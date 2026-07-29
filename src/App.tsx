@@ -11,6 +11,7 @@ import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipCont
 import { QueryClientProvider } from "@tanstack/react-query";
 import { QueryClient } from "@tanstack/query-core";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
@@ -211,7 +212,6 @@ const ConcertTicketsPublicPage = lazy(() => import("./pages/public/ConcertTicket
 const TicketsOrderPage = lazy(() => import("./pages/public/TicketsOrderPage"));
 const BoxOfficeIndexPage = lazy(() => import("./pages/public/BoxOfficeIndexPage"));
 const PartTracksModule = lazy(() => import("./components/modules/PartTracksModule"));
-const PartTracksLandingPage = lazy(() => import("./pages/dashboard/PartTracksLandingPage"));
 const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPage"));
 const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/SongwritingLibraryPage"));
 const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));
@@ -411,6 +411,17 @@ const LegacyMus240Redirect = () => {
   const newPath = location.pathname.replace('/classes/mus240', '/mus-240');
   return <Navigate to={newPath} replace />;
 };
+
+// Redirect /dashboard/part-tracks/* to /studio with a one-time toast
+function PartTracksRedirect() {
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !sessionStorage.getItem('pt-redirect-toast-shown')) {
+      sessionStorage.setItem('pt-redirect-toast-shown', '1');
+      toast.message('Part Tracks is now part of Studio.');
+    }
+  }, []);
+  return <Navigate to="/studio" replace />;
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -1602,28 +1613,8 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/dashboard/part-tracks"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <PartTracksLandingPage />
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard/part-tracks/:projectId"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <PartTracksLandingPage />
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
+                  path="/dashboard/part-tracks/*"
+                  element={<PartTracksRedirect />}
                 />
                 <Route
                   path="/dashboard/concert-planner"

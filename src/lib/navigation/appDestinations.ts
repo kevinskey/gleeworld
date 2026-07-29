@@ -9,7 +9,7 @@ import {
 import { resolveNav, entrySurfaces, type NavContext, type NavSectionKey } from './navCatalog';
 
 export interface ModuleFlags {
-  hasViewer: boolean; hasPartTracks: boolean; hasStudio: boolean;
+  hasViewer: boolean; hasStudio: boolean;
   hasSightReading: boolean; hasBoxOffice: boolean; hasConcertPlanner: boolean;
   hasMerch: boolean; hasFinance: boolean; hasAcademy: boolean; hasStore: boolean;
   hasSongwriting: boolean; hasPlanner: boolean;
@@ -24,7 +24,6 @@ const D = {
   studio:   { key: 'studio',   to: '/studio',               label: 'Studio',   icon: Disc3 } as Destination,
   schedule: { key: 'schedule', to: '/dashboard/calendar',   label: 'Calendar', icon: Calendar } as Destination,
   roster:   { key: 'roster',   to: '/dashboard/people',     label: 'Roster',   icon: Users } as Destination,
-  tracks:   { key: 'tracks',   to: '/dashboard/part-tracks',label: 'Tracks',   icon: Mic } as Destination,
   sight:    { key: 'sight',    to: '/dashboard/reading-music', label: 'Reading Music', icon: ScanEye } as Destination,
   academy:  { key: 'academy',  to: '/dashboard/academy',    label: 'Academy',  icon: GraduationCap } as Destination,
   tickets:  { key: 'tickets',  to: '/box-office',           label: 'Tickets',  icon: Ticket } as Destination,
@@ -38,7 +37,7 @@ const D = {
 // module-gated. Destinations absent from this map (e.g. attendance, roster)
 // are always available ("flagless-core") and never skipped for being "off".
 const SLOT_FLAG: Partial<Record<string, keyof ModuleFlags>> = {
-  music: 'hasViewer', tracks: 'hasPartTracks', studio: 'hasStudio',
+  music: 'hasViewer', studio: 'hasStudio',
   sight: 'hasSightReading', academy: 'hasAcademy',
 };
 
@@ -53,8 +52,8 @@ const TAB_MAX = 5;
 const CORE_TAB_COUNT = 3; // Home, Messages, Schedule
 const TAB_EXTRA_SLOTS = TAB_MAX - CORE_TAB_COUNT;
 
-const STUDENT_TAB_ORDER = ['music', 'studio', 'tracks', 'sight', 'academy', 'attendance'];
-const FACULTY_TAB_ORDER = ['roster', 'music', 'academy', 'tracks'];
+const STUDENT_TAB_ORDER = ['music', 'studio', 'sight', 'academy', 'attendance'];
+const FACULTY_TAB_ORDER = ['roster', 'music', 'academy'];
 
 function isSlotEnabled(key: string, flags: ModuleFlags): boolean {
   const flagKey = SLOT_FLAG[key];
@@ -106,7 +105,7 @@ export function parseTileLayout(raw: unknown): TileLayout | null {
 // built from the shared catalog rather than a hard-coded array — changing
 // this list changes what every tenant sees on day one, so it's a deliberate,
 // reviewable diff rather than an emergent side effect of catalog order.
-export const DEFAULT_GRID_ORDER = ['music', 'tracks', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch'];
+export const DEFAULT_GRID_ORDER = ['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch'];
 
 export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav: NavContext, layout?: TileLayout | null):
   { primary: Destination[]; overflow: Destination[] } {

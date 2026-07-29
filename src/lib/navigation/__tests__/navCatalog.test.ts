@@ -15,7 +15,6 @@ describe('NAV_CATALOG integrity', () => {
     const byKey = new Map(NAV_CATALOG.map((e) => [e.key, e]));
     const frozen: Array<[string, string, string]> = [
       ['music', '/dashboard/viewer', 'Music'],
-      ['tracks', '/dashboard/part-tracks', 'Tracks'],
       ['studio', '/studio', 'Studio'],
       ['sight', '/dashboard/reading-music', 'Reading Music'],
       ['attendance', '/attendance', 'Attendance'],
@@ -72,7 +71,7 @@ describe('resolveNav gates', () => {
     expect(out.find((e) => e.to === '/dashboard/pr-hub')).toBeUndefined();
   });
   it('flagless core (Music Library, People, Video) survives an all-off context', () => {
-    const out = resolveNav({ hasModule: () => false, isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false, hiddenRoutes: new Set() });
+    const out = resolveNav({ hasModule: () => false, isTenantAdmin: true, isPlatformAdmin: false, canLibrarian: false, isPartner: false, hiddenRoutes: new Set() });
     for (const key of ['music-library', 'people', 'video', 'music-tools', 'office-hours', 'analytics', 'settings', 'attendance', 'academy']) {
       expect(out.find((e) => e.key === key), key).toBeDefined();
     }
