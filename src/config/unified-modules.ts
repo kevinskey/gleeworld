@@ -16,7 +16,6 @@ import {
 // Import core module components
 import { MusicLibraryInlineModule } from '@/components/modules/MusicLibraryInlineModule';
 import { ReadMusicInlineModule } from '@/components/modules/ReadMusicInlineModule';
-import { PartTracksModule } from '@/components/modules/PartTracksModule';
 import { CheckInCheckOutModule } from '@/components/modules/CheckInCheckOutModule';
 import { CalendarModule } from '@/components/modules/CalendarModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
@@ -93,18 +92,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: MusicLibraryInlineModule,
     dbFunctionName: "music-library"
-  },
-  {
-    id: "part-tracks",
-    name: "part-tracks",
-    title: "Part Tracks",
-    description: "Upload MP3 practice tracks per voice part on each piece",
-    icon: Mic,
-    iconColor: "purple",
-    category: "musical-leadership",
-    isActive: true,
-    component: PartTracksModule,
-    dbFunctionName: "part-tracks"
   },
   {
     // Ensembles + nightly stability scores + AI action plans. The page

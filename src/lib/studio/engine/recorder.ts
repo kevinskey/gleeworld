@@ -3,10 +3,8 @@
 // blob to the storage layer to upload as an AudioAsset.
 //
 // The capture implementation itself now lives in the shared web
-// recording engine (src/lib/audio/sharedRecorder.ts), extracted so Part
-// Tracks can reuse the same hardened pipeline (see
-// docs/superpowers/plans/2026-07-05-part-tracks-shared-engine.md, Task 1).
-// This file re-exports it unchanged — Studio's call sites, defaults, and
+// recording engine (src/lib/audio/sharedRecorder.ts). This file
+// re-exports it unchanged — Studio's call sites, defaults, and
 // wiring (mic → inputGain → recorder/meter/waveAnalyser, monitor at unity
 // gain through the master bus) are identical to before the extraction.
 

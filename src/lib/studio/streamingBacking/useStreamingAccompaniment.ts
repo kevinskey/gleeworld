@@ -23,7 +23,7 @@ export interface StreamingAccompanimentHandle {
 }
 
 /**
- * Port of waitForAppleMusicPlaying from PartTracksStudio.tsx.
+ * Port of waitForAppleMusicPlaying from the retired PartTracksStudio (deleted 2026-07-29).
  * Polls kit.player?.playbackState ?? kit.playbackState for === 2 (Playing),
  * listening on 'playbackStateDidChange'. Resolves false if timeoutMs elapses.
  */
@@ -137,7 +137,7 @@ export function useStreamingAccompaniment(
 
   const stop = useCallback(() => {
     // Runs every teardown branch unconditionally — matches stopExternalAccompaniment
-    // in PartTracksStudio.tsx. Intentionally NOT gated on `accompaniment`; if the
+    // pattern from the retired PartTracksStudio (deleted 2026-07-29). Intentionally NOT gated on `accompaniment`; if the
     // parent sets accompaniment to null mid-play (e.g., detached the backing),
     // the still-playing streaming source must still be torn down. Cheap and
     // idempotent: each branch is a small set of guarded plugin calls with

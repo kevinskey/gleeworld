@@ -211,7 +211,6 @@ const BoxOfficeWillCallPage = lazy(() => import("./pages/dashboard/BoxOfficeWill
 const ConcertTicketsPublicPage = lazy(() => import("./pages/public/ConcertTicketsPublicPage"));
 const TicketsOrderPage = lazy(() => import("./pages/public/TicketsOrderPage"));
 const BoxOfficeIndexPage = lazy(() => import("./pages/public/BoxOfficeIndexPage"));
-const PartTracksModule = lazy(() => import("./components/modules/PartTracksModule"));
 const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPage"));
 const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/SongwritingLibraryPage"));
 const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));

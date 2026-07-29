@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { bufferToWav } from '@/components/partTracks/audioProcessing';
+import { bufferToWav } from './wav';
 
 export interface CapturedAccompaniment {
   url: string;

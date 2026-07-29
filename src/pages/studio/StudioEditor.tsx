@@ -249,11 +249,9 @@ function computePeaks(buffer: AudioBuffer, target = 300): number[] {
  * Returns the trimmed AudioBuffer plus a freshly encoded WAV blob.
  * If the recording is shorter than the trim, the original is kept.
  *
- * The latency configuration + ms→samples math are shared with Part
- * Tracks via src/lib/audio/sharedRecorder.ts (see
- * docs/superpowers/plans/2026-07-05-part-tracks-shared-engine.md, Task
- * 1); the decode/copy/re-encode steps below are unchanged from before
- * that extraction. */
+ * The latency configuration + ms→samples math live in
+ * src/lib/audio/sharedRecorder.ts; the decode/copy/re-encode steps
+ * below are unchanged from before that extraction. */
 /** Safari / any iOS browser shell reports vendor "Apple Computer, Inc.".
  *  On those engines MediaRecorder emits a fragmented mp4 that
  *  decodeAudioData can't read ("decoding failed" — recorded takes never
@@ -1466,8 +1464,8 @@ function Editor({
           // I3: Non-fatal — the take continues without the streaming backing
           // rather than aborting the whole recording. Toast as error (not
           // warning) so the user knows the take may drift and can stop + retry.
-          // This matches the behavior from PartTracksStudio.tsx's
-          // startExternalAccompaniment failure path: continue but surface clearly.
+          // Continue but surface clearly — same pattern as the retired
+          // Part Tracks startExternalAccompaniment failure path.
           console.warn('[studio] streaming backing start failed', streamErr);
           toast.error('Backing failed to start; take may drift. Stop and try again.');
         }
