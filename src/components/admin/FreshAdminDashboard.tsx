@@ -82,7 +82,7 @@ export const FreshAdminDashboard = () => {
         onViewModeChange={setViewMode}
       />
       
-      <div className="container mx-auto px-6 pt-24 pb-6">
+      <div className="container mx-auto px-4 md:px-6 pt-20 md:pt-24 pb-6">
         <Card className="mb-8 bg-background/50 border-border">
           <CardHeader>
             <CardTitle className="text-lg">Quick Actions</CardTitle>

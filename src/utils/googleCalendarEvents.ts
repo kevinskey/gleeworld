@@ -13,3 +13,22 @@ export function isGoogleSyncedEvent(
   if (event.source === 'google') return true;
   return typeof event.id === 'string' && event.id.startsWith(GOOGLE_EVENT_ID_PREFIX);
 }
+
+export function isIosSyncedEvent(event: any): boolean {
+  if (!event) return false;
+  if (event.source === 'ios') return true;
+  if (typeof event.id === 'string' && event.id.startsWith('ios-')) return true;
+  return false;
+}
+
+export function isSharedFromExternal(
+  event: { external_source?: string | null; origin_user_id?: string | null } | null | undefined,
+  currentUserId: string | null | undefined,
+): boolean {
+  if (!event || !currentUserId) return false;
+  const src = event.external_source;
+  return (src === 'google_calendar' || src === 'ios_calendar') && event.origin_user_id === currentUserId;
+}
+
+// Deprecated alias; delete when consumers migrate.
+export const isSharedFromGoogle = isSharedFromExternal;

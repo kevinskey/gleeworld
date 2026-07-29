@@ -32,6 +32,8 @@ if (typeof window !== 'undefined') installDemoWriteInterceptor();
 
 import { MessengerProvider } from "@/contexts/MessengerContext";
 import { ActiveMeetingProvider } from "@/contexts/ActiveMeetingContext";
+import { IosCalendarAutoPull } from "@/components/app/IosCalendarAutoPull";
+import { isNativeCalendarAvailable } from "@/plugins/gwCalendar";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { ControlCenterRedirect } from "@/components/routing/ControlCenterRedirect";
@@ -523,6 +525,7 @@ const App = () => {
         <TenantThemeRoot />
         <NativeTenantGate>
         <AuthProvider>
+          {isNativeCalendarAvailable() && <IosCalendarAutoPull />}
           <ThemeProvider>
             <TooltipProvider>
               <CustomTooltipProvider>

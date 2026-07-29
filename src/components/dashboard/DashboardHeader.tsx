@@ -2,7 +2,6 @@ import React from 'react';
 import { MessageCircle, Bell, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { AnnouncementsDisplay } from './AnnouncementsDisplay';
@@ -50,8 +49,12 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
         </div>
       </div>
 
-      {/* Center - Announcements ticker */}
-      <AnnouncementsDisplay />
+      {/* Center - Announcements ticker. Hidden on mobile: at 390px the
+          ticker fought the right-side action cluster for width and both
+          got crushed. Announcements are still accessible via the shell. */}
+      <div className="hidden lg:flex flex-1 justify-center px-4">
+        <AnnouncementsDisplay />
+      </div>
 
       {/* Right side - Actions and profile */}
       <div className="flex items-center gap-2 relative z-10">
@@ -62,9 +65,6 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
           className={`relative h-10 w-10 p-0 ${showMessages ? 'bg-muted' : ''}`}
         >
           <MessageCircle className="h-5 w-5" />
-          <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs">
-            3
-          </Badge>
         </Button>
 
         <Button variant="ghost" size="icon" className="h-10 w-10 p-0">

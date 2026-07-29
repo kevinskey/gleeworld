@@ -188,7 +188,11 @@ export const RequirementsEditor: React.FC<Props> = ({
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
+              {/* Wrap in a horizontal-scroll region so the 12-col grid
+                  (~700px min-width because of the inputs) doesn't overflow
+                  the card on 390px. Rows below match the same min-width. */}
+              <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground border-b pb-2 min-w-[560px]">
                 <div className="col-span-1"></div>
                 <div className="col-span-7">Requirement / Assignment</div>
                 <div className="col-span-3 text-right">Weight</div>
@@ -196,7 +200,7 @@ export const RequirementsEditor: React.FC<Props> = ({
               </div>
 
               {requirements.map((req, index) => (
-                <div key={req.id || index} className={`grid grid-cols-12 gap-4 items-center p-2 rounded-md ${index % 2 === 0 ? 'bg-muted/30' : 'bg-muted/10'}`}>
+                <div key={req.id || index} className={`grid grid-cols-12 gap-4 items-center p-2 rounded-md min-w-[560px] ${index % 2 === 0 ? 'bg-muted/30' : 'bg-muted/10'}`}>
                   <div className="col-span-1 flex justify-center">
                     <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
                   </div>
@@ -234,7 +238,7 @@ export const RequirementsEditor: React.FC<Props> = ({
               ))}
 
               {/* Total */}
-              <div className="grid grid-cols-12 gap-4 items-center pt-4 border-t">
+              <div className="grid grid-cols-12 gap-4 items-center pt-4 border-t min-w-[560px]">
                 <div className="col-span-1"></div>
                 <div className="col-span-7 font-semibold flex items-center gap-2">
                   Total
@@ -250,6 +254,7 @@ export const RequirementsEditor: React.FC<Props> = ({
                   </span>
                 </div>
                 <div className="col-span-1"></div>
+              </div>
               </div>
 
               {!isValidTotal && (

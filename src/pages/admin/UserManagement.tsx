@@ -281,7 +281,7 @@ const updateUserRole = async (userId: string, newRole: string) => {
           <CardDescription>Search and manage all users</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-6">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -292,7 +292,7 @@ const updateUserRole = async (userId: string, newRole: string) => {
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
@@ -308,8 +308,8 @@ const updateUserRole = async (userId: string, newRole: string) => {
 
           <div className="space-y-4">
             {filteredUsers.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center gap-4">
+              <div key={user.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 sm:p-4 border rounded-lg">
+                <div className="flex items-center gap-3 sm:gap-4 flex-wrap min-w-0">
                   <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
                     <span className="font-semibold text-primary">
                       {user.full_name?.charAt(0)?.toUpperCase() || user.email.charAt(0).toUpperCase()}
@@ -330,12 +330,12 @@ const updateUserRole = async (userId: string, newRole: string) => {
                   )}
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Select
                     value={user.role}
                     onValueChange={(value) => updateUserRole(user.user_id, value)}
                   >
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-32 sm:w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

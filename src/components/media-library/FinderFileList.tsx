@@ -102,12 +102,13 @@ export const FinderFileList = ({
 
   return (
     <div className="w-full">
-      {/* Header */}
-      <div className="grid grid-cols-12 gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border sticky top-0 bg-background z-10">
-        <div className="col-span-5">Name</div>
-        <div className="col-span-2">Type</div>
-        <div className="col-span-2 text-right">Size</div>
-        <div className="col-span-3">Date Added</div>
+      {/* Header — Name spans the whole row on mobile; secondary columns
+          hide below md so a 375px file list stays readable. */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2 px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border sticky top-0 bg-background z-10">
+        <div className="md:col-span-5">Name</div>
+        <div className="hidden md:block md:col-span-2">Type</div>
+        <div className="hidden md:block md:col-span-2 text-right">Size</div>
+        <div className="hidden md:block md:col-span-3">Date Added</div>
       </div>
 
       {/* Files */}
@@ -123,24 +124,24 @@ export const FinderFileList = ({
                 <ContextMenuTrigger>
                   <div
                     className={cn(
-                      "grid grid-cols-12 gap-2 px-3 py-2 text-sm cursor-pointer transition-colors",
+                      "grid grid-cols-1 md:grid-cols-12 gap-2 px-3 py-2 text-sm cursor-pointer transition-colors",
                       "hover:bg-muted/50",
                       isSelected && "bg-primary/10"
                     )}
                     onClick={(e) => onSelect(file, e)}
                     onDoubleClick={() => onOpen(file)}
                   >
-                    <div className="col-span-5 flex items-center gap-2 min-w-0">
+                    <div className="md:col-span-5 flex items-center gap-2 min-w-0">
                       <Icon className={cn("h-4 w-4 flex-shrink-0", getIconColor(extendedType))} />
                       <span className="truncate">{file.title || 'Untitled'}</span>
                     </div>
-                    <div className="col-span-2 text-muted-foreground capitalize">
+                    <div className="hidden md:block md:col-span-2 text-muted-foreground capitalize">
                       {extendedType}
                     </div>
-                    <div className="col-span-2 text-right text-muted-foreground">
+                    <div className="hidden md:block md:col-span-2 text-right text-muted-foreground">
                       {formatSize(file.file_size)}
                     </div>
-                    <div className="col-span-3 text-muted-foreground">
+                    <div className="hidden md:block md:col-span-3 text-muted-foreground">
                       {format(new Date(file.created_at), 'MMM d, yyyy')}
                     </div>
                   </div>
