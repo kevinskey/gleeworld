@@ -11,6 +11,7 @@ import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { decodeJwtClaims } from '@/lib/demoSession';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { applyTenantThemeVars } from '@/components/theme/TenantThemeRoot';
 import { ASSISTANT_VOICES, BROWSER_VOICE_ID, DEFAULT_VOICE_ID } from '@/lib/assistant/voices';
 import { speak } from '@/lib/assistant/speech';
 import { Card, CardContent } from '@/components/ui/card';
@@ -768,6 +769,25 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
       });
     }
   }, [settings]);
+
+  // Live preview: paint the tenant's chosen colors onto the CSS vars the
+  // whole app reads (--primary, --accent, --site-primary, --site-accent,
+  // and their foregrounds/contrast) the instant the color picker changes.
+  // No save required — the tenant SEES the effect on the surrounding UI
+  // (sidebar tint, buttons, Command Center accents) in real time.
+  //
+  // On unmount (tab switch or route change) we re-apply the persisted
+  // branding values so navigating away without saving reverts the
+  // preview. TenantThemeRoot's own effect also re-asserts on any
+  // branding refetch, so a successful save just keeps the same values.
+  useEffect(() => {
+    applyTenantThemeVars(form.primary_color, form.accent_color);
+    return () => {
+      const persistedPrimary = (settings as { primary_color?: string } | null)?.primary_color ?? null;
+      const persistedAccent = (settings as { accent_color?: string } | null)?.accent_color ?? null;
+      applyTenantThemeVars(persistedPrimary, persistedAccent);
+    };
+  }, [form.primary_color, form.accent_color, settings]);
 
   async function save() {
     // ImageUploadField hands us a `blob:` URL during the upload window and

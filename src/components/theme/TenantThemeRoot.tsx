@@ -53,6 +53,55 @@ function yiqForegroundTriplet(hex: string): string | null {
   return (r * 299 + g * 587 + b * 114) / 1000 >= 150 ? '0 0% 6%' : '0 0% 100%';
 }
 
+/** Write tenant primary + accent hex values into the CSS variables the app
+ *  chrome reads (--site-primary, --site-accent, --primary, --ring,
+ *  --accent, their foregrounds, and --site-*-contrast). Extracted from
+ *  TenantThemeRoot so the Branding form can call it directly for a
+ *  real-time preview as the tenant drags a color picker — no need to
+ *  save first. Passing null for a color removes its properties, letting
+ *  the next paint fall back to the base tokens in index.css.
+ *
+ *  Callers that want a "cancel/revert" affordance should re-invoke this
+ *  with the persisted branding values on unmount. TenantThemeRoot's own
+ *  effect re-asserts on every branding change so cancelling the form
+ *  without saving is a natural next-render restore. */
+export function applyTenantThemeVars(primary: string | null, accent: string | null): void {
+  const root = document.documentElement;
+  const primaryTriplet = primary ? hexToHslTriplet(primary) : null;
+  const accentTriplet = accent ? hexToHslTriplet(accent) : null;
+  const primaryFg = primary ? yiqForegroundTriplet(primary) : null;
+  const accentFg = accent ? yiqForegroundTriplet(accent) : null;
+
+  if (primary) root.style.setProperty('--site-primary', primary);
+  else root.style.removeProperty('--site-primary');
+  if (accent) root.style.setProperty('--site-accent', accent);
+  else root.style.removeProperty('--site-accent');
+
+  if (accent && accentFg) {
+    root.style.setProperty('--site-accent-contrast', `hsl(${accentFg})`);
+  } else {
+    root.style.removeProperty('--site-accent-contrast');
+  }
+  if (primary && primaryFg) {
+    root.style.setProperty('--site-primary-contrast', `hsl(${primaryFg})`);
+  } else {
+    root.style.removeProperty('--site-primary-contrast');
+  }
+
+  if (primaryTriplet) {
+    root.style.setProperty('--primary', primaryTriplet);
+    root.style.setProperty('--ring', primaryTriplet);
+    if (primaryFg) root.style.setProperty('--primary-foreground', primaryFg);
+  }
+  if (accentTriplet) {
+    root.style.setProperty('--accent', accentTriplet);
+    if (accentFg) root.style.setProperty('--accent-foreground', accentFg);
+  }
+
+  document.body.classList.add('gw-tenant-themed');
+  if (primary) document.body.dataset.tenantPrimaryFg = primaryFg === '0 0% 100%' ? 'light' : 'dark';
+}
+
 export function TenantThemeRoot() {
   const { settings: branding } = useBrandingSettings();
 
@@ -78,62 +127,9 @@ export function TenantThemeRoot() {
   const accent = branding.accent_color || data?.theme?.accentColor || null;
 
   useEffect(() => {
-    const root = document.documentElement;
-    const primaryTriplet = primary ? hexToHslTriplet(primary) : null;
-    const accentTriplet = accent ? hexToHslTriplet(accent) : null;
-    const primaryFg = primary ? yiqForegroundTriplet(primary) : null;
-    const accentFg = accent ? yiqForegroundTriplet(accent) : null;
-
-    // Tenant-direct vars (consumed by inline styles in public-site blocks,
-    // header, footer, etc.)
-    if (primary) root.style.setProperty('--site-primary', primary);
-    else root.style.removeProperty('--site-primary');
-    if (accent) root.style.setProperty('--site-accent', accent);
-    else root.style.removeProperty('--site-accent');
-
-    // Button contrast rule: --tint-contrast in index.css reads
-    // --site-accent-contrast when set. We write the YIQ-derived
-    // foreground here whenever --site-accent is present, so any Button
-    // that uses `bg-[var(--tint)] text-[var(--tint-contrast)]` gets a
-    // readable text color on a dark tenant accent — no more
-    // black-on-dark-teal Republish buttons.
-    if (accent && accentFg) {
-      root.style.setProperty('--site-accent-contrast', `hsl(${accentFg})`);
-    } else {
-      root.style.removeProperty('--site-accent-contrast');
-    }
-    if (primary && primaryFg) {
-      root.style.setProperty('--site-primary-contrast', `hsl(${primaryFg})`);
-    } else {
-      root.style.removeProperty('--site-primary-contrast');
-    }
-
-    // shadcn design tokens — route the tenant's PRIMARY color into --primary
-    // and --ring (buttons, focus rings, Command Center card accents that read
-    // `bg-primary` / `text-primary`), and the ACCENT color into --accent. This
-    // matches the natural mental model of the Branding form: primary_color =
-    // the color that tints app chrome. Previously accent was routed into both
-    // slots, so tenants who changed only the primary field saw no update in
-    // the admin shell.
-    if (primaryTriplet) {
-      root.style.setProperty('--primary', primaryTriplet);
-      root.style.setProperty('--ring', primaryTriplet);
-      if (primaryFg) root.style.setProperty('--primary-foreground', primaryFg);
-    }
-    if (accentTriplet) {
-      root.style.setProperty('--accent', accentTriplet);
-      if (accentFg) root.style.setProperty('--accent-foreground', accentFg);
-    }
-
-    // Class flag so the CSS override layer (tenant-theme.css) can target
-    // legacy modules' hardcoded Tailwind colors.
-    document.body.classList.add('gw-tenant-themed');
-    if (primary) document.body.dataset.tenantPrimaryFg = primaryFg === '0 0% 100%' ? 'light' : 'dark';
-
-    return () => {
-      // Don't strip on unmount — the App keeps this mounted for the whole
-      // session, so there's nothing to clean up except in HMR scenarios.
-    };
+    applyTenantThemeVars(primary, accent);
+    // Don't strip on unmount — the App keeps this mounted for the whole
+    // session, so there's nothing to clean up except in HMR scenarios.
   }, [primary, accent]);
 
   return null;
