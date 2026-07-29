@@ -275,6 +275,20 @@ export function useStudioSession(sessionId: string | null) {
     });
   }, [queueSave]);
 
+  // I2: Imperative flush — cancels the debounce timer and writes the current
+  // session to storage immediately. Use after high-value mutations (e.g.
+  // capture-from-playback) where losing the update on a quick reload would
+  // orphan an uploaded asset. Returns the save promise so callers can await.
+  const flushSave = useCallback((): Promise<void> => {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+    return session ? saveSession(session).catch(setError) : Promise.resolve();
+  // session ref is intentionally omitted — React setState batches mean the
+  // caller's latest update may not yet be reflected here. Callers that need
+  // the updated value should pass it directly; this flush handles the
+  // "best-effort flush of whatever is current" case.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
+
   // Flush on unmount.
   useEffect(() => () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -282,7 +296,7 @@ export function useStudioSession(sessionId: string | null) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { session, loading, error, update, reload };
+  return { session, loading, error, update, flushSave, reload };
 }
 
 // ── Engine lifecycle bound to a session ──────────────────────────────

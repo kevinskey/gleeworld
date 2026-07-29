@@ -10,6 +10,7 @@
 // loaded as a normal audio track/asset by the StudioEditor effect.
 
 import type React from 'react';
+import { useEffect } from 'react';
 import { Music, Youtube, Square, CircleDot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { Accompaniment } from '@/lib/studio/session';
@@ -40,6 +41,21 @@ export function AccompanimentLane({
     accompaniment.kind === 'apple_music' || accompaniment.kind === 'apple_music_album';
   const isYouTube = accompaniment.kind === 'youtube';
   const isFile = accompaniment.kind === 'file';
+
+  // C1: Null the YouTube iframe ref when the kind changes away from 'youtube'
+  // or when the component unmounts entirely. This ensures the hook's
+  // postMessage calls see null via optional chaining rather than posting to
+  // a stale detached iframe after a slow streaming.start() completion.
+  useEffect(() => {
+    if (isYouTube) return; // ref is actively in use — leave it
+    if (ytIframeRef) ytIframeRef.current = null;
+  }, [isYouTube, ytIframeRef]);
+  useEffect(() => {
+    return () => {
+      if (ytIframeRef) ytIframeRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Render using kind-switches so TypeScript narrows the discriminated union.
   const renderMeta = () => {

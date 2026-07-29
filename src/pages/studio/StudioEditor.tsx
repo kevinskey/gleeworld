@@ -67,7 +67,7 @@ import { getAssetUrlSync } from '@/lib/studio/engine/assetUrlCache';
 import { splitAudioClips, sliceClipChannels, duplicateClip } from '@/lib/studio/clipOps';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
 import { exportSession, hasResumableExport, clearExportProgress, type ExportPreset } from '@/lib/studio/engine/exportRender';
-import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
+import { getAssetUrl, saveSession, uploadAudioAsset } from '@/lib/studio/storage';
 import { toast } from 'sonner';
 import { MixerView } from './MixerView';
 import { useStreamingAccompaniment } from '@/lib/studio/streamingBacking/useStreamingAccompaniment';
@@ -399,7 +399,7 @@ function Editor({
   sessionState, engineState,
 }: { sessionState: ReturnType<typeof useStudioSession>; engineState: ReturnType<typeof useStudioEngine> }) {
   const session = sessionState.session!;
-  const { update } = sessionState;
+  const { update, flushSave } = sessionState;
   const {
     state, start, play, pause, stop, updateTrackStrip, updateTempo,
     updateTimeSignature, setMetronome, transportTick,
@@ -1091,9 +1091,14 @@ function Editor({
     if (session.accompaniment?.kind !== 'file') return;
     const fileUrl = session.accompaniment.fileUrl;
     const title = session.accompaniment.title ?? ACCOMPANIMENT_TRACK_NAME;
-    // Check if any existing asset already points at this URL (via assetUrlCache or filename match).
+    // I1: Guard by clip source URL (not track name) so renaming the
+    // accompaniment track doesn't defeat the idempotency check. Walk every
+    // audio track's clips, look each clip's asset_id up in the assetUrlCache,
+    // and skip seeding if any clip already resolves to the current fileUrl.
     const alreadySeeded = session.tracks.some(
-      (t) => isAudioTrack(t) && t.name === ACCOMPANIMENT_TRACK_NAME && t.clips.length > 0,
+      (t) =>
+        isAudioTrack(t) &&
+        t.clips.some((c) => getAssetUrlSync(c.asset_id) === fileUrl),
     );
     if (alreadySeeded) return;
     // Seed a locked audio track with one clip spanning the declared session length.
@@ -1133,6 +1138,12 @@ function Editor({
     session.accompaniment?.kind === 'apple_music_album' ||
     session.accompaniment?.kind === 'youtube';
 
+  // C2: Declare captureRecorderRef ABOVE onCapture so the ref allocation
+  // textually precedes the function that writes to it. React's runtime is
+  // unaffected (refs allocate before any handler runs), but this prevents
+  // a linter, code-splitter, or hand-refactor from reordering into a broken state.
+  const captureRecorderRef = useRef<MicRecorder | null>(null);
+
   const onCapture = async () => {
     if (!session.accompaniment) return;
     setCapturing(true);
@@ -1153,8 +1164,6 @@ function Editor({
     }
   };
 
-  const captureRecorderRef = useRef<MicRecorder | null>(null);
-
   const onStopCapture = async () => {
     const captureRecorder = captureRecorderRef.current;
     captureRecorderRef.current = null;
@@ -1166,10 +1175,15 @@ function Editor({
       if (!blob || blob.size < 1024) throw new Error('No audio captured — check mic and speaker volume');
       const captured = await captureFromPlayback({ blob, sessionId: session.id });
       // Flip the session accompaniment to kind='file' with the captured WAV URL.
-      update((s) => ({
-        ...s,
-        accompaniment: { kind: 'file', title: captured.title, fileUrl: captured.url },
-      }));
+      const nextSession = { ...session, accompaniment: { kind: 'file' as const, title: captured.title, fileUrl: captured.url } };
+      update(() => nextSession);
+      // I2: Persist immediately rather than relying on the 800ms autosave
+      // debounce. The captured WAV is already uploaded to storage; if the user
+      // reloads before the debounce fires the manifest would still reference
+      // the old streaming accompaniment and the WAV URL would be orphaned.
+      await saveSession(nextSession).catch((err) => {
+        console.error('[studio] failed to persist accompaniment capture', err);
+      });
       toast.success('Accompaniment captured — future takes lock to this WAV.');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Capture failed');
@@ -1445,10 +1459,13 @@ function Editor({
           const { backingAudibleWallMs } = await streaming.start(recordStartOffsetSec);
           streamingTransportWallMsRef.current = backingAudibleWallMs;
         } catch (streamErr) {
-          // Non-fatal — the take continues without the streaming backing rather
-          // than aborting the whole recording.
+          // I3: Non-fatal — the take continues without the streaming backing
+          // rather than aborting the whole recording. Toast as error (not
+          // warning) so the user knows the take may drift and can stop + retry.
+          // This matches the behavior from PartTracksStudio.tsx's
+          // startExternalAccompaniment failure path: continue but surface clearly.
           console.warn('[studio] streaming backing start failed', streamErr);
-          toast.warning('Streaming backing failed to start — recording without accompaniment');
+          toast.error('Backing failed to start; take may drift. Stop and try again.');
         }
       }
       setRecording({
