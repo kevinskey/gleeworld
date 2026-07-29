@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Loader2, Music2, Plus, Trash2, Mic, Sliders, AudioLines } from 'lucide-react';
+import { Loader2, Music2, Plus, Trash2, Mic, Sliders, AudioLines, Users, ArrowRight } from 'lucide-react';
 import {
   useMySessions, useCreateStudioSession, useDeleteStudioSession, useStudioOwner,
 } from '@/hooks/useStudio';
@@ -165,26 +165,115 @@ function FeatureChip({ icon: Icon, label }: { icon: typeof Mic; label: string })
   );
 }
 
+// Two-step create flow:
+//   1) Pick session flavor — a free-form Studio session (multitrack DAW) or
+//      a Part Tracks session (choose an Apple Music / YouTube / uploaded /
+//      captured backing track first, then record voice parts against it).
+//   2) For Studio: name it, create, navigate to the session.
+//      For Part Tracks: bounce to the existing /dashboard/part-tracks
+//      landing where the create-project dialog already handles the
+//      backing + voicing selections. No point duplicating that UI here.
 function CreateSessionDialog({
   open, onOpenChange, onSubmit, busy,
 }: { open: boolean; onOpenChange: (o: boolean) => void; onSubmit: (title: string) => void; busy: boolean }) {
+  const [step, setStep] = useState<'pick' | 'studio-title'>('pick');
   const [title, setTitle] = useState('');
+  const navigate = useNavigate();
+
+  // Reset back to the picker whenever the dialog closes so re-opening
+  // it doesn't strand the user on the title-input step.
+  const handleOpenChange = (o: boolean) => {
+    if (!o) {
+      setStep('pick');
+      setTitle('');
+    }
+    onOpenChange(o);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>New Studio session</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label className="text-xs">Title (optional)</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Spring concert demo" autoFocus />
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>
+            {step === 'pick' ? 'New session' : 'Name your Studio session'}
+          </DialogTitle>
+        </DialogHeader>
+
+        {step === 'pick' ? (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              What are you recording?
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setStep('studio-title')}
+                className="group text-left rounded-xl border-2 border-border hover:border-primary focus:border-primary focus:outline-none bg-card p-4 transition-colors"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                    <Sliders className="w-5 h-5" />
+                  </div>
+                  <div className="text-sm font-semibold">Studio session</div>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Free-form multitrack. Record, mix, and master with the full
+                  DAW — tracks, buses, sends, mastering chain, export.
+                </p>
+                <div className="mt-3 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity inline-flex items-center gap-1">
+                  Continue <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleOpenChange(false);
+                  navigate('/dashboard/part-tracks');
+                }}
+                className="group text-left rounded-xl border-2 border-border hover:border-primary focus:border-primary focus:outline-none bg-card p-4 transition-colors"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div className="text-sm font-semibold">Part Tracks session</div>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Pick a backing track (Apple Music, YouTube, upload, or
+                  capture from playback), then record Soprano/Alto/Tenor/
+                  Bass or custom parts locked to it.
+                </p>
+                <div className="mt-3 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity inline-flex items-center gap-1">
+                  Continue <ArrowRight className="w-3.5 h-3.5" />
+                </div>
+              </button>
+            </div>
+            <div className="flex justify-end pt-1">
+              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+            </div>
           </div>
-          <div className="flex justify-end gap-2 pt-1">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={() => onSubmit(title.trim())} disabled={busy}>
-              {busy ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Creating…</> : 'Create'}
-            </Button>
+        ) : (
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Title (optional)</Label>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="e.g. Spring concert demo"
+                autoFocus
+              />
+            </div>
+            <div className="flex justify-between gap-2 pt-1">
+              <Button variant="ghost" onClick={() => setStep('pick')}>← Back</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
+                <Button onClick={() => onSubmit(title.trim())} disabled={busy}>
+                  {busy ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Creating…</> : 'Create'}
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );

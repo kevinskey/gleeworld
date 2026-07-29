@@ -1415,6 +1415,13 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     track: PartTrack,
     opts?: { fallbackFromNative?: boolean },
   ) => {
+    // Refuse to start a take while accompaniment capture is running — one
+    // MediaRecorder / audio session at a time. Silent-tolerant: if the user
+    // hit Record by accident during capture, tell them why nothing happened.
+    if (capturingAccompanimentRef.current) {
+      toast.error('Stop the accompaniment capture before recording a part.');
+      return;
+    }
     // iOS uses the native external recorder (Task 4). The web path below is
     // the fallback when native capture can't get a record route
     // (opts.fallbackFromNative), and the path for all non-iOS platforms.
@@ -1571,6 +1578,102 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
     } catch (e: any) {
       console.error('[PartTracks] Start recording failed', e);
       toast.error(e?.message ?? 'Mic permission denied');
+    }
+  };
+
+  // "Capture from playback": records the room while the streaming backing
+  // (Apple Music or YouTube) plays, then saves the mic buffer as this
+  // project's accompaniment WAV. After this runs, `accompaniment_kind`
+  // flips to `file` — so from that point on, every part take plays back
+  // the SAME WAV in Web Audio and locks bit-perfect to the singer's mic,
+  // instead of streaming Apple/YouTube (which can't be teed into the
+  // audio graph due to DRM). Lo-fi by design; quality follows the room.
+  const [capturingAccompaniment, setCapturingAccompaniment] = useState(false);
+  const capturingAccompanimentRef = useRef(false);
+
+  const captureAccompanimentFromPlayback = async () => {
+    if (!project) return;
+    if (recordingTrackId) {
+      toast.error('Stop the current take before capturing accompaniment.');
+      return;
+    }
+    if (capturingAccompanimentRef.current) return;
+    const kind = project.accompaniment_kind;
+    const isExternal =
+      kind === 'apple_music' ||
+      kind === 'apple_music_album' ||
+      kind === 'youtube';
+    if (!isExternal) {
+      toast.error('Choose an Apple Music or YouTube backing track first.');
+      return;
+    }
+    try {
+      await unlockAudio();
+      // Turn OFF music-mode / raw-mic tricks so the browser's AEC + noise
+      // suppression stay ON. When the mic is capturing what the speaker
+      // is emitting, AEC is what stops runaway feedback. If the singer
+      // is on headphones this doesn't matter, but the default case here
+      // is "speaker in the room" and AEC should be the default.
+      capturingAccompanimentRef.current = true;
+      setCapturingAccompaniment(true);
+      toast.message('Capturing accompaniment — hit stop when the song ends.');
+      await startRecording({
+        inputDeviceId,
+        musicMode: false,
+      });
+      // Once the mic is open, start the external stream from the top.
+      await startExternalAccompaniment(0);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Could not start capture.';
+      console.error('[PartTracks] captureAccompaniment start failed', e);
+      toast.error(msg);
+      capturingAccompanimentRef.current = false;
+      setCapturingAccompaniment(false);
+      // Best-effort teardown if the external side started before the throw.
+      try { stopExternalAccompaniment(); } catch {}
+      try { await stopRecording(); } catch {}
+    }
+  };
+
+  const stopCaptureAccompaniment = async () => {
+    if (!project) return;
+    if (!capturingAccompanimentRef.current) return;
+    capturingAccompanimentRef.current = false;
+    setCapturingAccompaniment(false);
+    try {
+      // Kill the external stream first so it stops leaking into the mic
+      // during the stop→decode→upload window (which can take seconds).
+      stopExternalAccompaniment();
+      const rawBlob = await stopRecording();
+      if (!rawBlob || rawBlob.size < 1024) {
+        toast.error('No audio captured — check the room mic and speaker volume.');
+        return;
+      }
+      // Decode the MediaRecorder blob and re-encode as a proper WAV.
+      // Reason: the mic's native container (webm/opus on Chromium, mp4/aac
+      // on Safari) is what the `sheet-music` bucket serves back later, and
+      // Safari's decoder occasionally chokes on Chromium-produced webm.
+      // WAV is the universally-decodable common denominator.
+      const AC = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext;
+      const decoderCtx = new AC();
+      try {
+        const bytes = await rawBlob.arrayBuffer();
+        const buf = await decoderCtx.decodeAudioData(bytes.slice(0));
+        const wavBlob = bufferToWav(buf);
+        const file = new File(
+          [wavBlob],
+          `accompaniment-capture-${Date.now()}.wav`,
+          { type: 'audio/wav' },
+        );
+        await uploadAccompaniment(file);
+        toast.success('Accompaniment captured. Future takes lock to this recording.');
+      } finally {
+        try { await decoderCtx.close(); } catch {}
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Capture failed.';
+      console.error('[PartTracks] captureAccompaniment stop failed', e);
+      toast.error(msg);
     }
   };
 
@@ -1878,13 +1981,48 @@ export function PartTracksStudio({ projectId }: PartTracksStudioProps) {
               size="sm"
               className="mt-2 w-full"
               onClick={() => setAccPickerOpen(true)}
+              disabled={capturingAccompaniment}
             >
               <Music className="w-3.5 h-3.5 mr-1" />
               {project.accompaniment_kind && project.accompaniment_title ? 'Change backing track' : 'Choose backing track'}
             </Button>
-            {project.accompaniment_kind && project.accompaniment_kind !== 'file' && (
+            {(project.accompaniment_kind === 'apple_music' ||
+              project.accompaniment_kind === 'apple_music_album' ||
+              project.accompaniment_kind === 'youtube') && (
+              <>
+                {capturingAccompaniment ? (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="mt-2 w-full animate-pulse"
+                    onClick={() => void stopCaptureAccompaniment()}
+                  >
+                    <Square className="w-3.5 h-3.5 mr-1" fill="currentColor" />
+                    Stop capture
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2 w-full"
+                    onClick={() => void captureAccompanimentFromPlayback()}
+                    disabled={!!recordingTrackId}
+                    title="Play the backing through your speakers, mic captures it into a WAV. Future takes lock to that WAV so timing is exact."
+                  >
+                    <CircleDot className="w-3.5 h-3.5 mr-1 text-red-500" />
+                    Capture from playback
+                  </Button>
+                )}
+                <p className="text-[10px] text-muted-foreground mt-2 italic leading-tight">
+                  {capturingAccompaniment
+                    ? 'Recording the room mic while the backing plays. Stop when the song ends.'
+                    : 'Streams alongside the mix — only your mic is captured. Tap Capture to lock a WAV copy so future takes sync perfectly.'}
+                </p>
+              </>
+            )}
+            {project.accompaniment_kind === 'file' && project.accompaniment_url && (
               <p className="text-[10px] text-muted-foreground mt-2 italic leading-tight">
-                Streams alongside the mix. Only your mic is captured into recordings.
+                Locked to a WAV — every take will time-lock to this reference.
               </p>
             )}
           </Section>

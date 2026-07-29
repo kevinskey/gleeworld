@@ -27,7 +27,7 @@ import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor, type PlanTier } f
 import { ArrowRight } from 'lucide-react';
 import {
   Loader2, CheckCircle2, ExternalLink, CreditCard, Palette,
-  Plug, Save, Building2, Lock, Sparkles, Users, Menu, CalendarDays,
+  Save, Building2, Lock, Sparkles, Users, Menu, CalendarDays,
 } from 'lucide-react';
 import { hideableNavItems, HIDEABLE_NAV_ROLES, type NavRole, type HideableNavItem } from '@/lib/navigation/navCatalog';
 import { getPreviewRole, setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
@@ -42,14 +42,18 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
   boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
 };
 
-const TAB_VALUES = new Set(['plan', 'modules', 'navigation', 'branding', 'datecard', 'billing', 'general']);
+const TAB_VALUES = new Set(['plan', 'navigation', 'branding', 'datecard', 'billing', 'general']);
 
 export default function WorkspaceSettingsPage() {
   const { isSuperAdmin, isAdmin } = useUserRole();
   const canManage = isSuperAdmin() || isAdmin();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab');
-  const activeTab = tab && TAB_VALUES.has(tab) ? tab : 'plan';
+  // `modules` is the retired Add-ons tab — bounce old bookmarks to Plan
+  // (the tier's included feature list) instead of a dead 404 tab state.
+  const activeTab = tab === 'modules'
+    ? 'plan'
+    : (tab && TAB_VALUES.has(tab) ? tab : 'plan');
   const setActiveTab = (value: string) => {
     const sp = new URLSearchParams(searchParams);
     sp.set('tab', value);
@@ -70,11 +74,13 @@ export default function WorkspaceSettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        {/* Mobile: one swipeable scroll strip (no wrap) so 7 sections read as
-            a single row instead of a scattered 2-col grid. md+: 7-across grid. */}
-        <TabsList className="flex md:grid md:grid-cols-7 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto md:overflow-visible scrollbar-hide">
+        {/* Mobile: one swipeable scroll strip (no wrap) so 6 sections read as
+            a single row instead of a scattered 2-col grid. md+: 6-across grid.
+            The Add-ons tab was removed 2026-07-28 — features are now bundled
+            by plan tier, not toggled à la carte. A legacy ?tab=modules query
+            param transparently redirects to `plan` below. */}
+        <TabsList className="flex md:grid md:grid-cols-6 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto md:overflow-visible scrollbar-hide">
           <TabsTrigger value="plan" className="shrink-0"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
-          <TabsTrigger value="modules" className="shrink-0"><Plug className="w-3.5 h-3.5 mr-1.5" />Add-ons</TabsTrigger>
           <TabsTrigger value="navigation" className="shrink-0"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>
           <TabsTrigger value="branding" className="shrink-0"><Palette className="w-3.5 h-3.5 mr-1.5" />Branding</TabsTrigger>
           <TabsTrigger value="datecard" className="shrink-0"><CalendarDays className="w-3.5 h-3.5 mr-1.5" />Date card</TabsTrigger>
@@ -83,7 +89,6 @@ export default function WorkspaceSettingsPage() {
         </TabsList>
 
         <TabsContent value="plan"><PlanTabPanel canManage={canManage} /></TabsContent>
-        <TabsContent value="modules"><ModulesTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="navigation"><NavigationTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="branding"><BrandingTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="datecard"><DateCardTabPanel canManage={canManage} /></TabsContent>

@@ -149,14 +149,18 @@ export const BlockFrame = forwardRef<HTMLDivElement, BlockFrameProps>(function B
         }`}
       />
 
-      {/* Floating toolbar pinned to the top-right of the block. Sits above
-          the outline so its buttons stay clickable. */}
+      {/* Floating toolbar centered at the top of the block. Center-anchored
+          (not right-aligned) because the preview column has overflow-x-hidden
+          and many blocks constrain themselves with `max-w-6xl mx-auto`, so a
+          right-anchored pill was clipping off-screen on wide previews.
+          Sits above the outline so its buttons stay clickable, and above the
+          sticky header (z-40) so it never gets covered. */}
       {showChrome && (
         <div
           // Sized generously so the pill is a comfortable click target on
           // touch devices AND has visual weight in the builder canvas.
           // Kevin 2026-07-27: bumped ~3x from the original 14px icons.
-          className="absolute top-2 right-2 z-20 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/95 backdrop-blur px-3 py-2 shadow-lg"
+          className="absolute top-2 left-1/2 -translate-x-1/2 z-50 inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/95 backdrop-blur px-3 py-2 shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Drag handle — spreads the dnd-kit sortable listeners so grabbing
