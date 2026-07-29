@@ -376,15 +376,23 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
     const overId = e.over ? String(e.over.id) : null;
     if (!overId || activeId === overId) return;
 
-    // Section reorder path — active is a section header.
+    // Section reorder path — active is a section header. Map the drop
+    // target back to a SECTION regardless of what dnd-kit chose:
+    //   'sec:x'     → x (dropped on another section header)
+    //   'section:x' → x (dropped on a section body / gap)
+    //   any item    → the section that owns that item (closestCenter
+    //                 collision often lands on an interior item row
+    //                 rather than the wrapper — this makes the drag
+    //                 feel forgiving instead of "why isn't it moving").
     if (activeId.startsWith('sec:')) {
       const fromSec = activeId.slice(4);
-      // Landing on another section header OR the section container.
-      const toSec = overId.startsWith('sec:')
-        ? overId.slice(4)
-        : overId.startsWith('section:')
-          ? overId.slice(8)
-          : null;
+      let toSec: string | null = null;
+      if (overId.startsWith('sec:')) toSec = overId.slice(4);
+      else if (overId.startsWith('section:')) toSec = overId.slice(8);
+      else {
+        const owner = sections.find((s) => s.items.some((i) => i.key === overId));
+        toSec = owner ? owner.key : null;
+      }
       if (!toSec || toSec === fromSec) return;
       const currentOrder = sections.map((s) => s.key);
       const fromIdx = currentOrder.indexOf(fromSec);
