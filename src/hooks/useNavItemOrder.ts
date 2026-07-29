@@ -75,9 +75,17 @@ export function useNavItemOrder() {
     if (!uid) return false;
     try {
       const next: NavOrder = { v: 3, order, sections, sectionOrder };
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({ user_id: uid, nav_item_order: next }, { onConflict: 'user_id' });
+      // save_nav_item_order is a SECURITY DEFINER RPC that bypasses the
+      // RESTRICTIVE tenant_isolation_restrict policy on user_preferences
+      // and RESYNCS tenant_id to current_tenant_id() on every save. This
+      // is needed because a direct upsert failed with 403 whenever the
+      // caller's subdomain-derived current_tenant_id() didn't match the
+      // tenant_id stored on the existing row — a common state now that
+      // current_tenant_id() is subdomain-aware. See migration
+      // 20260729180000_save_nav_item_order_rpc.sql.
+      const { error } = await supabase.rpc('save_nav_item_order' as never, {
+        p_nav_item_order: next,
+      });
       if (error) {
         console.warn('[useNavItemOrder] save failed:', error.message);
         return false;
