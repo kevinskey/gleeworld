@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Bus, Users, X, UserPlus, Loader2, ChevronDown } from "lucide-react";
 import { useBusSeats, BusSeat } from "@/hooks/useBusSeats";
 import { cn } from "@/lib/utils";
+import { LegacyMigrationBanner } from "@/features/seating-charts/adapters/LegacyMigrationBanner";
 
 export const BusBuddiesSection = () => {
   const { seats, rosterMembers, loading, assignSeat, clearSeat, assignDoubleSeat, toggleSeatPurpose } = useBusSeats();
@@ -61,6 +62,7 @@ export const BusBuddiesSection = () => {
 
   return (
     <div className="space-y-6">
+      <LegacyMigrationBanner label="bus seating chart" />
       {/* Header */}
       <Card className="bg-accent/50 border-border">
         <CardContent className="p-4">
