@@ -50,7 +50,31 @@ export default function AuthPage() {
   const SANS = "'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif";
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [isLogin, setIsLogin] = useState(true);
+  // Default to Sign UP (not Sign in) when the visitor was bounced here
+  // from a gated action they attempted on the public site — a click
+  // on "Book now" on the appointment block, an audition sign-up link,
+  // etc. In those cases the visitor is by definition not a member yet,
+  // so the Register form is what they need. A returning member can
+  // still flip to Sign in with the toggle at the bottom of the card.
+  //
+  // Signals we treat as "came from a gated action":
+  //   • sessionStorage.redirectAfterAuth  — set by ProtectedRoute
+  //   • ?returnTo=<path>                  — set by direct link callers
+  //   • ?mode=signup                      — explicit override in any link
+  //
+  // Direct navigation to /auth (with none of the above) keeps the
+  // traditional Sign in default so returning members aren't nudged
+  // toward a duplicate account.
+  const [isLogin, setIsLogin] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const mode = searchParams.get('mode');
+    if (mode === 'signup' || mode === 'register') return false;
+    if (mode === 'signin' || mode === 'login') return true;
+    const cameFromGatedAction =
+      sessionStorage.getItem('redirectAfterAuth') !== null ||
+      searchParams.get('returnTo') !== null;
+    return !cameFromGatedAction;
+  });
   const [isForgotPassword, setIsForgotPassword] = useState(searchParams.get('forgot') === 'true');
   const [email, setEmail] = useState(searchParams.get('email') ?? '');
   const [password, setPassword] = useState('');
@@ -118,7 +142,14 @@ export default function AuthPage() {
       } else {
         // Signup flow
         // Public sign-ups become fans (students are enrolled by super-admins).
-        const redirectUrl = `${window.location.origin}/fan`;
+        // If the visitor came from a gated page (e.g., they clicked "Book
+        // now" on the public site and got sent to /auth to become a
+        // member first), honor that intent and route them back after the
+        // email confirmation lands. Otherwise fall through to /fan.
+        const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
+        const urlReturnTo = new URLSearchParams(window.location.search).get('returnTo');
+        const returnPath = storedRedirect || urlReturnTo || '/fan';
+        const redirectUrl = `${window.location.origin}${returnPath}`;
         const {
           data,
           error
