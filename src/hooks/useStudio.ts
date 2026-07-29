@@ -286,17 +286,19 @@ export function useStudioSession(sessionId: string | null) {
     });
   }, [queueSave]);
 
-  // I2: Imperative flush — cancels the debounce timer and writes the current
-  // session to storage immediately. Use after high-value mutations (e.g.
-  // capture-from-playback) where losing the update on a quick reload would
-  // orphan an uploaded asset. Returns the save promise so callers can await.
-  const flushSave = useCallback((): Promise<void> => {
+  // I2: Imperative flush — cancels the debounce timer and writes to storage
+  // immediately. Use after high-value mutations (e.g. capture-from-playback)
+  // where losing the update on a quick reload would orphan an uploaded asset.
+  //
+  // Accepts an optional session override — callers that already have the
+  // post-mutation session in hand should pass it, because React's setState
+  // batches mean the hook's own `session` may not yet reflect the caller's
+  // `update()` call. Cancelling the timer prevents a later queueSave from
+  // racing this direct write.
+  const flushSave = useCallback((override?: Session): Promise<void> => {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
-    return session ? saveSession(session).catch(setError) : Promise.resolve();
-  // session ref is intentionally omitted — React setState batches mean the
-  // caller's latest update may not yet be reflected here. Callers that need
-  // the updated value should pass it directly; this flush handles the
-  // "best-effort flush of whatever is current" case.
+    const target = override ?? session;
+    return target ? saveSession(target).catch(setError) : Promise.resolve();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 

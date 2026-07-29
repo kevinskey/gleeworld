@@ -1228,10 +1228,21 @@ function Editor({
     const assetId = `accomp-${newId()}`;
     const trackId = `accomp-track-${newId()}`;
     setAssetUrl(assetId, fileUrl);
+    // Signed URLs carry a `?token=…` query string, which broke the naive
+    // `fileUrl.endsWith('.mp3')` check (it always fell through to 'wav')
+    // and made the audio engine try to decode MP3/M4A bytes as WAV.
+    // Strip the query + hash first, then match on the true file extension
+    // — or use the accompaniment title's extension as a second signal.
+    const pickFormat = (): AudioAsset['format'] => {
+      const stripped = fileUrl.split('?')[0].split('#')[0].toLowerCase();
+      const nameHint = title.toLowerCase();
+      const match = (s: string) => (s.endsWith('.mp3') ? 'mp3' : s.endsWith('.m4a') ? 'm4a' : s.endsWith('.wav') ? 'wav' : null);
+      return match(stripped) ?? match(nameHint) ?? 'wav';
+    };
     const asset: AudioAsset = {
       id: assetId,
       filename: title,
-      format: fileUrl.endsWith('.mp3') ? 'mp3' : fileUrl.endsWith('.m4a') ? 'm4a' : 'wav',
+      format: pickFormat(),
       duration_seconds: session.length_seconds,
       sample_rate: 44100,
       channels: 2,
@@ -1321,11 +1332,13 @@ function Editor({
       // Flip the session accompaniment to kind='file' with the captured WAV URL.
       const nextSession = { ...session, accompaniment: { kind: 'file' as const, title: captured.title, fileUrl: captured.url } };
       update(() => nextSession);
-      // I2: Persist immediately rather than relying on the 800ms autosave
-      // debounce. The captured WAV is already uploaded to storage; if the user
-      // reloads before the debounce fires the manifest would still reference
-      // the old streaming accompaniment and the WAV URL would be orphaned.
-      await saveSession(nextSession).catch((err) => {
+      // I2: Persist immediately AND cancel the debounce timer via flushSave.
+      // Previously we called saveSession(nextSession) directly, which left
+      // the 800ms queueSave timer running — any edit within that window would
+      // fire a second write that could race the direct save. flushSave clears
+      // the timer atomically, then writes the override session so React
+      // batching can't hand us a stale local `session` value.
+      await flushSave(nextSession).catch((err) => {
         console.error('[studio] failed to persist accompaniment capture', err);
       });
       toast.success('Accompaniment captured — future takes lock to this WAV.');
