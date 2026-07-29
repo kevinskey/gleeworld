@@ -25,7 +25,7 @@ import {
   Volume2, MoveHorizontal, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
   ChevronLeft, ChevronRight, Repeat, SlidersHorizontal, X, MoreVertical, Undo2, Flag,
-  Magnet, Wrench,
+  Magnet, Wrench, BookOpen, BookX,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -73,6 +73,9 @@ import { MixerView } from './MixerView';
 import { useStreamingAccompaniment } from '@/lib/studio/streamingBacking/useStreamingAccompaniment';
 import { captureFromPlayback } from '@/lib/studio/streamingBacking/captureFromPlayback';
 import { AccompanimentLane } from '@/components/studio/AccompanimentLane';
+import { AttachScoreDialog } from '@/components/studio/AttachScoreDialog';
+import { FloatingScorePanel } from '@/components/studio/FloatingScorePanel';
+import { useQuery } from '@tanstack/react-query';
 
 const PX_PER_SECOND_DEFAULT = 40;
 const PX_PER_SECOND_MIN = 8;
@@ -416,6 +419,7 @@ function Editor({
   const [exportOpen, setExportOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [regionExportOpen, setRegionExportOpen] = useState(false);
+  const [attachScoreOpen, setAttachScoreOpen] = useState(false);
 
   // Timeline vs Mixer — same route, transport/header stay mounted; only
   // the main tracks-area block below swaps content (B1 Task 6).
@@ -2132,6 +2136,29 @@ function Editor({
             <Scissors className="w-4 h-4 sm:mr-1" />
             <span className="hidden sm:inline">Region</span>
           </Button>
+          {session.scoreId ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => update((s) => ({ ...s, scoreId: null }))}
+              title="Remove attached score"
+              className="h-7 text-sm px-2 sm:px-3"
+            >
+              <BookX className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Remove score</span>
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setAttachScoreOpen(true)}
+              title="Attach a score from the music library"
+              className="h-7 text-sm px-2 sm:px-3"
+            >
+              <BookOpen className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Attach score</span>
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={() => exportSessionJson(session)} title="Download session JSON" className="h-7 w-7 p-0">
             <FileJson className="w-4 h-4" />
           </Button>
@@ -2140,6 +2167,19 @@ function Editor({
 
       <ExportSheet session={session} open={exportOpen} onOpenChange={setExportOpen} engineState={engineState} />
       <RegionExportSheet session={session} region={loopRegion} open={regionExportOpen} onOpenChange={setRegionExportOpen} />
+      {/* Score attach dialog — music library search, picks a scoreId. */}
+      <AttachScoreDialog
+        open={attachScoreOpen}
+        onOpenChange={setAttachScoreOpen}
+        onAttach={(id) => update((s) => ({ ...s, scoreId: id }))}
+      />
+      {/* Floating PDF score panel — mounts whenever a scoreId is set. */}
+      {session.scoreId && (
+        <StudioScorePanel
+          scoreId={session.scoreId}
+          onClose={() => update((s) => ({ ...s, scoreId: null }))}
+        />
+      )}
       {/* Clip MP3 export prompt — name + destination before rendering.
        * `dark` classes forced: DialogContent portals to document.body,
        * outside the Studio's .dark scope (same trap as the old EQ sheet). */}
@@ -4110,6 +4150,35 @@ function exportSessionJson(session: Session): void {
   a.download = `${session.title.replace(/[^\w]+/g, '_')}.gleewstudio.json`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ── StudioScorePanel — fetches gw_sheet_music row and mounts the
+// floating PDF panel. Handles the prop impedance mismatch between
+// FloatingScorePanel (pdfUrl + musicId + musicTitle + onClose) and the
+// session's stored scoreId (just the row id). ──────────────────────────
+
+function StudioScorePanel({ scoreId, onClose }: { scoreId: string; onClose: () => void }) {
+  const { data } = useQuery({
+    queryKey: ['studio-score-panel', scoreId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_sheet_music')
+        .select('id, title, composer, voicing, pdf_url')
+        .eq('id', scoreId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  if (!data || !data.pdf_url) return null;
+  return (
+    <FloatingScorePanel
+      pdfUrl={data.pdf_url}
+      musicId={data.id}
+      musicTitle={data.title ?? null}
+      onClose={onClose}
+    />
+  );
 }
 
 // ── Export sheet (B1 Task 7) — MP3 320 / WAV (CD quality) / Stems ────
