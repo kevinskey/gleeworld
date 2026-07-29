@@ -147,12 +147,16 @@ describe('useStreamingAccompaniment', () => {
     it('still tears down when accompaniment has been set to null mid-play', async () => {
       const nmk = await import('@/plugins/nativeMusicKit');
       (nmk.isNativeMusicKitAvailable as any).mockReturnValue(true);
+      (nmk.nmkRequestAuthorization as any).mockResolvedValue({ authorized: true });
+      (nmk.nmkSetQueueSong as any).mockResolvedValue(undefined);
+      (nmk.nmkPlay as any).mockResolvedValue(undefined);
+      (nmk.nmkWaitForPlaying as any).mockResolvedValue(true);
       (nmk.nmkPause as any).mockResolvedValue(undefined);
       (nmk.nmkStop as any).mockResolvedValue(undefined);
       (nmk.nmkSeek as any).mockResolvedValue(undefined);
 
-      // Render with an accompaniment, capture the stop handle, then rerender
-      // with null (simulating the parent detaching the backing mid-play).
+      // Render with an accompaniment, start playback, capture the stop handle,
+      // then rerender with null (simulating the parent detaching the backing mid-play).
       const { result, rerender } = renderHook(
         (acc: any) => useStreamingAccompaniment(acc),
         {
@@ -167,6 +171,11 @@ describe('useStreamingAccompaniment', () => {
         },
       );
 
+      // Start playback first
+      await act(async () => {
+        await result.current.start(0);
+      });
+
       const stopFn = result.current.stop;
 
       // Detach the accompaniment
@@ -174,7 +183,7 @@ describe('useStreamingAccompaniment', () => {
 
       act(() => { stopFn(); });
 
-      // Native stop path must still have fired
+      // Native stop path must still have fired (nmkStop + nmkSeek)
       expect(nmk.nmkStop).toHaveBeenCalled();
       expect(nmk.nmkSeek).toHaveBeenCalledWith(0);
     });

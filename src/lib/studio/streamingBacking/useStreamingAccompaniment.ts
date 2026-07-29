@@ -57,10 +57,6 @@ export function useStreamingAccompaniment(
   const appleMusicRef = useRef<any>(null);
   const ytIframeRef = useRef<HTMLIFrameElement | null>(null);
 
-  // Track which kind was last started so stop() can tear down the right
-  // branch even if `accompaniment` has been set to null mid-play.
-  const lastStartedKindRef = useRef<string | null>(null);
-
   const start = useCallback(async (positionSec: number) => {
     const audibleAt = () => performance.now();
     if (!accompaniment) return { backingAudibleWallMs: audibleAt() };
@@ -93,7 +89,6 @@ export function useStreamingAccompaniment(
           toast.error(e?.message ?? 'Apple Music playback failed.');
           return { backingAudibleWallMs: audibleAt() };
         }
-        lastStartedKindRef.current = accompaniment.kind;
         return { backingAudibleWallMs: audibleAt() };
       }
 
@@ -115,7 +110,6 @@ export function useStreamingAccompaniment(
       } catch (e: any) {
         toast.error('Apple Music playback failed — sign in required.');
       }
-      lastStartedKindRef.current = accompaniment.kind;
       return { backingAudibleWallMs: audibleAt() };
     }
 
@@ -135,7 +129,6 @@ export function useStreamingAccompaniment(
       // mic rolls. backingAudibleWallMs is captured AFTER the sleep so it
       // corresponds to actual audible output rather than the moment we posted.
       await new Promise((r) => setTimeout(r, 500));
-      lastStartedKindRef.current = 'youtube';
       return { backingAudibleWallMs: performance.now() };
     }
 
@@ -143,10 +136,12 @@ export function useStreamingAccompaniment(
   }, [accompaniment]);
 
   const stop = useCallback(() => {
-    // NOTE: intentionally NOT gated on `accompaniment`. If the parent sets
-    // accompaniment to null mid-play (e.g., detached the backing), the
-    // still-playing streaming source must still be torn down. We use
-    // lastStartedKindRef to know which branch to run.
+    // Runs every teardown branch unconditionally — matches stopExternalAccompaniment
+    // in PartTracksStudio.tsx. Intentionally NOT gated on `accompaniment`; if the
+    // parent sets accompaniment to null mid-play (e.g., detached the backing),
+    // the still-playing streaming source must still be torn down. Cheap and
+    // idempotent: each branch is a small set of guarded plugin calls with
+    // individual try/catches, so firing them for a source that wasn't playing is a no-op.
 
     // Native MusicKit path — synchronously-pausable on iOS, no race with the
     // JS shim. Seek-to-zero so the next start() begins at 0.
