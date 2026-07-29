@@ -27,10 +27,48 @@ const GROUPS: Array<{ value: Group; label: string }> = [
 
 type StatusFilter = 'all' | 'draft' | 'scheduled' | 'sent' | 'template';
 
+// Structured event payload. When a Section carries this, the Design
+// step renders proper date/time/URL inputs (instead of a free-text
+// textarea where users end up typing "10182026" and the email sends
+// it out literal) and the email HTML gets a nicely formatted event
+// card built from the fields on save.
+interface EventInfo {
+  date?: string;      // YYYY-MM-DD (from <input type="date">)
+  time?: string;      // HH:mm (from <input type="time">)
+  location?: string;
+  tickets?: string;   // URL or plain text
+}
+
 interface Section {
   heading: string;
   body: string;
   image_url?: string;
+  event?: EventInfo;
+}
+
+// Renders YYYY-MM-DD as "Sunday, October 18, 2026" so the email
+// doesn't show the raw ISO shape. Falls back to the input on parse
+// failure — a stray "TBD" or "date TBA" should surface as-is, not
+// disappear.
+function formatEventDate(iso: string | undefined): string {
+  if (!iso) return '';
+  const d = new Date(`${iso}T00:00:00`);
+  if (isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString(undefined, {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  });
+}
+
+// 24h "19:30" → "7:30 PM" for the reader. Same fallback rule as the
+// date formatter — anything not HH:mm passes through untouched.
+function formatEventTime(t: string | undefined): string {
+  if (!t) return '';
+  const m = /^(\d{1,2}):(\d{2})$/.exec(t);
+  if (!m) return t;
+  const h = Number(m[1]); const mm = m[2];
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${mm} ${period}`;
 }
 
 // Built-in starting points so users never face a blank page.
@@ -49,7 +87,7 @@ const LAYOUTS: Array<{ name: string; intro: string; sections: Section[]; footer:
     name: 'Event announcement',
     intro: 'You’re invited!',
     sections: [
-      { heading: 'Event details', body: '📅 Date: \n🕒 Time: \n📍 Location: \n🎟️ Tickets: ' },
+      { heading: 'Event details', body: '', event: {} },
       { heading: 'About the program', body: '' },
     ],
     footer: 'We hope to see you there!\n[Your name] · [Email]',
@@ -78,7 +116,7 @@ const LAYOUTS: Array<{ name: string; intro: string; sections: Section[]; footer:
 const BLOCK_PRESETS: Array<{ name: string; section: Section }> = [
   { name: 'Text', section: { heading: '', body: '' } },
   { name: 'Announcement', section: { heading: 'Announcement', body: '' } },
-  { name: 'Event details', section: { heading: 'Event details', body: '📅 Date: \n🕒 Time: \n📍 Location: ' } },
+  { name: 'Event details', section: { heading: 'Event details', body: '', event: {} } },
   { name: 'Spotlight', section: { heading: 'Member spotlight', body: '' } },
   { name: 'Image + caption', section: { heading: '', body: '', image_url: '' } },
 ];
@@ -417,16 +455,41 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
   }
 
   function buildHtml(): string {
-    const cleanSections = sections.filter((s) => s.heading.trim() || s.body.trim());
-    const sectionHtml = cleanSections.map((s) => `
+    const hasContent = (s: Section) =>
+      s.heading.trim() || s.body.trim() || s.image_url ||
+      (s.event && (s.event.date || s.event.time || s.event.location || s.event.tickets));
+    const cleanSections = sections.filter(hasContent);
+    const sectionHtml = cleanSections.map((s) => {
+      // Event payload → labeled rows (date/time/location/tickets)
+      // instead of an unformatted body dump. Only the fields that are
+      // set render, and the ticket URL becomes a proper link.
+      const ev = s.event;
+      const eventRows: string[] = [];
+      if (ev?.date) eventRows.push(`<div style="margin:2px 0;"><span style="color:#666;">📅 </span>${escapeHtml(formatEventDate(ev.date))}</div>`);
+      if (ev?.time) eventRows.push(`<div style="margin:2px 0;"><span style="color:#666;">🕒 </span>${escapeHtml(formatEventTime(ev.time))}</div>`);
+      if (ev?.location) eventRows.push(`<div style="margin:2px 0;"><span style="color:#666;">📍 </span>${escapeHtml(ev.location)}</div>`);
+      if (ev?.tickets) {
+        const isUrl = /^https?:\/\//i.test(ev.tickets);
+        eventRows.push(
+          `<div style="margin:2px 0;"><span style="color:#666;">🎟️ </span>${isUrl
+            ? `<a href="${escapeHtml(ev.tickets)}" style="color:#2563eb;text-decoration:underline;">Tickets</a>`
+            : escapeHtml(ev.tickets)}</div>`,
+        );
+      }
+      const eventHtml = eventRows.length
+        ? `<div style="font-family:sans-serif;font-size:15px;line-height:1.7;color:#333;">${eventRows.join('')}</div>`
+        : '';
+      return `
       <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
         <tr><td>
           ${s.image_url ? `<img src="${escapeHtml(s.image_url)}" style="width:100%;max-width:600px;border-radius:8px;margin-bottom:12px;" />` : ''}
           ${s.heading ? `<h2 style="font-family:sans-serif;font-size:20px;margin:0 0 8px 0;color:#1a1a1a;">${escapeHtml(s.heading)}</h2>` : ''}
-          ${s.body ? `<div style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#333;white-space:pre-wrap;">${escapeHtml(s.body)}</div>` : ''}
+          ${eventHtml}
+          ${s.body ? `<div style="font-family:sans-serif;font-size:15px;line-height:1.6;color:#333;white-space:pre-wrap;${eventHtml ? 'margin-top:8px;' : ''}">${escapeHtml(s.body)}</div>` : ''}
         </td></tr>
       </table>
-    `).join('');
+    `;
+    }).join('');
     return `
       <div style="max-width:600px;margin:0 auto;padding:24px;background:#fff;">
         ${headerImage ? `<img src="${escapeHtml(headerImage)}" style="width:100%;border-radius:8px;margin-bottom:24px;" />` : ''}
@@ -444,6 +507,13 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
     if (intro) parts.push(intro);
     for (const s of sections) {
       if (s.heading) parts.push(`\n## ${s.heading}`);
+      const ev = s.event;
+      if (ev) {
+        if (ev.date) parts.push(`Date: ${formatEventDate(ev.date)}`);
+        if (ev.time) parts.push(`Time: ${formatEventTime(ev.time)}`);
+        if (ev.location) parts.push(`Location: ${ev.location}`);
+        if (ev.tickets) parts.push(`Tickets: ${ev.tickets}`);
+      }
       if (s.body) parts.push(s.body);
     }
     if (footer) parts.push(`\n---\n${footer}`);
@@ -829,7 +899,49 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                       </div>
                     </div>
                     <Input value={s.heading} onChange={(e) => updateSection(i, { heading: e.target.value })} placeholder="Heading" />
-                    <Textarea value={s.body} onChange={(e) => updateSection(i, { body: e.target.value })} placeholder="Body…" className="min-h-[100px]" />
+                    {s.event && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 rounded-lg bg-muted/40 border border-dashed">
+                        <div className="space-y-1">
+                          <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">📅 Date</Label>
+                          <Input
+                            type="date"
+                            value={s.event.date ?? ''}
+                            onChange={(e) => updateSection(i, { event: { ...s.event, date: e.target.value } })}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">🕒 Time</Label>
+                          <Input
+                            type="time"
+                            value={s.event.time ?? ''}
+                            onChange={(e) => updateSection(i, { event: { ...s.event, time: e.target.value } })}
+                          />
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">📍 Location</Label>
+                          <Input
+                            value={s.event.location ?? ''}
+                            onChange={(e) => updateSection(i, { event: { ...s.event, location: e.target.value } })}
+                            placeholder="Main Hall · 123 Choir St."
+                          />
+                        </div>
+                        <div className="space-y-1 sm:col-span-2">
+                          <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">🎟️ Tickets</Label>
+                          <Input
+                            type="url"
+                            value={s.event.tickets ?? ''}
+                            onChange={(e) => updateSection(i, { event: { ...s.event, tickets: e.target.value } })}
+                            placeholder="https://... or 'Free' / 'RSVP required'"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    <Textarea
+                      value={s.body}
+                      onChange={(e) => updateSection(i, { body: e.target.value })}
+                      placeholder={s.event ? 'Additional notes (optional)…' : 'Body…'}
+                      className="min-h-[100px]"
+                    />
                     <ImageField value={s.image_url || ''} onChange={(url) => updateSection(i, { image_url: url })} placeholder="Image (optional) — URL or upload" />
                   </div>
                 ))}
