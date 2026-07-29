@@ -455,6 +455,15 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
                   to={item.to}
                   end={item.end}
                   data-tour={item.tourId}
+                  // Browsers treat <a> elements as natively draggable —
+                  // the OS starts a URL-drag on pointerdown, which
+                  // steals the pointer stream before dnd-kit's 8px
+                  // activation threshold fires. Result: user tries to
+                  // reorder, gets a URL preview icon, nav doesn't move.
+                  // Disable the native drag and let SortableNavRow's
+                  // listeners own the pointer.
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
                   className={({ isActive }) => {
                     if (item.hero) {
                       return `${NAV_BASE} ${
