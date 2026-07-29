@@ -18,6 +18,7 @@ import { alumniSpotlightBlock } from './blocks/alumni-spotlight';
 import { spotlightBlock } from './blocks/spotlight';
 import { scholarshipBlock } from './blocks/scholarship';
 import { appointmentBookingBlock } from './blocks/appointment-booking';
+import { auditionBlock } from './blocks/audition';
 import { pressBlock } from './blocks/press';
 import { supportBlock } from './blocks/support';
 import { fanSignupBlock } from './blocks/fan-signup';
@@ -45,6 +46,7 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [spotlightBlock.type]: spotlightBlock,
   [scholarshipBlock.type]: scholarshipBlock,
   [appointmentBookingBlock.type]: appointmentBookingBlock,
+  [auditionBlock.type]: auditionBlock,
   // Back-compat: `video-gallery` was the original key for the Videos block.
   // Map it to the same module so stored configs continue to render.
   'video-gallery': videoGalleryBlock,

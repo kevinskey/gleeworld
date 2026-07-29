@@ -871,19 +871,19 @@ export default function PublicPageEditor() {
           </Dialog>
           {site.is_published && site.slug && (
             // "View site" opens the URL a visitor would use to see the built
-            // blocks. Two cases:
-            //   - main tenant: gleeworld.org root is the marketing page
-            //     (GleeWorldLanding). The built blocks only render at
-            //     /sites/main. Link there.
-            //   - any other tenant: subdomain root renders TenantLanding,
-            //     which mounts PublicSiteView for the tenant's published
-            //     blocks. Link to <slug>.gleeworld.org.
+            // blocks. Always use `/sites/<slug>` — the subdomain root
+            // (kevin.gleeworld.org/, etc.) mounts HomeRoute, which calls
+            // useRoleBasedRedirect and bounces authenticated users to
+            // Command Center. `/sites/:slug` mounts PublicSitePage directly
+            // and renders the built blocks without any redirect, so the
+            // admin sees exactly what a visitor sees regardless of their
+            // signed-in state.
             <Button variant="outline" asChild title="Open your live site in a new tab">
               <a
                 href={
                   site.slug === 'main'
                     ? `https://gleeworld.org/sites/main`
-                    : `https://${site.slug}.gleeworld.org/`
+                    : `https://${site.slug}.gleeworld.org/sites/${site.slug}`
                 }
                 target="_blank"
                 rel="noopener noreferrer"
