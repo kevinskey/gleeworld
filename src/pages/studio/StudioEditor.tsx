@@ -1140,6 +1140,16 @@ function Editor({
     session.accompaniment?.kind === 'apple_music_album' ||
     session.accompaniment?.kind === 'youtube';
 
+  // Phase 2 gap: on iOS native studio, streaming backing (Apple Music /
+  // YouTube) is not yet coordinated with the native recorder's audio
+  // session. Recording against a streaming backing on device would capture
+  // silence. Disable capture-from-playback and streaming take-start on iOS
+  // until Phase 2 resolves the .mixWithOthers audio session sequencing.
+  const isNativeStreamingBlocked = engineState.native && isStreaming;
+  const captureDisabledReason = isNativeStreamingBlocked
+    ? 'Not yet available on iOS — coming in the next update.'
+    : undefined;
+
   // C2: Declare captureRecorderRef ABOVE onCapture so the ref allocation
   // textually precedes the function that writes to it. React's runtime is
   // unaffected (refs allocate before any handler runs), but this prevents
@@ -1154,7 +1164,20 @@ function Editor({
       const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
       const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
       const channelIndex = Number(localStorage.getItem('studio.inputChannelIndex') || 0) || 0;
-      const captureRecorder = await openMicRecorder({ inputDeviceId, inputGainDb, channelIndex, captureWav: false });
+      // Disable AEC/noise-suppression/AGC for the capture-from-playback
+      // flow: the user is recording the room while a backing track plays,
+      // and the browser would otherwise echo-cancel the very signal being
+      // captured. Normal take recording does NOT pass constraints and keeps
+      // using Tone.UserMedia (which already disables AEC internally) — this
+      // only affects the capture path.
+      const captureRecorder = await openMicRecorder({
+        inputDeviceId, inputGainDb, channelIndex, captureWav: false,
+        constraints: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
       await captureRecorder.start();
       // Start the streaming backing from position 0.
       await streaming.start(0);
@@ -1175,7 +1198,7 @@ function Editor({
       const blob = await captureRecorder.stop();
       captureRecorder.dispose();
       if (!blob || blob.size < 1024) throw new Error('No audio captured — check mic and speaker volume');
-      const captured = await captureFromPlayback({ blob, sessionId: session.id });
+      const captured = await captureFromPlayback({ blob, sessionId: session.id, tenantId: session.tenant_id });
       // Flip the session accompaniment to kind='file' with the captured WAV URL.
       const nextSession = { ...session, accompaniment: { kind: 'file' as const, title: captured.title, fileUrl: captured.url } };
       update(() => nextSession);
@@ -1319,6 +1342,19 @@ function Editor({
       // Audio takes only — a MIDI-only take has no mic to open, so it
       // uses the shared JS count-in + transport path below on iOS too.
       if (mode === 'audio' && engineState.native && engineState.nativeRecordStart) {
+        // Phase 2 gap: streaming backing (Apple Music / YouTube) not yet
+        // coordinated with the native recorder's audio session. Sessions
+        // whose accompaniment.kind is streaming will record against silence
+        // on iOS. Block the take here and show a clear error rather than
+        // producing a broken/silent recording.
+        if (isNativeStreamingBlocked) {
+          toast.error(
+            'Streaming backing (Apple Music / YouTube) is not yet supported for recording on iOS. ' +
+            'Use a file backing to record here, or use the web app.',
+          );
+          return;
+        }
+
         const { NativeStudio } = await import('@/plugins/studioEngine');
         await NativeStudio.prepareRecordSession().catch(() => { /* recordWithCountIn will retry */ });
 
@@ -2903,6 +2939,7 @@ function Editor({
               ytIframeRef={streaming.ytIframeRef}
               onCapture={onCapture}
               onStopCapture={onStopCapture}
+              disabledReason={captureDisabledReason}
             />
           )}
           {session.tracks.map((t, i) => (

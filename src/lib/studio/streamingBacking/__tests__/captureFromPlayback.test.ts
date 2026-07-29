@@ -33,10 +33,11 @@ beforeAll(() => {
 });
 
 describe('captureFromPlayback', () => {
-  it('decodes → WAVs → uploads → returns public URL', async () => {
+  it('decodes → WAVs → uploads → returns public URL with tenantId in path', async () => {
     const blob = new Blob([new Uint8Array(2000)], { type: 'audio/webm' });
-    const out = await captureFromPlayback({ blob, sessionId: 'sess-1' });
-    expect(out.url).toContain('studio/');
+    const out = await captureFromPlayback({ blob, sessionId: 'sess-1', tenantId: 'tenant-abc' });
+    // The first path segment must be the tenantId (RLS requirement)
+    expect(out.url).toContain('tenant-abc/');
     expect(out.url).toContain('sess-1');
     expect(out.url).toContain('.wav');
     expect(out.title).toMatch(/\.wav$/);
@@ -44,6 +45,6 @@ describe('captureFromPlayback', () => {
 
   it('throws on tiny blobs (< 1KB)', async () => {
     const tiny = new Blob([new Uint8Array(100)], { type: 'audio/webm' });
-    await expect(captureFromPlayback({ blob: tiny, sessionId: 's' })).rejects.toThrow(/too short/i);
+    await expect(captureFromPlayback({ blob: tiny, sessionId: 's', tenantId: 'tenant-abc' })).rejects.toThrow(/too short/i);
   });
 });

@@ -27,6 +27,10 @@ export interface AccompanimentLaneProps {
   onStopCapture: () => Promise<void>;
   /** Ref for YouTube iframe (only used when kind='youtube'). */
   ytIframeRef?: React.MutableRefObject<HTMLIFrameElement | null>;
+  /** When set, the "Capture from playback" button is disabled with this
+   *  message as its tooltip. Used for Phase 2 gaps (e.g. iOS native +
+   *  streaming backing not yet coordinated). */
+  disabledReason?: string;
 }
 
 export function AccompanimentLane({
@@ -36,6 +40,7 @@ export function AccompanimentLane({
   capturing,
   recordingInProgress,
   ytIframeRef,
+  disabledReason,
 }: AccompanimentLaneProps) {
   const isApple =
     accompaniment.kind === 'apple_music' || accompaniment.kind === 'apple_music_album';
@@ -118,9 +123,9 @@ export function AccompanimentLane({
           <Button
             size="sm"
             variant="outline"
-            disabled={recordingInProgress}
+            disabled={recordingInProgress || !!disabledReason}
             onClick={() => void onCapture()}
-            title="Record the room while the backing plays. Future takes will lock to the WAV."
+            title={disabledReason ?? 'Record the room while the backing plays. Future takes will lock to the WAV.'}
           >
             <CircleDot className="w-3.5 h-3.5 mr-1 text-red-500" /> Capture from playback
           </Button>
