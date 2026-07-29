@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import {
   X, Send, Loader2, Plus, Trash2, ArrowUp, ArrowDown, Save, Clock, Newspaper,
-  ChevronLeft, Copy, Eye, Pencil, CheckCircle2, FileEdit, Users, LayoutTemplate,
-  Upload, ArrowLeft,
+  ChevronLeft, ChevronRight, Copy, Eye, Pencil, CheckCircle2, FileEdit, Users, LayoutTemplate,
+  Upload, ArrowLeft, Mail, PenLine, LayoutList,
 } from 'lucide-react';
 import { roleForGroup } from '@/lib/messengerGroups';
 
@@ -312,6 +312,13 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
   const [mobilePane, setMobilePane] = useState<'edit' | 'preview'>('edit');
   const [savedId, setSavedId] = useState<string | undefined>(newsletterId);
   const [showTemplatePicker, setShowTemplatePicker] = useState(!newsletterId);
+  // Mailchimp-style 4-step flow: To → Content → Design → Review. A
+  // returning edit jumps straight to Design (that's the thing the user
+  // opened the campaign to change); a brand-new campaign starts at To
+  // once the template picker has been dismissed.
+  type Step = 'to' | 'content' | 'design' | 'review';
+  const [step, setStep] = useState<Step>(newsletterId ? 'design' : 'to');
+  const [sentTest, setSentTest] = useState(false);
 
   function applyLayout(layout: typeof LAYOUTS[number]) {
     setIntro(layout.intro);
@@ -521,6 +528,59 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
     toast({ title: 'Campaign sent', description: `To ${emails.length} recipient${emails.length === 1 ? '' : 's'}.` });
   }
 
+  // First-10 recipient preview for the To step ("who am I actually
+  // reaching?") — a Mailchimp affordance that turns an abstract group
+  // count into concrete names. Faces on the list = user confidence.
+  const { data: recipientPreview = [] } = useQuery({
+    queryKey: ['newsletter-recipient-preview', group],
+    queryFn: async () => {
+      let q = supabase.from('gw_profiles_directory').select('full_name, email').not('email', 'is', null).limit(10);
+      const role = roleForGroup(group);
+      if (role) q = q.eq('role', role);
+      const { data } = await q;
+      return (data ?? []) as Array<{ full_name: string | null; email: string | null }>;
+    },
+  });
+
+  async function sendTestToSelf() {
+    if (!subject.trim()) {
+      toast({ title: 'Add a subject line first', variant: 'destructive' });
+      return;
+    }
+    setBusy(true);
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      const to = user.user?.email;
+      if (!to) throw new Error('No email on your account.');
+      const { error } = await supabase.functions.invoke('gw-send-email', {
+        body: { to: [to], subject: `[TEST] ${subject}`, html: buildHtml(), text: buildText() },
+      });
+      if (error) throw error;
+      setSentTest(true);
+      toast({ title: 'Test sent', description: `Delivered to ${to}` });
+    } catch (e: any) {
+      toast({ title: 'Test failed', description: e.message, variant: 'destructive' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Per-step completion. Drives the check-marks on the indicator and
+  // whether the Next / Send buttons at the bottom are enabled.
+  const hasTitle = title.trim().length > 0;
+  const hasSubject = subject.trim().length > 0;
+  const hasSomeContent = intro.trim().length > 0 || sections.some((s) => s.heading.trim() || s.body.trim());
+  const stepValid: Record<Step, boolean> = {
+    to: true, // group has a default
+    content: hasTitle && hasSubject,
+    design: hasSomeContent,
+    review: hasTitle && hasSubject && hasSomeContent,
+  };
+  const stepOrder: Step[] = ['to', 'content', 'design', 'review'];
+  const stepIdx = stepOrder.indexOf(step);
+  const goNext = () => setStep(stepOrder[Math.min(stepIdx + 1, stepOrder.length - 1)]);
+  const goBack = () => setStep(stepOrder[Math.max(stepIdx - 1, 0)]);
+
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
@@ -529,198 +589,370 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
     );
   }
 
+  // Template picker is now a first-time-only overlay on top of the To
+  // step. Existing campaigns skip it entirely. "Start blank" or a pick
+  // dismisses it; there's no reason to come back once you've moved on.
+  const showPicker = showTemplatePicker && !newsletterId && step === 'to';
+
   return (
-    <div className="flex-1 min-h-0 flex flex-col">
-      {/* Editor toolbar */}
-      <div className="border-b px-3 py-2 flex items-center gap-2 flex-wrap bg-gray-50">
+    <div className="flex-1 min-h-0 flex flex-col bg-white">
+      {/* Header: back + campaign name + save-draft + save-as-template.
+          Send/schedule live on the final Review step now — one place
+          per action instead of five buttons the user has to guess at. */}
+      <div className="border-b px-4 py-3 flex items-center gap-2 sm:gap-3 flex-wrap bg-white">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ChevronLeft className="w-4 h-4 mr-1" /> Campaigns
         </Button>
-        <div className="flex-1 min-w-[140px]">
+        <div className="flex-1 min-w-[180px] max-w-xl">
           <Input
             value={title}
             onChange={(e) => { setTitle(e.target.value); if (!subject) setSubject(e.target.value); }}
-            placeholder="Campaign name (internal)"
-            className="h-8 font-medium"
+            placeholder="Campaign name (for your reference)"
+            className="h-9 font-medium"
           />
         </div>
-        {/* Mobile edit/preview toggle */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="lg:hidden"
-          onClick={() => setMobilePane((p) => (p === 'edit' ? 'preview' : 'edit'))}
-        >
-          {mobilePane === 'edit' ? <><Eye className="w-3.5 h-3.5 mr-1" /> Preview</> : <><Pencil className="w-3.5 h-3.5 mr-1" /> Edit</>}
-        </Button>
-        <Button variant="outline" size="sm" onClick={saveAsTemplate} disabled={busy || !title.trim()} title="Save a reusable copy as a template">
-          <LayoutTemplate className="w-3.5 h-3.5 mr-1" /> Template
+        <Button variant="outline" size="sm" onClick={saveAsTemplate} disabled={busy || !title.trim()} title="Save this design as a reusable template">
+          <LayoutTemplate className="w-3.5 h-3.5 mr-1" /> Save as template
         </Button>
         <Button variant="outline" size="sm" onClick={() => save('draft')} disabled={busy || !title.trim()}>
-          <Save className="w-3.5 h-3.5 mr-1" /> Save
-        </Button>
-        {scheduleDate && (
-          <Button variant="outline" size="sm" onClick={() => save('scheduled')} disabled={busy || !subject.trim()}>
-            <Clock className="w-3.5 h-3.5 mr-1" /> Schedule
-          </Button>
-        )}
-        <Button size="sm" onClick={() => save('sent')} disabled={busy || !subject.trim()}>
-          {busy ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Send className="w-3.5 h-3.5 mr-1" />}
-          Send
+          <Save className="w-3.5 h-3.5 mr-1" /> Save draft
         </Button>
       </div>
 
-      <div className="flex flex-1 min-h-0">
-        {/* Edit pane */}
-        <div className={`flex-1 min-w-0 overflow-y-auto p-4 space-y-4 ${mobilePane === 'preview' ? 'hidden lg:block' : ''} lg:max-w-[50%] lg:border-r`}>
-          {showTemplatePicker && (
-            <div className="border rounded-lg p-3 bg-purple-50/60 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold flex items-center gap-2">
-                  <LayoutTemplate className="w-4 h-4 text-purple-700" /> Pick a starting point
-                </span>
-                <Button variant="ghost" size="sm" onClick={() => setShowTemplatePicker(false)}>
-                  <X className="w-3.5 h-3.5" />
-                </Button>
+      {/* Step indicator — four numbered pills. Click any completed
+          step to jump back; a step you haven't validated yet stays
+          disabled so you can't skip the recipient count and end up on
+          Review with no audience selected. */}
+      <div className="border-b bg-gray-50 px-4 py-3">
+        <ol className="flex items-center gap-1 sm:gap-2 max-w-3xl mx-auto">
+          {stepOrder.map((s, i) => {
+            const meta: Record<Step, { label: string; icon: React.ReactNode }> = {
+              to:      { label: 'To',       icon: <Users className="w-3.5 h-3.5" /> },
+              content: { label: 'Content',  icon: <Mail className="w-3.5 h-3.5" /> },
+              design:  { label: 'Design',   icon: <LayoutList className="w-3.5 h-3.5" /> },
+              review:  { label: 'Review',   icon: <Send className="w-3.5 h-3.5" /> },
+            };
+            const done = stepValid[s] && stepOrder.indexOf(step) > i;
+            const active = step === s;
+            const canJump = i === 0 || stepOrder.slice(0, i).every((prev) => stepValid[prev]);
+            return (
+              <li key={s} className="flex-1 flex items-center gap-1 sm:gap-2 min-w-0">
+                <button
+                  type="button"
+                  disabled={!canJump}
+                  onClick={() => canJump && setStep(s)}
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-colors min-w-0 ${
+                    active
+                      ? 'bg-primary text-primary-foreground'
+                      : done
+                        ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                        : canJump
+                          ? 'bg-white border text-gray-700 hover:bg-gray-100'
+                          : 'bg-gray-100 border border-dashed text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0 ${
+                    active ? 'bg-primary-foreground/20' : done ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : i + 1}
+                  </span>
+                  <span className="hidden sm:inline">{meta[s].label}</span>
+                </button>
+                {i < stepOrder.length - 1 && <ChevronRight className="w-3.5 h-3.5 text-gray-400 shrink-0 hidden sm:block" />}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+
+      {/* Step body */}
+      <div className="flex-1 min-h-0 overflow-y-auto bg-gray-50">
+        {step === 'to' && (
+          <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-5">
+            {showPicker && (
+              <div className="border rounded-xl p-4 bg-purple-50/60 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold flex items-center gap-2">
+                    <LayoutTemplate className="w-4 h-4 text-purple-700" /> Start from a template
+                  </span>
+                  <Button variant="ghost" size="sm" onClick={() => setShowTemplatePicker(false)}>Skip</Button>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1.5">Built-in layouts</p>
+                  <div className="flex flex-wrap gap-2">
+                    {LAYOUTS.map((l) => (
+                      <Button key={l.name} variant="outline" size="sm" onClick={() => applyLayout(l)}>{l.name}</Button>
+                    ))}
+                  </div>
+                </div>
+                {templates.length > 0 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1.5">Your saved templates</p>
+                    <div className="flex flex-wrap gap-2">
+                      {templates.map((t) => (
+                        <Button key={t.id} variant="outline" size="sm" onClick={() => applyTemplate(t.id)}>{t.title}</Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="bg-white border rounded-xl p-5 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">Who's it going to?</h3>
+                <p className="text-sm text-muted-foreground">Pick the audience — you can preview exactly who's on the list below.</p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground mb-1">Layouts</p>
-                <div className="flex flex-wrap gap-2">
-                  {LAYOUTS.map((l) => (
-                    <Button key={l.name} variant="outline" size="sm" onClick={() => applyLayout(l)}>
-                      {l.name}
-                    </Button>
-                  ))}
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Audience</Label>
+                <Select value={group} onValueChange={(v) => setGroup(v as Group)}>
+                  <SelectTrigger className="h-11 mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {GROUPS.map((g) => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <span className="text-gray-900 font-semibold">
+                    {audienceCount} recipient{audienceCount === 1 ? '' : 's'} with email
+                  </span>
+                  {audienceCount === 0 && (
+                    <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                      No emails — check the audience filter
+                    </span>
+                  )}
                 </div>
               </div>
-              {templates.length > 0 && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Your templates</p>
-                  <div className="flex flex-wrap gap-2">
-                    {templates.map((t) => (
-                      <Button key={t.id} variant="outline" size="sm" onClick={() => applyTemplate(t.id)}>
-                        {t.title}
+              {recipientPreview.length > 0 && (
+                <details className="text-sm">
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
+                    See who this includes (first {recipientPreview.length}
+                    {audienceCount > recipientPreview.length ? ` of ${audienceCount}` : ''})
+                  </summary>
+                  <ul className="mt-2 divide-y border rounded-lg">
+                    {recipientPreview.map((r, idx) => (
+                      <li key={idx} className="px-3 py-2 text-sm flex items-center gap-3">
+                        <span className="font-medium text-gray-900 truncate flex-1">{r.full_name || '(no name)'}</span>
+                        <span className="text-muted-foreground truncate">{r.email}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+            </div>
+          </div>
+        )}
+
+        {step === 'content' && (
+          <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-5">
+            <div className="bg-white border rounded-xl p-5 space-y-4">
+              <div>
+                <h3 className="text-base font-semibold text-gray-900">What's it about?</h3>
+                <p className="text-sm text-muted-foreground">The subject line is the first thing your audience sees in their inbox — keep it under 50 characters.</p>
+              </div>
+              <div>
+                <Label htmlFor="ns-subject" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Subject line</Label>
+                <Input
+                  id="ns-subject"
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  placeholder="Spring update from the choir"
+                  className="h-11 mt-1 text-base"
+                />
+                <div className="mt-1 flex items-center justify-between text-xs">
+                  <span className={`${subject.length > 60 ? 'text-amber-700' : 'text-muted-foreground'}`}>
+                    {subject.length} character{subject.length === 1 ? '' : 's'}
+                    {subject.length > 60 && ' — may truncate in some inboxes'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="ns-title" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Internal name</Label>
+                <Input
+                  id="ns-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Spring 2026 update"
+                  className="h-10 mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">Not sent to recipients — just how you'll find this campaign later.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 'design' && (
+          <div className="flex flex-col lg:flex-row min-h-0 h-full">
+            {/* Design editor */}
+            <div className={`flex-1 min-w-0 overflow-y-auto p-4 sm:p-6 space-y-4 ${mobilePane === 'preview' ? 'hidden lg:block' : ''} lg:max-w-[55%] lg:border-r bg-gray-50`}>
+              <div className="lg:hidden flex justify-end">
+                <Button variant="outline" size="sm" onClick={() => setMobilePane('preview')}>
+                  <Eye className="w-3.5 h-3.5 mr-1" /> See preview
+                </Button>
+              </div>
+              <div className="bg-white border rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Header image</Label>
+                  <span className="text-xs text-muted-foreground">Optional</span>
+                </div>
+                <ImageField value={headerImage} onChange={setHeaderImage} />
+              </div>
+              <div className="bg-white border rounded-xl p-4 space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Intro</Label>
+                <Textarea value={intro} onChange={(e) => setIntro(e.target.value)} placeholder="Dear friends…" className="min-h-[80px]" />
+                {!intro && (
+                  <div className="flex flex-wrap gap-1">
+                    {HEADER_PRESETS.map((h) => (
+                      <button
+                        key={h.name}
+                        type="button"
+                        onClick={() => setIntro(h.intro)}
+                        className="text-xs px-2 py-0.5 rounded-full border bg-muted/40 hover:bg-muted text-muted-foreground"
+                      >
+                        {h.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-semibold text-gray-900">Content blocks</Label>
+                  <span className="text-xs text-muted-foreground">{sections.length} block{sections.length === 1 ? '' : 's'}</span>
+                </div>
+                {sections.map((s, i) => (
+                  <div key={i} className="bg-white border rounded-xl p-4 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="font-medium">Block {i + 1}</span>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => moveSection(i, -1)} disabled={i === 0}><ArrowUp className="w-3 h-3" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => moveSection(i, 1)} disabled={i === sections.length - 1}><ArrowDown className="w-3 h-3" /></Button>
+                        <Button variant="ghost" size="sm" onClick={() => removeSection(i)} disabled={sections.length === 1}><Trash2 className="w-3 h-3" /></Button>
+                      </div>
+                    </div>
+                    <Input value={s.heading} onChange={(e) => updateSection(i, { heading: e.target.value })} placeholder="Heading" />
+                    <Textarea value={s.body} onChange={(e) => updateSection(i, { body: e.target.value })} placeholder="Body…" className="min-h-[100px]" />
+                    <ImageField value={s.image_url || ''} onChange={(url) => updateSection(i, { image_url: url })} placeholder="Image (optional) — URL or upload" />
+                  </div>
+                ))}
+                <div className="bg-white border border-dashed rounded-xl p-3">
+                  <p className="text-xs text-muted-foreground mb-2 font-medium">Add a block</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {BLOCK_PRESETS.map((b) => (
+                      <Button key={b.name} variant="outline" size="sm" onClick={() => addSection(b.section)}>
+                        <Plus className="w-3 h-3 mr-1" /> {b.name}
                       </Button>
                     ))}
                   </div>
                 </div>
-              )}
-              <Button variant="ghost" size="sm" onClick={() => setShowTemplatePicker(false)}>
-                Start blank
-              </Button>
-            </div>
-          )}
-          {!showTemplatePicker && !newsletterId && (
-            <Button variant="ghost" size="sm" className="text-muted-foreground -ml-2" onClick={() => setShowTemplatePicker(true)}>
-              <ArrowLeft className="w-3.5 h-3.5 mr-1" /> Back to starting points
-            </Button>
-          )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs">To</Label>
-              <Select value={group} onValueChange={(v) => setGroup(v as Group)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {GROUPS.map((g) => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">{audienceCount} recipient{audienceCount === 1 ? '' : 's'} with email</p>
-            </div>
-            <div>
-              <Label className="text-xs">Schedule (optional)</Label>
-              <Input type="datetime-local" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} />
-            </div>
-          </div>
-
-          <div>
-            <Label className="text-xs">Subject line</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="Spring update from the choir" />
-          </div>
-
-          <div>
-            <Label className="text-xs">Header image (optional)</Label>
-            <ImageField value={headerImage} onChange={setHeaderImage} />
-          </div>
-
-          <div>
-            <Label className="text-xs">Intro (optional)</Label>
-            <Textarea value={intro} onChange={(e) => setIntro(e.target.value)} placeholder="Dear friends…" className="min-h-[80px]" />
-            {!intro && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {HEADER_PRESETS.map((h) => (
-                  <button
-                    key={h.name}
-                    type="button"
-                    onClick={() => setIntro(h.intro)}
-                    className="text-sm px-2 py-0.5 rounded-full border bg-muted/40 hover:bg-muted text-muted-foreground"
-                  >
-                    {h.name}
-                  </button>
-                ))}
               </div>
-            )}
-          </div>
-
-          <div className="space-y-3">
-            <Label className="text-sm font-semibold">Content blocks</Label>
-            {sections.map((s, i) => (
-              <div key={i} className="border border-dashed rounded-lg p-3 space-y-2">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Block {i + 1}</span>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => moveSection(i, -1)} disabled={i === 0}><ArrowUp className="w-3 h-3" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => moveSection(i, 1)} disabled={i === sections.length - 1}><ArrowDown className="w-3 h-3" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => removeSection(i)} disabled={sections.length === 1}><Trash2 className="w-3 h-3" /></Button>
+              <div className="bg-white border rounded-xl p-4 space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Footer</Label>
+                <Textarea value={footer} onChange={(e) => setFooter(e.target.value)} placeholder="Dr. Smith · Director · choir@school.edu" />
+                {!footer && (
+                  <div className="flex flex-wrap gap-1">
+                    {FOOTER_PRESETS.map((f) => (
+                      <button
+                        key={f.name}
+                        type="button"
+                        onClick={() => setFooter(f.footer)}
+                        className="text-xs px-2 py-0.5 rounded-full border bg-muted/40 hover:bg-muted text-muted-foreground"
+                      >
+                        {f.name}
+                      </button>
+                    ))}
                   </div>
-                </div>
-                <Input value={s.heading} onChange={(e) => updateSection(i, { heading: e.target.value })} placeholder="Heading" />
-                <Textarea value={s.body} onChange={(e) => updateSection(i, { body: e.target.value })} placeholder="Body…" className="min-h-[100px]" />
-                <ImageField value={s.image_url || ''} onChange={(url) => updateSection(i, { image_url: url })} placeholder="Image (optional) — URL or upload" />
+                )}
               </div>
-            ))}
-            <div className="flex flex-wrap gap-1 items-center">
-              <span className="text-xs text-muted-foreground mr-1">Add block:</span>
-              {BLOCK_PRESETS.map((b) => (
-                <Button key={b.name} variant="outline" size="sm" onClick={() => addSection(b.section)}>
-                  <Plus className="w-3 h-3 mr-1" /> {b.name}
+            </div>
+            {/* Sticky preview */}
+            <div className={`flex-1 min-w-0 bg-gray-100 flex flex-col ${mobilePane === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
+              <div className="px-4 py-2 border-b bg-white text-xs text-muted-foreground flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 truncate">
+                  <Eye className="w-3.5 h-3.5" />
+                  <span className="truncate">Preview</span>
+                </span>
+                <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setMobilePane('edit')}>
+                  <PenLine className="w-3.5 h-3.5 mr-1" /> Back to edit
                 </Button>
-              ))}
+              </div>
+              <iframe
+                title="Email preview"
+                sandbox=""
+                srcDoc={previewHtml}
+                className="flex-1 w-full border-0"
+              />
             </div>
           </div>
+        )}
 
-          <div>
-            <Label className="text-xs">Footer (optional)</Label>
-            <Textarea value={footer} onChange={(e) => setFooter(e.target.value)} placeholder="Dr. Smith · Director · choir@school.edu" />
-            {!footer && (
-              <div className="flex flex-wrap gap-1 mt-1">
-                {FOOTER_PRESETS.map((f) => (
-                  <button
-                    key={f.name}
-                    type="button"
-                    onClick={() => setFooter(f.footer)}
-                    className="text-sm px-2 py-0.5 rounded-full border bg-muted/40 hover:bg-muted text-muted-foreground"
-                  >
-                    {f.name}
-                  </button>
-                ))}
+        {step === 'review' && (
+          <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-5">
+            <div className="bg-white border rounded-xl p-5 space-y-4">
+              <h3 className="text-base font-semibold text-gray-900">Ready to send?</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                <div className="border rounded-lg p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">To</div>
+                  <div className="font-medium text-gray-900">{GROUPS.find((g) => g.value === group)?.label}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{audienceCount} recipient{audienceCount === 1 ? '' : 's'}</div>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Subject</div>
+                  <div className="font-medium text-gray-900 truncate">{subject || '(no subject)'}</div>
+                </div>
+                <div className="border rounded-lg p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Design</div>
+                  <div className="font-medium text-gray-900">{sections.length} block{sections.length === 1 ? '' : 's'}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{headerImage ? 'Header image · ' : ''}{intro ? 'Intro · ' : ''}{footer ? 'Footer' : ''}</div>
+                </div>
               </div>
-            )}
+              <div className="border rounded-lg overflow-hidden">
+                <iframe title="Final preview" sandbox="" srcDoc={previewHtml} className="w-full h-[480px] border-0" />
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button variant="outline" size="sm" onClick={sendTestToSelf} disabled={busy || !hasSubject}>
+                  {sentTest ? <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-600" /> : <Mail className="w-3.5 h-3.5 mr-1" />}
+                  {sentTest ? 'Test sent' : 'Send test to me'}
+                </Button>
+                <div className="flex-1" />
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="ns-schedule" className="text-xs text-muted-foreground">Or schedule:</Label>
+                  <Input
+                    id="ns-schedule"
+                    type="datetime-local"
+                    value={scheduleDate}
+                    onChange={(e) => setScheduleDate(e.target.value)}
+                    className="h-9 w-[200px]"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Live preview pane */}
-        <div className={`flex-1 min-w-0 bg-gray-100 flex flex-col ${mobilePane === 'edit' ? 'hidden lg:flex' : 'flex'}`}>
-          <div className="px-4 py-2 border-b bg-white text-xs text-muted-foreground flex items-center gap-2">
-            <Eye className="w-3.5 h-3.5" />
-            <span className="truncate">Preview — Subject: <span className="font-medium text-gray-900">{subject || '(no subject)'}</span></span>
-          </div>
-          <iframe
-            title="Email preview"
-            sandbox=""
-            srcDoc={previewHtml}
-            className="flex-1 w-full border-0"
-          />
-        </div>
+      {/* Bottom nav */}
+      <div className="border-t px-4 py-3 bg-white flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={goBack} disabled={stepIdx === 0}>
+          <ChevronLeft className="w-4 h-4 mr-1" /> Back
+        </Button>
+        <div className="flex-1" />
+        {step === 'review' ? (
+          <>
+            {scheduleDate && (
+              <Button variant="outline" size="sm" onClick={() => save('scheduled')} disabled={busy || !stepValid.review}>
+                <Clock className="w-4 h-4 mr-1" /> Schedule send
+              </Button>
+            )}
+            <Button size="sm" onClick={() => save('sent')} disabled={busy || !stepValid.review || audienceCount === 0}>
+              {busy ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Send className="w-4 h-4 mr-1" />}
+              Send now
+            </Button>
+          </>
+        ) : (
+          <Button size="sm" onClick={goNext} disabled={!stepValid[step]}>
+            Next: {stepOrder[stepIdx + 1] === 'content' ? 'Content' : stepOrder[stepIdx + 1] === 'design' ? 'Design' : 'Review'}
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        )}
       </div>
     </div>
   );
