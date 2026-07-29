@@ -91,6 +91,23 @@ export function TenantThemeRoot() {
     if (accent) root.style.setProperty('--site-accent', accent);
     else root.style.removeProperty('--site-accent');
 
+    // Button contrast rule: --tint-contrast in index.css reads
+    // --site-accent-contrast when set. We write the YIQ-derived
+    // foreground here whenever --site-accent is present, so any Button
+    // that uses `bg-[var(--tint)] text-[var(--tint-contrast)]` gets a
+    // readable text color on a dark tenant accent — no more
+    // black-on-dark-teal Republish buttons.
+    if (accent && accentFg) {
+      root.style.setProperty('--site-accent-contrast', `hsl(${accentFg})`);
+    } else {
+      root.style.removeProperty('--site-accent-contrast');
+    }
+    if (primary && primaryFg) {
+      root.style.setProperty('--site-primary-contrast', `hsl(${primaryFg})`);
+    } else {
+      root.style.removeProperty('--site-primary-contrast');
+    }
+
     // shadcn design tokens — route the tenant's PRIMARY color into --primary
     // and --ring (buttons, focus rings, Command Center card accents that read
     // `bg-primary` / `text-primary`), and the ACCENT color into --accent. This

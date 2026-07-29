@@ -278,7 +278,11 @@
     --primary: 293 74% 53%;           /* #CB30E0 iOS purple (light) */
     --primary-foreground: 0 0% 100%;
     --tint: var(--site-accent, hsl(var(--primary)));
-    --tint-contrast: hsl(var(--primary-foreground));
+    /* --tint-contrast pairs with --tint: when --site-accent is set,
+       TenantThemeRoot writes --site-accent-contrast (YIQ-derived) too,
+       so the button's text stays readable on a dark tenant accent.
+       Falls back to --primary-foreground when accent is unset. */
+    --tint-contrast: var(--site-accent-contrast, hsl(var(--primary-foreground)));
     --secondary: 240 24% 96%;         /* iOS "gray button" fill, NOT cyan */
     --secondary-foreground: 0 0% 0%;
     --link: var(--primary);           /* chrome links ride the tint now */
@@ -627,7 +631,11 @@ button.module-card-solid:hover,
     --primary: 294 88% 58%;           /* #DB34F2 iOS purple (dark variant) */
     --primary-foreground: 0 0% 100%;
     --tint: var(--site-accent, hsl(var(--primary)));
-    --tint-contrast: hsl(var(--primary-foreground));
+    /* --tint-contrast pairs with --tint: when --site-accent is set,
+       TenantThemeRoot writes --site-accent-contrast (YIQ-derived) too,
+       so the button's text stays readable on a dark tenant accent.
+       Falls back to --primary-foreground when accent is unset. */
+    --tint-contrast: var(--site-accent-contrast, hsl(var(--primary-foreground)));
     --secondary: 240 2% 16%;
     --secondary-foreground: 0 0% 100%;
     --ring: var(--primary);
