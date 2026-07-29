@@ -10,17 +10,34 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Music, Upload, Youtube, Search, Loader2, X, AlertTriangle } from 'lucide-react';
 
+// Internal shape returned by the picker before mapping to the Accompaniment
+// manifest type. The parent (StudioHome) maps these into Accompaniment at the
+// onPick boundary so the picker stays decoupled from the session schema.
+export type PickerResult =
+  | { kind: 'file'; file: File }
+  | { kind: 'apple_music'; id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }
+  | { kind: 'apple_music_album'; id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }
+  | { kind: 'youtube'; url: string };
+
 interface AccompanimentPickerProps {
   open: boolean;
-  onClose: () => void;
-  onPickFile: (file: File) => void;
-  onPickAppleMusic: (track: { id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }) => void;
-  onPickAppleMusicAlbum: (album: { id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }) => void;
-  onPickYouTube: (url: string) => void;
+  onClose?: () => void;
+  onPickFile?: (file: File) => void;
+  onPickAppleMusic?: (track: { id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }) => void;
+  onPickAppleMusicAlbum?: (album: { id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }) => void;
+  onPickYouTube?: (url: string) => void;
+  /** When true, renders the picker body inline (no portal/modal wrapper).
+   * Use onPick + onSkip instead of the individual onPick* callbacks. */
+  embedded?: boolean;
+  /** Called (in embedded mode) when the user selects any backing source. */
+  onPick?: (result: PickerResult) => void;
+  /** Called (in embedded mode) when the user skips the backing step. */
+  onSkip?: () => void;
 }
 
 export function AccompanimentPicker({
   open, onClose, onPickFile, onPickAppleMusic, onPickAppleMusicAlbum, onPickYouTube,
+  embedded, onPick, onSkip,
 }: AccompanimentPickerProps) {
   const [tab, setTab] = useState<'file' | 'apple' | 'youtube'>('file');
   const [appleSearch, setAppleSearch] = useState('');
@@ -87,28 +104,44 @@ export function AccompanimentPicker({
     return () => { cancelled = true; window.clearTimeout(handle); };
   }, [tab, ytSearch]);
 
-  if (!open) return null;
+  if (!open && !embedded) return null;
 
-  // Portaled to <body>: the picker mounts inside arbitrary containers
-  // (studio, New Project dialog) and index.css has descendant rules like
-  // `.bg-card h2/span/p { color: … }` that black out this dark-styled
-  // modal when it nests inside a light card. Body-level rendering keeps
-  // it out of every container's cascade (and stacking context).
-  return createPortal(
+  // Helper: dispatch unified onPick (embedded mode) or legacy individual callbacks.
+  const dispatchFile = (file: File) => {
+    if (embedded && onPick) { onPick({ kind: 'file', file }); return; }
+    onPickFile?.(file); onClose?.();
+  };
+  const dispatchAppleMusic = (track: { id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }) => {
+    if (embedded && onPick) { onPick({ kind: 'apple_music', ...track }); return; }
+    onPickAppleMusic?.(track); onClose?.();
+  };
+  const dispatchAppleMusicAlbum = (album: { id: string; storefront: string; title: string; artist: string; artworkUrl: string | null }) => {
+    if (embedded && onPick) { onPick({ kind: 'apple_music_album', ...album }); return; }
+    onPickAppleMusicAlbum?.(album); onClose?.();
+  };
+  const dispatchYouTube = (url: string) => {
+    if (embedded && onPick) { onPick({ kind: 'youtube', url }); return; }
+    onPickYouTube?.(url); onClose?.();
+  };
+
+  // ── Shared inner form body ─────────────────────────────────────────
+  const formBody = (
     <div
-      className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3"
-      onClick={onClose}
+      className="bg-[#0b1430] border border-amber-500/30 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl text-slate-100"
+      onClick={(e) => e.stopPropagation()}
     >
-      <div
-        className="bg-[#0b1430] border border-amber-500/30 rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl text-slate-100"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="px-4 py-3 border-b border-amber-500/20 flex items-center justify-between">
-          <h2 className="text-sm font-bold tracking-wide uppercase text-amber-400">Choose backing track</h2>
+      <div className="px-4 py-3 border-b border-amber-500/20 flex items-center justify-between">
+        <h2 className="text-sm font-bold tracking-wide uppercase text-amber-400">Choose backing track</h2>
+        {embedded ? (
+          <button onClick={onSkip} className="text-slate-400 hover:text-slate-100 text-xs underline">
+            Skip
+          </button>
+        ) : (
           <button onClick={onClose} className="text-slate-400 hover:text-slate-100">
             <X className="w-4 h-4" />
           </button>
-        </div>
+        )}
+      </div>
 
         <div className="flex border-b border-amber-500/10 bg-black/30">
           {(['file', 'apple', 'youtube'] as const).map((k) => (
@@ -140,7 +173,7 @@ export function AccompanimentPicker({
                 // common extensions makes MP3 / M4A / WAV selectable
                 // even when the file's MIME type is missing.
                 accept=".mp3,.wav,.m4a,.aac,.flac,audio/mpeg,audio/mp4,audio/wav,audio/x-wav,audio/aac,audio/flac,audio/*"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) { onPickFile(f); onClose(); } }}
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) dispatchFile(f); }}
                 className="block w-full text-sm text-slate-200 file:mr-3 file:py-2 file:px-3 file:rounded file:border-0 file:bg-amber-500 file:text-slate-900 file:font-semibold file:hover:bg-amber-400 cursor-pointer"
               />
               <p className="text-[11px] text-slate-500 mt-3 italic">
@@ -209,7 +242,7 @@ export function AccompanimentPicker({
                         <button
                           key={`s-${r.id}`}
                           type="button"
-                          onClick={() => { onPickAppleMusic({ id: r.id, storefront: r.storefront, title: r.title, artist: r.artist, artworkUrl: r.artworkUrl }); onClose(); }}
+                          onClick={() => dispatchAppleMusic({ id: r.id, storefront: r.storefront, title: r.title, artist: r.artist, artworkUrl: r.artworkUrl })}
                           className="w-full flex items-start gap-3 px-3 py-2 text-left hover:bg-amber-500/10 text-slate-200"
                         >
                           {r.artworkUrl
@@ -230,7 +263,7 @@ export function AccompanimentPicker({
                         <button
                           key={`a-${a.id}`}
                           type="button"
-                          onClick={() => { onPickAppleMusicAlbum({ id: a.id, storefront: a.storefront, title: a.title, artist: a.artist, artworkUrl: a.artworkUrl }); onClose(); }}
+                          onClick={() => dispatchAppleMusicAlbum({ id: a.id, storefront: a.storefront, title: a.title, artist: a.artist, artworkUrl: a.artworkUrl })}
                           className="w-full flex items-start gap-3 px-3 py-2 text-left hover:bg-amber-500/10 text-slate-200"
                         >
                           {a.artworkUrl
@@ -288,7 +321,7 @@ export function AccompanimentPicker({
                     <button
                       key={h.videoId}
                       type="button"
-                      onClick={() => { onPickYouTube(h.url); onClose(); }}
+                      onClick={() => dispatchYouTube(h.url)}
                       className="w-full flex items-start gap-3 px-3 py-2 text-left hover:bg-amber-500/10 text-slate-200"
                     >
                       {h.thumbnail
@@ -319,8 +352,7 @@ export function AccompanimentPicker({
                 onClick={() => {
                   const url = ytUrl.trim();
                   if (!/youtu(be\.com|\.be)/i.test(url)) return;
-                  onPickYouTube(url);
-                  onClose();
+                  dispatchYouTube(url);
                 }}
                 disabled={!ytUrl.trim()}
                 className="w-full bg-amber-500 text-slate-900 hover:bg-amber-400 font-semibold"
@@ -331,6 +363,18 @@ export function AccompanimentPicker({
           )}
         </div>
       </div>
+  );
+
+  // Embedded mode: render inline (inside parent Dialog — no portal).
+  if (embedded) return formBody;
+
+  // Portal mode: mount over body to escape cascade/stacking context.
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3"
+      onClick={onClose}
+    >
+      {formBody}
     </div>,
     document.body,
   );

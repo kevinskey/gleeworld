@@ -9,11 +9,13 @@ import {
   getAssetUrl, uploadAudioAsset,
   type SessionListItem,
 } from '@/lib/studio/storage';
+import { blankSession, newId } from '@/lib/studio/defaults';
 import { StudioEngine, type EngineState } from '@/lib/studio/engine/engine';
 import { trackEqSig } from '@/lib/studio/engine/trackEq';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { renderSessionToWav } from '@/lib/studio/engine/mixdown';
-import type { Session, MidiClip } from '@/lib/studio/session';
+import { MASTER_BUS_ID } from '@/lib/studio/session';
+import type { Session, MidiClip, AudioTrack, Accompaniment } from '@/lib/studio/session';
 import { decodeJwtClaims } from '@/lib/demoSession';
 import {
   isNativeStudioAvailable, openNativeStudio, NativeStudio,
@@ -69,10 +71,109 @@ export function useMySessions() {
   });
 }
 
+export interface CreateStudioSessionInput {
+  tenantId: string;
+  ownerUserId: string;
+  title: string;
+  template?: 'empty' | 'satb' | 'custom';
+  accompaniment?: Accompaniment | null;
+  customParts?: Array<{ kind: string; label: string; color: string }>;
+}
+
+async function createStudioSessionWithTemplate(input: CreateStudioSessionInput): Promise<Session> {
+  // For empty or no-template, fall back to the existing storage helper.
+  if (!input.template || input.template === 'empty') {
+    return createSession({ tenantId: input.tenantId, ownerUserId: input.ownerUserId, title: input.title });
+  }
+
+  // Build the base session with a caller-supplied id so the storage prefix
+  // is deterministic before we write the manifest.
+  const id = newId();
+  const base = blankSession({ id, ownerUserId: input.ownerUserId, tenantId: input.tenantId, title: input.title });
+
+  // Build template tracks (AudioTrack shape — every required field present).
+  const templateTracks: AudioTrack[] = (() => {
+    if (input.template === 'satb') {
+      const defs = [
+        { id: 't-sop', name: 'Soprano', color: '#fbbf24' },
+        { id: 't-alt', name: 'Alto',    color: '#f97316' },
+        { id: 't-ten', name: 'Tenor',   color: '#3b82f6' },
+        { id: 't-bas', name: 'Bass',    color: '#9333ea' },
+      ];
+      return defs.map((d): AudioTrack => ({
+        id: d.id,
+        kind: 'audio',
+        name: d.name,
+        color: d.color,
+        volume_db: 0,
+        pan: 0,
+        mute: false,
+        solo: false,
+        arm: false,
+        fx: [],
+        clips: [],
+        output: { bus_id: MASTER_BUS_ID },
+        sends: [],
+      }));
+    }
+    if (input.template === 'custom' && input.customParts?.length) {
+      return input.customParts.map((p, i): AudioTrack => ({
+        id: `t-${p.kind}-${i}`,
+        kind: 'audio',
+        name: p.label,
+        color: p.color,
+        volume_db: 0,
+        pan: 0,
+        mute: false,
+        solo: false,
+        arm: false,
+        fx: [],
+        clips: [],
+        output: { bus_id: MASTER_BUS_ID },
+        sends: [],
+      }));
+    }
+    return [];
+  })();
+
+  const session: Session = {
+    ...base,
+    tracks: [...base.tracks, ...templateTracks],
+    accompaniment: input.accompaniment ?? null,
+  };
+
+  // Write the manifest directly (mirrors storage.createSession internals).
+  const prefix = `${input.tenantId}/sessions/${id}`;
+  const body = new Blob([JSON.stringify(session)], { type: 'application/json' });
+  const { error: uploadErr } = await supabase.storage
+    .from('studio')
+    .upload(`${prefix}/manifest.json`, body, { contentType: 'application/json', upsert: true });
+  if (uploadErr) throw uploadErr;
+
+  // Register the DB index row.
+  const { error: dbErr } = await supabase.from('gw_studio_sessions').insert({
+    id: session.id,
+    tenant_id: input.tenantId,
+    owner_user_id: input.ownerUserId,
+    title: session.title,
+    schema_version: session.schema_version,
+    storage_prefix: prefix,
+    duration_seconds: session.length_seconds,
+    track_count: session.tracks.length,
+    asset_count: 0,
+  });
+  if (dbErr) {
+    // Best-effort cleanup.
+    await supabase.storage.from('studio').remove([`${prefix}/manifest.json`]);
+    throw dbErr;
+  }
+  return session;
+}
+
 export function useCreateStudioSession() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: createSession,
+    mutationFn: createStudioSessionWithTemplate,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['studio-sessions'] }),
   });
 }

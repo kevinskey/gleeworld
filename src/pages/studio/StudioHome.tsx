@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Loader2, Music2, Plus, Trash2, Mic, Sliders, AudioLines, Users, ArrowRight } from 'lucide-react';
+import { Loader2, Music2, Plus, Trash2, Mic, Sliders, AudioLines, Users } from 'lucide-react';
 import {
   useMySessions, useCreateStudioSession, useDeleteStudioSession, useStudioOwner,
 } from '@/hooks/useStudio';
 import { toast } from 'sonner';
+import type { Accompaniment } from '@/lib/studio/session';
+import { AccompanimentPicker, type PickerResult } from '@/components/studio/AccompanimentPicker';
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
@@ -25,13 +27,17 @@ export default function StudioHome() {
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const onCreated = async (title: string) => {
+  type Template = 'empty' | 'satb' | 'custom';
+
+  const onCreated = async (i: { title: string; template: Template; accompaniment: Accompaniment | null }) => {
     if (!owner.data) return;
     try {
       const s = await createMut.mutateAsync({
         tenantId: owner.data.tenantId,
         ownerUserId: owner.data.userId,
-        title: title || 'Untitled session',
+        title: i.title || 'Untitled session',
+        template: i.template,
+        accompaniment: i.accompaniment,
       });
       setCreateOpen(false);
       navigate(`/studio/sessions/${s.id}`);
@@ -70,6 +76,7 @@ export default function StudioHome() {
       </header>
 
       <CreateSessionDialog open={createOpen} onOpenChange={setCreateOpen} onSubmit={onCreated} busy={createMut.isPending} />
+
 
       {sessions.isLoading ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">
@@ -165,114 +172,162 @@ function FeatureChip({ icon: Icon, label }: { icon: typeof Mic; label: string })
   );
 }
 
-// Two-step create flow:
-//   1) Pick session flavor — a free-form Studio session (multitrack DAW) or
-//      a Part Tracks session (choose an Apple Music / YouTube / uploaded /
-//      captured backing track first, then record voice parts against it).
-//   2) For Studio: name it, create, navigate to the session.
-//      For Part Tracks: bounce to the existing /dashboard/part-tracks
-//      landing where the create-project dialog already handles the
-//      backing + voicing selections. No point duplicating that UI here.
+// Three-card create flow:
+//   pick → (satb/custom → backing) → title → create + navigate.
+//   empty → title → create + navigate (skips backing step).
+
+type Template = 'empty' | 'satb' | 'custom';
+type Step = 'pick' | 'backing' | 'title';
+
+/** Maps the picker's internal PickerResult into the session Accompaniment type. */
+function mapPickerResult(r: PickerResult): Accompaniment {
+  if (r.kind === 'file') {
+    // File objects can't be stored in the manifest directly — the session
+    // will receive kind:'file' with a placeholder fileUrl; the Studio editor
+    // handles the actual upload when the session first opens. For the creation
+    // flow this sets the type; the editor replaces the URL on first save.
+    return { kind: 'file', title: r.file.name, fileUrl: '' };
+  }
+  if (r.kind === 'apple_music') {
+    return {
+      kind: 'apple_music',
+      title: r.title,
+      appleMusicId: r.id,
+      appleMusicStorefront: r.storefront,
+      appleMusicArtist: r.artist,
+      appleMusicArtworkUrl: r.artworkUrl,
+    };
+  }
+  if (r.kind === 'apple_music_album') {
+    return {
+      kind: 'apple_music_album',
+      title: r.title,
+      appleMusicId: r.id,
+      appleMusicStorefront: r.storefront,
+      appleMusicArtist: r.artist,
+      appleMusicArtworkUrl: r.artworkUrl,
+    };
+  }
+  // youtube
+  return { kind: 'youtube', title: null, youtubeUrl: r.url };
+}
+
+function TemplateCard({
+  label, icon: Icon, description, onClick,
+}: { label: string; icon: typeof Sliders; description: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group text-left rounded-xl border-2 border-border hover:border-primary focus:border-primary focus:outline-none bg-card p-4 transition-colors"
+    >
+      <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-2">
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="text-sm font-semibold mb-1">{label}</div>
+      <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+    </button>
+  );
+}
+
+function TitleStep({
+  busy, onBack, onCancel, onSubmit,
+}: { busy: boolean; onBack: () => void; onCancel: () => void; onSubmit: (t: string) => void }) {
+  const [title, setTitle] = useState('');
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-xs">Session title (optional)</Label>
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Spring concert demo"
+          autoFocus
+          onKeyDown={(e) => { if (e.key === 'Enter') onSubmit(title.trim()); }}
+        />
+      </div>
+      <div className="flex justify-between gap-2 pt-1">
+        <Button variant="ghost" onClick={onBack}>← Back</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button onClick={() => onSubmit(title.trim())} disabled={busy}>
+            {busy ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Creating…</> : 'Create'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CreateSessionDialog({
   open, onOpenChange, onSubmit, busy,
-}: { open: boolean; onOpenChange: (o: boolean) => void; onSubmit: (title: string) => void; busy: boolean }) {
-  const [step, setStep] = useState<'pick' | 'studio-title'>('pick');
-  const [title, setTitle] = useState('');
-  const navigate = useNavigate();
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onSubmit: (i: { title: string; template: Template; accompaniment: Accompaniment | null }) => void;
+  busy: boolean;
+}) {
+  const [step, setStep] = useState<Step>('pick');
+  const [template, setTemplate] = useState<Template>('empty');
+  const [accompaniment, setAccompaniment] = useState<Accompaniment | null>(null);
 
-  // Reset back to the picker whenever the dialog closes so re-opening
-  // it doesn't strand the user on the title-input step.
   const handleOpenChange = (o: boolean) => {
-    if (!o) {
-      setStep('pick');
-      setTitle('');
-    }
+    if (!o) { setStep('pick'); setTemplate('empty'); setAccompaniment(null); }
     onOpenChange(o);
+  };
+
+  const titleFor: Record<Step, string> = {
+    pick: 'New session',
+    backing: 'Choose backing track',
+    title: 'Name your session',
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            {step === 'pick' ? 'New session' : 'Name your Studio session'}
-          </DialogTitle>
+          <DialogTitle>{titleFor[step]}</DialogTitle>
         </DialogHeader>
 
-        {step === 'pick' ? (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              What are you recording?
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setStep('studio-title')}
-                className="group text-left rounded-xl border-2 border-border hover:border-primary focus:border-primary focus:outline-none bg-card p-4 transition-colors"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                    <Sliders className="w-5 h-5" />
-                  </div>
-                  <div className="text-sm font-semibold">Studio session</div>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Free-form multitrack. Record, mix, and master with the full
-                  DAW — tracks, buses, sends, mastering chain, export.
-                </p>
-                <div className="mt-3 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity inline-flex items-center gap-1">
-                  Continue <ArrowRight className="w-3.5 h-3.5" />
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  handleOpenChange(false);
-                  navigate('/dashboard/part-tracks');
-                }}
-                className="group text-left rounded-xl border-2 border-border hover:border-primary focus:border-primary focus:outline-none bg-card p-4 transition-colors"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                    <Users className="w-5 h-5" />
-                  </div>
-                  <div className="text-sm font-semibold">Part Tracks session</div>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Pick a backing track (Apple Music, YouTube, upload, or
-                  capture from playback), then record Soprano/Alto/Tenor/
-                  Bass or custom parts locked to it.
-                </p>
-                <div className="mt-3 text-xs font-medium text-primary opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity inline-flex items-center gap-1">
-                  Continue <ArrowRight className="w-3.5 h-3.5" />
-                </div>
-              </button>
-            </div>
-            <div className="flex justify-end pt-1">
-              <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-            </div>
+        {step === 'pick' && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <TemplateCard
+              label="Empty"
+              icon={Sliders}
+              description="Blank multitrack — add tracks yourself."
+              onClick={() => { setTemplate('empty'); setStep('title'); }}
+            />
+            <TemplateCard
+              label="Voice parts (SATB)"
+              icon={Users}
+              description="Four pre-labeled tracks: Soprano, Alto, Tenor, Bass."
+              onClick={() => { setTemplate('satb'); setStep('backing'); }}
+            />
+            <TemplateCard
+              label="Custom"
+              icon={AudioLines}
+              description="Start with your own part layout and a backing track."
+              onClick={() => { setTemplate('custom'); setStep('backing'); }}
+            />
           </div>
-        ) : (
-          <div className="space-y-3">
-            <div>
-              <Label className="text-xs">Title (optional)</Label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Spring concert demo"
-                autoFocus
-              />
-            </div>
-            <div className="flex justify-between gap-2 pt-1">
-              <Button variant="ghost" onClick={() => setStep('pick')}>← Back</Button>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => handleOpenChange(false)}>Cancel</Button>
-                <Button onClick={() => onSubmit(title.trim())} disabled={busy}>
-                  {busy ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Creating…</> : 'Create'}
-                </Button>
-              </div>
-            </div>
-          </div>
+        )}
+
+        {step === 'backing' && (
+          <AccompanimentPicker
+            open={true}
+            embedded
+            onPick={(r) => { setAccompaniment(mapPickerResult(r)); setStep('title'); }}
+            onSkip={() => { setAccompaniment(null); setStep('title'); }}
+          />
+        )}
+
+        {step === 'title' && (
+          <TitleStep
+            busy={busy}
+            onBack={() => setStep(template === 'empty' ? 'pick' : 'backing')}
+            onCancel={() => handleOpenChange(false)}
+            onSubmit={(t) => onSubmit({ title: t, template, accompaniment })}
+          />
         )}
       </DialogContent>
     </Dialog>
