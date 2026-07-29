@@ -150,6 +150,13 @@ function DroppableSection({ sectionKey, className, children }: {
 
 // Sortable wrapper for a sidebar nav row. The 8px activation distance
 // keeps plain clicks navigating; only a real drag reorders.
+//
+// - touch-none:   required so touch devices don't treat the pointer as
+//                 a scroll and steal it before dnd-kit sees enough movement.
+// - select-none:  avoids the browser starting a text selection during
+//                 the drag (which cancels the sortable).
+// - cursor-grab:  gives tenants a visual hint that the row is movable.
+//                 flips to grabbing during an active drag.
 function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id });
   return (
@@ -158,7 +165,9 @@ function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
       {...attributes}
       {...listeners}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={isDragging ? 'opacity-60' : undefined}
+      className={`touch-none select-none ${
+        isDragging ? 'cursor-grabbing opacity-60' : 'cursor-grab'
+      }`}
     >
       {children}
     </div>
