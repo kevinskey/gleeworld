@@ -68,11 +68,7 @@ export function DateCardTabPanel({ canManage }: { canManage: boolean }) {
   // Live preview: push the pending (type, config) into the query cache so
   // every consumer of useDateCardConfig (DateCardSlot on the home grid,
   // any surface that reads the setting) repaints in real time — same
-  // pattern as applyTenantThemeVars for Branding. On unmount, invalidate
-  // the query so the next fetch pulls the persisted value back and any
-  // unsaved preview reverts. Saving invalidates the query anyway (see
-  // useDateCardConfig.save), so a successful save keeps the preview in
-  // place because the DB now matches.
+  // pattern as applyTenantThemeVars for Branding.
   const queryClient = useQueryClient();
   const tenantSlug = typeof window !== 'undefined'
     ? (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant ?? null
@@ -81,12 +77,20 @@ export function DateCardTabPanel({ canManage }: { canManage: boolean }) {
     queryClient.setQueryData(['date-card-setting', tenantSlug], {
       v: 1, type, config,
     });
+  }, [type, config, tenantSlug, queryClient]);
+
+  // Drop any unsaved preview ONLY on real unmount (route/tab change), not
+  // on every dep change of the push-effect above — a per-change cleanup
+  // triggers an async refetch that races the next setQueryData call, and
+  // if the DB returns the old value first the preview snaps back and the
+  // form re-syncs to the stale value (looking "stuck" on the previous
+  // pick). Saving invalidates the query itself, so a successful save
+  // keeps the preview in place because the DB then matches.
+  useEffect(() => {
     return () => {
-      // On tab-switch / route-change / unmount, drop any pending
-      // preview by refetching the persisted value.
       void queryClient.invalidateQueries({ queryKey: ['date-card-setting'] });
     };
-  }, [type, config, tenantSlug, queryClient]);
+  }, [queryClient]);
 
   // Mirror DateCardSlot's availability fallback: if the currently-selected
   // type's add-on has lapsed since it was saved (e.g. liturgy_planner was
