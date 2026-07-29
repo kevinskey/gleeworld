@@ -2,6 +2,7 @@
 // Unavailable types render disabled rather than hidden so the add-on stays
 // discoverable.
 import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2, Save } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -63,6 +64,29 @@ export function DateCardTabPanel({ canManage }: { canManage: boolean }) {
     setConfig(setting.config);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [settingKey]);
+
+  // Live preview: push the pending (type, config) into the query cache so
+  // every consumer of useDateCardConfig (DateCardSlot on the home grid,
+  // any surface that reads the setting) repaints in real time — same
+  // pattern as applyTenantThemeVars for Branding. On unmount, invalidate
+  // the query so the next fetch pulls the persisted value back and any
+  // unsaved preview reverts. Saving invalidates the query anyway (see
+  // useDateCardConfig.save), so a successful save keeps the preview in
+  // place because the DB now matches.
+  const queryClient = useQueryClient();
+  const tenantSlug = typeof window !== 'undefined'
+    ? (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant ?? null
+    : null;
+  useEffect(() => {
+    queryClient.setQueryData(['date-card-setting', tenantSlug], {
+      v: 1, type, config,
+    });
+    return () => {
+      // On tab-switch / route-change / unmount, drop any pending
+      // preview by refetching the persisted value.
+      void queryClient.invalidateQueries({ queryKey: ['date-card-setting'] });
+    };
+  }, [type, config, tenantSlug, queryClient]);
 
   // Mirror DateCardSlot's availability fallback: if the currently-selected
   // type's add-on has lapsed since it was saved (e.g. liturgy_planner was
