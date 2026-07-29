@@ -11,6 +11,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:studio": "vitest run src/lib/studio",
+    "e2e": "playwright test",
+    "e2e:studio": "playwright test e2e/studio-part-tracks.spec.ts",
+    "e2e:headed": "HEADED=1 playwright test --headed",
+    "e2e:prod": "PLAYWRIGHT_BASE_URL=https://demo.gleeworld.org playwright test",
     "typecheck:guard": "node scripts/typecheck-baseline.mjs",
     "manual:lint": "node scripts/manual-lint.mjs",
     "manual:pdf": "node scripts/manual-pdf.mjs"
