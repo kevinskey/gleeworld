@@ -34,6 +34,31 @@ export function newSession(args: {
   };
 }
 
+/** Factory for test sessions. Like newSession but allows overriding all fields. */
+export function blankSession(args: {
+  id: string;
+  ownerUserId: string;
+  tenantId: string;
+  title: string;
+}): Session {
+  const now = new Date().toISOString();
+  return {
+    id: args.id,
+    schema_version: STUDIO_SCHEMA_VERSION,
+    title: args.title,
+    tempo_bpm: 120,
+    time_signature: { numerator: 4, denominator: 4 },
+    length_seconds: 60,
+    master: newMasterBus(),
+    tracks: [],
+    assets: [],
+    owner_user_id: args.ownerUserId,
+    tenant_id: args.tenantId,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
 export function newMasterBus(): MasterBus {
   return { volume_db: 0, pan: 0, fx: [] };
 }

@@ -6,7 +6,7 @@
 // listing every problem found (no early bailout — easier to fix).
 
 import {
-  STUDIO_SCHEMA_VERSIONS, type Session, type FxNode, type Track, type Bus,
+  STUDIO_SCHEMA_VERSIONS, type Session, type FxNode, type Track, type Bus, type Accompaniment,
   MAX_TRACKS, MAX_BUSES, MAX_SENDS_PER_TRACK, MAX_INSERTS_PER_STRIP,
   MASTER_BUS_ID,
   isAudioClip, isAudioTrack, isMidiClip, isMidiTrack,
@@ -128,6 +128,32 @@ export function validateSession(raw: unknown): ValidateResult {
       const trackIds = new Set((s.tracks ?? []).map((t: { id?: string }) => t.id).filter(Boolean));
       s.automation.forEach((a, i) => validateAutomation(a, i, errors, trackIds, busIds));
     }
+  }
+
+  // v2.1.0 — optional accompaniment. Validate only when present.
+  if (s.accompaniment != null) {
+    const a = s.accompaniment as Partial<Accompaniment>;
+    if (!a.kind || !['file', 'apple_music', 'apple_music_album', 'youtube'].includes(a.kind)) {
+      errors.push(`accompaniment.kind invalid: ${String(a.kind)}`);
+    } else if (a.kind === 'file') {
+      if (typeof (a as any).fileUrl !== 'string' || !(a as any).fileUrl) {
+        errors.push('accompaniment.fileUrl required when kind=file');
+      }
+    } else if (a.kind === 'apple_music' || a.kind === 'apple_music_album') {
+      if (typeof (a as any).appleMusicId !== 'string' || !(a as any).appleMusicId) {
+        errors.push('accompaniment.appleMusicId required when kind=apple_music*');
+      }
+      if (typeof (a as any).appleMusicStorefront !== 'string' || !(a as any).appleMusicStorefront) {
+        errors.push('accompaniment.appleMusicStorefront required');
+      }
+    } else if (a.kind === 'youtube') {
+      if (typeof (a as any).youtubeUrl !== 'string' || !(a as any).youtubeUrl) {
+        errors.push('accompaniment.youtubeUrl required when kind=youtube');
+      }
+    }
+  }
+  if (s.scoreId != null && typeof s.scoreId !== 'string') {
+    errors.push(`scoreId must be a string or null, got ${typeof s.scoreId}`);
   }
 
   if (errors.length) return { ok: false, errors };

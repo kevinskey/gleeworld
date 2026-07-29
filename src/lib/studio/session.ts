@@ -22,18 +22,40 @@
 //
 // Mirror this file faithfully in ios/App/App/StudioModel.swift.
 
-export const STUDIO_SCHEMA_VERSIONS = ['1.0.0', '1.1.0', '2.0.0'] as const;
+export const STUDIO_SCHEMA_VERSIONS = ['1.0.0', '1.1.0', '2.0.0', '2.1.0'] as const;
 export type StudioSchemaVersion = typeof STUDIO_SCHEMA_VERSIONS[number];
-/** Baseline version for sessions that use no 1.1.0 / 2.0.0 features.
+/** Baseline version for sessions that use no 1.1.0 / 2.0.0 / 2.1.0 features.
  * Kept at 1.0.0 so manifests stay openable by the shipped iOS app (its
  * decoder hard-rejects unknown versions). Writers stamp
  * requiredSchemaVersion(), which bumps only when v2 features are used. */
-export const STUDIO_SCHEMA_VERSION: StudioSchemaVersion = '1.0.0';
+export const STUDIO_SCHEMA_VERSION: StudioSchemaVersion = '2.1.0';
 
 /** Well-known bus id for the always-present master bus. Track `output`
  * defaults here; sends can target any bus INCLUDING master (though the
  * master is already the terminal sink). */
 export const MASTER_BUS_ID = 'master';
+
+/** Backing track or accompaniment source for a session.
+ * Discriminated union on `kind`. */
+export type Accompaniment =
+  | {
+      kind: 'file';
+      title: string | null;
+      fileUrl: string;
+    }
+  | {
+      kind: 'apple_music' | 'apple_music_album';
+      title: string | null;
+      appleMusicId: string;
+      appleMusicStorefront: string;
+      appleMusicArtist: string | null;
+      appleMusicArtworkUrl: string | null;
+    }
+  | {
+      kind: 'youtube';
+      title: string | null;
+      youtubeUrl: string;
+    };
 
 /** V1 mixer caps — enforced by validation. Increasing later is safe;
  * decreasing would break in-flight sessions, so leave these alone. */
@@ -349,6 +371,10 @@ export interface Session {
   tenant_id: string;
   created_at: string;                // ISO timestamp
   updated_at: string;                // ISO timestamp
+
+  // v2.1.0 — optional accompaniment/score reference
+  accompaniment?: Accompaniment | null;
+  scoreId?: string | null;
 }
 
 // ── Convenience type guards ──────────────────────────────────────────
