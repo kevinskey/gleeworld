@@ -47,7 +47,7 @@ import { useTransportPosition, useTransportTick } from './useTransportTick';
 import { retainUnsavedWork } from '@/lib/unsavedWork';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
-import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
+import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioTrack, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
 import {
   formatTime, formatBarBeat, formatSamples, nextCounterMode, type CounterMode,
   preRollStartSeconds, postRollEndSeconds, punchTransition,
@@ -70,6 +70,9 @@ import { exportSession, hasResumableExport, clearExportProgress, type ExportPres
 import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
 import { toast } from 'sonner';
 import { MixerView } from './MixerView';
+import { useStreamingAccompaniment } from '@/lib/studio/streamingBacking/useStreamingAccompaniment';
+import { captureFromPlayback } from '@/lib/studio/streamingBacking/captureFromPlayback';
+import { AccompanimentLane } from '@/components/studio/AccompanimentLane';
 
 const PX_PER_SECOND_DEFAULT = 40;
 const PX_PER_SECOND_MIN = 8;
@@ -1068,6 +1071,113 @@ function Editor({
   // unwired in stopRecording().
   const nativePeakSubRef = useRef<{ remove: () => Promise<void> } | null>(null);
 
+  // ── Streaming accompaniment + capture-from-playback ──────────────────
+  const streaming = useStreamingAccompaniment(session.accompaniment);
+  const [capturing, setCapturing] = useState(false);
+  // When a streaming-backed take starts, this ref holds the wall-clock ms
+  // at which the streaming source became audible. stopRecording() uses it
+  // to override transportStartWallMs in computeTakeAlignment so head-trim
+  // measures against the actual backing onset rather than the Studio
+  // transport start (which may lag by hundreds of ms on buffered sources).
+  // Null when the take was started without a streaming backing (file/null).
+  const streamingTransportWallMsRef = useRef<number | null>(null);
+
+  // Effect: when accompaniment.kind === 'file', ensure a track exists in the
+  // session backed by that URL so it loads in the mixer as a normal audio clip.
+  // We upsert idempotently — if a track already references the fileUrl we skip.
+  const ACCOMPANIMENT_TRACK_COLOR = '#64748b'; // slate-500
+  const ACCOMPANIMENT_TRACK_NAME = 'Accompaniment';
+  useEffect(() => {
+    if (session.accompaniment?.kind !== 'file') return;
+    const fileUrl = session.accompaniment.fileUrl;
+    const title = session.accompaniment.title ?? ACCOMPANIMENT_TRACK_NAME;
+    // Check if any existing asset already points at this URL (via assetUrlCache or filename match).
+    const alreadySeeded = session.tracks.some(
+      (t) => isAudioTrack(t) && t.name === ACCOMPANIMENT_TRACK_NAME && t.clips.length > 0,
+    );
+    if (alreadySeeded) return;
+    // Seed a locked audio track with one clip spanning the declared session length.
+    // The asset is a placeholder — duration will be updated once the file loads.
+    const assetId = `accomp-${newId()}`;
+    const trackId = `accomp-track-${newId()}`;
+    setAssetUrl(assetId, fileUrl);
+    const asset: AudioAsset = {
+      id: assetId,
+      filename: title,
+      format: fileUrl.endsWith('.mp3') ? 'mp3' : fileUrl.endsWith('.m4a') ? 'm4a' : 'wav',
+      duration_seconds: session.length_seconds,
+      sample_rate: 44100,
+      channels: 2,
+      size_bytes: 0,
+    };
+    const clip: AudioClip = {
+      id: newId(), kind: 'audio', asset_id: assetId,
+      start_seconds: 0, duration_seconds: session.length_seconds,
+      offset_seconds: 0, gain_db: 0,
+      fade_in_seconds: 0, fade_out_seconds: 0,
+      reverse: false, pitch_semitones: 0, time_stretch: 1,
+    };
+    const track: AudioTrack = {
+      id: trackId, kind: 'audio', name: ACCOMPANIMENT_TRACK_NAME,
+      color: ACCOMPANIMENT_TRACK_COLOR,
+      volume_db: 0, pan: 0, mute: false, solo: false, arm: false,
+      fx: [], clips: [clip],
+    };
+    update((s) => ({ ...s, tracks: [track, ...s.tracks], assets: [...s.assets, asset] }));
+  // Run only when the accompaniment fileUrl changes — not on every session update.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.accompaniment?.kind === 'file' ? session.accompaniment.fileUrl : null]);
+
+  const isStreaming =
+    session.accompaniment?.kind === 'apple_music' ||
+    session.accompaniment?.kind === 'apple_music_album' ||
+    session.accompaniment?.kind === 'youtube';
+
+  const onCapture = async () => {
+    if (!session.accompaniment) return;
+    setCapturing(true);
+    try {
+      // Open the mic (reuse the same openMicRecorder path as a normal take).
+      const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
+      const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
+      const channelIndex = Number(localStorage.getItem('studio.inputChannelIndex') || 0) || 0;
+      const captureRecorder = await openMicRecorder({ inputDeviceId, inputGainDb, channelIndex, captureWav: false });
+      await captureRecorder.start();
+      // Start the streaming backing from position 0.
+      await streaming.start(0);
+      // Store the recorder for onStopCapture.
+      captureRecorderRef.current = captureRecorder;
+    } catch (e) {
+      setCapturing(false);
+      toast.error(e instanceof Error ? e.message : 'Capture failed to start');
+    }
+  };
+
+  const captureRecorderRef = useRef<MicRecorder | null>(null);
+
+  const onStopCapture = async () => {
+    const captureRecorder = captureRecorderRef.current;
+    captureRecorderRef.current = null;
+    try {
+      streaming.stop();
+      if (!captureRecorder) throw new Error('No capture recorder active');
+      const blob = await captureRecorder.stop();
+      captureRecorder.dispose();
+      if (!blob || blob.size < 1024) throw new Error('No audio captured — check mic and speaker volume');
+      const captured = await captureFromPlayback({ blob, sessionId: session.id });
+      // Flip the session accompaniment to kind='file' with the captured WAV URL.
+      update((s) => ({
+        ...s,
+        accompaniment: { kind: 'file', title: captured.title, fileUrl: captured.url },
+      }));
+      toast.success('Accompaniment captured — future takes lock to this WAV.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Capture failed');
+    } finally {
+      setCapturing(false);
+    }
+  };
+
   // Undo stack — snapshots of the session taken right before each
   // structural change (recording finalize, track add/remove, etc.).
   // Cap at 30 entries so we don't grow indefinitely.
@@ -1320,6 +1430,27 @@ function Editor({
         play();
         transportStartWallMs = performance.now();
       }
+      // For streaming backings (Apple Music / YouTube), kick off the backing
+      // source and capture the wall-clock ms when it became audible. This
+      // precise timestamp overrides transportStartWallMs in computeTakeAlignment
+      // (see stopRecording) so the head-trim accounts for streaming buffer
+      // latency rather than the Studio transport's start time (which is only
+      // the Tone.js clock start — not when sound arrived at the listener).
+      // For file or null backings we leave the ref null so the existing
+      // transport-stamp path in stopRecording is used unchanged.
+      streamingTransportWallMsRef.current = null;
+      if (isStreaming) {
+        try {
+          const recordStartOffsetSec = state?.isPlaying ? (posNow() - startSec) : 0;
+          const { backingAudibleWallMs } = await streaming.start(recordStartOffsetSec);
+          streamingTransportWallMsRef.current = backingAudibleWallMs;
+        } catch (streamErr) {
+          // Non-fatal — the take continues without the streaming backing rather
+          // than aborting the whole recording.
+          console.warn('[studio] streaming backing start failed', streamErr);
+          toast.warning('Streaming backing failed to start — recording without accompaniment');
+        }
+      }
       setRecording({
         recorder, native: false,
         startSeconds: startSec, startWallMs: startedAt,
@@ -1389,7 +1520,17 @@ function Editor({
     commitMidiPresses(midiHeld.flush(), posNow() || recording.startSeconds, true);
     commitTakeCc();
 
-    const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, transportStartWallMs, armedTrackIds: armed } = recording;
+    const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, armedTrackIds: armed } = recording;
+    // If a streaming backing was running during this take, stop it now.
+    // Also grab the streaming-transport override (backingAudibleWallMs) so
+    // computeTakeAlignment measures head-trim against the true backing onset.
+    const streamingBackingWallMs = streamingTransportWallMsRef.current;
+    streamingTransportWallMsRef.current = null;
+    if (isStreaming) { try { streaming.stop(); } catch { /* ignore */ } }
+    // Use the streaming-backing wall-clock as transportStartWallMs when
+    // available (streaming take). Fall back to the Studio transport stamp
+    // (recording.transportStartWallMs) for non-streaming takes.
+    const transportStartWallMs = streamingBackingWallMs ?? recording.transportStartWallMs;
     setRecording(null);
     engineState.setRecordingActive?.(false);
     const elapsed = (performance.now() - startWallMs) / 1000;
@@ -2695,6 +2836,20 @@ function Editor({
             onSeek={(s) => engineState.seek?.(s)}
             onHeightChange={setTrackHeightClamped}
           />
+          {/* Accompaniment lane — rendered above all tracks when the session
+           * has an accompaniment set. Decorative for kind='file' (the file
+           * is already loaded as a normal audio track); shows a capture
+           * button for streaming kinds (Apple Music / YouTube). */}
+          {session.accompaniment && (
+            <AccompanimentLane
+              accompaniment={session.accompaniment}
+              capturing={capturing}
+              recordingInProgress={!!recording}
+              ytIframeRef={streaming.ytIframeRef}
+              onCapture={onCapture}
+              onStopCapture={onStopCapture}
+            />
+          )}
           {session.tracks.map((t, i) => (
             <DarkTrackRow
               key={t.id}
