@@ -514,25 +514,47 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
                   className={section.label ? 'rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5' : 'space-y-0.5 px-1'}
                 >
                   {section.label && (
-                    <div className="flex items-stretch pb-1 pt-1.5">
-                      {/* Grip handle — carries the drag listeners so the
-                          section can be reordered without stealing the
-                          collapse-click on the label. */}
-                      <button
-                        type="button"
-                        {...dragHandleProps}
-                        title="Drag to reorder this section"
-                        aria-label={`Reorder ${section.label}`}
-                        className="touch-none select-none cursor-grab active:cursor-grabbing px-1.5 text-muted-foreground hover:text-foreground transition-colors inline-flex items-center"
-                      >
-                        <GripVertical className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        type="button"
+                    <div
+                      // Whole header row IS the drag handle for section
+                      // reorder — sections have a large, obvious grab
+                      // target instead of a fiddly 14px grip. Click
+                      // through to expand/collapse still works via a
+                      // separate chevron button on the right (its
+                      // onPointerDown stopPropagation keeps the section
+                      // sortable from starting on chevron taps).
+                      {...dragHandleProps}
+                      title="Drag to reorder this section"
+                      aria-label={`Section ${section.label} — drag to reorder`}
+                      className="flex items-center pb-1 pt-1.5 pl-1.5 pr-1 touch-none select-none cursor-grab active:cursor-grabbing text-[11px] font-black uppercase tracking-[0.08em] text-foreground"
+                    >
+                      <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0 mr-1.5" />
+                      <span
+                        role="button"
+                        tabIndex={0}
                         onClick={() => toggleSection(section.label!)}
-                        className="flex-1 flex items-center justify-between pl-1 pr-2.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground hover:text-foreground transition-colors"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            toggleSection(section.label!);
+                          }
+                        }}
+                        // Don't let a click on the label start a section
+                        // drag — the label is for expand/collapse. But
+                        // don't stop pointerdown either, because a
+                        // click-and-drag STARTING on the label should
+                        // still initiate the section drag.
+                        onPointerUp={(e) => e.stopPropagation()}
+                        className="flex-1 cursor-pointer hover:text-foreground transition-colors"
                       >
-                        <span>{section.label}</span>
+                        {section.label}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); toggleSection(section.label!); }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        aria-label={isCollapsed ? `Expand ${section.label}` : `Collapse ${section.label}`}
+                        className="px-1.5 py-0.5 rounded hover:bg-muted transition-colors cursor-pointer"
+                      >
                         {isCollapsed ? (
                           <ChevronRight className="w-3.5 h-3.5" />
                         ) : (
