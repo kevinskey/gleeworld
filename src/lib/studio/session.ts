@@ -24,10 +24,10 @@
 
 export const STUDIO_SCHEMA_VERSIONS = ['1.0.0', '1.1.0', '2.0.0', '2.1.0'] as const;
 export type StudioSchemaVersion = typeof STUDIO_SCHEMA_VERSIONS[number];
-/** Baseline version for sessions that use no 1.1.0 / 2.0.0 / 2.1.0 features.
- * Kept at 1.0.0 so manifests stay openable by the shipped iOS app (its
- * decoder hard-rejects unknown versions). Writers stamp
- * requiredSchemaVersion(), which bumps only when v2 features are used. */
+/** Write target version for newly created sessions. The iOS decoder accepts
+ * every version in STUDIO_SCHEMA_VERSIONS; writers must stamp every version
+ * they support. v2.1.0 adds optional fields (accompaniment, scoreId) that
+ * older readers safely ignore, maintaining backward compatibility. */
 export const STUDIO_SCHEMA_VERSION: StudioSchemaVersion = '2.1.0';
 
 /** Well-known bus id for the always-present master bus. Track `output`
