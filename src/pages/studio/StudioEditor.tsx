@@ -1084,27 +1084,147 @@ function Editor({
   // Null when the take was started without a streaming backing (file/null).
   const streamingTransportWallMsRef = useRef<number | null>(null);
 
-  // Effect: when accompaniment.kind === 'file', ensure a track exists in the
-  // session backed by that URL so it loads in the mixer as a normal audio clip.
-  // We upsert idempotently — if a track already references the fileUrl we skip.
   const ACCOMPANIMENT_TRACK_COLOR = '#64748b'; // slate-500
   const ACCOMPANIMENT_TRACK_NAME = 'Accompaniment';
+
+  // Extract the storage path portion from any studio-bucket URL so we can
+  // match tracks by asset identity rather than by URL string (which
+  // changes every time we re-sign).
+  const storagePathOf = (url: string | undefined | null): string | null => {
+    if (!url) return null;
+    const m =
+      url.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/studio\/(.+?)(?:\?|$)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  };
+
+  // Auto-repair + de-dupe: the earliest cut of the file-upload path used
+  // getPublicUrl on a private bucket, which produced 403 URLs baked into
+  // `accompaniment.fileUrl`. A subsequent auto-repair added a SECOND
+  // Accompaniment track because the seed guard matched by URL and the
+  // URL had just changed. This effect:
+  //   1. re-signs any stale public URL,
+  //   2. collapses duplicate Accompaniment tracks whose clips point at
+  //      the same storage path,
+  //   3. refreshes the assetUrlCache so the audio engine loads the fresh URL.
+  // Runs once per unique fileUrl.
+  const repairedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (session.accompaniment?.kind !== 'file') return;
+    const fileUrl = session.accompaniment.fileUrl;
+    if (!fileUrl) return;
+    if (repairedRef.current === fileUrl) return;
+    repairedRef.current = fileUrl;
+
+    const publicMatch = fileUrl.match(/\/storage\/v1\/object\/public\/studio\/(.+?)(?:\?|$)/);
+    if (!publicMatch) {
+      // URL already signed (or non-repairable). Still de-dupe any leftover
+      // duplicate accompaniment tracks from a previous repair pass.
+      dedupeAccompaniment(fileUrl);
+      return;
+    }
+    const path = decodeURIComponent(publicMatch[1]);
+    void supabase.storage
+      .from('studio')
+      .createSignedUrl(path, 60 * 60 * 24 * 365)
+      .then(({ data, error }) => {
+        if (error || !data?.signedUrl) {
+          console.warn('[studio] accompaniment auto-repair failed', error);
+          return;
+        }
+        // Flip the manifest to the fresh URL AND collapse duplicates in
+        // one update so persistence sees the final state.
+        update((s) => {
+          if (s.accompaniment?.kind !== 'file' || s.accompaniment.fileUrl !== fileUrl) return s;
+          return applyDedupe(
+            { ...s, accompaniment: { ...s.accompaniment, fileUrl: data.signedUrl } },
+            path,
+            data.signedUrl,
+          );
+        });
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.accompaniment?.kind === 'file' ? session.accompaniment.fileUrl : null]);
+
+  // De-dupe helper — collapses redundant Accompaniment tracks by storage
+  // path and refreshes the surviving asset's URL cache.
+  const dedupeAccompaniment = (currentUrl: string) => {
+    const targetPath = storagePathOf(currentUrl);
+    if (!targetPath) return;
+    update((s) => applyDedupe(s, targetPath, currentUrl));
+  };
+
+  // Pure reducer: removes duplicate Accompaniment tracks, keeps the
+  // first one whose clip resolves to `targetPath`, and points its asset
+  // at `newUrl` via the assetUrlCache.
+  const applyDedupe = (s: Session, targetPath: string, newUrl: string): Session => {
+    let firstSeen = false;
+    const kept: typeof s.tracks = [];
+    for (const t of s.tracks) {
+      if (!isAudioTrack(t) || t.name !== ACCOMPANIMENT_TRACK_NAME) {
+        kept.push(t);
+        continue;
+      }
+      // Does this track's first clip belong to the current accompaniment path?
+      const clip = t.clips[0];
+      const asset = clip ? s.assets.find((a) => a.id === clip.asset_id) : undefined;
+      // Determine the track's path either from the cached URL for its
+      // asset id, or from the accompaniment filename fallback.
+      const cachedUrl = clip ? getAssetUrlSync(clip.asset_id) : null;
+      const cachedPath = storagePathOf(cachedUrl);
+      const filename = asset?.filename ?? null;
+      const matchesTarget =
+        cachedPath === targetPath ||
+        (filename !== null && targetPath.endsWith(filename));
+      if (matchesTarget) {
+        if (!firstSeen) {
+          firstSeen = true;
+          if (clip) setAssetUrl(clip.asset_id, newUrl);
+          kept.push(t);
+        }
+        // else drop the duplicate
+        continue;
+      }
+      kept.push(t);
+    }
+    return { ...s, tracks: kept };
+  };
+
+  // Effect: when accompaniment.kind === 'file', ensure a track exists in the
+  // session backed by that URL so it loads in the mixer as a normal audio clip.
+  // Idempotent by ASSET IDENTITY (filename OR storage path) so re-signing
+  // the URL doesn't cause a duplicate seed.
   useEffect(() => {
     if (session.accompaniment?.kind !== 'file') return;
     const fileUrl = session.accompaniment.fileUrl;
     const title = session.accompaniment.title ?? ACCOMPANIMENT_TRACK_NAME;
-    // I1: Guard by clip source URL (not track name) so renaming the
-    // accompaniment track doesn't defeat the idempotency check. Walk every
-    // audio track's clips, look each clip's asset_id up in the assetUrlCache,
-    // and skip seeding if any clip already resolves to the current fileUrl.
+    const targetPath = storagePathOf(fileUrl);
+
     const alreadySeeded = session.tracks.some(
       (t) =>
         isAudioTrack(t) &&
-        t.clips.some((c) => getAssetUrlSync(c.asset_id) === fileUrl),
+        t.clips.some((c) => {
+          const asset = session.assets.find((a) => a.id === c.asset_id);
+          if (asset?.filename === title) return true;
+          const cachedPath = storagePathOf(getAssetUrlSync(c.asset_id));
+          return targetPath !== null && cachedPath === targetPath;
+        }),
     );
-    if (alreadySeeded) return;
-    // Seed a locked audio track with one clip spanning the declared session length.
-    // The asset is a placeholder — duration will be updated once the file loads.
+    if (alreadySeeded) {
+      // Refresh the URL cache for the existing asset so the audio engine
+      // picks up the fresh signed URL on next load/play.
+      const track = session.tracks.find(
+        (t) =>
+          isAudioTrack(t) &&
+          t.clips.some((c) => {
+            const asset = session.assets.find((a) => a.id === c.asset_id);
+            return asset?.filename === title;
+          }),
+      );
+      if (track && isAudioTrack(track) && track.clips[0]) {
+        setAssetUrl(track.clips[0].asset_id, fileUrl);
+      }
+      return;
+    }
     const assetId = `accomp-${newId()}`;
     const trackId = `accomp-track-${newId()}`;
     setAssetUrl(assetId, fileUrl);
@@ -1131,7 +1251,6 @@ function Editor({
       fx: [], clips: [clip],
     };
     update((s) => ({ ...s, tracks: [track, ...s.tracks], assets: [...s.assets, asset] }));
-  // Run only when the accompaniment fileUrl changes — not on every session update.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session.accompaniment?.kind === 'file' ? session.accompaniment.fileUrl : null]);
 
@@ -4193,7 +4312,7 @@ function exportSessionJson(session: Session): void {
 // session's stored scoreId (just the row id). ──────────────────────────
 
 function StudioScorePanel({ scoreId, onClose }: { scoreId: string; onClose: () => void }) {
-  const { data } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['studio-score-panel', scoreId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -4205,6 +4324,37 @@ function StudioScorePanel({ scoreId, onClose }: { scoreId: string; onClose: () =
       return data;
     },
   });
+
+  // Surface the two silent-fail modes with a toast so the user knows why
+  // the panel didn't open. Previously we early-returned null in both
+  // cases and the "Attach score" action looked broken.
+  const notified = useRef(false);
+  useEffect(() => {
+    if (isLoading || notified.current) return;
+    if (error) {
+      notified.current = true;
+      toast.error('Could not load score', {
+        description: error instanceof Error ? error.message : String(error),
+      });
+      return;
+    }
+    if (!data) {
+      notified.current = true;
+      toast.error('Score not found', {
+        description: 'It may have been deleted or you no longer have access.',
+      });
+      onClose();
+      return;
+    }
+    if (!data.pdf_url) {
+      notified.current = true;
+      toast.error('This score has no PDF', {
+        description: `"${data.title ?? 'Untitled'}" has no pdf_url on file. Attach a PDF from the music library editor first.`,
+      });
+      onClose();
+    }
+  }, [isLoading, error, data, onClose]);
+
   if (!data || !data.pdf_url) return null;
   return (
     <FloatingScorePanel

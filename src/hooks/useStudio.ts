@@ -160,11 +160,22 @@ async function createStudioSessionWithTemplate(input: CreateStudioSessionInput):
         upsert: true,
       });
     if (uploadErr) throw new Error(`Failed to upload accompaniment file: ${uploadErr.message}`);
-    const { data: urlData } = supabase.storage.from('studio').getPublicUrl(assetPath);
+    // Studio bucket is private (holds the manifest + user audio). getPublicUrl
+    // returns a `/object/public/` URL that 403s on private buckets, so audio
+    // never played. Signed URLs bypass RLS via a JWT in the URL and work on
+    // private buckets. 1-year expiry is generous for a session-lifetime
+    // asset; on load, refreshFileAccompanimentUrl re-signs if it detects an
+    // expired URL. Match the same shape in captureFromPlayback.ts.
+    const { data: signedData, error: signErr } = await supabase.storage
+      .from('studio')
+      .createSignedUrl(assetPath, 60 * 60 * 24 * 365);
+    if (signErr || !signedData?.signedUrl) {
+      throw new Error(`Failed to sign accompaniment URL: ${signErr?.message ?? 'no url'}`);
+    }
     resolvedAccompaniment = {
       kind: 'file',
       title: file.name,
-      fileUrl: urlData.publicUrl,
+      fileUrl: signedData.signedUrl,
     };
   }
 

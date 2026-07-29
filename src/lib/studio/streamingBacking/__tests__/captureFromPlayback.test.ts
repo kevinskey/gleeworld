@@ -6,7 +6,13 @@ vi.mock('@/integrations/supabase/client', () => ({
     storage: {
       from: () => ({
         upload: vi.fn(async () => ({ error: null })),
-        getPublicUrl: (path: string) => ({ data: { publicUrl: `https://cdn.example/${path}` } }),
+        // Studio bucket is private; production code uses createSignedUrl,
+        // not getPublicUrl. Mock echoes the path in the signed URL so the
+        // test can still assert the path shape.
+        createSignedUrl: async (path: string, _expiresIn: number) => ({
+          data: { signedUrl: `https://cdn.example/${path}?token=stub` },
+          error: null,
+        }),
       }),
     },
   },
