@@ -11,13 +11,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { X, Send, Loader2, Mail, Paperclip, FileIcon } from 'lucide-react';
+import { roleForGroup, type ComposerGroup } from '@/lib/messengerGroups';
 
-type Group = 'all' | 'students' | 'admins' | 'fans' | 'custom';
+type Group = ComposerGroup;
 const GROUPS: Array<{ value: Group; label: string }> = [
   { value: 'all', label: 'Everyone' },
   { value: 'students', label: 'Students only' },
   { value: 'admins', label: 'Staff / Admins only' },
   { value: 'fans', label: 'Fans only' },
+  { value: 'parents', label: 'Parents only' },
   { value: 'custom', label: 'Specific people…' },
 ];
 
@@ -76,10 +78,8 @@ export function EmailBlastComposer({ onClose, initialGroup = 'students' }: { onC
     enabled: group !== 'custom',
     queryFn: async () => {
       let q = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
-      if (group !== 'all') {
-        const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
-        q = q.eq('role', role);
-      }
+      const role = roleForGroup(group);
+      if (role) q = q.eq('role', role);
       const { count: emails } = await q;
       return { emails: emails ?? 0, phones: 0 };
     },
@@ -126,7 +126,7 @@ export function EmailBlastComposer({ onClose, initialGroup = 'students' }: { onC
     }
     setSending(true);
     try {
-      const role = group !== 'all' && group !== 'custom' ? (group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan') : undefined;
+      const role = roleForGroup(group);
 
       let emails: string[];
       if (group === 'custom') {

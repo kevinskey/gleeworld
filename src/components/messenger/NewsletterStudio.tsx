@@ -14,13 +14,15 @@ import {
   ChevronLeft, Copy, Eye, Pencil, CheckCircle2, FileEdit, Users, LayoutTemplate,
   Upload, ArrowLeft,
 } from 'lucide-react';
+import { roleForGroup } from '@/lib/messengerGroups';
 
-type Group = 'all' | 'students' | 'admins' | 'fans';
+type Group = 'all' | 'students' | 'admins' | 'fans' | 'parents';
 const GROUPS: Array<{ value: Group; label: string }> = [
   { value: 'all', label: 'Everyone' },
   { value: 'students', label: 'Students only' },
   { value: 'admins', label: 'Staff / Admins only' },
   { value: 'fans', label: 'Fans only' },
+  { value: 'parents', label: 'Parents only' },
 ];
 
 type StatusFilter = 'all' | 'draft' | 'scheduled' | 'sent' | 'template';
@@ -383,7 +385,8 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
     queryKey: ['newsletter-audience-count', group],
     queryFn: async () => {
       let q = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
-      if (group !== 'all') q = q.eq('role', group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan');
+      const role = roleForGroup(group);
+      if (role) q = q.eq('role', role);
       const { count } = await q;
       return count ?? 0;
     },
@@ -497,7 +500,8 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
 
   async function sendNow(id: string) {
     let rq = supabase.from('gw_profiles_directory').select('email').not('email', 'is', null);
-    if (group !== 'all') rq = rq.eq('role', group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan');
+    const sendRole = roleForGroup(group);
+    if (sendRole) rq = rq.eq('role', sendRole);
     const { data: recipients, error: rErr } = await rq;
     if (rErr) throw rErr;
     const emails = (recipients ?? []).map((r: any) => r.email).filter(Boolean);
@@ -730,11 +734,16 @@ function ImageField({ value, onChange, placeholder }: { value: string; onChange:
   async function upload(file: File) {
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop() || 'jpg';
-      const path = `newsletters/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+      // FLAT path (single component, no slash). The self-hosted storage
+      // proxy reads flat and the flatten cron only rewrites paths after
+      // the fact — a nested key like `newsletters/foo.jpg` returns 404
+      // from getPublicUrl until the cron catches up, which is what makes
+      // the preview <img> render broken the instant after upload.
+      const path = `newsletter-${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
       const { error } = await supabase.storage
         .from('messenger-attachments')
-        .upload(path, file, { contentType: file.type });
+        .upload(path, file, { contentType: file.type, upsert: false });
       if (error) throw error;
       const { data: pub } = supabase.storage.from('messenger-attachments').getPublicUrl(path);
       onChange(pub.publicUrl);

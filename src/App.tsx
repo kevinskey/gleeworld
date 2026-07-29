@@ -196,6 +196,7 @@ const Messages = lazy(() => import("./pages/Messages"));
 const EmailComposerPage = lazy(() => import("./pages/EmailComposerPage"));
 const OnboardingInfo = lazy(() => import("./pages/OnboardingInfo"));
 const MemberRegistration = lazy(() => import("./pages/MemberRegistration"));
+const ParentRegistration = lazy(() => import("./pages/ParentRegistration"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const MusicLibraryPage = lazy(() => import("./pages/member/MusicLibraryPage"));
 const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPage"));
@@ -683,13 +684,21 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
+              <Route
+                path="/register/parent"
+                element={
+                  <PublicRoute>
+                    <ParentRegistration />
+                  </PublicRoute>
+                }
+              />
+              <Route
                 path="/reset-password"
                 element={
                   <PublicRoute>
                     <ResetPassword />
                   </PublicRoute>
-                } 
+                }
               />
               <Route 
                 path="/force-password-change"
