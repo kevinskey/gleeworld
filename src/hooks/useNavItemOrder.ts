@@ -73,8 +73,15 @@ export function useNavItemOrder() {
     sectionOrder: string[] = [],
   ): Promise<boolean> => {
     if (!uid) return false;
+    const next: NavOrder = { v: 3, order, sections, sectionOrder };
+    // Optimistic update — write the new order to the cache BEFORE the
+    // RPC round-trip. Without this the sidebar re-renders from the
+    // stale cache during the ~200-500ms the save takes, snapping every
+    // dropped item back to its old position and then jumping forward
+    // when the RPC resolves. Reading as a whole-screen "blink".
+    const previous = queryClient.getQueryData<NavOrder | null>(['nav-item-order', uid]) ?? null;
+    queryClient.setQueryData(['nav-item-order', uid], next);
     try {
-      const next: NavOrder = { v: 3, order, sections, sectionOrder };
       // save_nav_item_order is a SECURITY DEFINER RPC that bypasses the
       // RESTRICTIVE tenant_isolation_restrict policy on user_preferences
       // and RESYNCS tenant_id to current_tenant_id() on every save. This
@@ -88,12 +95,13 @@ export function useNavItemOrder() {
       });
       if (error) {
         console.warn('[useNavItemOrder] save failed:', error.message);
+        queryClient.setQueryData(['nav-item-order', uid], previous);
         return false;
       }
-      queryClient.setQueryData(['nav-item-order', uid], next);
       return true;
     } catch (err) {
       console.warn('[useNavItemOrder] save failed:', err);
+      queryClient.setQueryData(['nav-item-order', uid], previous);
       return false;
     }
   }, [uid, queryClient]);
