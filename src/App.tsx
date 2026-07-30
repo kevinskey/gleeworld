@@ -156,6 +156,7 @@ const ContractSigning = lazy(() => import("./pages/ContractSigning"));
 const AdminSigning = lazy(() => import("./pages/AdminSigning"));
 const ActivityLogs = lazy(() => import("./pages/ActivityLogs"));
 const W9FormPage = lazy(() => import("./pages/W9FormPage"));
+const ParentPermissionSlip = lazy(() => import("./pages/ParentPermissionSlip"));
 import NotFound from "./pages/NotFound";
 const Accounting = lazy(() => import("./pages/Accounting"));
 const DocsArchitecture = lazy(() => import("./pages/DocsArchitecture"));
@@ -3416,6 +3417,11 @@ const App = () => {
                                          <StudentAssignmentPage />
                                        </ProtectedRoute>
                                      } 
+                                   />
+                                   {/* Public parent-facing permission slip — no auth required */}
+                                   <Route
+                                     path="/parent/permission-slip"
+                                     element={<ParentPermissionSlip />}
                                    />
                                    {/* Catch-all route for 404 */}
                                    <Route path="*" element={<NotFound />} />
