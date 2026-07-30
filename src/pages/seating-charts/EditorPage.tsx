@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Save, Printer, Download, Undo2, Redo2, ZoomIn, ZoomOut, Maximize2,
+  ArrowLeft, Save, Printer, Download, Undo2, Wand2, Share2, Users, FileText,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,12 @@ import { useSeatingChart } from '@/hooks/useSeatingChart';
 import { Palette } from '@/features/seating-charts/engine/Palette';
 import { PropertiesPanel } from '@/features/seating-charts/engine/PropertiesPanel';
 import { CanvasEngine } from '@/features/seating-charts/engine/CanvasEngine';
+import { ArrangementsSwitcher } from '@/features/seating-charts/editor/ArrangementsSwitcher';
+import { PlacementDialog } from '@/features/seating-charts/placement/PlacementDialog';
+import { ShareDialog } from '@/features/seating-charts/sharing/ShareDialog';
+import { RosterImportDialog } from '@/features/seating-charts/imports/RosterImportDialog';
+import { VersionsMenu } from '@/features/seating-charts/versions/VersionsMenu';
+import { exportChartPdf } from '@/features/seating-charts/exports/pdfExport';
 import type { SeatingAssignment, SeatingObject, SeatingPerson } from '@/types/seatingCharts';
 
 function newId(prefix: string) {
@@ -25,12 +31,18 @@ export function SeatingChartEditorPage() {
   const {
     state, loading, saveStatus,
     patchChart, addObject, updateObject, deleteObjects,
-    upsertAssignment, clearAssignment, forceSave, reload,
+    upsertAssignment, bulkUpsertAssignments, clearAssignment, forceSave, reload,
+    switchArrangement, createArrangement, renameArrangement, duplicateArrangement,
+    deleteArrangement, setDefaultArrangement, replaceArrangementContents,
   } = useSeatingChart(chartId);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [people, setPeople] = useState<SeatingPerson[]>([]);
+  const [importedGuests, setImportedGuests] = useState<SeatingPerson[]>([]);
   const [peopleSearch, setPeopleSearch] = useState('');
+  const [placementOpen, setPlacementOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const loadPeople = useCallback(async () => {
@@ -42,6 +54,14 @@ export function SeatingChartEditorPage() {
   }, []);
 
   useEffect(() => { loadPeople(); }, [loadPeople]);
+
+  const mergedPeople = useMemo(() => {
+    // Deduplicate: prefer directory entries; guests only if user_id not present.
+    const byId = new Map<string, SeatingPerson>();
+    people.forEach((p) => byId.set(p.user_id, p));
+    importedGuests.forEach((g) => { if (!byId.has(g.user_id)) byId.set(g.user_id, g); });
+    return Array.from(byId.values());
+  }, [people, importedGuests]);
 
   const assignmentByObjectId = useMemo(() => {
     const m = new Map<string, SeatingAssignment>();
@@ -100,6 +120,23 @@ export function SeatingChartEditorPage() {
   const handlePrint = useCallback(() => {
     window.print();
   }, []);
+
+  const handleExportPdf = useCallback(async () => {
+    const svg = canvasRef.current?.querySelector('svg');
+    if (!svg || !state) return;
+    await exportChartPdf({ chart: state.chart, objects: state.objects, assignments: state.assignments, svg });
+  }, [state]);
+
+  const handleImportRoster = useCallback((imported: SeatingPerson[]) => {
+    setImportedGuests((prev) => {
+      const seen = new Set(prev.map((p) => p.user_id));
+      return [...prev, ...imported.filter((p) => !seen.has(p.user_id))];
+    });
+  }, []);
+
+  const handleApplyPlacement = useCallback((newAssignments: SeatingAssignment[]) => {
+    bulkUpsertAssignments(newAssignments);
+  }, [bulkUpsertAssignments]);
 
   const handleExportPng = useCallback(async () => {
     const svg = canvasRef.current?.querySelector('svg');
@@ -164,6 +201,31 @@ export function SeatingChartEditorPage() {
           </span>
         </div>
         <div className="flex items-center gap-1">
+          <ArrangementsSwitcher
+            arrangements={state.arrangements}
+            activeId={state.arrangement.id}
+            onSwitch={switchArrangement}
+            onCreate={(name) => createArrangement(name)}
+            onRename={renameArrangement}
+            onDuplicate={duplicateArrangement}
+            onSetDefault={setDefaultArrangement}
+            onDelete={deleteArrangement}
+          />
+          <Button variant="ghost" size="icon" title="Auto-place" onClick={() => setPlacementOpen(true)}>
+            <Wand2 className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" title="Import roster" onClick={() => setImportOpen(true)}>
+            <Users className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" title="Share" onClick={() => setShareOpen(true)}>
+            <Share2 className="w-4 h-4" />
+          </Button>
+          <VersionsMenu
+            arrangementId={state.arrangement.id}
+            objects={state.objects}
+            assignments={state.assignments}
+            onRestore={replaceArrangementContents}
+          />
           <Button variant="ghost" size="icon" title="Reload" onClick={() => reload()}>
             <Undo2 className="w-4 h-4" />
           </Button>
@@ -176,12 +238,15 @@ export function SeatingChartEditorPage() {
           <Button variant="ghost" size="icon" title="Export PNG" onClick={handleExportPng}>
             <Download className="w-4 h-4" />
           </Button>
+          <Button variant="ghost" size="icon" title="Export PDF" onClick={handleExportPdf}>
+            <FileText className="w-4 h-4" />
+          </Button>
         </div>
       </header>
 
       <div className="flex-1 flex overflow-hidden">
         <Palette
-          people={people}
+          people={mergedPeople}
           assignedPersonIds={assignedPersonIds}
           peopleSearch={peopleSearch}
           onPeopleSearchChange={setPeopleSearch}
@@ -210,6 +275,19 @@ export function SeatingChartEditorPage() {
           onDelete={(ids) => { deleteObjects(ids); setSelectedIds([]); }}
         />
       </div>
+
+      <PlacementDialog
+        open={placementOpen}
+        onOpenChange={setPlacementOpen}
+        objects={state.objects}
+        assignments={state.assignments}
+        people={mergedPeople}
+        arrangementId={state.arrangement.id}
+        tenantId={state.chart.tenant_id}
+        onApply={handleApplyPlacement}
+      />
+      <ShareDialog open={shareOpen} onOpenChange={setShareOpen} chartId={state.chart.id} />
+      <RosterImportDialog open={importOpen} onOpenChange={setImportOpen} onImport={handleImportRoster} />
     </div>
   );
 }
