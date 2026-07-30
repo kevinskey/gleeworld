@@ -1042,63 +1042,91 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
 // ── Billing ─────────────────────────────────────────────────────────
 
 function BillingTabPanel() {
-  const { data: active = [] } = useQuery({
-    queryKey: ['billing-active-modules'],
+  // Reads gw_tenant_plans (the new plan-tier model) rather than
+  // gw_tenant_active_addons (the retired per-add-on model). The Plan
+  // tab handles browsing/upgrading; this tab is about the money side —
+  // what you're on, when it renews, and how to update your card /
+  // download invoices via Stripe.
+  const { data: current, isLoading } = useQuery({
+    queryKey: ['workspace-billing-current-plan'],
     queryFn: async () => {
       const { data } = await supabase
-        .from('gw_tenant_active_addons')
-        .select('module_id, activated_at, name, monthly_price_cents');
-      return data ?? [];
+        .from('gw_tenant_plans')
+        .select('plan_id, billing_cycle, status, current_period_end, trial_ends_at')
+        .maybeSingle();
+      return data;
     },
   });
 
-  const monthlyTotal = (active as Array<{ monthly_price_cents: number | null }>).reduce(
-    (s, m) => s + ((m.monthly_price_cents ?? 0) / 100),
-    0,
-  );
+  const tier = current ? PLAN_TIERS.find((t) => t.id === current.plan_id) ?? null : null;
+  const cycle = current?.billing_cycle === 'annual' ? 'annual' : 'monthly';
+  const priceCents = tier
+    ? cycle === 'annual' ? tier.annualCents : tier.monthlyCents
+    : 0;
+  const cycleLabel = cycle === 'annual' ? '/year' : '/month';
+  const renewal = current?.current_period_end
+    ? new Date(current.current_period_end)
+    : null;
+  const trialEnds = current?.trial_ends_at ? new Date(current.trial_ends_at) : null;
 
   return (
     <div className="space-y-4">
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-4 sm:p-5">
-          <h2 className="text-lg font-semibold mb-1">Your subscription</h2>
-          <p className="text-sm text-muted-foreground mb-4">Active add-ons and their monthly cost.</p>
-          {active.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No paid add-ons active. Browse the Modules tab to activate features.</p>
+        <CardContent className="p-4 sm:p-5 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Current subscription</h2>
+            <p className="text-sm text-muted-foreground">
+              Change or compare plans in the <strong>Plan</strong> tab. Manage payment method and
+              invoices through the Stripe portal below.
+            </p>
+          </div>
+
+          {isLoading ? (
+            <div className="py-4 flex justify-center">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : !current || !tier ? (
+            <div className="rounded-lg border border-dashed p-4 text-center space-y-1">
+              <p className="text-sm font-medium">No paid plan yet.</p>
+              <p className="text-xs text-muted-foreground">
+                You're on the free tier — pick a plan from the Plan tab when you're ready.
+              </p>
+            </div>
           ) : (
-            <>
-              <ul className="divide-y">
-                {active.map((m: any) => (
-                  <li key={m.module_id} className="py-2.5 flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-base font-semibold truncate">{m.name}</div>
-                      {m.activated_at && (
-                        <div className="text-sm text-muted-foreground">
-                          Active since {new Date(m.activated_at).toLocaleDateString()}
-                        </div>
-                      )}
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      ${((m.monthly_price_cents ?? 0) / 100).toFixed(2)}/mo
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-3 pt-3 border-t flex items-center justify-between">
-                <div className="text-sm font-semibold">Total</div>
-                <div className="text-lg font-bold">${monthlyTotal.toFixed(2)}<span className="text-xs text-muted-foreground font-normal">/month</span></div>
+            <div className="rounded-xl border p-4 flex items-center gap-4 flex-wrap">
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xl font-bold">{tier.label}</span>
+                  <Badge variant="outline" className="text-xs capitalize">{current.status}</Badge>
+                  <Badge variant="outline" className="text-xs capitalize">{cycle}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">{tier.tagline}</p>
+                {trialEnds && current.status === 'trial' && (
+                  <p className="text-xs text-amber-700 font-medium">
+                    Trial ends {trialEnds.toLocaleDateString()}
+                  </p>
+                )}
+                {renewal && current.status !== 'trial' && (
+                  <p className="text-xs text-muted-foreground">
+                    Next renewal {renewal.toLocaleDateString()}
+                  </p>
+                )}
               </div>
-            </>
+              <div className="text-right">
+                <div className="text-2xl font-bold">{formatPrice(priceCents)}</div>
+                <div className="text-xs text-muted-foreground">{cycleLabel}</div>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
 
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-8 text-center space-y-3">
+        <CardContent className="p-6 sm:p-8 text-center space-y-3">
           <CreditCard className="w-10 h-10 text-muted-foreground/40 mx-auto" />
-          <h2 className="text-lg font-semibold">Stripe customer portal</h2>
+          <h2 className="text-lg font-semibold">Payment method &amp; invoices</h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Update payment method, download invoices, and cancel add-ons through Stripe.
+            Update your card, review past invoices, or cancel your subscription through Stripe.
           </p>
           <StripePortalButton />
         </CardContent>
@@ -1119,7 +1147,7 @@ function StripePortalButton() {
       if ((data as any)?.url) {
         window.location.href = (data as any).url;
       } else if ((data as any)?.error === 'no_stripe_customer_for_tenant') {
-        toast.error('No Stripe customer yet — activate an add-on first.');
+        toast.error('No Stripe customer yet — pick a plan first.');
       } else {
         toast.error('Portal session failed.');
       }
