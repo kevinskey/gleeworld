@@ -89,6 +89,7 @@ import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
 import { AssistantFab } from '@/components/assistant/AssistantFab';
 import { AssistantSheet } from '@/components/assistant/AssistantSheet';
 import { TrialBanner } from '@/components/dashboard/TrialBanner';
+import { PermissionSlipBell } from '@/components/dashboard/PermissionSlipBell';
 import {
   resolveNav, entrySurfaces, NAV_SECTION_LABELS,
   type CatalogEntry, type NavContext, type NavSectionKey,
@@ -976,6 +977,10 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 
       {/* Views switcher — tenant super-admins only */}
       <ViewsSwitcher />
+
+      {/* Permission-slip signed bell — tour managers only; RLS scopes
+          the query so non-managers see 0 rows and the bell stays hidden. */}
+      <PermissionSlipBell />
 
       {/* Notification bell — opens the personal notifications inbox
           (matches the unread badge, which counts gw_notifications).
