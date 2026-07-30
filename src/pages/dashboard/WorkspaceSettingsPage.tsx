@@ -36,6 +36,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { DateCardTabPanel } from '@/components/home/date-card/DateCardTabPanel';
 import { ParentsTabPanel } from '@/components/workspace-settings/ParentsTabPanel';
+import { K12ToggleField } from '@/components/travel-manager/K12ToggleField';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
@@ -1322,6 +1323,18 @@ function GeneralTabPanel({ canManage }: { canManage: boolean }) {
               </Button>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+        <CardContent className="p-4 sm:p-5 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold mb-1">Ensemble type</h2>
+            <p className="text-sm text-muted-foreground">
+              Controls age-specific features such as guardian permission slips for Travel Manager.
+            </p>
+          </div>
+          <K12ToggleField canManage={canManage} />
         </CardContent>
       </Card>
 
