@@ -11,7 +11,7 @@ import {
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
-  PenLine, NotebookPen, BookOpen,
+  PenLine, NotebookPen, BookOpen, HeartHandshake,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -103,6 +103,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // via gw_tenant_nav_prefs — a fresh tenant with no prefs seeded would
   // otherwise expose the roster + invite dialog to every student.
   { key: 'people',     to: '/dashboard/users', label: 'People',     icon: Users,         section: 'people', tone: 'bg-cyan-50 text-cyan-600', tourId: 'nav-people', gate: { adminOnly: true } },
+  { key: 'parents',    to: '/dashboard/workspace?tab=parents', label: 'Parents', icon: HeartHandshake, section: 'people', tone: 'bg-rose-50 text-rose-600', tourId: 'nav-parents', gate: { adminOnly: true } },
   { key: 'attendance', to: '/attendance',      label: 'Attendance', icon: ClipboardList, section: 'people', tone: 'bg-cyan-50 text-cyan-600', tourId: 'nav-attendance-grid', surfaces: ['grid'] },
   // Admin
   { key: 'site-setup', to: '/admin/public-page',   label: 'Site Setup', icon: Settings,   section: 'admin', tone: 'bg-fuchsia-50 text-fuchsia-700', tourId: 'nav-site-setup', gate: { adminOnly: true } },
