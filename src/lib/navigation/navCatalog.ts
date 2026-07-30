@@ -11,7 +11,7 @@ import {
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
-  PenLine, NotebookPen, BookOpen, HeartHandshake,
+  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -79,6 +79,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'planner',   to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, section: 'plan', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-concert-planner', gridLabel: 'Programs', gridIcon: ListMusic, gate: { module: 'concert_planner' } },
   { key: 'liturgy',   to: '/dashboard/liturgy',         label: 'Liturgy Planner', icon: Church,        section: 'plan', tone: 'bg-amber-50 text-amber-700',     tourId: 'nav-liturgy-planner', gate: { module: 'liturgy_planner' } },
   { key: 'tour',      to: '/tour-manager',              label: 'Tour Manager',    icon: RouteIcon,     section: 'plan', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-tour-manager', gate: { module: 'tour' } },
+  { key: 'seating-charts', to: '/seating-charts',       label: 'Seating Charts',  icon: Armchair,      section: 'plan', tone: 'bg-indigo-50 text-indigo-600',   tourId: 'nav-seating-charts' },
   { key: 'auditions', to: '/dashboard/auditions',       label: 'Auditions',       icon: ScanLine,      section: 'plan', tone: 'bg-lime-50 text-lime-600',       tourId: 'nav-auditions', gate: { module: 'auditions' } },
   // Reach
   { key: 'pr-hub',    to: '/dashboard/pr-hub', label: 'PR Hub',    icon: Megaphone,     section: 'reach', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-pr-hub', gate: { module: 'pr_hub' } },

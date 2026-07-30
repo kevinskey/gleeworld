@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, UserPlus, X, RotateCcw, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LegacyMigrationBanner } from '@/features/seating-charts/adapters/LegacyMigrationBanner';
 
 interface RosterMember {
   user_id: string;
@@ -211,6 +212,7 @@ const RiserGrid = ({ config }: { config: RiserConfig }) => {
 
   return (
     <div className="space-y-4">
+      <LegacyMigrationBanner label="riser chart" />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>

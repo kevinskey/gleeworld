@@ -1,0 +1,272 @@
+// SVG canvas with pan/zoom, click/box selection, and drag-to-move.
+// Works on desktop (mouse), iPad (touch), and phone (view + tap).
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { SeatingAssignment, SeatingObject } from '@/types/seatingCharts';
+import type { AttendanceStatus } from '../attendance/attendanceStatus';
+import ObjectShape from './ObjectShape';
+import { snap } from './selectionUtils';
+
+export interface CanvasEngineProps {
+  width: number;
+  height: number;
+  objects: SeatingObject[];
+  assignments: SeatingAssignment[];
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
+  onObjectMove: (id: string, x: number, y: number) => void;
+  onObjectDropPerson?: (objectId: string, profileId: string, displayName: string) => void;
+  readOnly?: boolean;
+  showGrid?: boolean;
+  /** Optional: attendance status per profile_id, keyed to assignment.profile_id */
+  attendanceByUserId?: Map<string, AttendanceStatus>;
+  /** Optional filter to hide objects (used by role views like stage_crew). */
+  objectFilter?: (o: SeatingObject) => boolean;
+}
+
+interface ViewportState {
+  scale: number;
+  panX: number;
+  panY: number;
+}
+
+const MIN_SCALE = 0.15;
+const MAX_SCALE = 3;
+const DEFAULT_SCALE = 0.7;
+
+export function CanvasEngine({
+  width, height, objects, assignments,
+  selectedIds, onSelectionChange, onObjectMove, onObjectDropPerson,
+  readOnly = false, showGrid = true,
+  attendanceByUserId, objectFilter,
+}: CanvasEngineProps) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [viewport, setViewport] = useState<ViewportState>({ scale: DEFAULT_SCALE, panX: 40, panY: 40 });
+  const [dragState, setDragState] = useState<
+    | { kind: 'none' }
+    | { kind: 'move'; startX: number; startY: number; origin: Map<string, { x: number; y: number }> }
+    | { kind: 'pan'; startX: number; startY: number; origPan: { x: number; y: number } }
+    | { kind: 'select'; startX: number; startY: number; currentX: number; currentY: number }
+  >({ kind: 'none' });
+
+  const assignmentByObjectId = useMemo(() => {
+    const m = new Map<string, SeatingAssignment>();
+    assignments.forEach((a) => m.set(a.chart_object_id, a));
+    return m;
+  }, [assignments]);
+
+  const clientToCanvas = useCallback((clientX: number, clientY: number) => {
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return {
+      x: (clientX - rect.left - viewport.panX) / viewport.scale,
+      y: (clientY - rect.top - viewport.panY) / viewport.scale,
+    };
+  }, [viewport]);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    if (readOnly) return;
+    (e.target as SVGElement).setPointerCapture?.(e.pointerId);
+    const target = e.target as SVGElement;
+    const objectId = target.closest('[data-object-id]')?.getAttribute('data-object-id') ?? null;
+    const canvasPt = clientToCanvas(e.clientX, e.clientY);
+
+    // Space / middle-click / two-finger → pan.
+    if (e.button === 1 || (e.pointerType === 'touch' && objectId === null)) {
+      setDragState({ kind: 'pan', startX: e.clientX, startY: e.clientY, origPan: { x: viewport.panX, y: viewport.panY } });
+      return;
+    }
+
+    if (objectId) {
+      const obj = objects.find((o) => o.id === objectId);
+      if (obj?.locked) return;
+      let nextSelected = selectedIds;
+      if (!selectedIds.includes(objectId)) {
+        nextSelected = e.shiftKey ? [...selectedIds, objectId] : [objectId];
+        onSelectionChange(nextSelected);
+      }
+      const origin = new Map<string, { x: number; y: number }>();
+      objects.forEach((o) => {
+        if (nextSelected.includes(o.id)) origin.set(o.id, { x: Number(o.x), y: Number(o.y) });
+      });
+      setDragState({ kind: 'move', startX: canvasPt.x, startY: canvasPt.y, origin });
+    } else {
+      // Box-select
+      onSelectionChange([]);
+      setDragState({ kind: 'select', startX: canvasPt.x, startY: canvasPt.y, currentX: canvasPt.x, currentY: canvasPt.y });
+    }
+  }, [readOnly, clientToCanvas, viewport.panX, viewport.panY, objects, selectedIds, onSelectionChange]);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    if (dragState.kind === 'none') return;
+    const canvasPt = clientToCanvas(e.clientX, e.clientY);
+    if (dragState.kind === 'move') {
+      const dx = canvasPt.x - dragState.startX;
+      const dy = canvasPt.y - dragState.startY;
+      dragState.origin.forEach((origin, id) => {
+        onObjectMove(id, snap(origin.x + dx), snap(origin.y + dy));
+      });
+    } else if (dragState.kind === 'pan') {
+      setViewport((v) => ({
+        ...v,
+        panX: dragState.origPan.x + (e.clientX - dragState.startX),
+        panY: dragState.origPan.y + (e.clientY - dragState.startY),
+      }));
+    } else if (dragState.kind === 'select') {
+      setDragState({ ...dragState, currentX: canvasPt.x, currentY: canvasPt.y });
+      const x = Math.min(dragState.startX, canvasPt.x);
+      const y = Math.min(dragState.startY, canvasPt.y);
+      const w = Math.abs(dragState.startX - canvasPt.x);
+      const h = Math.abs(dragState.startY - canvasPt.y);
+      const inside = objects
+        .filter((o) => {
+          const cx = Number(o.x) + Number(o.width) / 2;
+          const cy = Number(o.y) + Number(o.height) / 2;
+          return cx >= x && cx <= x + w && cy >= y && cy <= y + h && !o.locked;
+        })
+        .map((o) => o.id);
+      onSelectionChange(inside);
+    }
+  }, [dragState, clientToCanvas, objects, onObjectMove, onSelectionChange]);
+
+  const handlePointerUp = useCallback(() => {
+    setDragState({ kind: 'none' });
+  }, []);
+
+  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+    if (!e.ctrlKey && !e.metaKey) return;
+    e.preventDefault();
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const px = e.clientX - rect.left;
+    const py = e.clientY - rect.top;
+    setViewport((v) => {
+      const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, v.scale * (e.deltaY > 0 ? 0.9 : 1.1)));
+      // Zoom around the cursor
+      const nextPanX = px - ((px - v.panX) / v.scale) * nextScale;
+      const nextPanY = py - ((py - v.panY) / v.scale) * nextScale;
+      return { scale: nextScale, panX: nextPanX, panY: nextPanY };
+    });
+  }, []);
+
+  const handleDropZone = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const person = e.dataTransfer.getData('application/x-seating-person');
+    if (!person || !onObjectDropPerson) return;
+    const parsed = JSON.parse(person) as { profileId: string; displayName: string };
+    const canvasPt = clientToCanvas(e.clientX, e.clientY);
+    // Find nearest seat under the pointer.
+    const seat = objects.find((o) => {
+      const x1 = Number(o.x);
+      const y1 = Number(o.y);
+      const x2 = x1 + Number(o.width);
+      const y2 = y1 + Number(o.height);
+      return canvasPt.x >= x1 && canvasPt.x <= x2 && canvasPt.y >= y1 && canvasPt.y <= y2
+        && ['seat', 'chair', 'riser_slot', 'desk'].includes(o.object_type);
+    });
+    if (seat) onObjectDropPerson(seat.id, parsed.profileId, parsed.displayName);
+  }, [clientToCanvas, objects, onObjectDropPerson]);
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  }, []);
+
+  // Keyboard: arrow keys nudge selection.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (readOnly) return;
+      if (!selectedIds.length) return;
+      const active = document.activeElement;
+      if (active && active.tagName === 'INPUT') return;
+      const delta = e.shiftKey ? 32 : 8;
+      let dx = 0, dy = 0;
+      if (e.key === 'ArrowUp') dy = -delta;
+      else if (e.key === 'ArrowDown') dy = delta;
+      else if (e.key === 'ArrowLeft') dx = -delta;
+      else if (e.key === 'ArrowRight') dx = delta;
+      else return;
+      e.preventDefault();
+      selectedIds.forEach((id) => {
+        const o = objects.find((x) => x.id === id);
+        if (o) onObjectMove(id, snap(Number(o.x) + dx), snap(Number(o.y) + dy));
+      });
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [readOnly, selectedIds, objects, onObjectMove]);
+
+  const selectRect = dragState.kind === 'select' ? {
+    x: Math.min(dragState.startX, dragState.currentX),
+    y: Math.min(dragState.startY, dragState.currentY),
+    w: Math.abs(dragState.startX - dragState.currentX),
+    h: Math.abs(dragState.startY - dragState.currentY),
+  } : null;
+
+  return (
+    <div
+      ref={wrapRef}
+      className="relative flex-1 overflow-hidden bg-slate-100"
+      onWheel={handleWheel}
+      onDrop={handleDropZone}
+      onDragOver={handleDragOver}
+    >
+      <svg
+        ref={svgRef}
+        className="w-full h-full touch-none"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+      >
+        <g transform={`translate(${viewport.panX} ${viewport.panY}) scale(${viewport.scale})`}>
+          {showGrid && (
+            <>
+              <defs>
+                <pattern id="grid8" width={8} height={8} patternUnits="userSpaceOnUse">
+                  <path d="M 8 0 L 0 0 0 8" fill="none" stroke="#e2e8f0" strokeWidth="0.5" />
+                </pattern>
+              </defs>
+              <rect x={0} y={0} width={width} height={height} fill="url(#grid8)" />
+            </>
+          )}
+          <rect x={0} y={0} width={width} height={height} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
+          {objects
+            .slice()
+            .filter((o) => (objectFilter ? objectFilter(o) : true))
+            .sort((a, b) => a.z_index - b.z_index)
+            .map((o) => {
+              const a = assignmentByObjectId.get(o.id);
+              const status = a?.profile_id ? attendanceByUserId?.get(a.profile_id) : undefined;
+              return (
+                <ObjectShape
+                  key={o.id}
+                  object={o}
+                  assignment={a}
+                  selected={selectedIds.includes(o.id)}
+                  attendanceStatus={status}
+                />
+              );
+            })}
+          {selectRect && (
+            <rect
+              x={selectRect.x} y={selectRect.y} width={selectRect.w} height={selectRect.h}
+              fill="rgba(37,99,235,0.08)" stroke="#2563eb" strokeWidth={1} strokeDasharray="4 4"
+            />
+          )}
+        </g>
+      </svg>
+      <div className="absolute bottom-2 right-2 flex gap-2 bg-white/90 backdrop-blur rounded-md shadow px-2 py-1 text-xs text-slate-600">
+        <span>Zoom: {Math.round(viewport.scale * 100)}%</span>
+        <button
+          type="button"
+          className="text-slate-700 hover:text-slate-900"
+          onClick={() => setViewport({ scale: DEFAULT_SCALE, panX: 40, panY: 40 })}
+        >
+          Reset view
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default CanvasEngine;
