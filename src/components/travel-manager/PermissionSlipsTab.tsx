@@ -64,7 +64,7 @@ function relativeTime(iso: string | null): string {
   return `${days}d ago`;
 }
 
-function SlipBadge({ status, sentAt, signedAt }: Pick<PermissionSlip, 'status' | 'sent_at' | 'signed_at'>) {
+function SlipBadge({ status, sent_at, signed_at }: Pick<PermissionSlip, 'status' | 'sent_at' | 'signed_at'>) {
   switch (status) {
     case 'pending':
       return (
@@ -77,14 +77,14 @@ function SlipBadge({ status, sentAt, signedAt }: Pick<PermissionSlip, 'status' |
       return (
         <Badge variant="secondary" className="text-xs gap-1">
           <Clock className="h-3 w-3" />
-          Sent {relativeTime(sentAt)}
+          Sent {relativeTime(sent_at)}
         </Badge>
       );
     case 'signed':
       return (
         <Badge variant="success" className="text-xs gap-1">
           <CheckCircle2 className="h-3 w-3" />
-          Signed {relativeTime(signedAt)}
+          Signed {relativeTime(signed_at)}
         </Badge>
       );
     case 'expired':
