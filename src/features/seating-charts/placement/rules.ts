@@ -9,7 +9,9 @@ export type PlacementRule =
   | 'group_by_section'
   | 'keep_together'
   | 'separate'
-  | 'height_order';
+  | 'height_order'
+  | 'front_row_priority'
+  | 'accessibility_priority';
 
 export interface PlacementInput {
   objects: SeatingObject[];
@@ -196,13 +198,75 @@ export function separate(input: PlacementInput): PlacementResult {
   return pairPeopleToSeats(combined, input);
 }
 
+/**
+ * Front-row priority: `priorityPersonIds` are placed first (they land in
+ * the top-of-canvas seats first thanks to sortedSeats row-major order),
+ * then everyone else alphabetical.
+ */
+export function frontRowPriority(
+  input: PlacementInput & { priorityPersonIds?: Set<string> },
+): PlacementResult {
+  const priority = input.priorityPersonIds ?? new Set(input.groups?.flat() ?? []);
+  const first = input.people.filter((p) => priority.has(p.user_id))
+    .sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? ''));
+  const rest = input.people.filter((p) => !priority.has(p.user_id))
+    .sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? ''));
+  return pairPeopleToSeats([...first, ...rest], input);
+}
+
+/**
+ * Accessibility priority: prefer seats flagged with
+ * `properties.accessibility_only === true` for the priority set. Falls back
+ * to the normal front-of-house behaviour when no seats are flagged.
+ */
+export function accessibilityPriority(
+  input: PlacementInput & { priorityPersonIds?: Set<string> },
+): PlacementResult {
+  const priority = input.priorityPersonIds ?? new Set(input.groups?.flat() ?? []);
+  const locked = new Set([...(input.lockedPersonIds ?? [])]);
+  const existingByObj = new Map(input.assignments.map((a) => [a.chart_object_id, a] as const));
+  const lockedSeatIds = new Set<string>();
+  input.assignments.forEach((a) => {
+    if (a.profile_id && locked.has(a.profile_id)) lockedSeatIds.add(a.chart_object_id);
+  });
+
+  const openSeats = sortedSeats(seatObjects(input.objects)).filter((s) => !lockedSeatIds.has(s.id));
+  const accessibleSeats = openSeats.filter((s) => (s.properties as any)?.accessibility_only === true);
+  const otherSeats = openSeats.filter((s) => (s.properties as any)?.accessibility_only !== true);
+
+  const priorityPeople = input.people
+    .filter((p) => priority.has(p.user_id) && !locked.has(p.user_id))
+    .sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? ''));
+  const otherPeople = input.people
+    .filter((p) => !priority.has(p.user_id) && !locked.has(p.user_id))
+    .sort((a, b) => (a.full_name ?? '').localeCompare(b.full_name ?? ''));
+
+  const seatOrder = [...accessibleSeats, ...otherSeats];
+  const peopleOrder = [...priorityPeople, ...otherPeople];
+
+  const nextAssignments: SeatingAssignment[] = [];
+  const takenIds = new Set<string>();
+  for (let i = 0; i < seatOrder.length && i < peopleOrder.length; i++) {
+    nextAssignments.push(buildAssignment(seatOrder[i], peopleOrder[i], input, existingByObj.get(seatOrder[i].id)));
+    takenIds.add(peopleOrder[i].user_id);
+  }
+  const unassigned = peopleOrder.filter((p) => !takenIds.has(p.user_id));
+  const flaggedCount = accessibleSeats.length;
+  const message = flaggedCount === 0
+    ? `No accessibility-flagged seats. Placed ${nextAssignments.length} people, priority first.`
+    : `Placed ${nextAssignments.length} people; priority set filled ${Math.min(priorityPeople.length, flaggedCount)} accessibility seat(s).`;
+  return { assignments: nextAssignments, unassigned, message };
+}
+
 export function runRule(rule: PlacementRule, input: PlacementInput): PlacementResult {
   switch (rule) {
-    case 'alphabetical':     return alphabetical(input);
-    case 'random':           return random(input);
-    case 'group_by_section': return groupBySection(input);
-    case 'keep_together':    return keepTogether(input);
-    case 'separate':         return separate(input);
-    case 'height_order':     return heightOrder(input);
+    case 'alphabetical':          return alphabetical(input);
+    case 'random':                return random(input);
+    case 'group_by_section':      return groupBySection(input);
+    case 'keep_together':         return keepTogether(input);
+    case 'separate':              return separate(input);
+    case 'height_order':          return heightOrder(input);
+    case 'front_row_priority':    return frontRowPriority(input);
+    case 'accessibility_priority': return accessibilityPriority(input);
   }
 }

@@ -217,6 +217,50 @@ export function useSeatingChart(chartId: string | undefined) {
     [scheduleSave],
   );
 
+  const updateAssignment = useCallback(
+    (id: string, patch: Partial<SeatingAssignment>) => {
+      setState((prev) =>
+        prev
+          ? { ...prev, assignments: prev.assignments.map((a) => (a.id === id ? { ...a, ...patch } : a)) }
+          : prev,
+      );
+      pendingRef.current.assignmentUpdates[id] = { ...pendingRef.current.assignmentUpdates[id], ...patch };
+      scheduleSave();
+    },
+    [scheduleSave],
+  );
+
+  const swapAssignments = useCallback(
+    (swaps: Array<{ aId: string; bId: string; aChartObjectId: string; bChartObjectId: string }>) => {
+      setState((prev) => {
+        if (!prev) return prev;
+        // Build a map of assignment id → new chart_object_id
+        const idToNewObject = new Map<string, string>();
+        swaps.forEach((s) => {
+          idToNewObject.set(s.aId, s.bChartObjectId);
+          idToNewObject.set(s.bId, s.aChartObjectId);
+        });
+        return {
+          ...prev,
+          assignments: prev.assignments.map((a) => {
+            const nextObj = idToNewObject.get(a.id);
+            return nextObj ? { ...a, chart_object_id: nextObj } : a;
+          }),
+        };
+      });
+      swaps.forEach((s) => {
+        pendingRef.current.assignmentUpdates[s.aId] = {
+          ...pendingRef.current.assignmentUpdates[s.aId], chart_object_id: s.bChartObjectId,
+        };
+        pendingRef.current.assignmentUpdates[s.bId] = {
+          ...pendingRef.current.assignmentUpdates[s.bId], chart_object_id: s.aChartObjectId,
+        };
+      });
+      scheduleSave();
+    },
+    [scheduleSave],
+  );
+
   const upsertAssignment = useCallback(
     (assignment: SeatingAssignment) => {
       setState((prev) => {
@@ -422,6 +466,8 @@ export function useSeatingChart(chartId: string | undefined) {
       updateObject,
       deleteObjects,
       upsertAssignment,
+      updateAssignment,
+      swapAssignments,
       bulkUpsertAssignments,
       clearAssignment,
       forceSave,
@@ -443,6 +489,8 @@ export function useSeatingChart(chartId: string | undefined) {
       updateObject,
       deleteObjects,
       upsertAssignment,
+      updateAssignment,
+      swapAssignments,
       bulkUpsertAssignments,
       clearAssignment,
       forceSave,

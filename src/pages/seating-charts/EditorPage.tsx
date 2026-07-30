@@ -21,6 +21,9 @@ import { exportChartPdf } from '@/features/seating-charts/exports/pdfExport';
 import { AttendancePanel } from '@/features/seating-charts/attendance/AttendancePanel';
 import { useChartAttendance } from '@/features/seating-charts/attendance/useChartAttendance';
 import { AssociationsMenu } from '@/features/seating-charts/associations/AssociationsMenu';
+import { GroupManager } from '@/features/seating-charts/placement/GroupManager';
+import { OrchestraToolbar } from '@/features/seating-charts/orchestra/OrchestraToolbar';
+import { Users2 } from 'lucide-react';
 import type { SeatingAssignment, SeatingObject, SeatingPerson } from '@/types/seatingCharts';
 
 function newId(prefix: string) {
@@ -34,7 +37,8 @@ export function SeatingChartEditorPage() {
   const {
     state, loading, saveStatus,
     patchChart, addObject, updateObject, deleteObjects,
-    upsertAssignment, bulkUpsertAssignments, clearAssignment, forceSave, reload,
+    upsertAssignment, updateAssignment, swapAssignments,
+    bulkUpsertAssignments, clearAssignment, forceSave, reload,
     switchArrangement, createArrangement, renameArrangement, duplicateArrangement,
     deleteArrangement, setDefaultArrangement, replaceArrangementContents,
   } = useSeatingChart(chartId);
@@ -46,6 +50,7 @@ export function SeatingChartEditorPage() {
   const [placementOpen, setPlacementOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
+  const [groupsOpen, setGroupsOpen] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
   const attendance = useChartAttendance(chartId);
 
@@ -229,6 +234,15 @@ export function SeatingChartEditorPage() {
             <Share2 className="w-4 h-4" />
           </Button>
           <AssociationsMenu chartId={state.chart.id} />
+          <Button variant="ghost" size="icon" title="Groups" onClick={() => setGroupsOpen(true)}>
+            <Users2 className="w-4 h-4" />
+          </Button>
+          <OrchestraToolbar
+            objects={state.objects}
+            assignments={state.assignments}
+            onApplyChairNumbers={(patches) => patches.forEach((p) => updateAssignment(p.id, { chair_number: p.chair_number }))}
+            onRotateStands={(swaps) => swapAssignments(swaps)}
+          />
           <AttendancePanel
             attendance={attendance}
             assignments={state.assignments}
@@ -287,7 +301,10 @@ export function SeatingChartEditorPage() {
         <PropertiesPanel
           selection={selection}
           assignmentByObjectId={assignmentByObjectId}
+          allAssignments={state.assignments}
+          allObjects={state.objects}
           onUpdate={updateObject}
+          onUpdateAssignment={updateAssignment}
           onClearAssignment={clearAssignment}
           onDelete={(ids) => { deleteObjects(ids); setSelectedIds([]); }}
         />
@@ -296,15 +313,24 @@ export function SeatingChartEditorPage() {
       <PlacementDialog
         open={placementOpen}
         onOpenChange={setPlacementOpen}
+        chart={state.chart}
         objects={state.objects}
         assignments={state.assignments}
         people={mergedPeople}
         arrangementId={state.arrangement.id}
         tenantId={state.chart.tenant_id}
         onApply={handleApplyPlacement}
+        onOpenGroupManager={() => setGroupsOpen(true)}
       />
       <ShareDialog open={shareOpen} onOpenChange={setShareOpen} chartId={state.chart.id} />
       <RosterImportDialog open={importOpen} onOpenChange={setImportOpen} onImport={handleImportRoster} />
+      <GroupManager
+        open={groupsOpen}
+        onOpenChange={setGroupsOpen}
+        chart={state.chart}
+        people={mergedPeople}
+        onPatchChart={patchChart}
+      />
     </div>
   );
 }
