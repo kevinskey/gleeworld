@@ -7,7 +7,7 @@ import type { SeatingAssociation, SeatingChart } from '@/types/seatingCharts';
 
 export interface AttachChartInput {
   chartId: string;
-  associationType: 'tour' | 'tour_event';
+  associationType: 'tour' | 'tour_event' | 'ensemble' | 'course' | 'event' | 'venue' | 'production';
   associationId: string;
   arrangementId?: string;
 }
@@ -34,7 +34,7 @@ export async function attachChart(input: AttachChartInput): Promise<SeatingAssoc
 }
 
 export async function getAttachedCharts(
-  associationType: 'tour' | 'tour_event',
+  associationType: AttachChartInput['associationType'],
   associationId: string,
 ): Promise<SeatingChart[]> {
   const { data, error } = await supabase

@@ -18,6 +18,9 @@ import { ShareDialog } from '@/features/seating-charts/sharing/ShareDialog';
 import { RosterImportDialog } from '@/features/seating-charts/imports/RosterImportDialog';
 import { VersionsMenu } from '@/features/seating-charts/versions/VersionsMenu';
 import { exportChartPdf } from '@/features/seating-charts/exports/pdfExport';
+import { AttendancePanel } from '@/features/seating-charts/attendance/AttendancePanel';
+import { useChartAttendance } from '@/features/seating-charts/attendance/useChartAttendance';
+import { AssociationsMenu } from '@/features/seating-charts/associations/AssociationsMenu';
 import type { SeatingAssignment, SeatingObject, SeatingPerson } from '@/types/seatingCharts';
 
 function newId(prefix: string) {
@@ -44,6 +47,7 @@ export function SeatingChartEditorPage() {
   const [shareOpen, setShareOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const attendance = useChartAttendance(chartId);
 
   const loadPeople = useCallback(async () => {
     const { data } = await supabase
@@ -138,6 +142,10 @@ export function SeatingChartEditorPage() {
     bulkUpsertAssignments(newAssignments);
   }, [bulkUpsertAssignments]);
 
+  const handleReflow = useCallback((moves: Array<{ id: string; x: number; y: number }>) => {
+    moves.forEach((m) => updateObject(m.id, { x: m.x, y: m.y }));
+  }, [updateObject]);
+
   const handleExportPng = useCallback(async () => {
     const svg = canvasRef.current?.querySelector('svg');
     if (!svg || !state) return;
@@ -220,6 +228,14 @@ export function SeatingChartEditorPage() {
           <Button variant="ghost" size="icon" title="Share" onClick={() => setShareOpen(true)}>
             <Share2 className="w-4 h-4" />
           </Button>
+          <AssociationsMenu chartId={state.chart.id} />
+          <AttendancePanel
+            attendance={attendance}
+            assignments={state.assignments}
+            objects={state.objects}
+            onReflow={handleReflow}
+            onRefresh={attendance.refresh}
+          />
           <VersionsMenu
             arrangementId={state.arrangement.id}
             objects={state.objects}
@@ -264,6 +280,7 @@ export function SeatingChartEditorPage() {
             onSelectionChange={setSelectedIds}
             onObjectMove={(id, x, y) => updateObject(id, { x, y })}
             onObjectDropPerson={handleDropPerson}
+            attendanceByUserId={attendance.byUserId}
           />
         </div>
 

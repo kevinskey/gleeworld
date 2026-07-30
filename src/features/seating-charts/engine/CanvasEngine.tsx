@@ -2,6 +2,7 @@
 // Works on desktop (mouse), iPad (touch), and phone (view + tap).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { SeatingAssignment, SeatingObject } from '@/types/seatingCharts';
+import type { AttendanceStatus } from '../attendance/attendanceStatus';
 import ObjectShape from './ObjectShape';
 import { snap } from './selectionUtils';
 
@@ -16,6 +17,10 @@ export interface CanvasEngineProps {
   onObjectDropPerson?: (objectId: string, profileId: string, displayName: string) => void;
   readOnly?: boolean;
   showGrid?: boolean;
+  /** Optional: attendance status per profile_id, keyed to assignment.profile_id */
+  attendanceByUserId?: Map<string, AttendanceStatus>;
+  /** Optional filter to hide objects (used by role views like stage_crew). */
+  objectFilter?: (o: SeatingObject) => boolean;
 }
 
 interface ViewportState {
@@ -32,6 +37,7 @@ export function CanvasEngine({
   width, height, objects, assignments,
   selectedIds, onSelectionChange, onObjectMove, onObjectDropPerson,
   readOnly = false, showGrid = true,
+  attendanceByUserId, objectFilter,
 }: CanvasEngineProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -226,15 +232,21 @@ export function CanvasEngine({
           <rect x={0} y={0} width={width} height={height} fill="#ffffff" stroke="#cbd5e1" strokeWidth={1} />
           {objects
             .slice()
+            .filter((o) => (objectFilter ? objectFilter(o) : true))
             .sort((a, b) => a.z_index - b.z_index)
-            .map((o) => (
-              <ObjectShape
-                key={o.id}
-                object={o}
-                assignment={assignmentByObjectId.get(o.id)}
-                selected={selectedIds.includes(o.id)}
-              />
-            ))}
+            .map((o) => {
+              const a = assignmentByObjectId.get(o.id);
+              const status = a?.profile_id ? attendanceByUserId?.get(a.profile_id) : undefined;
+              return (
+                <ObjectShape
+                  key={o.id}
+                  object={o}
+                  assignment={a}
+                  selected={selectedIds.includes(o.id)}
+                  attendanceStatus={status}
+                />
+              );
+            })}
           {selectRect && (
             <rect
               x={selectRect.x} y={selectRect.y} width={selectRect.w} height={selectRect.h}

@@ -1,12 +1,14 @@
 // Pure-SVG renderer for one seating object. No React state — the parent
 // (CanvasEngine) owns selection + drag.
 import type { SeatingAssignment, SeatingObject } from '@/types/seatingCharts';
+import { ATTENDANCE_COLORS, type AttendanceStatus } from '../attendance/attendanceStatus';
 
 interface ObjectShapeProps {
   object: SeatingObject;
   assignment?: SeatingAssignment;
   selected: boolean;
   displayLabel?: string;
+  attendanceStatus?: AttendanceStatus;
 }
 
 function assignedFill(base: string | undefined, hasPerson: boolean, isAbsent: boolean): string {
@@ -15,7 +17,7 @@ function assignedFill(base: string | undefined, hasPerson: boolean, isAbsent: bo
   return base ?? '#c7d2fe';
 }
 
-export function ObjectShape({ object, assignment, selected, displayLabel }: ObjectShapeProps) {
+export function ObjectShape({ object, assignment, selected, displayLabel, attendanceStatus }: ObjectShapeProps) {
   const x = Number(object.x);
   const y = Number(object.y);
   const w = Number(object.width);
@@ -81,6 +83,9 @@ export function ObjectShape({ object, assignment, selected, displayLabel }: Obje
       )}
       {object.locked && (
         <circle cx={x + w - 6} cy={y + 6} r={4} fill="#64748b" />
+      )}
+      {attendanceStatus && attendanceStatus !== 'unknown' && hasPerson && (
+        <circle cx={x + 6} cy={y + 6} r={4} fill={ATTENDANCE_COLORS[attendanceStatus]} stroke="#fff" strokeWidth={1} />
       )}
     </g>
   );
