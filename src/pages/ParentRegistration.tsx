@@ -6,9 +6,10 @@
 // it later from the Parents panel). Either way the parent's account is
 // real and, once they confirm email, they'll appear in the "Parents
 // only" recipient list on every composer.
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { UserPlus, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { UserPlus, Eye, EyeOff, ArrowLeft, Search, ChevronRight } from 'lucide-react';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,14 @@ export default function ParentRegistration() {
   const { toast } = useToast();
   const { settings: branding } = useBrandingSettings();
   const isPortrait = useIsPortrait();
+
+  // The apex `gleeworld.org` and its www resolve to the platform-owner's
+  // `main` tenant. A parent hitting /register/parent there would be
+  // linked to the wrong students, so intercept and show a picker that
+  // sends them to their actual choir's subdomain. Everywhere else the
+  // form renders as normal.
+  const currentSlug = getTenantSlug();
+  const isPlatformApex = currentSlug === 'main';
 
   const authImageUrl =
     (isPortrait && branding.auth_background_mobile_url) || branding.auth_background_url;
@@ -98,6 +107,10 @@ export default function ParentRegistration() {
     }
   };
 
+  if (isPlatformApex) {
+    return <TenantPicker background={authBackgroundStyle} />;
+  }
+
   return (
     <PublicLayout>
       <div className="min-h-screen flex items-center justify-center px-4 py-12" style={authBackgroundStyle}>
@@ -169,6 +182,113 @@ export default function ParentRegistration() {
               <ArrowLeft className="w-3.5 h-3.5" /> Back to sign in
             </Link>
             <Link to="/" className="text-muted-foreground hover:text-foreground">Home</Link>
+          </div>
+        </div>
+      </div>
+    </PublicLayout>
+  );
+}
+
+// Rendered instead of the form when a parent lands on the apex domain
+// (tenant `main`). Fetches the list of active tenants from
+// gw_tenants — anon has SELECT on slug + name — and lets them pick
+// their choir. Selecting one sends them to that tenant's own
+// /register/parent so the trigger stamps the right tenant_id.
+function TenantPicker({ background }: { background: React.CSSProperties }) {
+  const [q, setQ] = useState('');
+  const { data: tenants = [], isLoading } = useQuery({
+    queryKey: ['parent-signup-tenant-picker'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_tenants')
+        .select('slug, name')
+        .neq('slug', 'main')
+        .order('name');
+      if (error) throw error;
+      return (data ?? []) as Array<{ slug: string; name: string | null }>;
+    },
+  });
+
+  const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    if (!needle) return tenants;
+    return tenants.filter((t) =>
+      (t.name ?? '').toLowerCase().includes(needle) ||
+      t.slug.toLowerCase().includes(needle),
+    );
+  }, [tenants, q]);
+
+  const goToTenant = (slug: string) => {
+    // Preserve the apex host suffix (gleeworld.org vs a staging host)
+    // so this works in any environment. Falls back to gleeworld.org
+    // when the current host lacks a dot (localhost).
+    const host = typeof window !== 'undefined' ? window.location.hostname : 'gleeworld.org';
+    const parts = host.split('.');
+    const rootDomain = parts.length >= 2 ? parts.slice(-2).join('.') : 'gleeworld.org';
+    window.location.assign(`https://${slug}.${rootDomain}/register/parent`);
+  };
+
+  return (
+    <PublicLayout>
+      <div className="min-h-screen flex items-center justify-center px-4 py-12" style={background}>
+        <div className="w-full max-w-lg bg-card/95 backdrop-blur rounded-2xl shadow-2xl p-6 sm:p-8 space-y-5">
+          <div className="text-center space-y-1.5">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-1">
+              <UserPlus className="w-6 h-6" />
+            </div>
+            <h1 className="text-2xl font-semibold text-foreground">Which choir does your child sing in?</h1>
+            <p className="text-sm text-muted-foreground">
+              Pick your child's ensemble to sign up. If you're not sure, ask the director.
+            </p>
+          </div>
+
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search ensembles…"
+              className="pl-9 h-10"
+              autoFocus
+            />
+          </div>
+
+          <div className="max-h-[420px] overflow-y-auto rounded-lg border divide-y">
+            {isLoading && (
+              <div className="px-4 py-6 text-sm text-muted-foreground text-center">Loading ensembles…</div>
+            )}
+            {!isLoading && filtered.length === 0 && (
+              <div className="px-4 py-6 text-sm text-muted-foreground text-center">
+                No ensembles match "{q}".
+              </div>
+            )}
+            {filtered.map((t) => (
+              <button
+                key={t.slug}
+                type="button"
+                onClick={() => goToTenant(t.slug)}
+                className="w-full text-left px-4 py-3 hover:bg-muted/40 transition-colors flex items-center gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-foreground truncate">
+                    {t.name || t.slug}
+                  </div>
+                  <div className="text-xs text-muted-foreground truncate">
+                    {t.slug}.gleeworld.org
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between text-sm">
+            <Link to="/" className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to home
+            </Link>
+            <Link to="/auth?mode=signin" className="text-muted-foreground hover:text-foreground">
+              Already have an account? Sign in
+            </Link>
           </div>
         </div>
       </div>
