@@ -45,6 +45,10 @@ CREATE POLICY guardians_student_update ON gw_guardians
   FOR UPDATE USING (student_user_id = auth.uid())
   WITH CHECK (student_user_id = auth.uid());
 
+CREATE TRIGGER gw_guardians_set_tenant_id
+  BEFORE INSERT ON gw_guardians
+  FOR EACH ROW EXECUTE FUNCTION public.set_tenant_id_default();
+
 CREATE TRIGGER gw_guardians_set_updated_at
   BEFORE UPDATE ON gw_guardians
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -92,6 +96,10 @@ CREATE POLICY slips_teacher_manage ON gw_permission_slips
 
 CREATE POLICY slips_student_read ON gw_permission_slips
   FOR SELECT USING (student_user_id = auth.uid());
+
+CREATE TRIGGER gw_permission_slips_set_tenant_id
+  BEFORE INSERT ON gw_permission_slips
+  FOR EACH ROW EXECUTE FUNCTION public.set_tenant_id_default();
 
 CREATE TRIGGER gw_permission_slips_set_updated_at
   BEFORE UPDATE ON gw_permission_slips
