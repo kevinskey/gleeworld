@@ -405,10 +405,10 @@ export const TourNotesSection: React.FC = () => {
         <div>
           <h2 className="text-lg font-semibold flex items-center gap-2">
             <MessageSquare className="h-5 w-5 text-primary" />
-            Tour Notes & Status Updates
+            Travel Notes & Status Updates
           </h2>
           <p className="text-sm text-muted-foreground">
-            Real-time notes from executive board and tour managers
+            Real-time notes from executive board and travel managers
           </p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -420,7 +420,7 @@ export const TourNotesSection: React.FC = () => {
           </DialogTrigger>
           <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-              <DialogTitle>New Tour Note</DialogTitle>
+              <DialogTitle>New Travel Note</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="grid grid-cols-2 gap-3">

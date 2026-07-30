@@ -130,8 +130,8 @@ const contentConfig: Record<string, {
   description: string;
 }> = {
   'overview': {
-    title: 'Tour Management',
-    description: 'Overview of all tour operations'
+    title: 'Travel Management',
+    description: 'Overview of all travel operations'
   },
   'logistics': {
     title: 'Itinerary',

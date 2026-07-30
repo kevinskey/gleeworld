@@ -26,6 +26,8 @@ export const ROUTES = {
   SHOP_SUCCESS: '/shop/success',
   
   TOUR_PLANNER: '/tour-planner',
+  TRAVEL_MANAGER: '/travel-manager',
+  TRAVEL_PLANNER: '/travel-planner',
   APPOINTMENTS: '/appointments',
   PR_HUB: '/dashboard/pr-hub',
   SIGHT_READING_SUBMISSION: '/sight-reading-submission',

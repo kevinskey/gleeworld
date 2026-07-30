@@ -2727,6 +2727,26 @@ const App = () => {
                                    </ProtectedRoute>
                                  }
                                 />
+                                <Route
+                                  path="/travel-manager"
+                                  element={
+                                    <ProtectedRoute>
+                                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                        <DashboardShell><TourPlanner /></DashboardShell>
+                                      </UniversalLayout>
+                                    </ProtectedRoute>
+                                  }
+                                />
+                                <Route
+                                  path="/travel-planner"
+                                  element={
+                                    <ProtectedRoute>
+                                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                        <DashboardShell><TourPlanner /></DashboardShell>
+                                      </UniversalLayout>
+                                    </ProtectedRoute>
+                                  }
+                                />
                                 <Route 
                                   path="/weather" 
                                   element={

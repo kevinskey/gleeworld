@@ -307,14 +307,14 @@ export const TourRosterSection = () => {
           <div className="p-4 border-b border-border flex-shrink-0">
             <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
-              Tour Roster
+              Travel Roster
               <Badge variant="secondary" className="ml-auto">{rosterMembers.length}</Badge>
             </h3>
           </div>
           <div className="p-4 space-y-2 overflow-y-auto flex-1" style={{ WebkitOverflowScrolling: 'touch' }}>
             {rosterMembers.length === 0 ? (
               <p className="text-center text-muted-foreground py-8 text-sm">
-                No members added to tour roster yet
+                No members added to travel roster yet
               </p>
             ) : (
               rosterMembers.map((member) => (

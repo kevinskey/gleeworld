@@ -276,7 +276,7 @@ Note: All documentation and deposits can be mailed to Riverside Music Institute,
 
       toast({
         title: "Contract Saved",
-        description: "Tour contract has been saved as a draft",
+        description: "Travel contract has been saved as a draft",
       });
     } catch (error) {
       console.error('Error saving contract:', error);
@@ -321,7 +321,7 @@ Note: All documentation and deposits can be mailed to Riverside Music Institute,
         <div>
           <h3 className="text-base font-semibold flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />
-            Tour Performance Agreement
+            Travel Performance Agreement
           </h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             Official {getOrgName()} contract format

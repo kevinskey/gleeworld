@@ -132,7 +132,7 @@ export const TourRouteTimeline = ({
         <CardHeader className="py-3 px-4">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
             <Route className="h-4 w-4 text-primary" />
-            Tour Route
+            Travel Route
           </CardTitle>
         </CardHeader>
         <CardContent className="px-4 pb-4">
@@ -147,7 +147,7 @@ export const TourRouteTimeline = ({
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
             <Route className="h-5 w-5 text-[#150d26]" />
-            Tour Route
+            Travel Route
           </CardTitle>
           <Button variant="outline" size="sm" className="h-8 text-sm text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-600" onClick={() => onNavigate('route-planning')}>
             Plan Route
@@ -160,7 +160,7 @@ export const TourRouteTimeline = ({
             <Route className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
             <p className="text-sm text-slate-600 dark:text-slate-400">No upcoming stops</p>
             <Button variant="outline" size="sm" className="mt-3" onClick={() => onNavigate('tour-dates')}>
-              Add Tour Dates
+              Add Travel Dates
             </Button>
           </div> : <div className="relative">
             {/* Timeline line */}
