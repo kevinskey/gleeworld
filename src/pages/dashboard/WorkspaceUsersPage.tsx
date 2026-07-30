@@ -27,8 +27,8 @@ import {
 } from '@/components/ui/select';
 import {
   Users, UserPlus, Search, Loader2, Shield, GraduationCap, Music, Heart,
-  AlertCircle, MoreVertical, Trash2, Power, Check, Upload, FileSpreadsheet,
-  ChevronDown, Download,
+  HeartHandshake, AlertCircle, MoreVertical, Trash2, Power, Check, Upload,
+  FileSpreadsheet, ChevronDown, Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -60,9 +60,10 @@ const ROLE_PALETTE: Record<string, { Icon: React.ElementType; tone: string; labe
   'member':      { Icon: Music,          tone: 'bg-emerald-50 text-emerald-700 border-emerald-200', label: 'Student' },
   'fan':         { Icon: Heart,          tone: 'bg-amber-50 text-amber-700 border-amber-200',   label: 'Fan' },
   'vip':         { Icon: Heart,          tone: 'bg-amber-50 text-amber-700 border-amber-200',   label: 'Fan (VIP)' },
+  'parent':      { Icon: HeartHandshake, tone: 'bg-rose-50 text-rose-700 border-rose-200',       label: 'Parent' },
 };
 
-type Filter = 'all' | 'admin' | 'instructor' | 'student' | 'fan' | 'disabled';
+type Filter = 'all' | 'admin' | 'instructor' | 'student' | 'fan' | 'parent' | 'disabled';
 
 export default function WorkspaceUsersPage() {
   const { user } = useAuth();
@@ -107,6 +108,7 @@ export default function WorkspaceUsersPage() {
         if (filter === 'instructor' && r !== 'instructor') return false;
         if (filter === 'student'    && !(r === 'student' || r === 'member')) return false;
         if (filter === 'fan'        && !(r === 'fan' || r === 'vip')) return false;
+        if (filter === 'parent'     && r !== 'parent') return false;
       }
       // Search
       if (!q) return true;
@@ -118,7 +120,7 @@ export default function WorkspaceUsersPage() {
   }, [people, search, filter]);
 
   const counts = useMemo(() => {
-    const c = { total: people.length, admin: 0, instructor: 0, student: 0, fan: 0, disabled: 0 };
+    const c = { total: people.length, admin: 0, instructor: 0, student: 0, fan: 0, parent: 0, disabled: 0 };
     people.forEach((p) => {
       const r = roleOf(p);
       if (p.disabled) c.disabled++;
@@ -126,6 +128,7 @@ export default function WorkspaceUsersPage() {
       else if (r === 'instructor') c.instructor++;
       else if (r === 'student' || r === 'member') c.student++;
       else if (r === 'fan' || r === 'vip') c.fan++;
+      else if (r === 'parent') c.parent++;
     });
     return c;
   }, [people]);
@@ -135,7 +138,7 @@ export default function WorkspaceUsersPage() {
       <DashboardShell>
     <DashboardPageShell
       title="People"
-      subtitle="Everyone in this workspace — teachers, students, fans."
+      subtitle="Everyone in this workspace — teachers, students, parents, fans."
       actions={
         canManage && (
           <div className="flex items-center gap-2">
@@ -183,10 +186,11 @@ export default function WorkspaceUsersPage() {
       }
     >
       {/* Stat strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
         <StatPill label="All"         value={counts.total}     active={filter === 'all'}        onClick={() => setFilter('all')} />
         <StatPill label="Teachers"    value={counts.instructor + counts.admin} active={filter === 'instructor' || filter === 'admin'} onClick={() => setFilter('instructor')} />
         <StatPill label="Students"    value={counts.student}   active={filter === 'student'}    onClick={() => setFilter('student')} />
+        <StatPill label="Parents"     value={counts.parent}    active={filter === 'parent'}     onClick={() => setFilter('parent')} />
         <StatPill label="Fans"        value={counts.fan}       active={filter === 'fan'}        onClick={() => setFilter('fan')} />
         <StatPill label="Disabled"    value={counts.disabled}  active={filter === 'disabled'}   onClick={() => setFilter('disabled')} tone="rose" />
       </div>
