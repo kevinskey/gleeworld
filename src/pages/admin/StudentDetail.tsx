@@ -15,6 +15,7 @@ import { ArrowLeft, Trash2, Pin, Loader2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { GuardianList } from '@/components/travel-manager/GuardianList';
 
 export default function StudentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -81,6 +82,7 @@ export default function StudentDetail() {
               )}
             </CardContent>
           </Card>
+          <GuardianList studentUserId={id} />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-4">
