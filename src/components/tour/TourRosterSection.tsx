@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Users, UserPlus, Search, Check, X, Clock, AlertCircle, FileCheck, FileWarning } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { usePermissionSlips } from '@/hooks/usePermissionSlips';
+import { SlipStatusBadge } from '@/components/travel-manager/SlipStatusBadge';
 
 interface Member {
   user_id: string;
@@ -30,38 +32,76 @@ export const TourRosterSection = () => {
   const [loading, setLoading] = useState(true);
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
   const [signedUserIds, setSignedUserIds] = useState<Set<string>>(new Set());
+  const [activeTourId, setActiveTourId] = useState<string | null>(null);
+  const [k12Enabled, setK12Enabled] = useState(false);
+  // Map of student_user_id → guardian count (bulk fetch, no N+1)
+  const [guardianCounts, setGuardianCounts] = useState<Map<string, number>>(new Map());
+
+  const { byStudent, send, revoke, viewSignedUrl, refresh: refreshSlips } =
+    usePermissionSlips(activeTourId);
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  const fetchGuardianCounts = useCallback(async (userIds: string[]) => {
+    if (userIds.length === 0) {
+      setGuardianCounts(new Map());
+      return;
+    }
+    const { data } = await supabase
+      .from('gw_guardians')
+      .select('student_user_id')
+      .in('student_user_id', userIds);
+    const counts = new Map<string, number>();
+    for (const row of data ?? []) {
+      counts.set(row.student_user_id, (counts.get(row.student_user_id) ?? 0) + 1);
+    }
+    setGuardianCounts(counts);
+  }, []);
+
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: members, error: membersError } = await supabase
-        .from('gw_profiles_directory')
-        .select('user_id, full_name, email, voice_part, avatar_url, role')
-        .in('role', ['member', 'student', 'executive', 'admin', 'super-admin'])
-        .order('full_name');
+      const [
+        { data: members, error: membersError },
+        { data: roster, error: rosterError },
+        { data: signatures },
+        { data: activeTour },
+        { data: branding },
+      ] = await Promise.all([
+        supabase
+          .from('gw_profiles_directory')
+          .select('user_id, full_name, email, voice_part, avatar_url, role')
+          .in('role', ['member', 'student', 'executive', 'admin', 'super-admin'])
+          .order('full_name'),
+        supabase.from('gw_tour_roster').select('*'),
+        supabase
+          .from('tour_contract_signatures')
+          .select('user_id')
+          .eq('contract_id', '99ad60d3-0e94-41b2-b4f9-1b03146c62c9'),
+        supabase
+          .from('gw_tours')
+          .select('id')
+          .in('status', ['planning', 'confirmed', 'active'])
+          .order('start_date', { ascending: true })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from('gw_branding_settings')
+          .select('k12_ensemble')
+          .maybeSingle(),
+      ]);
 
       if (membersError) throw membersError;
-
-      const { data: roster, error: rosterError } = await supabase
-        .from('gw_tour_roster')
-        .select('*');
-
       if (rosterError) throw rosterError;
 
-      // Fetch contract signatures for the tour contract
-      const { data: signatures } = await supabase
-        .from('tour_contract_signatures')
-        .select('user_id')
-        .eq('contract_id', '99ad60d3-0e94-41b2-b4f9-1b03146c62c9');
-
       setSignedUserIds(new Set(signatures?.map(s => s.user_id) || []));
+      setActiveTourId(activeTour?.id ?? null);
+      setK12Enabled(!!branding?.k12_ensemble);
 
       setAllMembers(members || []);
-      
+
       const rosterMap = new Map(roster?.map(r => [r.user_id, r]) || []);
       const rosterMembersList: RosterMember[] = (members || [])
         .filter(m => rosterMap.has(m.user_id))
@@ -74,8 +114,12 @@ export const TourRosterSection = () => {
             status
           };
         });
-      
+
       setRosterMembers(rosterMembersList);
+
+      // Bulk-fetch guardian counts for all roster members (single query, no N+1)
+      const rosterUserIds = rosterMembersList.map(m => m.user_id);
+      await fetchGuardianCounts(rosterUserIds);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load roster data');
@@ -87,7 +131,7 @@ export const TourRosterSection = () => {
   const addToRoster = async (userId: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       const { error } = await supabase
         .from('gw_tour_roster')
         .insert({
@@ -97,9 +141,10 @@ export const TourRosterSection = () => {
         });
 
       if (error) throw error;
-      
+
       toast.success('Member added to tour roster');
-      fetchData();
+      await fetchData();
+      await refreshSlips();
     } catch (error: any) {
       console.error('Error adding to roster:', error);
       toast.error(error.message || 'Failed to add member');
@@ -351,6 +396,36 @@ export const TourRosterSection = () => {
                       Not Signed
                     </Badge>
                   )}
+                  <SlipStatusBadge
+                    slip={byStudent.get(member.user_id) ?? null}
+                    guardianCount={guardianCounts.get(member.user_id) ?? 0}
+                    k12Enabled={k12Enabled}
+                    onSend={async () => {
+                      const slip = byStudent.get(member.user_id);
+                      if (slip) {
+                        await send(slip.id);
+                      } else {
+                        // No slip exists yet — calling send would fail;
+                        // the edge fn creates and sends in one shot only
+                        // if a slip row already exists. Surface a toast.
+                        toast.error('No permission slip record found. Contact support.');
+                      }
+                    }}
+                    onRevoke={async () => {
+                      const slip = byStudent.get(member.user_id);
+                      if (slip) await revoke(slip.id);
+                    }}
+                    onViewSigned={async () => {
+                      const slip = byStudent.get(member.user_id);
+                      if (!slip) return;
+                      const url = await viewSignedUrl(slip.id);
+                      if (url) {
+                        window.open(url, '_blank', 'noopener,noreferrer');
+                      } else {
+                        toast.error('Signed document not available.');
+                      }
+                    }}
+                  />
                   <Select
                     value={member.status}
                     onValueChange={(value) => member.roster_id && updateStatus(member.roster_id, value)}
