@@ -47,7 +47,7 @@ import {
   GripVertical,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { HIDEABLE_NAV_ROLES, applyPreviewRole, type NavRole } from '@/lib/navigation/navCatalog';
 import {
   DndContext, PointerSensor, useDroppable, useSensor, useSensors, type DragEndEvent,
@@ -104,9 +104,9 @@ const SECTION_ORDER: NavSectionKey[] = ['today', 'music', 'teach', 'make', 'plan
 const GLEE_PLATFORM_LOGO = '/lovable-uploads/gleeworld-logo.png?v=6';
 function platformLogoFor(brandingLogoUrl?: string | null): string | undefined {
   if (brandingLogoUrl) return brandingLogoUrl;
-  const slug = (typeof window !== 'undefined'
-    && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
-  return slug === 'main' ? GLEE_PLATFORM_LOGO : undefined;
+  // getTenantSlug() falls back to 'main' when no tenant bootstrap exists —
+  // which is exactly the gleeworld.org apex, where this fallback matters.
+  return getTenantSlug() === 'main' ? GLEE_PLATFORM_LOGO : undefined;
 }
 
 // Groups resolved sidebar-surface entries into the render shape both nav
