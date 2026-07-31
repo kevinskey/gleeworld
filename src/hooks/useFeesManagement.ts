@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -381,6 +381,47 @@ export const useFeesManagement = () => {
     }
   };
 
+  // ── Task 6: RPC-backed payment / refund / waive ──────────────────────────
+
+  const recordPayment = useCallback(async (
+    feeId: string,
+    method: 'cash' | 'check' | 'venmo' | 'other' | 'stripe',
+    amount: number,
+    reference?: string,
+  ) => {
+    const { data, error } = await supabase.rpc('record_fee_payment', {
+      p_fee_id: feeId,
+      p_method: method,
+      p_amount: amount,
+      p_reference: reference ?? null,
+    });
+    if (error) throw error;
+    await fetchStudentFees();
+    return data;
+  }, []);
+
+  const refundFee = useCallback(async (feeId: string, note: string) => {
+    const { data, error } = await supabase.rpc('refund_fee', {
+      p_fee_id: feeId,
+      p_note: note,
+    });
+    if (error) throw error;
+    await fetchStudentFees();
+    return data;
+  }, []);
+
+  const waiveFee = useCallback(async (feeId: string, note: string) => {
+    const { data, error } = await supabase.rpc('waive_fee', {
+      p_fee_id: feeId,
+      p_note: note,
+    });
+    if (error) throw error;
+    await fetchStudentFees();
+    return data;
+  }, []);
+
+  // ─────────────────────────────────────────────────────────────────────────
+
   const sendBulkReminders = async () => {
     try {
       // Create notifications for overdue fees
@@ -441,6 +482,9 @@ export const useFeesManagement = () => {
     createFeesForSemester,
     createPaymentPlan,
     markPaymentComplete,
+    recordPayment,
+    refundFee,
+    waiveFee,
     createReminder,
     sendBulkReminders,
     refetch: async () => {
