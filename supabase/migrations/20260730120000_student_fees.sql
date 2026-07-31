@@ -5,14 +5,13 @@ BEGIN;
 
 -- 1. Rename existing dues tables to their new generalized names
 --
--- NOTE: The installments table in this repo is named gw_dues_installments,
--- NOT gw_payment_plan_installments as specified in the task brief.
--- The brief's interface list used the wrong source name; we rename the table
--- that actually exists.
-ALTER TABLE gw_dues_records          RENAME TO gw_student_fees;
-ALTER TABLE gw_dues_payment_plans    RENAME TO gw_fee_payment_plans;
-ALTER TABLE gw_dues_installments     RENAME TO gw_fee_plan_installments;
-ALTER TABLE gw_dues_reminders        RENAME TO gw_fee_reminders;
+-- NOTE: prod installments table is gw_payment_plan_installments (brief was
+-- right; an earlier discovery against a stale MCP-visible project showed
+-- gw_dues_installments — that was NOT production).
+ALTER TABLE gw_dues_records              RENAME TO gw_student_fees;
+ALTER TABLE gw_dues_payment_plans        RENAME TO gw_fee_payment_plans;
+ALTER TABLE gw_payment_plan_installments RENAME TO gw_fee_plan_installments;
+ALTER TABLE gw_dues_reminders            RENAME TO gw_fee_reminders;
 
 -- 2. Rename FK columns that reference the old table name
 ALTER TABLE gw_fee_payment_plans RENAME COLUMN dues_record_id TO student_fee_id;
