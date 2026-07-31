@@ -57,8 +57,11 @@ export interface PaymentInstallment {
   amount: number;
   due_date: string;
   status: 'pending' | 'paid' | 'overdue';
-  paid_amount: number;
-  paid_at?: string;
+  notes?: string | null;
+  paid_date?: string | null;
+  payment_method?: string | null;
+  stripe_payment_intent_id?: string | null;
+  transaction_id?: string | null;
   created_at: string;
   updated_at: string;
 }

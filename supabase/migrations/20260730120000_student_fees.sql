@@ -219,4 +219,8 @@ CREATE TRIGGER trg_gw_tenant_fee_settings_updated_at
   BEFORE UPDATE ON gw_tenant_fee_settings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- 13. Add stripe_payment_intent_id to installments for Task 9 webhook idempotency
+ALTER TABLE gw_fee_plan_installments
+  ADD COLUMN IF NOT EXISTS stripe_payment_intent_id text;
+
 COMMIT;

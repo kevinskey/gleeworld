@@ -10319,6 +10319,7 @@ export type Database = {
           payment_method: string | null
           payment_plan_id: string
           status: string
+          stripe_payment_intent_id: string | null
           transaction_id: string | null
           updated_at: string
         }
@@ -10333,6 +10334,7 @@ export type Database = {
           payment_method?: string | null
           payment_plan_id: string
           status?: string
+          stripe_payment_intent_id?: string | null
           transaction_id?: string | null
           updated_at?: string
         }
@@ -10347,6 +10349,7 @@ export type Database = {
           payment_method?: string | null
           payment_plan_id?: string
           status?: string
+          stripe_payment_intent_id?: string | null
           transaction_id?: string | null
           updated_at?: string
         }
