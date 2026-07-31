@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
 interface PayFeeButtonProps {
   studentFeeId: string;
@@ -10,6 +11,7 @@ interface PayFeeButtonProps {
 
 export function PayFeeButton({ studentFeeId, disabled, label = 'Pay now' }: PayFeeButtonProps) {
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const onPay = async () => {
     setLoading(true);
@@ -33,7 +35,11 @@ export function PayFeeButton({ studentFeeId, disabled, label = 'Pay now' }: PayF
       if (!res.ok) throw new Error(body.error ?? 'Payment failed');
       window.location.href = body.url;
     } catch (e) {
-      alert(`Payment error: ${(e as Error).message}`);
+      toast({
+        title: 'Payment error',
+        description: (e as Error).message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }

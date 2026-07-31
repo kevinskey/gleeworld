@@ -234,10 +234,10 @@ export const useFeesManagement = () => {
     planType: 'two_installments' | 'five_installments' | 'ten_installments'
   ) => {
     try {
-      // Get the fee record to get the amount
+      // Get the fee record to get the amount and due_date
       const { data: feeRecord, error: feeError } = await supabase
         .from('gw_student_fees')
-        .select('amount, user_id')
+        .select('amount, user_id, due_date')
         .eq('id', studentFeeId)
         .single();
 
@@ -247,16 +247,14 @@ export const useFeesManagement = () => {
       const installmentAmount = feeRecord.amount / installmentCount;
 
       // Determine frequency and dates based on plan type
-      let frequency, startDate;
+      const today = new Date().toISOString().slice(0, 10);
+      let frequency: string;
       if (planType === 'two_installments') {
         frequency = 'monthly';
-        startDate = '2025-08-15';
       } else if (planType === 'five_installments') {
         frequency = 'monthly';
-        startDate = '2025-05-15';
       } else { // ten_installments
         frequency = 'bi_weekly';
-        startDate = '2025-03-15';
       }
 
       // Create the payment plan
@@ -269,10 +267,9 @@ export const useFeesManagement = () => {
           installments: installmentCount,
           installment_amount: installmentAmount,
           frequency: frequency,
-          start_date: startDate,
-          end_date: '2025-09-15',
+          start_date: today,
+          end_date: feeRecord.due_date ?? today,
           status: 'active',
-          auto_debit: false,
           source: 'self_serve',
         })
         .select()
@@ -355,10 +352,18 @@ export const useFeesManagement = () => {
       // Create immediate notification if due today
       const today = new Date().toISOString().split('T')[0];
       if (scheduledDate <= today) {
+        // Fetch tenant_id from the fee row so the notification is tenant-scoped
+        const { data: feeRow } = await supabase
+          .from('gw_student_fees')
+          .select('tenant_id')
+          .eq('id', studentFeeId)
+          .single();
+
         await supabase
           .from('gw_notifications')
           .insert({
             user_id: userId,
+            tenant_id: (feeRow as any)?.tenant_id,
             title: 'Fee Payment Reminder',
             message: message,
             type: 'fee_reminder',
@@ -454,6 +459,7 @@ export const useFeesManagement = () => {
           .from('gw_notifications')
           .insert({
             user_id: record.user_id,
+            tenant_id: (record as any).tenant_id,
             title: 'Fee Payment Overdue',
             message: `Your ${record.semester} fee payment of $${record.amount} was due on ${new Date(record.due_date).toLocaleDateString()}. Please make your payment as soon as possible.`,
             type: 'fee_reminder',
