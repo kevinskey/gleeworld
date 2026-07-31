@@ -3,7 +3,7 @@
 // stored JSON degrades to the plain default rather than throwing.
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { getDateCardModule, DEFAULT_DATE_CARD_TYPE } from '@/components/home/date-card/registry';
 import type { DateCardSetting } from '@/components/home/date-card/types';
 
@@ -27,7 +27,10 @@ export function parseDateCardSetting(raw: unknown): DateCardSetting {
 
 export function useDateCardConfig() {
   const qc = useQueryClient();
-  const bootstrapTenantSlug = TENANT?.tenant ?? null;
+  // getTenantSlug() falls back to 'main' when no bootstrap exists (the
+  // gleeworld.org apex) — never drop the pin: a platform owner's RLS reads
+  // every tenant's row, so an unpinned limit-1 returns an arbitrary tenant.
+  const bootstrapTenantSlug = getTenantSlug();
 
   const { data: setting = DEFAULT_DATE_CARD_SETTING, isLoading, refetch } = useQuery<DateCardSetting>({
     queryKey: ['date-card-setting', bootstrapTenantSlug],
@@ -39,11 +42,12 @@ export function useDateCardConfig() {
       // also enforces the match — defense in depth. `.limit(1)` keeps this
       // from throwing PGRST116 if RLS ever returns more than one row;
       // `.maybeSingle()` alone would throw instead of picking one.
-      let q = supabase.from('gw_branding_settings').select('date_card, gw_tenants!inner(slug)');
-      if (bootstrapTenantSlug) {
-        q = q.eq('gw_tenants.slug', bootstrapTenantSlug);
-      }
-      const { data, error } = await q.limit(1).maybeSingle();
+      const { data, error } = await supabase
+        .from('gw_branding_settings')
+        .select('date_card, gw_tenants!inner(slug)')
+        .eq('gw_tenants.slug', bootstrapTenantSlug)
+        .limit(1)
+        .maybeSingle();
       if (error) throw error;
       return parseDateCardSetting((data as { date_card?: unknown } | null)?.date_card);
     },
