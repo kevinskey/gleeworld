@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { useIsPhone } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
 import { isFacultyProfile } from '@/lib/roles';
@@ -19,18 +19,21 @@ const CORE_TAB_KEYS = new Set(['home', 'messages', 'schedule']);
 
 export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   // Only the cheap layout check runs on every mount, including desktop.
-  // All data hooks (useUserRole, useTenantModules) live in PhoneTabBar
+  // All data hooks (useUserRole, useTenantModules) live in MobileTabBar
   // below and only mount — and only then fetch — once we know we're on
-  // a phone, so desktop never pays for a duplicate profile/module fetch.
-  const isPhone = useIsPhone();
+  // a narrow viewport, so desktop never pays for a duplicate profile/module
+  // fetch. Threshold is `<lg` (1024px) so phones AND iPad-portrait both get
+  // a persistent bottom nav — iPad-portrait auto-collapses the sidebar for
+  // content width, so the bottom nav is the primary nav there.
+  const isMobile = useIsMobile();
 
-  if (!isPhone) return null;
+  if (!isMobile) return null;
   if (typeof document === 'undefined') return null;
 
-  return <PhoneTabBar className={className} />;
+  return <MobileTabBar className={className} />;
 };
 
-const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
+const MobileTabBar = ({ className }: MobileBottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 

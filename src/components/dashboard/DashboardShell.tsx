@@ -1147,8 +1147,18 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   // User-controlled nav collapse (persisted). Collapsing frees the full
   // window width for work surfaces like Calendar and Studio; the topbar
   // grows an expand button + compact brand while collapsed.
+  // First-load default on iPad-portrait / narrow viewports (<lg = 1024px):
+  // collapse the sidebar so tables and calendar grids have room to breathe;
+  // once the user opens/closes it manually, the persisted preference wins.
   const [navCollapsed, setNavCollapsed] = useState<boolean>(() => {
-    try { return localStorage.getItem('gw_sidebar_collapsed') === '1'; } catch { return false; }
+    try {
+      const saved = localStorage.getItem('gw_sidebar_collapsed');
+      if (saved === '1') return true;
+      if (saved === '0') return false;
+      return typeof window !== 'undefined' && window.innerWidth < 1024;
+    } catch {
+      return false;
+    }
   });
   const setCollapsed = (v: boolean) => {
     setNavCollapsed(v);
@@ -1172,19 +1182,20 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               sticky topbar — pages that want more (CommandCenter, Viewer
               landing) add their own larger top padding on top of this.
               The bottom padding reserves room for the docked MobileBottomNav
-              bar (phones only; sm+ has no bottom nav) so content ends ABOVE
-              it and never scrolls under. Bar = 56px tall + the bottom
+              bar (visible <lg so iPad-portrait gets it too) so content ends
+              ABOVE it and never scrolls under. Bar = 56px tall + the bottom
               safe-area inset, plus a small gap. */}
           <main className={cn(
             "flex-1 min-w-0 min-h-0 overflow-y-auto overflow-x-hidden",
-            isTourManager ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0",
+            isTourManager ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0",
             // Calendar and Tour Manager manage their own compact header
             // spacing — no extra breathing room below the topbar.
             isCalendar || isTourManager ? "pt-0" : "pt-3 sm:pt-4",
           )}>{children}</main>
         </div>
-        {/* Phone-only persistent bottom nav. Self-gates via useIsPhone()
-            so it returns null on tablet/desktop — safe to mount globally. */}
+        {/* Persistent bottom nav below the `lg` breakpoint (phones + iPad
+            portrait). Self-gates via useIsMobile() so it returns null on
+            desktop — safe to mount globally. */}
         <MobileBottomNav />
         {/* Mounts only when ?tour=admin is in the URL; otherwise a no-op. */}
         <ProductTour />
