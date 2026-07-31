@@ -32,9 +32,10 @@ CREATE POLICY guardians_tenant_isolation ON gw_guardians
 CREATE POLICY guardians_teacher_manage ON gw_guardians
   FOR ALL
   USING (is_current_user_tour_manager() OR EXISTS (
-    SELECT 1 FROM gw_user_roles r
+    SELECT 1 FROM app_roles r
     WHERE r.user_id = auth.uid()
       AND r.role IN ('super_admin','super-admin','admin')
+      AND COALESCE(r.is_active, true) = true
   ))
   WITH CHECK (true);
 
@@ -88,9 +89,10 @@ CREATE POLICY slips_tenant_isolation ON gw_permission_slips
 CREATE POLICY slips_teacher_manage ON gw_permission_slips
   FOR ALL
   USING (is_current_user_tour_manager() OR EXISTS (
-    SELECT 1 FROM gw_user_roles r
+    SELECT 1 FROM app_roles r
     WHERE r.user_id = auth.uid()
       AND r.role IN ('super_admin','super-admin','admin')
+      AND COALESCE(r.is_active, true) = true
   ))
   WITH CHECK (true);
 
