@@ -2,7 +2,7 @@
 // CRITICAL: must use onConflict:'tenant_id' to avoid the legacy singleton PK
 // trap (bare .upsert() always hits id=1, i.e. the main tenant's row).
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
@@ -18,9 +18,14 @@ export function K12ToggleField({ canManage = true }: Props) {
 
   useEffect(() => {
     (async () => {
+      // Pin to the current tenant: a platform owner's RLS reads every
+      // tenant's branding row, so an unpinned maybeSingle() errors
+      // (multiple rows) or picks an arbitrary tenant.
       const { data } = await supabase
         .from('gw_branding_settings')
-        .select('k12_ensemble')
+        .select('k12_ensemble, gw_tenants!inner(slug)')
+        .eq('gw_tenants.slug', getTenantSlug())
+        .limit(1)
         .maybeSingle();
       // null row → treat as false (tenant has no branding row yet)
       setEnabled(!!data?.k12_ensemble);
@@ -37,7 +42,9 @@ export function K12ToggleField({ canManage = true }: Props) {
       // onConflict:'tenant_id' target resolves to the right row even on first insert.
       const { data: existing } = await supabase
         .from('gw_branding_settings')
-        .select('tenant_id')
+        .select('tenant_id, gw_tenants!inner(slug)')
+        .eq('gw_tenants.slug', getTenantSlug())
+        .limit(1)
         .maybeSingle();
 
       if (!existing?.tenant_id) {
