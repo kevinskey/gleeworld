@@ -3,11 +3,13 @@
 // scope their saves to the subdomain you're on, so it's easy for a
 // platform owner to re-brand gleeworld.org itself by accident.
 import { AlertTriangle } from 'lucide-react';
+import { getTenantSlug } from '@/integrations/supabase/client';
 
 export function PlatformTenantWarning() {
-  const tenant = (window as Window & { __TENANT_CONFIG__?: { tenant?: string } })
-    .__TENANT_CONFIG__?.tenant;
-  if (tenant !== 'main') return null;
+  // getTenantSlug() falls back to 'main' when no tenant bootstrap exists —
+  // matching the write path: those requests carry x-tenant-slug: main, so
+  // saves genuinely land on the platform tenant and the warning is due.
+  if (getTenantSlug() !== 'main') return null;
   return (
     <div
       role="alert"
