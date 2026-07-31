@@ -162,7 +162,7 @@ export const ProductManagement = () => {
                 return <TabsTrigger key={tab.value} value={tab.value} className="
                         flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium
                         text-muted-foreground hover:text-foreground hover:bg-muted/50
-                        data-[state=active]:bg-[#150d26] data-[state=active]:text-white
+                        data-[state=active]:bg-[hsl(var(--brand-navy))] data-[state=active]:text-white
                         data-[state=active]:shadow-sm transition-all whitespace-nowrap
                       ">
                       <Icon className="w-4 h-4" />
@@ -172,7 +172,7 @@ export const ProductManagement = () => {
                 {FEATURE_SUBSCRIPTIONS_ENABLED && <TabsTrigger value="subscriptions" className="
                       flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium
                       text-muted-foreground hover:text-foreground hover:bg-muted/50
-                      data-[state=active]:bg-[#150d26] data-[state=active]:text-white
+                      data-[state=active]:bg-[hsl(var(--brand-navy))] data-[state=active]:text-white
                       data-[state=active]:shadow-sm transition-all whitespace-nowrap
                     ">
                     <RefreshCw className="w-4 h-4" />

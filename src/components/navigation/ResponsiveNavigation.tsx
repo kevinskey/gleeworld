@@ -53,7 +53,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
               className={cn(
                 "flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 w-full justify-start",
                 isActive 
-                  ? "bg-[#150d26] hover:bg-[#002244]" 
+                  ? "bg-[hsl(var(--brand-navy))] hover:bg-[#002244]" 
                   : "hover:bg-gray-100"
               )}
             >
@@ -81,7 +81,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
                     isActivePath(item.href) && "text-white bg-[#0066CC] font-semibold"
                   )
                 : cn(
-                    "text-[#150d26] hover:text-[#002244] hover:bg-accent/10",
+                    "text-[hsl(var(--brand-navy))] hover:text-[#002244] hover:bg-accent/10",
                     isActivePath(item.href) && "text-[#002244] bg-accent/20 font-semibold"
                   )
             )}
@@ -105,7 +105,7 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'd
                     isActivePath(item.href) && "text-white bg-[#0066CC] font-semibold"
                   )
                 : cn(
-                    "text-[#150d26] hover:text-[#002244] hover:bg-accent/10",
+                    "text-[hsl(var(--brand-navy))] hover:text-[#002244] hover:bg-accent/10",
                     isActivePath(item.href) && "text-[#002244] bg-accent/20 font-semibold"
                   )
             )}

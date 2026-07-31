@@ -202,7 +202,7 @@ export const CourseInstructorConsole = () => {
                       : "hover:bg-muted/50"
                   )}
                   style={{ 
-                    color: isActive ? '#150d26' : '#334155',
+                    color: isActive ? 'hsl(var(--brand-navy))' : '#334155',
                     backgroundColor: isActive ? '#e0f2fe' : undefined,
                     borderColor: isActive ? '#bae6fd' : undefined,
                     fontSize: '15px',
@@ -215,7 +215,7 @@ export const CourseInstructorConsole = () => {
                     style={{ 
                       width: '16px', 
                       height: '16px',
-                      color: isActive ? '#150d26' : '#475569',
+                      color: isActive ? 'hsl(var(--brand-navy))' : '#475569',
                     }} 
                   />
                   <span>{item.label}</span>

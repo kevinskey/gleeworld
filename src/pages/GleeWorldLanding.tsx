@@ -300,7 +300,7 @@ export const GleeWorldLanding = () => {
             <div
               className="relative overflow-hidden rounded-2xl border-2 border-amber-300/40 shadow-2xl p-6 sm:p-8 md:p-12 lg:p-16"
               style={{
-                background: 'linear-gradient(135deg, #150d26 0%, #0a4d8f 50%, #1a6dc7 100%)',
+                background: 'linear-gradient(135deg, hsl(var(--brand-navy)) 0%, #0a4d8f 50%, #1a6dc7 100%)',
               }}
             >
               <div className="relative z-10 max-w-3xl mx-auto space-y-4 md:space-y-6 text-center">
