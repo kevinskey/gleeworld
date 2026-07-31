@@ -13,6 +13,10 @@ import { Slider } from '@/components/ui/slider';
 import { StudioEngineStatus } from '@/components/studio/StudioEngineStatus';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { renderRegionMix, renderRegionStems, renderRegionBuffer, zipBlobs, safeName } from '@/lib/studio/engine/regionExport';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -2095,8 +2099,12 @@ function Editor({
     update((s) => ({ ...s, tracks: [...s.tracks, newMidiTrack(`MIDI ${s.tracks.length + 1}`)] }));
   };
   const removeTrack = (id: string) => {
+    const name = session.tracks.find((t) => t.id === id)?.name ?? 'track';
     pushHistory(session);
     update((s) => ({ ...s, tracks: s.tracks.filter((t) => t.id !== id) }));
+    // Deletion IS undoable (snapshot pushed above) — say so and offer it
+    // right where the accident happens.
+    toast.success(`Deleted "${name}"`, { action: { label: 'Undo', onClick: undo } });
   };
 
   // Keyboard shortcuts. Placed here so all referenced handlers
@@ -5198,6 +5206,8 @@ function DarkTrackRow({
       onStripChange(p as never);
     }
   };
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const deleteClipCount = isAudioTrack(track) || isMidiTrack(track) ? track.clips.length : 0;
   const isRecordingThisTrack = !!recording && recording.armedTrackIds.includes(track.id);
 
   return (
@@ -5264,13 +5274,7 @@ function DarkTrackRow({
                     </div>
                   )}
                   <button
-                    onClick={() => {
-                      const clipCount = isAudioTrack(track) || isMidiTrack(track) ? track.clips.length : 0;
-                      const msg = clipCount > 0
-                        ? `Delete "${track.name}"? ${clipCount} clip${clipCount === 1 ? '' : 's'} on this track will be removed. This can't be undone.`
-                        : `Delete "${track.name}"? This can't be undone.`;
-                      if (confirm(msg)) onRemove();
-                    }}
+                    onClick={() => setDeleteOpen(true)}
                     className="w-full h-11 rounded border border-border text-destructive inline-flex items-center justify-center gap-2 font-semibold hover:bg-destructive/10"
                   >
                     <Trash2 className="w-4 h-4" /> Delete track
@@ -5301,13 +5305,7 @@ function DarkTrackRow({
               title={`${track.volume_db.toFixed(1)} dB`}
             />
             <button
-              onClick={() => {
-                const clipCount = isAudioTrack(track) || isMidiTrack(track) ? track.clips.length : 0;
-                const msg = clipCount > 0
-                  ? `Delete "${track.name}"? ${clipCount} clip${clipCount === 1 ? '' : 's'} on this track will be removed. This can't be undone.`
-                  : `Delete "${track.name}"? This can't be undone.`;
-                if (confirm(msg)) onRemove();
-              }}
+              onClick={() => setDeleteOpen(true)}
               className="hidden sm:block shrink-0 text-muted-foreground hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition-colors"
               title="Delete track"
               aria-label={`Delete ${track.name}`}
@@ -5315,6 +5313,34 @@ function DarkTrackRow({
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
+          {/* Destructive-confirm dialog shared by the strip trash icon and
+           * the settings sheet's Delete button. A native confirm() was too
+           * easy to blow through — the strip trash sits next to the fader,
+           * so mis-taps happen; a real dialog with the track named and a
+           * destructive-styled action slows that down. Deletion remains
+           * undoable (removeTrack pushes history + offers an Undo toast). */}
+          <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete “{track.name}”?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {deleteClipCount > 0
+                    ? `${deleteClipCount} clip${deleteClipCount === 1 ? '' : 's'} on this track will be removed. `
+                    : ''}
+                  You can undo this right afterward.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={() => { setDeleteOpen(false); onRemove(); }}
+                >
+                  Delete track
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           {/* Row 3: only MIDI tracks need the instrument picker now.
            * Audio tracks use the Import icon next to the color swatch. */}
           {isMidiTrack(track) && (
