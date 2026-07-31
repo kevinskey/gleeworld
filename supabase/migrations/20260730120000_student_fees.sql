@@ -187,17 +187,17 @@ CREATE POLICY read_fee_settings ON gw_tenant_fee_settings
 CREATE POLICY admin_write_templates ON gw_fee_templates
   FOR INSERT WITH CHECK (
     has_role(auth.uid(), 'admin'::app_role)
-    OR has_role(auth.uid(), 'super_admin'::app_role)
+    OR has_role(auth.uid(), 'super-admin'::app_role)
   );
 CREATE POLICY admin_update_templates ON gw_fee_templates
   FOR UPDATE USING (
     has_role(auth.uid(), 'admin'::app_role)
-    OR has_role(auth.uid(), 'super_admin'::app_role)
+    OR has_role(auth.uid(), 'super-admin'::app_role)
   );
 CREATE POLICY admin_delete_templates ON gw_fee_templates
   FOR DELETE USING (
     has_role(auth.uid(), 'admin'::app_role)
-    OR has_role(auth.uid(), 'super_admin'::app_role)
+    OR has_role(auth.uid(), 'super-admin'::app_role)
   );
 
 -- 11. Indexes for common queries
