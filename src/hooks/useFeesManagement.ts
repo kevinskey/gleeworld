@@ -361,7 +361,7 @@ export const useFeesManagement = () => {
             user_id: userId,
             title: 'Fee Payment Reminder',
             message: message,
-            type: 'dues_reminder',
+            type: 'fee_reminder',
             related_id: studentFeeId
           });
       }
@@ -456,7 +456,7 @@ export const useFeesManagement = () => {
             user_id: record.user_id,
             title: 'Fee Payment Overdue',
             message: `Your ${record.semester} fee payment of $${record.amount} was due on ${new Date(record.due_date).toLocaleDateString()}. Please make your payment as soon as possible.`,
-            type: 'dues_reminder',
+            type: 'fee_reminder',
             related_id: record.id
           });
       }
