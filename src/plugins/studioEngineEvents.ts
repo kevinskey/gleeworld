@@ -6,7 +6,7 @@
 // unmount, so a React remount cleanly re-subscribes with no leaks or dupes.
 
 import { useEffect, useRef } from 'react';
-import { NativeStudio } from './studioEngine';
+import { NativeStudio, isNativeStudioAvailable } from './studioEngine';
 
 export interface StudioEngineError {
   code: string;
@@ -52,6 +52,10 @@ export function useStudioEngineEvents(handlers: StudioEngineHandlers, deps: Reac
   handlersRef.current = handlers;
 
   useEffect(() => {
+    // Web has no native engine — Capacitor's unimplemented-plugin proxy
+    // still exposes addListener but every call rejects ("not implemented
+    // on web"), spraying one uncaught rejection per subscribed event.
+    if (!isNativeStudioAvailable()) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const plugin = NativeStudio as any;
     if (!plugin?.addListener) return;

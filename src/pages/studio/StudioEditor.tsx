@@ -76,6 +76,8 @@ import { AccompanimentLane } from '@/components/studio/AccompanimentLane';
 import { AttachScoreDialog } from '@/components/studio/AttachScoreDialog';
 import { FloatingScorePanel } from '@/components/studio/FloatingScorePanel';
 import { useQuery } from '@tanstack/react-query';
+import { followPlayheadScroll } from './followPlayhead';
+import { nudgeStepSeconds } from './nudge';
 
 const PX_PER_SECOND_DEFAULT = 40;
 const PX_PER_SECOND_MIN = 8;
@@ -731,6 +733,23 @@ function Editor({
     toast.success('Clip deleted');
   };
 
+  /** Move the selected clip along the timeline by `deltaSeconds`,
+   * clamped at 0. Shared by the Alt+Arrow shortcut and the phone-only
+   * action bar's ◀ ▶ buttons (no keyboard on touch). */
+  const nudgeSelectedClip = (deltaSeconds: number) => {
+    if (!selectedClip) return;
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => t.id !== selectedClip.trackId ? t : {
+        ...t,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        clips: (t as any).clips.map((c: { id: string; start_seconds: number }) =>
+          c.id !== selectedClip.clipId ? c : { ...c, start_seconds: Math.max(0, c.start_seconds + deltaSeconds) },
+        ),
+      } as Track),
+    }));
+  };
+
   /** Logic-style split of the selected clip at the playhead. Shared by
    * the B shortcut and the selection action bar (touch). */
   const splitSelectedClipAtPlayhead = () => {
@@ -1023,24 +1042,29 @@ function Editor({
   // together. Each scrollable child registers itself via the context.
   const scrollSync = useScrollSyncProvider();
 
-  // Auto-follow the playhead while playing so it never runs off-screen.
-  // When the playhead nears the right edge (or is left of view after a
-  // seek/loop), page the timeline forward so the playhead sits ~15% from
-  // the left, giving some lookahead. Runs on each position tick; cheap.
-  // Driven by the tick store (not React state, which no longer updates
-  // per position tick). Latest-ref pattern: the handler is refreshed
-  // every render so it always sees current pxPerSecond/scrollSync,
-  // while the subscription itself is mounted once.
+  // Auto-follow the playhead so it never sits off-screen: pages forward
+  // during playback, and jumps to the head after a parked seek/rewind
+  // (see followPlayheadScroll for the policy — a position-unchanged
+  // emit must never hijack a manual scroll). Runs on each position
+  // tick; cheap. Driven by the tick store (not React state, which no
+  // longer updates per position tick). Latest-ref pattern: the handler
+  // is refreshed every render so it always sees current
+  // pxPerSecond/scrollSync, while the subscription is mounted once.
+  const lastTickPosRef = useRef(0);
   const followPlayheadRef = useRef<() => void>(() => {});
   followPlayheadRef.current = () => {
-    if (!state?.isPlaying) return;
+    const pos = transportTick.get().positionSeconds;
+    const positionMoved = pos !== lastTickPosRef.current;
+    lastTickPosRef.current = pos;
     const vp = scrollSync.getViewport();
-    if (!vp || vp.clientWidth <= 0) return;
-    const playheadX = transportTick.get().positionSeconds * pxPerSecond;
-    const margin = Math.min(80, vp.clientWidth * 0.15);
-    if (playheadX > vp.scrollLeft + vp.clientWidth - margin || playheadX < vp.scrollLeft) {
-      scrollSync.scrollToX(playheadX - vp.clientWidth * 0.15);
-    }
+    if (!vp) return;
+    const x = followPlayheadScroll({
+      playheadX: pos * pxPerSecond,
+      viewport: vp,
+      isPlaying: !!state?.isPlaying,
+      positionMoved,
+    });
+    if (x !== null) scrollSync.scrollToX(x);
   };
   useEffect(() => transportTick.subscribe(() => followPlayheadRef.current()), [transportTick]);
 
@@ -2152,27 +2176,18 @@ function Editor({
         e.preventDefault();
         splitSelectedClipAtPlayhead();
       } else if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && selectedClip) {
-        // Alt+arrow nudges the selected clip ±50ms (or ±10ms with Shift),
-        // perfect for slipping a take into the pocket after the fact.
+        // Alt+arrow nudges the selected clip by the snap-grid value
+        // (snap "free" falls back to 50ms); Shift+Alt is a fine 10ms
+        // slip for putting a take in the pocket after the fact.
         e.preventDefault();
-        const step = e.shiftKey ? 0.01 : 0.05;
-        const delta = e.key === 'ArrowLeft' ? -step : +step;
-        update((s) => ({
-          ...s,
-          tracks: s.tracks.map((t) => t.id !== selectedClip.trackId ? t : {
-            ...t,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            clips: (t as any).clips.map((c: { id: string; start_seconds: number }) =>
-              c.id !== selectedClip.clipId ? c : { ...c, start_seconds: Math.max(0, c.start_seconds + delta) },
-            ),
-          } as Track),
-        }));
+        const step = nudgeStepSeconds(snapSeconds, e.shiftKey);
+        nudgeSelectedClip(e.key === 'ArrowLeft' ? -step : +step);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, start, play, pause, stop, setMetronome, update, recording, selectedClip, session, session.tempo_bpm, session.time_signature.numerator, session.length_seconds, loopEnabled, loopRegion?.start, loopRegion?.end, punchEnabled, markers]);
+  }, [state, start, play, pause, stop, setMetronome, update, recording, selectedClip, session, session.tempo_bpm, session.time_signature.numerator, session.length_seconds, loopEnabled, loopRegion?.start, loopRegion?.end, punchEnabled, markers, snapSeconds]);
 
   // Timeline extent — the grid must NEVER stop before the content does.
   // Clips (and an in-flight recording) can run past session.length_seconds
@@ -2942,6 +2957,22 @@ function Editor({
           {selectedClip && (
             <div className="flex items-center gap-1.5 bg-card/90 backdrop-blur-xl border border-border/60 rounded-full px-2 py-1.5 overflow-x-auto">
               <span className="text-sm text-muted-foreground flex-1 min-w-0 truncate pl-2">Clip selected</span>
+              <button
+                onClick={() => nudgeSelectedClip(-nudgeStepSeconds(snapSeconds, false))}
+                title="Nudge clip earlier (snap value)"
+                aria-label="Nudge clip earlier"
+                className="h-10 w-10 rounded-full border border-border text-[var(--tint)] hover:bg-muted flex items-center justify-center shrink-0"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => nudgeSelectedClip(+nudgeStepSeconds(snapSeconds, false))}
+                title="Nudge clip later (snap value)"
+                aria-label="Nudge clip later"
+                className="h-10 w-10 rounded-full border border-border text-[var(--tint)] hover:bg-muted flex items-center justify-center shrink-0"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
               <button
                 onClick={splitSelectedClipAtPlayhead}
                 title={playheadInsideSelectedClip() ? 'Split at playhead (B)' : 'Split at clip center (move the playhead into the clip to cut there)'}
