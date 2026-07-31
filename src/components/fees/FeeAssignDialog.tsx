@@ -14,9 +14,9 @@ import { useFeeAssignment } from '@/hooks/useFeeAssignment';
 
 interface Member {
   user_id: string;
-  full_name: string;
-  email: string;
-  role: string;
+  full_name: string | null;
+  email: string | null;
+  role: string | null;
 }
 
 export function FeeAssignDialog({
@@ -54,15 +54,15 @@ export function FeeAssignDialog({
     })();
   }, [open, restrictToUserIds]);
 
-  const filtered = useMemo(
-    () =>
-      members.filter(
-        m =>
-          m.full_name.toLowerCase().includes(filter.toLowerCase()) ||
-          m.email.toLowerCase().includes(filter.toLowerCase()),
-      ),
-    [members, filter],
-  );
+  const filtered = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    if (!q) return members;
+    return members.filter(m => {
+      const name = (m.full_name ?? '').toLowerCase();
+      const email = (m.email ?? '').toLowerCase();
+      return name.includes(q) || email.includes(q);
+    });
+  }, [members, filter]);
 
   const toggle = (userId: string, checked: boolean) => {
     const next = new Set(selected);
@@ -104,8 +104,8 @@ export function FeeAssignDialog({
                   checked={selected.has(m.user_id)}
                   onCheckedChange={v => toggle(m.user_id, !!v)}
                 />
-                <span className="flex-1 text-sm">{m.full_name}</span>
-                <span className="text-xs text-muted-foreground">{m.email}</span>
+                <span className="flex-1 text-sm">{m.full_name || 'Unnamed member'}</span>
+                <span className="text-xs text-muted-foreground">{m.email || '—'}</span>
               </label>
             ))}
             {filtered.length === 0 && (
