@@ -14,6 +14,7 @@ import { UniversalFooter } from "./UniversalFooter";
 import { PageContainer } from "./PageContainer";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { useBrandingSettings } from "@/hooks/useBrandingSettings";
 
 // Tenant subdomains should never see UniversalHeader (it's the gleeworld.org
 // marketing/platform-owner chrome). Detect the bootstrap tenant once at
@@ -36,41 +37,6 @@ function tint(hex: string, weight = 0.08): string {
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
 }
 
-// Convert a hex color to the "h s% l%" triplet the shadcn design tokens use
-// (e.g. `hsl(var(--primary))` resolves the variable as raw H/S/L numbers).
-// Returns null when we can't parse, so the caller can leave the default.
-function hexToHslTriplet(hex: string): string | null {
-  const h = (hex || '').replace('#', '').trim();
-  if (h.length !== 6) return null;
-  const r = parseInt(h.slice(0, 2), 16) / 255;
-  const g = parseInt(h.slice(2, 4), 16) / 255;
-  const b = parseInt(h.slice(4, 6), 16) / 255;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const l = (max + min) / 2;
-  let hh = 0;
-  let s = 0;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: hh = (g - b) / d + (g < b ? 6 : 0); break;
-      case g: hh = (b - r) / d + 2; break;
-      case b: hh = (r - g) / d + 4; break;
-    }
-    hh /= 6;
-  }
-  return `${Math.round(hh * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-}
-
-function yiqForeground(hex: string): string | null {
-  const h = (hex || '').replace('#', '').trim();
-  if (h.length !== 6) return null;
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  return (r * 299 + g * 587 + b * 114) / 1000 >= 150 ? '0 0% 6%' : '0 0% 100%';
-}
 interface UniversalLayoutProps {
   children: ReactNode;
   showHeader?: boolean;
@@ -94,6 +60,7 @@ export const UniversalLayout = ({
   const alreadyInsideLayout = useContext(UniversalLayoutNestedContext);
   if (alreadyInsideLayout) return <>{children}</>;
   const location = useLocation();
+  const { settings: branding } = useBrandingSettings();
 
   // Pull the tenant's public-site theme so the admin shell stays in lockstep
   // with the brand colors the user picked in the page builder.
@@ -106,15 +73,15 @@ export const UniversalLayout = ({
       return data as any;
     },
   });
-  const primary = publicSite?.theme?.primaryColor;
-  const accent = publicSite?.theme?.accentColor;
+  // Branding owns the palette; the public-site theme is only the fallback for
+  // tenants that haven't set branding colors yet — the same merge order
+  // TenantThemeRoot uses. The shell tint is the ONLY color this layout
+  // derives; the shadcn tokens themselves come from TenantThemeRoot on
+  // <html> and must never be re-declared inline here (an inline --primary
+  // shadowed the root value for every descendant, so Branding color changes
+  // silently never showed anywhere inside the layout).
+  const primary = branding.primary_color || publicSite?.theme?.primaryColor;
   const shellBackground = primary ? tint(primary, 0.06) : 'hsl(40, 10%, 96%)';
-  // Override the shadcn --primary token with the tenant's accent so default
-  // buttons (which render bg-primary text-primary-foreground) tint
-  // automatically across the admin. Falls back to the design-system default
-  // when no accent is set.
-  const accentTriplet = accent ? hexToHslTriplet(accent) : null;
-  const accentFgTriplet = accent ? yiqForeground(accent) : null;
 
   // Use PublicHeader for public, fan, graduates, academy, and calendar pages
   const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/graduates', '/glee-academy', '/public-calendar'];
@@ -138,23 +105,7 @@ export const UniversalLayout = ({
 
   return <UniversalLayoutNestedContext.Provider value={true}><div
     className="flex flex-col min-h-screen w-full"
-    style={{
-      background: shellBackground,
-      // Expose tenant theme as CSS variables so any descendant component can
-      // tint itself with var(--site-primary) / var(--site-accent), and
-      // override the shadcn --primary token so default buttons take the
-      // tenant accent (gold for demo) instead of the platform blue.
-      ['--site-primary' as any]: primary || undefined,
-      ['--site-accent' as any]: accent || undefined,
-      ['--primary' as any]: accentTriplet || undefined,
-      ['--primary-foreground' as any]: accentFgTriplet || undefined,
-      ['--ring' as any]: accentTriplet || undefined,
-      // Outline buttons hover with bg-accent / text-accent-foreground. Tie
-      // those to the tenant accent so any "ghost" / "outline" button fills
-      // gold on hover instead of the default light-gray.
-      ['--accent' as any]: accentTriplet || undefined,
-      ['--accent-foreground' as any]: accentFgTriplet || undefined,
-    }}
+    style={{ background: shellBackground }}
   >
       {/* Fixed Header */}
       {showHeader && (shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
