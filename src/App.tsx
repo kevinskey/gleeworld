@@ -2389,7 +2389,9 @@ const App = () => {
                          path="/dashboard/fees"
                          element={
                            <ProtectedRoute>
-                             <FeesAdminPage />
+                             <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                               <DashboardShell><FeesAdminPage /></DashboardShell>
+                             </UniversalLayout>
                            </ProtectedRoute>
                          }
                        />
