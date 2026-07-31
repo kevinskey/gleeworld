@@ -34,7 +34,7 @@ const EXEC_BOARD_POSITIONS = [
   'Historian',
   'Parliamentarian',
   'Social Chair',
-  'Tour Manager',
+  'Travel Manager',
   'Wardrobe Coordinator',
   'Music Librarian',
   'Section Leader',

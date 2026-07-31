@@ -82,7 +82,7 @@ const PerformanceSuite = () => {
         <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="setlists">Setlist Builder</TabsTrigger>
-          <TabsTrigger value="tours">Tour Manager</TabsTrigger>
+          <TabsTrigger value="tours">Travel Manager</TabsTrigger>
           <TabsTrigger value="licensing">Licensing</TabsTrigger>
         </TabsList>
         

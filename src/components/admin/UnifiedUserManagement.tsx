@@ -83,7 +83,7 @@ const StatPill = ({ label, value, icon: Icon }: { label: string; value: number; 
 const GRANTABLE_APP_ROLES: Array<{ key: string; label: string; icon: React.ElementType; description: string }> = [
   { key: 'librarian',       label: 'Librarian',       icon: BookOpen,        description: 'Upload + manage music library scores' },
   { key: 'secretary',       label: 'Secretary',       icon: ClipboardList,   description: 'Roster + attendance + comms' },
-  { key: 'tour_manager',    label: 'Tour Manager',    icon: Bus,             description: 'Tours, hotels, rooming, logistics' },
+  { key: 'tour_manager',    label: 'Travel Manager',  icon: Bus,             description: 'Tours, hotels, rooming, logistics' },
   { key: 'instructor',      label: 'Instructor',      icon: GraduationCap,   description: 'Manage classes + assignments' },
   { key: 'ta',              label: 'Teaching Assist.',icon: GraduationCap,   description: 'Grade + assist instructor' },
   { key: 'wardrobe_manager',label: 'Wardrobe Mgr',    icon: HeadphonesIcon,  description: 'Wardrobe inventory + assignments' },

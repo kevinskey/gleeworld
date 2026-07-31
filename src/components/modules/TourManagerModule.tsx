@@ -25,7 +25,7 @@ export const TourManagerModule = ({ user, isFullPage = false }: ModuleProps) => 
   return (
     <ModuleWrapper
       id="tour-management"
-      title="Tour Manager"
+      title="Travel Manager"
       description="Comprehensive tour planning, logistics, and management system"
       icon={Route}
       iconColor="blue"

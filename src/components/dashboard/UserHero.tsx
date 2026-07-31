@@ -28,7 +28,7 @@ export const UserHero = () => {
       'vice_president': 'Vice President',
       'secretary': 'Secretary',
       'treasurer': 'Treasurer',
-      'tour_manager': 'Tour Manager',
+      'tour_manager': 'Travel Manager',
       'pr_coordinator': 'PR Coordinator',
       'music_director': 'Music Director',
       'librarian': 'Librarian',

@@ -110,20 +110,82 @@ Deno.serve(async (req: Request) => {
     for (const tenantId of Object.keys(grouped)) {
       console.log(`Processing tenant ${tenantId}`);
 
-      const { data: managers, error: managersErr } = await admin
+      // Resolve manager user_ids via three sources that mirror is_current_user_tour_manager():
+      //   1. gw_executive_board_members (position = 'tour_manager', is_active = true)
+      //   2. app_roles (role = 'tour_manager', coalesce(is_active, true) = true)
+      //   3. gw_profiles (is_exec_board = true)
+      // We scope each source to tenant_id then union the user_ids, deduplicate,
+      // and resolve email via auth.admin.getUserById (service-role only).
+      // NOTE: gw_executive_board_members has no email/tenant_id columns — never select them.
+
+      const managerUserIds = new Set<string>();
+
+      // Source 1: exec board members with tour_manager position
+      const { data: execBoardRows, error: execBoardErr } = await admin
         .from('gw_executive_board_members')
-        .select('user_id, email')
-        .eq('tenant_id', tenantId)
+        .select('user_id, gw_profiles!inner(tenant_id)')
+        .eq('gw_profiles.tenant_id', tenantId)
         .eq('position', 'tour_manager')
         .eq('is_active', true);
 
-      if (managersErr) {
-        console.error(`Failed to fetch managers for tenant ${tenantId}:`, managersErr);
+      if (execBoardErr) {
+        console.warn(`exec board lookup failed for tenant ${tenantId}:`, execBoardErr.message);
+      } else if (execBoardRows) {
+        for (const row of execBoardRows) {
+          if (row.user_id) managerUserIds.add(row.user_id as string);
+        }
+      }
+
+      // Source 2: app_roles with role = 'tour_manager'
+      const { data: appRoleRows, error: appRoleErr } = await admin
+        .from('app_roles')
+        .select('user_id')
+        .eq('tenant_id', tenantId)
+        .eq('role', 'tour_manager')
+        .or('is_active.is.null,is_active.eq.true');
+
+      if (appRoleErr) {
+        console.warn(`app_roles lookup failed for tenant ${tenantId}:`, appRoleErr.message);
+      } else if (appRoleRows) {
+        for (const row of appRoleRows) {
+          if (row.user_id) managerUserIds.add(row.user_id as string);
+        }
+      }
+
+      // Source 3: gw_profiles with is_exec_board = true
+      const { data: execProfileRows, error: execProfileErr } = await admin
+        .from('gw_profiles')
+        .select('user_id')
+        .eq('tenant_id', tenantId)
+        .eq('is_exec_board', true);
+
+      if (execProfileErr) {
+        console.warn(`gw_profiles exec board lookup failed for tenant ${tenantId}:`, execProfileErr.message);
+      } else if (execProfileRows) {
+        for (const row of execProfileRows) {
+          if (row.user_id) managerUserIds.add(row.user_id as string);
+        }
+      }
+
+      if (managerUserIds.size === 0) {
+        console.log(`No active tour managers for tenant ${tenantId}`);
         continue;
       }
 
-      if (!managers || managers.length === 0) {
-        console.log(`No active tour managers for tenant ${tenantId}`);
+      // Resolve email addresses via Auth Admin API (service-role only)
+      const managers: Array<{ user_id: string; email: string }> = [];
+      for (const userId of Array.from(managerUserIds)) {
+        const { data: authUser } = await admin.auth.admin.getUserById(userId);
+        const email = authUser?.user?.email;
+        if (email) {
+          managers.push({ user_id: userId, email });
+        } else {
+          console.warn(`No email found for manager user_id ${userId} on tenant ${tenantId}; skipping`);
+        }
+      }
+
+      if (managers.length === 0) {
+        console.log(`No manager emails resolved for tenant ${tenantId}`);
         continue;
       }
 
@@ -255,7 +317,7 @@ function buildDigestEmailHtml(p: {
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="font-family:sans-serif;color:#111;max-width:800px;margin:0 auto;padding:24px">
-  <p>Hi Tour Manager,</p>
+  <p>Hi Travel Manager,</p>
   <p>
     You have <strong>${p.totalCount} outstanding permission slip${p.totalCount !== 1 ? 's' : ''}</strong>
     for trips starting within the next 48 hours. Please contact the families listed below to complete them.

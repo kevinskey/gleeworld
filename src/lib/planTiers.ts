@@ -76,7 +76,7 @@ export const PLAN_TIERS: PlanTier[] = [
       'Scores + part tracks',
       'Tonight mode + stage viewer',
       'Branded login (your logo & colors)',
-      'Tour Manager + PR Hub',
+      'Travel Manager + PR Hub',
       'Custom domain ($25 setup + $15/yr)',
       '50 GB storage',
     ],

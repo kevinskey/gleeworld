@@ -53,7 +53,7 @@ export default function TourAddon({ courseId, canEdit }: Props) {
           <Plane className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="font-semibold">Tour Manager</h2>
+          <h2 className="font-semibold">Travel Manager</h2>
           <p className="text-xs text-muted-foreground">
             Itinerary, crew, logistics. Events tagged with this course show in the rollup.
           </p>
@@ -95,7 +95,7 @@ export default function TourAddon({ courseId, canEdit }: Props) {
         </Card>
       )}
 
-      <EmbedWrap label="Full Tour Manager">
+      <EmbedWrap label="Full Travel Manager">
         <TourCourseProvider courseId={courseId}>
           <TourManagerDashboard user={user as any} />
         </TourCourseProvider>
