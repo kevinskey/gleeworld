@@ -41,9 +41,13 @@ export function useSeatingCharts() {
   const create = useCallback(
     async (input: CreateChartInput): Promise<SeatingChart | null> => {
       const template = input.template;
+      // owner_id must be set explicitly: RLS write policy requires
+      // owner_id = auth.uid() (or admin), and the column has no default.
+      const { data: authData } = await supabase.auth.getUser();
       const { data: chart, error } = await supabase
         .from('gw_seating_charts')
         .insert({
+          owner_id: authData.user?.id,
           name: input.name,
           description: input.description ?? null,
           chart_mode: input.chart_mode,
@@ -94,9 +98,11 @@ export function useSeatingCharts() {
     async (chartId: string): Promise<SeatingChart | null> => {
       const source = charts.find((c) => c.id === chartId);
       if (!source) return null;
+      const { data: authData } = await supabase.auth.getUser();
       const { data: copy, error } = await supabase
         .from('gw_seating_charts')
         .insert({
+          owner_id: authData.user?.id,
           name: `${source.name} (copy)`,
           description: source.description,
           chart_mode: source.chart_mode,
