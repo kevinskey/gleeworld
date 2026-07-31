@@ -2,6 +2,7 @@
 // pool and returns proposed assignments. Never mutates input. Locked
 // objects/assignments are preserved.
 import type { SeatingAssignment, SeatingObject, SeatingPerson } from '@/types/seatingCharts';
+import { newDbId, isUuid } from '../ids';
 
 export type PlacementRule =
   | 'alphabetical'
@@ -39,9 +40,6 @@ export interface PlacementResult {
 const SEAT_TYPES: SeatingObject['object_type'][] = ['seat', 'chair', 'riser_slot', 'desk'];
 
 function nowIso() { return new Date().toISOString(); }
-function makeId(prefix: string) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-}
 
 function seatObjects(objects: SeatingObject[]): SeatingObject[] {
   return objects.filter((o) => SEAT_TYPES.includes(o.object_type) && !o.locked);
@@ -61,13 +59,15 @@ function buildAssignment(
   input: PlacementInput,
   existing?: SeatingAssignment,
 ): SeatingAssignment {
+  // Imported guests have synthetic ids; only real user uuids may go in profile_id.
+  const isRealUser = isUuid(person.user_id);
   return {
-    id: existing?.id ?? makeId('asn'),
+    id: existing?.id ?? newDbId(),
     tenant_id: input.tenantId,
     arrangement_id: input.arrangementId,
     chart_object_id: seat.id,
-    profile_id: person.user_id,
-    external_person_id: null,
+    profile_id: isRealUser ? person.user_id : null,
+    external_person_id: isRealUser ? null : person.user_id,
     display_name: person.full_name,
     section: existing?.section ?? null,
     voice_part: person.voice_part ?? existing?.voice_part ?? null,

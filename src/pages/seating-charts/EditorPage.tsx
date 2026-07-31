@@ -28,10 +28,8 @@ import { GroupManager } from '@/features/seating-charts/placement/GroupManager';
 import { OrchestraToolbar } from '@/features/seating-charts/orchestra/OrchestraToolbar';
 import { Users2 } from 'lucide-react';
 import type { SeatingAssignment, SeatingObject, SeatingPerson } from '@/types/seatingCharts';
+import { newDbId, isUuid } from '@/features/seating-charts/ids';
 
-function newId(prefix: string) {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-}
 
 export function SeatingChartEditorPage() {
   const params = useParams<{ chartId: string }>();
@@ -99,7 +97,7 @@ export function SeatingChartEditorPage() {
     if (!state) return;
     const object: SeatingObject = {
       ...partial,
-      id: newId('obj'),
+      id: newDbId(),
       tenant_id: state.chart.tenant_id,
       arrangement_id: state.arrangement.id,
       created_at: new Date().toISOString(),
@@ -112,13 +110,15 @@ export function SeatingChartEditorPage() {
   const handleDropPerson = useCallback((objectId: string, profileId: string, displayName: string) => {
     if (!state) return;
     const existing = assignmentByObjectId.get(objectId);
+    // Imported guests have synthetic ids; only real user uuids may go in profile_id.
+    const isRealUser = isUuid(profileId);
     const assignment: SeatingAssignment = {
-      id: existing?.id ?? newId('asn'),
+      id: existing?.id ?? newDbId(),
       tenant_id: state.chart.tenant_id,
       arrangement_id: state.arrangement.id,
       chart_object_id: objectId,
-      profile_id: profileId,
-      external_person_id: null,
+      profile_id: isRealUser ? profileId : null,
+      external_person_id: isRealUser ? null : profileId,
       display_name: displayName,
       section: existing?.section ?? null,
       voice_part: existing?.voice_part ?? null,

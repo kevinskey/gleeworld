@@ -154,10 +154,12 @@ export interface TemplateSpec {
   canvas_width: number;
   canvas_height: number;
   orientation: SeatingChartOrientation;
+  // Templates pre-generate a uuid id per object so optimistic editor state and
+  // the DB insert share the same key.
   objects: Array<Omit<
     SeatingObject,
     'id' | 'tenant_id' | 'arrangement_id' | 'created_at' | 'updated_at'
-  >>;
+  > & { id?: string }>;
   settings?: Record<string, unknown>;
 }
 

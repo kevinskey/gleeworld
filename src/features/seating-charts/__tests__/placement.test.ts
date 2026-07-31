@@ -13,8 +13,15 @@ function seat(id: string, x: number, y: number, locked = false): SeatingObject {
   };
 }
 
+// Real users must have uuid ids — non-uuid ids are routed to external_person_id.
+const UID: Record<string, string> = {
+  p1: '00000000-0000-4000-8000-000000000001',
+  p2: '00000000-0000-4000-8000-000000000002',
+  p3: '00000000-0000-4000-8000-000000000003',
+};
+
 function person(id: string, name: string, voice_part: string | null = null): SeatingPerson {
-  return { user_id: id, full_name: name, voice_part, avatar_url: null };
+  return { user_id: UID[id] ?? id, full_name: name, voice_part, avatar_url: null };
 }
 
 function baseInput(overrides: Partial<PlacementInput> = {}): PlacementInput {
@@ -89,11 +96,11 @@ describe('placement rules', () => {
 
   it('height_order places tallest first (top of row-major order)', () => {
     const input = baseInput({
-      personHeight: new Map([['p1', 180], ['p2', 160], ['p3', 170]]),
+      personHeight: new Map([[UID.p1, 180], [UID.p2, 160], [UID.p3, 170]]),
     });
     const result = runRule('height_order', input);
-    expect(result.assignments[0].profile_id).toBe('p1'); // 180cm
-    expect(result.assignments[1].profile_id).toBe('p3'); // 170cm
-    expect(result.assignments[2].profile_id).toBe('p2'); // 160cm
+    expect(result.assignments[0].profile_id).toBe(UID.p1); // 180cm
+    expect(result.assignments[1].profile_id).toBe(UID.p3); // 170cm
+    expect(result.assignments[2].profile_id).toBe(UID.p2); // 160cm
   });
 });

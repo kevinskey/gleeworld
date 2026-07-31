@@ -1,12 +1,7 @@
 // Small helpers for template generators. Templates return objects sans
 // tenant/arrangement/timestamp fields; the hook fills those in on insert.
 import type { SeatingObject, SeatingObjectStyle, SeatingObjectType } from '@/types/seatingCharts';
-
-let _seq = 0;
-export function tempId(prefix: string): string {
-  _seq += 1;
-  return `${prefix}_${Date.now()}_${_seq}`;
-}
+import { newDbId } from '../ids';
 
 export type SeedObject = Omit<
   SeatingObject,
@@ -30,7 +25,7 @@ export interface MakeObjectArgs {
 
 export function obj(a: MakeObjectArgs): SeedObject {
   return {
-    id: tempId(a.object_type),
+    id: newDbId(),
     object_type: a.object_type,
     subtype: a.subtype ?? null,
     x: a.x,
