@@ -401,13 +401,33 @@ export const useFeesManagement = () => {
   }, []);
 
   const refundFee = useCallback(async (feeId: string, note: string) => {
-    const { data, error } = await supabase.rpc('refund_fee', {
-      p_fee_id: feeId,
-      p_note: note,
-    });
-    if (error) throw error;
+    // Fetch the fee to determine how it was paid
+    const { data: fee, error: feeErr } = await supabase
+      .from('gw_student_fees')
+      .select('payment_method, stripe_payment_intent_id')
+      .eq('id', feeId)
+      .single();
+    if (feeErr) throw feeErr;
+
+    if (fee?.payment_method === 'stripe' && fee?.stripe_payment_intent_id) {
+      // Route through edge function so the Stripe refund is issued first
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const { error: fnError } = await supabase.functions.invoke('refund-fee-stripe', {
+        body: { studentFeeId: feeId, note },
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (fnError) throw fnError;
+    } else {
+      // Non-Stripe payment: call the RPC directly
+      const { data, error } = await supabase.rpc('refund_fee', {
+        p_fee_id: feeId,
+        p_note: note,
+      });
+      if (error) throw error;
+    }
+
     await fetchStudentFees();
-    return data;
   }, []);
 
   const waiveFee = useCallback(async (feeId: string, note: string) => {

@@ -16,6 +16,8 @@ import { renderHook, act } from '@testing-library/react';
 
 const mockRpc = vi.fn();
 const mockFrom = vi.fn();
+const mockFunctionsInvoke = vi.fn();
+const mockAuthGetSession = vi.fn();
 
 // fetchStudentFees uses supabase.from(...).select(...).order(...)
 // We need it to resolve without error so the hook doesn't toast-error.
@@ -39,6 +41,12 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     rpc: (...args: unknown[]) => mockRpc(...args),
     from: (...args: unknown[]) => mockFrom(...args),
+    functions: {
+      invoke: (...args: unknown[]) => mockFunctionsInvoke(...args),
+    },
+    auth: {
+      getSession: () => mockAuthGetSession(),
+    },
   },
 }));
 
@@ -54,6 +62,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   // Default: from().select().order() → empty list (no error)
   mockFrom.mockReturnValue(makeChain({ data: [], error: null }));
+  // Default: functions.invoke → success
+  mockFunctionsInvoke.mockResolvedValue({ data: { ok: true }, error: null });
+  // Default: auth.getSession → valid session with access token
+  mockAuthGetSession.mockResolvedValue({
+    data: { session: { access_token: 'test-token' } },
+  });
 });
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -166,6 +180,70 @@ describe('useFeesManagement payment RPCs', () => {
           await result.current.refundFee('nonexistent-uuid', 'test');
         }),
       ).rejects.toMatchObject({ message: 'fee not found' });
+    });
+
+    // ── Task 9: two-branch refundFee ─────────────────────────────────────────
+
+    it('routes to refund-fee-stripe edge fn when payment_method is stripe', async () => {
+      // Call sequence for mockFrom:
+      //   1. mount → fetchStudentFees → from('gw_student_fees') → empty list
+      //   2. mount → fetchPaymentPlans → from('gw_fee_payment_plans') → empty list
+      //   3. refundFee → from('gw_student_fees').select('payment_method,...') → stripe fee
+      //   4. refundFee → fetchStudentFees → from('gw_student_fees') → empty list
+      const stripeFeeSingle = makeChain({
+        data: { payment_method: 'stripe', stripe_payment_intent_id: 'pi_test_abc' },
+        error: null,
+      });
+      mockFrom
+        .mockReturnValueOnce(makeChain({ data: [], error: null })) // mount fetchStudentFees
+        .mockReturnValueOnce(makeChain({ data: [], error: null })) // mount fetchPaymentPlans
+        .mockReturnValueOnce(stripeFeeSingle)                      // fee lookup in refundFee
+        .mockReturnValue(makeChain({ data: [], error: null }));    // post-refund fetchStudentFees
+
+      mockFunctionsInvoke.mockResolvedValueOnce({ data: { ok: true }, error: null });
+
+      const { result } = renderHook(() => useFeesManagement());
+
+      await act(async () => {
+        await result.current.refundFee(FEE_ID, 'Stripe refund test');
+      });
+
+      // Should have called the edge function, not refund_fee RPC
+      expect(mockFunctionsInvoke).toHaveBeenCalledWith(
+        'refund-fee-stripe',
+        expect.objectContaining({
+          body: { studentFeeId: FEE_ID, note: 'Stripe refund test' },
+        }),
+      );
+      expect(mockRpc).not.toHaveBeenCalledWith('refund_fee', expect.anything());
+    });
+
+    it('calls refund_fee RPC directly when payment_method is not stripe', async () => {
+      // Fee was paid via cash — no stripe_payment_intent_id
+      // Call sequence: mount×2, fee-lookup, post-refund fetchStudentFees
+      const cashFeeSingle = makeChain({
+        data: { payment_method: 'cash', stripe_payment_intent_id: null },
+        error: null,
+      });
+      mockFrom
+        .mockReturnValueOnce(makeChain({ data: [], error: null })) // mount fetchStudentFees
+        .mockReturnValueOnce(makeChain({ data: [], error: null })) // mount fetchPaymentPlans
+        .mockReturnValueOnce(cashFeeSingle)                        // fee lookup in refundFee
+        .mockReturnValue(makeChain({ data: [], error: null }));    // post-refund fetchStudentFees
+
+      mockRpc.mockResolvedValueOnce({ data: { id: FEE_ID, status: 'refunded' }, error: null });
+
+      const { result } = renderHook(() => useFeesManagement());
+
+      await act(async () => {
+        await result.current.refundFee(FEE_ID, 'cash refund');
+      });
+
+      expect(mockRpc).toHaveBeenCalledWith('refund_fee', {
+        p_fee_id: FEE_ID,
+        p_note: 'cash refund',
+      });
+      expect(mockFunctionsInvoke).not.toHaveBeenCalled();
     });
   });
 
