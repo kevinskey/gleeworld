@@ -10315,6 +10315,8 @@ export type Database = {
           id: string
           installment_number: number
           notes: string | null
+          paid_amount: number
+          paid_at: string | null
           paid_date: string | null
           payment_method: string | null
           payment_plan_id: string
@@ -10330,6 +10332,8 @@ export type Database = {
           id?: string
           installment_number: number
           notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
           paid_date?: string | null
           payment_method?: string | null
           payment_plan_id: string
@@ -10345,6 +10349,8 @@ export type Database = {
           id?: string
           installment_number?: number
           notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
           paid_date?: string | null
           payment_method?: string | null
           payment_plan_id?: string

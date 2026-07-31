@@ -57,6 +57,8 @@ export interface PaymentInstallment {
   amount: number;
   due_date: string;
   status: 'pending' | 'paid' | 'overdue';
+  paid_amount: number;
+  paid_at?: string;
   notes?: string | null;
   paid_date?: string | null;
   payment_method?: string | null;

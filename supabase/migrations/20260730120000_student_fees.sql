@@ -223,4 +223,14 @@ CREATE TRIGGER trg_gw_tenant_fee_settings_updated_at
 ALTER TABLE gw_fee_plan_installments
   ADD COLUMN IF NOT EXISTS stripe_payment_intent_id text;
 
+-- 14. Add installment payment tracking fields for Task 6/9 (partial payments, exact timestamps)
+ALTER TABLE gw_fee_plan_installments
+  ADD COLUMN IF NOT EXISTS paid_amount numeric(10,2) NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS paid_at timestamptz;
+
+-- Backfill paid_at from paid_date where present (preserve information)
+UPDATE gw_fee_plan_installments
+SET paid_at = paid_date::timestamptz
+WHERE paid_date IS NOT NULL AND paid_at IS NULL;
+
 COMMIT;
