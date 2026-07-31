@@ -11,7 +11,7 @@ import {
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
-  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, CreditCard,
+  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, CreditCard, Receipt,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -96,6 +96,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'merch',     to: '/store/products',   label: 'Merch',     icon: Shirt,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-merch-grid', surfaces: ['grid'], gate: { module: 'merch' } },
   // Money
   { key: 'my-fees',   to: '/dashboard/my-fees',    label: 'My Fees',    icon: CreditCard, section: 'money', tone: 'bg-sky-50 text-sky-700',         tourId: 'nav-my-fees' },
+  { key: 'fees-admin', to: '/dashboard/fees',      label: 'Fees',       icon: Receipt,    section: 'money', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-fees-admin', gate: { adminOnly: true } },
   { key: 'box-office', to: '/dashboard/box-office', label: 'Box Office', icon: Ticket,     section: 'money', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-box-office', gate: { module: 'box_office', adminOnly: true } },
   { key: 'finance',    to: '/dashboard/finance',    label: 'Finance',    icon: DollarSign, section: 'money', tone: 'bg-emerald-50 text-emerald-600', tourId: 'nav-finance', gridIcon: Wallet, gate: { module: 'finance' } },
   { key: 'tickets',    to: '/box-office',           label: 'Tickets',    icon: Ticket,     section: 'money', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-tickets-grid', surfaces: ['grid'], gate: { module: 'box_office' } },
