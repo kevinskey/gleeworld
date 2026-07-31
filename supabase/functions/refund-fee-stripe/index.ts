@@ -47,6 +47,24 @@ serve(async (req) => {
       );
     }
 
+    // ── Admin role gate: must be admin/super_admin before touching Stripe ──
+    const { data: profile } = await admin
+      .from("gw_profiles")
+      .select("is_admin, is_super_admin, role")
+      .eq("user_id", userData.user.id)
+      .maybeSingle();
+
+    if (
+      !profile?.is_admin &&
+      !profile?.is_super_admin &&
+      !["admin", "super_admin", "super-admin"].includes(profile?.role ?? "")
+    ) {
+      return new Response(
+        JSON.stringify({ error: "forbidden" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     // ── Parse body ─────────────────────────────────────────────────────────
     const { studentFeeId, note } = await req.json().catch(() => ({} as Record<string, string>));
     if (!studentFeeId) {
