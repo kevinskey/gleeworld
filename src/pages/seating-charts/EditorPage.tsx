@@ -4,10 +4,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Save, Printer, Download, Undo2, Wand2, Share2, Users, FileText,
+  PanelLeft, SlidersHorizontal,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useIsPhone } from '@/hooks/use-mobile';
 import { useSeatingChart } from '@/hooks/useSeatingChart';
 import { Palette } from '@/features/seating-charts/engine/Palette';
 import { PropertiesPanel } from '@/features/seating-charts/engine/PropertiesPanel';
@@ -51,6 +54,9 @@ export function SeatingChartEditorPage() {
   const [shareOpen, setShareOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [groupsOpen, setGroupsOpen] = useState(false);
+  const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
+  const [mobilePropsOpen, setMobilePropsOpen] = useState(false);
+  const isPhone = useIsPhone();
   const canvasRef = useRef<HTMLDivElement>(null);
   const attendance = useChartAttendance(chartId);
 
@@ -195,17 +201,17 @@ export function SeatingChartEditorPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-56px)]">
-      <header className="flex items-center justify-between gap-3 border-b bg-white px-3 py-2 print:hidden">
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 border-b bg-white px-2 md:px-3 py-2 print:hidden">
         <div className="flex items-center gap-2 min-w-0">
-          <Button variant="ghost" size="icon" onClick={() => nav('/seating-charts')}>
+          <Button variant="ghost" size="icon" onClick={() => nav('/seating-charts')} className="shrink-0">
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <Input
             value={state.chart.name}
             onChange={(e) => patchChart({ name: e.target.value })}
-            className="h-8 w-72 text-sm font-semibold"
+            className="h-8 min-w-0 flex-1 md:flex-none md:w-72 text-sm font-semibold"
           />
-          <span className="text-xs text-muted-foreground min-w-24">
+          <span className="hidden sm:inline text-xs text-muted-foreground min-w-24 shrink-0">
             {saveStatus === 'saving' && 'Saving…'}
             {saveStatus === 'saved' && 'Saved'}
             {saveStatus === 'dirty' && 'Unsaved changes'}
@@ -213,7 +219,7 @@ export function SeatingChartEditorPage() {
             {saveStatus === 'idle' && 'Ready'}
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 overflow-x-auto -mx-2 md:mx-0 px-2 md:px-0 scrollbar-hide">
           <ArrangementsSwitcher
             arrangements={state.arrangements}
             activeId={state.arrangement.id}
@@ -274,15 +280,35 @@ export function SeatingChartEditorPage() {
         </div>
       </header>
 
+      {/* Mobile-only toolbar for panel access; the desktop side panels replace this. */}
+      <div className="flex md:hidden items-center gap-2 border-b bg-white px-2 py-1 print:hidden">
+        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setMobilePaletteOpen(true)}>
+          <PanelLeft className="w-3.5 h-3.5" /> Palette
+        </Button>
+        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setMobilePropsOpen(true)}>
+          <SlidersHorizontal className="w-3.5 h-3.5" /> Properties
+          {selection.length > 0 && <span className="ml-1 rounded-full bg-primary text-primary-foreground text-[10px] px-1.5">{selection.length}</span>}
+        </Button>
+        <span className="text-[11px] text-muted-foreground ml-auto">
+          {saveStatus === 'saving' && 'Saving…'}
+          {saveStatus === 'saved' && 'Saved'}
+          {saveStatus === 'dirty' && 'Unsaved'}
+          {saveStatus === 'error' && <span className="text-red-600">Error</span>}
+        </span>
+      </div>
+
       <div className="flex-1 flex overflow-hidden">
-        <Palette
-          people={mergedPeople}
-          assignedPersonIds={assignedPersonIds}
-          peopleSearch={peopleSearch}
-          onPeopleSearchChange={setPeopleSearch}
-          onAddObject={handleAddObject}
-          onRefreshPeople={loadPeople}
-        />
+        {/* Desktop / tablet: fixed side panels. Phone: hidden — Sheets below own them. */}
+        <div className="hidden md:flex">
+          <Palette
+            people={mergedPeople}
+            assignedPersonIds={assignedPersonIds}
+            peopleSearch={peopleSearch}
+            onPeopleSearchChange={setPeopleSearch}
+            onAddObject={handleAddObject}
+            onRefreshPeople={loadPeople}
+          />
+        </div>
 
         <div ref={canvasRef} className="flex-1 flex">
           <CanvasEngine
@@ -298,17 +324,58 @@ export function SeatingChartEditorPage() {
           />
         </div>
 
-        <PropertiesPanel
-          selection={selection}
-          assignmentByObjectId={assignmentByObjectId}
-          allAssignments={state.assignments}
-          allObjects={state.objects}
-          onUpdate={updateObject}
-          onUpdateAssignment={updateAssignment}
-          onClearAssignment={clearAssignment}
-          onDelete={(ids) => { deleteObjects(ids); setSelectedIds([]); }}
-        />
+        <div className="hidden md:flex">
+          <PropertiesPanel
+            selection={selection}
+            assignmentByObjectId={assignmentByObjectId}
+            allAssignments={state.assignments}
+            allObjects={state.objects}
+            onUpdate={updateObject}
+            onUpdateAssignment={updateAssignment}
+            onClearAssignment={clearAssignment}
+            onDelete={(ids) => { deleteObjects(ids); setSelectedIds([]); }}
+          />
+        </div>
       </div>
+
+      {/* Phone-only bottom sheets */}
+      {isPhone && (
+        <>
+          <Sheet open={mobilePaletteOpen} onOpenChange={setMobilePaletteOpen}>
+            <SheetContent side="left" className="p-0 w-[85vw] max-w-sm">
+              <SheetHeader className="p-3 border-b"><SheetTitle className="text-sm">Palette</SheetTitle></SheetHeader>
+              <div className="flex flex-col h-[calc(100%-49px)]">
+                <Palette
+                  people={mergedPeople}
+                  assignedPersonIds={assignedPersonIds}
+                  peopleSearch={peopleSearch}
+                  onPeopleSearchChange={setPeopleSearch}
+                  onAddObject={(partial) => { handleAddObject(partial); setMobilePaletteOpen(false); }}
+                  onRefreshPeople={loadPeople}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <Sheet open={mobilePropsOpen} onOpenChange={setMobilePropsOpen}>
+            <SheetContent side="right" className="p-0 w-[85vw] max-w-sm">
+              <SheetHeader className="p-3 border-b"><SheetTitle className="text-sm">Properties</SheetTitle></SheetHeader>
+              <div className="flex flex-col h-[calc(100%-49px)]">
+                <PropertiesPanel
+                  selection={selection}
+                  assignmentByObjectId={assignmentByObjectId}
+                  allAssignments={state.assignments}
+                  allObjects={state.objects}
+                  onUpdate={updateObject}
+                  onUpdateAssignment={updateAssignment}
+                  onClearAssignment={clearAssignment}
+                  onDelete={(ids) => { deleteObjects(ids); setSelectedIds([]); setMobilePropsOpen(false); }}
+                />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </>
+      )}
 
       <PlacementDialog
         open={placementOpen}
