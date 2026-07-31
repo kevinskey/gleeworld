@@ -30,35 +30,48 @@ Deno.serve(async (req: Request) => {
   try {
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    // --- Query all tours starting within 48h with unsigned slips ---
+    // --- Step 1: Find tours starting within the next 48h ---
+    // PostgREST does NOT push filter predicates through embedded-resource joins
+    // (e.g. `.lte('tour.start_date', …)` is silently ignored), so we must
+    // query gw_tour_events first, then filter gw_permission_slips by those ids.
     const now = new Date();
     const in48h = new Date(now.getTime() + 48 * 3600 * 1000);
 
+    const { data: upcomingTours, error: toursErr } = await admin
+      .from('gw_tour_events')
+      .select('id, title, start_date, location, description, tenant_id')
+      .gte('start_date', now.toISOString())
+      .lte('start_date', in48h.toISOString());
+
+    if (toursErr) {
+      console.error('Tour query error:', toursErr);
+      return json(500, { error: 'processing_failed', details: toursErr.message });
+    }
+
+    if (!upcomingTours || upcomingTours.length === 0) {
+      console.log('No tours starting within 48h');
+      return json(200, { ok: true, digests_sent: 0 });
+    }
+
+    const upcomingTourIds = upcomingTours.map((t) => t.id as string);
+    // Build a lookup for tour metadata (id → tour row) to avoid re-fetching below
+    const tourById: Record<string, { id: string; title: string; start_date: string; location: string; description?: string }> =
+      Object.fromEntries(upcomingTours.map((t) => [t.id as string, t as any]));
+
+    // --- Step 2: Fetch pending/sent slips for those tour ids ---
     const { data: outstandingSlips, error: slipsErr } = await admin
       .from('gw_permission_slips')
-      .select(`
-        id,
-        tenant_id,
-        student_user_id,
-        tour:tour_id (
-          id,
-          title,
-          start_date,
-          location,
-          description
-        )
-      `)
-      .in('status', ['pending', 'sent'])
-      .lte('tour.start_date', in48h.toISOString())
-      .gte('tour.start_date', now.toISOString());
+      .select('id, tenant_id, student_user_id, tour_id')
+      .in('tour_id', upcomingTourIds)
+      .in('status', ['pending', 'sent']);
 
     if (slipsErr) {
-      console.error('Query error:', slipsErr);
+      console.error('Slips query error:', slipsErr);
       return json(500, { error: 'processing_failed', details: slipsErr.message });
     }
 
     if (!outstandingSlips || outstandingSlips.length === 0) {
-      console.log('No outstanding slips within 48h');
+      console.log('No outstanding slips for upcoming tours within 48h');
       return json(200, { ok: true, digests_sent: 0 });
     }
 
@@ -68,21 +81,23 @@ Deno.serve(async (req: Request) => {
 
     for (const slip of outstandingSlips) {
       const tenantId = slip.tenant_id as string;
-      const tour = slip.tour as unknown as { id: string; title: string; start_date: string; location: string; description?: string } | null;
+      const tourId = slip.tour_id as string;
+      const tour = tourById[tourId];
 
       if (!tour) {
-        console.warn(`Slip ${slip.id} has no tour; skipping`);
+        // Tour was outside the 48h window or missing; should not happen but guard anyway
+        console.warn(`Slip ${slip.id} references tour ${tourId} not in upcoming set; skipping`);
         continue;
       }
 
       if (!grouped[tenantId]) {
         grouped[tenantId] = {};
       }
-      if (!grouped[tenantId][tour.id]) {
-        grouped[tenantId][tour.id] = [];
+      if (!grouped[tenantId][tourId]) {
+        grouped[tenantId][tourId] = [];
       }
 
-      grouped[tenantId][tour.id].push({
+      grouped[tenantId][tourId].push({
         slipId: slip.id,
         studentUserId: slip.student_user_id,
         tour,
@@ -135,10 +150,15 @@ Deno.serve(async (req: Request) => {
         students: slips.map((slip) => studentNames[slip.studentUserId]),
       }));
 
-      const subject = `${outstandingSlips.length} outstanding permission slips`;
+      // Count only the slips for THIS tenant (not the global total across all tenants)
+      const tenantSlipCount = Object.values(grouped[tenantId]).reduce(
+        (sum, slips) => sum + slips.length,
+        0,
+      );
+      const subject = `${tenantSlipCount} outstanding permission slip${tenantSlipCount !== 1 ? 's' : ''}`;
       const html = buildDigestEmailHtml({
         tours: toursData,
-        totalCount: outstandingSlips.length,
+        totalCount: tenantSlipCount,
       });
 
       // Send to each manager
