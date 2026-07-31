@@ -9,16 +9,16 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Calendar, DollarSign, Bell, CreditCard, Users, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { DuesOverview } from "@/components/dues/DuesOverview";
-import { DuesRecordsList } from "@/components/dues/DuesRecordsList";
+import { StudentFeesList } from "@/components/fees/StudentFeesList";
 import { PaymentPlansList } from "@/components/dues/PaymentPlansList";
 import { DuesRemindersList } from "@/components/dues/DuesRemindersList";
-import { CreateDuesDialog } from "@/components/dues/CreateDuesDialog";
+import { CreateFeeDialog } from "@/components/fees/CreateFeeDialog";
 import { CreatePaymentPlanDialog } from "@/components/dues/CreatePaymentPlanDialog";
 import { CreateReminderDialog } from "@/components/dues/CreateReminderDialog";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 
-export const DuesManagement = () => {
+export const FeesAdminPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -88,7 +88,7 @@ export const DuesManagement = () => {
       console.log('DuesManagement: User ID:', user?.id);
       
       const { data, error } = await supabase
-        .from('gw_dues_records')
+        .from('gw_student_fees')
         .select(`
           *,
           gw_profiles:gw_profiles_directory (
@@ -120,10 +120,10 @@ export const DuesManagement = () => {
   const fetchPaymentPlans = async () => {
     try {
       const { data, error } = await (supabase as any)
-        .from('gw_dues_payment_plans')
+        .from('gw_fee_payment_plans')
         .select(`
           *,
-          gw_payment_plan_installments (*)
+          gw_fee_plan_installments (*)
         `)
         .order('created_at', { ascending: false });
 
@@ -142,7 +142,7 @@ export const DuesManagement = () => {
   const fetchReminders = async () => {
     try {
       const { data, error } = await (supabase as any)
-        .from('gw_dues_reminders')
+        .from('gw_fee_reminders')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -263,8 +263,8 @@ export const DuesManagement = () => {
         </TabsContent>
 
         <TabsContent value="records" className="space-y-6">
-          <DuesRecordsList 
-            duesRecords={duesRecords} 
+          <StudentFeesList
+            duesRecords={duesRecords}
             onRefresh={fetchDuesRecords}
           />
         </TabsContent>
@@ -285,8 +285,8 @@ export const DuesManagement = () => {
       </Tabs>
 
       {/* Dialogs */}
-      <CreateDuesDialog 
-        open={createDuesOpen} 
+      <CreateFeeDialog
+        open={createDuesOpen}
         onOpenChange={setCreateDuesOpen}
         onSuccess={handleSuccess}
       />

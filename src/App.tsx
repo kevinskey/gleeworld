@@ -148,7 +148,7 @@ const ForcePasswordChange = lazy(() => import("./pages/ForcePasswordChange"));
 const AuditionApplicationPage = lazy(() => import("./pages/AuditionApplicationPage"));
 const FanDashboard = lazy(() => import("./pages/FanDashboard"));
 // import AdminDashboard from "./pages/AdminDashboard";
-const DuesManagement = lazy(() => import("./pages/DuesManagement").then(m => ({ default: m.DuesManagement })));
+const FeesAdminPage = lazy(() => import("./pages/dashboard/FeesAdminPage").then(m => ({ default: m.FeesAdminPage })));
 const PermissionsPage = lazy(() => import("./pages/admin/Permissions"));
 const WeekPage = lazy(() => import("./pages/music-theory/WeekPage"));
 
@@ -2380,13 +2380,17 @@ const App = () => {
                          </ProtectedRoute>
                        } 
                       />
-                       <Route 
-                         path="/dues-management" 
+                       <Route
+                         path="/dues-management"
+                         element={<Navigate to="/dashboard/fees" replace />}
+                       />
+                       <Route
+                         path="/dashboard/fees"
                          element={
                            <ProtectedRoute>
-                             <DuesManagement />
+                             <FeesAdminPage />
                            </ProtectedRoute>
-                         } 
+                         }
                        />
                        <Route 
                          path="/dues-management/success" 

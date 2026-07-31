@@ -25,7 +25,7 @@ interface PaymentPlan {
   installment_amount: number;
   frequency: string;
   status: 'active' | 'paused' | 'completed';
-  gw_payment_plan_installments: Array<{
+  gw_fee_plan_installments: Array<{
     id: string;
     installment_number: number;
     amount: number;
@@ -55,7 +55,7 @@ export const FinancesModule = () => {
     try {
       // Fetch dues records
       const { data: duesData, error: duesError } = await supabase
-        .from('gw_dues_records')
+        .from('gw_student_fees')
         .select('*')
         .eq('user_id', user?.id)
         .order('due_date', { ascending: false });
@@ -65,10 +65,10 @@ export const FinancesModule = () => {
 
       // Fetch payment plans
       const { data: plansData, error: plansError } = await supabase
-        .from('gw_dues_payment_plans')
+        .from('gw_fee_payment_plans')
         .select(`
           *,
-          gw_payment_plan_installments(*)
+          gw_fee_plan_installments(*)
         `)
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
@@ -165,7 +165,7 @@ export const FinancesModule = () => {
       const installmentAmount = selectedDuesRecord.amount / installments;
 
       const { error } = await supabase
-        .from('gw_dues_payment_plans')
+        .from('gw_fee_payment_plans')
         .insert({
           dues_record_id: selectedDuesRecord.id,
           user_id: user?.id,
@@ -316,7 +316,7 @@ export const FinancesModule = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {activePlans.map((plan) => {
-              const pendingInstallments = plan.gw_payment_plan_installments.filter(
+              const pendingInstallments = plan.gw_fee_plan_installments.filter(
                 inst => inst.status === 'pending'
               );
               const nextInstallment = pendingInstallments.sort((a, b) => 
