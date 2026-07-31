@@ -41,16 +41,43 @@ SET name = COALESCE(NULLIF(TRIM(semester), ''), 'Dues')
 WHERE category = 'dues';
 
 -- Extend the status check to include all new statuses.
--- Prior migration 20250904040803 already renamed the constraint from the
--- original ('pending','paid','overdue','partial') to include 'waived' and
--- 'payment_plan'.  We drop whatever name it has now and add the full set.
-ALTER TABLE gw_student_fees DROP CONSTRAINT IF EXISTS gw_dues_records_status_check;
+-- Prior migration 20250904040803 may have renamed the original constraint.
+-- We introspect pg_constraint to drop ANY existing CHECK on the status column
+-- regardless of its name, then add the canonical new constraint.
+DO $$
+DECLARE
+  cname text;
+BEGIN
+  FOR cname IN
+    SELECT conname
+    FROM pg_constraint
+    WHERE conrelid = 'gw_student_fees'::regclass
+      AND contype = 'c'
+      AND pg_get_constraintdef(oid) ILIKE '%status%'
+  LOOP
+    EXECUTE format('ALTER TABLE gw_student_fees DROP CONSTRAINT %I', cname);
+  END LOOP;
+END $$;
 ALTER TABLE gw_student_fees ADD CONSTRAINT gw_student_fees_status_check
   CHECK (status IN ('pending','partial','paid','overdue','refunded','waived'));
 
--- payment_method has no named CHECK constraint in the existing schema
--- (only a DEFAULT value); simply add the new constraint.
-ALTER TABLE gw_student_fees DROP CONSTRAINT IF EXISTS gw_dues_records_payment_method_check;
+-- payment_method: drop any existing CHECK constraint on this column by name,
+-- then add the new one.  (No named check existed in the original schema, but
+-- a rename in a prior migration could have introduced one.)
+DO $$
+DECLARE
+  cname text;
+BEGIN
+  FOR cname IN
+    SELECT conname
+    FROM pg_constraint
+    WHERE conrelid = 'gw_student_fees'::regclass
+      AND contype = 'c'
+      AND pg_get_constraintdef(oid) ILIKE '%payment_method%'
+  LOOP
+    EXECUTE format('ALTER TABLE gw_student_fees DROP CONSTRAINT %I', cname);
+  END LOOP;
+END $$;
 ALTER TABLE gw_student_fees ADD CONSTRAINT gw_student_fees_payment_method_check
   CHECK (payment_method IN ('stripe','cash','check','venmo','other') OR payment_method IS NULL);
 
