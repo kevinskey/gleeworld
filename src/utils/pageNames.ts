@@ -32,7 +32,7 @@ export const PAGE_NAMES: Record<string, string> = {
   '/payments': 'Payments',
   '/budget-approvals': 'Budget Approvals',
   '/budgets': 'Budget Management',
-  '/tour-manager': 'Tour Manager Dashboard',
+  '/tour-manager': 'Travel Manager Dashboard',
   '/treasurer': 'Treasurer Dashboard',
   '/tour-planner': 'Tour Planner',
   

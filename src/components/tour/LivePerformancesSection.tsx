@@ -103,7 +103,7 @@ export const LivePerformancesSection = () => {
         <div className="space-y-4">
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Video className="h-5 w-5 text-primary" />
-            Past Tour Recordings
+            Past Travel Recordings
           </h3>
           
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

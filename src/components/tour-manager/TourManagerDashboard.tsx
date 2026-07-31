@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Menu, Home, Clock, Hotel, CheckCircle2, LayoutGrid, MessageSquare, CloudSun, Receipt } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Menu, Home, Clock, Hotel, CheckCircle2, LayoutGrid, MessageSquare, CloudSun, Receipt, FileCheck } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -28,6 +28,7 @@ import { TourNotesSection } from '@/components/tour/TourNotesSection';
 import { TourRollCallSection } from './TourRollCallSection';
 import { TourWeatherSection } from './TourWeatherSection';
 import { BusDriverTipReceiptSection } from '@/components/tour/BusDriverTipReceiptSection';
+import { PermissionSlipsTab } from '@/components/travel-manager/PermissionSlipsTab';
 import { supabase } from '@/integrations/supabase/client';
 interface TourManagerDashboardProps {
   user?: {
@@ -124,14 +125,18 @@ const navItems = [{
   value: 'weather',
   label: 'Weather',
   icon: CloudSun
+}, {
+  value: 'permission-slips',
+  label: 'Permission Slips',
+  icon: FileCheck
 }];
 const contentConfig: Record<string, {
   title: string;
   description: string;
 }> = {
   'overview': {
-    title: 'Tour Management',
-    description: 'Overview of all tour operations'
+    title: 'Travel Management',
+    description: 'Overview of all travel operations'
   },
   'logistics': {
     title: 'Itinerary',
@@ -208,6 +213,10 @@ const contentConfig: Record<string, {
   'weather': {
     title: 'Weather',
     description: 'Current weather for tour destination cities'
+  },
+  'permission-slips': {
+    title: 'Permission Slips',
+    description: 'Track parent permission slips for K–12 travel rosters'
   }
 };
 export const TourManagerDashboard = ({
@@ -330,6 +339,8 @@ export const TourManagerDashboard = ({
         return <TourNotesSection />;
       case 'weather':
         return <TourWeatherSection />;
+      case 'permission-slips':
+        return <PermissionSlipsTab />;
       default:
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
     }

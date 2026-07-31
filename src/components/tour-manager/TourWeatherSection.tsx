@@ -171,7 +171,7 @@ export const TourWeatherSection: React.FC = () => {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">Tour City Weather</h2>
+          <h2 className="text-xl font-bold text-foreground">Travel City Weather</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
@@ -193,9 +193,9 @@ export const TourWeatherSection: React.FC = () => {
       <Card>
         <CardContent className="p-8 text-center">
           <CloudSun className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-          <h3 className="font-semibold text-lg text-foreground">No Tour Cities Found</h3>
+          <h3 className="font-semibold text-lg text-foreground">No Travel Cities Found</h3>
           <p className="text-muted-foreground text-sm mt-1">
-            Add cities to your tour itinerary to see weather forecasts.
+            Add cities to your travel itinerary to see weather forecasts.
           </p>
         </CardContent>
       </Card>
@@ -206,7 +206,7 @@ export const TourWeatherSection: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Tour City Weather</h2>
+          <h2 className="text-xl font-bold text-foreground">Travel City Weather</h2>
           {lastUpdated && (
             <p className="text-xs text-muted-foreground">
               Updated {lastUpdated.toLocaleTimeString()}

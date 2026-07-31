@@ -897,7 +897,7 @@ function DashboardMockup() {
           in daily. Order roughly matches the sidebar priority; colors are
           just for visual variety (the real app tiles use the tenant's
           brand color). Kept to eight for a clean 2x4 grid — Notation,
-          Sight Reading, Liturgy Planner, Tour Manager and the rest are
+          Sight Reading, Liturgy Planner, Travel Manager and the rest are
           add-ons discussed at signup, not front-of-house tiles here. */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
@@ -2015,7 +2015,7 @@ const ADDON_MODULES: { name: string; includedFrom: PlanTierId; tagline: string }
   { name: 'Studio Hours',    includedFrom: 'personal',     tagline: 'Bookable teacher time your students can grab.' },
   { name: 'Concert Planner', includedFrom: 'personal',     tagline: 'Print-ready programs with editor credits.' },
   { name: 'Finances',        includedFrom: 'personal',     tagline: 'Contracts, invoicing, and cash-flow tracking.' },
-  { name: 'Tour Manager',    includedFrom: 'director_60',  tagline: 'Routes, hotels, weather, manifests.' },
+  { name: 'Travel Manager',  includedFrom: 'director_60',  tagline: 'Routes, hotels, weather, manifests.' },
   { name: 'PR Hub',          includedFrom: 'director_60',  tagline: 'Press releases, media kits, and outreach.' },
   { name: 'Box Office',      includedFrom: 'director_150', tagline: 'Ticketing — you keep 100% of ticket sales.' },
   { name: 'Liturgy Planner', includedFrom: 'director_150', tagline: 'Weekly service planning with readings and orders of worship.' },

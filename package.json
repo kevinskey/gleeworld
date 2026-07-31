@@ -163,6 +163,7 @@
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "globals": "^15.9.0",
+    "jose": "^5.10.0",
     "lovable-tagger": "^1.1.7",
     "playwright-core": "^1.62.0",
     "postcss": "^8.4.47",

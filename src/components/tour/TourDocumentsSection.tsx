@@ -109,7 +109,7 @@ export const TourDocumentsSection = () => {
       if (data) {
         setRootFolderId(data.id);
         setCurrentFolderId(data.id);
-        setFolderPath([{ id: data.id, name: 'Tour Documents' }]);
+        setFolderPath([{ id: data.id, name: 'Travel Documents' }]);
       }
     };
     findFolder();
@@ -499,7 +499,7 @@ export const TourDocumentsSection = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Tour Documents</h2>
+          <h2 className="text-xl font-bold text-foreground">Travel Documents</h2>
           <p className="text-sm text-muted-foreground">
             Signed contracts, deposit checks, receipts, scans & more
           </p>
@@ -812,7 +812,7 @@ export const TourDocumentsSection = () => {
           <DialogHeader>
             <DialogTitle>Create New Folder</DialogTitle>
             <DialogDescription>
-              Add a subfolder inside "{folderPath[folderPath.length - 1]?.name || 'Tour Documents'}"
+              Add a subfolder inside "{folderPath[folderPath.length - 1]?.name || 'Travel Documents'}"
             </DialogDescription>
           </DialogHeader>
           <Input

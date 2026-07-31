@@ -281,8 +281,8 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
   {
     id: "tour-management",
     name: "tour-management",
-    title: "Tour Manager",
-    description: "Comprehensive tour planning, logistics, and management system",
+    title: "Travel Manager",
+    description: "Comprehensive travel planning, logistics, and management system",
     icon: Route,
     iconColor: "blue",
     category: "communications",

@@ -238,7 +238,7 @@ const RiserGrid = ({ config }: { config: RiserConfig }) => {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <Card className="p-3 text-center">
           <p className="text-2xl font-bold text-primary">{roster.length}</p>
-          <p className="text-xs text-muted-foreground">Tour Roster</p>
+          <p className="text-xs text-muted-foreground">Travel Roster</p>
         </Card>
         <Card className="p-3 text-center">
           <p className="text-2xl font-bold" style={{ color: '#16a34a' }}>{assignedCount}</p>

@@ -242,7 +242,7 @@ export const TourStopDetailDialog = ({ stop, open, onOpenChange, onEdit, busComp
           {/* Edit Button */}
           {onEdit && (
             <Button className="w-full" onClick={() => onEdit(stop)}>
-              <Pencil className="h-4 w-4 mr-2" /> Edit Tour Stop Details
+              <Pencil className="h-4 w-4 mr-2" /> Edit Travel Stop Details
             </Button>
           )}
         </div>

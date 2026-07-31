@@ -101,7 +101,7 @@ export const CallMeetingDialog = ({
       'president': 'President',
       'secretary': 'Secretary',
       'treasurer': 'Treasurer',
-      'tour_manager': 'Tour Manager',
+      'tour_manager': 'Travel Manager',
       'wardrobe_manager': 'Wardrobe Manager',
       'librarian': 'Librarian',
       'historian': 'Historian',
