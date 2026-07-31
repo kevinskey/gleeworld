@@ -108,12 +108,10 @@ export const useFeeTemplates = () => {
     id: string,
     patch: Partial<CreateFeeTemplateInput>,
   ): Promise<FeeTemplate> => {
-    const { data, error } = await supabase
-      .from('gw_fee_templates')
-      .update(patch)
-      .eq('id', id)
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc('update_fee_template', {
+      p_template_id: id,
+      p_patch: patch as Record<string, unknown>,
+    });
 
     if (error || !data) throw error ?? new Error('Update failed');
 

@@ -54,11 +54,13 @@ function makeChain(result: ChainResult) {
 // ── Module mock ───────────────────────────────────────────────────────────────
 
 const mockFrom = vi.fn();
+const mockRpc = vi.fn();
 const mockGetUser = vi.fn();
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: (...args: unknown[]) => mockFrom(...args),
+    rpc: (...args: unknown[]) => mockRpc(...args),
     auth: { getUser: () => mockGetUser() },
   },
 }));
@@ -96,6 +98,8 @@ const fakeInstallments = [
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetUser.mockResolvedValue({ data: { user: FAKE_USER }, error: null });
+  // Default rpc mock resolves successfully; individual tests override as needed.
+  mockRpc.mockResolvedValue({ data: null, error: null });
 });
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -299,13 +303,14 @@ describe('useFeeTemplates', () => {
   // ── updateTemplate ──────────────────────────────────────────────────────────
 
   describe('updateTemplate', () => {
-    it('updates gw_fee_templates then fetches installments for the returned FeeTemplate', async () => {
+    it('calls rpc("update_fee_template") with correct args then fetches installments', async () => {
       const updatedTpl = { ...fakeTpl, name: 'Renamed' };
-      const updateChain = makeChain({ data: updatedTpl, error: null });
       const instChain = makeChain({ data: fakeInstallments, error: null });
-      mockFrom
-        .mockReturnValueOnce(updateChain)
-        .mockReturnValueOnce(instChain);
+
+      // updateTemplate now calls supabase.rpc (not supabase.from) for the update,
+      // then supabase.from("gw_fee_template_installments") for the re-fetch.
+      mockRpc.mockResolvedValueOnce({ data: updatedTpl, error: null });
+      mockFrom.mockReturnValueOnce(instChain);
 
       const { result } = renderHook(() => useFeeTemplates());
 
@@ -314,12 +319,16 @@ describe('useFeeTemplates', () => {
         updated = await result.current.updateTemplate('tpl-1', { name: 'Renamed' });
       });
 
-      expect(mockFrom).toHaveBeenNthCalledWith(1, 'gw_fee_templates');
-      expect(mockFrom).toHaveBeenNthCalledWith(2, 'gw_fee_template_installments');
+      // RPC called with correct function name and parameters.
+      expect(mockRpc).toHaveBeenCalledWith('update_fee_template', {
+        p_template_id: 'tpl-1',
+        p_patch: { name: 'Renamed' },
+      });
 
-      const updateArgs = (updateChain._calls['update'] ?? [])[0]?.[0] as Record<string, unknown>;
-      expect(updateArgs.name).toBe('Renamed');
+      // Installments re-fetched via supabase.from (not the RPC).
+      expect(mockFrom).toHaveBeenCalledWith('gw_fee_template_installments');
 
+      expect(updated.name).toBe('Renamed');
       expect(updated.installments).toHaveLength(2);
     });
   });
