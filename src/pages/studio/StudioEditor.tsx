@@ -2471,8 +2471,11 @@ function Editor({
           title="Play (Space)">
           <Play className="w-4 h-4" />
         </button>
-        <button onClick={pause} disabled={!state?.isPlaying}
-          className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 flex items-center justify-center"
+        {/* Never disabled: pausing a parked transport is a no-op, and a
+            greyed Pause strands the user if engine state ever disagrees
+            with what's audible (playback OR recording). */}
+        <button onClick={pause}
+          className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
           title="Pause (Space)">
           <Pause className="w-4 h-4" />
         </button>
