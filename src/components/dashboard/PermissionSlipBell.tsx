@@ -49,6 +49,7 @@ export function PermissionSlipBell() {
 
   const [count, setCount] = useState(0);
   const [lastSeen, setLastSeenState] = useState<string>('');
+  const [hasEverHadRows, setHasEverHadRows] = useState(false);
   const prevCountRef = useRef(0);
 
   // Initialise lastSeen from localStorage once we have a userId.
@@ -78,18 +79,21 @@ export function PermissionSlipBell() {
       const n = await fetchCount(lastSeen);
       if (cancelled) return;
 
+      // Track whether query has ever returned rows for visibility control.
+      if (n > 0) {
+        setHasEverHadRows(true);
+      }
+
       // Fire a toast only when the count grows while the user is on-page.
       if (n > prevCountRef.current && prevCountRef.current >= 0) {
         const newArrivals = n - prevCountRef.current;
         // Suppress the initial-load toast (prevCount === 0 and we just
         // mounted, which isn't a "new arrival while on-page" event).
-        if (prevCountRef.current > 0 || n > 0 && document.hasFocus()) {
-          if (newArrivals > 0 && prevCountRef.current > 0) {
-            toast.success(
-              `${newArrivals} permission slip${newArrivals > 1 ? 's' : ''} just signed`,
-              { description: 'Check the travel manager for details.' },
-            );
-          }
+        if (prevCountRef.current > 0 && newArrivals > 0 && document.hasFocus()) {
+          toast.success(
+            `${newArrivals} permission slip${newArrivals > 1 ? 's' : ''} just signed`,
+            { description: 'Check the travel manager for details.' },
+          );
         }
       }
 
@@ -115,11 +119,9 @@ export function PermissionSlipBell() {
     setCount(0);
   };
 
-  // Don't render for non-managers (count will always be 0 from RLS, but
-  // we still hide the bell to keep the topbar uncluttered).
-  if (count === 0 && !localStorage.getItem(lsKey(userId ?? ''))) return null;
-  // Always render the bell even when count === 0 so the icon persists once
-  // the user has been identified as a tour manager (by having data in LS).
+  // Don't render for non-managers: RLS means query returns 0 rows, so
+  // hasEverHadRows stays false and the bell never renders.
+  if (!hasEverHadRows) return null;
   if (!userId) return null;
 
   const sinceLabel = new Date(lastSeen).toLocaleString(undefined, {
