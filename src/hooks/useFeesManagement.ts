@@ -308,7 +308,7 @@ export const useFeesManagement = () => {
         .update({
           status: 'paid',
           paid_date: new Date().toISOString().split('T')[0],
-          payment_method: paymentMethod || 'manual',
+          payment_method: paymentMethod || 'other',
           updated_at: new Date().toISOString()
         })
         .eq('id', studentFeeId);
