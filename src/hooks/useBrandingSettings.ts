@@ -36,7 +36,7 @@ function fallback(): BrandingSettings {
     logo_url: TENANT?.logoUrl ?? null,
     auth_background_url: null,
     auth_background_mobile_url: null,
-    primary_color: '#150d26',
+    primary_color: 'hsl(var(--brand-navy))',
     accent_color: '#9333ea',
     font_family: 'sans',
     letter_spacing: 0,

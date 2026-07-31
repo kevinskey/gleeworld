@@ -32,7 +32,7 @@ export default function SiteSetup() {
   const [tagline, setTagline] = useState('');
   const [showEnrollCta, setShowEnrollCta] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#150d26');
+  const [primaryColor, setPrimaryColor] = useState('hsl(var(--brand-navy))');
   const [authBackgroundUrl, setAuthBackgroundUrl] = useState('');
   const [authBackgroundMobileUrl, setAuthBackgroundMobileUrl] = useState('');
   const [saving, setSaving] = useState(false);
@@ -68,7 +68,7 @@ export default function SiteSetup() {
       setTagline(settings.tagline ?? '');
       setShowEnrollCta(Boolean((settings as any).show_enroll_cta));
       setLogoUrl(settings.logo_url ?? '');
-      setPrimaryColor(settings.primary_color ?? '#150d26');
+      setPrimaryColor(settings.primary_color ?? 'hsl(var(--brand-navy))');
       setAuthBackgroundUrl(settings.auth_background_url ?? '');
       setAuthBackgroundMobileUrl(settings.auth_background_mobile_url ?? '');
     }
@@ -207,7 +207,7 @@ export default function SiteSetup() {
       tagline: tagline.trim() || null,
       show_enroll_cta: showEnrollCta,
       logo_url: logoUrl.trim() || null,
-      primary_color: primaryColor || '#150d26',
+      primary_color: primaryColor || 'hsl(var(--brand-navy))',
       auth_background_url: authBackgroundUrl.trim() || null,
       auth_background_mobile_url: authBackgroundMobileUrl.trim() || null,
       ...(markComplete ? { setup_completed: true } : {}),

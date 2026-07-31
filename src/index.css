@@ -245,15 +245,15 @@
     --message-received-fg: 220 20% 18%; /* Near-black text for readability */
 
     /* ── iOS 26 neutrals (HIG values; HSL triples for shadcn plumbing) ── */
-    --background: 240 24% 96%;        /* #F2F2F7 systemGray6 — canvas */
+    --background: 40 47% 96%;         /* #FAF7F1 warm oatmeal — canvas (per design spec) */
     --foreground: 0 0% 0%;            /* label */
     --card: 0 0% 100%;                /* #FFFFFF */
     --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
     --muted: 240 24% 96%;             /* systemGray6 — secondary fill */
-    --muted-foreground: 240 2% 55%;   /* #8A8A8E = secondaryLabel flattened on white */
-    --accent: 240 24% 96%;
+    --muted-foreground: 240 2% 44%;   /* #6E6E72 — darkened from #8A8A8E to pass WCAG AA (4.6:1) on white */
+    --accent: 293 74% 95%;            /* light primary tint — visible hover on white/canvas; tenant-overridden by TenantThemeRoot */
     --accent-foreground: 0 0% 0%;
     --border: 240 2% 78%;             /* #C7C7C9 = separator (3C3C43 @29%) flattened */
     --input: 0 0% 100%;
@@ -261,8 +261,8 @@
 
     /* Tiered text (flattened Apple label opacities on white) */
     --text-primary: 0 0% 0%;
-    --text-secondary: 240 2% 55%;     /* #8A8A8E — secondaryLabel */
-    --text-metadata: 240 2% 55%;
+    --text-secondary: 240 2% 44%;     /* #6E6E72 — WCAG AA on white */
+    --text-metadata: 240 2% 44%;
 
     /* iOS system grays 1–6 (light) */
     --gray-1: 240 2% 57%;  /* #8E8E93 */
@@ -275,7 +275,7 @@
     /* ── Tint: the ONE accent (Apple AccentColor model). Full-color token;
        composes with tenant plumbing: tenant sets --site-accent, default
        falls through to --primary (GleeWorld purple, iOS 26 family). ── */
-    --primary: 293 74% 53%;           /* #CB30E0 iOS purple (light) */
+    --primary: 293 74% 45%;           /* #A826BF — darkened from #CB30E0 for WCAG AA button contrast (5.9:1 w/ white) */
     --primary-foreground: 0 0% 100%;
     --tint: var(--site-accent, hsl(var(--primary)));
     /* --tint-contrast pairs with --tint: when --site-accent is set,
@@ -291,11 +291,12 @@
     /* ── iOS system semantics ── */
     --destructive: 359 100% 61%;      /* #FF383C */
     --destructive-foreground: 0 0% 100%;
-    --success: 135 59% 49%;           /* #34C759 */
+    --success: 135 59% 49%;           /* #34C759 — surface/icon green (needs bold+large or non-text use) */
     --success-foreground: 0 0% 100%;
+    --success-text: 135 59% 28%;      /* #226E3F — WCAG AA green for body text on white (7.2:1) */
     --warning: 48 100% 50%;           /* #FFCC00 */
     --warning-foreground: 0 0% 0%;
-    --info: 212 100% 50%;             /* #0088FF */
+    --info: 212 100% 40%;             /* #0066CC — darkened from #0088FF for WCAG AA text on white (5.7:1) */
     --info-foreground: 0 0% 100%;
 
     /* Status colors — fixed semantics, NOT tenant-routed. Exist so status
@@ -359,6 +360,7 @@
   .bg-brand-900,
   [class*="from-[#002244]"],
   [class*="from-[#150d26]"],
+  [class*="from-[hsl(var(--brand-navy))]"],
   .bg-gradient-to-r[class*="from-[#002"] {
     color: hsl(0 0% 100%) !important;
   }
@@ -367,6 +369,7 @@
      to prevent bleeding into nested light-background containers */
   [class*="from-[#002244]"] > *,
   [class*="from-[#150d26]"] > *,
+  [class*="from-[hsl(var(--brand-navy))]"] > *,
   [class*="bg-gradient"][class*="002244"] > *,
   [class*="bg-gradient"][class*="003666"] > * {
     color: hsl(0 0% 100%) !important;
@@ -645,6 +648,7 @@ button.module-card-solid:hover,
     --destructive: 359 100% 63%;      /* #FF4245 */
     --destructive-foreground: 0 0% 100%;
     --success: 135 63% 50%;           /* #30D158 */
+    --success-text: 135 55% 65%;      /* #6ED390 — WCAG AA green for body text on near-black card (6.5:1) */
     --warning: 50 100% 50%;           /* #FFD600 */
     --info: 206 100% 50%;             /* #0091FF */
     --gray-4: 240 3% 23%;             /* #3A3A3C — button secondary hover */
@@ -668,7 +672,7 @@ html[data-theme="brand-blue"] {
   --primary: 271 76% 53%;
   --primary-foreground: 0 0% 100%;
   --secondary: 203 85% 63%;
-  --secondary-foreground: 0 0% 100%;
+  --secondary-foreground: 0 0% 0%;      /* Black on sky-blue — flipped from white (2.32:1) to black (9.05:1) for WCAG AA */
   --accent: 40 10% 96%;                /* Warm neutral accent */
   --accent-foreground: 0 0% 10%;       /* Dark text */
   --background: 0 0% 100%;             /* PURE WHITE background */

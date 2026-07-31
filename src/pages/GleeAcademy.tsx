@@ -77,7 +77,7 @@ const GleeAcademy = () => {
       <div className="min-h-screen bg-[#1a3a5c]">
         {/* Header Banner */}
         <div className="w-full py-6 sm:py-8 flex items-center justify-center" style={{
-        backgroundColor: '#150d26'
+        backgroundColor: 'hsl(var(--brand-navy))'
       }}>
           <div className="container mx-auto px-4">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center tracking-wide" style={{

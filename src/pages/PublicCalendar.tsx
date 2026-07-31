@@ -7,7 +7,7 @@ const PublicCalendar = () => {
       <div className="min-h-screen bg-white">
         {/* Header Banner */}
         <div className="w-full py-4 sm:py-5 flex items-center justify-center" style={{
-        backgroundColor: '#150d26'
+        backgroundColor: 'hsl(var(--brand-navy))'
       }}>
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-center gap-3 mb-1">
