@@ -45,6 +45,7 @@ import { MidiTimebase } from '@/lib/studio/midiTimebase';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset, type TransportTickStore } from '@/hooks/useStudio';
 import { useTransportPosition, useTransportTick } from './useTransportTick';
 import { retainUnsavedWork } from '@/lib/unsavedWork';
+import { withUploadRetry } from '@/lib/studio/uploadRetry';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
 import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioTrack, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
@@ -1873,9 +1874,16 @@ function Editor({
       // Background upload — swap the provisional asset for the real
       // one when the network round-trip finishes. The user can play +
       // hear the take immediately in the meantime.
-      (async () => {
+      //
+      // Loss-proofing (2026-07-31 bass-take incident): the upload gets
+      // automatic retries with backoff; until it lands, the unsavedWork
+      // registry keeps the reload/close confirmation armed (the take
+      // exists ONLY in this tab's memory). Terminal failure surfaces a
+      // persistent toast with a manual Retry — never a 4s auto-dismiss.
+      const releaseTakeUpload = retainUnsavedWork('studio-take-upload');
+      const runTakeUpload = async (): Promise<void> => {
         try {
-          const assetRaw = await uploadAudioAsset({
+          const assetRaw = await withUploadRetry(() => uploadAudioAsset({
             tenantId: session.tenant_id,
             sessionId: session.id,
             file: uploadBlob,
@@ -1883,6 +1891,9 @@ function Editor({
             duration_seconds: buf.duration,
             sample_rate: buf.sampleRate,
             channels: buf.numberOfChannels,
+          }), {
+            onRetry: ({ attempt, delayMs, error }) =>
+              console.warn(`[studio] take upload retry ${attempt} in ${delayMs}ms`, error),
           });
           const asset: AudioAsset = { ...assetRaw, peaks };
           const remoteUrl = await getAssetUrl({ tenantId: session.tenant_id, sessionId: session.id, asset });
@@ -1900,14 +1911,18 @@ function Editor({
             });
             return { ...s, assets: nextAssets, tracks: nextTracks };
           });
+          releaseTakeUpload();
           // Local blob URL is no longer referenced — free it.
           try { URL.revokeObjectURL(localUrl); } catch { /* ignore */ }
         } catch (uploadErr) {
-          toast.error('Take upload failed — clip is playable locally but not saved', {
-            description: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
+          toast.error('Take upload failed — the recording is NOT saved yet', {
+            description: `Keep this tab open and retry. Closing it loses the take. (${uploadErr instanceof Error ? uploadErr.message : String(uploadErr)})`,
+            duration: Infinity,
+            action: { label: 'Retry upload', onClick: () => { void runTakeUpload(); } },
           });
         }
-      })();
+      };
+      void runTakeUpload();
       // Park the playhead at the take's start so the user can press
       // Play (or hit Space) once and immediately hear the take. Auto-
       // play is intentionally NOT triggered here — the engine reload
