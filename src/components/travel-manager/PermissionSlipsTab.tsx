@@ -4,6 +4,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -27,6 +36,7 @@ import {
   Download,
   Loader2,
   Mail,
+  PlusCircle,
   RefreshCw,
   Send,
   UserX,
@@ -39,6 +49,13 @@ interface RosterStudent {
   user_id: string;
   full_name: string;
   email: string;
+}
+
+interface TourEvent {
+  id: string;
+  title: string;
+  location: string | null;
+  start_date: string;
 }
 
 type FilterValue =
@@ -120,6 +137,16 @@ export function PermissionSlipsTab({ tourId: propTourId }: PermissionSlipsTabPro
   const [loadingData, setLoadingData] = useState(true);
   const [filter, setFilter] = useState<FilterValue>('all');
   const [bulkProgress, setBulkProgress] = useState<{ done: number; total: number } | null>(null);
+
+  // ── Generate-slips dialog state ───────────────────────────────────────────
+  const [genDialogOpen, setGenDialogOpen] = useState(false);
+  const [genTourEvents, setGenTourEvents] = useState<TourEvent[]>([]);
+  const [genLoadingEvents, setGenLoadingEvents] = useState(false);
+  const [genSelectedTourId, setGenSelectedTourId] = useState<string>('');
+  const [genRoster, setGenRoster] = useState<RosterStudent[]>([]);
+  const [genLoadingRoster, setGenLoadingRoster] = useState(false);
+  const [genChecked, setGenChecked] = useState<Set<string>>(new Set());
+  const [genSubmitting, setGenSubmitting] = useState(false);
 
   const { slips, byStudent, send, revoke, viewSignedUrl, refresh } =
     usePermissionSlips(resolvedTourId);
@@ -343,6 +370,122 @@ export function PermissionSlipsTab({ tourId: propTourId }: PermissionSlipsTabPro
     toast.success(`Opened ${done} signed document${done !== 1 ? 's' : ''}.`);
   }
 
+  // ── Generate-slips dialog helpers ─────────────────────────────────────────
+
+  async function openGenDialog() {
+    setGenDialogOpen(true);
+    setGenSelectedTourId('');
+    setGenRoster([]);
+    setGenChecked(new Set());
+    setGenLoadingEvents(true);
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data, error } = await supabase
+        .from('gw_tour_events')
+        .select('id, title, location, start_date')
+        .gte('start_date', today)
+        .order('start_date', { ascending: true })
+        .limit(50);
+      if (error) throw error;
+      setGenTourEvents((data ?? []) as TourEvent[]);
+    } catch (err) {
+      console.error('[PermissionSlipsTab] openGenDialog error', err);
+      toast.error('Failed to load tour events.');
+    } finally {
+      setGenLoadingEvents(false);
+    }
+  }
+
+  async function onGenTourChange(tourId: string) {
+    setGenSelectedTourId(tourId);
+    setGenRoster([]);
+    setGenChecked(new Set());
+    if (!tourId) return;
+    setGenLoadingRoster(true);
+    try {
+      // Fetch all roster user_ids (choir-wide — no per-event scoping)
+      const { data: rosterRows, error: rosterErr } = await supabase
+        .from('gw_tour_roster')
+        .select('user_id')
+        .limit(200);
+      if (rosterErr) throw rosterErr;
+      const userIds = (rosterRows ?? []).map((r: { user_id: string }) => r.user_id);
+      if (userIds.length === 0) {
+        setGenRoster([]);
+        return;
+      }
+      const { data: profiles, error: profileErr } = await supabase
+        .from('gw_profiles_directory')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds)
+        .order('full_name');
+      if (profileErr) throw profileErr;
+      const roster = (profiles ?? []).map((p: { user_id: string; full_name: string; email: string }) => ({
+        user_id: p.user_id,
+        full_name: p.full_name ?? p.email,
+        email: p.email,
+      }));
+      setGenRoster(roster);
+      // Default: all checked
+      setGenChecked(new Set(roster.map(r => r.user_id)));
+    } catch (err) {
+      console.error('[PermissionSlipsTab] onGenTourChange error', err);
+      toast.error('Failed to load roster.');
+    } finally {
+      setGenLoadingRoster(false);
+    }
+  }
+
+  function toggleGenStudent(userId: string) {
+    setGenChecked(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  }
+
+  function toggleAllGenStudents() {
+    if (genChecked.size === genRoster.length) {
+      setGenChecked(new Set());
+    } else {
+      setGenChecked(new Set(genRoster.map(r => r.user_id)));
+    }
+  }
+
+  async function confirmGenSlips() {
+    if (!genSelectedTourId || genChecked.size === 0) return;
+    setGenSubmitting(true);
+    try {
+      const rows = Array.from(genChecked).map(userId => ({
+        tour_id: genSelectedTourId,
+        student_user_id: userId,
+      }));
+      const { data: inserted, error } = await supabase
+        .from('gw_permission_slips')
+        .upsert(rows, { onConflict: 'tour_id,student_user_id', ignoreDuplicates: true })
+        .select('id');
+      if (error) throw error;
+      const created = (inserted ?? []).length;
+      const skipped = rows.length - created;
+      setGenDialogOpen(false);
+      await refresh();
+      if (skipped > 0) {
+        toast.success(`Generated ${created} slip${created !== 1 ? 's' : ''} (${skipped} already existed).`);
+      } else {
+        toast.success(`Generated ${created} permission slip${created !== 1 ? 's' : ''}.`);
+      }
+    } catch (err) {
+      console.error('[PermissionSlipsTab] confirmGenSlips error', err);
+      toast.error('Failed to generate slips. Please try again.');
+    } finally {
+      setGenSubmitting(false);
+    }
+  }
+
   // ── Loading state ─────────────────────────────────────────────────────────
 
   if (loadingData) {
@@ -441,6 +584,17 @@ export function PermissionSlipsTab({ tourId: propTourId }: PermissionSlipsTabPro
             {bulkProgress.done}/{bulkProgress.total}
           </span>
         )}
+
+        <Button
+          size="sm"
+          variant="default"
+          className="gap-1.5"
+          disabled={!!bulkProgress}
+          onClick={openGenDialog}
+        >
+          <PlusCircle className="h-3.5 w-3.5" />
+          Generate slips for trip
+        </Button>
 
         <Button
           size="sm"
@@ -633,6 +787,138 @@ export function PermissionSlipsTab({ tourId: propTourId }: PermissionSlipsTabPro
           </TableBody>
         </Table>
       </div>
+
+      {/* ── Generate-slips dialog ──────────────────────────────────────────── */}
+      <Dialog open={genDialogOpen} onOpenChange={open => { if (!genSubmitting) setGenDialogOpen(open); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Generate slips for a trip</DialogTitle>
+            <DialogDescription>
+              Pick an upcoming trip, choose which roster members to include, then confirm to create
+              permission slips. Existing slips for the same student + trip are skipped automatically.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Step 1: pick a tour event */}
+          <div className="space-y-3">
+            <label className="text-sm font-medium">Trip</label>
+            {genLoadingEvents ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Loading upcoming trips…
+              </div>
+            ) : genTourEvents.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-2">
+                No upcoming tour events found. Add an event with a future start date first.
+              </p>
+            ) : (
+              <Select value={genSelectedTourId} onValueChange={onGenTourChange}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select a trip…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {genTourEvents.map(evt => (
+                    <SelectItem key={evt.id} value={evt.id}>
+                      <span className="font-medium">{evt.title}</span>
+                      {evt.location && (
+                        <span className="text-muted-foreground ml-1">— {evt.location}</span>
+                      )}
+                      <span className="text-muted-foreground ml-1">
+                        ({new Date(evt.start_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })})
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          {/* Step 2: select roster members */}
+          {genSelectedTourId && (
+            <div className="space-y-2 mt-1">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium">Roster members</label>
+                {genRoster.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={toggleAllGenStudents}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {genChecked.size === genRoster.length ? 'Deselect all' : 'Select all'}
+                  </button>
+                )}
+              </div>
+
+              {genLoadingRoster ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading roster…
+                </div>
+              ) : genRoster.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-2">
+                  No roster members found. Add students to the tour roster first.
+                </p>
+              ) : (
+                <div className="max-h-60 overflow-y-auto rounded-md border border-border divide-y divide-border">
+                  {genRoster.map(student => (
+                    <div
+                      key={student.user_id}
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40 cursor-pointer"
+                      onClick={() => toggleGenStudent(student.user_id)}
+                    >
+                      <Checkbox
+                        id={`gen-student-${student.user_id}`}
+                        checked={genChecked.has(student.user_id)}
+                        onCheckedChange={() => toggleGenStudent(student.user_id)}
+                        onClick={e => e.stopPropagation()}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {student.full_name || student.email}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">{student.email}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {genRoster.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {genChecked.size} of {genRoster.length} selected
+                </p>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="mt-2">
+            <Button
+              variant="outline"
+              onClick={() => setGenDialogOpen(false)}
+              disabled={genSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmGenSlips}
+              disabled={genSubmitting || !genSelectedTourId || genChecked.size === 0}
+              className="gap-1.5"
+            >
+              {genSubmitting ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Generating…
+                </>
+              ) : (
+                <>
+                  <PlusCircle className="h-3.5 w-3.5" />
+                  Generate {genChecked.size > 0 ? `${genChecked.size} slip${genChecked.size !== 1 ? 's' : ''}` : 'slips'}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
