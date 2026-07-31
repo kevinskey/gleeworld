@@ -20,7 +20,9 @@ DECLARE
   v_new_paid   numeric;
   v_new_status text;
 BEGIN
-  SELECT * INTO v_fee FROM gw_student_fees WHERE id = p_fee_id FOR UPDATE;
+  SELECT * INTO v_fee FROM gw_student_fees
+   WHERE id = p_fee_id AND tenant_id = current_tenant_id()
+   FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION 'fee not found';
   END IF;
@@ -48,7 +50,7 @@ BEGIN
          payment_reference = COALESCE(p_reference, payment_reference),
          paid_at           = CASE WHEN v_new_status = 'paid' THEN now() ELSE paid_at END,
          updated_at        = now()
-   WHERE id = p_fee_id
+   WHERE id = p_fee_id AND tenant_id = current_tenant_id()
    RETURNING * INTO v_fee;
 
   RETURN v_fee;
@@ -69,16 +71,21 @@ AS $$
 DECLARE
   v_fee gw_student_fees%ROWTYPE;
 BEGIN
+  SELECT * INTO v_fee FROM gw_student_fees
+   WHERE id = p_fee_id AND tenant_id = current_tenant_id();
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'fee not found';
+  END IF;
+  IF v_fee.status = 'refunded' THEN
+    RAISE EXCEPTION 'fee already refunded';
+  END IF;
+
   UPDATE gw_student_fees
      SET status     = 'refunded',
          notes      = COALESCE(notes || E'\n', '') || 'Refunded: ' || p_note,
          updated_at = now()
-   WHERE id = p_fee_id
+   WHERE id = p_fee_id AND tenant_id = current_tenant_id()
    RETURNING * INTO v_fee;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'fee not found';
-  END IF;
 
   RETURN v_fee;
 END;
@@ -97,16 +104,21 @@ AS $$
 DECLARE
   v_fee gw_student_fees%ROWTYPE;
 BEGIN
+  SELECT * INTO v_fee FROM gw_student_fees
+   WHERE id = p_fee_id AND tenant_id = current_tenant_id();
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'fee not found';
+  END IF;
+  IF v_fee.status = 'waived' THEN
+    RAISE EXCEPTION 'fee already waived';
+  END IF;
+
   UPDATE gw_student_fees
      SET status     = 'waived',
          notes      = COALESCE(notes || E'\n', '') || 'Waived: ' || p_note,
          updated_at = now()
-   WHERE id = p_fee_id
+   WHERE id = p_fee_id AND tenant_id = current_tenant_id()
    RETURNING * INTO v_fee;
-
-  IF NOT FOUND THEN
-    RAISE EXCEPTION 'fee not found';
-  END IF;
 
   RETURN v_fee;
 END;

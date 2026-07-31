@@ -22,7 +22,7 @@ BEGIN
                                     allow_self_serve_split
                                  ),
         updated_at            = now()
-  WHERE id = p_template_id
+  WHERE id = p_template_id AND tenant_id = current_tenant_id()
   RETURNING * INTO v_tpl;
 
   IF NOT FOUND THEN
@@ -38,7 +38,8 @@ BEGIN
         due_date   = v_tpl.due_date,
         updated_at = now()
   WHERE template_id = v_tpl.id
-    AND status      = 'pending';
+    AND status      = 'pending'
+    AND tenant_id   = current_tenant_id();
 
   RETURN v_tpl;
 END $$;

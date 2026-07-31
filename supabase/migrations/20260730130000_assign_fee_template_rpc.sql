@@ -8,7 +8,8 @@ DECLARE
   v_template gw_fee_templates%ROWTYPE;
   v_created int := 0;
 BEGIN
-  SELECT * INTO v_template FROM gw_fee_templates WHERE id = p_template_id;
+  SELECT * INTO v_template FROM gw_fee_templates
+   WHERE id = p_template_id AND tenant_id = current_tenant_id();
   IF NOT FOUND THEN RAISE EXCEPTION 'template not found'; END IF;
 
   -- Insert one row per user, skipping users who already have an unpaid row for this template
