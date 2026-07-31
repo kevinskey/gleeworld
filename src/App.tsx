@@ -149,6 +149,7 @@ const AuditionApplicationPage = lazy(() => import("./pages/AuditionApplicationPa
 const FanDashboard = lazy(() => import("./pages/FanDashboard"));
 // import AdminDashboard from "./pages/AdminDashboard";
 const FeesAdminPage = lazy(() => import("./pages/dashboard/FeesAdminPage").then(m => ({ default: m.FeesAdminPage })));
+const MyFeesPage = lazy(() => import("./pages/dashboard/MyFeesPage"));
 const PermissionsPage = lazy(() => import("./pages/admin/Permissions"));
 const WeekPage = lazy(() => import("./pages/music-theory/WeekPage"));
 
@@ -2389,6 +2390,16 @@ const App = () => {
                          element={
                            <ProtectedRoute>
                              <FeesAdminPage />
+                           </ProtectedRoute>
+                         }
+                       />
+                       <Route
+                         path="/dashboard/my-fees"
+                         element={
+                           <ProtectedRoute>
+                             <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                               <DashboardShell><MyFeesPage /></DashboardShell>
+                             </UniversalLayout>
                            </ProtectedRoute>
                          }
                        />
