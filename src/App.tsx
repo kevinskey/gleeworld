@@ -148,7 +148,7 @@ const ForcePasswordChange = lazy(() => import("./pages/ForcePasswordChange"));
 const AuditionApplicationPage = lazy(() => import("./pages/AuditionApplicationPage"));
 const FanDashboard = lazy(() => import("./pages/FanDashboard"));
 // import AdminDashboard from "./pages/AdminDashboard";
-const FeesAdminPage = lazy(() => import("./pages/dashboard/FeesAdminPage").then(m => ({ default: m.FeesAdminPage })));
+const FeesAdminPage = lazy(() => import("./pages/dashboard/FeesAdminPage"));
 const MyFeesPage = lazy(() => import("./pages/dashboard/MyFeesPage"));
 const PermissionsPage = lazy(() => import("./pages/admin/Permissions"));
 const WeekPage = lazy(() => import("./pages/music-theory/WeekPage"));
