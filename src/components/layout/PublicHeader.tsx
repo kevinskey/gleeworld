@@ -10,8 +10,8 @@
  * - Background: Solid white (#FFFFFF)
  * - Site Title Font: Cinzel (matches PersistentHeader)
  * - Site Title Size: 90% of logo height
- * - All text/icons color: #150d26 (Brand blue)
- * - Sign In button: #150d26 background with white text
+ * - All text/icons color: hsl(var(--brand-navy)) (Brand blue)
+ * - Sign In button: hsl(var(--brand-navy)) background with white text
  * 
  * ============================================================================
  */
@@ -46,7 +46,7 @@ const HEADER_STYLES = {
   brandColor: "#FFFFFF",
   
   // Background color
-  backgroundColor: "#150d26",
+  backgroundColor: "hsl(var(--brand-navy))",
   
   // Title font family (must match PersistentHeader)
   titleFontFamily: "'Cinzel', serif",
@@ -287,7 +287,7 @@ export const PublicHeader = ({ className }: PublicHeaderProps) => {
                         ) : (
                           <Button 
                             asChild
-                            className="w-full bg-[#150d26] hover:bg-[#002244] text-white"
+                            className="w-full bg-[hsl(var(--brand-navy))] hover:bg-[#002244] text-white"
                             onClick={() => setIsOpen(false)}
                           >
                             <Link to="/auth">Sign In / Join</Link>

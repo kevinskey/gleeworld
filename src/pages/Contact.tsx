@@ -72,7 +72,7 @@ const Contact = () => {
         {/* Header Banner */}
         <div 
           className="w-full py-8 sm:py-12 flex items-center justify-center" 
-          style={{ backgroundColor: '#150d26' }}
+          style={{ backgroundColor: 'hsl(var(--brand-navy))' }}
         >
           <div className="container mx-auto px-4">
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white text-center tracking-wide">
@@ -147,7 +147,7 @@ const Contact = () => {
                   <Button 
                     type="submit" 
                     className="w-full text-white"
-                    style={{ backgroundColor: '#150d26' }}
+                    style={{ backgroundColor: 'hsl(var(--brand-navy))' }}
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? (
@@ -180,7 +180,7 @@ const Contact = () => {
                     >
                       <div 
                         className="w-10 h-10 rounded-lg flex items-center justify-center mb-3"
-                        style={{ backgroundColor: '#150d26' }}
+                        style={{ backgroundColor: 'hsl(var(--brand-navy))' }}
                       >
                         <info.icon className="w-5 h-5 text-white" />
                       </div>
@@ -191,7 +191,7 @@ const Contact = () => {
                           target={info.link.startsWith('http') ? '_blank' : undefined}
                           rel={info.link.startsWith('http') ? 'noopener noreferrer' : undefined}
                           className="text-sm hover:underline"
-                          style={{ color: '#150d26' }}
+                          style={{ color: 'hsl(var(--brand-navy))' }}
                         >
                           {info.details}
                         </a>

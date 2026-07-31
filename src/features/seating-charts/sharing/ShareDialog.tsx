@@ -116,8 +116,8 @@ export function ShareDialog({ open, onOpenChange, chartId }: ShareDialogProps) {
         <div className="space-y-3">
           <div className="space-y-2">
             <label className="text-xs font-medium">Invite by name</label>
-            <div className="flex gap-2">
-              <div className="flex-1 relative">
+            <div className="flex flex-wrap sm:flex-nowrap gap-2">
+              <div className="w-full sm:flex-1 relative">
                 <Input value={query} onChange={(e) => { setQuery(e.target.value); setSelectedUserId(''); }} placeholder="Search users…" />
                 {query && filteredUsers.length > 0 && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-md shadow z-10 max-h-48 overflow-y-auto">
@@ -135,12 +135,12 @@ export function ShareDialog({ open, onOpenChange, chartId }: ShareDialogProps) {
                 )}
               </div>
               <Select value={role} onValueChange={(v) => setRole(v as SeatingShareRole)}>
-                <SelectTrigger className="w-40 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="flex-1 sm:flex-none sm:w-40 text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ROLES.map((r) => <SelectItem key={r.value} value={r.value} className="text-xs">{r.label}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Button size="sm" disabled={!selectedUserId || saving} onClick={invite}>
+              <Button size="sm" disabled={!selectedUserId || saving} onClick={invite} className="shrink-0">
                 <UserPlus className="w-4 h-4" />
               </Button>
             </div>

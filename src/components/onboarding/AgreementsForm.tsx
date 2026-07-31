@@ -117,7 +117,7 @@ export const AgreementsForm = ({ profile, onUpdate, saving }: AgreementsFormProp
           />
 
           {(profile.media_release_signed_at || signatureSaved) && (
-            <p className="text-sm text-green-600">
+            <p className="text-sm text-success-text">
               ✓ Signed on {new Date(profile.media_release_signed_at || new Date()).toLocaleDateString()}
             </p>
           )}

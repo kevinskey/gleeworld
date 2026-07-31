@@ -224,7 +224,7 @@ export default function BookAppointmentPage() {
     <UniversalLayout showHeader={false} showFooter={false}>
       <DashboardShell>
       {/* Header Banner */}
-      <div className="w-full py-3 sm:py-8" style={{ backgroundColor: '#150d26' }}>
+      <div className="w-full py-3 sm:py-8" style={{ backgroundColor: 'hsl(var(--brand-navy))' }}>
         <div className="px-3 sm:px-8 flex flex-col items-center">
           <h1 className="text-center tracking-wide text-white text-xl sm:text-4xl md:text-5xl font-bold font-['Bebas_Neue']">
             OFFICE HOURS
@@ -293,7 +293,7 @@ export default function BookAppointmentPage() {
           {/* Main Content Tabs */}
           <div className="flex-1 min-w-0">
             <Tabs defaultValue="book" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 h-11 sm:h-16 bg-gradient-to-b from-[#004080] to-[#150d26] p-0 rounded-t-xl rounded-b-none shadow-lg">
+              <TabsList className="grid w-full grid-cols-3 h-11 sm:h-16 bg-gradient-to-b from-[#004080] to-[hsl(var(--brand-navy))] p-0 rounded-t-xl rounded-b-none shadow-lg">
                 {[
                   { value: 'book', icon: CalendarDays, label: 'Book' },
                   { value: 'history', icon: History, label: 'History' },
@@ -303,7 +303,7 @@ export default function BookAppointmentPage() {
                     key={tab.value}
                     value={tab.value}
                     className={cn(
-                      "gap-1 sm:gap-2 font-['Bebas_Neue'] tracking-wide py-2 h-full hover:bg-white/20 transition-all duration-200 rounded-none text-white data-[state=active]:bg-white data-[state=active]:text-[#150d26] data-[state=active]:shadow-md",
+                      "gap-1 sm:gap-2 font-['Bebas_Neue'] tracking-wide py-2 h-full hover:bg-white/20 transition-all duration-200 rounded-none text-white data-[state=active]:bg-white data-[state=active]:text-[hsl(var(--brand-navy))] data-[state=active]:shadow-md",
                       i === 0 && "rounded-tl-xl",
                       i === 2 && "rounded-tr-xl",
                       i < 2 && "border-r border-white/20"

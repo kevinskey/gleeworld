@@ -26,7 +26,7 @@ export function PropertiesPanel({
 }: PropertiesPanelProps) {
   if (selection.length === 0) {
     return (
-      <aside className="w-64 border-l bg-white p-3 shrink-0">
+      <aside className="w-full md:w-64 border-l bg-white p-3 shrink-0 h-full">
         <p className="text-xs text-muted-foreground">Select an object to edit its properties. Shift-click to select multiple.</p>
       </aside>
     );
@@ -34,7 +34,7 @@ export function PropertiesPanel({
 
   if (selection.length > 1) {
     return (
-      <aside className="w-64 border-l bg-white p-3 shrink-0 space-y-3">
+      <aside className="w-full md:w-64 border-l bg-white p-3 shrink-0 h-full overflow-y-auto space-y-3">
         <div className="text-sm font-semibold">{selection.length} objects selected</div>
         <Button variant="destructive" size="sm" className="w-full" onClick={() => onDelete(selection.map((s) => s.id))}>
           Delete selection
@@ -48,7 +48,7 @@ export function PropertiesPanel({
   const patch = (p: Partial<SeatingObject>) => onUpdate(obj.id, p);
 
   return (
-    <aside className="w-64 border-l bg-white p-3 shrink-0 overflow-y-auto space-y-3">
+    <aside className="w-full md:w-64 border-l bg-white p-3 shrink-0 h-full overflow-y-auto space-y-3">
       <div>
         <p className="text-[10px] uppercase text-muted-foreground">{obj.object_type}{obj.subtype ? ` · ${obj.subtype}` : ''}</p>
         <Input

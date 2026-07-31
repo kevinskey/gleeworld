@@ -64,7 +64,6 @@ function orchestraAmerican(): TemplateSpec {
       { section: 'cello',   label: 'Vc', angle: 35,  count: 10 },
     ]),
   );
-  // Bass rear right
   for (let i = 0; i < 6; i++) {
     objects.push(
       obj({ object_type: 'chair', subtype: 'bass_v', x: W - 320 + i * 60, y: 240, width: 40, height: 40,
@@ -72,7 +71,6 @@ function orchestraAmerican(): TemplateSpec {
         properties: { section: 'bass_v', chair: i + 1 } }),
     );
   }
-  // Woodwinds centre
   for (let i = 0; i < 8; i++) {
     objects.push(
       obj({ object_type: 'chair', subtype: 'ww', x: 500 + i * 55, y: 240, width: 40, height: 40,
@@ -80,7 +78,6 @@ function orchestraAmerican(): TemplateSpec {
         properties: { section: 'woodwind', chair: i + 1 } }),
     );
   }
-  // Brass rear centre
   for (let i = 0; i < 10; i++) {
     objects.push(
       obj({ object_type: 'chair', subtype: 'brass', x: 460 + i * 55, y: 160, width: 40, height: 40,
@@ -98,7 +95,6 @@ function orchestraAmerican(): TemplateSpec {
 // 17. Full Orchestra — Antiphonal / German
 function orchestraGerman(): TemplateSpec {
   const spec = orchestraAmerican();
-  // Swap Violin 2 to the outside right.
   spec.objects = spec.objects.map((o) => {
     if (o.subtype === 'violin2') {
       return { ...o, x: W - (Number(o.x) - 60) - Number(o.width), style: { ...(o.style ?? {}), fill: SECTION_COLORS.violin2 } };
@@ -184,6 +180,206 @@ function pitOrchestra(): TemplateSpec {
   return { chart_mode: 'seating', canvas_width: W, canvas_height: H, orientation: 'landscape', objects };
 }
 
+// 21. Full Orchestra with Chorus — orchestra front, choir risers rear
+function orchestraWithChorus(): TemplateSpec {
+  const spec = orchestraAmerican();
+  const objects = spec.objects;
+  const parts = ['soprano', 'alto', 'tenor', 'bass'];
+  for (let r = 0; r < 3; r++) {
+    const pts = arcPoints(W / 2, 60 + r * 40 + 400, 460 - r * 20, 16, 150);
+    pts.forEach((p, i) => {
+      const sec = parts[Math.floor(i / 4)];
+      objects.push(
+        obj({
+          object_type: 'riser_slot', subtype: 'choir',
+          x: p.x - 20, y: 80 + r * 40 + (p.y - (60 + r * 40 + 400)) * 0.15,
+          width: 36, height: 36,
+          label: `C·${r + 1}·${i + 1}`,
+          style: { fill: SECTION_COLORS[sec as keyof typeof SECTION_COLORS], radius: 8, stroke: '#0f172a', strokeWidth: 1 },
+          properties: { row: r + 1, position: i + 1, section: sec, group: 'chorus' },
+        }),
+      );
+    });
+  }
+  return spec;
+}
+
+// 22. Youth Orchestra — reduced strings + smaller brass/ww
+function youthOrchestra(): TemplateSpec {
+  const cx = W / 2;
+  const cy = H - 100;
+  const objects: TemplateSpec['objects'] = [stage(), conductor(), audience()];
+  objects.push(
+    ...wedgeChairs(cx, cy, 200, [
+      { section: 'violin1', label: 'V1', angle: 155, count: 8 },
+      { section: 'violin2', label: 'V2', angle: 115, count: 6 },
+      { section: 'viola',   label: 'Va', angle: 75,  count: 4 },
+      { section: 'cello',   label: 'Vc', angle: 35,  count: 4 },
+    ]),
+  );
+  for (let i = 0; i < 3; i++) {
+    objects.push(
+      obj({ object_type: 'chair', subtype: 'bass_v', x: W - 260 + i * 60, y: 260, width: 40, height: 40,
+        label: `Bass ${i + 1}`, style: { fill: SECTION_COLORS.bass_v, radius: 20, stroke: '#0f172a', strokeWidth: 1 },
+        properties: { section: 'bass_v', chair: i + 1 } }),
+    );
+  }
+  for (let i = 0; i < 6; i++) {
+    objects.push(
+      obj({ object_type: 'chair', subtype: 'ww', x: 520 + i * 55, y: 250, width: 40, height: 40,
+        label: `WW ${i + 1}`, style: { fill: SECTION_COLORS.flute, radius: 20, stroke: '#0f172a', strokeWidth: 1 },
+        properties: { section: 'woodwind', chair: i + 1 } }),
+    );
+  }
+  for (let i = 0; i < 6; i++) {
+    objects.push(
+      obj({ object_type: 'chair', subtype: 'brass', x: 540 + i * 55, y: 170, width: 40, height: 40,
+        label: `Br ${i + 1}`, style: { fill: SECTION_COLORS.trumpet, radius: 20, stroke: '#0f172a', strokeWidth: 1 },
+        properties: { section: 'brass', chair: i + 1 } }),
+    );
+  }
+  objects.push(
+    obj({ object_type: 'instrument', subtype: 'timpani', x: 280, y: 150, width: 90, height: 90, label: 'Timpani', style: { fill: '#111827', color: '#fff', radius: 8 } }),
+  );
+  return { chart_mode: 'seating', canvas_width: W, canvas_height: H, orientation: 'landscape', objects };
+}
+
+// 23. Opera Pit — narrow deep pit under the stage lip
+function operaPit(): TemplateSpec {
+  const objects: TemplateSpec['objects'] = [
+    obj({ object_type: 'stage_boundary', x: 60, y: 60, width: W - 120, height: 100, subtype: 'stage',
+      style: { fill: '#f8fafc', stroke: '#111827', strokeWidth: 3 }, locked: true, z_index: 0 }),
+    obj({ object_type: 'label', subtype: 'stage', x: W / 2 - 60, y: 90, width: 120, height: 20, label: 'STAGE',
+      style: { fill: 'transparent', color: '#0f172a', fontWeight: 700 }, locked: true }),
+    obj({ object_type: 'stage_boundary', x: 100, y: 200, width: W - 200, height: H - 320,
+      subtype: 'pit',
+      style: { fill: '#f1f5f9', stroke: '#0f172a', strokeWidth: 2 }, locked: true, z_index: 0 }),
+    obj({ object_type: 'label', subtype: 'pit', x: 120, y: 230, width: 200, height: 20, label: 'Orchestra Pit',
+      style: { fill: 'transparent', color: '#0f172a', fontWeight: 700 }, locked: true }),
+  ];
+  const layouts = [
+    { y: 280, sec: 'violin1', label: 'V1', count: 6, color: SECTION_COLORS.violin1 },
+    { y: 340, sec: 'violin2', label: 'V2', count: 5, color: SECTION_COLORS.violin2 },
+    { y: 400, sec: 'viola',   label: 'Va', count: 4, color: SECTION_COLORS.viola },
+    { y: 460, sec: 'cello',   label: 'Vc', count: 4, color: SECTION_COLORS.cello },
+  ];
+  layouts.forEach((l) => {
+    for (let i = 0; i < l.count; i++) {
+      objects.push(
+        obj({ object_type: 'chair', subtype: l.sec, x: 160 + i * 70, y: l.y, width: 40, height: 40,
+          label: `${l.label} ${i + 1}`, style: { fill: l.color, radius: 20, stroke: '#0f172a', strokeWidth: 1 },
+          properties: { section: l.sec, chair: i + 1 } }),
+      );
+    }
+  });
+  // Winds / brass on right side
+  const rights = [
+    { y: 280, count: 5, label: 'WW', color: SECTION_COLORS.flute },
+    { y: 340, count: 4, label: 'Br', color: SECTION_COLORS.trumpet },
+    { y: 400, count: 2, label: 'Bn', color: SECTION_COLORS.bassoon },
+    { y: 460, count: 2, label: 'Bass', color: SECTION_COLORS.bass_v },
+    { y: 520, count: 3, label: 'Perc', color: SECTION_COLORS.perc },
+  ];
+  rights.forEach((row) => {
+    for (let i = 0; i < row.count; i++) {
+      objects.push(
+        obj({ object_type: 'chair', subtype: 'pit', x: W - 500 + i * 70, y: row.y, width: 40, height: 40,
+          label: `${row.label} ${i + 1}`, style: { fill: row.color, radius: 20, stroke: '#0f172a', strokeWidth: 1 },
+          properties: { section: row.label.toLowerCase(), chair: i + 1 } }),
+      );
+    }
+  });
+  return { chart_mode: 'seating', canvas_width: W, canvas_height: H, orientation: 'landscape', objects };
+}
+
+// 24. Pops Orchestra — orchestra + mics + soloist featured mid-stage
+function popsOrchestra(): TemplateSpec {
+  const spec = orchestraAmerican();
+  spec.objects.push(
+    obj({ object_type: 'microphone', subtype: 'vocal', x: W / 2 - 15, y: H - 220, width: 30, height: 30, label: 'Soloist',
+      style: { fill: '#f97316' } }),
+    obj({ object_type: 'monitor', subtype: 'floor', x: W / 2 - 40, y: H - 180, width: 80, height: 30, label: 'Monitor',
+      style: { fill: '#0f172a', color: '#fff' } }),
+    obj({ object_type: 'microphone', subtype: 'strings', x: 260, y: 620, width: 20, height: 20, label: 'V1 Mic',
+      style: { fill: '#f97316' } }),
+    obj({ object_type: 'microphone', subtype: 'strings', x: 460, y: 640, width: 20, height: 20, label: 'V2 Mic',
+      style: { fill: '#f97316' } }),
+    obj({ object_type: 'microphone', subtype: 'strings', x: W - 460, y: 640, width: 20, height: 20, label: 'Vc Mic',
+      style: { fill: '#f97316' } }),
+    obj({ object_type: 'instrument', subtype: 'piano', x: 340, y: 480, width: 180, height: 90, label: 'Grand Piano',
+      style: { fill: '#111827', color: '#fff', radius: 8 } }),
+  );
+  return spec;
+}
+
+// 25. Baroque Orchestra — smaller strings + continuo (harpsichord + cello)
+function baroqueOrchestra(): TemplateSpec {
+  const objects: TemplateSpec['objects'] = [stage(), audience()];
+  const cx = W / 2;
+  const cy = H - 140;
+  objects.push(
+    ...wedgeChairs(cx, cy, 200, [
+      { section: 'violin1', label: 'V1', angle: 150, count: 6 },
+      { section: 'violin2', label: 'V2', angle: 120, count: 5 },
+      { section: 'viola',   label: 'Va', angle: 80,  count: 4 },
+      { section: 'cello',   label: 'Vc', angle: 40,  count: 3 },
+    ]),
+  );
+  objects.push(
+    obj({ object_type: 'chair', subtype: 'bass_v', x: W - 300, y: 260, width: 40, height: 40, label: 'Bass',
+      style: { fill: SECTION_COLORS.bass_v, radius: 20, stroke: '#0f172a', strokeWidth: 1 },
+      properties: { section: 'bass_v', chair: 1 } }),
+    obj({ object_type: 'instrument', subtype: 'harpsichord', x: cx - 100, y: cy - 80, width: 200, height: 90,
+      label: 'Harpsichord (continuo)', style: { fill: '#111827', color: '#fff', radius: 8 } }),
+    obj({ object_type: 'chair', subtype: 'continuo', x: cx + 60, y: cy - 40, width: 40, height: 40, label: 'Continuo Vc',
+      style: { fill: SECTION_COLORS.cello, radius: 20, stroke: '#0f172a', strokeWidth: 1 },
+      properties: { section: 'continuo', chair: 1 } }),
+  );
+  return { chart_mode: 'seating', canvas_width: W, canvas_height: H, orientation: 'landscape', objects };
+}
+
+// 26. Film-scoring session — divided strings + click booth
+function filmScoring(): TemplateSpec {
+  const objects: TemplateSpec['objects'] = [stage()];
+  // Isolation booths for winds
+  const booths = [
+    { label: 'Woodwinds booth', x: 100, y: 120, w: 260, h: 160 },
+    { label: 'Brass booth',    x: 100, y: 320, w: 260, h: 160 },
+    { label: 'Percussion booth', x: 100, y: 520, w: 260, h: 160 },
+    { label: 'Control room',   x: W - 340, y: 120, w: 260, h: 200 },
+  ];
+  booths.forEach((b) => objects.push(
+    obj({ object_type: 'stage_boundary', subtype: 'booth', x: b.x, y: b.y, width: b.w, height: b.h,
+      style: { fill: '#f8fafc', stroke: '#0f172a', strokeWidth: 2, radius: 8 }, locked: true, z_index: 0 }),
+    obj({ object_type: 'label', subtype: 'booth', x: b.x + 10, y: b.y + 10, width: b.w - 20, height: 18, label: b.label,
+      style: { fill: 'transparent', color: '#0f172a', fontWeight: 700 }, locked: true }),
+  ));
+  // Strings in main room
+  const sections = [
+    { sec: 'violin1', label: 'V1', count: 8, y: 200 },
+    { sec: 'violin2', label: 'V2', count: 6, y: 280 },
+    { sec: 'viola',   label: 'Va', count: 4, y: 360 },
+    { sec: 'cello',   label: 'Vc', count: 4, y: 440 },
+    { sec: 'bass_v',  label: 'Bs', count: 2, y: 520 },
+  ];
+  sections.forEach((s) => {
+    for (let i = 0; i < s.count; i++) {
+      objects.push(
+        obj({ object_type: 'chair', subtype: s.sec, x: 420 + i * 60, y: s.y, width: 40, height: 40, label: `${s.label} ${i + 1}`,
+          style: { fill: (SECTION_COLORS as Record<string, string>)[s.sec], radius: 20, stroke: '#0f172a', strokeWidth: 1 },
+          properties: { section: s.sec, chair: i + 1 } }),
+        obj({ object_type: 'microphone', subtype: 'strings', x: 432 + i * 60, y: s.y + 44, width: 16, height: 16, label: '',
+          style: { fill: '#f97316' } }),
+      );
+    }
+  });
+  objects.push(
+    obj({ object_type: 'label', subtype: 'conductor', x: W / 2 - 60, y: H - 100, width: 120, height: 24,
+      label: 'Conductor / Click', style: { fill: '#111827', color: '#fff', fontWeight: 700 }, locked: true }),
+  );
+  return { chart_mode: 'stage_plot', canvas_width: W, canvas_height: H, orientation: 'landscape', objects };
+}
+
 export const ORCHESTRA_TEMPLATES: TemplateEntry[] = [
   { key: 'orch_full_american', name: 'Full Orchestra (American)', category: 'orchestra',
     description: 'Violins left, celli/bass right — standard US layout.', generate: orchestraAmerican },
@@ -195,4 +391,16 @@ export const ORCHESTRA_TEMPLATES: TemplateEntry[] = [
     description: '20-piece chamber arc.', generate: chamberOrchestra },
   { key: 'orch_pit',    name: 'Pit Orchestra', category: 'orchestra',
     description: 'Musical-theatre pit layered by section.', generate: pitOrchestra },
+  { key: 'orch_with_chorus', name: 'Orchestra + Chorus', category: 'orchestra',
+    description: 'Full orchestra with SATB chorus risers on the back of the stage.', generate: orchestraWithChorus },
+  { key: 'orch_youth', name: 'Youth Orchestra', category: 'orchestra',
+    description: 'Reduced strings and winds sized for school ensembles.', generate: youthOrchestra },
+  { key: 'orch_opera_pit', name: 'Opera Pit', category: 'orchestra',
+    description: 'Narrow, deep pit under the stage lip for opera productions.', generate: operaPit },
+  { key: 'orch_pops', name: 'Pops Orchestra + Mics', category: 'orchestra',
+    description: 'Amplified pops orchestra with soloist mic, monitor, and section mics.', generate: popsOrchestra },
+  { key: 'orch_baroque', name: 'Baroque Orchestra + Continuo', category: 'orchestra',
+    description: 'Small strings with harpsichord + continuo cello at center.', generate: baroqueOrchestra },
+  { key: 'orch_film_scoring', name: 'Film Scoring Session', category: 'orchestra',
+    description: 'Isolation booths + spot-mic\'d strings for scoring stage recording.', generate: filmScoring },
 ];
