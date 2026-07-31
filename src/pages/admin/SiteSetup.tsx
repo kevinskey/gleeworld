@@ -13,6 +13,7 @@ import { Loader2, Save, ArrowRight, Upload, Image as ImageIcon, X, Globe, Settin
 import { toast } from 'sonner';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { PlatformTenantWarning } from '@/components/admin/PlatformTenantWarning';
 
 export default function SiteSetup() {
   const navigate = useNavigate();
@@ -278,6 +279,8 @@ export default function SiteSetup() {
             </Button>
           </div>
         </div>
+
+        <PlatformTenantWarning />
 
         <Card className="p-6 bg-card text-card-foreground">
           <div className="space-y-5">

@@ -39,6 +39,7 @@ import { ParentsTabPanel } from '@/components/workspace-settings/ParentsTabPanel
 import { K12ToggleField } from '@/components/travel-manager/K12ToggleField';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { PlatformTenantWarning } from '@/components/admin/PlatformTenantWarning';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -851,6 +852,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
   return (
     <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
       <CardContent className="p-4 sm:p-5 space-y-3">
+        <PlatformTenantWarning />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Organization name</Label>
