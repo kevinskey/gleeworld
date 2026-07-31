@@ -41,8 +41,8 @@ export function Palette({
   }, [people, peopleSearch]);
 
   return (
-    <aside className="w-64 border-r bg-white flex flex-col shrink-0">
-      <Tabs defaultValue="people" className="flex-1 flex flex-col">
+    <aside className="w-full md:w-64 border-r bg-white flex flex-col shrink-0 h-full">
+      <Tabs defaultValue="people" className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid grid-cols-2 m-2">
           <TabsTrigger value="people">People</TabsTrigger>
           <TabsTrigger value="objects">Objects</TabsTrigger>

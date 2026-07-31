@@ -106,10 +106,6 @@ export function AssociationsMenu({ chartId }: AssociationsMenuProps) {
 
   async function onAttach() {
     if (!selectedId) return;
-    if (type === 'venue' || type === 'production') {
-      toast({ title: 'Not implemented', description: `${TYPE_LABEL[type]} associations coming soon.` });
-      return;
-    }
     const assocType = type === 'tour_event' ? 'tour_event' : (type === 'tour' ? 'tour' : type) as any;
     const result = await attachChart({
       chartId, associationType: assocType,

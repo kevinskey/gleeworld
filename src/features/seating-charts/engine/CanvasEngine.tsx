@@ -29,9 +29,21 @@ interface ViewportState {
   panY: number;
 }
 
-const MIN_SCALE = 0.15;
+const MIN_SCALE = 0.1;
 const MAX_SCALE = 3;
 const DEFAULT_SCALE = 0.7;
+
+// Fit the whole chart inside `containerRect` with a small margin, then clamp
+// to [MIN_SCALE, MAX_SCALE]. Used on first render + on "Reset view".
+function fitScale(chartW: number, chartH: number, containerW: number, containerH: number): { scale: number; panX: number; panY: number } {
+  const margin = 24;
+  const availW = Math.max(1, containerW - margin * 2);
+  const availH = Math.max(1, containerH - margin * 2);
+  const scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, Math.min(availW / chartW, availH / chartH)));
+  const panX = margin + (availW - chartW * scale) / 2;
+  const panY = margin + (availH - chartH * scale) / 2;
+  return { scale, panX, panY };
+}
 
 export function CanvasEngine({
   width, height, objects, assignments,
@@ -41,6 +53,7 @@ export function CanvasEngine({
 }: CanvasEngineProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const didFitRef = useRef(false);
   const [viewport, setViewport] = useState<ViewportState>({ scale: DEFAULT_SCALE, panX: 40, panY: 40 });
   const [dragState, setDragState] = useState<
     | { kind: 'none' }
@@ -48,6 +61,19 @@ export function CanvasEngine({
     | { kind: 'pan'; startX: number; startY: number; origPan: { x: number; y: number } }
     | { kind: 'select'; startX: number; startY: number; currentX: number; currentY: number }
   >({ kind: 'none' });
+
+  // Active touch points, keyed by pointerId. Used for pinch-zoom + two-finger
+  // pan on iPhone / iPad. When two touches are down we suppress single-pointer
+  // drag / select and drive the viewport directly.
+  const touchesRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const gestureRef = useRef<{
+    startDist: number;
+    startCenterX: number;
+    startCenterY: number;
+    startScale: number;
+    startPanX: number;
+    startPanY: number;
+  } | null>(null);
 
   const assignmentByObjectId = useMemo(() => {
     const m = new Map<string, SeatingAssignment>();
@@ -65,13 +91,36 @@ export function CanvasEngine({
   }, [viewport]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
-    if (readOnly) return;
+    if (readOnly && e.pointerType !== 'touch') return;
     (e.target as SVGElement).setPointerCapture?.(e.pointerId);
+
+    // Multi-touch: track every touch pointer. When the second touch lands we
+    // start a pinch gesture and cancel any single-touch drag in progress.
+    if (e.pointerType === 'touch') {
+      touchesRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touchesRef.current.size === 2) {
+        const pts = Array.from(touchesRef.current.values());
+        const dx = pts[1].x - pts[0].x;
+        const dy = pts[1].y - pts[0].y;
+        gestureRef.current = {
+          startDist: Math.hypot(dx, dy),
+          startCenterX: (pts[0].x + pts[1].x) / 2,
+          startCenterY: (pts[0].y + pts[1].y) / 2,
+          startScale: viewport.scale,
+          startPanX: viewport.panX,
+          startPanY: viewport.panY,
+        };
+        setDragState({ kind: 'none' });
+        return;
+      }
+    }
+
+    if (readOnly) return;
     const target = e.target as SVGElement;
     const objectId = target.closest('[data-object-id]')?.getAttribute('data-object-id') ?? null;
     const canvasPt = clientToCanvas(e.clientX, e.clientY);
 
-    // Space / middle-click / two-finger → pan.
+    // Space / middle-click / single-touch on empty canvas → pan.
     if (e.button === 1 || (e.pointerType === 'touch' && objectId === null)) {
       setDragState({ kind: 'pan', startX: e.clientX, startY: e.clientY, origPan: { x: viewport.panX, y: viewport.panY } });
       return;
@@ -98,6 +147,35 @@ export function CanvasEngine({
   }, [readOnly, clientToCanvas, viewport.panX, viewport.panY, objects, selectedIds, onSelectionChange]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    // Multi-touch: update touch registry + drive pinch/pan directly.
+    if (e.pointerType === 'touch' && touchesRef.current.has(e.pointerId)) {
+      touchesRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (gestureRef.current && touchesRef.current.size === 2) {
+        const pts = Array.from(touchesRef.current.values());
+        const dx = pts[1].x - pts[0].x;
+        const dy = pts[1].y - pts[0].y;
+        const dist = Math.hypot(dx, dy);
+        const cx = (pts[0].x + pts[1].x) / 2;
+        const cy = (pts[0].y + pts[1].y) / 2;
+        const g = gestureRef.current;
+        const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, g.startScale * (dist / g.startDist)));
+        const rect = wrapRef.current?.getBoundingClientRect();
+        if (!rect) return;
+        const px = g.startCenterX - rect.left;
+        const py = g.startCenterY - rect.top;
+        // Zoom around the initial pinch center, then translate by the pinch's
+        // own drift so two-finger drag also pans the canvas.
+        const scaledPanX = px - ((px - g.startPanX) / g.startScale) * nextScale;
+        const scaledPanY = py - ((py - g.startPanY) / g.startScale) * nextScale;
+        setViewport({
+          scale: nextScale,
+          panX: scaledPanX + (cx - g.startCenterX),
+          panY: scaledPanY + (cy - g.startCenterY),
+        });
+        return;
+      }
+    }
+
     if (dragState.kind === 'none') return;
     const canvasPt = clientToCanvas(e.clientX, e.clientY);
     if (dragState.kind === 'move') {
@@ -129,7 +207,11 @@ export function CanvasEngine({
     }
   }, [dragState, clientToCanvas, objects, onObjectMove, onSelectionChange]);
 
-  const handlePointerUp = useCallback(() => {
+  const handlePointerUp = useCallback((e: React.PointerEvent<SVGSVGElement>) => {
+    if (e.pointerType === 'touch') {
+      touchesRef.current.delete(e.pointerId);
+      if (touchesRef.current.size < 2) gestureRef.current = null;
+    }
     setDragState({ kind: 'none' });
   }, []);
 
@@ -170,6 +252,24 @@ export function CanvasEngine({
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
   }, []);
+
+  // On first mount + on width/height change, fit the chart to the container
+  // so phones + iPad portraits don't start off-screen. We only auto-fit once
+  // per canvas size so the user's pan/zoom isn't clobbered on every render.
+  useEffect(() => {
+    if (!wrapRef.current) return;
+    const rect = wrapRef.current.getBoundingClientRect();
+    if (rect.width < 40 || rect.height < 40) return;
+    if (didFitRef.current) return;
+    didFitRef.current = true;
+    setViewport(fitScale(width, height, rect.width, rect.height));
+  }, [width, height]);
+
+  const handleReset = useCallback(() => {
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setViewport(fitScale(width, height, rect.width, rect.height));
+  }, [width, height]);
 
   // Keyboard: arrow keys nudge selection.
   useEffect(() => {
@@ -260,9 +360,9 @@ export function CanvasEngine({
         <button
           type="button"
           className="text-slate-700 hover:text-slate-900"
-          onClick={() => setViewport({ scale: DEFAULT_SCALE, panX: 40, panY: 40 })}
+          onClick={handleReset}
         >
-          Reset view
+          Fit
         </button>
       </div>
     </div>

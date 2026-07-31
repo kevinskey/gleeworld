@@ -71,25 +71,27 @@ export function SeatingChartsDashboardPage() {
         </Button>
       }
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="choir">Choir</TabsTrigger>
-            <TabsTrigger value="band">Band</TabsTrigger>
-            <TabsTrigger value="orchestra">Orchestra</TabsTrigger>
-            <TabsTrigger value="classroom">Classroom</TabsTrigger>
-            <TabsTrigger value="stage_plot">Stage plots</TabsTrigger>
-            <TabsTrigger value="archived">Archived</TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div className="overflow-x-auto scrollbar-hide -mx-1 px-1">
+          <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
+            <TabsList>
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="choir">Choir</TabsTrigger>
+              <TabsTrigger value="band">Band</TabsTrigger>
+              <TabsTrigger value="orchestra">Orchestra</TabsTrigger>
+              <TabsTrigger value="classroom">Classroom</TabsTrigger>
+              <TabsTrigger value="stage_plot">Stage plots</TabsTrigger>
+              <TabsTrigger value="archived">Archived</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
         <div className="relative">
           <Search className="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search charts"
-            className="pl-8 h-9 w-64"
+            className="pl-8 h-9 w-full md:w-64"
           />
         </div>
       </div>
@@ -128,7 +130,7 @@ export function SeatingChartsDashboardPage() {
               </CardHeader>
               <CardContent className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Updated {new Date(c.updated_at).toLocaleDateString()}</span>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition">
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicate(c.id)} title="Duplicate">
                     <Copy className="w-3.5 h-3.5" />
                   </Button>

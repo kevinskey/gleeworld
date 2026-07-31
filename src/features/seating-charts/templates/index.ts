@@ -5,6 +5,7 @@ import { BAND_TEMPLATES } from './band';
 import { ORCHESTRA_TEMPLATES } from './orchestra';
 import { OTHER_MUSIC_TEMPLATES } from './otherMusic';
 import { CLASSROOM_TEMPLATES } from './classroom';
+import { STAGE_PLOT_TEMPLATES } from './stagePlots';
 import { CUSTOM_TEMPLATES } from './custom';
 
 export const ALL_TEMPLATES: TemplateEntry[] = [
@@ -13,6 +14,7 @@ export const ALL_TEMPLATES: TemplateEntry[] = [
   ...ORCHESTRA_TEMPLATES,
   ...OTHER_MUSIC_TEMPLATES,
   ...CLASSROOM_TEMPLATES,
+  ...STAGE_PLOT_TEMPLATES,
   ...CUSTOM_TEMPLATES,
 ];
 
@@ -43,4 +45,7 @@ export function generateTemplate(key: string, config?: Record<string, unknown>):
   return entry ? entry.generate(config) : null;
 }
 
-export { CHOIR_TEMPLATES, BAND_TEMPLATES, ORCHESTRA_TEMPLATES, OTHER_MUSIC_TEMPLATES, CLASSROOM_TEMPLATES, CUSTOM_TEMPLATES };
+export {
+  CHOIR_TEMPLATES, BAND_TEMPLATES, ORCHESTRA_TEMPLATES, OTHER_MUSIC_TEMPLATES,
+  CLASSROOM_TEMPLATES, STAGE_PLOT_TEMPLATES, CUSTOM_TEMPLATES,
+};
