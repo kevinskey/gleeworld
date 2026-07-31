@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, UserPlus, Search, Check, X, Clock, AlertCircle, FileCheck, FileWarning } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePermissionSlips } from '@/hooks/usePermissionSlips';
 import { SlipStatusBadge } from '@/components/travel-manager/SlipStatusBadge';
@@ -87,9 +87,13 @@ export const TourRosterSection = () => {
           .order('start_date', { ascending: true })
           .limit(1)
           .maybeSingle(),
+        // Pinned to the current tenant — a platform owner's RLS reads every
+        // tenant's branding row, so an unpinned maybeSingle() errors.
         supabase
           .from('gw_branding_settings')
-          .select('k12_ensemble')
+          .select('k12_ensemble, gw_tenants!inner(slug)')
+          .eq('gw_tenants.slug', getTenantSlug())
+          .limit(1)
           .maybeSingle(),
       ]);
 
