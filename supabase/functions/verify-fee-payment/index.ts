@@ -72,6 +72,24 @@ serve(async (req) => {
     }
   }
 
+  // ── Defense-in-depth: verify fee row belongs to the metadata tenant ────────
+  // service-role bypasses RLS, so we enforce tenant matching explicitly.
+  if (md.tenant_id) {
+    const { data: fee } = await admin
+      .from("gw_student_fees")
+      .select("tenant_id")
+      .eq("id", md.student_fee_id)
+      .maybeSingle();
+
+    if (fee && fee.tenant_id !== md.tenant_id) {
+      console.warn(
+        `Tenant mismatch: fee ${md.student_fee_id} belongs to tenant ${fee.tenant_id}` +
+        ` but metadata says ${md.tenant_id} — skipping`,
+      );
+      return new Response("Tenant mismatch — not processed", { status: 200 });
+    }
+  }
+
   // ── Call record_fee_payment RPC (Task 6) ───────────────────────────────────
   const { error: rpcError } = await admin.rpc("record_fee_payment", {
     p_fee_id: md.student_fee_id,
