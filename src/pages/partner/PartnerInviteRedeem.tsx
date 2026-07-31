@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { edgeFunctionErrorMessage } from '@/lib/edgeFunctionError';
 import DashboardPageShell from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -20,9 +21,9 @@ export default function PartnerInviteRedeem() {
         const { data, error } = await supabase.functions.invoke<{ partner_id: string; error?: string }>(
           'partner-invite-redeem', { body: { token } }
         );
-        if (error || !data || data.error) {
-          const msg = data?.error ?? error?.message ?? 'redeem failed';
-          setMessage(msg); setStatus('error'); return;
+        const errMsg = await edgeFunctionErrorMessage(error, data);
+        if (errMsg || !data) {
+          setMessage(errMsg ?? 'redeem failed'); setStatus('error'); return;
         }
         toast.success('Welcome to the GleeWorld composer store');
         navigate('/partner?welcome=1');

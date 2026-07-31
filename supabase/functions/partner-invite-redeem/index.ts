@@ -35,7 +35,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "expired" }), { status: 410, headers: { ...corsHeaders, "content-type": "application/json" } });
   }
   if (invite.email.toLowerCase() !== (userData.user.email ?? "").toLowerCase()) {
-    return new Response(JSON.stringify({ error: "email mismatch" }), { status: 403, headers: { ...corsHeaders, "content-type": "application/json" } });
+    return new Response(JSON.stringify({ error: `this invite is for ${invite.email}, but you're signed in as ${userData.user.email}. Sign out and back in with the invited address.` }), { status: 403, headers: { ...corsHeaders, "content-type": "application/json" } });
   }
 
   const displayName = invite.display_name ?? userData.user.email?.split("@")[0] ?? "Composer";
