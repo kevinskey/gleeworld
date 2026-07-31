@@ -2415,16 +2415,18 @@ function Editor({
 
         {/* LEFT — transport controls. Play/Pause/Stop/Rec/Metro are
          *  visible on every breakpoint; nav (skip start/end + scrub) and
-         *  markers appear on wider screens where there's room. */}
-        <div className="flex items-center gap-0.5 sm:gap-1 min-w-0">
+         *  markers appear on wider screens where there's room. Every
+         *  button is shrink-0 — squeezed cells must wrap to a second
+         *  line (flex-wrap), never compress the buttons into slivers. */}
+        <div className="flex flex-wrap items-center gap-0.5 sm:gap-1 min-w-0">
         <button
           onClick={() => engineState.seek?.(0)}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="hidden sm:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Go to beginning (Home)">
           <SkipBack className="w-4 h-4" />
         </button>
         <ScrubButton
-          className="hidden sm:flex"
+          className="hidden lg:flex"
           direction={-1}
           getPosition={posNow}
           max={session.length_seconds}
@@ -2433,7 +2435,7 @@ function Editor({
           title="Rewind — click to nudge, hold to scrub"
         />
         <ScrubButton
-          className="hidden sm:flex"
+          className="hidden lg:flex"
           direction={+1}
           getPosition={posNow}
           max={session.length_seconds}
@@ -2443,12 +2445,12 @@ function Editor({
         />
         <button
           onClick={() => engineState.seek?.(session.length_seconds)}
-          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="hidden lg:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Skip to end">
           <SkipForward className="w-4 h-4" />
         </button>
 
-        <div className="hidden sm:block w-px h-7 bg-border mx-0.5" />
+        <div className="hidden sm:block shrink-0 w-px h-7 bg-border mx-0.5" />
 
         {/* Primary transport — always visible */}
         <button onClick={async () => {
@@ -2465,23 +2467,23 @@ function Editor({
               });
             }
           }} disabled={state?.isPlaying}
-          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${state?.isPlaying ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border hover:bg-muted/70'} disabled:opacity-50`}
+          className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${state?.isPlaying ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border hover:bg-muted/70'} disabled:opacity-50`}
           title="Play (Space)">
           <Play className="w-4 h-4" />
         </button>
         <button onClick={pause} disabled={!state?.isPlaying}
-          className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 flex items-center justify-center"
+          className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 flex items-center justify-center"
           title="Pause (Space)">
           <Pause className="w-4 h-4" />
         </button>
         <button
           onClick={onStopPressed}
-          className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
+          className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
           title="Stop (S) — also finalizes any active recording">
           <Square className="w-4 h-4" />
         </button>
         <button onClick={onRecordPressed}
-          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${isRecording ? 'bg-rose-500 border-rose-500 text-white animate-pulse' : 'bg-muted border-border hover:bg-rose-100 hover:border-rose-300'}`}
+          className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${isRecording ? 'bg-rose-500 border-rose-500 text-white animate-pulse' : 'bg-muted border-border hover:bg-rose-100 hover:border-rose-300'}`}
           title={punchEnabled ? 'Record (R) — punch mode: rolls pre-roll, then drops in/out at the punch range' : 'Record (R)'}>
           <Circle className={`w-3.5 h-3.5 ${isRecording ? 'fill-white text-white' : 'fill-rose-500 text-rose-500'}`} />
         </button>
@@ -2497,7 +2499,7 @@ function Editor({
             void Promise.resolve(start?.()).catch(() => { /* engine will retry on play */ });
             setMetronome(!state?.metronomeOn);
           }}
-          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${state?.metronomeOn ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border hover:bg-muted/70'}`}
+          className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${state?.metronomeOn ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border hover:bg-muted/70'}`}
           title="Metronome (M)">
           <Timer className="w-4 h-4" />
         </button>
@@ -2529,7 +2531,7 @@ function Editor({
             }
             setLoopEnabled(true);
           }}
-          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${loopEnabled ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border hover:bg-muted/70'}`}
+          className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${loopEnabled ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border hover:bg-muted/70'}`}
           title={
             selectedClip
               ? 'Loop the selected clip — toggle on/off'
@@ -2542,24 +2544,24 @@ function Editor({
         </button>
 
         {/* Markers — drop a flag at the playhead, hop between flags.
-         *  Flag on sm+, prev/next on md+ (they only help once markers exist). */}
+         *  Flag on md+, prev/next on lg+ (they only help once markers exist). */}
         <button
           onClick={addMarkerAtPlayhead}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="hidden md:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Add marker at playhead (K)">
           <Flag className="w-4 h-4 text-amber-500" />
         </button>
         <button
           onClick={jumpPrevMarker}
           disabled={markers.length === 0}
-          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          className="hidden lg:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
           title="Previous marker (,)">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <button
           onClick={jumpNextMarker}
           disabled={markers.length === 0}
-          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          className="hidden lg:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
           title="Next marker (.)">
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -2591,7 +2593,7 @@ function Editor({
         <div className="flex items-center gap-1 sm:gap-1.5 justify-end min-w-0">
           <button
             onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
-            className={`h-8 sm:h-9 px-2 sm:px-3 rounded border text-xs sm:text-sm font-bold whitespace-nowrap ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+            className={`shrink-0 h-8 sm:h-9 px-2 sm:px-3 rounded border text-xs sm:text-sm font-bold whitespace-nowrap ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
             title={countInBars === 0 ? 'Count-in OFF — tap to cycle 1 bar → 2 bars → off' : `Count-in: ${countInBars} bar${countInBars > 1 ? 's' : ''}`}>
             <span className="hidden md:inline">Count-in </span>{countInBars === 0 ? 'Off' : `${countInBars}`}
           </button>
@@ -2602,14 +2604,14 @@ function Editor({
           )}
           <button
             onClick={undo}
-            className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
+            className="shrink-0 h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
             aria-label="Undo" title="Undo (⌘Z)">
             <Undo2 className="w-4 h-4" />
             <span className="hidden lg:inline text-sm font-semibold">Undo</span>
           </button>
           <button
             onClick={() => setSettingsOpen(true)}
-            className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
+            className="shrink-0 h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
             aria-label="Session settings" title="Session — tempo, time signature, snap, grid, punch, end">
             <SlidersHorizontal className="w-4 h-4" />
             <span className="hidden lg:inline text-sm font-semibold">More</span>
@@ -6497,7 +6499,7 @@ function ScrubButton({
       onPointerUp={(e) => { try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* ignore */ } stopScrub(); }}
       onPointerCancel={stopScrub}
       onPointerLeave={stopScrub}
-      className={`h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center ${className ?? ''}`}
+      className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center ${className ?? ''}`}
       title={title}
     >
       {icon}
