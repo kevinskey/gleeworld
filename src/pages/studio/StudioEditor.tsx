@@ -25,7 +25,7 @@ import { PitchPipe } from '@/components/audioTools/PitchPipe';
 import { Tuner } from '@/components/audioTools/Tuner';
 import { InstrumentPlayer } from '@/components/audioTools/InstrumentPlayer';
 import {
-  Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download, Scissors,
+  Loader2, ArrowLeft, ArrowRight, AlertCircle, Play, Pause, Square, Mic, Plus, Download, Scissors,
   Volume2, MoveHorizontal, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
   ChevronLeft, ChevronRight, Repeat, SlidersHorizontal, X, MoreVertical, Undo2, Flag,
@@ -2605,6 +2605,26 @@ function Editor({
           className="hidden lg:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
           title="Next marker (.)">
           <ChevronRight className="w-4 h-4" />
+        </button>
+
+        {/* Nudge the selected clip — click affordance for the Alt+Arrow
+         *  shortcut. Hidden on phones (the clip action bar has its own
+         *  ◀ ▶ pair there); disabled until a clip is selected. */}
+        <button
+          onClick={() => nudgeSelectedClip(-nudgeStepSeconds(snapSeconds, false))}
+          disabled={!selectedClip}
+          className="hidden sm:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          title={selectedClip ? 'Nudge clip earlier by the snap value (Alt+←)' : 'Nudge — select a clip first'}
+          aria-label="Nudge clip earlier">
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => nudgeSelectedClip(+nudgeStepSeconds(snapSeconds, false))}
+          disabled={!selectedClip}
+          className="hidden sm:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          title={selectedClip ? 'Nudge clip later by the snap value (Alt+→)' : 'Nudge — select a clip first'}
+          aria-label="Nudge clip later">
+          <ArrowRight className="w-4 h-4" />
         </button>
         </div>
 
