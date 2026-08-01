@@ -6,9 +6,23 @@
 // semitones -> destination. Per-part mixing stays live and tempo costs a
 // single worklet regardless of part count. Count-in clicks bypass the
 // stretch node (they should not be pitch-shifted or add latency).
-import SignalsmithStretch from 'signalsmith-stretch';
 import type { PartTrackManifest } from '../types';
 import { countInDelays, pitchCompSemitones } from './playerMath';
+
+// signalsmith-stretch stringifies its own functions into a blob to build
+// the worklet module; Vite's minification breaks those stringified bodies
+// (the processor dies silently and its 'ready' handshake never arrives).
+// So the UNMINIFIED .mjs is vendored in public/vendor/ and loaded at
+// runtime — same-origin, covered by script-src 'self'.
+type StretchFactory = (ctx: AudioContext, options?: unknown) => Promise<AudioNode>;
+const VENDOR_STRETCH_URL = '/vendor/signalsmith-stretch-1.3.2.mjs';
+let stretchFactoryPromise: Promise<StretchFactory> | null = null;
+function loadSignalsmith(): Promise<StretchFactory> {
+  // Variable specifier + @vite-ignore keeps the bundler's hands off it.
+  stretchFactoryPromise ??= import(/* @vite-ignore */ `${VENDOR_STRETCH_URL}`)
+    .then((m) => m.default as StretchFactory);
+  return stretchFactoryPromise;
+}
 
 export interface StemInput {
   role: string;
@@ -65,7 +79,14 @@ export async function createPartTrackEngine(
     }
 
     sum = ctx.createGain();
-    stretch = (await SignalsmithStretch(ctx)) as StretchNode;
+    const SignalsmithStretch = await loadSignalsmith();
+    // Timeout guard: a broken worklet processor fails silently (no
+    // processorerror handling in the library) — fail loud instead.
+    stretch = (await Promise.race([
+      SignalsmithStretch(ctx),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('The audio engine took too long to start.')), 10000)),
+    ])) as StretchNode;
     sum.connect(stretch);
     stretch.connect(ctx.destination);
     stretch.start();
