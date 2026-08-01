@@ -2464,3 +2464,19 @@ button[role="combobox"] > svg {
 body.gw-stage-mode .gw-collapsible-sidebar {
   display: none !important;
 }
+
+/* Hero block (public-site builder): the section is a size container so
+   its text (cqw units in fluidPx) and overlay layout respond to the
+   HERO's width — correct on real phones AND in the builder's narrow
+   phone-preview canvas, where viewport-based media queries never fire.
+   Below 640px of container width, free-positioned overlays are forced
+   to center horizontally and fit, matching the old max-sm behavior. */
+.gw-hero-section {
+  container-type: inline-size;
+}
+@container (max-width: 639px) {
+  .gw-hero-overlay {
+    left: 50% !important;
+    width: 92% !important;
+  }
+}

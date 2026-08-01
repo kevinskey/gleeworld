@@ -109,17 +109,24 @@ function contrastText(bg: string): string {
 // legibility, and 55% of a large desktop headline (easy to reach with
 // the corner-resize handle) used to become an un-fitting phone size —
 // e.g. 160px desktop → 88px clamp MINIMUM, overflowing a 390px viewport.
-// With the cap, big headlines scale down to the vw term on phones. An
+// With the cap, big headlines scale down to the fluid term on phones. An
 // explicit mobilePx is still honored as-is. Exported for tests.
+//
+// Sizes are in cqw (container-query width units — the hero section is a
+// container, see .gw-hero-section), NOT vw: the builder's phone preview
+// renders the page in a narrow canvas where the browser viewport is still
+// desktop-sized, so vw-based text stayed huge. cqw tracks the hero's own
+// width, which is correct on real phones, in the preview canvas, and in
+// iframes alike.
 export function fluidPx(px: number, mobilePx?: number): string {
   const max = Math.max(12, Math.round(px));
   const autoMin = Math.max(14, Math.min(40, Math.round(max * 0.55)));
   const min = typeof mobilePx === 'number'
     ? Math.max(12, Math.min(max, Math.round(mobilePx)))
     : autoMin;
-  // Slope chosen so the size reaches `max` around a 1280px viewport.
-  const vw = (max / 12).toFixed(2);
-  return `clamp(${min}px, ${vw}vw, ${max}px)`;
+  // Slope chosen so the size reaches `max` around a 1280px-wide hero.
+  const cqw = (max / 12).toFixed(2);
+  return `clamp(${min}px, ${cqw}cqw, ${max}px)`;
 }
 
 function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
@@ -145,6 +152,9 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     x: number; y: number;
     sx: number; sy: number;
     rect: DOMRect;
+    /** Half the dragged box's size as % of the section — clamps keep the
+     * whole box inside the hero instead of letting half of it hang off. */
+    halfW: number; halfH: number;
   } | null>(null);
   const [dragging, setDragging] = useState<DragTarget | null>(null);
   const draggable = !!onConfigChange;
@@ -179,9 +189,16 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
       // Per-field handles must not also start the stack/group drag.
       if (target === 'headline' || target === 'subheadline') e.stopPropagation();
       const rect = sectionRef.current.getBoundingClientRect();
-      const measureEl = opts?.fieldEl?.() ?? (e.currentTarget as HTMLElement);
+      // Measure the FIELD box, not the grip handle the pointer landed on —
+      // it feeds both coord seeding and the containment clamp.
+      const measureEl = opts?.fieldEl?.()
+        ?? ((e.currentTarget as HTMLElement).closest('[data-hero-field]') as HTMLElement | null)
+        ?? (e.currentTarget as HTMLElement);
       const { sx, sy } = dragStartCoords(target, measureEl, rect);
-      dragRef.current = { target, x: e.clientX, y: e.clientY, sx, sy, rect };
+      const box = measureEl.getBoundingClientRect();
+      const halfW = Math.min(50, (box.width / 2 / rect.width) * 100);
+      const halfH = Math.min(50, (box.height / 2 / rect.height) * 100);
+      dragRef.current = { target, x: e.clientX, y: e.clientY, sx, sy, rect, halfW, halfH };
       setDragging(target);
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
@@ -190,8 +207,11 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
       if (!s || s.target !== target) return;
       const dxPct = ((e.clientX - s.x) / s.rect.width) * 100;
       const dyPct = ((e.clientY - s.y) / s.rect.height) * 100;
-      const newX = Math.max(0, Math.min(100, s.sx + dxPct));
-      const newY = Math.max(0, Math.min(100, s.sy + dyPct));
+      // Clamp the box CENTER so the whole box stays inside the section —
+      // "responsiveness is an epic fail" screenshot: half the headline
+      // hanging off the left edge.
+      const newX = Math.max(s.halfW, Math.min(100 - s.halfW, s.sx + dxPct));
+      const newY = Math.max(s.halfH, Math.min(100 - s.halfH, s.sy + dyPct));
       onConfigChange?.(dragPatch(target, newX, newY));
     },
     onPointerUp: (e: React.PointerEvent) => {
@@ -291,7 +311,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     <section
       ref={sectionRef}
       id="top"
-      className={`relative overflow-hidden text-white max-w-6xl mx-auto w-full ${hasImage ? '' : 'min-h-[40vh]'}`}
+      className={`gw-hero-section relative overflow-hidden text-white max-w-6xl mx-auto w-full ${hasImage ? '' : 'min-h-[40vh]'}`}
       style={hasImage ? undefined : { background: 'var(--site-primary)' }}
     >
       {/* Image (when present) always renders at its natural aspect — the
@@ -445,7 +465,8 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           return (
             <div
               key={field}
-              className={`text-center absolute max-sm:!left-1/2 max-sm:!w-[92%] group/field ${
+              data-hero-field
+              className={`gw-hero-overlay text-center absolute group/field ${
                 draggable ? (dragging === field ? 'cursor-grabbing' : 'cursor-grab') : ''
               }`}
               style={{
@@ -472,7 +493,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           <>
             {stackFields.length > 0 && (
               <div
-                className={`text-center ${hasImage ? 'absolute max-sm:!left-1/2 max-sm:!w-[92%]' : 'relative pt-20 sm:pt-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
+                className={`text-center ${hasImage ? 'gw-hero-overlay absolute' : 'relative pt-20 sm:pt-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
                   draggable && hasImage ? (dragging === 'text' ? 'cursor-grabbing' : 'cursor-grab') : ''
                 }`}
                 style={
@@ -494,7 +515,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
                 onPointerCancel={hasImage ? textDrag.onPointerUp : undefined}
               >
                 {stackFields.map((field) => (
-                  <div key={field} className="relative group/field">
+                  <div key={field} data-hero-field className="relative group/field">
                     {fieldText(field)}
                     {fieldHandles(field)}
                   </div>
@@ -513,7 +534,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
       })()}
       {showCta && (
         <div
-          className={`text-center ${hasImage ? 'absolute max-sm:!left-1/2 max-sm:!w-[92%]' : 'relative pb-20 sm:pb-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
+          className={`text-center ${hasImage ? 'gw-hero-overlay absolute' : 'relative pb-20 sm:pb-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
             draggable && hasImage ? (dragging === 'buttons' ? 'cursor-grabbing' : 'cursor-grab') : ''
           }`}
           style={

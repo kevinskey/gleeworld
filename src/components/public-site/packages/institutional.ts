@@ -16,7 +16,7 @@ export const institutionalPackage: TemplatePackage = {
     fontFamily: 'merriweather',
     headingFontFamily: 'playfair',
     radiusScale: 'sharp',
-    sectionPaddingScale: 'tight',
+    sectionPaddingScale: 'normal',
     dividerStyle: 'rule',
     letterSpacing: 0,
     package: 'institutional',
