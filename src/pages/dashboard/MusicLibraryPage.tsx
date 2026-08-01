@@ -39,6 +39,7 @@ import { PublicDomainSearch } from '@/components/music-library/PublicDomainSearc
 import { MyMusicTab } from '@/components/music-library/MyMusicTab';
 import { getSignedUrl } from '@/utils/storage';
 import { BookOpen as BookOpenIcon } from 'lucide-react';
+import { PartTracksDialog } from '@/features/part-tracks/PartTracksDialog';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { MUSIC_LIBRARY_TABS, type MusicLibraryTabKey } from './musicLibraryTabs';
@@ -192,6 +193,7 @@ export default function MusicLibraryPage() {
   const [attachingAudio, setAttachingAudio] = useState<ScoreRow | null>(null);
   // Edit dialog state — librarian edit (title, composer, voicing, copies, location).
   const [editing, setEditing] = useState<ScoreRow | null>(null);
+  const [partTracksFor, setPartTracksFor] = useState<ScoreRow | null>(null);
   // Fullscreen toggle for the viewer dialog (max viewing area for annotation).
   // Guarded for environments without the Fullscreen API (notably iOS
   // WKWebView under Capacitor) — accessing `document.fullscreenElement` is
@@ -382,6 +384,7 @@ export default function MusicLibraryPage() {
                   onAttachAudio={() => setAttachingAudio(r)}
                   onEdit={() => setEditing(r)}
                   onToggleShare={() => handleOpenShare(r)}
+                  onPartTracks={() => setPartTracksFor(r)}
                 />
               ))}
             </div>
@@ -398,6 +401,7 @@ export default function MusicLibraryPage() {
                     onAttachAudio={() => setAttachingAudio(r)}
                     onEdit={() => setEditing(r)}
                     onToggleShare={() => handleOpenShare(r)}
+                    onPartTracks={() => setPartTracksFor(r)}
                   />
                 ))}
               </div>
@@ -468,6 +472,15 @@ export default function MusicLibraryPage() {
           setSharing(null);
         }}
       />
+
+      {partTracksFor && (
+        <PartTracksDialog
+          sheetMusicId={partTracksFor.id}
+          sheetMusicTitle={partTracksFor.title || 'Untitled'}
+          open
+          onOpenChange={(open) => !open && setPartTracksFor(null)}
+        />
+      )}
 
       {/* Annotation viewer — opens a near-fullscreen dialog wrapping the
           shared PDFViewerWithAnnotations. Annotations save into
@@ -578,7 +591,7 @@ export default function MusicLibraryPage() {
 }
 
 function ScoreCard({
-  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare,
+  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare, onPartTracks,
 }: {
   row: ScoreRow;
   courseCode: string | null;
@@ -587,6 +600,7 @@ function ScoreCard({
   onAttachAudio: () => void;
   onEdit: () => void;
   onToggleShare: () => void;
+  onPartTracks: () => void;
 }) {
   const hasPdf = !!row.pdf_url || !!row.storage_path;
   const hasAudio = !!row.audio_url;
@@ -697,6 +711,16 @@ function ScoreCard({
               <Share2 className="w-4 h-4" />
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="shrink-0 text-muted-foreground hover:text-foreground"
+            onClick={(e) => { e.stopPropagation(); onPartTracks(); }}
+            aria-label="Part tracks"
+            title="Part tracks"
+          >
+            <ListMusic className="w-4 h-4" />
+          </Button>
           {hasPdf && (
             <>
               {canEdit && (
@@ -732,7 +756,7 @@ function ScoreCard({
 // actions as ScoreCard; the badge cluster collapses away below md so phone
 // rows stay title + actions.
 function ScoreListRow({
-  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare,
+  row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare, onPartTracks,
 }: {
   row: ScoreRow;
   courseCode: string | null;
@@ -741,6 +765,7 @@ function ScoreListRow({
   onAttachAudio: () => void;
   onEdit: () => void;
   onToggleShare: () => void;
+  onPartTracks: () => void;
 }) {
   const hasPdf = !!row.pdf_url || !!row.storage_path;
   const hasAudio = !!row.audio_url;
@@ -801,6 +826,15 @@ function ScoreListRow({
         </div>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={(e) => { e.stopPropagation(); onPartTracks(); }}
+          aria-label="Part tracks"
+          title="Part tracks"
+        >
+          <ListMusic className="w-4 h-4" />
+        </Button>
         {canEdit && (
           <Button
             variant="ghost"
