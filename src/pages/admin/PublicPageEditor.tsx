@@ -1232,7 +1232,11 @@ export default function PublicPageEditor() {
           if (!open) setSettingsOpenId(null);
         }}
       >
-        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        {/* Left side by design (Kevin, 2026-07-31): the live preview sits to
+            the right on desktop/iPad, so a right-anchored sheet buried it —
+            block edits should repaint in view as the user tweaks them. On
+            phones the sheet is w-full either way. */}
+        <SheetContent side="left" className="w-full sm:max-w-md overflow-y-auto">
           {(() => {
             const b = blocks.find((x) => x.id === settingsOpenId);
             if (!b) return null;
