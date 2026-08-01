@@ -3068,14 +3068,11 @@ function Editor({
             )}
           </div>
 
-      {/* Tracks — DAW-style numbered + dense */}
-      {session.tracks.length === 0 ? (
-        <div className="border border-dashed border-border rounded-md py-10 text-center text-xs text-muted-foreground space-y-2">
-          <Music2 className="w-5 h-5 mx-auto opacity-40" />
-          <p>Add an audio or MIDI track to begin.</p>
-        </div>
-      ) : (
-        <div className="bg-card border border-border rounded-md overflow-hidden">
+      {/* Tracks — DAW-style numbered + dense. The ruler + click row
+       * render even with zero tracks so the timeline (and the End
+       * caret) is always visible; the add-a-track hint is a row inside
+       * the timeline instead of replacing it. */}
+      <div className="bg-card border border-border rounded-md overflow-hidden">
           {/* Bar/beat ruler */}
           <div className="flex border-b border-border bg-muted/30">
             <div className="shrink-0 border-r border-border" style={{ width: effectiveStripWidth }} />
@@ -3092,6 +3089,8 @@ function Editor({
                 markers={markers}
                 onMarkerJump={(s) => engineState.seek?.(s)}
                 onMarkerEdit={setEditingMarkerId}
+                endSeconds={session.length_seconds}
+                onEndChange={(sec) => update((s) => ({ ...s, length_seconds: sec }))}
               />
             </div>
           </div>
@@ -3155,6 +3154,15 @@ function Editor({
               onOpenPianoRoll={() => openPianoRollForTrack(t.id)}
             />
           ))}
+          {session.tracks.length === 0 && (
+            <div className="flex">
+              <div className="shrink-0 border-r border-border" style={{ width: effectiveStripWidth }} />
+              <div className="flex-1 py-8 text-center text-xs text-muted-foreground space-y-2">
+                <Music2 className="w-5 h-5 mx-auto opacity-40" />
+                <p>Add an audio or MIDI track to begin.</p>
+              </div>
+            </div>
+          )}
           {/* Single shared horizontal scrollbar — drags here scroll the
            * ruler + every track lane via the ScrollSyncContext. Per-row
            * scrollbars are hidden so the user sees ONE coordinated bar. */}
@@ -3169,7 +3177,6 @@ function Editor({
             </div>
           </div>
         </div>
-      )}
 
       {/* SMART CONTROLS (bottom drawer — selected track's FX rack) */}
       <SmartControls
@@ -4853,7 +4860,7 @@ function CompactTimeSignaturePicker({
 function BarRuler({
   lengthSeconds, tempoBpm, numerator, transportTick,
   loopRegion = null, loopEnabled = false, onLoopRegionChange, onSeek,
-  markers = [], onMarkerJump, onMarkerEdit,
+  markers = [], onMarkerJump, onMarkerEdit, endSeconds, onEndChange,
 }: {
   lengthSeconds: number; tempoBpm: number; numerator: number;
   transportTick: TransportTickStore;
@@ -4864,9 +4871,16 @@ function BarRuler({
   markers?: SessionMarker[];
   onMarkerJump?: (seconds: number) => void;
   onMarkerEdit?: (id: string) => void;
+  /** Project end (session.length_seconds) — rendered as a draggable
+   * caret. May be < lengthSeconds (the ruler extends past End when
+   * clips run long). */
+  endSeconds?: number;
+  onEndChange?: (seconds: number) => void;
 }) {
   const pxPerSecond = usePxPerSecond();
   const gridLevel = useGridLevel();
+  // Live position while the End caret is being dragged; null = parked.
+  const [endPreview, setEndPreview] = useState<number | null>(null);
   const secondsPerBeat = 60 / tempoBpm;
   const secondsPerBar = secondsPerBeat * numerator;
   const totalBars = Math.ceil(lengthSeconds / secondsPerBar);
@@ -4985,6 +4999,40 @@ function BarRuler({
           {mk.name}
         </button>
       ))}
+      {/* Project-End caret — draggable. Mirrors the transport bar's
+       * "End … s" number input: dragging commits session.length_seconds.
+       * pointer-down is stopped so tap-to-seek / drag-to-loop don't
+       * also fire. Preview state keeps the caret under the finger; the
+       * session updates once on release. */}
+      {endSeconds !== undefined && (
+        <div
+          className="absolute top-0 bottom-0 z-20 cursor-ew-resize"
+          style={{ left: (endPreview ?? endSeconds) * pxPerSecond - 6, width: 13 }}
+          onPointerDown={(e) => {
+            if (!onEndChange) return;
+            e.stopPropagation();
+            const handle = e.currentTarget as HTMLElement;
+            handle.setPointerCapture(e.pointerId);
+            const ruler = handle.parentElement!.getBoundingClientRect();
+            const secAt = (clientX: number) =>
+              Math.max(4, Math.min(Math.min(lengthSeconds, 3600), (clientX - ruler.left) / pxPerSecond));
+            const move = (ev: PointerEvent) => setEndPreview(secAt(ev.clientX));
+            const up = (ev: PointerEvent) => {
+              try { handle.releasePointerCapture(ev.pointerId); } catch { /* ignore */ }
+              window.removeEventListener('pointermove', move);
+              window.removeEventListener('pointerup', up);
+              setEndPreview(null);
+              onEndChange(Math.round(secAt(ev.clientX)));
+            };
+            window.addEventListener('pointermove', move);
+            window.addEventListener('pointerup', up);
+          }}
+          title="Project end — drag to change the session length"
+        >
+          <div className="absolute inset-y-0 left-1/2 -translate-x-px border-l-2 border-[var(--tint)]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-[var(--tint)]" />
+        </div>
+      )}
       {/* Playhead chevron on the ruler — moves with transport position. */}
       <RulerPlayheadChevron store={transportTick} />
     </div>
