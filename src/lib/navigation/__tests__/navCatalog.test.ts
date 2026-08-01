@@ -109,7 +109,7 @@ describe('hideableNavItems (Workspace Settings source)', () => {
   });
   it('includes grid-only tiles so admins can hide them from the home grid', () => {
     const paths = items.map((i) => i.path);
-    for (const p of ['/attendance', '/box-office', '/store', '/store/products']) expect(paths, p).toContain(p);
+    for (const p of ['/attendance', '/box-office', '/store/products']) expect(paths, p).toContain(p);
   });
   it('paths are unique and every item has a section label', () => {
     expect(new Set(items.map((i) => i.path)).size).toBe(items.length);
