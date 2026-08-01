@@ -281,19 +281,17 @@ const NAV_ACTIVE = 'bg-primary/10 text-primary font-semibold';
 const iconTextOnly = (tone: string) =>
   tone.replace(/bg-\S+/g, '').replace(/\s+/g, ' ').trim() || 'text-foreground/70';
 
-// Sections start collapsed unless the user is currently on a page inside
-// the section (auto-expand) or they've toggled it open before (persisted
-// in localStorage so the preference sticks across reloads). Bumping the
-// key version invalidates any stale preference from earlier defaults.
-const COLLAPSED_SECTIONS_KEY = 'gw_sidebar_collapsed_v2';
-const DEFAULT_COLLAPSED = ['Admin'] as const;
+// Every fresh app load lands in the prescribed state: Today + Admin
+// expanded, every other section collapsed to its header (Kevin,
+// 2026-07-31 — a uniform landing view for every user/role; non-admins
+// simply have no Admin card). Collapse toggles still work during the
+// session but are deliberately NOT persisted across loads — the old
+// localStorage restore (gw_sidebar_collapsed_v2) is what made landings
+// unpredictable per user. Auto-expand of the active route's section is
+// unaffected (see the render-time check below).
+const DEFAULT_COLLAPSED = ['Music', 'Teach', 'Make', 'Plan', 'Reach', 'Money', 'People'] as const;
 
 function loadCollapsed(): Set<string> {
-  if (typeof window === 'undefined') return new Set(DEFAULT_COLLAPSED);
-  try {
-    const raw = window.localStorage.getItem(COLLAPSED_SECTIONS_KEY);
-    if (raw) return new Set(JSON.parse(raw));
-  } catch { /* fall through */ }
   return new Set(DEFAULT_COLLAPSED);
 }
 
@@ -320,9 +318,6 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
       const next = new Set(prev);
       if (next.has(label)) next.delete(label);
       else next.add(label);
-      try {
-        window.localStorage.setItem(COLLAPSED_SECTIONS_KEY, JSON.stringify(Array.from(next)));
-      } catch { /* ignore */ }
       return next;
     });
   };
