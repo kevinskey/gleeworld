@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBrandingSettings } from "@/hooks/useBrandingSettings";
 import { supabase } from "@/integrations/supabase/client";
-import { claimPartnerByEmail } from "@/lib/partner/api";
+import { claimPartnerByEmailWithTimeout } from "@/lib/partner/api";
 
 /**
  * Post-login routing for the choir/band template.
@@ -60,13 +60,15 @@ export const useRoleBasedRedirect = () => {
 
   // Auto-claim a partner record matching the signed-in user's email, so a
   // partner who signs in for the first time lands directly in their store
-  // backend without a separate invite-accept step.
+  // backend without a separate invite-accept step. Timeout-raced: a hung
+  // socket must degrade to "not a partner" rather than stranding the user
+  // on the public landing page forever (partnerId staying undefined).
   useEffect(() => {
     if (!user) { setPartnerId(undefined); return; }
     let cancelled = false;
-    claimPartnerByEmail()
+    claimPartnerByEmailWithTimeout()
       .then((id) => { if (!cancelled) setPartnerId(id); })
-      .catch(() => { if (!cancelled) setPartnerId(null); }); // claim failure must never block login routing
+      .catch(() => { if (!cancelled) setPartnerId(null); }); // belt-and-suspenders — claim failure must never block login routing
     return () => { cancelled = true; };
   }, [user]);
 

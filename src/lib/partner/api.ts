@@ -282,6 +282,22 @@ export async function claimPartnerByEmail(): Promise<string | null> {
   return (data as string | null) ?? null;
 }
 
+// Same as claimPartnerByEmail, but races the rpc against a timeout so a
+// hung socket degrades to "not a partner" rather than stranding a caller
+// waiting forever. Never throws — errors and timeouts both resolve null.
+// Shared by useRoleBasedRedirect and SignInDialog so both post-login paths
+// treat a partner claim identically.
+export async function claimPartnerByEmailWithTimeout(timeoutMs = 4000): Promise<string | null> {
+  try {
+    return await Promise.race([
+      claimPartnerByEmail(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+    ]);
+  } catch {
+    return null;
+  }
+}
+
 export function useSetPartnerScoreFeatured(): UseMutationResult<{ id: string }, Error, { id: string; partner_featured_order: number | null }> {
   const qc = useQueryClient();
   return useMutation({
