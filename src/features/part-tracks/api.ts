@@ -153,6 +153,47 @@ export async function enqueueRender(scoreId: string): Promise<void> {
   if (upd.error) throw upd.error;
 }
 
+export async function recordListen(
+  scoreId: string,
+  userId: string,
+  batch: { partRole: string | null; tempoPct: number; seconds: number },
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_listens')
+    .insert({
+      score_id: scoreId,
+      user_id: userId,
+      part_role: batch.partRole,
+      mode: 'player',
+      seconds_listened: batch.seconds,
+      tempo_pct: batch.tempoPct,
+    })
+    .select()
+    .single();
+  if (error || !data) throw error ?? new Error('Listen row was not recorded');
+}
+
+export async function logDownload(
+  scoreId: string,
+  userId: string,
+  partRole: string | null,
+  tempoPct: number | null,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_listens')
+    .insert({
+      score_id: scoreId,
+      user_id: userId,
+      part_role: partRole,
+      mode: 'download',
+      seconds_listened: null,
+      tempo_pct: tempoPct,
+    })
+    .select()
+    .single();
+  if (error || !data) throw error ?? new Error('Download row was not recorded');
+}
+
 export async function listRenders(scoreId: string): Promise<PartTrackRender[]> {
   const { data, error } = await supabase
     .from('gw_parttrack_renders')
