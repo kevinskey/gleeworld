@@ -153,6 +153,92 @@ export async function enqueueRender(scoreId: string): Promise<void> {
   if (upd.error) throw upd.error;
 }
 
+export interface PartTrackAssignment {
+  id: string;
+  score_id: string;
+  ensemble_id: string | null;
+  voice_part: string | null;
+  due_date: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface ListenRollupRow {
+  score_id: string;
+  user_id: string;
+  total_seconds: number;
+  last_at: string;
+  avg_tempo_pct: number | null;
+}
+
+export interface TenantSinger {
+  user_id: string;
+  full_name: string | null;
+  voice_part: string | null;
+}
+
+export async function listAssignments(scoreId: string): Promise<PartTrackAssignment[]> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_assignments')
+    .select('*')
+    .eq('score_id', scoreId)
+    .order('created_at');
+  if (error) throw error;
+  return (data ?? []) as PartTrackAssignment[];
+}
+
+export async function listAssignmentsForScores(scoreIds: string[]): Promise<PartTrackAssignment[]> {
+  if (scoreIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('gw_parttrack_assignments')
+    .select('*')
+    .in('score_id', scoreIds);
+  if (error) throw error;
+  return (data ?? []) as PartTrackAssignment[];
+}
+
+export async function createAssignment(
+  scoreId: string,
+  voicePart: string | null,
+  dueDate: string | null,
+  userId: string,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_assignments')
+    .insert({ score_id: scoreId, voice_part: voicePart, due_date: dueDate, created_by: userId })
+    .select()
+    .single();
+  if (error || !data) throw error ?? new Error('Assignment was not created');
+}
+
+export async function deleteAssignment(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('gw_parttrack_assignments')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function getListenRollup(scoreId: string): Promise<ListenRollupRow[]> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_listen_rollup')
+    .select('score_id, user_id, total_seconds, last_at, avg_tempo_pct')
+    .eq('score_id', scoreId);
+  if (error) throw error;
+  return (data ?? []) as ListenRollupRow[];
+}
+
+export async function getTenantSingers(): Promise<TenantSinger[]> {
+  const { data, error } = await supabase
+    .from('gw_profiles_directory')
+    .select('user_id, full_name, voice_part')
+    .not('voice_part', 'is', null)
+    .order('voice_part')
+    .order('full_name');
+  if (error) throw error;
+  return (data ?? []) as TenantSinger[];
+}
+
 export async function recordListen(
   scoreId: string,
   userId: string,

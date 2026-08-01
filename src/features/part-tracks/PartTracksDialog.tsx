@@ -10,9 +10,12 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useUserRole } from '@/hooks/useUserRole';
 import * as api from './api';
+import { AssignmentsPanel } from './AssignmentsPanel';
 import { canGenerate } from './canGenerate';
 import { PartMappingTable } from './PartMappingTable';
 import { createListenTracker, type ListenTracker } from './player/listenTracker';
@@ -44,6 +47,7 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
   const { toast } = useToast();
   const { score, parts, rights, renders, loading, refresh } = usePartTrackScore(sheetMusicId, open);
   const myVoicePart = useMyVoicePart(user?.id);
+  const { isAdmin } = useUserRole();
   const trackerRef = useRef<ListenTracker | null>(null);
 
   const scoreId = score?.id;
@@ -230,20 +234,33 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
           )}
 
           {score && score.status === 'ready' && score.manifest && (
-            <div className="space-y-5">
-              <PartTrackPlayer
-                score={score}
-                renders={renders}
-                myVoicePart={myVoicePart}
-                onListenStateChange={handleListenState}
-              />
-              <details>
-                <summary className="text-sm font-medium cursor-pointer">Downloads</summary>
-                <div className="mt-2">
-                  <RendersList renders={renders.filter((r) => r.kind === 'mix')} onDownload={handleDownload} />
-                </div>
-              </details>
-            </div>
+            <Tabs defaultValue="practice">
+              {isAdmin() && (
+                <TabsList className="mb-3">
+                  <TabsTrigger value="practice" className="text-sm">Practice</TabsTrigger>
+                  <TabsTrigger value="assignments" className="text-sm">Assignments</TabsTrigger>
+                </TabsList>
+              )}
+              <TabsContent value="practice" className="space-y-5">
+                <PartTrackPlayer
+                  score={score}
+                  renders={renders}
+                  myVoicePart={myVoicePart}
+                  onListenStateChange={handleListenState}
+                />
+                <details>
+                  <summary className="text-sm font-medium cursor-pointer">Downloads</summary>
+                  <div className="mt-2">
+                    <RendersList renders={renders.filter((r) => r.kind === 'mix')} onDownload={handleDownload} />
+                  </div>
+                </details>
+              </TabsContent>
+              {isAdmin() && (
+                <TabsContent value="assignments">
+                  <AssignmentsPanel scoreId={score.id} parts={parts} />
+                </TabsContent>
+              )}
+            </Tabs>
           )}
           {score && score.status === 'ready' && !score.manifest && <RendersList renders={renders} />}
 
