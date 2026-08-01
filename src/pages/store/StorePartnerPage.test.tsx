@@ -61,4 +61,15 @@ describe('StorePartnerPage', () => {
     expect(wrapper!.className).toContain('ring-2');
     expect(document.getElementById('score-sc2')?.className ?? '').not.toContain('ring-2');
   });
+
+  it('highlights a partner-featured target without a duplicate-id collision', () => {
+    // sc2 appears in both the Featured Items shelf and All Scores. Only the
+    // All Scores grid owns highlighting (passes highlightId), so it must be
+    // the only one to emit the score-sc2 anchor id — otherwise
+    // getElementById finds the unringed Featured Items copy instead.
+    renderAt('/store/partners/pt1?score=sc2');
+    const matches = document.querySelectorAll('[id="score-sc2"]');
+    expect(matches.length).toBe(1);
+    expect(matches[0].className).toContain('ring-2');
+  });
 });

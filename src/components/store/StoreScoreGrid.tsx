@@ -13,14 +13,26 @@ interface Props {
   highlightId?: string | null;
 }
 
-export function StoreScoreGrid({ scores, linkFor = (s) => `/store/scores/${s.id}`, highlightId = null }: Props) {
+export function StoreScoreGrid({ scores, linkFor = (s) => `/store/scores/${s.id}`, highlightId }: Props) {
+  // `highlightId` distinguishes "this grid owns highlighting" (prop passed,
+  // possibly null when there's no ?score= match) from "this grid doesn't"
+  // (prop omitted entirely). Only the owning grid emits the `score-<id>`
+  // anchor id — otherwise two grids rendering the same score (e.g. a
+  // Featured shelf + the full catalog) both emit it, and
+  // document.getElementById finds whichever renders first, which may not
+  // be the ringed one.
+  const ownsHighlighting = highlightId !== undefined;
   const thumbUrl = (path: string | null) =>
     path ? supabase.storage.from(ASSETS_BUCKET).getPublicUrl(path).data.publicUrl : null;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {scores.map((s) => (
-        <div key={s.id} id={`score-${s.id}`} className={s.id === highlightId ? 'ring-2 ring-primary rounded-lg' : ''}>
+        <div
+          key={s.id}
+          id={ownsHighlighting ? `score-${s.id}` : undefined}
+          className={s.id === highlightId ? 'ring-2 ring-primary rounded-lg' : ''}
+        >
           <Link to={linkFor(s)} className="block">
             <Card className="hover:border-slate-400 transition-colors">
               <CardContent className="p-3">

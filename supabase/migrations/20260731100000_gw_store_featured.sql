@@ -33,6 +33,7 @@ CREATE INDEX IF NOT EXISTS gw_partner_scores_gw_featured_idx
 CREATE OR REPLACE FUNCTION guard_gw_featured_order()
 RETURNS trigger
 LANGUAGE plpgsql
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_touched boolean := false;
@@ -67,6 +68,7 @@ FOR EACH ROW EXECUTE FUNCTION guard_gw_featured_order();
 CREATE OR REPLACE FUNCTION guard_partner_featured_order()
 RETURNS trigger
 LANGUAGE plpgsql
+SET search_path = public, pg_temp
 AS $$
 DECLARE
   v_touched boolean := false;

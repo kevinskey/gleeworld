@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
   useInvitePartner,
   useListPartnerInvites,
@@ -20,6 +21,13 @@ import { useStoreScores } from '@/lib/store/api';
 const APP_HOST = window.location.origin;
 
 export default function PartnersAdmin() {
+  // Store/GW curation (featured_order, gw_featured_order) is super-admin
+  // only at the DB layer (guard_partner_featured_order /
+  // guard_gw_featured_order triggers) — AdminOnlyRoute lets tenant admins
+  // reach this page, so hide the featuring controls they'd get a 42501
+  // toast from.
+  const { isSuperAdmin } = useUserRole();
+  const canCurate = isSuperAdmin();
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const invite = useInvitePartner();
@@ -203,24 +211,26 @@ export default function PartnersAdmin() {
                 </span>
                 <div className="flex items-center gap-2">
                   <Badge variant={p.status === 'active' ? 'default' : 'outline'} className="text-xs">{p.status}</Badge>
-                  {p.featured_order != null ? (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={setPartnerFeatured.isPending}
-                      onClick={() => unfeaturePartner(p.id)}
-                    >
-                      Unfeature
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={setPartnerFeatured.isPending}
-                      onClick={() => featurePartner(p.id)}
-                    >
-                      Feature
-                    </Button>
+                  {canCurate && (
+                    p.featured_order != null ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={setPartnerFeatured.isPending}
+                        onClick={() => unfeaturePartner(p.id)}
+                      >
+                        Unfeature
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        disabled={setPartnerFeatured.isPending}
+                        onClick={() => featurePartner(p.id)}
+                      >
+                        Feature
+                      </Button>
+                    )
                   )}
                 </div>
               </li>
@@ -243,46 +253,50 @@ export default function PartnersAdmin() {
               {featuredScores.map((s) => (
                 <li key={s.id} className="flex items-center justify-between text-sm">
                   <span>★ #{s.gw_featured_order} {scoreLabel(s)}</span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={setGwFeatured.isPending}
-                    onClick={() => removeScore(s.id)}
-                  >
-                    Remove
-                  </Button>
+                  {canCurate && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={setGwFeatured.isPending}
+                      onClick={() => removeScore(s.id)}
+                    >
+                      Remove
+                    </Button>
+                  )}
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="pa-score-search" className="text-xs">Search published scores</Label>
-            <Input
-              id="pa-score-search"
-              value={scoreSearch}
-              onChange={(e) => setScoreSearch(e.target.value)}
-              placeholder="Title, composer, or partner"
-            />
-            {otherScores.length === 0 && (
-              <p className="text-xs text-muted-foreground">No matching scores.</p>
-            )}
-            <ul className="space-y-2">
-              {otherScores.map((s) => (
-                <li key={s.id} className="flex items-center justify-between text-sm">
-                  <span>{scoreLabel(s)}</span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={setGwFeatured.isPending}
-                    onClick={() => featureScore(s.id)}
-                  >
-                    Feature
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {canCurate && (
+            <div className="space-y-2">
+              <Label htmlFor="pa-score-search" className="text-xs">Search published scores</Label>
+              <Input
+                id="pa-score-search"
+                value={scoreSearch}
+                onChange={(e) => setScoreSearch(e.target.value)}
+                placeholder="Title, composer, or partner"
+              />
+              {otherScores.length === 0 && (
+                <p className="text-xs text-muted-foreground">No matching scores.</p>
+              )}
+              <ul className="space-y-2">
+                {otherScores.map((s) => (
+                  <li key={s.id} className="flex items-center justify-between text-sm">
+                    <span>{scoreLabel(s)}</span>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={setGwFeatured.isPending}
+                      onClick={() => featureScore(s.id)}
+                    >
+                      Feature
+                    </Button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </CardContent>
       </Card>
     </DashboardPageShell>
