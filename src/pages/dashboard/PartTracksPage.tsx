@@ -9,7 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { listAssignmentsForScores, type PartTrackAssignment } from '@/features/part-tracks/api';
 import { PartTracksDialog } from '@/features/part-tracks/PartTracksDialog';
+import { useMyVoicePart } from '@/features/part-tracks/player/useMyVoicePart';
+import { voicePartsMatch } from '@/features/part-tracks/voiceParts';
 import type { PartTrackScore } from '@/features/part-tracks/types';
 
 interface Row extends PartTrackScore {
@@ -26,7 +30,10 @@ const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secon
 };
 
 export default function PartTracksPage() {
+  const { user } = useAuth();
+  const myVoicePart = useMyVoicePart(user?.id);
   const [rows, setRows] = useState<Row[]>([]);
+  const [assignments, setAssignments] = useState<PartTrackAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [openScore, setOpenScore] = useState<Row | null>(null);
 
@@ -35,9 +42,20 @@ export default function PartTracksPage() {
       .from('gw_parttrack_scores')
       .select('*, gw_sheet_music(title, composer)')
       .order('updated_at', { ascending: false });
-    if (!error) setRows((data ?? []) as Row[]);
+    if (!error) {
+      const list = (data ?? []) as Row[];
+      setRows(list);
+      void listAssignmentsForScores(list.map((r) => r.id))
+        .then(setAssignments)
+        .catch(() => undefined);
+    }
     setLoading(false);
   }, []);
+
+  const myAssignment = useCallback((scoreId: string): PartTrackAssignment | null => {
+    return assignments.find((a) =>
+      a.score_id === scoreId && (a.voice_part === null || voicePartsMatch(a.voice_part, myVoicePart))) ?? null;
+  }, [assignments, myVoicePart]);
 
   useEffect(() => {
     void refresh();
@@ -83,7 +101,17 @@ export default function PartTracksPage() {
                       <p className="text-xs text-muted-foreground truncate">{row.gw_sheet_music.composer}</p>
                     )}
                   </div>
-                  <Badge variant={status.variant} className="text-xs shrink-0">{status.label}</Badge>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {(() => {
+                      const a = myAssignment(row.id);
+                      return a ? (
+                        <Badge variant="outline" className="text-xs">
+                          Assigned{a.due_date ? ` · due ${a.due_date}` : ''}
+                        </Badge>
+                      ) : null;
+                    })()}
+                    <Badge variant={status.variant} className="text-xs">{status.label}</Badge>
+                  </div>
                 </CardContent>
               </Card>
             );

@@ -27,7 +27,7 @@ function fmtDuration(ms: number | null): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-function RenderRow({ render }: { render: PartTrackRender }) {
+function RenderRow({ render, onDownload }: { render: PartTrackRender; onDownload?: (r: PartTrackRender) => void }) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -51,7 +51,7 @@ function RenderRow({ render }: { render: PartTrackRender }) {
         <div className="flex items-center gap-2">
           <audio controls preload="none" src={url} className="h-8 max-w-56" />
           <Button asChild size="sm" variant="outline" className="text-xs">
-            <a href={url} download>Download</a>
+            <a href={url} download onClick={() => onDownload?.(render)}>Download</a>
           </Button>
         </div>
       ) : (
@@ -63,7 +63,7 @@ function RenderRow({ render }: { render: PartTrackRender }) {
   );
 }
 
-export function RendersList({ renders }: { renders: PartTrackRender[] }) {
+export function RendersList({ renders, onDownload }: { renders: PartTrackRender[]; onDownload?: (r: PartTrackRender) => void }) {
   const stems = renders.filter((r) => r.kind === 'stem');
   const mixes = renders.filter((r) => r.kind === 'mix');
   return (
@@ -71,13 +71,13 @@ export function RendersList({ renders }: { renders: PartTrackRender[] }) {
       {mixes.length > 0 && (
         <div>
           <p className="text-sm font-medium mb-1">Practice mixes</p>
-          {mixes.map((r) => <RenderRow key={r.id} render={r} />)}
+          {mixes.map((r) => <RenderRow key={r.id} render={r} onDownload={onDownload} />)}
         </div>
       )}
       {stems.length > 0 && (
         <div>
           <p className="text-sm font-medium mb-1">Stems</p>
-          {stems.map((r) => <RenderRow key={r.id} render={r} />)}
+          {stems.map((r) => <RenderRow key={r.id} render={r} onDownload={onDownload} />)}
         </div>
       )}
     </div>
