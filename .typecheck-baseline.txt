@@ -165,7 +165,6 @@ src/pages/notation/NotationView.tsx(L,C): error TS2305: Module '"vexflow"' has n
 src/pages/notation/NotationView.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'VoiceMode'.
 src/pages/notation/NoteEditor.test.tsx(L,C): error TS2322: Type 'EditorScore' is not assignable to type '{ elements: EditorNote[]; title: string; keyFifths: number; mode: "major" | "minor"; timeSig: { beats: number; beatType: number; }; clef: "treble" | "bass" | "alto"; tempo: number; systemBreaks?: number[]; }'.
 src/pages/partner/PartnerInviteRedeem.tsx(L,C): error TS2347: Untyped function calls may not accept type arguments.
-src/pages/partner/PartnerProfile.tsx(L,C): error TS2345: Argument of type '{ display_name: string; bio: string; website_url: string; contact_email: string; logo_storage_path: string; }' is not assignable to parameter of type 'UpdateSelfArgs'.
 src/pages/studio/AutomationPanel.tsx(L,C): error TS2322: Type '{ time_seconds: number; value: number; curve: string; }[]' is not assignable to type 'AutomationPoint[]'.
 src/pages/studio/MixerView.tsx(L,C): error TS2339: Property 'cycle' does not exist on type 'CycleResult'.
 src/pages/studio/StudioEditor.tsx(L,C): error TS2578: Unused '@ts-expect-error' directive.

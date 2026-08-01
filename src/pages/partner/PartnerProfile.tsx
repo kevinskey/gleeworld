@@ -33,6 +33,8 @@ export default function PartnerProfile() {
     website_url: form.website_url || null,
     contact_email: form.contact_email || null,
     logo_storage_path: form.logo_storage_path,
+    owner_photo_storage_path: partner.owner_photo_storage_path ?? null,
+    history: partner.history ?? null,
   }, {
     onSuccess: () => toast.success('Profile saved'),
     onError: (e) => toast.error(e.message),
