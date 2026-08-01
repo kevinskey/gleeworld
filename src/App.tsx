@@ -201,6 +201,7 @@ const ParentRegistration = lazy(() => import("./pages/ParentRegistration"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const MusicLibraryPage = lazy(() => import("./pages/member/MusicLibraryPage"));
 const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPage"));
+const PartTracksPage = lazy(() => import("./pages/dashboard/PartTracksPage"));
 const RepertoirePage = lazy(() => import("./pages/dashboard/RepertoirePage"));
 const SeatingChartsDashboardPage = lazy(() => import("./pages/seating-charts/DashboardPage"));
 const SeatingChartEditorPage = lazy(() => import("./pages/seating-charts/EditorPage"));
@@ -418,16 +419,9 @@ const LegacyMus240Redirect = () => {
   return <Navigate to={newPath} replace />;
 };
 
-// Redirect /dashboard/part-tracks/* to /studio with a one-time toast
-function PartTracksRedirect() {
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !sessionStorage.getItem('pt-redirect-toast-shown')) {
-      sessionStorage.setItem('pt-redirect-toast-shown', '1');
-      toast.message('Part Tracks is now part of Studio.');
-    }
-  }, []);
-  return <Navigate to="/studio" replace />;
-}
+// /dashboard/part-tracks briefly redirected to /studio after the old
+// editor retired (2026-07-29); it now hosts the PartTrack rehearsal-track
+// pipeline (PR #335).
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -1668,8 +1662,14 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/dashboard/part-tracks/*"
-                  element={<PartTracksRedirect />}
+                  path="/dashboard/part-tracks"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><PartTracksPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
                 />
                 <Route
                   path="/dashboard/concert-planner"
