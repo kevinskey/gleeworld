@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { readableOnLightHex } from '@/lib/readableColor';
 
 interface PublicSiteTheme {
   theme?: { primaryColor?: string; accentColor?: string; fontFamily?: string };
@@ -67,23 +68,36 @@ function yiqForegroundTriplet(hex: string): string | null {
  *  without saving is a natural next-render restore. */
 export function applyTenantThemeVars(primary: string | null, accent: string | null): void {
   const root = document.documentElement;
-  const primaryTriplet = primary ? hexToHslTriplet(primary) : null;
-  const accentTriplet = accent ? hexToHslTriplet(accent) : null;
-  const primaryFg = primary ? yiqForegroundTriplet(primary) : null;
-  const accentFg = accent ? yiqForegroundTriplet(accent) : null;
+  // App-chrome tokens (--primary/--accent/--ring) are contrast-clamped:
+  // a tenant's light gold looks great on their dark hero photo but is
+  // unreadable as icon/text/button color on the app's white cards. The
+  // clamp keeps hue/saturation and darkens only as far as needed; dark
+  // brands pass through unchanged. The RAW hex still flows to
+  // --site-primary/--site-accent below — the public site keeps the
+  // tenant's exact colors.
+  const readablePrimary = primary ? (readableOnLightHex(primary) ?? primary) : null;
+  const readableAccent = accent ? (readableOnLightHex(accent) ?? accent) : null;
+  const primaryTriplet = readablePrimary ? hexToHslTriplet(readablePrimary) : null;
+  const accentTriplet = readableAccent ? hexToHslTriplet(readableAccent) : null;
+  const primaryFg = readablePrimary ? yiqForegroundTriplet(readablePrimary) : null;
+  const accentFg = readableAccent ? yiqForegroundTriplet(readableAccent) : null;
+  // Foregrounds for the RAW site colors (public-site pairs) — derived
+  // from the unclamped hex, since that's what they sit on.
+  const sitePrimaryFg = primary ? yiqForegroundTriplet(primary) : null;
+  const siteAccentFg = accent ? yiqForegroundTriplet(accent) : null;
 
   if (primary) root.style.setProperty('--site-primary', primary);
   else root.style.removeProperty('--site-primary');
   if (accent) root.style.setProperty('--site-accent', accent);
   else root.style.removeProperty('--site-accent');
 
-  if (accent && accentFg) {
-    root.style.setProperty('--site-accent-contrast', `hsl(${accentFg})`);
+  if (accent && siteAccentFg) {
+    root.style.setProperty('--site-accent-contrast', `hsl(${siteAccentFg})`);
   } else {
     root.style.removeProperty('--site-accent-contrast');
   }
-  if (primary && primaryFg) {
-    root.style.setProperty('--site-primary-contrast', `hsl(${primaryFg})`);
+  if (primary && sitePrimaryFg) {
+    root.style.setProperty('--site-primary-contrast', `hsl(${sitePrimaryFg})`);
   } else {
     root.style.removeProperty('--site-primary-contrast');
   }
