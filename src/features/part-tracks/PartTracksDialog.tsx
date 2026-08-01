@@ -15,6 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 import * as api from './api';
 import { canGenerate } from './canGenerate';
 import { PartMappingTable } from './PartMappingTable';
+import { PartTrackPlayer } from './player/PartTrackPlayer';
+import { useMyVoicePart } from './player/useMyVoicePart';
 import { RendersList } from './RendersList';
 import { RightsAttestation } from './RightsAttestation';
 import type { PartTrackPart, PartTrackSourceType } from './types';
@@ -40,6 +42,7 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
   const { user } = useAuth();
   const { toast } = useToast();
   const { score, parts, rights, renders, loading, refresh } = usePartTrackScore(sheetMusicId, open);
+  const myVoicePart = useMyVoicePart(user?.id);
   const [draftParts, setDraftParts] = useState<PartTrackPart[]>([]);
   const [warningsAcked, setWarningsAcked] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -191,7 +194,18 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
             </div>
           )}
 
-          {score && score.status === 'ready' && <RendersList renders={renders} />}
+          {score && score.status === 'ready' && score.manifest && (
+            <div className="space-y-5">
+              <PartTrackPlayer score={score} renders={renders} myVoicePart={myVoicePart} />
+              <details>
+                <summary className="text-sm font-medium cursor-pointer">Downloads</summary>
+                <div className="mt-2">
+                  <RendersList renders={renders.filter((r) => r.kind === 'mix')} />
+                </div>
+              </details>
+            </div>
+          )}
+          {score && score.status === 'ready' && !score.manifest && <RendersList renders={renders} />}
 
           {score && score.status === 'failed' && (
             <div className="space-y-3">
