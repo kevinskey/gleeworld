@@ -37,4 +37,14 @@ describe('StoreScoreGrid', () => {
     );
     expect(screen.getByRole('link')).toHaveAttribute('href', '/store/partners/pt1?score=sc1');
   });
+
+  it('rings only the highlighted card wrapper', () => {
+    render(
+      <MemoryRouter>
+        <StoreScoreGrid scores={[row({}), row({ id: 'sc2', title: 'Second Score' })]} highlightId="sc1" />
+      </MemoryRouter>
+    );
+    expect(document.getElementById('score-sc1')?.className ?? '').toContain('ring-2');
+    expect(document.getElementById('score-sc2')?.className ?? '').not.toContain('ring-2');
+  });
 });

@@ -71,7 +71,9 @@ export function SignInDialog({ open, onOpenChange, onAuthenticated, primaryColor
           // socket can never hang this navigation.
           claimPartnerByEmailWithTimeout(),
         ]);
-        const dest = prof ? pickDestination({ ...(prof as any), partner_id: partnerId }) : null;
+        const dest = prof
+          ? pickDestination({ role: prof.role, is_admin: prof.is_admin, is_super_admin: prof.is_super_admin, partner_id: partnerId })
+          : null;
         if (dest) navigate(dest);
       }
       onAuthenticated?.();

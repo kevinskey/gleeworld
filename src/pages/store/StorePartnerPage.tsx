@@ -8,22 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import DashboardPageShell from '@/components/dashboard/DashboardPageShell';
 import { useStorePartner, useStoreScores } from '@/lib/store/api';
 import { StoreScoreGrid } from '@/components/store/StoreScoreGrid';
-import type { StoreScoreRow } from '@/lib/store/api';
 
 const ASSETS_BUCKET = 'partner-assets';
-
-function HighlightableGrid({ scores, targetId }: { scores: StoreScoreRow[]; targetId: string | null }) {
-  // Card-level wrapper so the ring survives StoreScoreGrid's internals.
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {scores.map((s) => (
-        <div key={s.id} id={`score-${s.id}`} className={s.id === targetId ? 'ring-2 ring-primary rounded-xl' : ''}>
-          <StoreScoreGrid scores={[s]} />
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function StorePartnerPage() {
   const { id } = useParams<{ id: string }>();
@@ -93,7 +79,7 @@ export default function StorePartnerPage() {
           {(scores?.length ?? 0) === 0 ? (
             <p className="text-sm text-muted-foreground">No published scores yet.</p>
           ) : (
-            <HighlightableGrid scores={scores!} targetId={targetId} />
+            <StoreScoreGrid scores={scores!} highlightId={targetId} />
           )}
         </section>
       </div>

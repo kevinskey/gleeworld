@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup } from '@testing-library/react';
@@ -9,7 +10,9 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: { storage: { from: () => ({ getPublicUrl: (p: string) => ({ data: { publicUrl: `https://cdn.example/${p}` } }) }) } },
 }));
 vi.mock('@/components/dashboard/DashboardPageShell', () => ({
-  default: ({ title, subtitle, children }: any) => <div><h1>{title}</h1><p>{subtitle}</p>{children}</div>,
+  default: ({ title, subtitle, children }: { title?: string; subtitle?: string; children?: React.ReactNode }) => (
+    <div><h1>{title}</h1><p>{subtitle}</p>{children}</div>
+  ),
 }));
 
 const base = {
