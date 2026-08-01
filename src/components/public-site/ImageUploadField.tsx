@@ -2,16 +2,99 @@ import { useEffect, useRef, useState } from 'react';
 import { Image as ImageIcon, Upload, Loader2, X } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
+import { computeOpaqueBounds, hasTransparency } from '@/lib/imageTrim';
 import { toast } from 'sonner';
 
 // Downscale large images client-side before upload — a 4000×3000 hero
 // photo can be 8 MB, taking 30 s+ over a home upload and getting cut off
-// by nginx/proxy body limits. Max dimension 1920px, JPEG Q0.85; PNGs
-// stay PNG if they're small enough already.
-// Downscale large images client-side before upload. Max dim 1920px,
-// JPEG Q0.85. Loud on console so we can see what's happening in the
-// wild when uploads fail — silent shrinks make diagnostics impossible.
-async function shrinkForUpload(file: File): Promise<File> {
+// by nginx/proxy body limits. Max dimension 1920px. Loud on console so we
+// can see what's happening in the wild when uploads fail — silent shrinks
+// make diagnostics impossible.
+//
+// Encoding rule: anything that actually uses its alpha channel re-encodes
+// as PNG — JPEG has no alpha, so encoding a transparent logo to JPEG bakes
+// its background solid black (the canvas backing is transparent *black*,
+// and dropping alpha exposes it). Fully opaque images (photos) still go
+// JPEG for the much smaller payload.
+//
+// trimTransparent (logo uploads): crop fully-transparent padding off the
+// edges so the mark itself fills whatever box the headers give it. Runs
+// even for files under the 500 KB shrink threshold.
+interface ShrinkOpts {
+  trimTransparent?: boolean;
+}
+
+async function processDecodedImage(
+  source: CanvasImageSource,
+  srcW: number,
+  srcH: number,
+  file: File,
+  opts: ShrinkOpts,
+): Promise<File> {
+  const work = document.createElement('canvas');
+  work.width = srcW; work.height = srcH;
+  const workCtx = work.getContext('2d');
+  if (!workCtx) {
+    console.warn('[upload/shrink] canvas.getContext(2d) returned null; sending original');
+    return file;
+  }
+  workCtx.drawImage(source, 0, 0, srcW, srcH);
+
+  // Keep PNG only when the image actually uses its alpha channel — an
+  // opaque PNG photo compresses far better as JPEG and loses nothing.
+  let keepAlpha = false;
+  let cx = 0, cy = 0, cw = srcW, ch = srcH;
+  if (file.type !== 'image/jpeg') {
+    const data = workCtx.getImageData(0, 0, srcW, srcH).data;
+    keepAlpha = hasTransparency(data);
+    // Crop region defaults to the full frame; shrink it to the opaque
+    // bounding box when trimming is on and there is padding to remove.
+    if (opts.trimTransparent && keepAlpha) {
+      const bounds = computeOpaqueBounds(data, srcW, srcH);
+      if (bounds && (bounds.w < srcW || bounds.h < srcH)) {
+        ({ x: cx, y: cy, w: cw, h: ch } = bounds);
+        console.log(`[upload/shrink] trimmed transparent padding: ${srcW}×${srcH} → ${cw}×${ch}`);
+      }
+    }
+  }
+  const cropped = cw !== srcW || ch !== srcH;
+
+  const maxDim = 1920;
+  const scale = Math.min(1, maxDim / Math.max(cw, ch));
+  const w = Math.round(cw * scale);
+  const h = Math.round(ch * scale);
+  if (!cropped && scale === 1 && file.size < 500 * 1024) {
+    console.log('[upload/shrink] no trim/resize needed and under 500 KB; sending original');
+    return file;
+  }
+  console.log(`[upload/shrink] decoded: ${srcW}×${srcH} → target ${w}×${h} (${keepAlpha ? 'png' : 'jpeg'})`);
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return file;
+  ctx.drawImage(work, cx, cy, cw, ch, 0, 0, w, h);
+  const blob = await new Promise<Blob | null>((resolve) => {
+    canvas.toBlob(resolve, keepAlpha ? 'image/png' : 'image/jpeg', 0.85);
+  });
+  if (!blob) {
+    console.warn('[upload/shrink] canvas.toBlob returned null; sending original');
+    return file;
+  }
+  // A re-encode that isn't smaller is pointless — unless we cropped, in
+  // which case the trim is the product and size is secondary.
+  if (!cropped && blob.size >= file.size) {
+    console.log(`[upload/shrink] shrunk (${Math.round(blob.size / 1024)} KB) not smaller than source (${Math.round(file.size / 1024)} KB); sending original`);
+    return file;
+  }
+  console.log(`[upload/shrink] output: ${Math.round(blob.size / 1024)} KB`);
+  return new File(
+    [blob],
+    file.name.replace(/\.\w+$/, keepAlpha ? '.png' : '.jpg'),
+    { type: keepAlpha ? 'image/png' : 'image/jpeg' },
+  );
+}
+
+async function shrinkForUpload(file: File, opts: ShrinkOpts = {}): Promise<File> {
   const startKB = Math.round(file.size / 1024);
   console.log(`[upload/shrink] input: ${file.name} · ${startKB} KB · ${file.type}`);
   if (!file.type.startsWith('image/')) {
@@ -19,41 +102,23 @@ async function shrinkForUpload(file: File): Promise<File> {
     return file;
   }
   if (file.type === 'image/gif' || file.type === 'image/svg+xml') {
+    // Untouched pass-through: SVG scales losslessly and both formats keep
+    // their own transparency as long as we never rasterize them.
     console.log('[upload/shrink] skipped: GIF/SVG passes through');
     return file;
   }
-  if (file.size < 500 * 1024) {
+  const wantsTrim = !!opts.trimTransparent && file.type !== 'image/jpeg';
+  if (file.size < 500 * 1024 && !wantsTrim) {
     console.log('[upload/shrink] skipped: under 500 KB');
     return file;
   }
   try {
     const bitmap = await createImageBitmap(file);
-    const maxDim = 1920;
-    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
-    const w = Math.round(bitmap.width * scale);
-    const h = Math.round(bitmap.height * scale);
-    console.log(`[upload/shrink] decoded: ${bitmap.width}×${bitmap.height} → target ${w}×${h}`);
-    const canvas = document.createElement('canvas');
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.warn('[upload/shrink] canvas.getContext(2d) returned null; sending original');
-      return file;
+    try {
+      return await processDecodedImage(bitmap, bitmap.width, bitmap.height, file, opts);
+    } finally {
+      bitmap.close();
     }
-    ctx.drawImage(bitmap, 0, 0, w, h);
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob(resolve, 'image/jpeg', 0.85);
-    });
-    if (!blob) {
-      console.warn('[upload/shrink] canvas.toBlob returned null; sending original');
-      return file;
-    }
-    if (blob.size >= file.size) {
-      console.log(`[upload/shrink] shrunk (${Math.round(blob.size / 1024)} KB) not smaller than source (${startKB} KB); sending original`);
-      return file;
-    }
-    console.log(`[upload/shrink] output: ${Math.round(blob.size / 1024)} KB (${Math.round((1 - blob.size / file.size) * 100)}% smaller)`);
-    return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
   } catch (err) {
     // Big camera PNGs sometimes trip createImageBitmap on Chromium; the
     // resulting fallback is the original file which is exactly the case
@@ -72,21 +137,7 @@ async function shrinkForUpload(file: File): Promise<File> {
         el.onerror = () => reject(new Error('image decode failed'));
         el.src = dataUrl;
       });
-      const maxDim = 1920;
-      const scale = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
-      const w = Math.round(img.naturalWidth * scale);
-      const h = Math.round(img.naturalHeight * scale);
-      const canvas = document.createElement('canvas');
-      canvas.width = w; canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return file;
-      ctx.drawImage(img, 0, 0, w, h);
-      const blob = await new Promise<Blob | null>((resolve) => {
-        canvas.toBlob(resolve, 'image/jpeg', 0.85);
-      });
-      if (!blob) return file;
-      console.log(`[upload/shrink] fallback output: ${Math.round(blob.size / 1024)} KB`);
-      return new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' });
+      return await processDecodedImage(img, img.naturalWidth, img.naturalHeight, file, opts);
     } catch (err2) {
       console.error('[upload/shrink] both decode paths failed; sending original:', err2);
       return file;
@@ -95,7 +146,10 @@ async function shrinkForUpload(file: File): Promise<File> {
 }
 
 async function uploadToSiteBranding(file: File, prefix: string): Promise<string | null> {
-  file = await shrinkForUpload(file);
+  // Logos get their transparent padding cropped so the mark fills the
+  // box headers render it in; other prefixes (hero photos etc.) keep
+  // whatever framing the source image has.
+  file = await shrinkForUpload(file, { trimTransparent: prefix === 'logo' });
   if (file.size > 10 * 1024 * 1024) {
     toast.error('Image must be 10 MB or smaller.');
     return null;
@@ -133,11 +187,12 @@ async function uploadToSiteBranding(file: File, prefix: string): Promise<string 
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error('canvas ctx null');
         ctx.drawImage(img, 0, 0);
-        // Use JPEG for photos, PNG for anything with transparency-y
-        // extensions. Doesn't matter much — edge fn accepts any image/*.
-        const isPng = file.type === 'image/png' || file.name.endsWith('.png');
+        // JPEG only when the source is JPEG. Everything else re-encodes
+        // as PNG: JPEG drops the alpha channel, which turns transparent
+        // backgrounds (logos especially) into a baked-in black box.
+        const isJpeg = file.type === 'image/jpeg' || /\.jpe?g$/i.test(file.name);
         const blob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob((b) => b ? resolve(b) : reject(new Error('toBlob null')), isPng ? 'image/png' : 'image/jpeg', 0.9);
+          canvas.toBlob((b) => b ? resolve(b) : reject(new Error('toBlob null')), isJpeg ? 'image/jpeg' : 'image/png', 0.9);
         });
         const buf = await blob.arrayBuffer();
         bytes = new Uint8Array(buf);
