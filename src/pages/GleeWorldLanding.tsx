@@ -14,6 +14,7 @@ import { HeroSlider } from "@/components/hero/HeroSlider";
 import { useUniversalHeroSlides } from "@/hooks/useUniversalSlider";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor, type PlanTierId } from "@/lib/planTiers";
+import { isTenantCloneLanding } from "@/lib/home/landingGate";
 import {
   Calendar,
   MapPin,
@@ -94,9 +95,10 @@ const MOCK_EVENTS: Event[] = [
 export const GleeWorldLanding = () => {
   const { loading: authLoading } = useAuth();
   const tenantOrg = typeof window !== 'undefined' ? (window as any).__TENANT_CONFIG__?.org : undefined;
+  const tenantSlug = typeof window !== 'undefined' ? (window as any).__TENANT_CONFIG__?.tenant : undefined;
   const siteName = tenantOrg || 'GleeWorld';
   // Sales CTA appears only on the main marketing site — never on tenant clones.
-  const isTenantClone = !!tenantOrg;
+  const isTenantClone = isTenantCloneLanding(tenantSlug, tenantOrg);
 
   const { data: adaptedSlides = [], isLoading: heroLoading } =
     useUniversalHeroSlides("homepage_hero");
