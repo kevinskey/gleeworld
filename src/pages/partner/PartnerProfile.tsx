@@ -12,7 +12,7 @@ export default function PartnerProfile() {
   const { data: partner } = useMyPartner();
   const update = useUpdateMyPartner();
   const [form, setForm] = useState({
-    display_name: '', bio: '', website_url: '', contact_email: '', logo_storage_path: null as string | null,
+    display_name: '', bio: '', website_url: '', contact_email: '', logo_storage_path: null as string | null, owner_photo_storage_path: null as string | null, history: '',
   });
 
   useEffect(() => {
@@ -22,6 +22,8 @@ export default function PartnerProfile() {
       website_url: partner.website_url ?? '',
       contact_email: partner.contact_email ?? '',
       logo_storage_path: partner.logo_storage_path,
+      owner_photo_storage_path: partner.owner_photo_storage_path,
+      history: partner.history ?? '',
     });
   }, [partner]);
 
@@ -33,6 +35,8 @@ export default function PartnerProfile() {
     website_url: form.website_url || null,
     contact_email: form.contact_email || null,
     logo_storage_path: form.logo_storage_path,
+    owner_photo_storage_path: form.owner_photo_storage_path,
+    history: form.history || null,
   }, {
     onSuccess: () => toast.success('Profile saved'),
     onError: (e) => toast.error(e.message),
@@ -48,6 +52,21 @@ export default function PartnerProfile() {
             currentPath={form.logo_storage_path}
             onUploaded={(path) => setForm({ ...form, logo_storage_path: path })}
           />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Owner photo</Label>
+          <LogoUploadField
+            partnerId={partner.id}
+            currentPath={form.owner_photo_storage_path}
+            filenameBase="owner"
+            emptyLabel="No photo"
+            onUploaded={(path) => setForm({ ...form, owner_photo_storage_path: path })}
+          />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="pp-history" className="text-xs">History / About your store</Label>
+          <Textarea id="pp-history" value={form.history} onChange={(e) => setForm({ ...form, history: e.target.value })} rows={6}
+            placeholder="Tell buyers who you are — your background, your catalog, what makes your music yours." />
         </div>
         <div className="space-y-1">
           <Label htmlFor="pp-name" className="text-xs">Display name *</Label>

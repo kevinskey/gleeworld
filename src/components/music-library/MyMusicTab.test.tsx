@@ -45,7 +45,7 @@ describe('MyMusicTab', () => {
     expect(screen.getByText('Ave Maria')).toBeInTheDocument();
     expect(screen.getByText('Upload')).toBeInTheDocument();
     expect(screen.getByText('CPDL')).toBeInTheDocument();
-    expect(screen.getByText('Lion & Lamb')).toBeInTheDocument();
+    expect(screen.getByText('GW Sheet Music Store')).toBeInTheDocument();
   });
 
   it('shows loading state', () => {

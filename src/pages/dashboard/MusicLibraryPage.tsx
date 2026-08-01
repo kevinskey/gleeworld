@@ -23,7 +23,7 @@ import {
   Music, Upload, Search, Loader2, FileMusic, ListMusic,
   PencilLine, Headphones, Youtube, X, Pencil, Library as LibraryIcon,
   Maximize2, Minimize2, LayoutGrid, List as ListIcon, Share2,
-  Users as UsersIcon, GraduationCap, Check as CheckIcon,
+  Users as UsersIcon, GraduationCap, Check as CheckIcon, Store,
 } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
@@ -41,6 +41,7 @@ import { getSignedUrl } from '@/utils/storage';
 import { BookOpen as BookOpenIcon } from 'lucide-react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { MUSIC_LIBRARY_TABS, type MusicLibraryTabKey } from './musicLibraryTabs';
 
 const SetlistBuilder = lazy(() =>
   import('@/components/music-library/SetlistBuilder').then((m) => ({ default: m.SetlistBuilder })),
@@ -48,8 +49,15 @@ const SetlistBuilder = lazy(() =>
 const PDFViewerWithAnnotations = lazy(() =>
   import('@/components/PDFViewerWithAnnotations').then((m) => ({ default: m.PDFViewerWithAnnotations })),
 );
+const GwStoreTab = lazy(() =>
+  import('@/components/store/GwStoreTab').then((m) => ({ default: m.GwStoreTab })),
+);
 
-type TopTab = 'scores' | 'my-music' | 'setlists' | 'public-domain';
+type TopTab = MusicLibraryTabKey;
+
+const TAB_ICONS: Record<MusicLibraryTabKey, React.ComponentType<{ className?: string }>> = {
+  'scores': Music, 'my-music': FileMusic, 'setlists': ListMusic, 'store': Store, 'public-domain': BookOpenIcon,
+};
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -268,19 +276,15 @@ export default function MusicLibraryPage() {
       {/* Score upload + URL import live in the Librarian add-on. The
           Music Library is read-only for browsing/playback. */}
 
-      {/* Top-level tabs: Scores | Setlists | Public Domain (CPDL search). */}
-      {/* Four tabs exceed a 390px viewport, so the row scrolls rather than
+      {/* Top-level tabs: Scores | My Music | Setlists | GW Sheet Music Store | Public Domain (CPDL search). */}
+      {/* Five tabs exceed a 390px viewport, so the row scrolls rather than
           clipping the last one. The negative margin lets the scroll area reach
           the screen edges inside the shell's padding; body is overflow-x:clip,
           so a wider-than-parent container would be cut off, not scrollable. */}
       <div className="flex gap-2 border-b border-border overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {([
-          { key: 'scores',        label: 'Scores',         Icon: Music },
-          { key: 'my-music',      label: 'My Music',       Icon: FileMusic },
-          { key: 'setlists',      label: 'Setlists',       Icon: ListMusic },
-          { key: 'public-domain', label: 'Public Domain',  Icon: BookOpenIcon },
-        ] as Array<{ key: TopTab; label: string; Icon: React.ComponentType<{ className?: string }> }>).map((t) => {
+        {MUSIC_LIBRARY_TABS.map((t) => {
           const isActive = t.key === topTab;
+          const Icon = TAB_ICONS[t.key];
           return (
             <button
               key={t.key}
@@ -292,7 +296,7 @@ export default function MusicLibraryPage() {
                   : 'inline-flex shrink-0 whitespace-nowrap items-center gap-1.5 px-3 py-2 min-h-[44px] lg:min-h-0 text-sm text-muted-foreground hover:text-foreground transition-colors'
               }
             >
-              <t.Icon className="w-4 h-4" />
+              <Icon className="w-4 h-4" />
               {t.label}
             </button>
           );
@@ -427,6 +431,12 @@ export default function MusicLibraryPage() {
             </Suspense>
           </CardContent>
         </Card>
+      )}
+
+      {topTab === 'store' && (
+        <Suspense fallback={<div className="py-10 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div>}>
+          <GwStoreTab />
+        </Suspense>
       )}
 
       {topTab === 'public-domain' && <PublicDomainSearch />}

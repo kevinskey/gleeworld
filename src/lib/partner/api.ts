@@ -16,6 +16,9 @@ export interface Partner {
   invited_at: string | null;
   activated_at: string | null;
   created_at: string;
+  owner_photo_storage_path: string | null;
+  history: string | null;
+  featured_order: number | null;
 }
 
 export interface PartnerScore {
@@ -39,6 +42,8 @@ export interface PartnerScore {
   status: 'draft' | 'published' | 'unlisted' | 'removed';
   created_at: string;
   updated_at: string;
+  partner_featured_order: number | null;
+  gw_featured_order: number | null;
 }
 
 export interface PartnerInvite {
@@ -106,6 +111,8 @@ interface UpdateSelfArgs {
   website_url: string | null;
   contact_email: string | null;
   logo_storage_path: string | null;
+  owner_photo_storage_path: string | null;
+  history: string | null;
 }
 
 export function useUpdateMyPartner(): UseMutationResult<Partner, Error, UpdateSelfArgs> {
@@ -118,6 +125,8 @@ export function useUpdateMyPartner(): UseMutationResult<Partner, Error, UpdateSe
         p_website_url: args.website_url,
         p_contact_email: args.contact_email,
         p_logo_storage_path: args.logo_storage_path,
+        p_owner_photo_storage_path: args.owner_photo_storage_path,
+        p_history: args.history,
       });
       if (error) throw error;
       return data as Partner;
@@ -262,5 +271,103 @@ export function useUpdatePartnerScoreStatus(): UseMutationResult<{ id: string; s
       return data as { id: string; status: string };
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['my-partner-scores'] }),
+  });
+}
+
+// Links the signed-in user to an unclaimed partner row matching their auth
+// email. Returns the partner id (existing or newly claimed) or null.
+export async function claimPartnerByEmail(): Promise<string | null> {
+  const { data, error } = await supabase.rpc('partner_claim_by_email');
+  if (error) throw error;
+  return (data as string | null) ?? null;
+}
+
+// Same as claimPartnerByEmail, but races the rpc against a timeout so a
+// hung socket degrades to "not a partner" rather than stranding a caller
+// waiting forever. Never throws — errors and timeouts both resolve null.
+// Shared by useRoleBasedRedirect and SignInDialog so both post-login paths
+// treat a partner claim identically.
+export async function claimPartnerByEmailWithTimeout(timeoutMs = 4000): Promise<string | null> {
+  try {
+    return await Promise.race([
+      claimPartnerByEmail(),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), timeoutMs)),
+    ]);
+  } catch {
+    return null;
+  }
+}
+
+export function useSetPartnerScoreFeatured(): UseMutationResult<{ id: string }, Error, { id: string; partner_featured_order: number | null }> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, partner_featured_order }) => {
+      const { data, error } = await supabase
+        .from('gw_partner_scores')
+        .update({ partner_featured_order })
+        .eq('id', id)
+        .select('id')
+        .single();
+      if (error) throw error;
+      return data as { id: string };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-partner-scores'] }),
+  });
+}
+
+export function useSetPartnerFeatured(): UseMutationResult<{ id: string }, Error, { id: string; featured_order: number | null }> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, featured_order }) => {
+      const { data, error } = await supabase
+        .from('gw_partners')
+        .update({ featured_order })
+        .eq('id', id)
+        .select('id')
+        .single();
+      if (error) throw error;
+      return data as { id: string };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['partners-admin'] });
+      qc.invalidateQueries({ queryKey: ['store-featured-partners'] });
+      qc.invalidateQueries({ queryKey: ['store-partners'] });
+    },
+  });
+}
+
+export function useSetGwFeaturedScore(): UseMutationResult<{ id: string }, Error, { id: string; gw_featured_order: number | null }> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, gw_featured_order }) => {
+      const { data, error } = await supabase
+        .from('gw_partner_scores')
+        .update({ gw_featured_order })
+        .eq('id', id)
+        .select('id')
+        .single();
+      if (error) throw error;
+      return data as { id: string };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['store-gw-featured-scores'] });
+      qc.invalidateQueries({ queryKey: ['store-scores'] });
+    },
+  });
+}
+
+export function useCreatePartnerByEmail(): UseMutationResult<{ id: string }, Error, { display_name: string; contact_email: string }> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (args) => {
+      const { data, error } = await supabase
+        .from('gw_partners')
+        .insert({ display_name: args.display_name, contact_email: args.contact_email, status: 'invited' })
+        .select('id')
+        .single();
+      if (error) throw error;
+      return data as { id: string };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['partners-admin'] }),
   });
 }

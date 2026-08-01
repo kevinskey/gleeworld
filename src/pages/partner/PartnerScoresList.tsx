@@ -3,11 +3,12 @@ import { Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useMyPartnerScores, useUpdatePartnerScoreStatus } from '@/lib/partner/api';
+import { useMyPartnerScores, useUpdatePartnerScoreStatus, useSetPartnerScoreFeatured } from '@/lib/partner/api';
 
 export default function PartnerScoresList() {
   const { data: scores, isLoading } = useMyPartnerScores();
   const updateStatus = useUpdatePartnerScoreStatus();
+  const setFeatured = useSetPartnerScoreFeatured();
 
   return (
     <div className="space-y-4">
@@ -42,6 +43,30 @@ export default function PartnerScoresList() {
                 >
                   {s.status === 'published' ? 'Unpublish' : 'Publish'}
                 </Button>
+                {s.status === 'published' && (
+                  s.partner_featured_order != null ? (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={setFeatured.isPending}
+                      onClick={() => setFeatured.mutate({ id: s.id, partner_featured_order: null })}
+                    >
+                      ★ Featured — remove
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={setFeatured.isPending}
+                      onClick={() => {
+                        const next = Math.max(0, ...(scores ?? []).filter((x) => x.partner_featured_order != null).map((x) => x.partner_featured_order!)) + 1;
+                        setFeatured.mutate({ id: s.id, partner_featured_order: next });
+                      }}
+                    >
+                      Feature on my store
+                    </Button>
+                  )
+                )}
               </div>
             </CardContent>
           </Card>

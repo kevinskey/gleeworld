@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBrandingSettings } from "@/hooks/useBrandingSettings";
 import { supabase } from "@/integrations/supabase/client";
+import { claimPartnerByEmailWithTimeout } from "@/lib/partner/api";
 
 /**
  * Post-login routing for the choir/band template.
@@ -36,6 +37,8 @@ export const useRoleBasedRedirect = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [tenantSlug, setTenantSlug] = useState<string | null>(null);
+  // undefined = claim not yet resolved; null = definitively not a partner.
+  const [partnerId, setPartnerId] = useState<string | null | undefined>(undefined);
 
   // Tenant slug is needed to distinguish platform super-admin (main tenant)
   // from tenant super-admins (everyone else). Pulled from the JWT claim
@@ -52,6 +55,20 @@ export const useRoleBasedRedirect = () => {
       const slug = (claims?.tenant_slug as string | undefined) || null;
       if (!cancelled) setTenantSlug(slug);
     })().catch(() => { /* leave null */ });
+    return () => { cancelled = true; };
+  }, [user]);
+
+  // Auto-claim a partner record matching the signed-in user's email, so a
+  // partner who signs in for the first time lands directly in their store
+  // backend without a separate invite-accept step. Timeout-raced: a hung
+  // socket must degrade to "not a partner" rather than stranding the user
+  // on the public landing page forever (partnerId staying undefined).
+  useEffect(() => {
+    if (!user) { setPartnerId(undefined); return; }
+    let cancelled = false;
+    claimPartnerByEmailWithTimeout()
+      .then((id) => { if (!cancelled) setPartnerId(id); })
+      .catch(() => { if (!cancelled) setPartnerId(null); }); // belt-and-suspenders — claim failure must never block login routing
     return () => { cancelled = true; };
   }, [user]);
 
@@ -85,17 +102,21 @@ export const useRoleBasedRedirect = () => {
       return;
     }
 
+    // Wait for the partner-claim RPC to resolve before routing, so a
+    // partner isn't briefly routed to /dashboard and then bounced.
+    if (partnerId === undefined) return;
+
     // Previously: brand-new tenants force-redirected super-admins to
     // /admin/site-setup. Removed — site-setup is reachable from Control Center
     // and the wizard kept trapping admins after initial setup.
 
     // Compute the role destination.
-    const dest = pickDestination({ ...userProfile, tenant_slug: tenantSlug });
+    const dest = pickDestination({ ...userProfile, tenant_slug: tenantSlug, partner_id: partnerId });
     if (dest && dest !== location.pathname) {
       sessionStorage.removeItem('redirectAfterAuth');
       navigate(dest, { replace: true });
     }
-  }, [user, userProfile, loading, navigate, location.pathname, tenantSlug]);
+  }, [user, userProfile, loading, navigate, location.pathname, tenantSlug, partnerId]);
 
   return { userProfile, loading };
 };
@@ -105,9 +126,11 @@ export function pickDestination(profile: {
   is_super_admin?: boolean | null;
   is_admin?: boolean | null;
   tenant_slug?: string | null;
+  partner_id?: string | null;
 }): string | null {
   // Canonical role hierarchy (highest → lowest privilege):
   //   platform super-admin (super-admin on the 'main' tenant) → /admin/tenants
+  //   partner (has a claimed gw_partners record)               → /partner
   //   tenant super-admin   (super-admin on any other tenant)  → /dashboard
   //   admin       → /dashboard        (Command Center — daily triage feed)
   //   instructor  → /dashboard        (Command Center — same operational view)
@@ -117,13 +140,14 @@ export function pickDestination(profile: {
   //   auditioner  → /auditioner       (in the audition pipeline)
   //   vip / fan   → /fan              (signed-up supporters; vip = fan with extra privileges)
   const isSuper = profile.is_super_admin || profile.role === 'super-admin';
-  if (isSuper) {
-    // Only the platform owner (super-admin on the main tenant) lands on
-    // the mother site — the all-tenants portal at /admin/tenants, where
-    // they pick a world to enter. Tenant super-admins manage their own
-    // tenant from the standard Command Center.
-    return profile.tenant_slug === 'main' ? '/admin/tenants' : '/dashboard';
-  }
+  // Only the platform owner (super-admin on the main tenant) lands on the
+  // mother site — the all-tenants portal at /admin/tenants, where they pick
+  // a world to enter. Tenant super-admins manage their own tenant instead,
+  // unless they also carry a partner record (below).
+  if (isSuper && profile.tenant_slug === 'main') return '/admin/tenants';
+  // Partners land in their store backend — the portal is a partner's home.
+  if (profile.partner_id) return '/partner';
+  if (isSuper) return '/dashboard';
   if (profile.is_admin || profile.role === 'admin') return '/dashboard';
   if (profile.role === 'instructor') return '/dashboard';
   if (profile.role === 'alumni' || profile.role === 'graduate' || profile.role === 'graduates') return '/alumni';
