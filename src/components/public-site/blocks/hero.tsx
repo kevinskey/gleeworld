@@ -104,9 +104,16 @@ function contrastText(bg: string): string {
 // and tiny on 4K displays. Desktop = `px`. Mobile = `mobilePx` when the
 // user set one; otherwise auto-derives at ~55% of desktop (14px absolute
 // floor so nothing becomes illegible).
-function fluidPx(px: number, mobilePx?: number): string {
+//
+// The auto-derived mobile floor is CAPPED at 40px: the floor exists for
+// legibility, and 55% of a large desktop headline (easy to reach with
+// the corner-resize handle) used to become an un-fitting phone size —
+// e.g. 160px desktop → 88px clamp MINIMUM, overflowing a 390px viewport.
+// With the cap, big headlines scale down to the vw term on phones. An
+// explicit mobilePx is still honored as-is. Exported for tests.
+export function fluidPx(px: number, mobilePx?: number): string {
   const max = Math.max(12, Math.round(px));
-  const autoMin = Math.max(14, Math.round(max * 0.55));
+  const autoMin = Math.max(14, Math.min(40, Math.round(max * 0.55)));
   const min = typeof mobilePx === 'number'
     ? Math.max(12, Math.min(max, Math.round(mobilePx)))
     : autoMin;
@@ -415,14 +422,14 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
             <>
               <span
                 {...drag}
-                className="absolute -left-8 top-1/2 -translate-y-1/2 hidden sm:flex h-6 w-6 items-center justify-center rounded bg-slate-900/80 text-white cursor-grab opacity-0 group-hover/field:opacity-100 transition-opacity select-none"
+                className="absolute -left-8 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded bg-slate-900/80 text-white cursor-grab opacity-0 group-hover/field:opacity-100 transition-opacity select-none"
                 title={`Drag to move the ${field}`}
               >
                 <GripVertical className="w-3.5 h-3.5" />
               </span>
               <span
                 {...resize}
-                className="absolute -right-7 -bottom-1 hidden sm:flex h-6 w-6 items-center justify-center rounded bg-slate-900/80 text-white cursor-nwse-resize opacity-0 group-hover/field:opacity-100 transition-opacity select-none"
+                className="absolute -right-7 -bottom-1 flex h-6 w-6 items-center justify-center rounded bg-slate-900/80 text-white cursor-nwse-resize opacity-0 group-hover/field:opacity-100 transition-opacity select-none"
                 title={`Drag to resize the ${field}`}
               >
                 <MoveDiagonal className="w-3.5 h-3.5" />
