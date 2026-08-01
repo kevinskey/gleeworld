@@ -367,7 +367,7 @@ export default function MusicLibraryPage() {
               </CardContent>
             </Card>
           ) : scoresView === 'cards' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {filtered.map((r) => (
                 <ScoreCard
                   key={r.id}
@@ -596,15 +596,15 @@ function ScoreCard({
     >
       <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
         <div className="flex items-start gap-3">
-          <div className="w-11 h-11 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 text-primary">
-            <Music className="w-5 h-5" />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
+            <Music className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
             {/* Titles are frequently raw upload filenames with no spaces, so
                 wrap on any character \u2014 truncating them to one line hid the
                 only part that distinguishes one score from another. */}
             <div
-              className="text-base font-semibold leading-snug line-clamp-2 break-words"
+              className="text-sm font-semibold leading-snug line-clamp-2 break-words"
               title={row.title || 'Untitled'}
             >
               {row.title || 'Untitled'}
@@ -630,10 +630,10 @@ function ScoreCard({
               {courseCode ? (
                 <Badge variant="outline" className="text-xs">{courseCode}</Badge>
               ) : (
-                <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">Platform</Badge>
+                <Badge variant="outline" className="text-xs text-muted-foreground">Platform</Badge>
               )}
               {hasAudio && (
-                <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">
+                <Badge variant="outline" className="text-xs text-muted-foreground">
                   <Headphones className="w-3 h-3 mr-1" />
                   Audio
                 </Badge>
@@ -667,7 +667,7 @@ function ScoreCard({
             <Button
               variant="ghost"
               size="sm"
-              className="shrink-0"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
               aria-label="Edit score details"
               title="Edit score details"
@@ -691,9 +691,9 @@ function ScoreCard({
             <>
               {canEdit && (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  className="shrink-0"
+                  className="shrink-0 text-muted-foreground hover:text-foreground"
                   onClick={(e) => { e.stopPropagation(); onAttachAudio(); }}
                   aria-label={hasAudio ? 'Replace attached audio' : 'Attach audio'}
                   title={hasAudio ? 'Replace attached audio' : 'Attach audio'}
@@ -702,7 +702,7 @@ function ScoreCard({
                 </Button>
               )}
               <Button
-                variant="default"
+                variant="outline"
                 size="sm"
                 className="shrink-0"
                 onClick={(e) => { e.stopPropagation(); onAnnotate(); }}
@@ -772,7 +772,7 @@ function ScoreListRow({
         {courseCode ? (
           <Badge variant="outline" className="text-xs">{courseCode}</Badge>
         ) : (
-          <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">Platform</Badge>
+          <Badge variant="outline" className="text-xs text-muted-foreground">Platform</Badge>
         )}
         {hasAudio && (
           <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">
@@ -827,7 +827,7 @@ function ScoreListRow({
               </Button>
             )}
             <Button
-              variant="default"
+              variant="outline"
               size="sm"
               onClick={(e) => { e.stopPropagation(); onAnnotate(); }}
               aria-label="Annotate score"
