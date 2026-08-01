@@ -9,6 +9,7 @@ class Settings:
     service_key: str
     soundfont_path: str        # /opt/gleeworld-parttrack/soundfonts/FluidR3_GM.sf2
     poll_interval_s: float
+    audiveris_cmd: str         # headless OMR binary (Phase 3)
 
 
 def load() -> Settings:
@@ -18,4 +19,5 @@ def load() -> Settings:
         service_key=os.environ["SUPABASE_SERVICE_KEY"],
         soundfont_path=os.environ["SOUNDFONT_PATH"],
         poll_interval_s=float(os.environ.get("POLL_INTERVAL_S", "5")),
+        audiveris_cmd=os.environ.get("AUDIVERIS_CMD", "audiveris"),
     )

@@ -4,7 +4,8 @@ import storage
 from config import Settings
 
 S = Settings(database_url="x", supabase_url="https://supabase.example.org",
-             service_key="sk", soundfont_path="/sf.sf2", poll_interval_s=5)
+             service_key="sk", soundfont_path="/sf.sf2", poll_interval_s=5,
+             audiveris_cmd="audiveris")
 
 
 def test_upload_posts_to_object_endpoint(tmp_path):

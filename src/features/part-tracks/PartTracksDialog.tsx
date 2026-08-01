@@ -26,10 +26,11 @@ import { RightsAttestation } from './RightsAttestation';
 import type { PartTrackPart, PartTrackSourceType } from './types';
 import { usePartTrackScore } from './usePartTrackScore';
 
-const ACCEPT = '.xml,.musicxml,.mxl,.mid,.midi';
+const ACCEPT = '.xml,.musicxml,.mxl,.mid,.midi,.pdf';
 
 function sourceTypeFromName(name: string): PartTrackSourceType {
   const lower = name.toLowerCase();
+  if (lower.endsWith('.pdf')) return 'pdf_omr';
   if (lower.endsWith('.mid') || lower.endsWith('.midi')) return 'midi';
   if (lower.endsWith('.mxl')) return 'mxl';
   return 'musicxml';
@@ -40,9 +41,10 @@ interface Props {
   sheetMusicTitle: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  pdfUrl?: string | null;
 }
 
-export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenChange }: Props) {
+export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenChange, pdfUrl }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
   const { score, parts, rights, renders, loading, refresh } = usePartTrackScore(sheetMusicId, open);
@@ -108,6 +110,23 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
     }
   };
 
+  const importAttachedPdf = async () => {
+    if (!user || !pdfUrl) return;
+    setBusy(true);
+    try {
+      await api.createScoreFromAttachedPdf(sheetMusicId, pdfUrl, user.id);
+      await refresh();
+    } catch (e) {
+      toast({
+        title: 'Could not use the attached PDF',
+        description: e instanceof Error ? e.message : 'Try uploading the file instead.',
+        variant: 'destructive',
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const generate = async () => {
     if (!score) return;
     setBusy(true);
@@ -158,7 +177,7 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
             <div className="py-6 text-center space-y-3">
               <UploadCloud className="w-8 h-8 mx-auto text-muted-foreground" />
               <p className="text-sm">
-                Upload the score as MusicXML (.xml, .mxl) or MIDI to generate practice tracks.
+                Upload the score as MusicXML (.xml, .mxl), MIDI, or a PDF to generate practice tracks.
               </p>
               <input
                 ref={fileInput}
@@ -170,16 +189,34 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
                   if (f) void upload(f);
                 }}
               />
-              <Button size="sm" disabled={busy} onClick={() => fileInput.current?.click()}>
-                {busy ? 'Uploading…' : 'Choose file'}
-              </Button>
+              <div className="flex items-center justify-center gap-2">
+                {pdfUrl && (
+                  <Button size="sm" disabled={busy} onClick={() => void importAttachedPdf()}>
+                    {busy ? 'Reading…' : 'Use the attached PDF (beta)'}
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant={pdfUrl ? 'outline' : 'default'}
+                  disabled={busy}
+                  onClick={() => fileInput.current?.click()}
+                >
+                  {busy ? 'Uploading…' : 'Choose file'}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                PDF reading is beta — clean, engraved octavos work best, and you&apos;ll confirm
+                every part before anything is generated. MusicXML is always the most accurate.
+              </p>
             </div>
           )}
 
           {score && (score.status === 'queued' || score.status === 'analyzing') && (
             <div className="flex items-center gap-2 py-8 justify-center text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Reading the score… usually under a minute.
+              {score.source_type === 'pdf_omr'
+                ? 'Reading the PDF… this takes a few minutes for a full octavo.'
+                : 'Reading the score… usually under a minute.'}
             </div>
           )}
 

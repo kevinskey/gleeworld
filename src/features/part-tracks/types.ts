@@ -1,6 +1,6 @@
 // Mirrors supabase/migrations/20260801090000_parttrack_pipeline.sql exactly.
 
-export type PartTrackSourceType = 'musicxml' | 'mxl' | 'midi';
+export type PartTrackSourceType = 'musicxml' | 'mxl' | 'midi' | 'pdf_omr';
 
 export type PartTrackStatus =
   | 'queued'
