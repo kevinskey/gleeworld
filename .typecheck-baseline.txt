@@ -41,6 +41,7 @@ src/components/mus240/instructor/StudentGradesRoster.tsx(L,C): error TS2339: Pro
 src/components/music-library/DockablePiano.tsx(L,C): error TS2367: This comparison appears to be unintentional because the types 'number' and 'string' have no overlap.
 src/components/music-library/MobilePDFViewer.tsx(L,C): error TS2322: Type 'MutableRefObject<{ promptToSaveIfDirty: () => Promise<boolean>; toggleToolbar: () => void; }>' is not assignable to type 'LegacyRef<PDFViewerHandle>'.
 src/components/music-library/SheetMusicViewDialog.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
+src/components/public-site/blocks/columns.tsx(L,C): error TS2741: Property 'ctx' is missing in type '{ config: any; onConfigChange: (patch: Record<string, unknown>) => void; }' but required in type 'BlockRenderProps<any>'.
 src/components/public-site/blocks/contact.tsx(L,C): error TS2322: Type '{ key: string; href: string; Icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; }[]' is not assignable to type '{ key: "youtube" | "facebook" | "instagram" | "twitter" | "spotify"; href: string; Icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; }[]'.
 src/components/public-site/blocks/media-gallery.tsx(L,C): error TS2322: Type '{ caption?: string; url?: string; }[]' is not assignable to type '{ url: string; caption: string; }[]'.
 src/components/public-site/blocks/video-gallery.tsx(L,C): error TS2578: Unused '@ts-expect-error' directive.
@@ -64,6 +65,8 @@ src/components/user-dashboard/GleeWorldProfileManager.tsx(L,C): error TS2339: Pr
 src/components/user-dashboard/sections/DashboardModulesSection.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
 src/components/user-dashboard/sections/DashboardModulesSection.tsx(L,C): error TS2339: Property 'is_exec_board' does not exist on type 'UserProfile'.
 src/components/viewer/ViewerReader.tsx(L,C): error TS2339: Property 'name' does not exist on type 'Setlist'.
+src/components/workspace-settings/ParentsTabPanel.tsx(L,C): error TS2339: Property 'filter' does not exist on type 'any[] | NoInfer<TQueryFnData>'.
+src/components/workspace-settings/ParentsTabPanel.tsx(L,C): error TS2769: No overload matches this call.
 src/contexts/AudioCompanionContext.tsx(L,C): error TS2345: Argument of type '"apple_music"' is not assignable to parameter of type 'SetStateAction<"youtube" | "file">'.
 src/contexts/AudioCompanionContext.tsx(L,C): error TS2367: This comparison appears to be unintentional because the types '"file"' and '"apple_music"' have no overlap.
 src/contexts/AudioCompanionContext.tsx(L,C): error TS2367: This comparison appears to be unintentional because the types '"youtube" | "file"' and '"apple_music"' have no overlap.
@@ -162,6 +165,7 @@ src/pages/notation/NotationView.tsx(L,C): error TS2305: Module '"vexflow"' has n
 src/pages/notation/NotationView.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'VoiceMode'.
 src/pages/notation/NoteEditor.test.tsx(L,C): error TS2322: Type 'EditorScore' is not assignable to type '{ elements: EditorNote[]; title: string; keyFifths: number; mode: "major" | "minor"; timeSig: { beats: number; beatType: number; }; clef: "treble" | "bass" | "alto"; tempo: number; systemBreaks?: number[]; }'.
 src/pages/partner/PartnerInviteRedeem.tsx(L,C): error TS2347: Untyped function calls may not accept type arguments.
+src/pages/partner/PartnerProfile.tsx(L,C): error TS2345: Argument of type '{ display_name: string; bio: string; website_url: string; contact_email: string; logo_storage_path: string; }' is not assignable to parameter of type 'UpdateSelfArgs'.
 src/pages/studio/AutomationPanel.tsx(L,C): error TS2322: Type '{ time_seconds: number; value: number; curve: string; }[]' is not assignable to type 'AutomationPoint[]'.
 src/pages/studio/MixerView.tsx(L,C): error TS2339: Property 'cycle' does not exist on type 'CycleResult'.
 src/pages/studio/StudioEditor.tsx(L,C): error TS2578: Unused '@ts-expect-error' directive.
