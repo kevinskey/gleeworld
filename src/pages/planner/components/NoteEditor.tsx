@@ -270,7 +270,7 @@ function EditorToolbar({ editor, onDirty }: { editor: Editor; onDirty: () => voi
   // on load and instantly dismissing any open popover/menu.
   const c = () => editor.chain().focus();
   return (
-    <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-border bg-card px-1 py-0.5" role="toolbar" aria-label="Formatting">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-border/60 bg-transparent pb-1.5 mb-1" role="toolbar" aria-label="Formatting">
       <ToolbarButton label="Heading 1" active={editor.isActive('heading', { level: 1 })} onClick={run(() => c().toggleHeading({ level: 1 }).run())}><Heading1 className="h-4 w-4" /></ToolbarButton>
       <ToolbarButton label="Heading 2" active={editor.isActive('heading', { level: 2 })} onClick={run(() => c().toggleHeading({ level: 2 }).run())}><Heading2 className="h-4 w-4" /></ToolbarButton>
       <ToolbarButton label="Heading 3" active={editor.isActive('heading', { level: 3 })} onClick={run(() => c().toggleHeading({ level: 3 }).run())}><Heading3 className="h-4 w-4" /></ToolbarButton>
