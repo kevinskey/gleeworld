@@ -70,6 +70,11 @@ export function PartTrackPlayer({ score, renders, myVoicePart, onListenStateChan
 
   const ensureEngine = useCallback(async (): Promise<PartTrackEngine | null> => {
     if (engineRef.current) return engineRef.current;
+    // Create + resume the context NOW, synchronously within the click
+    // gesture — created later (after awaits) it stays suspended and the
+    // worklet handshake deadlocks. See engine.ts.
+    const ctx = new AudioContext();
+    void ctx.resume();
     setEngineState('loading');
     try {
       const inputs = [] as Array<{ role: string; url: string }>;
@@ -78,7 +83,7 @@ export function PartTrackPlayer({ score, renders, myVoicePart, onListenStateChan
         if (!url) throw new Error(`Could not load the ${stem.part_role} track`);
         inputs.push({ role: stem.part_role as string, url });
       }
-      const engine = await createPartTrackEngine(inputs, manifest, (l, t) => setLoadProgress([l, t]));
+      const engine = await createPartTrackEngine(inputs, manifest, (l, t) => setLoadProgress([l, t]), ctx);
       engine.onTick(setPosition);
       engineRef.current = engine;
       applyGains(volumes, muted, soloed);
@@ -87,6 +92,7 @@ export function PartTrackPlayer({ score, renders, myVoicePart, onListenStateChan
     } catch (e) {
       // Surface the real cause — a silent catch here cost a debugging session.
       console.error('PartTrack player failed to initialize:', e);
+      ctx.close().catch(() => undefined); // double-close with engine.ts is harmless
       setEngineState('error');
       return null;
     }

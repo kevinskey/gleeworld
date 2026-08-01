@@ -40,10 +40,15 @@ export async function createPartTrackEngine(
   stems: StemInput[],
   manifest: PartTrackManifest,
   onProgress?: (loaded: number, total: number) => void,
+  providedCtx?: AudioContext,
 ): Promise<PartTrackEngine> {
-  // Chrome caps live AudioContexts (~6 per tab); a failed attempt must
-  // close its context or retries eventually fail at construction.
-  const ctx = new AudioContext();
+  // The context must be created (and resume() called) SYNCHRONOUSLY in the
+  // user-gesture click handler and passed in: a suspended context never
+  // starts its rendering thread, and the signalsmith worklet factory waits
+  // on a processor handshake that then never arrives (observed live as an
+  // infinite "Loading parts…"). Chrome also caps live AudioContexts (~6 per
+  // tab), so a failed attempt must close its context.
+  const ctx = providedCtx ?? new AudioContext();
   let sum: GainNode;
   let stretch: StretchNode;
   const buffers = new Map<string, AudioBuffer>();
@@ -171,6 +176,8 @@ export async function createPartTrackEngine(
     async play() {
       if (playing) return;
       if (ctx.state === 'suspended') await ctx.resume();
+      // (resume() here is a fallback; the primary resume happens in the
+      // click handler that created the context.)
       const offset = loop && (pausedAt < loop.startSec || pausedAt >= loop.endSec)
         ? loop.startSec
         : Math.min(pausedAt, duration());
