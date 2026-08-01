@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useSearchParams, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useSearchParams, NavLink, Outlet, useLocation, Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import DashboardPageShell from '@/components/dashboard/DashboardPageShell';
@@ -52,6 +52,7 @@ export default function PartnerPortal() {
 
   return (
     <DashboardPageShell title={partner.display_name} subtitle="Composer store partner portal">
+      <Link to="/dashboard" className="text-xs text-primary hover:underline inline-block mb-4">← Go to my member dashboard</Link>
       <Card className="mb-6">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm">Payout status</CardTitle>
