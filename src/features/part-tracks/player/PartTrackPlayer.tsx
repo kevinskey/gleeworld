@@ -84,7 +84,9 @@ export function PartTrackPlayer({ score, renders, myVoicePart, onListenStateChan
       applyGains(volumes, muted, soloed);
       setEngineState('ready');
       return engine;
-    } catch {
+    } catch (e) {
+      // Surface the real cause — a silent catch here cost a debugging session.
+      console.error('PartTrack player failed to initialize:', e);
       setEngineState('error');
       return null;
     }

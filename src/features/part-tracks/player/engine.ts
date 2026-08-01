@@ -41,24 +41,33 @@ export async function createPartTrackEngine(
   manifest: PartTrackManifest,
   onProgress?: (loaded: number, total: number) => void,
 ): Promise<PartTrackEngine> {
+  // Chrome caps live AudioContexts (~6 per tab); a failed attempt must
+  // close its context or retries eventually fail at construction.
   const ctx = new AudioContext();
+  let sum: GainNode;
+  let stretch: StretchNode;
   const buffers = new Map<string, AudioBuffer>();
-  // Decode sequentially to cap peak memory on phones.
-  let loaded = 0;
-  for (const stem of stems) {
-    const res = await fetch(stem.url);
-    if (!res.ok) throw new Error(`Could not load the ${stem.role} track`);
-    const bytes = await res.arrayBuffer();
-    buffers.set(stem.role, await ctx.decodeAudioData(bytes));
-    loaded += 1;
-    onProgress?.(loaded, stems.length);
-  }
+  try {
+    // Decode sequentially to cap peak memory on phones.
+    let loaded = 0;
+    for (const stem of stems) {
+      const res = await fetch(stem.url);
+      if (!res.ok) throw new Error(`Could not load the ${stem.role} track`);
+      const bytes = await res.arrayBuffer();
+      buffers.set(stem.role, await ctx.decodeAudioData(bytes));
+      loaded += 1;
+      onProgress?.(loaded, stems.length);
+    }
 
-  const sum = ctx.createGain();
-  const stretch = (await SignalsmithStretch(ctx)) as StretchNode;
-  sum.connect(stretch);
-  stretch.connect(ctx.destination);
-  stretch.start();
+    sum = ctx.createGain();
+    stretch = (await SignalsmithStretch(ctx)) as StretchNode;
+    sum.connect(stretch);
+    stretch.connect(ctx.destination);
+    stretch.start();
+  } catch (e) {
+    void ctx.close();
+    throw e;
+  }
 
   const partGains = new Map<string, GainNode>();
   for (const stem of stems) {
