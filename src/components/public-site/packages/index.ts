@@ -11,6 +11,8 @@ import type { SiteTheme } from '../types';
 import { modernPackage } from './modern';
 import { institutionalPackage } from './institutional';
 import { minimalistPackage } from './minimalist';
+import { elegantPackage } from './elegant';
+import { boldPackage } from './bold';
 
 /** One seeded block in a package. `configOverrides` merge on top of the
  *  block module's `defaultConfig`, so we only spell out what's specific to
@@ -21,7 +23,7 @@ export interface PackageBlockSeed {
 }
 
 export interface TemplatePackage {
-  id: 'modern' | 'institutional' | 'minimalist';
+  id: 'modern' | 'institutional' | 'minimalist' | 'elegant' | 'bold';
   name: string;
   description: string;
   /** Preview thumbnail — a data URL or served asset path. */
@@ -41,6 +43,8 @@ export const PACKAGE_REGISTRY: Record<TemplatePackage['id'], TemplatePackage> = 
   modern: modernPackage,
   institutional: institutionalPackage,
   minimalist: minimalistPackage,
+  elegant: elegantPackage,
+  bold: boldPackage,
 };
 
 export const PACKAGE_LIST: TemplatePackage[] = Object.values(PACKAGE_REGISTRY);

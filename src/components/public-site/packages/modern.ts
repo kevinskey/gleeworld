@@ -10,8 +10,8 @@ export const modernPackage: TemplatePackage = {
   description:
     'Bold sans-serif type, soft-rounded corners, and roomy whitespace. Photos and video take the lead; text plays a supporting role.',
   theme: {
-    fontFamily: 'poppins',
-    headingFontFamily: 'poppins',
+    fontFamily: 'open-sans',
+    headingFontFamily: 'montserrat',
     radiusScale: 'round',
     sectionPaddingScale: 'generous',
     dividerStyle: 'none',

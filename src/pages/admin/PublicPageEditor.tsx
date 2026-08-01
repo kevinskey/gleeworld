@@ -540,8 +540,13 @@ export default function PublicPageEditor() {
     if (pkg.comingSoon) return;
     setApplyingPackage(pkg.id);
     try {
-      const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
-      if (del.error) throw del.error;
+      // NON-DESTRUCTIVE by design (Kevin, 2026-07-31): applying a look
+      // changes the THEME only — typography, rhythm, shape. It must never
+      // delete the tenant's blocks, logo, or content edits. The package's
+      // starter blocks are seeded ONLY when the site has no content yet
+      // (nothing beyond a header), i.e. the fresh-site case the seeder was
+      // built for.
+      const hasContent = blocks.some((b) => b.block_type !== 'header');
 
       // Package theme merges OVER the current theme, but tenant colors are
       // preserved on top — packages are about typography / rhythm / shape,
@@ -558,41 +563,51 @@ export default function PublicPageEditor() {
         .eq('id', site.id);
       if (themeUpd.error) throw themeUpd.error;
 
-      // Header always seeds from tenant branding — not part of the package
-      // schema. Keeps every package's nav consistent with what the block
-      // anchors expect. (Logo image comes from Branding at render time.)
-      const headerConfig = {
-        siteName: branding.org_name || site.slug,
-        navLinks: [
-          { label: 'Events', url: '#events' },
-          { label: 'About', url: '#about' },
-          { label: 'Listen', url: '#music' },
-          { label: 'Watch', url: '#watch' },
-          { label: 'Contact', url: '#contact' },
-        ],
-        logoHeight: 36,
-      };
+      if (!hasContent) {
+        const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
+        if (del.error) throw del.error;
 
-      const rows = [
-        { block_type: 'header', position: 0, config: headerConfig, is_visible: true },
-        ...pkg.blocks.map((b, i) => {
-          const mod = getBlockModule(b.type);
-          return {
-            block_type: b.type,
-            position: i + 1,
-            config: { ...(mod?.defaultConfig ?? {}), ...(b.config ?? {}) },
-            is_visible: true,
-          };
-        }),
-      ];
-      const ins = await supabase.from('gw_site_blocks').insert(rows);
-      if (ins.error) throw ins.error;
+        // Header always seeds from tenant branding — not part of the package
+        // schema. Keeps every package's nav consistent with what the block
+        // anchors expect. (Logo image comes from Branding at render time.)
+        const headerConfig = {
+          siteName: branding.org_name || site.slug,
+          navLinks: [
+            { label: 'Events', url: '#events' },
+            { label: 'About', url: '#about' },
+            { label: 'Listen', url: '#music' },
+            { label: 'Watch', url: '#watch' },
+            { label: 'Contact', url: '#contact' },
+          ],
+          logoHeight: 36,
+        };
 
-      setSelectedId(null);
-      await queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
+        const rows = [
+          { block_type: 'header', position: 0, config: headerConfig, is_visible: true },
+          ...pkg.blocks.map((b, i) => {
+            const mod = getBlockModule(b.type);
+            return {
+              block_type: b.type,
+              position: i + 1,
+              config: { ...(mod?.defaultConfig ?? {}), ...(b.config ?? {}) },
+              is_visible: true,
+            };
+          }),
+        ];
+        const ins = await supabase.from('gw_site_blocks').insert(rows);
+        if (ins.error) throw ins.error;
+        setSelectedId(null);
+        await queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
       setPackagePickerOpen(false);
-      toast({ title: `${pkg.name} applied`, description: 'Your site now uses this look.' });
+      toast({
+        title: `${pkg.name} applied`,
+        description: hasContent
+          ? 'Fonts, spacing, and shape updated — your blocks and content are untouched.'
+          : 'Your site now uses this look.',
+      });
     } catch (e: any) {
       toast({ title: 'Could not apply look', description: e.message, variant: 'destructive' });
     } finally {
@@ -703,7 +718,7 @@ export default function PublicPageEditor() {
                     Presets
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Applying a preset replaces your current blocks with that layout. Your brand colors and uploaded media stay the same.
+                    A look changes fonts, spacing, and shape only — your blocks, text, logo, and media are never touched. Brand colors stay yours.
                   </p>
                   <div className="space-y-2">
                     {PACKAGE_LIST.map((pkg) => {

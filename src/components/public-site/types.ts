@@ -20,7 +20,7 @@ export const themeSchema = z.object({
    * behavior comes from the token values below. `custom` = user tweaked
    * theme after seeding.
    */
-  package: z.enum(['modern', 'institutional', 'minimalist', 'custom']).default('custom'),
+  package: z.enum(['modern', 'institutional', 'minimalist', 'elegant', 'bold', 'custom']).default('custom'),
   /**
    * Corner radius scale for cards, images, buttons. Maps to CSS via
    * --site-radius. Modern = round, Institutional = sharp, Minimalist = sharp.
