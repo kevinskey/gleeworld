@@ -23,10 +23,12 @@ import { pressBlock } from './blocks/press';
 import { supportBlock } from './blocks/support';
 import { fanSignupBlock } from './blocks/fan-signup';
 import { liturgicalCalendarBlock } from './blocks/liturgical-calendar';
+import { columnsBlock } from './blocks/columns';
 
 export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [headerBlock.type]: headerBlock,
   [heroBlock.type]: heroBlock,
+  [columnsBlock.type]: columnsBlock,
   [eventsBlock.type]: eventsBlock,
   [aboutBlock.type]: aboutBlock,
   [mediaGalleryBlock.type]: mediaGalleryBlock,

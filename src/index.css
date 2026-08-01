@@ -2480,3 +2480,24 @@ body.gw-stage-mode .gw-collapsible-sidebar {
     width: 92% !important;
   }
 }
+
+/* Two-column layout block: side-by-side normally, stacking to one
+   column below 640px of CONTAINER width (works in the builder's
+   phone-preview canvas, not just real narrow viewports). */
+.gw-columns-section {
+  container-type: inline-size;
+}
+.gw-columns-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+@container (max-width: 639px) {
+  .gw-columns-grid {
+    grid-template-columns: 1fr;
+  }
+  .gw-columns-right-first .gw-columns-col:last-child {
+    order: -1;
+  }
+}
