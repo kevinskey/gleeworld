@@ -42,8 +42,8 @@ def condensed_satb():
     s = stream.Score()
     s.append(tempo.MetronomeMark(number=90))
     for cl, hi, lo in [
-        (clef.TrebleClef(), ["C5", "D5", "E5", "F5"], ["G4", "A4", "B4", "C5"]),
-        (clef.BassClef(), ["C4", "D4", "E4", "F4"], ["C3", "D3", "E3", "F3"]),
+        (clef.TrebleClef(), ["C5", "D5", "E5", "F5"], ["E4", "F4", "G4", "A4"]),
+        (clef.BassClef(), ["G3", "A3", "B3", "C4"], ["C3", "D3", "E3", "F3"]),
     ]:
         p = stream.Part()
         p.append(cl)
