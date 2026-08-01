@@ -1,0 +1,4 @@
+music21==9.3.0
+psycopg[binary]==3.2.*
+requests==2.32.*
+pytest==8.*

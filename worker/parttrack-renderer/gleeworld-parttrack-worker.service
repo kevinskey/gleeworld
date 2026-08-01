@@ -1,0 +1,18 @@
+[Unit]
+Description=GleeWorld PartTrack Renderer
+After=network-online.target supabase.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=parttrack
+WorkingDirectory=/opt/gleeworld-parttrack-worker
+EnvironmentFile=/etc/gleeworld-parttrack-worker.env
+ExecStart=/opt/gleeworld-parttrack-worker/.venv/bin/python main.py
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
