@@ -328,7 +328,11 @@ export function useSetPartnerFeatured(): UseMutationResult<{ id: string }, Error
       if (error) throw error;
       return data as { id: string };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['partners-admin'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['partners-admin'] });
+      qc.invalidateQueries({ queryKey: ['store-featured-partners'] });
+      qc.invalidateQueries({ queryKey: ['store-partners'] });
+    },
   });
 }
 
@@ -345,7 +349,10 @@ export function useSetGwFeaturedScore(): UseMutationResult<{ id: string }, Error
       if (error) throw error;
       return data as { id: string };
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['gw-featured-admin'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['store-gw-featured-scores'] });
+      qc.invalidateQueries({ queryKey: ['store-scores'] });
+    },
   });
 }
 

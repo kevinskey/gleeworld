@@ -109,20 +109,14 @@ export default function PartnersAdmin() {
     const nextOrder = (orders.length ? Math.max(...orders) : 0) + 1;
     setGwFeatured.mutate(
       { id, gw_featured_order: nextOrder },
-      {
-        onSuccess: () => scores.refetch(),
-        onError: (err) => toast.error(`Feature failed: ${err.message}`),
-      },
+      { onError: (err) => toast.error(`Feature failed: ${err.message}`) },
     );
   };
 
   const removeScore = (id: string) => {
     setGwFeatured.mutate(
       { id, gw_featured_order: null },
-      {
-        onSuccess: () => scores.refetch(),
-        onError: (err) => toast.error(`Remove failed: ${err.message}`),
-      },
+      { onError: (err) => toast.error(`Remove failed: ${err.message}`) },
     );
   };
 
