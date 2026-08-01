@@ -30,7 +30,7 @@ import {
   useTasksForRange, useTemplates,
 } from '../hooks';
 import AddEventDialog from './AddEventDialog';
-import DayTimeline, { slotToIso } from './DayTimeline';
+import { slotToIso } from './DayTimeline';
 import NoteEditor from './NoteEditor';
 import TaskRow from './TaskRow';
 import { QuickAddTask } from './TasksView';
@@ -226,20 +226,6 @@ export default function PeriodView({
                 />
               </DraggableRow>
             ))}
-          </section>
-
-          <section aria-label="Timeline" className="flex flex-col gap-2">
-            <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Timeline</h2>
-            <p className="text-xs text-muted-foreground">
-              Drag a task onto an hour (or use its ⋯ menu → Block time). Click a block to adjust.
-            </p>
-            <DayTimeline
-              date={dateKey}
-              events={events ?? []}
-              tasks={dayTasks ?? []}
-              onSetBlock={(id, startIso, minutes) => setBlock.mutate({ id, startIso, minutes })}
-              onSetStatus={(id, status) => setStatus.mutate({ id, status })}
-            />
           </section>
 
           <DragOverlay>
