@@ -19,6 +19,8 @@ export interface StoreScoreRow {
   page_count: number | null;
   status: string;
   partner: { display_name: string; logo_storage_path: string | null } | null;
+  partner_featured_order: number | null;
+  gw_featured_order: number | null;
 }
 
 export interface StorePartner {
@@ -28,6 +30,9 @@ export interface StorePartner {
   website_url: string | null;
   logo_storage_path: string | null;
   status: string;
+  owner_photo_storage_path: string | null;
+  history: string | null;
+  featured_order: number | null;
 }
 
 export interface OrderStatusRow {
@@ -155,6 +160,51 @@ export function useDownloadUrl(): UseMutationResult<{ url: string }, Error, { or
       if (error) throw error;
       if (!data) throw new Error('empty response');
       return data as { url: string };
+    },
+  });
+}
+
+export function useFeaturedPartners(): UseQueryResult<StorePartner[]> {
+  return useQuery({
+    queryKey: ['store-featured-partners'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_partners_public')
+        .select('*')
+        .not('featured_order', 'is', null)
+        .order('featured_order', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as StorePartner[];
+    },
+  });
+}
+
+export function useStorePartners(): UseQueryResult<StorePartner[]> {
+  return useQuery({
+    queryKey: ['store-partners'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_partners_public')
+        .select('*')
+        .order('display_name', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as StorePartner[];
+    },
+  });
+}
+
+export function useGwFeaturedScores(): UseQueryResult<StoreScoreRow[]> {
+  return useQuery({
+    queryKey: ['store-gw-featured-scores'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_partner_scores')
+        .select('*, partner:gw_partners(display_name, logo_storage_path)')
+        .eq('status', 'published')
+        .not('gw_featured_order', 'is', null)
+        .order('gw_featured_order', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as StoreScoreRow[];
     },
   });
 }
