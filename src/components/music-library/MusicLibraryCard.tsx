@@ -28,7 +28,6 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useToast } from '@/hooks/use-toast';
 import { InAppPDFViewerDialog } from './InAppPDFViewerDialog';
 import { PDFThumbnail } from './PDFThumbnail';
-import { PartTracksDialog } from '@/features/part-tracks/PartTracksDialog';
 
 interface MusicLibraryCardProps {
   piece: any; // Original sheet music data
@@ -38,7 +37,6 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
   const [integratedPiece, setIntegratedPiece] = useState<MusicPieceIntegration | null>(null);
   const [loadingIntegration, setLoadingIntegration] = useState(true);
   const [showPDFDialog, setShowPDFDialog] = useState(false);
-  const [showPartTracks, setShowPartTracks] = useState(false);
   
   const { canDownloadPDF } = useUserRole();
   const { toast } = useToast();
@@ -282,11 +280,6 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
                     No setlists available
                   </DropdownMenuItem>
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setShowPartTracks(true)}>
-                  <Music className="h-4 w-4 mr-2" />
-                  Part Tracks
-                </DropdownMenuItem>
               </DropdownMenuContent>
               </DropdownMenu>
             </EnhancedTooltip>
@@ -300,13 +293,6 @@ export const MusicLibraryCard: React.FC<MusicLibraryCardProps> = ({ piece }) => 
         pdfUrl={piece.pdf_url}
         title={piece.title}
         musicId={piece.id}
-      />
-
-      <PartTracksDialog
-        sheetMusicId={piece.id}
-        sheetMusicTitle={piece.title}
-        open={showPartTracks}
-        onOpenChange={setShowPartTracks}
       />
     </Card>
   );
