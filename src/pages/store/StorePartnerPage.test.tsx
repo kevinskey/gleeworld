@@ -1,0 +1,61 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import '@testing-library/jest-dom/vitest';
+import { render, screen, cleanup } from '@testing-library/react';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import StorePartnerPage from './StorePartnerPage';
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: { storage: { from: () => ({ getPublicUrl: (p: string) => ({ data: { publicUrl: `https://cdn.example/${p}` } }) }) } },
+}));
+vi.mock('@/components/dashboard/DashboardPageShell', () => ({
+  default: ({ title, subtitle, children }: any) => <div><h1>{title}</h1><p>{subtitle}</p>{children}</div>,
+}));
+
+const base = {
+  id: 'sc1', partner_id: 'pt1', title: 'Anthem One', composer: 'K. Johnson',
+  arranger: null, voicing: 'SATB', ensemble_type: null, difficulty_grade: null,
+  description: null, tags: null, price_cents: 500, currency: 'USD',
+  thumbnail_storage_path: null, sample_audio_storage_path: null, page_count: null,
+  status: 'published', partner: { display_name: 'KPJ Music', logo_storage_path: null },
+  partner_featured_order: null, gw_featured_order: null,
+};
+
+vi.mock('@/lib/store/api', () => ({
+  useStorePartner: () => ({ data: {
+    id: 'pt1', display_name: 'KPJ Music', bio: 'Short bio', website_url: null,
+    logo_storage_path: null, status: 'active',
+    owner_photo_storage_path: 'pt1/owner.jpg', history: 'Founded in 2020.', featured_order: null,
+  } }),
+  useStoreScores: () => ({ data: [
+    base,
+    { ...base, id: 'sc2', title: 'Anthem Two', partner_featured_order: 1 },
+  ] }),
+}));
+
+afterEach(cleanup);
+
+const renderAt = (url: string) => render(
+  <MemoryRouter initialEntries={[url]}>
+    <Routes><Route path="/store/partners/:id" element={<StorePartnerPage />} /></Routes>
+  </MemoryRouter>
+);
+
+describe('StorePartnerPage', () => {
+  it('shows owner photo, history, and a Featured Items shelf', () => {
+    renderAt('/store/partners/pt1');
+    expect(screen.getByText('Founded in 2020.')).toBeInTheDocument();
+    expect(screen.getByText('Featured Items')).toBeInTheDocument();
+    expect(screen.getByAltText('KPJ Music')).toHaveAttribute('src', 'https://cdn.example/pt1/owner.jpg');
+    // Featured shelf + full catalog both contain Anthem Two.
+    expect(screen.getAllByText('Anthem Two').length).toBe(2);
+  });
+
+  it('highlights the ?score= target card', () => {
+    renderAt('/store/partners/pt1?score=sc1');
+    const wrapper = document.getElementById('score-sc1');
+    expect(wrapper).not.toBeNull();
+    expect(wrapper!.className).toContain('ring-2');
+    expect(document.getElementById('score-sc2')?.className ?? '').not.toContain('ring-2');
+  });
+});
