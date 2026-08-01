@@ -10,7 +10,9 @@ import type {
   PartTrackSourceType,
 } from './types';
 
-const EXT: Record<PartTrackSourceType, string> = { musicxml: 'musicxml', mxl: 'mxl', midi: 'mid' };
+const EXT: Record<PartTrackSourceType, string> = {
+  musicxml: 'musicxml', mxl: 'mxl', midi: 'mid', pdf_omr: 'pdf',
+};
 
 export async function getScoreForSheetMusic(sheetMusicId: string): Promise<PartTrackScore | null> {
   const { data, error } = await supabase
@@ -55,6 +57,26 @@ export async function createScore(
     .single();
   if (job.error || !job.data) throw job.error ?? new Error('Analyze job was not created');
   return data as PartTrackScore;
+}
+
+export async function createScoreFromAttachedPdf(
+  sheetMusicId: string,
+  pdfUrl: string,
+  userId: string,
+): Promise<PartTrackScore> {
+  const { getSignedUrl } = await import('@/utils/storage');
+  // pdfUrl may be a full public/proxy URL or a sheet-music bucket path.
+  let resolved = pdfUrl;
+  if (!/^https?:\/\//.test(pdfUrl)) {
+    const signed = await getSignedUrl('sheet-music', pdfUrl, 3600);
+    if (!signed) throw new Error('Could not read the attached PDF');
+    resolved = signed;
+  }
+  const res = await fetch(resolved);
+  if (!res.ok) throw new Error('Could not read the attached PDF');
+  const blob = await res.blob();
+  const file = new File([blob], 'score.pdf', { type: 'application/pdf' });
+  return createScore(sheetMusicId, file, 'pdf_omr', userId);
 }
 
 export async function retryAnalyze(scoreId: string): Promise<void> {

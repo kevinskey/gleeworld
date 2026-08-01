@@ -479,6 +479,7 @@ export default function MusicLibraryPage() {
           sheetMusicTitle={partTracksFor.title || 'Untitled'}
           open
           onOpenChange={(open) => !open && setPartTracksFor(null)}
+          pdfUrl={partTracksFor.pdf_url ?? partTracksFor.storage_path ?? null}
         />
       )}
 
