@@ -160,10 +160,13 @@ export default function PeriodView({
 
       {/* Day view: the note is the work surface — one big centered paper
           with room to think. Events + tasks live in a slim rail beside it
-          on desktop (below it on phones), with no dashed placeholder
-          boxes eating the page. */}
+          on wide desktop (below it otherwise), with no dashed placeholder
+          boxes eating the page. Rail goes side-by-side at xl, not lg — at
+          1024-1279 the dashboard sidebar leaves ~670px of content, and a
+          320px rail crushed the editor into a sliver (Kevin's iPad Pro
+          portrait screenshot, 2026-08-01). */}
       {isDaily && (
-        <div className="flex flex-col lg:flex-row lg:items-start gap-5">
+        <div className="flex flex-col xl:flex-row xl:items-start gap-5">
           <section aria-label="Note" className="w-full flex-1 min-w-0">
             {isLoading ? (
               <Skeleton className="h-[60vh] w-full" />
@@ -192,7 +195,7 @@ export default function PeriodView({
             )}
           </section>
 
-          <aside className="w-full lg:w-80 shrink-0 flex flex-col gap-5">
+          <aside className="w-full xl:w-80 shrink-0 flex flex-col gap-5">
             <section aria-label="Events" className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Events</h2>

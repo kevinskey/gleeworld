@@ -71,13 +71,19 @@ export const AssistantSheet = () => {
           <SheetHeader className="px-4 py-2.5 border-b flex-row items-center justify-between space-y-0">
             <SheetTitle className="text-sm font-semibold">GleeWorld Assistant</SheetTitle>
             <SheetDescription className="sr-only">{ASSISTANT_DESCRIPTION}</SheetDescription>
+            {/* Muted gets a persistent destructive tint so the state reads at
+                a glance. Unmuted hover pairs bg-accent WITH accent-foreground —
+                on touch devices :hover sticks after a tap, and the old
+                muted-gray icon on the stuck tenant-accent circle was
+                illegible (Kevin couldn't tell his iPad was muted). */}
             <button
               type="button"
               onClick={toggleMute}
-              className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
-              title={muted ? 'Unmute replies' : 'Mute replies'}
+              className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${muted ? 'bg-destructive/10 text-destructive hover:bg-destructive/20' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'}`}
+              title={muted ? 'Replies muted — tap to unmute' : 'Mute replies'}
+              aria-pressed={muted}
             >
-              {muted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-muted-foreground" />}
+              {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </button>
           </SheetHeader>
 
@@ -111,7 +117,7 @@ export const AssistantSheet = () => {
             )}
             {micAvailable && (
               <button type="button" onClick={toggleMic}
-                className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors ${listening ? 'bg-destructive/10 text-destructive animate-pulse' : 'hover:bg-accent text-muted-foreground'}`}
+                className={`h-9 w-9 rounded-full flex items-center justify-center transition-colors ${listening ? 'bg-destructive/10 text-destructive animate-pulse' : 'hover:bg-accent hover:text-accent-foreground text-muted-foreground'}`}
                 title={listening ? 'Stop listening' : 'Speak'}>
                 <Mic className="w-4 h-4" />
               </button>
@@ -161,13 +167,15 @@ export const AssistantSheet = () => {
           <div className="flex items-center justify-between px-3 py-2 border-b">
             <span className="text-xs font-medium text-muted-foreground px-1">GleeWorld Assistant</span>
             <div className="flex items-center gap-1">
+              {/* Same muted-state treatment as the sheet header above. */}
               <button
                 type="button"
                 onClick={toggleMute}
-                className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
-                title={muted ? 'Unmute replies' : 'Mute replies'}
+                className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${muted ? 'bg-destructive/10 text-destructive hover:bg-destructive/20' : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'}`}
+                title={muted ? 'Replies muted — tap to unmute' : 'Mute replies'}
+                aria-pressed={muted}
               >
-                {muted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-muted-foreground" />}
+                {muted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </button>
               {/* The desktop spotlight otherwise closes only via Esc/backdrop —
                   an invisible exit. Minimizing returns to the floating mic. */}
@@ -176,7 +184,7 @@ export const AssistantSheet = () => {
                 onClick={() => setSheetOpen(false)}
                 aria-label="Minimize assistant"
                 title="Minimize"
-                className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
+                className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <ChevronDown className="w-4 h-4 text-muted-foreground" />
               </button>
@@ -215,7 +223,7 @@ export const AssistantSheet = () => {
                 )}
                 {micAvailable && (
                   <button type="button" onClick={toggleMic}
-                    className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center transition-colors ${listening ? 'bg-destructive/10 text-destructive animate-pulse' : 'hover:bg-accent text-muted-foreground'}`}
+                    className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center transition-colors ${listening ? 'bg-destructive/10 text-destructive animate-pulse' : 'hover:bg-accent hover:text-accent-foreground text-muted-foreground'}`}
                     title={listening ? 'Stop listening' : 'Speak'}>
                     <Mic className="w-4 h-4" />
                   </button>
