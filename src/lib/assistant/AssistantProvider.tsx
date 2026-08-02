@@ -182,6 +182,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   // back to asking the user for a `near` string.
   const geoRef = useRef<{ lat: number; lng: number; ts: number } | null>(null);
   const geoDeniedRef = useRef(false);
+  // Set after a getCurrentPosition call that never called back. From then on
+  // sends never AWAIT geolocation again — they fire a background warm-up and
+  // proceed without geo immediately.
+  const geoSlowRef = useRef(false);
   const getFreshGeo = useCallback(async (): Promise<{ lat: number; lng: number } | null> => {
     if (geoDeniedRef.current) return null;
     const cached = geoRef.current;
@@ -189,22 +193,58 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       return { lat: cached.lat, lng: cached.lng };
     }
     if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
-    return new Promise((resolve) => {
+    const request = (onDone?: (v: { lat: number; lng: number } | null) => void) =>
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const next = { lat: pos.coords.latitude, lng: pos.coords.longitude, ts: Date.now() };
           geoRef.current = next;
-          resolve({ lat: next.lat, lng: next.lng });
+          geoSlowRef.current = false;
+          onDone?.({ lat: next.lat, lng: next.lng });
         },
         () => {
           // Permission dismissed / denied / errored. Don't re-prompt this
           // session — user can enable in browser settings if they want it.
           geoDeniedRef.current = true;
-          resolve(null);
+          onDone?.(null);
         },
         { enableHighAccuracy: false, maximumAge: 15 * 60 * 1000, timeout: 5000 },
       );
+    if (geoSlowRef.current) {
+      // A previous call stalled (or the permission prompt is still up) —
+      // warm the cache in the background but never block this send on it.
+      request();
+      return null;
+    }
+    return new Promise((resolve) => {
+      // WKWebView with no NSLocationWhenInUseUsageDescription NEVER invokes
+      // either callback — the PositionOptions timeout only starts counting
+      // once permission is resolved (verified on the iOS 18 simulator,
+      // 2026-08-02: probe saw no callback after 15s). Every send() awaits
+      // this, so without a wall-clock race one geolocation stall froze the
+      // assistant for the rest of the session (busy stuck true = every
+      // later message silently dropped). Race a hard 4s timer; a late
+      // success still lands in geoRef for the next message.
+      let settled = false;
+      const settle = (v: { lat: number; lng: number } | null) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(v);
+      };
+      const timer = setTimeout(() => {
+        geoSlowRef.current = true;
+        settle(null);
+      }, 4000);
+      request(settle);
     });
+  }, []);
+
+  // A failure with the sheet closed (floating-mic flow) used to render only
+  // inside the invisible thread — the user spoke, watched their words appear,
+  // then NOTHING. Surface it as a caption too so every failure is visible.
+  const failVisibly = useCallback((message: string) => {
+    dispatch({ type: 'fail', error: message });
+    if (!sheetOpenRef.current) setCaptionReply({ id: crypto.randomUUID(), text: message });
   }, []);
 
   const send = useCallback(async (content: string) => {
@@ -242,14 +282,14 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         catch { /* private mode / quota — persistence just doesn't survive refresh */ }
       }
       if (error || data?.error) {
-        dispatch({ type: 'fail', error: data?.error ?? "I couldn't reach the assistant right now." });
+        failVisibly(data?.error ?? "I couldn't reach the assistant right now.");
         return;
       }
       // Malformed response: no reply text and no error to show — surface a
       // failure instead of dispatching an empty-content assistant message
       // and leaving busy stuck (or silently doing nothing).
       if (!data || (data.reply == null && data.error == null)) {
-        dispatch({ type: 'fail', error: "I couldn't reach the assistant right now." });
+        failVisibly("I couldn't reach the assistant right now.");
         return;
       }
       if (data.resultsPanel && typeof data.resultsPanel === 'object' && 'kind' in data.resultsPanel) {
@@ -272,9 +312,9 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         await runAction(replyId, action);
       }
     } catch {
-      dispatch({ type: 'fail', error: "I couldn't reach the assistant right now." });
+      failVisibly("I couldn't reach the assistant right now.");
     }
-  }, [state.busy, state.messages, profile, speakNow, runAction, setSheetOpen, getFreshGeo]);
+  }, [state.busy, state.messages, profile, speakNow, runAction, setSheetOpen, getFreshGeo, failVisibly]);
 
   const toggleMic = useCallback(() => {
     const speech = speechRef.current;

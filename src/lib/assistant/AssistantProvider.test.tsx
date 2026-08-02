@@ -66,6 +66,28 @@ describe('AssistantProvider', () => {
     expect(screen.getByTestId('caption')).toHaveTextContent('spoken answer');
   });
 
+  it('send() proceeds even when geolocation never calls back (WKWebView hang)', async () => {
+    // WKWebView with no location plist key invokes NEITHER geolocation
+    // callback (its PositionOptions timeout never starts). One such stall
+    // used to freeze the assistant for the whole session: send() awaited
+    // the fix forever, busy stayed true, every later message was dropped.
+    vi.useFakeTimers();
+    Object.defineProperty(navigator, 'geolocation', {
+      configurable: true,
+      value: { getCurrentPosition: vi.fn() }, // never calls back
+    });
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'made it', actions: [] }, error: null } as never);
+    try {
+      renderProbe();
+      await act(async () => { screen.getByText('go').click(); });
+      await act(async () => { await vi.advanceTimersByTimeAsync(4000); });
+      expect(screen.getByTestId('count')).toHaveTextContent('2');
+    } finally {
+      delete (navigator as { geolocation?: unknown }).geolocation;
+      vi.useRealTimers();
+    }
+  });
+
   it('a confirm-gated action auto-opens the sheet', async () => {
     vi.mocked(supabase.functions.invoke).mockResolvedValue({
       data: { reply: 'ready to send', actions: [{ tool: 'send_sms', args: {}, confirm: true }] },

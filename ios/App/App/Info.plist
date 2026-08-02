@@ -34,6 +34,8 @@
 	<string>GleeWorld shows your iPhone Calendar events alongside your GleeWorld schedule.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>GleeWorld uses the camera for video meetings and profile photos.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>GleeWorld uses your location only when you ask the Assistant to find places nearby.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>GleeWorld uses the microphone for the instrument tuner and music practice tools.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
