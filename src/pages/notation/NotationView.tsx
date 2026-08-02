@@ -11,6 +11,7 @@ const { Articulation, Tuplet, Curve } = VexFlowExt as any;
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { toVexKey, toVexDuration } from '@/lib/notation/toVexflow';
+import { packRows } from './packRows';
 
 const VEX_CLEF = { treble: 'treble', bass: 'bass', alto: 'alto' } as const;
 
@@ -43,9 +44,15 @@ const SELECTED_COLOR = '#ea580c'; // orange-600
 export function NotationView({
   score, width, onNoteClick, selectedIndex,
   editingLyric, lyricValue, onLyricChange, onLyricAdvance, onLyricExit,
-  onToggleSystemBreak,
+  onToggleSystemBreak, targetPerRow,
 }: {
   score: EditorScore; width?: number; onNoteClick?: (index: number) => void; selectedIndex?: number | null;
+  /** Prefer full rows of this many measures (phones still cap at 2): the fit
+   *  check drops its per-measure breathing room so rows fill to the target,
+   *  falling back to fewer only when the measures' true minimum widths cannot
+   *  fit. Sight-reading exercises pass 4; the editor leaves it unset and keeps
+   *  the looser content-aware wrap. */
+  targetPerRow?: number;
   // Inline lyric editing: when on, a text cursor sits under the selected note (no dialog).
   editingLyric?: boolean; lyricValue?: string;
   onLyricChange?: (v: string) => void; onLyricAdvance?: () => void; onLyricExit?: () => void;
@@ -102,7 +109,9 @@ export function NotationView({
     // note spacing — no more cramped busy bars next to over-stretched
     // sparse ones.
     const isPhone = typeof window !== 'undefined' && window.innerWidth < PHONE_MAX_WIDTH;
-    const maxPerRow = isPhone ? MAX_PER_ROW_PHONE : MAX_PER_ROW_DESKTOP;
+    const maxPerRow = isPhone
+      ? (targetPerRow != null ? Math.min(MAX_PER_ROW_PHONE, targetPerRow) : MAX_PER_ROW_PHONE)
+      : (targetPerRow ?? MAX_PER_ROW_DESKTOP);
     // SYSTEM_H is the vertical stride between systems (staff to staff). Lower
     // = tighter score, more visible at once — the previous 130 was leaving
     // white space between systems bigger than the staves themselves.
@@ -174,33 +183,16 @@ export function NotationView({
       return { m, notes, voice, beams, tuplets, minW };
     });
 
-    // Row-packing pass. Greedily fill each system with as many measures
-    // as their combined minW allows, using maxPerRow as a readability cap.
-    // Rows always contain at least one measure — a bar wider than
-    // availableW just overflows its own row rather than being dropped.
-    // User-authored breaks (score.systemBreaks) take precedence over the
-    // width heuristic: an entry `k` forces a new row starting at measure
-    // k+1 regardless of remaining width.
-    const forcedBreaks = new Set(score.systemBreaks ?? []);
-    const rowsPacked: { start: number; end: number }[] = [];
-    {
-      let start = 0;
-      let acc = 0;
-      for (let i = 0; i < built.length; i++) {
-        const w = (built[i].minW || 40) + 20;
-        const inRow = i - start;
-        const wouldOverflow = inRow > 0 && acc + w > availableW;
-        const atCap = inRow >= maxPerRow;
-        const userBreak = inRow > 0 && forcedBreaks.has(i - 1);
-        if (wouldOverflow || atCap || userBreak) {
-          rowsPacked.push({ start, end: i });
-          start = i;
-          acc = 0;
-        }
-        acc += w;
-      }
-      if (built.length > 0) rowsPacked.push({ start, end: built.length });
-    }
+    // Row-packing pass — see packRows. With targetPerRow set, the per-measure
+    // breathing room drops to 0 so rows fill to the target whenever the
+    // measures' minimum widths genuinely fit.
+    const rowsPacked = packRows({
+      widths: built.map((b) => b.minW),
+      availableW,
+      maxPerRow,
+      pad: targetPerRow != null ? 0 : 20,
+      forcedBreaks: new Set(score.systemBreaks ?? []),
+    });
     const rows = Math.max(1, rowsPacked.length);
     const logicalHeight = TOP + rows * SYSTEM_H + BOTTOM;
     renderer.resize(cssWidth, Math.ceil(logicalHeight * SCALE));
@@ -299,7 +291,7 @@ export function NotationView({
     }
     setLyricPos(selPos);
     setBarTargets(barTargetsBuf);
-  }, [score, width, measuredW, selectedIndex]);
+  }, [score, width, measuredW, selectedIndex, targetPerRow]);
 
   const forcedBreakSet = new Set(score.systemBreaks ?? []);
   return (
