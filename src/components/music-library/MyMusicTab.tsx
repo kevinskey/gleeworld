@@ -193,7 +193,7 @@ export function MyMusicTab() {
                   try { await removeScore(s); toast.success('Removed'); }
                   catch (e) { toast.error(e instanceof Error ? e.message : 'Remove failed'); }
                 }}
-                className="absolute top-3 right-3 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+                className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
                 aria-label={`Remove ${s.title}`}
               >
                 <Trash2 className="w-4 h-4" />

@@ -1637,7 +1637,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleSave}
                 disabled={isSaving || !musicId}
-                className="h-6 px-1 text-xs sm:h-8 sm:px-2 sm:text-xs"
+                className="h-8 px-2 text-xs sm:h-9 sm:px-2.5 sm:text-xs"
               >
                 {isSaving ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -1653,7 +1653,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant={activeTool === "select" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("select")}
-                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
                 <MousePointer className="h-3 w-3" />
               </Button>
@@ -1661,7 +1661,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant={activeTool === "draw" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("draw")}
-                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
                 <Pencil className="h-3 w-3" />
               </Button>
@@ -1669,7 +1669,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant={activeTool === "erase" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("erase")}
-                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
                 <Eraser className="h-3 w-3" />
               </Button>
@@ -1729,7 +1729,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-6 w-6 p-0 sm:h-8 sm:w-8 rounded-full border-2"
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-9 rounded-full border-2"
                   style={{ backgroundColor: brushColor, borderColor: 'hsl(var(--border))' }}
                 >
                   <span className="sr-only">Select color</span>
@@ -1775,7 +1775,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleZoomOut}
                 disabled={zoomLevel <= 0.5}
-                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                 title="Zoom out"
               >
                 <ZoomOut className="h-3 w-3" />
@@ -1784,7 +1784,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant="outline"
                 size="sm"
                 onClick={handleResetZoom}
-                className="h-6 px-1 text-xs sm:h-8 sm:px-2 sm:text-xs"
+                className="h-8 px-2 text-xs sm:h-9 sm:px-2.5 sm:text-xs"
                 title="Reset zoom"
               >
                 {Math.round(zoomLevel * 100)}%
@@ -1794,7 +1794,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleZoomIn}
                 disabled={zoomLevel >= 3}
-                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                 title="Zoom in"
               >
                 <ZoomIn className="h-3 w-3" />
@@ -1826,7 +1826,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleUndo}
                 disabled={paths.length === 0}
-                className="h-6 w-6 p-0 sm:h-9 sm:w-9"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
                 <Undo className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
@@ -1835,7 +1835,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleClear}
                 disabled={paths.length === 0}
-                className="h-6 w-6 p-0 sm:h-9 sm:w-9"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
@@ -1892,10 +1892,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={handleScaleZoomOut}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleZoomOut(); }}
                   disabled={scale <= 0.5}
-                  className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
+                  className="h-9 w-9 p-0 touch-manipulation rounded-full"
                   aria-label="Zoom out"
                 >
-                  <ZoomOut className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
+                  <ZoomOut className="h-5 w-5" />
                 </Button>
                 <button
                   type="button"
@@ -1913,10 +1913,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={handleScaleZoomIn}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleZoomIn(); }}
                   disabled={scale >= 3}
-                  className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
+                  className="h-9 w-9 p-0 touch-manipulation rounded-full"
                   aria-label="Zoom in"
                 >
-                  <ZoomIn className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
+                  <ZoomIn className="h-5 w-5" />
                 </Button>
 
                 <div className="w-px h-4 bg-border mx-0.5" />
@@ -1931,9 +1931,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     onClick={() => setShowAudioCompanion(true)}
                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowAudioCompanion(true); }}
                     aria-label="Listen along with audio"
-                    className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
+                    className="h-9 w-9 p-0 touch-manipulation rounded-full"
                   >
-                    <Music className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
+                    <Music className="h-5 w-5" />
                   </Button>
                 )}
                 
@@ -1944,9 +1944,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={() => setShowPiano(!showPiano)}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowPiano(!showPiano); }}
                   aria-label={showPiano ? "Hide piano" : "Show piano"}
-                  className={`h-7 w-7 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-[var(--tint)] text-[var(--tint-contrast)]' : ''}`}
+                  className={`h-9 w-9 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-[var(--tint)] text-[var(--tint-contrast)]' : ''}`}
                 >
-                  <Piano className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
+                  <Piano className="h-5 w-5" />
                 </Button>
                 
                 {/* Annotate Button */}
@@ -1956,9 +1956,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={() => { setError(null); setAnnotationMode(true); }}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setError(null); setAnnotationMode(true); }}
                   aria-label="Enable annotations"
-                  className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
+                  className="h-9 w-9 p-0 touch-manipulation rounded-full"
                 >
-                  <Palette className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
+                  <Palette className="h-5 w-5" />
                 </Button>
 
                 {/* Extra toolbar actions (e.g. Crop/Close on mobile) */}
@@ -2162,7 +2162,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-6 w-6 rounded-full touch-manipulation" 
+                  className="h-9 w-9 rounded-full touch-manipulation" 
                   onClick={prevPage}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); prevPage(); }}
                   disabled={isLoading || currentPage <= 1}
@@ -2175,7 +2175,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-6 w-6 rounded-full touch-manipulation" 
+                  className="h-9 w-9 rounded-full touch-manipulation" 
                   onClick={nextPage}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); nextPage(); }}
                   disabled={isLoading || currentPage >= (totalPages || (pdf?.numPages ?? 0) || 1)}

@@ -3,7 +3,8 @@
 // so the empty state routes to the Music Library.
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ListMusic } from 'lucide-react';
+import { ListMusic, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -57,6 +58,28 @@ export default function PartTracksPage() {
     }
     setLoading(false);
   }, []);
+
+  // Hard delete: gw_parttrack_scores cascades to parts/rights/jobs/renders +
+  // player tables, so the whole project disappears in one row delete. RLS
+  // allows it for tenant admins only; PostgREST returns 200 with 0 rows when
+  // blocked, so ALWAYS .select() and check length instead of trusting the
+  // status. Rendered stem FILES in storage are left behind (no client-side
+  // storage delete against the private bucket) — acceptable orphan for now.
+  const deleteProject = useCallback(async (row: Row) => {
+    const title = row.gw_sheet_music?.title ?? 'this score';
+    if (!confirm(`Delete part tracks for "${title}"? This removes the generated tracks for everyone in your organization. The score itself stays in the Music Library.`)) return;
+    const { data, error } = await supabase
+      .from('gw_parttrack_scores')
+      .delete()
+      .eq('id', row.id)
+      .select('id');
+    if (error || !data?.length) {
+      toast.error('Could not delete — only admins can delete part tracks.');
+      return;
+    }
+    toast.success(`Deleted part tracks for "${title}".`);
+    void refresh();
+  }, [refresh]);
 
   const myAssignment = useCallback((scoreId: string): PartTrackAssignment | null => {
     return assignments.find((a) =>
@@ -117,6 +140,21 @@ export default function PartTracksPage() {
                       ) : null;
                     })()}
                     <Badge variant={status.variant} className="text-xs">{status.label}</Badge>
+                    {/* Always visible (no hover reveal — this list is used on
+                        touch devices); stopPropagation so the tap doesn't
+                        also open the project dialog. RLS quietly no-ops for
+                        non-admins, and deleteProject surfaces that as an
+                        error toast rather than pretending it worked. */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      aria-label={`Delete part tracks for ${row.gw_sheet_music?.title ?? 'this score'}`}
+                      title="Delete part tracks"
+                      onClick={(e) => { e.stopPropagation(); void deleteProject(row); }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

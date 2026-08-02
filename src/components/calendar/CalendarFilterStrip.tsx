@@ -268,7 +268,7 @@ export const CalendarFilterStrip = ({
   return (
     <div className="flex items-center gap-2 sm:gap-3 min-w-0 max-w-full overflow-hidden flex-wrap">
       {/* Calendar Toggles as Clean Chips */}
-      <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-0.5 flex-1 min-w-0">
+      <div className="flex items-center gap-1.5 overflow-x-auto touch-pan-x overscroll-x-contain scrollbar-hide py-0.5 flex-1 min-w-0">
         {calendars.map(calendar => {
           const isSelected = selectedCalendarIds.includes(calendar.id);
           return (

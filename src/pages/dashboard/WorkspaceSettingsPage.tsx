@@ -83,7 +83,7 @@ export default function WorkspaceSettingsPage() {
             The Add-ons tab was removed 2026-07-28 — features are now bundled
             by plan tier, not toggled à la carte. A legacy ?tab=modules query
             param transparently redirects to `plan` below. */}
-        <TabsList className="flex md:grid md:grid-cols-7 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto md:overflow-visible scrollbar-hide">
+        <TabsList className="flex md:grid md:grid-cols-7 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto touch-pan-x overscroll-x-contain md:overflow-visible scrollbar-hide">
           <TabsTrigger value="plan" className="shrink-0"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
           <TabsTrigger value="navigation" className="shrink-0"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>
           <TabsTrigger value="branding" className="shrink-0"><Palette className="w-3.5 h-3.5 mr-1.5" />Branding</TabsTrigger>
@@ -632,7 +632,7 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
 
           <div className="mb-3">
             <div className="text-sm font-medium mb-2">Editing view for:</div>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+            <div className="flex gap-2 overflow-x-auto touch-pan-x overscroll-x-contain scrollbar-hide pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
               {HIDEABLE_NAV_ROLES.map((r) => (
                 <button
                   key={r.value}
@@ -654,7 +654,7 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
 
           <div className="mb-4 rounded-lg bg-slate-50 border px-3 py-2">
             <div className="text-xs text-muted-foreground mb-2">Preview my sidebar as:</div>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+            <div className="flex gap-2 overflow-x-auto touch-pan-x overscroll-x-contain scrollbar-hide pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
               <button
                 type="button"
                 data-compact
