@@ -15,7 +15,11 @@ const corsHeaders = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-const MAX_TOOL_ITERATIONS = 6;
+// Model rounds per turn. Providers that call tools one-at-a-time burn a
+// round per action, so 6 exhausted on any compound request ("make a note,
+// add three tasks, and schedule it") — Kevin hit the wall 2026-08-02.
+// Cost stays bounded: each round is one capped (max_tokens 1000) call.
+const MAX_TOOL_ITERATIONS = 12;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -248,7 +252,19 @@ serve(async (req) => {
         messages.push({ role: 'tool', content: result, tool_call_id: tc.id });
       }
     }
-    const timeoutReply = 'That took too many steps — try breaking the request into smaller pieces.';
+    // Tool budget exhausted. Don't scold-and-discard: every action queued so
+    // far still runs on the client, so ask the model — WITHOUT tools — to
+    // tell the user what got done and what's left. Static fallback only if
+    // even that plain completion fails.
+    let timeoutReply = "That was a big request — I finished part of it. Ask me to continue and I'll pick up the rest.";
+    try {
+      messages.push({
+        role: 'user',
+        content: 'You have used your tool budget for this turn. Do not call any more tools. In one or two sentences, tell the user what you completed and what remains, and suggest they say "continue" to finish the rest.',
+      });
+      const { message } = await callModel(buildChatRequest(messages, [], model), apiKey, apiUrl);
+      if (message.content?.trim()) timeoutReply = message.content;
+    } catch { /* keep the static fallback */ }
     await persistAssistantReply(timeoutReply);
     return json({ reply: timeoutReply, actions, resultsPanel, thread_id: threadId });
   } catch (e) {
