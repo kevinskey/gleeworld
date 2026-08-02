@@ -937,7 +937,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           input was simply `hidden sm:block`, which left mobile users with
           no path to search at all. The mobile button opens a focused
           search prompt (browser-native via <dialog>-style fallback). */}
-      <form onSubmit={onSearch} className="hidden sm:block w-full max-w-md">
+      <form onSubmit={onSearch} className="hidden sm:block w-full max-w-md min-w-0">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -1020,7 +1020,11 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div className="hidden md:block text-left leading-tight">
+            {/* lg+, not md+ — at 768-1023 (iPad portrait) the sidebar +
+                search + action buttons already fill the row; this 176px
+                text block was the piece that pushed the bell/avatar into
+                the shell's overflow-hidden crop. */}
+            <div className="hidden lg:block text-left leading-tight">
               <div className="text-base font-semibold truncate max-w-[160px]">{displayName}</div>
               <div className="text-xs text-muted-foreground truncate max-w-[160px]">{subRole}</div>
             </div>
@@ -1172,19 +1176,20 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               sticky topbar — pages that want more (CommandCenter, Viewer
               landing) add their own larger top padding on top of this.
               The bottom padding reserves room for the docked MobileBottomNav
-              bar (phones only; sm+ has no bottom nav) so content ends ABOVE
-              it and never scrolls under. Bar = 56px tall + the bottom
+              bar (below md; md+ has the sidebar instead) so content ends
+              ABOVE it and never scrolls under. Bar = 56px tall + the bottom
               safe-area inset, plus a small gap. */}
           <main className={cn(
             "flex-1 min-w-0 min-h-0 overflow-y-auto overflow-x-hidden",
-            isTourManager ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0",
+            isTourManager ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0",
             // Calendar and Tour Manager manage their own compact header
             // spacing — no extra breathing room below the topbar.
             isCalendar || isTourManager ? "pt-0" : "pt-3 sm:pt-4",
           )}>{children}</main>
         </div>
-        {/* Phone-only persistent bottom nav. Self-gates via useIsPhone()
-            so it returns null on tablet/desktop — safe to mount globally. */}
+        {/* Persistent bottom nav below md. Self-gates via useIsCompactNav()
+            so it returns null once the sidebar exists — safe to mount
+            globally. */}
         <MobileBottomNav />
         {/* Mounts only when ?tour=admin is in the URL; otherwise a no-op. */}
         <ProductTour />

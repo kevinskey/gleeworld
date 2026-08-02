@@ -95,18 +95,18 @@ export default function PeriodView({
           </TabsList>
         </Tabs>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Previous period" onClick={() => onNavigate(type, shiftKey(dateKey, type, -1))}>
+          <Button variant="ghost" size="sm" className="h-9 w-9 p-0" aria-label="Previous period" onClick={() => onNavigate(type, shiftKey(dateKey, type, -1))}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => onNavigate(type, todayKey)} disabled={dateKey === todayKey}>
             Today
           </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Next period" onClick={() => onNavigate(type, shiftKey(dateKey, type, 1))}>
+          <Button variant="ghost" size="sm" className="h-9 w-9 p-0" aria-label="Next period" onClick={() => onNavigate(type, shiftKey(dateKey, type, 1))}>
             <ChevronRight className="h-4 w-4" />
           </Button>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Jump to date">
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0" aria-label="Jump to date">
                 <CalendarDays className="h-4 w-4" />
               </Button>
             </PopoverTrigger>

@@ -92,7 +92,11 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
     content: note.content,
     editorProps: {
       attributes: {
-        class: 'planner-editor prose prose-base max-w-none focus:outline-none min-h-[40vh] text-foreground',
+        // max-w-none frees the prose cap on phones/tablets where the pane
+        // is already narrow; lg+ restores a readable measure — without it,
+        // iPad-landscape widths (1024-1279, before the xl context panel
+        // mounts) produced 700-800px text lines.
+        class: 'planner-editor prose prose-base max-w-none lg:max-w-[70ch] focus:outline-none min-h-[40vh] text-foreground',
         'aria-label': 'Note body',
       },
     },
@@ -248,7 +252,7 @@ function ToolbarButton({ onClick, active, label, children }: {
       type="button"
       variant={active ? 'secondary' : 'ghost'}
       size="sm"
-      className="h-8 w-8 p-0"
+      className="h-9 w-9 p-0"
       aria-label={label}
       aria-pressed={active}
       onClick={onClick}

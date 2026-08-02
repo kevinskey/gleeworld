@@ -406,18 +406,18 @@ export const TourManagerDashboard = ({
         <main className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Bottom padding lives inside the scroll container so content can
               clear the fixed section bar + global nav pill on small screens. */}
-          <div ref={mainContentRef} className="flex-1 overflow-auto p-4 pb-36 sm:pb-20 lg:pb-4">
+          <div ref={mainContentRef} className="flex-1 overflow-auto p-4 pb-36 md:pb-20 lg:pb-4">
             {renderContent()}
           </div>
         </main>
       </div>
 
-      {/* Tour section switcher for <lg. On phones (<sm) it rides above the
-          global MobileBottomNav pill (bottom 16px + 48px pill + gap); on
-          tablets the pill doesn't render, so the bar sits flush at the
-          bottom. z-20 keeps it under the pill (z-30), never burying the
-          platform nav. */}
-      <nav className="fixed bottom-[76px] sm:bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-20" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      {/* Tour section switcher for <lg. Below md it rides above the global
+          MobileBottomNav bar (which now renders whenever the sidebar is
+          hidden, i.e. <768); at md+ the bar doesn't render, so this sits
+          flush at the bottom. z-20 keeps it under the bar (z-30), never
+          burying the platform nav. */}
+      <nav className="fixed bottom-[76px] md:bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-20" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="overflow-x-auto scrollbar-hide overscroll-x-contain touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="flex items-center h-14 px-2 min-w-max">
             {navItems.map(item => <button key={item.value} onClick={() => handleSectionChange(item.value)} className={cn("flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-md transition-colors flex-shrink-0", activeSection === item.value ? "text-primary bg-primary/10" : "text-muted-foreground")}>

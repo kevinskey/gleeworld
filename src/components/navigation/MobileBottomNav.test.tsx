@@ -28,7 +28,7 @@ const renderNav = (path = '/dashboard') =>
   );
 
 beforeEach(() => {
-  // useIsPhone reads window.innerWidth (< 640 = phone) and matchMedia.
+  // useIsCompactNav reads window.innerWidth (< 768 = compact nav) and matchMedia.
   window.innerWidth = 390;
   window.matchMedia = ((query: string) => ({
     matches: true, media: query, onchange: null,

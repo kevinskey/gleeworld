@@ -57,7 +57,7 @@ export default function AddEventDialog({ date }: { date: string }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline" className="h-7 gap-1 text-xs">
+        <Button size="sm" variant="outline" className="h-8 gap-1 text-xs">
           <CalendarPlus className="h-3.5 w-3.5" /> Event
         </Button>
       </DialogTrigger>

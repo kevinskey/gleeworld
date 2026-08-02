@@ -106,19 +106,24 @@ export default function PlannerPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-none px-2 sm:px-4">
-      {/* Desktop sidebar. lg+ only — at md (iPad portrait) the dashboard nav
-          is already showing, and a second inline sidebar squeezed the actual
-          content into a sliver. Tablets use the Menu sheet like phones. */}
-      <aside className="sticky top-[var(--gw-header-h,64px)] hidden h-[calc(100vh-var(--gw-header-h,64px))] w-60 shrink-0 self-start overflow-y-auto border-r border-border lg:block">
+      {/* Desktop sidebar. xl+ only — the dashboard nav grows to lg:w-64 at
+          1024px, and the 12.9" iPad Pro's portrait viewport is exactly
+          1024px, so gating this at lg: put BOTH sidebars on that screen and
+          squeezed the content into a sliver. Tablets and narrow laptops use
+          the Menu sheet like phones. Sticky offset is 0 because the shell's
+          <main> is the scroll container (the topbar sits outside it);
+          height subtracts the 5rem md+ topbar so the rail bottom isn't
+          clipped. */}
+      <aside className="sticky top-0 hidden h-[calc(100dvh-5rem)] w-60 shrink-0 self-start overflow-y-auto border-r border-border xl:block">
         {sidebar}
       </aside>
 
       <div className="min-w-0 flex-1 px-4 py-4 lg:px-6">
         {/* Mobile / tablet / narrow-desktop top bar — Menu opens the sidebar
             popover; the primary "New note" action sits alongside so it's
-            reachable without going through Menu. Hidden at lg+ where the
+            reachable without going through Menu. Hidden at xl+ where the
             persistent sidebar carries both. */}
-        <div className="mb-3 flex items-center gap-2 lg:hidden">
+        <div className="mb-3 flex items-center gap-2 xl:hidden">
           <Popover open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5" aria-label="Open planner menu">
@@ -272,8 +277,10 @@ function NoteView({ noteId, onOpenNote, onBack }: {
         </div>
       </div>
 
-      {/* Inline context panel on wide screens */}
-      <aside className="sticky top-[calc(var(--gw-header-h,64px)+1rem)] hidden w-56 shrink-0 self-start xl:block">
+      {/* Inline context panel on wide screens. top-4, not a header offset —
+          the shell's <main> is the scroll container and the topbar sits
+          outside it. */}
+      <aside className="sticky top-4 hidden w-56 shrink-0 self-start xl:block">
         <ContextPanel note={note} onOpenNote={onOpenNote} />
       </aside>
     </div>
