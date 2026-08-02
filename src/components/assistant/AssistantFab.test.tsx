@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
 import { AssistantFab } from './AssistantFab';
 
@@ -12,18 +13,25 @@ vi.mock('@/hooks/useUserRole', () => ({
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { functions: { invoke: vi.fn() } },
 }));
+// AssistantProvider → useAssistantVoice → useBrandingSettings, which needs
+// getTenantSlug + a queryable supabase client; stub the hook instead.
+vi.mock('@/hooks/useBrandingSettings', () => ({
+  useBrandingSettings: () => ({ settings: {}, isLoading: false }),
+}));
 
 const renderFab = (path = '/dashboard/calendar') =>
   render(
     <MemoryRouter initialEntries={[path]}>
-      <AssistantProvider><AssistantFab /></AssistantProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <AssistantProvider><AssistantFab /></AssistantProvider>
+      </QueryClientProvider>
     </MemoryRouter>,
   );
 
 beforeEach(() => {
   localStorage.clear();
   sessionStorage.clear();
-  // jsdom has no matchMedia; useIsPhone needs it. matches:false = desktop.
+  // jsdom has no matchMedia; useIsCompactNav needs it. matches:false = desktop.
   window.matchMedia = window.matchMedia ?? (() => ({}) as MediaQueryList);
   vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
     matches: false, media: query, onchange: null,

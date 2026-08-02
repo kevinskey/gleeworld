@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AssistantProvider, useAssistant } from './AssistantProvider';
 import { saveThread } from './threadStorage';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +13,11 @@ vi.mock('@/hooks/useUserRole', () => ({
 }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { functions: { invoke: vi.fn() } },
+}));
+// AssistantProvider → useAssistantVoice → useBrandingSettings, which needs
+// getTenantSlug + a queryable supabase client; stub the hook instead.
+vi.mock('@/hooks/useBrandingSettings', () => ({
+  useBrandingSettings: () => ({ settings: {}, isLoading: false }),
 }));
 
 const Probe = () => {
@@ -29,7 +35,9 @@ const Probe = () => {
 const renderProbe = () =>
   render(
     <MemoryRouter>
-      <AssistantProvider><Probe /></AssistantProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <AssistantProvider><Probe /></AssistantProvider>
+      </QueryClientProvider>
     </MemoryRouter>,
   );
 

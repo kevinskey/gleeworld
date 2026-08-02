@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ChevronUp, Mic, Square, X } from 'lucide-react';
-import { useIsPhone } from '@/hooks/use-mobile';
+import { useIsCompactNav } from '@/hooks/use-mobile';
 import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
 import { sectionKeyFromPath, isFabCollapsed, setFabCollapsed } from '@/lib/assistant/fabPrefs';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,9 @@ const CAPTION_MS = 6000;
 export const AssistantFab = () => {
   const assistant = useAssistantOptional();
   const { pathname } = useLocation();
-  const isPhone = useIsPhone();
+  // Tracks the docked bottom tab bar's own <768 gate so the FAB floats
+  // above the bar exactly when the bar exists.
+  const isCompactNav = useIsCompactNav();
   const section = sectionKeyFromPath(pathname);
   const [collapsed, setCollapsed] = useState(() => isFabCollapsed(section));
   // Re-read the pref when the section changes (collapse is per-section).
@@ -46,7 +48,7 @@ export const AssistantFab = () => {
     /^\/studio\/sessions\/[^/]+/.test(pathname);
   const bottom = isImmersive
     ? 'calc(env(safe-area-inset-bottom, 0px) + 12px)'
-    : isPhone
+    : isCompactNav
       ? 'calc(env(safe-area-inset-bottom, 0px) + 68px)'
       : '1.25rem';
 

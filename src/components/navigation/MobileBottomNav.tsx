@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { useIsPhone } from '@/hooks/use-mobile';
+import { useIsCompactNav } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
 import { isFacultyProfile } from '@/lib/roles';
@@ -20,11 +20,14 @@ const CORE_TAB_KEYS = new Set(['home', 'messages', 'schedule']);
 export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   // Only the cheap layout check runs on every mount, including desktop.
   // All data hooks (useUserRole, useTenantModules) live in PhoneTabBar
-  // below and only mount — and only then fetch — once we know we're on
-  // a phone, so desktop never pays for a duplicate profile/module fetch.
-  const isPhone = useIsPhone();
+  // below and only mount — and only then fetch — once we know we're
+  // below md, so desktop never pays for a duplicate profile/module fetch.
+  // Gate is <768 (matching the sidebar's `md:` gate), not <640: the
+  // 640-767 band (iPad mini portrait) has no sidebar, so the tab bar must
+  // carry navigation there too.
+  const isCompactNav = useIsCompactNav();
 
-  if (!isPhone) return null;
+  if (!isCompactNav) return null;
   if (typeof document === 'undefined') return null;
 
   return <PhoneTabBar className={className} />;

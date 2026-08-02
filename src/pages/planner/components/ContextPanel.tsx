@@ -137,7 +137,7 @@ export default function ContextPanel({ note, onOpenNote }: {
                 v{r.version} · {format(new Date(r.created_at), 'MMM d, h:mm a')}
               </span>
               <Button
-                variant="ghost" size="sm" className="h-6 px-2 text-xs"
+                variant="ghost" size="sm" className="h-8 px-2.5 text-xs"
                 onClick={() => restore.mutate(r.id)}
               >
                 Restore

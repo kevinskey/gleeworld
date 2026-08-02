@@ -2072,12 +2072,14 @@ const App = () => {
                    } 
                    />
                  <Route
-                   path="/notifications/send" 
+                   path="/notifications/send"
                    element={
                      <ProtectedRoute>
-                       <SendNotificationPage />
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><SendNotificationPage /></DashboardShell>
+                       </UniversalLayout>
                      </ProtectedRoute>
-                   } 
+                   }
                   />
                  <Route
                    path="/announcements" 
@@ -2956,13 +2958,15 @@ const App = () => {
                                      </PublicRoute>
                                    } 
                                  />
-                                 <Route 
-                                   path="/first-year" 
+                                 <Route
+                                   path="/first-year"
                                    element={
                                      <ProtectedRoute>
-                                       <FirstYearHub />
+                                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                         <DashboardShell><FirstYearHub /></DashboardShell>
+                                       </UniversalLayout>
                                      </ProtectedRoute>
-                                   } 
+                                   }
                                  />
                                  {/* /console/first-year route removed with First Year Console module. */}
 

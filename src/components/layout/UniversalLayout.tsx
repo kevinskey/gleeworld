@@ -111,11 +111,11 @@ export const UniversalLayout = ({
       {showHeader && (shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
 
       {/* Main Content - padded by header height only when header is shown.
-          Bottom padding reserves room for the docked MobileBottomNav bar on
-          phones (56px + safe-area inset) so content ends above it; sm+ has no
-          bottom nav and only clears the safe-area inset. Kept in the class
-          (not inline) so the phone-only bar clearance can vary by breakpoint. */}
-      <main className={`w-full flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-[env(safe-area-inset-bottom,0px)] ${showHeader ? 'pt-[calc(var(--gw-header-h,4rem)+var(--gw-radio-bar-height,0px))]' : ''} text-foreground ${className}`} style={{
+          Bottom padding reserves room for the docked MobileBottomNav bar
+          below md (56px + safe-area inset) so content ends above it; md+ has
+          no bottom nav and only clears the safe-area inset. Kept in the class
+          (not inline) so the bar clearance can vary by breakpoint. */}
+      <main className={`w-full flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-[env(safe-area-inset-bottom,0px)] ${showHeader ? 'pt-[calc(var(--gw-header-h,4rem)+var(--gw-radio-bar-height,0px))]' : ''} text-foreground ${className}`} style={{
       background: shellBackground,
       paddingLeft: 'env(safe-area-inset-left)',
       paddingRight: 'env(safe-area-inset-right)'

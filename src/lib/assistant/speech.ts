@@ -1,5 +1,5 @@
 import { GWSpeech, isNativeSpeechAvailable, type GWSpeechPluginShape } from '@/plugins/gwSpeech';
-import type { PluginListenerHandle } from '@capacitor/core';
+import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 
 export interface SpeechInputSource {
   available: boolean;
@@ -136,6 +136,49 @@ export function setMuted(muted: boolean, storage?: Storage): void {
   else s?.removeItem(MUTE_KEY);
 }
 
+// ── Gesture-primed playback element ─────────────────────────────────────
+// Safari (iPad/iPhone, and macOS with strict auto-play settings) only lets
+// an <audio> element play programmatically if THAT element has already
+// played inside a user gesture. Assistant replies always start after an
+// async LLM + TTS round-trip — far outside any gesture window — so a fresh
+// `new Audio()` per reply rejects with NotAllowedError there, and the
+// speechSynthesis fallback is gesture-gated in Safari too: total silence.
+// Fix: prime ONE persistent element with a silent WAV inside the first
+// user gesture (unmuted — muted playback doesn't set WebKit's per-element
+// gesture flag), then reuse it for every reply by swapping .src.
+const SILENT_WAV =
+  'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=';
+let ttsEl: HTMLAudioElement | null = null;
+let ttsElUnlocked = false;
+
+function primeTtsElement(): void {
+  if (ttsElUnlocked) return;
+  try {
+    const el = ttsEl ?? (ttsEl = new Audio());
+    el.src = SILENT_WAV;
+    void el
+      .play()
+      .then(() => {
+        el.pause();
+        ttsElUnlocked = true;
+      })
+      .catch(() => {
+        /* not a real gesture frame — retry on the next one */
+      });
+  } catch {
+    /* retry on next gesture */
+  }
+}
+
+if (typeof document !== 'undefined') {
+  const events = ['pointerdown', 'touchstart', 'keydown', 'click'];
+  const handler = () => {
+    primeTtsElement();
+    if (ttsElUnlocked) events.forEach((ev) => document.removeEventListener(ev, handler, true));
+  };
+  events.forEach((ev) => document.addEventListener(ev, handler, true));
+}
+
 // Tracks the currently-playing ElevenLabs audio so a new speak() (or
 // stopSpeaking) can cut it off — same barge-in guarantee the browser
 // SpeechSynthesis path has via synth.cancel().
@@ -228,16 +271,24 @@ export function speak(
   try { browserSynth?.cancel(); } catch { /* nothing playing */ }
   stopElevenLabs();
 
-  // Decide provider. 'browser' sentinel forces the free path; a missing
-  // access token or supabaseUrl also forces the free path (unauth'd
-  // ElevenLabs calls would just 401 anyway).
+  // WKWebView's speechSynthesis is a zombie: it exists, fires onstart/onend,
+  // but has ZERO voices and produces NO sound (verified on iOS 18 sim,
+  // 2026-08-01). Never route audio through it in the native app — 'browser'
+  // voice falls through to the ElevenLabs default there, and failure
+  // fallbacks end silently instead of fake-speaking.
+  const synthIsDead = Capacitor.isNativePlatform();
+
+  // Decide provider. 'browser' sentinel forces the free path (except on
+  // native, where that path is silent); a missing access token or
+  // supabaseUrl also forces the free path (unauth'd ElevenLabs calls would
+  // just 401 anyway).
   const supabaseUrl = opts?.supabaseUrl
     ?? (typeof import.meta !== 'undefined' ? (import.meta as any).env?.VITE_SUPABASE_URL : undefined);
   const useEleven =
-    opts?.voiceId !== 'browser' && !!supabaseUrl && !!opts?.accessToken;
+    (opts?.voiceId !== 'browser' || synthIsDead) && !!supabaseUrl && !!opts?.accessToken;
 
   if (!useEleven) {
-    if (!browserSynth) { opts?.onEnd?.(); return; }
+    if (!browserSynth || synthIsDead) { opts?.onEnd?.(); return; }
     const UtterCtor = (globalThis as any).SpeechSynthesisUtterance;
     const utterance = UtterCtor ? new UtterCtor(text) : ({ text } as any);
     utterance.volume = volume;
@@ -268,7 +319,12 @@ export function speak(
       const blob = await res.blob();
       if (mySession !== speakSession) return;
       const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
+      // Reuse the gesture-primed element when we have one — a fresh
+      // Audio() here is exactly what Safari's auto-play policy rejects
+      // (see primeTtsElement above). Fall back to a new element where no
+      // gesture has happened yet (first page load, tests).
+      const audio = ttsElUnlocked && ttsEl ? ttsEl : new Audio();
+      audio.src = url;
       audio.volume = volume;
       elevenAudio = audio;
       audio.onplay = () => { if (mySession === speakSession) opts?.onStart?.(); };
@@ -283,8 +339,11 @@ export function speak(
     } catch {
       // Fall back to browser TTS on ANY ElevenLabs failure — a rate limit,
       // network hiccup, or bad voice_id must never leave the assistant mute.
+      // Except on native: WKWebView's synth fires events but produces no
+      // sound, so "falling back" there just fakes a spoken reply. End
+      // honestly instead.
       if (mySession !== speakSession) return;
-      if (!browserSynth) { opts?.onEnd?.(); return; }
+      if (!browserSynth || synthIsDead) { opts?.onEnd?.(); return; }
       const UtterCtor = (globalThis as any).SpeechSynthesisUtterance;
       const utterance = UtterCtor ? new UtterCtor(text) : ({ text } as any);
       utterance.volume = volume;
