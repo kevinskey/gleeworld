@@ -54,11 +54,12 @@ import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defa
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
 import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioTrack, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
 import {
-  formatTime, formatBarBeat, formatSamples, nextCounterMode, type CounterMode,
+  formatTime, formatBarBeat, formatBarBeatCompact, formatSamples, nextCounterMode, type CounterMode,
   preRollStartSeconds, postRollEndSeconds, punchTransition,
   nextMarker, prevMarker, sortMarkers, defaultMarkerName, shuttleStepSeconds,
 } from '@/lib/studio/transport';
 import { MidiClockSender } from '@/lib/studio/midiClock';
+import { useIsPhone } from '@/hooks/use-mobile';
 import { PianoRollPanel } from '@/pages/studio/pianoroll/PianoRollPanel';
 import { MidiClipPreview } from '@/pages/studio/pianoroll/MidiClipPreview';
 import type { EngineState } from '@/lib/studio/engine/engine';
@@ -2457,14 +2458,17 @@ function Editor({
          *  button is shrink-0 — squeezed cells must wrap to a second
          *  line (flex-wrap), never compress the buttons into slivers. */}
         <div className="flex flex-wrap items-center gap-0.5 sm:gap-1 min-w-0">
+        {/* Skip-to-start + rewind ride every breakpoint — hiding them on
+            phones left mobile with no way back to the top of the song
+            (Kevin's report). The compact phone LCD paid for the room. */}
         <button
           onClick={() => engineState.seek?.(0)}
-          className="hidden sm:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Go to beginning (Home)">
           <SkipBack className="w-4 h-4" />
         </button>
         <ScrubButton
-          className="hidden lg:flex"
+          className="flex"
           direction={-1}
           getPosition={posNow}
           max={session.length_seconds}
@@ -2473,7 +2477,7 @@ function Editor({
           title="Rewind — click to nudge, hold to scrub"
         />
         <ScrubButton
-          className="hidden lg:flex"
+          className="hidden sm:flex"
           direction={+1}
           getPosition={posNow}
           max={session.length_seconds}
@@ -4025,14 +4029,19 @@ function TransportCounter({
   lengthSeconds: number;
 }) {
   const pos = useTransportPosition(store);
+  // Phones get bar.beat ("7.3") — the padded BBB.beat.tick readout ate a
+  // third of the 390px transport row and crowded the rewind cluster out.
+  const isPhone = useIsPhone();
   return (
     <>
       <button
         onClick={onCycleMode}
-        className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1.5 hover:bg-zinc-800"
+        className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1 sm:gap-1.5 hover:bg-zinc-800"
         title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
         <span className="text-emerald-400 text-sm sm:text-lg">
-          {counterMode === 'bars' && formatBarBeat(pos, tempoBpm, numerator)}
+          {counterMode === 'bars' && (isPhone
+            ? formatBarBeatCompact(pos, tempoBpm, numerator)
+            : formatBarBeat(pos, tempoBpm, numerator))}
           {counterMode === 'time' && formatTime(pos)}
           {counterMode === 'samples' && formatSamples(pos, sampleRate)}
         </span>

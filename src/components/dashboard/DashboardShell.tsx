@@ -666,6 +666,23 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { navOrder } = useNavItemOrder();
   const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
 
+  // Collapsible sections — nine expanded groups made the drawer a long
+  // scroll to reach anything below Music. Headers toggle; the choice
+  // persists per device so a member who only uses Today + Music keeps
+  // a short drawer. Default expanded (current behavior) until tapped.
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem('gw_mobile_nav_collapsed') || '{}'); }
+    catch { return {}; }
+  });
+  const toggleSection = (label: string) => {
+    setCollapsedSections((prev) => {
+      const next = { ...prev, [label]: !prev[label] };
+      try { localStorage.setItem('gw_mobile_nav_collapsed', JSON.stringify(next)); }
+      catch { /* private mode — collapse just won't persist */ }
+      return next;
+    });
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* min-height includes the status-bar inset (same border-box rule
@@ -683,10 +700,21 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         {sections.map((section) => (
           section.items.length === 0 ? null : (
             <div key={section.label} className="rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5">
-              <div className="px-2.5 pb-1 pt-1.5 text-[12px] font-black tracking-[0.08em] text-foreground uppercase">
-                {section.label}
-              </div>
-              {section.items.map((item) => (
+              <button
+                type="button"
+                onClick={() => toggleSection(section.label)}
+                aria-expanded={!collapsedSections[section.label]}
+                className="flex w-full min-h-[40px] items-center justify-between px-2.5 py-1"
+              >
+                <span className="text-[12px] font-black tracking-[0.08em] text-foreground uppercase">
+                  {section.label}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 text-muted-foreground transition-transform ${collapsedSections[section.label] ? '-rotate-90' : ''}`}
+                  aria-hidden
+                />
+              </button>
+              {!collapsedSections[section.label] && section.items.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}

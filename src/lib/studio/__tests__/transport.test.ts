@@ -7,6 +7,7 @@ import {
   nextCounterMode,
   formatTime,
   formatBarBeat,
+  formatBarBeatCompact,
   formatSamples,
   barSeconds,
   preRollStartSeconds,
@@ -53,6 +54,18 @@ describe('formatBarBeat', () => {
   it('renders 960 PPQN ticks', () => {
     // 0.25s = half a beat = 480 ticks
     expect(formatBarBeat(0.25, 120, 4)).toBe('001.1.480');
+  });
+});
+
+describe('formatBarBeatCompact', () => {
+  it('drops padding and ticks: bar.beat only', () => {
+    expect(formatBarBeatCompact(0, 120, 4)).toBe('1.1');
+    expect(formatBarBeatCompact(2.5, 120, 4)).toBe('2.2');
+  });
+  it('tracks the full readout bar/beat at higher bars', () => {
+    // 13s at 120 BPM 4/4 = 26 beats = bar 7, beat 3
+    expect(formatBarBeatCompact(13, 120, 4)).toBe('7.3');
+    expect(formatBarBeat(13, 120, 4).startsWith('007.3')).toBe(true);
   });
 });
 

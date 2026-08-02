@@ -1834,7 +1834,10 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><GraduatesManagementModule /></DashboardShell>
+                        {/* isFullPage: this is a routed page — without it the
+                            module renders its embedded variant (no container
+                            padding) and the title sits flush at x=0 on phones. */}
+                        <DashboardShell><GraduatesManagementModule isFullPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
