@@ -16,9 +16,17 @@ interface UserProfile {
   verified?: boolean;
 }
 
+// gw_tenant_members.role for the CURRENT tenant (x-tenant-slug aware). A
+// provisioned tenant admin's profile row may still carry their old home role
+// (e.g. 'fan') — the membership row is what actually grants tenant rights,
+// so it must outrank the profile role (campbell-hs-chorus incident 2026-08-02).
+const MEMBER_SUPER_ROLES = ['super-admin', 'super_admin'];
+const MEMBER_ADMIN_ROLES = ['admin', 'director'];
+
 export const useUserRole = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [memberRole, setMemberRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasSecretaryAppRole, setHasSecretaryAppRole] = useState(false);
   const [hasLibrarianAppRole, setHasLibrarianAppRole] = useState(false);
@@ -28,6 +36,7 @@ export const useUserRole = () => {
     const fetchUserProfileAndRoles = async () => {
       if (!user) {
         setProfile(null);
+        setMemberRole(null);
         setHasSecretaryAppRole(false);
         setHasLibrarianAppRole(false);
         setHasWardrobeAppRole(false);
@@ -36,7 +45,7 @@ export const useUserRole = () => {
       }
 
       try {
-        const [profileResult, appRolesResult] = await Promise.all([
+        const [profileResult, appRolesResult, memberRoleResult] = await Promise.all([
           supabase
             .from('gw_profiles')
             .select('id, user_id, email, role, full_name, is_admin, is_super_admin, is_exec_board, verified')
@@ -46,7 +55,8 @@ export const useUserRole = () => {
             .from('app_roles')
             .select('role')
             .eq('user_id', user.id)
-            .eq('is_active', true)
+            .eq('is_active', true),
+          supabase.rpc('get_my_membership_role')
         ]);
 
         if (profileResult.error) {
@@ -55,6 +65,10 @@ export const useUserRole = () => {
         } else {
           setProfile(profileResult.data);
         }
+
+        // RPC missing (pre-migration deploy) or errored → just fall back to
+        // the profile role; never block role resolution on it.
+        setMemberRole(memberRoleResult.error ? null : (memberRoleResult.data as string | null));
 
         const appRoles = (appRolesResult.data || []).map((r: any) => r.role);
         setHasSecretaryAppRole(appRoles.includes('secretary'));
@@ -77,7 +91,9 @@ export const useUserRole = () => {
   const getEffectiveRole = (): string => {
     if (!profile) return USER_ROLES.VISITOR;
     if (profile.is_super_admin) return USER_ROLES.SUPER_ADMIN;
+    if (memberRole && MEMBER_SUPER_ROLES.includes(memberRole)) return USER_ROLES.SUPER_ADMIN;
     if (profile.is_admin) return USER_ROLES.ADMIN;
+    if (memberRole && MEMBER_ADMIN_ROLES.includes(memberRole)) return USER_ROLES.ADMIN;
     return profile.role || USER_ROLES.VISITOR;
   };
 
@@ -87,12 +103,14 @@ export const useUserRole = () => {
 
   const isSuperAdmin = (): boolean => {
     if (!profile) return false;
+    if (memberRole && MEMBER_SUPER_ROLES.includes(memberRole)) return true;
     return profile.is_super_admin || profile.role === 'director' || profile.role === USER_ROLES.SUPER_ADMIN;
   };
 
   const isAdmin = (): boolean => {
     if (!profile) return false;
     if (isSuperAdmin()) return true;
+    if (memberRole && MEMBER_ADMIN_ROLES.includes(memberRole)) return true;
     return profile.is_admin || profile.role === USER_ROLES.ADMIN;
   };
 

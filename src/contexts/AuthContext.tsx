@@ -150,9 +150,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   // read-only by RESTRICTIVE RLS regardless of which tenant
                   // they're scoped to — there's no write/escalation surface
                   // for a stale tenant_slug claim to exploit.
+                  // The access-token hook emits tenant_role (the user's
+                  // gw_tenant_members.role) and, since 2026-08-02,
+                  // is_super_admin (gw_profiles flag). The old check read
+                  // claims.role — which is GoTrue's Postgres role
+                  // ('authenticated'), never an app role — so this bypass
+                  // NEVER fired and platform owners were bounced to
+                  // gleeworld.org from every tenant subdomain.
                   const isPlatformOwner =
                     claims.tenant_slug === 'main' &&
-                    (claims.is_super_admin === true || claims.role === 'super-admin' || claims.role === 'super_admin');
+                    (claims.is_super_admin === true ||
+                      claims.tenant_role === 'super-admin' || claims.tenant_role === 'super_admin');
                   const isDemoViewer = claims.demo_viewer === true;
                   // A tenant switch the user just asked for. performTenantSwitch
                   // pivots the JWT here and navigates a beat later, so for that
