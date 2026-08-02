@@ -9,6 +9,8 @@ import { ContinueTab } from '@/pages/readingMusic/ContinueTab';
 import { PitchIntervalsTab } from '@/pages/readingMusic/PitchIntervalsTab';
 import { SightSingingTab } from '@/pages/readingMusic/SightSingingTab';
 import { PlaceholderTab } from '@/pages/readingMusic/PlaceholderTab';
+import { RhythmTab } from '@/pages/readingMusic/RhythmTab';
+import { ClassAssessments } from '@/pages/readingMusic/ClassAssessments';
 import { DomainProgressTab } from '@/pages/readingMusic/DomainProgressTab';
 import { SingFlow } from '@/pages/sightReading/SingFlow';
 import { isValidIr } from '@/lib/sightReading/irValidate';
@@ -107,11 +109,7 @@ export default function ReadingMusicPage() {
         </TabsContent>
 
         <TabsContent value="rhythm" className="mt-4">
-          <PlaceholderTab
-            title="Rhythm Machine"
-            shipsIn="Phase 2"
-            blurb="Clap-back exercises, read-and-clap with Takadimi/Kodály/counting toggle, meter and syncopation drills."
-          />
+          <RhythmTab />
         </TabsContent>
 
         <TabsContent value="sight_singing" className="mt-4">
@@ -148,11 +146,14 @@ export default function ReadingMusicPage() {
 
         {isAdmin() && (
           <TabsContent value="class" className="mt-4">
-            <PlaceholderTab
-              title="Class Dashboard"
-              shipsIn="Phase 3"
-              blurb="Roster heatmap, assign flow, per-student progress, struggling-students weekly digest."
-            />
+            <div className="space-y-4">
+              <ClassAssessments />
+              <PlaceholderTab
+                title="Class Dashboard"
+                shipsIn="Phase 3"
+                blurb="Roster heatmap, assign flow, per-student progress, struggling-students weekly digest."
+              />
+            </div>
           </TabsContent>
         )}
       </Tabs>
