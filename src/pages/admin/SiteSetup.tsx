@@ -373,7 +373,7 @@ export default function SiteSetup() {
                     {uploading ? 'Uploading…' : logoUrl ? 'Replace logo' : 'Upload logo'}
                     <input
                       type="file"
-                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp,image/avif"
                       className="hidden"
                       disabled={uploading}
                       onChange={(e) => {
@@ -426,7 +426,7 @@ export default function SiteSetup() {
                     {bgUploading ? 'Uploading…' : authBackgroundUrl ? 'Replace background' : 'Upload background'}
                     <input
                       type="file"
-                      accept="image/png,image/jpeg,image/webp"
+                      accept="image/png,image/jpeg,image/webp,image/avif"
                       className="hidden"
                       disabled={bgUploading}
                       onChange={(e) => {
@@ -479,7 +479,7 @@ export default function SiteSetup() {
                     {bgMobileUploading ? 'Uploading…' : authBackgroundMobileUrl ? 'Replace background' : 'Upload background'}
                     <input
                       type="file"
-                      accept="image/png,image/jpeg,image/webp"
+                      accept="image/png,image/jpeg,image/webp,image/avif"
                       className="hidden"
                       disabled={bgMobileUploading}
                       onChange={(e) => {

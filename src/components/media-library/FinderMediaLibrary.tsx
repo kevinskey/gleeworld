@@ -190,7 +190,7 @@ export const FinderMediaLibrary = () => {
     const url = file.file_url?.toLowerCase() || '';
     const type = file.file_type?.toLowerCase() || '';
     
-    if (type.includes('image') || url.match(/\.(jpg|jpeg|png|gif|webp|svg|heic)$/)) return 'image';
+    if (type.includes('image') || url.match(/\.(jpg|jpeg|png|gif|webp|svg|heic|avif)$/)) return 'image';
     if (type.includes('video') || url.match(/\.(mp4|mov|avi|webm|mkv)$/)) return 'video';
     if (type.includes('audio') || url.match(/\.(mp3|wav|m4a|aac|ogg|flac)$/)) return 'audio';
     if (type.includes('pdf') || url.match(/\.pdf$/)) return 'document';
