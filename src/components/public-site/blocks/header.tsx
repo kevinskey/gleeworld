@@ -148,6 +148,10 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
               placeholder={ctx.orgName}
               ariaLabel="Site name"
               className="font-bold text-base sm:text-lg truncate"
+              // Inline like the nav links: the global .bg-card/.bg-muted span
+              // contrast guards match this span directly and beat the color
+              // inherited from <header>.
+              style={{ color: linkColor }}
             />
           </div>
         ) : (
@@ -161,7 +165,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
                 onError={(e) => { (e.currentTarget.style.display = 'none'); }}
               />
             )}
-            <span className="font-bold text-base sm:text-lg truncate">{name}</span>
+            <span className="font-bold text-base sm:text-lg truncate" style={{ color: linkColor }}>{name}</span>
           </a>
         )}
         {/* Desktop: inline links. Mobile: a hamburger that toggles the dropdown below. */}
