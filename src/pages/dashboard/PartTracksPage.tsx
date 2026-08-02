@@ -17,7 +17,13 @@ import { voicePartsMatch } from '@/features/part-tracks/voiceParts';
 import type { PartTrackScore } from '@/features/part-tracks/types';
 
 interface Row extends PartTrackScore {
-  gw_sheet_music: { title: string; composer: string | null; pdf_url: string | null } | null;
+  gw_sheet_music: {
+    title: string;
+    composer: string | null;
+    pdf_url: string | null;
+    storage_bucket: string | null;
+    storage_path: string | null;
+  } | null;
 }
 
 const STATUS_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
@@ -40,7 +46,7 @@ export default function PartTracksPage() {
   const refresh = useCallback(async () => {
     const { data, error } = await supabase
       .from('gw_parttrack_scores')
-      .select('*, gw_sheet_music(title, composer, pdf_url)')
+      .select('*, gw_sheet_music(title, composer, pdf_url, storage_bucket, storage_path)')
       .order('updated_at', { ascending: false });
     if (!error) {
       const list = (data ?? []) as Row[];
@@ -123,7 +129,11 @@ export default function PartTracksPage() {
         <PartTracksDialog
           sheetMusicId={openScore.sheet_music_id}
           sheetMusicTitle={openScore.gw_sheet_music?.title ?? 'Untitled score'}
-          pdfUrl={openScore.gw_sheet_music?.pdf_url ?? null}
+          pdfSource={{
+            url: openScore.gw_sheet_music?.pdf_url ?? null,
+            bucket: openScore.gw_sheet_music?.storage_bucket ?? null,
+            path: openScore.gw_sheet_music?.storage_path ?? null,
+          }}
           open
           onOpenChange={(o) => {
             if (!o) {

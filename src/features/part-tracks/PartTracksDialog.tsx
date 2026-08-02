@@ -41,10 +41,11 @@ interface Props {
   sheetMusicTitle: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  pdfUrl?: string | null;
+  pdfSource?: api.AttachedPdfSource | null;
 }
 
-export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenChange, pdfUrl }: Props) {
+export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenChange, pdfSource }: Props) {
+  const attachedPdfAvailable = api.hasAttachedPdf(pdfSource);
   const { user } = useAuth();
   const { toast } = useToast();
   const { score, parts, rights, renders, loading, refresh } = usePartTrackScore(sheetMusicId, open);
@@ -111,10 +112,10 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
   };
 
   const importAttachedPdf = async () => {
-    if (!user || !pdfUrl) return;
+    if (!user || !pdfSource) return;
     setBusy(true);
     try {
-      await api.createScoreFromAttachedPdf(sheetMusicId, pdfUrl, user.id);
+      await api.createScoreFromAttachedPdf(sheetMusicId, pdfSource, user.id);
       await refresh();
     } catch (e) {
       toast({
@@ -190,14 +191,14 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
                 }}
               />
               <div className="flex items-center justify-center gap-2">
-                {pdfUrl && (
+                {attachedPdfAvailable && (
                   <Button size="sm" disabled={busy} onClick={() => void importAttachedPdf()}>
                     {busy ? 'Reading…' : 'Use the attached PDF (beta)'}
                   </Button>
                 )}
                 <Button
                   size="sm"
-                  variant={pdfUrl ? 'outline' : 'default'}
+                  variant={attachedPdfAvailable ? 'outline' : 'default'}
                   disabled={busy}
                   onClick={() => fileInput.current?.click()}
                 >
