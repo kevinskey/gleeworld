@@ -31,3 +31,23 @@ describe('canGenerate', () => {
     expect(canGenerate(score, parts, r, false).ok).toBe(false);
   });
 });
+
+describe('canGenerate vocal-part guard', () => {
+  it('blocks when every included part is piano/other', () => {
+    const p = [
+      { role: 'piano', confirmed: true, include: true },
+      { role: 'piano', confirmed: true, include: true },
+      { role: 'other', confirmed: true, include: true },
+    ] as never;
+    const r = canGenerate(score, p, rights, true);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toMatch(/voice part/i);
+  });
+  it('allows when at least one voice part is included', () => {
+    const p = [
+      { role: 'soprano', confirmed: true, include: true },
+      { role: 'piano', confirmed: true, include: true },
+    ] as never;
+    expect(canGenerate(score, p, rights, true).ok).toBe(true);
+  });
+});

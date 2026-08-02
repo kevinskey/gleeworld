@@ -30,6 +30,15 @@ def _role_from_name(name: str | None) -> str | None:
     return None
 
 
+def _is_generic_vocal_name(name: str | None) -> bool:
+    # OMR output (and some engravers) name every sung staff "Voice" —
+    # vocal for sure, but which part must come from the pitch range.
+    if not name:
+        return False
+    n = name.lower()
+    return "voice" in n or "vox" in n or n in ("choir", "chorus", "vocal")
+
+
 def _median_midi(notes) -> float | None:
     vals = [p.midi for n in notes for p in n.pitches]
     return median(vals) if vals else None
@@ -79,7 +88,9 @@ def inventory_parts(score):
             cands.extend(_voice_split_candidates(part, idx))
         else:
             notes = list(part.recurse().notes)
-            has_lyrics = any(n.lyric for n in notes)
+            # A generically-named vocal staff counts as "has lyrics" for the
+            # pitch heuristic: it is definitely sung, just unlabeled.
+            has_lyrics = any(n.lyric for n in notes) or _is_generic_vocal_name(part.partName)
             role, conf = _role_from_pitch(_median_midi(notes), has_lyrics)
             cands.append(PartCandidate(idx, None, None, role,
                                        part.partName or f"Part {idx + 1}", conf))
