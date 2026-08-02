@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MediaPicker, type MediaItem } from '../MediaPicker';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 // Media Gallery accepts both audio and video — but for visual layout we focus
 // on images, which are the most common gallery item. Re-uses MediaPicker;
@@ -100,10 +101,10 @@ function GalleryViewer({
   );
 }
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const items = config.items.filter((i) => i.url);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  if (items.length === 0) return null;
+  if (items.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Media Gallery" /> : null;
 
   const openAt = (i: number) => setOpenIndex(i);
   // Common button classes for the click-to-open thumbnails. Rendering the

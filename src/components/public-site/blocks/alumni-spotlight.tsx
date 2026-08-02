@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploadField } from '../ImageUploadField';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Graduate spotlight'),
@@ -22,9 +23,9 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const list = config.graduates.filter((g) => g.name);
-  if (list.length === 0) return null;
+  if (list.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Graduate Spotlight" /> : null;
   return (
     <section id="graduates" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (

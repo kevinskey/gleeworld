@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MediaPicker, type MediaItem } from '../MediaPicker';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Listen'),
@@ -21,9 +22,9 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const tracks = config.tracks.filter((t) => t.url);
-  if (tracks.length === 0) return null;
+  if (tracks.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Music Player" /> : null;
   return (
     <section id="music" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (

@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploadField } from '../ImageUploadField';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Director & Staff'),
@@ -20,7 +21,7 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   // Accept any person with SOMETHING in any displayed field — the old
   // name-only filter silently dropped entries where the user typed the
   // person's name into the Title or Bio field by mistake (and ate their
@@ -35,7 +36,7 @@ function Render({ config }: BlockRenderProps<Config>) {
       // Don't render the title underneath if we just used it as the name.
       showTitle: !!(p.name && p.title),
     }));
-  if (people.length === 0) return null;
+  if (people.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Staff" /> : null;
   return (
     <section id="staff" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (
