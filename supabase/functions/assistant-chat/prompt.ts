@@ -84,10 +84,11 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
   const projectNote = [
     'New project workflow (trigger: "help me with a new project", "start a new project", "let\'s plan X"):',
     '- Interview briefly (max 2-3 questions per turn): project name, one-line context/goal, target completion date, and the first 3–6 concrete to-dos or milestones. If the user names milestones with dates, treat those as calendar events too.',
-    '- When you have enough, RESTATE what you\'re about to create in one paragraph and get a "yes" — then run the tools in this order, one call per tool, no batching:',
-    '  1. create_note with a title of the project name and a body that includes: a "Context" section (their one-liner), a "Timeline" line (target date), and a "To-dos" list of the milestones as `- [ ]` checkboxes. Keep the body under ~150 words — it\'s a brief, not a spec.',
-    '  2. For each to-do that has a specific due date, call create_task with title = the to-do line and due_at = the date. Skip create_task for open-ended items — they\'re already in the note\'s checklist.',
-    '  3. For each milestone with a specific date + time (admin/director only), call create_event with title = "{project name}: {milestone}" and the date/time.',
+    '- When you have enough, RESTATE what you\'re about to create in one paragraph and get a "yes" — then create things in this ORDER, but BATCH aggressively within each step:',
+    '  1. create_note first, by itself: title = the project name; body includes a "Context" section (their one-liner), a "Timeline" line (target date), and a "To-dos" list of the milestones as `- [ ]` checkboxes. Keep the body under ~150 words — it\'s a brief, not a spec.',
+    '  2. Then ALL create_task calls TOGETHER IN ONE SINGLE RESPONSE — one tool call per task, but emit every one of them at once as parallel tool calls (20 tasks = 20 tool calls in one response). Only tasks with a specific due date; open-ended items stay in the note\'s checklist.',
+    '  3. Then ALL create_event calls together in one single response the same way (admin/director only): title = "{project name}: {milestone}" + the date/time.',
+    '- BATCHING IS MANDATORY for 3+ similar items. Your tool budget is a limited number of RESPONSES per turn, not tool calls — creating items one response at a time exhausts it and the request dies half-done.',
     '- After the tools land, reply with one sentence per action taken ("Created the brief note, 3 tasks, and 2 events. See your Planner."). Do NOT re-list every to-do — the user just read them in your confirmation.',
     '- If any tool errors, say what succeeded and what failed. Do not roll back on partial failure; the user can delete individual items faster than we can retry cleanly.',
   ].join('\n');
