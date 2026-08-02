@@ -2688,6 +2688,40 @@ function Editor({
             <LiveVuMeter store={transportTick} />
           </div>
         </div>
+
+        {/* Phone-only: Audio / MIDI / Snap join the transport stream —
+            there's room in the wrapping button rows, and their standalone
+            row below is sm+ only. KEEP IN SYNC with the add-track row
+            near the timeline (same handlers, same labels). */}
+        <div className="contents sm:hidden">
+          <button onClick={addAudioTrack} className="shrink-0 h-8 px-2 bg-muted border border-border rounded hover:bg-muted/70 inline-flex items-center gap-1 text-sm">
+            <Plus className="w-4 h-4" /> Audio
+          </button>
+          <button onClick={addMidiTrack} className="shrink-0 h-8 px-2 bg-muted border border-border rounded hover:bg-muted/70 inline-flex items-center gap-1 text-sm">
+            <Plus className="w-4 h-4" /> MIDI
+          </button>
+          <button
+            onClick={toggleSnap}
+            title={snapMode === 'free'
+              ? 'Snap OFF — clips move freely. Tap to snap to grid.'
+              : `Snap ON (${snapMode}) — clips align to the grid. Tap for free movement.`}
+            aria-pressed={snapMode !== 'free'}
+            className={`shrink-0 h-8 px-2.5 inline-flex items-center gap-1 rounded border text-xs font-semibold ${
+              snapMode !== 'free'
+                ? 'bg-primary/15 text-primary border-primary/40'
+                : 'bg-muted text-muted-foreground border-border'
+            }`}
+          >
+            <Magnet className="w-3.5 h-3.5" />
+            {snapMode !== 'free' ? 'Snap' : 'Free'}
+          </button>
+          {isRecording && (
+            <div className="w-full flex items-center justify-center gap-1.5 text-rose-600 font-semibold text-sm">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              Recording — {((performance.now() - recording.startWallMs) / 1000).toFixed(1)}s
+            </div>
+          )}
+        </div>
         </div>
 
         {/* Row 2 — desktop chip row (md+). Tempo + Tap + TS, Punch,
@@ -3055,8 +3089,9 @@ function Editor({
               </button>
             </div>
           )}
-          {/* Add-track row */}
-          <div className="flex items-center gap-2 text-sm">
+          {/* Add-track row — sm+ only; on phones these controls live in the
+              transport stream above (KEEP IN SYNC with that copy). */}
+          <div className="hidden sm:flex items-center gap-2 text-sm">
             <button onClick={addAudioTrack} className="h-7 px-2 bg-card border border-border rounded hover:bg-muted inline-flex items-center gap-1">
               <Plus className="w-4 h-4" /> Audio
             </button>
