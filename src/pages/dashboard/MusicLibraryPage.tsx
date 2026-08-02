@@ -282,8 +282,12 @@ export default function MusicLibraryPage() {
       {/* Five tabs exceed a 390px viewport, so the row scrolls rather than
           clipping the last one. The negative margin lets the scroll area reach
           the screen edges inside the shell's padding; body is overflow-x:clip,
-          so a wider-than-parent container would be cut off, not scrollable. */}
-      <div className="flex gap-2 border-b border-border overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          so a wider-than-parent container would be cut off, not scrollable.
+          touch-pan-x locks a swipe that starts on the strip to the horizontal
+          axis (no diagonal wobble dragging the page along), and
+          overscroll-x-contain stops the strip's edge-bounce from chaining
+          into the page scroll. */}
+      <div className="flex gap-2 border-b border-border overflow-x-auto touch-pan-x overscroll-x-contain -mx-3 px-3 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {MUSIC_LIBRARY_TABS.map((t) => {
           const isActive = t.key === topTab;
           const Icon = TAB_ICONS[t.key];
@@ -509,10 +513,16 @@ export default function MusicLibraryPage() {
           // [&>button]:hidden hides exactly the duplicate. When the user
           // hits the Maximize button the dialog grows to fill the browser
           // window (not the whole monitor — that was confusing).
+          // Safe-area: the app is edge-to-edge (status bar overlays the
+          // webview), so a full-height dialog starts at y=0 UNDER the iPhone
+          // clock. Fullscreen pads the header past the inset; the centered
+          // variant caps its height so the translate-centered top edge can
+          // never rise into the inset (2× top inset keeps the split-margin
+          // math above the bar on notched phones).
           className={`p-0 flex flex-col overflow-hidden bg-background [&>button]:hidden ${
             isViewerFullscreen
-              ? 'w-screen h-screen max-w-none rounded-none'
-              : 'max-w-6xl h-[90vh]'
+              ? 'w-screen h-[100dvh] max-w-none rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]'
+              : 'max-w-6xl h-[90dvh] max-h-[calc(100dvh-env(safe-area-inset-top,0px)*2-1rem)]'
           }`}
         >
           <DialogHeader className="p-4 border-b border-border shrink-0 flex-row items-center justify-between space-y-0 gap-3">

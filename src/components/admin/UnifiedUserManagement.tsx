@@ -333,7 +333,7 @@ export const UnifiedUserManagement = () => {
       </div>
 
       {/* Stat pills */}
-      <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-1 overflow-x-auto touch-pan-x overscroll-x-contain scrollbar-hide">
         <StatPill label="Total" value={userStats.total} icon={Users} />
         <StatPill label="Admins" value={userStats.admins} icon={Shield} />
         <StatPill label="Students" value={userStats.students} icon={User} />

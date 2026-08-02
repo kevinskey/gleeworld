@@ -191,7 +191,7 @@ export const AppNavigation = () => {
   }, []);
 
   const DesktopNavigation = () => (
-    <nav className="flex items-center space-x-1 overflow-x-auto scrollbar-hide max-w-full">
+    <nav className="flex items-center space-x-1 overflow-x-auto touch-pan-x overscroll-x-contain scrollbar-hide max-w-full">
       {flatItems.map((item) => (
         <Link
           key={item.href + item.label}

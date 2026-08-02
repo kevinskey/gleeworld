@@ -907,7 +907,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                         size="sm"
                         variant="ghost"
                         onClick={(e) => { e.stopPropagation(); removeFromSetlist(item.id); }}
-                        className="h-5 w-5 p-0 text-destructive"
+                        className="h-11 w-11 min-w-[44px] p-0 lg:h-5 lg:w-5 lg:min-w-0 text-destructive"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
