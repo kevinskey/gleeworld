@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Mic, Play, Save, Music } from 'lucide-react';
+import { Loader2, Mic, Minus, Play, Plus, Save, Music, Timer } from 'lucide-react';
 import { useMicPitch } from '@/lib/sightReading/useMicPitch';
 import { scoreAttempt, type ScoreResult, type SungNote } from '@/lib/sightReading/score';
 import { recordTake } from '@/lib/sightReading/takesApi';
@@ -9,6 +9,7 @@ import { ResultCard } from './ResultCard';
 import { NotationView } from '@/pages/notation/NotationView';
 import { irToEditorScore } from '@/lib/notation/fromIR';
 import { saveExercise } from '@/lib/notation/exercisesApi';
+import { clickSchedule, playClicks } from '@/lib/sightReading/metronome';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 
@@ -77,16 +78,16 @@ function tone(ctx: AudioContext, hz: number, at: number, dur: number, gain: numb
 /** Best-effort notation strip. Laid out from REALIZED length (sum of
  * durationBeats), never from bars × meter.beats — generated lines routinely
  * overshoot their nominal bar count, and the IR is honest about it. */
-function NotationStrip({ ir }: { ir: ExerciseIR }) {
+function NotationStrip({ ir, bpm }: { ir: ExerciseIR; bpm: number }) {
   const realized = ir.notes.reduce((s, n) => s + n.durationBeats, 0);
   // Render the line as real notation on a staff (memoized so mic-driven re-renders
   // during a take don't rebuild VexFlow ~30×/s).
   const score = useMemo(() => irToEditorScore(ir), [ir]);
   return (
     <div className="rounded-2xl bg-white p-4 shadow-sm">
-      <NotationView score={score} />
+      <NotationView score={score} targetPerRow={4} />
       <p className="mt-2 text-xs text-slate-500">
-        {ir.key} {ir.mode} · {ir.meter.beats}/{ir.meter.beatType} · {ir.tempo} bpm · {realized} beats
+        {ir.key} {ir.mode} · {ir.meter.beats}/{ir.meter.beatType} · {bpm} bpm · {realized} beats
       </p>
     </div>
   );
@@ -108,6 +109,18 @@ export function SingFlow({
   const [result, setResult] = useState<ScoreResult | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [pipePlaying, setPipePlaying] = useState(false);
+  // Practice tempo. Starts at the exercise's written tempo; the student can
+  // slow it down or push it. Everything downstream (mic beat clock, count-in,
+  // take window, metronome) derives from this, so rhythm scoring adapts.
+  const [bpm, setBpm] = useState(exercise.tempo);
+  const [metroOn, setMetroOn] = useState(true);
+  // The metronome runs on its own short-lived AudioContext (same isolation
+  // pattern as playPriming) so it never collides with useMicPitch's context.
+  const metroCtxRef = useRef<AudioContext | null>(null);
+  const stopMetro = () => {
+    metroCtxRef.current?.close().catch(() => {});
+    metroCtxRef.current = null;
+  };
 
   // Sound the exercise's tonic so the singer can grab their starting note
   // before hitting Start take. Uses the same triangle-wave envelope the
@@ -178,6 +191,8 @@ export function SingFlow({
   useEffect(
     () => () => {
       clearTimers();
+      metroCtxRef.current?.close().catch(() => {});
+      metroCtxRef.current = null;
       stopRef.current();
     },
     [],
@@ -217,16 +232,39 @@ export function SingFlow({
     // — but the line stays on screen (and was just played), and the denied
     // banner offers the way back in. A refused mic is never a dead end.
     setPhase('countin');
-    const outcome = await mic.start(exercise.tempo);
+    const outcome = await mic.start(bpm);
     if (outcome !== 'granted') {
       setPhase('ready');
       return;
     }
 
-    const beatMs = (60 / exercise.tempo) * 1000;
+    const beatMs = (60 / bpm) * 1000;
     const realized = exercise.notes.reduce((s, n) => s + n.durationBeats, 0);
 
-    // Audible four-beat count-in, then the exercise window.
+    // Metronome: count-in clicks (loud, so the tempo is unmistakable) then a
+    // quiet click through the take. Anchored here — the same instant the
+    // count-in timers below are measured from — so clicks, the on-screen
+    // count, and the mic's beat clock agree to within a few ms. Audio is
+    // best-effort: with no AudioContext the count-in stays visual-only.
+    if (metroOn) {
+      const AC = window.AudioContext
+        || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (AC) {
+        try {
+          const mctx = new AC();
+          metroCtxRef.current = mctx;
+          if (mctx.state !== 'running') void mctx.resume();
+          playClicks(mctx, clickSchedule({
+            bpm,
+            countInBeats: COUNT_IN_BEATS,
+            exerciseBeats: realized,
+            meterBeats: exercise.meter.beats,
+          }));
+        } catch { /* no audio available — proceed silently */ }
+      }
+    }
+
+    // Four-beat count-in, then the exercise window.
     for (let b = 0; b < COUNT_IN_BEATS; b++) {
       timers.current.push(setTimeout(() => setCountBeat(b + 1), b * beatMs));
     }
@@ -242,6 +280,7 @@ export function SingFlow({
     timers.current.push(
       setTimeout(() => {
         setPhase('scoring');
+        stopMetro();
         mic.stop();
         const raw = mic.getCaptured();
         // Shift the mic-clock timeline back by the count-in so IR beat 0 lines
@@ -257,10 +296,11 @@ export function SingFlow({
         setPhase('done');
       }, takeMs),
     );
-  }, [exercise, mic, logOnce]);
+  }, [exercise, mic, logOnce, bpm, metroOn]);
 
   const restart = useCallback(() => {
     clearTimers();
+    stopMetro();
     mic.stop();
     setResult(null);
     setPhase('ready');
@@ -275,6 +315,39 @@ export function SingFlow({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Sing the line</h1>
         <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5 rounded-full border border-input px-1.5 py-1" role="group" aria-label="Practice tempo">
+            <button
+              type="button"
+              className="rounded-full p-0.5 text-slate-600 hover:bg-accent disabled:opacity-40"
+              onClick={() => setBpm((b) => Math.max(40, b - 5))}
+              disabled={phase !== 'ready' || bpm <= 40}
+              aria-label="Slower"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="w-14 text-center text-xs font-medium tabular-nums">♩ = {bpm}</span>
+            <button
+              type="button"
+              className="rounded-full p-0.5 text-slate-600 hover:bg-accent disabled:opacity-40"
+              onClick={() => setBpm((b) => Math.min(180, b + 5))}
+              disabled={phase !== 'ready' || bpm >= 180}
+              aria-label="Faster"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+          <Button
+            variant={metroOn ? 'secondary' : 'outline'}
+            size="sm"
+            className="rounded-full"
+            onClick={() => setMetroOn((o) => !o)}
+            disabled={phase !== 'ready'}
+            aria-pressed={metroOn}
+            title={metroOn ? 'Metronome on — count-in and click during the take' : 'Metronome off — silent visual count-in'}
+          >
+            <Timer className="mr-1.5 h-4 w-4" />
+            {metroOn ? 'Click on' : 'Click off'}
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -304,7 +377,7 @@ export function SingFlow({
         </div>
       </div>
 
-      <NotationStrip ir={exercise} />
+      <NotationStrip ir={exercise} bpm={bpm} />
 
       {mic.error && (
         <div className="rounded-xl bg-rose-50 p-3 text-sm text-rose-700" role="alert">
