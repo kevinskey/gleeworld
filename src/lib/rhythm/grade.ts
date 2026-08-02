@@ -36,6 +36,20 @@ export function gradeOnsets(expected: number[], actual: number[], opts: GradeOpt
     const verdict: Verdict = Math.abs(delta) <= tol ? 'on_time' : delta < 0 ? 'early' : 'late';
     return { expectedSec: exp, actualSec: actual[bestIdx], deltaSec: delta, verdict };
   });
+  // A clap that lands outside a note's window already scored a miss — don't
+  // double-charge it as an extra too. Absorb unclaimed onsets that sit within
+  // half a pulse of a missed note.
+  for (const n of notes) {
+    if (n.verdict !== 'missed') continue;
+    let bestIdx = -1;
+    let bestD = 0.5 * opts.secondsPerPulse;
+    actual.forEach((a, i) => {
+      if (used[i]) return;
+      const d = Math.abs(a - n.expectedSec);
+      if (d <= bestD) { bestD = d; bestIdx = i; }
+    });
+    if (bestIdx !== -1) used[bestIdx] = true;
+  }
   const extraOnsets = actual.filter((_, i) => !used[i]);
   const pts = notes.reduce((s, n) => s + (n.verdict === 'on_time' ? 1 : n.verdict === 'missed' ? 0 : 0.5), 0)
     - 0.25 * extraOnsets.length;
