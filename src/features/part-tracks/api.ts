@@ -59,19 +59,31 @@ export async function createScore(
   return data as PartTrackScore;
 }
 
+export interface AttachedPdfSource {
+  url?: string | null;            // public/legacy pdf_url
+  bucket?: string | null;         // private storage rows (storage_bucket)
+  path?: string | null;           // + storage_path
+}
+
+export function hasAttachedPdf(src: AttachedPdfSource | null | undefined): boolean {
+  return Boolean(src && (src.url || (src.bucket && src.path)));
+}
+
 export async function createScoreFromAttachedPdf(
   sheetMusicId: string,
-  pdfUrl: string,
+  src: AttachedPdfSource,
   userId: string,
 ): Promise<PartTrackScore> {
-  const { getSignedUrl } = await import('@/utils/storage');
-  // pdfUrl may be a full public/proxy URL or a sheet-music bucket path.
-  let resolved = pdfUrl;
-  if (!/^https?:\/\//.test(pdfUrl)) {
-    const signed = await getSignedUrl('sheet-music', pdfUrl, 3600);
-    if (!signed) throw new Error('Could not read the attached PDF');
-    resolved = signed;
+  // Same resolution order the Music Library viewer uses: private
+  // storage rows (bucket + path) are signed per read; else the public URL.
+  let resolved: string | null = null;
+  if (src.bucket && src.path) {
+    const { getSignedUrl } = await import('@/utils/storage');
+    resolved = await getSignedUrl(src.bucket, src.path, 3600);
+  } else if (src.url) {
+    resolved = src.url;
   }
+  if (!resolved) throw new Error('Could not read the attached PDF');
   const res = await fetch(resolved);
   if (!res.ok) throw new Error('Could not read the attached PDF');
   const blob = await res.blob();
