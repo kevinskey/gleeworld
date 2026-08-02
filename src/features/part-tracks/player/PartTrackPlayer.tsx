@@ -261,7 +261,7 @@ export function PartTrackPlayer({ score, renders, myVoicePart, onListenStateChan
         {roles.map((role) => (
           <div key={role} className="flex items-center gap-2">
             <span className="text-sm w-24 shrink-0 truncate">
-              {ROLE_LABELS[role] ?? role}
+              {ROLE_LABELS[role] ?? role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
               {featured === role && <Badge variant="secondary" className="ml-1 text-xs">mine</Badge>}
             </span>
             <Slider

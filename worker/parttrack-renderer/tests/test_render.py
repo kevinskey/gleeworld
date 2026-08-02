@@ -51,3 +51,36 @@ def test_manifest_expands_repeats():
 
 def test_manifest_defaults_missing_tempo_to_100():
     assert build_manifest(no_tempo())["tempo_map"][0]["bpm"] == 100
+
+
+@needs_tools
+def test_duplicate_roles_produce_distinct_stems(tmp_path):
+    # Six parts all confirmed "piano" must NOT collapse into one stem
+    # (live bug: "only pulled one staff out of 6").
+    dupes = [
+        {"role": "piano", "label": f"Voice {i}", "source_part_index": i,
+         "source_voice": None, "include": True}
+        for i in range(3)
+    ]
+    stems = render_stems(satb_piano(), dupes, "piano", tmp_path)
+    assert len(stems) == 3
+    assert sorted(stems) == ["piano", "piano_2", "piano_3"]
+
+
+def test_mixes_treat_suffixed_piano_as_accompaniment(tmp_path):
+    from render import build_mixes
+    fake = {"soprano": tmp_path / "s.wav", "piano": tmp_path / "p1.wav", "piano_2": tmp_path / "p2.wav"}
+    for p in fake.values():
+        p.write_bytes(b"x")
+    import render
+    calls = []
+    orig = render._amix
+    render._amix = lambda ig, out: calls.append((tuple(str(p) for p, _ in ig), str(out))) or out
+    try:
+        mixes = build_mixes(fake, tmp_path)
+    finally:
+        render._amix = orig
+    # only soprano is a voice: 3 featured presets + full + piano_only = 5
+    assert len(mixes) == 5
+    featured = [k for k in mixes if k[1] == "piano_2"]
+    assert featured == []

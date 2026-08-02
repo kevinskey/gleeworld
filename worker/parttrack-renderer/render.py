@@ -39,6 +39,10 @@ def _run(cmd):
     subprocess.run(cmd, check=True, capture_output=True)
 
 
+def _is_piano_role(role: str) -> bool:
+    return role.startswith("piano")
+
+
 def render_stems(score, parts, timbre, workdir) -> dict:
     workdir = Path(workdir)
     prepared = _prepared(score)
@@ -46,8 +50,17 @@ def render_stems(score, parts, timbre, workdir) -> dict:
     for row in parts:
         if not row["include"]:
             continue
+        # Duplicate roles must not collapse into one stem (six parts all
+        # confirmed "piano" once rendered as a single staff): suffix dupes.
+        base_role = row["role"]
+        key = base_role
+        n = 2
+        while key in stems:
+            key = f"{base_role}_{n}"
+            n += 1
+        row = {**row, "role": key}
         part = _extract(prepared, row)
-        program = GM_PROGRAMS["piano"] if row["role"] == "piano" else GM_PROGRAMS[timbre]
+        program = GM_PROGRAMS["piano"] if _is_piano_role(base_role) else GM_PROGRAMS[timbre]
         for el in list(part.recurse().getElementsByClass(instrument.Instrument)):
             el.activeSite.remove(el)
         inst = instrument.instrumentFromMidiProgram(program)
@@ -82,22 +95,22 @@ def _amix(inputs_gains, out):
 
 def build_mixes(stems: dict, workdir) -> dict:
     workdir = Path(workdir)
-    voices = {r: p for r, p in stems.items() if r != "piano"}
-    piano = stems.get("piano")
+    voices = {r: p for r, p in stems.items() if not _is_piano_role(r)}
+    pianos = [p for r, p in stems.items() if _is_piano_role(r)]
     mixes = {}
     for featured, fpath in voices.items():
         for preset, (vg, pg, fg) in MIX_MATRIX.items():
             ig = [(fpath, fg)]
             ig += [(p, vg) for r, p in voices.items() if r != featured and vg > 0]
-            if piano and pg > 0:
-                ig.append((piano, pg))
+            if pianos and pg > 0:
+                ig += [(p, pg) for p in pianos]
             mixes[(preset, featured)] = _amix(ig, workdir / f"{featured}_{preset}.wav")
     full = [(p, FULL_VOICES) for p in voices.values()]
-    if piano:
-        full.append((piano, FULL_PIANO))
-    mixes[("full", None)] = _amix(full, workdir / "full.wav")
-    if piano:
-        mixes[("piano_only", None)] = _amix([(piano, 1.0)], workdir / "piano_only.wav")
+    full += [(p, FULL_PIANO) for p in pianos]
+    if full:
+        mixes[("full", None)] = _amix(full, workdir / "full.wav")
+    if pianos:
+        mixes[("piano_only", None)] = _amix([(p, 1.0) for p in pianos], workdir / "piano_only.wav")
     return mixes
 
 

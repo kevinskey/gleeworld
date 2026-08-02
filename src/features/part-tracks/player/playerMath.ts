@@ -48,7 +48,8 @@ export function featuredGains(
       gains[role] = 1;
     } else if (role === featuredRole) {
       gains[role] = FEATURED;
-    } else if (role === 'piano') {
+    } else if (role.startsWith('piano')) {
+      // startsWith: duplicate piano staves render as piano, piano_2, …
       gains[role] = PIANO_UNDER;
     } else {
       gains[role] = OTHER_VOICES;
