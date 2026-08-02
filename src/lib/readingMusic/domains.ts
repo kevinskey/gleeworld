@@ -15,7 +15,7 @@ export interface Domain {
 
 export const DOMAINS: Domain[] = [
   { id: 'pitch_intervals', label: 'Pitch & Intervals', blurb: 'Match pitches, sing and identify intervals, chord qualities.', status: 'live' },
-  { id: 'rhythm',          label: 'Rhythm',            blurb: 'Clap-back, read-and-clap, dictation. Rhythm Machine ships Phase 2.', status: 'placeholder' },
+  { id: 'rhythm',          label: 'Rhythm',            blurb: 'Clap-back, read-and-clap, steady beat — with Takadimi, Kodály, or counting.', status: 'live' },
   { id: 'sight_singing',   label: 'Sight-Singing',     blurb: 'Sing generated lines with real-time pitch feedback.', status: 'live' },
   { id: 'dictation',       label: 'Dictation',         blurb: 'Hear it, notate it. Melodic and harmonic dictation. Ships Phase 2.', status: 'placeholder' },
   { id: 'harmony',         label: 'Harmony & Chords',  blurb: 'Chord ID, cadence ID, Roman numerals. Ships Phase 2.', status: 'placeholder' },
