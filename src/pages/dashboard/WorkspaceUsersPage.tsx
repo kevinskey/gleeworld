@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -328,7 +329,7 @@ function PersonRow({
 
 // ── Invite dialog ───────────────────────────────────────────────────────
 
-type CsvRow = { email: string; full_name?: string; role?: 'student' | 'instructor' | 'fan' | 'admin' };
+type CsvRow = { email: string; full_name?: string; role?: 'student' | 'instructor' | 'fan' };
 
 // Naive CSV splitter — no quoted-comma support. Handles the 90% case:
 // spreadsheets exported with no embedded commas in fields. If a real
@@ -341,8 +342,10 @@ function splitCsvLine(line: string): string[] {
 // Parse a CSV blob into invite rows. Requires a header row with at
 // minimum an `email` column. Optional columns: `full_name` (or `name`,
 // or `first_name` + `last_name`), and `role` (student|teacher|instructor|
-// fan|admin). Rows with invalid emails are silently dropped so a stray
-// header/footer line doesn't kill the import.
+// fan). `admin` is deliberately not importable — gw-invite-student clamps
+// unknown roles to student, so surfacing it here would lie in the preview;
+// promote people in the Edit dialog instead. Rows with invalid emails are
+// silently dropped so a stray header/footer line doesn't kill the import.
 function parseInviteCsv(text: string): { rows: CsvRow[]; skipped: number; error?: string } {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (!lines.length) return { rows: [], skipped: 0, error: 'CSV is empty.' };
@@ -371,7 +374,6 @@ function parseInviteCsv(text: string): { rows: CsvRow[]; skipped: number; error?
     if (rawRole === 'teacher' || rawRole === 'instructor') role = 'instructor';
     else if (rawRole === 'student' || rawRole === 'member') role = 'student';
     else if (rawRole === 'fan' || rawRole === 'supporter') role = 'fan';
-    else if (rawRole === 'admin') role = 'admin';
     rows.push({ email, full_name, role });
   }
   return { rows, skipped };
@@ -500,7 +502,12 @@ function CsvImportDialog({
   onInvited: () => void;
 }) {
   const [fallbackRole, setFallbackRole] = useState<'student' | 'instructor' | 'fan'>('student');
+  // Off by default: adding a roster shouldn't blast hundreds of emails unless
+  // the director explicitly opts in. Accounts are created either way; people
+  // can sign in anytime with their email.
+  const [sendEmails, setSendEmails] = useState(false);
   const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(0);
 
   if (!payload) return null;
   const { fileName, rows, skipped } = payload;
@@ -509,27 +516,39 @@ function CsvImportDialog({
 
   async function send() {
     setSending(true);
+    setDone(0);
     let ok = 0; const fails: string[] = [];
-    for (const row of rows) {
-      try {
-        const { data, error } = await supabase.functions.invoke('gw-invite-student', {
-          body: {
-            email: row.email,
-            role: row.role || fallbackRole,
-            full_name: row.full_name,
-            appOrigin: window.location.origin,
-          },
-        });
-        if (error) throw new Error(error.message || 'invoke failed');
-        if ((data as any)?.error) throw new Error((data as any).error);
-        ok++;
-      } catch (e: any) {
-        fails.push(`${row.email} — ${e.message}`);
+    // Modest worker pool — one-at-a-time makes a 700-row roster take many
+    // minutes; unbounded hammers the functions gateway.
+    const queue = [...rows];
+    async function worker() {
+      for (;;) {
+        const row = queue.shift();
+        if (!row) return;
+        try {
+          const { data, error } = await supabase.functions.invoke('gw-invite-student', {
+            body: {
+              email: row.email,
+              role: row.role || fallbackRole,
+              full_name: row.full_name,
+              sendEmail: sendEmails,
+              appOrigin: window.location.origin,
+            },
+          });
+          if (error) throw new Error(error.message || 'invoke failed');
+          if ((data as any)?.error) throw new Error((data as any).error);
+          ok++;
+        } catch (e: any) {
+          fails.push(`${row.email} — ${e.message}`);
+        } finally {
+          setDone((d) => d + 1);
+        }
       }
     }
+    await Promise.all(Array.from({ length: Math.min(4, rows.length) }, worker));
     setSending(false);
     if (ok > 0) {
-      toast.success(`Invited ${ok}${fails.length ? ` · ${fails.length} failed` : ''}`);
+      toast.success(`${sendEmails ? 'Invited' : 'Added'} ${ok}${fails.length ? ` · ${fails.length} failed` : ''}`);
       onInvited();
     }
     if (fails.length > 0) toast.error(fails[0], { description: fails.length > 1 ? `${fails.length - 1} more failed` : undefined });
@@ -540,7 +559,11 @@ function CsvImportDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Import from CSV</DialogTitle>
-          <DialogDescription>Review before sending — every row triggers a real invite email.</DialogDescription>
+          <DialogDescription>
+            {sendEmails
+              ? 'Review before sending — every row triggers a real invite email.'
+              : 'Review before adding — accounts are created right away, no emails go out.'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -570,6 +593,18 @@ function CsvImportDialog({
             <p className="text-xs text-muted-foreground">
               Used for rows that don't include a <code>role</code> column. Per-row roles win.
             </p>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="csv-send-emails" className="text-sm">Send invite emails</Label>
+              <p className="text-xs text-muted-foreground">
+                {sendEmails
+                  ? 'Everyone gets a sign-in link in their inbox.'
+                  : 'Off — people are added quietly and can sign in anytime with their email.'}
+              </p>
+            </div>
+            <Switch id="csv-send-emails" checked={sendEmails} onCheckedChange={setSendEmails} disabled={sending} />
           </div>
 
           {/* Compact preview of the first few rows so directors can
@@ -603,7 +638,11 @@ function CsvImportDialog({
           <Button variant="outline" onClick={onClose} disabled={sending}>Cancel</Button>
           <Button onClick={send} disabled={sending}>
             {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <UserPlus className="w-4 h-4 mr-1.5" />}
-            Send {rows.length} invite{rows.length === 1 ? '' : 's'}
+            {sending
+              ? `${done}/${rows.length}…`
+              : sendEmails
+                ? `Send ${rows.length} invite${rows.length === 1 ? '' : 's'}`
+                : `Add ${rows.length} ${rows.length === 1 ? 'person' : 'people'}`}
           </Button>
         </DialogFooter>
       </DialogContent>
