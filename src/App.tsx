@@ -265,7 +265,7 @@ const TermsOfService = lazy(() => import("./pages/policies/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/policies/PrivacyPolicy"));
 const TrustCenter = lazy(() => import("./pages/policies/Security"));
 const DataProcessingAddendum = lazy(() => import("./pages/policies/DataProcessingAddendum"));
-const GraduatesManagementModule = lazy(() => import("./components/modules/GraduatesManagementModule").then((m) => ({ default: (m as any).GraduatesManagementModule ?? (m as any).default })));
+const GraduatesManagementModule = lazy(() => import("./components/modules/GraduatesManagementModule").then((m) => ({ default: m.GraduatesManagementModule })));
 const SendNotificationPage = lazy(() => import("./pages/SendNotificationPage"));
 const AuditionPage = lazy(() => import("./pages/AuditionPage"));
 const Handbook = lazy(() => import("./pages/Handbook"));
