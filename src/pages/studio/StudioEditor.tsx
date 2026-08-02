@@ -2445,19 +2445,22 @@ function Editor({
         </DialogContent>
       </Dialog>
 
-      {/* Transport bar — three-cell grid keeps the LCD dead-center at every
-       *  breakpoint. Row 1: primary transport | LCD | secondary actions.
-       *  Row 2 (md+): tempo, punch, snap, grid, end chips. Row 3: engine
-       *  status. On phones the chip row lives inside the settings sheet. */}
+      {/* Transport bar. sm+: three-cell grid keeps the LCD dead-center
+       *  (primary transport | LCD | secondary actions), chip row below on
+       *  md+. PHONES: the LCD gets a full-width line of its own up top and
+       *  EVERY button — left and right cells alike — flows in one wrapping
+       *  stream beneath it (the cells use `contents` below sm, so their
+       *  buttons become direct flex items of this row). The old grid
+       *  crammed all buttons into a tall left column beside a huge LCD. */}
       <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 space-y-1.5">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:justify-normal sm:gap-3">
 
         {/* LEFT — transport controls. Play/Pause/Stop/Rec/Metro are
          *  visible on every breakpoint; nav (skip start/end + scrub) and
          *  markers appear on wider screens where there's room. Every
          *  button is shrink-0 — squeezed cells must wrap to a second
          *  line (flex-wrap), never compress the buttons into slivers. */}
-        <div className="flex flex-wrap items-center gap-0.5 sm:gap-1 min-w-0">
+        <div className="contents sm:flex sm:flex-wrap sm:items-center sm:gap-1 sm:min-w-0">
         {/* Skip-to-start + rewind ride every breakpoint — hiding them on
             phones left mobile with no way back to the top of the song
             (Kevin's report). The compact phone LCD paid for the room. */}
@@ -2636,7 +2639,7 @@ function Editor({
          *  reads dead-center at every breakpoint regardless of how many
          *  buttons occupy the left cell. Position/length text stacks below
          *  on phones and sits beside the counter on md+ where there's room. */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-3 shrink-0">
+        <div className="order-first w-full sm:order-none sm:w-auto flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-3 shrink-0">
           <TransportCounter
             store={transportTick}
             counterMode={counterMode}
@@ -2655,7 +2658,7 @@ function Editor({
          *  More button opens the settings sheet with tempo/TS/snap/grid/
          *  end/punch — the same controls that live in Row 2's chip row on
          *  desktop, so nothing is ever exclusively phone- or desktop-only. */}
-        <div className="flex items-center gap-1 sm:gap-1.5 justify-end min-w-0">
+        <div className="contents sm:flex sm:items-center sm:gap-1.5 sm:justify-end sm:min-w-0">
           <button
             onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
             className={`shrink-0 h-8 sm:h-9 px-2 sm:px-3 rounded border text-xs sm:text-sm font-bold whitespace-nowrap ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
