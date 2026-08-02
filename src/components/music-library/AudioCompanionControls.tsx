@@ -287,7 +287,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
 
       {/* Progress - Hidden on very small mobile, shown on larger */}
       {audioSource && (
-        <div className="hidden sm:flex items-center gap-1.5 flex-1 min-w-0">
+        <div className="hidden xs:flex items-center gap-1.5 flex-1 min-w-0">
           <span className="text-xs text-muted-foreground w-10 text-right tabular-nums">
             {formatTime(currentTime)}
           </span>
