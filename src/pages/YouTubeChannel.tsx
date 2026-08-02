@@ -487,9 +487,12 @@ export const YouTubeChannel: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <div className="p-4 space-y-2">
+                    <div className="p-3 space-y-1.5">
+                      {/* Explicit text-sm: the global h3 rule in index.css is
+                          22px/700, which lets the metadata block outweigh the
+                          thumbnail — the video must stay the dominant element. */}
                       <h3
-                        className="font-medium text-foreground line-clamp-2 group-hover:text-destructive transition-colors cursor-pointer"
+                        className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-destructive transition-colors cursor-pointer"
                         onClick={() => setSelectedVideo(video)}
                       >
                         {video.title}
