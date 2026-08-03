@@ -160,7 +160,7 @@ export function AssociationsMenu({ chartId }: AssociationsMenuProps) {
             </Select>
           </div>
           <Button size="sm" className="w-full h-7 text-xs gap-1.5" disabled={!selectedId} onClick={onAttach}>
-            <Plus className="w-3.5 h-3.5" /> Attach
+            <Plus className="w-4 h-4" /> Attach
           </Button>
         </div>
 
@@ -174,10 +174,10 @@ export function AssociationsMenu({ chartId }: AssociationsMenuProps) {
                 <li key={r.id} className="flex items-center justify-between px-2 py-1.5">
                   <div className="min-w-0 flex-1">
                     <p className="truncate">{r.label ?? r.association_id.slice(0, 8)}</p>
-                    <Badge variant="secondary" className="text-[10px] mt-0.5">{TYPE_LABEL[r.association_type]}</Badge>
+                    <Badge variant="secondary" className="text-xs mt-0.5">{TYPE_LABEL[r.association_type]}</Badge>
                   </div>
                   <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onDetach(r.id)}>
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </li>
               ))}

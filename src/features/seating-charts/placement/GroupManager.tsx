@@ -44,7 +44,7 @@ export function GroupManager({ open, onOpenChange, chart, people, onPatchChart }
         <Tabs value={kind} onValueChange={(v) => setKind(v as GroupKind)}>
           <TabsList className="grid grid-cols-4 text-xs">
             {TABS.map((k) => (
-              <TabsTrigger key={k} value={k} className="text-[11px]">{GROUP_KIND_LABEL[k]}</TabsTrigger>
+              <TabsTrigger key={k} value={k} className="text-xs">{GROUP_KIND_LABEL[k]}</TabsTrigger>
             ))}
           </TabsList>
 
@@ -64,7 +64,7 @@ export function GroupManager({ open, onOpenChange, chart, people, onPatchChart }
                     setNewName('');
                   }}
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" />
                 </Button>
               </div>
 
@@ -83,14 +83,14 @@ export function GroupManager({ open, onOpenChange, chart, people, onPatchChart }
                       />
                       <Button variant="ghost" size="icon" className="h-7 w-7"
                         onClick={() => onPatchChart(deleteGroup(chart, g.id))}>
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                     <div className="flex flex-wrap gap-1">
                       {g.member_user_ids.map((uid) => {
                         const p = peopleById.get(uid);
                         return (
-                          <Badge key={uid} variant="secondary" className="text-[10px] gap-1 pl-1.5 pr-1">
+                          <Badge key={uid} variant="secondary" className="text-xs gap-1 pl-1.5 pr-1">
                             {p?.full_name ?? uid.slice(0, 8)}
                             <button
                               type="button" className="hover:text-red-600"
@@ -102,7 +102,7 @@ export function GroupManager({ open, onOpenChange, chart, people, onPatchChart }
                         );
                       })}
                       {g.member_user_ids.length === 0 && (
-                        <span className="text-[11px] text-muted-foreground">No members yet.</span>
+                        <span className="text-xs text-muted-foreground">No members yet.</span>
                       )}
                     </div>
                     {addingToGroup === g.id ? (
@@ -129,7 +129,7 @@ export function GroupManager({ open, onOpenChange, chart, people, onPatchChart }
                     ) : (
                       <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5"
                         onClick={() => { setAddingToGroup(g.id); setAddUserId(''); }}>
-                        <UserPlus className="w-3.5 h-3.5" /> Add person
+                        <UserPlus className="w-4 h-4" /> Add person
                       </Button>
                     )}
                   </li>

@@ -125,22 +125,22 @@ export function SeatingChartsDashboardPage() {
                       {c.description ?? 'No description'}
                     </CardDescription>
                   </div>
-                  <Badge variant="secondary" className="text-[10px]">{templateCategory(c)}</Badge>
+                  <Badge variant="secondary" className="text-xs">{templateCategory(c)}</Badge>
                 </div>
               </CardHeader>
               <CardContent className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Updated {new Date(c.updated_at).toLocaleDateString()}</span>
                 <div className="flex gap-1 md:opacity-0 md:group-hover:opacity-100 transition">
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => duplicate(c.id)} title="Duplicate">
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => archive(c.id, c.status !== 'archived')} title="Archive">
-                    <Archive className="w-3.5 h-3.5" />
+                    <Archive className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
                     if (confirm(`Delete "${c.name}"? This cannot be undone.`)) remove(c.id);
                   }} title="Delete">
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </CardContent>

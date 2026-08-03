@@ -36,7 +36,7 @@ export function PropertiesPanel({
     return (
       <aside className="w-full p-3 h-full overflow-y-auto space-y-3">
         <div className="text-sm font-semibold">{selection.length} objects selected</div>
-        <Button variant="destructive" size="sm" className="w-full" onClick={() => onDelete(selection.map((s) => s.id))}>
+        <Button variant="destructive" size="sm" className="w-full" onClick={() => { if (confirm(`Delete ${selection.length} objects? Anyone seated on them loses their spot.`)) onDelete(selection.map((s) => s.id)); }}>
           Delete selection
         </Button>
       </aside>
@@ -50,7 +50,7 @@ export function PropertiesPanel({
   return (
     <aside className="w-full p-3 h-full overflow-y-auto space-y-3">
       <div>
-        <p className="text-[10px] uppercase text-muted-foreground">{obj.object_type}{obj.subtype ? ` · ${obj.subtype}` : ''}</p>
+        <p className="text-xs uppercase text-muted-foreground">{obj.object_type}{obj.subtype ? ` · ${obj.subtype}` : ''}</p>
         <Input
           value={obj.label ?? ''}
           onChange={(e) => patch({ label: e.target.value })}
@@ -61,7 +61,7 @@ export function PropertiesPanel({
 
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <Label className="text-[10px] uppercase text-muted-foreground">X</Label>
+          <Label className="text-xs uppercase text-muted-foreground">X</Label>
           <Input
             type="number" value={Number(obj.x)}
             onChange={(e) => patch({ x: Number(e.target.value) })}
@@ -69,7 +69,7 @@ export function PropertiesPanel({
           />
         </div>
         <div>
-          <Label className="text-[10px] uppercase text-muted-foreground">Y</Label>
+          <Label className="text-xs uppercase text-muted-foreground">Y</Label>
           <Input
             type="number" value={Number(obj.y)}
             onChange={(e) => patch({ y: Number(e.target.value) })}
@@ -77,7 +77,7 @@ export function PropertiesPanel({
           />
         </div>
         <div>
-          <Label className="text-[10px] uppercase text-muted-foreground">W</Label>
+          <Label className="text-xs uppercase text-muted-foreground">W</Label>
           <Input
             type="number" value={Number(obj.width)}
             onChange={(e) => patch({ width: Number(e.target.value) })}
@@ -85,7 +85,7 @@ export function PropertiesPanel({
           />
         </div>
         <div>
-          <Label className="text-[10px] uppercase text-muted-foreground">H</Label>
+          <Label className="text-xs uppercase text-muted-foreground">H</Label>
           <Input
             type="number" value={Number(obj.height)}
             onChange={(e) => patch({ height: Number(e.target.value) })}
@@ -93,7 +93,7 @@ export function PropertiesPanel({
           />
         </div>
         <div>
-          <Label className="text-[10px] uppercase text-muted-foreground">Rotation</Label>
+          <Label className="text-xs uppercase text-muted-foreground">Rotation</Label>
           <Input
             type="number" value={Number(obj.rotation)}
             onChange={(e) => patch({ rotation: Number(e.target.value) })}
@@ -101,7 +101,7 @@ export function PropertiesPanel({
           />
         </div>
         <div>
-          <Label className="text-[10px] uppercase text-muted-foreground">Z</Label>
+          <Label className="text-xs uppercase text-muted-foreground">Z</Label>
           <Input
             type="number" value={Number(obj.z_index)}
             onChange={(e) => patch({ z_index: Number(e.target.value) })}
@@ -118,7 +118,7 @@ export function PropertiesPanel({
       {assignment && (
         <div className="border rounded p-2 space-y-2 bg-muted/30">
           <p className="text-xs font-semibold">{assignment.display_name ?? 'Assigned'}</p>
-          {assignment.voice_part && <p className="text-[10px] text-muted-foreground">{assignment.voice_part}</p>}
+          {assignment.voice_part && <p className="text-xs text-muted-foreground">{assignment.voice_part}</p>}
           <Button variant="outline" size="sm" className="w-full h-7 text-xs" onClick={() => onClearAssignment(obj.id)}>
             Clear seat
           </Button>
@@ -127,10 +127,10 @@ export function PropertiesPanel({
 
       {assignment && onUpdateAssignment && (ORCHESTRA_SECTIONS as readonly string[]).includes(obj.subtype ?? '') && (
         <div className="border rounded p-2 space-y-2 bg-indigo-50/50">
-          <p className="text-[10px] uppercase text-muted-foreground">Orchestra chair</p>
+          <p className="text-xs uppercase text-muted-foreground">Orchestra chair</p>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-[10px] uppercase text-muted-foreground">Chair #</Label>
+              <Label className="text-xs uppercase text-muted-foreground">Chair #</Label>
               <Input
                 type="number" value={assignment.chair_number ?? ''}
                 onChange={(e) => onUpdateAssignment(assignment.id, { chair_number: e.target.value === '' ? null : Number(e.target.value) })}
@@ -154,7 +154,7 @@ export function PropertiesPanel({
             const currentPartner = (assignment.properties as any)?.stand_partner_object_id ?? '';
             return (
               <div>
-                <Label className="text-[10px] uppercase text-muted-foreground">Stand partner</Label>
+                <Label className="text-xs uppercase text-muted-foreground">Stand partner</Label>
                 <Select
                   value={currentPartner}
                   onValueChange={(v) => onUpdateAssignment(assignment.id, {
@@ -175,7 +175,7 @@ export function PropertiesPanel({
         </div>
       )}
 
-      <Button variant="destructive" size="sm" className="w-full h-8" onClick={() => onDelete([obj.id])}>
+      <Button variant="destructive" size="sm" className="w-full h-8" onClick={() => { if (confirm(assignment ? `Delete this ${obj.object_type.replace('_', ' ')}? ${assignment.display_name} loses their spot.` : 'Delete this object?')) onDelete([obj.id]); }}>
         Delete
       </Button>
     </aside>

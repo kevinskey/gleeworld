@@ -29,7 +29,7 @@ export function AttendancePanel({ attendance, assignments, objects, onReflow, on
         <div className="flex items-center justify-between">
           <p className="font-semibold text-sm">Attendance</p>
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onRefresh} title="Refresh">
-            <RefreshCw className="w-3.5 h-3.5" />
+            <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
 
@@ -45,29 +45,29 @@ export function AttendancePanel({ attendance, assignments, objects, onReflow, on
           <>
             <div className="border rounded p-2 bg-muted/30 space-y-1">
               <p className="font-medium">{attendance.session.title}</p>
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Opens {new Date(attendance.session.opens_at).toLocaleString()}
               </p>
             </div>
             <ul className="space-y-1">
               <li className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" style={{ color: ATTENDANCE_COLORS.present }} /> Present</span>
+                <span className="flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" style={{ color: ATTENDANCE_COLORS.present }} /> Present</span>
                 <span className="font-semibold">{counts.present}</span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" style={{ color: ATTENDANCE_COLORS.late }} /> Late</span>
+                <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" style={{ color: ATTENDANCE_COLORS.late }} /> Late</span>
                 <span className="font-semibold">{counts.late}</span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" style={{ color: ATTENDANCE_COLORS.absent }} /> Absent</span>
+                <span className="flex items-center gap-1.5"><XCircle className="w-4 h-4" style={{ color: ATTENDANCE_COLORS.absent }} /> Absent</span>
                 <span className="font-semibold">{counts.absent}</span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><MinusCircle className="w-3.5 h-3.5" style={{ color: ATTENDANCE_COLORS.excused }} /> Excused</span>
+                <span className="flex items-center gap-1.5"><MinusCircle className="w-4 h-4" style={{ color: ATTENDANCE_COLORS.excused }} /> Excused</span>
                 <span className="font-semibold">{counts.excused}</span>
               </li>
               <li className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5"><HelpCircle className="w-3.5 h-3.5 text-muted-foreground" /> No record</span>
+                <span className="flex items-center gap-1.5"><HelpCircle className="w-4 h-4 text-muted-foreground" /> No record</span>
                 <span className="font-semibold">{counts.unknown}</span>
               </li>
             </ul>
@@ -80,7 +80,7 @@ export function AttendancePanel({ attendance, assignments, objects, onReflow, on
                 onReflow(moves);
               }}
             >
-              <Wand2 className="w-3.5 h-3.5" /> Reflow absent to hold zone
+              <Wand2 className="w-4 h-4" /> Reflow absent to hold zone
             </Button>
           </>
         )}

@@ -89,7 +89,7 @@ export function VersionsMenu({ arrangementId, objects, assignments, onRestore }:
       <DropdownMenuContent align="end" className="w-72">
         <DropdownMenuLabel className="text-xs">Snapshots</DropdownMenuLabel>
         <DropdownMenuItem disabled={saving} onClick={save} className="text-xs gap-2">
-          <Camera className="w-3.5 h-3.5" /> Save snapshot
+          <Camera className="w-4 h-4" /> Save snapshot
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {versions.length === 0 && (
@@ -99,10 +99,10 @@ export function VersionsMenu({ arrangementId, objects, assignments, onRestore }:
           <div key={v.id} className="flex items-center justify-between gap-1 px-2 py-1 text-xs">
             <div className="min-w-0 flex-1">
               <p className="truncate">{v.name}</p>
-              <p className="text-[10px] text-muted-foreground">{new Date(v.created_at).toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleString()}</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => restore(v)} title="Restore"><RotateCcw className="w-3.5 h-3.5" /></Button>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => remove(v.id)} title="Delete"><Trash2 className="w-3.5 h-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => restore(v)} title="Restore"><RotateCcw className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { if (confirm(`Delete snapshot "${v.name}"? This cannot be undone.`)) remove(v.id); }} title="Delete snapshot" aria-label="Delete snapshot"><Trash2 className="w-4 h-4" /></Button>
           </div>
         ))}
       </DropdownMenuContent>

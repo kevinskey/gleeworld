@@ -1,6 +1,6 @@
 // SVG canvas with pan/zoom, click/box selection, and drag-to-move.
 // Works on desktop (mouse), iPad (touch), and phone (view + tap).
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { SeatingAssignment, SeatingObject } from '@/types/seatingCharts';
 import type { AttendanceStatus } from '../attendance/attendanceStatus';
 import ObjectShape from './ObjectShape';
@@ -263,7 +263,9 @@ export function CanvasEngine({
   // chart (panel/sidebar animation finished AFTER the only fit). A
   // ResizeObserver re-fits on every container size change instead —
   // and stands down permanently once the user has adjusted the view.
-  useEffect(() => {
+  // useLayoutEffect: the first fit must land before paint, or the default
+  // 0.7-scale viewport flashes for a frame before snapping to fit.
+  useLayoutEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
     const refit = () => {
@@ -275,7 +277,14 @@ export function CanvasEngine({
     refit();
     const ro = new ResizeObserver(refit);
     ro.observe(el);
-    return () => ro.disconnect();
+    // Rotation is a system event the user didn't ask for — re-arm auto-fit
+    // so the chart refits to the new shape even after a manual pan/zoom.
+    const onOrientation = () => { userAdjustedRef.current = false; refit(); };
+    window.addEventListener('orientationchange', onOrientation);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('orientationchange', onOrientation);
+    };
   }, [width, height]);
 
   const handleReset = useCallback(() => {

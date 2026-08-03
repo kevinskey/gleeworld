@@ -81,14 +81,14 @@ export function PlacementDialog({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-[11px] text-muted-foreground mt-1">{meta.help}</p>
+            <p className="text-xs text-muted-foreground mt-1">{meta.help}</p>
           </div>
 
           {meta.groupKind && (
             <div className="border rounded p-2 text-xs bg-muted/30 space-y-1.5">
               <div className="flex items-center justify-between">
                 <p className="font-medium">{GROUP_KIND_LABEL[meta.groupKind]} groups</p>
-                <Button variant="ghost" size="sm" className="h-6 text-[11px]" onClick={onOpenGroupManager}>Manage</Button>
+                <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onOpenGroupManager}>Manage</Button>
               </div>
               {groupsMissing ? (
                 <p className="text-amber-700">No groups defined yet. Open "Manage" to create one.</p>
@@ -115,7 +115,7 @@ export function PlacementDialog({
               )}
             </div>
           )}
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             Applying replaces current assignments on unlocked seats. Locked people stay put.
           </p>
         </div>
