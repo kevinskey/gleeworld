@@ -302,11 +302,16 @@ export function useStudioSession(sessionId: string | null) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
-  // Flush on unmount.
+  // Latest session for the unmount flush — the cleanup closure below is
+  // created once (deps []), so reading state directly there would see the
+  // mount-time value (null) forever. Kept current every render instead.
+  const sessionRef = useRef<Session | null>(null);
+  sessionRef.current = session;
+
+  // Flush on unmount. Reads sessionRef (not `session`) — see above.
   useEffect(() => () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    if (session) saveSession(session).catch(() => { /* swallow */ });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (sessionRef.current) saveSession(sessionRef.current).catch(() => { /* swallow */ });
   }, []);
 
   return { session, loading, error, update, flushSave, reload };
