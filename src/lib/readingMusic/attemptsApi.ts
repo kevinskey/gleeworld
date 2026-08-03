@@ -11,6 +11,8 @@ export interface RhythmAttemptPayload {
   verdicts: string[];
   meter: { beats: number; beatType: number };
   seed: number;
+  /** Bars actually generated — player-selectable, so not derivable from level. */
+  measures?: number;
   no_input?: boolean;
   /** Clap Blast only: calibrated device latency applied during grading (mic input). */
   latency_ms?: number;

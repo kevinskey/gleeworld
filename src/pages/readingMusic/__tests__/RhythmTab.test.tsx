@@ -44,6 +44,21 @@ describe('RhythmTab', () => {
     expect(screen.getByRole('button', { name: /clap blast/i })).toBeInTheDocument();
   });
 
+  it('lets any level be picked — stars record progress, they do not gate it', () => {
+    localStorage.removeItem('rm_rhythm_stars');
+    render(<RhythmTab />);
+    expect(screen.getByRole('button', { name: /level 8/i })).toBeEnabled();
+    expect(screen.queryByText(/🔒/)).not.toBeInTheDocument();
+  });
+
+  it('offers the measure-count choices', () => {
+    render(<RhythmTab />);
+    const select = screen.getByLabelText(/measures/i) as HTMLSelectElement;
+    expect([...select.options].map((o) => o.value)).toEqual(['2', '4', '8', '16']);
+    fireEvent.change(select, { target: { value: '16' } });
+    expect(select.value).toBe('16');
+  });
+
   it('hides the syllables picker on Clap Blast and restores it on other drills', () => {
     render(<RhythmTab />);
     expect(screen.getByLabelText(/syllables/i)).toBeInTheDocument();

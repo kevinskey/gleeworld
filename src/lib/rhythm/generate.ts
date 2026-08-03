@@ -26,16 +26,19 @@ function canFill(remaining: number, sizes: number[], memo = new Map<number, bool
   return ok;
 }
 
-export function generatePattern(levelId: number, seed: number, meterIndex = 0): RhythmPattern {
+// `measures` overrides the level's own bar count so the player can pick a
+// short drill or a long endurance run without changing difficulty.
+export function generatePattern(levelId: number, seed: number, meterIndex = 0, measures?: number): RhythmPattern {
   const lvl = RHYTHM_LEVELS.find((l) => l.id === levelId);
   if (!lvl) throw new Error(`unknown rhythm level ${levelId}`);
+  const bars = Math.max(1, Math.floor(measures ?? lvl.measures));
   const meter: Meter = lvl.meters[meterIndex % lvl.meters.length];
   const ppm = pulsesPerMeasure(meter);
   const rand = mulberry32(seed * 8 + levelId);
   const sizes = lvl.cells.map((c) => c.pulses);
   const events: RhythmEvent[] = [];
   let cursor = 0;
-  for (let m = 0; m < lvl.measures; m++) {
+  for (let m = 0; m < bars; m++) {
     let remaining = ppm;
     while (remaining > 1e-6) {
       const fits: RhythmCell[] = lvl.cells.filter((c) => c.pulses <= remaining + 1e-6
@@ -50,5 +53,5 @@ export function generatePattern(levelId: number, seed: number, meterIndex = 0): 
       remaining -= cell.pulses;
     }
   }
-  return { meter, pulsesPerMeasure: ppm, measures: lvl.measures, events, totalPulses: ppm * lvl.measures };
+  return { meter, pulsesPerMeasure: ppm, measures: bars, events, totalPulses: ppm * bars };
 }

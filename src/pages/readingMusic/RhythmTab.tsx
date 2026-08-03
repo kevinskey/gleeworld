@@ -29,6 +29,8 @@ type Drill = 'steady_beat' | 'echo' | 'read_clap' | 'clap_blast';
 type InputMethod = 'tap' | 'mic';
 type Phase = 'idle' | 'demo' | 'countin' | 'take' | 'result';
 
+const MEASURE_CHOICES = [2, 4, 8, 16];
+
 const DRILLS: Array<{ id: Drill; label: string; blurb: string }> = [
   { id: 'steady_beat', label: 'Steady Beat', blurb: 'Tap along with the click.' },
   { id: 'echo', label: 'Echo', blurb: 'Listen, then clap it back.' },
@@ -93,6 +95,7 @@ export function RhythmTab() {
   const [input, setInput] = useState<InputMethod>(() => (localStorage.getItem('rm_rhythm_input') as InputMethod) || 'tap');
   const [system, setSystem] = useState<SyllableSystem>(() => (localStorage.getItem('rm_rhythm_syllables') as SyllableSystem) || 'takadimi');
   const [bpm, setBpm] = useState<number>(RHYTHM_LEVELS[0].defaultBpm);
+  const [measures, setMeasures] = useState<number>(() => readJson('rm_rhythm_measures', RHYTHM_LEVELS[0].measures));
   const [assessment, setAssessment] = useState(false);
   const [phase, setPhase] = useState<Phase>('idle');
   const [pattern, setPattern] = useState<RhythmPattern | null>(null);
@@ -118,6 +121,7 @@ export function RhythmTab() {
   useEffect(() => { localStorage.setItem('rm_rhythm_input', input); }, [input]);
   useEffect(() => { localStorage.setItem('rm_rhythm_syllables', system); }, [system]);
   useEffect(() => { localStorage.setItem('rm_rhythm_stars', JSON.stringify(stars)); }, [stars]);
+  useEffect(() => { localStorage.setItem('rm_rhythm_measures', JSON.stringify(measures)); }, [measures]);
   useEffect(() => {
     const lvl = RHYTHM_LEVELS.find((l) => l.id === level);
     if (lvl) setBpm(lvl.defaultBpm);
@@ -181,7 +185,9 @@ export function RhythmTab() {
     }
 
     const seed = Math.floor(Math.random() * 1e9);
-    const p = drill === 'steady_beat' ? generatePattern(1, seed) : generatePattern(level, seed, seed % 7);
+    const p = drill === 'steady_beat'
+      ? generatePattern(1, seed, 0, measures)
+      : generatePattern(level, seed, seed % 7, measures);
     setPattern(p);
     setResult(null);
 
@@ -280,7 +286,7 @@ export function RhythmTab() {
           bpm, input: effectiveInput, syllables: system, tolerancePct,
           expected: expectedOnsets(p, spp), actual: payloadActual,
           verdicts: graded.notes.map((n) => n.verdict),
-          meter: p.meter, seed, ...(noInput ? { no_input: true } : {}),
+          meter: p.meter, seed, measures: p.measures, ...(noInput ? { no_input: true } : {}),
           ...(drill === 'clap_blast' ? { best_streak: bestStreak } : {}),
           ...(drill === 'clap_blast' && effectiveInput === 'mic' && latencyMs !== null ? { latency_ms: latencyMs } : {}),
         },
@@ -289,7 +295,7 @@ export function RhythmTab() {
       // and cancelTake() disposes the mic here — so the schedule has to carry the
       // same latency the round was built with, or slow devices force a miss.
     }, ms(t0 + takeDur + latencySec + 2 * tol + 0.35)));
-  }, [assessment, bpm, cancelTake, drill, input, latencyMs, level, system]);
+  }, [assessment, bpm, cancelTake, drill, input, latencyMs, level, measures, system]);
 
   const getOnsets = useCallback(() => sessionRef.current?.onsets ?? [], []);
 
@@ -305,23 +311,22 @@ export function RhythmTab() {
 
       {/* Level journey */}
       <div className="flex flex-wrap gap-2">
+        {/* Every level is selectable — stars record progress, they don't gate it. */}
         {RHYTHM_LEVELS.map((l) => {
-          const locked = l.id > 1 && (stars[l.id - 1] ?? 0) < 1;
           const s = stars[l.id] ?? 0;
           return (
             <button
               key={l.id}
               type="button"
-              disabled={locked || running}
+              disabled={running}
               onClick={() => setLevel(l.id)}
               className={`rounded-full border px-3 py-1.5 text-sm transition ${
                 level === l.id ? 'border-slate-800 bg-slate-800 text-white'
-                : locked ? 'border-slate-200 bg-slate-100 text-slate-400'
                 : 'border-slate-300 bg-white text-slate-700 hover:bg-accent'
               }`}
               title={l.label}
             >
-              Level {l.id}{s > 0 ? ` ${'★'.repeat(s)}` : locked ? ' 🔒' : ''}
+              Level {l.id}{s > 0 ? ` ${'★'.repeat(s)}` : ''}
             </button>
           );
         })}
@@ -377,6 +382,18 @@ export function RhythmTab() {
                 </select>
               </div>
             )}
+            <div className="flex items-center gap-2">
+              <label htmlFor="rm-measures" className="text-sm text-slate-600">Measures</label>
+              <select
+                id="rm-measures"
+                className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+                value={measures}
+                disabled={running}
+                onChange={(e) => setMeasures(Number(e.target.value))}
+              >
+                {MEASURE_CHOICES.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-600">Tempo</span>
               <Button variant="outline" size="sm" disabled={running || bpm <= 40} onClick={() => setBpm((b) => Math.max(40, b - 5))}>−5</Button>

@@ -33,3 +33,23 @@ describe('generatePattern', () => {
     }
   });
 });
+
+describe('measures override', () => {
+  it('generates the requested bar count instead of the level default', () => {
+    const two = generatePattern(2, 7);           // level 2 defaults to 2 bars
+    const eight = generatePattern(2, 7, 0, 8);
+    expect(two.measures).toBe(2);
+    expect(eight.measures).toBe(8);
+    expect(eight.totalPulses).toBe(eight.pulsesPerMeasure * 8);
+    expect(eight.events.length).toBeGreaterThan(two.events.length);
+  });
+  it('every measure is filled exactly', () => {
+    const p = generatePattern(4, 3, 0, 16);
+    const sum = p.events.reduce((s, e) => s + e.durPulses, 0);
+    expect(sum).toBeCloseTo(p.pulsesPerMeasure * 16, 6);
+  });
+  it('clamps nonsense bar counts to at least one measure', () => {
+    expect(generatePattern(1, 1, 0, 0).measures).toBe(1);
+    expect(generatePattern(1, 1, 0, -5).measures).toBe(1);
+  });
+});
