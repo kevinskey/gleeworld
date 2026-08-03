@@ -19,6 +19,7 @@ import type { MicOnsetSession } from '@/lib/rhythm/onsets/mic';
 import { insertAttempt } from '@/lib/readingMusic/attemptsApi';
 import { RhythmStrip } from './RhythmStrip';
 import { RhythmResults } from './RhythmResults';
+import { getAudioCtx } from './audioCtx';
 
 type Drill = 'steady_beat' | 'echo' | 'read_clap';
 type InputMethod = 'tap' | 'mic';
@@ -29,22 +30,6 @@ const DRILLS: Array<{ id: Drill; label: string; blurb: string }> = [
   { id: 'echo', label: 'Echo', blurb: 'Listen, then clap it back.' },
   { id: 'read_clap', label: 'Read & Clap', blurb: 'Read the line, then perform it.' },
 ];
-
-// Created inside the click gesture (Safari/iOS requirement), reused after.
-let toneCtx: AudioContext | null = null;
-function getAudioCtx(): AudioContext | null {
-  try {
-    if (!toneCtx) {
-      const Ctor = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (!Ctor) return null;
-      toneCtx = new Ctor();
-    }
-    if (toneCtx.state === 'suspended') void toneCtx.resume();
-    return toneCtx;
-  } catch {
-    return null;
-  }
-}
 
 // Short sine bursts (the playClicks envelope idiom) with an explicit start
 // time so the count-in can be scheduled after an echo demo.
