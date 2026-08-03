@@ -12,7 +12,14 @@ const corsHeaders = {
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-06-20" });
 const APP_HOST = Deno.env.get("APP_HOST") ?? "https://gleeworld.org";
 
-interface Item { partner_score_id: string; }
+interface Item { partner_score_id: string; quantity?: number; }
+
+// Seat licensing (2026-08-03): quantity = number of people INCLUDING the
+// buyer licensed to use the score in-app. Priced per copy.
+const clampQty = (q: unknown): number => {
+  const n = Math.trunc(Number(q));
+  return Number.isFinite(n) ? Math.min(Math.max(n, 1), 200) : 1;
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -59,9 +66,13 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: "partner not currently accepting purchases" }), { status: 400, headers: { ...corsHeaders, "content-type": "application/json" } });
   }
 
-  const subtotal_cents = published.reduce((s, x) => s + x.price_cents, 0);
+  const qtyByScore = new Map(items.map(i => [i.partner_score_id, clampQty(i.quantity)]));
+  const subtotal_cents = published.reduce((s, x) => s + x.price_cents * (qtyByScore.get(x.id) ?? 1), 0);
   const platform_fee_cents = Math.floor(subtotal_cents / 2);
   const cart_score_ids = published.map(s => s.id).join(",");
+  // Aligned 1:1 with cart_score_ids so the webhook can recover per-item
+  // quantities without another metadata size hit.
+  const cart_quantities = published.map(s => qtyByScore.get(s.id) ?? 1).join(",");
 
   // Insert order (pending).
   const { data: order, error: orderErr } = await supa
@@ -88,7 +99,7 @@ serve(async (req) => {
         product_data: { name: s.title },
         unit_amount: s.price_cents,
       },
-      quantity: 1,
+      quantity: qtyByScore.get(s.id) ?? 1,
     })),
     payment_intent_data: {
       application_fee_amount: platform_fee_cents,
@@ -100,6 +111,7 @@ serve(async (req) => {
       partner_id: partnerId,
       buyer_user_id: userData.user.id,
       cart_score_ids,
+      cart_quantities,
     },
     success_url: `${APP_HOST}/store/thanks?order=${order.id}`,
     cancel_url: `${APP_HOST}/store`,
