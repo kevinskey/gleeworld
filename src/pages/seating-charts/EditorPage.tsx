@@ -1,21 +1,26 @@
-// Seating chart editor: toolbar + palette + canvas + properties panel.
+// Seating chart editor: chart-first layout. A slim icon rail (left on md+,
+// bottom bar on phones) opens tool panels that overlay the canvas as
+// flyouts (md+) or Sheets (phones) — the canvas itself never reflows.
 // Loads people from gw_profiles_directory scoped to the current tenant.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft, Save, Printer, Download, Undo2, Wand2, Share2, Users, FileText,
-  PanelLeft, SlidersHorizontal,
+  Shapes, SlidersHorizontal, Users2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { useIsPhone } from '@/hooks/use-mobile';
+import { useIsCompactNav } from '@/hooks/use-mobile';
 import { useSeatingChart } from '@/hooks/useSeatingChart';
-import { Palette } from '@/features/seating-charts/engine/Palette';
+import { PeoplePanel } from '@/features/seating-charts/engine/PeoplePanel';
+import { ObjectsPanel } from '@/features/seating-charts/engine/ObjectsPanel';
 import { PropertiesPanel } from '@/features/seating-charts/engine/PropertiesPanel';
 import { CanvasEngine } from '@/features/seating-charts/engine/CanvasEngine';
 import { ArrangementsSwitcher } from '@/features/seating-charts/editor/ArrangementsSwitcher';
+import { EditorRail, type RailItem, type RailItemKey } from '@/features/seating-charts/editor/EditorRail';
+import { EditorFlyout } from '@/features/seating-charts/editor/EditorFlyout';
 import { PlacementDialog } from '@/features/seating-charts/placement/PlacementDialog';
 import { ShareDialog } from '@/features/seating-charts/sharing/ShareDialog';
 import { RosterImportDialog } from '@/features/seating-charts/imports/RosterImportDialog';
@@ -26,10 +31,15 @@ import { useChartAttendance } from '@/features/seating-charts/attendance/useChar
 import { AssociationsMenu } from '@/features/seating-charts/associations/AssociationsMenu';
 import { GroupManager } from '@/features/seating-charts/placement/GroupManager';
 import { OrchestraToolbar } from '@/features/seating-charts/orchestra/OrchestraToolbar';
-import { Users2 } from 'lucide-react';
 import type { SeatingAssignment, SeatingObject, SeatingPerson } from '@/types/seatingCharts';
 import { newDbId, isUuid } from '@/features/seating-charts/ids';
 
+const FLYOUT_TITLES: Record<string, string> = {
+  people: 'People',
+  objects: 'Objects',
+  properties: 'Properties',
+  share: 'Share & export',
+};
 
 export function SeatingChartEditorPage() {
   const params = useParams<{ chartId: string }>();
@@ -52,9 +62,13 @@ export function SeatingChartEditorPage() {
   const [shareOpen, setShareOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [groupsOpen, setGroupsOpen] = useState(false);
-  const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
-  const [mobilePropsOpen, setMobilePropsOpen] = useState(false);
-  const isPhone = useIsPhone();
+  const [activeFlyout, setActiveFlyout] = useState<RailItemKey | null>(null);
+  // Tap-to-place: native HTML5 drag-and-drop never fires on touch, so a
+  // tapped person is "armed" and the next tapped seat receives them.
+  const [armedPerson, setArmedPerson] = useState<{ id: string; name: string } | null>(null);
+  // Same 768px gate as the rail's `md:` classes — a useIsPhone (640px) gate
+  // here left 640-767px viewports with buttons that opened nothing.
+  const isCompact = useIsCompactNav();
   const canvasRef = useRef<HTMLDivElement>(null);
   const attendance = useChartAttendance(chartId);
 
@@ -92,6 +106,24 @@ export function SeatingChartEditorPage() {
     () => (state?.objects ?? []).filter((o) => selectedIds.includes(o.id)),
     [state?.objects, selectedIds],
   );
+
+  // Selecting on the canvas opens Properties; deselecting closes it.
+  // Compact viewports keep it manual — an auto-opening sheet would cover
+  // the chart on every tap.
+  useEffect(() => {
+    if (isCompact) return;
+    if (selection.length > 0) {
+      setActiveFlyout('properties');
+    } else {
+      setActiveFlyout((k) => (k === 'properties' ? null : k));
+    }
+  }, [selection.length, isCompact]);
+
+  const handleRailSelect = useCallback((key: RailItemKey) => {
+    if (key === 'autoplace') { setPlacementOpen(true); return; }
+    if (key === 'groups') { setGroupsOpen(true); return; }
+    setActiveFlyout((k) => (k === key ? null : key));
+  }, []);
 
   const handleAddObject = useCallback((partial: Omit<SeatingObject, 'id' | 'tenant_id' | 'arrangement_id' | 'created_at' | 'updated_at'>) => {
     if (!state) return;
@@ -131,6 +163,25 @@ export function SeatingChartEditorPage() {
     };
     upsertAssignment(assignment);
   }, [state, assignmentByObjectId, upsertAssignment]);
+
+  // Arm a person from the People panel (tap-to-place). On compact
+  // viewports the panel is a Sheet covering the chart, so close it to
+  // expose the seats.
+  const handleArmPerson = useCallback((person: { id: string; name: string } | null) => {
+    setArmedPerson(person);
+    if (person && isCompact) setActiveFlyout(null);
+  }, [isCompact]);
+
+  // Second half of tap-to-place: tapping a seat selects it; if someone is
+  // armed, that selection becomes their assignment.
+  useEffect(() => {
+    if (!armedPerson || selection.length !== 1) return;
+    const obj = selection[0];
+    if (!['seat', 'chair', 'riser_slot', 'desk'].includes(obj.object_type)) return;
+    handleDropPerson(obj.id, armedPerson.id, armedPerson.name);
+    setArmedPerson(null);
+    setSelectedIds([]);
+  }, [armedPerson, selection, handleDropPerson]);
 
   const handlePrint = useCallback(() => {
     window.print();
@@ -199,27 +250,126 @@ export function SeatingChartEditorPage() {
     );
   }
 
+  const railItems: RailItem[] = [
+    { key: 'people', icon: Users, label: 'People' },
+    { key: 'objects', icon: Shapes, label: 'Objects' },
+    { key: 'properties', icon: SlidersHorizontal, label: 'Properties', badge: selection.length },
+    { key: 'autoplace', icon: Wand2, label: 'Auto-place', dividerBefore: true },
+    { key: 'groups', icon: Users2, label: 'Groups' },
+    { key: 'share', icon: Share2, label: 'Share & export', dividerBefore: true },
+  ];
+
+  const railExtras = (
+    <AttendancePanel
+      attendance={attendance}
+      assignments={state.assignments}
+      objects={state.objects}
+      onReflow={handleReflow}
+      onRefresh={attendance.refresh}
+    />
+  );
+
+  const flyoutContent = (key: RailItemKey) => {
+    switch (key) {
+      case 'people':
+        return (
+          <PeoplePanel
+            people={mergedPeople}
+            assignedPersonIds={assignedPersonIds}
+            peopleSearch={peopleSearch}
+            onPeopleSearchChange={setPeopleSearch}
+            onRefreshPeople={loadPeople}
+            onImportRoster={() => setImportOpen(true)}
+            armedPersonId={armedPerson?.id ?? null}
+            onArmPerson={handleArmPerson}
+          />
+        );
+      case 'objects':
+        return (
+          <ObjectsPanel
+            onAddObject={(partial) => {
+              handleAddObject(partial);
+              if (isCompact) setActiveFlyout(null);
+            }}
+          />
+        );
+      case 'properties':
+        return (
+          <PropertiesPanel
+            selection={selection}
+            assignmentByObjectId={assignmentByObjectId}
+            allAssignments={state.assignments}
+            allObjects={state.objects}
+            onUpdate={updateObject}
+            onUpdateAssignment={updateAssignment}
+            onClearAssignment={clearAssignment}
+            onDelete={(ids) => { deleteObjects(ids); setSelectedIds([]); setActiveFlyout(null); }}
+          />
+        );
+      case 'share':
+        return (
+          <div className="p-2 space-y-1">
+            <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs" onClick={() => setShareOpen(true)}>
+              <Share2 className="w-4 h-4" /> Share
+            </Button>
+            <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs" onClick={handlePrint}>
+              <Printer className="w-4 h-4" /> Print
+            </Button>
+            <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs" onClick={handleExportPng}>
+              <Download className="w-4 h-4" /> Export PNG
+            </Button>
+            <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs" onClick={handleExportPdf}>
+              <FileText className="w-4 h-4" /> Export PDF
+            </Button>
+            <div className="border-t my-2" />
+            <div className="flex items-center gap-1 text-xs">
+              <OrchestraToolbar
+                objects={state.objects}
+                assignments={state.assignments}
+                onApplyChairNumbers={(patches) => patches.forEach((p) => updateAssignment(p.id, { chair_number: p.chair_number }))}
+                onRotateStands={(swaps) => swapAssignments(swaps)}
+              />
+              <span>Orchestra tools</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs">
+              <VersionsMenu
+                arrangementId={state.arrangement.id}
+                objects={state.objects}
+                assignments={state.assignments}
+                onRestore={replaceArrangementContents}
+              />
+              <span>Snapshots</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs">
+              <AssociationsMenu chartId={state.chart.id} />
+              <span>Calendar links</span>
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-56px)]">
-      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 border-b bg-white px-2 md:px-3 py-2 print:hidden">
-        <div className="flex items-center gap-2 min-w-0">
-          <Button variant="ghost" size="icon" onClick={() => nav('/seating-charts')} className="shrink-0">
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <Input
-            value={state.chart.name}
-            onChange={(e) => patchChart({ name: e.target.value })}
-            className="h-8 min-w-0 flex-1 md:flex-none md:w-72 text-sm font-semibold"
-          />
-          <span className="hidden sm:inline text-xs text-muted-foreground min-w-24 shrink-0">
-            {saveStatus === 'saving' && 'Saving…'}
-            {saveStatus === 'saved' && 'Saved'}
-            {saveStatus === 'dirty' && 'Unsaved changes'}
-            {saveStatus === 'error' && <span className="text-red-600">Save error</span>}
-            {saveStatus === 'idle' && 'Ready'}
-          </span>
-        </div>
-        <div className="flex items-center gap-1 overflow-x-auto -mx-2 md:mx-0 px-2 md:px-0 scrollbar-hide">
+      <header className="flex items-center gap-2 border-b bg-card px-2 md:px-3 py-2 print:hidden">
+        <Button variant="ghost" size="icon" onClick={() => nav('/seating-charts')} className="shrink-0">
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
+        <Input
+          value={state.chart.name}
+          onChange={(e) => patchChart({ name: e.target.value })}
+          className="h-8 min-w-0 flex-1 md:flex-none md:w-72 text-sm font-semibold"
+        />
+        <span className="hidden sm:inline text-xs text-muted-foreground shrink-0">
+          {saveStatus === 'saving' && 'Saving…'}
+          {saveStatus === 'saved' && 'Saved'}
+          {saveStatus === 'dirty' && 'Unsaved changes'}
+          {saveStatus === 'error' && <span className="text-destructive">Save error</span>}
+          {saveStatus === 'idle' && 'Ready'}
+        </span>
+        <div className="flex items-center gap-1 ml-auto shrink-0">
           <ArrangementsSwitcher
             arrangements={state.arrangements}
             activeId={state.arrangement.id}
@@ -230,151 +380,73 @@ export function SeatingChartEditorPage() {
             onSetDefault={setDefaultArrangement}
             onDelete={deleteArrangement}
           />
-          <Button variant="ghost" size="icon" title="Auto-place" onClick={() => setPlacementOpen(true)}>
-            <Wand2 className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" title="Import roster" onClick={() => setImportOpen(true)}>
-            <Users className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" title="Share" onClick={() => setShareOpen(true)}>
-            <Share2 className="w-4 h-4" />
-          </Button>
-          <AssociationsMenu chartId={state.chart.id} />
-          <Button variant="ghost" size="icon" title="Groups" onClick={() => setGroupsOpen(true)}>
-            <Users2 className="w-4 h-4" />
-          </Button>
-          <OrchestraToolbar
-            objects={state.objects}
-            assignments={state.assignments}
-            onApplyChairNumbers={(patches) => patches.forEach((p) => updateAssignment(p.id, { chair_number: p.chair_number }))}
-            onRotateStands={(swaps) => swapAssignments(swaps)}
-          />
-          <AttendancePanel
-            attendance={attendance}
-            assignments={state.assignments}
-            objects={state.objects}
-            onReflow={handleReflow}
-            onRefresh={attendance.refresh}
-          />
-          <VersionsMenu
-            arrangementId={state.arrangement.id}
-            objects={state.objects}
-            assignments={state.assignments}
-            onRestore={replaceArrangementContents}
-          />
           <Button variant="ghost" size="icon" title="Reload" onClick={() => reload()}>
             <Undo2 className="w-4 h-4" />
           </Button>
           <Button variant="ghost" size="icon" title="Save now" onClick={() => forceSave()}>
             <Save className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" title="Print" onClick={handlePrint}>
-            <Printer className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" title="Export PNG" onClick={handleExportPng}>
-            <Download className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" title="Export PDF" onClick={handleExportPdf}>
-            <FileText className="w-4 h-4" />
-          </Button>
         </div>
       </header>
 
-      {/* Mobile-only toolbar for panel access; the desktop side panels replace this. */}
-      <div className="flex md:hidden items-center gap-2 border-b bg-white px-2 py-1 print:hidden">
-        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setMobilePaletteOpen(true)}>
-          <PanelLeft className="w-3.5 h-3.5" /> Palette
-        </Button>
-        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setMobilePropsOpen(true)}>
-          <SlidersHorizontal className="w-3.5 h-3.5" /> Properties
-          {selection.length > 0 && <span className="ml-1 rounded-full bg-primary text-primary-foreground text-[10px] px-1.5">{selection.length}</span>}
-        </Button>
-        <span className="text-[11px] text-muted-foreground ml-auto">
-          {saveStatus === 'saving' && 'Saving…'}
-          {saveStatus === 'saved' && 'Saved'}
-          {saveStatus === 'dirty' && 'Unsaved'}
-          {saveStatus === 'error' && <span className="text-red-600">Error</span>}
-        </span>
-      </div>
-
       <div className="flex-1 flex overflow-hidden">
-        {/* Desktop / tablet: fixed side panels. Phone: hidden — Sheets below own them. */}
         <div className="hidden md:flex">
-          <Palette
-            people={mergedPeople}
-            assignedPersonIds={assignedPersonIds}
-            peopleSearch={peopleSearch}
-            onPeopleSearchChange={setPeopleSearch}
-            onAddObject={handleAddObject}
-            onRefreshPeople={loadPeople}
-          />
+          <EditorRail items={railItems} activeKey={activeFlyout} onSelect={handleRailSelect}>
+            {railExtras}
+          </EditorRail>
         </div>
 
-        <div ref={canvasRef} className="flex-1 flex">
-          <CanvasEngine
-            width={state.chart.canvas_width}
-            height={state.chart.canvas_height}
-            objects={state.objects}
-            assignments={state.assignments}
-            selectedIds={selectedIds}
-            onSelectionChange={setSelectedIds}
-            onObjectMove={(id, x, y) => updateObject(id, { x, y })}
-            onObjectDropPerson={handleDropPerson}
-            attendanceByUserId={attendance.byUserId}
-          />
-        </div>
-
-        <div className="hidden md:flex">
-          <PropertiesPanel
-            selection={selection}
-            assignmentByObjectId={assignmentByObjectId}
-            allAssignments={state.assignments}
-            allObjects={state.objects}
-            onUpdate={updateObject}
-            onUpdateAssignment={updateAssignment}
-            onClearAssignment={clearAssignment}
-            onDelete={(ids) => { deleteObjects(ids); setSelectedIds([]); }}
-          />
+        <div className="relative flex-1 flex overflow-hidden">
+          <div ref={canvasRef} className="flex-1 flex">
+            <CanvasEngine
+              width={state.chart.canvas_width}
+              height={state.chart.canvas_height}
+              objects={state.objects}
+              assignments={state.assignments}
+              selectedIds={selectedIds}
+              onSelectionChange={setSelectedIds}
+              onObjectMove={(id, x, y) => updateObject(id, { x, y })}
+              onObjectDropPerson={handleDropPerson}
+              attendanceByUserId={attendance.byUserId}
+            />
+          </div>
+          {armedPerson && (
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-primary text-primary-foreground text-xs px-3 py-2 shadow print:hidden">
+              <span>Tap a seat to place {armedPerson.name}</span>
+              <button type="button" className="underline font-semibold" onClick={() => setArmedPerson(null)}>
+                Cancel
+              </button>
+            </div>
+          )}
+          {!isCompact && activeFlyout && (
+            <EditorFlyout title={FLYOUT_TITLES[activeFlyout] ?? ''} onClose={() => {
+              if (activeFlyout === 'properties') setSelectedIds([]);
+              setActiveFlyout(null);
+            }}>
+              {flyoutContent(activeFlyout)}
+            </EditorFlyout>
+          )}
         </div>
       </div>
 
-      {/* Phone-only bottom sheets */}
-      {isPhone && (
-        <>
-          <Sheet open={mobilePaletteOpen} onOpenChange={setMobilePaletteOpen}>
-            <SheetContent side="left" className="p-0 w-[85vw] max-w-sm">
-              <SheetHeader className="p-3 border-b"><SheetTitle className="text-sm">Palette</SheetTitle></SheetHeader>
-              <div className="flex flex-col h-[calc(100%-49px)]">
-                <Palette
-                  people={mergedPeople}
-                  assignedPersonIds={assignedPersonIds}
-                  peopleSearch={peopleSearch}
-                  onPeopleSearchChange={setPeopleSearch}
-                  onAddObject={(partial) => { handleAddObject(partial); setMobilePaletteOpen(false); }}
-                  onRefreshPeople={loadPeople}
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
+      {/* Phone: rail docks to the bottom edge; panels open as Sheets. */}
+      <div className="flex md:hidden print:hidden">
+        <EditorRail items={railItems} activeKey={activeFlyout} onSelect={handleRailSelect}>
+          {railExtras}
+        </EditorRail>
+      </div>
 
-          <Sheet open={mobilePropsOpen} onOpenChange={setMobilePropsOpen}>
-            <SheetContent side="right" className="p-0 w-[85vw] max-w-sm">
-              <SheetHeader className="p-3 border-b"><SheetTitle className="text-sm">Properties</SheetTitle></SheetHeader>
-              <div className="flex flex-col h-[calc(100%-49px)]">
-                <PropertiesPanel
-                  selection={selection}
-                  assignmentByObjectId={assignmentByObjectId}
-                  allAssignments={state.assignments}
-                  allObjects={state.objects}
-                  onUpdate={updateObject}
-                  onUpdateAssignment={updateAssignment}
-                  onClearAssignment={clearAssignment}
-                  onDelete={(ids) => { deleteObjects(ids); setSelectedIds([]); setMobilePropsOpen(false); }}
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </>
+      {isCompact && (
+        <Sheet open={activeFlyout !== null} onOpenChange={(open) => { if (!open) setActiveFlyout(null); }}>
+          <SheetContent side={activeFlyout === 'properties' ? 'right' : 'left'} className="p-0 w-[85vw] max-w-sm">
+            <SheetHeader className="p-3 border-b">
+              <SheetTitle className="text-sm">{activeFlyout ? FLYOUT_TITLES[activeFlyout] : ''}</SheetTitle>
+            </SheetHeader>
+            <div className="flex flex-col h-[calc(100%-49px)]">
+              {activeFlyout && flyoutContent(activeFlyout)}
+            </div>
+          </SheetContent>
+        </Sheet>
       )}
 
       <PlacementDialog

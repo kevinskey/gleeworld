@@ -285,6 +285,23 @@ export function CanvasEngine({
     setViewport(fitScale(width, height, rect.width, rect.height));
   }, [width, height]);
 
+  // +/- buttons zoom around the container center.
+  const zoomBy = useCallback((factor: number) => {
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const px = rect.width / 2;
+    const py = rect.height / 2;
+    userAdjustedRef.current = true;
+    setViewport((v) => {
+      const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, v.scale * factor));
+      return {
+        scale: nextScale,
+        panX: px - ((px - v.panX) / v.scale) * nextScale,
+        panY: py - ((py - v.panY) / v.scale) * nextScale,
+      };
+    });
+  }, []);
+
   // Keyboard: arrow keys nudge selection.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -369,11 +386,27 @@ export function CanvasEngine({
           )}
         </g>
       </svg>
-      <div className="absolute bottom-2 right-2 flex gap-2 bg-white/90 backdrop-blur rounded-md shadow px-2 py-1 text-xs text-slate-600">
-        <span>Zoom: {Math.round(viewport.scale * 100)}%</span>
+      <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-card/90 backdrop-blur shadow border px-1 py-1 text-xs text-muted-foreground print:hidden">
         <button
           type="button"
-          className="text-slate-700 hover:text-slate-900"
+          className="h-8 w-8 inline-flex items-center justify-center text-foreground hover:bg-accent text-sm font-semibold"
+          onClick={() => zoomBy(1 / 1.25)}
+          aria-label="Zoom out"
+        >
+          −
+        </button>
+        <span className="min-w-10 text-center tabular-nums">{Math.round(viewport.scale * 100)}%</span>
+        <button
+          type="button"
+          className="h-8 w-8 inline-flex items-center justify-center text-foreground hover:bg-accent text-sm font-semibold"
+          onClick={() => zoomBy(1.25)}
+          aria-label="Zoom in"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          className="h-8 px-2 inline-flex items-center justify-center text-foreground hover:bg-accent"
           onClick={handleReset}
         >
           Fit
