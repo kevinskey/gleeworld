@@ -15,13 +15,13 @@ ALTER TABLE public.gw_attendance_sessions
 ALTER TABLE public.gw_attendance_records DROP CONSTRAINT IF EXISTS gw_attendance_records_check_in_method_check;
 ALTER TABLE public.gw_attendance_records
   ADD CONSTRAINT gw_attendance_records_check_in_method_check
-  CHECK (check_in_method IN ('qr', 'manual', 'pin', 'auto', 'qr_scan', 'self')) NOT VALID;
+  CHECK (check_in_method IN ('qr', 'manual', 'pin', 'auto', 'qr_scan', 'gps', 'self')) NOT VALID;
 
 -- 2. Per-session secret seed (NEVER student-readable)
 CREATE TABLE public.gw_attendance_session_secrets (
   session_id UUID PRIMARY KEY REFERENCES public.gw_attendance_sessions(id) ON DELETE CASCADE,
   challenge_seed UUID NOT NULL DEFAULT gen_random_uuid(),
-  tenant_id UUID NOT NULL DEFAULT public.current_tenant_id(),
+  tenant_id UUID DEFAULT public.current_tenant_id(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 ALTER TABLE public.gw_attendance_session_secrets ENABLE ROW LEVEL SECURITY;
@@ -56,7 +56,7 @@ CREATE TABLE public.gw_attendance_challenge_attempts (
   symbol_index INTEGER NOT NULL,
   was_correct BOOLEAN NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  tenant_id UUID NOT NULL DEFAULT public.current_tenant_id()
+  tenant_id UUID DEFAULT public.current_tenant_id()
 );
 CREATE INDEX idx_challenge_attempts_session_user
   ON public.gw_attendance_challenge_attempts(session_id, user_id);
@@ -87,10 +87,12 @@ USING (
 -- 4. Seed trigger: every roll_call session gets a secret automatically.
 CREATE OR REPLACE FUNCTION public.seed_roll_call_secret()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  v_tenant UUID := (to_jsonb(NEW) ->> 'tenant_id')::uuid;
 BEGIN
   IF NEW.mode = 'roll_call' THEN
-    INSERT INTO gw_attendance_session_secrets (session_id)
-    VALUES (NEW.id)
+    INSERT INTO gw_attendance_session_secrets (session_id, tenant_id)
+    VALUES (NEW.id, COALESCE(v_tenant, public.current_tenant_id()))
     ON CONFLICT (session_id) DO NOTHING;
   END IF;
   RETURN NEW;
@@ -120,6 +122,7 @@ DECLARE
   v_status TEXT := 'present';
   v_existing RECORD;
   v_now TIMESTAMPTZ := now();
+  v_tenant UUID;
 BEGIN
   IF v_uid IS NULL THEN
     RETURN jsonb_build_object('success', false, 'error', 'NOT_AUTHENTICATED', 'message', 'Please sign in.');
@@ -132,6 +135,7 @@ BEGIN
   IF v_session IS NULL OR v_session.mode <> 'roll_call' THEN
     RETURN jsonb_build_object('success', false, 'error', 'SESSION_NOT_FOUND', 'message', 'Roll call not found.');
   END IF;
+  v_tenant := (to_jsonb(v_session) ->> 'tenant_id')::uuid;
   IF v_session.status <> 'open' OR v_now < v_session.opens_at OR v_now > v_session.closes_at THEN
     RETURN jsonb_build_object('success', false, 'error', 'SESSION_CLOSED', 'message', 'This roll call is not open.');
   END IF;
@@ -172,8 +176,8 @@ BEGIN
   v_slot := floor(extract(epoch FROM v_now) / 30)::bigint;
   IF p_symbol_index <> roll_call_symbol_for_slot(v_seed, v_slot)
      AND p_symbol_index <> roll_call_symbol_for_slot(v_seed, v_slot - 1) THEN
-    INSERT INTO gw_attendance_challenge_attempts (session_id, user_id, symbol_index, was_correct)
-    VALUES (p_session_id, v_uid, p_symbol_index, false);
+    INSERT INTO gw_attendance_challenge_attempts (session_id, user_id, symbol_index, was_correct, tenant_id)
+    VALUES (p_session_id, v_uid, p_symbol_index, false, COALESCE(v_tenant, public.current_tenant_id()));
     RETURN jsonb_build_object('success', false, 'error', 'WRONG_SYMBOL',
       'wrong_attempts', v_wrong_count + 1, 'locked', v_wrong_count + 1 >= 10,
       'message', 'That is not the symbol on the screen. Look up and try again.');
@@ -190,8 +194,8 @@ BEGIN
     END IF;
   END IF;
 
-  INSERT INTO gw_attendance_challenge_attempts (session_id, user_id, symbol_index, was_correct)
-  VALUES (p_session_id, v_uid, p_symbol_index, true);
+  INSERT INTO gw_attendance_challenge_attempts (session_id, user_id, symbol_index, was_correct, tenant_id)
+  VALUES (p_session_id, v_uid, p_symbol_index, true, COALESCE(v_tenant, public.current_tenant_id()));
 
   INSERT INTO gw_attendance_records (attendance_session_id, student_profile_id, status, check_in_method, marked_at)
   VALUES (p_session_id, v_profile_id, v_status, 'self', v_now)
@@ -213,6 +217,7 @@ DECLARE
   v_seed UUID;
   v_first_slot BIGINT;
   v_slots INTEGER[];
+  v_tenant UUID;
 BEGIN
   SELECT * INTO v_session FROM gw_attendance_sessions WHERE id = p_session_id;
   IF v_session IS NULL THEN
@@ -237,7 +242,8 @@ BEGIN
   SELECT challenge_seed INTO v_seed FROM gw_attendance_session_secrets WHERE session_id = p_session_id;
   IF v_seed IS NULL THEN
     -- Session predates the trigger or was flipped to roll_call oddly; self-heal.
-    INSERT INTO gw_attendance_session_secrets (session_id) VALUES (p_session_id)
+    v_tenant := (to_jsonb(v_session) ->> 'tenant_id')::uuid;
+    INSERT INTO gw_attendance_session_secrets (session_id, tenant_id) VALUES (p_session_id, COALESCE(v_tenant, public.current_tenant_id()))
     ON CONFLICT (session_id) DO NOTHING;
     SELECT challenge_seed INTO v_seed FROM gw_attendance_session_secrets WHERE session_id = p_session_id;
   END IF;
