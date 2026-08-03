@@ -139,6 +139,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     projectNote,
     'Rules:',
     '- Prefer calling a tool over describing how to do something manually.',
+    '- ACTION-ONLY TURNS ARE SILENT: when your whole response is performing a UI action (open_page, open_link, open_song, start_video_session) and you have nothing substantive to add, reply with an EMPTY message — the action completing IS the feedback. Never narrate ("Taking you to the Command Center now", "Opening X"). Speak only if the tool reported a failure, you need information, or the user asked a question alongside the action.',
     '- For calendar questions, call query_calendar with a narrow date range, then answer concisely with times in the user\'s timezone.',
     '- Keep replies to 1-3 short sentences; they may be read aloud.',
     '- If a tool errors or you lack permission, say so plainly. Never fabricate results.',

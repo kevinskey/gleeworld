@@ -3,6 +3,7 @@ import type { AssistantAction, ThreadMessage, ThreadState } from './types';
 export type ThreadEvent =
   | { type: 'send'; id: string; content: string }
   | { type: 'reply'; id: string; content: string; pendingAction?: AssistantAction }
+  | { type: 'settle' } // turn finished with nothing to show (silent action turn)
   | { type: 'fail'; error: string }
   | { type: 'action-state'; id: string; state: ThreadMessage['actionState'] }
   | { type: 'reset' };
@@ -27,6 +28,8 @@ export function threadReducer(state: ThreadState, ev: ThreadEvent): ThreadState 
         busy: false,
         error: null,
       };
+    case 'settle':
+      return { ...state, busy: false, error: null };
     case 'fail':
       return { ...state, busy: false, error: ev.error };
     case 'action-state':
