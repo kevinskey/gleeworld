@@ -4,6 +4,7 @@
 // Stripe customer, nginx vhost, bootstrap.js, starter modules, welcome email).
 // We just collect the inputs and forward the current session JWT for auth.
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -37,6 +38,7 @@ interface CreatedTenant {
 
 export function CreateTenantDialog() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<CreatedTenant | null>(null);
@@ -138,6 +140,8 @@ export function CreateTenantDialog() {
         staged: !!body.staged,
         tempPasswordNote: notice.tempPasswordNote,
       });
+      queryClient.invalidateQueries({ queryKey: ['platform-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['platform-stats'] });
       toast({ title: notice.toastTitle, description: notice.toastDescription });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';

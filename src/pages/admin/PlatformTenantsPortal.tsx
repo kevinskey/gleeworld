@@ -162,7 +162,23 @@ export default function PlatformTenantsPortal() {
   // temp password for the tenant's admin (invalidating any staged one),
   // so it always goes through the confirm dialog below.
   const [resendTarget, setResendTarget] = useState<TenantRow | null>(null);
+  // Mirrors resendTarget but only updates when the dialog opens, so the
+  // AlertDialogDescription keeps rendering the tenant's name during the
+  // close animation instead of going blank the instant resendTarget is
+  // cleared.
+  const [lastResendTarget, setLastResendTarget] = useState<TenantRow | null>(null);
+  const openResendDialog = (t: TenantRow) => {
+    setResendTarget(t);
+    setLastResendTarget(t);
+  };
+  // In-flight guard: the resend-welcome API mints a brand-new temp
+  // password each call, invalidating the previous one, so a double-fired
+  // click (slow network + impatient double-click) would silently mint two
+  // passwords and email the wrong one. Track which tenant is mid-request
+  // and disable/spin its Welcome button for the duration.
+  const [resendingId, setResendingId] = useState<string | null>(null);
   const resendWelcome = async (t: TenantRow) => {
+    setResendingId(t.id);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not signed in.');
@@ -176,6 +192,8 @@ export default function PlatformTenantsPortal() {
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : 'Unknown error';
       toast({ title: 'Resend failed', description: errorMessage, variant: 'destructive' });
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -358,10 +376,16 @@ export default function PlatformTenantsPortal() {
                         size="sm"
                         variant="outline"
                         className="h-8 min-h-0 lg:min-h-0 px-2 text-xs"
-                        onClick={() => setResendTarget(t)}
+                        onClick={() => openResendDialog(t)}
+                        disabled={resendingId === t.id}
                         title="Email this tenant's admin a fresh sign-in (invalidates any staged password)"
                       >
-                        <Mail className="w-3.5 h-3.5 mr-1" /> Welcome
+                        {resendingId === t.id ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <Mail className="w-3.5 h-3.5 mr-1" />
+                        )}
+                        Welcome
                       </Button>
                     )}
                   </div>
@@ -385,7 +409,7 @@ export default function PlatformTenantsPortal() {
           <AlertDialogHeader>
             <AlertDialogTitle>Resend welcome email?</AlertDialogTitle>
             <AlertDialogDescription>
-              This emails a fresh temp password to the {resendTarget?.name} admin and invalidates
+              This emails a fresh temp password to the {lastResendTarget?.name} admin and invalidates
               any staged password. Use it as the handoff step after building their site.
             </AlertDialogDescription>
           </AlertDialogHeader>

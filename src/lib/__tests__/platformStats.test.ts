@@ -33,8 +33,8 @@ describe('formatPlatformStats', () => {
       revenue: { mrr_cents: 150000, arr_cents: 1800000, active_subs: 30 },
     })).toEqual([
       { label: 'top level', value: '$1,500' },
-      { label: 'revenue mrr', value: '$1,500' },
-      { label: 'revenue arr', value: '$18,000' },
+      { label: 'revenue MRR', value: '$1,500' },
+      { label: 'revenue ARR', value: '$18,000' },
       { label: 'revenue active subs', value: '30' },
     ]);
   });
@@ -49,8 +49,8 @@ describe('formatPlatformStats', () => {
     // Should flatten and format all nested scalars
     expect(result).toContainEqual({ label: 'customers total', value: '42' });
     expect(result).toContainEqual({ label: 'customers active', value: '35' });
-    expect(result).toContainEqual({ label: 'revenue mrr', value: '$1,500' });
-    expect(result).toContainEqual({ label: 'revenue arr', value: '$18,000' });
+    expect(result).toContainEqual({ label: 'revenue MRR', value: '$1,500' });
+    expect(result).toContainEqual({ label: 'revenue ARR', value: '$18,000' });
     expect(result).toContainEqual({ label: 'revenue active subs', value: '30' });
     expect(result).toContainEqual({ label: 'modules total', value: '12' });
     expect(result.length).toBe(11);

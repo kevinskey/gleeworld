@@ -9,6 +9,16 @@ export interface PlatformStat {
   value: string;
 }
 
+// The tile renders labels with a `capitalize` class, which title-cases the
+// first letter of each word but leaves the rest alone — so acronyms need to
+// already be uppercase going in, or "revenue mrr" renders as "Revenue Mrr"
+// instead of "Revenue MRR". Applied after underscore-to-space conversion,
+// on whole words only, so it can't clobber a longer word that merely
+// contains "mrr"/"arr" as a substring.
+function uppercaseAcronyms(label: string): string {
+  return label.replace(/\b(mrr|arr)\b/gi, (m) => m.toUpperCase());
+}
+
 export function formatPlatformStats(raw: unknown): PlatformStat[] {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return [];
   const stats: PlatformStat[] = [];
@@ -18,7 +28,7 @@ export function formatPlatformStats(raw: unknown): PlatformStat[] {
       // Top-level scalar: render directly.
       const isCents = typeof v === 'number' && k.endsWith('_cents');
       stats.push({
-        label: k.replace(/_/g, ' ').replace(/ cents$/, ''),
+        label: uppercaseAcronyms(k.replace(/_/g, ' ').replace(/ cents$/, '')),
         value: isCents ? formatPrice(v) : String(v),
       });
     } else if (v && typeof v === 'object' && !Array.isArray(v)) {
@@ -27,7 +37,7 @@ export function formatPlatformStats(raw: unknown): PlatformStat[] {
         if (typeof childVal === 'number' || typeof childVal === 'string') {
           const isCents = typeof childVal === 'number' && childKey.endsWith('_cents');
           stats.push({
-            label: `${k} ${childKey}`.replace(/_/g, ' ').replace(/ cents$/, ''),
+            label: uppercaseAcronyms(`${k} ${childKey}`.replace(/_/g, ' ').replace(/ cents$/, '')),
             value: isCents ? formatPrice(childVal) : String(childVal),
           });
         }
