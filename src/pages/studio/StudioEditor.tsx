@@ -72,6 +72,7 @@ import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { audioBufferToWavBlob } from '@/lib/studio/engine/mixdown';
 import { getAssetUrlSync } from '@/lib/studio/engine/assetUrlCache';
 import { splitAudioClips, sliceClipChannels, duplicateClip } from '@/lib/studio/clipOps';
+import { trimNotesToDuration } from '@/lib/studio/midiEdit';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
 import { exportSession, hasResumableExport, clearExportProgress, type ExportPreset } from '@/lib/studio/engine/exportRender';
 import { getAssetUrl, saveSession, uploadAudioAsset } from '@/lib/studio/storage';
@@ -3674,10 +3675,17 @@ function MidiClipBlock({
       selected={selected}
       canTrimLeft={false}
       onSelect={onSelect}
-      onChange={(p) => onChange({
-        start_seconds: p.start ?? clip.start_seconds,
-        duration_seconds: p.duration ?? clip.duration_seconds,
-      })}
+      onChange={(p) => {
+        // Right-edge trim (shrink only — a grow or a move must leave
+        // notes untouched) truncates notes so playback always matches
+        // what the piano roll shows.
+        const isRightTrimShrink = p.duration != null && p.duration < clip.duration_seconds;
+        onChange({
+          start_seconds: p.start ?? clip.start_seconds,
+          duration_seconds: p.duration ?? clip.duration_seconds,
+          ...(isRightTrimShrink ? { notes: trimNotesToDuration(clip.notes, p.duration!) } : {}),
+        });
+      }}
       onRemove={onRemove}
       onDuplicate={onDuplicate}
     />
