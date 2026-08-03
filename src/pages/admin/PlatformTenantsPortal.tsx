@@ -40,19 +40,23 @@ interface TenantRow {
   created_at: string;
 }
 
-function tenantUrl(t: TenantRow): string {
+function tenantHost(t: TenantRow): string {
   // The platform tenant's subdomain column holds the bare apex domain
   // ("gleeworld.org"), which naively concatenates to the dead
   // "gleeworld.org.gleeworld.org" — special-case it.
-  if (t.slug === 'main') return 'https://gleeworld.org';
-  if (t.custom_domain) return `https://${t.custom_domain}`;
+  if (t.slug === 'main') return 'gleeworld.org';
+  if (t.custom_domain) return t.custom_domain;
   // Some rows' `subdomain` column holds the FULL host already (e.g.
   // "demo-choir.gleeworld.org") rather than a bare slug — appending
   // ".gleeworld.org" again produced a dead double-domain link
   // ("demo-choir.gleeworld.org.gleeworld.org"). Only append the suffix
   // when subdomain looks like a bare slug (no dot in it).
   const host = t.subdomain || t.slug;
-  return `https://${host.includes('.') ? host : `${host}.gleeworld.org`}`;
+  return host.includes('.') ? host : `${host}.gleeworld.org`;
+}
+
+function tenantUrl(t: TenantRow): string {
+  return `https://${tenantHost(t)}`;
 }
 
 export default function PlatformTenantsPortal() {
@@ -229,8 +233,15 @@ export default function PlatformTenantsPortal() {
                       <CardTitle className="!text-base font-semibold leading-tight break-words">
                         {t.name}
                       </CardTitle>
-                      <CardDescription className="font-mono text-xs break-all">
-                        {t.custom_domain || `${t.subdomain || t.slug}.gleeworld.org`}
+                      {/* tenantHost (not raw column concat) so rows whose
+                          subdomain already holds the full host don't render
+                          "x.gleeworld.org.gleeworld.org". Zero-width space
+                          after each dot gives the browser wrap points at
+                          label boundaries instead of break-all's mid-word
+                          splits ("gleeworl / d.org"). Display-only — the
+                          copyable link below uses the real URL. */}
+                      <CardDescription className="font-mono text-xs break-words">
+                        {tenantHost(t).replace(/\./g, '.\u200b')}
                       </CardDescription>
                     </div>
                     {isPlatform && <Badge variant="default">Platform</Badge>}
@@ -250,6 +261,7 @@ export default function PlatformTenantsPortal() {
                     <Button
                       size="sm"
                       variant="outline"
+                      className="h-8 min-h-0 lg:min-h-0 px-2 text-xs"
                       onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
                       title="Open the public site in a new tab"
                     >
@@ -258,6 +270,7 @@ export default function PlatformTenantsPortal() {
                     <Button
                       size="sm"
                       variant="default"
+                      className="h-8 min-h-0 lg:min-h-0 px-2 text-xs"
                       onClick={() => void openTenantAdmin(t, '/dashboard')}
                       title="Enter this tenant's dashboard signed in as its admin"
                     >
@@ -266,6 +279,7 @@ export default function PlatformTenantsPortal() {
                     <Button
                       size="sm"
                       variant="outline"
+                      className="h-8 min-h-0 lg:min-h-0 px-2 text-xs"
                       onClick={() => void openTenantAdmin(t, '/admin/public-page')}
                       title="Open the page builder signed in as the tenant admin"
                     >
