@@ -179,6 +179,17 @@ export function createMidiCommitQueue<T>(opts: {
 // getOutputLatencyMs() (read once per take by the caller) plus this
 // user trim. Mirrors the audio path's takeAlignment approach.
 
+// ── Punch capture gate ────────────────────────────────────────────────
+// Whether an incoming MIDI event should be CAPTURED into the take right
+// now. Live monitoring (LiveVoices) is never gated by this — the player
+// must always hear themselves, including during punch pre/post-roll.
+// A normal (non-punch) take has punchPhase === null, so the punch clause
+// is vacuously true and this reduces to the old bare `recordingActive`
+// check.
+export function shouldCaptureMidi(recordingActive: boolean, punchPhase: 'pre' | 'rec' | 'post' | null): boolean {
+  return recordingActive && (punchPhase === null || punchPhase === 'rec');
+}
+
 export const MIDI_TRIM_STORAGE_KEY = 'studio.midiTrimMs';
 
 export function getMidiTrimMs(): number {

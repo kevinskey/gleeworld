@@ -43,7 +43,7 @@ import { applyStatusBarSurface } from '@/lib/statusBarStyle';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import {
   appendTakeNote, recordStartMode, grownSessionLength, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
-  createMidiCommitQueue,
+  createMidiCommitQueue, shouldCaptureMidi,
   type HeldPress, type CapturedCc, type MidiCommitQueue,
 } from '@/lib/studio/midiRecord';
 import { MidiTimebase, formatMonitoringLatency } from '@/lib/studio/midiTimebase';
@@ -650,8 +650,8 @@ function Editor({
 
   const handleMidiNoteOn = (pitch: number, velocity: number, timeStampMs?: number) => {
     if (!midiInputTrack) return; // no armed MIDI track → keyboard is silent
-    liveVoicesRef.current?.noteOn(pitch, velocity / 127);
-    if (state?.recordingActive) {
+    liveVoicesRef.current?.noteOn(pitch, velocity / 127); // monitoring stays UNgated
+    if (shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null)) {
       const at = compAt(timeStampMs);
       const stale = midiHeld.keyDown(pitch, velocity, at);
       if (stale) commitMidiPresses([stale], at); // missed note-off
@@ -659,22 +659,31 @@ function Editor({
   };
   const handleMidiNoteOff = (pitch: number, timeStampMs?: number) => {
     if (!midiInputTrack) return;
-    liveVoicesRef.current?.noteOff(pitch);
+    liveVoicesRef.current?.noteOff(pitch); // monitoring stays UNgated
+    // No explicit gate check here by design: midiHeld only ever holds a
+    // press whose key-DOWN passed shouldCaptureMidi (see handleMidiNoteOn),
+    // so keyUp() already answers "was this press captured?" — deciding by
+    // where the press STARTED. That matters for punch: a note struck
+    // during 'rec' whose physical release lands after the punch-out (once
+    // phase is already 'post') must still commit, not be dropped because
+    // the CURRENT phase no longer allows capture. Gating this commit on
+    // the current phase would silently lose that note.
     const press = midiHeld.keyUp(pitch);
     if (!press) return;
     commitMidiPresses([press], compAt(timeStampMs));
   };
   const handleMidiSustain = (down: boolean, timeStampMs?: number) => {
     if (!midiInputTrack) return;
-    liveVoicesRef.current?.sustain(down); // monitoring feel unchanged
-    if (state?.recordingActive && down !== midiPedalRef.current) {
+    liveVoicesRef.current?.sustain(down); // monitoring feel unchanged, UNgated
+    const capturing = shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null);
+    if (capturing && down !== midiPedalRef.current) {
       midiPedalRef.current = down;
       midiCcRef.current.push({ controller: 64, value: down ? 127 : 0, timeAbsSeconds: compAt(timeStampMs) });
     }
-    if (!state?.recordingActive) midiPedalRef.current = down;
+    if (!capturing) midiPedalRef.current = down;
   };
   const handleMidiCc = (controller: number, value: number, timeStampMs?: number) => {
-    if (!midiInputTrack || !state?.recordingActive) return;
+    if (!midiInputTrack || !shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null)) return;
     const prev = midiCcRef.current[midiCcRef.current.length - 1];
     if (prev && prev.controller === controller && prev.value === value) return; // coalesce dupes
     midiCcRef.current.push({ controller, value, timeAbsSeconds: compAt(timeStampMs) });
@@ -2010,6 +2019,13 @@ function Editor({
 
   const beginPunchTake = async (recorder: MicRecorder) => {
     if (!loopRegion) return;
+    // Pre-roll noodling was armed (recordingActive=true) back at
+    // startPunchRecord, before the phase gate closes capture — reset the
+    // take-scoped capture state right at the actual punch-in so nothing
+    // queued during 'pre' can leak into this take.
+    resetMidiCapture();
+    midiTakeClipRef.current = null;
+    midiCommitQueueRef.current?.clear();
     try {
       await recorder.start();
       const startedAt = performance.now();
