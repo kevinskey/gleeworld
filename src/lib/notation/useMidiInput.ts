@@ -17,6 +17,21 @@
 // The hook is idempotent: enable→disable→enable cleanly detaches and
 // re-attaches listeners without leaking handlers, and refreshes the input
 // list when a new device is plugged in mid-session (via onStateChange).
+//
+// Race safety: enable() is async (it awaits source.subscribe(), which may
+// take a while — permission prompt, native plugin start). A generation
+// counter (genRef) guards its continuation, mirroring the cancelled-flag
+// discipline in useStudioMidiInput (src/hooks/useStudioMidiInput.ts):
+//   - Both enable() and disable() bump genRef; enable() captures its own
+//     generation before awaiting.
+//   - If disable() (or unmount) runs while an enable() is in flight, the
+//     bump invalidates it: when the subscribe promise eventually resolves,
+//     the continuation notices its generation is stale, immediately calls
+//     the freshly-obtained unsub (so the subscription doesn't outlive the
+//     module-singleton source) and returns without touching state.
+//   - enable() is also a no-op while already connected or already in
+//     flight (unsubRef/enablingRef truthy), so double-invoking it can't
+//     open two live subscriptions.
 
 import { useEffect, useRef, useState } from 'react';
 import { parseMidiMessage } from '@/lib/studio/midiMessage';
@@ -54,6 +69,14 @@ export function useMidiInput(onNoteOn: (midi: number, velocity: number) => void)
   useEffect(() => { handlerRef.current = onNoteOn; }, [onNoteOn]);
   const unsubRef = useRef<(() => void) | null>(null);
   const offStateRef = useRef<(() => void) | null>(null);
+  // Bumped by both enable() and disable(); enable() captures its own value
+  // before awaiting subscribe() so a later disable()/re-enable() can
+  // invalidate a stale continuation (see the race-safety note above).
+  const genRef = useRef(0);
+  // True from the start of enable() until its continuation settles for the
+  // CURRENT generation — blocks a second concurrent enable() from opening a
+  // second live subscription.
+  const enablingRef = useRef(false);
 
   const refreshInputs = () => {
     void source.listInputs()
@@ -62,10 +85,14 @@ export function useMidiInput(onNoteOn: (midi: number, velocity: number) => void)
   };
 
   const enable = async () => {
+    // Already connected, or an enable() is already in flight: no-op.
+    if (unsubRef.current || enablingRef.current) return;
     if (!source.supported) {
       setState((s) => ({ ...s, error: 'This browser has no MIDI support.' }));
       return;
     }
+    const myGen = ++genRef.current;
+    enablingRef.current = true;
     try {
       const unsub = await source.subscribe('', (data) => {
         const ev = parseMidiMessage(data);
@@ -73,6 +100,14 @@ export function useMidiInput(onNoteOn: (midi: number, velocity: number) => void)
         // so every 'noteon' here has velocity > 0 — no manual check needed.
         if (ev.type === 'noteon') handlerRef.current(ev.pitch, ev.velocity);
       });
+      if (myGen !== genRef.current) {
+        // disable() (or a newer enable()) ran while we were awaiting —
+        // this subscription was never committed to unsubRef, so tear it
+        // down immediately instead of leaking it or flipping state on a
+        // hook that's since been disabled/unmounted.
+        unsub();
+        return;
+      }
       unsubRef.current = unsub;
       // Re-fetch the input list whenever a device plugs in / unplugs so
       // the status pill stays accurate without a page reload.
@@ -80,11 +115,16 @@ export function useMidiInput(onNoteOn: (midi: number, velocity: number) => void)
       setState((s) => ({ ...s, connected: true, error: null }));
       refreshInputs();
     } catch (e) {
+      if (myGen !== genRef.current) return; // stale — disable()/re-enable() already happened
       setState((s) => ({ ...s, connected: false, error: e instanceof Error ? e.message : 'MIDI access denied' }));
+    } finally {
+      if (myGen === genRef.current) enablingRef.current = false;
     }
   };
 
   const disable = () => {
+    ++genRef.current; // invalidate any in-flight enable() continuation
+    enablingRef.current = false;
     unsubRef.current?.();
     unsubRef.current = null;
     offStateRef.current?.();
