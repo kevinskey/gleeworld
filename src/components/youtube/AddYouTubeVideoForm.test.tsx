@@ -23,68 +23,73 @@ vi.mock('@/hooks/use-toast', () => ({
 
 import { AddYouTubeVideoForm } from './AddYouTubeVideoForm';
 
+const fetchMock = vi.fn();
+
 const openForm = () => {
   fireEvent.click(screen.getByRole('button', { name: /add video/i }));
   // The dialog opens in Search mode by default; switch to Paste URL so the
-  // URL/ID input is present. Search flow is exercised separately.
+  // URL input is present. Search flow is exercised separately.
   fireEvent.click(screen.getByRole('button', { name: /paste url/i }));
 };
 
 const fillUrl = (value: string) => {
-  fireEvent.change(screen.getByLabelText('YouTube URL or video ID'), { target: { value } });
+  fireEvent.change(screen.getByLabelText('Video URL'), { target: { value } });
 };
+
+const submit = () => {
+  fireEvent.click(screen.getAllByRole('button', { name: /add video/i })[0]);
+};
+
+const oembedOk = (title: string) =>
+  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ title }) });
 
 beforeEach(() => {
   insertMock.mockReset();
   selectMock.mockReset();
   fromMock.mockClear();
   toastMock.mockReset();
+  fetchMock.mockReset();
+  vi.stubGlobal('fetch', fetchMock);
   // Default: insert().select() resolves successfully.
   insertMock.mockImplementation(() => ({ select: selectMock }));
   selectMock.mockResolvedValue({ data: [{ id: 'row-1' }], error: null });
 });
-afterEach(cleanup);
+afterEach(() => {
+  vi.unstubAllGlobals();
+  cleanup();
+});
 
 describe('AddYouTubeVideoForm', () => {
   it('starts collapsed behind an "Add video" button', () => {
     render(<AddYouTubeVideoForm onAdded={vi.fn()} />);
     expect(screen.getByRole('button', { name: /add video/i })).toBeInTheDocument();
-    expect(screen.queryByLabelText('YouTube URL or video ID')).not.toBeInTheDocument();
-  });
-
-  it('rejects an invalid/non-YouTube URL inline without calling supabase', async () => {
-    render(<AddYouTubeVideoForm onAdded={vi.fn()} />);
-    openForm();
-    fillUrl('https://evil.com/watch?v=dQw4w9WgXcQ');
-    fireEvent.click(screen.getAllByRole('button', { name: /add video/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/paste a full youtube url/i)).toBeInTheDocument();
-    });
-    expect(fromMock).not.toHaveBeenCalled();
-    expect(insertMock).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText('Video URL')).not.toBeInTheDocument();
   });
 
   it('rejects plain junk text inline without calling supabase', async () => {
     render(<AddYouTubeVideoForm onAdded={vi.fn()} />);
     openForm();
     fillUrl('not a url');
-    fireEvent.click(screen.getAllByRole('button', { name: /add video/i })[0]);
+    submit();
 
     await waitFor(() => {
-      expect(screen.getByText(/paste a full youtube url/i)).toBeInTheDocument();
+      expect(screen.getByText(/paste a youtube, vimeo/i)).toBeInTheDocument();
     });
     expect(fromMock).not.toHaveBeenCalled();
   });
 
-  it('accepts a valid watch URL, inserts with channel_id null and a non-empty video_url, and calls onAdded', async () => {
+  it('fetches the real title via oEmbed when none is typed, and inserts it', async () => {
+    oembedOk('Flight — Spring Concert');
     const onAdded = vi.fn();
     render(<AddYouTubeVideoForm onAdded={onAdded} />);
     openForm();
     fillUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-    fireEvent.click(screen.getAllByRole('button', { name: /add video/i })[0]);
+    submit();
 
     await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(1));
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0]![0])).toContain('youtube.com/oembed');
 
     const payload = insertMock.mock.calls[0]![0] as {
       video_id: string; channel_id: string | null; title: string; video_url: string;
@@ -93,31 +98,56 @@ describe('AddYouTubeVideoForm', () => {
     // Regression guard for the YouTubeManagement.tsx bug: channel_id must be
     // null (a UUID FK), never a non-null string like 'manual-upload'.
     expect(payload.channel_id).toBeNull();
-    expect(typeof payload.video_url).toBe('string');
-    expect(payload.video_url.length).toBeGreaterThan(0);
     expect(payload.video_url).toContain('dQw4w9WgXcQ');
-    // No title given -> falls back to the video id, never calls a YouTube API.
-    expect(payload.title).toBe('dQw4w9WgXcQ');
+    expect(payload.title).toBe('Flight — Spring Concert');
 
     await waitFor(() => expect(onAdded).toHaveBeenCalledTimes(1));
   });
 
-  it('accepts a youtu.be short link', async () => {
+  it('falls back to the video id as title when oEmbed is unreachable', async () => {
+    fetchMock.mockRejectedValue(new TypeError('network down'));
     render(<AddYouTubeVideoForm onAdded={vi.fn()} />);
     openForm();
-    fillUrl('https://youtu.be/dQw4w9WgXcQ');
-    fireEvent.click(screen.getAllByRole('button', { name: /add video/i })[0]);
+    fillUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    submit();
+
+    await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(1));
+    expect(insertMock.mock.calls[0]![0].title).toBe('dQw4w9WgXcQ');
+  });
+
+  it('uses a typed title verbatim and skips the oEmbed lookup', async () => {
+    render(<AddYouTubeVideoForm onAdded={vi.fn()} />);
+    openForm();
+    fillUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    fireEvent.change(screen.getByLabelText('Video title (optional)'), {
+      target: { value: 'My concert' },
+    });
+    submit();
+
+    await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(1));
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(insertMock.mock.calls[0]![0].title).toBe('My concert');
+  });
+
+  it('accepts a youtu.be short link with tracking params', async () => {
+    oembedOk('Shared from the app');
+    render(<AddYouTubeVideoForm onAdded={vi.fn()} />);
+    openForm();
+    fillUrl('https://youtu.be/dQw4w9WgXcQ?si=g_xjbKBFkqouQU1G');
+    submit();
 
     await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(1));
     expect(insertMock.mock.calls[0]![0].video_id).toBe('dQw4w9WgXcQ');
+    expect(insertMock.mock.calls[0]![0].title).toBe('Shared from the app');
   });
 
   it('shows a friendly message on a unique-violation (duplicate video) instead of a raw Postgres error', async () => {
+    oembedOk('Whatever');
     selectMock.mockResolvedValue({ data: null, error: { code: '23505', message: 'duplicate key value violates unique constraint "youtube_videos_video_id_key"' } });
     render(<AddYouTubeVideoForm onAdded={vi.fn()} />);
     openForm();
     fillUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-    fireEvent.click(screen.getAllByRole('button', { name: /add video/i })[0]);
+    submit();
 
     await waitFor(() => {
       expect(toastMock).toHaveBeenCalledWith(
