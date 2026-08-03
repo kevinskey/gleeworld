@@ -69,6 +69,9 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   const [transcript, setTranscript] = useState('');
   const [muted, setMutedState] = useState(isMuted());
   const [speaking, setSpeaking] = useState(false);
+  // Bumped by every Stop tap; a speakNow that started before the bump
+  // aborts instead of launching TTS the tap couldn't reach.
+  const speakRequestRef = useRef(0);
   const [videoRoom, setVideoRoom] = useState<string | null>(null);
   const [resultsPanel, setResultsPanel] = useState<ConciergeResult | null>(null);
   const [captionReply, setCaptionReply] = useState<{ id: string; text: string } | null>(null);
@@ -104,10 +107,22 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   // Speak a reply while tracking `speaking` so the UI can show a Stop
   // control; stopSpeakingNow cuts her off immediately (barge-in / Stop tap).
   const speakNow = useCallback(async (text: string) => {
+    // Speaking goes true the moment a spoken reply is REQUESTED, not when
+    // audio starts. ElevenLabs synthesis of a long reply (news rundown)
+    // takes many seconds, and waiting for onplay left that whole window
+    // with a mic instead of a Stop — Kevin: "I am unable to stop." A Stop
+    // tap during synthesis bumps the speak session, so the late-arriving
+    // audio checks the token and never plays. speak() guarantees onEnd on
+    // every path (muted, empty, dead synth, error) so this can't stick.
+    if (text.trim() && !muted) setSpeaking(true);
+    const myRequest = speakRequestRef.current;
     // Grab the current auth token on every speak() so a token refresh
     // doesn't leave us stuck on a 401 — cheap, session cache is in memory.
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
+    // Stop was tapped while we awaited the token — honor it; calling
+    // speak() now would start a fresh TTS session the tap can't cancel.
+    if (speakRequestRef.current !== myRequest) return;
     speak(text, {
       muted,
       voiceId: voiceIdRef.current,
@@ -124,6 +139,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   }, [muted]);
 
   const stopSpeakingNow = useCallback(() => {
+    speakRequestRef.current += 1;
     stopSpeaking();
     setSpeaking(false);
   }, []);
@@ -304,12 +320,15 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       const { first: confirmAction, autoRun } = confirmQueueRef.current.register(replyId, actions);
       dispatch({ type: 'reply', id: replyId, content: data.reply ?? '', pendingAction: confirmAction });
       speakNow(data.reply ?? '');
-      // Sheet closed = this turn came from the floating mic. Surface the
-      // reply as a caption; and NEVER leave a confirm card invisible —
-      // SMS/email sends must show their Send/Cancel, so open the sheet.
+      // Sheet closed = this turn came from the floating mic. Voice-first by
+      // Kevin's request (2026-08-03): a spoken reply is NOT also printed as
+      // a caption — the text is always in the thread behind the FAB's caret.
+      // The caption remains only as the fallback when she can't speak
+      // (muted), and NEVER leave a confirm card invisible — SMS/email sends
+      // must show their Send/Cancel, so open the sheet.
       if (!sheetOpenRef.current) {
         if (confirmAction) setSheetOpen(true);
-        else if (data.reply) setCaptionReply({ id: replyId, text: data.reply });
+        else if (data.reply && isMuted()) setCaptionReply({ id: replyId, text: data.reply });
       }
       // Non-confirm actions run immediately, in order.
       for (const action of autoRun) {
