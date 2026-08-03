@@ -1,10 +1,26 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MyMusicTab } from './MyMusicTab';
 import { getSignedUrl } from '@/utils/storage';
 import type { PersonalScore } from '@/hooks/usePersonalScores';
+import type { ReactElement } from 'react';
+
+// The tab reads publish state via react-query + role; keep tests member-
+// level (no publish affordances) and provide the required provider.
+vi.mock('@/hooks/useUserRole', () => ({
+  useUserRole: () => ({ canEditMusicLibrary: () => false }),
+}));
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: { from: vi.fn() },
+}));
+
+const render = (ui: ReactElement) => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return rtlRender(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+};
 
 const state: {
   scores: PersonalScore[]; isLoading: boolean;

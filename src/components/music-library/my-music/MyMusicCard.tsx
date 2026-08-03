@@ -3,13 +3,14 @@
 // trailing affordance) so the two tabs read as one library.
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, FileMusic, Loader2, Pencil, Star, Trash2 } from 'lucide-react';
+import { ExternalLink, FileMusic, Library as LibraryIcon, Loader2, Pencil, Star, Trash2 } from 'lucide-react';
 import { SOFT_CARD } from '@/components/music-library/scores/types';
 import type { PersonalScore } from '@/hooks/usePersonalScores';
 import { SOURCE_LABEL, isExternalOnly } from './personalScoreDisplay';
 
 export function MyMusicCard({
   score, opening, onOpen, onEdit, onRemove, onToggleFavorite,
+  published = false, onTogglePublish,
 }: {
   score: PersonalScore;
   opening: boolean;
@@ -17,6 +18,9 @@ export function MyMusicCard({
   onEdit: () => void;
   onRemove: () => void;
   onToggleFavorite: () => void;
+  // Librarian-only publish-to-tenant-library affordance; undefined hides it.
+  published?: boolean;
+  onTogglePublish?: () => void;
 }) {
   const externalOnly = isExternalOnly(score);
   return (
@@ -53,6 +57,12 @@ export function MyMusicCard({
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                 <Badge variant="secondary" className="text-xs">{SOURCE_LABEL[score.source]}</Badge>
                 {score.voicing && <Badge variant="outline" className="text-xs">{score.voicing}</Badge>}
+                {published && (
+                  <Badge variant="outline" className="text-xs text-primary border-primary/40">
+                    <LibraryIcon className="w-3 h-3 mr-1" />
+                    In your group’s library
+                  </Badge>
+                )}
                 {(score.tags ?? []).map((t) => (
                   <Badge key={t} variant="outline" className="text-xs text-muted-foreground">#{t}</Badge>
                 ))}
@@ -83,6 +93,22 @@ export function MyMusicCard({
           >
             <Star className={`w-4 h-4 ${score.is_favorite ? 'fill-current' : ''}`} />
           </button>
+          {onTogglePublish && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onTogglePublish(); }}
+              className={`p-1 rounded transition-colors ${
+                published
+                  ? 'text-primary hover:text-primary/70'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100'
+              }`}
+              aria-label={published ? `Unpublish ${score.title} from the group library` : `Publish ${score.title} to the group library`}
+              aria-pressed={published}
+              title={published ? 'Published — click to unpublish' : 'Publish to your group’s library'}
+            >
+              <LibraryIcon className="w-4 h-4" />
+            </button>
+          )}
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onEdit(); }}

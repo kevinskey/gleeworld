@@ -2,6 +2,8 @@
 // purchases, and Repertoire saves). User-scoped, follows the person
 // across tenants. Spec: docs/superpowers/specs/2026-07-12-personal-music-library-design.md
 import { useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +13,7 @@ import {
 import { Music, Plus, LayoutGrid, List as ListIcon, Search, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePersonalScores, type PersonalScore } from '@/hooks/usePersonalScores';
+import { useUserRole } from '@/hooks/useUserRole';
 import { getSignedUrl } from '@/utils/storage';
 import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
 import { SOFT_CARD } from '@/components/music-library/scores/types';
@@ -19,6 +22,7 @@ import { MyMusicCard } from '@/components/music-library/my-music/MyMusicCard';
 import { MyMusicListRow } from '@/components/music-library/my-music/MyMusicListRow';
 import { MyMusicUploadDialog } from '@/components/music-library/my-music/MyMusicUploadDialog';
 import { EditPersonalScoreDialog } from '@/components/music-library/my-music/EditPersonalScoreDialog';
+import { PublishToLibraryDialog, isPublishableSource } from '@/components/music-library/my-music/PublishToLibraryDialog';
 import { isExternalOnly } from '@/components/music-library/my-music/personalScoreDisplay';
 
 type SortKey = 'recent' | 'oldest' | 'title-asc' | 'title-desc' | 'composer-asc' | 'source';
@@ -111,6 +115,62 @@ export function MyMusicTab() {
     }
   };
 
+  // ── Publish to the tenant library (librarian/admin only) ──────────────
+  // A personal score is "published" when a gw_sheet_music row in this
+  // tenant points at its storage object (20260718140000). Query the rows
+  // for MY paths to badge published scores and drive unpublish.
+  const { canEditMusicLibrary } = useUserRole();
+  const canPublish = canEditMusicLibrary();
+  const qc = useQueryClient();
+  const [publishing, setPublishing] = useState<PersonalScore | null>(null);
+  const myPaths = useMemo(
+    () => scores.map((s) => s.storage_path).filter((p): p is string => !!p),
+    [scores],
+  );
+  const { data: publishedRows = [] } = useQuery<Array<{ id: string; storage_path: string }>>({
+    queryKey: ['my-published-scores', myPaths.join(',')],
+    enabled: canPublish && myPaths.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_sheet_music')
+        .select('id, storage_path')
+        .eq('storage_bucket', 'personal-scores')
+        .in('storage_path', myPaths);
+      return (data ?? []) as Array<{ id: string; storage_path: string }>;
+    },
+  });
+  const publishedByPath = useMemo(
+    () => new Map(publishedRows.map((r) => [r.storage_path, r.id])),
+    [publishedRows],
+  );
+  const refreshPublished = () => {
+    qc.invalidateQueries({ queryKey: ['my-published-scores'] });
+    qc.invalidateQueries({ queryKey: ['music-library-scores'] });
+  };
+
+  const togglePublish = async (s: PersonalScore) => {
+    const publishedId = s.storage_path ? publishedByPath.get(s.storage_path) : undefined;
+    if (!publishedId) {
+      setPublishing(s);
+      return;
+    }
+    if (!confirm(`Unpublish "${s.title}"? Members will immediately lose access to the published copy.`)) return;
+    // Deleting the row revokes tenant read of the file (the storage policy
+    // keys on the row's existence). The owner-revoke DELETE policy
+    // (20260803180000) guarantees this works for the file's owner.
+    const { data, error } = await supabase
+      .from('gw_sheet_music')
+      .delete()
+      .eq('id', publishedId)
+      .select('id');
+    if (error || !data?.length) {
+      toast.error('Could not unpublish — your role may not have permission.');
+      return;
+    }
+    toast.success('Unpublished.');
+    refreshPublished();
+  };
+
   const openScore = async (s: PersonalScore) => {
     if (openingId) return; // one at a time — stacking clicks stacked requests
     // Repertoire saves (IMSLP / external) have no PDF of their own — they
@@ -140,7 +200,11 @@ export function MyMusicTab() {
   };
 
   const removeWithConfirm = async (s: PersonalScore) => {
-    if (!confirm(`Remove "${s.title}" from My Music?`)) return;
+    const published = !!(s.storage_path && publishedByPath.get(s.storage_path));
+    const message = published
+      ? `"${s.title}" is published to your group's library — deleting the file will BREAK the published copy for every member. Remove anyway?`
+      : `Remove "${s.title}" from My Music?`;
+    if (!confirm(message)) return;
     try { await removeScore(s); toast.success('Removed'); }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Remove failed'); }
   };
@@ -276,6 +340,8 @@ export function MyMusicTab() {
                 onEdit={() => setEditing(s)}
                 onRemove={() => removeWithConfirm(s)}
                 onToggleFavorite={() => toggleFavorite(s)}
+                published={!!(s.storage_path && publishedByPath.get(s.storage_path))}
+                onTogglePublish={canPublish && isPublishableSource(s) ? () => togglePublish(s) : undefined}
               />
             </li>
           ))}
@@ -292,6 +358,8 @@ export function MyMusicTab() {
                 onEdit={() => setEditing(s)}
                 onRemove={() => removeWithConfirm(s)}
                 onToggleFavorite={() => toggleFavorite(s)}
+                published={!!(s.storage_path && publishedByPath.get(s.storage_path))}
+                onTogglePublish={canPublish && isPublishableSource(s) ? () => togglePublish(s) : undefined}
               />
             ))}
           </div>
@@ -309,6 +377,12 @@ export function MyMusicTab() {
         onOpenChange={(o) => !o && setEditing(null)}
         onSave={updateScore}
         tagSuggestions={allTags}
+      />
+
+      <PublishToLibraryDialog
+        score={publishing}
+        onOpenChange={(o) => !o && setPublishing(null)}
+        onPublished={refreshPublished}
       />
 
       <ScoreViewerDialog viewing={viewing} onClose={() => setViewing(null)} />
