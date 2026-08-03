@@ -43,6 +43,9 @@ export interface OrderStatusRow {
     partner_score_id: string;
     watermarked_storage_path: string | null;
     title?: string | null;
+    composer?: string | null;
+    thumbnail_storage_path?: string | null;
+    price_cents?: number | null;
   }>;
 }
 
@@ -135,12 +138,24 @@ export function useOrderStatus(orderId: string | undefined): UseQueryResult<Orde
         .maybeSingle();
       if (error) throw error;
       if (!order) return null;
+      // Published gw_partner_scores rows are already anon-readable (the store
+      // lists them), so joining title/composer/cover here is a pure query change.
       const { data: items, error: itemsError } = await supabase
         .from('gw_partner_order_items')
-        .select('id, partner_score_id, watermarked_storage_path')
+        .select('id, partner_score_id, watermarked_storage_path, score:gw_partner_scores(title, composer, thumbnail_storage_path, price_cents)')
         .eq('order_id', orderId);
       if (itemsError) throw itemsError;
-      const enriched = (items ?? []).map((i) => ({ ...i }));
+      type JoinedScore = { title: string | null; composer: string | null; thumbnail_storage_path: string | null; price_cents: number | null } | null;
+      const enriched = (items ?? []).map((i) => {
+        const { score, ...rest } = i as typeof i & { score: JoinedScore };
+        return {
+          ...rest,
+          title: score?.title ?? null,
+          composer: score?.composer ?? null,
+          thumbnail_storage_path: score?.thumbnail_storage_path ?? null,
+          price_cents: score?.price_cents ?? null,
+        };
+      });
       return {
         id: order.id,
         status: order.status as OrderStatusRow['status'],

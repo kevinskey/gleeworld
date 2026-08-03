@@ -9,6 +9,11 @@ import type { StoreScoreRow } from '@/lib/store/api';
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { storage: { from: () => ({ getPublicUrl: (p: string) => ({ data: { publicUrl: `https://cdn.example/${p}` } }) }) } },
 }));
+// pdfjs-dist can't load under jsdom (no DOMMatrix); these fixtures have no
+// PDF thumbnails, so a stub is faithful.
+vi.mock('@/components/music-library/PDFThumbnail', () => ({
+  PDFThumbnail: () => <div data-testid="pdf-thumbnail" />,
+}));
 
 const row = (over: Partial<StoreScoreRow>): StoreScoreRow => ({
   id: 'sc1', partner_id: 'pt1', title: 'Lift Every Voice', composer: 'J. R. Johnson',
@@ -22,9 +27,11 @@ const row = (over: Partial<StoreScoreRow>): StoreScoreRow => ({
 afterEach(cleanup);
 
 describe('StoreScoreGrid', () => {
-  it('renders title, price, partner and default detail link', () => {
+  it('renders title, composer, price and default detail link', () => {
     render(<MemoryRouter><StoreScoreGrid scores={[row({})]} /></MemoryRouter>);
-    expect(screen.getByText('Lift Every Voice')).toBeInTheDocument();
+    // Title/composer also appear inside the designed cover placeholder.
+    expect(screen.getAllByText('Lift Every Voice').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('J. R. Johnson').length).toBeGreaterThan(0);
     expect(screen.getByText('$4.95')).toBeInTheDocument();
     expect(screen.getByRole('link')).toHaveAttribute('href', '/store/scores/sc1');
   });

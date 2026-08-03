@@ -8,6 +8,11 @@ import { GwStoreTab } from './GwStoreTab';
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { storage: { from: () => ({ getPublicUrl: (p: string) => ({ data: { publicUrl: `https://cdn.example/${p}` } }) }) } },
 }));
+// pdfjs-dist can't load under jsdom (no DOMMatrix); these fixtures have no
+// PDF thumbnails, so a stub is faithful.
+vi.mock('@/components/music-library/PDFThumbnail', () => ({
+  PDFThumbnail: () => <div data-testid="pdf-thumbnail" />,
+}));
 
 const partner = {
   id: 'pt1', display_name: 'KPJ Music', bio: null, website_url: null,
@@ -33,24 +38,34 @@ vi.mock('@/lib/store/api', () => ({
 afterEach(cleanup);
 
 describe('GwStoreTab', () => {
-  it('links a featured piece to its store of origin with the score param', () => {
+  it('spotlights the top featured piece in the hero with a link to its detail page', () => {
     render(<MemoryRouter><GwStoreTab /></MemoryRouter>);
+    expect(screen.getAllByText('Featured Anthem').length).toBeGreaterThan(0);
+    expect(screen.getByText('View score')).toBeInTheDocument();
     const links = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
-    expect(links).toContain('/store/partners/pt1?score=sc1');
+    expect(links).toContain('/store/scores/sc1');
   });
 
-  it('links a featured store card to the partner storefront', () => {
+  it('renders one deduped Publishers shelf linking to the partner storefront', () => {
     render(<MemoryRouter><GwStoreTab /></MemoryRouter>);
     const links = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
-    expect(links).toContain('/store/partners/pt1');
-    expect(screen.getByText('Featured Stores')).toBeInTheDocument();
-    expect(screen.getByText('Featured Pieces')).toBeInTheDocument();
+    // pt1 is both featured and in the all-partners list — exactly one card.
+    expect(links.filter((h) => h === '/store/partners/pt1').length).toBe(1);
+    expect(screen.getByText('Publishers')).toBeInTheDocument();
+  });
+
+  it('always renders the composer recruitment banner', () => {
+    render(<MemoryRouter><GwStoreTab /></MemoryRouter>);
+    expect(screen.getByText('Publish your music on GleeWorld')).toBeInTheDocument();
+    const mailto = screen.getByText('Become a partner').closest('a');
+    expect(mailto?.getAttribute('href') ?? '').toContain('mailto:kpj64110@gmail.com');
   });
 
   it('filters the browse grid by search text', async () => {
     const { fireEvent } = await import('@testing-library/react');
     render(<MemoryRouter><GwStoreTab /></MemoryRouter>);
     fireEvent.change(screen.getByPlaceholderText('Search scores…'), { target: { value: 'zzzz' } });
-    expect(screen.getByText('No scores match your search.')).toBeInTheDocument();
+    expect(screen.getByText(/No scores match your search\./)).toBeInTheDocument();
+    expect(screen.getByText('Clear search')).toBeInTheDocument();
   });
 });
