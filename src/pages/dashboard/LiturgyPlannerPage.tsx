@@ -265,7 +265,7 @@ function ReadingRow({
             </PopoverTrigger>
             <PopoverContent align="end" className="w-[min(28rem,calc(100vw-2rem))] max-h-[60vh] overflow-y-auto p-4">
               <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{block.heading}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{block.heading}</p>
                 {block.citation && <p className="text-xs italic text-muted-foreground">{block.citation}</p>}
                 <div
                   className="prose prose-sm max-w-none text-sm leading-relaxed text-foreground/90 [&_p]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:italic"
@@ -763,7 +763,7 @@ function SongSlot({
 
   return (
     <div className="space-y-1.5">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">{label}</div>
+      <div className="text-xs font-semibold uppercase tracking-wider text-foreground/70">{label}</div>
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Input
@@ -1031,7 +1031,7 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
                   <div className="min-w-0 flex-1 space-y-0.5">
                     <div className="text-sm font-semibold leading-tight line-clamp-2">{h.title}</div>
                     <div className="text-xs text-muted-foreground">{h.channelTitle}</div>
-                    <div className="text-[11px] text-muted-foreground line-clamp-2">{h.description}</div>
+                    <div className="text-xs text-muted-foreground line-clamp-2">{h.description}</div>
                   </div>
                 </button>
               </li>
@@ -1041,7 +1041,7 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
 
         {source === 'appleMusic' && appleHits.length > 0 && (
           <>
-            <p className="text-[11px] text-muted-foreground pt-3">
+            <p className="text-xs text-muted-foreground pt-3">
               Full playback requires the listener's Apple Music subscription.
             </p>
             <ul className="space-y-1.5 pt-1.5">
@@ -1060,7 +1060,7 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
                     <div className="min-w-0 flex-1 space-y-0.5">
                       <div className="text-sm font-semibold leading-tight line-clamp-2">{h.title}</div>
                       <div className="text-xs text-muted-foreground line-clamp-1">{h.artist}</div>
-                      {h.album && <div className="text-[11px] text-muted-foreground line-clamp-1">{h.album}</div>}
+                      {h.album && <div className="text-xs text-muted-foreground line-clamp-1">{h.album}</div>}
                     </div>
                   </button>
                 </li>
@@ -1084,7 +1084,7 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block space-y-1">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-wider text-foreground/70">{label}</span>
       {children}
     </label>
   );

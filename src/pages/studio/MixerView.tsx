@@ -787,13 +787,13 @@ function ChannelStrip({
       <button
         type="button"
         onClick={onToggleFx}
-        className={`w-full h-7 rounded border text-[11px] font-semibold inline-flex items-center justify-center gap-1 ${
+        className={`w-full h-7 rounded border text-xs font-semibold inline-flex items-center justify-center gap-1 ${
           fxOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
         title="Inserts (FX)"
       >
         FX
         {enabledFxCount > 0 && (
-          <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledFxCount}</span>
+          <span className="text-xs px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledFxCount}</span>
         )}
       </button>
 
@@ -801,13 +801,13 @@ function ChannelStrip({
       <button
         type="button"
         onClick={onToggleAuto}
-        className={`w-full h-7 rounded border text-[11px] font-semibold inline-flex items-center justify-center gap-1 ${
+        className={`w-full h-7 rounded border text-xs font-semibold inline-flex items-center justify-center gap-1 ${
           autoOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
         title="Automation"
       >
         Auto
         {activeAutoCount > 0 && (
-          <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{activeAutoCount}</span>
+          <span className="text-xs px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{activeAutoCount}</span>
         )}
       </button>
 
@@ -830,13 +830,13 @@ function ChannelStrip({
         <button
           type="button"
           onClick={onToggleSends}
-          className={`w-full h-7 rounded border text-[11px] font-semibold inline-flex items-center justify-center gap-1 ${
+          className={`w-full h-7 rounded border text-xs font-semibold inline-flex items-center justify-center gap-1 ${
             sendsOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
           title="Sends"
         >
           Sends
           {enabledSendCount > 0 && (
-            <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledSendCount}</span>
+            <span className="text-xs px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledSendCount}</span>
           )}
         </button>
       )}
@@ -1433,7 +1433,7 @@ function OutputSelector({
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-full h-7 px-1.5 py-0 text-[11px] gap-1 [&>svg]:opacity-60">
+      <SelectTrigger className="w-full h-7 px-1.5 py-0 text-xs gap-1 [&>svg]:opacity-60">
         <Route className="w-3 h-3 shrink-0 opacity-70" />
         <SelectValue />
       </SelectTrigger>
@@ -1501,7 +1501,7 @@ function BusStrip({
         />
         <span className="text-xs font-semibold truncate flex-1 min-w-0" title={bus.name}>{bus.name}</span>
       </div>
-      <div className="w-full text-[10px] uppercase tracking-wide text-muted-foreground text-center">Bus</div>
+      <div className="w-full text-xs uppercase tracking-wide text-muted-foreground text-center">Bus</div>
       {/* Output selector — only rendered when there's somewhere other
        *  than master to route to. Keeps the strip clean for the common
        *  single-bus case where every bus routes to master. */}
@@ -1516,13 +1516,13 @@ function BusStrip({
       <button
         type="button"
         onClick={onToggleFx}
-        className={`w-full h-7 rounded border text-[11px] font-semibold inline-flex items-center justify-center gap-1 ${
+        className={`w-full h-7 rounded border text-xs font-semibold inline-flex items-center justify-center gap-1 ${
           fxOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
         title="Bus inserts (FX)"
       >
         FX
         {enabledFxCount > 0 && (
-          <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledFxCount}</span>
+          <span className="text-xs px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{enabledFxCount}</span>
         )}
       </button>
 
@@ -1530,13 +1530,13 @@ function BusStrip({
       <button
         type="button"
         onClick={onToggleAuto}
-        className={`w-full h-7 rounded border text-[11px] font-semibold inline-flex items-center justify-center gap-1 ${
+        className={`w-full h-7 rounded border text-xs font-semibold inline-flex items-center justify-center gap-1 ${
           autoOpen ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted hover:bg-muted/70'}`}
         title="Bus automation"
       >
         Auto
         {activeAutoCount > 0 && (
-          <span className="text-[10px] px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{activeAutoCount}</span>
+          <span className="text-xs px-1 rounded-full bg-emerald-500/25 text-emerald-300 tabular-nums">{activeAutoCount}</span>
         )}
       </button>
       <PanKnob
@@ -1625,7 +1625,7 @@ function SendsPanel({
             <button
               type="button"
               onClick={() => onFieldChange(snd.id, { pre_fader: !snd.pre_fader })}
-              className={`h-8 rounded border text-[11px] font-semibold ${
+              className={`h-8 rounded border text-xs font-semibold ${
                 snd.pre_fader ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-muted text-muted-foreground hover:bg-muted/70'
               }`}
               title={snd.pre_fader ? 'Pre-fader (independent of track fader)' : 'Post-fader (follows track fader)'}
@@ -1702,7 +1702,7 @@ function AddBusTile({ disabled, onClick }: { disabled: boolean; onClick: () => v
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`shrink-0 w-14 self-stretch border border-dashed rounded-md flex flex-col items-center justify-center gap-1 text-[11px] ${
+      className={`shrink-0 w-14 self-stretch border border-dashed rounded-md flex flex-col items-center justify-center gap-1 text-xs ${
         disabled
           ? 'border-border/50 text-muted-foreground/40 cursor-not-allowed'
           : 'border-border text-muted-foreground hover:bg-muted/40 hover:text-foreground'

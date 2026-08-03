@@ -721,7 +721,7 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                           : 'bg-gray-100 border border-dashed text-gray-400 cursor-not-allowed'
                   }`}
                 >
-                  <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold shrink-0 ${
+                  <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold shrink-0 ${
                     active ? 'bg-primary-foreground/20' : done ? 'bg-emerald-600 text-white' : 'bg-gray-200 text-gray-600'
                   }`}>
                     {done ? <CheckCircle2 className="w-3.5 h-3.5" /> : i + 1}
@@ -902,7 +902,7 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                     {s.event && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 rounded-lg bg-muted/40 border border-dashed">
                         <div className="space-y-1">
-                          <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">📅 Date</Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">📅 Date</Label>
                           <Input
                             type="date"
                             value={s.event.date ?? ''}
@@ -910,7 +910,7 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                           />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">🕒 Time</Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">🕒 Time</Label>
                           <Input
                             type="time"
                             value={s.event.time ?? ''}
@@ -918,7 +918,7 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                           />
                         </div>
                         <div className="space-y-1 sm:col-span-2">
-                          <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">📍 Location</Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">📍 Location</Label>
                           <Input
                             value={s.event.location ?? ''}
                             onChange={(e) => updateSection(i, { event: { ...s.event, location: e.target.value } })}
@@ -926,7 +926,7 @@ function CampaignEditor({ newsletterId, templates, onBack }: { newsletterId?: st
                           />
                         </div>
                         <div className="space-y-1 sm:col-span-2">
-                          <Label className="text-[11px] uppercase tracking-wide text-muted-foreground">🎟️ Tickets</Label>
+                          <Label className="text-xs uppercase tracking-wide text-muted-foreground">🎟️ Tickets</Label>
                           <Input
                             type="url"
                             value={s.event.tickets ?? ''}

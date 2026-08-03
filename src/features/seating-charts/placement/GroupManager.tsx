@@ -42,9 +42,9 @@ export function GroupManager({ open, onOpenChange, chart, people, onPatchChart }
         <DialogHeader><DialogTitle>Manage groups</DialogTitle></DialogHeader>
 
         <Tabs value={kind} onValueChange={(v) => setKind(v as GroupKind)}>
-          <TabsList className="grid grid-cols-4 text-xs">
+          <TabsList className="grid grid-cols-2 sm:grid-cols-4 h-auto text-xs">
             {TABS.map((k) => (
-              <TabsTrigger key={k} value={k} className="text-xs">{GROUP_KIND_LABEL[k]}</TabsTrigger>
+              <TabsTrigger key={k} value={k} className="text-xs whitespace-normal">{GROUP_KIND_LABEL[k]}</TabsTrigger>
             ))}
           </TabsList>
 

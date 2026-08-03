@@ -245,7 +245,7 @@ function RecordingCard({
       />
       {canEdit ? (
         <div className="space-y-1.5">
-          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+          <label className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
             Teacher feedback
           </label>
           <Textarea

@@ -339,12 +339,12 @@ export const RehearsalFeedback = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl font-bold">Rehearsal Feedback</h2>
           <p className="text-muted-foreground">Track performance feedback and self-assessments</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button 
             variant="outline" 
             onClick={() => navigate('/rehearsals/feedback-dashboard')}

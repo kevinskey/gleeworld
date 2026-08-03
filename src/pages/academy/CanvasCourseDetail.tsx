@@ -534,7 +534,7 @@ function QuizzesTab({ courseId, active }: { courseId: number; active: boolean })
                       <span>· {q.question_count} questions</span>
                     </div>
                   </div>
-                  {!q.published && <Badge variant="outline" className="text-[10px]">Draft</Badge>}
+                  {!q.published && <Badge variant="outline" className="text-xs">Draft</Badge>}
                 </CardContent>
               </Card>
             );
@@ -588,7 +588,7 @@ function DiscussionsTab({ courseId, active }: { courseId: number; active: boolea
                         {d.last_reply_at && <> · last {formatDateShort(d.last_reply_at)}</>}
                       </div>
                     </div>
-                    {d.unread > 0 && <Badge variant="outline" className="text-[10px] bg-rose-50 text-rose-700 border-rose-200">{d.unread} new</Badge>}
+                    {d.unread > 0 && <Badge variant="outline" className="text-xs bg-rose-50 text-rose-700 border-rose-200">{d.unread} new</Badge>}
                   </CardContent>
                 </Card>
               </Link>
@@ -720,7 +720,7 @@ function AssignmentRow({ courseId, a }: { courseId: number; a: { id: number; nam
                 {a.points_possible !== null && <span>· {a.points_possible} pts</span>}
               </div>
             </div>
-            {a.has_submission && <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">Submitted</Badge>}
+            {a.has_submission && <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">Submitted</Badge>}
           </CardContent>
         </Card>
       </Link>

@@ -1140,7 +1140,7 @@ function AttachAudioDialog({
                   <button
                     type="button"
                     onClick={() => setDefaultTrack.mutate(t.id)}
-                    className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded transition-colors ${
+                    className={`text-xs uppercase tracking-wider px-1.5 py-0.5 rounded transition-colors ${
                       t.is_default
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:bg-accent'
@@ -1265,7 +1265,7 @@ function AttachAudioDialog({
               {appleErr && (
                 <p className="text-xs text-destructive">{appleErr}</p>
               )}
-              <p className="text-[11px] text-muted-foreground italic">
+              <p className="text-xs text-muted-foreground italic">
                 Playback requires an active Apple Music subscription. Free users will see a subscription prompt when they hit play.
               </p>
               <div className="border rounded-md max-h-60 overflow-y-auto divide-y">
@@ -1278,7 +1278,7 @@ function AttachAudioDialog({
                       <div className="text-sm font-medium truncate">{applePick.title}</div>
                       <div className="text-xs text-muted-foreground truncate">{applePick.artist}</div>
                     </div>
-                    <span className="text-[10px] uppercase tracking-wider text-primary">Picked</span>
+                    <span className="text-xs uppercase tracking-wider text-primary">Picked</span>
                   </div>
                 )}
                 {appleSearching ? (
@@ -1542,7 +1542,7 @@ function EditScoreDialog({
                 <option value="licensed">Licensed (limited seats)</option>
                 <option value="all_rights_reserved">All rights reserved (private use only)</option>
               </select>
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {rightsStatus === 'public_domain' && 'No seat limit. Modern editions may still be copyrighted — verify the editor.'}
                 {rightsStatus === 'licensed' && 'One active member per seat. Reduce roster or buy more copies if you grow past the count.'}
                 {rightsStatus === 'all_rights_reserved' && 'Private use only — do NOT share with members or move to the shared library.'}
@@ -1739,7 +1739,7 @@ function ShareScoreDialog({
               <Label className="text-sm inline-flex items-center gap-1.5">
                 <UsersIcon className="w-3.5 h-3.5 text-muted-foreground" />
                 Specific people
-                {users.size > 0 && <Badge variant="secondary" className="ml-1 text-[10px]">{users.size}</Badge>}
+                {users.size > 0 && <Badge variant="secondary" className="ml-1 text-xs">{users.size}</Badge>}
               </Label>
               {users.size > 0 && (
                 <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setUsers(new Set())}>
@@ -1793,7 +1793,7 @@ function ShareScoreDialog({
               <Label className="text-sm inline-flex items-center gap-1.5">
                 <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
                 Classes
-                {coursesSel.size > 0 && <Badge variant="secondary" className="ml-1 text-[10px]">{coursesSel.size}</Badge>}
+                {coursesSel.size > 0 && <Badge variant="secondary" className="ml-1 text-xs">{coursesSel.size}</Badge>}
               </Label>
               {coursesSel.size > 0 && (
                 <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setCoursesSel(new Set())}>

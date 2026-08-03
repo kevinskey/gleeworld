@@ -4701,11 +4701,11 @@ function RegionExportSheet({
               <button
                 onClick={() => { setMode('mix'); setMono(false); }}
                 className={`h-11 rounded border text-sm font-semibold ${mode === 'mix' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
-              >Stereo mix<span className="block text-[10px] font-normal opacity-70">one file</span></button>
+              >Stereo mix<span className="block text-xs font-normal opacity-70">one file</span></button>
               <button
                 onClick={() => { setMode('stems'); setMono(true); }}
                 className={`h-11 rounded border text-sm font-semibold ${mode === 'stems' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
-              >Mono stems<span className="block text-[10px] font-normal opacity-70">one file per track</span></button>
+              >Mono stems<span className="block text-xs font-normal opacity-70">one file per track</span></button>
             </div>
             <label className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
               <input type="checkbox" checked={mono} onChange={(e) => setMono(e.target.checked)} className="accent-primary w-4 h-4" />
@@ -4748,7 +4748,7 @@ function RegionExportSheet({
                 ? <><Upload className="w-4 h-4 mr-2" /> Send {selected.size} track{selected.size === 1 ? '' : 's'} to Library</>
                 : <><Download className="w-4 h-4 mr-2" /> Export {selected.size} track{selected.size === 1 ? '' : 's'}</>}
           </Button>
-          <p className="text-[11px] text-muted-foreground text-center">
+          <p className="text-xs text-muted-foreground text-center">
             {dest === 'library'
               ? 'Saved to Media Library → Studio, in your own subfolder.'
               : 'Downloads to this device.'}
@@ -5194,7 +5194,7 @@ function ClickTrackRow({
           <span className="text-xs font-semibold">Click</span>
           <button
             onClick={onToggle}
-            className={`text-[10px] font-bold px-1 py-px rounded border shrink-0 ${metronomeOn ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+            className={`text-xs font-bold px-1 py-px rounded border shrink-0 ${metronomeOn ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
             title={metronomeOn ? 'Click is ON — tap to silence' : 'Click is OFF — tap to turn on (M)'}
           >
             {metronomeOn ? 'ON' : 'OFF'}
@@ -5205,7 +5205,7 @@ function ClickTrackRow({
             className="flex-1 min-w-0 h-1 accent-amber-500"
             title={`${metronomeVolumeDb.toFixed(1)} dB`}
           />
-          <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+          <span className="text-xs text-muted-foreground tabular-nums shrink-0">
             {session.tempo_bpm} BPM
           </span>
         </div>
@@ -5869,7 +5869,7 @@ function ChannelStrip({
             second output; there isn't — everything routes to the single
             destination. -1 = hard left, 0 = center, +1 = hard right. */}
         <MoveHorizontal className="w-4 h-4" />
-        <span className="text-[10px] font-semibold uppercase tracking-wider">Pan</span>
+        <span className="text-xs font-semibold uppercase tracking-wider">Pan</span>
         <span className="w-10 tabular-nums text-right ml-auto">{pan.toFixed(2)}</span>
       </div>
       <input type="range" min={-1} max={1} step={0.05} value={pan}
@@ -6114,7 +6114,7 @@ function RecordingLatencyControl() {
           title={`Reset to default (${defaultMs} ms)`}
         >R</button>
       </div>
-      <div className="text-[10px] text-muted-foreground italic">
+      <div className="text-xs text-muted-foreground italic">
         {Capacitor.isNativePlatform()
           ? 'Increase if takes land late, decrease if early. Use Snap to beat on a clip after a take.'
           : 'Covers mic/speaker hardware latency only — startup delay is measured automatically per take. Increase if takes still land late.'}
@@ -6150,7 +6150,7 @@ function MidiLatencyControl() {
           title="Reset trim to 0 ms"
         >R</button>
       </div>
-      <div className="text-[10px] text-muted-foreground italic">
+      <div className="text-xs text-muted-foreground italic">
         Auto compensation is measured each take. Add trim if recorded notes still sit late against the click; go negative if they land early.
       </div>
     </div>
