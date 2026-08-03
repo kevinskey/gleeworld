@@ -14,6 +14,7 @@ import { enabledEqBands, eqBandToBiquadOptions, trackEqSig } from './trackEq';
 // Track FX are still NOT in this monitoring path (would require rebuilding
 // the fx chain per edit). Rebuild via setInstrument() when the armed
 // track's instrument changes; dispose() when input turns off.
+// Triggers use Tone.immediate(): monitoring must not pay the transport lookAhead (~100ms); scheduled playback keeps its lookahead elsewhere.
 export class LiveVoices {
   private inst: EngineInstrument | null = null;
   private specKey = '';
@@ -81,7 +82,7 @@ export class LiveVoices {
   noteOn(pitch: number, velocity01: number): void {
     const inst = this.inst;
     if (!inst) return;
-    const now = Tone.now();
+    const now = Tone.immediate();
     // Re-striking a sustained pitch: release the ringing voice first so the
     // new attack doesn't stack on top of it.
     if (this.sustained.delete(pitch) && inst.triggerRelease) inst.triggerRelease(pitch, now);
@@ -93,7 +94,7 @@ export class LiveVoices {
   noteOff(pitch: number): void {
     this.held.delete(pitch);
     if (this.pedalDown) { this.sustained.add(pitch); return; } // damper keeps it ringing
-    if (this.inst?.triggerRelease) this.inst.triggerRelease(pitch, Tone.now());
+    if (this.inst?.triggerRelease) this.inst.triggerRelease(pitch, Tone.immediate());
   }
 
   /** Piano damper (CC64). Lifting releases every sustained pitch whose key
@@ -104,7 +105,7 @@ export class LiveVoices {
     if (down) return;
     const inst = this.inst;
     if (inst?.triggerRelease) {
-      const now = Tone.now();
+      const now = Tone.immediate();
       for (const p of this.sustained) if (!this.held.has(p)) inst.triggerRelease(p, now);
     }
     this.sustained.clear();

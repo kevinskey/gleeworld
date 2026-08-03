@@ -43,9 +43,10 @@ import { applyStatusBarSurface } from '@/lib/statusBarStyle';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import {
   appendTakeNote, recordStartMode, grownSessionLength, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
-  type HeldPress, type CapturedCc,
+  createMidiCommitQueue, shouldCaptureMidi, ensureTakeClip, MIN_NOTE_SECONDS,
+  type HeldPress, type CapturedCc, type MidiCommitQueue,
 } from '@/lib/studio/midiRecord';
-import { MidiTimebase } from '@/lib/studio/midiTimebase';
+import { MidiTimebase, formatMonitoringLatency } from '@/lib/studio/midiTimebase';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset, type TransportTickStore } from '@/hooks/useStudio';
 import { useTransportPosition, useTransportTick } from './useTransportTick';
 import { retainUnsavedWork } from '@/lib/unsavedWork';
@@ -71,6 +72,7 @@ import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { audioBufferToWavBlob } from '@/lib/studio/engine/mixdown';
 import { getAssetUrlSync } from '@/lib/studio/engine/assetUrlCache';
 import { splitAudioClips, sliceClipChannels, duplicateClip } from '@/lib/studio/clipOps';
+import { trimNotesToDuration } from '@/lib/studio/midiEdit';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
 import { exportSession, hasResumableExport, clearExportProgress, type ExportPreset } from '@/lib/studio/engine/exportRender';
 import { getAssetUrl, saveSession, uploadAudioAsset } from '@/lib/studio/storage';
@@ -514,6 +516,11 @@ function Editor({
   // CC events captured during the take (absolute compensated seconds).
   const midiCcRef = useRef<CapturedCc[]>([]);
   const midiPedalRef = useRef(false);   // dedupe (WP06 broadcasts CC64 on 3 channels)
+  // Continuous physical pedal state — updated on every sustain message
+  // regardless of capture gating, so a fresh take (or a punch-in mid-hold)
+  // can seed midiPedalRef from what the foot is ACTUALLY doing right now,
+  // instead of always assuming "up".
+  const lastPedalDownRef = useRef(false);
   // Capture compensation for this take, seconds (auto output latency + trim).
   const midiCompSecRef = useRef(0);
   // Hardware-timestamp → transport mapping for the current take. The
@@ -582,27 +589,10 @@ function Editor({
     midiPedalRef.current = false;
   }, [midiInputTrack, midiHeld]);
 
-  // Pending press queue + coalesce timer for MIDI-take commits. Every
-  // released note used to trigger its own update() → the whole session
-  // subtree re-rendered per keystroke and the engine-reload effect saw
-  // a new skeleton per keystroke. Even after deferring reloads mid-take
-  // (useStudio.ts), the React-render pressure alone still glitched
-  // longer takes. Batch releases into a ref and flush every 250 ms so
-  // one update lands per quarter-second of playing instead of per
-  // finger. Immediate-flush path is used when NOT recording (single
-  // notes need to land in state right away) and from stopRecording so
-  // the take fully commits before setRecordingActive(false).
-  const pendingMidiCommitsRef = useRef<Array<{ presses: HeldPress[]; upAbs: number }>>([]);
-  const pendingFlushTimerRef = useRef<number | null>(null);
-
-  const flushPendingMidiCommits = () => {
-    if (pendingFlushTimerRef.current !== null) {
-      window.clearTimeout(pendingFlushTimerRef.current);
-      pendingFlushTimerRef.current = null;
-    }
-    const items = pendingMidiCommitsRef.current;
+  // Builds/updates the take clip from a coalesced batch of presses. See the
+  // comment above `midiCommitQueueRef` below for why batching exists.
+  const flushPendingMidiCommits = (items: Array<{ presses: HeldPress[]; upAbs: number }>) => {
     if (items.length === 0 || !midiInputTrack) return;
-    pendingMidiCommitsRef.current = [];
     const trackId = midiInputTrack.id;
     const freshClipId = crypto.randomUUID();
     update((s) => ({
@@ -625,6 +615,31 @@ function Editor({
       }),
     }));
   };
+  // The queue below is created ONCE (lazy ref) and outlives every render,
+  // so its onFlush must not close over this render's flushPendingMidiCommits
+  // directly (that would freeze onFlush to the FIRST render's midiInputTrack/
+  // update — a stale closure). Indirect through a ref that's reassigned to
+  // the latest closure on every render instead.
+  const flushPendingMidiCommitsRef = useRef(flushPendingMidiCommits);
+  flushPendingMidiCommitsRef.current = flushPendingMidiCommits;
+
+  // Pending press queue + coalesce timer for MIDI-take commits. Every
+  // released note used to trigger its own update() → the whole session
+  // subtree re-rendered per keystroke and the engine-reload effect saw
+  // a new skeleton per keystroke. Even after deferring reloads mid-take
+  // (useStudio.ts), the React-render pressure alone still glitched
+  // longer takes. Batch releases into a queue and flush every 250 ms so
+  // one update lands per quarter-second of playing instead of per
+  // finger. Immediate-flush path is used when NOT recording (single
+  // notes need to land in state right away) and from stopRecording so
+  // the take fully commits before setRecordingActive(false).
+  const midiCommitQueueRef = useRef<MidiCommitQueue<{ presses: HeldPress[]; upAbs: number }> | null>(null);
+  if (!midiCommitQueueRef.current) {
+    midiCommitQueueRef.current = createMidiCommitQueue({
+      coalesceMs: 250,
+      onFlush: (batch) => flushPendingMidiCommitsRef.current(batch),
+    });
+  }
 
   // Write finished presses into the take clip. Coalesces to ~4 updates/
   // second during recording; commits immediately outside a take or when
@@ -632,23 +647,17 @@ function Editor({
   // final held-note flush lands in state synchronously).
   const commitMidiPresses = (presses: HeldPress[], upAbs: number, immediate = false) => {
     if (presses.length === 0 || !midiInputTrack) return;
-    pendingMidiCommitsRef.current.push({ presses, upAbs });
+    const queue = midiCommitQueueRef.current!;
+    queue.add({ presses, upAbs });
     if (immediate || !state?.recordingActive) {
-      flushPendingMidiCommits();
-      return;
-    }
-    if (pendingFlushTimerRef.current === null) {
-      pendingFlushTimerRef.current = window.setTimeout(() => {
-        pendingFlushTimerRef.current = null;
-        flushPendingMidiCommits();
-      }, 250);
+      queue.flushNow();
     }
   };
 
   const handleMidiNoteOn = (pitch: number, velocity: number, timeStampMs?: number) => {
     if (!midiInputTrack) return; // no armed MIDI track → keyboard is silent
-    liveVoicesRef.current?.noteOn(pitch, velocity / 127);
-    if (state?.recordingActive) {
+    liveVoicesRef.current?.noteOn(pitch, velocity / 127); // monitoring stays UNgated
+    if (shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null)) {
       const at = compAt(timeStampMs);
       const stale = midiHeld.keyDown(pitch, velocity, at);
       if (stale) commitMidiPresses([stale], at); // missed note-off
@@ -656,22 +665,36 @@ function Editor({
   };
   const handleMidiNoteOff = (pitch: number, timeStampMs?: number) => {
     if (!midiInputTrack) return;
-    liveVoicesRef.current?.noteOff(pitch);
+    liveVoicesRef.current?.noteOff(pitch); // monitoring stays UNgated
+    // No explicit gate check here by design: midiHeld only ever holds a
+    // press whose key-DOWN passed shouldCaptureMidi (see handleMidiNoteOn),
+    // so keyUp() already answers "was this press captured?" — deciding by
+    // where the press STARTED. That matters for punch: a note struck
+    // during 'rec' whose physical release lands after the punch-out (once
+    // phase is already 'post') must still commit, not be dropped because
+    // the CURRENT phase no longer allows capture. Gating this commit on
+    // the current phase would silently lose that note.
     const press = midiHeld.keyUp(pitch);
     if (!press) return;
     commitMidiPresses([press], compAt(timeStampMs));
   };
   const handleMidiSustain = (down: boolean, timeStampMs?: number) => {
+    // Physical pedal truth — updated unconditionally, before any gating or
+    // even the armed-track check, so it's always right when a take seeds
+    // from it (resetMidiCapture) regardless of what was armed when the
+    // foot moved.
+    lastPedalDownRef.current = down;
     if (!midiInputTrack) return;
-    liveVoicesRef.current?.sustain(down); // monitoring feel unchanged
-    if (state?.recordingActive && down !== midiPedalRef.current) {
+    liveVoicesRef.current?.sustain(down); // monitoring feel unchanged, UNgated
+    const capturing = shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null);
+    if (capturing && down !== midiPedalRef.current) {
       midiPedalRef.current = down;
       midiCcRef.current.push({ controller: 64, value: down ? 127 : 0, timeAbsSeconds: compAt(timeStampMs) });
     }
-    if (!state?.recordingActive) midiPedalRef.current = down;
+    if (!capturing) midiPedalRef.current = down;
   };
   const handleMidiCc = (controller: number, value: number, timeStampMs?: number) => {
-    if (!midiInputTrack || !state?.recordingActive) return;
+    if (!midiInputTrack || !shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null)) return;
     const prev = midiCcRef.current[midiCcRef.current.length - 1];
     if (prev && prev.controller === controller && prev.value === value) return; // coalesce dupes
     midiCcRef.current.push({ controller, value, timeAbsSeconds: compAt(timeStampMs) });
@@ -1456,7 +1479,11 @@ function Editor({
   // path and punch-record's in-point.
   const resetMidiCapture = () => {
     midiCcRef.current = [];
-    midiPedalRef.current = false;
+    // Seed from the CONTINUOUS physical state, not false — a pedal held
+    // down when the take starts (or across a punch-in) is truly down, and
+    // must dedupe against handleMidiSustain's next message correctly
+    // instead of the take wrongly believing it starts released.
+    midiPedalRef.current = lastPedalDownRef.current;
     // Auto compensation measured once per take; ±trim from the settings
     // dial. Do NOT clamp the total at 0 here: the trim UI explicitly
     // promises "go negative if they land early" (MidiLatencyControl), and
@@ -1690,16 +1717,27 @@ function Editor({
   // Called once per stop, after the corresponding HeldNotes flush commit.
   const commitTakeCc = () => {
     const ccTake = midiCcRef.current.splice(0);
-    if (ccTake.length && midiTakeClipRef.current && midiInputTrack) {
-      const takeId = midiTakeClipRef.current;
-      const trackId = midiInputTrack.id;
-      update((s) => ({
-        ...s,
-        tracks: s.tracks.map((t) => t.id === trackId && isMidiTrack(t)
-          ? { ...t, clips: attachTakeCc(t.clips, takeId, ccTake) } as Track
-          : t),
-      }));
-    }
+    if (!ccTake.length || !midiInputTrack) return;
+    const trackId = midiInputTrack.id;
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => {
+        if (t.id !== trackId || !isMidiTrack(t)) return t;
+        let clips = t.clips;
+        let takeId = midiTakeClipRef.current;
+        // CC-only take: no notes landed, so appendTakeNote never ran and
+        // no clip exists yet — create one at the first captured CC event
+        // so pedal/mod moves alone still produce a clip instead of being
+        // silently dropped.
+        if (!takeId) {
+          const clip = ensureTakeClip(null, ccTake[0].timeAbsSeconds, MIN_NOTE_SECONDS);
+          takeId = clip.id;
+          midiTakeClipRef.current = takeId;
+          clips = [...clips, clip];
+        }
+        return { ...t, clips: attachTakeCc(clips, takeId, ccTake) } as Track;
+      }),
+    }));
   };
 
   const stopRecording = async () => {
@@ -1719,6 +1757,13 @@ function Editor({
       const midiElapsed = (performance.now() - recording.startWallMs) / 1000;
       const takeEndSec = posNow() || recording.startSeconds;
       commitMidiPresses(midiHeld.flush(), takeEndSec, true);
+      // commitMidiPresses early-returns when the held-press flush is empty,
+      // which would otherwise skip draining the coalescing queue — any
+      // batch still waiting on its 250ms timer would flush AFTER
+      // commitTakeCc()/setRecordingActive(false), landing late-shifted or
+      // bleeding into the next take. Flush the queue unconditionally
+      // (no-op if already empty) before finalizing CC.
+      midiCommitQueueRef.current?.flushNow();
       commitTakeCc();
       // Grow the grid to cover a take that ran past it, like the audio
       // path does — otherwise playback stops at the old length_seconds
@@ -1735,6 +1780,10 @@ function Editor({
     // pedal-sustained before the transport gets parked. immediate=true so
     // any coalesced-mid-take presses land in state before we tear down.
     commitMidiPresses(midiHeld.flush(), posNow() || recording.startSeconds, true);
+    // See matching comment in the midi-only branch above: flush the
+    // coalescing queue unconditionally so a pending batch can't land after
+    // commitTakeCc()/setRecordingActive(false).
+    midiCommitQueueRef.current?.flushNow();
     commitTakeCc();
 
     const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, armedTrackIds: armed } = recording;
@@ -1958,6 +2007,8 @@ function Editor({
     // than committing it, or it leaks into the next take's clip.
     midiHeld.flush();
     midiCcRef.current = [];
+    midiCommitQueueRef.current?.clear();  // discard coalesced-but-unflushed notes
+    midiTakeClipRef.current = null;       // next take must not adopt this clip
     engineState.setRecordingActive?.(false);
   };
 
@@ -2005,6 +2056,16 @@ function Editor({
 
   const beginPunchTake = async (recorder: MicRecorder) => {
     if (!loopRegion) return;
+    // Pre-roll noodling was armed (recordingActive=true) back at
+    // startPunchRecord, before the phase gate closes capture — reset the
+    // take-scoped capture state right at the actual punch-in so nothing
+    // queued during 'pre' can leak into this take.
+    // Pedal state is physical, not per-take — resetMidiCapture seeds
+    // midiPedalRef from lastPedalDownRef, so a pedal held across punch-in
+    // is still correctly "down" for this take.
+    resetMidiCapture();
+    midiTakeClipRef.current = null;
+    midiCommitQueueRef.current?.clear();
     try {
       await recorder.start();
       const startedAt = performance.now();
@@ -2311,6 +2372,8 @@ function Editor({
               deviceId: midiInputDeviceId, setDeviceId: setMidiInputDeviceId,
               inputs: midiIn.inputs, status: midiIn.status, supported: midiIn.supported,
               targetTrackName: midiInputTrack?.name,
+              monitoringLatencyMs: engineState.engine?.getOutputLatencyMs() ?? getOutputLatencyMs(),
+              locked: !!recording || !!punchRef.current,
             }}
           />
           <Button
@@ -3624,10 +3687,17 @@ function MidiClipBlock({
       selected={selected}
       canTrimLeft={false}
       onSelect={onSelect}
-      onChange={(p) => onChange({
-        start_seconds: p.start ?? clip.start_seconds,
-        duration_seconds: p.duration ?? clip.duration_seconds,
-      })}
+      onChange={(p) => {
+        // Right-edge trim (shrink only — a grow or a move must leave
+        // notes untouched) truncates notes so playback always matches
+        // what the piano roll shows.
+        const isRightTrimShrink = p.duration != null && p.duration < clip.duration_seconds;
+        onChange({
+          start_seconds: p.start ?? clip.start_seconds,
+          duration_seconds: p.duration ?? clip.duration_seconds,
+          ...(isRightTrimShrink ? { notes: trimNotesToDuration(clip.notes, p.duration!) } : {}),
+        });
+      }}
       onRemove={onRemove}
       onDuplicate={onDuplicate}
     />
@@ -6362,9 +6432,14 @@ interface MidiInputProps {
   status: 'idle' | 'connected' | 'denied';
   supported: boolean;
   targetTrackName?: string;
+  monitoringLatencyMs: number;
+  /** True while a take (normal recording or punch pre/rec/post) is active —
+   *  the device picker locks so switching MIDI input mid-take can't yank
+   *  the session out from under an in-progress recording. */
+  locked?: boolean;
 }
 
-function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, status, supported, targetTrackName }: MidiInputProps) {
+function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, status, supported, targetTrackName, monitoringLatencyMs, locked }: MidiInputProps) {
   if (!supported) return null;
   return (
     <div className="border-t border-border pt-2">
@@ -6384,12 +6459,19 @@ function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, 
         </button>
         {enabled && (
           <select value={deviceId} onChange={(e) => setDeviceId(e.target.value)}
-            className="flex-1 h-8 bg-background border border-border rounded px-2 text-sm">
+            disabled={!!locked}
+            title={locked ? 'Locked while recording' : undefined}
+            className="flex-1 h-8 bg-background border border-border rounded px-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed">
             <option value="">All MIDI inputs</option>
             {inputs.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
           </select>
         )}
       </div>
+      {enabled && (
+        <p className="text-xs text-muted-foreground mt-1">
+          {formatMonitoringLatency(monitoringLatencyMs)}
+        </p>
+      )}
       {enabled && getMidiInputSource().kind === 'native' && (
         <button
           onClick={() => {
