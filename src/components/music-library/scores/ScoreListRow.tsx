@@ -2,7 +2,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Music, Headphones, Library as LibraryIcon, Pencil, PencilLine, Share2, ListMusic,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Music, Headphones, Library as LibraryIcon, Layers, MoreHorizontal,
+  Pencil, PencilLine, Share2, ListMusic,
 } from 'lucide-react';
 import { RightsBadge } from '@/components/policies/RightsBadge';
 import { isSharedAnyLane, sharingSummary, type ScoreRow } from './types';
@@ -12,6 +16,7 @@ import { isSharedAnyLane, sharingSummary, type ScoreRow } from './types';
 // rows stay title + actions.
 export function ScoreListRow({
   row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare, onPartTracks,
+  onAddToCollection,
   selectable = false, selected = false, onToggleSelect,
 }: {
   row: ScoreRow;
@@ -22,6 +27,7 @@ export function ScoreListRow({
   onEdit: () => void;
   onToggleShare: () => void;
   onPartTracks: () => void;
+  onAddToCollection?: () => void;
   // Bulk-select mode: clicking toggles selection instead of opening the
   // viewer; a leading checkbox mirrors the state.
   selectable?: boolean;
@@ -107,25 +113,6 @@ export function ScoreListRow({
         </div>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => { e.stopPropagation(); onPartTracks(); }}
-          aria-label="Part tracks"
-          title="Part tracks"
-        >
-          <ListMusic className="w-4 h-4" />
-        </Button>
-        {canEdit && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            aria-label="Edit score details"
-          >
-            <Pencil className="w-4 h-4" />
-          </Button>
-        )}
         {canEdit && (
           <Button
             variant={isSharedAnyLane(row) ? 'secondary' : 'outline'}
@@ -139,29 +126,50 @@ export function ScoreListRow({
             <span className="hidden sm:inline">{isSharedAnyLane(row) ? 'Shared' : 'Share'}</span>
           </Button>
         )}
-        {hasPdf && (
-          <>
-            {canEdit && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="hidden sm:inline-flex"
-                onClick={(e) => { e.stopPropagation(); onAttachAudio(); }}
-              >
-                <Headphones className="w-4 h-4 mr-1.5" />
-                {hasAudio ? 'Audio' : 'Attach audio'}
-              </Button>
-            )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              onClick={(e) => { e.stopPropagation(); onAnnotate(); }}
-              aria-label="Annotate score"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={(e) => e.stopPropagation()}
+              aria-label="More actions"
+              title="More actions"
             >
-              <PencilLine className="w-4 h-4 sm:mr-1.5" />
-              <span className="hidden sm:inline">Annotate</span>
+              <MoreHorizontal className="w-4 h-4" />
             </Button>
-          </>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            {canEdit && (
+              <DropdownMenuItem onClick={onEdit}>
+                <Pencil className="w-4 h-4 mr-2" /> Edit details
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={onPartTracks}>
+              <ListMusic className="w-4 h-4 mr-2" /> Part tracks
+            </DropdownMenuItem>
+            {canEdit && hasPdf && (
+              <DropdownMenuItem onClick={onAttachAudio}>
+                <Headphones className="w-4 h-4 mr-2" /> {hasAudio ? 'Audio tracks' : 'Attach audio'}
+              </DropdownMenuItem>
+            )}
+            {canEdit && onAddToCollection && (
+              <DropdownMenuItem onClick={onAddToCollection}>
+                <Layers className="w-4 h-4 mr-2" /> Add to collection
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {hasPdf && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); onAnnotate(); }}
+            aria-label="Annotate score"
+          >
+            <PencilLine className="w-4 h-4 sm:mr-1.5" />
+            <span className="hidden sm:inline">Annotate</span>
+          </Button>
         )}
       </div>
     </div>

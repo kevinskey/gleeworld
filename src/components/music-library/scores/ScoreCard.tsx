@@ -3,13 +3,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Music, Headphones, Library as LibraryIcon, Pencil, PencilLine, Share2, ListMusic,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Music, Headphones, Library as LibraryIcon, Layers, MoreHorizontal,
+  Pencil, PencilLine, Share2, ListMusic,
 } from 'lucide-react';
 import { RightsBadge } from '@/components/policies/RightsBadge';
 import { SOFT_CARD, SOFT_CARD_STYLE, isSharedAnyLane, sharingSummary, type ScoreRow } from './types';
 
 export function ScoreCard({
   row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare, onPartTracks,
+  onAddToCollection,
   selectable = false, selected = false, onToggleSelect,
 }: {
   row: ScoreRow;
@@ -20,6 +25,7 @@ export function ScoreCard({
   onEdit: () => void;
   onToggleShare: () => void;
   onPartTracks: () => void;
+  onAddToCollection?: () => void;
   // Bulk-select mode: clicking toggles selection instead of opening the
   // viewer; a checkbox mirrors the state.
   selectable?: boolean;
@@ -128,24 +134,12 @@ export function ScoreCard({
             </div>
           </div>
         </div>
-        {/* Four labelled buttons cannot fit a one-third-column card, and flex
-            items default to min-width:auto, so the old non-wrapping row spilled
-            past the card edge. The secondary actions are now icon-only at every
-            width — labels live in aria-label/title — which keeps the whole row
-            on one line with Annotate, the only action worth a label, last. */}
+        {/* Secondary actions live in one "More" menu so the row never
+            spills past the card edge; Annotate — the action performers
+            actually reach for — stays as the one labelled button. Share
+            keeps its own button for librarians (highest-frequency action,
+            and its variant mirrors the sharing state). */}
         <div className="flex flex-wrap items-center justify-end gap-1.5 mt-auto pt-3">
-          {canEdit && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              aria-label="Edit score details"
-              title="Edit score details"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-          )}
           {canEdit && (
             <Button
               variant={isSharedAnyLane(row) ? 'secondary' : 'outline'}
@@ -158,40 +152,50 @@ export function ScoreCard({
               <Share2 className="w-4 h-4" />
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="shrink-0 text-muted-foreground hover:text-foreground"
-            onClick={(e) => { e.stopPropagation(); onPartTracks(); }}
-            aria-label="Part tracks"
-            title="Part tracks"
-          >
-            <ListMusic className="w-4 h-4" />
-          </Button>
-          {hasPdf && (
-            <>
-              {canEdit && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0 text-muted-foreground hover:text-foreground"
-                  onClick={(e) => { e.stopPropagation(); onAttachAudio(); }}
-                  aria-label={hasAudio ? 'Replace attached audio' : 'Attach audio'}
-                  title={hasAudio ? 'Replace attached audio' : 'Attach audio'}
-                >
-                  <Headphones className="w-4 h-4" />
-                </Button>
-              )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="shrink-0"
-                onClick={(e) => { e.stopPropagation(); onAnnotate(); }}
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+                onClick={(e) => e.stopPropagation()}
+                aria-label="More actions"
+                title="More actions"
               >
-                <PencilLine className="w-4 h-4 mr-1.5" />
-                Annotate
+                <MoreHorizontal className="w-4 h-4" />
               </Button>
-            </>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              {canEdit && (
+                <DropdownMenuItem onClick={onEdit}>
+                  <Pencil className="w-4 h-4 mr-2" /> Edit details
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={onPartTracks}>
+                <ListMusic className="w-4 h-4 mr-2" /> Part tracks
+              </DropdownMenuItem>
+              {canEdit && hasPdf && (
+                <DropdownMenuItem onClick={onAttachAudio}>
+                  <Headphones className="w-4 h-4 mr-2" /> {hasAudio ? 'Audio tracks' : 'Attach audio'}
+                </DropdownMenuItem>
+              )}
+              {canEdit && onAddToCollection && (
+                <DropdownMenuItem onClick={onAddToCollection}>
+                  <Layers className="w-4 h-4 mr-2" /> Add to collection
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {hasPdf && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={(e) => { e.stopPropagation(); onAnnotate(); }}
+            >
+              <PencilLine className="w-4 h-4 mr-1.5" />
+              Annotate
+            </Button>
           )}
         </div>
       </CardContent>

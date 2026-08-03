@@ -34,7 +34,11 @@ import {
   ScoresFilterBar, ActiveFilterChips, applyScoresFilters,
   type ScoresFilters, type ScoresSort,
 } from '@/components/music-library/scores/ScoresFilterBar';
+import { AddToCollectionDialog } from '@/components/music-library/scores/AddToCollectionDialog';
 import { ScoreViewerDialog } from '@/components/music-library/ScoreViewerDialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { MyMusicTab } from '@/components/music-library/MyMusicTab';
 import { getSignedUrl } from '@/utils/storage';
 import { BookOpen as BookOpenIcon } from 'lucide-react';
@@ -103,6 +107,39 @@ export default function MusicLibraryPage() {
   const setSort = (s: ScoresSort) => updateParams((p) => {
     if (s === 'title') p.delete('sort'); else p.set('sort', s);
   });
+
+  // Collections (gw_music_collections — existing schema, newly consumed by
+  // this tab). Picking one narrows the grid to its members.
+  const collectionId = searchParams.get('collection');
+  const setCollectionId = (id: string | null) => updateParams((p) => {
+    if (id) p.set('collection', id); else p.delete('collection');
+  });
+  const { data: collections = [] } = useQuery<Array<{ id: string; title: string }>>({
+    queryKey: ['music-collections'],
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_music_collections')
+        .select('id, title')
+        .order('is_system', { ascending: false })
+        .order('title');
+      return (data ?? []) as Array<{ id: string; title: string }>;
+    },
+  });
+  const { data: collectionItemIds } = useQuery<string[]>({
+    queryKey: ['collection-items', collectionId],
+    enabled: !!collectionId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_music_collection_items')
+        .select('sheet_music_id')
+        .eq('collection_id', collectionId!);
+      return (data ?? []).map((r: { sheet_music_id: string }) => r.sheet_music_id);
+    },
+  });
+
+  // Add-to-collection dialog target (More menu, canEdit only).
+  const [collectingFor, setCollectingFor] = useState<ScoreRow | null>(null);
   // Scores layout: card grid (default) or compact list. Persisted so the
   // librarian's preference survives reloads.
   const [scoresView, setScoresView] = useState<'cards' | 'list'>(() =>
@@ -231,6 +268,10 @@ export default function MusicLibraryPage() {
       );
     }
     out = applyScoresFilters(out, filters);
+    if (collectionId && collectionItemIds) {
+      const inCollection = new Set(collectionItemIds);
+      out = out.filter((r) => inCollection.has(r.id));
+    }
     if (sort === 'composer') {
       const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
       out = [...out].sort((a, b) => collator.compare(a.composer ?? '', b.composer ?? ''));
@@ -239,7 +280,7 @@ export default function MusicLibraryPage() {
     }
     // 'title' keeps the server's .order('title').
     return out;
-  }, [rows, search, filters, sort]);
+  }, [rows, search, filters, sort, collectionId, collectionItemIds]);
 
   // Row's Share button — opens the granular share dialog rather than
   // toggling in place. The dialog handles the actual write; passing the
@@ -313,6 +354,22 @@ export default function MusicLibraryPage() {
                     className="pl-9"
                   />
                 </div>
+                {collections.length > 0 && (
+                  <Select
+                    value={collectionId ?? 'all'}
+                    onValueChange={(v) => setCollectionId(v === 'all' ? null : v)}
+                  >
+                    <SelectTrigger className="h-9 w-auto sm:w-48 shrink-0" aria-label="Collection">
+                      <SelectValue placeholder="All collections" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All collections</SelectItem>
+                      {collections.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 <ScoresFilterBar
                   rows={rows}
                   filters={filters}
@@ -390,6 +447,7 @@ export default function MusicLibraryPage() {
                   onEdit={() => setEditing(r)}
                   onToggleShare={() => handleOpenShare(r)}
                   onPartTracks={() => setPartTracksFor(r)}
+                  onAddToCollection={canEdit ? () => setCollectingFor(r) : undefined}
                   selectable={selectMode}
                   selected={selectedIds.has(r.id)}
                   onToggleSelect={() => toggleSelected(r.id)}
@@ -410,6 +468,7 @@ export default function MusicLibraryPage() {
                     onEdit={() => setEditing(r)}
                     onToggleShare={() => handleOpenShare(r)}
                     onPartTracks={() => setPartTracksFor(r)}
+                    onAddToCollection={canEdit ? () => setCollectingFor(r) : undefined}
                     selectable={selectMode}
                     selected={selectedIds.has(r.id)}
                     onToggleSelect={() => toggleSelected(r.id)}
@@ -515,6 +574,11 @@ export default function MusicLibraryPage() {
           // so the librarian can keep working through the library.
           setSelectedIds(new Set());
         }}
+      />
+
+      <AddToCollectionDialog
+        score={collectingFor}
+        onOpenChange={(open) => !open && setCollectingFor(null)}
       />
 
       {partTracksFor && (
