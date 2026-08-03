@@ -1,51 +1,85 @@
-// "My Music" — the user's personal library (uploads now; CPDL saves and
-// purchases land here in later phases). User-scoped, follows the person
+// "My Music" — the user's personal library (uploads, CPDL saves, store
+// purchases, and Repertoire saves). User-scoped, follows the person
 // across tenants. Spec: docs/superpowers/specs/2026-07-12-personal-music-library-design.md
 import { useMemo, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Music, Plus, Trash2, FileMusic, ExternalLink, Loader2, Search } from 'lucide-react';
+import { Music, Plus, LayoutGrid, List as ListIcon, Search, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePersonalScores, type PersonalScore } from '@/hooks/usePersonalScores';
+import { useUserRole } from '@/hooks/useUserRole';
 import { getSignedUrl } from '@/utils/storage';
 import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
-
-const SOURCE_LABEL: Record<PersonalScore['source'], string> = {
-  upload: 'Upload',
-  cpdl: 'CPDL',
-  purchase: 'GW Sheet Music Store',
-};
+import { SOFT_CARD } from '@/components/music-library/scores/types';
+import { ScoreViewerDialog, type ViewingScore } from '@/components/music-library/ScoreViewerDialog';
+import { MyMusicCard } from '@/components/music-library/my-music/MyMusicCard';
+import { MyMusicListRow } from '@/components/music-library/my-music/MyMusicListRow';
+import { MyMusicUploadDialog } from '@/components/music-library/my-music/MyMusicUploadDialog';
+import { EditPersonalScoreDialog } from '@/components/music-library/my-music/EditPersonalScoreDialog';
+import { PublishToLibraryDialog, isPublishableSource } from '@/components/music-library/my-music/PublishToLibraryDialog';
+import { isExternalOnly } from '@/components/music-library/my-music/personalScoreDisplay';
 
 type SortKey = 'recent' | 'oldest' | 'title-asc' | 'title-desc' | 'composer-asc' | 'source';
 
 export function MyMusicTab() {
-  const { scores, isLoading, uploadScore, removeScore } = usePersonalScores();
+  const { scores, isLoading, uploadScore, updateScore, removeScore } = usePersonalScores();
   const [adding, setAdding] = useState(false);
-  const [viewingUrl, setViewingUrl] = useState<string | null>(null);
-  const [viewingTitle, setViewingTitle] = useState('');
+  const [editing, setEditing] = useState<PersonalScore | null>(null);
+  // Personal PDFs open in the SAME contain-fit viewer as the Scores tab
+  // (whole page visible, no scrolling — PR #321). No `id`: annotation
+  // tables FK to gw_sheet_music, so the viewer's annotation/audio lookups
+  // stay disabled for personal scores.
+  const [viewing, setViewing] = useState<ViewingScore | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('recent');
+  // Organization filters — favorites toggle + tag chips (OR within tags).
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const toggleTag = (t: string) => {
+    setSelectedTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t); else next.add(t);
+      return next;
+    });
+  };
+  const allTags = useMemo(
+    () => [...new Set(scores.flatMap((s) => s.tags ?? []))].sort(),
+    [scores],
+  );
+  // Cards/list layout, persisted like the Scores tab's toggle.
+  const [view, setView] = useState<'cards' | 'list'>(() =>
+    typeof window !== 'undefined' && localStorage.getItem('gw-my-music-view') === 'list'
+      ? 'list'
+      : 'cards',
+  );
+  const changeView = (v: 'cards' | 'list') => {
+    setView(v);
+    try { localStorage.setItem('gw-my-music-view', v); } catch { /* private mode */ }
+  };
 
   // Filter + sort into a derived list. Case-insensitive match against title,
   // composer, and voicing so a user typing "SATB" or "brahms" both work.
   // Empty query short-circuits — no need to run toLowerCase on every row.
   const visibleScores = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const filtered = q
+    let filtered = q
       ? scores.filter((s) =>
           (s.title || '').toLowerCase().includes(q)
           || (s.composer || '').toLowerCase().includes(q)
-          || (s.voicing || '').toLowerCase().includes(q))
+          || (s.voicing || '').toLowerCase().includes(q)
+          || (s.tags ?? []).some((t) => t.toLowerCase().includes(q)))
       : scores;
+    if (favoritesOnly) filtered = filtered.filter((s) => s.is_favorite);
+    if (selectedTags.size > 0) {
+      filtered = filtered.filter((s) => (s.tags ?? []).some((t) => selectedTags.has(t)));
+    }
     // Sort a shallow copy — the source array is a react-query cache, mutating
     // it would break equality checks downstream.
     const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
@@ -71,10 +105,84 @@ export function MyMusicTab() {
         sorted.sort((a, b) => b.created_at.localeCompare(a.created_at));
     }
     return sorted;
-  }, [scores, query, sortKey]);
+  }, [scores, query, sortKey, favoritesOnly, selectedTags]);
+
+  const toggleFavorite = async (s: PersonalScore) => {
+    try {
+      await updateScore(s, { is_favorite: !s.is_favorite });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not update favorite.');
+    }
+  };
+
+  // ── Publish to the tenant library (librarian/admin only) ──────────────
+  // A personal score is "published" when a gw_sheet_music row in this
+  // tenant points at its storage object (20260718140000). Query the rows
+  // for MY paths to badge published scores and drive unpublish.
+  const { canEditMusicLibrary } = useUserRole();
+  const canPublish = canEditMusicLibrary();
+  const qc = useQueryClient();
+  const [publishing, setPublishing] = useState<PersonalScore | null>(null);
+  const myPaths = useMemo(
+    () => scores.map((s) => s.storage_path).filter((p): p is string => !!p),
+    [scores],
+  );
+  const { data: publishedRows = [] } = useQuery<Array<{ id: string; storage_path: string }>>({
+    queryKey: ['my-published-scores', myPaths.join(',')],
+    enabled: canPublish && myPaths.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_sheet_music')
+        .select('id, storage_path')
+        .eq('storage_bucket', 'personal-scores')
+        .in('storage_path', myPaths);
+      return (data ?? []) as Array<{ id: string; storage_path: string }>;
+    },
+  });
+  const publishedByPath = useMemo(
+    () => new Map(publishedRows.map((r) => [r.storage_path, r.id])),
+    [publishedRows],
+  );
+  const refreshPublished = () => {
+    qc.invalidateQueries({ queryKey: ['my-published-scores'] });
+    qc.invalidateQueries({ queryKey: ['music-library-scores'] });
+  };
+
+  const togglePublish = async (s: PersonalScore) => {
+    const publishedId = s.storage_path ? publishedByPath.get(s.storage_path) : undefined;
+    if (!publishedId) {
+      setPublishing(s);
+      return;
+    }
+    if (!confirm(`Unpublish "${s.title}"? Members will immediately lose access to the published copy.`)) return;
+    // Deleting the row revokes tenant read of the file (the storage policy
+    // keys on the row's existence). The owner-revoke DELETE policy
+    // (20260803180000) guarantees this works for the file's owner.
+    const { data, error } = await supabase
+      .from('gw_sheet_music')
+      .delete()
+      .eq('id', publishedId)
+      .select('id');
+    if (error || !data?.length) {
+      toast.error('Could not unpublish — your role may not have permission.');
+      return;
+    }
+    toast.success('Unpublished.');
+    refreshPublished();
+  };
 
   const openScore = async (s: PersonalScore) => {
     if (openingId) return; // one at a time — stacking clicks stacked requests
+    // Repertoire saves (IMSLP / external) have no PDF of their own — they
+    // open at the source site in a new tab.
+    if (isExternalOnly(s)) {
+      window.open(s.external_url!, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (!s.storage_path) {
+      toast.error(`"${s.title}" has no file attached.`);
+      return;
+    }
     setOpeningId(s.id);
     try {
       // waitForReady=false: that retry loop exists to ride out the post-upload
@@ -85,11 +193,20 @@ export function MyMusicTab() {
         toast.error(`Could not open "${s.title}". The file may be missing.`);
         return;
       }
-      setViewingTitle(s.title);
-      setViewingUrl(url);
+      setViewing({ title: s.title, pdfUrl: url });
     } finally {
       setOpeningId(null);
     }
+  };
+
+  const removeWithConfirm = async (s: PersonalScore) => {
+    const published = !!(s.storage_path && publishedByPath.get(s.storage_path));
+    const message = published
+      ? `"${s.title}" is published to your group's library — deleting the file will BREAK the published copy for every member. Remove anyway?`
+      : `Remove "${s.title}" from My Music?`;
+    if (!confirm(message)) return;
+    try { await removeScore(s); toast.success('Removed'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Remove failed'); }
   };
 
   if (isLoading) {
@@ -119,19 +236,80 @@ export function MyMusicTab() {
               aria-label="Search My Music"
             />
           </div>
-          <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
-            <SelectTrigger className="sm:w-56" aria-label="Sort My Music">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">Newest first</SelectItem>
-              <SelectItem value="oldest">Oldest first</SelectItem>
-              <SelectItem value="title-asc">Title A → Z</SelectItem>
-              <SelectItem value="title-desc">Title Z → A</SelectItem>
-              <SelectItem value="composer-asc">Composer A → Z</SelectItem>
-              <SelectItem value="source">Source</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+              <SelectTrigger className="flex-1 sm:w-56" aria-label="Sort My Music">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Newest first</SelectItem>
+                <SelectItem value="oldest">Oldest first</SelectItem>
+                <SelectItem value="title-asc">Title A → Z</SelectItem>
+                <SelectItem value="title-desc">Title Z → A</SelectItem>
+                <SelectItem value="composer-asc">Composer A → Z</SelectItem>
+                <SelectItem value="source">Source</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="shrink-0 flex items-center gap-0.5 rounded-lg border border-border p-0.5" role="group" aria-label="Layout">
+              <Button
+                variant={view === 'cards' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-8 px-2.5"
+                onClick={() => changeView('cards')}
+                aria-label="Card view"
+                aria-pressed={view === 'cards'}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={view === 'list' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-8 px-2.5"
+                onClick={() => changeView('list')}
+                aria-label="List view"
+                aria-pressed={view === 'list'}
+              >
+                <ListIcon className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Organization chips: favorites + the union of the user's tags. */}
+      {(allTags.length > 0 || scores.some((s) => s.is_favorite)) && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setFavoritesOnly((v) => !v)}
+            aria-pressed={favoritesOnly}
+            className={
+              favoritesOnly
+                ? 'inline-flex items-center gap-1 rounded-full border border-primary bg-primary text-primary-foreground px-2.5 py-1 text-xs font-medium transition-colors'
+                : 'inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors'
+            }
+          >
+            <Star className={`w-3 h-3 ${favoritesOnly ? 'fill-current' : ''}`} />
+            Favorites
+          </button>
+          {allTags.map((t) => {
+            const selected = selectedTags.has(t);
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => toggleTag(t)}
+                aria-pressed={selected}
+                className={
+                  selected
+                    ? 'inline-flex items-center rounded-full border border-primary bg-primary text-primary-foreground px-2.5 py-1 text-xs font-medium transition-colors'
+                    : 'inline-flex items-center rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors'
+                }
+              >
+                #{t}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -151,147 +329,63 @@ export function MyMusicTab() {
             Try a shorter search, or clear it to see everything.
           </p>
         </div>
-      ) : (
+      ) : view === 'cards' ? (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visibleScores.map((s) => (
-            <li
-              key={s.id}
-              className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-md focus-within:border-primary/50"
-            >
-              {/* Whole card opens the PDF. The trailing icon is the affordance —
-                  without it the card reads as an inert list row, since there is
-                  no thumbnail and the source badge looks like a status. */}
-              <button
-                type="button"
-                className="block w-full text-left cursor-pointer disabled:cursor-wait"
-                onClick={() => openScore(s)}
-                disabled={openingId === s.id}
-                aria-label={`Open ${s.title}`}
-              >
-                <div className="flex items-center gap-2">
-                  {openingId === s.id
-                    ? <Loader2 className="w-4 h-4 text-primary shrink-0 animate-spin" />
-                    : <FileMusic className="w-4 h-4 text-primary shrink-0" />}
-                  <span className="text-sm font-semibold leading-tight truncate">{s.title}</span>
-                </div>
-                {s.composer && (
-                  <div className="text-xs text-muted-foreground truncate mt-1">{s.composer}</div>
-                )}
-                <div className="mt-2 flex items-center gap-1.5">
-                  <Badge variant="secondary" className="text-xs">{SOURCE_LABEL[s.source]}</Badge>
-                  {s.voicing && <Badge variant="outline" className="text-xs">{s.voicing}</Badge>}
-                  <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground group-hover:text-primary transition-colors">
-                    {openingId === s.id ? 'Opening…' : 'Open'}
-                    <ExternalLink className="w-4 h-4" />
-                  </span>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!confirm(`Remove "${s.title}" from My Music?`)) return;
-                  try { await removeScore(s); toast.success('Removed'); }
-                  catch (e) { toast.error(e instanceof Error ? e.message : 'Remove failed'); }
-                }}
-                className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
-                aria-label={`Remove ${s.title}`}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+            <li key={s.id}>
+              <MyMusicCard
+                score={s}
+                opening={openingId === s.id}
+                onOpen={() => openScore(s)}
+                onEdit={() => setEditing(s)}
+                onRemove={() => removeWithConfirm(s)}
+                onToggleFavorite={() => toggleFavorite(s)}
+                published={!!(s.storage_path && publishedByPath.get(s.storage_path))}
+                onTogglePublish={canPublish && isPublishableSource(s) ? () => togglePublish(s) : undefined}
+              />
             </li>
           ))}
         </ul>
+      ) : (
+        <Card className={SOFT_CARD}>
+          <div className="divide-y divide-border">
+            {visibleScores.map((s) => (
+              <MyMusicListRow
+                key={s.id}
+                score={s}
+                opening={openingId === s.id}
+                onOpen={() => openScore(s)}
+                onEdit={() => setEditing(s)}
+                onRemove={() => removeWithConfirm(s)}
+                onToggleFavorite={() => toggleFavorite(s)}
+                published={!!(s.storage_path && publishedByPath.get(s.storage_path))}
+                onTogglePublish={canPublish && isPublishableSource(s) ? () => togglePublish(s) : undefined}
+              />
+            ))}
+          </div>
+        </Card>
       )}
 
-      <UploadDialog
+      <MyMusicUploadDialog
         open={adding}
         onClose={() => setAdding(false)}
-        onUpload={async (file, meta) => {
-          await uploadScore(file, meta);
-          toast.success(`"${meta.title}" added to My Music`);
-        }}
+        onUpload={uploadScore}
       />
 
-      {/* Phase 1 viewer: plain PDF (annotation tables FK to gw_sheet_music). */}
-      <Dialog open={!!viewingUrl} onOpenChange={(o) => !o && setViewingUrl(null)}>
-        <DialogContent className="max-w-5xl h-[85vh] p-0 flex flex-col">
-          <DialogHeader className="px-4 pt-3 pb-2 shrink-0">
-            <DialogTitle className="text-sm">{viewingTitle}</DialogTitle>
-          </DialogHeader>
-          {viewingUrl && (
-            <iframe title={viewingTitle} src={viewingUrl} className="flex-1 w-full border-0 rounded-b-xl" />
-          )}
-        </DialogContent>
-      </Dialog>
+      <EditPersonalScoreDialog
+        score={editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        onSave={updateScore}
+        tagSuggestions={allTags}
+      />
+
+      <PublishToLibraryDialog
+        score={publishing}
+        onOpenChange={(o) => !o && setPublishing(null)}
+        onPublished={refreshPublished}
+      />
+
+      <ScoreViewerDialog viewing={viewing} onClose={() => setViewing(null)} />
     </div>
-  );
-}
-
-function UploadDialog({ open, onClose, onUpload }: {
-  open: boolean;
-  onClose: () => void;
-  onUpload: (file: File, meta: { title: string; composer?: string; voicing?: string }) => Promise<void>;
-}) {
-  const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState('');
-  const [composer, setComposer] = useState('');
-  const [voicing, setVoicing] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  const reset = () => { setFile(null); setTitle(''); setComposer(''); setVoicing(''); };
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add a PDF to My Music</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="score-file">PDF file</Label>
-            <Input
-              id="score-file" type="file" accept="application/pdf" className="mt-1"
-              onChange={(e) => {
-                const f = e.target.files?.[0] ?? null;
-                setFile(f);
-                if (f && !title) setTitle(f.name.replace(/\.pdf$/i, ''));
-              }}
-            />
-          </div>
-          <div>
-            <Label htmlFor="score-title">Title</Label>
-            <Input id="score-title" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="score-composer">Composer</Label>
-              <Input id="score-composer" value={composer} onChange={(e) => setComposer(e.target.value)} className="mt-1" />
-            </div>
-            <div>
-              <Label htmlFor="score-voicing">Voicing</Label>
-              <Input id="score-voicing" value={voicing} onChange={(e) => setVoicing(e.target.value)} placeholder="SATB" className="mt-1" />
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={() => { reset(); onClose(); }} disabled={busy}>Cancel</Button>
-          <Button
-            disabled={!file || !title.trim() || busy}
-            onClick={async () => {
-              if (!file) return;
-              setBusy(true);
-              try {
-                await onUpload(file, { title, composer: composer || undefined, voicing: voicing || undefined });
-                reset(); onClose();
-              } catch (e) {
-                toast.error(e instanceof Error ? e.message : 'Upload failed');
-              } finally { setBusy(false); }
-            }}
-          >
-            {busy ? 'Adding…' : 'Add to My Music'}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }
