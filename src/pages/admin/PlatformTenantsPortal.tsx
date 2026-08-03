@@ -26,7 +26,18 @@ import {
   RefreshCw,
   Loader2,
   Globe,
+  Mail,
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
@@ -144,6 +155,27 @@ export default function PlatformTenantsPortal() {
         description: e?.message ?? 'Unknown error',
         variant: 'destructive',
       });
+    }
+  };
+
+  // Resend welcome = the staged-setup handoff step. The API mints a fresh
+  // temp password for the tenant's admin (invalidating any staged one),
+  // so it always goes through the confirm dialog below.
+  const [resendTarget, setResendTarget] = useState<TenantRow | null>(null);
+  const resendWelcome = async (t: TenantRow) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not signed in.');
+      const res = await fetch(`/superadmin/api/tenants/${t.id}/resend-welcome`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      toast({ title: 'Welcome email sent', description: `A fresh sign-in email went to the ${t.name} admin.` });
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+      toast({ title: 'Resend failed', description: errorMessage, variant: 'destructive' });
     }
   };
 
@@ -293,7 +325,7 @@ export default function PlatformTenantsPortal() {
                     <span>Plan: {t.plan}</span>
                     <span>{new Date(t.created_at).toLocaleDateString()}</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-1.5 pt-1">
+                  <div className="grid grid-cols-2 gap-1.5 pt-1">
                     <Button
                       size="sm"
                       variant="outline"
@@ -321,6 +353,17 @@ export default function PlatformTenantsPortal() {
                     >
                       <LayoutPanelTop className="w-3.5 h-3.5 mr-1" /> Pages
                     </Button>
+                    {!isPlatform && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 min-h-0 lg:min-h-0 px-2 text-xs"
+                        onClick={() => setResendTarget(t)}
+                        title="Email this tenant's admin a fresh sign-in (invalidates any staged password)"
+                      >
+                        <Mail className="w-3.5 h-3.5 mr-1" /> Welcome
+                      </Button>
+                    )}
                   </div>
                   <a
                     href={url}
@@ -336,6 +379,24 @@ export default function PlatformTenantsPortal() {
           })}
         </div>
       )}
+
+      <AlertDialog open={!!resendTarget} onOpenChange={(v) => !v && setResendTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resend welcome email?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This emails a fresh temp password to the {resendTarget?.name} admin and invalidates
+              any staged password. Use it as the handoff step after building their site.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => resendTarget && void resendWelcome(resendTarget)}>
+              Send welcome email
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </DashboardShell>
     </UniversalLayout>
