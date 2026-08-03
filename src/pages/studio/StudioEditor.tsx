@@ -1757,6 +1757,13 @@ function Editor({
       const midiElapsed = (performance.now() - recording.startWallMs) / 1000;
       const takeEndSec = posNow() || recording.startSeconds;
       commitMidiPresses(midiHeld.flush(), takeEndSec, true);
+      // commitMidiPresses early-returns when the held-press flush is empty,
+      // which would otherwise skip draining the coalescing queue — any
+      // batch still waiting on its 250ms timer would flush AFTER
+      // commitTakeCc()/setRecordingActive(false), landing late-shifted or
+      // bleeding into the next take. Flush the queue unconditionally
+      // (no-op if already empty) before finalizing CC.
+      midiCommitQueueRef.current?.flushNow();
       commitTakeCc();
       // Grow the grid to cover a take that ran past it, like the audio
       // path does — otherwise playback stops at the old length_seconds
@@ -1773,6 +1780,10 @@ function Editor({
     // pedal-sustained before the transport gets parked. immediate=true so
     // any coalesced-mid-take presses land in state before we tear down.
     commitMidiPresses(midiHeld.flush(), posNow() || recording.startSeconds, true);
+    // See matching comment in the midi-only branch above: flush the
+    // coalescing queue unconditionally so a pending batch can't land after
+    // commitTakeCc()/setRecordingActive(false).
+    midiCommitQueueRef.current?.flushNow();
     commitTakeCc();
 
     const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, armedTrackIds: armed } = recording;

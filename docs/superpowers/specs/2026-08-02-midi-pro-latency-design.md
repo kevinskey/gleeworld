@@ -29,6 +29,8 @@ scheduling and is not touched.
    time-stamped call in the class).
 2. Assert/keep context `latencyHint: 'interactive'` (Tone default) at engine
    init — verify, don't re-plumb.
+   Verified 2026-08-02: no setContext/latencyHint override exists; Tone's
+   default interactive context applies.
 3. Surface measured monitoring latency in the Studio MIDI input settings
    section: `baseLatency + outputLatency` rendered as "monitoring ≈ Nms",
    reusing `getOutputLatencyMs()`.

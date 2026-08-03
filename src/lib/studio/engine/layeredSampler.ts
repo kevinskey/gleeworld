@@ -195,9 +195,12 @@ function buildLayeredVoice(name: string, manifest: GwManifest, out: Tone.Gain): 
       }
     },
     // Transport pause/stop/seek: cut every held note now, no damper —
-    // this is a hard stop, not a musical note-off.
+    // this is a hard stop, not a musical note-off. Use Tone.immediate()
+    // (see liveVoices.ts header comment): this must not pay the transport
+    // lookAhead (~100ms) the way scheduled playback does, or held notes
+    // ring on past the pause/stop/seek point.
     releaseAll: () => {
-      const time = Tone.now();
+      const time = Tone.immediate();
       for (const [pitch, i] of heldLayer) {
         try { samplers[i].triggerRelease(midiToNote(pitch), time); } catch { /* already ended */ }
       }
