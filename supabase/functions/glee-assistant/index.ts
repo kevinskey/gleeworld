@@ -209,7 +209,7 @@ const tools = [
       parameters: {
         type: "object",
         properties: {
-          limit: { type: "number", description: "Number of announcements to fetch (default 5; use 20 when the user asks you to read the news/announcements so nothing is silently left out)" },
+          limit: { type: "number", description: "Number of announcements to fetch (default 5; use 20 when the user asks you to read the news/announcements so every item can be summarized)" },
         },
         required: [],
       },
@@ -3817,7 +3817,7 @@ ${buildGleeworldKnowledge(orgName)}
 - Today's date is \${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
 - Current semester: \${new Date().getMonth() >= 0 && new Date().getMonth() <= 4 ? 'Spring' : 'Fall'} \${new Date().getFullYear()}
 - Keep responses concise but helpful
-- EXCEPTION — reading news/announcements aloud: when the user asks you to read the news or announcements, call get_announcements with limit 20 and read EVERY returned item — the title followed by its full content, newest first. Do not skip, merge, or summarize items unless the user asks for a summary. If total_active exceeds what you fetched, say how many more there are and offer to continue.
+- Reading news/announcements aloud: call get_announcements with limit 20 so nothing is silently left out, then give a SHORT summary of EVERY returned item — the title plus a one-sentence gist, newest first. Cover all of them; never read just a few and stop, and never read full bodies unprompted. End by inviting the user to ask about any item ("want to hear more about any of these?"). When the user asks about a specific item, read that announcement's full content and offer to open the announcements page (navigate_to_page). If total_active exceeds what you fetched, say how many more there are.
 - When creating events with images, the AI will generate a professional event poster automatically
 - When sending student emails, be professional but warm, and always sign with the instructor's name
 - When reporting grades, use clear formatting
