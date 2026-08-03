@@ -37,4 +37,18 @@ export interface ScoreRow {
   shared_with_members: boolean | null;
   shared_with_users: string[] | null;
   shared_with_courses: string[] | null;
+  shared_with_voice_parts: string[] | null;
 }
+
+// Fixed section list — mirrors the CHECK constraint on
+// gw_profiles.voice_part (20250713160258). Keep in sync with the DB.
+export const VOICE_PARTS: Array<{ value: string; label: string }> = [
+  { value: 'soprano_1', label: 'Soprano 1' },
+  { value: 'soprano_2', label: 'Soprano 2' },
+  { value: 'alto_1', label: 'Alto 1' },
+  { value: 'alto_2', label: 'Alto 2' },
+  { value: 'tenor_1', label: 'Tenor 1' },
+  { value: 'tenor_2', label: 'Tenor 2' },
+  { value: 'bass_1', label: 'Bass 1' },
+  { value: 'bass_2', label: 'Bass 2' },
+];

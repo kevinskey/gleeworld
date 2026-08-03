@@ -146,7 +146,7 @@ export default function MusicLibraryPage() {
       // open on purpose so ?view= deep links and setlists keep working.
       let q = (supabase as any)
         .from('gw_sheet_music_browse')
-        .select('id, title, composer, voicing, difficulty_level, pdf_url, storage_path, storage_bucket, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members, shared_with_users, shared_with_courses')
+        .select('id, title, composer, voicing, difficulty_level, pdf_url, storage_path, storage_bucket, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members, shared_with_users, shared_with_courses, shared_with_voice_parts')
         .order('title')
         .limit(200);
       q = applyFilter(q as any);

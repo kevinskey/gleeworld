@@ -13,9 +13,10 @@ import {
 } from '@/components/ui/dialog';
 import {
   Search, Loader2, Users as UsersIcon, GraduationCap, Check as CheckIcon,
+  Music2 as VoicePartIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { ScoreRow } from './types';
+import { VOICE_PARTS, type ScoreRow } from './types';
 
 // ── Share dialog ────────────────────────────────────────────────────────
 //
@@ -43,6 +44,7 @@ export function ShareScoreDialog({
   const [everyone, setEveryone] = useState(false);
   const [users, setUsers] = useState<Set<string>>(new Set());
   const [coursesSel, setCoursesSel] = useState<Set<string>>(new Set());
+  const [voiceParts, setVoiceParts] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [peopleFilter, setPeopleFilter] = useState('');
 
@@ -52,6 +54,7 @@ export function ShareScoreDialog({
     setEveryone(!!score.shared_with_members);
     setUsers(new Set(score.shared_with_users ?? []));
     setCoursesSel(new Set(score.shared_with_courses ?? []));
+    setVoiceParts(new Set(score.shared_with_voice_parts ?? []));
     setPeopleFilter('');
   }, [score]);
 
@@ -110,6 +113,13 @@ export function ShareScoreDialog({
       return next;
     });
   };
+  const toggleVoicePart = (vp: string) => {
+    setVoiceParts((prev) => {
+      const next = new Set(prev);
+      if (next.has(vp)) next.delete(vp); else next.add(vp);
+      return next;
+    });
+  };
 
   const save = async () => {
     if (!score) return;
@@ -122,6 +132,7 @@ export function ShareScoreDialog({
         shared_with_members: everyone,
         shared_with_users: Array.from(users),
         shared_with_courses: Array.from(coursesSel),
+        shared_with_voice_parts: Array.from(voiceParts),
       })
       .eq('id', score.id)
       .select('id');
@@ -132,9 +143,9 @@ export function ShareScoreDialog({
     }
     const summary = everyone
       ? 'Shared with everyone in this workspace'
-      : (users.size + coursesSel.size === 0
+      : (users.size + coursesSel.size + voiceParts.size === 0
         ? 'Not shared — visible only to you and other admins'
-        : `Shared with ${users.size} person${users.size === 1 ? '' : 's'} · ${coursesSel.size} class${coursesSel.size === 1 ? '' : 'es'}`);
+        : `Shared with ${users.size} person${users.size === 1 ? '' : 's'} · ${coursesSel.size} class${coursesSel.size === 1 ? '' : 'es'} · ${voiceParts.size} section${voiceParts.size === 1 ? '' : 's'}`);
     toast.success(summary);
     onSaved();
   };
@@ -147,7 +158,7 @@ export function ShareScoreDialog({
           <DialogTitle className="truncate">Share “{score.title}”</DialogTitle>
           <DialogDescription>
             Choose who can see this score in their Scores tab. Sharing is additive — any
-            of the three lanes below is enough for a member to see the row.
+            of the lanes below is enough for a member to see the row.
           </DialogDescription>
         </DialogHeader>
 
@@ -217,7 +228,46 @@ export function ShareScoreDialog({
             </ScrollArea>
           </div>
 
-          {/* Lane 3 — classes */}
+          {/* Lane 3 — voice parts / sections */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm inline-flex items-center gap-1.5">
+                <VoicePartIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                Voice parts
+                {voiceParts.size > 0 && <Badge variant="secondary" className="ml-1 text-[10px]">{voiceParts.size}</Badge>}
+              </Label>
+              {voiceParts.size > 0 && (
+                <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setVoiceParts(new Set())}>
+                  Clear
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground -mt-1">
+              Every member whose profile lists a selected section sees this score.
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {VOICE_PARTS.map((vp) => {
+                const selected = voiceParts.has(vp.value);
+                return (
+                  <button
+                    key={vp.value}
+                    type="button"
+                    onClick={() => toggleVoicePart(vp.value)}
+                    aria-pressed={selected}
+                    className={
+                      selected
+                        ? 'inline-flex items-center rounded-full border border-primary bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium transition-colors'
+                        : 'inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors'
+                    }
+                  >
+                    {vp.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Lane 4 — classes */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-sm inline-flex items-center gap-1.5">
