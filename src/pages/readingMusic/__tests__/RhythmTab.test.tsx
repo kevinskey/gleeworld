@@ -44,6 +44,35 @@ describe('RhythmTab', () => {
     expect(screen.getByRole('button', { name: /clap blast/i })).toBeInTheDocument();
   });
 
+  it('records a Take-assessment take as an assessment on the FIRST click', async () => {
+    // Regression: start() read `assessment` from a closure created before the
+    // click's setState committed, so the first assessment ran with practice
+    // tolerance, saved as mode:'practice', and awarded stars.
+    const { insertAttempt } = await import('@/lib/readingMusic/attemptsApi');
+    vi.mocked(insertAttempt).mockClear();
+    localStorage.setItem('rm_rhythm_stars', JSON.stringify({ 1: 2 })); // unlock the button
+    localStorage.setItem('rm_rhythm_level', '1');
+    localStorage.setItem('rm_rhythm_input', 'tap');
+    localStorage.setItem('rm_rhythm_measures', '2');
+    (window as unknown as { AudioContext: unknown }).AudioContext = FakeCtx;
+    vi.useFakeTimers();
+    try {
+      render(<RhythmTab />);
+      fireEvent.click(screen.getByRole('button', { name: /read & clap/i }));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /take assessment/i }));
+      });
+      await act(async () => { vi.advanceTimersByTime(120_000); });
+      expect(insertAttempt).toHaveBeenCalled();
+      const arg = vi.mocked(insertAttempt).mock.calls[0][0];
+      expect(arg.mode).toBe('assessment');
+      expect(arg.payload.tolerancePct).toBe(0.06); // ASSESSMENT, not the 0.10 practice value
+    } finally {
+      vi.useRealTimers();
+      localStorage.clear();
+    }
+  });
+
   it('lets any level be picked — stars record progress, they do not gate it', () => {
     localStorage.removeItem('rm_rhythm_stars');
     render(<RhythmTab />);

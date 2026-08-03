@@ -159,9 +159,13 @@ export function RhythmTab() {
   // `inputOverride` lets a caller start a take with an input the `input` state
   // hasn't committed to yet — the mic-denied calibration fallback sets state to
   // 'tap' and starts in the same tick, so it can't read the fresh value.
-  const start = useCallback(async (inputOverride?: InputMethod) => {
+  const start = useCallback(async (inputOverride?: InputMethod, assessmentOverride?: boolean) => {
     if (activeRef.current) return;
     const chosenInput: InputMethod = inputOverride ?? input;
+    // Same reason as inputOverride: the Start / Take-assessment buttons set
+    // this state and launch a take in one click, so this closure still holds
+    // the pre-click value. Without the override the two buttons swap roles.
+    const isAssessment = assessmentOverride ?? assessment;
     if (drill === 'clap_blast' && chosenInput === 'mic' && latencyMs === null) {
       setCalibrating(true);
       return;
@@ -194,7 +198,7 @@ export function RhythmTab() {
     // Single source of truth for the round's timing constants — the live round,
     // the end-of-take schedule and the saved payload must never disagree.
     const spp = 60 / bpm;
-    const tolerancePct = assessment ? ASSESSMENT_TOLERANCE_PCT : PRACTICE_TOLERANCE_PCT;
+    const tolerancePct = isAssessment ? ASSESSMENT_TOLERANCE_PCT : PRACTICE_TOLERANCE_PCT;
     const tol = Math.max(tolerancePct * spp, TOLERANCE_FLOOR_SEC);
     const latencySec = drill === 'clap_blast' && effectiveInput === 'mic' ? (latencyMs ?? 0) / 1000 : 0;
 
@@ -264,7 +268,7 @@ export function RhythmTab() {
       setResult(graded);
       setPhase('result');
       setMicLevel(0);
-      if (!assessment) {
+      if (!isAssessment) {
         const earned = starsFor(graded.score);
         setStars((prev) => {
           const best = Math.max(prev[level] ?? 0, earned);
@@ -278,7 +282,7 @@ export function RhythmTab() {
       void insertAttempt({
         domain: 'rhythm',
         drill,
-        mode: assessment ? 'assessment' : 'practice',
+        mode: isAssessment ? 'assessment' : 'practice',
         level,
         score: graded.score,
         passed: graded.passed,
@@ -403,14 +407,14 @@ export function RhythmTab() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button disabled={running} onClick={() => { setAssessment(false); void start(); }}>
+            <Button disabled={running} onClick={() => { setAssessment(false); void start(undefined, false); }}>
               {phase === 'result' ? 'Start again' : 'Start'}
             </Button>
             <Button
               variant="outline"
               disabled={running || (stars[level] ?? 0) < 1}
               title={(stars[level] ?? 0) < 1 ? 'Pass this level in practice first' : undefined}
-              onClick={() => { setAssessment(true); void start(); }}
+              onClick={() => { setAssessment(true); void start(undefined, true); }}
             >
               Take assessment
             </Button>
@@ -489,7 +493,7 @@ export function RhythmTab() {
               result={result}
               bpm={bpm}
               assessment={assessment}
-              onRetry={() => { setAssessment(false); void start(); }}
+              onRetry={() => { setAssessment(false); void start(undefined, false); }}
               onNextLevel={result.passed && level < 8 ? () => { setLevel(level + 1); setPhase('idle'); setPattern(null); } : null}
             />
           )}
