@@ -1,5 +1,6 @@
 import { GWSpeech, isNativeSpeechAvailable, type GWSpeechPluginShape } from '@/plugins/gwSpeech';
 import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
+import { voiceGain } from './voices';
 
 export interface SpeechInputSource {
   available: boolean;
@@ -188,6 +189,52 @@ let elevenAudio: HTMLAudioElement | null = null;
 // playing so we never stack audio.
 let speakSession = 0;
 
+// ── Per-voice loudness boost ────────────────────────────────────────────
+// Library voices (voices.ts gain > 1) are mastered quieter than premades,
+// and the server keeps use_speaker_boost off because it clips the source
+// MP3. HTMLAudioElement.volume caps at 1.0, so boosting has to happen in
+// WebAudio: element → gain → limiter → speakers. A MediaElementSourceNode
+// can be created exactly ONCE per element, so the graph is cached per
+// element and reused; audio stays blob:-sourced (same-origin), which keeps
+// the node from muting on CORS grounds.
+const boostGraphs = new WeakMap<HTMLAudioElement, { ctx: AudioContext; gain: GainNode }>();
+function applyPlaybackGain(audio: HTMLAudioElement, level: number): void {
+  const existing = boostGraphs.get(audio);
+  if (level <= 1 && !existing) {
+    audio.volume = level; // plain path — never route unless we must
+    return;
+  }
+  try {
+    let graph = existing;
+    if (!graph) {
+      const Ctx = (globalThis as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext });
+      const CtxCtor = Ctx.AudioContext ?? Ctx.webkitAudioContext;
+      if (!CtxCtor) { audio.volume = Math.min(1, level); return; }
+      const ctx = new CtxCtor();
+      const source = ctx.createMediaElementSource(audio);
+      const gain = ctx.createGain();
+      // Soft limiter so a 1.7x boost can't clip percussive syllables —
+      // the exact failure that got use_speaker_boost banned server-side.
+      const limiter = ctx.createDynamicsCompressor();
+      limiter.threshold.value = -6;
+      limiter.knee.value = 6;
+      limiter.ratio.value = 12;
+      limiter.attack.value = 0.003;
+      limiter.release.value = 0.25;
+      source.connect(gain);
+      gain.connect(limiter);
+      limiter.connect(ctx.destination);
+      graph = { ctx, gain };
+      boostGraphs.set(audio, graph);
+    }
+    graph.gain.gain.value = level;
+    audio.volume = 1; // element volume stays neutral; the gain node owns level
+    void graph.ctx.resume?.();
+  } catch {
+    audio.volume = Math.min(1, level);
+  }
+}
+
 function stopElevenLabs(): void {
   speakSession += 1;
   const a = elevenAudio;
@@ -329,7 +376,7 @@ export function speak(
       // gesture has happened yet (first page load, tests).
       const audio = ttsElUnlocked && ttsEl ? ttsEl : new Audio();
       audio.src = url;
-      audio.volume = volume;
+      applyPlaybackGain(audio, volume * voiceGain(voiceId));
       elevenAudio = audio;
       audio.onplay = () => { if (mySession === speakSession) opts?.onStart?.(); };
       const cleanup = () => {

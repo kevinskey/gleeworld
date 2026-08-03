@@ -15,6 +15,12 @@ export interface AssistantVoice {
   label: string;       // user-facing name
   description: string; // short tone/style hint
   gender: 'female' | 'male';
+  /** Playback loudness trim. Library voices are mastered quieter than
+   *  ElevenLabs premades, and the server deliberately keeps
+   *  use_speaker_boost OFF (it clips the source MP3 — see
+   *  elevenlabs-tts). Values > 1 are applied client-side through a
+   *  WebAudio gain + limiter in speech.ts. Omit for premades (1.0). */
+  gain?: number;
 }
 
 // Union of every voice previously offered in the main assistant, Office
@@ -27,13 +33,13 @@ export const ASSISTANT_VOICES: AssistantVoice[] = [
   // 2026-08-03 (Kevin's picks). These are shared-library voices added to
   // our account via POST /v1/voices/add — they are NOT premade voices, so
   // if TTS for one ever 404s, re-add it to the account before debugging.
-  { id: '5V3TtHQpNbNMJIdXzmGC', label: 'Allison',  description: 'Natural, calm, welcoming',       gender: 'female' },
-  { id: 'YYsXMvvITqnbq9AYpUDk', label: 'Rene',     description: 'Calm, confident, powerful',      gender: 'female' },
-  { id: 'zWoalRDt5TZrmW4ROIA7', label: 'Brooklyn', description: 'New Yorker, conversational',     gender: 'female' },
-  { id: 'pOo9f7JLO1jJyqHtwenW', label: 'James',    description: 'Teaching and ministry warmth',   gender: 'male'   },
-  { id: 'iObeGmp9cQqqHByD4hTs', label: 'Rory',     description: 'Mellow, smooth, slightly deep',  gender: 'male'   },
-  { id: 'JMj1UeO6tBAXd3E8HyWb', label: 'Joseph',   description: 'Smooth, confident',              gender: 'male'   },
-  { id: 'dbABjyOGWVViRzFiwl1U', label: 'Anthony',  description: 'Deep, warm baritone',            gender: 'male'   },
+  { id: '5V3TtHQpNbNMJIdXzmGC', label: 'Allison',  description: 'Natural, calm, welcoming',       gender: 'female' , gain: 1.7 },
+  { id: 'YYsXMvvITqnbq9AYpUDk', label: 'Rene',     description: 'Calm, confident, powerful',      gender: 'female' , gain: 1.7 },
+  { id: 'zWoalRDt5TZrmW4ROIA7', label: 'Brooklyn', description: 'New Yorker, conversational',     gender: 'female' , gain: 1.7 },
+  { id: 'pOo9f7JLO1jJyqHtwenW', label: 'James',    description: 'Teaching and ministry warmth',   gender: 'male'   , gain: 1.7 },
+  { id: 'iObeGmp9cQqqHByD4hTs', label: 'Rory',     description: 'Mellow, smooth, slightly deep',  gender: 'male'   , gain: 1.7 },
+  { id: 'JMj1UeO6tBAXd3E8HyWb', label: 'Joseph',   description: 'Smooth, confident',              gender: 'male'   , gain: 1.7 },
+  { id: 'dbABjyOGWVViRzFiwl1U', label: 'Anthony',  description: 'Deep, warm baritone',            gender: 'male'   , gain: 1.7 },
   { id: '9BWtsMINqrJLrRacOk9x', label: 'Aria',     description: 'Young, expressive',              gender: 'female' },
   { id: 'EXAVITQu4vr4xnSDxMaL', label: 'Sarah',    description: 'Soft, conversational',           gender: 'female' },
   { id: 'FGY2WhTYpPnrIDTdsKH5', label: 'Laura',    description: 'Clear, confident',               gender: 'female' },
@@ -54,6 +60,13 @@ export const ASSISTANT_VOICES: AssistantVoice[] = [
 export const BROWSER_VOICE_ID = 'browser';
 
 export const DEFAULT_VOICE_ID = ASSISTANT_VOICES[0].id;
+
+// Loudness trim for a voice id (1.0 when unknown/default). null/undefined
+// resolves through the app default so the trim follows the actual voice.
+export function voiceGain(voiceId: string | null | undefined): number {
+  const id = voiceId ?? DEFAULT_VOICE_ID;
+  return ASSISTANT_VOICES.find((v) => v.id === id)?.gain ?? 1;
+}
 
 export function voiceLabel(voiceId: string | null | undefined): string {
   if (!voiceId) return ASSISTANT_VOICES[0].label; // app default
