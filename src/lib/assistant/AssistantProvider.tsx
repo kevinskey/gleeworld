@@ -9,7 +9,7 @@ import { executeClientAction, resolvePageRoute } from './clientActions';
 import { getSpeechInput, isMuted, setMuted, speak, stopSpeaking } from './speech';
 import { ConfirmActionQueue } from './confirmQueue';
 import { loadThread, saveThread } from './threadStorage';
-import { useAssistantVoice } from './voices';
+import { useAssistantVoice, BROWSER_VOICE_ID } from './voices';
 import type { AssistantAction, ThreadState } from './types';
 import type { ConciergeResult } from './conciergeTypes';
 
@@ -301,9 +301,23 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       const token = (data as { token?: string } | null)?.token;
       if (error || !token) throw new Error(error?.message ?? 'no conversation token');
       const { Conversation } = await import('@elevenlabs/client');
+      // The agent carries its own TTS voice (Jessica). Without this override
+      // every tenant hears Jessica in live mode regardless of the Branding
+      // tab pick — the push-to-talk path honored it, live mode didn't.
+      // Requires `conversation_config_override.tts.voice_id: true` in the
+      // agent's security settings; with it off, ElevenLabs rejects the
+      // session outright, so this and that flag ship together.
+      // BROWSER_VOICE_ID is meaningless here (a WebRTC agent has no
+      // browser-synth path) — it falls through to the agent default.
+      const liveVoiceId = voiceIdRef.current;
+      const voiceOverride =
+        liveVoiceId && liveVoiceId !== BROWSER_VOICE_ID
+          ? { overrides: { tts: { voiceId: liveVoiceId } } }
+          : {};
       const session = await Conversation.startSession({
         conversationToken: token,
         connectionType: 'webrtc',
+        ...voiceOverride,
         clientTools: {
           open_page: async (params: { name?: string }) => {
             const resolved = resolvePageRoute(String(params?.name ?? ''));

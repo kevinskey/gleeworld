@@ -17,9 +17,17 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 // AssistantProvider → useAssistantVoice → useBrandingSettings, which needs
 // getTenantSlug + a queryable supabase client; stub the hook instead.
+const brandingVoice = { current: null as string | null };
 vi.mock('@/hooks/useBrandingSettings', () => ({
-  useBrandingSettings: () => ({ settings: {}, isLoading: false }),
+  useBrandingSettings: () => ({
+    settings: { assistant_voice_id: brandingVoice.current },
+    isLoading: false,
+  }),
 }));
+// Live voice mode dynamically imports the ElevenLabs SDK; capture the
+// startSession options so we can assert what the tenant's voice does to them.
+const startSession = vi.fn(async () => ({ endSession: vi.fn(async () => {}) }));
+vi.mock('@elevenlabs/client', () => ({ Conversation: { startSession } }));
 
 const Probe = () => {
   const a = useAssistant();
@@ -29,6 +37,7 @@ const Probe = () => {
       <span data-testid="sheet">{String(a.sheetOpen)}</span>
       <span data-testid="caption">{a.captionReply?.text ?? ''}</span>
       <button onClick={() => a.send('hello')}>go</button>
+      <button onClick={() => a.startLive()}>live</button>
     </div>
   );
 };
@@ -42,7 +51,7 @@ const renderProbe = () =>
     </MemoryRouter>,
   );
 
-beforeEach(() => { sessionStorage.clear(); });
+beforeEach(() => { sessionStorage.clear(); brandingVoice.current = null; startSession.mockClear(); });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe('AssistantProvider', () => {
@@ -101,6 +110,28 @@ describe('AssistantProvider', () => {
       delete (navigator as { geolocation?: unknown }).geolocation;
       vi.useRealTimers();
     }
+  });
+
+  it('live mode starts the session on the TENANT voice, not the agent default', async () => {
+    // The ElevenLabs agent's own TTS config is pinned to Jessica. Without an
+    // explicit override every tenant hears Jessica in live mode no matter
+    // what they picked on the Branding tab (Kevin, 2026-08-03).
+    brandingVoice.current = '9BWtsMINqrJLrRacOk9x'; // Aria
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { token: 'tok' }, error: null } as never);
+    renderProbe();
+    await act(async () => { screen.getByText('live').click(); });
+    expect(startSession).toHaveBeenCalledWith(
+      expect.objectContaining({ overrides: { tts: { voiceId: '9BWtsMINqrJLrRacOk9x' } } }),
+    );
+  });
+
+  it('live mode sends NO voice override when the tenant has not picked one', async () => {
+    // null → the agent's configured default; 'browser' is meaningless to a
+    // WebRTC agent (there is no browser-synth path in live mode).
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { token: 'tok' }, error: null } as never);
+    renderProbe();
+    await act(async () => { screen.getByText('live').click(); });
+    expect(startSession).toHaveBeenCalledWith(expect.not.objectContaining({ overrides: expect.anything() }));
   });
 
   it('a confirm-gated action auto-opens the sheet', async () => {
