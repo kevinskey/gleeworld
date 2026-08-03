@@ -236,6 +236,17 @@ export function useStudioSession(sessionId: string | null) {
   const [error, setError] = useState<Error | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks whether there is an edit that hasn't yet been dispatched to
+  // saveSession. Set true whenever an edit is queued; cleared the moment a
+  // save is actually dispatched (debounce timer fires, flushSave runs, or
+  // the unmount flush runs) — not when the save's promise resolves, so a
+  // fast second flush can't race the in-flight request. Without this the
+  // unmount flush saved unconditionally: (1) an edit that had already been
+  // debounce-saved >800ms earlier still triggered a second, redundant save
+  // on unmount, and (2) merely opening and closing a session with no edits
+  // at all triggered a spurious save that bumps updated_at and can clobber
+  // newer server state in multi-tab use.
+  const dirtyRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -274,7 +285,12 @@ export function useStudioSession(sessionId: string | null) {
 
   const queueSave = useCallback((next: Session) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => { saveSession(next).catch(setError); }, 800);
+    dirtyRef.current = true;
+    saveTimer.current = setTimeout(() => {
+      saveTimer.current = null;
+      dirtyRef.current = false;
+      saveSession(next).catch(setError);
+    }, 800);
   }, []);
 
   const update = useCallback((mutator: (s: Session) => Session) => {
@@ -298,6 +314,7 @@ export function useStudioSession(sessionId: string | null) {
   const flushSave = useCallback((override?: Session): Promise<void> => {
     if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
     const target = override ?? session;
+    dirtyRef.current = false;
     return target ? saveSession(target).catch(setError) : Promise.resolve();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
@@ -308,10 +325,16 @@ export function useStudioSession(sessionId: string | null) {
   const sessionRef = useRef<Session | null>(null);
   sessionRef.current = session;
 
-  // Flush on unmount. Reads sessionRef (not `session`) — see above.
+  // Flush on unmount. Reads sessionRef (not `session`) — see above. Only
+  // saves when dirtyRef is true: a debounced save that already fired (or a
+  // session that was never edited) must not trigger a redundant/spurious
+  // save here — see the dirtyRef comment above.
   useEffect(() => () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    if (sessionRef.current) saveSession(sessionRef.current).catch(() => { /* swallow */ });
+    if (dirtyRef.current && sessionRef.current) {
+      dirtyRef.current = false;
+      saveSession(sessionRef.current).catch(() => { /* swallow */ });
+    }
   }, []);
 
   return { session, loading, error, update, flushSave, reload };

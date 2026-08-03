@@ -49,4 +49,33 @@ describe('useStudioSession unmount flush', () => {
     await waitFor(() => expect(storage.saved.length).toBe(1));
     expect(storage.saved[0].title).toBe('EDITED');
   });
+
+  it('does NOT save on unmount when the session was loaded but never edited', async () => {
+    const { result, unmount } = renderHook(() => useStudioSession('s1'));
+    await waitFor(() => expect(result.current.session).not.toBeNull());
+
+    unmount();
+
+    // Give a spurious save a chance to land before asserting it didn't.
+    await new Promise((r) => setTimeout(r, 50));
+    expect(storage.saved.length).toBe(0);
+  });
+
+  it('does NOT save a second time on unmount after the debounced save already fired', async () => {
+    const { result, unmount } = renderHook(() => useStudioSession('s1'));
+    await waitFor(() => expect(result.current.session).not.toBeNull());
+
+    act(() => {
+      result.current.update((s) => ({ ...s, title: 'EDITED' }));
+    });
+
+    // Let the 800ms debounce fire and land — this is save #1.
+    await waitFor(() => expect(storage.saved.length).toBe(1), { timeout: 2000 });
+
+    unmount();
+
+    // Give a spurious second save a chance to land before asserting it didn't.
+    await new Promise((r) => setTimeout(r, 50));
+    expect(storage.saved.length).toBe(1);
+  });
 });
