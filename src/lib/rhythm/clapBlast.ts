@@ -49,7 +49,7 @@ export function createClapBlastRound({
   const deltas: Array<number | null> = expected.map(() => null);
   const actuals: Array<number | null> = expected.map(() => null);
   const strays: number[] = [];
-  const processedOnsets = new Set<number>();
+  let cursor = 0;
   let streak = 0;
   let bestStreak = 0;
 
@@ -66,9 +66,8 @@ export function createClapBlastRound({
 
     tick(nowSec, onsets) {
       const events: ClapBlastEvent[] = [];
-      for (const t of onsets) {
-        if (processedOnsets.has(t)) continue;
-        processedOnsets.add(t);
+      for (; cursor < onsets.length; cursor++) {
+        const t = onsets[cursor];
         let best = -1;
         let bestD = Infinity;
         shifted.forEach((exp, j) => {
