@@ -1,4 +1,5 @@
 import type { AssistantAction } from './types';
+import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
 
 // Model-generated text (assistant tool args, possibly steered via indirect prompt
 // injection through tool results) must never be trusted as HTML. Escape before
@@ -12,8 +13,27 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
-// Route whitelist for open_page. Paths come from src/lib/navigation/navCatalog.ts —
-// keep keys in sync with the open_page tool description in toolCatalog.ts.
+// Resolve an open_page key against the live nav catalog: exact key first,
+// then a normalized label match ("Reading Music" ≈ "reading-music") so the
+// model's best guess still lands. Returns undefined for anything unknown —
+// the caller reports honestly instead of dumping the user on /dashboard.
+const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+export function resolvePageRoute(rawKey: string): { route: string; label: string } | undefined {
+  const key = normalize(rawKey);
+  const byKey = NAV_CATALOG.find((e) => e.key === key);
+  if (byKey) return { route: byKey.to, label: byKey.label };
+  const byLabel = NAV_CATALOG.find((e) => normalize(e.label) === key);
+  if (byLabel) return { route: byLabel.to, label: byLabel.label };
+  // Legacy aliases from the original hand-kept whitelist (older threads /
+  // cached prompts may still emit these).
+  if (Object.prototype.hasOwnProperty.call(PAGE_ROUTES, key)) {
+    return { route: PAGE_ROUTES[key], label: rawKey };
+  }
+  return undefined;
+}
+
+// Legacy route whitelist for open_page — superseded by resolvePageRoute's
+// nav-catalog lookup; kept only as an alias fallback for old key spellings.
 export const PAGE_ROUTES: Record<string, string> = {
   home: '/dashboard',
   calendar: '/dashboard/calendar',
@@ -73,19 +93,24 @@ export async function executeClientAction(
   action: AssistantAction,
   depsOverride?: Partial<ActionDeps>,
 ): Promise<ActionOutcome> {
-  const needsDeps = !['open_page', 'open_song', 'start_video_session'].includes(action.tool);
+  const needsDeps = !['open_page', 'open_link', 'open_song', 'start_video_session'].includes(action.tool);
   const deps = { ...(needsDeps && !depsOverride ? await defaultDeps() : {}), ...depsOverride } as ActionDeps;
   const a = action.args;
   try {
     switch (action.tool) {
       case 'open_page': {
-        const key = String(a.key);
-        // hasOwnProperty guard: PAGE_ROUTES[key] alone resolves inherited keys like
-        // 'constructor' / '__proto__' / 'hasOwnProperty' to truthy non-route values,
-        // which would bypass the whitelist rejection below.
-        const route = Object.prototype.hasOwnProperty.call(PAGE_ROUTES, key) ? PAGE_ROUTES[key] : undefined;
-        if (typeof route !== 'string') return { ok: false, message: `I don't know a page called "${a.key}".` };
-        return { ok: true, navigateTo: route, message: `Opening ${a.key}.` };
+        const resolved = resolvePageRoute(String(a.key));
+        if (!resolved) return { ok: false, message: `I don't know a page called "${a.key}".` };
+        return { ok: true, navigateTo: resolved.route, message: `Opening ${resolved.label}.` };
+      }
+      case 'open_link': {
+        // External article/link hand-off (e.g. "open the full article" on a
+        // news item). http(s) only — the URL is model-supplied and may echo
+        // feed content, so never allow javascript:/data:/custom schemes.
+        const url = String(a.url ?? '');
+        if (!/^https?:\/\/\S+$/i.test(url)) return { ok: false, message: 'That link looks invalid.' };
+        (globalThis as unknown as Window).open(url, '_blank', 'noopener,noreferrer');
+        return { ok: true, message: `Opening ${String(a.title ?? 'the article').slice(0, 120)} in a new tab.` };
       }
       case 'open_song': {
         const id = String(a.score_id ?? '');

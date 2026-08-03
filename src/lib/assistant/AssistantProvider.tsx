@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
+import { assistantNavTargets } from '@/lib/navigation/navCatalog';
 import { threadReducer, INITIAL_THREAD } from './threadReducer';
 import { executeClientAction } from './clientActions';
 import { getSpeechInput, isMuted, setMuted, speak, stopSpeaking } from './speech';
@@ -273,6 +274,9 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           context: {
             firstName: profile?.full_name?.split(' ')[0] ?? 'there',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            // Live page list from the nav catalog, so open_page keeps up
+            // with new add-ons without touching the edge function.
+            navTargets: assistantNavTargets(),
             ...(geo ? { geo } : {}),
           },
         },

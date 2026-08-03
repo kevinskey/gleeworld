@@ -146,6 +146,25 @@ export function resolveNav(ctx: NavContext): CatalogEntry[] {
   return NAV_CATALOG.filter((e) => gateOpen(e.gate, ctx) && !ctx.hiddenRoutes.has(e.to));
 }
 
+// Every page the assistant may offer to open, derived from the catalog so
+// it can never drift from the real nav (its predecessor was a hand-kept
+// key list in the assistant-chat edge fn that missed every add-on shipped
+// after it was written). Deliberately ungated: gating needs live role +
+// module state the AssistantProvider doesn't carry, and each gated route
+// already defends itself — worst case the assistant opens a page that
+// shows its own access message, which beats silently pretending the page
+// doesn't exist.
+export function assistantNavTargets(): Array<{ key: string; label: string }> {
+  const seen = new Set<string>();
+  const targets: Array<{ key: string; label: string }> = [];
+  for (const e of NAV_CATALOG) {
+    if (seen.has(e.key)) continue;
+    seen.add(e.key);
+    targets.push({ key: e.key, label: e.label });
+  }
+  return targets;
+}
+
 // ---------------------------------------------------------------------------
 // Hideable-nav settings (Workspace Settings → Navigation tab)
 //

@@ -20,7 +20,24 @@ export interface AssistantContext {
   /** Live coarse coords from the browser Geolocation API when the user
    *  granted permission. Undefined when denied/unavailable. */
   geo?: { lat: number; lng: number };
+  /** Pages the client's build can open via open_page, sent from the nav
+   *  catalog on every request. Undefined for older client bundles — the
+   *  prompt then falls back to the legacy hardcoded key list. */
+  navTargets?: Array<{ key: string; label: string }>;
 }
+
+// Pre-navTargets clients: the original hand-kept open_page keys, so the
+// assistant stays navigable for stale bundles until they refresh.
+const LEGACY_PAGE_KEYS: Array<{ key: string; label: string }> = [
+  { key: 'home', label: 'Dashboard' }, { key: 'calendar', label: 'Calendar' },
+  { key: 'planner', label: 'Planner' }, { key: 'music-library', label: 'Music Library' },
+  { key: 'studio', label: 'Studio' }, { key: 'video', label: 'Video' },
+  { key: 'messenger', label: 'Messages' }, { key: 'academy', label: 'Academy' },
+  { key: 'sight-reading', label: 'Sight Reading' }, { key: 'media-library', label: 'Media Library' },
+  { key: 'songwriting', label: 'Songwriting' }, { key: 'concert-planner', label: 'Concert Planner' },
+  { key: 'tour-manager', label: 'Tour Manager' }, { key: 'attendance', label: 'Attendance' },
+  { key: 'users', label: 'Users' }, { key: 'analytics', label: 'Analytics' },
+];
 
 export function buildSystemPrompt(ctx: AssistantContext): string {
   const memberNote = ctx.role === 'member'
@@ -72,13 +89,20 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
   const geoLine = ctx.geo
     ? `Approximate location: lat ${ctx.geo.lat.toFixed(4)}, lng ${ctx.geo.lng.toFixed(4)} (browser Geolocation).`
     : 'Approximate location: unknown (user has not granted geolocation permission — ask for a city / zip / "near X" when using find_nearby_place).';
+  const pageTargets = ctx.navTargets?.length ? ctx.navTargets : LEGACY_PAGE_KEYS;
+  const pagesNote = [
+    'Pages you can open (open_page — pass `key` exactly as listed):',
+    pageTargets.map((t) => `${t.key} (${t.label})`).join(', '),
+    '- "Take me to X" / "open X": pick the closest match from this list and call open_page. Some pages are add-ons the tenant may not have enabled — the page itself will say so; still open it rather than refusing.',
+    '- If nothing on the list fits, say you can\'t open that page and name the closest match — never silently open the dashboard instead.',
+  ].join('\n');
   const newsNote = [
     'News:',
     '- read_news_feeds returns the tenant\'s current headlines (same rail their dashboard shows).',
-    '- DEFAULT reply is a spoken SUMMARY: one or two sentences distilling the top 3–5 items, grouped by theme where useful. Do not read every headline verbatim — replies may be spoken aloud.',
-    '- "Read them all" / "go through each one" / "read the headlines": switch to VERBATIM mode. Go in order, one item per short paragraph, saying "Number 1, from {source}: {title}. {one-sentence summary}." No preamble between items. Number them so the user can interrupt with "number 3" or "the second one".',
+    '- DEFAULT reply is a spoken RUNDOWN that covers EVERY returned item, one short numbered line each: "Number 1, from {source}: {title}." plus a one-sentence gist where the title alone is cryptic. Never cover only the top few and stop — the user should hear the whole list. Number them so the user can interrupt with "number 3" or "the one about X".',
+    '- "Just the highlights" / "give me a quick summary": compress to one or two sentences distilling the top items, grouped by theme.',
     '- "Read the third one" / "read the one about X": pick that single item and read its title, source, and the summary field. If ambiguous, ask which of the matches they mean.',
-    '- If the user asks to "open" or "read the full article", hand back the item\'s link — this app does not fetch article bodies.',
+    '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — this app does not fetch article bodies, but it CAN open the article in a new tab for them.',
     '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly.',
   ].join('\n');
   const projectNote = [
@@ -107,6 +131,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     geoLine,
     memberNote,
     memoryNote,
+    pagesNote,
     ...(courseBuilderNote ? [courseBuilderNote] : []),
     dateCardNote,
     newsNote,
