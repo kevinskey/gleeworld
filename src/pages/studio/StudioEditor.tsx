@@ -2023,7 +2023,12 @@ function Editor({
     // startPunchRecord, before the phase gate closes capture — reset the
     // take-scoped capture state right at the actual punch-in so nothing
     // queued during 'pre' can leak into this take.
+    // Pedal state is physical, not per-take — resetMidiCapture's
+    // false-default is wrong when the pedal is held across punch-in (C3
+    // replaces this with continuous last-known-state seeding).
+    const pedalWasDown = midiPedalRef.current;
     resetMidiCapture();
+    midiPedalRef.current = pedalWasDown;
     midiTakeClipRef.current = null;
     midiCommitQueueRef.current?.clear();
     try {
