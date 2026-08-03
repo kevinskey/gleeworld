@@ -221,10 +221,15 @@ export default function PlatformTenantsPortal() {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <CardTitle className="text-base font-semibold leading-tight truncate">
+                      {/* Wrap, don't truncate — tenant names ("Campbell High
+                          School Chorus") and slugs routinely overflow the
+                          3-col card width and were clipping to "…". break-all
+                          on the domain because hostnames have no natural
+                          break points. */}
+                      <CardTitle className="!text-base font-semibold leading-tight break-words">
                         {t.name}
                       </CardTitle>
-                      <CardDescription className="font-mono text-xs truncate">
+                      <CardDescription className="font-mono text-xs break-all">
                         {t.custom_domain || `${t.subdomain || t.slug}.gleeworld.org`}
                       </CardDescription>
                     </div>
