@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { CreateDuesRecord } from "./CreateDuesRecord";
+import { CreateFeeRecord } from "./CreateFeeRecord";
 import { 
   Plus, 
   Users, 
@@ -39,7 +39,7 @@ interface DuesRecord {
   } | null;
 }
 
-export const DuesManager = () => {
+export const FeesManager = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [duesRecords, setDuesRecords] = useState<DuesRecord[]>([]);
@@ -54,7 +54,7 @@ export const DuesManager = () => {
   const fetchDuesRecords = async () => {
     try {
       const { data, error } = await supabase
-        .from('gw_dues_records')
+        .from('gw_student_fees')
         .select(`
           *,
           gw_profiles:gw_profiles_directory (
@@ -92,7 +92,7 @@ export const DuesManager = () => {
   const handleMarkPaid = async (id: string, paymentMethod: string = 'cash') => {
     try {
       const { error } = await supabase
-        .from('gw_dues_records')
+        .from('gw_student_fees')
         .update({ 
           status: 'paid',
           paid_date: new Date().toISOString(),
@@ -161,7 +161,7 @@ export const DuesManager = () => {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <CreateDuesRecord
+            <CreateFeeRecord
               onSuccess={handleSuccess}
               editingRecord={editingRecord}
               onCancel={handleCancel}

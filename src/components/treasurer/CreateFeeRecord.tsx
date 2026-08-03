@@ -17,13 +17,13 @@ interface Member {
   class_year?: number;
 }
 
-interface CreateDuesRecordProps {
+interface CreateFeeRecordProps {
   onSuccess: () => void;
   editingRecord?: any;
   onCancel: () => void;
 }
 
-export const CreateDuesRecord = ({ onSuccess, editingRecord, onCancel }: CreateDuesRecordProps) => {
+export const CreateFeeRecord = ({ onSuccess, editingRecord, onCancel }: CreateFeeRecordProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [members, setMembers] = useState<Member[]>([]);
@@ -90,7 +90,7 @@ export const CreateDuesRecord = ({ onSuccess, editingRecord, onCancel }: CreateD
 
       if (editingRecord) {
         const { error } = await supabase
-          .from('gw_dues_records')
+          .from('gw_student_fees')
           .update(duesData)
           .eq('id', editingRecord.id);
 
@@ -98,7 +98,7 @@ export const CreateDuesRecord = ({ onSuccess, editingRecord, onCancel }: CreateD
         toast({ title: "Success", description: "Dues record updated successfully" });
       } else {
         const { error } = await supabase
-          .from('gw_dues_records')
+          .from('gw_student_fees')
           .insert([duesData]);
 
         if (error) throw error;

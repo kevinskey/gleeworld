@@ -10,6 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Search, User, Package, Calendar, Mail, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFeeTemplates, FeeTemplate } from '@/hooks/useFeeTemplates';
+import { useFeeAssignment } from '@/hooks/useFeeAssignment';
+import { CreateFeeTemplateDialog } from '@/components/fees/CreateFeeTemplateDialog';
 
 interface User {
   id: string;
@@ -49,6 +52,15 @@ export const WardrobeCheckoutSystem = () => {
   const [checkoutNotes, setCheckoutNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchingUsers, setSearchingUsers] = useState(false);
+
+  // Fee assignment state
+  const [chargeFee, setChargeFee] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [feeTemplates, setFeeTemplates] = useState<FeeTemplate[]>([]);
+  const [createFeeOpen, setCreateFeeOpen] = useState(false);
+
+  const { listTemplates } = useFeeTemplates();
+  const { assign } = useFeeAssignment();
 
   // Search for users
   const searchUsers = async (query: string) => {
@@ -150,6 +162,10 @@ export const WardrobeCheckoutSystem = () => {
     return () => clearTimeout(timeoutId);
   }, [searchTerm]);
 
+  useEffect(() => {
+    listTemplates({ category: 'wardrobe' }).then(setFeeTemplates).catch(console.error);
+  }, [listTemplates]);
+
   const selectUser = (user: User) => {
     setSelectedUser(user);
     setSearchTerm('');
@@ -248,6 +264,14 @@ export const WardrobeCheckoutSystem = () => {
 
       const checkoutResults = await Promise.all(checkoutPromises);
 
+      // Assign fee to recipient if requested
+      if (chargeFee && selectedTemplateId && selectedUser) {
+        const count = await assign(selectedTemplateId, [selectedUser.id]);
+        if (count === 0) {
+          toast.warning('Fee already assigned to this student');
+        }
+      }
+
       // Send email confirmation
       const emailItems = selectedItems.map(item => ({
         name: item.item.name,
@@ -285,6 +309,8 @@ export const WardrobeCheckoutSystem = () => {
       setSelectedItems([]);
       setExpectedReturnDate('');
       setCheckoutNotes('');
+      setChargeFee(false);
+      setSelectedTemplateId('');
       
       // Refresh wardrobe items to show updated quantities
       fetchWardrobeItems();
@@ -530,7 +556,55 @@ export const WardrobeCheckoutSystem = () => {
               </ul>
             </div>
 
-            <Button 
+            {/* Fee assignment */}
+            <div className="border-t pt-4 space-y-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={chargeFee}
+                  onCheckedChange={v => setChargeFee(!!v)}
+                />
+                <span className="text-sm font-medium">Charge a fee for this item</span>
+              </label>
+              {chargeFee && (
+                <>
+                  <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pick a fee template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {feeTemplates.map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name} — ${t.total_amount}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    type="button"
+                    className="px-0 h-auto"
+                    onClick={() => setCreateFeeOpen(true)}
+                  >
+                    + Create new fee template
+                  </Button>
+                </>
+              )}
+            </div>
+
+            <CreateFeeTemplateDialog
+              open={createFeeOpen}
+              onClose={() => setCreateFeeOpen(false)}
+              defaultCategory="wardrobe"
+              contextType="wardrobe_item"
+              contextId={selectedItems[0]?.item.id}
+              onCreated={t => {
+                setFeeTemplates(prev => [t, ...prev]);
+                setSelectedTemplateId(t.id);
+              }}
+            />
+
+            <Button
               onClick={handleCheckout}
               disabled={loading}
               className="w-full"

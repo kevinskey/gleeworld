@@ -80,13 +80,13 @@ export const CreateReminderDialog = ({
 
       // Set the appropriate target field
       if (formData.target_type === 'dues_record') {
-        reminderData.dues_record_id = formData.target_id;
+        reminderData.student_fee_id = formData.target_id;
       } else if (formData.target_type === 'payment_plan') {
         reminderData.payment_plan_id = formData.target_id;
       }
 
       const { error } = await (supabase as any)
-        .from('gw_dues_reminders')
+        .from('gw_fee_reminders')
         .insert([reminderData]);
 
       if (error) throw error;

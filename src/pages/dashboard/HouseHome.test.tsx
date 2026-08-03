@@ -13,6 +13,9 @@ import { MemoryRouter } from 'react-router-dom';
 import type { DateCardContext } from '@/components/home/date-card/types';
 
 const brandingOrgName = vi.hoisted(() => ({ current: null as string | null }));
+const myFeesResult = vi.hoisted(() => ({
+  current: { totalOwed: 0, unpaid: [], paid: [], plans: [], loading: false, refetch: vi.fn() },
+}));
 
 vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: () => ({
@@ -58,6 +61,14 @@ vi.mock('@/components/dashboard/HomeTileGrid', () => ({
 // the contract under test, so render the real registry-resolved card
 // straight through a passthrough that just records its props.
 const capturedCtx = vi.hoisted(() => ({ current: null as DateCardContext | null }));
+vi.mock('@/hooks/useMyFees', () => ({
+  useMyFees: () => myFeesResult.current,
+}));
+
+vi.mock('@/hooks/use-mobile', () => ({
+  useIsMobile: () => false,
+}));
+
 vi.mock('@/components/home/date-card/DateCardSlot', () => ({
   DateCardSlot: ({ ctx }: { ctx: DateCardContext }) => {
     capturedCtx.current = ctx;
@@ -86,6 +97,7 @@ afterEach(() => {
   cleanup();
   brandingOrgName.current = null;
   capturedCtx.current = null;
+  myFeesResult.current = { totalOwed: 0, unpaid: [], paid: [], plans: [], loading: false, refetch: vi.fn() };
 });
 
 function renderHouseHome() {
@@ -125,5 +137,37 @@ describe('HouseHome date-card ensembleName wiring', () => {
     renderHouseHome();
     const withoutName = dateCardTokenContext(capturedCtx.current!);
     expect(substituteText('{{ensemble_name}}', withoutName)).toBe('{{ensemble_name}}');
+  });
+});
+
+describe('HouseHome YouOweCard integration', () => {
+  it('renders the "You owe" card with formatted amount when totalOwed > 0', () => {
+    myFeesResult.current = {
+      totalOwed: 25,
+      unpaid: [
+        { id: 'f1', category: 'tuition', name: 'Tuition', amount: 25, paid_amount: 0,
+          due_date: '2026-08-01', status: 'pending', payment_method: null, paid_at: null },
+      ],
+      paid: [],
+      plans: [],
+      loading: false,
+      refetch: vi.fn(),
+    };
+    renderHouseHome();
+    expect(screen.getByText('$25.00')).toBeInTheDocument();
+    expect(screen.getByText('You owe')).toBeInTheDocument();
+    expect(screen.getByText('Pay now →')).toBeInTheDocument();
+  });
+
+  it('does not render the "You owe" card when totalOwed is 0', () => {
+    myFeesResult.current = { totalOwed: 0, unpaid: [], paid: [], plans: [], loading: false, refetch: vi.fn() };
+    renderHouseHome();
+    expect(screen.queryByText('You owe')).not.toBeInTheDocument();
+  });
+
+  it('does not render while loading', () => {
+    myFeesResult.current = { totalOwed: 50, unpaid: [], paid: [], plans: [], loading: true, refetch: vi.fn() };
+    renderHouseHome();
+    expect(screen.queryByText('You owe')).not.toBeInTheDocument();
   });
 });
