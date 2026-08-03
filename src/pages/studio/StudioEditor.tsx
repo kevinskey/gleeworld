@@ -45,7 +45,7 @@ import {
   appendTakeNote, recordStartMode, grownSessionLength, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
   type HeldPress, type CapturedCc,
 } from '@/lib/studio/midiRecord';
-import { MidiTimebase } from '@/lib/studio/midiTimebase';
+import { MidiTimebase, formatMonitoringLatency } from '@/lib/studio/midiTimebase';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset, type TransportTickStore } from '@/hooks/useStudio';
 import { useTransportPosition, useTransportTick } from './useTransportTick';
 import { retainUnsavedWork } from '@/lib/unsavedWork';
@@ -2311,6 +2311,7 @@ function Editor({
               deviceId: midiInputDeviceId, setDeviceId: setMidiInputDeviceId,
               inputs: midiIn.inputs, status: midiIn.status, supported: midiIn.supported,
               targetTrackName: midiInputTrack?.name,
+              monitoringLatencyMs: engineState.engine?.getOutputLatencyMs() ?? getOutputLatencyMs(),
             }}
           />
           <Button
@@ -6362,9 +6363,10 @@ interface MidiInputProps {
   status: 'idle' | 'connected' | 'denied';
   supported: boolean;
   targetTrackName?: string;
+  monitoringLatencyMs: number;
 }
 
-function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, status, supported, targetTrackName }: MidiInputProps) {
+function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, status, supported, targetTrackName, monitoringLatencyMs }: MidiInputProps) {
   if (!supported) return null;
   return (
     <div className="border-t border-border pt-2">
@@ -6390,6 +6392,11 @@ function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, 
           </select>
         )}
       </div>
+      {enabled && (
+        <p className="text-xs text-muted-foreground mt-1">
+          {formatMonitoringLatency(monitoringLatencyMs)}
+        </p>
+      )}
       {enabled && getMidiInputSource().kind === 'native' && (
         <button
           onClick={() => {
