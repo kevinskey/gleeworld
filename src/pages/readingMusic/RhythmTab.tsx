@@ -418,6 +418,22 @@ export function RhythmTab() {
             >
               Take assessment
             </Button>
+            {/* Abandon a take in progress. Nothing is graded or saved — the
+                finish timer is cleared by cancelTake before it can fire. */}
+            {running && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  cancelTake();
+                  setPhase('idle');
+                  setTakeT0(null);
+                  setMicLevel(0);
+                  setPattern(null);
+                }}
+              >
+                Stop
+              </Button>
+            )}
             {phase === 'demo' && <span className="text-sm font-medium text-sky-700">Listen…</span>}
             {phase === 'countin' && <span className="text-sm font-medium text-amber-700">Count-in…</span>}
             {phase === 'take' && <span className="text-sm font-medium text-emerald-700">Go!</span>}

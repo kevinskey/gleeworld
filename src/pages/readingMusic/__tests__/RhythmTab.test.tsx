@@ -73,6 +73,32 @@ describe('RhythmTab', () => {
     }
   });
 
+  it('Stop abandons a take in progress without saving an attempt', async () => {
+    const { insertAttempt } = await import('@/lib/readingMusic/attemptsApi');
+    vi.mocked(insertAttempt).mockClear();
+    localStorage.setItem('rm_rhythm_input', 'tap');
+    localStorage.setItem('rm_rhythm_measures', '2');
+    (window as unknown as { AudioContext: unknown }).AudioContext = FakeCtx;
+    vi.useFakeTimers();
+    try {
+      render(<RhythmTab />);
+      fireEvent.click(screen.getByRole('button', { name: /read & clap/i }));
+      await act(async () => { fireEvent.click(screen.getByRole('button', { name: /^start$/i })); });
+
+      const stop = screen.getByRole('button', { name: /^stop$/i });
+      await act(async () => { fireEvent.click(stop); });
+
+      // Let every timer the take scheduled run out — none may grade or save.
+      await act(async () => { vi.advanceTimersByTime(120_000); });
+      expect(insertAttempt).not.toHaveBeenCalled();
+      expect(screen.queryByRole('button', { name: /^stop$/i })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^start$/i })).toBeEnabled();
+    } finally {
+      vi.useRealTimers();
+      localStorage.clear();
+    }
+  });
+
   it('lets any level be picked — stars record progress, they do not gate it', () => {
     localStorage.removeItem('rm_rhythm_stars');
     render(<RhythmTab />);
