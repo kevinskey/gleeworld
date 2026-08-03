@@ -8,20 +8,11 @@ import { useToast } from '@/hooks/use-toast';
 import { parseYouTubeInput } from '@/lib/youtubeId';
 import { parseVideoSource, type ParsedVideoSource } from '@/lib/videoSources';
 import { addVideoToLibrary, youTubeSource } from '@/lib/videoLibrary';
+import { useYouTubeSearch, type YouTubeHit } from '@/hooks/useYouTubeSearch';
 
 interface AddYouTubeVideoFormProps {
   // Called after a successful insert so the caller can refresh its grid.
   onAdded: () => void;
-}
-
-interface SearchHit {
-  videoId: string;
-  title: string;
-  channelTitle: string;
-  publishedAt: string;
-  description: string;
-  thumbnail: string;
-  url: string;
 }
 
 type Mode = 'search' | 'url' | 'upload';
@@ -107,17 +98,14 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
   // call so quota (~100 units per search of the 10k/day free tier) isn't
   // burned per keystroke.
   const [query, setQuery] = useState('');
-  const [hits, setHits] = useState<SearchHit[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [searchErr, setSearchErr] = useState<string | null>(null);
+  const { hits, searching, error: searchErr, search: runSearch, clear: clearSearch } = useYouTubeSearch(10);
 
   const reset = () => {
     setUrl('');
     setTitle('');
     setError(null);
     setQuery('');
-    setHits([]);
-    setSearchErr(null);
+    clearSearch();
     setUploadProgress(null);
     setProgress(null);
   };
@@ -127,30 +115,16 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
     reset();
   };
 
+  // 300ms debounce is safe here because this dialog is admin-only. The
+  // /video header bar, which every member can reach, submits explicitly
+  // instead — see the QUOTA note in useYouTubeSearch.
   useEffect(() => {
     if (!open || mode !== 'search') return;
     const term = query.trim();
-    if (!term) { setHits([]); setSearchErr(null); return; }
-    let cancelled = false;
-    setSearching(true);
-    setSearchErr(null);
-    const handle = window.setTimeout(async () => {
-      try {
-        const { data, error: fnErr } = await supabase.functions.invoke('youtube-search', {
-          body: { q: term, maxResults: 10 },
-        });
-        if (fnErr) throw fnErr;
-        const body = data as { hits?: SearchHit[]; error?: string };
-        if (body?.error) throw new Error(body.error);
-        if (!cancelled) setHits(body?.hits ?? []);
-      } catch (e) {
-        if (!cancelled) setSearchErr(e instanceof Error ? e.message : 'YouTube search failed.');
-      } finally {
-        if (!cancelled) setSearching(false);
-      }
-    }, 300);
-    return () => { cancelled = true; window.clearTimeout(handle); };
-  }, [open, mode, query]);
+    if (!term) { clearSearch(); return; }
+    const handle = window.setTimeout(() => { void runSearch(term); }, 300);
+    return () => window.clearTimeout(handle);
+  }, [open, mode, query, runSearch, clearSearch]);
 
   const insertRow = async (source: ParsedVideoSource, providedTitle: string) => {
     setSubmitting(true);
