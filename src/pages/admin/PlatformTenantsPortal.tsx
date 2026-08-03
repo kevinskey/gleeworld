@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
+import { formatPlatformStats } from '@/lib/platformStats';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +26,18 @@ import {
   RefreshCw,
   Loader2,
   Globe,
+  Mail,
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
@@ -88,6 +100,25 @@ export default function PlatformTenantsPortal() {
     },
   });
 
+  // Platform stats from the superadmin API — same auth pattern as the
+  // tenant list. Failure must never block the tenant list, so this is a
+  // separate query and errors render as a quiet note.
+  const { data: statsData, isError: statsError } = useQuery<Record<string, unknown>>({
+    queryKey: ['platform-stats'],
+    enabled: isPlatformAdmin,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('not signed in');
+      const res = await fetch('/superadmin/api/stats', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    },
+  });
+  const stats = formatPlatformStats(statsData);
+
   // Jump into a tenant's admin surface signed in AS that tenant's admin.
   // A plain link can't work: the gleeworld.org session doesn't exist on
   // the tenant subdomain (per-origin storage), and the platform JWT is
@@ -124,6 +155,45 @@ export default function PlatformTenantsPortal() {
         description: e?.message ?? 'Unknown error',
         variant: 'destructive',
       });
+    }
+  };
+
+  // Resend welcome = the staged-setup handoff step. The API mints a fresh
+  // temp password for the tenant's admin (invalidating any staged one),
+  // so it always goes through the confirm dialog below.
+  const [resendTarget, setResendTarget] = useState<TenantRow | null>(null);
+  // Mirrors resendTarget but only updates when the dialog opens, so the
+  // AlertDialogDescription keeps rendering the tenant's name during the
+  // close animation instead of going blank the instant resendTarget is
+  // cleared.
+  const [lastResendTarget, setLastResendTarget] = useState<TenantRow | null>(null);
+  const openResendDialog = (t: TenantRow) => {
+    setResendTarget(t);
+    setLastResendTarget(t);
+  };
+  // In-flight guard: the resend-welcome API mints a brand-new temp
+  // password each call, invalidating the previous one, so a double-fired
+  // click (slow network + impatient double-click) would silently mint two
+  // passwords and email the wrong one. Track which tenant is mid-request
+  // and disable/spin its Welcome button for the duration.
+  const [resendingId, setResendingId] = useState<string | null>(null);
+  const resendWelcome = async (t: TenantRow) => {
+    setResendingId(t.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not signed in.');
+      const res = await fetch(`/superadmin/api/tenants/${t.id}/resend-welcome`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+      toast({ title: 'Welcome email sent', description: `A fresh sign-in email went to the ${t.name} admin.` });
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+      toast({ title: 'Resend failed', description: errorMessage, variant: 'destructive' });
+    } finally {
+      setResendingId(null);
     }
   };
 
@@ -194,6 +264,22 @@ export default function PlatformTenantsPortal() {
         </div>
       </div>
 
+      {stats.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {stats.map((s) => (
+            <Card key={s.label}>
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold leading-tight">{s.value}</div>
+                <div className="text-xs text-muted-foreground capitalize">{s.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+      {statsError && (
+        <p className="text-xs text-muted-foreground">Platform stats unavailable right now.</p>
+      )}
+
       <div className="relative max-w-md">
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input
@@ -257,7 +343,7 @@ export default function PlatformTenantsPortal() {
                     <span>Plan: {t.plan}</span>
                     <span>{new Date(t.created_at).toLocaleDateString()}</span>
                   </div>
-                  <div className="grid grid-cols-3 gap-1.5 pt-1">
+                  <div className="grid grid-cols-2 gap-1.5 pt-1">
                     <Button
                       size="sm"
                       variant="outline"
@@ -285,6 +371,23 @@ export default function PlatformTenantsPortal() {
                     >
                       <LayoutPanelTop className="w-3.5 h-3.5 mr-1" /> Pages
                     </Button>
+                    {!isPlatform && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 min-h-0 lg:min-h-0 px-2 text-xs"
+                        onClick={() => openResendDialog(t)}
+                        disabled={resendingId === t.id}
+                        title="Email this tenant's admin a fresh sign-in (invalidates any staged password)"
+                      >
+                        {resendingId === t.id ? (
+                          <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <Mail className="w-3.5 h-3.5 mr-1" />
+                        )}
+                        Welcome
+                      </Button>
+                    )}
                   </div>
                   <a
                     href={url}
@@ -300,6 +403,24 @@ export default function PlatformTenantsPortal() {
           })}
         </div>
       )}
+
+      <AlertDialog open={!!resendTarget} onOpenChange={(v) => !v && setResendTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Resend welcome email?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This emails a fresh temp password to the {lastResendTarget?.name} admin and invalidates
+              any staged password. Use it as the handoff step after building their site.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => resendTarget && void resendWelcome(resendTarget)}>
+              Send welcome email
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
     </DashboardShell>
     </UniversalLayout>

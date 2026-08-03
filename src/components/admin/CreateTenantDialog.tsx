@@ -4,6 +4,7 @@
 // Stripe customer, nginx vhost, bootstrap.js, starter modules, welcome email).
 // We just collect the inputs and forward the current session JWT for auth.
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
@@ -21,6 +22,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { TENANT_PLAN_TIERS, DEFAULT_PLAN_TIER } from '@/lib/planTiers';
 import { Plus, Loader2, CheckCircle2, ExternalLink } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { provisionNotice, type ProvisionNotice } from '@/lib/tenantProvisionNotice';
 
 interface CreatedTenant {
   id: string;
@@ -29,10 +32,13 @@ interface CreatedTenant {
   subdomain: string;
   admin_email: string;
   url: string;
+  staged: boolean;
+  tempPasswordNote: string | null;
 }
 
 export function CreateTenantDialog() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<CreatedTenant | null>(null);
@@ -46,6 +52,7 @@ export function CreateTenantDialog() {
   // 'gleeworld' → we design the site for them (setup gate pre-completed).
   // 'self' → customer's first sign-in routes into the guided Site Setup.
   const [deploymentPath, setDeploymentPath] = useState<'gleeworld' | 'self'>('gleeworld');
+  const [staged, setStaged] = useState(true);
 
   const reset = () => {
     setSlug('');
@@ -55,6 +62,7 @@ export function CreateTenantDialog() {
     setPlan(DEFAULT_PLAN_TIER);
     setCustomDomain('');
     setDeploymentPath('gleeworld');
+    setStaged(true);
     setCreated(null);
   };
 
@@ -105,6 +113,7 @@ export function CreateTenantDialog() {
           plan,
           custom_domain: customDomain.trim() || null,
           deployment_path: deploymentPath,
+          staged,
         }),
       });
 
@@ -120,6 +129,7 @@ export function CreateTenantDialog() {
         return;
       }
 
+      const notice: ProvisionNotice = provisionNotice(body, name.trim(), adminEmail);
       setCreated({
         id: body.id ?? body.tenant?.id ?? 'unknown',
         slug,
@@ -127,10 +137,15 @@ export function CreateTenantDialog() {
         subdomain: slug,
         admin_email: adminEmail,
         url: `https://${slug}.gleeworld.org`,
+        staged: !!body.staged,
+        tempPasswordNote: notice.tempPasswordNote,
       });
-      toast({ title: 'Tenant created', description: `${name} provisioned. Admin invite sent to ${adminEmail}.` });
-    } catch (err: any) {
-      toast({ title: 'Create failed', description: err.message || 'Unknown error', variant: 'destructive' });
+      queryClient.invalidateQueries({ queryKey: ['platform-tenants'] });
+      queryClient.invalidateQueries({ queryKey: ['platform-stats'] });
+      toast({ title: notice.toastTitle, description: notice.toastDescription });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      toast({ title: 'Create failed', description: message, variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -158,9 +173,19 @@ export function CreateTenantDialog() {
                 Tenant created
               </DialogTitle>
               <DialogDescription>
-                {created.name} is provisioned and verified. Credentials were emailed to{' '}
-                <strong>{created.admin_email}</strong> — they set their own password on first
-                sign-in.
+                {created.staged ? (
+                  <>
+                    {created.name} is provisioned <strong>staged</strong> — no email sent yet. Build
+                    their site, then press <strong>Welcome</strong> on the tenant card to send
+                    credentials to <strong>{created.admin_email}</strong>.
+                  </>
+                ) : (
+                  <>
+                    {created.name} is provisioned and verified. Credentials were emailed to{' '}
+                    <strong>{created.admin_email}</strong> — they set their own password on first
+                    sign-in.
+                  </>
+                )}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 text-sm">
@@ -178,6 +203,11 @@ export function CreateTenantDialog() {
                   Open site <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
+              {created.tempPasswordNote && (
+                <p className="rounded-md border border-amber-400 bg-amber-50 p-3 text-xs select-all">
+                  {created.tempPasswordNote}
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 If DNS hasn&apos;t propagated yet, the subdomain may take a minute to resolve. A
                 wildcard *.gleeworld.org A record is already in place — first-time TLS cert
@@ -288,6 +318,12 @@ export function CreateTenantDialog() {
                   </SelectContent>
                 </Select>
               </div>
+
+              <label className="flex items-center gap-2 pt-1 text-sm font-normal cursor-pointer">
+                <Checkbox checked={staged} onCheckedChange={(v) => setStaged(v === true)} />
+                Staged setup — don&apos;t email the admin yet; show a temp password so we can build
+                their site first
+              </label>
             </div>
 
             <DialogFooter>
