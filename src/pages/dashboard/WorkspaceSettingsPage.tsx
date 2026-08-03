@@ -642,8 +642,8 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
                   className={cn(
                     'shrink-0 inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
                     role === r.value
-                      ? 'bg-slate-900 text-white hover:bg-slate-800'
-                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80',
                   )}
                 >
                   {r.label}
@@ -662,8 +662,8 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
                 className={cn(
                   'shrink-0 inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
                   !preview
-                    ? 'bg-slate-900 text-white hover:bg-slate-800'
-                    : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80',
                 )}
               >
                 Super-admin (me)
@@ -677,8 +677,8 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
                   className={cn(
                     'shrink-0 inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
                     preview === r.value
-                      ? 'bg-slate-900 text-white hover:bg-slate-800'
-                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80',
                   )}
                 >
                   {r.label}

@@ -125,7 +125,7 @@ export default function CanvasSpeedGrader() {
                       {s.workflow_state === 'graded'
                         ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         : s.workflow_state === 'unsubmitted'
-                          ? <span className="text-[10px] text-muted-foreground">—</span>
+                          ? <span className="text-xs text-muted-foreground">—</span>
                           : <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
                     </button>
                   </li>

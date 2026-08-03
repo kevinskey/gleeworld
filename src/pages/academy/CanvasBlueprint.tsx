@@ -194,8 +194,8 @@ export default function CanvasBlueprint() {
                         <span className="flex-1 truncate">
                           {m.comment || <span className="text-muted-foreground italic">(no comment)</span>}
                         </span>
-                        <Badge variant="outline" className="text-[10px]">{m.workflow_state}</Badge>
-                        <span className="text-[10px] text-muted-foreground">{new Date(m.created_at).toLocaleString()}</span>
+                        <Badge variant="outline" className="text-xs">{m.workflow_state}</Badge>
+                        <span className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString()}</span>
                       </li>
                     ))}
                   </ul>

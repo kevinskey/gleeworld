@@ -190,7 +190,7 @@ function GroupPanel({ groupCategoryId }: { groupCategoryId: number }) {
                 : <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs">{m.name.charAt(0)}</div>
               }
               <span>{m.name}</span>
-              {m.is_self && <Badge variant="outline" className="text-[10px]">You</Badge>}
+              {m.is_self && <Badge variant="outline" className="text-xs">You</Badge>}
             </li>
           ))}
         </ul>
@@ -218,7 +218,7 @@ function PeerReviewPanel({ courseId, assignmentId }: { courseId: number; assignm
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium truncate">{r.reviewee_name}</div>
                 {r.workflow_state === 'completed' && (
-                  <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">Complete</Badge>
+                  <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">Complete</Badge>
                 )}
               </div>
               <Link to={`/academy/canvas/courses/${courseId}/assignments/${assignmentId}/peer-review/${r.user_id}`}>

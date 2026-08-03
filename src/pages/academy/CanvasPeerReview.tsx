@@ -186,7 +186,7 @@ export default function CanvasPeerReview() {
             <Textarea value={comment} onChange={(e) => setComment(e.target.value)} rows={4} placeholder="Constructive feedback for your peer…" />
           </div>
           <div className="flex justify-end items-center gap-2">
-            <Badge variant="outline" className="text-[10px]">Posted as your peer review</Badge>
+            <Badge variant="outline" className="text-xs">Posted as your peer review</Badge>
             <Button onClick={submit} disabled={update.isPending}>
               {update.isPending ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Submitting…</> : 'Submit review'}
             </Button>

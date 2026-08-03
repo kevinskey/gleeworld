@@ -287,7 +287,7 @@ function LibraryTab({
         <div className="rounded-lg border bg-card divide-y">
           {grouped.map(([letter, items]) => (
             <section key={letter}>
-              <div className="px-3 py-1.5 text-[11px] tracking-widest font-semibold text-muted-foreground bg-muted/50">
+              <div className="px-3 py-1.5 text-xs tracking-widest font-semibold text-muted-foreground bg-muted/50">
                 {letter}
               </div>
               {items.map((r) => (
@@ -408,7 +408,7 @@ function SetlistRow({
                 {sc.pdf_url ? (
                   <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                 ) : (
-                  <span className="text-[10px] uppercase text-muted-foreground">no pdf</span>
+                  <span className="text-xs uppercase text-muted-foreground">no pdf</span>
                 )}
               </button>
             ))
@@ -505,7 +505,7 @@ function ScoreRowItem({ row, onOpen }: { row: ScoreRow; onOpen: () => void }) {
               key={`${b.label}-${i}`}
               variant="outline"
               className={cn(
-                'h-5 px-1.5 text-[10px] font-normal',
+                'h-5 px-1.5 text-xs font-normal',
                 b.tone === 'key' && 'border-amber-400/40 text-amber-700',
                 b.tone === 'time' && 'border-sky-400/40 text-sky-700',
                 b.tone === 'tag' && 'border-muted-foreground/30',
@@ -518,7 +518,7 @@ function ScoreRowItem({ row, onOpen }: { row: ScoreRow; onOpen: () => void }) {
         </div>
       </div>
       {row.audio_url && (
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground border rounded px-1.5 py-0.5 shrink-0">
+        <span className="text-xs uppercase tracking-wider text-muted-foreground border rounded px-1.5 py-0.5 shrink-0">
           audio
         </span>
       )}

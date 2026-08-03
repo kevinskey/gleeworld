@@ -139,7 +139,7 @@ export default function CanvasCalendar() {
                           </div>
                         </div>
                         {item.kind === 'assignment' && (
-                          <Badge variant="outline" className="text-[10px]">Due</Badge>
+                          <Badge variant="outline" className="text-xs">Due</Badge>
                         )}
                       </CardContent>
                     </Card>

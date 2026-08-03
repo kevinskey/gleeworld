@@ -80,7 +80,7 @@ export default function TourAddon({ courseId, canEdit }: Props) {
                 return (
                   <li key={e.id} className="py-2 flex items-center gap-3 text-sm">
                     <div className="w-12 text-center shrink-0 rounded-md py-0.5 bg-sky-50 text-sky-700">
-                      <div className="text-[9px] font-bold uppercase">{d ? format(d, 'MMM') : '—'}</div>
+                      <div className="text-xs font-bold uppercase">{d ? format(d, 'MMM') : '—'}</div>
                       <div className="text-base font-bold leading-none">{d ? format(d, 'd') : ''}</div>
                     </div>
                     <div className="flex-1 min-w-0">

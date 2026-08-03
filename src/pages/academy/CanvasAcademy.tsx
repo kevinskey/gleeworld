@@ -158,7 +158,7 @@ export default function CanvasAcademy() {
                   <Link to={`/academy/canvas/courses/${c.id}`}>
                     <Button size="sm" variant="outline" className="text-xs">Open</Button>
                   </Link>
-                  <div className="text-[10px] text-muted-foreground font-mono">id: {c.id}</div>
+                  <div className="text-xs text-muted-foreground font-mono">id: {c.id}</div>
                 </div>
               </CardContent>
             </Card>
