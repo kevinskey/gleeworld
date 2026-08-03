@@ -52,6 +52,11 @@ export interface EngineTrack {
   userSolo: boolean;
   /** Live clip→player pairs the engine can re-schedule on Play. */
   playbacks: ClipPlayback[];
+  /** MIDI tracks' built instrument (undefined for audio tracks). Exposed
+   *  so the engine can call `instrument?.releaseAll?.()` on pause/stop/
+   *  seek — held synth/sampler voices are free-running like clip Players
+   *  and must be cut explicitly, the transport doesn't touch them. */
+  instrument?: EngineInstrument;
   updateStrip: (patch: { volume_db?: number; pan?: number; mute?: boolean; solo?: boolean }) => void;
   /** Incremental clip add — no track rebuild, no other clips touched.
    *  Used after a fresh recording lands so the new take is immediately
@@ -108,6 +113,7 @@ export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
     () => { for (const n of eqNodes) n.dispose(); },
   ];
   const playbacks: ClipPlayback[] = [];
+  let instrument: EngineInstrument | undefined;
 
   // Sources now feed preTap instead of panvol so pre-fader sends see
   // the raw signal. Main path still flows preTap → panvol → ... as
@@ -121,6 +127,7 @@ export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
     }
   } else if (isMidiTrack(track)) {
     const inst = buildInstrument(track.instrument);
+    instrument = inst;
     inst.output.connect(preTap);
     disposers.push(() => inst.dispose());
     for (const clip of track.clips) {
@@ -139,6 +146,7 @@ export function buildTrack(track: Track, assets: AudioAsset[]): EngineTrack {
     userMute: track.mute,
     userSolo: track.solo,
     playbacks,
+    instrument,
     updateStrip: (patch) => {
       // Smooth ramps (30 ms) prevent the click/pop you'd otherwise get
       // when the user drags a fader during playback. linearRampTo on the
