@@ -67,6 +67,7 @@ export const AttendanceLiveRoster: React.FC<AttendanceLiveRosterProps> = ({
   useEffect(() => {
     let cancelled = false;
     const fetchFlags = async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase.rpc('get_roll_call_flags' as any, {
         p_session_id: sessionId,
       });

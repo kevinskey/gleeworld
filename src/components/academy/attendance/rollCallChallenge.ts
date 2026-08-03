@@ -20,16 +20,17 @@ export function clockOffsetMs(serverNowIso: string, clientNowMs: number): number
   return new Date(serverNowIso).getTime() - clientNowMs;
 }
 
-export function parseSchedule(raw: any): RollCallSchedule | null {
-  if (!raw || raw.success !== true) return null;
-  if (typeof raw.first_slot !== 'number' || !Array.isArray(raw.slots)) return null;
-  if (!raw.slots.every((s: unknown) => typeof s === 'number')) return null;
+export function parseSchedule(raw: unknown): RollCallSchedule | null {
+  const r = raw as { success?: unknown; first_slot?: unknown; slots?: unknown; interval_seconds?: unknown; server_now?: unknown; closes_at?: unknown } | null;
+  if (!r || r.success !== true) return null;
+  if (typeof r.first_slot !== 'number' || !Array.isArray(r.slots)) return null;
+  if (!r.slots.every((s: unknown) => typeof s === 'number')) return null;
   return {
-    firstSlot: raw.first_slot,
-    slots: raw.slots,
-    intervalSeconds: typeof raw.interval_seconds === 'number' ? raw.interval_seconds : ROTATION_SECONDS,
-    serverNow: String(raw.server_now ?? ''),
-    closesAt: String(raw.closes_at ?? ''),
+    firstSlot: r.first_slot,
+    slots: r.slots,
+    intervalSeconds: typeof r.interval_seconds === 'number' ? r.interval_seconds : ROTATION_SECONDS,
+    serverNow: String(r.server_now ?? ''),
+    closesAt: String(r.closes_at ?? ''),
   };
 }
 

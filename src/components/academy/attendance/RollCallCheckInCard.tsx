@@ -42,6 +42,7 @@ export const RollCallCheckInCard: React.FC<RollCallCheckInCardProps> = ({ course
   const { data: myState } = useQuery({
     queryKey: ['roll-call-my-state', session?.id, user?.id],
     queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase.rpc('get_my_roll_call_state' as any, {
         p_session_id: session!.id,
       });
@@ -66,6 +67,7 @@ export const RollCallCheckInCard: React.FC<RollCallCheckInCardProps> = ({ course
 
   const tapMutation = useMutation({
     mutationFn: async (symbolIndex: number) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase.rpc('roll_call_check_in' as any, {
         p_session_id: session!.id,
         p_symbol_index: symbolIndex,

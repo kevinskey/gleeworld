@@ -17,6 +17,7 @@ export const RollCallChallengeDisplay: React.FC<RollCallChallengeDisplayProps> =
   const { data: schedule, isLoading, refetch } = useQuery({
     queryKey: ['roll-call-schedule', sessionId],
     queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await supabase.rpc('get_roll_call_schedule' as any, {
         p_session_id: sessionId,
       });
