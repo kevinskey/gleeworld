@@ -36,8 +36,10 @@ const fillUrl = (value: string) => {
   fireEvent.change(screen.getByLabelText('Video URL'), { target: { value } });
 };
 
+// The submit button counts the pasted links ("Add video" vs "Add 5 videos"),
+// so match both shapes rather than the singular label.
 const submit = () => {
-  fireEvent.click(screen.getAllByRole('button', { name: /add video/i })[0]);
+  fireEvent.click(screen.getAllByRole('button', { name: /^add (\d+ )?videos?$/i })[0]);
 };
 
 const oembedOk = (title: string) =>
@@ -139,6 +141,83 @@ describe('AddYouTubeVideoForm', () => {
     await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(1));
     expect(insertMock.mock.calls[0]![0].video_id).toBe('dQw4w9WgXcQ');
     expect(insertMock.mock.calls[0]![0].title).toBe('Shared from the app');
+  });
+
+  it('adds every link in a pasted list, in order, with oEmbed titles', async () => {
+    fetchMock.mockImplementation((input: unknown) => {
+      const id = String(input).match(/watch%3Fv%3D(\w+)/)?.[1] ?? 'unknown';
+      return Promise.resolve({ ok: true, json: async () => ({ title: `Title ${id}` }) });
+    });
+    const onAdded = vi.fn();
+    render(<AddYouTubeVideoForm onAdded={onAdded} />);
+    openForm();
+    fillUrl(
+      [
+        'https://www.youtube.com/watch?v=aaaaaaaaaaa',
+        'https://youtu.be/bbbbbbbbbbb?si=tracking',
+        'https://www.youtube.com/watch?v=ccccccccccc',
+      ].join('\n'),
+    );
+    submit();
+
+    await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(3));
+    expect(insertMock.mock.calls.map((c) => c[0].video_id)).toEqual([
+      'aaaaaaaaaaa',
+      'bbbbbbbbbbb',
+      'ccccccccccc',
+    ]);
+    expect(insertMock.mock.calls[0]![0].title).toBe('Title aaaaaaaaaaa');
+    // One refresh for the whole batch, not one per link.
+    await waitFor(() => expect(onAdded).toHaveBeenCalledTimes(1));
+  });
+
+  it('drops duplicate links within a single paste', async () => {
+    oembedOk('Same video');
+    render(<AddYouTubeVideoForm onAdded={vi.fn()} />);
+    openForm();
+    fillUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ\nhttps://www.youtube.com/watch?v=dQw4w9WgXcQ');
+    submit();
+
+    // Deduped down to a single link, so this takes the single-add path.
+    await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(1));
+  });
+
+  it('keeps going when one link in a batch is already in the library', async () => {
+    oembedOk('Whatever');
+    selectMock
+      .mockResolvedValueOnce({ data: null, error: { code: '23505', message: 'duplicate key' } })
+      .mockResolvedValue({ data: [{ id: 'row-2' }], error: null });
+    const onAdded = vi.fn();
+    render(<AddYouTubeVideoForm onAdded={onAdded} />);
+    openForm();
+    fillUrl('https://www.youtube.com/watch?v=aaaaaaaaaaa\nhttps://www.youtube.com/watch?v=bbbbbbbbbbb');
+    submit();
+
+    await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Added 1 of 2 links',
+          description: expect.stringMatching(/1 added · 1 already in the library/i),
+        }),
+      ),
+    );
+    expect(onAdded).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports unreadable lines and leaves them in the box to fix', async () => {
+    oembedOk('Good one');
+    render(<AddYouTubeVideoForm onAdded={vi.fn()} />);
+    openForm();
+    fillUrl('https://www.youtube.com/watch?v=aaaaaaaaaaa\nhttps://example.com/not-a-video');
+    submit();
+
+    await waitFor(() => expect(insertMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => {
+      expect(screen.getByText(/couldn't be read/i)).toBeInTheDocument();
+    });
+    // Only the bad link survives in the textarea.
+    expect(screen.getByLabelText('Video URL')).toHaveValue('https://example.com/not-a-video');
   });
 
   it('shows a friendly message on a unique-violation (duplicate video) instead of a raw Postgres error', async () => {
