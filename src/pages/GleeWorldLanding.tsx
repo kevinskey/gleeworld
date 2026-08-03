@@ -790,61 +790,98 @@ function AppleHero() {
           it. Background lives on the inner wrapper (not the section) so
           there's no full-bleed dark gutter on wide viewports. */}
       <div className="max-w-7xl mx-auto bg-[#0a0518]">
-        {slide?.imageUrl ? (
-          <>
-            {/* Mobile <640px: prefer mobile image, fall back to desktop.
-                max-h + object-contain keeps the WHOLE baked image visible
-                (hero text is pixels — never crop it) while leaving room
-                for the CTA strip inside the first viewport: full-height
-                heroes were pushing "Get started" below the fold. */}
-            <img
-              src={slide.mobileImageUrl || slide.imageUrl}
-              alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
-              className="w-full h-auto max-h-[55dvh] object-contain mx-auto block sm:hidden"
-            />
-            {/* Desktop ≥640px */}
+        {/* MOBILE <640px: the hero owns the ENTIRE first viewport
+            (100dvh minus the sticky h-14 header + safe-area). Image is
+            full-width, top-anchored cover — the baked headline lives in
+            the top half of the asset, so bottom-crop on short screens
+            never touches it. Buttons pin to the viewport bottom; the
+            white section below starts exactly at the fold (Kevin
+            2026-08-03: full-width hero, no second section visible
+            without scrolling). */}
+        <div
+          className="sm:hidden flex flex-col"
+          style={{ height: 'calc(100dvh - 3.5rem - env(safe-area-inset-top, 0px))' }}
+        >
+          <div className="flex-1 min-h-0">
+            {slide?.imageUrl ? (
+              <img
+                src={slide.mobileImageUrl || slide.imageUrl}
+                alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
+                className="w-full h-full object-cover object-top"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center"
+                style={{ background: 'radial-gradient(circle at 50% 30%, #1a0f3a 0%, #0a0518 70%)' }}
+              >
+                <div className="text-center text-white/70 px-6">
+                  <p className="text-sm uppercase tracking-widest opacity-60">No hero configured</p>
+                  <p className="text-lg font-semibold mt-2">Run your music program. Beautifully.</p>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="px-5 pt-3 pb-[max(env(safe-area-inset-bottom,0px),0.875rem)] flex flex-col gap-2.5">
+            <button
+              type="button"
+              onClick={openInquiry}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold text-white shadow-2xl"
+              style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
+            >
+              Get started
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <a
+              href={TRY_DEMO_URL}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold backdrop-blur-sm"
+              style={{ color: '#ffffff', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.10)' }}
+            >
+              Try the demo <ArrowRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+
+        {/* DESKTOP ≥640px: unchanged — natural-height image, centered
+            CTA strip below it. */}
+        <div className="hidden sm:block">
+          {slide?.imageUrl ? (
             <img
               src={slide.imageUrl}
               alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
-              className="w-full h-auto hidden sm:block"
+              className="w-full h-auto block"
             />
-          </>
-        ) : (
-          // No hero configured — gradient backdrop in place of the image.
-          <div
-            className="w-full aspect-[16/8] sm:aspect-[16/7] flex items-center justify-center"
-            style={{ background: 'radial-gradient(circle at 50% 30%, #1a0f3a 0%, #0a0518 70%)' }}
-          >
-            <div className="text-center text-white/70 px-6">
-              <p className="text-sm sm:text-base uppercase tracking-widest opacity-60">No hero configured</p>
-              <p className="text-lg sm:text-2xl font-semibold mt-2">Run your music program. Beautifully.</p>
+          ) : (
+            <div
+              className="w-full aspect-[16/7] flex items-center justify-center"
+              style={{ background: 'radial-gradient(circle at 50% 30%, #1a0f3a 0%, #0a0518 70%)' }}
+            >
+              <div className="text-center text-white/70 px-6">
+                <p className="text-base uppercase tracking-widest opacity-60">No hero configured</p>
+                <p className="text-2xl font-semibold mt-2">Run your music program. Beautifully.</p>
+              </div>
+            </div>
+          )}
+          <div className="px-6 py-12">
+            <div className="max-w-5xl mx-auto flex flex-row gap-3 justify-center items-center">
+              <button
+                type="button"
+                onClick={openInquiry}
+                className="inline-flex w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold text-white transition-transform hover:scale-[1.03] shadow-2xl"
+                style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
+              >
+                Get started
+                <ArrowRight className="h-4 w-4" />
+              </button>
+              <a
+                href={TRY_DEMO_URL}
+                className="inline-flex w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold transition-colors backdrop-blur-sm"
+                style={{ color: '#ffffff', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.10)' }}
+              >
+                Try the demo <ArrowRight className="h-4 w-4" />
+              </a>
             </div>
           </div>
-        )}
-
-        {/* CTA strip — sits BELOW the hero image, not overlaying it.
-            Mobile padding stays tight so the buttons land inside the
-            first viewport together with the capped hero. */}
-        <div className="px-6 py-4 sm:py-12">
-          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-3 justify-center items-center">
-          <button
-            type="button"
-            onClick={openInquiry}
-            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold text-white transition-transform hover:scale-[1.03] shadow-2xl"
-            style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
-          >
-            Get started
-            <ArrowRight className="h-4 w-4" />
-          </button>
-          <a
-            href={TRY_DEMO_URL}
-            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full px-7 py-3 text-base font-semibold transition-colors backdrop-blur-sm"
-            style={{ color: '#ffffff', border: '1px solid rgba(255,255,255,0.35)', backgroundColor: 'rgba(255,255,255,0.10)' }}
-          >
-            Try the demo <ArrowRight className="h-4 w-4" />
-          </a>
-          </div>{/* /CTA inner */}
-        </div>{/* /CTA outer */}
+        </div>
       </div>{/* /max-w-7xl wrapper */}
     </section>
   );
