@@ -5,7 +5,7 @@
 // (up to LIBRARY_HARD_CAP rows) because the toolbar filters client-side —
 // if a tenant blows past that cap we'll revisit and paginate server-side
 // per-tab instead.
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Play, Youtube, Loader2, Search, ArrowUpDown, Star, Upload, Pencil,
   Share2, ListPlus, Check, Users, Inbox, Plus, Trash2, ListVideo, Bookmark,
@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { useVideoDock } from '@/contexts/VideoDockContext';
 
 interface VideoRow {
   id: string;
@@ -70,6 +71,49 @@ export const YouTubeChannel: React.FC = () => {
   const [videos, setVideos] = useState<VideoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState<VideoRow | null>(null);
+
+  // ── Inline playback + dock handoff ────────────────────────────────────
+  // Tapping a YouTube thumbnail plays it IN the card (no modal). While it
+  // plays, a postMessage listener tracks currentTime (YouTube streams
+  // infoDelivery after the 'listening' handshake — same mechanism as
+  // AudioCompanionContext). If the user navigates away mid-play, the page
+  // unmount hands the video to the global VideoDock, which keeps playing
+  // it bottom-left until they hit its X.
+  const [inlineId, setInlineId] = useState<string | null>(null);
+  const inlineMetaRef = useRef<{ videoId: string; title: string } | null>(null);
+  const inlineTimeRef = useRef(0);
+  const { dock } = useVideoDock();
+
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      if (typeof e.data !== 'string' || !/https:\/\/(www\.)?youtube(-nocookie)?\.com$/.test(e.origin)) return;
+      try {
+        const d = JSON.parse(e.data);
+        if (d?.event === 'infoDelivery' && typeof d.info?.currentTime === 'number') {
+          inlineTimeRef.current = d.info.currentTime;
+        }
+      } catch { /* not a YT payload */ }
+    };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  // Page unmount with a video still playing inline → dock it.
+  useEffect(() => () => {
+    if (inlineMetaRef.current) {
+      dock({ ...inlineMetaRef.current, startAt: inlineTimeRef.current });
+    }
+  }, [dock]);
+
+  const playInline = (video: VideoRow) => {
+    inlineMetaRef.current = { videoId: video.video_id, title: video.title };
+    inlineTimeRef.current = 0;
+    setInlineId(video.id);
+  };
+  const stopInlineTracking = () => {
+    inlineMetaRef.current = null;
+    setInlineId(null);
+  };
 
   const [tab, setTab] = useState<Tab>('all');
   const [search, setSearch] = useState('');
@@ -263,22 +307,22 @@ export const YouTubeChannel: React.FC = () => {
   return (
     <UniversalLayout showHeader={false} showFooter={false}>
       <DashboardShell>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-full bg-destructive flex items-center justify-center">
-              <Youtube className="h-6 w-6 text-white" />
+        {/* Header + toolbar share one container with compact spacing —
+            the old stacked containers (py-4 + mb-6 + py-4 + space-y-6)
+            pushed the video grid below the fold (Kevin 2026-08-03). */}
+        <main className="container mx-auto px-4 pt-3 pb-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-destructive flex items-center justify-center">
+              <Youtube className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">Video Library</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-xl font-bold text-foreground leading-tight">Video Library</h1>
+              <p className="text-sm text-muted-foreground leading-tight">
                 {videos.length} video{videos.length === 1 ? '' : 's'}
                 {filtered.length !== videos.length && ` · ${filtered.length} shown`}
               </p>
             </div>
           </div>
-        </div>
-
-        <main className="container mx-auto px-4 py-4 space-y-6">
           {isAdmin() && (
             <div className="flex items-start gap-2 flex-wrap">
               <AddYouTubeVideoForm onAdded={() => fetchVideos()} />
@@ -299,7 +343,7 @@ export const YouTubeChannel: React.FC = () => {
           )}
 
           {/* Toolbar: tabs (underlined library-style), search, sort */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2 flex-wrap overflow-x-auto border-b border-border -mx-4 px-4">
               {tabs.map(({ key, label, icon: Icon }) => {
                 const active = tab === key;
@@ -307,7 +351,7 @@ export const YouTubeChannel: React.FC = () => {
                   <button
                     key={key}
                     onClick={() => setTab(key)}
-                    className={`relative flex items-center gap-1.5 px-1 py-3 text-sm transition-colors whitespace-nowrap ${
+                    className={`relative flex items-center gap-1.5 px-1 py-2 text-sm transition-colors whitespace-nowrap ${
                       active
                         ? 'text-foreground font-semibold'
                         : 'text-foreground/60 hover:text-foreground'
@@ -451,9 +495,28 @@ export const YouTubeChannel: React.FC = () => {
                     key={video.id}
                     className="group relative rounded-xl overflow-hidden bg-card border border-border hover:border-destructive/50 transition-all hover:shadow-lg"
                   >
+                    {inlineId === video.id ? (
+                    <div className="aspect-video relative bg-black">
+                      {/* enablejsapi + the onLoad 'listening' handshake make
+                          YouTube stream infoDelivery (currentTime) so the
+                          dock can resume where the user left off. */}
+                      <iframe
+                        src={`https://www.youtube.com/embed/${video.video_id}?autoplay=1&playsinline=1&rel=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
+                        title={video.title}
+                        className="w-full h-full"
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allowFullScreen
+                        onLoad={(e) => {
+                          try {
+                            e.currentTarget.contentWindow?.postMessage(JSON.stringify({ event: 'listening' }), 'https://www.youtube.com');
+                          } catch { /* cross-origin hiccup — dock just restarts at 0 */ }
+                        }}
+                      />
+                    </div>
+                    ) : (
                     <div
                       className="aspect-video relative bg-muted cursor-pointer"
-                      onClick={() => setSelectedVideo(video)}
+                      onClick={() => (isYouTube ? playInline(video) : setSelectedVideo(video))}
                     >
                       {video.thumbnail_url || fallbackThumb ? (
                         <img
@@ -487,13 +550,17 @@ export const YouTubeChannel: React.FC = () => {
                         </span>
                       )}
                     </div>
+                    )}
                     <div className="p-3 space-y-1.5">
                       {/* Explicit text-sm: the global h3 rule in index.css is
                           22px/700, which lets the metadata block outweigh the
                           thumbnail — the video must stay the dominant element. */}
                       <h3
                         className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-destructive transition-colors cursor-pointer"
-                        onClick={() => setSelectedVideo(video)}
+                        // Title = theater mode (modal). Stop the inline
+                        // tracker first so the unmount handoff doesn't dock
+                        // a video the user just re-opened in the modal.
+                        onClick={() => { stopInlineTracking(); setSelectedVideo(video); }}
                       >
                         {video.title}
                       </h3>
