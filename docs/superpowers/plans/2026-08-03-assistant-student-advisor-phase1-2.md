@@ -427,7 +427,9 @@ Expected: no exceptions, ends with `ROLLBACK`.
 ```sql
 select source, count(*) from student_picture.v_student_assignments group by source;
 ```
-Expected: an `assignments` row with a non-zero count. If it is 0 while `gw_assignments` has 53, the enrollment expansion is dropping everything — check that `gw_course_enrollments.enrollment_status` actually uses the literal `'active'`.
+Expected: an `assignments` row with a non-zero count. All 53 rows in `gw_assignments` are course-wide, so this number reflects assignments × enrolled students, not 53.
+
+If it is 0, the enrollment expansion is dropping everything. The first thing to check is that every adapter filters `enrollment_status = 'enrolled'` — `'active'` is the wrong literal and matches nothing.
 
 - [ ] **Step 6: Commit**
 
