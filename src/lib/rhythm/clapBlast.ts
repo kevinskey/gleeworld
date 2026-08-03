@@ -115,3 +115,34 @@ export function createClapBlastRound({
     },
   };
 }
+
+// Calibration: play CALIBRATION_CLICKS loud clicks at CALIBRATION_BPM, record
+// clap onsets on the same clock, and take the median clap−click delta as the
+// device's input+output latency. Follows takeAlignment.ts's philosophy:
+// measure the device-specific constant once, configure nothing else.
+export const CALIBRATION_CLICKS = 8;
+export const CALIBRATION_BPM = 90;
+const CAL_MATCH_WINDOW_SEC = 0.35;
+const CAL_MIN_MATCHES = 5;
+const CAL_MIN_OFFSET_SEC = -0.1;
+const CAL_MAX_OFFSET_SEC = 0.6;
+
+export function calibrationOffsetSec(clickTimes: number[], claps: number[]): number | null {
+  const used = new Array(claps.length).fill(false);
+  const deltas: number[] = [];
+  for (const c of clickTimes) {
+    let best = -1;
+    let bestD = CAL_MATCH_WINDOW_SEC;
+    claps.forEach((t, i) => {
+      if (used[i]) return;
+      const d = Math.abs(t - c);
+      if (d <= bestD) { bestD = d; best = i; }
+    });
+    if (best !== -1) { used[best] = true; deltas.push(claps[best] - c); }
+  }
+  if (deltas.length < CAL_MIN_MATCHES) return null;
+  deltas.sort((a, b) => a - b);
+  const mid = Math.floor(deltas.length / 2);
+  const median = deltas.length % 2 ? deltas[mid] : (deltas[mid - 1] + deltas[mid]) / 2;
+  return Math.min(CAL_MAX_OFFSET_SEC, Math.max(CAL_MIN_OFFSET_SEC, median));
+}

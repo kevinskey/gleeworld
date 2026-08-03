@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createClapBlastRound } from '../clapBlast';
+import { createClapBlastRound, calibrationOffsetSec, CALIBRATION_CLICKS, CALIBRATION_BPM } from '../clapBlast';
 
 // 100 bpm quarters → spp 0.6, tol 60ms, window 120ms
 const mk = (over: Partial<Parameters<typeof createClapBlastRound>[0]> = {}) =>
@@ -90,5 +90,35 @@ describe('createClapBlastRound', () => {
     const r = createClapBlastRound({ expected: [0], secondsPerPulse: 0.2, tolerancePct: 0.06 }); // 12ms → floor 30ms
     const ev = r.tick(0.05, [0.025]);
     expect(ev[0]).toMatchObject({ grade: 'perfect' });
+  });
+});
+
+describe('calibrationOffsetSec', () => {
+  const clicks = Array.from({ length: 8 }, (_, i) => i * (60 / 90)); // 8 clicks @90bpm
+
+  it('returns the median offset when the user claps consistently late', () => {
+    const claps = clicks.map((c, i) => c + 0.12 + (i % 2 ? 0.01 : -0.01));
+    expect(calibrationOffsetSec(clicks, claps)).toBeCloseTo(0.12, 2);
+  });
+
+  it('ignores stray claps and survives one missed click', () => {
+    const claps = [...clicks.slice(0, 7).map((c) => c + 0.1), 2.9]; // 7 matched + 1 stray
+    expect(calibrationOffsetSec(clicks, claps)).toBeCloseTo(0.1, 2);
+  });
+
+  it('returns null with fewer than 5 matches', () => {
+    const claps = clicks.slice(0, 4).map((c) => c + 0.1);
+    expect(calibrationOffsetSec(clicks, claps)).toBeNull();
+  });
+
+  it('clamps implausible medians into [-0.1, 0.6]', () => {
+    // −300ms is inside the ±350ms match window, so it matches; median −0.3 clamps to −0.1
+    const early = clicks.map((c) => c - 0.3);
+    expect(calibrationOffsetSec(clicks, early)).toBeCloseTo(-0.1, 5);
+  });
+
+  it('exports the click count and bpm the UI schedules with', () => {
+    expect(CALIBRATION_CLICKS).toBe(8);
+    expect(CALIBRATION_BPM).toBe(90);
   });
 });
