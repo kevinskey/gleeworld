@@ -792,11 +792,15 @@ function AppleHero() {
       <div className="max-w-7xl mx-auto bg-[#0a0518]">
         {slide?.imageUrl ? (
           <>
-            {/* Mobile <640px: prefer mobile image, fall back to desktop */}
+            {/* Mobile <640px: prefer mobile image, fall back to desktop.
+                max-h + object-contain keeps the WHOLE baked image visible
+                (hero text is pixels — never crop it) while leaving room
+                for the CTA strip inside the first viewport: full-height
+                heroes were pushing "Get started" below the fold. */}
             <img
               src={slide.mobileImageUrl || slide.imageUrl}
               alt={slide.title || 'GleeWorld — Run your music program. Beautifully.'}
-              className="w-full h-auto block sm:hidden"
+              className="w-full h-auto max-h-[55dvh] object-contain mx-auto block sm:hidden"
             />
             {/* Desktop ≥640px */}
             <img
@@ -818,8 +822,10 @@ function AppleHero() {
           </div>
         )}
 
-        {/* CTA strip — sits BELOW the hero image, not overlaying it */}
-        <div className="px-6 py-8 sm:py-12">
+        {/* CTA strip — sits BELOW the hero image, not overlaying it.
+            Mobile padding stays tight so the buttons land inside the
+            first viewport together with the capped hero. */}
+        <div className="px-6 py-4 sm:py-12">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row gap-3 justify-center items-center">
           <button
             type="button"
