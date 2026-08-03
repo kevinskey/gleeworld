@@ -11,6 +11,7 @@ export interface StudentFee {
   semester: string;
   academic_year: string;
   status: 'pending' | 'paid' | 'overdue' | 'partial' | 'refunded' | 'waived';
+  paid_amount?: number;
   payment_method?: string;
   notes?: string;
   // New columns from migration
