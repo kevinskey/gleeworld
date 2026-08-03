@@ -99,8 +99,17 @@ export default function WorkspaceUsersPage() {
   });
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return people.filter((p) => {
+    // Accent-insensitive, token-based search: every word the admin types
+    // must appear somewhere in the person's name/email/phone/role, in any
+    // order — so "brown aaliyah", "aali br", "josé" vs "jose", and pasted
+    // phone digits all hit. The old bare substring missed all of those,
+    // which read as "search is broken" on a 134-person roster.
+    const norm = (v: string) =>
+      v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const tokens = norm(search.trim()).split(/\s+/).filter(Boolean);
+    const digits = search.replace(/\D/g, '');
+
+    const matches = people.filter((p) => {
       // Role filter
       if (filter === 'disabled' && !p.disabled) return false;
       if (filter !== 'all' && filter !== 'disabled') {
@@ -112,12 +121,25 @@ export default function WorkspaceUsersPage() {
         if (filter === 'parent'     && r !== 'parent') return false;
       }
       // Search
-      if (!q) return true;
-      return (
-        (p.full_name || '').toLowerCase().includes(q) ||
-        (p.email || '').toLowerCase().includes(q)
-      );
+      if (tokens.length === 0) return true;
+      const hay = norm(`${p.full_name || ''} ${p.email || ''} ${roleOf(p) || ''}`);
+      const phoneDigits = (p.phone_number || '').replace(/\D/g, '');
+      return tokens.every((t) =>
+        hay.includes(t) || (digits.length >= 3 && phoneDigits.includes(digits)));
     });
+
+    // Rank: name starts-with the query first, then email starts-with,
+    // then everything else in the existing alphabetical order.
+    if (tokens.length === 0) return matches;
+    const first = tokens[0];
+    const rank = (p: Person): number => {
+      const name = norm(p.full_name || '');
+      const email = norm(p.email || '');
+      if (name.startsWith(first) || name.split(/\s+/).some((w) => w.startsWith(first))) return 0;
+      if (email.startsWith(first)) return 1;
+      return 2;
+    };
+    return [...matches].sort((a, b) => rank(a) - rank(b));
   }, [people, search, filter]);
 
   const counts = useMemo(() => {
