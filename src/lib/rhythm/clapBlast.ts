@@ -43,7 +43,7 @@ export function createClapBlastRound({
   latencySec?: number;
 }): ClapBlastRound {
   const tol = Math.max(tolerancePct * secondsPerPulse, TOLERANCE_FLOOR_SEC);
-  const window = 2 * tol;
+  const claimWindow = 2 * tol;
   const shifted = expected.map((t) => t + latencySec);
   const states: NoteState[] = expected.map(() => 'pending');
   const deltas: Array<number | null> = expected.map(() => null);
@@ -73,7 +73,7 @@ export function createClapBlastRound({
         shifted.forEach((exp, j) => {
           if (states[j] !== 'pending') return;
           const d = Math.abs(t - exp);
-          if (d <= window && d < bestD) { bestD = d; best = j; }
+          if (d <= claimWindow && d < bestD) { bestD = d; best = j; }
         });
         if (best === -1) {
           strays.push(t - latencySec);
@@ -90,7 +90,7 @@ export function createClapBlastRound({
         events.push({ kind: 'hit', noteIndex: best, grade, deltaSec: delta });
       }
       shifted.forEach((exp, i) => {
-        if (states[i] === 'pending' && nowSec > exp + window) {
+        if (states[i] === 'pending' && nowSec > exp + claimWindow) {
           states[i] = 'missed';
           streak = 0;
           events.push({ kind: 'miss', noteIndex: i });
@@ -102,6 +102,13 @@ export function createClapBlastRound({
     isFinished: () => states.every((s) => s !== 'pending'),
 
     toGradeResult(): GradeResult {
+      // Divergence from gradeOnsets, and it is intentional: gradeOnsets makes a
+      // second pass that absorbs an unclaimed onset sitting within half a pulse
+      // of a missed note, so one badly-placed clap isn't charged as a miss AND
+      // an extra. Live grading can't do that — a stray is resolved the instant
+      // it arrives, before we know whether the neighbouring note will end up
+      // missed — so a single wild clap can read "1 missed · 1 extra" here.
+      // Harmless in practice: strays carry no score penalty in Clap Blast.
       const notes: NoteVerdict[] = expected.map((exp, i) => {
         const st = states[i];
         const verdict: Verdict =
@@ -116,10 +123,11 @@ export function createClapBlastRound({
   };
 }
 
-// Calibration: play CALIBRATION_CLICKS loud clicks at CALIBRATION_BPM, record
-// clap onsets on the same clock, and take the median clap−click delta as the
-// device's input+output latency. Follows takeAlignment.ts's philosophy:
-// measure the device-specific constant once, configure nothing else.
+// Calibration: flash CALIBRATION_CLICKS SILENT visual pulses at CALIBRATION_BPM
+// (see ClapCalibration.tsx for why nothing is played), record clap onsets on the
+// same clock, and take the median clap−pulse delta as this device's visual
+// round-trip latency. Follows takeAlignment.ts's philosophy: measure the
+// device-specific constant once, configure nothing else.
 export const CALIBRATION_CLICKS = 8;
 export const CALIBRATION_BPM = 90;
 const CAL_MATCH_WINDOW_SEC = 0.35;

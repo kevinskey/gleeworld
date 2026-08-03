@@ -86,6 +86,42 @@ describe('createClapBlastRound', () => {
     expect(r.isFinished()).toBe(false);
   });
 
+  it('an empty pattern scores 0, never passes, and does not crash', () => {
+    const r = createClapBlastRound({ expected: [], secondsPerPulse: 0.6, tolerancePct: 0.10 });
+    const ev = r.tick(0.5, [0.5]);
+    expect(ev).toEqual([{ kind: 'stray', noteIndex: null }]);
+    expect(r.score()).toBe(0);
+    expect(r.isFinished()).toBe(true);
+    const g = r.toGradeResult();
+    expect(g.notes).toEqual([]);
+    expect(g.score).toBe(0);
+    expect(g.passed).toBe(false);
+  });
+
+  it('reports stray onsets in musical time, not mic time', () => {
+    const r = mk({ latencySec: 0.15 });
+    // Mic-time 1.0 is 250ms from the nearest shifted note (0.75) → stray.
+    // (The same tick also closes notes 0 and 1's windows.)
+    expect(r.tick(1.05, [1.0])[0]).toEqual({ kind: 'stray', noteIndex: null });
+    const g = r.toGradeResult();
+    expect(g.extraOnsets).toHaveLength(1);
+    expect(g.extraOnsets[0]).toBeCloseTo(0.85, 5); // 1.0 − latency
+  });
+
+  it('bestStreak survives a miss and a rebuilt streak', () => {
+    const r = mk();
+    const onsets: number[] = [];
+    onsets.push(0.0);
+    r.tick(0.05, onsets);          // hit note 0 → streak 1
+    onsets.push(0.6);
+    r.tick(0.65, onsets);          // hit note 1 → streak 2
+    r.tick(1.35, onsets);          // note 2's window closed → miss, streak 0
+    onsets.push(1.8);
+    r.tick(1.85, onsets);          // hit note 3 → streak 1
+    expect(r.streak()).toBe(1);
+    expect(r.bestStreak()).toBe(2);
+  });
+
   it('tolerance floor applies at fast tempos', () => {
     const r = createClapBlastRound({ expected: [0], secondsPerPulse: 0.2, tolerancePct: 0.06 }); // 12ms → floor 30ms
     const ev = r.tick(0.05, [0.025]);
