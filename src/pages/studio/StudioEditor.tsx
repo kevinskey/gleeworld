@@ -43,7 +43,8 @@ import { applyStatusBarSurface } from '@/lib/statusBarStyle';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import {
   appendTakeNote, recordStartMode, grownSessionLength, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
-  type HeldPress, type CapturedCc,
+  createMidiCommitQueue,
+  type HeldPress, type CapturedCc, type MidiCommitQueue,
 } from '@/lib/studio/midiRecord';
 import { MidiTimebase, formatMonitoringLatency } from '@/lib/studio/midiTimebase';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset, type TransportTickStore } from '@/hooks/useStudio';
@@ -582,27 +583,10 @@ function Editor({
     midiPedalRef.current = false;
   }, [midiInputTrack, midiHeld]);
 
-  // Pending press queue + coalesce timer for MIDI-take commits. Every
-  // released note used to trigger its own update() → the whole session
-  // subtree re-rendered per keystroke and the engine-reload effect saw
-  // a new skeleton per keystroke. Even after deferring reloads mid-take
-  // (useStudio.ts), the React-render pressure alone still glitched
-  // longer takes. Batch releases into a ref and flush every 250 ms so
-  // one update lands per quarter-second of playing instead of per
-  // finger. Immediate-flush path is used when NOT recording (single
-  // notes need to land in state right away) and from stopRecording so
-  // the take fully commits before setRecordingActive(false).
-  const pendingMidiCommitsRef = useRef<Array<{ presses: HeldPress[]; upAbs: number }>>([]);
-  const pendingFlushTimerRef = useRef<number | null>(null);
-
-  const flushPendingMidiCommits = () => {
-    if (pendingFlushTimerRef.current !== null) {
-      window.clearTimeout(pendingFlushTimerRef.current);
-      pendingFlushTimerRef.current = null;
-    }
-    const items = pendingMidiCommitsRef.current;
+  // Builds/updates the take clip from a coalesced batch of presses. See the
+  // comment above `midiCommitQueueRef` below for why batching exists.
+  const flushPendingMidiCommits = (items: Array<{ presses: HeldPress[]; upAbs: number }>) => {
     if (items.length === 0 || !midiInputTrack) return;
-    pendingMidiCommitsRef.current = [];
     const trackId = midiInputTrack.id;
     const freshClipId = crypto.randomUUID();
     update((s) => ({
@@ -625,6 +609,31 @@ function Editor({
       }),
     }));
   };
+  // The queue below is created ONCE (lazy ref) and outlives every render,
+  // so its onFlush must not close over this render's flushPendingMidiCommits
+  // directly (that would freeze onFlush to the FIRST render's midiInputTrack/
+  // update — a stale closure). Indirect through a ref that's reassigned to
+  // the latest closure on every render instead.
+  const flushPendingMidiCommitsRef = useRef(flushPendingMidiCommits);
+  flushPendingMidiCommitsRef.current = flushPendingMidiCommits;
+
+  // Pending press queue + coalesce timer for MIDI-take commits. Every
+  // released note used to trigger its own update() → the whole session
+  // subtree re-rendered per keystroke and the engine-reload effect saw
+  // a new skeleton per keystroke. Even after deferring reloads mid-take
+  // (useStudio.ts), the React-render pressure alone still glitched
+  // longer takes. Batch releases into a queue and flush every 250 ms so
+  // one update lands per quarter-second of playing instead of per
+  // finger. Immediate-flush path is used when NOT recording (single
+  // notes need to land in state right away) and from stopRecording so
+  // the take fully commits before setRecordingActive(false).
+  const midiCommitQueueRef = useRef<MidiCommitQueue<{ presses: HeldPress[]; upAbs: number }> | null>(null);
+  if (!midiCommitQueueRef.current) {
+    midiCommitQueueRef.current = createMidiCommitQueue({
+      coalesceMs: 250,
+      onFlush: (batch) => flushPendingMidiCommitsRef.current(batch),
+    });
+  }
 
   // Write finished presses into the take clip. Coalesces to ~4 updates/
   // second during recording; commits immediately outside a take or when
@@ -632,16 +641,10 @@ function Editor({
   // final held-note flush lands in state synchronously).
   const commitMidiPresses = (presses: HeldPress[], upAbs: number, immediate = false) => {
     if (presses.length === 0 || !midiInputTrack) return;
-    pendingMidiCommitsRef.current.push({ presses, upAbs });
+    const queue = midiCommitQueueRef.current!;
+    queue.add({ presses, upAbs });
     if (immediate || !state?.recordingActive) {
-      flushPendingMidiCommits();
-      return;
-    }
-    if (pendingFlushTimerRef.current === null) {
-      pendingFlushTimerRef.current = window.setTimeout(() => {
-        pendingFlushTimerRef.current = null;
-        flushPendingMidiCommits();
-      }, 250);
+      queue.flushNow();
     }
   };
 
@@ -1958,6 +1961,8 @@ function Editor({
     // than committing it, or it leaks into the next take's clip.
     midiHeld.flush();
     midiCcRef.current = [];
+    midiCommitQueueRef.current?.clear();  // discard coalesced-but-unflushed notes
+    midiTakeClipRef.current = null;       // next take must not adopt this clip
     engineState.setRecordingActive?.(false);
   };
 

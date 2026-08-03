@@ -138,6 +138,41 @@ export function attachTakeCc(clips: MidiClip[], takeClipId: string, events: Capt
   });
 }
 
+// ── Commit coalescing queue ──────────────────────────────────────────
+
+export interface MidiCommitQueue<T> {
+  add(item: T): void;        // starts/extends the coalesce timer
+  flushNow(): T[];           // cancel timer, drain, return items
+  clear(): void;             // cancel timer, drop items — "leave no trace"
+  size(): number;
+}
+
+/** Coalescing commit queue for captured MIDI presses. StudioEditor batches
+ * note commits ~250ms so chords land as one manifest write; punch-cancel
+ * must be able to discard the batch entirely ("leave no trace"). */
+export function createMidiCommitQueue<T>(opts: {
+  coalesceMs: number;
+  onFlush: (items: T[]) => void;
+  setTimer?: typeof setTimeout;
+  clearTimer?: typeof clearTimeout;
+}): MidiCommitQueue<T> {
+  const setT = opts.setTimer ?? setTimeout;
+  const clearT = opts.clearTimer ?? clearTimeout;
+  let items: T[] = [];
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const cancel = () => { if (timer !== null) { clearT(timer); timer = null; } };
+  const drain = () => { const out = items; items = []; return out; };
+  return {
+    add(item) {
+      items.push(item);
+      if (timer === null) timer = setT(() => { timer = null; opts.onFlush(drain()); }, opts.coalesceMs);
+    },
+    flushNow() { cancel(); const out = drain(); if (out.length) opts.onFlush(out); return out; },
+    clear() { cancel(); items = []; },
+    size() { return items.length; },
+  };
+}
+
 // ── MIDI recording offset (auto + trim) ──────────────────────────────
 // The player performs in time with what they HEAR, which is late by the
 // audio output latency — so captured event times are shifted earlier by
