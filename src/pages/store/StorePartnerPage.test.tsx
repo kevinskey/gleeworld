@@ -14,6 +14,11 @@ vi.mock('@/components/dashboard/DashboardPageShell', () => ({
     <div><h1>{title}</h1><p>{subtitle}</p>{children}</div>
   ),
 }));
+// pdfjs-dist can't load under jsdom (no DOMMatrix); these fixtures have no
+// PDF thumbnails, so a stub is faithful.
+vi.mock('@/components/music-library/PDFThumbnail', () => ({
+  PDFThumbnail: () => <div data-testid="pdf-thumbnail" />,
+}));
 
 const base = {
   id: 'sc1', partner_id: 'pt1', title: 'Anthem One', composer: 'K. Johnson',
@@ -45,13 +50,13 @@ const renderAt = (url: string) => render(
 );
 
 describe('StorePartnerPage', () => {
-  it('shows owner photo, history, and a Featured Items shelf', () => {
+  it('shows owner photo, history, and a Featured shelf', () => {
     renderAt('/store/partners/pt1');
     expect(screen.getByText('Founded in 2020.')).toBeInTheDocument();
-    expect(screen.getByText('Featured Items')).toBeInTheDocument();
+    expect(screen.getByText('Featured')).toBeInTheDocument();
     expect(screen.getByAltText('KPJ Music')).toHaveAttribute('src', 'https://cdn.example/pt1/owner.jpg');
-    // Featured shelf + full catalog both contain Anthem Two.
-    expect(screen.getAllByText('Anthem Two').length).toBe(2);
+    // Featured shelf + full catalog both link to Anthem Two's detail page.
+    expect(document.querySelectorAll('a[href="/store/scores/sc2"]').length).toBe(2);
   });
 
   it('highlights the ?score= target card', () => {
@@ -63,10 +68,10 @@ describe('StorePartnerPage', () => {
   });
 
   it('highlights a partner-featured target without a duplicate-id collision', () => {
-    // sc2 appears in both the Featured Items shelf and All Scores. Only the
+    // sc2 appears in both the Featured shelf and All Scores. Only the
     // All Scores grid owns highlighting (passes highlightId), so it must be
     // the only one to emit the score-sc2 anchor id — otherwise
-    // getElementById finds the unringed Featured Items copy instead.
+    // getElementById finds the unringed Featured shelf copy instead.
     renderAt('/store/partners/pt1?score=sc2');
     const matches = document.querySelectorAll('[id="score-sc2"]');
     expect(matches.length).toBe(1);

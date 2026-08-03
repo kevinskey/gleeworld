@@ -1,7 +1,15 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { StoreScoreRow } from '@/lib/store/api';
 
-interface CartItem { id: string; partner_id: string; title: string; price_cents: number; }
+interface CartItem {
+  id: string;
+  partner_id: string;
+  title: string;
+  price_cents: number;
+  /** Captured at add time; optional for carts persisted before this field existed. */
+  partner_name?: string;
+  thumbnail_storage_path?: string | null;
+}
 
 interface CartAPI {
   items: CartItem[];
@@ -24,6 +32,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch { return []; }
   });
 
+  // Mirror of `items` updated synchronously so sequential calls within one
+  // tick (e.g. the "Clear cart & add this" toast action doing clear() then
+  // addItem()) see each other's effects instead of a stale closure.
+  const itemsRef = useRef(items);
+  useEffect(() => { itemsRef.current = items; }, [items]);
+
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch { /* private mode */ }
   }, [items]);
@@ -33,17 +47,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
     partnerId: items[0]?.partner_id ?? null,
     subtotalCents: items.reduce((s, i) => s + i.price_cents, 0),
     addItem: (row) => {
-      if (items.some((i) => i.id === row.id)) return { ok: true };
-      if (items.length > 0 && items[0].partner_id !== row.partner_id) {
+      const current = itemsRef.current;
+      if (current.some((i) => i.id === row.id)) return { ok: true };
+      if (current.length > 0 && current[0].partner_id !== row.partner_id) {
         return { ok: false, reason: 'multiple_partners' };
       }
-      setItems((prev) => [...prev, {
-        id: row.id, partner_id: row.partner_id, title: row.title, price_cents: row.price_cents,
-      }]);
+      const next = [...current, {
+        id: row.id,
+        partner_id: row.partner_id,
+        title: row.title,
+        price_cents: row.price_cents,
+        partner_name: row.partner?.display_name ?? undefined,
+        thumbnail_storage_path: row.thumbnail_storage_path ?? null,
+      }];
+      itemsRef.current = next;
+      setItems(next);
       return { ok: true };
     },
-    removeItem: (id) => setItems((prev) => prev.filter((x) => x.id !== id)),
-    clear: () => setItems([]),
+    removeItem: (id) => {
+      const next = itemsRef.current.filter((x) => x.id !== id);
+      itemsRef.current = next;
+      setItems(next);
+    },
+    clear: () => {
+      itemsRef.current = [];
+      setItems([]);
+    },
   }), [items]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

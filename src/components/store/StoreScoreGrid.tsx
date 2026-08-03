@@ -1,16 +1,34 @@
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { StoreScoreRow } from '@/lib/store/api';
-
-const ASSETS_BUCKET = 'partner-assets';
+import { StoreScoreCover } from './StoreScoreCover';
 
 interface Props {
   scores: StoreScoreRow[];
   linkFor?: (s: StoreScoreRow) => string;
   /** Score id to ring-highlight (e.g. from a ?score= deep link). */
   highlightId?: string | null;
+}
+
+/** Single product card — cover on top, title/composer/price below. Also used
+ *  by the partner page's horizontal Featured shelf. */
+export function StoreScoreCard({ score, to }: { score: StoreScoreRow; to: string }) {
+  return (
+    <Link to={to} className="block h-full">
+      <Card className="overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5 hover:border-primary/40 h-full">
+        <StoreScoreCover score={score} />
+        <CardContent className="p-3">
+          <p className="text-sm font-semibold line-clamp-2 leading-snug min-h-[2.5rem]">{score.title}</p>
+          <p className="text-xs text-muted-foreground truncate">{score.composer ?? '—'}</p>
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-sm font-bold text-foreground">${(score.price_cents / 100).toFixed(2)}</span>
+            {score.voicing && <Badge variant="secondary" className="text-xs">{score.voicing}</Badge>}
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
 }
 
 export function StoreScoreGrid({ scores, linkFor = (s) => `/store/scores/${s.id}`, highlightId }: Props) {
@@ -22,36 +40,16 @@ export function StoreScoreGrid({ scores, linkFor = (s) => `/store/scores/${s.id}
   // document.getElementById finds whichever renders first, which may not
   // be the ringed one.
   const ownsHighlighting = highlightId !== undefined;
-  const thumbUrl = (path: string | null) =>
-    path ? supabase.storage.from(ASSETS_BUCKET).getPublicUrl(path).data.publicUrl : null;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
       {scores.map((s) => (
         <div
           key={s.id}
           id={ownsHighlighting ? `score-${s.id}` : undefined}
           className={s.id === highlightId ? 'ring-2 ring-primary rounded-lg' : ''}
         >
-          <Link to={linkFor(s)} className="block">
-            <Card className="hover:border-slate-400 transition-colors">
-              <CardContent className="p-3">
-                <div className="aspect-[3/4] rounded bg-slate-50 border overflow-hidden mb-3 flex items-center justify-center">
-                  {thumbUrl(s.thumbnail_storage_path) ? (
-                    <img src={thumbUrl(s.thumbnail_storage_path)!} alt="" className="w-full h-full object-cover" loading="lazy" />
-                  ) : (
-                    <span className="text-xs text-slate-400">No thumbnail</span>
-                  )}
-                </div>
-                <p className="text-sm font-medium truncate">{s.title}</p>
-                <p className="text-xs text-slate-600 truncate">{s.composer ?? '—'} · {s.partner?.display_name ?? 'Composer'}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-sm font-semibold text-slate-900">${(s.price_cents / 100).toFixed(2)}</span>
-                  {s.voicing && <Badge variant="outline" className="text-xs">{s.voicing}</Badge>}
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+          <StoreScoreCard score={s} to={linkFor(s)} />
         </div>
       ))}
     </div>
