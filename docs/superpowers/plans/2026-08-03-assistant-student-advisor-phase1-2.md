@@ -84,7 +84,22 @@ Reason: `v_student_assignments` expands course-wide assignments across the roste
 
 **Context the implementer needs:** person identity is spelled four different ways across sources — `user_id`, `student_id`, `student_profile_id`, and `student_email`. Every adapter must emit a single `user_id` that matches `auth.uid()`. `gw_profiles` has both an `id` (row PK) and a `user_id` (auth user). Columns named `*_profile_id` reference `gw_profiles.id`; columns named `student_id`/`user_id` already hold the auth user id.
 
-- [ ] **Step 1: Verify the `student_profile_id` assumption before building on it**
+### RESOLVED before dispatch — do not re-run Steps 1 and 1b
+
+The controller ran both verification steps against production on 2026-08-03. Findings, all authoritative:
+
+| Question | Answer |
+|---|---|
+| `gw_attendance_records.student_profile_id` → ? | **`gw_profiles.id`.** There is NO foreign key, but two independent call sites document it: `src/features/seating-charts/attendance/useChartAttendance.ts:3` and `src/components/course/CourseAttendanceGrid.tsx:33`. `person_user_id()` is correct as written. |
+| `gw_profiles.id` vs `user_id` | Different values — equal in only **1 of 846** rows. Never substitute one for the other. |
+| `gw_course_enrollments.enrollment_status` | **`'enrolled'`** — all 46 rows. NOT `'active'`. The plan text below has been corrected; if you see `'active'` anywhere, it is a bug. |
+| `gw_course_enrollments.user_id` → ? | Matches `gw_profiles.user_id` (43/46; 3 orphans with no profile). Join on `user_id`, not `id`. |
+| `gw_assignments.student_id` | **All 53 rows are course-wide** (`student_id` null, `course_id` set). The enrollment fan-out is the only path by which any assignment reaches a student. |
+| Supporting columns | `gw_sheet_music.title`, `gw_courses.title`, `gw_profiles.{id,user_id,email,voice_part,tenant_id}` all confirmed present. |
+
+Steps 1 and 1b below are retained as the record of what was checked. **Skip them and start at Step 2.**
+
+- [ ] ~~**Step 1: Verify the `student_profile_id` assumption before building on it**~~ (RESOLVED — see table above)
 
 Run:
 ```bash
@@ -207,9 +222,9 @@ insert into public.gw_courses (id, title, tenant_id)
   values ('11111111-1111-1111-1111-111111111111','Test Choir',
           (select id from public.gw_tenants limit 1));
 insert into public.gw_course_enrollments (course_id, user_id, enrollment_status, tenant_id)
-  values ('11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222','active',
+  values ('11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222','enrolled',
           (select id from public.gw_tenants limit 1)),
-         ('11111111-1111-1111-1111-111111111111','33333333-3333-3333-3333-333333333333','active',
+         ('11111111-1111-1111-1111-111111111111','33333333-3333-3333-3333-333333333333','enrolled',
           (select id from public.gw_tenants limit 1));
 insert into public.gw_assignments (id, course_id, title, points, due_at, is_active, tenant_id, student_id)
   values ('44444444-4444-4444-4444-444444444444','11111111-1111-1111-1111-111111111111',
@@ -280,7 +295,7 @@ left join public.gw_courses c on c.id = a.course_id
 left join public.gw_course_enrollments e
        on a.student_id is null
       and e.course_id = a.course_id
-      and e.enrollment_status = 'active'
+      and e.enrollment_status = 'enrolled'
 left join public.gw_submissions s
        on s.assignment_id = a.id
       and s.student_id = coalesce(a.student_id, e.user_id)
@@ -302,7 +317,7 @@ select
 from public.gw_course_assignments a
 left join public.gw_courses c on c.id = a.course_id
 join public.gw_course_enrollments e
-     on e.course_id = a.course_id and e.enrollment_status = 'active'
+     on e.course_id = a.course_id and e.enrollment_status = 'enrolled'
 left join public.gw_course_submissions s
      on s.assignment_id = a.id and s.student_id = e.user_id
 where a.is_published is not false;
@@ -319,7 +334,7 @@ select
 from public.gw_sight_reading_assignments a
 left join public.gw_courses c on c.id = a.course_id
 join public.gw_course_enrollments e
-     on e.course_id = a.course_id and e.enrollment_status = 'active'
+     on e.course_id = a.course_id and e.enrollment_status = 'enrolled'
 left join public.gw_assignment_submissions s
      on s.assignment_id = a.id and s.user_id = e.user_id
 where a.is_active is not false;
@@ -368,7 +383,7 @@ select
 from public.gw_course_tests t
 left join public.gw_courses c on c.id = t.course_id
 join public.gw_course_enrollments e
-     on e.course_id = t.course_id and e.enrollment_status = 'active'
+     on e.course_id = t.course_id and e.enrollment_status = 'enrolled'
 left join public.gw_course_test_attempts at
      on at.test_id = t.id and at.user_id = e.user_id
 where t.is_published is not false;
