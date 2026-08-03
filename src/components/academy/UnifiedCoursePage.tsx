@@ -48,6 +48,7 @@ import { getCourseTheme } from '@/lib/academy/courseTheme';
 import { CourseIdentityBackground } from './CourseIdentityBackground';
 import { CourseHeroHeader } from './CourseHeroHeader';
 import { CourseHomeDashboard } from './CourseHomeDashboard';
+import { RollCallCheckInCard } from '@/components/academy/attendance';
 
 const SecretaryAttendanceManager = React.lazy(() => import('./SecretaryAttendanceManager'));
 const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({
@@ -406,6 +407,12 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
+          {/* Roll Call check-in — mounted above tab content so it's visible
+              regardless of the active tab; renders null when no session is open. */}
+          <div className="px-3 sm:px-4 md:px-6 pt-3 md:pt-4">
+            <RollCallCheckInCard courseId={course.id} />
+          </div>
+
           {/* Breadcrumb — theme-aware so it reads over the themed shell. */}
           <div
             className="px-3 sm:px-4 md:px-6 py-2 border-b flex items-center gap-2 text-sm"
