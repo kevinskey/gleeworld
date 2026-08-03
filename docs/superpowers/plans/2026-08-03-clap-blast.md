@@ -139,12 +139,15 @@ describe('createClapBlastRound', () => {
   });
 
   it('toGradeResult maps grades to Verdicts, no stray penalty, pass at 80', () => {
+    // Single append-only array across ticks — the contract production upholds
     const r = mk();
-    r.tick(0.05, [0.0]);          // perfect
-    r.tick(0.75, [0.69]);         // +90ms → good/late
-    r.tick(1.25, [1.19]);         // perfect
-    r.tick(1.85, [1.81, 1.5]);    // perfect + stray
-    r.tick(5, []);
+    const onsets: number[] = [];
+    const push = (...t: number[]) => { onsets.push(...t); return onsets; };
+    r.tick(0.05, push(0.0));          // perfect
+    r.tick(0.75, push(0.69));         // +90ms → good/late
+    r.tick(1.25, push(1.19));         // perfect
+    r.tick(1.85, push(1.81, 1.5));    // perfect + stray
+    r.tick(5, onsets);
     const g = r.toGradeResult();
     expect(g.notes.map((n) => n.verdict)).toEqual(['on_time', 'late', 'on_time', 'on_time']);
     expect(g.extraOnsets).toHaveLength(1);
