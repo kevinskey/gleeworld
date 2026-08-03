@@ -29,7 +29,7 @@ export function grownSessionLength(currentSeconds: number, takeEndSeconds: numbe
   return Math.max(currentSeconds, Math.ceil(takeEndSeconds));
 }
 
-const MIN_NOTE_SECONDS = 0.05; // floor so a fast tap still has audible length
+export const MIN_NOTE_SECONDS = 0.05; // floor so a fast tap still has audible length
 
 // Turn a captured key press (absolute transport seconds for down/up) into a
 // clip-relative MidiNote. Pure — the timing math is unit-tested.
@@ -79,6 +79,22 @@ export function appendTakeNote(
     notes: [note],
   };
   return { takeClipId: clip.id, clips: [...clips, clip] };
+}
+
+// A take's clip may not exist yet when it's time to attach something to
+// it — a CC-only take (pedal/mod moves with no notes played) never runs
+// appendTakeNote, so midiTakeClipRef stays null all the way to stop.
+// Returns the existing clip untouched (notes already created it), or a
+// fresh empty-notes clip anchored at the first captured event — same id
+// generator and defaults as appendTakeNote's fresh-clip branch above.
+export function ensureTakeClip(existing: MidiClip | null, firstEventAbsSeconds: number, minDuration: number): MidiClip {
+  if (existing) return existing;
+  return {
+    id: crypto.randomUUID(), kind: 'midi',
+    start_seconds: firstEventAbsSeconds,
+    duration_seconds: minDuration,
+    notes: [],
+  };
 }
 
 // ── Held-note bookkeeping (recording) ────────────────────────────────

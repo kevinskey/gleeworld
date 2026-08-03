@@ -43,7 +43,7 @@ import { applyStatusBarSurface } from '@/lib/statusBarStyle';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import {
   appendTakeNote, recordStartMode, grownSessionLength, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
-  createMidiCommitQueue, shouldCaptureMidi,
+  createMidiCommitQueue, shouldCaptureMidi, ensureTakeClip, MIN_NOTE_SECONDS,
   type HeldPress, type CapturedCc, type MidiCommitQueue,
 } from '@/lib/studio/midiRecord';
 import { MidiTimebase, formatMonitoringLatency } from '@/lib/studio/midiTimebase';
@@ -515,6 +515,11 @@ function Editor({
   // CC events captured during the take (absolute compensated seconds).
   const midiCcRef = useRef<CapturedCc[]>([]);
   const midiPedalRef = useRef(false);   // dedupe (WP06 broadcasts CC64 on 3 channels)
+  // Continuous physical pedal state — updated on every sustain message
+  // regardless of capture gating, so a fresh take (or a punch-in mid-hold)
+  // can seed midiPedalRef from what the foot is ACTUALLY doing right now,
+  // instead of always assuming "up".
+  const lastPedalDownRef = useRef(false);
   // Capture compensation for this take, seconds (auto output latency + trim).
   const midiCompSecRef = useRef(0);
   // Hardware-timestamp → transport mapping for the current take. The
@@ -673,6 +678,11 @@ function Editor({
     commitMidiPresses([press], compAt(timeStampMs));
   };
   const handleMidiSustain = (down: boolean, timeStampMs?: number) => {
+    // Physical pedal truth — updated unconditionally, before any gating or
+    // even the armed-track check, so it's always right when a take seeds
+    // from it (resetMidiCapture) regardless of what was armed when the
+    // foot moved.
+    lastPedalDownRef.current = down;
     if (!midiInputTrack) return;
     liveVoicesRef.current?.sustain(down); // monitoring feel unchanged, UNgated
     const capturing = shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null);
@@ -1468,7 +1478,11 @@ function Editor({
   // path and punch-record's in-point.
   const resetMidiCapture = () => {
     midiCcRef.current = [];
-    midiPedalRef.current = false;
+    // Seed from the CONTINUOUS physical state, not false — a pedal held
+    // down when the take starts (or across a punch-in) is truly down, and
+    // must dedupe against handleMidiSustain's next message correctly
+    // instead of the take wrongly believing it starts released.
+    midiPedalRef.current = lastPedalDownRef.current;
     // Auto compensation measured once per take; ±trim from the settings
     // dial. Do NOT clamp the total at 0 here: the trim UI explicitly
     // promises "go negative if they land early" (MidiLatencyControl), and
@@ -1702,16 +1716,27 @@ function Editor({
   // Called once per stop, after the corresponding HeldNotes flush commit.
   const commitTakeCc = () => {
     const ccTake = midiCcRef.current.splice(0);
-    if (ccTake.length && midiTakeClipRef.current && midiInputTrack) {
-      const takeId = midiTakeClipRef.current;
-      const trackId = midiInputTrack.id;
-      update((s) => ({
-        ...s,
-        tracks: s.tracks.map((t) => t.id === trackId && isMidiTrack(t)
-          ? { ...t, clips: attachTakeCc(t.clips, takeId, ccTake) } as Track
-          : t),
-      }));
-    }
+    if (!ccTake.length || !midiInputTrack) return;
+    const trackId = midiInputTrack.id;
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => {
+        if (t.id !== trackId || !isMidiTrack(t)) return t;
+        let clips = t.clips;
+        let takeId = midiTakeClipRef.current;
+        // CC-only take: no notes landed, so appendTakeNote never ran and
+        // no clip exists yet — create one at the first captured CC event
+        // so pedal/mod moves alone still produce a clip instead of being
+        // silently dropped.
+        if (!takeId) {
+          const clip = ensureTakeClip(null, ccTake[0].timeAbsSeconds, MIN_NOTE_SECONDS);
+          takeId = clip.id;
+          midiTakeClipRef.current = takeId;
+          clips = [...clips, clip];
+        }
+        return { ...t, clips: attachTakeCc(clips, takeId, ccTake) } as Track;
+      }),
+    }));
   };
 
   const stopRecording = async () => {
@@ -2023,12 +2048,10 @@ function Editor({
     // startPunchRecord, before the phase gate closes capture — reset the
     // take-scoped capture state right at the actual punch-in so nothing
     // queued during 'pre' can leak into this take.
-    // Pedal state is physical, not per-take — resetMidiCapture's
-    // false-default is wrong when the pedal is held across punch-in (C3
-    // replaces this with continuous last-known-state seeding).
-    const pedalWasDown = midiPedalRef.current;
+    // Pedal state is physical, not per-take — resetMidiCapture seeds
+    // midiPedalRef from lastPedalDownRef, so a pedal held across punch-in
+    // is still correctly "down" for this take.
     resetMidiCapture();
-    midiPedalRef.current = pedalWasDown;
     midiTakeClipRef.current = null;
     midiCommitQueueRef.current?.clear();
     try {
