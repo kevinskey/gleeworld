@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
+import { formatPlatformStats } from '@/lib/platformStats';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -87,6 +88,25 @@ export default function PlatformTenantsPortal() {
       return res.json();
     },
   });
+
+  // Platform stats from the superadmin API — same auth pattern as the
+  // tenant list. Failure must never block the tenant list, so this is a
+  // separate query and errors render as a quiet note.
+  const { data: statsData, isError: statsError } = useQuery<Record<string, unknown>>({
+    queryKey: ['platform-stats'],
+    enabled: isPlatformAdmin,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('not signed in');
+      const res = await fetch('/superadmin/api/stats', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    },
+  });
+  const stats = formatPlatformStats(statsData);
 
   // Jump into a tenant's admin surface signed in AS that tenant's admin.
   // A plain link can't work: the gleeworld.org session doesn't exist on
@@ -193,6 +213,22 @@ export default function PlatformTenantsPortal() {
           <CreateTenantDialog />
         </div>
       </div>
+
+      {stats.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {stats.map((s) => (
+            <Card key={s.label}>
+              <CardContent className="p-3 text-center">
+                <div className="text-2xl font-bold leading-tight">{s.value}</div>
+                <div className="text-xs text-muted-foreground capitalize">{s.label}</div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+      {statsError && (
+        <p className="text-xs text-muted-foreground">Platform stats unavailable right now.</p>
+      )}
 
       <div className="relative max-w-md">
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
