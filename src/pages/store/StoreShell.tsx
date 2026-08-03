@@ -14,7 +14,7 @@ export function StoreShell({ children }: { children: ReactNode }) {
   const { data: partner } = useMyPartner();
   return (
     <CartProvider>
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 pt-4 pb-1 px-4 sm:px-6 lg:px-8 max-w-6xl">
         <Link to="/store" className="text-sm font-semibold">Music Store</Link>
         <div className="flex-1" />
         {partner && (
