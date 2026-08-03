@@ -10,8 +10,18 @@
 
 import UIKit
 import Capacitor
+import WebKit
 
 class MainViewController: CAPBridgeViewController {
+    // The WKWebView's edge-swipe walks browser history. In a single-page app
+    // that reads as "swiping right changes pages" — the app appears to navigate
+    // on its own. Nothing in GleeWorld should page on a swipe except the score
+    // viewer, which handles its own touches to paginate.
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        webView?.allowsBackForwardNavigationGestures = false
+    }
+
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(AudioSessionConfigPlugin())
         bridge?.registerPluginInstance(NativeMusicKitPlugin())

@@ -157,6 +157,13 @@
     padding: 0 !important;
     width: 100%;
     max-width: 100%;
+    /* A sideways swipe must never navigate. A two-finger trackpad swipe or a
+       touch drag that overscrolls horizontally is "go back/forward" in Chrome,
+       Edge and Safari, which in a SPA reads as the app jumping pages on its
+       own. `none` keeps the overscroll from chaining up to the browser while
+       leaving normal scrolling — and the score viewer's own swipe-to-paginate,
+       which is a touch handler, not overscroll — untouched. */
+    overscroll-behavior-x: none;
     /* Kill sideways scroll WITHOUT creating a scroll container.
        overflow-x: hidden promotes body to the page scroller on iOS
        Safari, which demotes position:fixed children (the mobile tab
