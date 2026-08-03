@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
 import { ScopeFilterSelect } from '@/components/library/ScopeFilterSelect';
 import { useUserRole } from '@/hooks/useUserRole';
+import { usePreviewRole } from '@/lib/nav/navPreview';
 import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
 import { PublicDomainSearch } from '@/components/music-library/PublicDomainSearch';
 import { SOFT_CARD, type ScoreRow } from '@/components/music-library/scores/types';
@@ -66,6 +67,7 @@ export default function MusicLibraryPage() {
   const { active: scope, setActive: setScope, options, courses, applyFilter } = useScopeFilter();
   const { canEditMusicLibrary } = useUserRole();
   const canEdit = canEditMusicLibrary();
+  const previewRole = usePreviewRole();
 
   const [topTab, setTopTab] = useState<TopTab>('scores');
 
@@ -258,6 +260,15 @@ export default function MusicLibraryPage() {
   const filtered = useMemo(() => {
     const s = search.trim().toLowerCase();
     let out = rows;
+    // "View as student/member" previews VISIBILITY too, not just nav.
+    // The browse view filters server-side per the REAL caller, so an
+    // admin previewing a student still received everything — which read
+    // as "my private music shows to students" (Kevin, 2026-08-03; it
+    // doesn't — verified against the view with a member JWT). Approximate
+    // the member sightline client-side: only member-shared rows survive.
+    if (previewRole && previewRole !== 'admin') {
+      out = out.filter((r) => r.shared_with_members === true);
+    }
     if (s) {
       out = out.filter((r) =>
         r.title?.toLowerCase().includes(s) ||
@@ -280,7 +291,7 @@ export default function MusicLibraryPage() {
     }
     // 'title' keeps the server's .order('title').
     return out;
-  }, [rows, search, filters, sort, collectionId, collectionItemIds]);
+  }, [rows, search, filters, sort, collectionId, collectionItemIds, previewRole]);
 
   // Row's Share button — opens the granular share dialog rather than
   // toggling in place. The dialog handles the actual write; passing the
