@@ -20,8 +20,12 @@ import { insertAttempt } from '@/lib/readingMusic/attemptsApi';
 import { RhythmStrip } from './RhythmStrip';
 import { RhythmResults } from './RhythmResults';
 import { getAudioCtx } from './audioCtx';
+import { createClapBlastRound } from '@/lib/rhythm/clapBlast';
+import type { ClapBlastRound } from '@/lib/rhythm/clapBlast';
+import { ClapBlastStage } from './ClapBlastStage';
+import { ClapCalibration } from './ClapCalibration';
 
-type Drill = 'steady_beat' | 'echo' | 'read_clap';
+type Drill = 'steady_beat' | 'echo' | 'read_clap' | 'clap_blast';
 type InputMethod = 'tap' | 'mic';
 type Phase = 'idle' | 'demo' | 'countin' | 'take' | 'result';
 
@@ -29,6 +33,7 @@ const DRILLS: Array<{ id: Drill; label: string; blurb: string }> = [
   { id: 'steady_beat', label: 'Steady Beat', blurb: 'Tap along with the click.' },
   { id: 'echo', label: 'Echo', blurb: 'Listen, then clap it back.' },
   { id: 'read_clap', label: 'Read & Clap', blurb: 'Read the line, then perform it.' },
+  { id: 'clap_blast', label: '💥 Clap Blast', blurb: 'Clap each note as it crosses the line!' },
 ];
 
 // Short sine bursts (the playClicks envelope idiom) with an explicit start
@@ -95,6 +100,13 @@ export function RhythmTab() {
   const [stars, setStars] = useState<Record<number, number>>(() => readJson('rm_rhythm_stars', {}));
   const [burstId, setBurstId] = useState(0);
   const [micLevel, setMicLevel] = useState(0);
+  const [latencyMs, setLatencyMs] = useState<number | null>(() => {
+    const v = localStorage.getItem('rm_clap_latency_ms');
+    return v === null || Number.isNaN(Number(v)) ? null : Number(v);
+  });
+  const [calibrating, setCalibrating] = useState(false);
+  const [takeT0, setTakeT0] = useState<number | null>(null);
+  const roundRef = useRef<ClapBlastRound | null>(null);
 
   const padRef = useRef<HTMLButtonElement | null>(null);
   const timersRef = useRef<number[]>([]);
@@ -119,6 +131,7 @@ export function RhythmTab() {
     sessionRef.current = null;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    roundRef.current = null;
   }, []);
 
   // Unmount / tab-hidden: kill the take cleanly, no partial insert.
@@ -141,6 +154,10 @@ export function RhythmTab() {
 
   const start = useCallback(async () => {
     if (activeRef.current) return;
+    if (drill === 'clap_blast' && input === 'mic' && latencyMs === null) {
+      setCalibrating(true);
+      return;
+    }
     const ctx = getAudioCtx();
     if (!ctx) { toast.error('Audio unavailable', { description: 'This browser does not support Web Audio.' }); return; }
 
@@ -163,6 +180,16 @@ export function RhythmTab() {
     const p = drill === 'steady_beat' ? generatePattern(1, seed) : generatePattern(level, seed, seed % 7);
     setPattern(p);
     setResult(null);
+    if (drill === 'clap_blast') {
+      roundRef.current = createClapBlastRound({
+        expected: expectedOnsets(p, 60 / bpm),
+        secondsPerPulse: 60 / bpm,
+        tolerancePct: assessment ? ASSESSMENT_TOLERANCE_PCT : PRACTICE_TOLERANCE_PCT,
+        latencySec: effectiveInput === 'mic' ? (latencyMs ?? 0) / 1000 : 0,
+      });
+    } else {
+      roundRef.current = null;
+    }
     activeRef.current = true;
 
     const spp = 60 / bpm;
@@ -171,6 +198,7 @@ export function RhythmTab() {
     const demoDur = drill === 'echo' ? p.totalPulses * spp + 0.5 : 0;
     const countInStart = base + demoDur;
     const t0 = countInStart + ppm * spp;
+    setTakeT0(t0);
     const takeDur = p.totalPulses * spp;
 
     if (drill === 'echo') {
@@ -209,8 +237,15 @@ export function RhythmTab() {
       const onsets = (sessionRef.current?.onsets ?? [])
         .filter((t) => t >= -2 * tol && t <= takeDur + 2 * tol);
       const noInput = (sessionRef.current?.onsets ?? []).length === 0;
+      const graded = (() => {
+        if (drill === 'clap_blast' && roundRef.current) {
+          roundRef.current.tick(ctx.currentTime - t0, sessionRef.current?.onsets ?? []);
+          return roundRef.current.toGradeResult();
+        }
+        return gradeOnsets(expectedOnsets(p, spp), onsets, { secondsPerPulse: spp, tolerancePct });
+      })();
       cancelTake();
-      const graded = gradeOnsets(expectedOnsets(p, spp), onsets, { secondsPerPulse: spp, tolerancePct });
+      setTakeT0(null);
       setResult(graded);
       setPhase('result');
       setMicLevel(0);
@@ -222,6 +257,9 @@ export function RhythmTab() {
           return { ...prev, [level]: best };
         });
       }
+      const payloadActual = drill === 'clap_blast'
+        ? [...graded.notes.filter((n) => n.actualSec !== null).map((n) => n.actualSec as number), ...graded.extraOnsets].sort((a, b) => a - b)
+        : onsets;
       void insertAttempt({
         domain: 'rhythm',
         drill,
@@ -231,15 +269,18 @@ export function RhythmTab() {
         passed: graded.passed,
         payload: {
           bpm, input: effectiveInput, syllables: system, tolerancePct,
-          expected: expectedOnsets(p, spp), actual: onsets,
+          expected: expectedOnsets(p, spp), actual: payloadActual,
           verdicts: graded.notes.map((n) => n.verdict),
           meter: p.meter, seed, ...(noInput ? { no_input: true } : {}),
+          ...(drill === 'clap_blast' && effectiveInput === 'mic' && latencyMs !== null ? { latency_ms: latencyMs } : {}),
         },
       });
-    }, ms(t0 + takeDur + 0.35)));
-  }, [assessment, bpm, cancelTake, drill, input, level, system]);
+    }, ms(t0 + takeDur + 2 * tol + 0.35)));
+  }, [assessment, bpm, cancelTake, drill, input, latencyMs, level, system]);
 
-  const showNotation = drill !== 'echo' && pattern && phase !== 'idle';
+  const getOnsets = useCallback(() => sessionRef.current?.onsets ?? [], []);
+
+  const showNotation = drill !== 'echo' && drill !== 'clap_blast' && pattern && phase !== 'idle';
   const running = phase === 'demo' || phase === 'countin' || phase === 'take';
 
   return (
@@ -340,7 +381,41 @@ export function RhythmTab() {
             {phase === 'take' && <span className="text-sm font-medium text-emerald-700">Go!</span>}
           </div>
 
+          {calibrating && (
+            <ClapCalibration
+              onDone={(msVal) => {
+                localStorage.setItem('rm_clap_latency_ms', String(msVal));
+                setLatencyMs(msVal);
+                setCalibrating(false);
+                toast.success(`Calibrated — your device delay is ${msVal} ms`);
+              }}
+              onCancel={() => setCalibrating(false)}
+            />
+          )}
+          {drill === 'clap_blast' && input === 'mic' && latencyMs !== null && !calibrating && (
+            <button
+              type="button"
+              disabled={running}
+              onClick={() => setCalibrating(true)}
+              className="text-sm text-slate-500 underline-offset-2 hover:underline"
+            >
+              Device delay: {latencyMs} ms — recalibrate
+            </button>
+          )}
+
           {showNotation && pattern && phase !== 'result' && <RhythmStrip pattern={pattern} system={system} />}
+
+          {drill === 'clap_blast' && running && pattern && takeT0 !== null && getAudioCtx() && (
+            <ClapBlastStage
+              pattern={pattern}
+              bpm={bpm}
+              ctx={getAudioCtx()!}
+              t0={takeT0}
+              round={roundRef.current!}
+              getOnsets={getOnsets}
+              countIn={phase === 'countin'}
+            />
+          )}
 
           {running && input === 'tap' && (
             <button

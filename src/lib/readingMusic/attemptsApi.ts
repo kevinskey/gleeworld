@@ -12,6 +12,8 @@ export interface RhythmAttemptPayload {
   meter: { beats: number; beatType: number };
   seed: number;
   no_input?: boolean;
+  /** Clap Blast only: calibrated device latency applied during grading (mic input). */
+  latency_ms?: number;
 }
 
 export interface AttemptInsert {

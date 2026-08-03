@@ -20,4 +20,8 @@ describe('RhythmTab', () => {
     render(<RhythmTab />);
     expect(screen.getByRole('button', { name: /level 1/i })).toBeEnabled();
   });
+  it('renders the Clap Blast drill chip', () => {
+    render(<RhythmTab />);
+    expect(screen.getByRole('button', { name: /clap blast/i })).toBeInTheDocument();
+  });
 });
