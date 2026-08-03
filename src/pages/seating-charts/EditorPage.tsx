@@ -352,7 +352,12 @@ export function SeatingChartEditorPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-56px)]">
+    // Mobile: DashboardShell keeps an 80px+safe-top TopBar and a docked
+    // 4rem+safe-bottom footer. 100vh-56px overflowed that box, shoving the
+    // bottom tool rail underneath the app footer — the editor looked like
+    // it had no People/Objects tools at all on phones. dvh (not vh) so
+    // Safari's collapsing URL bar doesn't re-hide the rail.
+    <div className="flex flex-col h-[calc(100dvh-80px-4rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] md:h-[calc(100vh-56px)]">
       <header className="flex items-center gap-2 border-b bg-card px-2 md:px-3 py-2 print:hidden">
         <Button variant="ghost" size="icon" onClick={() => nav('/seating-charts')} className="shrink-0">
           <ArrowLeft className="w-4 h-4" />
