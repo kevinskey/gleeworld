@@ -83,12 +83,16 @@ export function CreateChartDialog({ open, onOpenChange, onCreate }: CreateChartD
           <DialogTitle>Create seating chart</DialogTitle>
         </DialogHeader>
 
+        {/* auto-rows-max: Card is overflow-hidden, so its min row contribution is 0 —
+            inside a max-h grid the rows compress and clip card text instead of scrolling. */}
         {step === 1 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-max gap-3">
             {PURPOSES.map((p) => (
               <Card key={p.key} className="cursor-pointer hover:border-primary" onClick={() => pickPurpose(p)}>
                 <CardHeader>
-                  <CardTitle className="text-sm">{p.label}</CardTitle>
+                  {/* !text-sm: CardTitle's .font-headline is a late utility (17px) that
+                      otherwise beats an unimportant text-sm */}
+                  <CardTitle className="!text-sm">{p.label}</CardTitle>
                 </CardHeader>
               </Card>
             ))}
@@ -96,7 +100,7 @@ export function CreateChartDialog({ open, onOpenChange, onCreate }: CreateChartD
         )}
 
         {step === 2 && purpose && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[60vh] overflow-y-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 auto-rows-max gap-3 max-h-[60vh] overflow-y-auto">
             {templateChoices.map((t) => (
               <Card
                 key={t.key}
@@ -104,7 +108,7 @@ export function CreateChartDialog({ open, onOpenChange, onCreate }: CreateChartD
                 onClick={() => { setTemplateKey(t.key); setName(t.name); setStep(3); }}
               >
                 <CardHeader>
-                  <CardTitle className="text-sm">{t.name}</CardTitle>
+                  <CardTitle className="!text-sm">{t.name}</CardTitle>
                   <CardDescription className="text-xs">{t.description}</CardDescription>
                   <p className="text-[10px] uppercase text-muted-foreground pt-1">{CATEGORY_LABELS[t.category]}</p>
                 </CardHeader>
