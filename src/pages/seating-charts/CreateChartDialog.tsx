@@ -110,7 +110,7 @@ export function CreateChartDialog({ open, onOpenChange, onCreate }: CreateChartD
                 <CardHeader>
                   <CardTitle className="!text-sm">{t.name}</CardTitle>
                   <CardDescription className="text-xs">{t.description}</CardDescription>
-                  <p className="text-[10px] uppercase text-muted-foreground pt-1">{CATEGORY_LABELS[t.category]}</p>
+                  <p className="text-xs uppercase text-muted-foreground pt-1">{CATEGORY_LABELS[t.category]}</p>
                 </CardHeader>
               </Card>
             ))}

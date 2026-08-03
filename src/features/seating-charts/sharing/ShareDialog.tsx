@@ -144,7 +144,7 @@ export function ShareDialog({ open, onOpenChange, chartId }: ShareDialogProps) {
                 <UserPlus className="w-4 h-4" />
               </Button>
             </div>
-            <p className="text-[11px] text-muted-foreground">{ROLES.find((r) => r.value === role)?.help}</p>
+            <p className="text-xs text-muted-foreground">{ROLES.find((r) => r.value === role)?.help}</p>
           </div>
 
           <div className="space-y-1">
@@ -156,15 +156,15 @@ export function ShareDialog({ open, onOpenChange, chartId }: ShareDialogProps) {
                 {shares.map((s) => (
                   <li key={s.id} className="flex items-center justify-between px-2 py-1.5 text-xs">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-semibold">
+                      <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-semibold">
                         {(s.display_name ?? '?').split(' ').map((n) => n[0]).slice(0, 2).join('')}
                       </div>
                       <span className="truncate">{s.display_name ?? s.user_id.slice(0, 8)}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-[10px]">{ROLES.find((r) => r.value === s.role)?.label ?? s.role}</Badge>
+                      <Badge variant="secondary" className="text-xs">{ROLES.find((r) => r.value === s.role)?.label ?? s.role}</Badge>
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => revoke(s.id)}>
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </li>

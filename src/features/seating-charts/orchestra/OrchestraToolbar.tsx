@@ -38,7 +38,7 @@ export function OrchestraToolbar({
             onApplyChairNumbers(patches.map((p) => ({ id: p.assignmentId, chair_number: p.chair_number })));
           }}
         >
-          <Hash className="w-3.5 h-3.5" /> Auto-number chairs
+          <Hash className="w-4 h-4" /> Auto-number chairs
         </Button>
         <Button
           variant="outline" size="sm" className="w-full h-8 text-xs gap-1.5"
@@ -49,9 +49,9 @@ export function OrchestraToolbar({
             onRotateStands(swaps);
           }}
         >
-          <RefreshCw className="w-3.5 h-3.5" /> Rotate stands
+          <RefreshCw className="w-4 h-4" /> Rotate stands
         </Button>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-xs text-muted-foreground">
           Rotation keeps chair numbers put — the leader position stays chair 1; the person occupying it swaps with their stand partner.
         </p>
       </PopoverContent>

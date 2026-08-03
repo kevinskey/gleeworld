@@ -36,7 +36,7 @@ export function ArrangementsSwitcher({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="h-8 gap-1 text-xs">
-            <Layers className="w-3.5 h-3.5" />
+            <Layers className="w-4 h-4" />
             {active?.name ?? 'Arrangements'}
           </Button>
         </DropdownMenuTrigger>
@@ -50,7 +50,7 @@ export function ArrangementsSwitcher({
               onClick={() => a.id !== activeId && onSwitch(a.id)}
             >
               <span className="flex items-center gap-1.5 min-w-0">
-                {a.id === activeId ? <Check className="w-3.5 h-3.5" /> : <span className="w-3.5" />}
+                {a.id === activeId ? <Check className="w-4 h-4" /> : <span className="w-3.5" />}
                 <span className="truncate">{a.name}</span>
               </span>
               {a.is_default && <Star className="w-3 h-3 text-amber-500" />}
@@ -58,19 +58,19 @@ export function ArrangementsSwitcher({
           ))}
           <DropdownMenuSeparator />
           <DropdownMenuItem className="text-xs gap-1.5" onClick={() => setCreating(true)}>
-            <Plus className="w-3.5 h-3.5" /> New arrangement
+            <Plus className="w-4 h-4" /> New arrangement
           </DropdownMenuItem>
           {active && (
             <>
               <DropdownMenuItem className="text-xs gap-1.5" onClick={() => onDuplicate(active.id)}>
-                <Copy className="w-3.5 h-3.5" /> Duplicate current
+                <Copy className="w-4 h-4" /> Duplicate current
               </DropdownMenuItem>
               <DropdownMenuItem className="text-xs gap-1.5" onClick={() => { setRenameId(active.id); setRenameValue(active.name); }}>
-                <Edit3 className="w-3.5 h-3.5" /> Rename current
+                <Edit3 className="w-4 h-4" /> Rename current
               </DropdownMenuItem>
               {!active.is_default && (
                 <DropdownMenuItem className="text-xs gap-1.5" onClick={() => onSetDefault(active.id)}>
-                  <Star className="w-3.5 h-3.5" /> Set as default
+                  <Star className="w-4 h-4" /> Set as default
                 </DropdownMenuItem>
               )}
               {arrangements.length > 1 && (
@@ -81,7 +81,7 @@ export function ArrangementsSwitcher({
                       onDelete(active.id);
                   }}
                 >
-                  <Trash2 className="w-3.5 h-3.5" /> Delete current
+                  <Trash2 className="w-4 h-4" /> Delete current
                 </DropdownMenuItem>
               )}
             </>

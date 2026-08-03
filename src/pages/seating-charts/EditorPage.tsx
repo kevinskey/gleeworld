@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Save, Printer, Download, Undo2, Wand2, Share2, Users, FileText,
+  ArrowLeft, Save, Printer, Download, RefreshCw, Wand2, Share2, Users, FileText,
   Shapes, SlidersHorizontal, Users2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -380,10 +380,10 @@ export function SeatingChartEditorPage() {
             onSetDefault={setDefaultArrangement}
             onDelete={deleteArrangement}
           />
-          <Button variant="ghost" size="icon" title="Reload" onClick={() => reload()}>
-            <Undo2 className="w-4 h-4" />
+          <Button variant="ghost" size="icon" title="Reload from server" aria-label="Reload from server" onClick={() => { if (saveStatus !== 'dirty' || confirm('Reload from server? Your unsaved changes will be discarded.')) reload(); }}>
+            <RefreshCw className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" title="Save now" onClick={() => forceSave()}>
+          <Button variant="ghost" size="icon" title="Save now" aria-label="Save now" onClick={() => forceSave()}>
             <Save className="w-4 h-4" />
           </Button>
         </div>
