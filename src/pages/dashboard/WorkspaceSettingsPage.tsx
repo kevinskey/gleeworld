@@ -33,6 +33,7 @@ import {
 import { hideableNavItems, HIDEABLE_NAV_ROLES, type NavRole, type HideableNavItem } from '@/lib/navigation/navCatalog';
 import { getPreviewRole, setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { toast } from 'sonner';
+import { billingPortalErrorMessage } from '@/lib/billingPortalError';
 import { cn } from '@/lib/utils';
 import { DateCardTabPanel } from '@/components/home/date-card/DateCardTabPanel';
 import { ParentsTabPanel } from '@/components/workspace-settings/ParentsTabPanel';
@@ -1146,11 +1147,15 @@ function StripePortalButton() {
       const { data, error } = await supabase.functions.invoke('create-customer-portal-session', {
         body: { return_url: window.location.href },
       });
-      if (error) throw error;
-      if ((data as any)?.url) {
+      // Non-2xx responses arrive as a thrown FunctionsHttpError with data
+      // null, so the real reason (e.g. no_stripe_customer_for_tenant on
+      // free-tier tenants) must be recovered from the error body — checking
+      // data.error here was dead code and users saw only the generic toast.
+      const failure = await billingPortalErrorMessage(error, data as Record<string, unknown> | null);
+      if (failure) {
+        toast.error(failure);
+      } else if ((data as any)?.url) {
         window.location.href = (data as any).url;
-      } else if ((data as any)?.error === 'no_stripe_customer_for_tenant') {
-        toast.error('No Stripe customer yet — pick a plan first.');
       } else {
         toast.error('Portal session failed.');
       }
