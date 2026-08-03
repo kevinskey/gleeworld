@@ -53,20 +53,45 @@ export function usePersonalScores() {
         .from(PERSONAL_SCORES_BUCKET)
         .upload(path, file, { contentType: 'application/pdf', upsert: false });
       if (upErr) throw new Error(upErr.message);
-      const { error: insErr } = await (supabase as any).from('gw_personal_scores').insert({
-        user_id: user.id,
-        title: meta.title.trim(),
-        composer: meta.composer?.trim() || null,
-        voicing: meta.voicing?.trim() || null,
-        source: 'upload',
-        storage_path: path,
-      });
-      if (insErr) {
+      // `.select()` after insert: demo tenants silently swallow writes, so a
+      // missing row must surface as a real failure, not a lying success.
+      const { data: inserted, error: insErr } = await (supabase as any)
+        .from('gw_personal_scores')
+        .insert({
+          user_id: user.id,
+          title: meta.title.trim(),
+          composer: meta.composer?.trim() || null,
+          voicing: meta.voicing?.trim() || null,
+          source: 'upload',
+          storage_path: path,
+        })
+        .select('id')
+        .maybeSingle();
+      if (insErr || !inserted) {
         // don't strand the object if the row failed
         await supabase.storage.from(PERSONAL_SCORES_BUCKET).remove([path]);
-        throw new Error(insErr.message);
+        throw new Error(insErr?.message ?? 'Could not save the score.');
       }
       qc.invalidateQueries({ queryKey: ['personal-scores', user.id] });
+    },
+    [user, qc],
+  );
+
+  const updateScore = useCallback(
+    async (score: PersonalScore, patch: { title?: string; composer?: string | null; voicing?: string | null }) => {
+      const updates: Record<string, string | null> = {};
+      if (patch.title !== undefined) updates.title = patch.title.trim() || score.title;
+      if (patch.composer !== undefined) updates.composer = patch.composer?.trim() || null;
+      if (patch.voicing !== undefined) updates.voicing = patch.voicing?.trim() || null;
+      // `.select()` so an RLS/demo-tenant silent no-op fails loudly.
+      const { data, error } = await (supabase as any)
+        .from('gw_personal_scores')
+        .update(updates)
+        .eq('id', score.id)
+        .select('id')
+        .maybeSingle();
+      if (error || !data) throw new Error(error?.message ?? 'Could not update the score.');
+      qc.invalidateQueries({ queryKey: ['personal-scores', user?.id] });
     },
     [user, qc],
   );
@@ -86,5 +111,5 @@ export function usePersonalScores() {
     [user, qc],
   );
 
-  return { scores, isLoading, uploadScore, removeScore };
+  return { scores, isLoading, uploadScore, updateScore, removeScore };
 }

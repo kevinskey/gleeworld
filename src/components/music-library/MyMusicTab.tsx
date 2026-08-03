@@ -5,10 +5,6 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -21,13 +17,16 @@ import { SOFT_CARD, SOFT_CARD_STYLE } from '@/components/music-library/scores/ty
 import { ScoreViewerDialog, type ViewingScore } from '@/components/music-library/ScoreViewerDialog';
 import { MyMusicCard } from '@/components/music-library/my-music/MyMusicCard';
 import { MyMusicListRow } from '@/components/music-library/my-music/MyMusicListRow';
+import { MyMusicUploadDialog } from '@/components/music-library/my-music/MyMusicUploadDialog';
+import { EditPersonalScoreDialog } from '@/components/music-library/my-music/EditPersonalScoreDialog';
 import { isExternalOnly } from '@/components/music-library/my-music/personalScoreDisplay';
 
 type SortKey = 'recent' | 'oldest' | 'title-asc' | 'title-desc' | 'composer-asc' | 'source';
 
 export function MyMusicTab() {
-  const { scores, isLoading, uploadScore, removeScore } = usePersonalScores();
+  const { scores, isLoading, uploadScore, updateScore, removeScore } = usePersonalScores();
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<PersonalScore | null>(null);
   // Personal PDFs open in the SAME contain-fit viewer as the Scores tab
   // (whole page visible, no scrolling — PR #321). No `id`: annotation
   // tables FK to gw_sheet_music, so the viewer's annotation/audio lookups
@@ -210,6 +209,7 @@ export function MyMusicTab() {
                 score={s}
                 opening={openingId === s.id}
                 onOpen={() => openScore(s)}
+                onEdit={() => setEditing(s)}
                 onRemove={() => removeWithConfirm(s)}
               />
             </li>
@@ -224,6 +224,7 @@ export function MyMusicTab() {
                 score={s}
                 opening={openingId === s.id}
                 onOpen={() => openScore(s)}
+                onEdit={() => setEditing(s)}
                 onRemove={() => removeWithConfirm(s)}
               />
             ))}
@@ -231,85 +232,19 @@ export function MyMusicTab() {
         </Card>
       )}
 
-      <UploadDialog
+      <MyMusicUploadDialog
         open={adding}
         onClose={() => setAdding(false)}
-        onUpload={async (file, meta) => {
-          await uploadScore(file, meta);
-          toast.success(`"${meta.title}" added to My Music`);
-        }}
+        onUpload={uploadScore}
+      />
+
+      <EditPersonalScoreDialog
+        score={editing}
+        onOpenChange={(o) => !o && setEditing(null)}
+        onSave={updateScore}
       />
 
       <ScoreViewerDialog viewing={viewing} onClose={() => setViewing(null)} />
     </div>
-  );
-}
-
-function UploadDialog({ open, onClose, onUpload }: {
-  open: boolean;
-  onClose: () => void;
-  onUpload: (file: File, meta: { title: string; composer?: string; voicing?: string }) => Promise<void>;
-}) {
-  const [file, setFile] = useState<File | null>(null);
-  const [title, setTitle] = useState('');
-  const [composer, setComposer] = useState('');
-  const [voicing, setVoicing] = useState('');
-  const [busy, setBusy] = useState(false);
-
-  const reset = () => { setFile(null); setTitle(''); setComposer(''); setVoicing(''); };
-
-  return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) { reset(); onClose(); } }}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add a PDF to My Music</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="score-file">PDF file</Label>
-            <Input
-              id="score-file" type="file" accept="application/pdf" className="mt-1"
-              onChange={(e) => {
-                const f = e.target.files?.[0] ?? null;
-                setFile(f);
-                if (f && !title) setTitle(f.name.replace(/\.pdf$/i, ''));
-              }}
-            />
-          </div>
-          <div>
-            <Label htmlFor="score-title">Title</Label>
-            <Input id="score-title" value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="score-composer">Composer</Label>
-              <Input id="score-composer" value={composer} onChange={(e) => setComposer(e.target.value)} className="mt-1" />
-            </div>
-            <div>
-              <Label htmlFor="score-voicing">Voicing</Label>
-              <Input id="score-voicing" value={voicing} onChange={(e) => setVoicing(e.target.value)} placeholder="SATB" className="mt-1" />
-            </div>
-          </div>
-        </div>
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={() => { reset(); onClose(); }} disabled={busy}>Cancel</Button>
-          <Button
-            disabled={!file || !title.trim() || busy}
-            onClick={async () => {
-              if (!file) return;
-              setBusy(true);
-              try {
-                await onUpload(file, { title, composer: composer || undefined, voicing: voicing || undefined });
-                reset(); onClose();
-              } catch (e) {
-                toast.error(e instanceof Error ? e.message : 'Upload failed');
-              } finally { setBusy(false); }
-            }}
-          >
-            {busy ? 'Adding…' : 'Add to My Music'}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
   );
 }

@@ -13,7 +13,7 @@ const state: {
 vi.mock('@/hooks/usePersonalScores', () => ({
   usePersonalScores: () => ({
     scores: state.scores, isLoading: state.isLoading,
-    uploadScore: vi.fn(), removeScore: vi.fn(),
+    uploadScore: vi.fn(), updateScore: vi.fn(), removeScore: vi.fn(),
   }),
 }));
 vi.mock('@/utils/storage', () => ({ getSignedUrl: vi.fn(async () => 'https://signed.example/x.pdf') }));

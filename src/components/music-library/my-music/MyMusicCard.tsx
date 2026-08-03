@@ -3,17 +3,18 @@
 // trailing affordance) so the two tabs read as one library.
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, FileMusic, Loader2, Trash2 } from 'lucide-react';
+import { ExternalLink, FileMusic, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { SOFT_CARD, SOFT_CARD_STYLE } from '@/components/music-library/scores/types';
 import type { PersonalScore } from '@/hooks/usePersonalScores';
 import { SOURCE_LABEL, isExternalOnly } from './personalScoreDisplay';
 
 export function MyMusicCard({
-  score, opening, onOpen, onRemove,
+  score, opening, onOpen, onEdit, onRemove,
 }: {
   score: PersonalScore;
   opening: boolean;
   onOpen: () => void;
+  onEdit: () => void;
   onRemove: () => void;
 }) {
   const externalOnly = isExternalOnly(score);
@@ -61,14 +62,25 @@ export function MyMusicCard({
             </span>
           </div>
         </button>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onRemove(); }}
-          className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
-          aria-label={`Remove ${score.title}`}
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        <div className="absolute top-3 right-3 flex items-center gap-0.5 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-within:opacity-100">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent"
+            aria-label={`Edit ${score.title}`}
+            title="Edit title / composer / voicing"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+            aria-label={`Remove ${score.title}`}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </CardContent>
     </Card>
   );

@@ -2,16 +2,17 @@
 // mirrors the Scores tab's ScoreListRow so the two tabs read as one library.
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, FileMusic, Loader2, Trash2 } from 'lucide-react';
+import { ExternalLink, FileMusic, Loader2, Pencil, Trash2 } from 'lucide-react';
 import type { PersonalScore } from '@/hooks/usePersonalScores';
 import { SOURCE_LABEL, isExternalOnly } from './personalScoreDisplay';
 
 export function MyMusicListRow({
-  score, opening, onOpen, onRemove,
+  score, opening, onOpen, onEdit, onRemove,
 }: {
   score: PersonalScore;
   opening: boolean;
   onOpen: () => void;
+  onEdit: () => void;
   onRemove: () => void;
 }) {
   const externalOnly = isExternalOnly(score);
@@ -44,6 +45,16 @@ export function MyMusicListRow({
           {opening ? 'Opening…' : externalOnly ? 'Open at source' : 'Open'}
           <ExternalLink className="w-4 h-4" />
         </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground hover:text-foreground"
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
+          aria-label={`Edit ${score.title}`}
+          title="Edit title / composer / voicing"
+        >
+          <Pencil className="w-4 h-4" />
+        </Button>
         <Button
           variant="ghost"
           size="sm"
