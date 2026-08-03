@@ -53,7 +53,8 @@ export function CanvasEngine({
 }: CanvasEngineProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const didFitRef = useRef(false);
+  // True once the user has panned/zoomed — auto-fit stands down from then on.
+  const userAdjustedRef = useRef(false);
   const [viewport, setViewport] = useState<ViewportState>({ scale: DEFAULT_SCALE, panX: 40, panY: 40 });
   const [dragState, setDragState] = useState<
     | { kind: 'none' }
@@ -167,6 +168,7 @@ export function CanvasEngine({
         // own drift so two-finger drag also pans the canvas.
         const scaledPanX = px - ((px - g.startPanX) / g.startScale) * nextScale;
         const scaledPanY = py - ((py - g.startPanY) / g.startScale) * nextScale;
+        userAdjustedRef.current = true;
         setViewport({
           scale: nextScale,
           panX: scaledPanX + (cx - g.startCenterX),
@@ -185,6 +187,7 @@ export function CanvasEngine({
         onObjectMove(id, snap(origin.x + dx), snap(origin.y + dy));
       });
     } else if (dragState.kind === 'pan') {
+      userAdjustedRef.current = true;
       setViewport((v) => ({
         ...v,
         panX: dragState.origPan.x + (e.clientX - dragState.startX),
@@ -222,6 +225,7 @@ export function CanvasEngine({
     if (!rect) return;
     const px = e.clientX - rect.left;
     const py = e.clientY - rect.top;
+    userAdjustedRef.current = true;
     setViewport((v) => {
       const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, v.scale * (e.deltaY > 0 ? 0.9 : 1.1)));
       // Zoom around the cursor
@@ -253,21 +257,31 @@ export function CanvasEngine({
     e.preventDefault();
   }, []);
 
-  // On first mount + on width/height change, fit the chart to the container
-  // so phones + iPad portraits don't start off-screen. We only auto-fit once
-  // per canvas size so the user's pan/zoom isn't clobbered on every render.
+  // Keep the chart fitted to the container until the user pans/zooms
+  // themselves. The old fit-once-on-mount ran while the flex layout was
+  // still settling, measured a small container, and locked in a tiny
+  // chart (panel/sidebar animation finished AFTER the only fit). A
+  // ResizeObserver re-fits on every container size change instead —
+  // and stands down permanently once the user has adjusted the view.
   useEffect(() => {
-    if (!wrapRef.current) return;
-    const rect = wrapRef.current.getBoundingClientRect();
-    if (rect.width < 40 || rect.height < 40) return;
-    if (didFitRef.current) return;
-    didFitRef.current = true;
-    setViewport(fitScale(width, height, rect.width, rect.height));
+    const el = wrapRef.current;
+    if (!el) return;
+    const refit = () => {
+      if (userAdjustedRef.current) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 40 || rect.height < 40) return;
+      setViewport(fitScale(width, height, rect.width, rect.height));
+    };
+    refit();
+    const ro = new ResizeObserver(refit);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [width, height]);
 
   const handleReset = useCallback(() => {
     const rect = wrapRef.current?.getBoundingClientRect();
     if (!rect) return;
+    userAdjustedRef.current = false;
     setViewport(fitScale(width, height, rect.width, rect.height));
   }, [width, height]);
 

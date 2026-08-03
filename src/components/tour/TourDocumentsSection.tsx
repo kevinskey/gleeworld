@@ -853,7 +853,7 @@ export const TourDocumentsSection = () => {
             </div>
           </div>
           <div className="flex-1 overflow-auto">
-            {previewUrl.match(/\.(png|jpg|jpeg|gif|webp|bmp|tiff)(\?|$)/i) ? (
+            {previewUrl.match(/\.(png|jpg|jpeg|gif|webp|bmp|tiff|avif)(\?|$)/i) ? (
               <div className="flex items-center justify-center h-full p-4">
                 <img src={previewUrl} alt={previewTitle} className="max-w-full max-h-full object-contain rounded-lg" />
               </div>

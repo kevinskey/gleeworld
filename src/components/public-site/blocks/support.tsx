@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ImageUploadField } from '../ImageUploadField';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Support our program'),
@@ -27,10 +28,10 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const sponsors = config.sponsors.filter((s) => s.name || s.logoUrl);
   const showCampaign = !!(config.campaign.name || config.campaign.blurb || config.campaign.ctaUrl);
-  if (!showCampaign && sponsors.length === 0) return null;
+  if (!showCampaign && sponsors.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Support" /> : null;
   const pct = Math.max(0, Math.min(100, config.campaign.progressPercent ?? 0));
   return (
     <section id="support" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">

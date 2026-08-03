@@ -370,7 +370,7 @@ export function ImageUploadField({
           {uploading ? 'Uploading…' : previewSrc ? 'Replace' : 'Upload'}
           <input
             type="file"
-            accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif"
+            accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif,image/avif"
             className="hidden"
             disabled={uploading}
             onChange={async (e) => {

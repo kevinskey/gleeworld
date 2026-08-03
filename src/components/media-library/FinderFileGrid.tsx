@@ -25,7 +25,7 @@ const getExtendedFileType = (file: MediaFile): string => {
   const type = file.file_type?.toLowerCase() || '';
   const title = file.title?.toLowerCase() || '';
   
-  if (type.includes('image') || url.match(/\.(jpg|jpeg|png|gif|webp|svg|heic|bmp|ico|tiff?)$/)) return 'image';
+  if (type.includes('image') || url.match(/\.(jpg|jpeg|png|gif|webp|svg|heic|bmp|ico|tiff?|avif)$/)) return 'image';
   if (type.includes('video') || url.match(/\.(mp4|mov|avi|webm|mkv|m4v|wmv|flv)$/)) return 'video';
   if (type.includes('audio') || url.match(/\.(mp3|wav|m4a|aac|ogg|flac|wma)$/)) return 'audio';
   if (type.includes('pdf') || url.match(/\.pdf$/)) return 'pdf';

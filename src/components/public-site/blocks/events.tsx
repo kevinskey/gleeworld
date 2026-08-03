@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Upcoming events'),
@@ -210,7 +211,7 @@ function UpcomingList({ events }: { events: PublicEvent[] }) {
   );
 }
 
-function Render({ config, ctx }: BlockRenderProps<Config>) {
+function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   // Editor preview reads draft events through the admin's tenant-scoped RLS;
   // the public page goes through the published-site RPC.
   const { data: events = [] } = useQuery<PublicEvent[]>({
@@ -234,7 +235,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
     },
   });
 
-  if (events.length === 0 && config.style !== 'month') return null;
+  if (events.length === 0 && config.style !== 'month') return onConfigChange ? <EmptyBlockPlaceholder name="Events" /> : null;
 
   return (
     <section id="events" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">

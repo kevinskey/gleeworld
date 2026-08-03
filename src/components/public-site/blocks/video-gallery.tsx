@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MediaPicker, type MediaItem } from '../MediaPicker';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Watch'),
@@ -53,9 +54,9 @@ function VideoPlayer({ v }: { v: Config['videos'][number] }) {
   );
 }
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const videos = config.videos.filter((v) => v.url);
-  if (videos.length === 0) return null;
+  if (videos.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Videos" /> : null;
   return (
     <section id="watch" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (
