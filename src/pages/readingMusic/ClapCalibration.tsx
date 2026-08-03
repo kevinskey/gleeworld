@@ -24,8 +24,10 @@ export function ClapCalibration({ onDone, onCancel }: Props) {
   const timersRef = useRef<number[]>([]);
   const sessionRef = useRef<MicOnsetSession | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const runningRef = useRef(false);
 
   const cleanup = () => {
+    runningRef.current = false;
     for (const t of timersRef.current) window.clearTimeout(t);
     timersRef.current = [];
     sessionRef.current?.dispose();
@@ -36,8 +38,11 @@ export function ClapCalibration({ onDone, onCancel }: Props) {
   useEffect(() => cleanup, []);
 
   const run = async () => {
+    if (runningRef.current) return;
+    runningRef.current = true;
+
     const ctx = getAudioCtx();
-    if (!ctx) { toast.error('Audio unavailable'); return; }
+    if (!ctx) { toast.error('Audio unavailable'); cleanup(); return; }
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -45,40 +50,47 @@ export function ClapCalibration({ onDone, onCancel }: Props) {
       });
     } catch {
       toast.error('Microphone unavailable', { description: 'Calibration needs the mic. Tap input needs no calibration.' });
+      cleanup();
       onCancel();
       return;
     }
     streamRef.current = stream;
     setState('running');
 
-    const spb = 60 / CALIBRATION_BPM;
-    const t0 = ctx.currentTime + 0.35;
-    const clickTimes = Array.from({ length: CALIBRATION_CLICKS }, (_, i) => i * spb);
-    for (const c of clickTimes) {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 1400;
-      g.gain.setValueAtTime(0, t0 + c);
-      g.gain.linearRampToValueAtTime(0.4, t0 + c + 0.004);
-      g.gain.linearRampToValueAtTime(0, t0 + c + 0.05);
-      osc.connect(g).connect(ctx.destination);
-      osc.start(t0 + c);
-      osc.stop(t0 + c + 0.06);
-    }
-    sessionRef.current = startMicOnsetSession(ctx, stream, t0);
-
-    const endMs = (t0 + (CALIBRATION_CLICKS - 1) * spb + 0.7 - ctx.currentTime) * 1000;
-    timersRef.current.push(window.setTimeout(() => {
-      const claps = [...(sessionRef.current?.onsets ?? [])];
-      cleanup();
-      const offset = calibrationOffsetSec(clickTimes, claps);
-      if (offset === null) {
-        setState('failed');
-        return;
+    try {
+      const spb = 60 / CALIBRATION_BPM;
+      const t0 = ctx.currentTime + 0.35;
+      const clickTimes = Array.from({ length: CALIBRATION_CLICKS }, (_, i) => i * spb);
+      for (const c of clickTimes) {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 1400;
+        g.gain.setValueAtTime(0, t0 + c);
+        g.gain.linearRampToValueAtTime(0.4, t0 + c + 0.004);
+        g.gain.linearRampToValueAtTime(0, t0 + c + 0.05);
+        osc.connect(g).connect(ctx.destination);
+        osc.start(t0 + c);
+        osc.stop(t0 + c + 0.06);
       }
-      onDone(Math.round(offset * 1000));
-    }, endMs));
+      sessionRef.current = startMicOnsetSession(ctx, stream, t0);
+
+      const endMs = (t0 + (CALIBRATION_CLICKS - 1) * spb + 0.7 - ctx.currentTime) * 1000;
+      timersRef.current.push(window.setTimeout(() => {
+        const claps = [...(sessionRef.current?.onsets ?? [])];
+        cleanup();
+        const offset = calibrationOffsetSec(clickTimes, claps);
+        if (offset === null) {
+          setState('failed');
+          return;
+        }
+        onDone(Math.round(offset * 1000));
+      }, endMs));
+    } catch {
+      cleanup();
+      setState('failed');
+      toast.error('Calibration failed', { description: 'Audio error — try again.' });
+    }
   };
 
   return (
@@ -97,7 +109,7 @@ export function ClapCalibration({ onDone, onCancel }: Props) {
         <Button onClick={() => void run()} disabled={state === 'running'}>
           {state === 'running' ? 'Clap with the clicks…' : state === 'failed' ? 'Try again' : 'Start calibration'}
         </Button>
-        <Button variant="outline" onClick={() => { cleanup(); onCancel(); }} disabled={state === 'running'}>
+        <Button variant="outline" onClick={() => { cleanup(); setState('idle'); onCancel(); }}>
           Cancel
         </Button>
       </div>
