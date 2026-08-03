@@ -23,6 +23,17 @@ export interface AssistantVoice {
 // change here instead of a scavenger hunt.
 export const ASSISTANT_VOICES: AssistantVoice[] = [
   { id: 'cgSgspJ2msm6clMCkdW9', label: 'Jessica',  description: 'Warm, natural — the default',    gender: 'female' },
+  // African American voices added from the ElevenLabs voice library
+  // 2026-08-03 (Kevin's picks). These are shared-library voices added to
+  // our account via POST /v1/voices/add — they are NOT premade voices, so
+  // if TTS for one ever 404s, re-add it to the account before debugging.
+  { id: '5V3TtHQpNbNMJIdXzmGC', label: 'Allison',  description: 'Natural, calm, welcoming',       gender: 'female' },
+  { id: 'YYsXMvvITqnbq9AYpUDk', label: 'Rene',     description: 'Calm, confident, powerful',      gender: 'female' },
+  { id: 'zWoalRDt5TZrmW4ROIA7', label: 'Brooklyn', description: 'New Yorker, conversational',     gender: 'female' },
+  { id: 'pOo9f7JLO1jJyqHtwenW', label: 'James',    description: 'Teaching and ministry warmth',   gender: 'male'   },
+  { id: 'iObeGmp9cQqqHByD4hTs', label: 'Rory',     description: 'Mellow, smooth, slightly deep',  gender: 'male'   },
+  { id: 'JMj1UeO6tBAXd3E8HyWb', label: 'Joseph',   description: 'Smooth, confident',              gender: 'male'   },
+  { id: 'dbABjyOGWVViRzFiwl1U', label: 'Anthony',  description: 'Deep, warm baritone',            gender: 'male'   },
   { id: '9BWtsMINqrJLrRacOk9x', label: 'Aria',     description: 'Young, expressive',              gender: 'female' },
   { id: 'EXAVITQu4vr4xnSDxMaL', label: 'Sarah',    description: 'Soft, conversational',           gender: 'female' },
   { id: 'FGY2WhTYpPnrIDTdsKH5', label: 'Laura',    description: 'Clear, confident',               gender: 'female' },
