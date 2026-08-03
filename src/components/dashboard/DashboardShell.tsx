@@ -44,6 +44,7 @@ import {
   Sparkles,
   PanelLeft,
   PanelLeftClose,
+  Bug,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
@@ -83,6 +84,7 @@ import {
 } from '@/components/ui/sheet';
 import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
 import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
+import { ReportBugDialog } from '@/components/feedback/ReportBugDialog';
 import { isDemoTenant } from '@/lib/demoTenant';
 import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
 import { AssistantFab } from '@/components/assistant/AssistantFab';
@@ -779,6 +781,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [becomeTenantOpen, setBecomeTenantOpen] = useState(false);
+  const [reportBugOpen, setReportBugOpen] = useState(false);
   const showBecomeTenantCta = isDemoTenant();
 
   // min-height INCLUDES the safe-area inset: with border-box, a fixed
@@ -987,6 +990,9 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
               <Settings className="w-4 h-4" /> Settings
             </Link>
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setReportBugOpen(true)} className="flex items-center gap-2">
+            <Bug className="w-4 h-4" /> Report a Bug
+          </DropdownMenuItem>
           {/* Switch organization — every tenant this user belongs to.
               On web, navigation crosses subdomains (full-page load into
               the target tenant's own domain). On native (iOS), cross-
@@ -1074,6 +1080,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           onClose={() => setBecomeTenantOpen(false)}
         />
       )}
+      <ReportBugDialog open={reportBugOpen} onClose={() => setReportBugOpen(false)} />
     </header>
   );
 }
