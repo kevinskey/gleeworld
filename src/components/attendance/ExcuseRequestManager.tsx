@@ -33,6 +33,9 @@ interface ExcuseRequest {
   event_date: string;
   event_title: string;
   reason: string;
+  ensemble?: string | null;
+  conflict_type?: string | null;
+  acknowledgment_name?: string | null;
   status: string; // Changed to string to match database
   submitted_at: string;
   forwarded_by?: string | null;
@@ -484,7 +487,17 @@ export const ExcuseRequestManager = () => {
                       
                       <div className="mb-4">
                         <p className="text-sm font-medium mb-1">Reason:</p>
-                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{request.reason}</p>
+                        <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded space-y-1">
+                          {(request.ensemble || request.conflict_type) && (
+                            <p className="text-xs font-medium text-gray-500">
+                              {[request.ensemble, request.conflict_type].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
+                          <p>{request.reason}</p>
+                          {request.acknowledgment_name && (
+                            <p className="text-xs text-gray-500 italic">Policy acknowledged: {request.acknowledgment_name}</p>
+                          )}
+                        </div>
                       </div>
 
                       <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
@@ -555,7 +568,17 @@ export const ExcuseRequestManager = () => {
                       
                       <div className="mb-4">
                         <p className="text-sm font-medium mb-1">Reason:</p>
-                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{request.reason}</p>
+                        <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded space-y-1">
+                          {(request.ensemble || request.conflict_type) && (
+                            <p className="text-xs font-medium text-gray-500">
+                              {[request.ensemble, request.conflict_type].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
+                          <p>{request.reason}</p>
+                          {request.acknowledgment_name && (
+                            <p className="text-xs text-gray-500 italic">Policy acknowledged: {request.acknowledgment_name}</p>
+                          )}
+                        </div>
                       </div>
 
                       {request.secretary_message && (
@@ -623,7 +646,17 @@ export const ExcuseRequestManager = () => {
                       
                       <div className="mb-4">
                         <p className="text-sm font-medium mb-1">Reason:</p>
-                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{request.reason}</p>
+                        <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded space-y-1">
+                          {(request.ensemble || request.conflict_type) && (
+                            <p className="text-xs font-medium text-gray-500">
+                              {[request.ensemble, request.conflict_type].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
+                          <p>{request.reason}</p>
+                          {request.acknowledgment_name && (
+                            <p className="text-xs text-gray-500 italic">Policy acknowledged: {request.acknowledgment_name}</p>
+                          )}
+                        </div>
                       </div>
 
                       {request.secretary_message && (
@@ -698,7 +731,17 @@ export const ExcuseRequestManager = () => {
                       
                       <div className="mb-4">
                         <p className="text-sm font-medium mb-1">Reason:</p>
-                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{request.reason}</p>
+                        <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded space-y-1">
+                          {(request.ensemble || request.conflict_type) && (
+                            <p className="text-xs font-medium text-gray-500">
+                              {[request.ensemble, request.conflict_type].filter(Boolean).join(' · ')}
+                            </p>
+                          )}
+                          <p>{request.reason}</p>
+                          {request.acknowledgment_name && (
+                            <p className="text-xs text-gray-500 italic">Policy acknowledged: {request.acknowledgment_name}</p>
+                          )}
+                        </div>
                       </div>
 
                       {request.admin_notes && (
