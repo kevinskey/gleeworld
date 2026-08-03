@@ -219,6 +219,20 @@ serve(async (req) => {
       const toolCalls = message.tool_calls ?? [];
       if (toolCalls.length === 0) {
         const reply = message.content ?? '';
+        // Empty replies are ONLY legal on action turns (silent-action UX).
+        // The model over-applied the rule to plain conversation ("how are
+        // you today" → empty → the client renders dead silence, which
+        // users read as "assistant not reachable" — Kevin, iOS, 08-03).
+        // Give it one corrective nudge; if it stays silent, fall through
+        // with a minimal honest reply rather than nothing.
+        if (!reply.trim() && actions.length === 0) {
+          messages.push({ role: 'assistant', content: '' });
+          messages.push({
+            role: 'user',
+            content: 'Your last message was empty but you queued no action this turn. Empty replies are only allowed when you actually performed a UI action. Answer the user now in one or two sentences.',
+          });
+          continue;
+        }
         await persistAssistantReply(reply);
         return json({ reply, actions, resultsPanel, thread_id: threadId });
       }
