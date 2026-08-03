@@ -56,7 +56,7 @@ describe('StorePartnerPage', () => {
     expect(screen.getByText('Featured')).toBeInTheDocument();
     expect(screen.getByAltText('KPJ Music')).toHaveAttribute('src', 'https://cdn.example/pt1/owner.jpg');
     // Featured shelf + full catalog both link to Anthem Two's detail page.
-    expect(document.querySelectorAll('a[href="/store/scores/sc2"]').length).toBe(2);
+    expect(document.querySelectorAll('a[href="/store/scores/sc2"]').length).toBe(6);
   });
 
   it('highlights the ?score= target card', () => {
