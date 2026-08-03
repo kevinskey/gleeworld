@@ -32,6 +32,12 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 // ── Hook stubs ───────────────────────────────────────────────────────────────
+// StoreConnectPrompt needs a QueryClientProvider (useTenantStripeStatus);
+// out of scope for these smoke tests.
+vi.mock('@/components/products/StoreConnectPrompt', () => ({
+  StoreConnectPrompt: () => null,
+}));
+
 vi.mock('@/hooks/useFeeTemplates', () => ({
   useFeeTemplates: () => ({
     listTemplates: vi.fn(() => Promise.resolve([])),

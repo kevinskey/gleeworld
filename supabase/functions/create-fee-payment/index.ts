@@ -147,38 +147,42 @@ serve(async (req) => {
       });
     }
 
-    // Create Stripe Checkout Session with Connect destination charge
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: user.email ?? undefined,
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: itemName,
-              description: fee.category ?? undefined,
+    // Create the Checkout Session ON the tenant's connected account (direct
+    // charge, no application fee) — same posture as box-office-checkout: the
+    // money settles straight into the tenant's Stripe account and GleeWorld
+    // never custodies it. The completed event therefore fires on the
+    // CONNECTED account and reaches verify-fee-payment via a Connect
+    // ("listen to connected accounts") webhook endpoint.
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "payment",
+        customer_email: user.email ?? undefined,
+        line_items: [
+          {
+            price_data: {
+              currency: "usd",
+              product_data: {
+                name: itemName,
+                description: fee.category ?? undefined,
+              },
+              unit_amount: amountCents,
             },
-            unit_amount: amountCents,
+            quantity: 1,
           },
-          quantity: 1,
+        ],
+        success_url: `${origin}/dashboard/my-fees?session_id={CHECKOUT_SESSION_ID}&status=success`,
+        cancel_url: `${origin}/dashboard/my-fees?status=cancelled`,
+        metadata: {
+          student_fee_id: body.studentFeeId,
+          tenant_id: tenant.id,
+          user_id: user.id,
+          payment_type: body.paymentType,
+          installment_id: body.installmentId ?? "",
+          payment_plan_id: body.paymentPlanId ?? "",
         },
-      ],
-      payment_intent_data: {
-        application_fee_amount: 0,
-        transfer_data: { destination: tenant.stripe_account_id },
       },
-      success_url: `${origin}/dashboard/my-fees?session_id={CHECKOUT_SESSION_ID}&status=success`,
-      cancel_url: `${origin}/dashboard/my-fees?status=cancelled`,
-      metadata: {
-        student_fee_id: body.studentFeeId,
-        tenant_id: tenant.id,
-        user_id: user.id,
-        payment_type: body.paymentType,
-        installment_id: body.installmentId ?? "",
-        payment_plan_id: body.paymentPlanId ?? "",
-      },
-    });
+      { stripeAccount: tenant.stripe_account_id },
+    );
 
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id, amount: amountCents / 100 }),

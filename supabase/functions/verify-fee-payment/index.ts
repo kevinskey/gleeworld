@@ -4,8 +4,18 @@ import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 // Webhook handler — no CORS needed (server-to-server, not browser-originated)
+//
+// Fee payments are DIRECT charges on the tenant's connected account
+// (see create-fee-payment), so checkout.session.completed fires on the
+// connected account and reaches us through a Connect webhook endpoint
+// ("listen to events on connected accounts"). That endpoint has its own
+// signing secret — STRIPE_WEBHOOK_SECRET_FEES, never the platform
+// endpoint's STRIPE_WEBHOOK_SECRET (each Stripe endpoint signs with a
+// distinct secret; sharing the env var would make one of them always
+// fail verification). Same per-endpoint pattern as partner-webhook's
+// STRIPE_WEBHOOK_SECRET_PARTNER.
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2023-10-16" });
-const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
+const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET_FEES")!;
 
 const admin = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -48,6 +58,12 @@ serve(async (req) => {
     return new Response("Not a fee payment session — no student_fee_id in metadata", { status: 200 });
   }
 
+  // Never fulfill an unpaid session — completed sessions can carry
+  // payment_status 'unpaid' (e.g. delayed payment methods).
+  if (session.payment_status !== "paid") {
+    return new Response(`Session not paid (payment_status=${session.payment_status}) — skipping`, { status: 200 });
+  }
+
   const paymentIntentId =
     typeof session.payment_intent === "string"
       ? session.payment_intent
@@ -72,22 +88,41 @@ serve(async (req) => {
     }
   }
 
-  // ── Defense-in-depth: verify fee row belongs to the metadata tenant ────────
-  // service-role bypasses RLS, so we enforce tenant matching explicitly.
-  if (md.tenant_id) {
-    const { data: fee } = await admin
-      .from("gw_student_fees")
-      .select("tenant_id")
-      .eq("id", md.student_fee_id)
-      .maybeSingle();
+  // ── Tenant binding: the connected account that emitted this event MUST be
+  // the account of the tenant that owns the fee row. Session metadata alone
+  // is NOT trustworthy here — any connected account's own dashboard user can
+  // create a Checkout Session with arbitrary metadata, so a hostile tenant
+  // could otherwise mark another tenant's fees paid. `event.account` is set
+  // by Stripe on Connect-delivered events and can't be forged.
+  const { data: feeRow } = await admin
+    .from("gw_student_fees")
+    .select("tenant_id, gw_tenants!inner(stripe_account_id)")
+    .eq("id", md.student_fee_id)
+    .maybeSingle();
 
-    if (fee && fee.tenant_id !== md.tenant_id) {
-      console.warn(
-        `Tenant mismatch: fee ${md.student_fee_id} belongs to tenant ${fee.tenant_id}` +
-        ` but metadata says ${md.tenant_id} — skipping`,
-      );
-      return new Response("Tenant mismatch — not processed", { status: 200 });
-    }
+  if (!feeRow) {
+    console.warn(`Fee ${md.student_fee_id} not found — skipping`);
+    return new Response("Fee not found — not processed", { status: 200 });
+  }
+
+  const eventAccount = (event as { account?: string }).account ?? null;
+  const tenantAccount = (feeRow as any).gw_tenants?.stripe_account_id ?? null;
+  if (!eventAccount || !tenantAccount || eventAccount !== tenantAccount) {
+    console.warn(
+      `Connected-account mismatch: event from ${eventAccount ?? "platform"} but fee` +
+      ` ${md.student_fee_id} belongs to tenant account ${tenantAccount ?? "none"} — skipping`,
+    );
+    return new Response("Connected-account mismatch — not processed", { status: 200 });
+  }
+
+  // Defense-in-depth: metadata tenant (set by create-fee-payment) should also
+  // agree with the fee row.
+  if (md.tenant_id && feeRow.tenant_id !== md.tenant_id) {
+    console.warn(
+      `Tenant mismatch: fee ${md.student_fee_id} belongs to tenant ${feeRow.tenant_id}` +
+      ` but metadata says ${md.tenant_id} — skipping`,
+    );
+    return new Response("Tenant mismatch — not processed", { status: 200 });
   }
 
   // ── Call record_fee_payment RPC (Task 6) ───────────────────────────────────

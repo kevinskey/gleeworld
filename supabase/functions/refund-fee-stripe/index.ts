@@ -74,10 +74,12 @@ serve(async (req) => {
       );
     }
 
-    // ── Load the fee row ───────────────────────────────────────────────────
+    // ── Load the fee row + tenant's connected account ──────────────────────
+    // Fees are direct charges on the tenant's connected account, so the
+    // PaymentIntent (and its refund) lives there, not on the platform.
     const { data: fee, error: feeErr } = await admin
       .from("gw_student_fees")
-      .select("id, status, payment_method, stripe_payment_intent_id")
+      .select("id, status, payment_method, stripe_payment_intent_id, gw_tenants!inner(stripe_account_id)")
       .eq("id", studentFeeId)
       .single();
 
@@ -103,9 +105,20 @@ serve(async (req) => {
       );
     }
 
-    // ── Issue Stripe refund ────────────────────────────────────────────────
+    const stripeAccountId = (fee as any).gw_tenants?.stripe_account_id as string | null;
+    if (!stripeAccountId) {
+      return new Response(
+        JSON.stringify({ error: "Tenant has no connected Stripe account — cannot refund" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // ── Issue Stripe refund on the connected account ───────────────────────
     try {
-      await stripe.refunds.create({ payment_intent: fee.stripe_payment_intent_id });
+      await stripe.refunds.create(
+        { payment_intent: fee.stripe_payment_intent_id },
+        { stripeAccount: stripeAccountId },
+      );
     } catch (stripeErr) {
       console.error("Stripe refund error:", (stripeErr as Error).message);
       return new Response(

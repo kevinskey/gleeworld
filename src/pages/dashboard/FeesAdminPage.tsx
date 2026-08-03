@@ -8,6 +8,7 @@ import { CreateFeeTemplateDialog } from '@/components/fees/CreateFeeTemplateDial
 import { FeeAssignDialog } from '@/components/fees/FeeAssignDialog';
 import { FeeTemplateRollup } from '@/components/fees/FeeTemplateRollup';
 import { MarkPaidDialog } from '@/components/fees/MarkPaidDialog';
+import { StoreConnectPrompt } from '@/components/products/StoreConnectPrompt';
 
 const CATS = ['all', 'dues', 'wardrobe', 'trip', 'travel', 'other'] as const;
 type Cat = (typeof CATS)[number];
@@ -59,6 +60,7 @@ export default function FeesAdminPage() {
         <Button onClick={() => setCreateOpen(true)}>+ New template</Button>
       }
     >
+      <StoreConnectPrompt returnPath="/dashboard/fees" moneyLabel="Student fee payments" />
       <Tabs value={tab} onValueChange={v => setTab(v as Cat)}>
         <TabsList>
           {CATS.map(c => (

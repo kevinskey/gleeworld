@@ -189,7 +189,7 @@ curl -s -o /dev/null -w "%{http_code}" \
 
 ---
 
-## Step 3 — Add `STRIPE_WEBHOOK_SECRET` to Supabase env
+## Step 3 — Add `STRIPE_WEBHOOK_SECRET_FEES` to Supabase env
 
 ```bash
 ssh root@supabase.gleeworld.org
@@ -198,10 +198,13 @@ nano /opt/supabase/.env
 ```
 
 Add the line (get the value from Step 4 below — register the webhook first,
-then paste the signing secret here):
+then paste the signing secret here). The var is deliberately NOT
+`STRIPE_WEBHOOK_SECRET` — that one belongs to the existing `stripe-webhook`
+endpoint, and every Stripe endpoint signs with its own distinct secret
+(same pattern as `STRIPE_WEBHOOK_SECRET_PARTNER` for `partner-webhook`):
 
 ```
-STRIPE_WEBHOOK_SECRET=whsec_XXXXXXXXXXXXXXXXXXXXXXXX
+STRIPE_WEBHOOK_SECRET_FEES=whsec_XXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
 After saving, restart Kong/functions so the new env var is picked up:
@@ -218,15 +221,19 @@ cd /opt/supabase && docker compose restart kong functions
    connected account).
 2. Click **Add endpoint**.
 3. Endpoint URL: `https://supabase.gleeworld.org/functions/v1/verify-fee-payment`
-4. Events to subscribe:
+4. **Listen to: events on Connected accounts** — fee payments are direct
+   charges created ON the tenant's connected account, so
+   `checkout.session.completed` fires there, not on the platform account.
+   An "events on your account" endpoint will never receive them.
+5. Events to subscribe:
    - `checkout.session.completed`
-5. Click **Add endpoint**.
-6. On the endpoint detail page, reveal the **Signing secret** (`whsec_…`).
-7. Copy it into `/opt/supabase/.env` as `STRIPE_WEBHOOK_SECRET` (see Step 3).
+6. Click **Add endpoint**.
+7. On the endpoint detail page, reveal the **Signing secret** (`whsec_…`).
+8. Copy it into `/opt/supabase/.env` as `STRIPE_WEBHOOK_SECRET_FEES` (see Step 3).
 
-> Note: the existing `stripe-webhook` function handles Box Office events.
-> This is a **separate** endpoint for fee payments only. Do NOT reuse the
-> Box Office signing secret — they are independent endpoints with separate secrets.
+> Note: this is a **separate** endpoint from the existing `stripe-webhook`
+> one. Do NOT reuse its signing secret — every Stripe endpoint has its own,
+> and `verify-fee-payment` reads `STRIPE_WEBHOOK_SECRET_FEES`.
 
 ---
 
