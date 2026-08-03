@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
+import { VideoDockProvider, VideoDockPlayer } from "@/contexts/VideoDockContext";
 import { Mus240SemesterProvider } from "@/contexts/Mus240SemesterContext";
 import { CourseProvider } from "@/contexts/CourseContext";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -513,6 +514,7 @@ function AuthenticatedGlobals() {
       <PersistentMeetingOverlay />
       <MessengerModal />
       <GlobalMiniPlayer />
+      <VideoDockPlayer />
     </Suspense>
   );
 }
@@ -535,6 +537,7 @@ const App = () => {
                   <MessengerProvider>
                   <ActiveMeetingProvider>
                   <AudioCompanionProvider>
+                  <VideoDockProvider>
                   <div>
                   <TenantFavicon />
                   <Toaster />
@@ -3475,6 +3478,7 @@ const App = () => {
                     <GlobalMusicPlayer />
                     <PWAInstallPrompt />
                    </div>
+                   </VideoDockProvider>
                    </AudioCompanionProvider>
                   </ActiveMeetingProvider>
                   </MessengerProvider>
