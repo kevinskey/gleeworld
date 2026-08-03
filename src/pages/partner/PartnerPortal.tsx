@@ -15,16 +15,19 @@ export default function PartnerPortal() {
   const refresh = useRefreshConnectStatus();
   const location = useLocation();
 
-  // On return from Stripe onboarding, refresh status.
+  // Refresh status on EVERY portal visit, not just the ?stripe=done
+  // return — statuses also change while the user is away (Stripe's
+  // payout review clearing, or a status check that failed during an
+  // outage). Loud toasts only on the onboarding return.
   useEffect(() => {
-    if (params.get('stripe') === 'done') {
-      refresh.mutate(undefined, {
-        onSuccess: (r) => {
-          if (r.status === 'active') toast.success('You\'re live — your storefront is ready.');
-          else toast.info('Still finalizing with Stripe. Try again in a moment.');
-        },
-      });
-    }
+    const returning = params.get('stripe') === 'done';
+    refresh.mutate(undefined, {
+      onSuccess: (r) => {
+        if (!returning) return;
+        if (r.status === 'active') toast.success('You\'re live — your storefront is ready.');
+        else toast.info('Still finalizing with Stripe. Try again in a moment.');
+      },
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.get('stripe')]);
 
@@ -36,7 +39,11 @@ export default function PartnerPortal() {
   );
 
   const isActive = partner.status === 'active';
-  const needsOnboarding = partner.status === 'onboarding' && (!partner.stripe_charges_enabled || !partner.stripe_payouts_enabled);
+  // Onboarding is only "needed" until charges work. Payouts lag behind
+  // in Stripe's review for new accounts — sending the user back through
+  // onboarding then is a no-op loop (Stripe has nothing left to ask).
+  const needsOnboarding = partner.status === 'onboarding' && !partner.stripe_charges_enabled;
+  const payoutsPending = !!partner.stripe_charges_enabled && !partner.stripe_payouts_enabled;
 
   const kickOff = () => start.mutate(undefined, {
     onSuccess: (r) => { window.location.href = r.onboarding_url; },
@@ -64,6 +71,14 @@ export default function PartnerPortal() {
               <p className="text-sm">Finish Stripe onboarding to start selling. Stripe collects the info you need to receive payouts; we never see it.</p>
               <Button disabled={start.isPending} onClick={kickOff}>Continue on Stripe</Button>
             </>
+          )}
+          {payoutsPending && (
+            <p className="text-xs text-muted-foreground">
+              You can sell now — charges are enabled. Payouts are pending Stripe's
+              standard review of new accounts; your earnings collect safely in your
+              Stripe balance and pay out automatically once the review clears
+              (usually a few days).
+            </p>
           )}
           {isActive && (
             <div className="flex items-center gap-2 flex-wrap">

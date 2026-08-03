@@ -32,7 +32,13 @@ serve(async (req) => {
   const acct = await stripe.accounts.retrieve(partner.stripe_connect_id);
   const charges_enabled = !!acct.charges_enabled;
   const payouts_enabled = !!acct.payouts_enabled;
-  const nextStatus = (charges_enabled && payouts_enabled)
+  // Active on CHARGES alone. New Connect accounts routinely sit in
+  // Stripe's payout review (requirements.disabled_reason "other",
+  // nothing currently_due) for days after onboarding completes — gating
+  // on payouts too left Lion & Lamb looping through a Stripe flow that
+  // had nothing left to collect. Sales work with charges enabled; funds
+  // accumulate in the partner's Stripe balance until payouts clear.
+  const nextStatus = charges_enabled
     ? "active" : (partner.status === "invited" ? "onboarding" : partner.status);
   const activatedAt = (nextStatus === "active" && partner.status !== "active") ? new Date().toISOString() : null;
 
