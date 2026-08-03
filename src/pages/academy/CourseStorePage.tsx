@@ -21,6 +21,9 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
   boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
 };
 
+// Store is a teaser until launch — flip to false in Spring 2027.
+const STORE_LOCKED = true;
+
 export default function CourseStorePage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -39,6 +42,7 @@ export default function CourseStorePage() {
 
   const adopt = useMutation({
     mutationFn: async (templateId: string): Promise<string | null> => {
+      if (STORE_LOCKED) throw new Error('The Course Store opens Spring 2027.');
       const { data, error } = await supabase.rpc('adopt_course_template', { p_template_id: templateId });
       if (error) throw error;
       return data as string | null;
@@ -83,11 +87,28 @@ export default function CourseStorePage() {
       title="Course Store"
       subtitle="Adopt a pre-built course into your tenant. You can edit everything after."
       actions={
-        <Button size="sm" onClick={() => navigate('/academy/new')}>
+        <Button
+          size="sm"
+          disabled={STORE_LOCKED}
+          title={STORE_LOCKED ? 'Available Spring 2027' : undefined}
+          onClick={() => navigate('/academy/new')}
+        >
           <Plus className="w-4 h-4 mr-1.5" /> Build from scratch
         </Button>
       }
     >
+      <div className="relative">
+        {STORE_LOCKED && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+            <div className="-rotate-6 rounded-2xl border-4 border-muted-foreground/40 bg-background/80 px-6 py-3 sm:px-10 sm:py-5 text-xl sm:text-3xl font-extrabold uppercase tracking-widest text-muted-foreground/80 text-center shadow-sm">
+              Available Spring 2027
+            </div>
+          </div>
+        )}
+        <div
+          className={STORE_LOCKED ? 'grayscale opacity-50 pointer-events-none select-none' : undefined}
+          aria-hidden={STORE_LOCKED || undefined}
+        >
       {isLoading ? (
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
           <CardContent className="p-10 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></CardContent>
@@ -121,7 +142,7 @@ export default function CourseStorePage() {
                   <Button
                     size="sm"
                     onClick={() => adopt.mutate(t.id)}
-                    disabled={adopt.isPending}
+                    disabled={STORE_LOCKED || adopt.isPending}
                   >
                     {adopt.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Check className="w-4 h-4 mr-1.5" />}
                     Adopt
@@ -132,6 +153,8 @@ export default function CourseStorePage() {
           ))}
         </div>
       )}
+        </div>
+      </div>
     </DashboardPageShell>
     </DashboardShell>
     </UniversalLayout>
