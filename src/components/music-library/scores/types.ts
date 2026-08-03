@@ -40,6 +40,28 @@ export interface ScoreRow {
   shared_with_voice_parts: string[] | null;
 }
 
+// At-a-glance sharing summary for librarian badges. Returns the compact
+// badge label plus a full breakdown for the title/tooltip.
+export function sharingSummary(row: ScoreRow): { shared: boolean; label: string; detail: string } {
+  if (row.shared_with_members) {
+    return { shared: true, label: 'Everyone', detail: 'Visible to every member of this workspace' };
+  }
+  const people = row.shared_with_users?.length ?? 0;
+  const classes = row.shared_with_courses?.length ?? 0;
+  const parts = row.shared_with_voice_parts?.length ?? 0;
+  const segments: string[] = [];
+  if (classes > 0) segments.push(`${classes} ${classes === 1 ? 'class' : 'classes'}`);
+  if (people > 0) segments.push(`${people} ${people === 1 ? 'person' : 'people'}`);
+  if (parts > 0) segments.push(`${parts} ${parts === 1 ? 'part' : 'parts'}`);
+  if (segments.length === 0) {
+    return { shared: false, label: 'Not shared', detail: 'Visible only to librarians and admins' };
+  }
+  const label = segments.join(' · ');
+  return { shared: true, label, detail: `Shared with ${label}` };
+}
+
+export const isSharedAnyLane = (row: ScoreRow): boolean => sharingSummary(row).shared;
+
 // Fixed section list — mirrors the CHECK constraint on
 // gw_profiles.voice_part (20250713160258). Keep in sync with the DB.
 export const VOICE_PARTS: Array<{ value: string; label: string }> = [

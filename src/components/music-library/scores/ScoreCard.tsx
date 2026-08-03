@@ -6,7 +6,7 @@ import {
   Music, Headphones, Library as LibraryIcon, Pencil, PencilLine, Share2, ListMusic,
 } from 'lucide-react';
 import { RightsBadge } from '@/components/policies/RightsBadge';
-import { SOFT_CARD, SOFT_CARD_STYLE, type ScoreRow } from './types';
+import { SOFT_CARD, SOFT_CARD_STYLE, isSharedAnyLane, sharingSummary, type ScoreRow } from './types';
 
 export function ScoreCard({
   row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare, onPartTracks,
@@ -110,6 +110,21 @@ export function ScoreCard({
                   </span>
                 </Badge>
               )}
+              {/* At-a-glance sharing — librarians only; members don't need
+                  to reason about who else can see a score. */}
+              {canEdit && (() => {
+                const share = sharingSummary(row);
+                return (
+                  <Badge
+                    variant="outline"
+                    className={`text-xs max-w-full ${share.shared ? '' : 'text-muted-foreground'}`}
+                    title={share.detail}
+                  >
+                    <Share2 className="w-3 h-3 mr-1 shrink-0" />
+                    <span className="truncate">{share.label}</span>
+                  </Badge>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -133,12 +148,12 @@ export function ScoreCard({
           )}
           {canEdit && (
             <Button
-              variant={row.shared_with_members ? 'secondary' : 'outline'}
+              variant={isSharedAnyLane(row) ? 'secondary' : 'outline'}
               size="sm"
               className="shrink-0"
               onClick={(e) => { e.stopPropagation(); onToggleShare(); }}
-              aria-label={row.shared_with_members ? 'Shared with members — tap to unshare' : 'Share with members'}
-              title={row.shared_with_members ? 'Shared with members' : 'Share with members'}
+              aria-label={isSharedAnyLane(row) ? 'Shared — review sharing' : 'Share this score'}
+              title={sharingSummary(row).detail}
             >
               <Share2 className="w-4 h-4" />
             </Button>

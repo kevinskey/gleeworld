@@ -5,7 +5,7 @@ import {
   Music, Headphones, Library as LibraryIcon, Pencil, PencilLine, Share2, ListMusic,
 } from 'lucide-react';
 import { RightsBadge } from '@/components/policies/RightsBadge';
-import type { ScoreRow } from './types';
+import { isSharedAnyLane, sharingSummary, type ScoreRow } from './types';
 
 // Compact one-line-per-score rendering for the list layout. Same data and
 // actions as ScoreCard; the badge cluster collapses away below md so phone
@@ -90,6 +90,20 @@ export function ScoreListRow({
           <LibraryIcon className="w-3 h-3 mr-1" />
           {copies}
         </Badge>
+        {/* At-a-glance sharing — librarians only. */}
+        {canEdit && (() => {
+          const share = sharingSummary(row);
+          return (
+            <Badge
+              variant="outline"
+              className={`text-xs ${share.shared ? '' : 'text-muted-foreground'}`}
+              title={share.detail}
+            >
+              <Share2 className="w-3 h-3 mr-1" />
+              {share.label}
+            </Badge>
+          );
+        })()}
         </div>
       </div>
       <div className="flex items-center gap-1.5 shrink-0">
@@ -114,14 +128,15 @@ export function ScoreListRow({
         )}
         {canEdit && (
           <Button
-            variant={row.shared_with_members ? 'secondary' : 'outline'}
+            variant={isSharedAnyLane(row) ? 'secondary' : 'outline'}
             size="sm"
             className="text-xs"
             onClick={(e) => { e.stopPropagation(); onToggleShare(); }}
-            aria-label={row.shared_with_members ? 'Shared with members' : 'Share with members'}
+            aria-label={isSharedAnyLane(row) ? 'Shared — review sharing' : 'Share this score'}
+            title={sharingSummary(row).detail}
           >
             <Share2 className="w-4 h-4 sm:mr-1" />
-            <span className="hidden sm:inline">{row.shared_with_members ? 'Shared' : 'Share'}</span>
+            <span className="hidden sm:inline">{isSharedAnyLane(row) ? 'Shared' : 'Share'}</span>
           </Button>
         )}
         {hasPdf && (
