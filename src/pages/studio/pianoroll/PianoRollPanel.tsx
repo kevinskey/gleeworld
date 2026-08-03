@@ -112,14 +112,26 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
    * Flags the change as internal (this panel's own edit) BEFORE the update
    * propagates, so the reconcile effect below can tell it apart from an
    * external swap of clip.notes (undo, collaborator refresh) — see
-   * selectionSync.ts. */
+   * selectionSync.ts.
+   *
+   * The flag is armed ONLY when this mutation actually changes notes
+   * identity (next.notes !== c.notes) — cc-only edits (sustain ranges,
+   * mod points; see the `{ ...c, cc: ... }` call sites below) never touch
+   * notes, so they must never arm it. If they did, the flag would leak
+   * `true` past them and a later undo, whose notes swap the reconcile
+   * effect is supposed to catch as external, would be misclassified as
+   * internal — the exact stale-selection bug this file exists to fix. */
   const internalEditRef = useRef(false);
   const editClip = (mut: (c: MidiClip) => MidiClip) => {
-    internalEditRef.current = true;
     props.update((s) => ({
       ...s,
       tracks: s.tracks.map((t) => t.id !== trackId || !isMidiTrack(t) ? t : {
-        ...t, clips: t.clips.map((c) => c.id === clipId ? mut(c) : c),
+        ...t, clips: t.clips.map((c) => {
+          if (c.id !== clipId) return c;
+          const next = mut(c);
+          if (next.notes !== c.notes) internalEditRef.current = true;
+          return next;
+        }),
       }),
     }));
   };
