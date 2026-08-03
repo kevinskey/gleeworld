@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { parseYouTubeInput } from '@/lib/youtubeId';
-import { parseVideoSource, providerLabel, type ParsedVideoSource } from '@/lib/videoSources';
+import { parseVideoSource, type ParsedVideoSource } from '@/lib/videoSources';
+import { addVideoToLibrary, youTubeSource } from '@/lib/videoLibrary';
 
 interface AddYouTubeVideoFormProps {
   // Called after a successful insert so the caller can refresh its grid.
@@ -24,7 +25,6 @@ interface SearchHit {
 }
 
 type Mode = 'search' | 'url' | 'upload';
-type AddOutcome = 'added' | 'duplicate' | 'failed';
 
 const MAX_UPLOAD_BYTES = 500 * 1024 * 1024; // 500 MB — Supabase edge default; large enough for member submissions.
 const ACCEPT_VIDEO = 'video/*,.mkv,.avi,.wmv,.flv';
@@ -86,11 +86,11 @@ async function mapWithConcurrency<T, R>(
 // lines reported back rather than aborting the batch.
 //
 // Gating who SEES this form is the caller's job (YouTubeChannel checks
-// useUserRole().isAdmin) — this component assumes it should render. Note
-// youtube_videos RLS is WITH CHECK (true) for any authenticated user,
-// so the real access control here is UI-only; a signed-in non-admin who
-// reaches this component via devtools could still insert. Tightening
-// that is an RLS change, not a UI one.
+// useUserRole().isAdmin) — this component assumes it should render. The UI
+// gate is belt-and-braces: migration 20260216024654 dropped the old
+// permissive policies, so youtube_videos writes are admin-only at the RLS
+// level too. A non-admin who reaches this via devtools gets an empty row
+// set back, which addVideoToLibrary reports as { outcome: 'failed' }.
 export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdded }) => {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -152,48 +152,10 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
     return () => { cancelled = true; window.clearTimeout(handle); };
   }, [open, mode, query]);
 
-  // Insert one video row and report the outcome instead of toasting, so the
-  // bulk path can tally a whole batch and the single-add path can keep its
-  // one-video-shaped messages. Accepts either a legacy YT-shaped payload
-  // (videoId + videoTitle) or a fully parsed source (any provider), so the
-  // search-result click and the URL/upload flows share one code path.
-  const insertSource = async (
-    source: ParsedVideoSource,
-    providedTitle: string,
-  ): Promise<{ outcome: AddOutcome; message?: string }> => {
-    try {
-      const { data, error: insertError } = await supabase
-        .from('youtube_videos')
-        .insert({
-          video_id: source.videoId,
-          // NOT a channels row — see clientActions.ts add_video for why null
-          // is correct here and 'manual-upload' (a string) is not: this
-          // column is a UUID FK and a non-UUID string fails every insert.
-          channel_id: null as unknown as string,
-          title: providedTitle || (source.provider === 'youtube' ? source.videoId : `${providerLabel(source.provider)} video`),
-          thumbnail_url: source.thumbnailUrl ?? '',
-          video_url: source.canonicalUrl,
-          published_at: new Date().toISOString(),
-        })
-        .select();
-
-      if (insertError) {
-        if (insertError.code === '23505') return { outcome: 'duplicate' };
-        return { outcome: 'failed', message: insertError.message };
-      }
-      if (!data?.length) {
-        return { outcome: 'failed', message: 'No row was returned — check permissions.' };
-      }
-      return { outcome: 'added' };
-    } catch (err) {
-      return { outcome: 'failed', message: err instanceof Error ? err.message : 'Unknown error' };
-    }
-  };
-
   const insertRow = async (source: ParsedVideoSource, providedTitle: string) => {
     setSubmitting(true);
     try {
-      const result = await insertSource(source, providedTitle);
+      const result = await addVideoToLibrary(source, providedTitle);
       if (result.outcome === 'duplicate') {
         toast({ title: 'Already added', description: 'That video is already in the library.', variant: 'destructive' });
         return;
@@ -212,16 +174,7 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
   };
 
   const addYouTube = async (videoId: string, videoTitle: string) => {
-    await insertRow(
-      {
-        provider: 'youtube',
-        videoId,
-        embedUrl: `https://www.youtube.com/embed/${videoId}`,
-        canonicalUrl: `https://www.youtube.com/watch?v=${videoId}`,
-        thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-      },
-      videoTitle,
-    );
+    await insertRow(youTubeSource(videoId), videoTitle);
   };
 
   // Real title via YouTube's oEmbed endpoint — CORS-enabled, keyless, and
@@ -247,21 +200,16 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
   };
 
   // Turn one pasted token into something insertable. YouTube links get their
-  // real title from oEmbed here; other providers fall back to insertSource's
-  // "<Provider> video" default since there's no keyless title endpoint.
+  // real title from oEmbed here; other providers fall back to
+  // addVideoToLibrary's "<Provider> video" default since there's no keyless
+  // title endpoint.
   const resolveToken = async (
     token: string,
   ): Promise<{ source: ParsedVideoSource; title: string } | { badToken: string }> => {
     const ytId = parseYouTubeInput(token);
     if (ytId) {
       return {
-        source: {
-          provider: 'youtube',
-          videoId: ytId,
-          embedUrl: `https://www.youtube.com/embed/${ytId}`,
-          canonicalUrl: `https://www.youtube.com/watch?v=${ytId}`,
-          thumbnailUrl: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
-        },
+        source: youTubeSource(ytId),
         title: await fetchYouTubeTitle(ytId),
       };
     }
@@ -290,7 +238,7 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
         if ('badToken' in entry) {
           failed.push(entry.badToken);
         } else {
-          const result = await insertSource(entry.source, entry.title);
+          const result = await addVideoToLibrary(entry.source, entry.title);
           if (result.outcome === 'added') added += 1;
           else if (result.outcome === 'duplicate') duplicate += 1;
           else failed.push(tokens[i]!);
