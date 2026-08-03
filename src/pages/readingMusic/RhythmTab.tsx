@@ -41,7 +41,13 @@ const DRILLS: Array<{ id: Drill; label: string; blurb: string }> = [
 
 // Short sine bursts (the playClicks envelope idiom) with an explicit start
 // time so the count-in can be scheduled after an echo demo.
-function burst(ctx: AudioContext, at: number, freq: number, gain: number): void {
+//
+// Everything a take plays is routed through `dest`, a per-take gain node, NOT
+// straight to ctx.destination. A whole take's clicks are scheduled up front, so
+// once they are on the graph only a node in front of them can silence them —
+// clearing JS timers does nothing, which is why Stop used to leave the
+// metronome and echo demo playing to the end.
+function burst(ctx: AudioContext, dest: AudioNode, at: number, freq: number, gain: number): void {
   const osc = ctx.createOscillator();
   const g = ctx.createGain();
   osc.type = 'sine';
@@ -49,28 +55,28 @@ function burst(ctx: AudioContext, at: number, freq: number, gain: number): void 
   g.gain.setValueAtTime(0, at);
   g.gain.linearRampToValueAtTime(gain, at + 0.004);
   g.gain.exponentialRampToValueAtTime(0.0001, at + 0.06);
-  osc.connect(g).connect(ctx.destination);
+  osc.connect(g).connect(dest);
   osc.start(at);
   osc.stop(at + 0.08);
 }
 
 function scheduleCountInAndClicks(
-  ctx: AudioContext, startAt: number, bpm: number, countInPulses: number, exercisePulses: number, ppm: number,
+  ctx: AudioContext, dest: AudioNode, startAt: number, bpm: number, countInPulses: number, exercisePulses: number, ppm: number,
 ): void {
   const clicks = clickSchedule({ bpm, countInBeats: countInPulses, exerciseBeats: exercisePulses, meterBeats: ppm });
   for (const c of clicks) {
     // Count-in loud so tempo is unmistakable; take clicks quiet so the open
     // (echoCancellation-off) mic doesn't hear the speaker as claps.
     const gain = c.countIn ? (c.accent ? 0.4 : 0.3) : c.accent ? 0.08 : 0.05;
-    burst(ctx, startAt + c.timeSec, c.accent ? 1400 : 1000, gain);
+    burst(ctx, dest, startAt + c.timeSec, c.accent ? 1400 : 1000, gain);
   }
 }
 
-function schedulePatternDemo(ctx: AudioContext, pattern: RhythmPattern, spp: number, startAt: number): void {
+function schedulePatternDemo(ctx: AudioContext, dest: AudioNode, pattern: RhythmPattern, spp: number, startAt: number): void {
   for (const e of pattern.events) {
     if (e.rest) continue;
     const onPulse = Math.abs(e.startPulse - Math.round(e.startPulse)) < 1e-6;
-    burst(ctx, startAt + e.startPulse * spp, onPulse ? 1200 : 900, 0.3);
+    burst(ctx, dest, startAt + e.startPulse * spp, onPulse ? 1200 : 900, 0.3);
   }
 }
 
@@ -117,6 +123,8 @@ export function RhythmTab() {
   const sessionRef = useRef<TapSession | MicOnsetSession | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const activeRef = useRef(false);
+  /** Everything this take plays hangs off here so Stop can silence it at once. */
+  const takeGainRef = useRef<GainNode | null>(null);
 
   useEffect(() => { localStorage.setItem('rm_rhythm_level', JSON.stringify(level)); }, [level]);
   useEffect(() => { localStorage.setItem('rm_rhythm_input', input); }, [input]);
@@ -137,6 +145,12 @@ export function RhythmTab() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     roundRef.current = null;
+    // Oscillators for the whole take are already scheduled on the graph;
+    // disconnecting their only route to the speakers is what actually stops them.
+    if (takeGainRef.current) {
+      try { takeGainRef.current.disconnect(); } catch { /* already torn down */ }
+      takeGainRef.current = null;
+    }
   }, []);
 
   // Unmount / tab-hidden: kill the take cleanly, no partial insert.
@@ -223,13 +237,20 @@ export function RhythmTab() {
     setTakeT0(t0);
     const takeDur = p.totalPulses * spp;
 
+    // One gain node per take, in front of every scheduled voice, so cancelTake
+    // has something to cut. Without it Stop leaves the take audible to the end.
+    const takeGain = ctx.createGain();
+    takeGain.gain.value = 1;
+    takeGain.connect(ctx.destination);
+    takeGainRef.current = takeGain;
+
     if (drill === 'echo') {
       setPhase('demo');
-      schedulePatternDemo(ctx, p, spp, base);
+      schedulePatternDemo(ctx, takeGain, p, spp, base);
     } else {
       setPhase('countin');
     }
-    scheduleCountInAndClicks(ctx, countInStart, bpm, ppm, p.totalPulses, ppm);
+    scheduleCountInAndClicks(ctx, takeGain, countInStart, bpm, ppm, p.totalPulses, ppm);
 
     const ms = (sec: number) => Math.max(0, (sec - ctx.currentTime) * 1000);
     if (drill === 'echo') {
@@ -468,15 +489,20 @@ export function RhythmTab() {
               }}
             />
           )}
-          {drill === 'clap_blast' && input === 'mic' && latencyMs !== null && !calibrating && (
-            <button
-              type="button"
-              disabled={running}
-              onClick={() => setCalibrating(true)}
-              className="text-sm text-slate-500 underline-offset-2 hover:underline"
-            >
-              Device delay: {latencyMs} ms — recalibrate
-            </button>
+          {/* Always reachable whenever mic input is selected — before a first
+              calibration as well as after. A stale or bad offset makes every
+              clap read wrong, so getting back here must never require guessing. */}
+          {drill === 'clap_blast' && input === 'mic' && !calibrating && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" disabled={running} onClick={() => setCalibrating(true)}>
+                {latencyMs === null ? 'Calibrate mic' : 'Recalibrate mic'}
+              </Button>
+              <span className="text-sm text-slate-500">
+                {latencyMs === null
+                  ? 'Not calibrated yet — Clap Blast will ask before your first take.'
+                  : `Device delay: ${latencyMs} ms`}
+              </span>
+            </div>
           )}
 
           {showNotation && pattern && phase !== 'result' && <RhythmStrip pattern={pattern} system={system} />}

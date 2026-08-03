@@ -13,16 +13,18 @@ class FakeParam {
   linearRampToValueAtTime() { return this; }
   exponentialRampToValueAtTime() { return this; }
 }
-class FakeNode { connect(n: unknown) { return n; } disconnect() {} }
+class FakeNode { connect(n: unknown) { return n; } disconnect() { (this as { disconnected?: boolean }).disconnected = true; } }
 class FakeOsc extends FakeNode { type = 'sine'; frequency = new FakeParam(); start() {} stop() {} }
-class FakeGain extends FakeNode { gain = new FakeParam(); }
+class FakeGain extends FakeNode { gain = new FakeParam(); disconnected = false; }
+/** Gains created since the last reset — lets a test see the take bus torn down. */
+const createdGains: FakeGain[] = [];
 class FakeCtx {
   currentTime = 0;
   state = 'running';
   destination = new FakeNode();
   resume() { return Promise.resolve(); }
   createOscillator() { return new FakeOsc(); }
-  createGain() { return new FakeGain(); }
+  createGain() { const g = new FakeGain(); createdGains.push(g); return g; }
 }
 
 describe('RhythmTab', () => {
@@ -86,7 +88,13 @@ describe('RhythmTab', () => {
       await act(async () => { fireEvent.click(screen.getByRole('button', { name: /^start$/i })); });
 
       const stop = screen.getByRole('button', { name: /^stop$/i });
+      const gainsBefore = createdGains.length;
       await act(async () => { fireEvent.click(stop); });
+
+      // A take's clicks are scheduled on the audio graph up front, so Stop must
+      // disconnect the bus they hang off — clearing timers alone left the
+      // metronome and echo demo audible until the take would have ended.
+      expect(createdGains.slice(0, gainsBefore).some((g) => g.disconnected)).toBe(true);
 
       // Let every timer the take scheduled run out — none may grade or save.
       await act(async () => { vi.advanceTimersByTime(120_000); });
@@ -123,6 +131,32 @@ describe('RhythmTab', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^echo$/i }));
     expect(screen.getByLabelText(/syllables/i)).toBeInTheDocument();
+  });
+
+  it('offers a calibrate button whenever mic input is selected, before and after calibrating', () => {
+    localStorage.removeItem('rm_clap_latency_ms_v2');
+    render(<RhythmTab />);
+    fireEvent.click(screen.getByRole('button', { name: /clap blast/i }));
+    fireEvent.change(screen.getByLabelText(/input/i), { target: { value: 'mic' } });
+    // Reachable with no stored offset — previously it only appeared afterwards.
+    expect(screen.getByRole('button', { name: /calibrate mic/i })).toBeInTheDocument();
+    expect(screen.getByText(/not calibrated yet/i)).toBeInTheDocument();
+    // ...and hidden on tap input, where there is nothing to calibrate.
+    fireEvent.change(screen.getByLabelText(/input/i), { target: { value: 'tap' } });
+    expect(screen.queryByRole('button', { name: /calibrate mic/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the stored delay and a Recalibrate button once calibrated', () => {
+    localStorage.setItem('rm_clap_latency_ms_v2', '42');
+    try {
+      render(<RhythmTab />);
+      fireEvent.click(screen.getByRole('button', { name: /clap blast/i }));
+      fireEvent.change(screen.getByLabelText(/input/i), { target: { value: 'mic' } });
+      expect(screen.getByRole('button', { name: /recalibrate mic/i })).toBeInTheDocument();
+      expect(screen.getByText(/device delay: 42 ms/i)).toBeInTheDocument();
+    } finally {
+      localStorage.clear();
+    }
   });
 
   it('falls back to tap (and closes calibration) when the mic is denied', async () => {
