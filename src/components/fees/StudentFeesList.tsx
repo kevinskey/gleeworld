@@ -22,12 +22,12 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 
-interface DuesRecordsListProps {
+interface StudentFeesListProps {
   duesRecords: any[];
   onRefresh: () => void;
 }
 
-export const DuesRecordsList = ({ duesRecords, onRefresh }: DuesRecordsListProps) => {
+export const StudentFeesList = ({ duesRecords, onRefresh }: StudentFeesListProps) => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -46,7 +46,7 @@ export const DuesRecordsList = ({ duesRecords, onRefresh }: DuesRecordsListProps
       }
 
       const { error } = await supabase
-        .from('gw_dues_records')
+        .from('gw_student_fees')
         .update(updateData)
         .eq('id', recordId);
 

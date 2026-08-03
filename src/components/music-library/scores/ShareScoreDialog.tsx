@@ -222,7 +222,7 @@ export function ShareScoreDialog({
               <Label className="text-sm inline-flex items-center gap-1.5">
                 <UsersIcon className="w-3.5 h-3.5 text-muted-foreground" />
                 Specific people
-                {users.size > 0 && <Badge variant="secondary" className="ml-1 text-[10px]">{users.size}</Badge>}
+                {users.size > 0 && <Badge variant="secondary" className="ml-1 text-xs">{users.size}</Badge>}
               </Label>
               {users.size > 0 && (
                 <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setUsers(new Set())}>
@@ -276,7 +276,7 @@ export function ShareScoreDialog({
               <Label className="text-sm inline-flex items-center gap-1.5">
                 <VoicePartIcon className="w-3.5 h-3.5 text-muted-foreground" />
                 Voice parts
-                {voiceParts.size > 0 && <Badge variant="secondary" className="ml-1 text-[10px]">{voiceParts.size}</Badge>}
+                {voiceParts.size > 0 && <Badge variant="secondary" className="ml-1 text-xs">{voiceParts.size}</Badge>}
               </Label>
               {voiceParts.size > 0 && (
                 <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setVoiceParts(new Set())}>
@@ -315,7 +315,7 @@ export function ShareScoreDialog({
               <Label className="text-sm inline-flex items-center gap-1.5">
                 <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
                 Classes
-                {coursesSel.size > 0 && <Badge variant="secondary" className="ml-1 text-[10px]">{coursesSel.size}</Badge>}
+                {coursesSel.size > 0 && <Badge variant="secondary" className="ml-1 text-xs">{coursesSel.size}</Badge>}
               </Label>
               {coursesSel.size > 0 && (
                 <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setCoursesSel(new Set())}>

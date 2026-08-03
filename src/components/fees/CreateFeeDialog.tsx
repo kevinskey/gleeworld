@@ -10,13 +10,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-interface CreateDuesDialogProps {
+interface CreateFeeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }
 
-export const CreateDuesDialog = ({ open, onOpenChange, onSuccess }: CreateDuesDialogProps) => {
+export const CreateFeeDialog = ({ open, onOpenChange, onSuccess }: CreateFeeDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -68,7 +68,7 @@ export const CreateDuesDialog = ({ open, onOpenChange, onSuccess }: CreateDuesDi
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('gw_dues_records')
+        .from('gw_student_fees')
         .insert([{
           user_id: formData.user_id,
           amount: parseFloat(formData.amount),

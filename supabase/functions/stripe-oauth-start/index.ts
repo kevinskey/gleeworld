@@ -34,6 +34,7 @@ const corsHeaders = {
 const RETURN_PATH_ALLOWLIST = new Set([
   '/dashboard/store',
   '/dashboard/box-office',
+  '/dashboard/fees',
   '/store',
 ]);
 

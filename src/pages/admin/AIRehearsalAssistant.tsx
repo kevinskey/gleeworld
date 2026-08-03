@@ -104,7 +104,7 @@ export default function AIRehearsalAssistant() {
       subtitle="Pick a task, fill in a couple of fields, and get a draft you can copy or edit."
     >
       <Tabs value={mode} onValueChange={(v) => switchMode(v as Mode)}>
-        <TabsList className="grid grid-cols-2 sm:grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-4 h-auto w-full">
           <TabsTrigger value="plan">Rehearsal Plan</TabsTrigger>
           <TabsTrigger value="warmup">Warm-Ups</TabsTrigger>
           <TabsTrigger value="notes">Program Notes</TabsTrigger>

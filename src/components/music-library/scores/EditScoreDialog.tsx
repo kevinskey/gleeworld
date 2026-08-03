@@ -140,7 +140,7 @@ export function EditScoreDialog({
                 <option value="licensed">Licensed (limited seats)</option>
                 <option value="all_rights_reserved">All rights reserved (private use only)</option>
               </select>
-              <p className="text-[11px] text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {rightsStatus === 'public_domain' && 'No seat limit. Modern editions may still be copyrighted — verify the editor.'}
                 {rightsStatus === 'licensed' && 'One active member per seat. Reduce roster or buy more copies if you grow past the count.'}
                 {rightsStatus === 'all_rights_reserved' && 'Private use only — do NOT share with members or move to the shared library.'}

@@ -11,6 +11,14 @@ const players = vi.hoisted(() => ({
   all: [] as Array<{ started: number; stopped: number }>,
 }));
 
+// MIDI instrument voices (Tone.PolySynth) — separate from clip Players
+// above. Used by the releaseAll regression below: pause() must silence
+// held synth notes too, the same discipline as clip players, since
+// PolySynth voices are also free-running against Tone's own clock.
+const synths = vi.hoisted(() => ({
+  all: [] as Array<{ released: number }>,
+}));
+
 vi.mock('tone', () => {
   class MockParam {
     value = 0;
@@ -57,6 +65,18 @@ vi.mock('tone', () => {
     start() { this.started += 1; return this; }
     stop() { this.stopped += 1; return this; }
   }
+  class PolySynth extends MockNode {
+    released = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    constructor(..._args: any[]) {
+      super();
+      synths.all.push(this);
+    }
+    triggerAttackRelease() {}
+    triggerAttack() {}
+    triggerRelease() {}
+    releaseAll() { this.released += 1; }
+  }
   interface ScheduledEvent { id: number; cb: (time: number) => void; at: number }
   const transport = {
     seconds: 0,
@@ -92,6 +112,7 @@ vi.mock('tone', () => {
     EQ: MockNode,
     Meter,
     Synth: MockNode,
+    PolySynth,
     Player,
     getTransport: () => transport,
     getContext: () => ({
@@ -112,7 +133,7 @@ vi.mock('../engine/assetUrlCache', () => ({
 }));
 
 import { StudioEngine } from '../engine/engine';
-import { newSession, newAudioTrack } from '../defaults';
+import { newSession, newAudioTrack, newMidiTrack } from '../defaults';
 import type { AudioAsset, AudioClip } from '../session';
 
 function sessionWithOneClip() {
@@ -172,5 +193,32 @@ describe('pause() silences clip players', () => {
         'pause() left a clip player streaming — playhead frozen, audio still audible',
       ).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('pause() releases held MIDI instrument voices', () => {
+  beforeEach(() => {
+    players.all.length = 0;
+    synths.all.length = 0;
+    vi.stubGlobal('requestAnimationFrame', () => 1);
+    vi.stubGlobal('cancelAnimationFrame', () => {});
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('calls releaseAll() on the track\'s PolySynth when the transport pauses', () => {
+    const session = newSession({ tenantId: 't', ownerUserId: 'u' });
+    session.tracks = [newMidiTrack('Synth')];
+
+    const engine = new StudioEngine();
+    engine.loadSession(session);
+
+    expect(synths.all.length).toBe(1);
+    engine.pause();
+    expect(
+      synths.all[0].released,
+      "pause() left a MIDI track's instrument without calling releaseAll() — a held note can ring past the pause",
+    ).toBeGreaterThan(0);
   });
 });

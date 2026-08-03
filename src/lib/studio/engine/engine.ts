@@ -1246,6 +1246,10 @@ export class StudioEngine {
       for (const pb of track.playbacks) {
         try { pb.player.stop(); } catch { /* not playing */ }
       }
+      // MIDI voices are free-running too (triggered directly against
+      // Tone's clock, not .sync()ed) — cut them here or a held synth/
+      // sampler note rings past the pause.
+      try { track.instrument?.releaseAll?.(); } catch { /* nothing held */ }
     }
     for (const id of this.playScheduleIds) transport.clear(id);
     this.playScheduleIds = [];
@@ -1268,6 +1272,7 @@ export class StudioEngine {
       for (const pb of track.playbacks) {
         try { pb.player.stop(); } catch { /* not playing */ }
       }
+      try { track.instrument?.releaseAll?.(); } catch { /* nothing held */ }
     }
     for (const id of this.playScheduleIds) transport.clear(id);
     this.playScheduleIds = [];
@@ -1299,6 +1304,7 @@ export class StudioEngine {
         for (const pb of track.playbacks) {
           try { pb.player.stop(); } catch { /* not playing */ }
         }
+        try { track.instrument?.releaseAll?.(); } catch { /* nothing held */ }
       }
     }
 

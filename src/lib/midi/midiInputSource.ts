@@ -31,6 +31,18 @@ export interface MidiInputSource {
    * Resolves to an unsubscribe function.
    */
   subscribe(deviceId: string, onMessage: (data: Uint8Array, timeStampMs?: number) => void): Promise<() => void>;
+  /**
+   * Same delivery contract as `subscribe`, but the returned handle lets the
+   * caller change which device's messages it wants (`setDevice`) without
+   * tearing down the underlying MIDI session — no port re-attach (web), no
+   * plugin stop/start (native). Used by the Studio device picker so
+   * switching input devices mid-session doesn't re-prompt for permission
+   * or drop in-flight messages.
+   */
+  subscribeManaged(
+    deviceId: string,
+    onMessage: (data: Uint8Array, timeStampMs?: number) => void,
+  ): Promise<{ close(): void; setDevice(id: string): void }>;
   /** Fires on device hot-plug / disconnect. Returns un-listen function. */
   onStateChange(cb: () => void): () => void;
   /** Opens the OS Bluetooth MIDI pairing sheet. Resolves false where
@@ -97,6 +109,15 @@ export function createWebMidiInputSource(nav: Navigator = globalThis.navigator):
       const sub: Subscriber = { deviceId, cb: onMessage };
       subscribers.add(sub);
       return () => { subscribers.delete(sub); };
+    },
+    async subscribeManaged(deviceId, onMessage) {
+      await getAccess(); // permission denial rejects here, before we register
+      const sub: Subscriber = { deviceId, cb: onMessage };
+      subscribers.add(sub);
+      return {
+        close: () => { subscribers.delete(sub); },
+        setDevice: (id: string) => { sub.deviceId = id; },
+      };
     },
     onStateChange(cb) {
       stateCbs.add(cb);
@@ -187,6 +208,20 @@ export function createNativeMidiInputSource(plugin: GWMidiPluginShape): MidiInpu
       return () => {
         subscribers.delete(sub);
         void run(stopOp);
+      };
+    },
+    async subscribeManaged(deviceId, onMessage) {
+      const sub: Subscriber = { deviceId, cb: onMessage };
+      subscribers.add(sub);
+      try {
+        await run(startOp);
+      } catch (err) {
+        subscribers.delete(sub);
+        throw err;
+      }
+      return {
+        close: () => { subscribers.delete(sub); void run(stopOp); },
+        setDevice: (id: string) => { sub.deviceId = id; },
       };
     },
     onStateChange(cb) {

@@ -63,7 +63,7 @@ export default function StudentDetail() {
       </Button>
 
       <Tabs defaultValue="overview">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto w-full">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="uniform">Uniform</TabsTrigger>

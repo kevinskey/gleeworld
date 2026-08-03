@@ -122,7 +122,7 @@ export function PublishToLibraryDialog({
               <option value="public_domain">Public domain (free to distribute)</option>
               <option value="licensed">Licensed (limited seats)</option>
             </select>
-            <p className="text-[11px] text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Works marked “all rights reserved” must stay private — don’t publish them.
             </p>
           </div>

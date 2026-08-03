@@ -129,7 +129,7 @@ export function AddToCollectionDialog({
                   ? <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
                   : <Layers className="w-4 h-4 text-muted-foreground shrink-0" />}
                 <span className="text-sm truncate flex-1">{c.title}</span>
-                {c.is_system && <span className="text-[10px] uppercase tracking-wider text-muted-foreground">System</span>}
+                {c.is_system && <span className="text-xs uppercase tracking-wider text-muted-foreground">System</span>}
               </button>
             ))}
           </div>

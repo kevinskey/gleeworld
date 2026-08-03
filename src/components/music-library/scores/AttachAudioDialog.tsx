@@ -230,7 +230,7 @@ export function AttachAudioDialog({
                   <button
                     type="button"
                     onClick={() => setDefaultTrack.mutate(t.id)}
-                    className={`text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded transition-colors ${
+                    className={`text-xs uppercase tracking-wider px-1.5 py-0.5 rounded transition-colors ${
                       t.is_default
                         ? 'bg-primary text-primary-foreground'
                         : 'text-muted-foreground hover:bg-accent'
@@ -355,7 +355,7 @@ export function AttachAudioDialog({
               {appleErr && (
                 <p className="text-xs text-destructive">{appleErr}</p>
               )}
-              <p className="text-[11px] text-muted-foreground italic">
+              <p className="text-xs text-muted-foreground italic">
                 Playback requires an active Apple Music subscription. Free users will see a subscription prompt when they hit play.
               </p>
               <div className="border rounded-md max-h-60 overflow-y-auto divide-y">
@@ -368,7 +368,7 @@ export function AttachAudioDialog({
                       <div className="text-sm font-medium truncate">{applePick.title}</div>
                       <div className="text-xs text-muted-foreground truncate">{applePick.artist}</div>
                     </div>
-                    <span className="text-[10px] uppercase tracking-wider text-primary">Picked</span>
+                    <span className="text-xs uppercase tracking-wider text-primary">Picked</span>
                   </div>
                 )}
                 {appleSearching ? (

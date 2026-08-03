@@ -323,14 +323,14 @@ export const CourseGradebook: React.FC<CourseGradebookProps> = ({ courseId, isEn
                   >
                     <div className="flex items-center justify-between mb-1">
                       <div className="text-xs font-medium truncate">{c.label}</div>
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      <Badge variant="outline" className="text-xs px-1.5 py-0">
                         {c.weightPct}%
                       </Badge>
                     </div>
                     <div className={`text-xl font-bold ${graded ? '' : 'text-muted-foreground'}`}>
                       {formatGradePct(c.score)}
                     </div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                    <div className="text-xs text-muted-foreground mt-0.5">
                       {graded ? (
                         <>
                           {c.totalEarned}/{c.totalPossible} pts
@@ -374,7 +374,7 @@ export const CourseGradebook: React.FC<CourseGradebookProps> = ({ courseId, isEn
                       <div className="h-5 w-5 rounded-full border-2 border-muted-foreground shrink-0" />
                     )}
                     <span className="font-medium truncate">{assignment.title}</span>
-                    <Badge variant="outline" className="text-[10px] shrink-0">
+                    <Badge variant="outline" className="text-xs shrink-0">
                       {gradeData.categories.find((c) => c.key === assignment.categoryKey)?.label ?? assignment.categoryKey}
                     </Badge>
                   </div>

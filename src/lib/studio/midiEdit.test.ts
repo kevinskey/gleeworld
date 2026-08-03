@@ -3,6 +3,7 @@ import {
   applySustain,
   gridSeconds, quantizeNotes, transposeNotes, moveNotes, resizeNotes,
   offsetVelocity, addNote, deleteNotes, sustainRanges, setSustainRanges,
+  trimNotesToDuration,
 } from './midiEdit';
 import type { MidiNote, MidiCcEvent } from './session';
 
@@ -133,5 +134,22 @@ describe('sustain ranges', () => {
     const cc = setSustainRanges([], [{ down: 1, up: 3 }, { down: 2, up: 4 }]);
     const ranges = sustainRanges(cc, 10);
     expect(ranges).toEqual([{ down: 1, up: 4 }]);
+  });
+});
+
+describe('trimNotesToDuration', () => {
+  const n = (start: number, dur: number) => ({ pitch: 60, velocity: 100, start_seconds: start, duration_seconds: dur });
+  it('drops notes starting at/after the new end', () => {
+    expect(trimNotesToDuration([n(0, 1), n(2, 1)], 2)).toHaveLength(1);
+  });
+  it('truncates straddlers', () => {
+    const out = trimNotesToDuration([n(1, 4)], 2);
+    expect(out[0].duration_seconds).toBe(1);
+  });
+  it('floors truncation at MIN_NOTE_SECONDS and keeps identity of untouched notes', () => {
+    const keep = n(0, 0.5);
+    const out = trimNotesToDuration([keep, n(1.999, 1)], 2);
+    expect(out[0]).toBe(keep);
+    expect(out[1].duration_seconds).toBeGreaterThan(0);
   });
 });
