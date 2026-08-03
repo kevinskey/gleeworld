@@ -78,8 +78,13 @@ export default function MusicLibraryPage() {
     try { localStorage.setItem('gw-music-library-view', v); } catch { /* private mode */ }
   };
   // Annotation viewer state — when set, opens a full-screen dialog with the
-  // annotated PDF viewer so the user can mark up the score.
-  const [viewing, setViewing] = useState<{ id: string; title: string; pdfUrl: string } | null>(null);
+  // annotated PDF viewer so the user can mark up the score. All open paths
+  // route through PDFViewerWithAnnotations, which contain-fits the page
+  // (whole page visible, no scrolling — PR #321); don't reroute opens to a
+  // different viewer. `id` is undefined only when a setlist item somehow
+  // lacks a sheet-music id — annotation/audio lookups then short-circuit
+  // instead of querying with an empty string.
+  const [viewing, setViewing] = useState<{ id?: string; title: string; pdfUrl: string } | null>(null);
 
   // Share dialog state — the row currently being reviewed for sharing.
   // Opened via the row's Share button (canEdit only). Setting to null
@@ -351,8 +356,11 @@ export default function MusicLibraryPage() {
               }
             >
               <SetlistBuilder
+                // SetlistBuilder passes the real sheet_music.id — keep it so
+                // annotations + audio tracks load for setlist opens too. An
+                // undefined id (never '') cleanly disables those lookups.
                 onPdfSelect={(url, title, id) =>
-                  url && setViewing({ id: id ?? '', title, pdfUrl: url })
+                  url && setViewing({ id, title, pdfUrl: url })
                 }
                 onOpenPlayer={() => { /* handled inside SetlistBuilder */ }}
               />
