@@ -103,26 +103,6 @@ export default function MusicLibraryPage() {
   const { canEditMusicLibrary } = useUserRole();
   const canEdit = canEditMusicLibrary();
 
-  // Non-admin visibility rule: a score is visible if
-  //   shared_with_members = true
-  //   OR the current user is in shared_with_users
-  //   OR the current user is enrolled in one of shared_with_courses
-  // Course enrollments are pre-fetched once and folded into the scores
-  // query's OR filter as an array-overlap predicate. Admins bypass all
-  // of this via the canEdit branch below.
-  const { data: enrolledCourseIds = [] } = useQuery<string[]>({
-    queryKey: ['my-enrolled-courses', user?.id],
-    enabled: !!user && !canEdit,
-    staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('gw_course_enrollments')
-        .select('course_id')
-        .or(`user_id.eq.${user!.id},student_profile_id.eq.${user!.id}`)
-        .eq('enrollment_status', 'enrolled');
-      return Array.from(new Set((data ?? []).map((r: any) => r.course_id).filter(Boolean)));
-    },
-  });
   const [topTab, setTopTab] = useState<TopTab>('scores');
   const [search, setSearch] = useState('');
   // Scores layout: card grid (default) or compact list. Persisted so the
@@ -207,39 +187,18 @@ export default function MusicLibraryPage() {
   const toggleViewerFullscreen = () => setIsViewerFullscreen((v) => !v);
 
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({
-    queryKey: ['music-library-scores', scope, canEdit, enrolledCourseIds.join(',')],
+    queryKey: ['music-library-scores', scope, canEdit],
     queryFn: async () => {
-      let q = supabase
-        .from('gw_sheet_music')
+      // Server-enforced browse visibility: gw_sheet_music_browse embeds the
+      // sharing rules (everyone / shared-with-me / my course / my upload;
+      // librarians see all) — see 20260803140000_sheet_music_browse_view.sql.
+      // Listing is enforced by the view; open-by-id on the base table stays
+      // open on purpose so ?view= deep links and setlists keep working.
+      let q = (supabase as any)
+        .from('gw_sheet_music_browse')
         .select('id, title, composer, voicing, difficulty_level, pdf_url, storage_path, storage_bucket, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members, shared_with_users, shared_with_courses')
-        .eq('is_archived', false)
         .order('title')
         .limit(200);
-      // Browse filter only: the Scores tab hides unshared scores from
-      // members. NOT an access control — RLS is unchanged and
-      // deep-link/setlist flows still open unshared scores (server-side
-      // hardening is a phase-2 follow-up). Editors see everything.
-      //
-      // Sharing shape (2026-07-25):
-      //   shared_with_members = true             → visible to all members
-      //   auth.uid() ∈ shared_with_users         → visible to that user
-      //   auth.uid() enrolled in a course whose
-      //     id ∈ shared_with_courses            → visible to that student
-      // Combined via a PostgREST `.or(...)` clause; `cs` = contains,
-      // `ov` = overlaps. Curly-brace UUID literals are the PG array
-      // syntax the operator expects.
-      if (!canEdit && user) {
-        const clauses: string[] = ['shared_with_members.eq.true'];
-        clauses.push(`shared_with_users.cs.{${user.id}}`);
-        if (enrolledCourseIds.length > 0) {
-          clauses.push(`shared_with_courses.ov.{${enrolledCourseIds.join(',')}}`);
-        }
-        q = q.or(clauses.join(','));
-      } else if (!canEdit) {
-        // Signed out or user missing — mimic legacy "shared_with_members
-        // only" so nothing leaks while auth is still resolving.
-        q = q.eq('shared_with_members', true);
-      }
       q = applyFilter(q as any);
       const { data } = await q;
       return (data ?? []) as ScoreRow[];

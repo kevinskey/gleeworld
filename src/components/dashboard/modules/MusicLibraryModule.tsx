@@ -70,10 +70,13 @@ export const MusicLibraryModule = () => {
   const fetchSheetMusic = async () => {
     try {
       setLoading(true);
+      // Browse via the server-filtered view so members only see scores
+      // shared with them (20260803140000_sheet_music_browse_view.sql).
+      // The view already excludes archived rows.
       const {
         data,
         error
-      } = await supabase.from('gw_sheet_music').select('*').eq('is_archived', false).order('created_at', {
+      } = await (supabase as any).from('gw_sheet_music_browse').select('*').order('created_at', {
         ascending: false
       });
       if (error) throw error;
