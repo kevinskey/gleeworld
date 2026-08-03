@@ -201,6 +201,32 @@ export const YouTubeChannel: React.FC = () => {
     }
   };
 
+  // One-click feature toggle. The Edit dialog can also set is_featured, but
+  // starring is a per-video curation gesture, not a metadata edit — opening a
+  // modal per video to build a Featured row is unusable at library scale.
+  // Optimistic, with a revert on failure. The .select() is load-bearing:
+  // a tenant whose RLS rejects the write returns zero rows and no error, so
+  // without it a silent no-op would look like success.
+  const toggleFeatured = async (video: VideoRow) => {
+    const next = !video.is_featured;
+    setVideos((prev) => prev.map((v) => (v.id === video.id ? { ...v, is_featured: next } : v)));
+    const { data, error } = await supabase
+      .from('youtube_videos')
+      .update({ is_featured: next })
+      .eq('id', video.id)
+      .select('id');
+    if (error || !data?.length) {
+      setVideos((prev) => prev.map((v) => (v.id === video.id ? { ...v, is_featured: !next } : v)));
+      toast({
+        title: 'Could not update',
+        description: error?.message || 'The change was rejected — check permissions.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    toast({ title: next ? 'Added to Featured' : 'Removed from Featured' });
+  };
+
   const tabs: { key: Tab; label: string; icon?: React.ComponentType<{ className?: string }> }[] = [
     { key: 'all', label: 'All' },
     { key: 'featured', label: 'Featured', icon: Star },
@@ -436,7 +462,11 @@ export const YouTubeChannel: React.FC = () => {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-muted-foreground text-sm">No videos match those filters.</p>
+              <p className="text-muted-foreground text-sm">
+                {tab === 'featured' && !search.trim()
+                  ? 'Nothing featured yet. Star a video on the All tab to feature it here.'
+                  : 'No videos match those filters.'}
+              </p>
               <Button
                 variant="ghost"
                 size="sm"
@@ -609,6 +639,19 @@ export const YouTubeChannel: React.FC = () => {
                         </Button>
                         {isAdmin() && (
                           <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs px-2"
+                              onClick={(e) => { e.stopPropagation(); toggleFeatured(video); }}
+                              title={video.is_featured ? 'Remove from Featured' : 'Add to Featured'}
+                              aria-pressed={!!video.is_featured}
+                              aria-label={video.is_featured ? 'Remove from Featured' : 'Add to Featured'}
+                            >
+                              <Star
+                                className={`w-3.5 h-3.5 ${video.is_featured ? 'fill-current text-amber-500' : ''}`}
+                              />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
