@@ -5,7 +5,7 @@ import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { assistantNavTargets } from '@/lib/navigation/navCatalog';
 import { threadReducer, INITIAL_THREAD } from './threadReducer';
-import { executeClientAction } from './clientActions';
+import { executeClientAction, resolvePageRoute } from './clientActions';
 import { getSpeechInput, isMuted, setMuted, speak, stopSpeaking } from './speech';
 import { ConfirmActionQueue } from './confirmQueue';
 import { loadThread, saveThread } from './threadStorage';
@@ -36,6 +36,12 @@ export interface AssistantContextValue {
   /** Tenant-configured assistant voice from Workspace Settings → Branding.
    *  Null while loading, or if the tenant hasn't picked one (app default). */
   voiceId: string | null;
+  /** Live conversation mode (ElevenLabs WebRTC agent): full-duplex voice
+   *  with real barge-in — the user's VOICE interrupts the assistant, no
+   *  tapping required. 'connecting' while the session is being set up. */
+  liveStatus: 'off' | 'connecting' | 'live';
+  startLive: () => void;
+  endLive: () => void;
 }
 
 const AssistantContext = createContext<AssistantContextValue | null>(null);
@@ -143,6 +149,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     stopSpeaking();
     setSpeaking(false);
   }, []);
+
 
   const advanceConfirmQueue = useCallback((msgId: string) => {
     const nextId = crypto.randomUUID();
@@ -264,6 +271,91 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     if (!sheetOpenRef.current) setCaptionReply({ id: crypto.randomUUID(), text: message });
   }, []);
 
+  // ── Live conversation mode (ElevenLabs WebRTC agent) ────────────────
+  // Full-duplex voice: the agent hears the user WHILE it speaks, so the
+  // user's voice interrupts naturally (Kevin: "my voice can't interrupt?").
+  // The SDK (+ LiveKit) is ~heavy, so it's dynamically imported only when
+  // a session actually starts. Client tools mirror the chat assistant's
+  // navigation/news surface; anything else stays with push-to-talk chat.
+  const [liveStatus, setLiveStatus] = useState<'off' | 'connecting' | 'live'>('off');
+  const liveSessionRef = useRef<{ endSession: () => Promise<void> } | null>(null);
+  const liveConnectingRef = useRef(false);
+
+  const endLive = useCallback(() => {
+    const session = liveSessionRef.current;
+    liveSessionRef.current = null;
+    setLiveStatus('off');
+    if (session) void session.endSession().catch(() => { /* already closed */ });
+  }, []);
+
+  const startLive = useCallback(async () => {
+    if (liveSessionRef.current || liveConnectingRef.current) return;
+    liveConnectingRef.current = true;
+    setLiveStatus('connecting');
+    // Live mode owns the audio path — silence push-to-talk TTS and mic.
+    stopSpeakingNow();
+    speechRef.current.stop();
+    setListening(false);
+    try {
+      const { data, error } = await supabase.functions.invoke('elevenlabs-conversation-token');
+      const token = (data as { token?: string } | null)?.token;
+      if (error || !token) throw new Error(error?.message ?? 'no conversation token');
+      const { Conversation } = await import('@elevenlabs/client');
+      const session = await Conversation.startSession({
+        conversationToken: token,
+        connectionType: 'webrtc',
+        clientTools: {
+          open_page: async (params: { name?: string }) => {
+            const resolved = resolvePageRoute(String(params?.name ?? ''));
+            if (!resolved) return `No page called "${String(params?.name ?? '')}" — tell the user you couldn't find it.`;
+            navigate(resolved.route);
+            return `Opened ${resolved.label}.`;
+          },
+          read_news: async (params: { limit?: number }) => {
+            const raw = Number(params?.limit);
+            const limit = Math.max(1, Math.min(30, Number.isFinite(raw) ? Math.trunc(raw) : 12));
+            const { data: news, error: newsErr } = await supabase.functions.invoke('fetch-news-feeds', {
+              body: { offset: 0, limit },
+            });
+            if (newsErr) return JSON.stringify({ error: newsErr.message ?? 'news fetch failed' });
+            const items = Array.isArray((news as { items?: unknown[] } | null)?.items)
+              ? (news as { items: Array<Record<string, unknown>> }).items
+              : [];
+            return JSON.stringify({
+              items: items.slice(0, limit).map((it) => ({
+                title: it?.title,
+                source: it?.source,
+                summary: typeof it?.description === 'string' ? it.description.slice(0, 240) : '',
+                url: it?.link,
+              })),
+            });
+          },
+          open_link: async (params: { url?: string; title?: string }) => {
+            const url = String(params?.url ?? '');
+            if (!/^https?:\/\/\S+$/i.test(url)) return 'That link is invalid — do not retry it.';
+            (globalThis as unknown as Window).open(url, '_blank', 'noopener,noreferrer');
+            return `Opened ${String(params?.title ?? 'the article').slice(0, 120)}.`;
+          },
+        },
+        onDisconnect: () => {
+          liveSessionRef.current = null;
+          setLiveStatus('off');
+        },
+      });
+      liveSessionRef.current = session;
+      setLiveStatus('live');
+    } catch {
+      setLiveStatus('off');
+      failVisibly("Live voice isn't available right now.");
+    } finally {
+      liveConnectingRef.current = false;
+    }
+  }, [navigate, stopSpeakingNow, failVisibly]);
+
+  // End the live session if the provider ever unmounts (sign-out, tenant
+  // switch) — a dangling WebRTC session would keep the mic open.
+  useEffect(() => endLive, [endLive]);
+
   const send = useCallback(async (content: string) => {
     const text = content.trim();
     if (!text || state.busy) return;
@@ -340,6 +432,8 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   }, [state.busy, state.messages, profile, speakNow, runAction, setSheetOpen, getFreshGeo, failVisibly]);
 
   const toggleMic = useCallback(() => {
+    // Live mode owns the mic — push-to-talk stays out of the way.
+    if (liveSessionRef.current) return;
     const speech = speechRef.current;
     if (!speech.available) return;
     if (listening) { speech.stop(); setListening(false); return; }
@@ -370,6 +464,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       micAvailable: speechRef.current.available, listening, transcript, toggleMic,
       muted, toggleMute,
       speaking, stopSpeaking: stopSpeakingNow,
+      liveStatus, startLive, endLive,
       videoRoom, setVideoRoom,
       resultsPanel, setResultsPanel,
       captionReply,
