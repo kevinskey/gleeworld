@@ -44,6 +44,17 @@ describe('RhythmTab', () => {
     expect(screen.getByRole('button', { name: /clap blast/i })).toBeInTheDocument();
   });
 
+  it('hides the syllables picker on Clap Blast and restores it on other drills', () => {
+    render(<RhythmTab />);
+    expect(screen.getByLabelText(/syllables/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /clap blast/i }));
+    expect(screen.queryByLabelText(/syllables/i)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /^echo$/i }));
+    expect(screen.getByLabelText(/syllables/i)).toBeInTheDocument();
+  });
+
   it('falls back to tap (and closes calibration) when the mic is denied', async () => {
     localStorage.removeItem('rm_clap_latency_ms');
     localStorage.removeItem('rm_rhythm_input');

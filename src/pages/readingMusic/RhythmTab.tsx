@@ -360,18 +360,23 @@ export function RhythmTab() {
                 <option value="mic">Clap (mic)</option>
               </select>
             </div>
-            <div className="flex items-center gap-2">
-              <label htmlFor="rm-syllables" className="text-sm text-slate-600">Syllables</label>
-              <select
-                id="rm-syllables"
-                className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
-                value={system}
-                disabled={running}
-                onChange={(e) => setSystem(e.target.value as SyllableSystem)}
-              >
-                {SYLLABLE_SYSTEMS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
-              </select>
-            </div>
+            {/* The Clap Blast stage has no room for a syllable underlay, so
+                during play this picker changes nothing visible. Hidden here to
+                avoid an apparently-live control that does nothing. */}
+            {drill !== 'clap_blast' && (
+              <div className="flex items-center gap-2">
+                <label htmlFor="rm-syllables" className="text-sm text-slate-600">Syllables</label>
+                <select
+                  id="rm-syllables"
+                  className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+                  value={system}
+                  disabled={running}
+                  onChange={(e) => setSystem(e.target.value as SyllableSystem)}
+                >
+                  {SYLLABLE_SYSTEMS.map((s) => <option key={s.id} value={s.id}>{s.label}</option>)}
+                </select>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <span className="text-sm text-slate-600">Tempo</span>
               <Button variant="outline" size="sm" disabled={running || bpm <= 40} onClick={() => setBpm((b) => Math.max(40, b - 5))}>−5</Button>
