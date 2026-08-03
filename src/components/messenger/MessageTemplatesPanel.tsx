@@ -161,7 +161,7 @@ export function MessageTemplatesPanel() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-semibold truncate">{t.name}</span>
-                          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
+                          <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
                         </div>
                         {t.subject && (
                           <div className="text-xs text-muted-foreground truncate mt-0.5">Subject: {t.subject}</div>

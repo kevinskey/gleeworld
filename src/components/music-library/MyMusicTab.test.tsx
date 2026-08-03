@@ -1,10 +1,26 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { render as rtlRender, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MyMusicTab } from './MyMusicTab';
 import { getSignedUrl } from '@/utils/storage';
 import type { PersonalScore } from '@/hooks/usePersonalScores';
+import type { ReactElement } from 'react';
+
+// The tab reads publish state via react-query + role; keep tests member-
+// level (no publish affordances) and provide the required provider.
+vi.mock('@/hooks/useUserRole', () => ({
+  useUserRole: () => ({ canEditMusicLibrary: () => false }),
+}));
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: { from: vi.fn() },
+}));
+
+const render = (ui: ReactElement) => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return rtlRender(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);
+};
 
 const state: {
   scores: PersonalScore[]; isLoading: boolean;
@@ -13,7 +29,7 @@ const state: {
 vi.mock('@/hooks/usePersonalScores', () => ({
   usePersonalScores: () => ({
     scores: state.scores, isLoading: state.isLoading,
-    uploadScore: vi.fn(), removeScore: vi.fn(),
+    uploadScore: vi.fn(), updateScore: vi.fn(), removeScore: vi.fn(),
   }),
 }));
 vi.mock('@/utils/storage', () => ({ getSignedUrl: vi.fn(async () => 'https://signed.example/x.pdf') }));
@@ -22,10 +38,17 @@ const score = (over: Partial<PersonalScore>): PersonalScore => ({
   id: 's1', user_id: 'u1', title: 'Ave Maria', composer: 'Gounod', voicing: 'SATB',
   source: 'upload', pd_work_id: null, entitlement_id: null,
   storage_path: 'u1/uploads/a.pdf', thumbnail_path: null,
+  ext_catalog_item_id: null, external_url: null,
+  tags: [], is_favorite: false,
   created_at: '2026-07-12T00:00:00Z', ...over,
 });
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  // Call history must not leak between tests — the external-open test
+  // asserts getSignedUrl was NOT called.
+  vi.clearAllMocks();
+});
 
 describe('MyMusicTab', () => {
   it('shows the inviting empty state when there are no scores', () => {
@@ -73,5 +96,24 @@ describe('MyMusicTab', () => {
     await waitFor(() => expect(getSignedUrl).toHaveBeenCalled());
     const [, , , waitForReady] = vi.mocked(getSignedUrl).mock.calls.at(-1)!;
     expect(waitForReady).toBe(false);
+  });
+
+  // Regression: IMSLP/external rows have storage_path NULL — the old code
+  // tried to sign a null path and errored. They must open at the source
+  // site instead, without touching storage.
+  it('opens external-only rows at the source site, not via signed URL', async () => {
+    state.scores = [score({
+      id: '1', title: 'Lauda Sion', source: 'imslp',
+      storage_path: null, external_url: 'https://imslp.org/wiki/Lauda_Sion',
+    })];
+    state.isLoading = false;
+    const openSpy = vi.spyOn(window, 'open').mockReturnValue(null);
+    render(<MyMusicTab />);
+    expect(screen.getByText('IMSLP')).toBeInTheDocument();
+    expect(screen.getByText('Open at source')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /open lauda sion/i }));
+    expect(openSpy).toHaveBeenCalledWith('https://imslp.org/wiki/Lauda_Sion', '_blank', 'noopener,noreferrer');
+    expect(getSignedUrl).not.toHaveBeenCalled();
+    openSpy.mockRestore();
   });
 });

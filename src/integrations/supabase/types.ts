@@ -10253,17 +10253,18 @@ export type Database = {
         }
         Relationships: []
       }
-      gw_dues_payment_plans: {
+      gw_fee_payment_plans: {
         Row: {
           auto_debit: boolean | null
           created_at: string
-          dues_record_id: string
+          student_fee_id: string
           end_date: string | null
           frequency: string
           id: string
           installment_amount: number
           installments: number
           payment_method: string | null
+          source: string
           start_date: string
           status: string
           total_amount: number
@@ -10273,13 +10274,14 @@ export type Database = {
         Insert: {
           auto_debit?: boolean | null
           created_at?: string
-          dues_record_id: string
+          student_fee_id: string
           end_date?: string | null
           frequency?: string
           id?: string
           installment_amount: number
           installments?: number
           payment_method?: string | null
+          source?: string
           start_date: string
           status?: string
           total_amount: number
@@ -10289,13 +10291,14 @@ export type Database = {
         Update: {
           auto_debit?: boolean | null
           created_at?: string
-          dues_record_id?: string
+          student_fee_id?: string
           end_date?: string | null
           frequency?: string
           id?: string
           installment_amount?: number
           installments?: number
           payment_method?: string | null
+          source?: string
           start_date?: string
           status?: string
           total_amount?: number
@@ -10304,46 +10307,275 @@ export type Database = {
         }
         Relationships: []
       }
-      gw_dues_records: {
+      gw_fee_plan_installments: {
         Row: {
-          academic_year: string
           amount: number
           created_at: string
           due_date: string
           id: string
+          installment_number: number
           notes: string | null
+          paid_amount: number
+          paid_at: string | null
           paid_date: string | null
           payment_method: string | null
+          payment_plan_id: string
+          status: string
+          stripe_payment_intent_id: string | null
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          due_date: string
+          id?: string
+          installment_number: number
+          notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          payment_plan_id: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          due_date?: string
+          id?: string
+          installment_number?: number
+          notes?: string | null
+          paid_amount?: number | null
+          paid_at?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          payment_plan_id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_payment_plan_installments_payment_plan_id_fkey"
+            columns: ["payment_plan_id"]
+            isOneToOne: false
+            referencedRelation: "gw_fee_payment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_fee_reminders: {
+        Row: {
+          created_at: string
+          custom_message: string | null
+          days_before_due: number
+          student_fee_id: string | null
+          id: string
+          installment_id: string | null
+          is_active: boolean | null
+          last_sent_at: string | null
+          next_send_at: string | null
+          payment_plan_id: string | null
+          reminder_frequency: string
+          reminder_type: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_message?: string | null
+          days_before_due?: number
+          student_fee_id?: string | null
+          id?: string
+          installment_id?: string | null
+          is_active?: boolean | null
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          payment_plan_id?: string | null
+          reminder_frequency?: string
+          reminder_type?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_message?: string | null
+          days_before_due?: number
+          student_fee_id?: string | null
+          id?: string
+          installment_id?: string | null
+          is_active?: boolean | null
+          last_sent_at?: string | null
+          next_send_at?: string | null
+          payment_plan_id?: string | null
+          reminder_frequency?: string
+          reminder_type?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gw_fee_template_installments: {
+        Row: {
+          amount: number
+          due_date: string
+          id: string
+          sequence: number
+          template_id: string
+          tenant_id: string
+        }
+        Insert: {
+          amount: number
+          due_date: string
+          id?: string
+          sequence: number
+          template_id: string
+          tenant_id?: string
+        }
+        Update: {
+          amount?: number
+          due_date?: string
+          id?: string
+          sequence?: number
+          template_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_fee_template_installments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "gw_fee_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_fee_templates: {
+        Row: {
+          allow_self_serve_split: boolean
+          archived_at: string | null
+          category: string
+          context_id: string | null
+          context_type: string | null
+          created_at: string
+          created_by: string
+          currency: string
+          description: string | null
+          due_date: string | null
+          id: string
+          name: string
+          tenant_id: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          allow_self_serve_split?: boolean
+          archived_at?: string | null
+          category: string
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string
+          created_by: string
+          currency?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          name: string
+          tenant_id?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          allow_self_serve_split?: boolean
+          archived_at?: string | null
+          category?: string
+          context_id?: string | null
+          context_type?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          name?: string
+          tenant_id?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      gw_student_fees: {
+        Row: {
+          academic_year: string
+          amount: number
+          category: string
+          context_id: string | null
+          context_type: string | null
+          created_at: string
+          due_date: string
+          id: string
+          name: string
+          notes: string | null
+          paid_at: string | null
+          paid_date: string | null
+          payment_method: string | null
+          payment_reference: string | null
           semester: string
           status: string
+          stripe_payment_intent_id: string | null
+          template_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           academic_year: string
           amount: number
+          category?: string
+          context_id?: string | null
+          context_type?: string | null
           created_at?: string
           due_date: string
           id?: string
+          name?: string
           notes?: string | null
+          paid_at?: string | null
           paid_date?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           semester: string
           status?: string
+          stripe_payment_intent_id?: string | null
+          template_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           academic_year?: string
           amount?: number
+          category?: string
+          context_id?: string | null
+          context_type?: string | null
           created_at?: string
           due_date?: string
           id?: string
+          name?: string
           notes?: string | null
+          paid_at?: string | null
           paid_date?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           semester?: string
           status?: string
+          stripe_payment_intent_id?: string | null
+          template_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -10369,59 +10601,45 @@ export type Database = {
             referencedRelation: "user_dashboard_data"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "gw_student_fees_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "gw_fee_templates"
+            referencedColumns: ["id"]
+          },
         ]
       }
-      gw_dues_reminders: {
+      gw_tenant_fee_settings: {
         Row: {
+          accepted_manual_methods: string[]
           created_at: string
-          custom_message: string | null
-          days_before_due: number
-          dues_record_id: string | null
-          id: string
-          installment_id: string | null
-          is_active: boolean | null
-          last_sent_at: string | null
-          next_send_at: string | null
-          payment_plan_id: string | null
-          reminder_frequency: string
-          reminder_type: string
-          template_id: string | null
+          statement_descriptor: string | null
+          tenant_id: string
+          treasurer_contact_email: string | null
+          treasurer_contact_name: string | null
+          treasurer_contact_phone: string | null
           updated_at: string
-          user_id: string
         }
         Insert: {
+          accepted_manual_methods?: string[]
           created_at?: string
-          custom_message?: string | null
-          days_before_due?: number
-          dues_record_id?: string | null
-          id?: string
-          installment_id?: string | null
-          is_active?: boolean | null
-          last_sent_at?: string | null
-          next_send_at?: string | null
-          payment_plan_id?: string | null
-          reminder_frequency?: string
-          reminder_type?: string
-          template_id?: string | null
+          statement_descriptor?: string | null
+          tenant_id: string
+          treasurer_contact_email?: string | null
+          treasurer_contact_name?: string | null
+          treasurer_contact_phone?: string | null
           updated_at?: string
-          user_id: string
         }
         Update: {
+          accepted_manual_methods?: string[]
           created_at?: string
-          custom_message?: string | null
-          days_before_due?: number
-          dues_record_id?: string | null
-          id?: string
-          installment_id?: string | null
-          is_active?: boolean | null
-          last_sent_at?: string | null
-          next_send_at?: string | null
-          payment_plan_id?: string | null
-          reminder_frequency?: string
-          reminder_type?: string
-          template_id?: string | null
+          statement_descriptor?: string | null
+          tenant_id?: string
+          treasurer_contact_email?: string | null
+          treasurer_contact_name?: string | null
+          treasurer_contact_phone?: string | null
           updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -14302,59 +14520,6 @@ export type Database = {
           width?: number
         }
         Relationships: []
-      }
-      gw_payment_plan_installments: {
-        Row: {
-          amount: number
-          created_at: string
-          due_date: string
-          id: string
-          installment_number: number
-          notes: string | null
-          paid_date: string | null
-          payment_method: string | null
-          payment_plan_id: string
-          status: string
-          transaction_id: string | null
-          updated_at: string
-        }
-        Insert: {
-          amount: number
-          created_at?: string
-          due_date: string
-          id?: string
-          installment_number: number
-          notes?: string | null
-          paid_date?: string | null
-          payment_method?: string | null
-          payment_plan_id: string
-          status?: string
-          transaction_id?: string | null
-          updated_at?: string
-        }
-        Update: {
-          amount?: number
-          created_at?: string
-          due_date?: string
-          id?: string
-          installment_number?: number
-          notes?: string | null
-          paid_date?: string | null
-          payment_method?: string | null
-          payment_plan_id?: string
-          status?: string
-          transaction_id?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "gw_payment_plan_installments_payment_plan_id_fkey"
-            columns: ["payment_plan_id"]
-            isOneToOne: false
-            referencedRelation: "gw_dues_payment_plans"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       gw_payment_records: {
         Row: {
@@ -19426,12 +19591,13 @@ export type Database = {
           featured_tablet_columns: number | null
           featured_title: string | null
           free_shipping_threshold: number | null
-          id: number
+          id: number | null
           notifications_enabled: boolean | null
           store_email: string | null
           store_name: string | null
           stripe_mode: string | null
           support_email: string | null
+          tenant_id: string
           updated_at: string | null
         }
         Insert: {
@@ -19452,12 +19618,13 @@ export type Database = {
           featured_tablet_columns?: number | null
           featured_title?: string | null
           free_shipping_threshold?: number | null
-          id?: number
+          id?: number | null
           notifications_enabled?: boolean | null
           store_email?: string | null
           store_name?: string | null
           stripe_mode?: string | null
           support_email?: string | null
+          tenant_id?: string
           updated_at?: string | null
         }
         Update: {
@@ -19478,12 +19645,13 @@ export type Database = {
           featured_tablet_columns?: number | null
           featured_title?: string | null
           free_shipping_threshold?: number | null
-          id?: number
+          id?: number | null
           notifications_enabled?: boolean | null
           store_email?: string | null
           store_name?: string | null
           stripe_mode?: string | null
           support_email?: string | null
+          tenant_id?: string
           updated_at?: string | null
         }
         Relationships: []

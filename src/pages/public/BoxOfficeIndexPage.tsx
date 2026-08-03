@@ -100,7 +100,7 @@ export default function BoxOfficeIndexPage() {
         <div className="relative max-w-5xl mx-auto px-4 py-12 sm:py-16">
           <div className="flex items-center gap-2 text-white/80">
             <Ticket className="w-5 h-5" />
-            <span className="text-[11px] uppercase tracking-[0.22em] font-semibold">
+            <span className="text-xs uppercase tracking-[0.22em] font-semibold">
               Tickets
             </span>
           </div>

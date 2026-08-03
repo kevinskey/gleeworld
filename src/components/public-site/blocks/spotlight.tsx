@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploadField } from '../ImageUploadField';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 // Generic person-spotlight: handles students, graduates, faculty, honorees
 // in a single block. Tenants pick the role label per person so a fan
@@ -34,9 +35,9 @@ const ROLE_LABEL: Record<Config['people'][number]['role'], string> = {
   honoree: 'Honoree',
 };
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const list = config.people.filter((p) => p.name);
-  if (list.length === 0) return null;
+  if (list.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Spotlight" /> : null;
   return (
     <section id="spotlight" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (

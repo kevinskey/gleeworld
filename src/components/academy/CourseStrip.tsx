@@ -237,13 +237,13 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
                   <ListMusic className="h-3.5 w-3.5 text-white/50 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64 bg-slate-900 border-slate-700 shadow-lg z-50">
-                <DropdownMenuLabel className="text-xs text-white/60">
+              <DropdownMenuContent align="start" className="w-64 shadow-lg z-50">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
                   Now Playing
                 </DropdownMenuLabel>
                 <div className="max-h-64 overflow-y-auto">
                   {tracks.length === 0 ? (
-                    <div className="px-2 py-3 text-sm text-white/50 text-center">
+                    <div className="px-2 py-3 text-sm text-muted-foreground text-center">
                       No tracks available
                     </div>
                   ) : (
@@ -252,8 +252,8 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
                         key={track.id || idx}
                         onClick={() => playTrack(idx)}
                         className={cn(
-                          "cursor-pointer flex items-center gap-2 py-2 text-white hover:bg-white/10 focus:bg-white/10",
-                          idx === currentTrackIndex && "bg-white/20"
+                          "cursor-pointer flex items-center gap-2 py-2",
+                          idx === currentTrackIndex && "bg-accent"
                         )}
                       >
                         <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
@@ -262,10 +262,10 @@ export const CourseStrip: React.FC<CourseStripProps> = ({
                           ) : idx === currentTrackIndex ? (
                             <Play className="h-3.5 w-3.5 text-primary" />
                           ) : (
-                            <span className="text-xs text-white/50">{idx + 1}</span>
+                            <span className="text-xs text-muted-foreground">{idx + 1}</span>
                           )}
                         </div>
-                        <span className="truncate text-sm text-white">
+                        <span className="truncate text-sm">
                           {track.track_data?.title || `Track ${idx + 1}`}
                         </span>
                       </DropdownMenuItem>

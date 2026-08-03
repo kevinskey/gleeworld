@@ -100,7 +100,7 @@ export default function StudioHome() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-sm leading-tight truncate">{s.title}</div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                      <div className="text-xs text-muted-foreground mt-0.5 truncate">
                         {s.track_count} {s.track_count === 1 ? 'track' : 'tracks'} · {Math.round(s.duration_seconds)}s · {formatDate(s.updated_at)}
                       </div>
                     </div>
@@ -171,7 +171,7 @@ function FeatureChip({ icon: Icon, label }: { icon: typeof Mic; label: string })
   return (
     <div className="flex flex-col items-center gap-1 py-2 px-2 rounded-lg bg-background/40 backdrop-blur-sm border border-border/60">
       <Icon className="w-4 h-4 text-primary" />
-      <span className="text-[11px] font-medium text-foreground/85 drop-shadow-sm">{label}</span>
+      <span className="text-xs font-medium text-foreground/85 drop-shadow-sm">{label}</span>
     </div>
   );
 }

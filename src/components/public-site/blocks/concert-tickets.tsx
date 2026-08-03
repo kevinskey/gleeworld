@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ImageUploadField } from '../ImageUploadField';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Buy tickets'),
@@ -27,9 +28,9 @@ function formatDate(iso: string): string {
   return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const shows = config.shows.filter((s) => s.title);
-  if (shows.length === 0) return null;
+  if (shows.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Concert Tickets" /> : null;
   return (
     <section id="tickets" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (

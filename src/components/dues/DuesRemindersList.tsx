@@ -28,7 +28,7 @@ export const DuesRemindersList = ({ reminders, onRefresh }: DuesRemindersListPro
   const handleToggleReminder = async (reminderId: string, currentStatus: boolean) => {
     try {
       const { error } = await (supabase as any)
-        .from('gw_dues_reminders')
+        .from('gw_fee_reminders')
         .update({ is_active: !currentStatus })
         .eq('id', reminderId);
 

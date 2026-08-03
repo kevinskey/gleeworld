@@ -1,6 +1,6 @@
 // SVG canvas with pan/zoom, click/box selection, and drag-to-move.
 // Works on desktop (mouse), iPad (touch), and phone (view + tap).
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { SeatingAssignment, SeatingObject } from '@/types/seatingCharts';
 import type { AttendanceStatus } from '../attendance/attendanceStatus';
 import ObjectShape from './ObjectShape';
@@ -53,7 +53,8 @@ export function CanvasEngine({
 }: CanvasEngineProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const didFitRef = useRef(false);
+  // True once the user has panned/zoomed — auto-fit stands down from then on.
+  const userAdjustedRef = useRef(false);
   const [viewport, setViewport] = useState<ViewportState>({ scale: DEFAULT_SCALE, panX: 40, panY: 40 });
   const [dragState, setDragState] = useState<
     | { kind: 'none' }
@@ -167,6 +168,7 @@ export function CanvasEngine({
         // own drift so two-finger drag also pans the canvas.
         const scaledPanX = px - ((px - g.startPanX) / g.startScale) * nextScale;
         const scaledPanY = py - ((py - g.startPanY) / g.startScale) * nextScale;
+        userAdjustedRef.current = true;
         setViewport({
           scale: nextScale,
           panX: scaledPanX + (cx - g.startCenterX),
@@ -185,6 +187,7 @@ export function CanvasEngine({
         onObjectMove(id, snap(origin.x + dx), snap(origin.y + dy));
       });
     } else if (dragState.kind === 'pan') {
+      userAdjustedRef.current = true;
       setViewport((v) => ({
         ...v,
         panX: dragState.origPan.x + (e.clientX - dragState.startX),
@@ -222,6 +225,7 @@ export function CanvasEngine({
     if (!rect) return;
     const px = e.clientX - rect.left;
     const py = e.clientY - rect.top;
+    userAdjustedRef.current = true;
     setViewport((v) => {
       const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, v.scale * (e.deltaY > 0 ? 0.9 : 1.1)));
       // Zoom around the cursor
@@ -253,23 +257,59 @@ export function CanvasEngine({
     e.preventDefault();
   }, []);
 
-  // On first mount + on width/height change, fit the chart to the container
-  // so phones + iPad portraits don't start off-screen. We only auto-fit once
-  // per canvas size so the user's pan/zoom isn't clobbered on every render.
-  useEffect(() => {
-    if (!wrapRef.current) return;
-    const rect = wrapRef.current.getBoundingClientRect();
-    if (rect.width < 40 || rect.height < 40) return;
-    if (didFitRef.current) return;
-    didFitRef.current = true;
-    setViewport(fitScale(width, height, rect.width, rect.height));
+  // Keep the chart fitted to the container until the user pans/zooms
+  // themselves. The old fit-once-on-mount ran while the flex layout was
+  // still settling, measured a small container, and locked in a tiny
+  // chart (panel/sidebar animation finished AFTER the only fit). A
+  // ResizeObserver re-fits on every container size change instead —
+  // and stands down permanently once the user has adjusted the view.
+  // useLayoutEffect: the first fit must land before paint, or the default
+  // 0.7-scale viewport flashes for a frame before snapping to fit.
+  useLayoutEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const refit = () => {
+      if (userAdjustedRef.current) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 40 || rect.height < 40) return;
+      setViewport(fitScale(width, height, rect.width, rect.height));
+    };
+    refit();
+    const ro = new ResizeObserver(refit);
+    ro.observe(el);
+    // Rotation is a system event the user didn't ask for — re-arm auto-fit
+    // so the chart refits to the new shape even after a manual pan/zoom.
+    const onOrientation = () => { userAdjustedRef.current = false; refit(); };
+    window.addEventListener('orientationchange', onOrientation);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('orientationchange', onOrientation);
+    };
   }, [width, height]);
 
   const handleReset = useCallback(() => {
     const rect = wrapRef.current?.getBoundingClientRect();
     if (!rect) return;
+    userAdjustedRef.current = false;
     setViewport(fitScale(width, height, rect.width, rect.height));
   }, [width, height]);
+
+  // +/- buttons zoom around the container center.
+  const zoomBy = useCallback((factor: number) => {
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const px = rect.width / 2;
+    const py = rect.height / 2;
+    userAdjustedRef.current = true;
+    setViewport((v) => {
+      const nextScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, v.scale * factor));
+      return {
+        scale: nextScale,
+        panX: px - ((px - v.panX) / v.scale) * nextScale,
+        panY: py - ((py - v.panY) / v.scale) * nextScale,
+      };
+    });
+  }, []);
 
   // Keyboard: arrow keys nudge selection.
   useEffect(() => {
@@ -355,11 +395,27 @@ export function CanvasEngine({
           )}
         </g>
       </svg>
-      <div className="absolute bottom-2 right-2 flex gap-2 bg-white/90 backdrop-blur rounded-md shadow px-2 py-1 text-xs text-slate-600">
-        <span>Zoom: {Math.round(viewport.scale * 100)}%</span>
+      <div className="absolute bottom-2 right-2 flex items-center gap-1 bg-card/90 backdrop-blur shadow border px-1 py-1 text-xs text-muted-foreground print:hidden">
         <button
           type="button"
-          className="text-slate-700 hover:text-slate-900"
+          className="h-8 w-8 inline-flex items-center justify-center text-foreground hover:bg-accent text-sm font-semibold"
+          onClick={() => zoomBy(1 / 1.25)}
+          aria-label="Zoom out"
+        >
+          −
+        </button>
+        <span className="min-w-10 text-center tabular-nums">{Math.round(viewport.scale * 100)}%</span>
+        <button
+          type="button"
+          className="h-8 w-8 inline-flex items-center justify-center text-foreground hover:bg-accent text-sm font-semibold"
+          onClick={() => zoomBy(1.25)}
+          aria-label="Zoom in"
+        >
+          +
+        </button>
+        <button
+          type="button"
+          className="h-8 px-2 inline-flex items-center justify-center text-foreground hover:bg-accent"
           onClick={handleReset}
         >
           Fit

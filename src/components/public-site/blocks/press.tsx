@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploadField } from '../ImageUploadField';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Press & Recognition'),
@@ -23,9 +24,9 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const items = config.items.filter((i) => i.outlet || i.quote);
-  if (items.length === 0) return null;
+  if (items.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Press" /> : null;
   return (
     <section id="press" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (

@@ -1,30 +1,48 @@
-// Web MIDI subscription for the NotationEditor. Requests access lazily
-// (users pay the permission-prompt cost only when they enable MIDI), then
-// fans out `noteon` messages from every connected input to the caller.
+// MIDI subscription for the NotationEditor, built on the shared MIDI input
+// facade (getMidiInputSource) so it works identically over Web MIDI on
+// desktop browsers and CoreMIDI (via the GWMidi Capacitor plugin) inside the
+// iOS app — Safari on iOS has no Web MIDI at all, so before this rewrite the
+// notation MIDI button never appeared on iPad.
 //
-// MIDI parsing crib sheet:
+// MIDI parsing crib sheet (now lives in parseMidiMessage, src/lib/studio/midiMessage.ts):
 //   status = data[0]
 //     0x90-0x9F → note-on channel c (c = status & 0x0F)
 //     0x80-0x8F → note-off channel c
 //   data[1] = note number 0..127 (60 = middle C)
 //   data[2] = velocity 0..127 (a "note-on" with velocity 0 is really a note-off,
-//             which many older devices send — treat it as one)
+//             which many older devices send — parseMidiMessage already remaps
+//             it to a 'noteoff' event, so this hook never sees a velocity-0
+//             'noteon' and doesn't need to check velocity itself)
 //
 // The hook is idempotent: enable→disable→enable cleanly detaches and
-// re-attaches listeners without leaking handlers, and re-runs when a new
-// device is plugged in mid-session (via the `statechange` event).
+// re-attaches listeners without leaking handlers, and refreshes the input
+// list when a new device is plugged in mid-session (via onStateChange).
+//
+// Race safety: enable() is async (it awaits source.subscribe(), which may
+// take a while — permission prompt, native plugin start). A generation
+// counter (genRef) guards its continuation, mirroring the cancelled-flag
+// discipline in useStudioMidiInput (src/hooks/useStudioMidiInput.ts):
+//   - Both enable() and disable() bump genRef; enable() captures its own
+//     generation before awaiting.
+//   - If disable() (or unmount) runs while an enable() is in flight, the
+//     bump invalidates it: when the subscribe promise eventually resolves,
+//     the continuation notices its generation is stale, immediately calls
+//     the freshly-obtained unsub (so the subscription doesn't outlive the
+//     module-singleton source) and returns without touching state.
+//   - enable() is also a no-op while already connected or already in
+//     flight (unsubRef/enablingRef truthy), so double-invoking it can't
+//     open two live subscriptions.
 
 import { useEffect, useRef, useState } from 'react';
-
-type MIDIAccess = any; // Web MIDI types aren't in default lib.dom
-type MIDIInput = any;
-type MIDIMessageEvent = any;
+import { parseMidiMessage } from '@/lib/studio/midiMessage';
+import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 
 export interface MidiInputState {
-  /** True when the browser reports a Web MIDI implementation. Safari on iOS
-   *  and old Firefox versions return false. */
+  /** True wherever the shared MIDI facade has a working backend — Web MIDI
+   *  on desktop browsers, or the CoreMIDI plugin inside the iOS app. Safari
+   *  on iOS *outside* the app and old Firefox versions still report false. */
   supported: boolean;
-  /** True after the user granted permission and we have an active MIDIAccess. */
+  /** True after the user granted permission and we have an active subscription. */
   connected: boolean;
   /** Human names of the inputs we're listening to (for a status pill). */
   inputNames: string[];
@@ -33,77 +51,89 @@ export interface MidiInputState {
   error: string | null;
 }
 
-/** Subscribe to Web MIDI note-on events. `onNoteOn(midi, velocity)` fires
- *  for every note-on (velocity > 0) from any connected input. Enable/disable
- *  via the returned `enable`/`disable` functions so the permission prompt
- *  only happens when the user opts in. */
+/** Subscribe to MIDI note-on events via the shared facade. `onNoteOn(midi,
+ *  velocity)` fires for every note-on (velocity > 0) from any connected
+ *  input. Enable/disable via the returned `enable`/`disable` functions so
+ *  the permission prompt only happens when the user opts in. */
 export function useMidiInput(onNoteOn: (midi: number, velocity: number) => void): {
   state: MidiInputState;
   enable: () => Promise<void>;
   disable: () => void;
 } {
-  const supported = typeof navigator !== 'undefined' && typeof (navigator as any).requestMIDIAccess === 'function';
+  const source = getMidiInputSource();
   const [state, setState] = useState<MidiInputState>({
-    supported, connected: false, inputNames: [], error: null,
+    supported: source.supported, connected: false, inputNames: [], error: null,
   });
   // Latest handler in a ref so subscribers don't need to re-bind every render.
   const handlerRef = useRef(onNoteOn);
   useEffect(() => { handlerRef.current = onNoteOn; }, [onNoteOn]);
-  const accessRef = useRef<MIDIAccess | null>(null);
+  const unsubRef = useRef<(() => void) | null>(null);
+  const offStateRef = useRef<(() => void) | null>(null);
+  // Bumped by both enable() and disable(); enable() captures its own value
+  // before awaiting subscribe() so a later disable()/re-enable() can
+  // invalidate a stale continuation (see the race-safety note above).
+  const genRef = useRef(0);
+  // True from the start of enable() until its continuation settles for the
+  // CURRENT generation — blocks a second concurrent enable() from opening a
+  // second live subscription.
+  const enablingRef = useRef(false);
 
-  const bindInputs = (access: MIDIAccess) => {
-    const inputs: MIDIInput[] = Array.from(access.inputs.values());
-    const names: string[] = [];
-    inputs.forEach((input) => {
-      names.push(input.name ?? 'MIDI input');
-      // Overwrite rather than addEventListener so re-binding on device
-      // hotplug replaces stale references without leaks.
-      input.onmidimessage = (e: MIDIMessageEvent) => {
-        const data = e.data;
-        if (!data || data.length < 3) return;
-        const status = data[0] & 0xf0;
-        const note = data[1];
-        const velocity = data[2];
-        // Note-on with velocity 0 is a legitimate note-off spelling.
-        if (status === 0x90 && velocity > 0) {
-          handlerRef.current(note, velocity);
-        }
-      };
-    });
-    setState((s) => ({ ...s, connected: true, inputNames: names, error: null }));
+  const refreshInputs = () => {
+    void source.listInputs()
+      .then((list) => setState((s) => ({ ...s, inputNames: list.map((i) => i.name) })))
+      .catch(() => { /* device list unavailable — keep last known */ });
   };
 
   const enable = async () => {
-    if (!supported) {
+    // Already connected, or an enable() is already in flight: no-op.
+    if (unsubRef.current || enablingRef.current) return;
+    if (!source.supported) {
       setState((s) => ({ ...s, error: 'This browser has no MIDI support.' }));
       return;
     }
+    const myGen = ++genRef.current;
+    enablingRef.current = true;
     try {
-      const access = await (navigator as any).requestMIDIAccess({ sysex: false });
-      accessRef.current = access;
-      bindInputs(access);
-      // Re-bind whenever the device list changes so plugging in a keyboard
-      // after enabling still works without a page reload.
-      access.onstatechange = () => bindInputs(access);
+      const unsub = await source.subscribe('', (data) => {
+        const ev = parseMidiMessage(data);
+        // parseMidiMessage already remaps velocity-0 note-ons to 'noteoff',
+        // so every 'noteon' here has velocity > 0 — no manual check needed.
+        if (ev.type === 'noteon') handlerRef.current(ev.pitch, ev.velocity);
+      });
+      if (myGen !== genRef.current) {
+        // disable() (or a newer enable()) ran while we were awaiting —
+        // this subscription was never committed to unsubRef, so tear it
+        // down immediately instead of leaking it or flipping state on a
+        // hook that's since been disabled/unmounted.
+        unsub();
+        return;
+      }
+      unsubRef.current = unsub;
+      // Re-fetch the input list whenever a device plugs in / unplugs so
+      // the status pill stays accurate without a page reload.
+      offStateRef.current = source.onStateChange(refreshInputs);
+      setState((s) => ({ ...s, connected: true, error: null }));
+      refreshInputs();
     } catch (e) {
+      if (myGen !== genRef.current) return; // stale — disable()/re-enable() already happened
       setState((s) => ({ ...s, connected: false, error: e instanceof Error ? e.message : 'MIDI access denied' }));
+    } finally {
+      if (myGen === genRef.current) enablingRef.current = false;
     }
   };
 
   const disable = () => {
-    const access = accessRef.current;
-    if (access) {
-      Array.from(access.inputs.values() as Iterable<MIDIInput>).forEach((input) => {
-        input.onmidimessage = null;
-      });
-      access.onstatechange = null;
-    }
-    accessRef.current = null;
-    setState({ supported, connected: false, inputNames: [], error: null });
+    ++genRef.current; // invalidate any in-flight enable() continuation
+    enablingRef.current = false;
+    unsubRef.current?.();
+    unsubRef.current = null;
+    offStateRef.current?.();
+    offStateRef.current = null;
+    setState({ supported: source.supported, connected: false, inputNames: [], error: null });
   };
 
   // Detach on unmount so a nav-away doesn't leave dangling listeners on
-  // the shared MIDIAccess (permission stays granted; only listeners go).
+  // the shared MIDI source (permission stays granted; only listeners go).
   useEffect(() => () => disable(), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { state, enable, disable };

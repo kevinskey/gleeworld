@@ -79,14 +79,14 @@ export const ActiveMeetingsSidebar: React.FC = () => {
                     <div className="flex -space-x-1.5">
                       {meeting.participants.slice(0, 4).map((p, idx) => (
                         <Avatar key={p.user_id || idx} className="h-6 w-6 border-2 border-background">
-                          <AvatarFallback className="text-[9px] bg-primary/80 text-primary-foreground">
+                          <AvatarFallback className="text-xs bg-primary/80 text-primary-foreground">
                             {p.user_name?.charAt(0)?.toUpperCase() || '?'}
                           </AvatarFallback>
                         </Avatar>
                       ))}
                       {meeting.participants.length > 4 && (
                         <Avatar className="h-6 w-6 border-2 border-background">
-                          <AvatarFallback className="text-[9px] bg-muted">
+                          <AvatarFallback className="text-xs bg-muted">
                             +{meeting.participants.length - 4}
                           </AvatarFallback>
                         </Avatar>

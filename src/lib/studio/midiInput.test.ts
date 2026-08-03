@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
 import { parseMidiMessage } from './midiMessage';
-import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode, grownSessionLength } from './midiRecord';
+import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode, grownSessionLength, ensureTakeClip } from './midiRecord';
 import { HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY } from './midiRecord';
 import type { MidiClip } from './session';
 
@@ -140,6 +140,19 @@ describe('appendTakeNote', () => {
   });
 });
 
+
+describe('ensureTakeClip', () => {
+  it('returns the existing clip untouched', () => {
+    const existing = ensureTakeClip(null, 4.0, 0.5);
+    expect(ensureTakeClip(existing, 9.9, 0.5)).toBe(existing);
+  });
+  it('creates a clip at the first CC event when no notes were played', () => {
+    const clip = ensureTakeClip(null, 4.0, 0.5);
+    expect(clip.start_seconds).toBe(4.0);
+    expect(clip.duration_seconds).toBe(0.5);
+    expect(clip.notes).toEqual([]);
+  });
+});
 
 describe('parseMidiMessage cc', () => {
   it('reads the mod wheel (CC1) on any channel', () => {

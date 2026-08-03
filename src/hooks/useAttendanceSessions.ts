@@ -12,7 +12,7 @@ export interface AttendanceSession {
   opens_at: string;
   closes_at: string;
   status: 'scheduled' | 'open' | 'closed' | 'cancelled';
-  mode: 'qr' | 'manual' | 'hybrid';
+  mode: 'qr' | 'manual' | 'hybrid' | 'roll_call';
   roster_scope: 'enrolled_students' | 'tour_roster' | 'custom_group';
   allow_late_checkin: boolean;
   late_threshold_minutes: number;
@@ -27,7 +27,7 @@ export interface AttendanceRecord {
   status: 'present' | 'late' | 'absent' | 'excused';
   marked_by?: string;
   marked_at: string;
-  check_in_method: 'qr' | 'manual' | 'pin' | 'auto';
+  check_in_method: 'qr' | 'manual' | 'pin' | 'auto' | 'self';
   note?: string;
   student?: {
     full_name: string;

@@ -14,6 +14,7 @@ import { HeroSlider } from "@/components/hero/HeroSlider";
 import { useUniversalHeroSlides } from "@/hooks/useUniversalSlider";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor, type PlanTierId } from "@/lib/planTiers";
+import { isTenantCloneLanding } from "@/lib/home/landingGate";
 import {
   Calendar,
   MapPin,
@@ -94,9 +95,10 @@ const MOCK_EVENTS: Event[] = [
 export const GleeWorldLanding = () => {
   const { loading: authLoading } = useAuth();
   const tenantOrg = typeof window !== 'undefined' ? (window as any).__TENANT_CONFIG__?.org : undefined;
+  const tenantSlug = typeof window !== 'undefined' ? (window as any).__TENANT_CONFIG__?.tenant : undefined;
   const siteName = tenantOrg || 'GleeWorld';
   // Sales CTA appears only on the main marketing site — never on tenant clones.
-  const isTenantClone = !!tenantOrg;
+  const isTenantClone = isTenantCloneLanding(tenantSlug, tenantOrg);
 
   const { data: adaptedSlides = [], isLoading: heroLoading } =
     useUniversalHeroSlides("homepage_hero");
@@ -1255,7 +1257,7 @@ function ConcertPlannerMockup() {
           </div>
         ))}
       </div>
-      <div className="mt-3 text-[10px] text-slate-500 italic">
+      <div className="mt-3 text-xs text-slate-500 italic">
         Editor credits preserved from CPDL on print export.
       </div>
     </div>
@@ -1322,7 +1324,7 @@ function MobileAppMockup() {
           </div>
         </div>
       </div>
-      <div className="mt-3 flex items-center justify-center gap-3 text-[11px] text-slate-500">
+      <div className="mt-3 flex items-center justify-center gap-3 text-xs text-slate-500">
         <span>iOS · TestFlight</span>
         <span>·</span>
         <span>Google Play · Internal testing</span>
@@ -1603,7 +1605,7 @@ function LiveExamplesSection() {
             >
               {s.badge && (
                 <span
-                  className="absolute top-5 right-5 inline-flex items-center rounded-full px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-wider text-slate-800"
+                  className="absolute top-5 right-5 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider text-slate-800"
                   style={{ backgroundColor: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(4px)' }}
                 >
                   {s.badge}

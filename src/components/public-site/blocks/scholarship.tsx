@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 // Scholarship block: lists scholarships the ensemble offers or sponsors,
 // with optional past recipients. Each award has a title, amount, deadline,
@@ -24,9 +25,9 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const list = config.scholarships.filter((s) => s.name);
-  if (list.length === 0) return null;
+  if (list.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Scholarships" /> : null;
   return (
     <section id="scholarships" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
       {config.heading && (

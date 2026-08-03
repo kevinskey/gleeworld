@@ -137,6 +137,27 @@ export function deleteNotes(notes: MidiNote[], selection: number[]): MidiNote[] 
   return notes.filter((_, i) => !sel.has(i));
 }
 
+/** Truncate notes to a new clip duration — what you see (after a
+ * right-edge trim) is what plays. Notes starting at/after the new end
+ * are dropped entirely; straddlers are shortened to fit, floored at
+ * `minNoteSeconds` so a trim doesn't produce an inaudible sliver.
+ * Notes that don't need to change keep referential identity. */
+export function trimNotesToDuration(
+  notes: MidiNote[], durationSeconds: number, minNoteSeconds: number = MIN_NOTE_SECONDS,
+): MidiNote[] {
+  const out: MidiNote[] = [];
+  for (const n of notes) {
+    if (n.start_seconds >= durationSeconds) continue;
+    const maxDuration = durationSeconds - n.start_seconds;
+    if (n.duration_seconds <= maxDuration) {
+      out.push(n);
+    } else {
+      out.push({ ...n, duration_seconds: Math.max(minNoteSeconds, maxDuration) });
+    }
+  }
+  return out;
+}
+
 // ── CC lane helpers ──────────────────────────────────────────────────
 
 /** Pair CC64 events into pedal ranges for rendering/editing. An

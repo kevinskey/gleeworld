@@ -148,7 +148,7 @@ export function RosterImportDialog({ open, onOpenChange, onImport }: RosterImpor
 Aisha Adams,Soprano
 Marcus Bell,Tenor
 ..." className="text-xs font-mono" />
-            <p className="text-[11px] text-muted-foreground">Header row is optional. Column order: name, voice_part, instrument.</p>
+            <p className="text-xs text-muted-foreground">Header row is optional. Column order: name, voice_part, instrument.</p>
           </TabsContent>
         </Tabs>
         <DialogFooter>

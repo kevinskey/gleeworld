@@ -16,7 +16,7 @@ export function LegacyMigrationBanner({ label = 'seating chart' }: { label?: str
         to="/seating-charts"
         className="inline-flex items-center gap-1 font-semibold hover:underline shrink-0"
       >
-        Open Seating Charts <ArrowRight className="w-3.5 h-3.5" />
+        Open Seating Charts <ArrowRight className="w-4 h-4" />
       </Link>
     </div>
   );

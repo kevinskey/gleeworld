@@ -31,6 +31,13 @@ interface EnrolledStudent {
   profile_image_url?: string;
 }
 
+interface RollCallFlag {
+  user_id: string;
+  student_profile_id: string | null;
+  wrong_attempts: number;
+  locked: boolean;
+}
+
 interface AttendanceLiveRosterProps {
   sessionId: string;
   courseId: string;
@@ -50,11 +57,26 @@ export const AttendanceLiveRoster: React.FC<AttendanceLiveRosterProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [noteText, setNoteText] = useState('');
+  const [rollCallFlags, setRollCallFlags] = useState<RollCallFlag[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchEnrolledStudents();
   }, [courseId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchFlags = async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await supabase.rpc('get_roll_call_flags' as any, {
+        p_session_id: sessionId,
+      });
+      if (!cancelled && !error && Array.isArray(data)) setRollCallFlags(data as RollCallFlag[]);
+    };
+    fetchFlags();
+    const t = setInterval(fetchFlags, 10_000); // polling fallback by design
+    return () => { cancelled = true; clearInterval(t); };
+  }, [sessionId]);
 
   const fetchEnrolledStudents = async () => {
     try {
@@ -228,7 +250,18 @@ export const AttendanceLiveRoster: React.FC<AttendanceLiveRosterProps> = ({
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{student.full_name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium truncate">{student.full_name}</p>
+                          {(() => {
+                            const flag = rollCallFlags.find(f => f.user_id === student.user_id);
+                            return flag && (
+                              <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-400 text-xs gap-1">
+                                <AlertTriangle className="h-3 w-3" />
+                                {flag.locked ? 'locked' : `${flag.wrong_attempts} missed ${flag.wrong_attempts === 1 ? 'tap' : 'taps'}`}
+                              </Badge>
+                            );
+                          })()}
+                        </div>
                         <p className="text-xs text-muted-foreground truncate">{student.email}</p>
                         {record?.marked_at && (
                           <p className="text-xs text-muted-foreground">

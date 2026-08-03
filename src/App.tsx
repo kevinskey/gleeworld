@@ -148,7 +148,8 @@ const ForcePasswordChange = lazy(() => import("./pages/ForcePasswordChange"));
 const AuditionApplicationPage = lazy(() => import("./pages/AuditionApplicationPage"));
 const FanDashboard = lazy(() => import("./pages/FanDashboard"));
 // import AdminDashboard from "./pages/AdminDashboard";
-const DuesManagement = lazy(() => import("./pages/DuesManagement").then(m => ({ default: m.DuesManagement })));
+const FeesAdminPage = lazy(() => import("./pages/dashboard/FeesAdminPage"));
+const MyFeesPage = lazy(() => import("./pages/dashboard/MyFeesPage"));
 const PermissionsPage = lazy(() => import("./pages/admin/Permissions"));
 const WeekPage = lazy(() => import("./pages/music-theory/WeekPage"));
 
@@ -2385,13 +2386,29 @@ const App = () => {
                          </ProtectedRoute>
                        } 
                       />
-                       <Route 
-                         path="/dues-management" 
+                       <Route
+                         path="/dues-management"
+                         element={<Navigate to="/dashboard/fees" replace />}
+                       />
+                       <Route
+                         path="/dashboard/fees"
                          element={
                            <ProtectedRoute>
-                             <DuesManagement />
+                             <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                               <DashboardShell><FeesAdminPage /></DashboardShell>
+                             </UniversalLayout>
                            </ProtectedRoute>
-                         } 
+                         }
+                       />
+                       <Route
+                         path="/dashboard/my-fees"
+                         element={
+                           <ProtectedRoute>
+                             <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                               <DashboardShell><MyFeesPage /></DashboardShell>
+                             </UniversalLayout>
+                           </ProtectedRoute>
+                         }
                        />
                        <Route 
                          path="/dues-management/success" 

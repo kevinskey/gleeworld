@@ -22,20 +22,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { verifyClaims } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-function decodeJwtPayload(jwt: string): Record<string, unknown> | null {
-  try {
-    const part = jwt.split(".")[1];
-    const padded = part + "===".slice((part.length + 3) % 4);
-    return JSON.parse(atob(padded.replace(/-/g, "+").replace(/_/g, "/")));
-  } catch { return null; }
-}
 
 function err(status: number, code: string, detail?: string) {
   return new Response(JSON.stringify({ error: code, detail }), {
@@ -69,9 +62,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return err(405, "method_not_allowed");
 
-  const auth = req.headers.get("Authorization") || "";
-  const jwt = auth.replace(/^Bearer\s+/i, "");
-  if (!jwt) return err(401, "unauthorized");
+  // The edge-functions container runs with VERIFY_JWT=false, so the gateway
+  // does NOT check the token signature — we MUST verify it here. Without this
+  // a forged JWT (any tenant_id / tenant_role, garbage signature) would be
+  // trusted and let an attacker open a plan checkout against any tenant.
+  // verifyClaims() calls admin.auth.getUser() before returning claims.
+  const payload = await verifyClaims(req);
+  if (!payload) return err(401, "invalid_token");
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -79,16 +76,6 @@ serve(async (req) => {
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
-  // The edge-functions container runs with VERIFY_JWT=false, so the gateway
-  // does NOT check the token signature — we MUST verify it here. Without this
-  // a forged JWT (any tenant_id / tenant_role, garbage signature) would be
-  // trusted and let an attacker open a plan checkout against any tenant.
-  const { data: userData, error: authErr } = await admin.auth.getUser(jwt);
-  if (authErr || !userData?.user) return err(401, "invalid_token");
-
-  // Signature is now verified — the custom claims injected by the GoTrue hook
-  // are trustworthy. Read tenant_id / tenant_role from the verified payload.
-  const payload = decodeJwtPayload(jwt);
   // deno-lint-ignore no-explicit-any
   const tenantId = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
   // deno-lint-ignore no-explicit-any

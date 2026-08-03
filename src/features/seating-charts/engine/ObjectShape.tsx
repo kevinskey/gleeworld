@@ -72,7 +72,7 @@ export function ObjectShape({ object, assignment, selected, displayLabel, attend
           x={x + w / 2}
           y={y + h / 2 + 4}
           textAnchor="middle"
-          fontSize={style.fontSize ?? Math.max(9, Math.min(12, w / 6))}
+          fontSize={style.fontSize ?? Math.max(11, Math.min(13, w / 5))}
           fontWeight={style.fontWeight ?? 500}
           fill={style.color ?? '#0f172a'}
           pointerEvents="none"

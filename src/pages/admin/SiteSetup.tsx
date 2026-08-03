@@ -293,7 +293,6 @@ export default function SiteSetup() {
                 value={orgName}
                 onChange={(e) => setOrgName(e.target.value)}
                 placeholder="e.g. The Golden Gate Singers Institute"
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
               />
             </Field>
 
@@ -306,7 +305,6 @@ export default function SiteSetup() {
                 onChange={(e) => setShortName(e.target.value)}
                 placeholder="e.g. Golden Gate Singers"
                 maxLength={30}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
               />
             </Field>
 
@@ -318,7 +316,6 @@ export default function SiteSetup() {
                 value={tagline}
                 onChange={(e) => setTagline(e.target.value)}
                 placeholder="e.g. Voices that move audiences"
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
               />
             </Field>
 
@@ -326,7 +323,7 @@ export default function SiteSetup() {
               label="Show 'Enroll' button on public landing"
               hint="When on, visitors see an Enroll button that takes them to a class-code signup page. Turn off if you're not accepting new students right now."
             >
-              <label className="flex items-center gap-2 text-sm text-white">
+              <label className="flex items-center gap-2 text-sm text-foreground">
                 <input
                   type="checkbox"
                   checked={showEnrollCta}
@@ -352,7 +349,7 @@ export default function SiteSetup() {
                     <button
                       type="button"
                       onClick={() => setLogoUrl('')}
-                      className="absolute -top-2 -right-2 bg-slate-900 border border-slate-700 rounded-full p-1 text-white hover:bg-slate-700"
+                      className="absolute -top-2 -right-2 bg-foreground text-background border border-border rounded-full p-1 hover:bg-foreground/80"
                       title="Remove logo"
                     >
                       <X className="w-3 h-3" />
@@ -364,7 +361,7 @@ export default function SiteSetup() {
                   </div>
                 )}
                 <div className="flex-1 min-w-[12rem]">
-                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium cursor-pointer transition-colors">
+                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium cursor-pointer transition-colors">
                     {uploading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
@@ -373,7 +370,7 @@ export default function SiteSetup() {
                     {uploading ? 'Uploading…' : logoUrl ? 'Replace logo' : 'Upload logo'}
                     <input
                       type="file"
-                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp,image/avif"
                       className="hidden"
                       disabled={uploading}
                       onChange={(e) => {
@@ -383,7 +380,7 @@ export default function SiteSetup() {
                       }}
                     />
                   </label>
-                  <p className="text-xs text-slate-400 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     PNG, JPG, SVG, WebP. Max 5 MB. Square images work best.
                   </p>
                 </div>
@@ -405,7 +402,7 @@ export default function SiteSetup() {
                     <button
                       type="button"
                       onClick={() => setAuthBackgroundUrl('')}
-                      className="absolute -top-2 -right-2 bg-slate-900 border border-slate-700 rounded-full p-1 text-white hover:bg-slate-700"
+                      className="absolute -top-2 -right-2 bg-foreground text-background border border-border rounded-full p-1 hover:bg-foreground/80"
                       title="Remove background"
                     >
                       <X className="w-3 h-3" />
@@ -417,7 +414,7 @@ export default function SiteSetup() {
                   </div>
                 )}
                 <div className="flex-1 min-w-[12rem]">
-                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium cursor-pointer transition-colors">
+                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium cursor-pointer transition-colors">
                     {bgUploading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
@@ -426,7 +423,7 @@ export default function SiteSetup() {
                     {bgUploading ? 'Uploading…' : authBackgroundUrl ? 'Replace background' : 'Upload background'}
                     <input
                       type="file"
-                      accept="image/png,image/jpeg,image/webp"
+                      accept="image/png,image/jpeg,image/webp,image/avif"
                       className="hidden"
                       disabled={bgUploading}
                       onChange={(e) => {
@@ -436,7 +433,7 @@ export default function SiteSetup() {
                       }}
                     />
                   </label>
-                  <p className="text-xs text-slate-400 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     PNG, JPG, WebP. Max 5 MB. Wide (landscape) images work best.
                   </p>
                 </div>
@@ -458,7 +455,7 @@ export default function SiteSetup() {
                     <button
                       type="button"
                       onClick={() => setAuthBackgroundMobileUrl('')}
-                      className="absolute -top-2 -right-2 bg-slate-900 border border-slate-700 rounded-full p-1 text-white hover:bg-slate-700"
+                      className="absolute -top-2 -right-2 bg-foreground text-background border border-border rounded-full p-1 hover:bg-foreground/80"
                       title="Remove mobile background"
                     >
                       <X className="w-3 h-3" />
@@ -470,7 +467,7 @@ export default function SiteSetup() {
                   </div>
                 )}
                 <div className="flex-1 min-w-[12rem]">
-                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-500 text-white text-sm font-medium cursor-pointer transition-colors">
+                  <label className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium cursor-pointer transition-colors">
                     {bgMobileUploading ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
@@ -479,7 +476,7 @@ export default function SiteSetup() {
                     {bgMobileUploading ? 'Uploading…' : authBackgroundMobileUrl ? 'Replace background' : 'Upload background'}
                     <input
                       type="file"
-                      accept="image/png,image/jpeg,image/webp"
+                      accept="image/png,image/jpeg,image/webp,image/avif"
                       className="hidden"
                       disabled={bgMobileUploading}
                       onChange={(e) => {
@@ -489,7 +486,7 @@ export default function SiteSetup() {
                       }}
                     />
                   </label>
-                  <p className="text-xs text-slate-400 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     PNG, JPG, WebP. Max 5 MB. Tall (portrait) images work best.
                   </p>
                 </div>
@@ -505,22 +502,21 @@ export default function SiteSetup() {
                   type="color"
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="h-10 w-16 rounded border border-slate-700 bg-slate-800 cursor-pointer"
+                  className="h-10 w-16 rounded border border-input bg-background cursor-pointer"
                 />
                 <Input
                   value={primaryColor}
                   onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="font-mono w-32 bg-slate-800 border-slate-700 text-white"
+                  className="font-mono w-32"
                 />
               </div>
             </Field>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 mt-8 pt-6 border-t border-slate-700">
+          <div className="flex flex-wrap items-center gap-3 mt-8 pt-6 border-t border-border">
             <Button
               onClick={() => handleSave(true)}
               disabled={saving}
-              className="bg-sky-600 hover:bg-sky-500 text-white"
             >
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ArrowRight className="w-4 h-4 mr-2" />}
               Save & continue
@@ -529,7 +525,6 @@ export default function SiteSetup() {
               variant="outline"
               onClick={() => handleSave(false)}
               disabled={saving}
-              className="border-slate-600 text-slate-200 hover:bg-slate-800"
             >
               <Save className="w-4 h-4 mr-2" />
               Save (stay here)
@@ -538,7 +533,7 @@ export default function SiteSetup() {
               <Button
                 variant="ghost"
                 onClick={() => navigate('/control-center')}
-                className="text-slate-300 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               >
                 Skip to dashboard
               </Button>
@@ -562,7 +557,7 @@ export default function SiteSetup() {
                 <Input
                   value={tenant?.subdomain ?? `${tenant?.slug ?? '...'}.gleeworld.org`}
                   readOnly
-                  className="bg-slate-900 border-slate-700 text-slate-300 font-mono"
+                  className="bg-muted text-muted-foreground font-mono"
                 />
                 <a
                   href={`https://${tenant?.subdomain ?? `${tenant?.slug}.gleeworld.org`}`}
@@ -581,7 +576,7 @@ export default function SiteSetup() {
                 value={customDomain}
                 onChange={(e) => setCustomDomain(e.target.value.trim().toLowerCase())}
                 placeholder="e.g. choir.example.org"
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 font-mono"
+                className="font-mono"
               />
             </Field>
 
@@ -589,7 +584,7 @@ export default function SiteSetup() {
               <div className="rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm space-y-2">
                 <p className="font-semibold">Next: point DNS at us.</p>
                 <p className="text-muted-foreground">Add this <code className="bg-muted px-1 rounded">CNAME</code> at your DNS provider:</p>
-                <pre className="bg-slate-900 text-slate-200 rounded p-3 text-xs overflow-x-auto"><code>{customDomain}    CNAME    gleeworld.org</code></pre>
+                <pre className="bg-muted text-foreground rounded p-3 text-xs overflow-x-auto"><code>{customDomain}    CNAME    gleeworld.org</code></pre>
                 <p className="text-muted-foreground">When DNS resolves, we'll issue an SSL cert and start serving your site at <code className="bg-muted px-1 rounded">https://{customDomain}</code>. Allow a few minutes after DNS propagates.</p>
               </div>
             )}

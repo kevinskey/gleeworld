@@ -156,13 +156,37 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
     );
   };
 
+  // Real title via YouTube's oEmbed endpoint — CORS-enabled, keyless, and
+  // not billed against the Data API quota. Returns '' on any failure so
+  // insertRow's videoId fallback still applies (offline, deleted/region-
+  // blocked video, CSP misconfig). www.youtube.com must stay in the
+  // index.html connect-src for this to work.
+  const fetchYouTubeTitle = async (videoId: string): Promise<string> => {
+    try {
+      const ctrl = new AbortController();
+      const timer = window.setTimeout(() => ctrl.abort(), 4000);
+      const res = await fetch(
+        `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&format=json`,
+        { signal: ctrl.signal },
+      );
+      window.clearTimeout(timer);
+      if (!res.ok) return '';
+      const body = (await res.json()) as { title?: unknown };
+      return typeof body.title === 'string' ? body.title.trim() : '';
+    } catch {
+      return '';
+    }
+  };
+
   const handleUrlSubmit = async () => {
     setError(null);
     const trimmed = url.trim();
     // Fast path: YouTube 11-char id or any YouTube URL shape.
     const ytId = parseYouTubeInput(trimmed);
     if (ytId) {
-      await addYouTube(ytId, title.trim());
+      setSubmitting(true);
+      const resolvedTitle = title.trim() || (await fetchYouTubeTitle(ytId));
+      await addYouTube(ytId, resolvedTitle);
       return;
     }
     const source = parseVideoSource(trimmed);

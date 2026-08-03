@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MidiTimebase, MIDI_TIMEBASE_DRIFT_LIMIT_SEC } from '../midiTimebase';
+import { MidiTimebase, MIDI_TIMEBASE_DRIFT_LIMIT_SEC, formatMonitoringLatency } from '../midiTimebase';
 
 // The recording bug this fixes: note times were read from the engine's
 // ~30Hz positionSeconds snapshot at handler run time, so every note
@@ -103,5 +103,15 @@ describe('MidiTimebase', () => {
     tb.toTransportSeconds(9000, 12);
     // Delta from take-2 anchor, NOT from take-1 anchor.
     expect(tb.toTransportSeconds(9500, 12.5)).toBeCloseTo(12.5, 6);
+  });
+});
+
+describe('formatMonitoringLatency', () => {
+  it('rounds and labels', () => {
+    expect(formatMonitoringLatency(12.4)).toBe('monitoring ≈ 12ms');
+    expect(formatMonitoringLatency(0)).toBe('monitoring ≈ 0ms');
+  });
+  it('clamps negatives to 0', () => {
+    expect(formatMonitoringLatency(-3)).toBe('monitoring ≈ 0ms');
   });
 });

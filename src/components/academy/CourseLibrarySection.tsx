@@ -68,7 +68,7 @@ export function CourseLibrarySection({ isSuperAdmin = false }: { isSuperAdmin?: 
       {loadingTemplates ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[0, 1, 2, 3].map((i) => (
-            <div key={i} className="bg-slate-800/50 border border-slate-700 rounded-xl p-5 h-44 animate-pulse" />
+            <div key={i} className="bg-muted border border-border rounded-xl p-5 h-44 animate-pulse" />
           ))}
         </div>
       ) : (
@@ -79,9 +79,9 @@ export function CourseLibrarySection({ isSuperAdmin = false }: { isSuperAdmin?: 
             const isAdopted = adoptedSourceIds.has(t.id);
             const isAdopting = adoptingId === t.id;
             return (
-              <div key={t.id} className="bg-slate-800 border border-slate-700 rounded-xl p-5 flex flex-col">
+              <div key={t.id} className="bg-card border border-border rounded-xl p-5 flex flex-col">
                 <div className="flex items-start justify-between gap-2 mb-2">
-                  <Badge className="bg-sky-600 text-white border-0 text-xs">
+                  <Badge className="text-xs">
                     {t.level ? (LEVEL_LABEL[t.level] ?? t.level) : 'Course'}
                   </Badge>
                   {isAdopted ? (
@@ -92,25 +92,25 @@ export function CourseLibrarySection({ isSuperAdmin = false }: { isSuperAdmin?: 
                     <Badge className="bg-emerald-600 text-white border-0 text-xs">Owned</Badge>
                   ) : null}
                 </div>
-                <div className="font-semibold text-white mb-1 line-clamp-2">{t.title}</div>
-                <div className="text-sm text-slate-400 mb-2">
+                <div className="font-semibold text-foreground mb-1 line-clamp-2">{t.title}</div>
+                <div className="text-sm text-muted-foreground mb-2">
                   {t.unit_count} units · {t.lesson_count} lessons{t.grades ? ` · Grades ${t.grades}` : ''}
                 </div>
                 {t.description && (
-                  <div className="text-xs text-slate-300 line-clamp-3 mb-3">{t.description}</div>
+                  <div className="text-xs text-muted-foreground line-clamp-3 mb-3">{t.description}</div>
                 )}
                 <div className="mt-auto pt-2 flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
-                    className="flex-1 border-slate-600 text-slate-200 hover:bg-slate-700"
+                    className="flex-1"
                     onClick={() => navigate(`/academy/templates/${t.id}`)}
                   >
                     Open
                   </Button>
                   <Button
                     size="sm"
-                    className="flex-1 bg-sky-600 hover:bg-sky-500 text-white"
+                    className="flex-1"
                     disabled={isAdopting}
                     onClick={() => handleAdopt(t.id, t.title)}
                   >
@@ -168,15 +168,15 @@ function GrantCoursePanel() {
   }
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 border-dashed rounded-xl p-4">
-      <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-200 mb-2">
-        <Gift className="w-3.5 h-3.5 text-sky-400" /> Comp a course (super admin)
+    <div className="bg-muted/60 border border-border border-dashed rounded-xl p-4">
+      <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground mb-2">
+        <Gift className="w-3.5 h-3.5 text-primary" /> Comp a course (super admin)
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <select
           value={tenantId}
           onChange={(e) => setTenantId(e.target.value)}
-          className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-md px-2 py-1.5"
+          className="bg-background border border-input text-foreground text-xs rounded-md px-2 py-1.5"
         >
           <option value="">Select tenant…</option>
           {tenants.map((t) => (
@@ -186,14 +186,14 @@ function GrantCoursePanel() {
         <select
           value={sku}
           onChange={(e) => setSku(e.target.value)}
-          className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-md px-2 py-1.5"
+          className="bg-background border border-input text-foreground text-xs rounded-md px-2 py-1.5"
         >
           <option value="">Select course…</option>
           {products.map((p) => (
             <option key={p.id} value={p.sku}>{p.name}</option>
           ))}
         </select>
-        <Button size="sm" onClick={grant} disabled={!tenantId || !sku || granting} className="bg-sky-600 hover:bg-sky-500 text-white">
+        <Button size="sm" onClick={grant} disabled={!tenantId || !sku || granting}>
           {granting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Gift className="w-4 h-4 mr-1.5" />}
           Grant
         </Button>

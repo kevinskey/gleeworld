@@ -34,7 +34,7 @@ export const CreatePaymentPlanDialog = ({
   const [loading, setLoading] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [formData, setFormData] = useState({
-    dues_record_id: '',
+    student_fee_id: '',
     user_id: '',
     total_amount: '',
     installments: '2',
@@ -48,7 +48,7 @@ export const CreatePaymentPlanDialog = ({
     if (record) {
       setFormData(prev => ({
         ...prev,
-        dues_record_id: duesRecordId,
+        student_fee_id: duesRecordId,
         user_id: record.user_id,
         total_amount: record.amount?.toString() || ''
       }));
@@ -100,7 +100,7 @@ export const CreatePaymentPlanDialog = ({
     }
     const {
       error
-    } = await (supabase as any).from('gw_payment_plan_installments').insert(installmentData);
+    } = await (supabase as any).from('gw_fee_plan_installments').insert(installmentData);
     if (error) throw error;
   };
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,8 +113,8 @@ export const CreatePaymentPlanDialog = ({
       const {
         data: planData,
         error: planError
-      } = await (supabase as any).from('gw_dues_payment_plans').insert([{
-        dues_record_id: formData.dues_record_id,
+      } = await (supabase as any).from('gw_fee_payment_plans').insert([{
+        student_fee_id: formData.student_fee_id,
         user_id: user.id,
         // Use the authenticated user's ID for RLS compliance
         total_amount: parseFloat(formData.total_amount),
@@ -136,7 +136,7 @@ export const CreatePaymentPlanDialog = ({
         description: "Payment plan created successfully"
       });
       setFormData({
-        dues_record_id: '',
+        student_fee_id: '',
         user_id: '',
         total_amount: '',
         installments: '2',
@@ -170,8 +170,8 @@ export const CreatePaymentPlanDialog = ({
             <Popover open={searchOpen} onOpenChange={setSearchOpen}>
               <PopoverTrigger asChild>
                 <Button variant="outline" role="combobox" aria-expanded={searchOpen} className="w-full justify-between">
-                  {formData.dues_record_id ? (() => {
-                  const record = pendingDuesRecords.find(r => r.id === formData.dues_record_id);
+                  {formData.student_fee_id ? (() => {
+                  const record = pendingDuesRecords.find(r => r.id === formData.student_fee_id);
                   return record ? `${record.gw_profiles?.full_name || 'Unknown'} - $${record.amount?.toFixed(2)} (${record.semester})` : "Select dues record";
                 })() : "Select dues record"}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -189,7 +189,7 @@ export const CreatePaymentPlanDialog = ({
                       handleDuesRecordChange(record.id);
                       setSearchOpen(false);
                     }}>
-                          <Check className={cn("mr-2 h-4 w-4", formData.dues_record_id === record.id ? "opacity-100" : "opacity-0")} />
+                          <Check className={cn("mr-2 h-4 w-4", formData.student_fee_id === record.id ? "opacity-100" : "opacity-0")} />
                           {record.gw_profiles?.full_name || 'Unknown'} - ${record.amount?.toFixed(2)} ({record.semester})
                         </CommandItem>)}
                     </CommandGroup>
@@ -289,7 +289,7 @@ export const CreatePaymentPlanDialog = ({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || !formData.dues_record_id} className="flex-1 bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90">
+            <Button type="submit" disabled={loading || !formData.student_fee_id} className="flex-1 bg-gradient-to-r from-brand-primary to-brand-secondary hover:from-brand-primary/90 hover:to-brand-secondary/90">
               {loading ? "Creating..." : "Create Payment Plan"}
             </Button>
           </div>

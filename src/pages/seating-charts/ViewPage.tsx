@@ -93,11 +93,11 @@ export function SeatingChartViewPage() {
           </Link>
           <Armchair className="w-4 h-4 text-primary shrink-0" />
           <span className="text-sm font-semibold truncate min-w-0">{state.chart.name}</span>
-          <Badge variant="secondary" className="text-[10px] shrink-0">{ROLE_LABEL[role]}</Badge>
+          <Badge variant="secondary" className="text-xs shrink-0">{ROLE_LABEL[role]}</Badge>
         </div>
         <div className="flex items-center gap-3 md:gap-2 overflow-x-auto scrollbar-hide -mx-2 md:mx-0 px-2 md:px-0">
           {(['performer', 'section_leader', 'stage_crew', 'substitute'] as ViewRole[]).map((r) => (
-            <Link key={r} to={`?role=${r}`} className={`text-[11px] whitespace-nowrap ${role === r ? 'font-semibold text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
+            <Link key={r} to={`?role=${r}`} className={`text-xs whitespace-nowrap ${role === r ? 'font-semibold text-primary' : 'text-muted-foreground hover:text-foreground'}`}>
               {ROLE_LABEL[r].replace(' view', '')}
             </Link>
           ))}
