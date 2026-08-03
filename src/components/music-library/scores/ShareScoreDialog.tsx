@@ -30,17 +30,25 @@ import { VOICE_PARTS, type ScoreRow } from './types';
 //      sees the row. Removing a student from the class immediately
 //      revokes access on the next Scores refresh.
 //
-// One Save writes all three arrays back in a single update. On failure
+// One Save writes all the arrays back in a single update. On failure
 // (RLS silent no-op, network, etc.) we toast and leave the dialog open
 // so the librarian can retry rather than lose their selections.
+//
+// Multi-score mode (scores.length > 1, from the bulk-select bar): the save
+// is ADDITIVE via the bulk_share_scores RPC — it unions the picked lanes
+// into each score, so "share these 20 with class X" never clobbers the
+// per-score user shares somebody granted earlier. The everyone switch
+// defaults to "leave as-is" and can only turn ON in bulk.
 export function ShareScoreDialog({
-  score, onOpenChange, onSaved,
+  scores, onOpenChange, onSaved,
 }: {
-  score: ScoreRow | null;
+  scores: ScoreRow[];
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
 }) {
-  const open = !!score;
+  const open = scores.length > 0;
+  const multi = scores.length > 1;
+  const score = scores.length === 1 ? scores[0] : null;
   const [everyone, setEveryone] = useState(false);
   const [users, setUsers] = useState<Set<string>>(new Set());
   const [coursesSel, setCoursesSel] = useState<Set<string>>(new Set());
@@ -48,15 +56,21 @@ export function ShareScoreDialog({
   const [saving, setSaving] = useState(false);
   const [peopleFilter, setPeopleFilter] = useState('');
 
-  // Reset draft state whenever the dialog opens for a different score.
+  // Reset draft state whenever the dialog opens for a different selection.
+  // Single score: prefill with its current sharing (replace-on-save).
+  // Multi: start empty — the save only ADDS what's picked here.
   useEffect(() => {
-    if (!score) return;
-    setEveryone(!!score.shared_with_members);
-    setUsers(new Set(score.shared_with_users ?? []));
-    setCoursesSel(new Set(score.shared_with_courses ?? []));
-    setVoiceParts(new Set(score.shared_with_voice_parts ?? []));
+    if (scores.length === 0) return;
+    const single = scores.length === 1 ? scores[0] : null;
+    setEveryone(!!single?.shared_with_members);
+    setUsers(new Set(single?.shared_with_users ?? []));
+    setCoursesSel(new Set(single?.shared_with_courses ?? []));
+    setVoiceParts(new Set(single?.shared_with_voice_parts ?? []));
     setPeopleFilter('');
-  }, [score]);
+    // The dialog opens/closes by identity of the selection, not deep
+    // content — joining ids keeps the effect stable across re-renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scores.map((s) => s.id).join(',')]);
 
   // Tenant members — used for the individual-share picker. Fetched only
   // when the dialog is open to avoid pulling every profile at page load.
@@ -122,8 +136,31 @@ export function ShareScoreDialog({
   };
 
   const save = async () => {
-    if (!score) return;
+    if (scores.length === 0) return;
     setSaving(true);
+    if (multi) {
+      // Additive bulk write — atomic, RLS-enforced inside the INVOKER RPC.
+      const { data: count, error } = await (supabase as any).rpc('bulk_share_scores', {
+        p_score_ids: scores.map((s) => s.id),
+        p_add_users: Array.from(users),
+        p_add_courses: Array.from(coursesSel),
+        p_add_voice_parts: Array.from(voiceParts),
+        p_set_everyone: everyone ? true : null,
+      });
+      setSaving(false);
+      if (error || typeof count !== 'number' || count < scores.length) {
+        toast.error(
+          error || typeof count !== 'number'
+            ? "Sharing couldn't be updated — your role may not have permission."
+            : `Only ${count} of ${scores.length} scores updated — your role may not have permission for the rest.`,
+        );
+        return;
+      }
+      toast.success(`Sharing added to ${count} scores.`);
+      onSaved();
+      return;
+    }
+    // Single score — replace-on-save, exactly what the dialog shows.
     // `.select()` after update so an RLS-silenced no-op surfaces as a real
     // failure (row_count === 0) instead of a lying success toast.
     const { data, error } = await (supabase as any)
@@ -134,7 +171,7 @@ export function ShareScoreDialog({
         shared_with_courses: Array.from(coursesSel),
         shared_with_voice_parts: Array.from(voiceParts),
       })
-      .eq('id', score.id)
+      .eq('id', score!.id)
       .select('id');
     setSaving(false);
     if (error || !data?.length) {
@@ -150,15 +187,18 @@ export function ShareScoreDialog({
     onSaved();
   };
 
-  if (!score) return null;
+  if (scores.length === 0) return null;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="truncate">Share “{score.title}”</DialogTitle>
+          <DialogTitle className="truncate">
+            {multi ? `Add sharing to ${scores.length} scores` : `Share “${score!.title}”`}
+          </DialogTitle>
           <DialogDescription>
-            Choose who can see this score in their Scores tab. Sharing is additive — any
-            of the lanes below is enough for a member to see the row.
+            {multi
+              ? 'Everything you pick below is ADDED to each selected score — existing shares are kept.'
+              : 'Choose who can see this score in their Scores tab. Sharing is additive — any of the lanes below is enough for a member to see the row.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -168,7 +208,9 @@ export function ShareScoreDialog({
             <div className="min-w-0">
               <div className="text-sm font-semibold">Everyone in this workspace</div>
               <div className="text-xs text-muted-foreground">
-                Every member of your tenant can see the score. Turn this off to share only with the specific people and classes below.
+                {multi
+                  ? 'Off = leave each score’s "everyone" setting as it is. On = turn it on for all selected scores.'
+                  : 'Every member of your tenant can see the score. Turn this off to share only with the specific people and classes below.'}
               </div>
             </div>
             <Switch checked={everyone} onCheckedChange={setEveryone} />
@@ -320,7 +362,7 @@ export function ShareScoreDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
           <Button onClick={save} disabled={saving}>
             {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <CheckIcon className="w-4 h-4 mr-1.5" />}
-            Save sharing
+            {multi ? 'Add sharing' : 'Save sharing'}
           </Button>
         </DialogFooter>
       </DialogContent>

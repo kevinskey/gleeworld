@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Music, Headphones, Library as LibraryIcon, Pencil, PencilLine, Share2, ListMusic,
 } from 'lucide-react';
@@ -9,6 +10,7 @@ import { SOFT_CARD, SOFT_CARD_STYLE, type ScoreRow } from './types';
 
 export function ScoreCard({
   row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare, onPartTracks,
+  selectable = false, selected = false, onToggleSelect,
 }: {
   row: ScoreRow;
   courseCode: string | null;
@@ -18,23 +20,36 @@ export function ScoreCard({
   onEdit: () => void;
   onToggleShare: () => void;
   onPartTracks: () => void;
+  // Bulk-select mode: clicking toggles selection instead of opening the
+  // viewer; a checkbox mirrors the state.
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }) {
   const hasPdf = !!row.pdf_url || !!row.storage_path;
   const hasAudio = !!row.audio_url;
   const copies = row.physical_copies_count ?? 0;
+  const clickable = selectable || hasPdf;
+  const handleActivate = selectable ? onToggleSelect : (hasPdf ? onAnnotate : undefined);
   return (
     <Card
-      className={`${SOFT_CARD} h-full flex flex-col ${hasPdf ? 'cursor-pointer transition-colors hover:bg-accent/40' : ''}`}
+      className={`${SOFT_CARD} h-full flex flex-col relative ${clickable ? 'cursor-pointer transition-colors hover:bg-accent/40' : ''} ${selected ? 'ring-2 ring-primary' : ''}`}
       style={SOFT_CARD_STYLE}
-      onClick={hasPdf ? onAnnotate : undefined}
-      role={hasPdf ? 'button' : undefined}
-      tabIndex={hasPdf ? 0 : undefined}
+      onClick={handleActivate}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      aria-pressed={selectable ? selected : undefined}
       onKeyDown={
-        hasPdf
-          ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAnnotate(); } }
+        handleActivate
+          ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleActivate(); } }
           : undefined
       }
     >
+      {selectable && (
+        <div className="absolute top-2.5 right-2.5 z-10">
+          <Checkbox checked={selected} className="pointer-events-none bg-background" aria-hidden />
+        </div>
+      )}
       <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-muted text-muted-foreground">

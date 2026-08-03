@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Music, Search, Loader2, FileMusic, ListMusic,
-  LayoutGrid, List as ListIcon, Store,
+  LayoutGrid, List as ListIcon, Store, CheckSquare, Share2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
@@ -81,10 +81,26 @@ export default function MusicLibraryPage() {
   // instead of querying with an empty string.
   const [viewing, setViewing] = useState<{ id?: string; title: string; pdfUrl: string } | null>(null);
 
-  // Share dialog state — the row currently being reviewed for sharing.
-  // Opened via the row's Share button (canEdit only). Setting to null
-  // closes the dialog without saving.
-  const [sharing, setSharing] = useState<ScoreRow | null>(null);
+  // Share dialog state — the row(s) currently being reviewed for sharing.
+  // One row = the card's Share button (replace-on-save); several rows =
+  // the bulk-select bar (additive save). Empty array closes the dialog.
+  const [sharing, setSharing] = useState<ScoreRow[]>([]);
+
+  // Bulk-select mode (canEdit only): clicking cards toggles selection and
+  // a sticky bar offers Share for the whole selection.
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const toggleSelectMode = () => {
+    setSelectMode((v) => !v);
+    setSelectedIds(new Set());
+  };
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   // A score is served either from a public pdf_url (legacy/tenant uploads) or
   // from a PRIVATE storage object (personal scores published to this tenant —
@@ -174,8 +190,8 @@ export default function MusicLibraryPage() {
   // Row's Share button — opens the granular share dialog rather than
   // toggling in place. The dialog handles the actual write; passing the
   // row through state gives it access to the current sharing state
-  // (shared_with_members/users/courses) as initial values.
-  const handleOpenShare = (row: ScoreRow) => setSharing(row);
+  // (shared_with_members/users/courses/voice_parts) as initial values.
+  const handleOpenShare = (row: ScoreRow) => setSharing([row]);
 
   return (
     <UniversalLayout showHeader={false} showFooter={false}>
@@ -265,6 +281,19 @@ export default function MusicLibraryPage() {
                     <ListIcon className="w-4 h-4" />
                   </Button>
                 </div>
+                {canEdit && (
+                  <Button
+                    variant={selectMode ? 'secondary' : 'outline'}
+                    size="sm"
+                    className="shrink-0 h-9"
+                    onClick={toggleSelectMode}
+                    aria-pressed={selectMode}
+                    title="Select several scores to share at once"
+                  >
+                    <CheckSquare className="w-4 h-4 sm:mr-1.5" />
+                    <span className="hidden sm:inline">{selectMode ? 'Done' : 'Select'}</span>
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -298,6 +327,9 @@ export default function MusicLibraryPage() {
                   onEdit={() => setEditing(r)}
                   onToggleShare={() => handleOpenShare(r)}
                   onPartTracks={() => setPartTracksFor(r)}
+                  selectable={selectMode}
+                  selected={selectedIds.has(r.id)}
+                  onToggleSelect={() => toggleSelected(r.id)}
                 />
               ))}
             </div>
@@ -315,10 +347,40 @@ export default function MusicLibraryPage() {
                     onEdit={() => setEditing(r)}
                     onToggleShare={() => handleOpenShare(r)}
                     onPartTracks={() => setPartTracksFor(r)}
+                    selectable={selectMode}
+                    selected={selectedIds.has(r.id)}
+                    onToggleSelect={() => toggleSelected(r.id)}
                   />
                 ))}
               </div>
             </Card>
+          )}
+
+          {/* Sticky bulk-share bar — appears once something is selected.
+              Sticky (not fixed) so it stays inside the shell's content
+              column and above the docked mobile footer. */}
+          {selectMode && selectedIds.size > 0 && (
+            <div className="sticky bottom-[calc(56px+env(safe-area-inset-bottom,0px)+0.5rem)] md:bottom-4 z-20">
+              <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+                <CardContent className="p-3 flex items-center justify-between gap-3">
+                  <span className="text-sm font-semibold">
+                    {selectedIds.size} selected
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+                      Clear
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => setSharing(rows.filter((r) => selectedIds.has(r.id)))}
+                    >
+                      <Share2 className="w-4 h-4 mr-1.5" />
+                      Share…
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </>
       )}
@@ -381,11 +443,14 @@ export default function MusicLibraryPage() {
       />
 
       <ShareScoreDialog
-        score={sharing}
-        onOpenChange={(open) => !open && setSharing(null)}
+        scores={sharing}
+        onOpenChange={(open) => !open && setSharing([])}
         onSaved={() => {
           qc.invalidateQueries({ queryKey: ['music-library-scores'] });
-          setSharing(null);
+          setSharing([]);
+          // After a bulk share, drop the selection but stay in select mode
+          // so the librarian can keep working through the library.
+          setSelectedIds(new Set());
         }}
       />
 

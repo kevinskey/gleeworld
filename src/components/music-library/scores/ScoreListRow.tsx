@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Music, Headphones, Library as LibraryIcon, Pencil, PencilLine, Share2, ListMusic,
 } from 'lucide-react';
@@ -11,6 +12,7 @@ import type { ScoreRow } from './types';
 // rows stay title + actions.
 export function ScoreListRow({
   row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare, onPartTracks,
+  selectable = false, selected = false, onToggleSelect,
 }: {
   row: ScoreRow;
   courseCode: string | null;
@@ -20,22 +22,33 @@ export function ScoreListRow({
   onEdit: () => void;
   onToggleShare: () => void;
   onPartTracks: () => void;
+  // Bulk-select mode: clicking toggles selection instead of opening the
+  // viewer; a leading checkbox mirrors the state.
+  selectable?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }) {
   const hasPdf = !!row.pdf_url || !!row.storage_path;
   const hasAudio = !!row.audio_url;
   const copies = row.physical_copies_count ?? 0;
+  const clickable = selectable || hasPdf;
+  const handleActivate = selectable ? onToggleSelect : (hasPdf ? onAnnotate : undefined);
   return (
     <div
-      className={`flex items-center gap-3 px-3 sm:px-4 py-3 ${hasPdf ? 'cursor-pointer transition-colors hover:bg-accent/40' : ''}`}
-      onClick={hasPdf ? onAnnotate : undefined}
-      role={hasPdf ? 'button' : undefined}
-      tabIndex={hasPdf ? 0 : undefined}
+      className={`flex items-center gap-3 px-3 sm:px-4 py-3 ${clickable ? 'cursor-pointer transition-colors hover:bg-accent/40' : ''} ${selected ? 'bg-primary/5' : ''}`}
+      onClick={handleActivate}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      aria-pressed={selectable ? selected : undefined}
       onKeyDown={
-        hasPdf
-          ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onAnnotate(); } }
+        handleActivate
+          ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleActivate(); } }
           : undefined
       }
     >
+      {selectable && (
+        <Checkbox checked={selected} className="pointer-events-none shrink-0" aria-hidden />
+      )}
       <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 text-primary">
         <Music className="w-4 h-4" />
       </div>
