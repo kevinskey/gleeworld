@@ -5,7 +5,7 @@
 // (up to LIBRARY_HARD_CAP rows) because the toolbar filters client-side —
 // if a tenant blows past that cap we'll revisit and paginate server-side
 // per-tab instead.
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Play, Youtube, Loader2, Search, ArrowUpDown, Star, Upload, Pencil,
   Share2, ListPlus, Check, Users, Inbox, Plus, Trash2, ListVideo, Bookmark,
@@ -29,7 +29,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
-import { useVideoDock } from '@/contexts/VideoDockContext';
 
 interface VideoRow {
   id: string;
@@ -72,48 +71,13 @@ export const YouTubeChannel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState<VideoRow | null>(null);
 
-  // ── Inline playback + dock handoff ────────────────────────────────────
-  // Tapping a YouTube thumbnail plays it IN the card (no modal). While it
-  // plays, a postMessage listener tracks currentTime (YouTube streams
-  // infoDelivery after the 'listening' handshake — same mechanism as
-  // AudioCompanionContext). If the user navigates away mid-play, the page
-  // unmount hands the video to the global VideoDock, which keeps playing
-  // it bottom-left until they hit its X.
+  // ── Inline playback ───────────────────────────────────────────────────
+  // Tapping a YouTube thumbnail plays it IN the card (no modal). Leaving
+  // the page unmounts the iframe, which stops playback — deliberate
+  // (Kevin 2026-08-03: videos must NOT keep playing after leaving).
   const [inlineId, setInlineId] = useState<string | null>(null);
-  const inlineMetaRef = useRef<{ videoId: string; title: string } | null>(null);
-  const inlineTimeRef = useRef(0);
-  const { dock } = useVideoDock();
-
-  useEffect(() => {
-    const onMsg = (e: MessageEvent) => {
-      if (typeof e.data !== 'string' || !/https:\/\/(www\.)?youtube(-nocookie)?\.com$/.test(e.origin)) return;
-      try {
-        const d = JSON.parse(e.data);
-        if (d?.event === 'infoDelivery' && typeof d.info?.currentTime === 'number') {
-          inlineTimeRef.current = d.info.currentTime;
-        }
-      } catch { /* not a YT payload */ }
-    };
-    window.addEventListener('message', onMsg);
-    return () => window.removeEventListener('message', onMsg);
-  }, []);
-
-  // Page unmount with a video still playing inline → dock it.
-  useEffect(() => () => {
-    if (inlineMetaRef.current) {
-      dock({ ...inlineMetaRef.current, startAt: inlineTimeRef.current });
-    }
-  }, [dock]);
-
-  const playInline = (video: VideoRow) => {
-    inlineMetaRef.current = { videoId: video.video_id, title: video.title };
-    inlineTimeRef.current = 0;
-    setInlineId(video.id);
-  };
-  const stopInlineTracking = () => {
-    inlineMetaRef.current = null;
-    setInlineId(null);
-  };
+  const playInline = (video: VideoRow) => setInlineId(video.id);
+  const stopInlineTracking = () => setInlineId(null);
 
   const [tab, setTab] = useState<Tab>('all');
   const [search, setSearch] = useState('');
@@ -497,20 +461,12 @@ export const YouTubeChannel: React.FC = () => {
                   >
                     {inlineId === video.id ? (
                     <div className="aspect-video relative bg-black">
-                      {/* enablejsapi + the onLoad 'listening' handshake make
-                          YouTube stream infoDelivery (currentTime) so the
-                          dock can resume where the user left off. */}
                       <iframe
-                        src={`https://www.youtube.com/embed/${video.video_id}?autoplay=1&playsinline=1&rel=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
+                        src={`https://www.youtube.com/embed/${video.video_id}?autoplay=1&playsinline=1&rel=0`}
                         title={video.title}
                         className="w-full h-full"
                         allow="autoplay; encrypted-media; picture-in-picture"
                         allowFullScreen
-                        onLoad={(e) => {
-                          try {
-                            e.currentTarget.contentWindow?.postMessage(JSON.stringify({ event: 'listening' }), 'https://www.youtube.com');
-                          } catch { /* cross-origin hiccup — dock just restarts at 0 */ }
-                        }}
                       />
                     </div>
                     ) : (
