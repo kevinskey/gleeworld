@@ -32,7 +32,21 @@ serve(async (req) => {
 
   const { data: order } = await supa
     .from("gw_partner_orders").select("buyer_user_id, status").eq("id", item.order_id).single();
-  if (!order || order.buyer_user_id !== userData.user.id) {
+  const isBuyer = !!order && order.buyer_user_id === userData.user.id;
+  // Seat licensing: recipients of a share get the SAME signed URL, used by
+  // the in-app viewer (the UI gives them no download affordance; the seat
+  // model is enforced at share time by share_partner_purchase).
+  let isSharedWith = false;
+  if (!isBuyer && order) {
+    const { data: share } = await supa
+      .from("gw_partner_score_shares")
+      .select("id")
+      .eq("order_item_id", item.id)
+      .eq("shared_with_user_id", userData.user.id)
+      .maybeSingle();
+    isSharedWith = !!share;
+  }
+  if (!order || (!isBuyer && !isSharedWith)) {
     return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "content-type": "application/json" } });
   }
   if (order.status !== "paid") {

@@ -31,6 +31,10 @@ serve(async (req) => {
   const buyerUserId = session.metadata?.buyer_user_id;
   const partnerId = session.metadata?.partner_id;
   const cartScoreIds = (session.metadata?.cart_score_ids ?? "").split(",").filter(Boolean);
+  // Seat licensing: aligned 1:1 with cart_score_ids (see checkout fn).
+  const cartQuantities = String(session.metadata?.cart_quantities ?? "")
+    .split(",").map((q: string) => Math.max(1, Math.trunc(Number(q)) || 1));
+  const qtyByScore = new Map(cartScoreIds.map((id: string, i: number) => [id, cartQuantities[i] ?? 1]));
   if (!orderId || !buyerUserId || !partnerId || cartScoreIds.length === 0) {
     return new Response("missing metadata", { status: 400 });
   }
@@ -57,9 +61,11 @@ serve(async (req) => {
 
   // Fulfill each item.
   for (const score of scores) {
-    const price = score.price_cents;
-    const platformFee = Math.floor(price / 2);
-    const payout = price - platformFee;
+    const qty = qtyByScore.get(score.id) ?? 1;
+    const lineTotal = score.price_cents * qty;
+    const price = score.price_cents; // unit price — quantity is its own column
+    const platformFee = Math.floor(lineTotal / 2);
+    const payout = lineTotal - platformFee;
 
     // Idempotency: skip if item already exists for (order_id, partner_score_id).
     const { data: existing } = await supa
@@ -78,6 +84,7 @@ serve(async (req) => {
         partner_score_id: score.id,
         partner_id: partnerId,
         price_cents: price,
+        quantity: qty,
         platform_fee_cents: platformFee,
         partner_payout_cents: payout,
         entitlement_id: null,

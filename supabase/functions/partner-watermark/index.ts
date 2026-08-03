@@ -19,7 +19,7 @@ serve(async (req) => {
 
   const { data: item, error: itemErr } = await supa
     .from("gw_partner_order_items")
-    .select("id, order_id, partner_score_id")
+    .select("id, order_id, partner_score_id, quantity")
     .eq("id", order_item_id)
     .single();
   if (itemErr || !item) return new Response(JSON.stringify({ error: "item not found" }), { status: 404, headers: { ...corsHeaders, "content-type": "application/json" } });
@@ -44,7 +44,9 @@ serve(async (req) => {
   const pdfDoc = await PDFDocument.load(bytes);
   const helv = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const orderShort = order.id.substring(0, 8);
-  const footer = `Purchased by ${displayName} · GleeWorld Order #${orderShort} · License to one performer`;
+  // Seat licensing: quantity = licensed singers INCLUDING the buyer.
+  const seats = Math.max(1, Number(item.quantity ?? 1));
+  const footer = `Purchased by ${displayName} · GleeWorld Order #${orderShort} · Licensed for ${seats} student${seats === 1 ? "" : "s"}`;
 
   for (const page of pdfDoc.getPages()) {
     const { width } = page.getSize();
