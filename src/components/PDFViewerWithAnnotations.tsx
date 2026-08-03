@@ -1851,9 +1851,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
       {/* PDF Content - Full height, no padding */}
       <CardContent className="p-0 flex-1 min-h-0 flex flex-col overflow-hidden">
-        <div 
-          className="relative w-full flex-1 min-h-0 overflow-auto"
-          style={{ 
+        <div
+          // flex flex-col is load-bearing for the contain-fit: the child
+          // containerRef div is flex-1 and the fit effect measures its
+          // clientHeight. In the old block layout flex-1 was a no-op, the
+          // container's height was CONTENT-driven, and the measurement was
+          // self-referential — so the page opened at 100% and scrolled on
+          // landscape containers (desktop) instead of fitting to height.
+          className="relative w-full flex-1 min-h-0 overflow-auto flex flex-col"
+          style={{
             WebkitOverflowScrolling: 'touch',
             touchAction: 'pan-y pinch-zoom'
           } as React.CSSProperties}
@@ -1974,8 +1980,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
-            <div 
-              className="w-full overflow-auto flex justify-center flex-1" 
+            <div
+              className="w-full overflow-auto flex justify-center flex-1 min-h-0"
               ref={containerRef}
               onTouchStart={(e) => {
                 // Handle pinch-to-zoom start
@@ -2028,8 +2034,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {/* Annotation Mode: PDF + Overlay Canvas with Zoom */}
           {annotationMode && (
-            <div 
-              className="w-full overflow-auto flex-1" 
+            <div
+              className="w-full overflow-auto flex-1 min-h-0"
               style={{
                 WebkitOverflowScrolling: 'touch',
                 touchAction: 'pan-x pan-y'
