@@ -2362,6 +2362,7 @@ function Editor({
               inputs: midiIn.inputs, status: midiIn.status, supported: midiIn.supported,
               targetTrackName: midiInputTrack?.name,
               monitoringLatencyMs: engineState.engine?.getOutputLatencyMs() ?? getOutputLatencyMs(),
+              locked: !!recording || !!punchRef.current,
             }}
           />
           <Button
@@ -6421,9 +6422,13 @@ interface MidiInputProps {
   supported: boolean;
   targetTrackName?: string;
   monitoringLatencyMs: number;
+  /** True while a take (normal recording or punch pre/rec/post) is active —
+   *  the device picker locks so switching MIDI input mid-take can't yank
+   *  the session out from under an in-progress recording. */
+  locked?: boolean;
 }
 
-function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, status, supported, targetTrackName, monitoringLatencyMs }: MidiInputProps) {
+function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, status, supported, targetTrackName, monitoringLatencyMs, locked }: MidiInputProps) {
   if (!supported) return null;
   return (
     <div className="border-t border-border pt-2">
@@ -6443,7 +6448,9 @@ function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, 
         </button>
         {enabled && (
           <select value={deviceId} onChange={(e) => setDeviceId(e.target.value)}
-            className="flex-1 h-8 bg-background border border-border rounded px-2 text-sm">
+            disabled={!!locked}
+            title={locked ? 'Locked while recording' : undefined}
+            className="flex-1 h-8 bg-background border border-border rounded px-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed">
             <option value="">All MIDI inputs</option>
             {inputs.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
           </select>
