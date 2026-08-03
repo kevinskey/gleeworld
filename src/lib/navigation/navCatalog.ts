@@ -9,7 +9,7 @@
 import {
   Home, MessageSquare, Calendar, Music, ScanEye, Eye, Mic, Images, LibraryBig,
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
-  Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store,
+  Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
   PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, CreditCard, Receipt,
   type LucideIcon,
@@ -61,6 +61,9 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'sight',         to: '/dashboard/reading-music', label: 'Reading Music', icon: Eye,      section: 'music', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-reading-music', gridIcon: ScanEye, gate: { module: 'sight_reading' } },
   { key: 'part-tracks',   to: '/dashboard/part-tracks',   label: 'Part Tracks',   icon: ListMusic, section: 'music', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-part-tracks' },
   { key: 'media-library', to: '/dashboard/media-library', label: 'Media Library', icon: Images,   section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-media-library' },
+  // The partner sheet-music marketplace (buyer side). Everyone can browse
+  // and buy; partners manage their catalog via Partner Portal below.
+  { key: 'music-store',   to: '/store',                   label: 'Music Store',   icon: ShoppingBag, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-music-store' },
   { key: 'librarian',     to: '/dashboard/librarian',     label: 'Librarian',     icon: LibraryBig, section: 'music', tone: 'bg-slate-50 text-slate-600', tourId: 'nav-librarian',    gate: { module: 'librarian', librarianOnly: true } },
   { key: 'partner-portal', to: '/partner', label: 'Partner Portal', icon: Store, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-partner-portal', gate: { partnerOnly: true } },
   // Teach
