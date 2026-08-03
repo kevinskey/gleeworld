@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { usePersonalScores, type PersonalScore } from '@/hooks/usePersonalScores';
 import { getSignedUrl } from '@/utils/storage';
 import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
-import { SOFT_CARD, SOFT_CARD_STYLE } from '@/components/music-library/scores/types';
+import { SOFT_CARD } from '@/components/music-library/scores/types';
 import { ScoreViewerDialog, type ViewingScore } from '@/components/music-library/ScoreViewerDialog';
 import { MyMusicCard } from '@/components/music-library/my-music/MyMusicCard';
 import { MyMusicListRow } from '@/components/music-library/my-music/MyMusicListRow';
@@ -216,7 +216,7 @@ export function MyMusicTab() {
           ))}
         </ul>
       ) : (
-        <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+        <Card className={SOFT_CARD}>
           <div className="divide-y divide-border">
             {visibleScores.map((s) => (
               <MyMusicListRow

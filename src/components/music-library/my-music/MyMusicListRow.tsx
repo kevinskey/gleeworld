@@ -58,7 +58,7 @@ export function MyMusicListRow({
         <Button
           variant="ghost"
           size="sm"
-          className="text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
           onClick={(e) => { e.stopPropagation(); onRemove(); }}
           aria-label={`Remove ${score.title}`}
         >

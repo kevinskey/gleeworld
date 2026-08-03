@@ -10,7 +10,7 @@ import {
   Pencil, PencilLine, Share2, ListMusic,
 } from 'lucide-react';
 import { RightsBadge } from '@/components/policies/RightsBadge';
-import { SOFT_CARD, SOFT_CARD_STYLE, isSharedAnyLane, sharingSummary, type ScoreRow } from './types';
+import { SOFT_CARD, isSharedAnyLane, sharingSummary, type ScoreRow } from './types';
 
 export function ScoreCard({
   row, courseCode, canEdit, onAnnotate, onAttachAudio, onEdit, onToggleShare, onPartTracks,
@@ -40,7 +40,6 @@ export function ScoreCard({
   return (
     <Card
       className={`${SOFT_CARD} h-full flex flex-col relative ${clickable ? 'cursor-pointer transition-colors hover:bg-accent/40' : ''} ${selected ? 'ring-2 ring-primary' : ''}`}
-      style={SOFT_CARD_STYLE}
       onClick={handleActivate}
       role={clickable ? 'button' : undefined}
       tabIndex={clickable ? 0 : undefined}

@@ -55,7 +55,9 @@ export function ScoreListRow({
       {selectable && (
         <Checkbox checked={selected} className="pointer-events-none shrink-0" aria-hidden />
       )}
-      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-primary/10 text-primary">
+      {/* Same token pair as ScoreCard's tile so card and list read as one
+          system (was bg-primary/10 text-primary — an accidental variant). */}
+      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
         <Music className="w-4 h-4" />
       </div>
       <div className="flex-1 min-w-0">

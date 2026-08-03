@@ -4,7 +4,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, FileMusic, Loader2, Pencil, Trash2 } from 'lucide-react';
-import { SOFT_CARD, SOFT_CARD_STYLE } from '@/components/music-library/scores/types';
+import { SOFT_CARD } from '@/components/music-library/scores/types';
 import type { PersonalScore } from '@/hooks/usePersonalScores';
 import { SOURCE_LABEL, isExternalOnly } from './personalScoreDisplay';
 
@@ -19,7 +19,7 @@ export function MyMusicCard({
 }) {
   const externalOnly = isExternalOnly(score);
   return (
-    <Card className={`${SOFT_CARD} group relative h-full flex flex-col transition-colors hover:bg-accent/40 focus-within:bg-accent/40`} style={SOFT_CARD_STYLE}>
+    <Card className={`${SOFT_CARD} group relative h-full flex flex-col transition-colors hover:bg-accent/40 focus-within:bg-accent/40`}>
       <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
         {/* Whole card opens the PDF (or the source site for external rows).
             The trailing icon is the affordance — without it the card reads
@@ -75,7 +75,7 @@ export function MyMusicCard({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onRemove(); }}
-            className="p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+            className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             aria-label={`Remove ${score.title}`}
           >
             <Trash2 className="w-4 h-4" />

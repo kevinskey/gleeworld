@@ -2,12 +2,9 @@
 // Extracted verbatim from MusicLibraryPage.tsx so the page, cards, and
 // dialogs agree on one definition.
 
-import type { CSSProperties } from 'react';
-
-export const SOFT_CARD = 'border-0 rounded-2xl bg-card';
-export const SOFT_CARD_STYLE: CSSProperties = {
-  boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
-};
+// Card chrome for library surfaces — design-system tokens only
+// (shadow-card → var(--shadow-card); corners are square system-wide).
+export const SOFT_CARD = 'border-0 bg-card shadow-card';
 
 export interface ScoreRow {
   id: string;

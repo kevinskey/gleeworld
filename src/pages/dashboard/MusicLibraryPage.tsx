@@ -24,7 +24,7 @@ import { ScopeFilterSelect } from '@/components/library/ScopeFilterSelect';
 import { useUserRole } from '@/hooks/useUserRole';
 import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
 import { PublicDomainSearch } from '@/components/music-library/PublicDomainSearch';
-import { SOFT_CARD, SOFT_CARD_STYLE, type ScoreRow } from '@/components/music-library/scores/types';
+import { SOFT_CARD, type ScoreRow } from '@/components/music-library/scores/types';
 import { ScoreCard } from '@/components/music-library/scores/ScoreCard';
 import { ScoreListRow } from '@/components/music-library/scores/ScoreListRow';
 import { AttachAudioDialog } from '@/components/music-library/scores/AttachAudioDialog';
@@ -331,7 +331,7 @@ export default function MusicLibraryPage() {
 
       {topTab === 'scores' && (
         <>
-          <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+          <Card className={SOFT_CARD}>
             {/* One row instead of three. The scope chips were a per-class list
                 that wrapped to 3-4 lines once a director was in more than a
                 couple of classes, and the "SCOPE" caps label cost another row
@@ -423,7 +423,7 @@ export default function MusicLibraryPage() {
               <Loader2 className="w-6 h-6 animate-spin inline text-muted-foreground" />
             </div>
           ) : filtered.length === 0 ? (
-            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+            <Card className={SOFT_CARD}>
               <CardContent className="p-12 text-center">
                 <FileMusic className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
                 <p className="text-base font-semibold">No scores match the current filters.</p>
@@ -455,7 +455,7 @@ export default function MusicLibraryPage() {
               ))}
             </div>
           ) : (
-            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+            <Card className={SOFT_CARD}>
               <div className="divide-y divide-border">
                 {filtered.map((r) => (
                   <ScoreListRow
@@ -483,7 +483,7 @@ export default function MusicLibraryPage() {
               column and above the docked mobile footer. */}
           {selectMode && selectedIds.size > 0 && (
             <div className="sticky bottom-[calc(56px+env(safe-area-inset-bottom,0px)+0.5rem)] md:bottom-4 z-20">
-              <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+              <Card className={SOFT_CARD}>
                 <CardContent className="p-3 flex items-center justify-between gap-3">
                   <span className="text-sm font-semibold">
                     {selectedIds.size} selected
@@ -514,7 +514,7 @@ export default function MusicLibraryPage() {
         // card surface. SetlistBuilder owns create / reorder / share /
         // delete; we pass onPdfSelect so picking a song from inside a
         // setlist still opens the annotated viewer.
-        <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+        <Card className={SOFT_CARD}>
           <CardContent className="p-5">
             <Suspense
               fallback={
