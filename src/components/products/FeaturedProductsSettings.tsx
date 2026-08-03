@@ -63,11 +63,11 @@ export const FeaturedProductsSettings = () => {
 
   const fetchSettings = async () => {
     try {
+      // RLS scopes gw_store_settings to caller's tenant — no id filter needed.
       const { data, error } = await supabase
         .from('gw_store_settings')
         .select('*')
-        .eq('id', 1)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
       if (data) {
@@ -128,12 +128,18 @@ export const FeaturedProductsSettings = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      const { data: existing } = await supabase
+        .from('gw_store_settings')
+        .select('tenant_id')
+        .maybeSingle();
+
+      const payload = existing?.tenant_id
+        ? { tenant_id: existing.tenant_id, ...settings }
+        : { ...settings };
+
       const { error } = await supabase
         .from('gw_store_settings')
-        .upsert({
-          id: 1,
-          ...settings
-        });
+        .upsert(payload, { onConflict: 'tenant_id' });
 
       if (error) throw error;
       toast({ title: "Success", description: "Featured products settings saved" });

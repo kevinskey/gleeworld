@@ -48,11 +48,13 @@ export const StoreSettingsManager = () => {
   const fetchSettings = async () => {
     setLoading(true);
     try {
+      // RLS scopes gw_store_settings to the caller's tenant (tenant_id =
+      // current_tenant_id()), so we don't need an explicit filter — at
+      // most one row can come back.
       const { data, error } = await supabase
         .from('gw_store_settings')
         .select('*')
-        .eq('id', 1)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') throw error;
       if (data) {
@@ -68,12 +70,22 @@ export const StoreSettingsManager = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
+      // Resolve tenant_id so onConflict:'tenant_id' targets the right row
+      // even on first insert. Server-side DEFAULT + BEFORE INSERT trigger
+      // fill it if omitted, but supplying it explicitly on update avoids
+      // the singleton-PK trap that broke gw_branding_settings for 49 tenants.
+      const { data: existing } = await supabase
+        .from('gw_store_settings')
+        .select('tenant_id')
+        .maybeSingle();
+
+      const payload = existing?.tenant_id
+        ? { tenant_id: existing.tenant_id, ...settings }
+        : { ...settings };
+
       const { error } = await supabase
         .from('gw_store_settings')
-        .upsert({
-          id: 1,
-          ...settings
-        });
+        .upsert(payload, { onConflict: 'tenant_id' });
 
       if (error) throw error;
       toast({ title: "Success", description: "Settings saved" });

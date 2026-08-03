@@ -19591,12 +19591,13 @@ export type Database = {
           featured_tablet_columns: number | null
           featured_title: string | null
           free_shipping_threshold: number | null
-          id: number
+          id: number | null
           notifications_enabled: boolean | null
           store_email: string | null
           store_name: string | null
           stripe_mode: string | null
           support_email: string | null
+          tenant_id: string
           updated_at: string | null
         }
         Insert: {
@@ -19617,12 +19618,13 @@ export type Database = {
           featured_tablet_columns?: number | null
           featured_title?: string | null
           free_shipping_threshold?: number | null
-          id?: number
+          id?: number | null
           notifications_enabled?: boolean | null
           store_email?: string | null
           store_name?: string | null
           stripe_mode?: string | null
           support_email?: string | null
+          tenant_id?: string
           updated_at?: string | null
         }
         Update: {
@@ -19643,12 +19645,13 @@ export type Database = {
           featured_tablet_columns?: number | null
           featured_title?: string | null
           free_shipping_threshold?: number | null
-          id?: number
+          id?: number | null
           notifications_enabled?: boolean | null
           store_email?: string | null
           store_name?: string | null
           stripe_mode?: string | null
           support_email?: string | null
+          tenant_id?: string
           updated_at?: string | null
         }
         Relationships: []
