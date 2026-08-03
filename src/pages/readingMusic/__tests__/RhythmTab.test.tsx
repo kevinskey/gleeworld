@@ -126,7 +126,7 @@ describe('RhythmTab', () => {
   });
 
   it('falls back to tap (and closes calibration) when the mic is denied', async () => {
-    localStorage.removeItem('rm_clap_latency_ms');
+    localStorage.removeItem('rm_clap_latency_ms_v2');
     localStorage.removeItem('rm_rhythm_input');
     (window as unknown as { AudioContext: unknown }).AudioContext = FakeCtx;
     const getUserMedia = vi.fn().mockRejectedValue(new Error('NotAllowedError'));

@@ -23,7 +23,7 @@ import { calibrationOffsetSec, CALIBRATION_CLICKS, CALIBRATION_BPM } from '@/lib
 //
 // The pulses are driven off ctx.currentTime in a rAF loop so the pulse times
 // and the mic onset timestamps share one clock. The median (clap − pulse)
-// delta becomes rm_clap_latency_ms (persisted by the parent).
+// delta becomes rm_clap_latency_ms_v2 (persisted by the parent).
 
 type CalState = 'idle' | 'running' | 'failed';
 export type CalCancelReason = 'denied' | 'user';
@@ -39,6 +39,8 @@ export function ClapCalibration({ onDone, onCancel }: Props) {
   const [state, setState] = useState<CalState>('idle');
   const [pulseIdx, setPulseIdx] = useState(-1);
   const [lit, setLit] = useState(false);
+  /** 0 = start of the approach, 1 = the dot is on the line (the beat). */
+  const [approach, setApproach] = useState(0);
   const timersRef = useRef<number[]>([]);
   const rafRef = useRef(0);
   const sessionRef = useRef<MicOnsetSession | null>(null);
@@ -79,6 +81,7 @@ export function ClapCalibration({ onDone, onCancel }: Props) {
     setState('running');
     setPulseIdx(-1);
     setLit(false);
+    setApproach(0);
 
     try {
       const spb = 60 / CALIBRATION_BPM;
@@ -94,6 +97,14 @@ export function ClapCalibration({ onDone, onCancel }: Props) {
         for (let i = 0; i < pulseTimes.length; i++) if (rel >= pulseTimes[i]) idx = i;
         setPulseIdx(idx);
         setLit(idx >= 0 && rel - pulseTimes[idx] < FLASH_SEC);
+        // The marker must ARRIVE at the line exactly on the pulse. A target you
+        // can see coming is anticipated, not reacted to — a discrete flash
+        // measured ~250ms of human reaction time instead of device latency,
+        // and the game itself glides notes into a hit line, so the calibration
+        // has to pose the same perceptual task or it measures the wrong thing.
+        const nextIdx = Math.min(pulseTimes.length - 1, idx + 1);
+        const timeToNext = pulseTimes[nextIdx] - rel;
+        setApproach(Math.max(0, Math.min(1, 1 - timeToNext / spb)));
         rafRef.current = requestAnimationFrame(loop);
       };
       rafRef.current = requestAnimationFrame(loop);
@@ -104,6 +115,7 @@ export function ClapCalibration({ onDone, onCancel }: Props) {
         cleanup();
         setPulseIdx(-1);
         setLit(false);
+        setApproach(0);
         const offset = calibrationOffsetSec(pulseTimes, claps);
         if (offset === null) {
           setState('failed');
@@ -122,25 +134,33 @@ export function ClapCalibration({ onDone, onCancel }: Props) {
     <div className="space-y-3 rounded-xl border border-sky-200 bg-sky-50 p-4">
       <p className="text-sm font-medium text-slate-800">Calibrate your clap timing</p>
       <p className="text-sm text-slate-600">
-        Every device hears your claps a little late. Clap once on each of the {CALIBRATION_CLICKS} flashes
-        below — no sound, just watch the circle — and Clap Blast will grade you fairly on this device.
+        Every device hears your claps a little late. Clap {CALIBRATION_CLICKS} times as the dot reaches
+        the line — no sound, just watch — and Clap Blast will grade you fairly on this device.
       </p>
 
       {state === 'running' && (
         <div className="flex flex-col items-center gap-2 py-2">
           <div
-            data-role="cal-pulse"
+            data-role="cal-track"
             data-lit={lit ? 'on' : 'off'}
-            className={`flex h-32 w-32 items-center justify-center rounded-full border-4 transition-transform duration-75 ${
-              lit
-                ? 'scale-110 border-sky-600 bg-sky-500 text-white'
-                : 'scale-100 border-sky-300 bg-white text-sky-700'
-            }`}
+            className="relative h-20 w-full max-w-md overflow-hidden rounded-lg border border-sky-300 bg-white"
           >
-            <span className="text-3xl font-bold tabular-nums">{Math.max(0, pulseIdx + 1)}</span>
+            {/* The line the dot arrives at, on the beat. */}
+            <div
+              className={`absolute inset-y-0 right-0 w-1.5 transition-colors duration-75 ${
+                lit ? 'bg-sky-600' : 'bg-sky-400'
+              }`}
+            />
+            <div
+              data-role="cal-marker"
+              className={`absolute top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 ${
+                lit ? 'border-sky-600 bg-sky-500' : 'border-sky-300 bg-sky-100'
+              }`}
+              style={{ left: `${approach * 100}%` }}
+            />
           </div>
           <p className="text-sm font-medium text-slate-700">
-            Clap the moment it flashes ({Math.max(0, pulseIdx + 1)} of {CALIBRATION_CLICKS})
+            Clap when the dot reaches the line ({Math.max(0, pulseIdx + 1)} of {CALIBRATION_CLICKS})
           </p>
         </div>
       )}

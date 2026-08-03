@@ -1,14 +1,15 @@
 import { frameEnergies } from './flux';
+import { createOnsetDetector } from './detector';
 
-// Mic clap-onset source. Incremental version of the flux.ts peak logic so
-// onsets appear in real time; timestamps are relative to t0 on the ctx clock.
+// Mic clap-onset source: AnalyserNode frames in, onset timestamps (relative to
+// t0 on the ctx clock) out. The peak-picking itself lives in detector.ts so it
+// is unit-testable against synthetic rooms — this file previously carried its
+// own copy of that logic, which drifted from the tested version and went deaf
+// in any room noisier than -80dBFS.
 
 export interface MicOnsetSession { onsets: number[]; level: () => number; dispose(): void }
 
 const FRAME = 512;
-const RATIO = 6;
-const FLOOR_ALPHA = 0.995;
-const REFRACTORY_SEC = 0.08;
 
 export function startMicOnsetSession(ctx: AudioContext, stream: MediaStream, t0: number): MicOnsetSession {
   const src = ctx.createMediaStreamSource(stream);
@@ -17,9 +18,7 @@ export function startMicOnsetSession(ctx: AudioContext, stream: MediaStream, t0:
   src.connect(analyser);
   const buf = new Float32Array(analyser.fftSize);
   const onsets: number[] = [];
-  let floor = 1e-4;
-  let armed = true;
-  let lastOnsetAt = -Infinity;
+  const detector = createOnsetDetector();
   let lastLevel = 0;
   const timer = window.setInterval(() => {
     analyser.getFloatTimeDomainData(buf);
@@ -27,15 +26,10 @@ export function startMicOnsetSession(ctx: AudioContext, stream: MediaStream, t0:
     // Only the freshest frame matters for edge detection.
     const e = frameEnergies(buf.subarray(buf.length - FRAME), FRAME, FRAME)[0] ?? 0;
     lastLevel = e;
-    const threshold = Math.max(floor * RATIO, 1e-3);
-    if (armed && e > threshold && now - lastOnsetAt >= REFRACTORY_SEC) {
+    if (detector.push(now, e)) {
+      // Half-frame group delay: the transient sits mid-frame on average.
       onsets.push(now - t0 - FRAME / (2 * ctx.sampleRate));
-      lastOnsetAt = now;
-      armed = false;
-    } else if (!armed && e < threshold * 0.5) {
-      armed = true;
     }
-    if (e < threshold) floor = FLOOR_ALPHA * floor + (1 - FLOOR_ALPHA) * Math.max(e, 1e-4);
   }, 12);
   return {
     onsets,

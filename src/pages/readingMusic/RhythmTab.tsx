@@ -15,6 +15,7 @@ import { clickSchedule } from '@/lib/sightReading/metronome';
 import { startTapSession } from '@/lib/rhythm/onsets/tap';
 import type { TapSession } from '@/lib/rhythm/onsets/tap';
 import { startMicOnsetSession } from '@/lib/rhythm/onsets/mic';
+import { WARMUP_SEC } from '@/lib/rhythm/onsets/detector';
 import type { MicOnsetSession } from '@/lib/rhythm/onsets/mic';
 import { insertAttempt } from '@/lib/readingMusic/attemptsApi';
 import { RhythmStrip } from './RhythmStrip';
@@ -104,7 +105,7 @@ export function RhythmTab() {
   const [burstId, setBurstId] = useState(0);
   const [micLevel, setMicLevel] = useState(0);
   const [latencyMs, setLatencyMs] = useState<number | null>(() => {
-    const v = localStorage.getItem('rm_clap_latency_ms');
+    const v = localStorage.getItem('rm_clap_latency_ms_v2');
     return v === null || Number.isNaN(Number(v)) ? null : Number(v);
   });
   const [calibrating, setCalibrating] = useState(false);
@@ -234,18 +235,26 @@ export function RhythmTab() {
     if (drill === 'echo') {
       timersRef.current.push(window.setTimeout(() => { if (activeRef.current) setPhase('countin'); }, ms(countInStart)));
     }
-    // Input opens just before beat zero so demo/count-in never register.
-    timersRef.current.push(window.setTimeout(() => {
-      if (!activeRef.current) return;
-      setPhase('take');
-      if (effectiveInput === 'mic' && streamRef.current) {
+    // The mic opens EARLY — during the count-in — because the onset detector
+    // spends WARMUP_SEC measuring the room before it will report anything. Open
+    // it at beat zero and the warm-up would swallow the first notes. It emits
+    // nothing during warm-up, so the count-in clicks can't register as claps.
+    if (effectiveInput === 'mic') {
+      timersRef.current.push(window.setTimeout(() => {
+        if (!activeRef.current || !streamRef.current) return;
         const mic = startMicOnsetSession(ctx, streamRef.current, t0);
         sessionRef.current = mic;
         const meter = window.setInterval(() => {
           if (sessionRef.current === mic) setMicLevel(mic.level()); else window.clearInterval(meter);
         }, 100);
         timersRef.current.push(meter as unknown as number);
-      } else if (padRef.current) {
+      }, ms(t0 - 2 * tol - WARMUP_SEC - 0.05)));
+    }
+    // Tap input has nothing to warm up, so it opens just before beat zero.
+    timersRef.current.push(window.setTimeout(() => {
+      if (!activeRef.current) return;
+      setPhase('take');
+      if (effectiveInput !== 'mic' && padRef.current) {
         sessionRef.current = startTapSession(ctx, t0, padRef.current);
       }
     }, ms(t0 - 2 * tol)));
@@ -442,7 +451,7 @@ export function RhythmTab() {
           {calibrating && (
             <ClapCalibration
               onDone={(msVal) => {
-                localStorage.setItem('rm_clap_latency_ms', String(msVal));
+                localStorage.setItem('rm_clap_latency_ms_v2', String(msVal));
                 setLatencyMs(msVal);
                 setCalibrating(false);
                 toast.success(`Calibrated — your device delay is ${msVal} ms`);
