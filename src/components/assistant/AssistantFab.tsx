@@ -58,7 +58,7 @@ export const AssistantFab = () => {
         type="button"
         aria-label="Show assistant"
         onClick={() => { setCollapsed(false); setFabCollapsed(section, false); }}
-        className="fixed right-0 z-40 h-8 w-4 rounded-l-full bg-primary/25 backdrop-blur-xl border border-r-0 border-primary/30 shadow-md hover:bg-primary/40 transition-colors"
+        className="fixed right-0 z-40 h-8 w-4 rounded-l-full bg-background/80 backdrop-blur-xl border border-r-0 border-border shadow-md hover:bg-muted transition-colors"
         style={{ bottom }}
       />
     );
@@ -83,7 +83,11 @@ export const AssistantFab = () => {
           {caption}
         </button>
       )}
-      <div className="group relative flex items-center gap-1 rounded-full bg-primary/20 backdrop-blur-xl border border-primary/30 shadow-lg p-1">
+      {/* Neutral adaptive surface (Kevin 2026-08-03): the old bg-primary/20
+          translucency dissolved into photo/dark backgrounds — the pill now
+          sits on the theme's background token at near-opacity so it reads
+          on ANY backdrop, with primary reserved for the icons. */}
+      <div className="group relative flex items-center gap-1 rounded-full bg-background/85 backdrop-blur-xl border border-border shadow-lg p-1">
         <button
           type="button"
           aria-label="Hide assistant on this page"
@@ -96,7 +100,7 @@ export const AssistantFab = () => {
           type="button"
           aria-label="Open assistant chat"
           onClick={() => setSheetOpen(true)}
-          className="h-6 w-6 rounded-full flex items-center justify-center text-primary hover:bg-primary/20 transition-colors"
+          className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           <ChevronUp className="w-4 h-4" />
         </button>
