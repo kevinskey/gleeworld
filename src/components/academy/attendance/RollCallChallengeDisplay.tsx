@@ -60,6 +60,7 @@ export const RollCallChallengeDisplay: React.FC<RollCallChallengeDisplayProps> =
   const corrected = nowMs + offsetRef.current;
   const symbolIndex = symbolIndexAt(schedule, corrected);
   const remaining = secondsRemainingInSlot(corrected);
+  const closed = schedule.closesAt ? corrected > Date.parse(schedule.closesAt) : false;
 
   return (
     <Card>
@@ -67,7 +68,7 @@ export const RollCallChallengeDisplay: React.FC<RollCallChallengeDisplayProps> =
         <CardTitle className="text-lg text-center">Tap this symbol on your device</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-4 py-8">
-        {symbolIndex === null ? (
+        {closed || symbolIndex === null ? (
           <p className="text-muted-foreground text-sm">Roll call window has ended.</p>
         ) : (
           <>

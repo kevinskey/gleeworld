@@ -155,7 +155,7 @@ BEGIN
   -- Already checked in? Idempotent success.
   SELECT * INTO v_existing FROM gw_attendance_records
   WHERE attendance_session_id = p_session_id AND student_profile_id = v_profile_id;
-  IF v_existing IS NOT NULL THEN
+  IF v_existing.id IS NOT NULL THEN
     RETURN jsonb_build_object('success', true, 'already_recorded', true,
       'status', v_existing.status, 'marked_at', v_existing.marked_at);
   END IF;
@@ -279,7 +279,7 @@ BEGIN
   SELECT * INTO v_record FROM gw_attendance_records
   WHERE attendance_session_id = p_session_id AND student_profile_id = v_profile_id;
   RETURN jsonb_build_object(
-    'checked_in', v_record IS NOT NULL,
+    'checked_in', v_record.id IS NOT NULL,
     'status', v_record.status,
     'marked_at', v_record.marked_at,
     'wrong_attempts', v_wrong,
@@ -338,6 +338,7 @@ GRANT EXECUTE ON FUNCTION public.roll_call_check_in(uuid, integer) TO authentica
 GRANT EXECUTE ON FUNCTION public.get_roll_call_schedule(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_my_roll_call_state(uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_roll_call_flags(uuid) TO authenticated;
+REVOKE EXECUTE ON FUNCTION public.roll_call_symbol_for_slot(uuid, bigint) FROM PUBLIC;
 REVOKE EXECUTE ON FUNCTION public.roll_call_symbol_for_slot(uuid, bigint) FROM anon, authenticated;
 
 DO $do$

@@ -409,7 +409,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
         <div className="flex-1 overflow-y-auto">
           {/* Roll Call check-in — mounted above tab content so it's visible
               regardless of the active tab; renders null when no session is open. */}
-          <div className="px-3 sm:px-4 md:px-6 pt-3 md:pt-4">
+          <div className="px-3 sm:px-4 md:px-6 pt-3 md:pt-4 empty:hidden">
             <RollCallCheckInCard courseId={course.id} />
           </div>
 
