@@ -23,6 +23,7 @@ const score = (over: Partial<PersonalScore>): PersonalScore => ({
   source: 'upload', pd_work_id: null, entitlement_id: null,
   storage_path: 'u1/uploads/a.pdf', thumbnail_path: null,
   ext_catalog_item_id: null, external_url: null,
+  tags: [], is_favorite: false,
   created_at: '2026-07-12T00:00:00Z', ...over,
 });
 

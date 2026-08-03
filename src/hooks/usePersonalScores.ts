@@ -22,6 +22,9 @@ export interface PersonalScore {
   thumbnail_path: string | null;
   ext_catalog_item_id: string | null;
   external_url: string | null;
+  // Organization (20260803170000_my_music_organization.sql).
+  tags: string[];
+  is_favorite: boolean;
   created_at: string;
 }
 
@@ -78,11 +81,24 @@ export function usePersonalScores() {
   );
 
   const updateScore = useCallback(
-    async (score: PersonalScore, patch: { title?: string; composer?: string | null; voicing?: string | null }) => {
-      const updates: Record<string, string | null> = {};
+    async (
+      score: PersonalScore,
+      patch: {
+        title?: string;
+        composer?: string | null;
+        voicing?: string | null;
+        tags?: string[];
+        is_favorite?: boolean;
+      },
+    ) => {
+      const updates: Record<string, string | string[] | boolean | null> = {};
       if (patch.title !== undefined) updates.title = patch.title.trim() || score.title;
       if (patch.composer !== undefined) updates.composer = patch.composer?.trim() || null;
       if (patch.voicing !== undefined) updates.voicing = patch.voicing?.trim() || null;
+      if (patch.tags !== undefined) {
+        updates.tags = [...new Set(patch.tags.map((t) => t.trim()).filter(Boolean))];
+      }
+      if (patch.is_favorite !== undefined) updates.is_favorite = patch.is_favorite;
       // `.select()` so an RLS/demo-tenant silent no-op fails loudly.
       const { data, error } = await (supabase as any)
         .from('gw_personal_scores')

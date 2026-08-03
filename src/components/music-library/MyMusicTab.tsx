@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Music, Plus, LayoutGrid, List as ListIcon, Search } from 'lucide-react';
+import { Music, Plus, LayoutGrid, List as ListIcon, Search, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePersonalScores, type PersonalScore } from '@/hooks/usePersonalScores';
 import { getSignedUrl } from '@/utils/storage';
@@ -35,6 +35,20 @@ export function MyMusicTab() {
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('recent');
+  // Organization filters — favorites toggle + tag chips (OR within tags).
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const toggleTag = (t: string) => {
+    setSelectedTags((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t); else next.add(t);
+      return next;
+    });
+  };
+  const allTags = useMemo(
+    () => [...new Set(scores.flatMap((s) => s.tags ?? []))].sort(),
+    [scores],
+  );
   // Cards/list layout, persisted like the Scores tab's toggle.
   const [view, setView] = useState<'cards' | 'list'>(() =>
     typeof window !== 'undefined' && localStorage.getItem('gw-my-music-view') === 'list'
@@ -51,12 +65,17 @@ export function MyMusicTab() {
   // Empty query short-circuits — no need to run toLowerCase on every row.
   const visibleScores = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const filtered = q
+    let filtered = q
       ? scores.filter((s) =>
           (s.title || '').toLowerCase().includes(q)
           || (s.composer || '').toLowerCase().includes(q)
-          || (s.voicing || '').toLowerCase().includes(q))
+          || (s.voicing || '').toLowerCase().includes(q)
+          || (s.tags ?? []).some((t) => t.toLowerCase().includes(q)))
       : scores;
+    if (favoritesOnly) filtered = filtered.filter((s) => s.is_favorite);
+    if (selectedTags.size > 0) {
+      filtered = filtered.filter((s) => (s.tags ?? []).some((t) => selectedTags.has(t)));
+    }
     // Sort a shallow copy — the source array is a react-query cache, mutating
     // it would break equality checks downstream.
     const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
@@ -82,7 +101,15 @@ export function MyMusicTab() {
         sorted.sort((a, b) => b.created_at.localeCompare(a.created_at));
     }
     return sorted;
-  }, [scores, query, sortKey]);
+  }, [scores, query, sortKey, favoritesOnly, selectedTags]);
+
+  const toggleFavorite = async (s: PersonalScore) => {
+    try {
+      await updateScore(s, { is_favorite: !s.is_favorite });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not update favorite.');
+    }
+  };
 
   const openScore = async (s: PersonalScore) => {
     if (openingId) return; // one at a time — stacking clicks stacked requests
@@ -185,6 +212,43 @@ export function MyMusicTab() {
         </div>
       )}
 
+      {/* Organization chips: favorites + the union of the user's tags. */}
+      {(allTags.length > 0 || scores.some((s) => s.is_favorite)) && (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setFavoritesOnly((v) => !v)}
+            aria-pressed={favoritesOnly}
+            className={
+              favoritesOnly
+                ? 'inline-flex items-center gap-1 rounded-full border border-primary bg-primary text-primary-foreground px-2.5 py-1 text-xs font-medium transition-colors'
+                : 'inline-flex items-center gap-1 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors'
+            }
+          >
+            <Star className={`w-3 h-3 ${favoritesOnly ? 'fill-current' : ''}`} />
+            Favorites
+          </button>
+          {allTags.map((t) => {
+            const selected = selectedTags.has(t);
+            return (
+              <button
+                key={t}
+                type="button"
+                onClick={() => toggleTag(t)}
+                aria-pressed={selected}
+                className={
+                  selected
+                    ? 'inline-flex items-center rounded-full border border-primary bg-primary text-primary-foreground px-2.5 py-1 text-xs font-medium transition-colors'
+                    : 'inline-flex items-center rounded-full border border-border bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted transition-colors'
+                }
+              >
+                #{t}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {scores.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-10 text-center bg-muted/30">
           <Music className="w-10 h-10 text-muted-foreground/60 mx-auto mb-3" />
@@ -211,6 +275,7 @@ export function MyMusicTab() {
                 onOpen={() => openScore(s)}
                 onEdit={() => setEditing(s)}
                 onRemove={() => removeWithConfirm(s)}
+                onToggleFavorite={() => toggleFavorite(s)}
               />
             </li>
           ))}
@@ -226,6 +291,7 @@ export function MyMusicTab() {
                 onOpen={() => openScore(s)}
                 onEdit={() => setEditing(s)}
                 onRemove={() => removeWithConfirm(s)}
+                onToggleFavorite={() => toggleFavorite(s)}
               />
             ))}
           </div>
@@ -242,6 +308,7 @@ export function MyMusicTab() {
         score={editing}
         onOpenChange={(o) => !o && setEditing(null)}
         onSave={updateScore}
+        tagSuggestions={allTags}
       />
 
       <ScoreViewerDialog viewing={viewing} onClose={() => setViewing(null)} />
