@@ -30,6 +30,10 @@ import { ScoreListRow } from '@/components/music-library/scores/ScoreListRow';
 import { AttachAudioDialog } from '@/components/music-library/scores/AttachAudioDialog';
 import { EditScoreDialog } from '@/components/music-library/scores/EditScoreDialog';
 import { ShareScoreDialog } from '@/components/music-library/scores/ShareScoreDialog';
+import {
+  ScoresFilterBar, ActiveFilterChips, applyScoresFilters,
+  type ScoresFilters, type ScoresSort,
+} from '@/components/music-library/scores/ScoresFilterBar';
 import { ScoreViewerDialog } from '@/components/music-library/ScoreViewerDialog';
 import { MyMusicTab } from '@/components/music-library/MyMusicTab';
 import { getSignedUrl } from '@/utils/storage';
@@ -60,7 +64,45 @@ export default function MusicLibraryPage() {
   const canEdit = canEditMusicLibrary();
 
   const [topTab, setTopTab] = useState<TopTab>('scores');
-  const [search, setSearch] = useState('');
+
+  // URL search params carry the deep-link (?view=) plus the Scores tab's
+  // search/filter/sort state, so a filtered view is shareable and survives
+  // reload. All writes use the functional form with replace:true to avoid
+  // clobbering concurrent params or spamming history.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const updateParams = (mutate: (p: URLSearchParams) => void) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      mutate(next);
+      return next;
+    }, { replace: true });
+  };
+
+  const [search, setSearch] = useState(() => searchParams.get('q') ?? '');
+  const changeSearch = (v: string) => {
+    setSearch(v);
+    updateParams((p) => { if (v.trim()) p.set('q', v); else p.delete('q'); });
+  };
+
+  const filters = useMemo<ScoresFilters>(() => ({
+    voicings: (searchParams.get('voicing') ?? '').split(',').filter(Boolean),
+    difficulties: (searchParams.get('diff') ?? '').split(',').filter(Boolean),
+    tags: (searchParams.get('tag') ?? '').split(',').filter(Boolean),
+    rights: (searchParams.get('rights') ?? '').split(',').filter(Boolean),
+    composer: searchParams.get('composer'),
+  }), [searchParams]);
+  const sort: ScoresSort = (searchParams.get('sort') as ScoresSort) || 'title';
+  const setFilters = (f: ScoresFilters) => updateParams((p) => {
+    const setOrDel = (k: string, v: string) => { if (v) p.set(k, v); else p.delete(k); };
+    setOrDel('voicing', f.voicings.join(','));
+    setOrDel('diff', f.difficulties.join(','));
+    setOrDel('tag', f.tags.join(','));
+    setOrDel('rights', f.rights.join(','));
+    setOrDel('composer', f.composer ?? '');
+  });
+  const setSort = (s: ScoresSort) => updateParams((p) => {
+    if (s === 'title') p.delete('sort'); else p.set('sort', s);
+  });
   // Scores layout: card grid (default) or compact list. Persisted so the
   // librarian's preference survives reloads.
   const [scoresView, setScoresView] = useState<'cards' | 'list'>(() =>
@@ -119,7 +161,6 @@ export default function MusicLibraryPage() {
   // Deep link: /dashboard/music-library?view=<scoreId> opens the score viewer
   // (the Glee Assistant's open-score action navigates here). Fetch by id
   // rather than searching `rows` — the list is scope-filtered and capped.
-  const [searchParams, setSearchParams] = useSearchParams();
   const viewParam = searchParams.get('view');
   useEffect(() => {
     if (!viewParam) return;
@@ -162,7 +203,7 @@ export default function MusicLibraryPage() {
       // open on purpose so ?view= deep links and setlists keep working.
       let q = (supabase as any)
         .from('gw_sheet_music_browse')
-        .select('id, title, composer, voicing, difficulty_level, pdf_url, storage_path, storage_bucket, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members, shared_with_users, shared_with_courses, shared_with_voice_parts')
+        .select('id, title, composer, voicing, difficulty_level, pdf_url, storage_path, storage_bucket, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, arranger, language, tags, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members, shared_with_users, shared_with_courses, shared_with_voice_parts')
         .order('title')
         .limit(200);
       q = applyFilter(q as any);
@@ -178,14 +219,27 @@ export default function MusicLibraryPage() {
   }, [courses]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return rows;
     const s = search.trim().toLowerCase();
-    return rows.filter((r) =>
-      r.title?.toLowerCase().includes(s) ||
-      r.composer?.toLowerCase().includes(s) ||
-      r.voicing?.toLowerCase().includes(s),
-    );
-  }, [rows, search]);
+    let out = rows;
+    if (s) {
+      out = out.filter((r) =>
+        r.title?.toLowerCase().includes(s) ||
+        r.composer?.toLowerCase().includes(s) ||
+        r.arranger?.toLowerCase().includes(s) ||
+        r.voicing?.toLowerCase().includes(s) ||
+        (r.tags ?? []).some((t) => t.toLowerCase().includes(s)),
+      );
+    }
+    out = applyScoresFilters(out, filters);
+    if (sort === 'composer') {
+      const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
+      out = [...out].sort((a, b) => collator.compare(a.composer ?? '', b.composer ?? ''));
+    } else if (sort === 'recent') {
+      out = [...out].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''));
+    }
+    // 'title' keeps the server's .order('title').
+    return out;
+  }, [rows, search, filters, sort]);
 
   // Row's Share button — opens the granular share dialog rather than
   // toggling in place. The dialog handles the actual write; passing the
@@ -254,11 +308,18 @@ export default function MusicLibraryPage() {
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search by title, composer, voicing…"
+                    onChange={(e) => changeSearch(e.target.value)}
+                    placeholder="Search by title, composer, arranger, tag…"
                     className="pl-9"
                   />
                 </div>
+                <ScoresFilterBar
+                  rows={rows}
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                  sort={sort}
+                  onSortChange={setSort}
+                />
                 <div className="shrink-0 flex items-center gap-0.5 rounded-lg border border-border p-0.5" role="group" aria-label="Layout">
                   <Button
                     variant={scoresView === 'cards' ? 'secondary' : 'ghost'}
@@ -297,6 +358,8 @@ export default function MusicLibraryPage() {
               </div>
             </CardContent>
           </Card>
+
+          <ActiveFilterChips filters={filters} onFiltersChange={setFilters} />
 
           {isLoading ? (
             <div className="text-center py-16">

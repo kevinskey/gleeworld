@@ -24,6 +24,9 @@ export interface ScoreRow {
   physical_location: string | null;
   course_id: string | null;
   created_at: string | null;
+  arranger: string | null;
+  language: string | null;
+  tags: string[] | null;
   // Rights model (added via migration 20260622040000_sheet_music_rights.sql).
   // unknown = legacy row that still needs to be tagged by the librarian.
   rights_status: 'public_domain' | 'licensed' | 'all_rights_reserved' | 'unknown' | null;
