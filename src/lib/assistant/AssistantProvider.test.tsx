@@ -6,6 +6,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AssistantProvider, useAssistant } from './AssistantProvider';
 import { saveThread } from './threadStorage';
+import { setMuted } from './speech';
 import { supabase } from '@/integrations/supabase/client';
 
 vi.mock('@/hooks/useUserRole', () => ({
@@ -59,11 +60,25 @@ describe('AssistantProvider', () => {
     expect(JSON.parse(sessionStorage.getItem('gw_assistant_thread') ?? '[]')).toHaveLength(2);
   });
 
-  it('a reply arriving while the sheet is closed becomes the caption', async () => {
+  it('a spoken reply with the sheet closed is NOT printed as a caption (voice-first)', async () => {
     vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'spoken answer', actions: [] }, error: null } as never);
     renderProbe();
     await act(async () => { screen.getByText('go').click(); });
-    expect(screen.getByTestId('caption')).toHaveTextContent('spoken answer');
+    // Kevin 2026-08-03: only speak; the text lives in the sheet behind the
+    // FAB caret. The caption is reserved for replies she can't speak.
+    expect(screen.getByTestId('caption')).toHaveTextContent('');
+  });
+
+  it('a muted reply with the sheet closed still surfaces as a caption', async () => {
+    setMuted(true);
+    try {
+      vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'silent answer', actions: [] }, error: null } as never);
+      renderProbe();
+      await act(async () => { screen.getByText('go').click(); });
+      expect(screen.getByTestId('caption')).toHaveTextContent('silent answer');
+    } finally {
+      setMuted(false);
+    }
   });
 
   it('send() proceeds even when geolocation never calls back (WKWebView hang)', async () => {

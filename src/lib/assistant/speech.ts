@@ -260,7 +260,11 @@ export function speak(
   // doesn't accidentally speak the raw text on retry — every path from here
   // uses `text` as the spoken content.
   text = sanitizeForSpeech(text);
-  if (muted || !text.trim()) return;
+  // onEnd fires even on the nothing-to-say paths — callers track a
+  // "speaking" flag from the moment they request speech (so Stop is
+  // visible during ElevenLabs synthesis latency), and skipping onEnd
+  // here would leave that flag stuck true forever.
+  if (muted || !text.trim()) { opts?.onEnd?.(); return; }
   const volume = typeof opts?.volume === 'number'
     ? Math.max(0, Math.min(1, opts.volume))
     : 1;
