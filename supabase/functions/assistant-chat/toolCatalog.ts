@@ -88,11 +88,21 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'open_page',
-    description: 'Navigate the user to a GleeWorld page. Valid keys: home, calendar, planner, music-library, studio, video, messenger, academy, sight-reading, media-library, songwriting, concert-planner, tour-manager, attendance, users, analytics.',
+    description: "Navigate the user to a GleeWorld page. Valid keys are listed in the system prompt under 'Pages you can open' — pass one exactly as listed there.",
     parameters: {
       type: 'object',
-      properties: { key: str('Page key from the list in the description') },
+      properties: { key: str("Page key from the system prompt's 'Pages you can open' list") },
       required: ['key'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'open_link',
+    description: 'Open an external http(s) link in a new browser tab — e.g. the full article behind a news headline from read_news_feeds. Use the exact link from the tool result; never fabricate URLs.',
+    parameters: {
+      type: 'object',
+      properties: { url: str('The http(s) URL to open'), title: str('Short human name for the link, for the spoken confirmation (optional)') },
+      required: ['url'],
     },
     minRole: 'member', execution: 'client', confirm: false,
   },

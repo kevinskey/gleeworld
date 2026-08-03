@@ -44,6 +44,34 @@ describe('executeClientAction', () => {
     expect(hasOwn).toMatchObject({ ok: false });
   });
 
+  it('open_page resolves nav-catalog keys and labels that the legacy whitelist never had', async () => {
+    // 'sight' is Reading Music's catalog key — not in PAGE_ROUTES.
+    const byKey = await executeClientAction({ tool: 'open_page', args: { key: 'sight' }, confirm: false });
+    expect(byKey).toMatchObject({ ok: true, navigateTo: '/dashboard/reading-music' });
+    // Label matching: the model may echo the human name instead of the key.
+    const byLabel = await executeClientAction({ tool: 'open_page', args: { key: 'Reading Music' }, confirm: false });
+    expect(byLabel).toMatchObject({ ok: true, navigateTo: '/dashboard/reading-music' });
+    const seating = await executeClientAction({ tool: 'open_page', args: { key: 'seating-charts' }, confirm: false });
+    expect(seating.ok).toBe(true);
+  });
+
+  it('open_link opens http(s) URLs in a new tab and rejects other schemes', async () => {
+    const opened: string[] = [];
+    vi.stubGlobal('open', (url: string) => { opened.push(url); return null; });
+    try {
+      const ok = await executeClientAction({ tool: 'open_link', args: { url: 'https://example.com/story' }, confirm: false });
+      expect(ok.ok).toBe(true);
+      expect(opened).toEqual(['https://example.com/story']);
+      const js = await executeClientAction({ tool: 'open_link', args: { url: 'javascript:alert(1)' }, confirm: false });
+      expect(js.ok).toBe(false);
+      const data = await executeClientAction({ tool: 'open_link', args: { url: 'data:text/html,x' }, confirm: false });
+      expect(data.ok).toBe(false);
+      expect(opened).toHaveLength(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('open_song builds the viewer deep link', async () => {
     const out = await executeClientAction({ tool: 'open_song', args: { score_id: 'abc-123' }, confirm: false });
     expect(out.navigateTo).toBe('/dashboard/music-library?view=abc-123');

@@ -147,6 +147,17 @@ serve(async (req) => {
   const geo = rawGeo && typeof rawGeo.lat === 'number' && typeof rawGeo.lng === 'number'
     ? { lat: rawGeo.lat, lng: rawGeo.lng }
     : undefined;
+  // Page list the client's build actually ships (from navCatalog). Sanitized
+  // hard: model-visible strings from the request body. Cap 100 entries so a
+  // hostile client can't balloon the prompt.
+  const rawTargets = body.context?.navTargets;
+  const navTargets = Array.isArray(rawTargets)
+    ? rawTargets
+        .filter((t): t is { key: unknown; label: unknown } => !!t && typeof t === 'object')
+        .map((t) => ({ key: String(t.key ?? '').slice(0, 60), label: String(t.label ?? '').slice(0, 60) }))
+        .filter((t) => /^[a-z0-9-]+$/.test(t.key) && t.label.length > 0)
+        .slice(0, 100)
+    : undefined;
   const ctx = {
     firstName: inferredFirst || String(body.context?.firstName ?? 'there'),
     fullName: fullName || undefined,
@@ -159,6 +170,7 @@ serve(async (req) => {
     nowIso: new Date().toISOString(),
     timezone: String(body.context?.timezone ?? 'America/New_York'),
     geo,
+    navTargets,
   };
 
   const tools = toolsForRole(role);
