@@ -44,7 +44,6 @@ import {
   Sparkles,
   PanelLeft,
   PanelLeftClose,
-  GripVertical,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
@@ -117,7 +116,6 @@ function buildNavSections(
   ctx: NavContext,
   userOrder?: string[] | null,
   sectionOverrides?: Record<string, string> | null,
-  userSectionOrder?: string[] | null,
 ): Array<{ key: string; label: string; items: CatalogEntry[] }> {
   const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
   const sectionOf = (e: CatalogEntry): string => {
@@ -129,18 +127,10 @@ function buildNavSections(
     userOrder?.length
       ? [...items].sort((a, b) => (rank.get(a.key) ?? Infinity) - (rank.get(b.key) ?? Infinity))
       : items;
-  // Section order: user-preferred sections first (in the order they've
-  // arranged), then any remaining catalog sections that aren't ranked
-  // yet — so newly-shipped sections don't vanish for tenants with an
-  // existing sectionOrder saved.
-  const validSections = new Set(SECTION_ORDER as readonly string[]);
-  const rankedSections = (userSectionOrder ?? []).filter((s) => validSections.has(s));
-  const rankedSet = new Set(rankedSections);
-  const finalOrder = [
-    ...rankedSections,
-    ...SECTION_ORDER.filter((s) => !rankedSet.has(s as string)),
-  ];
-  return finalOrder
+  // Sections always render in catalog order. Users can reorder items
+  // (and move them between sections) but not the sections themselves;
+  // any sectionOrder still stored in user_preferences is ignored.
+  return SECTION_ORDER
     .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s as NavSectionKey], items: sortItems(resolved.filter((e) => sectionOf(e) === s)) }))
     .filter((s) => s.items.length > 0);
 }
@@ -158,8 +148,9 @@ function DroppableSection({ sectionKey, className, children }: {
   );
 }
 
-// Sortable wrapper for a sidebar nav row. The 8px activation distance
-// keeps plain clicks navigating; only a real drag reorders.
+// Sortable wrapper for a sidebar nav row. The press-and-hold activation
+// constraint keeps plain clicks navigating; only a deliberate hold-then-
+// move reorders.
 //
 // - touch-none:   required so touch devices don't treat the pointer as
 //                 a scroll and steal it before dnd-kit sees enough movement.
@@ -180,37 +171,6 @@ function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
       }`}
     >
       {children}
-    </div>
-  );
-}
-
-// Sortable wrapper for a whole section CARD. The drag listeners are
-// exposed via the render prop so callers can attach them to a specific
-// handle (a grip icon in the header) rather than the whole card — this
-// keeps the collapse/expand click on the header text working normally,
-// and prevents the section drag from stealing pointer events from the
-// item-row sortables nested inside.
-function SortableSection({
-  id,
-  children,
-}: {
-  id: string;
-  children: (args: {
-    dragHandleProps: Record<string, unknown>;
-    isDragging: boolean;
-  }) => ReactNode;
-}) {
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id });
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 20 : undefined }}
-      className={isDragging ? 'opacity-70' : undefined}
-    >
-      {children({
-        dragHandleProps: { ...attributes, ...listeners },
-        isDragging,
-      })}
     </div>
   );
 }
@@ -358,52 +318,26 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
     hiddenRoutes: hiddenNav,
   }, previewRole);
   const { navOrder, saveNavOrder } = useNavItemOrder();
-  const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections, navOrder?.sectionOrder);
-  const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  // Distinct id namespaces so onDragEnd can tell what kind of drag
-  // just happened:
-  //   'sec:<key>'     — the section header (whole section is being
-  //                     reordered in the outer SortableContext)
+  // Section order is deliberately NOT passed — sections always render in
+  // catalog order; only items within them are user-orderable.
+  const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
+  // Press-and-hold to drag: the old 8px movement threshold made rows
+  // move on any slightly-sloppy click or scroll flick. With a delay
+  // constraint, a plain click navigates instantly, and a drag only
+  // starts after the pointer has been held still (within `tolerance`
+  // px) for `delay` ms — accidental reorders effectively disappear.
+  const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 250, tolerance: 6 } }));
+  // Id namespaces in onDragEnd:
   //   'section:<key>' — the DroppableSection body (target when an item
-  //                     is dragged INTO a section, not a section drag)
-  //   '<item.key>'    — the bare item row (inner SortableContext)
+  //                     is dragged INTO a section)
+  //   '<item.key>'    — the bare item row (SortableContext)
+  // Sections themselves are NOT sortable — their order is fixed to the
+  // catalog SECTION_ORDER.
   const onNavDragEnd = (e: DragEndEvent) => {
     const activeId = String(e.active.id);
     const overId = e.over ? String(e.over.id) : null;
     if (!overId || activeId === overId) return;
 
-    // Section reorder path — active is a section header. Map the drop
-    // target back to a SECTION regardless of what dnd-kit chose:
-    //   'sec:x'     → x (dropped on another section header)
-    //   'section:x' → x (dropped on a section body / gap)
-    //   any item    → the section that owns that item (closestCenter
-    //                 collision often lands on an interior item row
-    //                 rather than the wrapper — this makes the drag
-    //                 feel forgiving instead of "why isn't it moving").
-    if (activeId.startsWith('sec:')) {
-      const fromSec = activeId.slice(4);
-      let toSec: string | null = null;
-      if (overId.startsWith('sec:')) toSec = overId.slice(4);
-      else if (overId.startsWith('section:')) toSec = overId.slice(8);
-      else {
-        const owner = sections.find((s) => s.items.some((i) => i.key === overId));
-        toSec = owner ? owner.key : null;
-      }
-      if (!toSec || toSec === fromSec) return;
-      const currentOrder = sections.map((s) => s.key);
-      const fromIdx = currentOrder.indexOf(fromSec);
-      const toIdx = currentOrder.indexOf(toSec);
-      if (fromIdx < 0 || toIdx < 0) return;
-      const nextSectionOrder = arrayMove(currentOrder, fromIdx, toIdx);
-      void saveNavOrder(
-        navOrder?.order ?? sections.flatMap((s) => s.items.map((i) => i.key)),
-        navOrder?.sections ?? {},
-        nextSectionOrder,
-      );
-      return;
-    }
-
-    // Item reorder path — existing logic.
     const from = sections.find((s) => s.items.some((i) => i.key === activeId));
     if (!from) return;
     const overSectionKey = overId.startsWith('section:') ? overId.slice(8) : null;
@@ -434,7 +368,9 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
     const overrides = { ...(navOrder?.sections ?? {}) };
     if (to.key === catalogSection) delete overrides[activeId];
     else if (to.key !== from.key) overrides[activeId] = to.key;
-    void saveNavOrder(flat, overrides, navOrder?.sectionOrder ?? []);
+    // sectionOrder is intentionally reset to [] — section order is fixed
+    // to the catalog and any previously-dragged order should not persist.
+    void saveNavOrder(flat, overrides, []);
   };
 
   // Studio session editor needs the full window for clips + mixer.
@@ -497,33 +433,22 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
           brand block instead of glueing flush against the divider. */}
       <nav className="flex-1 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2 space-y-1.5">
         <DndContext sensors={dragSensors} onDragEnd={onNavDragEnd}>
-        <SortableContext items={sections.map((s) => `sec:${s.key}`)} strategy={verticalListSortingStrategy}>
         {sections.map((section, idx) => {
           if (section.items.length === 0) return null;
           const isCollapsible = !!section.label;
           const isCollapsed = isCollapsible && collapsed.has(section.label!);
           return (
-            <SortableSection key={section.key ?? `section-${idx}`} id={`sec:${section.key}`}>
-              {({ dragHandleProps }) => (
                 <DroppableSection
+                  key={section.key ?? `section-${idx}`}
                   sectionKey={section.key}
                   className={section.label ? 'rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5' : 'space-y-0.5 px-1'}
                 >
                   {section.label && (
                     <div
-                      // Whole header row IS the drag handle for section
-                      // reorder — sections have a large, obvious grab
-                      // target instead of a fiddly 14px grip. Click
-                      // through to expand/collapse still works via a
-                      // separate chevron button on the right (its
-                      // onPointerDown stopPropagation keeps the section
-                      // sortable from starting on chevron taps).
-                      {...dragHandleProps}
-                      title="Drag to reorder this section"
-                      aria-label={`Section ${section.label} — drag to reorder`}
-                      className="flex items-center pb-1 pt-1.5 pl-1.5 pr-1 touch-none select-none cursor-grab active:cursor-grabbing text-[11px] font-black uppercase tracking-[0.08em] text-foreground"
+                      // Sections are fixed in place — the whole header
+                      // row is a plain expand/collapse toggle.
+                      className="flex items-center pb-1 pt-1.5 pl-1.5 pr-1 select-none text-[11px] font-black uppercase tracking-[0.08em] text-foreground"
                     >
-                      <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0 mr-1.5" />
                       <span
                         role="button"
                         tabIndex={0}
@@ -534,20 +459,13 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
                             toggleSection(section.label!);
                           }
                         }}
-                        // Don't let a click on the label start a section
-                        // drag — the label is for expand/collapse. But
-                        // don't stop pointerdown either, because a
-                        // click-and-drag STARTING on the label should
-                        // still initiate the section drag.
-                        onPointerUp={(e) => e.stopPropagation()}
                         className="flex-1 cursor-pointer hover:text-foreground transition-colors"
                       >
                         {section.label}
                       </span>
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); toggleSection(section.label!); }}
-                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={() => toggleSection(section.label!)}
                         aria-label={isCollapsed ? `Expand ${section.label}` : `Collapse ${section.label}`}
                         className="px-1.5 py-0.5 rounded hover:bg-muted transition-colors cursor-pointer"
                       >
@@ -601,11 +519,8 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
               </SortableContext>
               )}
                 </DroppableSection>
-              )}
-            </SortableSection>
           );
         })}
-        </SortableContext>
         </DndContext>
       </nav>
 
