@@ -23,6 +23,7 @@ import type { TransportTickStore } from '@/hooks/useStudio';
 import { useTransportPosition } from '../useTransportTick';
 import { midiClipToMusicXml } from './midiToMusicXml';
 import { ScoreView } from './ScoreView';
+import { reconcileSelection } from './selectionSync';
 
 const KEYS_W = 48;      // piano-key gutter
 const RULER_H = 20;
@@ -107,13 +108,21 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     : '',
     [view, clip, session.tempo_bpm, session.time_signature.numerator, session.time_signature.denominator, track?.name]);
 
-  /** One history-free clip mutation; gestures call pushHistory() once first. */
-  const editClip = (mut: (c: MidiClip) => MidiClip) => props.update((s) => ({
-    ...s,
-    tracks: s.tracks.map((t) => t.id !== trackId || !isMidiTrack(t) ? t : {
-      ...t, clips: t.clips.map((c) => c.id === clipId ? mut(c) : c),
-    }),
-  }));
+  /** One history-free clip mutation; gestures call pushHistory() once first.
+   * Flags the change as internal (this panel's own edit) BEFORE the update
+   * propagates, so the reconcile effect below can tell it apart from an
+   * external swap of clip.notes (undo, collaborator refresh) — see
+   * selectionSync.ts. */
+  const internalEditRef = useRef(false);
+  const editClip = (mut: (c: MidiClip) => MidiClip) => {
+    internalEditRef.current = true;
+    props.update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => t.id !== trackId || !isMidiTrack(t) ? t : {
+        ...t, clips: t.clips.map((c) => c.id === clipId ? mut(c) : c),
+      }),
+    }));
+  };
 
   // ── Toolbar ops: one-shot edits, one history entry + one engine reload
   // each (via editClip, same as any other committed mutation). ──────────
@@ -880,6 +889,31 @@ export function PianoRollPanel(props: PianoRollPanelProps) {
     setSelectedRange(null);
     setSelectedModPoint(null);
   }, [clipId]);
+
+  // Reconcile selection whenever clip.notes changes identity. Runs every
+  // render (no dep array) and compares against the last-seen notes array
+  // by reference, since a clip switch AND an in-place edit both produce a
+  // new array — only internalEditRef tells them apart from a genuinely
+  // external swap (⌘Z undo in StudioEditor, collaborator refresh), which
+  // bypasses editClip and never sets it.
+  //
+  // Edit paths in this panel (add/delete/move/resize/marquee, above) call
+  // editClip then set an explicit selection themselves; that happens in
+  // the same commit, so by the time this effect sees the new clip.notes
+  // the explicit selection is already current state — reconcile only
+  // clamps it (drops indices a shrinking edit left dangling) rather than
+  // clearing it. On clip switch, the effect above already reset selection
+  // to []; this effect independently arrives at [] too (external branch),
+  // so the two never fight over a value.
+  const notesRef = useRef(clip?.notes);
+  useEffect(() => {
+    if (clip?.notes !== notesRef.current) {
+      const external = !internalEditRef.current;
+      internalEditRef.current = false;
+      notesRef.current = clip?.notes;
+      setSelection((sel) => reconcileSelection(sel, clip?.notes.length ?? 0, external));
+    }
+  });
 
   if (!clip) return null;
   const totalW = KEYS_W + Math.ceil(clip.duration_seconds * pxPerSecond) + 200; // headroom to draw past the end
