@@ -150,15 +150,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   // read-only by RESTRICTIVE RLS regardless of which tenant
                   // they're scoped to — there's no write/escalation surface
                   // for a stale tenant_slug claim to exploit.
-                  // custom_access_token_hook injects tenant_role (from
-                  // gw_tenant_members.role) — it never sets role or
-                  // is_super_admin, so those two checks alone left this
-                  // permanently false and bounced the platform owner to
-                  // gleeworld.org from every tenant subdomain.
+                  // The access-token hook emits tenant_role (the user's
+                  // gw_tenant_members.role) and, since 2026-08-02,
+                  // is_super_admin (gw_profiles flag). The old check read
+                  // only claims.role — which is GoTrue's Postgres role
+                  // ('authenticated'), never an app role — so this bypass
+                  // NEVER fired and platform owners were bounced to
+                  // gleeworld.org from every tenant subdomain. claims.role
+                  // stays as a last-resort fallback for older tokens.
                   const isPlatformOwner =
                     claims.tenant_slug === 'main' &&
-                    (claims.tenant_role === 'super_admin' || claims.tenant_role === 'super-admin' ||
-                     claims.is_super_admin === true || claims.role === 'super-admin' || claims.role === 'super_admin');
+                    (claims.is_super_admin === true ||
+                      claims.tenant_role === 'super-admin' || claims.tenant_role === 'super_admin' ||
+                      claims.role === 'super-admin' || claims.role === 'super_admin');
                   const isDemoViewer = claims.demo_viewer === true;
                   // A tenant switch the user just asked for. performTenantSwitch
                   // pivots the JWT here and navigates a beat later, so for that
