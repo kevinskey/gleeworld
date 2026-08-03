@@ -83,3 +83,9 @@ export function useCart(): CartAPI {
   if (!ctx) throw new Error('useCart must be used inside CartProvider');
   return ctx;
 }
+
+/** Null outside a CartProvider — for surfaces that render the store grid
+ *  without cart chrome (e.g. the Music Library's Store tab). */
+export function useCartOptional(): CartAPI | null {
+  return useContext(CartContext);
+}

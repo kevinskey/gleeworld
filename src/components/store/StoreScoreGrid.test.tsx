@@ -33,7 +33,11 @@ describe('StoreScoreGrid', () => {
     expect(screen.getAllByText('Lift Every Voice').length).toBeGreaterThan(0);
     expect(screen.getAllByText('J. R. Johnson').length).toBeGreaterThan(0);
     expect(screen.getByText('$4.95')).toBeInTheDocument();
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/store/scores/sc1');
+    // Model card has multiple links per card (cover, title, Preview) — all
+    // must point at the same destination.
+    const links = screen.getAllByRole('link');
+    expect(links.length).toBeGreaterThan(1);
+    links.forEach((l) => expect(l).toHaveAttribute('href', '/store/scores/sc1'));
   });
 
   it('honors a custom linkFor', () => {
@@ -42,7 +46,8 @@ describe('StoreScoreGrid', () => {
         <StoreScoreGrid scores={[row({})]} linkFor={(s) => `/store/partners/${s.partner_id}?score=${s.id}`} />
       </MemoryRouter>
     );
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/store/partners/pt1?score=sc1');
+    screen.getAllByRole('link').forEach((l) =>
+      expect(l).toHaveAttribute('href', '/store/partners/pt1?score=sc1'));
   });
 
   it('rings only the highlighted card wrapper', () => {

@@ -1,19 +1,23 @@
-// GW Sheet Music Store — curated front door for the partner marketplace.
-// Hero spotlights the top GW-featured score, a trust strip answers buyer
-// doubts, one deduped Publishers shelf, then the full catalog with search.
-// A recruitment banner closes the page so the store never dead-ends.
-// Spec: docs/superpowers/specs/2026-07-31-gw-sheet-music-store-design.md
-// Redesign: expert-committee spec 2026-08-03.
-import { useMemo, useState } from 'react';
+// GW Sheet Music Store — front door, rebuilt to Kevin's 2026-08-03
+// desktop/iPad/iPhone store model: marketing hero (in-hero search +
+// Browse/Sell CTAs), trust strip, category chip filters, browse section
+// with result count + sort, publisher cards with title counts, and a
+// Become-a-Partner banner. Earlier spec history:
+// docs/superpowers/specs/2026-07-31-gw-sheet-music-store-design.md
+import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, Music, Search, Store } from 'lucide-react';
 import {
-  useFeaturedPartners, useGwFeaturedScores, useStorePartners, useStoreScores,
-  type StorePartner,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
+  ChevronRight, Church, GraduationCap, LayoutGrid, Music, Music2, Star, Store, Users,
+} from 'lucide-react';
+import {
+  useFeaturedPartners, useStorePartners, useStoreScores,
+  type StorePartner, type StoreScoreRow,
 } from '@/lib/store/api';
 import { StoreScoreGrid } from './StoreScoreGrid';
 import { StoreHero } from './StoreHero';
@@ -24,46 +28,54 @@ import { StoreEmptyState } from './StoreEmptyState';
 const ASSETS_BUCKET = 'partner-assets';
 const PARTNER_MAILTO = 'mailto:kpj64110@gmail.com?subject=Publishing%20on%20GleeWorld';
 
+// Category chips from the store model. Voicing chips match score.voicing;
+// topic chips match tags (both case-insensitive). Fixed vocabulary so the
+// row looks intentional even while the catalog is small.
+const CHIPS: Array<{ key: string; label: string; icon: typeof Music; kind: 'all' | 'voicing' | 'tag' }> = [
+  { key: 'all', label: 'All', icon: LayoutGrid, kind: 'all' },
+  { key: 'satb', label: 'SATB', icon: Users, kind: 'voicing' },
+  { key: 'ssaa', label: 'SSAA', icon: Users, kind: 'voicing' },
+  { key: 'sab', label: 'SAB', icon: Users, kind: 'voicing' },
+  { key: 'ttbb', label: 'TTBB', icon: Users, kind: 'voicing' },
+  { key: 'sacred', label: 'Sacred', icon: Church, kind: 'tag' },
+  { key: 'gospel', label: 'Gospel', icon: Music2, kind: 'tag' },
+  { key: 'concert', label: 'Concert', icon: Music, kind: 'tag' },
+  { key: 'patriotic', label: 'Patriotic', icon: Star, kind: 'tag' },
+  { key: 'educational', label: 'Educational', icon: GraduationCap, kind: 'tag' },
+];
+
+type SortKey = 'featured' | 'newest' | 'price-asc' | 'price-desc' | 'title';
+
+function matchesChip(s: StoreScoreRow, chip: (typeof CHIPS)[number]): boolean {
+  if (chip.kind === 'all') return true;
+  if (chip.kind === 'voicing') return (s.voicing ?? '').toLowerCase().replace(/[^a-z]/g, '') === chip.key;
+  return (s.tags ?? []).some((t) => t.toLowerCase().includes(chip.key));
+}
+
 function partnerImage(p: StorePartner): string | null {
   const path = p.owner_photo_storage_path ?? p.logo_storage_path;
   return path ? supabase.storage.from(ASSETS_BUCKET).getPublicUrl(path).data.publicUrl : null;
 }
 
-/** Narrow avatar card for the horizontal shelf (4+ publishers). */
-function PartnerCard({ p }: { p: StorePartner }) {
+/** Publisher card per the model: avatar · name · "N titles" · chevron. */
+function PublisherCard({ p, titleCount }: { p: StorePartner; titleCount: number }) {
   const img = partnerImage(p);
   return (
-    <Link to={`/store/partners/${p.id}`} className="block shrink-0 w-44">
+    <Link to={`/store/partners/${p.id}`} className="block h-full">
       <Card className="hover:border-primary/40 transition-colors h-full">
-        <CardContent className="p-3 text-center">
+        <CardContent className="flex items-center gap-3 p-3">
           {img ? (
-            <img src={img} alt="" className="w-16 h-16 rounded-full object-cover mx-auto mb-2 border" />
+            <img src={img} alt="" className="w-11 h-11 rounded-full object-cover border shrink-0" />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-muted mx-auto mb-2 border" />
-          )}
-          <p className="text-sm font-medium truncate">{p.display_name}</p>
-          {p.bio && <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{p.bio}</p>}
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
-
-/** Wide card used when there are only a few publishers (≤ 3). */
-function PartnerWideCard({ p }: { p: StorePartner }) {
-  const img = partnerImage(p);
-  return (
-    <Link to={`/store/partners/${p.id}`} className="block">
-      <Card className="hover:border-primary/40 transition-colors h-full">
-        <CardContent className="flex items-center gap-4 p-4">
-          {img ? (
-            <img src={img} alt="" className="w-16 h-16 rounded-full object-cover border shrink-0" />
-          ) : (
-            <div className="w-16 h-16 rounded-full bg-muted border shrink-0" />
+            <div className="w-11 h-11 rounded-full bg-primary/10 border grid place-items-center shrink-0">
+              <Store className="w-5 h-5 text-primary" />
+            </div>
           )}
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold truncate">{p.display_name}</p>
-            {p.bio && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{p.bio}</p>}
+            <p className="text-xs text-muted-foreground">
+              {titleCount} title{titleCount === 1 ? '' : 's'}
+            </p>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
         </CardContent>
@@ -72,115 +84,116 @@ function PartnerWideCard({ p }: { p: StorePartner }) {
   );
 }
 
-function PartnerShelf({ partners }: { partners: StorePartner[] }) {
-  return (
-    <div className="flex gap-3 overflow-x-auto pb-1">
-      {partners.map((p) => <PartnerCard key={p.id} p={p} />)}
-    </div>
-  );
-}
-
 export function GwStoreTab() {
   const { data: featuredPartners } = useFeaturedPartners();
-  const { data: featuredScores } = useGwFeaturedScores();
   const { data: allPartners } = useStorePartners();
   const { data: allScores, isLoading } = useStoreScores();
   const [query, setQuery] = useState('');
+  const [chip, setChip] = useState('all');
+  const [sort, setSort] = useState<SortKey>('featured');
+  const browseRef = useRef<HTMLDivElement>(null);
 
-  const heroScore = featuredScores?.[0] ?? null;
-
-  // One deduped publisher list: featured first (featured_order asc from the
-  // hook), then the rest alphabetical. Kills the duplicated-card bug.
+  // One deduped publisher list: featured first, then the rest.
   const publishers = useMemo(() => {
     const feat = featuredPartners ?? [];
     const rest = (allPartners ?? []).filter((p) => !feat.some((f) => f.id === p.id));
     return [...feat, ...rest];
   }, [featuredPartners, allPartners]);
-  const nonFeaturedCount = publishers.length - (featuredPartners?.length ?? 0);
-  const splitPublishers = nonFeaturedCount > 0 && publishers.length > 6;
 
-  // Featured Pieces shelf only earns space in a big catalog; below that the
-  // hero absorbs the feature and the browse grid is the only score grid.
-  const shelfFeatured = useMemo(() => {
-    if ((allScores?.length ?? 0) < 8) return [];
-    return (featuredScores ?? []).filter((s) => s.id !== heroScore?.id);
-  }, [featuredScores, allScores, heroScore]);
+  const titleCounts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of allScores ?? []) m.set(s.partner_id, (m.get(s.partner_id) ?? 0) + 1);
+    return m;
+  }, [allScores]);
 
   const browseScores = useMemo(() => {
-    const list = allScores ?? [];
+    let list = allScores ?? [];
+    const activeChip = CHIPS.find((c) => c.key === chip) ?? CHIPS[0];
+    list = list.filter((s) => matchesChip(s, activeChip));
     const q = query.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter((s) =>
-      s.title.toLowerCase().includes(q)
-      || (s.composer ?? '').toLowerCase().includes(q)
-      || (s.voicing ?? '').toLowerCase().includes(q)
-      || (s.partner?.display_name ?? '').toLowerCase().includes(q));
-  }, [allScores, query]);
+    if (q) {
+      list = list.filter((s) =>
+        s.title.toLowerCase().includes(q)
+        || (s.composer ?? '').toLowerCase().includes(q)
+        || (s.arranger ?? '').toLowerCase().includes(q)
+        || (s.voicing ?? '').toLowerCase().includes(q)
+        || (s.tags ?? []).some((t) => t.toLowerCase().includes(q))
+        || (s.partner?.display_name ?? '').toLowerCase().includes(q));
+    }
+    const sorted = [...list];
+    switch (sort) {
+      case 'newest': break; // hook returns newest-first
+      case 'price-asc': sorted.sort((a, b) => a.price_cents - b.price_cents); break;
+      case 'price-desc': sorted.sort((a, b) => b.price_cents - a.price_cents); break;
+      case 'title': sorted.sort((a, b) => a.title.localeCompare(b.title)); break;
+      case 'featured':
+      default:
+        // GW-featured first (curated order), then everything else newest-first.
+        sorted.sort((a, b) =>
+          (a.gw_featured_order ?? Number.MAX_SAFE_INTEGER) - (b.gw_featured_order ?? Number.MAX_SAFE_INTEGER));
+    }
+    return sorted;
+  }, [allScores, chip, query, sort]);
+
+  const scrollToBrowse = () => browseRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   return (
-    <div className="space-y-8">
-      <StoreHero featured={heroScore} />
+    <div className="space-y-6">
+      <StoreHero query={query} onQueryChange={setQuery} onBrowse={scrollToBrowse} />
 
       <StoreTrustStrip />
 
-      <section>
-        {splitPublishers ? (
-          <>
-            <StoreSectionHeader title="Featured Publishers" />
-            <PartnerShelf partners={featuredPartners!} />
-            <div className="mt-6">
-              <StoreSectionHeader title="All Publishers" count={publishers.length} />
-              <PartnerShelf partners={publishers.filter((p) => !featuredPartners!.some((f) => f.id === p.id))} />
-            </div>
-          </>
-        ) : (
-          <>
-            <StoreSectionHeader title="Publishers" count={publishers.length || undefined} />
-            {publishers.length === 0 ? (
-              <StoreEmptyState
-                icon={Store}
-                headline="Publishers are coming"
-                body="Partner composers and publishers will appear here as they join."
-              />
-            ) : publishers.length <= 3 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {publishers.map((p) => <PartnerWideCard key={p.id} p={p} />)}
-              </div>
-            ) : (
-              <PartnerShelf partners={publishers} />
-            )}
-          </>
-        )}
-      </section>
+      {/* Category chips */}
+      <div className="flex flex-wrap gap-2">
+        {CHIPS.map(({ key, label, icon: Icon }) => {
+          const active = chip === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setChip(key)}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors border ${
+                active
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-foreground border-border hover:border-primary/40'
+              }`}
+            >
+              <Icon className="w-4 h-4" /> {label}
+            </button>
+          );
+        })}
+      </div>
 
-      {shelfFeatured.length > 0 && (
-        <section>
-          <StoreSectionHeader title="Featured Pieces" />
-          <StoreScoreGrid
-            scores={shelfFeatured}
-            linkFor={(s) => `/store/partners/${s.partner_id}?score=${s.id}`}
-          />
-        </section>
-      )}
-
-      <section>
-        <StoreSectionHeader title="All Scores" count={browseScores.length || undefined} />
-        <div className="relative max-w-sm mb-3">
-          <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="pl-8"
-            placeholder="Search scores…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
+      <section ref={browseRef} className="scroll-mt-4">
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <h2 className="text-lg font-semibold tracking-tight flex-1">Browse Sheet Music</h2>
+          <span className="text-sm text-muted-foreground">
+            {browseScores.length} result{browseScores.length === 1 ? '' : 's'}
+          </span>
+          <Select value={sort} onValueChange={(v) => setSort(v as SortKey)}>
+            <SelectTrigger className="h-9 w-[180px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="featured">Sort by: Featured</SelectItem>
+              <SelectItem value="newest">Sort by: Newest</SelectItem>
+              <SelectItem value="title">Sort by: Title A–Z</SelectItem>
+              <SelectItem value="price-asc">Sort by: Price low → high</SelectItem>
+              <SelectItem value="price-desc">Sort by: Price high → low</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
         {!isLoading && browseScores.length === 0 && (
-          query ? (
+          (query || chip !== 'all') ? (
             <p className="text-sm text-muted-foreground">
-              No scores match your search.{' '}
-              <button type="button" className="text-primary hover:underline" onClick={() => setQuery('')}>
-                Clear search
+              No scores match.{' '}
+              <button
+                type="button"
+                className="text-primary hover:underline"
+                onClick={() => { setQuery(''); setChip('all'); }}
+              >
+                Clear filters
               </button>
             </p>
           ) : (
@@ -194,15 +207,37 @@ export function GwStoreTab() {
         {browseScores.length > 0 && <StoreScoreGrid scores={browseScores} />}
       </section>
 
+      <section>
+        <StoreSectionHeader title="Featured Publishers" count={publishers.length || undefined} />
+        {publishers.length === 0 ? (
+          <StoreEmptyState
+            icon={Store}
+            headline="Publishers are coming"
+            body="Partner composers and publishers will appear here as they join."
+          />
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+            {publishers.map((p) => (
+              <PublisherCard key={p.id} p={p} titleCount={titleCounts.get(p.id) ?? 0} />
+            ))}
+          </div>
+        )}
+      </section>
+
       <section className="rounded-2xl bg-card p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <p className="text-base font-semibold">Publish your music on GleeWorld</p>
-          <p className="text-sm text-muted-foreground">
-            Keep 50% of every sale. Watermarked delivery, Stripe payouts.
-          </p>
+        <div className="flex items-start gap-3">
+          <span className="h-9 w-9 rounded-full bg-primary grid place-items-center shrink-0">
+            <Star className="w-4 h-4 text-primary-foreground fill-current" />
+          </span>
+          <div>
+            <p className="text-base font-semibold">Publish your music on GleeWorld</p>
+            <p className="text-sm text-muted-foreground">
+              Keep 50% of every sale. Watermarked delivery, Stripe payouts.
+            </p>
+          </div>
         </div>
-        <Button asChild variant="outline">
-          <a href={PARTNER_MAILTO}>Become a partner</a>
+        <Button asChild className="shrink-0">
+          <a href={PARTNER_MAILTO}>Become a Partner</a>
         </Button>
       </section>
     </div>

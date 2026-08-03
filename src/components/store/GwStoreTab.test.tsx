@@ -38,34 +38,49 @@ vi.mock('@/lib/store/api', () => ({
 afterEach(cleanup);
 
 describe('GwStoreTab', () => {
-  it('spotlights the top featured piece in the hero with a link to its detail page', () => {
+  it('renders the marketing hero with Browse and Sell CTAs and detail links to the score', () => {
     render(<MemoryRouter><GwStoreTab /></MemoryRouter>);
-    expect(screen.getAllByText('Featured Anthem').length).toBeGreaterThan(0);
-    expect(screen.getByText('View score')).toBeInTheDocument();
+    expect(screen.getByText('GW Sheet Music Store')).toBeInTheDocument();
+    expect(screen.getByText('Browse Music')).toBeInTheDocument();
+    expect(screen.getByText('Sell Your Music').closest('a')).toHaveAttribute('href', '/partner');
     const links = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
     expect(links).toContain('/store/scores/sc1');
   });
 
-  it('renders one deduped Publishers shelf linking to the partner storefront', () => {
+  it('renders one deduped publisher card with a title count', () => {
     render(<MemoryRouter><GwStoreTab /></MemoryRouter>);
     const links = screen.getAllByRole('link').map((a) => a.getAttribute('href'));
     // pt1 is both featured and in the all-partners list — exactly one card.
     expect(links.filter((h) => h === '/store/partners/pt1').length).toBe(1);
-    expect(screen.getByText('Publishers')).toBeInTheDocument();
+    expect(screen.getByText('Featured Publishers')).toBeInTheDocument();
+    expect(screen.getByText('1 title')).toBeInTheDocument();
   });
 
   it('always renders the composer recruitment banner', () => {
     render(<MemoryRouter><GwStoreTab /></MemoryRouter>);
     expect(screen.getByText('Publish your music on GleeWorld')).toBeInTheDocument();
-    const mailto = screen.getByText('Become a partner').closest('a');
+    const mailto = screen.getByText('Become a Partner').closest('a');
     expect(mailto?.getAttribute('href') ?? '').toContain('mailto:kpj64110@gmail.com');
   });
 
-  it('filters the browse grid by search text', async () => {
+  it('filters via the hero search and clears both search and chip filters', async () => {
     const { fireEvent } = await import('@testing-library/react');
     render(<MemoryRouter><GwStoreTab /></MemoryRouter>);
-    fireEvent.change(screen.getByPlaceholderText('Search scores…'), { target: { value: 'zzzz' } });
-    expect(screen.getByText(/No scores match your search\./)).toBeInTheDocument();
-    expect(screen.getByText('Clear search')).toBeInTheDocument();
+    fireEvent.change(
+      screen.getByPlaceholderText('Search by title, composer, voicing, or keyword…'),
+      { target: { value: 'zzzz' } },
+    );
+    expect(screen.getByText(/No scores match\./)).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Clear filters'));
+    expect(screen.getByText(/1 result/)).toBeInTheDocument();
+  });
+
+  it('category chips filter by voicing', async () => {
+    const { fireEvent } = await import('@testing-library/react');
+    render(<MemoryRouter><GwStoreTab /></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: /TTBB/ }));
+    expect(screen.getByText(/No scores match\./)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /SATB/ }));
+    expect(screen.getByText(/1 result/)).toBeInTheDocument();
   });
 });
