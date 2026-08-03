@@ -1,9 +1,9 @@
-// "My Music" — the user's personal library (uploads now; CPDL saves and
-// purchases land here in later phases). User-scoped, follows the person
+// "My Music" — the user's personal library (uploads, CPDL saves, store
+// purchases, and Repertoire saves). User-scoped, follows the person
 // across tenants. Spec: docs/superpowers/specs/2026-07-12-personal-music-library-design.md
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -12,28 +12,40 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Music, Plus, Trash2, FileMusic, ExternalLink, Loader2, Search } from 'lucide-react';
+import { Music, Plus, LayoutGrid, List as ListIcon, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePersonalScores, type PersonalScore } from '@/hooks/usePersonalScores';
 import { getSignedUrl } from '@/utils/storage';
 import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
-
-const SOURCE_LABEL: Record<PersonalScore['source'], string> = {
-  upload: 'Upload',
-  cpdl: 'CPDL',
-  purchase: 'GW Sheet Music Store',
-};
+import { SOFT_CARD, SOFT_CARD_STYLE } from '@/components/music-library/scores/types';
+import { ScoreViewerDialog, type ViewingScore } from '@/components/music-library/ScoreViewerDialog';
+import { MyMusicCard } from '@/components/music-library/my-music/MyMusicCard';
+import { MyMusicListRow } from '@/components/music-library/my-music/MyMusicListRow';
+import { isExternalOnly } from '@/components/music-library/my-music/personalScoreDisplay';
 
 type SortKey = 'recent' | 'oldest' | 'title-asc' | 'title-desc' | 'composer-asc' | 'source';
 
 export function MyMusicTab() {
   const { scores, isLoading, uploadScore, removeScore } = usePersonalScores();
   const [adding, setAdding] = useState(false);
-  const [viewingUrl, setViewingUrl] = useState<string | null>(null);
-  const [viewingTitle, setViewingTitle] = useState('');
+  // Personal PDFs open in the SAME contain-fit viewer as the Scores tab
+  // (whole page visible, no scrolling — PR #321). No `id`: annotation
+  // tables FK to gw_sheet_music, so the viewer's annotation/audio lookups
+  // stay disabled for personal scores.
+  const [viewing, setViewing] = useState<ViewingScore | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [sortKey, setSortKey] = useState<SortKey>('recent');
+  // Cards/list layout, persisted like the Scores tab's toggle.
+  const [view, setView] = useState<'cards' | 'list'>(() =>
+    typeof window !== 'undefined' && localStorage.getItem('gw-my-music-view') === 'list'
+      ? 'list'
+      : 'cards',
+  );
+  const changeView = (v: 'cards' | 'list') => {
+    setView(v);
+    try { localStorage.setItem('gw-my-music-view', v); } catch { /* private mode */ }
+  };
 
   // Filter + sort into a derived list. Case-insensitive match against title,
   // composer, and voicing so a user typing "SATB" or "brahms" both work.
@@ -75,6 +87,16 @@ export function MyMusicTab() {
 
   const openScore = async (s: PersonalScore) => {
     if (openingId) return; // one at a time — stacking clicks stacked requests
+    // Repertoire saves (IMSLP / external) have no PDF of their own — they
+    // open at the source site in a new tab.
+    if (isExternalOnly(s)) {
+      window.open(s.external_url!, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (!s.storage_path) {
+      toast.error(`"${s.title}" has no file attached.`);
+      return;
+    }
     setOpeningId(s.id);
     try {
       // waitForReady=false: that retry loop exists to ride out the post-upload
@@ -85,11 +107,16 @@ export function MyMusicTab() {
         toast.error(`Could not open "${s.title}". The file may be missing.`);
         return;
       }
-      setViewingTitle(s.title);
-      setViewingUrl(url);
+      setViewing({ title: s.title, pdfUrl: url });
     } finally {
       setOpeningId(null);
     }
+  };
+
+  const removeWithConfirm = async (s: PersonalScore) => {
+    if (!confirm(`Remove "${s.title}" from My Music?`)) return;
+    try { await removeScore(s); toast.success('Removed'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Remove failed'); }
   };
 
   if (isLoading) {
@@ -119,19 +146,43 @@ export function MyMusicTab() {
               aria-label="Search My Music"
             />
           </div>
-          <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
-            <SelectTrigger className="sm:w-56" aria-label="Sort My Music">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recent">Newest first</SelectItem>
-              <SelectItem value="oldest">Oldest first</SelectItem>
-              <SelectItem value="title-asc">Title A → Z</SelectItem>
-              <SelectItem value="title-desc">Title Z → A</SelectItem>
-              <SelectItem value="composer-asc">Composer A → Z</SelectItem>
-              <SelectItem value="source">Source</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
+              <SelectTrigger className="flex-1 sm:w-56" aria-label="Sort My Music">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recent">Newest first</SelectItem>
+                <SelectItem value="oldest">Oldest first</SelectItem>
+                <SelectItem value="title-asc">Title A → Z</SelectItem>
+                <SelectItem value="title-desc">Title Z → A</SelectItem>
+                <SelectItem value="composer-asc">Composer A → Z</SelectItem>
+                <SelectItem value="source">Source</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="shrink-0 flex items-center gap-0.5 rounded-lg border border-border p-0.5" role="group" aria-label="Layout">
+              <Button
+                variant={view === 'cards' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-8 px-2.5"
+                onClick={() => changeView('cards')}
+                aria-label="Card view"
+                aria-pressed={view === 'cards'}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={view === 'list' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="h-8 px-2.5"
+                onClick={() => changeView('list')}
+                aria-label="List view"
+                aria-pressed={view === 'list'}
+              >
+                <ListIcon className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -151,56 +202,33 @@ export function MyMusicTab() {
             Try a shorter search, or clear it to see everything.
           </p>
         </div>
-      ) : (
+      ) : view === 'cards' ? (
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visibleScores.map((s) => (
-            <li
-              key={s.id}
-              className="group relative rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/50 hover:shadow-md focus-within:border-primary/50"
-            >
-              {/* Whole card opens the PDF. The trailing icon is the affordance —
-                  without it the card reads as an inert list row, since there is
-                  no thumbnail and the source badge looks like a status. */}
-              <button
-                type="button"
-                className="block w-full text-left cursor-pointer disabled:cursor-wait"
-                onClick={() => openScore(s)}
-                disabled={openingId === s.id}
-                aria-label={`Open ${s.title}`}
-              >
-                <div className="flex items-center gap-2">
-                  {openingId === s.id
-                    ? <Loader2 className="w-4 h-4 text-primary shrink-0 animate-spin" />
-                    : <FileMusic className="w-4 h-4 text-primary shrink-0" />}
-                  <span className="text-sm font-semibold leading-tight truncate">{s.title}</span>
-                </div>
-                {s.composer && (
-                  <div className="text-xs text-muted-foreground truncate mt-1">{s.composer}</div>
-                )}
-                <div className="mt-2 flex items-center gap-1.5">
-                  <Badge variant="secondary" className="text-xs">{SOURCE_LABEL[s.source]}</Badge>
-                  {s.voicing && <Badge variant="outline" className="text-xs">{s.voicing}</Badge>}
-                  <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground group-hover:text-primary transition-colors">
-                    {openingId === s.id ? 'Opening…' : 'Open'}
-                    <ExternalLink className="w-4 h-4" />
-                  </span>
-                </div>
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!confirm(`Remove "${s.title}" from My Music?`)) return;
-                  try { await removeScore(s); toast.success('Removed'); }
-                  catch (e) { toast.error(e instanceof Error ? e.message : 'Remove failed'); }
-                }}
-                className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
-                aria-label={`Remove ${s.title}`}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+            <li key={s.id}>
+              <MyMusicCard
+                score={s}
+                opening={openingId === s.id}
+                onOpen={() => openScore(s)}
+                onRemove={() => removeWithConfirm(s)}
+              />
             </li>
           ))}
         </ul>
+      ) : (
+        <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+          <div className="divide-y divide-border">
+            {visibleScores.map((s) => (
+              <MyMusicListRow
+                key={s.id}
+                score={s}
+                opening={openingId === s.id}
+                onOpen={() => openScore(s)}
+                onRemove={() => removeWithConfirm(s)}
+              />
+            ))}
+          </div>
+        </Card>
       )}
 
       <UploadDialog
@@ -212,17 +240,7 @@ export function MyMusicTab() {
         }}
       />
 
-      {/* Phase 1 viewer: plain PDF (annotation tables FK to gw_sheet_music). */}
-      <Dialog open={!!viewingUrl} onOpenChange={(o) => !o && setViewingUrl(null)}>
-        <DialogContent className="max-w-5xl h-[85vh] p-0 flex flex-col">
-          <DialogHeader className="px-4 pt-3 pb-2 shrink-0">
-            <DialogTitle className="text-sm">{viewingTitle}</DialogTitle>
-          </DialogHeader>
-          {viewingUrl && (
-            <iframe title={viewingTitle} src={viewingUrl} className="flex-1 w-full border-0 rounded-b-xl" />
-          )}
-        </DialogContent>
-      </Dialog>
+      <ScoreViewerDialog viewing={viewing} onClose={() => setViewing(null)} />
     </div>
   );
 }

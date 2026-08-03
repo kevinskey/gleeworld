@@ -5,7 +5,7 @@
 // persist via gw_sheet_music_annotations and can be shared per existing
 // flows. The legacy /music-library two-pane viewer remains for deep links.
 
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,11 +15,8 @@ import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
-import {
   Music, Search, Loader2, FileMusic, ListMusic,
-  PencilLine, X, Maximize2, Minimize2, LayoutGrid, List as ListIcon, Store,
+  LayoutGrid, List as ListIcon, Store,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
@@ -33,6 +30,7 @@ import { ScoreListRow } from '@/components/music-library/scores/ScoreListRow';
 import { AttachAudioDialog } from '@/components/music-library/scores/AttachAudioDialog';
 import { EditScoreDialog } from '@/components/music-library/scores/EditScoreDialog';
 import { ShareScoreDialog } from '@/components/music-library/scores/ShareScoreDialog';
+import { ScoreViewerDialog } from '@/components/music-library/ScoreViewerDialog';
 import { MyMusicTab } from '@/components/music-library/MyMusicTab';
 import { getSignedUrl } from '@/utils/storage';
 import { BookOpen as BookOpenIcon } from 'lucide-react';
@@ -43,9 +41,6 @@ import { MUSIC_LIBRARY_TABS, type MusicLibraryTabKey } from './musicLibraryTabs'
 
 const SetlistBuilder = lazy(() =>
   import('@/components/music-library/SetlistBuilder').then((m) => ({ default: m.SetlistBuilder })),
-);
-const PDFViewerWithAnnotations = lazy(() =>
-  import('@/components/PDFViewerWithAnnotations').then((m) => ({ default: m.PDFViewerWithAnnotations })),
 );
 const GwStoreTab = lazy(() =>
   import('@/components/store/GwStoreTab').then((m) => ({ default: m.GwStoreTab })),
@@ -140,17 +135,6 @@ export default function MusicLibraryPage() {
   // Edit dialog state — librarian edit (title, composer, voicing, copies, location).
   const [editing, setEditing] = useState<ScoreRow | null>(null);
   const [partTracksFor, setPartTracksFor] = useState<ScoreRow | null>(null);
-  // Fullscreen toggle for the viewer dialog (max viewing area for annotation).
-  // Guarded for environments without the Fullscreen API (notably iOS
-  // WKWebView under Capacitor) — accessing `document.fullscreenElement` is
-  // fine but the request/exit methods don't exist there, so we feature-detect
-  // "Fullscreen" here means fill the browser window, not the whole monitor —
-  // toggling a CSS state instead of calling the Fullscreen API keeps the
-  // tab chrome visible and works identically on every device, including iOS
-  // Safari where requestFullscreen() isn't available anyway.
-  const viewerDialogRef = useRef<HTMLDivElement>(null);
-  const [isViewerFullscreen, setIsViewerFullscreen] = useState(false);
-  const toggleViewerFullscreen = () => setIsViewerFullscreen((v) => !v);
 
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({
     queryKey: ['music-library-scores', scope, canEdit],
@@ -419,112 +403,24 @@ export default function MusicLibraryPage() {
         />
       )}
 
-      {/* Annotation viewer — opens a near-fullscreen dialog wrapping the
-          shared PDFViewerWithAnnotations. Annotations save into
+      {/* Annotation viewer — near-fullscreen dialog wrapping the shared
+          contain-fit PDFViewerWithAnnotations (whole page visible, no
+          scrolling — PR #321). Annotations save into
           gw_sheet_music_annotations and persist across sessions. */}
-      <Dialog
-        open={!!viewing}
-        onOpenChange={(v) => {
-          if (!v) {
-            setViewing(null);
-            setIsViewerFullscreen(false);
-          }
-        }}
-      >
-        <DialogContent
-          ref={viewerDialogRef}
-          // Hide default Radix X close — we render a properly-sized close
-          // button next to fullscreen below. The defaults were 32px and
-          // overlapping on iPhone.
-          // The default Radix close is the only direct button child of
-          // DialogContent — our own X+Maximize live inside DialogHeader — so
-          // [&>button]:hidden hides exactly the duplicate. When the user
-          // hits the Maximize button the dialog grows to fill the browser
-          // window (not the whole monitor — that was confusing).
-          // Safe-area: the app is edge-to-edge (status bar overlays the
-          // webview), so a full-height dialog starts at y=0 UNDER the iPhone
-          // clock. Fullscreen pads the header past the inset; the centered
-          // variant caps its height so the translate-centered top edge can
-          // never rise into the inset (2× top inset keeps the split-margin
-          // math above the bar on notched phones).
-          className={`p-0 flex flex-col overflow-hidden bg-background [&>button]:hidden ${
-            isViewerFullscreen
-              ? 'w-screen h-[100dvh] max-w-none rounded-none pt-[env(safe-area-inset-top,0px)] pb-[env(safe-area-inset-bottom,0px)]'
-              : 'max-w-6xl h-[90dvh] max-h-[calc(100dvh-env(safe-area-inset-top,0px)*2-1rem)]'
-          }`}
-        >
-          <DialogHeader className="p-4 border-b border-border shrink-0 flex-row items-center justify-between space-y-0 gap-3">
-            <DialogTitle className="flex items-center gap-3 text-xl sm:text-2xl md:text-3xl font-bold tracking-tight min-w-0 flex-1">
-              {canEdit && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!viewing) return;
-                    const row = rows.find((r) => r.id === viewing.id);
-                    if (row) setEditing(row);
-                  }}
-                  className="text-primary hover:opacity-70 transition-opacity shrink-0"
-                  aria-label="Edit score details"
-                  title="Edit title / metadata"
-                >
-                  <PencilLine className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
-              )}
-              {/* Pull the title from the live `rows` query — if the user
-                  edits via the pencil, react-query refetches `rows` and
-                  this header updates instantly. Fall back to the
-                  snapshot captured at open time. */}
-              <span className="truncate">
-                {(viewing && rows.find((r) => r.id === viewing.id)?.title) || viewing?.title || 'Score'}
-              </span>
-            </DialogTitle>
-            {/* Bigger on desktop, still 44pt-safe on iOS. Outline variant + a
-                subtle border so they read as actual buttons against the
-                light header instead of tiny ghost icons in the corner. */}
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={toggleViewerFullscreen}
-                className="h-11 w-11 md:h-12 md:w-12"
-                aria-label={isViewerFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-                title={isViewerFullscreen ? 'Exit fullscreen' : 'Fullscreen (great on iPad)'}
-              >
-                {isViewerFullscreen ? <Minimize2 className="w-5 h-5 md:w-6 md:h-6" /> : <Maximize2 className="w-5 h-5 md:w-6 md:h-6" />}
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setViewing(null)}
-                className="h-11 w-11 md:h-12 md:w-12"
-                aria-label="Close score viewer"
-                title="Close"
-              >
-                <X className="w-5 h-5 md:w-6 md:h-6" />
-              </Button>
-            </div>
-          </DialogHeader>
-          <div className="flex-1 min-h-0">
-            {viewing && (
-              <Suspense
-                fallback={
-                  <div className="py-10 text-center">
-                    <Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" />
-                  </div>
-                }
-              >
-                <PDFViewerWithAnnotations
-                  pdfUrl={viewing.pdfUrl}
-                  musicId={viewing.id}
-                  musicTitle={rows.find((r) => r.id === viewing.id)?.title || viewing.title}
-                  startInAnnotationMode={false}
-                  className="h-full"
-                />
-              </Suspense>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ScoreViewerDialog
+        viewing={viewing}
+        onClose={() => setViewing(null)}
+        liveTitle={viewing ? rows.find((r) => r.id === viewing.id)?.title ?? null : null}
+        onEditScore={
+          canEdit
+            ? () => {
+                if (!viewing) return;
+                const row = rows.find((r) => r.id === viewing.id);
+                if (row) setEditing(row);
+              }
+            : undefined
+        }
+      />
 
       <CopyrightPolicyLink />
     </DashboardPageShell>

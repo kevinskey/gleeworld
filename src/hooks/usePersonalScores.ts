@@ -12,11 +12,16 @@ export interface PersonalScore {
   title: string;
   composer: string | null;
   voicing: string | null;
-  source: 'upload' | 'cpdl' | 'purchase';
+  // imslp/external rows (Repertoire "Add to My Music",
+  // 20260727180000_repertoire_add_to_library.sql) carry no PDF of their
+  // own — storage_path is NULL and external_url points at the source site.
+  source: 'upload' | 'cpdl' | 'purchase' | 'imslp' | 'external';
   pd_work_id: string | null;
   entitlement_id: string | null;
-  storage_path: string;
+  storage_path: string | null;
   thumbnail_path: string | null;
+  ext_catalog_item_id: string | null;
+  external_url: string | null;
   created_at: string;
 }
 
@@ -73,7 +78,7 @@ export function usePersonalScores() {
         .delete()
         .eq('id', score.id);
       if (error) throw new Error(error.message);
-      if (score.source === 'upload') {
+      if (score.source === 'upload' && score.storage_path) {
         await supabase.storage.from(PERSONAL_SCORES_BUCKET).remove([score.storage_path]);
       }
       qc.invalidateQueries({ queryKey: ['personal-scores', user?.id] });

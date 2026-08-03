@@ -1,0 +1,75 @@
+// Card rendering for a personal score — mirrors the Scores tab's ScoreCard
+// layout (icon tile, clamped title, reserved composer line, badge cluster,
+// trailing affordance) so the two tabs read as one library.
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { ExternalLink, FileMusic, Loader2, Trash2 } from 'lucide-react';
+import { SOFT_CARD, SOFT_CARD_STYLE } from '@/components/music-library/scores/types';
+import type { PersonalScore } from '@/hooks/usePersonalScores';
+import { SOURCE_LABEL, isExternalOnly } from './personalScoreDisplay';
+
+export function MyMusicCard({
+  score, opening, onOpen, onRemove,
+}: {
+  score: PersonalScore;
+  opening: boolean;
+  onOpen: () => void;
+  onRemove: () => void;
+}) {
+  const externalOnly = isExternalOnly(score);
+  return (
+    <Card className={`${SOFT_CARD} group relative h-full flex flex-col transition-colors hover:bg-accent/40 focus-within:bg-accent/40`} style={SOFT_CARD_STYLE}>
+      <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
+        {/* Whole card opens the PDF (or the source site for external rows).
+            The trailing icon is the affordance — without it the card reads
+            as an inert list row, since there is no thumbnail and the source
+            badge looks like a status. */}
+        <button
+          type="button"
+          className="block w-full text-left cursor-pointer disabled:cursor-wait flex-1 flex flex-col"
+          onClick={onOpen}
+          disabled={opening}
+          aria-label={`Open ${score.title}`}
+        >
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
+              {opening
+                ? <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                : <FileMusic className="w-4 h-4" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div
+                className="text-sm font-semibold leading-snug line-clamp-2 break-words pr-6"
+                title={score.title || 'Untitled'}
+              >
+                {score.title || 'Untitled'}
+              </div>
+              {/* Reserve the composer line so cards stay the same height. */}
+              <div className="text-sm text-muted-foreground truncate mt-0.5">
+                {score.composer || '\u00A0'}
+              </div>
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                <Badge variant="secondary" className="text-xs">{SOURCE_LABEL[score.source]}</Badge>
+                {score.voicing && <Badge variant="outline" className="text-xs">{score.voicing}</Badge>}
+              </div>
+            </div>
+          </div>
+          <div className="mt-auto pt-3 flex items-center justify-end">
+            <span className="flex items-center gap-1 text-xs text-muted-foreground group-hover:text-primary transition-colors">
+              {opening ? 'Opening…' : externalOnly ? 'Open at source' : 'Open'}
+              <ExternalLink className="w-4 h-4" />
+            </span>
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          className="absolute top-3 right-3 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100 p-1 rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
+          aria-label={`Remove ${score.title}`}
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </CardContent>
+    </Card>
+  );
+}
