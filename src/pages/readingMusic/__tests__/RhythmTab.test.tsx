@@ -1,10 +1,29 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 vi.mock('@/lib/readingMusic/attemptsApi', () => ({ insertAttempt: vi.fn().mockResolvedValue(true) }));
 vi.mock('sonner', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 import { RhythmTab } from '../RhythmTab';
+
+// jsdom has no Web Audio; the tab needs a context to get past its first guard.
+class FakeParam {
+  value = 0;
+  setValueAtTime() { return this; }
+  linearRampToValueAtTime() { return this; }
+  exponentialRampToValueAtTime() { return this; }
+}
+class FakeNode { connect(n: unknown) { return n; } disconnect() {} }
+class FakeOsc extends FakeNode { type = 'sine'; frequency = new FakeParam(); start() {} stop() {} }
+class FakeGain extends FakeNode { gain = new FakeParam(); }
+class FakeCtx {
+  currentTime = 0;
+  state = 'running';
+  destination = new FakeNode();
+  resume() { return Promise.resolve(); }
+  createOscillator() { return new FakeOsc(); }
+  createGain() { return new FakeGain(); }
+}
 
 describe('RhythmTab', () => {
   it('renders drills, input + syllable toggles, and start button', () => {
@@ -23,5 +42,29 @@ describe('RhythmTab', () => {
   it('renders the Clap Blast drill chip', () => {
     render(<RhythmTab />);
     expect(screen.getByRole('button', { name: /clap blast/i })).toBeInTheDocument();
+  });
+
+  it('falls back to tap (and closes calibration) when the mic is denied', async () => {
+    localStorage.removeItem('rm_clap_latency_ms');
+    localStorage.removeItem('rm_rhythm_input');
+    (window as unknown as { AudioContext: unknown }).AudioContext = FakeCtx;
+    const getUserMedia = vi.fn().mockRejectedValue(new Error('NotAllowedError'));
+    Object.defineProperty(navigator, 'mediaDevices', { value: { getUserMedia }, configurable: true });
+
+    render(<RhythmTab />);
+    fireEvent.click(screen.getByRole('button', { name: /clap blast/i }));
+    fireEvent.change(screen.getByLabelText(/input/i), { target: { value: 'mic' } });
+    fireEvent.click(screen.getByRole('button', { name: /^start$/i }));
+
+    // Mic + Clap Blast + no stored latency → the calibration gate opens.
+    expect(screen.getByText(/calibrate your clap timing/i)).toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /start calibration/i }));
+    });
+
+    expect(getUserMedia).toHaveBeenCalled();
+    expect(screen.queryByText(/calibrate your clap timing/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/input/i)).toHaveValue('tap');
   });
 });

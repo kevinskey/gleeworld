@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import type { RhythmPattern, RhythmEvent } from '@/lib/rhythm/pattern';
 import type { ClapBlastRound, ClapBlastEvent, NoteState } from '@/lib/rhythm/clapBlast';
 
@@ -22,6 +23,14 @@ const STATE_COLOR: Record<NoteState, string> = {
 
 interface Burst { id: number; grade: 'perfect' | 'good' }
 
+// Streak milestones, Pitch Match convention (PitchMatchTab.tsx). Fired at most
+// once per round — a rAF tick can resolve several hits, so match on >= not ==.
+const MILESTONES: Array<{ at: number; title: string; description: string }> = [
+  { at: 10, title: '10-streak!', description: 'Locked in.' },
+  { at: 25, title: '25-streak!', description: 'Incredible pulse.' },
+  { at: 50, title: '50-streak!', description: 'Legendary.' },
+];
+
 interface Props {
   pattern: RhythmPattern;
   bpm: number;
@@ -37,6 +46,7 @@ export function ClapBlastStage({ pattern, bpm, ctx, t0, round, getOnsets, countI
   const [bursts, setBursts] = useState<Burst[]>([]);
   const [flash, setFlash] = useState<'perfect' | 'good' | 'stray' | null>(null);
   const burstSeq = useRef(0);
+  const milestonesRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
     let raf = 0;
@@ -48,6 +58,13 @@ export function ClapBlastStage({ pattern, bpm, ctx, t0, round, getOnsets, countI
         if (hits.length > 0) {
           setBursts((b) => [...b.slice(-6), ...hits.map((h) => ({ id: ++burstSeq.current, grade: h.grade }))]);
           setFlash(hits[hits.length - 1].grade);
+          const s = round.streak();
+          for (const m of MILESTONES) {
+            if (s >= m.at && !milestonesRef.current.has(m.at)) {
+              milestonesRef.current.add(m.at);
+              toast.success(m.title, { description: m.description });
+            }
+          }
         } else if (events.some((e) => e.kind === 'stray')) {
           setFlash('stray');
         }

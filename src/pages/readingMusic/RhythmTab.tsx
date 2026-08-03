@@ -152,18 +152,22 @@ export function RhythmTab() {
 
   const currentLevel = RHYTHM_LEVELS.find((l) => l.id === level) ?? RHYTHM_LEVELS[0];
 
-  const start = useCallback(async () => {
+  // `inputOverride` lets a caller start a take with an input the `input` state
+  // hasn't committed to yet — the mic-denied calibration fallback sets state to
+  // 'tap' and starts in the same tick, so it can't read the fresh value.
+  const start = useCallback(async (inputOverride?: InputMethod) => {
     if (activeRef.current) return;
-    if (drill === 'clap_blast' && input === 'mic' && latencyMs === null) {
+    const chosenInput: InputMethod = inputOverride ?? input;
+    if (drill === 'clap_blast' && chosenInput === 'mic' && latencyMs === null) {
       setCalibrating(true);
       return;
     }
     const ctx = getAudioCtx();
     if (!ctx) { toast.error('Audio unavailable', { description: 'This browser does not support Web Audio.' }); return; }
 
-    let effectiveInput: InputMethod = input;
+    let effectiveInput: InputMethod = chosenInput;
     let stream: MediaStream | null = null;
-    if (input === 'mic') {
+    if (chosenInput === 'mic') {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
           audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
@@ -180,19 +184,26 @@ export function RhythmTab() {
     const p = drill === 'steady_beat' ? generatePattern(1, seed) : generatePattern(level, seed, seed % 7);
     setPattern(p);
     setResult(null);
+
+    // Single source of truth for the round's timing constants — the live round,
+    // the end-of-take schedule and the saved payload must never disagree.
+    const spp = 60 / bpm;
+    const tolerancePct = assessment ? ASSESSMENT_TOLERANCE_PCT : PRACTICE_TOLERANCE_PCT;
+    const tol = Math.max(tolerancePct * spp, TOLERANCE_FLOOR_SEC);
+    const latencySec = drill === 'clap_blast' && effectiveInput === 'mic' ? (latencyMs ?? 0) / 1000 : 0;
+
     if (drill === 'clap_blast') {
       roundRef.current = createClapBlastRound({
-        expected: expectedOnsets(p, 60 / bpm),
-        secondsPerPulse: 60 / bpm,
-        tolerancePct: assessment ? ASSESSMENT_TOLERANCE_PCT : PRACTICE_TOLERANCE_PCT,
-        latencySec: effectiveInput === 'mic' ? (latencyMs ?? 0) / 1000 : 0,
+        expected: expectedOnsets(p, spp),
+        secondsPerPulse: spp,
+        tolerancePct,
+        latencySec,
       });
     } else {
       roundRef.current = null;
     }
     activeRef.current = true;
 
-    const spp = 60 / bpm;
     const ppm = p.pulsesPerMeasure;
     const base = ctx.currentTime + 0.1;
     const demoDur = drill === 'echo' ? p.totalPulses * spp + 0.5 : 0;
@@ -208,9 +219,6 @@ export function RhythmTab() {
       setPhase('countin');
     }
     scheduleCountInAndClicks(ctx, countInStart, bpm, ppm, p.totalPulses, ppm);
-
-    const tolerancePct = assessment ? ASSESSMENT_TOLERANCE_PCT : PRACTICE_TOLERANCE_PCT;
-    const tol = Math.max(tolerancePct * spp, TOLERANCE_FLOOR_SEC);
 
     const ms = (sec: number) => Math.max(0, (sec - ctx.currentTime) * 1000);
     if (drill === 'echo') {
@@ -244,6 +252,7 @@ export function RhythmTab() {
         }
         return gradeOnsets(expectedOnsets(p, spp), onsets, { secondsPerPulse: spp, tolerancePct });
       })();
+      const bestStreak = roundRef.current?.bestStreak() ?? 0;
       cancelTake();
       setTakeT0(null);
       setResult(graded);
@@ -272,16 +281,23 @@ export function RhythmTab() {
           expected: expectedOnsets(p, spp), actual: payloadActual,
           verdicts: graded.notes.map((n) => n.verdict),
           meter: p.meter, seed, ...(noInput ? { no_input: true } : {}),
+          ...(drill === 'clap_blast' ? { best_streak: bestStreak } : {}),
           ...(drill === 'clap_blast' && effectiveInput === 'mic' && latencyMs !== null ? { latency_ms: latencyMs } : {}),
         },
       });
-    }, ms(t0 + takeDur + 2 * tol + 0.35)));
+      // The last note's mic-time window closes at lastExpected + latency + 2·tol
+      // and cancelTake() disposes the mic here — so the schedule has to carry the
+      // same latency the round was built with, or slow devices force a miss.
+    }, ms(t0 + takeDur + latencySec + 2 * tol + 0.35)));
   }, [assessment, bpm, cancelTake, drill, input, latencyMs, level, system]);
 
   const getOnsets = useCallback(() => sessionRef.current?.onsets ?? [], []);
 
   const showNotation = drill !== 'echo' && drill !== 'clap_blast' && pattern && phase !== 'idle';
   const running = phase === 'demo' || phase === 'countin' || phase === 'take';
+  // getAudioCtx() constructs/resumes a context — resolve it once per render,
+  // and only while a take is actually on the clock.
+  const stageCtx = takeT0 !== null ? getAudioCtx() : null;
 
   return (
     <div className="relative space-y-4">
@@ -389,7 +405,16 @@ export function RhythmTab() {
                 setCalibrating(false);
                 toast.success(`Calibrated — your device delay is ${msVal} ms`);
               }}
-              onCancel={() => setCalibrating(false)}
+              onCancel={(reason) => {
+                setCalibrating(false);
+                // Mic denied must never trap the player in the calibration gate:
+                // fall back to tap like every other drill and run the take.
+                if (reason === 'denied') {
+                  setInput('tap');
+                  toast.error('Mic unavailable — switched to tap input');
+                  void start('tap');
+                }
+              }}
             />
           )}
           {drill === 'clap_blast' && input === 'mic' && latencyMs !== null && !calibrating && (
@@ -405,11 +430,11 @@ export function RhythmTab() {
 
           {showNotation && pattern && phase !== 'result' && <RhythmStrip pattern={pattern} system={system} />}
 
-          {drill === 'clap_blast' && running && pattern && takeT0 !== null && getAudioCtx() && (
+          {drill === 'clap_blast' && running && pattern && takeT0 !== null && stageCtx && (
             <ClapBlastStage
               pattern={pattern}
               bpm={bpm}
-              ctx={getAudioCtx()!}
+              ctx={stageCtx}
               t0={takeT0}
               round={roundRef.current!}
               getOnsets={getOnsets}

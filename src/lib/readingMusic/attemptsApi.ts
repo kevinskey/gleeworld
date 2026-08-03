@@ -14,6 +14,8 @@ export interface RhythmAttemptPayload {
   no_input?: boolean;
   /** Clap Blast only: calibrated device latency applied during grading (mic input). */
   latency_ms?: number;
+  /** Clap Blast only: longest consecutive-hit streak in the round. */
+  best_streak?: number;
 }
 
 export interface AttemptInsert {
