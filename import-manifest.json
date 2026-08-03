@@ -1,0 +1,83 @@
+{
+  "entries": {
+    "gw_sheet_music:64f84249-6899-4f12-b658-d9abfbed60af": {
+      "status": "error",
+      "error": "GET https://glee-world.sfo3.cdn.digitaloceanspaces.com/user-files/sheet-music/down-in-the-river-to-pray.pdf -> HTTP 404"
+    },
+    "gw_sheet_music:07e5c58a-6540-4bb5-9cfb-76970f27b034": {
+      "status": "error",
+      "error": "GET https://glee-world.sfo3.cdn.digitaloceanspaces.com/user-files/sheet-music/salve-regina.pdf -> HTTP 404"
+    },
+    "gw_sheet_music:18d01918-ad3e-4098-851f-49193f074b95": {
+      "status": "error",
+      "error": "GET https://glee-world.sfo3.cdn.digitaloceanspaces.com/user-files/sheet-music/lift-every-voice-and-sing.pdf -> HTTP 404"
+    },
+    "gw_sheet_music:0bd01aff-6c36-461a-beff-1949fc2b33b2": {
+      "status": "error",
+      "error": "GET https://glee-world.sfo3.cdn.digitaloceanspaces.com/user-files/sheet-music/wade-in-the-water.pdf -> HTTP 404"
+    },
+    "gw_sheet_music:81bfad55-d20b-4227-a384-a8c372cd0b06": {
+      "status": "error",
+      "error": "GET https://glee-world.sfo3.cdn.digitaloceanspaces.com/user-files/sheet-music/o-magnum-mysterium.pdf -> HTTP 404"
+    },
+    "gw_sheet_music:ecac8a79-c857-4e07-b0c3-2bc5c6ac2cf0": {
+      "status": "error",
+      "error": "GET https://glee-world.sfo3.cdn.digitaloceanspaces.com/user-files/sheet-music/hallelujah.pdf -> HTTP 404"
+    },
+    "gw_sheet_music:38811e04-f2ea-4cf9-a6af-9b895e82f650": {
+      "status": "error",
+      "error": "GET https://glee-world.sfo3.cdn.digitaloceanspaces.com/user-files/sheet-music/ride-on-king-jesus.pdf -> HTTP 404"
+    },
+    "gw_sheet_music:37c1c261-90aa-431f-a38e-1dfaac13dda3": {
+      "status": "error",
+      "error": "GET https://glee-world.sfo3.cdn.digitaloceanspaces.com/user-files/sheet-music/my-soul-been-anchored.pdf -> HTTP 404"
+    },
+    "gw_sheet_music:4510def3-b884-432f-8003-3e12ed968802": {
+      "status": "done",
+      "title": "A Choice to Change the World SSAA",
+      "note": "already in library (title match)"
+    },
+    "gw_sheet_music:cdca85f8-fde7-4b61-abd3-78d106c47cd4": {
+      "status": "done",
+      "title": "Magnificat Bach",
+      "storagePath": "4e6c2ec0-1f83-449a-a984-8920f6056ab5/uploads/c3198509-6b46-4a0f-8d5e-e61a82ed582b.pdf",
+      "id": "cd0c492b-540b-4343-91e4-e6d2d4ecfdea"
+    },
+    "gw_sheet_music:2e863a70-3fc6-4a7f-af05-f07d8539a3f3": {
+      "status": "done",
+      "title": "Panis Angelicus Palestrina tr",
+      "storagePath": "4e6c2ec0-1f83-449a-a984-8920f6056ab5/uploads/c0840231-820b-4e8b-bd43-76377a63dab9.pdf",
+      "id": "d8a236dc-48dc-4318-956c-574d3f172498"
+    },
+    "gw_sheet_music:a137d866-5c8a-45c4-959d-ef15c26c709f": {
+      "status": "done",
+      "title": "Gounod Ave Maria",
+      "storagePath": "4e6c2ec0-1f83-449a-a984-8920f6056ab5/uploads/22955745-75c2-4a79-9ca0-439671483447.pdf",
+      "id": "28d8ba63-9099-4bf9-980e-59e385fc43f0"
+    },
+    "gw_sheet_music:b5990d06-b568-4cf8-b84e-e891fb82235b": {
+      "status": "done",
+      "title": "Aus Der Tiefe rufe ich Cantata BWV131",
+      "storagePath": "4e6c2ec0-1f83-449a-a984-8920f6056ab5/uploads/bfc0e8cd-2aa9-4ab8-a160-0dcc4edc4e8f.pdf",
+      "id": "dde52bd7-4c9e-4c3e-97df-945efbe79557"
+    },
+    "gw_sheet_music:096b3ff7-a2fc-419f-8ddb-e49c0dfc576e": {
+      "status": "done",
+      "title": "Aus der Tiefer rufe ich - Orchestra Parts",
+      "storagePath": "4e6c2ec0-1f83-449a-a984-8920f6056ab5/uploads/8744d6b8-f805-47e7-aaf0-36649547a84e.pdf",
+      "id": "7b56be6b-56b4-4b46-b637-222c9f71c62f"
+    },
+    "gw_sheet_music:ee32e09f-d353-4009-9590-932163bb39c3": {
+      "status": "done",
+      "title": "Preacher's Mass KPJ Piano and Vocals Full Score",
+      "storagePath": "4e6c2ec0-1f83-449a-a984-8920f6056ab5/uploads/5ff297b9-1d07-4b76-b8fe-9bda34df7213.pdf",
+      "id": "54f71231-8d91-451e-b957-257253b41988"
+    },
+    "gw_sheet_music:5f9108b8-4fda-44da-9098-f2ad41d20fbc": {
+      "status": "done",
+      "title": "A Choice to Change the World SSAA",
+      "storagePath": "4e6c2ec0-1f83-449a-a984-8920f6056ab5/uploads/bf3c2944-de75-4b66-b6ac-96d63437654d.pdf",
+      "id": "9b77d899-8943-44e4-8a2e-ca6a68c2a186"
+    }
+  }
+}
