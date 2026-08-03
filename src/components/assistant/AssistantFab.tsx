@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ChevronUp, Mic, Square, X } from 'lucide-react';
+import { AudioLines, ChevronUp, Mic, Square, X } from 'lucide-react';
 import { useIsCompactNav } from '@/hooks/use-mobile';
 import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
 import { sectionKeyFromPath, isFabCollapsed, setFabCollapsed } from '@/lib/assistant/fabPrefs';
@@ -35,7 +35,7 @@ export const AssistantFab = () => {
   }, [captionReply]);
 
   if (!assistant) return null;
-  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state } = assistant;
+  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state, liveStatus, startLive, endLive } = assistant;
   if (sheetOpen || videoRoom) return null;
 
   // Immersive full-screen routes (Viewer reader, Studio session editor)
@@ -104,7 +104,25 @@ export const AssistantFab = () => {
             silences her (Kevin: "she won't stop talking"). Otherwise it's
             the mic; tapping the mic also barges in (stops speech) via the
             provider. */}
-        {speaking ? (
+        {/* Live conversation (ElevenLabs full-duplex): while live, the
+            agent hears the user THROUGH its own speech — voice interrupts
+            voice, no tapping. The live button replaces the push-to-talk
+            mic's job entirely for the session, so mic/stop hide. */}
+        {liveStatus !== 'off' ? (
+          <button
+            type="button"
+            aria-label="End live conversation"
+            title="End live conversation"
+            onClick={endLive}
+            className={cn(
+              'h-9 rounded-full px-3 flex items-center gap-1.5 transition-colors bg-destructive/20 text-destructive hover:bg-destructive/30',
+              liveStatus === 'connecting' && 'opacity-70',
+            )}
+          >
+            <AudioLines className={cn('w-4 h-4', liveStatus === 'live' && 'animate-pulse')} />
+            <span className="text-xs font-semibold">{liveStatus === 'connecting' ? '…' : 'End'}</span>
+          </button>
+        ) : speaking ? (
           <button
             type="button"
             aria-label="Stop talking"
@@ -126,6 +144,17 @@ export const AssistantFab = () => {
             )}
           >
             <Mic className="w-4 h-4" />
+          </button>
+        )}
+        {liveStatus === 'off' && (
+          <button
+            type="button"
+            aria-label="Start live conversation"
+            title="Live conversation — talk naturally, your voice can interrupt"
+            onClick={startLive}
+            className="h-9 w-9 rounded-full flex items-center justify-center text-primary/80 hover:bg-primary/20 transition-colors"
+          >
+            <AudioLines className="w-4 h-4" />
           </button>
         )}
       </div>
