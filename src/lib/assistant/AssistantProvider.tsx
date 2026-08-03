@@ -410,8 +410,17 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       const replyId = crypto.randomUUID();
       const actions: AssistantAction[] = data.actions ?? [];
       const { first: confirmAction, autoRun } = confirmQueueRef.current.register(replyId, actions);
-      dispatch({ type: 'reply', id: replyId, content: data.reply ?? '', pendingAction: confirmAction });
-      speakNow(data.reply ?? '');
+      // Silent action turns (Kevin 2026-08-03: "not respond when just
+      // completing a task"): the model replies with an empty message when
+      // its whole turn is a UI action. No bubble, no speech — the page
+      // changing is the feedback. A confirm card still needs its bubble.
+      const replyText = (data.reply ?? '').trim();
+      if (replyText || confirmAction) {
+        dispatch({ type: 'reply', id: replyId, content: data.reply ?? '', pendingAction: confirmAction });
+        speakNow(replyText);
+      } else {
+        dispatch({ type: 'settle' });
+      }
       // Sheet closed = this turn came from the floating mic. Voice-first by
       // Kevin's request (2026-08-03): a spoken reply is NOT also printed as
       // a caption — the text is always in the thread behind the FAB's caret.
