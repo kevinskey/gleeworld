@@ -344,9 +344,9 @@ export const TourManagerDashboard = ({
       case 'driver-tip':
         return <BusDriverTipReceiptSection />;
       case 'documents':
-        return <TourDocumentsSection />;
+        return <TourDocumentsSection showHeading={false} />;
       case 'wardrobe':
-        return <WardrobeMistressHub />;
+        return <WardrobeMistressHub showHeading={false} />;
       case 'stipends':
         return <TourStipends />;
       case 'budget':
@@ -354,7 +354,7 @@ export const TourManagerDashboard = ({
       case 'notes':
         return <TourNotesSection />;
       case 'weather':
-        return <TourWeatherSection />;
+        return <TourWeatherSection showHeading={false} />;
       case 'permission-slips':
         return <PermissionSlipsTab />;
       case 'fees':

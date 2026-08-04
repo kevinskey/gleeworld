@@ -8,18 +8,21 @@ import { OrderManagement } from './wardrobe/OrderManagement';
 import { WardrobeAnnouncements } from './wardrobe/WardrobeAnnouncements';
 import { WardrobeReports } from './wardrobe/WardrobeReports';
 
-export const WardrobeMistressHub = () => {
+/** Set false when a parent already renders the section title (Tour Manager's
+ *  DashboardPageShell does). /wardrobe and WardrobeModule leave it true — the
+ *  banner is their only heading. */
+export const WardrobeMistressHub = ({ showHeading = true }: { showHeading?: boolean }) => {
   const [activeTab, setActiveTab] = useState('inventory');
 
   return (
     <div className="space-y-8">
       {/* Header Section */}
-      <div className="bg-accent/50 p-6 rounded-lg border border-border">
+      {showHeading && <div className="bg-accent/50 p-6 rounded-lg border border-border">
         <h1 className="text-2xl font-bold text-foreground mb-3">Wardrobe Mistress Hub</h1>
         <p className="text-muted-foreground">
           Comprehensive wardrobe management for formal dresses, lipstick, pearls, polos, and t-shirts
         </p>
-      </div>
+      </div>}
 
       {/* Navigation Tabs - More Space and Better Layout */}
       <div className="bg-card rounded-lg border border-border shadow-sm p-4">
