@@ -13,8 +13,10 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
-import { useQuery } from '@tanstack/react-query';
-import { Download, Copy, Share2, Link2, Check, ExternalLink } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Download, Copy, Share2, Link2, Check, ExternalLink, LineChart, Power, Loader2,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -44,9 +46,24 @@ function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'qr-code';
 }
 
+interface TrackedCode {
+  id: string; title: string; qr_token: string; content: string;
+  is_active: boolean; scan_count: number; created_at: string; last_scan_at: string | null;
+}
+
+/** Short, URL-safe, unguessable enough that codes can't be enumerated off a
+ *  poster. 8 chars of base32 ≈ 40 bits, and the column is UNIQUE. */
+function newToken(): string {
+  const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789'; // no look-alikes
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join('');
+}
+
 export function QRCodeStudio() {
   const { toast } = useToast();
   const slug = getTenantSlug();
+  const queryClient = useQueryClient();
 
   const [selected, setSelected] = useState<string>('/');
   const [custom, setCustom] = useState('');
@@ -54,6 +71,10 @@ export function QRCodeStudio() {
   const [size, setSize] = useState(1024);
   const [pngUrl, setPngUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  /** When set, the QR encodes this tracked /q/<token> link instead of the
+   *  destination itself, so scans get counted. */
+  const [tracking, setTracking] = useState<TrackedCode | null>(null);
+  const [saving, setSaving] = useState(false);
 
   // The tenant's real host — a branded custom domain when they have one.
   const { data: host } = useQuery({
@@ -106,11 +127,78 @@ export function QRCodeStudio() {
   }, [events]);
 
   const activeDest = destinations.find((d) => d.path === selected);
-  const url = useCustom
+  const destinationUrl = useCustom
     ? custom.trim()
     : host
       ? `https://${host}${selected === '/' ? '' : selected}`
       : '';
+  // What the QR actually encodes. Tracked codes go through /q/<token> so the
+  // scan is counted before the visitor is forwarded.
+  const url = tracking && host ? `https://${host}/q/${tracking.qr_token}` : destinationUrl;
+
+  // Changing the destination invalidates the tracked link for the old one.
+  useEffect(() => { setTracking(null); }, [selected, custom, useCustom]);
+
+  const { data: trackedCodes, isLoading: loadingCodes } = useQuery({
+    queryKey: ['qr-tracked', slug],
+    queryFn: async (): Promise<TrackedCode[]> => {
+      const { data, error } = await supabase.rpc('gw_qr_list_tracked');
+      if (error) throw new Error(error.message);
+      return (data ?? []) as TrackedCode[];
+    },
+    staleTime: 30_000,
+  });
+
+  const createTracked = async () => {
+    if (!destinationUrl || !/^https?:\/\//i.test(destinationUrl)) {
+      toast({ title: 'Add a link first', description: 'Tracked codes need a full https:// address.', variant: 'destructive' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const { data, error } = await supabase
+        .from('gw_qr_codes')
+        .insert({
+          title: useCustom ? destinationUrl : (activeDest?.label ?? 'Link'),
+          qr_token: newToken(),
+          // CHECK constraints on this table allow qr_type in
+          // (url|text|course_link|assignment_link|attendance|custom) and
+          // context_type in (event|course|assignment|general|marketing).
+          // 'url' + 'marketing' is what identifies a tracked poster link and
+          // keeps these rows distinct from the attendance codes.
+          qr_type: 'url',
+          context_type: 'marketing',
+          content: destinationUrl,
+          created_by: auth.user?.id,
+          is_active: true,
+        })
+        .select('id, title, qr_token, content, is_active, scan_count, created_at')
+        .single();
+      if (error) throw new Error(error.message);
+      setTracking({ ...(data as TrackedCode), last_scan_at: null });
+      queryClient.invalidateQueries({ queryKey: ['qr-tracked', slug] });
+      toast({ title: 'Tracking on', description: 'This code now counts scans. Re-download it to use the tracked version.' });
+    } catch (e) {
+      toast({
+        title: "Couldn't turn on tracking",
+        description: e instanceof Error ? e.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const setCodeActive = async (code: TrackedCode, isActive: boolean) => {
+    const { error } = await supabase.from('gw_qr_codes').update({ is_active: isActive }).eq('id', code.id);
+    if (error) {
+      toast({ title: "Couldn't update the code", description: error.message, variant: 'destructive' });
+      return;
+    }
+    if (tracking?.id === code.id) setTracking({ ...tracking, is_active: isActive });
+    queryClient.invalidateQueries({ queryKey: ['qr-tracked', slug] });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -284,6 +372,38 @@ export function QRCodeStudio() {
               )}
             </div>
           )}
+
+          {/* Tracking */}
+          <div className="rounded-md border border-border p-3">
+            {tracking ? (
+              <div className="flex items-start gap-3">
+                <LineChart className="w-5 h-5 mt-0.5 shrink-0 text-primary" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">Counting scans</p>
+                  <p className="mt-0.5 text-sm text-muted-foreground break-all">
+                    Forwards to {destinationUrl}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Download the code again — the tracked link is what it encodes now.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">Count the scans?</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    Routes the code through a short link so you can see how many people used it.
+                    Slightly slower for them; you can switch it off later.
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" onClick={createTracked}
+                        disabled={saving || !destinationUrl} className="shrink-0">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Turn on'}
+                </Button>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -323,6 +443,69 @@ export function QRCodeStudio() {
           <p className="text-xs text-muted-foreground text-center">
             Print it at least 1 inch across, and test a scan before it goes out.
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Tracked codes + their scan counts */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle className="text-lg">Tracked codes</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loadingCodes ? (
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+            </p>
+          ) : !trackedCodes?.length ? (
+            <p className="text-sm text-muted-foreground">
+              No tracked codes yet. Turn on counting for a code above and it'll show up here with its
+              scan count.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground border-b border-border">
+                    <th className="py-2 pr-4 font-medium">Code</th>
+                    <th className="py-2 pr-4 font-medium">Goes to</th>
+                    <th className="py-2 pr-4 font-medium text-right">Scans</th>
+                    <th className="py-2 pr-4 font-medium">Last scan</th>
+                    <th className="py-2 font-medium sr-only">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trackedCodes.map((c) => (
+                    <tr key={c.id} className="border-b border-border last:border-0">
+                      <td className="py-3 pr-4">
+                        <span className="font-medium">{c.title}</span>
+                        <span className="block text-xs text-muted-foreground">/q/{c.qr_token}</span>
+                      </td>
+                      <td className="py-3 pr-4 max-w-[22rem] truncate text-muted-foreground">{c.content}</td>
+                      <td className="py-3 pr-4 text-right tabular-nums font-semibold">{c.scan_count}</td>
+                      <td className="py-3 pr-4 text-muted-foreground whitespace-nowrap">
+                        {c.last_scan_at ? new Date(c.last_scan_at).toLocaleDateString() : '—'}
+                      </td>
+                      <td className="py-3 text-right">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setCodeActive(c, !c.is_active)}
+                          title={c.is_active ? 'Stop this code working' : 'Make this code work again'}
+                        >
+                          <Power className={`w-4 h-4 mr-1 ${c.is_active ? 'text-primary' : 'text-muted-foreground'}`} />
+                          {c.is_active ? 'On' : 'Off'}
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Switching a code off stops it working — useful if a printed code has to be retired,
+                since the paper can't be changed.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

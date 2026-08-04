@@ -173,25 +173,31 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   return (
     <section id="rsvp-section" className="border-y border-border bg-muted/30">
       {config.showCard && (
-        <div className="px-6 sm:px-10 lg:px-16">
+        // Background spans the full width; the content sits in the same
+        // max-w-6xl container every other block uses, so the heading lines up
+        // with the header logo and the sections above and below it.
+        <div className="max-w-6xl mx-auto px-4 sm:px-6">
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading event details…
             </div>
           ) : (
             <div className="grid gap-10 lg:grid-cols-2 lg:gap-16 lg:items-center">
-              {/* Left: what it is */}
-              <div>
+              {/* min-w-0 on both columns: grid children default to
+                  min-width:auto, so a long unbroken title pushes its track
+                  wider than the container and spills over the neighbouring
+                  column instead of wrapping. */}
+              <div className="min-w-0">
                 {config.heading && (
                   <p
-                    className="text-sm font-semibold uppercase tracking-[0.2em]"
+                    className="text-xl sm:text-2xl font-bold uppercase tracking-[0.18em]"
                     style={{ color: 'var(--site-accent)' }}
                   >
                     {config.heading}
                   </p>
                 )}
                 <h2
-                  className="mt-3 normal-case text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1]"
+                  className="mt-3 normal-case text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] break-words hyphens-auto"
                   style={{ fontFamily: 'var(--site-heading-font)' }}
                 >
                   {ev!.title}
@@ -211,20 +217,20 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
               {/* Right: when, where, and the way in */}
               <div
-                className="bg-card border border-border p-6 sm:p-8"
+                className="min-w-0 bg-card border border-border p-6 sm:p-8"
                 style={{ borderRadius: 'var(--site-radius)' }}
               >
                 <dl className="space-y-5">
                   <div className="flex items-start gap-4">
                     <CalendarDays className="w-5 h-5 mt-0.5 shrink-0" style={{ color: 'var(--site-accent)' }} />
-                    <div>
+                    <div className="min-w-0 break-words">
                       <dt className="text-xs uppercase tracking-wider text-muted-foreground">Date</dt>
                       <dd className="mt-0.5 text-lg font-medium">{formatDay(ev!.start_date)}</dd>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <Clock className="w-5 h-5 mt-0.5 shrink-0" style={{ color: 'var(--site-accent)' }} />
-                    <div>
+                    <div className="min-w-0 break-words">
                       <dt className="text-xs uppercase tracking-wider text-muted-foreground">Time</dt>
                       <dd className="mt-0.5 text-lg font-medium">{formatTime(ev!.start_date)}</dd>
                     </div>
@@ -241,10 +247,12 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                   )}
                 </dl>
 
+                {/* h-auto + whitespace-normal so a long label wraps inside the
+                    button instead of running past its edges on a narrow phone. */}
                 <Button
                   size="lg"
                   onClick={() => handleOpenChange(true)}
-                  className="mt-8 w-full font-semibold h-12 text-base"
+                  className="mt-8 w-full font-semibold h-auto min-h-12 py-3 text-base whitespace-normal"
                   style={{
                     background: 'var(--site-accent)',
                     color: 'var(--site-accent-foreground, #fff)',
@@ -265,7 +273,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
       )}
 
       {cancelled && (
-        <p className="mt-6 px-6 text-sm text-muted-foreground text-center">
+        <p className="mt-6 px-4 sm:px-6 text-sm text-muted-foreground text-center">
           Your checkout was cancelled — nothing was charged. You can start again any time.
         </p>
       )}
@@ -420,7 +428,7 @@ function RsvpDialog({
             {/* Headcount */}
             <div>
               <div className="flex items-center justify-between gap-4">
-                <div>
+                <div className="min-w-0">
                   <Label className="text-base font-semibold">How many are coming?</Label>
                   <p className="text-sm text-muted-foreground">
                     {money(tier?.price_cents ?? 0)} per person

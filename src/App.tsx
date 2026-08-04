@@ -323,6 +323,7 @@ const BookAppointmentPage = lazy(() => import("./pages/BookAppointmentPage"));
 const GoogleDocsPage = lazy(() => import("./pages/GoogleDocs"));
 const LibrarianDashboardPage = lazy(() => import("./pages/LibrarianDashboardPage"));
 const QRGeneratorPage = lazy(() => import("./pages/QRGenerator"));
+const QRRedirectPage = lazy(() => import("./pages/QRRedirect"));
 const QRScannerPage = lazy(() => import("./pages/QRScanner"));
 const QRAnalytics = lazy(() => import("./pages/QRAnalytics"));
 const ModuleAccess = lazy(() => import("./pages/admin/ModuleAccess"));
@@ -639,9 +640,18 @@ const App = () => {
                   </PublicRoute>
                 } 
               />
+              {/* Tracked QR link — logs the scan, then forwards. */}
+              <Route
+                path="/q/:token"
+                element={
+                  <PublicRoute>
+                    <QRRedirectPage />
+                  </PublicRoute>
+                }
+              />
               {/* Event Check-in via QR Code */}
-              <Route 
-                path="/event-checkin/:token" 
+              <Route
+                path="/event-checkin/:token"
                 element={
                   <PublicRoute>
                     <EventCheckinPage />
