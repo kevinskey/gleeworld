@@ -117,9 +117,9 @@ begin
   -- subtract credit rows: gw_student_fees.status already encodes whether a
   -- charge was settled, and paying a fee does not reliably create a
   -- user_payments row. Netting credits against charges here would
-  -- double-count every Stripe-paid fee and overstate the balance.
-  -- Known limitation: a 'partial' charge contributes its FULL amount,
-  -- because gw_student_fees has no amount-paid column to subtract.
+  -- double-count every settled fee.
+  -- Partial payments ARE handled: led_fees emits amount - paid_amount, so a
+  -- partially paid charge already carries only its remaining balance.
   select coalesce(sum(amount_cents), 0)
     into owed from student_picture.v_student_ledger
    where user_id = target
