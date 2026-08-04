@@ -5,13 +5,18 @@ import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { usePrayerDay, type PrayerEvent } from '@/hooks/usePrayerDay';
+import { usePrayerTexts, pickPrayerOfTheMoment } from '@/hooks/usePrayerTexts';
+import { PrayerCard, PrayerLibrary } from '@/components/prayer/PrayerLibrary';
 
 /**
  * Prayer — the day's liturgy.
  *
- * Phase 0 of the Prayer module landed the calendar and the reading citations;
- * resolving those citations to scripture text is Phase 1, so this page shows
- * the day and its citations and says plainly that the text is still coming.
+ * Prayer leads; the liturgical day follows. An earlier version showed only the
+ * Mass reading citations, which made a page called "Prayer" into a lectionary —
+ * a fair complaint, and the reason the prayer library is first now.
+ *
+ * Reading citations still appear below, without verse text: resolving a
+ * citation to scripture is Phase 1.
  */
 
 // Liturgical colours are CONTENT, not chrome: a violet vestment is violet
@@ -147,6 +152,13 @@ export default function PrayerApp() {
     [offset],
   );
   const { day, isLoading, isError, error, isNotInstalled } = usePrayerDay(date);
+  const { prayers, isLoading: prayersLoading } = usePrayerTexts();
+  // Recomputed per render is fine — it only changes on the hour and the page
+  // is not long-lived.
+  const nowPrayer = useMemo(
+    () => pickPrayerOfTheMoment(prayers, new Date().getHours()),
+    [prayers],
+  );
 
   const heading = useMemo(
     () => format(parseISO(date), 'EEEE, d MMMM yyyy'),
@@ -158,7 +170,7 @@ export default function PrayerApp() {
       eyebrow="Prayer"
       title="Today"
       icon={HandHeart}
-      subtitle="The day in the Church's calendar, with the readings appointed for Mass."
+      subtitle="Prayers for today, and the day in the Church's calendar."
       maxWidth="4xl"
       actions={
         <div className="flex items-center gap-1">
@@ -186,7 +198,43 @@ export default function PrayerApp() {
         </div>
       }
     >
-      <p className="text-sm text-muted-foreground">{heading}</p>
+      {/* Prayer first — this is a prayer app, not a lectionary. */}
+      {nowPrayer && (
+        <section className="space-y-3">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Pray now
+          </h2>
+          <PrayerCard prayer={nowPrayer} />
+        </section>
+      )}
+
+      {prayers.length > 0 && (
+        <section className="space-y-3 pt-2">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            All prayers
+          </h2>
+          <PrayerLibrary prayers={prayers} />
+        </section>
+      )}
+
+      {!prayersLoading && prayers.length === 0 && (
+        <Card>
+          <CardContent className="p-6 space-y-2">
+            <h2 className="text-base font-semibold">The prayer library isn’t loaded yet</h2>
+            <p className="text-sm text-muted-foreground">
+              Once an administrator applies the Prayer setup, the traditional
+              prayers will appear here.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      <section className="space-y-3 pt-4 border-t border-border">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Today in the Church’s calendar
+        </h2>
+        <p className="text-sm text-muted-foreground">{heading}</p>
+      </section>
 
       {isLoading && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
