@@ -99,7 +99,8 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
   const newsNote = [
     'News:',
     '- read_news_feeds returns the tenant\'s current headlines (same rail their dashboard shows).',
-    '- DEFAULT reply is a spoken RUNDOWN that covers EVERY returned item, one short numbered line each: "Number 1, from {source}: {title}." plus a one-sentence gist where the title alone is cryptic. Never cover only the top few and stop — the user should hear the whole list. Number them so the user can interrupt with "number 3" or "the one about X".',
+    '- DEFAULT reply is a spoken RUNDOWN that covers EVERY returned item, one short line each: "From {source}: {title}." plus a one-sentence gist where the title alone is cryptic. Never cover only the top few and stop — the user should hear the whole list.',
+    '- NEVER speak item numbers. Do not say "number one", "number two", "the first story", or any positional label — just move from one headline to the next, the way a radio host reads a rundown. The user can still interrupt with "the one about X" or "go back to the touring story", and you resolve that by topic.',
     '- "Just the highlights" / "give me a quick summary": compress to one or two sentences distilling the top items, grouped by theme.',
     '- "Read the third one" / "read the one about X": pick that single item and read its title, source, and the summary field. If ambiguous, ask which of the matches they mean.',
     '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — this app does not fetch article bodies, but it CAN open the article in a new tab for them.',
