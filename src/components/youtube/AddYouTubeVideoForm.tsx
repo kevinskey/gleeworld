@@ -6,8 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { parseYouTubeInput } from '@/lib/youtubeId';
-import { parseVideoSource, type ParsedVideoSource } from '@/lib/videoSources';
-import { addVideoToLibrary, youTubeSource } from '@/lib/videoLibrary';
+import { parseVideoSource, youTubeSource, type ParsedVideoSource } from '@/lib/videoSources';
+import { addVideoToLibrary } from '@/lib/videoLibrary';
 import { useYouTubeSearch, type YouTubeHit } from '@/hooks/useYouTubeSearch';
 
 interface AddYouTubeVideoFormProps {
@@ -95,7 +95,29 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [query, setQuery] = useState('');
-  const { hits, searching, error: searchErr, search: runSearch, clear: clearSearch } = useYouTubeSearch(10);
+  const {
+    hits,
+    searching,
+    error: searchErr,
+    term: searchedTerm,
+    search: runSearch,
+    clear: clearSearch,
+  } = useYouTubeSearch(10);
+
+  // True from the keystroke until the 300ms debounce actually fires a search
+  // for what is now in the box.
+  //
+  // Before useYouTubeSearch was extracted, the debounce effect called
+  // setSearching(true) / setSearchErr(null) SYNCHRONOUSLY on every keystroke.
+  // A hook can only flip those when the request starts, 300ms later, which
+  // left two wrong frames: the empty state answered "No matches." for the
+  // whole debounce window on the first keystroke of every search, and the
+  // PREVIOUS query's error text sat on screen over the new query. Deriving
+  // "the box has moved on from what was last searched" restores both — the
+  // hook keeps its single source of truth about requests, and the dialog
+  // owns the fact that it debounces.
+  const trimmedQuery = query.trim();
+  const debouncePending = trimmedQuery !== '' && trimmedQuery !== searchedTerm;
 
   const reset = () => {
     setUrl('');
@@ -372,14 +394,14 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
               autoFocus
             />
           </div>
-          {searchErr && <p className="text-xs text-destructive">{searchErr}</p>}
+          {searchErr && !debouncePending && <p className="text-xs text-destructive">{searchErr}</p>}
           <div className="max-h-72 overflow-y-auto -mx-1">
-            {searching && hits.length === 0 && (
+            {(searching || debouncePending) && hits.length === 0 && (
               <div className="flex items-center gap-2 px-3 py-6 text-xs text-muted-foreground">
                 <Loader2 className="w-4 h-4 animate-spin" /> Searching…
               </div>
             )}
-            {!searching && !searchErr && query.trim() && hits.length === 0 && (
+            {!searching && !debouncePending && !searchErr && trimmedQuery && hits.length === 0 && (
               <div className="px-3 py-6 text-xs text-muted-foreground">No matches.</div>
             )}
             <ul className="space-y-1">

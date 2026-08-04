@@ -61,6 +61,20 @@ function hostMatches(host: string, needle: string): boolean {
   return h === needle || h.endsWith(`.${needle}`);
 }
 
+// The one definition of "what a YouTube source is". Callers that already hold
+// a bare video id (the /video header search, the oEmbed paste path) build the
+// rest of the shape here, and parseVideoSource's YouTube branch returns this
+// same object — so there is no second copy to drift.
+export function youTubeSource(videoId: string): ParsedVideoSource {
+  return {
+    provider: 'youtube',
+    videoId,
+    embedUrl: `https://www.youtube.com/embed/${videoId}`,
+    canonicalUrl: `https://www.youtube.com/watch?v=${videoId}`,
+    thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+  };
+}
+
 function parseVimeo(u: URL): ParsedVideoSource | null {
   if (!hostMatches(u.hostname, 'vimeo.com')) return null;
   // player.vimeo.com/video/<id>  →  <id>
@@ -270,15 +284,7 @@ export function parseVideoSource(input: string): ParsedVideoSource | null {
   // YouTube first — most common, and getYouTubeId already handles the many
   // variants including bare 11-char IDs (via parseYouTubeInput upstream).
   const ytId = getYouTubeId(trimmed);
-  if (ytId) {
-    return {
-      provider: 'youtube',
-      videoId: ytId,
-      embedUrl: `https://www.youtube.com/embed/${ytId}`,
-      canonicalUrl: `https://www.youtube.com/watch?v=${ytId}`,
-      thumbnailUrl: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
-    };
-  }
+  if (ytId) return youTubeSource(ytId);
 
   let u: URL;
   try {

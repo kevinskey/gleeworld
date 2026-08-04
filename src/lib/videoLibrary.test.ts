@@ -5,24 +5,13 @@ vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: () => ({ insert: (...a: unknown[]) => insertMock(...a) }) },
 }));
 
-import { addVideoToLibrary, youTubeSource } from './videoLibrary';
+import { addVideoToLibrary } from './videoLibrary';
+import { youTubeSource } from './videoSources';
 
 // insert(...).select() is the shape the real client returns.
 const resolving = (value: unknown) => ({ select: () => Promise.resolve(value) });
 
 beforeEach(() => insertMock.mockReset());
-
-describe('youTubeSource', () => {
-  it('builds canonical, embed, and thumbnail URLs from a video id', () => {
-    expect(youTubeSource('abc123')).toEqual({
-      provider: 'youtube',
-      videoId: 'abc123',
-      embedUrl: 'https://www.youtube.com/embed/abc123',
-      canonicalUrl: 'https://www.youtube.com/watch?v=abc123',
-      thumbnailUrl: 'https://img.youtube.com/vi/abc123/hqdefault.jpg',
-    });
-  });
-});
 
 describe('addVideoToLibrary', () => {
   it('reports added when a row comes back', async () => {

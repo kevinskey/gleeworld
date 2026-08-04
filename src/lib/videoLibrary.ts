@@ -17,18 +17,6 @@ export interface AddVideoResult {
   message?: string;
 }
 
-// A YouTube video id is all the header search gets back, so build the rest of
-// the source shape here rather than at each call site.
-export function youTubeSource(videoId: string): ParsedVideoSource {
-  return {
-    provider: 'youtube',
-    videoId,
-    embedUrl: `https://www.youtube.com/embed/${videoId}`,
-    canonicalUrl: `https://www.youtube.com/watch?v=${videoId}`,
-    thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-  };
-}
-
 // Reports an outcome instead of toasting, so a bulk paste can tally a whole
 // batch while a single add keeps its one-video-shaped message.
 export async function addVideoToLibrary(
