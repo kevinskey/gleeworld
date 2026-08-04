@@ -29,6 +29,8 @@ import { PermissionSlipsTab } from '@/components/travel-manager/PermissionSlipsT
 import { TripFeesTab } from './TripFeesTab';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { ActiveTripProvider } from './ActiveTripContext';
+import { TripSwitcher } from './TripSwitcher';
 interface TourManagerDashboardProps {
   user?: {
     id: string;
@@ -238,7 +240,7 @@ const contentConfig: Record<string, {
     description: 'Manage trip fees and assign them to tour roster members'
   }
 };
-export const TourManagerDashboard = ({
+const TourManagerDashboardInner = ({
   user
 }: TourManagerDashboardProps) => {
   const [activeSection, setActiveSection] = useState('overview');
@@ -385,6 +387,7 @@ export const TourManagerDashboard = ({
         title="Travel Manager"
         icon={MapPin}
         subtitle="Plan tours, move people, and keep the paperwork straight"
+        actions={<TripSwitcher />}
       >
         <TourManagerLanding onNavigate={handleSectionChange} stats={stats} />
 
@@ -430,13 +433,24 @@ export const TourManagerDashboard = ({
       subtitle={currentContent.description}
       icon={activeItem?.icon}
       actions={
-        <Button variant="outline" size="sm" onClick={() => handleSectionChange('overview')} className="gap-1.5">
-          <ChevronLeft className="h-4 w-4" />
-          All sections
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <TripSwitcher />
+          <Button variant="outline" size="sm" onClick={() => handleSectionChange('overview')} className="gap-1.5">
+            <ChevronLeft className="h-4 w-4" />
+            All sections
+          </Button>
+        </div>
       }
     >
       {renderContent()}
     </DashboardPageShell>
   );
 };
+
+// The provider wraps the whole dashboard so the hub, every drilled-in section
+// and the switcher itself all read one selection.
+export const TourManagerDashboard = (props: TourManagerDashboardProps) => (
+  <ActiveTripProvider>
+    <TourManagerDashboardInner {...props} />
+  </ActiveTripProvider>
+);
