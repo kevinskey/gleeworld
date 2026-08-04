@@ -1,6 +1,8 @@
 // Read-only tool executors. The supabase client is constructed with the
 // CALLER's JWT (Task 5), so RLS scopes every query to their tenant/role.
 import { executeStudentPictureTool } from './studentPicture.ts';
+import { ACADEMY_CORPUS } from '../_shared/academy/corpus.ts';
+import { buildIndex, searchAcademy } from '../_shared/academy/search.ts';
 
 type SupabaseLike = {
   from: (table: string) => any;
@@ -47,6 +49,7 @@ export async function executeServerTool(
     switch (name) {
       case 'query_calendar': return { replyJson: await queryCalendar(args, deps) };
       case 'search_music': return { replyJson: await searchMusic(args, deps) };
+      case 'search_academy': return { replyJson: searchAcademyTool(args) };
       case 'find_user': return { replyJson: await findUser(args, deps) };
       case 'search_youtube': return { replyJson: await searchYoutube(args, deps) };
       case 'get_ride': return await getRide(args, deps);
@@ -91,6 +94,28 @@ async function queryCalendar(args: Record<string, unknown>, { supabase }: Deps):
   return JSON.stringify({
     events: events ?? [],
     google_calendar_events: (gcal ?? []).map((g: any) => ({ ...g, read_only: true })),
+  });
+}
+
+// The corpus is bundled and immutable, so the index is built once per instance.
+const academyIndex = buildIndex(ACADEMY_CORPUS);
+
+function searchAcademyTool(args: Record<string, unknown>): string {
+  const query = String(args.query ?? '').trim();
+  const hits = query ? searchAcademy(query, academyIndex) : [];
+  if (hits.length === 0) {
+    return JSON.stringify({
+      passages: [],
+      note: 'No matching passages in the reference library. Say you do not have that information rather than guessing.',
+    });
+  }
+  return JSON.stringify({
+    passages: hits.map((h) => ({
+      title: h.chunk.title,
+      section: h.chunk.pageTitle,
+      text: h.text,
+      url: h.chunk.url,
+    })),
   });
 }
 

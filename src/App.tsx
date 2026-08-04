@@ -2378,15 +2378,14 @@ const App = () => {
                      path="/music-library"
                      element={<RedirectWithSearch to="/dashboard/music-library" />}
                     />
-                      <Route 
-                        path="/librarian-dashboard" 
-                        element={
-                          <ProtectedRoute>
-                            <UniversalLayout>
-                              <LibrarianDashboardPage />
-                            </UniversalLayout>
-                          </ProtectedRoute>
-                        } 
+                      {/* Legacy path. It used to render the page under a bare
+                          UniversalLayout — no DashboardShell — so the librarian
+                          got a different chrome depending on which URL they
+                          arrived by. Redirects to the canonical route instead,
+                          matching /calendar, /messenger and the rest. */}
+                      <Route
+                        path="/librarian-dashboard"
+                        element={<RedirectWithSearch to="/dashboard/librarian" />}
                       />
                       <Route 
                         path="/budgets" 

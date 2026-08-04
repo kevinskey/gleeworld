@@ -17,7 +17,8 @@
     "e2e:prod": "PLAYWRIGHT_BASE_URL=https://demo.gleeworld.org playwright test",
     "typecheck:guard": "node scripts/typecheck-baseline.mjs",
     "manual:lint": "node scripts/manual-lint.mjs",
-    "manual:pdf": "node scripts/manual-pdf.mjs"
+    "manual:pdf": "node scripts/manual-pdf.mjs",
+    "ingest:academy": "node scripts/ingest-academy.mjs"
   },
   "dependencies": {
     "@breezystack/lamejs": "^1.2.7",

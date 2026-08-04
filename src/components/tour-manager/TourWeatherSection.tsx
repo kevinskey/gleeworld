@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CloudSun, Droplets, Wind, Thermometer, CloudRain, Sun, Cloud, Snowflake, CloudLightning, MapPin, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveTrip } from './ActiveTripContext';
 
 interface WeatherData {
   city: string;
@@ -70,6 +71,7 @@ const normalizeState = (state: string): string => {
 /** Set false when a parent already renders the section title (Tour Manager's
  *  DashboardPageShell does). Standalone pages leave it true so they keep a heading. */
 export const TourWeatherSection: React.FC<{ showHeading?: boolean }> = ({ showHeading = true }) => {
+  const { tripId: selectedTripId } = useActiveTrip();
   const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -77,7 +79,9 @@ export const TourWeatherSection: React.FC<{ showHeading?: boolean }> = ({ showHe
   const fetchTourWeather = async () => {
     setLoading(true);
     try {
-      // Find the active tour
+      // Prefer the trip chosen in the Travel Manager switcher; only fall back
+      // to the old "earliest in-flight tour" guess when rendered standalone
+      // (/weather), where no ActiveTripProvider is mounted.
       const { data: tours, error: toursError } = await supabase
         .from('gw_tours')
         .select('id, name, status')
@@ -85,11 +89,23 @@ export const TourWeatherSection: React.FC<{ showHeading?: boolean }> = ({ showHe
         .order('start_date', { ascending: true })
         .limit(10);
 
+      // The switcher can select a trip this status/limit filter excludes (an
+      // archived one, or the 11th by date), so fetch it directly rather than
+      // silently falling back to a different trip's cities.
+      let selected: { id: string; name: string; status: string } | null = null;
+      if (selectedTripId && !tours?.some(t => t.id === selectedTripId)) {
+        const { data } = await supabase
+          .from('gw_tours').select('id, name, status').eq('id', selectedTripId).maybeSingle();
+        selected = (data as typeof selected) ?? null;
+      }
+
       if (toursError) {
         console.error('Weather: Tours query error:', toursError.message);
       }
 
-      const activeTour = tours?.find(t => t.status === 'active')
+      const activeTour = selected
+        || (selectedTripId && tours?.find(t => t.id === selectedTripId))
+        || tours?.find(t => t.status === 'active')
         || tours?.find(t => t.status === 'confirmed')
         || tours?.[0];
 
@@ -167,7 +183,10 @@ export const TourWeatherSection: React.FC<{ showHeading?: boolean }> = ({ showHe
     };
     load();
     return () => { cancelled = true; };
-  }, []);
+    // Re-runs when the switcher changes trips; previously mounted once and
+    // showed whichever tour it happened to pick first.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTripId]);
 
   if (loading) {
     return (

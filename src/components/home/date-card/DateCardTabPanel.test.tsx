@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 const save = vi.hoisted(() => vi.fn());
@@ -42,6 +43,17 @@ vi.mock('@/components/liturgy/LiturgicalDayCard', () => ({
 
 import { DateCardTabPanel } from './DateCardTabPanel';
 
+// DateCardTabPanel calls useQueryClient() to invalidate the date-card config
+// after a save, so it must render inside a provider. A fresh QueryClient per
+// render keeps cache state from leaking between tests. Same pattern as
+// AssistantFab.test.tsx.
+const renderPanel = (props: { canManage: boolean }) =>
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <DateCardTabPanel {...props} />
+    </QueryClientProvider>,
+  );
+
 afterEach(() => {
   cleanup();
   save.mockClear();
@@ -65,7 +77,7 @@ useDateCardConfigMock.mockImplementation(() => ({
 
 describe('DateCardTabPanel', () => {
   it('lists every registered card type', () => {
-    render(<DateCardTabPanel canManage />);
+    renderPanel({ canManage: true });
     expect(screen.getByText('Date')).toBeInTheDocument();
     expect(screen.getByText('Up next')).toBeInTheDocument();
     expect(screen.getByText('Today at a glance')).toBeInTheDocument();
@@ -75,17 +87,17 @@ describe('DateCardTabPanel', () => {
 
   it('marks an unavailable type as needing an add-on', () => {
     modules.current = [];
-    render(<DateCardTabPanel canManage />);
+    renderPanel({ canManage: true });
     expect(screen.getByText('Add-on required')).toBeInTheDocument();
   });
 
   it('hides the save button when the user cannot manage', () => {
-    render(<DateCardTabPanel canManage={false} />);
+    renderPanel({ canManage: false });
     expect(screen.queryByRole('button', { name: /save/i })).not.toBeInTheDocument();
   });
 
   it('saves the selected type', () => {
-    render(<DateCardTabPanel canManage />);
+    renderPanel({ canManage: true });
     fireEvent.click(screen.getByText('Today at a glance'));
     fireEvent.click(screen.getByRole('button', { name: /save/i }));
     expect(save).toHaveBeenCalledWith(expect.objectContaining({ type: 'today' }));
@@ -139,7 +151,7 @@ describe('DateCardTabPanel', () => {
       };
     });
 
-    render(<DateCardTabPanel canManage />);
+    renderPanel({ canManage: true });
     fireEvent.click(screen.getByText('Today at a glance'));
 
     expect(screen.getByText('Date card')).toBeInTheDocument();
@@ -154,7 +166,7 @@ describe('DateCardTabPanel', () => {
   // caught and blocked before save() is ever called.
   it('blocks save and reports the problem when a custom field exceeds its schema limit', () => {
     const errorSpy = vi.spyOn(toast, 'error').mockImplementation(() => '');
-    render(<DateCardTabPanel canManage />);
+    renderPanel({ canManage: true });
 
     fireEvent.click(screen.getByText('Custom'));
     const titleInput = screen.getByLabelText('title') as HTMLInputElement;
@@ -173,7 +185,7 @@ describe('DateCardTabPanel', () => {
   });
 
   it('caps the custom field inputs with maxLength matching the schema (eyebrow 60, title/subtitle 80)', () => {
-    render(<DateCardTabPanel canManage />);
+    renderPanel({ canManage: true });
     fireEvent.click(screen.getByText('Custom'));
 
     expect(screen.getByLabelText('eyebrow')).toHaveAttribute('maxlength', '60');
@@ -187,14 +199,14 @@ describe('DateCardTabPanel', () => {
   it('falls back the preview to the plain card when the persisted type is gated and the add-on is inactive', () => {
     mockSetting.current = { v: 1, type: 'liturgical', config: {} };
     modules.current = [];
-    render(<DateCardTabPanel canManage />);
+    renderPanel({ canManage: true });
     expect(screen.queryByText('LITURGICAL_MARKER')).not.toBeInTheDocument();
   });
 
   it('previews the liturgical card when its add-on is active', () => {
     mockSetting.current = { v: 1, type: 'liturgical', config: {} };
     modules.current = [{ module_id: 'liturgy_planner' }];
-    render(<DateCardTabPanel canManage />);
+    renderPanel({ canManage: true });
     expect(screen.getByText('LITURGICAL_MARKER')).toBeInTheDocument();
   });
 });
