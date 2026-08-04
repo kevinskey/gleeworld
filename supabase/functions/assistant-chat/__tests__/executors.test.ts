@@ -4,7 +4,7 @@ import { executeServerTool } from '../executors';
 function stubSupabase(rows: unknown[], error: { message: string } | null = null) {
   // Chainable stub: every method returns the builder; awaiting it resolves {data, error}.
   const builder: any = {};
-  for (const m of ['select', 'gte', 'lte', 'lt', 'eq', 'or', 'ilike', 'order', 'limit']) {
+  for (const m of ['select', 'gte', 'lte', 'lt', 'eq', 'is', 'or', 'ilike', 'order', 'limit']) {
     builder[m] = () => builder;
   }
   builder.then = (resolve: (v: unknown) => void) => resolve({ data: rows, error });
@@ -23,6 +23,12 @@ describe('executeServerTool', () => {
     const out = await executeServerTool('search_music', { query: 'lift' },
       { supabase: stubSupabase([{ id: 's1', title: 'Lift Every Voice', composer: 'J. R. Johnson' }]) });
     expect(JSON.parse(out).scores[0].id).toBe('s1');
+  });
+
+  it('find_note returns notes as JSON', async () => {
+    const out = await executeServerTool('find_note', { query: 'ideas' },
+      { supabase: stubSupabase([{ id: 'n1', title: 'Song ideas', updated_at: '2026-07-25T00:00:00Z' }]) });
+    expect(JSON.parse(out).notes[0].id).toBe('n1');
   });
 
   it('surfaces db errors as an error field, not a throw', async () => {

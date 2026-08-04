@@ -135,6 +135,11 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     const outcome = await executeClientAction(action);
     dispatch({ type: 'action-state', id: msgId, state: outcome.ok ? 'done' : 'error' });
     if (outcome.openVideoRoom) setVideoRoom(outcome.openVideoRoom);
+    // Ride/food hand-off links. Confirm-gated actions run from the user's tap
+    // on the confirm card, so this window.open carries a user gesture and
+    // isn't popup-blocked. The URL always comes from our own deep-link
+    // builders, never from model output.
+    if (outcome.openExternalUrl) window.open(outcome.openExternalUrl, '_blank', 'noopener,noreferrer');
     if (outcome.navigateTo) { setSheetOpen(false); navigate(outcome.navigateTo); }
     if (!outcome.ok) speakNow(outcome.message);
     // Only a confirm-gated action can have a queued follow-up waiting on it.

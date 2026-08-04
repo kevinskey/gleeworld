@@ -20,14 +20,32 @@ describe('toolCatalog', () => {
     expect(toolsForRole('admin').length).toBe(TOOL_CATALOG.length);
   });
 
-  it('only send_sms and send_email require confirmation', () => {
+  it('confirm gating covers exactly the side-effectful/outward-facing tools', () => {
     const confirmed = TOOL_CATALOG.filter((t) => t.confirm).map((t) => t.name).sort();
-    expect(confirmed).toEqual(['create_course_draft', 'send_email', 'send_sms']);
+    expect(confirmed).toEqual([
+      'book_ride', 'create_course_draft', 'order_food',
+      'send_email', 'send_sms', 'set_date_card',
+    ]);
+  });
+
+  it('book_ride and order_food are member-available, client-executed, confirm-gated', () => {
+    for (const name of ['book_ride', 'order_food']) {
+      const def = TOOL_CATALOG.find((t) => t.name === name);
+      expect(def, name).toBeDefined();
+      expect(def!.minRole).toBe('member');
+      expect(def!.execution).toBe('client');
+      expect(def!.confirm).toBe(true);
+      expect(toolsForRole('member').map((t) => t.name)).toContain(name);
+    }
   });
 
   it('server tools are exactly the read-only set', () => {
     const server = TOOL_CATALOG.filter((t) => t.execution === 'server').map((t) => t.name).sort();
-    expect(server).toEqual(['find_user', 'query_calendar', 'search_music', 'search_youtube']);
+    expect(server).toEqual([
+      'find_nearby_place', 'find_note', 'find_user',
+      'get_date_card', 'get_preference',
+      'query_calendar', 'read_news_feeds', 'search_music', 'search_youtube',
+    ]);
   });
 
   it('converts to OpenAI tool format', () => {

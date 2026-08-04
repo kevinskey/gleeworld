@@ -19,7 +19,7 @@ function makeDeps(overrides: Partial<ActionDeps> & { rpc?: any; from?: any } = {
 
 describe('PAGE_ROUTES', () => {
   it('maps every documented open_page key to a route', () => {
-    for (const key of ['home', 'calendar', 'planner', 'music-library', 'studio', 'video',
+    for (const key of ['home', 'calendar', 'notes', 'music-library', 'studio', 'video',
       'messenger', 'academy', 'sight-reading', 'part-tracks', 'media-library', 'songwriting',
       'concert-planner', 'tour-manager', 'attendance', 'users', 'analytics']) {
       expect(PAGE_ROUTES[key], key).toMatch(/^\//);
@@ -47,6 +47,13 @@ describe('executeClientAction', () => {
   it('open_song builds the viewer deep link', async () => {
     const out = await executeClientAction({ tool: 'open_song', args: { score_id: 'abc-123' }, confirm: false });
     expect(out.navigateTo).toBe('/dashboard/music-library?view=abc-123');
+  });
+
+  it('open_note navigates to the note deep link and rejects invalid ids', async () => {
+    const ok = await executeClientAction({ tool: 'open_note', args: { note_id: 'abc-123', title: 'Setlist' }, confirm: false });
+    expect(ok).toMatchObject({ ok: true, navigateTo: '/planner/abc-123' });
+    const bad = await executeClientAction({ tool: 'open_note', args: { note_id: '../evil' }, confirm: false });
+    expect(bad.ok).toBe(false);
   });
 
   it('start_video_session sanitizes the room slug', async () => {
@@ -533,5 +540,58 @@ describe('create_course_draft', () => {
     );
     expect(r.ok).toBe(false);
     expect(rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe('concierge actions', () => {
+  it('book_ride builds the Uber /looking link when coordinates are present', async () => {
+    const out = await executeClientAction({
+      tool: 'book_ride',
+      args: { provider: 'uber', destination_name: 'ATL Airport', destination_address: '6000 N Terminal Pkwy, Atlanta, GA', lat: 33.6324, lng: -84.4333 },
+      confirm: true,
+    });
+    expect(out.ok).toBe(true);
+    expect(out.openExternalUrl).toContain('https://m.uber.com/looking?pickup=my_location&drop%5B0%5D=');
+    expect(decodeURIComponent(out.openExternalUrl!)).toContain('"latitude":33.6324');
+    expect(decodeURIComponent(out.openExternalUrl!)).toContain('"addressLine1":"ATL Airport"');
+  });
+
+  it('book_ride falls back to the legacy Uber link without coordinates', async () => {
+    const out = await executeClientAction({
+      tool: 'book_ride',
+      args: { provider: 'uber', destination_address: '350 Spelman Ln SW, Atlanta' },
+      confirm: true,
+    });
+    expect(out.ok).toBe(true);
+    expect(out.openExternalUrl).toContain('https://m.uber.com/ul/?action=setPickup&pickup=my_location');
+  });
+
+  it('book_ride builds the Lyft universal link and rejects unknown providers', async () => {
+    const lyft = await executeClientAction({
+      tool: 'book_ride',
+      args: { provider: 'Lyft', destination_address: 'x', lat: 33.6, lng: -84.4 },
+      confirm: true,
+    });
+    expect(lyft.ok).toBe(true);
+    expect(lyft.openExternalUrl).toContain('https://lyft.com/ride?id=lyft');
+    expect(lyft.openExternalUrl).toContain('destination%5Blatitude%5D=33.6');
+    const bad = await executeClientAction({ tool: 'book_ride', args: { provider: 'waymo', destination_address: 'x' }, confirm: true });
+    expect(bad.ok).toBe(false);
+  });
+
+  it('book_ride requires a destination address', async () => {
+    const out = await executeClientAction({ tool: 'book_ride', args: { provider: 'uber' }, confirm: true });
+    expect(out.ok).toBe(false);
+  });
+
+  it('order_food builds service search links and rejects unknown services', async () => {
+    const dd = await executeClientAction({ tool: 'order_food', args: { service: 'doordash', craving: 'wings' }, confirm: true });
+    expect(dd.ok).toBe(true);
+    expect(dd.openExternalUrl).toBe('https://www.doordash.com/search/store/wings/');
+    const ue = await executeClientAction({ tool: 'order_food', args: { service: 'Uber Eats' }, confirm: true });
+    expect(ue.ok).toBe(true);
+    expect(ue.openExternalUrl).toBe('https://www.ubereats.com/');
+    const bad = await executeClientAction({ tool: 'order_food', args: { service: 'toString' }, confirm: true });
+    expect(bad.ok).toBe(false);
   });
 });

@@ -299,6 +299,7 @@ const HouseHome = lazy(() => import("./pages/dashboard/HouseHome"));
 const PeopleHub = lazy(() => import("./pages/dashboard/PeopleHub"));
 const PracticeRecordingsReview = lazy(() => import("./pages/dashboard/PracticeRecordingsReview"));
 const MusicToolkitPage = lazy(() => import("./pages/dashboard/MusicToolkitPage"));
+const ConciergePage = lazy(() => import("./pages/dashboard/ConciergePage"));
 const OfficeHoursPage = lazy(() => import("./pages/dashboard/OfficeHoursPage"));
 const DashboardShell = lazy(() => import("./components/dashboard/DashboardShell").then(m => ({ default: m.DashboardShell })));
 import { TenantThemeRoot } from "@/components/theme/TenantThemeRoot";
@@ -1440,6 +1441,14 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell><MusicToolkitPage /></DashboardShell>
                       </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/concierge"
+                  element={
+                    <ProtectedRoute>
+                      <ConciergePage />
                     </ProtectedRoute>
                   }
                 />

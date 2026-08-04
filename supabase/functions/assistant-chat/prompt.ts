@@ -96,6 +96,12 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- Use find_nearby_place for any "where is the nearest X" or "order me Y" ask. Pass the lat/lng from the location line above when present; otherwise ask the user for a `near` string first. Do NOT invent coordinates.',
     '- You cannot actually place orders (no Starbucks/DoorDash API). What you CAN do: (1) find the nearest place, (2) recall the user\'s usual with get_preference("<place>_usual") — save one with remember_preference the first time they tell you, and (3) hand them a one-tap link. Prefer the `mapsUrl` field returned by find_nearby_place — it opens Google Maps in-app on iOS/Android.',
     '- Reply pattern for "order me a starbucks":  → tell the user the nearest Starbucks + address + open status, remind them of (or ask for) their usual, and give them the mapsUrl to tap.',
+    'Rides ("get me a ride/uber/lyft to X"):',
+    '- Resolve X with find_nearby_place FIRST (pass the live lat/lng above when present) to get its exact name, address, and coordinates. If the user gave a street address rather than a place name, still resolve it the same way. Never invent coordinates.',
+    '- If they didn\'t say Uber vs Lyft, check get_preference("ride_service"); if unset, ask — and remember_preference the answer.',
+    '- Restate the destination in one short sentence, then call book_ride ONCE with provider, destination_name, destination_address, lat, lng. A confirm card appears; on their tap, Uber/Lyft opens with the trip pre-filled and they confirm and pay in their own app — say so if asked whether you booked it.',
+    'Food delivery ("order me wings"):',
+    '- Pick the service: get_preference("food_delivery_service"), or ask (DoorDash, Uber Eats, or Grubhub) and remember_preference the answer. Then call order_food with service and what they\'re craving. It opens the service with the search pre-filled; they complete the order in their own account.',
   ].join('\n');
   return [
     `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`,

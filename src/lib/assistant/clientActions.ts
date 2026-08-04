@@ -17,7 +17,7 @@ function escapeHtml(s: string): string {
 export const PAGE_ROUTES: Record<string, string> = {
   home: '/dashboard',
   calendar: '/dashboard/calendar',
-  planner: '/planner',
+  notes: '/planner',
   'music-library': '/dashboard/music-library',
   studio: '/studio',
   video: '/video',
@@ -38,6 +38,9 @@ export interface ActionOutcome {
   ok: boolean;
   navigateTo?: string;
   openVideoRoom?: string;
+  /** External URL to open in a new tab. Only ever set from our own whitelisted
+   *  deep-link builders (deepLinks.ts) — never from a model-supplied URL. */
+  openExternalUrl?: string;
   message: string;
 }
 
@@ -74,7 +77,7 @@ export async function executeClientAction(
   action: AssistantAction,
   depsOverride?: Partial<ActionDeps>,
 ): Promise<ActionOutcome> {
-  const needsDeps = !['open_page', 'open_song', 'start_video_session'].includes(action.tool);
+  const needsDeps = !['open_page', 'open_song', 'open_note', 'start_video_session', 'book_ride', 'order_food'].includes(action.tool);
   const deps = { ...(needsDeps && !depsOverride ? await defaultDeps() : {}), ...depsOverride } as ActionDeps;
   const a = action.args;
   try {
@@ -92,6 +95,41 @@ export async function executeClientAction(
         const id = String(a.score_id ?? '');
         if (!/^[0-9a-f-]{3,64}$/i.test(id)) return { ok: false, message: 'That score id looks invalid.' };
         return { ok: true, navigateTo: `/dashboard/music-library?view=${id}`, message: `Opening ${a.title ?? 'the score'}.` };
+      }
+      case 'open_note': {
+        const id = String(a.note_id ?? '');
+        if (!/^[0-9a-f-]{3,64}$/i.test(id)) return { ok: false, message: 'That note id looks invalid.' };
+        return { ok: true, navigateTo: `/planner/${id}`, message: `Opening ${a.title ?? 'the note'}.` };
+      }
+      case 'book_ride': {
+        const provider = String(a.provider ?? '').trim().toLowerCase();
+        if (provider !== 'uber' && provider !== 'lyft') {
+          return { ok: false, message: 'The ride service has to be Uber or Lyft.' };
+        }
+        const address = String(a.destination_address ?? '').trim();
+        if (!address) return { ok: false, message: 'Missing the destination address.' };
+        const { buildRideLink } = await import('@/lib/concierge/deepLinks');
+        const lat = Number(a.lat);
+        const lng = Number(a.lng);
+        const url = buildRideLink(provider, {
+          address,
+          name: typeof a.destination_name === 'string' ? a.destination_name : undefined,
+          ...(Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : {}),
+        });
+        return {
+          ok: true,
+          openExternalUrl: url,
+          message: `Opening ${provider === 'uber' ? 'Uber' : 'Lyft'} with your trip to ${a.destination_name || address} — confirm the ride there.`,
+        };
+      }
+      case 'order_food': {
+        const { buildFoodLink } = await import('@/lib/concierge/deepLinks');
+        const link = buildFoodLink(
+          String(a.service ?? '').trim().toLowerCase().replace(/[^a-z]/g, ''),
+          typeof a.craving === 'string' ? a.craving : undefined,
+        );
+        if (!link) return { ok: false, message: 'The food service has to be DoorDash, Uber Eats, or Grubhub.' };
+        return { ok: true, openExternalUrl: link.url, message: `Opening ${link.label} — finish your order there.` };
       }
       case 'start_video_session': {
         const slug = String(a.room_name ?? 'gleeworld-room').replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 60) || 'gleeworld-room';

@@ -17,6 +17,7 @@ export async function executeServerTool(
     switch (name) {
       case 'query_calendar': return await queryCalendar(args, deps);
       case 'search_music': return await searchMusic(args, deps);
+      case 'find_note': return await findNote(args, deps);
       case 'find_user': return await findUser(args, deps);
       case 'search_youtube': return await searchYoutube(args, deps);
       case 'get_date_card': return await getDateCard(deps);
@@ -63,6 +64,19 @@ async function searchMusic(args: Record<string, unknown>, { supabase }: Deps): P
     .limit(10);
   if (error) return JSON.stringify({ error: error.message });
   return JSON.stringify({ scores: data ?? [] });
+}
+
+async function findNote(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
+  const q = String(args.query ?? '').replace(/[%_]/g, '');
+  const { data, error } = await supabase
+    .from('gw_planner_notes')
+    .select('id, title, updated_at')
+    .is('deleted_at', null)
+    .ilike('title', `%${q}%`)
+    .order('updated_at', { ascending: false })
+    .limit(10);
+  if (error) return JSON.stringify({ error: error.message });
+  return JSON.stringify({ notes: data ?? [] });
 }
 
 async function findUser(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
