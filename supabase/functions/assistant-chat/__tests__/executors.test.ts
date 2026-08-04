@@ -43,3 +43,31 @@ describe('executeServerTool', () => {
     expect(JSON.parse(out.replyJson).error).toContain('Unknown tool');
   });
 });
+
+describe('search_academy executor', () => {
+  const deps = { supabase: { from: () => ({}) } } as any;
+
+  it('returns passages for a matching query', async () => {
+    const { replyJson } = await executeServerTool('search_academy', { query: 'ictus' }, deps);
+    const parsed = JSON.parse(replyJson);
+    expect(Array.isArray(parsed.passages)).toBe(true);
+    expect(parsed.passages.length).toBeGreaterThan(0);
+    expect(parsed.passages[0]).toHaveProperty('title');
+    expect(parsed.passages[0]).toHaveProperty('text');
+    expect(parsed.passages[0]).toHaveProperty('url');
+  });
+
+  it('reports no match explicitly rather than returning an empty success', async () => {
+    const { replyJson } = await executeServerTool(
+      'search_academy', { query: 'zzzz nonexistent trombone embouchure' }, deps,
+    );
+    const parsed = JSON.parse(replyJson);
+    expect(parsed.passages).toEqual([]);
+    expect(parsed.note).toMatch(/no matching/i);
+  });
+
+  it('handles a missing query argument without throwing', async () => {
+    const { replyJson } = await executeServerTool('search_academy', {}, deps);
+    expect(JSON.parse(replyJson).passages).toEqual([]);
+  });
+});
