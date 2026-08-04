@@ -135,6 +135,8 @@ const KNOWN_ROUTES = new Set([
   // <Route path="/dashboard/my-fees"> exist. Both were missed when the Student
   // Fees ledger shipped — exactly the drift this test is here to catch.
   '/dashboard/fees', '/dashboard/my-fees',
+  // Verified against src/App.tsx: <Route path="/prayer"> exists.
+  '/prayer',
   '/dashboard/box-office', '/dashboard/users', '/admin/public-page',
   '/dashboard/analytics', '/dashboard/workspace', '/songwriting',
   '/planner', '/dashboard/fundraising',

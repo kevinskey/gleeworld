@@ -224,6 +224,7 @@ const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPa
 const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/SongwritingLibraryPage"));
 const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));
 const PlannerPage = lazy(() => import("./pages/planner/PlannerPage"));
+const PrayerApp = lazy(() => import("./pages/prayer/PrayerApp"));
 const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
 const ConcertPlannerEditorPage = lazy(() => import("./pages/dashboard/ConcertPlannerEditorPage"));
 const PublicConcertProgramPage = lazy(() => import("./pages/public/PublicConcertProgramPage"));
@@ -1716,6 +1717,23 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell>
                           <ModuleGate moduleId="songwriting"><SongwritingEditorPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Prayer App — Phase 0/1 preview. No ModuleGate yet: the 'prayer'
+                    module is not registered in billing, so gating on it would
+                    make the page unreachable. The nav link is restricted to
+                    platform admins instead; swap both to the module gate once
+                    the module exists. */}
+                <Route
+                  path="/prayer"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <PrayerApp />
                         </DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
