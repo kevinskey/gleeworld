@@ -75,7 +75,10 @@ const ACCEPTED_TYPES: Record<string, string[]> = {
   'text/plain': ['.txt'],
 };
 
-export const TourDocumentsSection = () => {
+/** Set false when a parent already renders the section title (Tour Manager's
+ *  DashboardPageShell does). Tour2026Page leaves it true — there the heading
+ *  is a genuine sub-heading under that page's own h1. */
+export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boolean }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -499,10 +502,14 @@ export const TourDocumentsSection = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Travel Documents</h2>
-          <p className="text-sm text-muted-foreground">
-            Signed contracts, deposit checks, receipts, scans & more
-          </p>
+          {showHeading && (
+            <>
+              <h2 className="text-xl font-bold text-foreground">Travel Documents</h2>
+              <p className="text-sm text-muted-foreground">
+                Signed contracts, deposit checks, receipts, scans & more
+              </p>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">

@@ -266,10 +266,8 @@ export const TourBudgetManager = () => {
     <div className="space-y-3">
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h2 className="text-base font-semibold text-foreground">Travel Budget</h2>
-          <p className="text-xs text-muted-foreground">Track travel expenses & revenue</p>
-        </div>
+        {/* Title + description come from DashboardPageShell (section "Budget"). */}
+        <div className="min-w-0" />
         <div className="flex gap-1.5 shrink-0">
           <Dialog open={isAddingRevenue} onOpenChange={setIsAddingRevenue}>
             <DialogTrigger asChild>

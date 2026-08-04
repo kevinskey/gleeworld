@@ -258,10 +258,9 @@ export const TourRollCallSection: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-foreground">Roll Call</h2>
-          <p className="text-sm text-muted-foreground">{tour.name} • {rosterCount} roster members</p>
-        </div>
+        {/* "Roll Call" heading comes from DashboardPageShell; keep the tour
+            context line, which the shell subtitle doesn't carry. */}
+        <p className="text-sm text-muted-foreground">{tour.name} • {rosterCount} roster members</p>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2">

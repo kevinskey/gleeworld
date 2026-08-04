@@ -67,7 +67,9 @@ const normalizeState = (state: string): string => {
   return STATE_NAME_TO_CODE[state] || state;
 };
 
-export const TourWeatherSection: React.FC = () => {
+/** Set false when a parent already renders the section title (Tour Manager's
+ *  DashboardPageShell does). Standalone pages leave it true so they keep a heading. */
+export const TourWeatherSection: React.FC<{ showHeading?: boolean }> = ({ showHeading = true }) => {
   const [weatherData, setWeatherData] = useState<WeatherData[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -170,9 +172,11 @@ export const TourWeatherSection: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">Travel City Weather</h2>
-        </div>
+        {showHeading && (
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-foreground">Travel City Weather</h2>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map(i => (
             <Card key={i}>
@@ -206,7 +210,7 @@ export const TourWeatherSection: React.FC = () => {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Travel City Weather</h2>
+          {showHeading && <h2 className="text-xl font-bold text-foreground">Travel City Weather</h2>}
           {lastUpdated && (
             <p className="text-xs text-muted-foreground">
               Updated {lastUpdated.toLocaleTimeString()}

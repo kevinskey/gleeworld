@@ -542,10 +542,7 @@ export const TourLogisticsSection = () => {
     <div className="space-y-3 sm:space-y-4">
       {/* Header with tour selector */}
       <div className="space-y-2">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground">Operations Timeline</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">Call times, transport, performances, meals & crew</p>
-        </div>
+        {/* Title + description come from DashboardPageShell (section "Itinerary"). */}
         <div className="flex flex-col sm:flex-row gap-2">
           <Select value={selectedTourId} onValueChange={setSelectedTourId}>
             <SelectTrigger className="w-full sm:w-[260px] bg-card border-border">
