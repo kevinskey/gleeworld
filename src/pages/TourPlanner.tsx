@@ -2,8 +2,6 @@ import React from 'react';
 import { TourManagerDashboard } from '@/components/tour-manager/TourManagerDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
-import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
 const TourPlanner: React.FC = () => {
   const { user: authUser } = useAuth();
@@ -19,13 +17,10 @@ const TourPlanner: React.FC = () => {
       }
     : undefined;
 
-  return (
-    <UniversalLayout showHeader={false} showFooter={false}>
-      <DashboardShell>
-      <TourManagerDashboard user={user} />
-    </DashboardShell>
-    </UniversalLayout>
-  );
+  // No UniversalLayout/DashboardShell here: every route that renders this page
+  // (/tour-manager, /travel-manager, /travel-planner, /tour-planner) already
+  // wraps it in both, so doing it again nested a second shell inside the first.
+  return <TourManagerDashboard user={user} />;
 };
 
 export default TourPlanner;

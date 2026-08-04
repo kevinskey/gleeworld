@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { cn } from '@/lib/utils';
-import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, ClipboardList, Shirt, DollarSign, UserCheck, Menu, Home, Clock, Hotel, CheckCircle2, LayoutGrid, MessageSquare, CloudSun, Receipt, FileCheck, CreditCard } from 'lucide-react';
+import { Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, ClipboardList, Shirt, DollarSign, UserCheck, ChevronLeft, Home, Clock, Hotel, CheckCircle2, LayoutGrid, MessageSquare, CloudSun, Receipt, FileCheck, CreditCard } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
@@ -22,7 +20,6 @@ import { TourLogisticsSection } from './TourLogisticsSection';
 import { BusInfoSection } from '@/components/tour/BusInfoSection';
 import { HotelManagement } from './HotelManagement';
 import { TourBudgetManager } from './TourBudgetManager';
-import { TourMilestones } from './TourMilestones';
 import { RisersSection } from '@/components/tour/RisersSection';
 import { TourNotesSection } from '@/components/tour/TourNotesSection';
 import { TourRollCallSection } from './TourRollCallSection';
@@ -31,6 +28,7 @@ import { BusDriverTipReceiptSection } from '@/components/tour/BusDriverTipReceip
 import { PermissionSlipsTab } from '@/components/travel-manager/PermissionSlipsTab';
 import { TripFeesTab } from './TripFeesTab';
 import { supabase } from '@/integrations/supabase/client';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 interface TourManagerDashboardProps {
   user?: {
     id: string;
@@ -42,6 +40,18 @@ interface TourManagerDashboardProps {
     created_at?: string;
   };
 }
+// Hub groupings. 23 sections is far too many for a single tab strip — the old
+// bottom bar scrolled most of them off-screen — so the landing presents them as
+// labelled groups of cards and each one drills in, the same shape as Music
+// Librarian. Every value here must exist in navItems/contentConfig; the hub is
+// built from navItems so a section can never be listed without a destination.
+const SECTION_GROUPS: { heading: string; values: string[] }[] = [
+  { heading: 'Planning', values: ['tour-dates', 'logistics', 'route-planning', 'notes', 'documents', 'weather'] },
+  { heading: 'People', values: ['roster', 'roll-call', 'risers', 'bus-buddies', 'wardrobe'] },
+  { heading: 'Lodging & transport', values: ['hotels', 'rooming', 'bus-info', 'driver-tip'] },
+  { heading: 'Business', values: ['contracts', 'hosts', 'booking-requests', 'budget', 'stipends', 'fees', 'permission-slips'] },
+];
+
 const navItems = [{
   value: 'overview',
   label: 'Overview',
@@ -233,16 +243,13 @@ export const TourManagerDashboard = ({
 }: TourManagerDashboardProps) => {
   const [activeSection, setActiveSection] = useState('overview');
   const [contractEventData, setContractEventData] = useState<any>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const mainContentRef = React.useRef<HTMLDivElement>(null);
 
   const handleSectionChange = (section: string) => {
     setActiveSection(section);
-    setSidebarOpen(false);
-    if (mainContentRef.current) {
-      mainContentRef.current.scrollTop = 0;
-    }
-    window.scrollTo(0, 0);
+    // DashboardShell's <main> is the scroll container, not the document, so
+    // window.scrollTo(0,0) would do nothing here — drilling into a section
+    // from halfway down the hub would land you halfway down that section.
+    document.querySelector('main')?.scrollTo({ top: 0 });
   };
   const [stats, setStats] = useState({
     upcomingDates: 0,
@@ -356,87 +363,80 @@ export const TourManagerDashboard = ({
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
     }
   };
-  // The page renders inside DashboardShell, whose sticky topbar is h-14
-  // (md:h-20) and z-30, offset by the demo banner via --gw-demo-bar-h.
-  // The shell's <main> is overflow-x-hidden, which silently disables
-  // viewport sticky for descendants — so, like Calendar, this is a
-  // full-height self-scrolling layout: header and sidebar sit in flow and
-  // only the content pane scrolls. Height fills the viewport minus demo
-  // bar + topbar; DashboardShell zeroes its main padding for tour routes.
-  return <div className="h-[calc(100dvh-var(--gw-demo-bar-h,0px)-3.5rem)] md:h-[calc(100dvh-var(--gw-demo-bar-h,0px)-5rem)] bg-background flex flex-col overflow-hidden">
-      <header className="flex-shrink-0 z-20 bg-background border-b border-border">
-        <div className="flex items-center justify-between px-3 lg:px-4 h-12 bg-brand-900">
-          <div className="flex items-center gap-2 min-w-0">
-            {/* text-white, not text-primary-foreground: the bar is fixed
-                bg-brand-900, and tenant themes may define
-                --primary-foreground as a dark color (dark-on-dark). */}
-            <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8 flex-shrink-0 text-white" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              <Menu className="w-6 h-6" />
-            </Button>
-            <h1 className="font-medium truncate text-white text-xl py-5 pl-5">
-              {currentContent.title}
-            </h1>
-            <span className="text-xs hidden sm:inline text-white/70">—</span>
-            <span className="text-xs hidden sm:inline truncate text-white/70">{currentContent.description}</span>
-          </div>
-        </div>
-      </header>
+  // Ordinary dashboard page, hub-and-spoke like Music Librarian.
+  //
+  // This add-on used to ship its own entire app shell: a dark bg-brand-900
+  // title bar with a hamburger, a 224px in-page sidebar, and a bottom
+  // horizontal scroll bar of all 23 sections. It duplicated DashboardShell's
+  // sidebar and mobile nav, so the page read as a separate product bolted into
+  // GleeWorld — nav inside nav, two headers, and a scroll bar that pushed most
+  // sections off-screen. All of it is gone; the global shell is the only
+  // chrome, and DashboardPageShell owns the title exactly as elsewhere.
+  //
+  // The old layout was also full-height self-scrolling to dodge DashboardShell's
+  // overflow-x-hidden killing sticky. Nothing here is sticky any more, so the
+  // page just flows and the shell's own <main> scrolls (its tour-route padding
+  // exemption is removed alongside this).
+  const activeItem = navItems.find(i => i.value === activeSection);
 
-      <div className="flex-1 flex flex-row min-h-0">
-        <aside className={cn("fixed top-[calc(var(--gw-demo-bar-h,0px)+6.5rem)] md:top-[calc(var(--gw-demo-bar-h,0px)+8rem)] bottom-0 left-0 z-40 w-56 border-r border-border bg-background transform transition-transform duration-200 ease-in-out lg:static lg:h-full lg:translate-x-0 flex-shrink-0", sidebarOpen ? "translate-x-0" : "-translate-x-full")}>
-          <div
-            className="flex flex-col h-full px-0 pt-2 overflow-y-auto overscroll-contain touch-pan-y scrollbar-hide"
-            style={{
-              WebkitOverflowScrolling: 'touch',
-              paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))',
-              paddingTop: 'env(safe-area-inset-top, 0px)'
-            }}
-          >
-            <nav className="flex flex-col space-y-1 px-2 w-full">
-              {navItems.map(item => (
-                <button
-                  key={item.value}
-                  onClick={() => handleSectionChange(item.value)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors text-left min-h-[44px] touch-manipulation",
-                    activeSection === item.value
-                      ? "bg-primary/10 text-primary font-medium"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                  )}
-                >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </nav>
-          </div>
-        </aside>
+  if (activeSection === 'overview') {
+    return (
+      <DashboardPageShell
+        title="Travel Manager"
+        icon={MapPin}
+        subtitle="Plan tours, move people, and keep the paperwork straight"
+      >
+        <TourManagerLanding onNavigate={handleSectionChange} stats={stats} />
 
-        {sidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+        {SECTION_GROUPS.map(group => (
+          <section key={group.heading}>
+            <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+              {group.heading}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {group.values.map(value => {
+                const item = navItems.find(i => i.value === value);
+                if (!item) return null;
+                const SectionIcon = item.icon;
+                return (
+                  <button
+                    key={value}
+                    onClick={() => handleSectionChange(value)}
+                    className="flex flex-col items-start gap-3 rounded-xl border border-border bg-card p-4 text-left transition-all active:scale-[0.97] hover:shadow-md hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <div className="rounded-lg bg-primary/10 text-primary p-2.5">
+                      <SectionIcon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sm leading-tight">{item.label}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                        {contentConfig[value]?.description}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+      </DashboardPageShell>
+    );
+  }
 
-        <main className="flex-1 flex flex-col min-w-0 min-h-0">
-          {/* Bottom padding lives inside the scroll container so content can
-              clear the fixed section bar + global nav pill on small screens. */}
-          <div ref={mainContentRef} className="flex-1 overflow-auto p-4 pb-36 md:pb-20 lg:pb-4">
-            {renderContent()}
-          </div>
-        </main>
-      </div>
-
-      {/* Tour section switcher for <lg. Below md it rides above the global
-          MobileBottomNav bar (which now renders whenever the sidebar is
-          hidden, i.e. <768); at md+ the bar doesn't render, so this sits
-          flush at the bottom. z-20 keeps it under the bar (z-30), never
-          burying the platform nav. */}
-      <nav className="fixed bottom-[76px] md:bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-20" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
-        <div className="overflow-x-auto scrollbar-hide overscroll-x-contain touch-pan-x" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <div className="flex items-center h-14 px-2 min-w-max">
-            {navItems.map(item => <button key={item.value} onClick={() => handleSectionChange(item.value)} className={cn("flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-md transition-colors flex-shrink-0", activeSection === item.value ? "text-primary bg-primary/10" : "text-muted-foreground")}>
-                <item.icon className="h-4 w-4" />
-                <span className="text-xs font-medium">{item.label}</span>
-              </button>)}
-          </div>
-        </div>
-      </nav>
-    </div>;
+  return (
+    <DashboardPageShell
+      eyebrow="Travel Manager"
+      title={currentContent.title}
+      subtitle={currentContent.description}
+      icon={activeItem?.icon}
+      actions={
+        <Button variant="outline" size="sm" onClick={() => handleSectionChange('overview')} className="gap-1.5">
+          <ChevronLeft className="h-4 w-4" />
+          All sections
+        </Button>
+      }
+    >
+      {renderContent()}
+    </DashboardPageShell>
+  );
 };
