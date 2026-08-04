@@ -53,11 +53,32 @@ export const SECTION_PY_REM: Record<SiteTheme['sectionPaddingScale'], string> = 
   spacious: '4.5rem',
 };
 
+/**
+ * Pick black or white text for a background, by YIQ luminance. Same threshold
+ * as TenantThemeRoot's derivation for the app tokens, so a block sitting on
+ * --site-accent and a button sitting on --accent agree with each other.
+ *
+ * This matters because the accent is tenant-chosen: a dark navy needs white
+ * text and a pale gold needs near-black, and only one of those can be
+ * hardcoded correctly.
+ */
+export function yiqForeground(hex: string): string {
+  const h = (hex || '').replace('#', '').trim();
+  if (h.length !== 6) return '#ffffff';
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  if ([r, g, b].some(Number.isNaN)) return '#ffffff';
+  return (r * 299 + g * 587 + b * 114) / 1000 >= 150 ? '#0f172a' : '#ffffff';
+}
+
 /** Return the CSS custom properties a package/theme wants on the site root. */
 export function themeCssVars(theme: SiteTheme): Record<string, string> {
   return {
     '--site-primary': theme.primaryColor,
     '--site-accent': theme.accentColor,
+    '--site-primary-foreground': yiqForeground(theme.primaryColor),
+    '--site-accent-foreground': yiqForeground(theme.accentColor),
     '--site-radius': RADIUS_PX[theme.radiusScale],
     '--site-section-py': SECTION_PY_REM[theme.sectionPaddingScale],
     '--site-heading-font': theme.headingFontFamily

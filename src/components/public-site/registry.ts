@@ -14,6 +14,7 @@ import { mediaGalleryBlock } from './blocks/media-gallery';
 import { staffBlock } from './blocks/staff';
 import { ensemblesBlock } from './blocks/ensembles';
 import { concertTicketsBlock } from './blocks/concert-tickets';
+import { concertRsvpBlock } from './blocks/concert-rsvp';
 import { alumniSpotlightBlock } from './blocks/alumni-spotlight';
 import { spotlightBlock } from './blocks/spotlight';
 import { scholarshipBlock } from './blocks/scholarship';
@@ -41,6 +42,7 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [donationsBlock.type]: donationsBlock,
   [merchBlock.type]: merchBlock,
   [concertTicketsBlock.type]: concertTicketsBlock,
+  [concertRsvpBlock.type]: concertRsvpBlock,
   [alumniSpotlightBlock.type]: alumniSpotlightBlock,
   [spotlightBlock.type]: spotlightBlock,
   [scholarshipBlock.type]: scholarshipBlock,

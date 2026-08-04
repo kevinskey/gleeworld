@@ -5,6 +5,11 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', { apiVersion:
 
 export async function stripeCreateCheckout(a: CreateCheckoutArgs): Promise<{ url: string }> {
   const opts = a.account ? { stripeAccount: a.account } : undefined; // Connect direct charge when account set
+  const metadata = { ...(a.metadata ?? {}), order_id: a.orderId, store_type: a.storeType };
+  // A fee only makes sense on a Connect direct charge; see CreateCheckoutArgs.
+  const fee = a.account && a.applicationFeeCents && a.applicationFeeCents > 0
+    ? { application_fee_amount: a.applicationFeeCents }
+    : {};
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     line_items: a.lineItems.map(li => ({
@@ -13,8 +18,8 @@ export async function stripeCreateCheckout(a: CreateCheckoutArgs): Promise<{ url
     })),
     customer_email: a.buyerEmail,
     success_url: a.successUrl, cancel_url: a.cancelUrl,
-    metadata: { order_id: a.orderId, store_type: a.storeType },
-    payment_intent_data: { metadata: { order_id: a.orderId, store_type: a.storeType } },
+    metadata,
+    payment_intent_data: { metadata, ...fee },
   }, opts ? { stripeAccount: a.account! } : undefined);
   if (!session.url) throw new Error('stripe session missing url');
   return { url: session.url };
