@@ -71,6 +71,21 @@ begin
       public.sp_balance(v_stu)->>'balance_cents';
   end if;
 
+  -- A partially paid fee must report only what remains. Before paid_amount
+  -- existed, this reported the full original amount.
+  insert into public.gw_student_fees
+      (id, user_id, amount, paid_amount, due_date, status, semester, academic_year, tenant_id)
+    values ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', v_stu, 500.00, 200.00,
+            current_date + 30, 'partial', 'Fall 2026', '2026-2027', v_tenant);
+  select * into r from student_picture.v_student_ledger
+   where source_id = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+  if r.amount_cents <> 30000 then
+    raise exception 'a $500 fee with $200 paid must show 30000 cents remaining, got %', r.amount_cents;
+  end if;
+  if r.status <> 'partial' then
+    raise exception 'expected status partial, got %', r.status;
+  end if;
+
   raise notice 'ALL ASSERTIONS PASSED';
 end $$;
 rollback;

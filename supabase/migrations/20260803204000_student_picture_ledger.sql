@@ -12,7 +12,10 @@ create or replace view student_picture.led_fees
 with (security_invoker = on) as
 select f.user_id, f.tenant_id, 'fee'::text, f.id,
        coalesce(f.name, f.category, 'Fee')::text,
-       round(f.amount * 100)::bigint, 'charge'::text,
+       -- What is still OWED, not the original charge. record_fee_payment()
+       -- maintains paid_amount; every other surface (My Fees, reminder emails,
+       -- the admin page) subtracts it, and the assistant must agree with them.
+       round(greatest(f.amount - coalesce(f.paid_amount, 0), 0) * 100)::bigint, 'charge'::text,
        f.due_date::timestamptz,
        coalesce(f.paid_at, f.paid_date::timestamptz),
        -- gw_student_fees.status is CHECK-constrained to exactly:
