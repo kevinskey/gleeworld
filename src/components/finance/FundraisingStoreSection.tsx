@@ -46,8 +46,20 @@ interface FundraiserJson {
   ends_at?: string;
 }
 
+// The platform tenant cannot have a fundraising storefront. T-Shirt Brothers
+// reserves the slug "main" for a non-group store of their own, so provisioning
+// it returns 409 "slug already used by a non-group store" — permanently, not
+// transiently. Rendering an Enable button that can only ever fail is worse
+// than rendering nothing, so both this section and its page check here.
+const NO_STORE_TENANTS = new Set(['main']);
+
+export function fundraisingStoreAvailable(): boolean {
+  return !NO_STORE_TENANTS.has(getTenantSlug());
+}
+
 export function FundraisingStoreSection() {
   const { isSuperAdmin, isAdmin } = useUserRole();
+  const available = fundraisingStoreAvailable();
   const canManage = isSuperAdmin() || isAdmin();
 
   const [state, setState] = useState<StoreState | null>(null);
@@ -97,7 +109,7 @@ export function FundraisingStoreSection() {
     }
   }, []);
 
-  useEffect(() => { void loadState(); }, [loadState]);
+  useEffect(() => { if (available) void loadState(); }, [loadState, available]);
 
   const loadDrafts = useCallback(async () => {
     try {
@@ -157,6 +169,8 @@ export function FundraisingStoreSection() {
       setOpeningDesign(false);
     }
   };
+
+  if (!available) return null;
 
   return (
     <div className="border border-border rounded-lg bg-card divide-y divide-border">
