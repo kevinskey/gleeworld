@@ -166,6 +166,20 @@ export const BlockFrame = forwardRef<HTMLDivElement, BlockFrameProps>(function B
           // wrapped everything into a cramped ~26px strip that was hard
           // to hit on touch.
           className="absolute top-2 right-2 z-50 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 backdrop-blur px-1.5 py-1 shadow-lg"
+          // Counter-scale. The preview renders the site at a fixed device
+          // width (1280 desktop) and shrinks it with
+          // `transform: scale(var(--gw-preview-scale))`. This toolbar lives
+          // inside that scaled subtree, so its px sizes were multiplied by
+          // the same factor — on a ~600px desktop column that's ~0.47, and
+          // 18px icons painted at ~8px. Raising the px only feeds the same
+          // multiplier. Inverting it here pins the chrome to a true on-screen
+          // size at any zoom. Origin top-right so it still hangs off the
+          // block's top-right corner as it grows. Falls back to 1 outside
+          // the preview (published site never renders chrome anyway).
+          style={{
+            transform: 'scale(calc(1 / var(--gw-preview-scale, 1)))',
+            transformOrigin: 'top right',
+          }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Drag handle — spreads the dnd-kit sortable listeners so grabbing
