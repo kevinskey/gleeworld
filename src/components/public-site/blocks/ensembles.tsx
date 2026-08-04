@@ -24,7 +24,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   const items = config.ensembles.filter((e) => e.name);
   if (items.length === 0) return null;
   return (
-    <section id="ensembles" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="ensembles" className="gw-container py-5">
       {config.heading && (
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <MicVocal className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />

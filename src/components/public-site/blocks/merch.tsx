@@ -45,7 +45,7 @@ function displayPrice(p: TenantProduct): number {
 // has no way to tell them apart, and shouldn't need to.
 function ComingSoon({ heading }: { heading: string }) {
   return (
-    <section id="merch" className="max-w-6xl mx-auto px-4 sm:px-6 py-5 text-center">
+    <section id="merch" className="gw-container py-5 text-center">
       <ShoppingBag className="w-10 h-10 mx-auto mb-4" style={{ color: 'var(--site-accent)' }} />
       <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-3">{heading}</h2>
       <p className="text-muted-foreground">Our store is coming soon.</p>
@@ -134,7 +134,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
   if (isLoading) {
     return (
-      <section id="merch" className="max-w-6xl mx-auto px-4 sm:px-6 py-10 text-center">
+      <section id="merch" className="gw-container py-5 text-center">
         <Loader2 className="w-6 h-6 mx-auto animate-spin text-muted-foreground" />
       </section>
     );
@@ -147,7 +147,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   }
 
   return (
-    <section id="merch" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="merch" className="gw-container py-5">
       <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
         <ShoppingBag className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
         {config.heading}

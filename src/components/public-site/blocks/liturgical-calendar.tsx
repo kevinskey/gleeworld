@@ -200,7 +200,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   const isOrthodox = config.tradition === 'orthodox';
 
   return (
-    <section id="liturgical" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="liturgical" className="gw-container py-5">
       {config.heading && (
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <Church className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />

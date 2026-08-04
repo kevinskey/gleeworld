@@ -76,7 +76,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
       // Same inset-alignment as the header: outer keeps sections' 6xl +
       // px gutters, colored bar moved to the inner div so it aligns with
       // the visible content edge of every other block on the page.
-      className="mt-10 max-w-6xl mx-auto w-full px-4 sm:px-6"
+      className="mt-10 gw-container"
       style={{ color: fg }}
     >
       <div className="py-5 px-4 sm:px-6 text-center space-y-4" style={{ background: 'var(--site-primary)' }}>

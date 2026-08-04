@@ -37,6 +37,25 @@ export const themeSchema = z.object({
    * rule; Modern/Minimalist rely on whitespace alone.
    */
   dividerStyle: z.enum(['none', 'rule']).default('none'),
+  /**
+   * Max width of the centered content column, via --site-content-max. Every
+   * block's wrapper reads it, so header through footer stay aligned — that
+   * uniformity is the whole point and is why this is a site token rather
+   * than a per-block setting. `normal` (72rem) reproduces the max-w-6xl that
+   * was hardcoded in all 22 blocks before this existed.
+   */
+  contentWidth: z.enum(['narrow', 'normal', 'wide', 'full']).default('normal'),
+  /**
+   * Horizontal gutter between the content column and the viewport edge, via
+   * --site-gutter. Kept separate from contentWidth because a full-width site
+   * still needs breathing room at the edges.
+   */
+  sideGutter: z.enum(['none', 'snug', 'normal', 'roomy']).default('normal'),
+  /**
+   * Multiplier on body text size, via --site-font-scale. 1 = the sizes the
+   * blocks were authored at.
+   */
+  fontScale: z.number().min(0.85).max(1.4).default(1),
 });
 export type SiteTheme = z.infer<typeof themeSchema>;
 
@@ -51,6 +70,22 @@ export const SECTION_PY_REM: Record<SiteTheme['sectionPaddingScale'], string> = 
   normal: '1.5rem',
   generous: '3rem',
   spacious: '4.5rem',
+};
+/** Content column max-width. `normal` = 72rem = the old hardcoded max-w-6xl. */
+export const CONTENT_MAX: Record<SiteTheme['contentWidth'], string> = {
+  narrow: '60rem',
+  normal: '72rem',
+  wide: '87.5rem',
+  full: '100%',
+};
+/** Gutter between the content column and the viewport edge. `normal` = the
+ *  old hardcoded px-4 (sm:px-6 came along with it; the clamp keeps that
+ *  same "a bit wider once there's room" behavior without a media query). */
+export const SIDE_GUTTER: Record<SiteTheme['sideGutter'], string> = {
+  none: '0rem',
+  snug: '0.75rem',
+  normal: 'clamp(1rem, 4vw, 1.5rem)',
+  roomy: 'clamp(1.5rem, 6vw, 3rem)',
 };
 
 /**
@@ -81,6 +116,9 @@ export function themeCssVars(theme: SiteTheme): Record<string, string> {
     '--site-accent-foreground': yiqForeground(theme.accentColor),
     '--site-radius': RADIUS_PX[theme.radiusScale],
     '--site-section-py': SECTION_PY_REM[theme.sectionPaddingScale],
+    '--site-content-max': CONTENT_MAX[theme.contentWidth],
+    '--site-gutter': SIDE_GUTTER[theme.sideGutter],
+    '--site-font-scale': String(theme.fontScale),
     '--site-heading-font': theme.headingFontFamily
       ? fontStack(theme.headingFontFamily)
       : fontStack(theme.fontFamily),

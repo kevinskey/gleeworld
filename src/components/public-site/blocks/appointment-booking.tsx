@@ -320,7 +320,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   // External scheduler: the tenant has opted out of the inline flow.
   if (external) {
     return (
-      <section id="appointments" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+      <section id="appointments" className="gw-container py-5">
         {heading}
         {intro}
         <div className="text-center">
@@ -342,7 +342,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   // email to wait on, no account to check.
   if (receipt) {
     return (
-      <section id="appointments" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+      <section id="appointments" className="gw-container py-5">
         {heading}
         <div
           className="border border-border bg-card p-6 sm:p-8 max-w-2xl"
@@ -393,7 +393,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   if (!isLoading && !live) {
     const listed = config.services.filter((s) => s.name);
     return (
-      <section id="appointments" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+      <section id="appointments" className="gw-container py-5">
         {heading}
         {intro}
         {listed.length > 0 && (
@@ -431,7 +431,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   const canSubmit = Boolean(slot && form.name.trim() && form.email.trim()) && !submit.isPending;
 
   return (
-    <section id="appointments" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="appointments" className="gw-container py-5">
       {heading}
       {intro}
 

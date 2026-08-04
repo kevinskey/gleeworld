@@ -174,9 +174,10 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
     <section id="rsvp-section" className="border-y border-border bg-muted/30">
       {config.showCard && (
         // Background spans the full width; the content sits in the same
-        // max-w-6xl container every other block uses, so the heading lines up
-        // with the header logo and the sections above and below it.
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        // .gw-container every other block uses, so the heading lines up with
+        // the header logo and the sections above and below it whatever the
+        // site's content width is set to.
+        <div className="gw-container">
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading event details…

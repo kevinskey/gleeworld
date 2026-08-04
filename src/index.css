@@ -33,6 +33,79 @@
   display: block;
 }
 
+/* ---------------------------------------------------------------------------
+   Public-site content column.
+
+   Every block used to hardcode `max-w-6xl mx-auto px-4 sm:px-6`, so the width
+   was uniform header-to-footer but not adjustable — there was no token for a
+   UI control to turn. `.gw-container` replaces that literal in all 22 blocks
+   and reads the theme tokens instead, keeping the alignment while making it
+   settable from the Site design panel.
+
+   Fallbacks reproduce the old hardcoded values exactly, so a site whose theme
+   predates these tokens (or any use outside `.gw-site`) renders unchanged.
+   --------------------------------------------------------------------------- */
+.gw-container {
+  width: 100%;
+  max-width: var(--site-content-max, 72rem);
+  margin-inline: auto;
+  padding-inline: var(--site-gutter, clamp(1rem, 4vw, 1.5rem));
+}
+
+/* Width without the gutter, for blocks whose background must reach the edge
+   of the content column: the header's colored bar and the hero's image both
+   pad from the inside, so an outer gutter would inset the fill and break
+   alignment with the padded blocks below. */
+.gw-container-flush {
+  width: 100%;
+  max-width: var(--site-content-max, 72rem);
+  margin-inline: auto;
+}
+
+/* Body text scale.
+
+   Tailwind's text-* utilities are rem-based, and rem resolves against the
+   document root — so scaling the site wrapper's font-size alone would do
+   nothing to them. Restating the utilities in `em` inside `.gw-site` makes
+   them relative to that wrapper, so --site-font-scale actually moves the
+   text. Scoped to `.gw-site` so the surrounding admin UI is untouched, and
+   only the sizes the blocks actually use are listed (surveyed from
+   components/public-site/blocks). Headings scale with the same factor by
+   virtue of using these same utilities. */
+.gw-site {
+  font-size: calc(1rem * var(--site-font-scale, 1));
+}
+.gw-site .text-xs { font-size: 0.75em; line-height: 1.333em; }
+.gw-site .text-sm { font-size: 0.875em; line-height: 1.428em; }
+.gw-site .text-base { font-size: 1em; line-height: 1.5em; }
+.gw-site .text-lg { font-size: 1.125em; line-height: 1.556em; }
+.gw-site .text-xl { font-size: 1.25em; line-height: 1.4em; }
+.gw-site .text-2xl { font-size: 1.5em; line-height: 1.333em; }
+.gw-site .text-3xl { font-size: 1.875em; line-height: 1.2em; }
+.gw-site .text-4xl { font-size: 2.25em; line-height: 1.111em; }
+.gw-site .text-5xl { font-size: 3em; line-height: 1; }
+.gw-site .text-6xl { font-size: 3.75em; line-height: 1; }
+
+/* Responsive variants, restated for the same reason.
+
+   These MUST stay after the base rules above. `.gw-site .text-2xl` and
+   `.gw-site .sm\:text-3xl` have identical specificity (0,2,0), so source
+   order decides — listed first, the base rule would win inside the media
+   query and `text-2xl sm:text-3xl` headings would stay small on desktop.
+   Only the variants the blocks actually use are restated. */
+@media (min-width: 640px) {
+  .gw-site .sm\:text-xs { font-size: 0.75em; line-height: 1.333em; }
+  .gw-site .sm\:text-sm { font-size: 0.875em; line-height: 1.428em; }
+  .gw-site .sm\:text-base { font-size: 1em; line-height: 1.5em; }
+  .gw-site .sm\:text-lg { font-size: 1.125em; line-height: 1.556em; }
+  .gw-site .sm\:text-2xl { font-size: 1.5em; line-height: 1.333em; }
+  .gw-site .sm\:text-3xl { font-size: 1.875em; line-height: 1.2em; }
+  .gw-site .sm\:text-4xl { font-size: 2.25em; line-height: 1.111em; }
+}
+@media (min-width: 1024px) {
+  .gw-site .lg\:text-5xl { font-size: 3em; line-height: 1; }
+}
+
 /* Fast collapsible expand/collapse animation */
 [data-state="open"][data-radix-collapsible-content] {
   animation: collapsible-open 150ms ease-out;

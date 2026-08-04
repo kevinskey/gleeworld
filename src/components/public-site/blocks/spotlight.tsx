@@ -38,7 +38,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   const list = config.people.filter((p) => p.name);
   if (list.length === 0) return null;
   return (
-    <section id="spotlight" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="spotlight" className="gw-container py-5">
       {config.heading && (
         <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <Sparkles className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
