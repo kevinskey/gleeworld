@@ -405,7 +405,7 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
                   type="button"
                   onClick={() => setPaused((p) => !p)}
                   aria-label={paused ? 'Resume' : 'Pause'}
-                  className="h-8 w-8 rounded-md border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors"
+                  className="h-8 w-8 rounded-md border border-border hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors"
                 >
                   {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                 </button>
@@ -413,7 +413,7 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
                   type="button"
                   onClick={restart}
                   aria-label="Restart"
-                  className="h-8 w-8 rounded-md border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors"
+                  className="h-8 w-8 rounded-md border border-border hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -421,7 +421,7 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
                   type="button"
                   onClick={skip}
                   aria-label="Skip"
-                  className="h-8 w-8 rounded-md border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors"
+                  className="h-8 w-8 rounded-md border border-border hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors"
                 >
                   <SkipForward className="w-4 h-4" />
                 </button>

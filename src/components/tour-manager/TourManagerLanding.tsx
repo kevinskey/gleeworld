@@ -925,7 +925,7 @@ export const TourManagerLanding = ({
       <div className="hidden md:grid grid-cols-6 gap-2">
         {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="text-center p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
             <div className="text-xl font-bold text-foreground">{section.stat}</div>
-            <div className="text-xs capitalize text-slate-950">{section.statLabel}</div>
+            <div className="text-xs capitalize text-foreground">{section.statLabel}</div>
           </button>)}
       </div>
 

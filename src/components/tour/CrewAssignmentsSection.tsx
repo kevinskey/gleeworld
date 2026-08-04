@@ -340,7 +340,7 @@ export const CrewAssignmentsSection = () => {
     switch (status) {
       case 'completed': return 'bg-green-500/20 text-green-700';
       case 'in_progress': return 'bg-blue-500/20 text-blue-700';
-      case 'cancelled': return 'bg-gray-500/20 text-gray-700';
+      case 'cancelled': return 'bg-gray-500/20 text-muted-foreground';
       default: return 'bg-amber-500/20 text-amber-700';
     }
   };
