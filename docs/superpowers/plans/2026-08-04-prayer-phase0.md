@@ -18,7 +18,7 @@
 - After any DDL that the PostgREST API must see: `NOTIFY pgrst, 'reload schema';`
 - Import scripts are Node ESM `.mjs` under `scripts/`, invoked manually, idempotent, and safe to re-run.
 - `npm test` is `vitest run`. Unit tests live beside the code as `*.test.ts`.
-- No new npm runtime dependency is added in this phase. (See "Verified findings" — `romcal` is **not** needed.)
+- No new npm **runtime** dependency in this phase (`romcal` is not needed). `tsx` is added as a **dev** dependency because Node's native type-stripping will not resolve extensionless relative imports, so the admin import scripts need a TS runner.
 
 ---
 
@@ -36,7 +36,32 @@ These were tested against the live sources, not assumed. They are the reason thi
 - Dict sub-keys observed: `first_reading` (532), `responsorial_psalm` (532), `second_reading` (123), `gospel_acclamation` (532), `gospel` (532), plus rarer `night`/`dawn`/`day` (Christmas), `palm_gospel` (Palm Sunday), `third_reading`…`seventh_reading` + `responsorial_psalm_2`…`_7` + `epistle` (Easter Vigil), `evening`, and `schema_one`/`schema_two`/`schema_three` (Pentecost Vigil).
 - The five common sub-keys are an **exact 1:1 match** with the existing `gw_liturgy_masses` columns `first_reading`, `responsorial_psalm`, `second_reading`, `gospel_acclamation`, `gospel`. That is what makes the Phase 4 Liturgy Planner autofill trivial.
 - String-valued `readings`: 17 `SatMemBVM*` events read `"From the Common of the Blessed Virgin Mary"`; 4 are empty strings.
-- **Only two dates in the entire liturgical year have no structured readings on any event**: Thursday and Friday after Ash Wednesday (2026-02-19, 2026-02-20). Every other date is covered by at least one event with a `readings` dict. Task 2 Step 9 handles this explicitly rather than silently importing a hole.
+- `readings` also **nests** complete formularies: Christmas under `night`/`dawn`/`day`, the Pentecost Vigil under `schema_one`/`two`/`three`. An early version of the normaliser dropped these silently and lost Christmas entirely; they now flatten into `schema_label`.
+
+> **CORRECTION (2026-08-04).** An earlier revision of this plan claimed only two
+> dates per year lack readings. **That was wrong.** The check that produced it
+> treated `readings: {"first_reading": "", …}` — a dict of empty strings — as
+> coverage. Re-measured properly:
+>
+> | Year | Dates with no readings |
+> |---|---|
+> | 2020 | 105 (28.8%) |
+> | 2024 | 170 (46.6%) |
+> | 2026 | 104 (28.5%) |
+> | 2027 | **184 (50.4%)** |
+> | 2030 | 165 (45.2%) |
+>
+> The gaps are almost entirely **ferial weekdays in Ordinary Time** — the Year
+> I/II weekday lectionary. LitCal exposes no lectionary endpoint. This is not
+> patchable, so **LitCal supplies the calendar only.**
+
+**catholic-readings-api** — `https://cpbjr.github.io/catholic-readings-api/readings/YYYY/MM-DD.json` (**MIT**), the readings source:
+
+- **Citations only — no scripture text.** This is what keeps the licensing posture intact: citations are references, and the text renders from public-domain WEBCE we host ourselves.
+- Measured by fetching **all 365 days of 2026**: every day present, every day with at least one citation, 1,165 readings total, zero collisions on the `(slot, schema_label)` unique key.
+- Flat, all-string payload. Exactly four slots: `firstReading` (363), `psalm` (365), `secondReading` (72), `gospel` (365). **No `gospel_acclamation`** — LitCal has that for the days it covers, but mixing provenance per-slot is deliberately out of scope for Phase 0.
+- **Only 2026 and 2027 are populated upstream**; 2024, 2025 and 2028 are not. Adding each new year is an ongoing maintenance task and a real dependency on a single-maintainer project (29 stars, last push 2026-06-28).
+- **Fetching in parallel gets rate-limited**: 16 workers produced 36 consecutive failures, all of which recovered on a serial retry. The importer must fetch politely with retry, or vendor the data from a pinned commit.
 
 **World English Bible Catholic Edition** — `https://ebible.org/Scriptures/eng-web-c_usfm.zip`:
 
@@ -44,7 +69,7 @@ These were tested against the live sources, not assumed. They are the reason thi
 - Deuterocanon present in Catholic book order: `41-TOB`, `42-JDT`, `43-ESG`, `45-WIS`, `46-SIR`, `47-BAR`, `52-1MA`, `53-2MA`, `66-DAG`.
 - `copr.htm` states verbatim: *"The World English Bible is in the Public Domain. That means that it is not copyrighted."* Note `"World English Bible"` is a **trademark of eBible.org** — the name may not be used in a way implying endorsement, so the UI attributes it as the translation name only.
 
-**`romcal` is not needed.** It is MIT and correct, but it supplies calendar data *only* — no reading citations — and LitCal supplies the same calendar fields (season, rank, colour, Sunday cycle, psalter week) **plus** the readings **plus** the US national-calendar variants. Taking both would mean reconciling two sources of truth for the same facts. **This plan uses LitCal as the single source and drops `romcal` entirely**, removing a runtime dependency the design doc had assumed.
+**`romcal` is not needed.** It is MIT and correct, but it supplies calendar data *only* — no reading citations — and LitCal supplies the same calendar fields (season, rank, colour, Sunday cycle, psalter week) **plus** the US national-calendar variants. Taking both would mean reconciling two sources of truth for the same facts. **This plan uses LitCal for the calendar and drops `romcal` entirely**, removing a dependency the design doc had assumed. Readings come from catholic-readings-api, above.
 
 ---
 
@@ -58,7 +83,11 @@ These were tested against the live sources, not assumed. They are the reason thi
 | `supabase/migrations/tests/prayer_bible_test.sql` | Asserts bible schema, RLS shape, FTS index presence |
 | `supabase/migrations/20260804140000_prayer_day_rpc.sql` | `public.prayer_day(date, text)` RPC — the Phase 0 deliverable |
 | `supabase/migrations/tests/prayer_day_rpc_test.sql` | Asserts the RPC returns a day + readings for a seeded date |
-| `src/lib/prayer/litcal.ts` | Pure normalisation: LitCal event JSON → calendar-day + reading rows |
+| `src/lib/prayer/slots.ts` | Canonical slot vocabulary + ordering shared by every readings source |
+| `src/lib/prayer/litcal.ts` | Pure normalisation: LitCal event JSON → calendar-day rows |
+| `src/lib/prayer/readings.ts` | Pure normalisation: catholic-readings-api day JSON → reading rows |
+| `src/lib/prayer/readings.test.ts` | Vitest unit tests for the readings normaliser |
+| `scripts/import-readings.mjs` | Fetches reading citations for a year (serially), upserts rows |
 | `src/lib/prayer/litcal.test.ts` | Vitest unit tests for the above, including the string/empty edge cases |
 | `src/lib/prayer/usfm.ts` | Pure USFM parser: book file text → `{book, chapter, verse, text}[]` |
 | `src/lib/prayer/usfm.test.ts` | Vitest unit tests for the parser |
@@ -617,39 +646,23 @@ node scripts/import-litcal.mjs --from 2020 --to 2035
 
 Expected: one `imported` line per year, no throws.
 
-- [ ] **Step 9: Patch the two known reading gaps**
+- [ ] **Step 9: Import reading citations from catholic-readings-api**
 
-Thursday and Friday after Ash Wednesday carry no citations in LitCal. Their
-readings are fixed in the Roman Lectionary and do not vary by year. Add a data
-migration so the calendar has no holes:
+The Ash-Wednesday backfill this step used to describe is obsolete: the gap is
+~150 dates a year, not two. Readings come from a different source entirely.
 
-```sql
--- supabase/migrations/20260804125000_prayer_ash_wednesday_gap.sql
--- LitCal returns empty readings for the Thursday and Friday after Ash
--- Wednesday. These are fixed ferial readings (Lectionary 220 / 221) and do
--- not vary by year, so backfill them for every imported year.
-INSERT INTO public.gw_prayer_readings (calendar_day_id, slot, citation, schema_label, sort_order)
-SELECT d.id, v.slot, v.citation, '', v.sort_order
-FROM public.gw_prayer_calendar_days d
-JOIN (VALUES
-  ('ThursdayAfterAshWednesday', 'first_reading',      'Deuteronomy 30:15-20', 0),
-  ('ThursdayAfterAshWednesday', 'responsorial_psalm', 'Psalm 1:1-2, 3, 4, 6', 1),
-  ('ThursdayAfterAshWednesday', 'gospel_acclamation', 'Matthew 4:17',         2),
-  ('ThursdayAfterAshWednesday', 'gospel',             'Luke 9:22-25',         3),
-  ('FridayAfterAshWednesday',   'first_reading',      'Isaiah 58:1-9a',       0),
-  ('FridayAfterAshWednesday',   'responsorial_psalm', 'Psalm 51:3-4, 5-6a, 18-19', 1),
-  ('FridayAfterAshWednesday',   'gospel_acclamation', 'Amos 5:14',            2),
-  ('FridayAfterAshWednesday',   'gospel',             'Matthew 9:14-15',      3)
-) AS v(event_key, slot, citation, sort_order)
-  ON v.event_key = d.event_key
-WHERE d.rite = 'roman_catholic'
-ON CONFLICT (calendar_day_id, slot, schema_label) DO NOTHING;
-```
+Add `scripts/import-readings.mjs` (run with `npx tsx`) that walks every date in
+a year, fetches `https://cpbjr.github.io/catholic-readings-api/readings/YYYY/MM-DD.json`,
+normalises via `normalizeReadingsDay`, and attaches rows to the matching
+`gw_prayer_calendar_days` row of highest `rank_grade` for that date.
 
-> **Verify these eight citations against a printed Lectionary or the USCCB site
-> before committing.** They are the one place in this plan where content is
-> hand-entered rather than imported, and a wrong citation here is a liturgical
-> error that ships. Do not skip this check.
+Requirements proven by the spike:
+- **Fetch serially with a small delay and one retry.** 16 parallel workers
+  produced 36 consecutive failures against GitHub Pages. All recovered serially.
+- Only **2026 and 2027** exist upstream. The script must report, not silently
+  skip, a year with no data.
+- `.select()` after every write and throw on error — silent write failures have
+  bitten this codebase before.
 
 - [ ] **Step 10: Confirm zero gaps remain**
 
@@ -670,8 +683,8 @@ Expected: **0 rows.**
 
 ```bash
 git add scripts/import-litcal.mjs \
-        supabase/migrations/20260804125000_prayer_ash_wednesday_gap.sql
-git commit -m "feat(prayer): LitCal importer + Ash Wednesday ferial reading backfill"
+        scripts/import-readings.mjs
+git commit -m "feat(prayer): calendar + reading citation importers"
 ```
 
 ---
