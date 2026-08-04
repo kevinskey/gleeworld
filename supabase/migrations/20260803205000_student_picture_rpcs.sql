@@ -97,10 +97,18 @@ returns jsonb language plpgsql stable security invoker as $$
 declare target uuid := coalesce(p_user_id, auth.uid());
         owed bigint; rows jsonb;
 begin
-  select coalesce(sum(case when direction = 'charge' then amount_cents
-                          else -amount_cents end), 0)
+  -- Balance is the sum of charges still OPEN. It deliberately does NOT
+  -- subtract credit rows: gw_student_fees.status already encodes whether a
+  -- charge was settled, and paying a fee does not reliably create a
+  -- user_payments row. Netting credits against charges here would
+  -- double-count every Stripe-paid fee and overstate the balance.
+  -- Known limitation: a 'partial' charge contributes its FULL amount,
+  -- because gw_student_fees has no amount-paid column to subtract.
+  select coalesce(sum(amount_cents), 0)
     into owed from student_picture.v_student_ledger
-   where user_id = target and status <> 'waived';
+   where user_id = target
+     and direction = 'charge'
+     and status in ('outstanding','overdue','partial');
   select coalesce(jsonb_agg(to_jsonb(t) order by t.due_at nulls last), '[]'::jsonb) into rows
     from (select * from student_picture.v_student_ledger
            where user_id = target and status in ('outstanding','overdue','partial')
@@ -134,12 +142,14 @@ begin
              where status = 'missing' group by user_id limit 200) t;
   elsif p_flag = 'owes' then
     select coalesce(jsonb_agg(to_jsonb(t) order by t.balance_cents desc), '[]'::jsonb) into rows
-      from (select user_id,
-                   sum(case when direction='charge' then amount_cents
-                            else -amount_cents end) as balance_cents
-              from student_picture.v_student_ledger where status <> 'waived'
-             group by user_id having sum(case when direction='charge' then amount_cents
-                                              else -amount_cents end) > 0 limit 200) t;
+      -- Same rule as sp_balance: open charges only, no credit netting.
+      -- See the comment there for why subtracting credits double-counts.
+      from (select user_id, sum(amount_cents) as balance_cents
+              from student_picture.v_student_ledger
+             where direction = 'charge'
+               and status in ('outstanding','overdue','partial')
+             group by user_id
+            having sum(amount_cents) > 0 limit 200) t;
   else
     return jsonb_build_object('error', format('unknown flag: %s', p_flag));
   end if;
