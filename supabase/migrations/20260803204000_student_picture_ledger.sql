@@ -15,9 +15,16 @@ select f.user_id, f.tenant_id, 'fee'::text, f.id,
        round(f.amount * 100)::bigint, 'charge'::text,
        f.due_date::timestamptz,
        coalesce(f.paid_at, f.paid_date::timestamptz),
+       -- gw_student_fees.status is CHECK-constrained to exactly:
+       --   pending | partial | paid | overdue | refunded | waived
+       -- 'refunded' MUST map to waived. If it fell through to 'outstanding'
+       -- the assistant would tell a student they owe money that was refunded.
+       -- Waived/refunded is tested FIRST so a refunded-but-past-due fee is
+       -- not reported as overdue.
        case
-         when coalesce(f.paid_at, f.paid_date::timestamptz) is not null then 'paid'
-         when lower(coalesce(f.status,'')) in ('waived','cancelled') then 'waived'
+         when lower(coalesce(f.status,'')) in ('waived','refunded') then 'waived'
+         when lower(coalesce(f.status,'')) = 'paid'
+           or coalesce(f.paid_at, f.paid_date::timestamptz) is not null then 'paid'
          when lower(coalesce(f.status,'')) = 'partial' then 'partial'
          when f.due_date is not null and f.due_date < current_date then 'overdue'
          else 'outstanding'

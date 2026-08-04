@@ -40,6 +40,18 @@ begin
     raise exception 'fees are charges, got direction %', r.direction;
   end if;
 
+  -- A refunded fee must NOT be reported as owed. This is the regression guard
+  -- for the bug where 'refunded' fell through to overdue.
+  insert into public.gw_student_fees
+      (id, user_id, amount, due_date, status, semester, academic_year, tenant_id)
+    values ('99999999-9999-9999-9999-999999999999', v_stu, 75.00, current_date - 60,
+            'refunded', 'Fall 2026', '2026-2027', v_tenant);
+  select * into r from student_picture.v_student_ledger
+   where source_id = '99999999-9999-9999-9999-999999999999';
+  if r.status <> 'waived' then
+    raise exception 'a refunded fee must map to waived, got % (it would be counted as owed)', r.status;
+  end if;
+
   raise notice 'ALL ASSERTIONS PASSED';
 end $$;
 rollback;
