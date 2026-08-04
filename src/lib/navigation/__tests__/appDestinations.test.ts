@@ -131,6 +131,10 @@ const KNOWN_ROUTES = new Set([
   '/dashboard/music-tools', '/dashboard/liturgy', '/tour-manager',
   '/dashboard/auditions', '/dashboard/pr-hub', '/admin/fan-page',
   '/dashboard/feeds', '/dashboard/shop', '/dashboard/alumni',
+  // Verified against src/App.tsx: both <Route path="/dashboard/fees"> and
+  // <Route path="/dashboard/my-fees"> exist. Both were missed when the Student
+  // Fees ledger shipped — exactly the drift this test is here to catch.
+  '/dashboard/fees', '/dashboard/my-fees',
   '/dashboard/box-office', '/dashboard/users', '/admin/public-page',
   '/dashboard/analytics', '/dashboard/workspace', '/songwriting',
   '/planner', '/dashboard/fundraising',
@@ -172,7 +176,13 @@ describe('getAppTiles', () => {
     for (const role of ['student', 'faculty'] as const) {
       const { primary, overflow } = getAppTiles(role, allOn, adminNav);
       for (const dest of [...primary, ...overflow]) {
-        expect(KNOWN_ROUTES.has(dest.to)).toBe(true);
+        // Name the offender: a bare `expected false to be true` gives no clue
+        // which tile is dead, which is most of the cost of this test failing.
+        expect(
+          KNOWN_ROUTES.has(dest.to),
+          `${role} grid tile "${dest.label}" points at ${dest.to}, which is not in KNOWN_ROUTES. ` +
+            `Check src/App.tsx: if the route exists, add it to KNOWN_ROUTES above; if it does not, the tile is dead.`,
+        ).toBe(true);
       }
     }
   });
