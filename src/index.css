@@ -279,17 +279,23 @@
     --gray-5: 240 11% 91%; /* #E5E5EA */
     --gray-6: 240 24% 96%; /* #F2F2F7 */
 
-    /* ── Tint: the ONE accent (Apple AccentColor model). Full-color token;
-       composes with tenant plumbing: tenant sets --site-accent, default
-       falls through to --primary (GleeWorld purple, iOS 26 family). ── */
+    /* ── Tint: the ONE accent (Apple AccentColor model). Full-color token.
+       Reads --primary, which TenantThemeRoot sets from the tenant's
+       primary_color AFTER contrast-clamping it against the app's white
+       cards. It deliberately does NOT read --site-accent: that var holds
+       the tenant's RAW, unclamped hex for the public site, and routing
+       buttons through it skipped the very clamp that keeps button text
+       legible (a light brand accent rendered ~2:1 against white). Because
+       --tint now equals hsl(var(--primary)), `bg-primary` and
+       `bg-[var(--tint)]` paint identically — one button color everywhere,
+       whether a surface uses the token or the Tailwind class. ── */
     --primary: 293 74% 45%;           /* #A826BF — darkened from #CB30E0 for WCAG AA button contrast (5.9:1 w/ white) */
     --primary-foreground: 0 0% 100%;
-    --tint: var(--site-accent, hsl(var(--primary)));
-    /* --tint-contrast pairs with --tint: when --site-accent is set,
-       TenantThemeRoot writes --site-accent-contrast (YIQ-derived) too,
-       so the button's text stays readable on a dark tenant accent.
-       Falls back to --primary-foreground when accent is unset. */
-    --tint-contrast: var(--site-accent-contrast, hsl(var(--primary-foreground)));
+    --tint: hsl(var(--primary));
+    /* --tint-contrast pairs with --tint. TenantThemeRoot derives
+       --primary-foreground from the clamped primary via YIQ, so this stays
+       readable on both light and dark tenant brands. */
+    --tint-contrast: hsl(var(--primary-foreground));
     --secondary: 240 24% 96%;         /* iOS "gray button" fill, NOT cyan */
     --secondary-foreground: 0 0% 0%;
     --link: var(--primary);           /* chrome links ride the tint now */
@@ -640,12 +646,10 @@ button.module-card-solid:hover,
     --input: 240 2% 11%;
     --primary: 294 88% 58%;           /* #DB34F2 iOS purple (dark variant) */
     --primary-foreground: 0 0% 100%;
-    --tint: var(--site-accent, hsl(var(--primary)));
-    /* --tint-contrast pairs with --tint: when --site-accent is set,
-       TenantThemeRoot writes --site-accent-contrast (YIQ-derived) too,
-       so the button's text stays readable on a dark tenant accent.
-       Falls back to --primary-foreground when accent is unset. */
-    --tint-contrast: var(--site-accent-contrast, hsl(var(--primary-foreground)));
+    --tint: hsl(var(--primary));
+    /* Dark-mode pair — same reasoning as the light block above: the tint
+       rides the clamped --primary, never the raw --site-accent. */
+    --tint-contrast: hsl(var(--primary-foreground));
     --secondary: 240 2% 16%;
     --secondary-foreground: 0 0% 100%;
     --ring: var(--primary);
