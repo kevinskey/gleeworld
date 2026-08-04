@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
@@ -50,6 +51,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -179,6 +181,18 @@ export default function PublicPageEditor() {
   const [resetting, setResetting] = useState(false);
   const [packagePickerOpen, setPackagePickerOpen] = useState(false);
   const [applyingPackage, setApplyingPackage] = useState<string | null>(null);
+  // Package staged for confirmation. Applying one DELETEs every block the
+  // tenant has, so the click can't go straight through to applyPackage —
+  // "Change look" sounds cosmetic and read as safe, and it silently wiped a
+  // configured hero (Kevin, 2026-08-04). Nothing is destroyed until the
+  // dialog is confirmed.
+  const [pendingPackage, setPendingPackage] = useState<TemplatePackage | null>(null);
+  // Pre-apply snapshot of the block list, kept so the success toast can offer
+  // a real Undo. Held in state (not localStorage) deliberately: it's an
+  // in-session safety net, and a stale cross-session snapshot restoring over
+  // newer work would be its own data-loss bug.
+  const [undoBlocks, setUndoBlocks] = useState<SiteBlock[] | null>(null);
+  const [restoring, setRestoring] = useState(false);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const sensors = useSensors(
@@ -535,10 +549,40 @@ export default function PublicPageEditor() {
   // brand identity survives). Client-side rather than an RPC so package
   // definitions stay in TypeScript alongside the block modules they refer
   // to. RLS scopes the delete + insert to the current tenant.
+  // Restore the block list captured before the last package apply. Mirrors
+  // applyPackage's delete-then-insert, minus the theme write, so an Undo puts
+  // the tenant back exactly where they were.
+  const restoreBlocks = async (snapshot: SiteBlock[]) => {
+    if (!site || !snapshot.length) return;
+    setRestoring(true);
+    try {
+      const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
+      if (del.error) throw del.error;
+      const rows = snapshot.map((b, i) => ({
+        block_type: b.block_type,
+        position: i,
+        config: b.config,
+        is_visible: b.is_visible,
+      }));
+      const ins = await supabase.from('gw_site_blocks').insert(rows);
+      if (ins.error) throw ins.error;
+      await queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
+      setUndoBlocks(null);
+      toast({ title: 'Blocks restored', description: 'Your previous layout and settings are back.' });
+    } catch (e: any) {
+      toast({ title: 'Could not restore', description: e.message, variant: 'destructive' });
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   const applyPackage = async (pkg: TemplatePackage) => {
     if (!site) return;
     if (pkg.comingSoon) return;
     setApplyingPackage(pkg.id);
+    // Capture before the delete so Undo has something to put back. `blocks`
+    // is the live draft list, which is exactly what the delete destroys.
+    const snapshot = blocks.map((b) => ({ ...b }));
     try {
       const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
       if (del.error) throw del.error;
@@ -592,7 +636,18 @@ export default function PublicPageEditor() {
       await queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
       await queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
       setPackagePickerOpen(false);
-      toast({ title: `${pkg.name} applied`, description: 'Your site now uses this look.' });
+      setUndoBlocks(snapshot);
+      toast({
+        title: `${pkg.name} applied`,
+        description: `Replaced ${snapshot.length} block${snapshot.length === 1 ? '' : 's'}. Undo puts your previous layout back.`,
+        action: snapshot.length
+          ? (
+              <ToastAction altText="Undo and restore my previous blocks" onClick={() => restoreBlocks(snapshot)}>
+                Undo
+              </ToastAction>
+            )
+          : undefined,
+      });
     } catch (e: any) {
       toast({ title: 'Could not apply look', description: e.message, variant: 'destructive' });
     } finally {
@@ -703,7 +758,9 @@ export default function PublicPageEditor() {
                     Presets
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Applying a preset replaces your current blocks with that layout. Your brand colors and uploaded media stay the same.
+                    Applying a preset <strong className="font-semibold text-foreground">deletes your current blocks</strong> and
+                    their settings, then rebuilds the page from that layout. Your brand colors and uploaded media stay the same.
+                    You&rsquo;ll be asked to confirm first.
                   </p>
                   <div className="space-y-2">
                     {PACKAGE_LIST.map((pkg) => {
@@ -713,7 +770,7 @@ export default function PublicPageEditor() {
                         <button
                           key={pkg.id}
                           type="button"
-                          onClick={() => !pkg.comingSoon && applyPackage(pkg)}
+                          onClick={() => !pkg.comingSoon && setPendingPackage(pkg)}
                           disabled={pkg.comingSoon || busy}
                           className={`w-full text-left rounded-xl border p-3 space-y-1 transition-colors ${
                             active
@@ -845,6 +902,63 @@ export default function PublicPageEditor() {
               </div>
             </SheetContent>
           </Sheet>
+          {/* Confirmation gate for "Change look". The label reads cosmetic but
+              applyPackage DELETEs every gw_site_blocks row for the tenant, so
+              a single stray click used to wipe a fully configured page with no
+              warning and no way back. Names the exact blocks about to go so
+              the cost is visible before the click, not after. */}
+          <Dialog
+            open={!!pendingPackage}
+            onOpenChange={(open) => {
+              if (!open) setPendingPackage(null);
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Replace your page with the {pendingPackage?.name} look?</DialogTitle>
+                <DialogDescription asChild>
+                  <div className="space-y-3">
+                    <p>
+                      This <strong className="text-foreground">permanently deletes all {blocks.length} block
+                      {blocks.length === 1 ? '' : 's'}</strong> currently on your page, along with every setting
+                      on them — hero images, headlines, RSVP links, and booking config included — and rebuilds
+                      the page from the preset.
+                    </p>
+                    {blocks.length > 0 && (
+                      <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
+                        <p className="text-xs font-medium text-foreground mb-1.5">About to be deleted:</p>
+                        <ul className="text-xs space-y-0.5">
+                          {blocks.map((b) => (
+                            <li key={b.id}>• {getBlockModule(b.block_type)?.name ?? b.block_type}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    <p>
+                      Your brand colors, uploaded media, and theme are kept. You can Undo straight after
+                      from the toast, but that offer is gone once you leave the page.
+                    </p>
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setPendingPackage(null)}>
+                  Keep my page
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={!!applyingPackage}
+                  onClick={() => {
+                    const pkg = pendingPackage;
+                    setPendingPackage(null);
+                    if (pkg) applyPackage(pkg);
+                  }}
+                >
+                  Delete {blocks.length} block{blocks.length === 1 ? '' : 's'} and apply
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Dialog open={resetOpen} onOpenChange={setResetOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" title="Replace all blocks with the default layout">
@@ -870,21 +984,20 @@ export default function PublicPageEditor() {
             </DialogContent>
           </Dialog>
           {site.is_published && site.slug && (
-            // "View site" opens the URL a visitor would use to see the built
-            // blocks. Two cases:
-            //   - main tenant: gleeworld.org root is the marketing page
-            //     (GleeWorldLanding). The built blocks only render at
-            //     /sites/main. Link there.
-            //   - any other tenant: subdomain root renders TenantLanding,
-            //     which mounts PublicSiteView for the tenant's published
-            //     blocks. Link to <slug>.gleeworld.org.
+            // "View site" opens the built blocks at /sites/<slug>, which
+            // mounts PublicSitePage directly.
+            //
+            // It used to send non-main tenants to the subdomain root on the
+            // theory that it renders TenantLanding. That holds for anonymous
+            // visitors, but `/` is HomeRoute, and HomeRoute runs
+            // useRoleBasedRedirect() — so an authenticated user is bounced to
+            // their role's home. The only person who ever clicks this button
+            // is the signed-in admin editing the page, so it always landed on
+            // Command Center instead of the site. /sites/<slug> has no such
+            // redirect and is the same address shown in "Page address" below.
             <Button variant="outline" asChild title="Open your live site in a new tab">
               <a
-                href={
-                  site.slug === 'main'
-                    ? `https://gleeworld.org/sites/main`
-                    : `https://${site.slug}.gleeworld.org/`
-                }
+                href={`/sites/${site.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
