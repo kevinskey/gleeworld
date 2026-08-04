@@ -1228,11 +1228,23 @@ export default function PublicPageEditor() {
           contextually. */}
       <Sheet
         open={!!settingsOpenId}
+        modal={false}
         onOpenChange={(open) => {
           if (!open) setSettingsOpenId(null);
         }}
       >
-        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+        {/* Left side, no backdrop, non-modal (Kevin, 2026-07-31): the live
+            preview sits to the right on desktop/iPad and must stay fully
+            legible AND interactive while editing — block edits repaint in
+            view as the user tweaks them. Outside interactions are prevented
+            from auto-closing so scrolling/clicking the preview keeps the
+            panel open; close via the X. Phones: w-full either way. */}
+        <SheetContent
+          side="left"
+          hideOverlay
+          onInteractOutside={(e) => e.preventDefault()}
+          className="w-full sm:max-w-md overflow-y-auto"
+        >
           {(() => {
             const b = blocks.find((x) => x.id === settingsOpenId);
             if (!b) return null;

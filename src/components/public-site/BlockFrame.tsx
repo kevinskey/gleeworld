@@ -169,48 +169,48 @@ export const BlockFrame = forwardRef<HTMLDivElement, BlockFrameProps>(function B
               {...attributes}
               {...listeners}
               title="Drag to reorder"
-              className="p-1.5 rounded cursor-grab active:cursor-grabbing text-slate-500 hover:bg-slate-100 hover:text-slate-700 touch-none"
+              className="p-2 rounded cursor-grab active:cursor-grabbing text-slate-500 hover:bg-slate-100 hover:text-slate-700 touch-none"
               aria-label="Reorder block"
             >
-              <GripVertical className="w-3.5 h-3.5" />
+              <GripVertical className="w-[18px] h-[18px]" />
             </button>
           )}
           <span className="pl-1 pr-1 text-xs font-medium text-slate-700 whitespace-nowrap">
             {blockName}
           </span>
-          <span className="w-px h-4 bg-slate-200 mx-0.5" />
+          <span className="w-px h-5 bg-slate-200 mx-0.5" />
           {locked ? (
             <span
-              className="p-1.5 text-slate-400"
+              className="p-2 text-slate-400"
               title="Locked — the header stays at the top of every page"
             >
-              <Lock className="w-3.5 h-3.5" />
+              <Lock className="w-[18px] h-[18px]" />
             </span>
           ) : (
             <>
               <TB onClick={onMoveUp} title="Move up" disabled={!canMoveUp}>
-                <ArrowUp className="w-3.5 h-3.5" />
+                <ArrowUp className="w-[18px] h-[18px]" />
               </TB>
               <TB onClick={onMoveDown} title="Move down" disabled={!canMoveDown}>
-                <ArrowDown className="w-3.5 h-3.5" />
+                <ArrowDown className="w-[18px] h-[18px]" />
               </TB>
               <TB onClick={onDuplicate} title="Duplicate">
-                <Copy className="w-3.5 h-3.5" />
+                <Copy className="w-[18px] h-[18px]" />
               </TB>
               <TB
                 onClick={onToggleVisibility}
                 title={visible ? 'Hide from published site' : 'Show on published site'}
               >
-                {visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                {visible ? <Eye className="w-[18px] h-[18px]" /> : <EyeOff className="w-[18px] h-[18px]" />}
               </TB>
             </>
           )}
           <TB onClick={onOpenSettings} title="Block settings">
-            <Settings2 className="w-3.5 h-3.5" />
+            <Settings2 className="w-[18px] h-[18px]" />
           </TB>
           {!locked && (
             <TB onClick={onDelete} title="Delete block" danger>
-              <Trash2 className="w-3.5 h-3.5" />
+              <Trash2 className="w-[18px] h-[18px]" />
             </TB>
           )}
         </div>
