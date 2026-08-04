@@ -421,6 +421,60 @@ export const TOOL_CATALOG: ToolDef[] = [
     },
     minRole: 'member', execution: 'client', confirm: false,
   },
+  {
+    name: 'get_assignments',
+    description: 'Upcoming or overdue coursework for the caller, or for another student if user_id is given. Use for "what is due", "what am I behind on".',
+    parameters: { type: 'object', properties: {
+      window: str('week | overdue | all — defaults to week'),
+      course_id: str('Optional course uuid to narrow to one class'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_grades',
+    description: 'Per-course grade averages, or every graded item when detail is "all". Use for "how am I doing", "show me all my grades".',
+    parameters: { type: 'object', properties: {
+      detail: str('summary | all — defaults to summary'),
+      course_id: str('Optional course uuid'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_grade_trend',
+    description: 'Compares the average of the last 5 graded items against the 5 before. Use for "am I slipping", "is my grade going up".',
+    parameters: { type: 'object', properties: {
+      course_id: str('Optional course uuid'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_attendance',
+    description: 'Attendance counts by status plus the most recent absences and late arrivals.',
+    parameters: { type: 'object', properties: {
+      days: str('Lookback window in days — defaults to 120'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_balance',
+    description: 'Outstanding balance in cents plus open charges with due dates. Use for "what do I owe", "am I paid up".',
+    parameters: { type: 'object', properties: {
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_roster_flags',
+    description: 'Directors only. Lists students crossing a concern threshold across the whole roster.',
+    parameters: { type: 'object', properties: {
+      flag: str('failing | absences | missing_work | owes'),
+    }, required: ['flag'] },
+    minRole: 'admin', execution: 'server', confirm: false,
+  },
 ];
 
 export function toolsForRole(role: AssistantRole): ToolDef[] {

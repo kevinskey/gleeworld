@@ -1,5 +1,6 @@
 // Read-only tool executors. The supabase client is constructed with the
 // CALLER's JWT (Task 5), so RLS scopes every query to their tenant/role.
+import { executeStudentPictureTool } from './studentPicture.ts';
 
 type SupabaseLike = {
   from: (table: string) => any;
@@ -7,7 +8,7 @@ type SupabaseLike = {
   rpc?: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 };
 
-interface Deps {
+export interface Deps {
   supabase: SupabaseLike;
   youtubeApiKey?: string;
   googleMapsApiKey?: string;
@@ -55,6 +56,13 @@ export async function executeServerTool(
       case 'find_nearby_place': return await findNearbyPlace(args, deps);
       case 'get_preference': return { replyJson: await getPreference(args, deps) };
       case 'web_search': return await webSearch(args, deps);
+      case 'get_assignments':
+      case 'get_grades':
+      case 'get_grade_trend':
+      case 'get_attendance':
+      case 'get_balance':
+      case 'get_roster_flags':
+        return { replyJson: await executeStudentPictureTool(name, args, deps) };
       default: return { replyJson: JSON.stringify({ error: `Unknown tool: ${name}` }) };
     }
   } catch (e) {
