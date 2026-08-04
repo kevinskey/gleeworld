@@ -15,7 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import {
-  CalendarDays, MapPin, Clock, Ticket, Loader2, Minus, Plus, ShoppingBag,
+  CalendarDays, MapPin, Clock, Ticket, Loader2, Minus, Plus, ShoppingBag, ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,8 +33,11 @@ const schema = z.object({
   buttonLabel: z.string().default('RSVP and reserve seats'),
   /** Hide the inline card when the page already has its own CTA into #rsvp. */
   showCard: z.boolean().default(true),
-  merchHeading: z.string().default('Souvenirs'),
+  merchHeading: z.string().default('Souvenirs and Gifts'),
   merchBlurb: z.string().default('Take something home from the evening. Picked up at the concert.'),
+  /** Link out to the tenant's white-label TSB storefront for the full catalog. */
+  showStoreLink: z.boolean().default(true),
+  storeLinkLabel: z.string().default('Browse the full shop'),
 });
 type Config = z.infer<typeof schema>;
 
@@ -289,6 +292,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           isPreview={ctx.isPreview}
           merchHeading={config.merchHeading}
           merchBlurb={config.merchBlurb}
+          storeLabel={config.showStoreLink ? config.storeLinkLabel : ''}
         />
       )}
     </section>
@@ -300,7 +304,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 interface MerchSelection { quantity: number; size: string; color: string }
 
 function RsvpDialog({
-  open, onOpenChange, data, tenantSlug, eventSlug, isPreview, merchHeading, merchBlurb,
+  open, onOpenChange, data, tenantSlug, eventSlug, isPreview, merchHeading, merchBlurb, storeLabel,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -310,6 +314,8 @@ function RsvpDialog({
   isPreview: boolean;
   merchHeading: string;
   merchBlurb: string;
+  /** Empty string hides the storefront link. */
+  storeLabel: string;
 }) {
   const tier = data.tiers[0];
   const [attending, setAttending] = useState(1);
@@ -320,6 +326,22 @@ function RsvpDialog({
   const [merch, setMerch] = useState<Record<string, MerchSelection>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // The tenant's white-label TSB storefront, where the full catalog (and the
+  // mockups behind it) is built. The two souvenirs offered inline are the ones
+  // handed over at the concert; anything else ships from the store, which is a
+  // separate checkout on tshirtbrothers.com — hence a link, not a basket merge.
+  const { data: store } = useQuery({
+    queryKey: ['public-store-url', tenantSlug],
+    enabled: Boolean(storeLabel) && Boolean(tenantSlug),
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await supabase.rpc('gw_public_store_url', { p_slug: tenantSlug });
+      if (error) throw new Error(error.message);
+      return (data as { url?: string | null } | null)?.url ?? null;
+    },
+  });
+  const storeUrl = storeLabel ? store ?? null : null;
 
   // One updater so quantity/size/color never clobber each other. Defaults come
   // from the first option, matching what the buyer sees pre-selected.
@@ -440,8 +462,10 @@ function RsvpDialog({
               </div>
             </div>
 
-            {/* Souvenirs */}
-            {data.merch.length > 0 && (
+            {/* Souvenirs — renders for the storefront link alone, so an event
+                with nothing to hand over at the door still points buyers at
+                the shop. */}
+            {(data.merch.length > 0 || storeUrl) && (
               <div className="border-t border-border pt-5">
                 <Label className="text-base font-semibold flex items-center gap-2">
                   <ShoppingBag className="w-4 h-4" style={{ color: 'var(--site-accent)' }} />
@@ -526,6 +550,23 @@ function RsvpDialog({
                     );
                   })}
                 </div>
+
+                {storeUrl && (
+                  <a
+                    href={storeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-border p-3 hover:border-foreground/30 transition-colors"
+                  >
+                    <span className="min-w-0">
+                      <span className="block font-medium">{storeLabel}</span>
+                      <span className="block text-sm text-muted-foreground">
+                        More designs, sizes and gifts — ordered and shipped separately.
+                      </span>
+                    </span>
+                    <ExternalLink className="w-4 h-4 shrink-0" style={{ color: 'var(--site-accent)' }} />
+                  </a>
+                )}
               </div>
             )}
 
@@ -654,6 +695,29 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
         <Label htmlFor="rsvp-merch-blurb">Souvenir section note</Label>
         <Textarea id="rsvp-merch-blurb" value={config.merchBlurb} onChange={(e) => set({ merchBlurb: e.target.value })} rows={2} className="mt-1" />
       </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={config.showStoreLink}
+          onChange={(e) => set({ showStoreLink: e.target.checked })}
+        />
+        Link to our full shop
+      </label>
+      {config.showStoreLink && (
+        <div>
+          <Label htmlFor="rsvp-store-label">Shop link label</Label>
+          <Input
+            id="rsvp-store-label"
+            value={config.storeLinkLabel}
+            onChange={(e) => set({ storeLinkLabel: e.target.value })}
+            className="mt-1"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Points at your branded storefront, where you build the products and mockups. Set it up
+            under Workspace Settings → Fundraising Store; the link hides itself until a store exists.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
