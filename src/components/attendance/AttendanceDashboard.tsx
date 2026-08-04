@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { getOrgName } from '@/lib/orgName';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EventAttendanceDialog } from '@/components/calendar/command-center/EventAttendanceDialog';
@@ -251,7 +252,7 @@ export const AttendanceDashboard = () => {
               Attendance Command Center
             </h1>
             <p className="text-white/80 mt-1 text-sm sm:text-base">
-              {isAdmin ? 'Track, manage, and analyze attendance across the Glee Club' : 'Your attendance overview and check-in tools'}
+              {isAdmin ? `Track, manage, and analyze attendance across ${getOrgName()}` : 'Your attendance overview and check-in tools'}
             </p>
           </div>
           {isAdmin && !statsLoading && (
