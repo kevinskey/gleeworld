@@ -82,7 +82,7 @@ Profiled across all 1,165 citations imported in Phase 0. Percentages are of the 
   `BookRef = { usfmCode: string; singleChapter: boolean }`.
   Task 2 consumes it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -123,12 +123,12 @@ describe('resolveBook', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `npx vitest run src/lib/prayer/books.test.ts`
 Expected: FAIL, cannot resolve `./books`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Build a `Record<string, BookRef>` keyed by lowercased name. Cover, at minimum, every one of the 62 corpus names. Derive the authoritative list by querying the imported data:
 
@@ -140,18 +140,26 @@ psql "$PRAYER_DB_URL" -tA -c \
 
 Include common abbreviations (`Ps`, `Mt`, `Cf.` stripped) and the single-chapter set `{ OBA, PHM, 2JN, 3JN, JUD }`.
 
-- [ ] **Step 4: Confirm green**
+> **Deviation:** this run had neither a live `$PRAYER_DB_URL` nor outbound
+> network access (both blocked by the execution environment's egress
+> policy), so the query above could not be run. Coverage was instead built
+> from the full static set of all 73 WEBCE book names plus ~90 common
+> abbreviations, not validated against the live 62-name corpus. Treat as
+> unverified until Step 5 runs for real.
+
+- [x] **Step 4: Confirm green**
 
 Run: `npx vitest run src/lib/prayer/books.test.ts`
 
 - [ ] **Step 5: Prove every corpus name resolves**
 
-```bash
-npx tsx scripts/check-citation-coverage.ts --books-only
-```
-Expected: `0 unresolved book names`. Any miss is a real gap — add it, do not loosen the test.
+**Not run.** `scripts/check-citation-coverage.ts` doesn't exist yet (it's a
+Task 2 deliverable) and this environment has no DB/network access to fetch
+the corpus. Someone with `$PRAYER_DB_URL` access must run this once Task 2
+lands the script, before Task 1 can be considered verified rather than
+merely plausible.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/lib/prayer/books.ts src/lib/prayer/books.test.ts
