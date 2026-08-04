@@ -223,6 +223,10 @@ const contentConfig: Record<string, {
     title: 'Notes',
     description: 'Real-time status updates from exec board and tour managers'
   },
+  'budget': {
+    title: 'Budget',
+    description: 'Travel expenses and revenue for the trip'
+  },
   'stipends': {
     title: 'Stipends',
     description: 'Per diem directory and stipend calculator'
