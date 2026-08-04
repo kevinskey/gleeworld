@@ -17,6 +17,8 @@ $$;
 
 -- 1. gw_assignments — the unified table. student_id null = course-wide.
 create or replace view student_picture.asg_gw_assignments
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   due_at, points_possible, status, submitted_at)
 with (security_invoker = on) as
 select
   coalesce(a.student_id, e.user_id)              as user_id,
@@ -47,6 +49,8 @@ where a.is_active is not false
 
 -- 2. gw_course_assignments — always course-wide; due_date not due_at.
 create or replace view student_picture.asg_course_assignments
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   due_at, points_possible, status, submitted_at)
 with (security_invoker = on) as
 select
   e.user_id, a.tenant_id, 'course_assignment'::text, a.id, a.title::text,
@@ -64,6 +68,8 @@ where a.is_published is not false;
 
 -- 3. gw_sight_reading_assignments — points_possible, due_date, course-wide.
 create or replace view student_picture.asg_sight_reading
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   due_at, points_possible, status, submitted_at)
 with (security_invoker = on) as
 select
   e.user_id, a.tenant_id, 'sight_reading'::text, a.id, a.title,
@@ -82,6 +88,8 @@ where a.is_active is not false;
 -- 4. gw_parttrack_assignments — assigned by ensemble/voice_part, no points, no course.
 --    Roster comes from profiles matching the voice part in that tenant.
 create or replace view student_picture.asg_parttrack
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   due_at, points_possible, status, submitted_at)
 with (security_invoker = on) as
 select
   p.user_id, a.tenant_id, 'parttrack'::text, a.id,
@@ -99,6 +107,8 @@ where p.user_id is not null;
 
 -- 5. music_fundamentals_assignments — tenant-wide, max_score.
 create or replace view student_picture.asg_music_fundamentals
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   due_at, points_possible, status, submitted_at)
 with (security_invoker = on) as
 select
   s.student_id, a.tenant_id, 'music_fundamentals'::text, a.id, a.title,
@@ -112,6 +122,8 @@ where a.is_active is not false and s.student_id is not null;
 
 -- 6. gw_course_tests — no due date column; available_until is the deadline.
 create or replace view student_picture.asg_course_tests
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   due_at, points_possible, status, submitted_at)
 with (security_invoker = on) as
 select
   e.user_id, t.tenant_id, 'course_test'::text, t.id, t.title::text,
@@ -130,6 +142,8 @@ where t.is_published is not false;
 
 -- 7. glee_academy_tests — course_id is TEXT here, not uuid.
 create or replace view student_picture.asg_academy_tests
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   due_at, points_possible, status, submitted_at)
 with (security_invoker = on) as
 select
   s.student_id, t.tenant_id, 'academy_test'::text, t.id, t.title,
@@ -143,6 +157,8 @@ where t.is_published is not false and s.student_id is not null;
 
 -- Union
 create or replace view student_picture.v_student_assignments
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   due_at, points_possible, status, submitted_at)
 with (security_invoker = on) as
   select * from student_picture.asg_gw_assignments
   union all select * from student_picture.asg_course_assignments

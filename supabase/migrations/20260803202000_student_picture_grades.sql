@@ -1,4 +1,6 @@
 create or replace view student_picture.grd_gw_grades
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
 select g.student_id, g.tenant_id, 'grade'::text, g.id,
        coalesce(a.title,'Assignment')::text, a.course_id, c.title,
@@ -10,6 +12,8 @@ left join public.gw_courses c on c.id = a.course_id
 where g.student_id is not null;
 
 create or replace view student_picture.grd_final
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
 select f.student_id, f.tenant_id, 'final_grade'::text, f.id,
        coalesce(a.title,'Final')::text, f.course_id, c.title,
@@ -21,6 +25,8 @@ left join public.gw_courses c on c.id = f.course_id
 where f.student_id is not null and f.is_published is not false;
 
 create or replace view student_picture.grd_semester
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
 select s.user_id, s.tenant_id, 'semester'::text, s.id,
        coalesce(s.semester_name,'Semester')::text, null::uuid, null::text,
@@ -29,6 +35,8 @@ select s.user_id, s.tenant_id, 'semester'::text, s.id,
 from public.gw_semester_grades s where s.user_id is not null;
 
 create or replace view student_picture.grd_discussion
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
 select d.student_id, d.tenant_id, 'discussion'::text, d.id,
        coalesce(cd.title,'Discussion')::text, cd.course_id, c.title,
@@ -41,6 +49,8 @@ where d.student_id is not null;
 
 -- external_grades keys on EMAIL. Unmatched emails are dropped, not nulled.
 create or replace view student_picture.grd_external
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
 select p.user_id, x.tenant_id, 'external'::text, x.id,
        coalesce(x.exercise_title,'External exercise')::text, null::uuid, null::text,
@@ -54,6 +64,8 @@ join public.gw_profiles p
 where p.user_id is not null;
 
 create or replace view student_picture.grd_test_submissions
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
 select t.student_id, t.tenant_id, 'test'::text, t.id,
        coalesce(gt.title,'Test')::text, null::uuid, null::text,
@@ -64,6 +76,8 @@ left join public.glee_academy_tests gt on gt.id = t.test_id
 where t.student_id is not null and t.status = 'graded';
 
 create or replace view student_picture.grd_test_attempts
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
 select a.user_id, a.tenant_id, 'course_test'::text, a.id,
        coalesce(t.title,'Test')::text, t.course_id, c.title,
@@ -76,6 +90,8 @@ left join public.gw_courses c on c.id = t.course_id
 where a.user_id is not null and a.is_graded;
 
 create or replace view student_picture.grd_course_submissions
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
 select s.student_id, s.tenant_id, 'course_submission'::text, s.id,
        coalesce(a.title,'Assignment')::text, a.course_id, c.title,
@@ -88,6 +104,8 @@ left join public.gw_courses c on c.id = a.course_id
 where s.student_id is not null and s.graded_at is not null;
 
 create or replace view student_picture.grd_assignment_submissions
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
 select s.user_id, s.tenant_id, 'sight_reading'::text, s.id,
        coalesce(a.title,'Sight reading')::text, a.course_id, c.title,
@@ -101,6 +119,8 @@ left join public.gw_courses c on c.id = a.course_id
 where s.user_id is not null and s.graded_at is not null;
 
 create or replace view student_picture.grd_music_fundamentals
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
 select s.student_id, s.tenant_id, 'music_fundamentals'::text, s.id,
        coalesce(a.title,'Exercise')::text, null::uuid, null::text,
@@ -112,6 +132,8 @@ left join public.music_fundamentals_assignments a on a.id = s.assignment_id
 where s.student_id is not null and s.graded_at is not null;
 
 create or replace view student_picture.v_student_grades
+  (user_id, tenant_id, source, source_id, title, course_id, course_name,
+   points_earned, points_possible, percent, letter, graded_at, category, is_final)
 with (security_invoker = on) as
   select * from student_picture.grd_gw_grades
   union all select * from student_picture.grd_final
