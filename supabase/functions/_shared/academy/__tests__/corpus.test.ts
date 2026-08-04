@@ -80,6 +80,17 @@ describe('ACADEMY_CORPUS', () => {
     expect(hits.some((h) => h.text.toLowerCase().includes('walking'))).toBe(true);
   });
 
+  // Regression: the 2026-08-04 live smoke test could not find the grading
+  // breakdown because each entry became a chunk titled "Exams" in which the
+  // word "grading" never appeared. groupLabel carries the container name in.
+  it('finds the grading breakdown by its container name', () => {
+    const index = buildIndex(ACADEMY_CORPUS);
+    const hits = searchAcademy('what is the grading breakdown for the course', index);
+    expect(hits.length).toBeGreaterThan(0);
+    expect(hits[0].chunk.title.toLowerCase()).toContain('grading breakdown');
+    expect(hits[0].text).toContain('20');
+  });
+
   it('answers a repertoire query', () => {
     const index = buildIndex(ACADEMY_CORPUS);
     const hits = searchAcademy('Palestrina Sicut Cervus', index);

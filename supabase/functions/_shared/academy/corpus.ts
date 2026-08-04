@@ -4173,251 +4173,251 @@ export const ACADEMY_CORPUS: AcademyChunk[] = [
     "url": "https://kevinphillipjohnson.com/academy/terms.html"
   },
   {
-    "id": "workbook/attendance-participation",
+    "id": "workbook/course-objective-conduct-30-minutes-of-a-major-choral-work-by-memory",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Attendance & Participation",
-    "text": "Percentage: 20\nDescription: Active engagement in class activities and discussions",
-    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
-  },
-  {
-    "id": "workbook/conduct-30-minutes-of-a-major-choral-work-by-memory",
-    "page": "workbook",
-    "pageTitle": "Conducting Workbook",
-    "title": "Conduct 30 minutes of a major choral work by memory.",
+    "title": "Course objective — Conduct 30 minutes of a major choral work by memory.",
     "text": "Description: Conduct 30 minutes of a major choral work by memory.",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/conduct-beat-patterns-in-various-tempi",
+    "id": "workbook/course-objective-conduct-beat-patterns-in-various-tempi",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Conduct beat patterns in various tempi.",
+    "title": "Course objective — Conduct beat patterns in various tempi.",
     "text": "Description: Conduct beat patterns in various tempi.",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/conduct-choral-rehearsals-in-the-city-of-atlanta",
+    "id": "workbook/course-objective-conduct-choral-rehearsals-in-the-city-of-atlanta",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Conduct choral rehearsals in the City of Atlanta.",
+    "title": "Course objective — Conduct choral rehearsals in the City of Atlanta.",
     "text": "Description: Conduct choral rehearsals in the City of Atlanta.",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/define-instrumentation-and-seating-arrangements-relating-to-conducting",
+    "id": "workbook/course-objective-define-instrumentation-and-seating-arrangements-relating-to-conducting",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Define instrumentation and seating arrangements relating to conducting.",
+    "title": "Course objective — Define instrumentation and seating arrangements relating to conducting.",
     "text": "Description: Define instrumentation and seating arrangements relating to conducting.",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/define-major-choral-forms-musical-styles-and-choral-music-terminology",
+    "id": "workbook/course-objective-define-major-choral-forms-musical-styles-and-choral-music-terminology",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Define major choral forms, musical styles and choral music terminology.",
+    "title": "Course objective — Define major choral forms, musical styles and choral music terminology.",
     "text": "Description: Define major choral forms, musical styles and choral music terminology.",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/demonstrate-good-baton-technique",
+    "id": "workbook/course-objective-demonstrate-good-baton-technique",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Demonstrate good baton technique.",
+    "title": "Course objective — Demonstrate good baton technique.",
     "text": "Description: Demonstrate good baton technique.",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/employ-advanced-conducting-techniques-expressive-gestures-phrasing-tempo-changes-cut-offs-left-hand-independence-fermata-melding",
+    "id": "workbook/course-objective-employ-advanced-conducting-techniques-expressive-gestures-phrasing-tempo-changes-cut-offs-left-hand-independence-fermata-melding",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Employ advanced conducting techniques (expressive gestures, phrasing, tempo changes, cut-offs, left hand independence, fermata, melding).",
+    "title": "Course objective — Employ advanced conducting techniques (expressive gestures, phrasing, tempo changes, cut-offs, left hand independence, fermata, melding).",
     "text": "Description: Employ advanced conducting techniques (expressive gestures, phrasing, tempo changes, cut-offs, left hand independence, fermata, melding).",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/exams",
+    "id": "workbook/course-objective-identify-choral-resources-on-the-internet",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Exams",
-    "text": "Percentage: 20\nDescription: Conducting exams for each musical period",
-    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
-  },
-  {
-    "id": "workbook/final-project",
-    "page": "workbook",
-    "pageTitle": "Conducting Workbook",
-    "title": "Final Project",
-    "text": "Percentage: 20\nDescription: 30-minute major choral work conducted by memory",
-    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
-  },
-  {
-    "id": "workbook/finals-week",
-    "page": "workbook",
-    "pageTitle": "Conducting Workbook",
-    "title": "Finals Week",
-    "text": "Topics: Final Project, Written Final\nAssignments: Final Project: Major Choral Work — Conduct 30 minutes of a major choral work by memory. Demonstrate mastery of all conducting techniques studied. — project\nWritten Final Exam — Comprehensive exam covering all topics discussed during the semester. — exam\nWiki Portfolio Completion — Complete and submit wiki site containing all class work accomplished and collected. — project",
-    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
-  },
-  {
-    "id": "workbook/identify-choral-resources-on-the-internet",
-    "page": "workbook",
-    "pageTitle": "Conducting Workbook",
-    "title": "Identify choral resources on the Internet.",
+    "title": "Course objective — Identify choral resources on the Internet.",
     "text": "Description: Identify choral resources on the Internet.",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/oral-presentations-in-class-conducting",
+    "id": "workbook/course-objective-understand-score-structure-and-use-score-study-as-a-conducting-tool",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Oral Presentations & In-Class Conducting",
-    "text": "Percentage: 20\nDescription: Era presentations and octavo conducting",
-    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
-  },
-  {
-    "id": "workbook/understand-score-structure-and-use-score-study-as-a-conducting-tool",
-    "page": "workbook",
-    "pageTitle": "Conducting Workbook",
-    "title": "Understand score structure and use score study as a conducting tool.",
+    "title": "Course objective — Understand score structure and use score study as a conducting tool.",
     "text": "Description: Understand score structure and use score study as a conducting tool.",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/understand-the-role-musicianship-plays-in-conducting-success",
+    "id": "workbook/course-objective-understand-the-role-musicianship-plays-in-conducting-success",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Understand the role musicianship plays in conducting success.",
+    "title": "Course objective — Understand the role musicianship plays in conducting success.",
     "text": "Description: Understand the role musicianship plays in conducting success.",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-1",
+    "id": "workbook/grading-breakdown-attendance-participation",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 1",
+    "title": "Grading breakdown — Attendance & Participation",
+    "text": "Percentage: 20\nDescription: Active engagement in class activities and discussions",
+    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
+  },
+  {
+    "id": "workbook/grading-breakdown-exams",
+    "page": "workbook",
+    "pageTitle": "Conducting Workbook",
+    "title": "Grading breakdown — Exams",
+    "text": "Percentage: 20\nDescription: Conducting exams for each musical period",
+    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
+  },
+  {
+    "id": "workbook/grading-breakdown-final-project",
+    "page": "workbook",
+    "pageTitle": "Conducting Workbook",
+    "title": "Grading breakdown — Final Project",
+    "text": "Percentage: 20\nDescription: 30-minute major choral work conducted by memory",
+    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
+  },
+  {
+    "id": "workbook/grading-breakdown-oral-presentations-in-class-conducting",
+    "page": "workbook",
+    "pageTitle": "Conducting Workbook",
+    "title": "Grading breakdown — Oral Presentations & In-Class Conducting",
+    "text": "Percentage: 20\nDescription: Era presentations and octavo conducting",
+    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
+  },
+  {
+    "id": "workbook/grading-breakdown-wiki-portfolio-creation",
+    "page": "workbook",
+    "pageTitle": "Conducting Workbook",
+    "title": "Grading breakdown — Wiki/Portfolio Creation",
+    "text": "Percentage: 20\nDescription: Digital portfolio of all coursework",
+    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
+  },
+  {
+    "id": "workbook/weekly-schedule-finals-week",
+    "page": "workbook",
+    "pageTitle": "Conducting Workbook",
+    "title": "Weekly schedule — Finals Week",
+    "text": "Topics: Final Project, Written Final\nAssignments: Final Project: Major Choral Work — Conduct 30 minutes of a major choral work by memory. Demonstrate mastery of all conducting techniques studied. — project\nWritten Final Exam — Comprehensive exam covering all topics discussed during the semester. — exam\nWiki Portfolio Completion — Complete and submit wiki site containing all class work accomplished and collected. — project",
+    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
+  },
+  {
+    "id": "workbook/weekly-schedule-week-1",
+    "page": "workbook",
+    "pageTitle": "Conducting Workbook",
+    "title": "Weekly schedule — Week 1",
     "text": "Topics: Window/Posture, Meter, Patterns\nAssignments: Introduction to Conducting Fundamentals — Review the conducting window, proper posture, and basic meter patterns (2, 3, 4-beat). — conducting",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-10",
+    "id": "workbook/weekly-schedule-week-10",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 10",
+    "title": "Weekly schedule — Week 10",
     "text": "Topics: Romantic Era Introduction\nAssignments: Romantic Presentations — Oral presentation on Romantic choral music. Include typed one-page paper for distribution. — presentation",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-11",
+    "id": "workbook/weekly-schedule-week-11",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 11",
+    "title": "Weekly schedule — Week 11",
     "text": "Topics: Romantic Conducting\nAssignments: Romantic Conducting Exam — Conduct a Romantic work demonstrating expressive gestures and dramatic interpretation. — exam",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-12",
+    "id": "workbook/weekly-schedule-week-12",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 12",
+    "title": "Weekly schedule — Week 12",
     "text": "Topics: Negro Spiritual Introduction\nAssignments: Conducting Exercise 4 — Focus on left-hand independence, cueing, and gesture of syncopation. — conducting\nNegro Spiritual Presentations — Oral presentation on Negro Spirituals. Include typed one-page paper for distribution. — presentation\nWarm-up #4 — Prepare fourth choral warm-up exercise to distribute to class (PDF format). — written",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-13",
+    "id": "workbook/weekly-schedule-week-13",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 13",
+    "title": "Weekly schedule — Week 13",
     "text": "Topics: Negro Spiritual Conducting\nAssignments: Negro Spiritual Conducting Exam — Conduct a Negro Spiritual demonstrating appropriate stylistic interpretation and rhythmic vitality. — exam",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-14",
+    "id": "workbook/weekly-schedule-week-14",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 14",
+    "title": "Weekly schedule — Week 14",
     "text": "Topics: Gospel Music Introduction\nAssignments: Gospel Presentations — Oral presentation on Gospel choral music. Include typed one-page paper for distribution. — presentation\nWarm-up #5 — Prepare fifth and final choral warm-up exercise to distribute to class (PDF format). — written",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-15",
+    "id": "workbook/weekly-schedule-week-15",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 15",
+    "title": "Weekly schedule — Week 15",
     "text": "Topics: Gospel Conducting\nAssignments: Gospel Conducting Exam — Conduct a Gospel work demonstrating energy, call-and-response awareness, and stylistic authenticity. — exam",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-2",
+    "id": "workbook/weekly-schedule-week-2",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 2",
+    "title": "Weekly schedule — Week 2",
     "text": "Topics: Window/Posture/Meter/Patterns, Choral Conductor as Leader\nAssignments: Group Presentation: Choral Conductor as Leader — Prepare and deliver group presentation on the role and responsibilities of a choral conductor. — presentation\nConducting Exercise 1 — Demonstrate 2, 3, and 4-beat patterns at various tempi. Focus on clear ictus and rebound. — conducting",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-3",
+    "id": "workbook/weekly-schedule-week-3",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 3",
+    "title": "Weekly schedule — Week 3",
     "text": "Topics: Window/Posture/Meter/Patterns\nAssignments: Conducting Exercise 2 — Continue pattern work with emphasis on preparatory beat and cutoffs. — conducting\nWarm-up #1 — Prepare first choral warm-up exercise to distribute to class (PDF format). — written — End of week",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-4",
+    "id": "workbook/weekly-schedule-week-4",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 4",
+    "title": "Weekly schedule — Week 4",
     "text": "Topics: Window/Posture/Meter/Patterns, Renaissance Era Introduction\nAssignments: Renaissance Presentations — Oral presentation on Renaissance choral music. Include typed one-page paper for distribution. — presentation",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-5",
+    "id": "workbook/weekly-schedule-week-5",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 5",
+    "title": "Weekly schedule — Week 5",
     "text": "Topics: Renaissance Conducting\nAssignments: Renaissance Conducting Exam — Conduct a Renaissance work demonstrating appropriate stylistic interpretation. — exam",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-6",
+    "id": "workbook/weekly-schedule-week-6",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 6",
+    "title": "Weekly schedule — Week 6",
     "text": "Topics: Baroque Era Introduction\nAssignments: Baroque Presentations — Oral presentation on Baroque choral music. Include typed one-page paper for distribution. — presentation\nWarm-up #2 — Prepare second choral warm-up exercise to distribute to class (PDF format). — written",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-7",
+    "id": "workbook/weekly-schedule-week-7",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 7",
+    "title": "Weekly schedule — Week 7",
     "text": "Topics: Baroque Conducting\nAssignments: Baroque Conducting Exam — Conduct a Baroque work demonstrating appropriate stylistic interpretation and ornamentation awareness. — exam",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-8",
+    "id": "workbook/weekly-schedule-week-8",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 8",
+    "title": "Weekly schedule — Week 8",
     "text": "Topics: Classical Era Introduction\nAssignments: Conducting Exercise 3 — Advanced pattern work including 5 and 6-beat patterns, dynamics, and phrasing gestures. — conducting\nClassical Presentations — Oral presentation on Classical choral music. Include typed one-page paper for distribution. — presentation",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {
-    "id": "workbook/week-9",
+    "id": "workbook/weekly-schedule-week-9",
     "page": "workbook",
     "pageTitle": "Conducting Workbook",
-    "title": "Week 9",
+    "title": "Weekly schedule — Week 9",
     "text": "Topics: Classical Conducting\nAssignments: Classical Conducting Exam — Conduct a Classical work demonstrating balance, phrasing, and dynamic contrast. — exam\nWarm-up #3 — Prepare third choral warm-up exercise to distribute to class (PDF format). — written",
-    "url": "https://kevinphillipjohnson.com/academy/workbook.html"
-  },
-  {
-    "id": "workbook/wiki-portfolio-creation",
-    "page": "workbook",
-    "pageTitle": "Conducting Workbook",
-    "title": "Wiki/Portfolio Creation",
-    "text": "Percentage: 20\nDescription: Digital portfolio of all coursework",
     "url": "https://kevinphillipjohnson.com/academy/workbook.html"
   },
   {

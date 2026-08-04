@@ -126,3 +126,23 @@ describe('recordToChunk', () => {
     expect(recordToChunk({ bio: 'orphan' }, { titleField: 'name', fields: ['bio'] }, ctx)).toBeNull();
   });
 });
+
+describe('groupLabel', () => {
+  const cfg = { groupLabel: 'Grading breakdown', titleField: 'category', fields: ['percentage', 'description'] };
+  const record = { category: 'Exams', percentage: 20, description: 'Conducting exams for each musical period' };
+  const wctx = { page: 'workbook', pageTitle: 'Conducting Workbook', url: 'https://example.test/workbook.html' };
+
+  it('prefixes the title with the container name so the group is searchable', () => {
+    const chunk = recordToChunk(record, cfg, wctx);
+    expect(chunk.title).toBe('Grading breakdown — Exams');
+  });
+
+  it('folds the label into the id', () => {
+    expect(recordToChunk(record, cfg, wctx).id).toBe('workbook/grading-breakdown-exams');
+  });
+
+  it('leaves the title bare when no groupLabel is set', () => {
+    const chunk = recordToChunk(record, { titleField: 'category', fields: ['description'] }, wctx);
+    expect(chunk.title).toBe('Exams');
+  });
+});

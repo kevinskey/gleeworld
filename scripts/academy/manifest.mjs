@@ -44,9 +44,9 @@ export const SOURCES = [
   // its own cfg rather than sharing a page-level one.
   { page: 'workbook', pageTitle: 'Conducting Workbook', url: url('workbook'), mode: 'data',
     globals: [
-      { name: 'COURSE_OBJECTIVES', cfg: { titleField: 'description', fields: ['description'] } },
-      { name: 'WEEKLY_SCHEDULE', cfg: { titleField: 'dates', fields: ['topics', 'assignments'] } },
-      { name: 'GRADING_BREAKDOWN', cfg: { titleField: 'category', fields: ['percentage', 'description'] } },
+      { name: 'COURSE_OBJECTIVES', cfg: { groupLabel: 'Course objective', titleField: 'description', fields: ['description'] } },
+      { name: 'WEEKLY_SCHEDULE', cfg: { groupLabel: 'Weekly schedule', titleField: 'dates', fields: ['topics', 'assignments'] } },
+      { name: 'GRADING_BREAKDOWN', cfg: { groupLabel: 'Grading breakdown', titleField: 'category', fields: ['percentage', 'description'] } },
     ] },
 
   { page: 'works', pageTitle: 'Major Choral Works', url: url('works'), mode: 'data',

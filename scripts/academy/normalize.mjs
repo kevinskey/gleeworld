@@ -70,14 +70,18 @@ export function renderFacets(record, fields) {
 export function recordToChunk(record, cfg, ctx) {
   const rawTitle = record?.[cfg.titleField];
   if (!rawTitle || !String(rawTitle).trim()) return null;
-  const title = stripHtml(rawTitle);
+  // groupLabel carries the container's name into the chunk. Without it a
+  // GRADING_BREAKDOWN entry becomes a chunk titled "Exams" in which the word
+  // "grading" never appears, so "what is the grading breakdown" cannot find it.
+  const bare = stripHtml(rawTitle);
+  const title = cfg.groupLabel ? `${cfg.groupLabel} — ${bare}` : bare;
 
   const text = renderFacets(record, cfg.fields);
   if (!text.trim()) return null;
 
   const slug = cfg.idField && record[cfg.idField]
     ? slugify(record[cfg.idField])
-    : slugify(title);
+    : slugify(cfg.groupLabel ? `${cfg.groupLabel} ${bare}` : bare);
 
   return { id: `${ctx.page}/${slug}`, page: ctx.page, pageTitle: ctx.pageTitle, title, text, url: ctx.url };
 }
