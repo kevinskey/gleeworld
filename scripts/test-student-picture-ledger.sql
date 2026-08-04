@@ -54,11 +54,12 @@ begin
 
   -- A negative finance_records amount is money paid TO the person (a stipend,
   -- a reimbursement) and must never be reported as a charge they owe.
+  -- finance_records.balance is NOT NULL with no default (running balance).
   insert into public.finance_records
-      (id, user_id, date, type, category, description, amount, tenant_id)
+      (id, user_id, date, type, category, description, amount, balance, tenant_id)
     values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', v_stu, current_date,
             'debit', 'Performance Stipends', 'Stipend paid to student',
-            -100.00, v_tenant);
+            -100.00, 0, v_tenant);
   select * into r from student_picture.v_student_ledger
    where source_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   if r.direction <> 'credit' then
