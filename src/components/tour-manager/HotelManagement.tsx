@@ -512,7 +512,7 @@ export const HotelManagement = () => {
                       <button
                         key={place.place_id}
                         onClick={() => handleSelectPlace(place)}
-                        className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                        className="w-full text-left p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">

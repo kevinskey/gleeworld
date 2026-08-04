@@ -453,7 +453,7 @@ export const HostManager = ({
               )}
               {host.contact_email && (
                 <button
-                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-blue-500 transition-colors w-full text-left"
+                  className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors w-full text-left"
                   onClick={(e) => {
                     e.stopPropagation();
                     navigate(`/dashboard?module=messenger&compose=true&to=${encodeURIComponent(host.contact_email!)}&subject=${encodeURIComponent(`Re: ${host.organization_name || 'Performance'}`)}`);
