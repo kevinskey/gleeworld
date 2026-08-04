@@ -1427,5 +1427,11 @@ State these plainly rather than discovering them in production:
 
 1. **Three of four domains are empty.** Grades, attendance, and money have essentially no rows as of 2026-08-03. The adapters are correct and tested, but the assistant will honestly report "no records" for those until a term is underway. The `has_data` contract exists precisely so that reads as truth rather than as good news.
 2. **`gw_parttrack_assignments` fans out by voice part**, not by enrollment, because the table has no course or student column. A tenant with 80 sopranos and one part-track assignment produces 80 rows. Acceptable at current scale; revisit if part tracks get heavy use.
-3. **`external_grades` matches on email.** A student whose `gw_profiles.email` differs from the email they used in the external tool silently gets no rows. There is no fix at this layer — it needs an identity mapping.
-4. **No alert engine yet.** Phases 4–5 (rules, dry-run, briefing) are out of scope here and should be planned only after real data exists to tune thresholds against.
+3. **Two assignment sources can never report `missing` or `not_started`.** `asg_music_fundamentals` and `asg_academy_tests` INNER JOIN their submissions tables rather than fanning out across a roster, so a student who ignores such an item produces no row at all — the advisor silently under-reports outstanding work for those two sources.
+
+   Neither table can be fanned out the way the others are: `music_fundamentals_assignments` has no `course_id`, and `glee_academy_tests.course_id` is `text` and so cannot join `gw_course_enrollments.course_id` (uuid). A tenant-wide fan-out like `asg_parttrack` uses would work but multiplies rows by every profile in the tenant.
+
+   Deferred deliberately: both tables hold **zero rows** in production as of 2026-08-03, so the present impact is nil. Revisit if either source starts being used. Found by the Task 2 reviewer.
+
+4. **`external_grades` matches on email.** A student whose `gw_profiles.email` differs from the email they used in the external tool silently gets no rows. There is no fix at this layer — it needs an identity mapping.
+5. **No alert engine yet.** Phases 4–5 (rules, dry-run, briefing) are out of scope here and should be planned only after real data exists to tune thresholds against.
