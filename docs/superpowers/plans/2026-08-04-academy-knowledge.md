@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Give the GleeWorld Assistant a `search_academy` tool that answers choral-conducting questions from a generated corpus of the ~65,000-word reference library at kevinphillipjohnson.com/academy.
+**Goal:** Give the GleeWorld Assistant a `search_academy` tool that answers choral-conducting questions from a generated corpus of the ~25,000-word reference library at kevinphillipjohnson.com/academy.
 
-**Architecture:** A Node script renders the 16 live sources with Playwright, extracts their underlying data, and generates a typed TypeScript module of ~700 text chunks. A pure, dependency-free scorer ranks those chunks lexically in memory. A new server-side tool in `assistant-chat` calls the scorer and returns the top passages. No database, no migration, no RLS, no frontend deploy.
+**Architecture:** A Node script renders the 16 live sources with Playwright, extracts their underlying data, and generates a typed TypeScript module of 568 text chunks. A pure, dependency-free scorer ranks those chunks lexically in memory. A new server-side tool in `assistant-chat` calls the scorer and returns the top passages. No database, no migration, no RLS, no frontend deploy.
 
 **Tech Stack:** TypeScript, Deno (edge runtime), Node 22 + Playwright (ingest, run manually on Kevin's Mac), Vitest (tests).
 

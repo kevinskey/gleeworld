@@ -14,8 +14,9 @@ young choir?", it answers from whatever the base model happens to carry, with no
 grounding and no consistency.
 
 kevinphillipjohnson.com/academy hosts a substantial, authored reference library on
-exactly these subjects: roughly 65,000 words across 16 pages plus a 183-piece
-repertoire database. This spec gives the assistant retrieval access to that
+exactly these subjects: roughly 25,000 words of authored prose across 16 sources, including a
+183-piece repertoire database. (An earlier estimate of ~70,000 words counted
+JavaScript and CSS text in the raw HTML, not prose.) This spec gives the assistant retrieval access to that
 library.
 
 ## Decisions
