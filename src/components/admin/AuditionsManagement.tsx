@@ -1371,26 +1371,12 @@ export const AuditionsManagement = () => {
           ) : (
             <>
               {/* Adjudicator Panel Header */}
-              <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/20">
-                      <Shield className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="flex items-center gap-2">
-                        <UserCheck className="h-5 w-5 text-primary" />
-                        Professional Adjudicator Interface
-                      </CardTitle>
-                      <CardDescription>
-                        Select an applicant below to begin professional evaluation using the comprehensive scoring system
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              {/* Applicant Selection for Adjudication */}
+              {/* Applicant Selection for Adjudication.
+                  A contentless "Professional Adjudicator Interface" banner card
+                  used to sit above this one, saying "Select an applicant below
+                  to begin professional evaluation…" — the same instruction this
+                  card's own header gives, one line lower. It had a CardHeader
+                  and no CardContent, so it was pure restatement. */}
               <Card>
                 <CardHeader>
                   <CardTitle>Select Applicant for Professional Evaluation</CardTitle>
