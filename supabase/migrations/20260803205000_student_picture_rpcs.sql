@@ -13,6 +13,10 @@ begin
              when 'overdue' then a.status = 'missing'
              else true
            end
+     -- Ordered INSIDE the limit: an unordered LIMIT takes an arbitrary slice,
+     -- so a student over 200 items could lose their nearest deadline — the one
+     -- item the assistant is told to lead with.
+     order by a.due_at nulls last
      limit 200) t;
   return jsonb_build_object(
     'has_data', jsonb_array_length(rows) > 0,
@@ -30,6 +34,10 @@ begin
       from (select * from student_picture.v_student_grades g
              where g.user_id = target
                and (p_course_id is null or g.course_id = p_course_id)
+             -- Ordered inside the limit so the 500 kept are the most recent.
+             -- nulls last: DESC defaults to NULLS FIRST, which would let
+             -- ungraded-date rows crowd out real recent grades.
+             order by g.graded_at desc nulls last
              limit 500) t;
   else
     select coalesce(jsonb_agg(to_jsonb(t)), '[]'::jsonb) into rows from (
@@ -77,13 +85,21 @@ create or replace function public.sp_attendance(
 returns jsonb language plpgsql stable security invoker as $$
 declare target uuid := coalesce(p_user_id, auth.uid()); counts jsonb; recent jsonb;
 begin
+  -- An APPROVED excuse is not an unexcused absence. The row is reclassified as
+  -- 'excused' rather than dropped, so the counts still add up to the sessions
+  -- the student was scheduled for.
   select coalesce(jsonb_object_agg(status, n), '{}'::jsonb) into counts from (
-    select status, count(*) as n from student_picture.v_student_attendance
+    select case when status = 'absent'
+                 and coalesce(lower(excuse_status),'') = 'approved'
+                then 'excused' else status end as status,
+           count(*) as n
+      from student_picture.v_student_attendance
      where user_id = target and occurred_at > now() - (p_days || ' days')::interval
-     group by status) s;
+     group by 1) s;
   select coalesce(jsonb_agg(to_jsonb(t) order by t.occurred_at desc), '[]'::jsonb) into recent
     from (select occurred_at, status, title from student_picture.v_student_attendance
            where user_id = target and status in ('absent','late')
+             and coalesce(lower(excuse_status),'') <> 'approved'
              and occurred_at > now() - (p_days || ' days')::interval
            order by occurred_at desc limit 10) t;
   return jsonb_build_object(
@@ -112,6 +128,9 @@ begin
   select coalesce(jsonb_agg(to_jsonb(t) order by t.due_at nulls last), '[]'::jsonb) into rows
     from (select * from student_picture.v_student_ledger
            where user_id = target and status in ('outstanding','overdue','partial')
+           -- Ordered inside the limit so the soonest-due item is never the one
+           -- an arbitrary 100-row slice throws away.
+           order by due_at nulls last
            limit 100) t;
   return jsonb_build_object(
     'has_data', jsonb_array_length(rows) > 0 or owed <> 0,
@@ -124,11 +143,23 @@ create or replace function public.sp_roster_flags(p_flag text)
 returns jsonb language plpgsql stable security invoker as $$
 declare rows jsonb;
 begin
+  -- RLS is the real boundary, but this function is in `public` and therefore
+  -- callable directly over PostgREST by any authenticated user, regardless of
+  -- how the assistant's tool catalog is gated. Defense in depth, nearly free.
+  -- coalesce(...) so a NULL from either check denies rather than falls through.
+  if not coalesce(public.is_admin(auth.uid()) or public.is_gw_exec_board(), false) then
+    return jsonb_build_object('has_data', false, 'scope', 'roster',
+      'error', 'roster flags require director or exec-board access');
+  end if;
   if p_flag = 'absences' then
     select coalesce(jsonb_agg(to_jsonb(t) order by t.absences desc), '[]'::jsonb) into rows
+      -- The design threshold is 3 UNEXCUSED absences; an approved excuse must
+      -- not flag a student who did the right thing and filed one.
       from (select user_id, count(*) as absences
               from student_picture.v_student_attendance
-             where status = 'absent' and occurred_at > now() - interval '120 days'
+             where status = 'absent'
+               and coalesce(lower(excuse_status),'') <> 'approved'
+               and occurred_at > now() - interval '120 days'
              group by user_id having count(*) >= 3 limit 200) t;
   elsif p_flag = 'failing' then
     select coalesce(jsonb_agg(to_jsonb(t) order by t.average_percent), '[]'::jsonb) into rows

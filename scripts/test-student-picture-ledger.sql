@@ -5,6 +5,8 @@
 --   * semester is CHECK-constrained to a fixed list ending at 'Fall 2026'.
 --   * status is CHECK-constrained to
 --     pending|partial|paid|overdue|refunded|waived — 'unpaid' is rejected.
+--   * finance_records.type is CHECK-constrained to
+--     stipend|receipt|payment|debit|credit — 'refund' is rejected.
 \set ON_ERROR_STOP on
 begin;
 do $$
@@ -52,21 +54,21 @@ begin
     raise exception 'a refunded fee must map to waived, got % (it would be counted as owed)', r.status;
   end if;
 
-  -- A negative finance_records amount is money paid TO the person (a stipend,
-  -- a reimbursement) and must never be reported as a charge they owe.
+  -- finance_records must never reach the ledger — see the comment in the
+  -- migration. A stipend PAID TO a student must not become money they owe.
   -- finance_records.balance is NOT NULL with no default (running balance).
   insert into public.finance_records
       (id, user_id, date, type, category, description, amount, balance, tenant_id)
     values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', v_stu, current_date,
-            'debit', 'Performance Stipends', 'Stipend paid to student',
-            -100.00, 0, v_tenant);
-  select * into r from student_picture.v_student_ledger
-   where source_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
-  if r.direction <> 'credit' then
-    raise exception 'a negative finance amount must be a credit, got direction % (this would tell the student they OWE money paid TO them)', r.direction;
+            'stipend', 'Performance Stipends', 'Stipend paid to student',
+            250.00, 0, v_tenant);
+  if exists (select 1 from student_picture.v_student_ledger
+              where source_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') then
+    raise exception 'finance_records must not appear in the ledger';
   end if;
-  if r.status <> 'paid' then
-    raise exception 'a negative finance amount must be settled, got status %', r.status;
+  if (public.sp_balance(v_stu)->>'balance_cents')::bigint <> 12050 then
+    raise exception 'a stipend must not change the balance; expected 12050, got %',
+      public.sp_balance(v_stu)->>'balance_cents';
   end if;
 
   raise notice 'ALL ASSERTIONS PASSED';

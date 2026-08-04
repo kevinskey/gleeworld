@@ -817,6 +817,10 @@ select p.user_id, p.tenant_id, 'payment'::text, p.id,
        null::timestamptz, p.payment_date::timestamptz, 'paid'::text, null::uuid
 from public.user_payments p where p.user_id is not null;
 
+-- SUPERSEDED at final review: led_finance was REMOVED and is not shipped.
+-- finance_records is an organizational stipend/reimbursement ledger with no
+-- settlement path, and stipends are written POSITIVE, so this adapter reported
+-- a $250 stipend PAID TO a student as $250 they OWE. Do not re-introduce it.
 -- finance_records carries both directions in `type`.
 create or replace view student_picture.led_finance
 with (security_invoker = on) as

@@ -124,6 +124,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- NEVER compute what a tool can return. Do not average percentages yourself, and do not infer a letter grade from a percentage the tool did not give you.',
     '- Every tool returns has_data and scope. If has_data is false, say you have no records — do not congratulate the user on being caught up, because you may simply be unable to see the data.',
     '- If scope is "other" and has_data is false, say "I can\'t see any records for <name>" — NOT "<name> has no assignments". Those are different claims and only the first one is true.',
+    '- Nuance: for a NARROWED question (a week window, one course), has_data false means nothing matched THAT filter — say "nothing due this week", which is good news. The "I have no records" phrasing is only for an unfiltered question that still comes back empty.',
     '- get_grade_trend also returns has_trend. When it is false there is not enough graded work to call a direction — say so instead of describing a trend from two or three items.',
     '- Lead with the most actionable item. If several things are wrong at once, open with the nearest deadline rather than listing everything.',
     '- You may connect the dots ("your average dipped and you missed the two rehearsals before it") but do not assert causation about someone\'s character or effort.',

@@ -121,6 +121,9 @@ join public.music_fundamentals_submissions s on s.assignment_id = a.id
 where a.is_active is not false and s.student_id is not null;
 
 -- 6. gw_course_tests — no due date column; available_until is the deadline.
+--    gw_course_test_attempts is UNIQUE(test_id, user_id, attempt_number), so a
+--    plain join listed the same quiz once per attempt. Collapse to the
+--    HIGHEST-scoring attempt, latest attempt_number breaking ties.
 create or replace view student_picture.asg_course_tests
   (user_id, tenant_id, source, source_id, title, course_id, course_name,
    due_at, points_possible, status, submitted_at)
@@ -136,7 +139,11 @@ from public.gw_course_tests t
 left join public.gw_courses c on c.id = t.course_id
 join public.gw_course_enrollments e
      on e.course_id = t.course_id and e.enrollment_status = 'enrolled'
-left join public.gw_course_test_attempts at
+left join (
+  select distinct on (a.test_id, a.user_id) a.*
+    from public.gw_course_test_attempts a
+   order by a.test_id, a.user_id, a.score desc nulls last, a.attempt_number desc
+) as at
      on at.test_id = t.id and at.user_id = e.user_id
 where t.is_published is not false;
 

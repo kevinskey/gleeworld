@@ -75,6 +75,11 @@ from public.test_submissions t
 left join public.glee_academy_tests gt on gt.id = t.test_id
 where t.student_id is not null and t.status = 'graded';
 
+-- gw_course_test_attempts is UNIQUE(test_id, user_id, attempt_number): a
+-- student can have MANY graded rows for one test. Emitting all of them made
+-- attempts scoring 50/75/100 average to 75% while the gradebook showed 100,
+-- and let sp_roster_flags('failing') flag a student whose real grade is an A.
+-- Collapse to the HIGHEST-scoring attempt, latest attempt_number breaking ties.
 create or replace view student_picture.grd_test_attempts
   (user_id, tenant_id, source, source_id, title, course_id, course_name,
    points_earned, points_possible, percent, letter, graded_at, category, is_final)
@@ -84,7 +89,14 @@ select a.user_id, a.tenant_id, 'course_test'::text, a.id,
        a.score::numeric, a.max_score::numeric,
        case when a.max_score > 0 then round(a.score::numeric * 100 / a.max_score, 1) end,
        null::text, a.submitted_at, 'test'::text, false
-from public.gw_course_test_attempts a
+from (
+  -- is_graded is repeated inside the subquery so an ungraded attempt cannot
+  -- win the distinct-on and then be filtered away, dropping the test entirely.
+  select distinct on (a.test_id, a.user_id) a.*
+    from public.gw_course_test_attempts a
+   where a.is_graded
+   order by a.test_id, a.user_id, a.score desc nulls last, a.attempt_number desc
+) a
 left join public.gw_course_tests t on t.id = a.test_id
 left join public.gw_courses c on c.id = t.course_id
 where a.user_id is not null and a.is_graded;

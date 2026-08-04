@@ -3,6 +3,10 @@
 -- The pre-aggregated course attendance rollup table is deliberately excluded
 -- as a source here — adapting it would double-count every absence.
 
+-- excuse_status carries gw_attendance_excuses.status where a source has one.
+-- It is not decoration: sp_attendance and sp_roster_flags('absences') use it to
+-- keep an APPROVED excuse from being counted as an unexcused absence.
+
 -- Source vocabularies vary in case and wording. One mapper, used everywhere.
 create or replace function student_picture.attendance_status(raw text)
 returns text language sql immutable as $$
@@ -12,11 +16,16 @@ returns text language sql immutable as $$
     when 'here' then 'present'
     when 'late' then 'late'
     when 'tardy' then 'late'
+    when 'left_early' then 'late'
     when 'excused' then 'excused'
     when 'excused_absence' then 'excused'
     when 'absent' then 'absent'
     when 'unexcused' then 'absent'
-    else 'absent'
+    -- Unknown or NULL must NOT default to 'absent'. The absence threshold is
+    -- the only roster alert, and telling a director a present student was
+    -- absent is a false statement about a real person. Unrecognised values
+    -- fail toward the harmless side.
+    else 'present'
   end;
 $$;
 
