@@ -1094,10 +1094,6 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
   const isCalendar = pathname.startsWith('/dashboard/calendar');
-  // Tour Manager is a full-height self-scrolling layout (own header +
-  // section sidebar); it fills the viewport below the topbar exactly, so
-  // any main padding would force a phantom page scroll.
-  const isTourManager = pathname.startsWith('/tour-manager') || pathname.startsWith('/tour-planner');
   // User-controlled nav collapse (persisted). Collapsing frees the full
   // window width for work surfaces like Calendar and Studio; the topbar
   // grows an expand button + compact brand while collapsed.
@@ -1131,10 +1127,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               safe-area inset, plus a small gap. */}
           <main className={cn(
             "flex-1 min-w-0 min-h-0 overflow-y-auto overflow-x-hidden",
-            isTourManager ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0",
-            // Calendar and Tour Manager manage their own compact header
-            // spacing — no extra breathing room below the topbar.
-            isCalendar || isTourManager ? "pt-0" : "pt-3 sm:pt-4",
+            "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0",
+            // Calendar manages its own compact header spacing — no extra
+            // breathing room below the topbar. Tour Manager used to be
+            // exempt here too, back when it shipped its own full-height
+            // shell; it's an ordinary DashboardPageShell page now.
+            isCalendar ? "pt-0" : "pt-3 sm:pt-4",
           )}>{children}</main>
         </div>
         {/* Persistent bottom nav below md. Self-gates via useIsCompactNav()
