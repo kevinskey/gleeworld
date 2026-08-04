@@ -12,12 +12,11 @@
  *      the canonical five, so unknown slots are imported rather than dropped.
  */
 
-export interface NormalizedReading {
-  slot: string;
-  citation: string;
-  schemaLabel: string;
-  sortOrder: number;
-}
+import { compareSlots, type NormalizedReading } from './slots';
+
+export const LITCAL_SOURCE = 'litcal';
+
+export type { NormalizedReading };
 
 export interface NormalizedDay {
   rite: 'roman_catholic';
@@ -52,20 +51,6 @@ export interface LitCalPayload {
   litcal: LitCalEvent[];
 }
 
-/**
- * Canonical Mass reading order. Anything LitCal emits that is not listed here
- * is still imported, sorted after the known slots in the order LitCal returned
- * it, so rare Easter Vigil / Pentecost Vigil schemas survive without a code
- * change.
- */
-const SLOT_ORDER = [
-  'first_reading',
-  'responsorial_psalm',
-  'second_reading',
-  'gospel_acclamation',
-  'gospel',
-];
-
 function cycleLetter(value: string | undefined): 'A' | 'B' | 'C' | null {
   if (!value) return null;
   const match = /\b([ABC])\b/.exec(value.toUpperCase());
@@ -84,20 +69,14 @@ function flattenSlotMap(
 
   // Stable sort: known slots in liturgical order first, unknown slots after in
   // the order the API returned them.
-  entries.sort(([a], [b]) => {
-    const ia = SLOT_ORDER.indexOf(a);
-    const ib = SLOT_ORDER.indexOf(b);
-    if (ia !== -1 && ib !== -1) return ia - ib;
-    if (ia !== -1) return -1;
-    if (ib !== -1) return 1;
-    return 0;
-  });
+  entries.sort(([a], [b]) => compareSlots(a, b));
 
   return entries.map(([slot, citation], index) => ({
     slot,
     citation: citation.trim(),
     schemaLabel,
     sortOrder: index,
+    source: LITCAL_SOURCE,
   }));
 }
 
@@ -107,7 +86,9 @@ function normalizeReadings(readings: LitCalEvent['readings']): NormalizedReading
   // ~21 events a year carry a plain string rather than a slot map.
   if (typeof readings === 'string') {
     const citation = readings.trim();
-    return citation ? [{ slot: 'note', citation, schemaLabel: '', sortOrder: 0 }] : [];
+    return citation
+      ? [{ slot: 'note', citation, schemaLabel: '', sortOrder: 0, source: LITCAL_SOURCE }]
+      : [];
   }
 
   // Christmas nests night/dawn/day and the Pentecost Vigil nests

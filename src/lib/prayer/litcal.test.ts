@@ -52,6 +52,7 @@ describe('normalizeLitCalYear', () => {
       citation: 'Isaiah 2:1-5',
       schemaLabel: '',
       sortOrder: 0,
+      source: 'litcal',
     });
   });
 
@@ -63,6 +64,7 @@ describe('normalizeLitCalYear', () => {
         citation: 'From the Common of the Blessed Virgin Mary',
         schemaLabel: '',
         sortOrder: 0,
+        source: 'litcal',
       },
     ]);
   });

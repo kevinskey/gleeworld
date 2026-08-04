@@ -65,7 +65,13 @@ CREATE TABLE IF NOT EXISTS public.gw_prayer_readings (
   citation        text NOT NULL,
   -- Christmas night/dawn/day, Pentecost Vigil schema_one/two/three, else ''.
   schema_label    text NOT NULL DEFAULT '',
-  sort_order      int  NOT NULL DEFAULT 0
+  sort_order      int  NOT NULL DEFAULT 0,
+  -- Provenance. The calendar and the readings come from DIFFERENT upstream
+  -- projects: LitCal's calendar is complete but its citations are blank on
+  -- 28-50% of dates per year, so citations come from catholic-readings-api
+  -- (MIT, citations only — no scripture text), measured at 365/365 for 2026.
+  -- Both licenses require attribution, so the row records which one it came from.
+  source          text NOT NULL DEFAULT 'catholic-readings-api'
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS gw_prayer_readings_day_slot_uidx

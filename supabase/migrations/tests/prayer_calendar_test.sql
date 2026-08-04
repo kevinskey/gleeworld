@@ -43,6 +43,12 @@ BEGIN
           WHERE schemaname = 'public'
             AND indexname = 'gw_prayer_readings_day_slot_uidx'),
          'unique (calendar_day_id, slot, schema_label) index missing';
+  -- Calendar and readings come from different upstream projects under
+  -- different licenses; every reading row must record which one.
+  ASSERT (SELECT count(*) = 1 FROM information_schema.columns
+          WHERE table_schema = 'public' AND table_name = 'gw_prayer_readings'
+            AND column_name = 'source' AND is_nullable = 'NO'),
+         'gw_prayer_readings.source missing or nullable';
 END $$;
 
 -- The super-admin predicate must NOT grant to tenant admins, and must accept
