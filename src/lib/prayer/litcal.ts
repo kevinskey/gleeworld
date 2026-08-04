@@ -33,6 +33,12 @@ export interface NormalizedDay {
   readings: NormalizedReading[];
 }
 
+/**
+ * A slot value is either a citation, or — for Christmas and the Pentecost
+ * Vigil — a whole nested formulary keyed by slot.
+ */
+export type LitCalReadingValue = string | Record<string, string>;
+
 export interface LitCalEvent {
   event_key: string;
   name: string;
@@ -44,7 +50,7 @@ export interface LitCalEvent {
   liturgical_year?: string;
   psalter_week?: number;
   holy_day_of_obligation?: boolean;
-  readings?: Record<string, string> | string;
+  readings?: Record<string, LitCalReadingValue> | string;
 }
 
 export interface LitCalPayload {
@@ -59,7 +65,7 @@ function cycleLetter(value: string | undefined): 'A' | 'B' | 'C' | null {
 
 /** Sorts one flat slot map into liturgical order and drops blank citations. */
 function flattenSlotMap(
-  map: Record<string, unknown>,
+  map: Record<string, LitCalReadingValue>,
   schemaLabel: string,
 ): NormalizedReading[] {
   const entries = Object.entries(map).filter(
@@ -95,7 +101,7 @@ function normalizeReadings(readings: LitCalEvent['readings']): NormalizedReading
   // schema_one/two/three: each nested value is a complete Mass formulary.
   // Flatten them into schemaLabel rather than dropping them.
   const nested = Object.entries(readings).filter(
-    (entry): entry is [string, Record<string, unknown>] =>
+    (entry): entry is [string, Record<string, string>] =>
       typeof entry[1] === 'object' && entry[1] !== null,
   );
 
@@ -109,7 +115,7 @@ function normalizeReadings(readings: LitCalEvent['readings']): NormalizedReading
     ];
   }
 
-  return flattenSlotMap(readings as Record<string, unknown>, '');
+  return flattenSlotMap(readings, '');
 }
 
 export function normalizeLitCalYear(payload: LitCalPayload): NormalizedDay[] {
