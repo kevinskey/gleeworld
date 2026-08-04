@@ -157,6 +157,90 @@ describe('useYouTubeSearch', () => {
     });
   });
 
+  // Quota guard. requestRef only discards a stale RESPONSE; it never stopped
+  // the invoke, so a caller re-issuing the same term (Enter held down) spent
+  // ~100 Data API units per repeat out of a 10,000/day platform-wide budget.
+  it('refuses a duplicate query while that same query is in flight', async () => {
+    let resolveIt: (v: unknown) => void = () => {};
+    invoke.mockReturnValue(new Promise((r) => { resolveIt = r; }));
+
+    const { result } = renderHook(() => useYouTubeSearch());
+    let pending: Promise<void>;
+    act(() => { pending = result.current.search('handel'); });
+    act(() => { void result.current.search('handel'); });
+    act(() => { void result.current.search('  handel  '); }); // trims to the same term
+    act(() => { void result.current.search('handel'); });
+
+    // Captured, not asserted, while the request is still open: asserting here
+    // would abort the test before the pending promise settles, and the
+    // resulting teardown timeout would mask the real reason it failed.
+    const callsWhileInFlight = invoke.mock.calls.length;
+
+    await act(async () => {
+      resolveIt({ data: { hits: [hit('a')] }, error: null });
+      await pending;
+    });
+
+    expect(callsWhileInFlight).toBe(1);
+
+    // The lock releases when the request settles, so the term is searchable again.
+    await act(async () => { await result.current.search('handel'); });
+    expect(invoke).toHaveBeenCalledTimes(2);
+  });
+
+  // The counterpart to the test above: the guard must be a DUPLICATE guard,
+  // not an in-flight lockout. AddYouTubeVideoForm debounces into this hook,
+  // and its newest query must never be silently dropped for an older one.
+  // NOTE: both calls are held open and settled before the test ends.
+  // mockReturnValueOnce, not mockImplementation — a persistent
+  // mockImplementation on this mocked client hangs teardown for the full
+  // 10s hookTimeout in this repo, independently of the code under test.
+  it('lets a different query through while one is in flight', async () => {
+    let resolveFirst: (v: unknown) => void = () => {};
+    let resolveSecond: (v: unknown) => void = () => {};
+    invoke
+      .mockReturnValueOnce(new Promise((r) => { resolveFirst = r; }))
+      .mockReturnValueOnce(new Promise((r) => { resolveSecond = r; }));
+
+    const { result } = renderHook(() => useYouTubeSearch());
+    let first: Promise<void>;
+    let second: Promise<void>;
+    act(() => { first = result.current.search('handel'); });
+    act(() => { second = result.current.search('bach'); });
+
+    expect(invoke).toHaveBeenCalledTimes(2);
+    expect(result.current.term).toBe('bach');
+
+    await act(async () => {
+      resolveFirst({ data: { hits: [] }, error: null });
+      resolveSecond({ data: { hits: [] }, error: null });
+      await Promise.all([first, second]);
+    });
+  });
+
+  it('clear() releases the lock so the same term can be re-run', async () => {
+    let resolveFirst: (v: unknown) => void = () => {};
+    let resolveSecond: (v: unknown) => void = () => {};
+    invoke
+      .mockReturnValueOnce(new Promise((r) => { resolveFirst = r; }))
+      .mockReturnValueOnce(new Promise((r) => { resolveSecond = r; }));
+
+    const { result } = renderHook(() => useYouTubeSearch());
+    let first: Promise<void>;
+    let second: Promise<void>;
+    act(() => { first = result.current.search('handel'); });
+    act(() => { result.current.clear(); });
+    act(() => { second = result.current.search('handel'); });
+
+    expect(invoke).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      resolveFirst({ data: { hits: [] }, error: null });
+      resolveSecond({ data: { hits: [] }, error: null });
+      await Promise.all([first, second]);
+    });
+  });
+
   it('honors a custom maxResults', async () => {
     invoke.mockResolvedValue({ data: { hits: [] }, error: null });
     const { result } = renderHook(() => useYouTubeSearch(5));

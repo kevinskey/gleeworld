@@ -41,6 +41,24 @@ export function useYouTubeSearch(maxResults = 10) {
   // in flight instead of setting state on a dead component.
   const requestRef = useRef(0);
   const aliveRef = useRef(true);
+
+  // The exact query currently in flight, or null. Guards the QUOTA note
+  // above at the layer that actually spends it: without this, holding Enter
+  // in the /video field issues one ~100-unit Data API search per keypress —
+  // five presses is 5% of the platform's daily budget from one user. The
+  // requestRef below only discards stale RESPONSES; it does not stop the
+  // call from being made.
+  //
+  // Deliberately scoped to a DUPLICATE query, not to any second search: a
+  // repeat of the in-flight term can only return what the first call will,
+  // so refusing it drops nothing. A DIFFERENT term still goes through,
+  // because AddYouTubeVideoForm debounces into this hook and its newest
+  // query must never be silently discarded.
+  //
+  // A ref, not `searching`/`term` state: several keydowns can land in one
+  // React batch, where the state would still read stale and let duplicates
+  // through.
+  const inFlightRef = useRef<string | null>(null);
   useEffect(() => {
     aliveRef.current = true;
     return () => { aliveRef.current = false; };
@@ -48,6 +66,10 @@ export function useYouTubeSearch(maxResults = 10) {
 
   const clear = useCallback(() => {
     requestRef.current += 1;
+    // Releasing the lock here is what lets a user clear mid-flight and then
+    // re-run the same term; the abandoned call's response is dropped by the
+    // requestRef bump above.
+    inFlightRef.current = null;
     setHits([]);
     setError(null);
     setSearching(false);
@@ -57,10 +79,12 @@ export function useYouTubeSearch(maxResults = 10) {
   const search = useCallback(async (raw: string) => {
     const q = raw.trim();
     if (!q) { clear(); return; }
+    if (inFlightRef.current === q) return;
 
     const id = ++requestRef.current;
     const current = () => aliveRef.current && id === requestRef.current;
 
+    inFlightRef.current = q;
     setTerm(q);
     setSearching(true);
     setError(null);
@@ -79,6 +103,10 @@ export function useYouTubeSearch(maxResults = 10) {
         setHits([]);
       }
     } finally {
+      // Only the newest request may release the lock. An older overlapping
+      // call finishing late must not unlock a query that is still running,
+      // and a call abandoned by clear() must not unlock its re-issue.
+      if (id === requestRef.current) inFlightRef.current = null;
       if (current()) setSearching(false);
     }
   }, [clear, maxResults]);

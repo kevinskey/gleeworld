@@ -358,7 +358,9 @@ export const YouTubeChannel: React.FC = () => {
               <h1 className="text-xl font-bold text-foreground leading-tight">Video Library</h1>
               <p className="text-sm text-muted-foreground leading-tight">
                 {videos.length} video{videos.length === 1 ? '' : 's'}
-                {filtered.length !== videos.length && ` · ${filtered.length} shown`}
+                {/* The "shown" count describes the library grid — suppress it
+                    while YouTube results have taken that space over. */}
+                {!ytActive && filtered.length !== videos.length && ` · ${filtered.length} shown`}
               </p>
             </div>
             {/* ml-auto on a flex-wrap row: sits right of the title on desktop,

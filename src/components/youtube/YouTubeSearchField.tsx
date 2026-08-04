@@ -2,7 +2,7 @@
 // search-as-you-type: every signed-in member can reach this, and the
 // platform shares ~100 YouTube searches per day. Submitting is an explicit
 // act — Enter or the button.
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Search, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,10 +21,25 @@ export const YouTubeSearchField: React.FC<YouTubeSearchFieldProps> = ({
   const [draft, setDraft] = useState('');
 
   const submit = () => {
+    // The button is disabled while searching; Enter must match it, or holding
+    // Enter fires a real quota-costing search per keypress. The hook refuses
+    // duplicates as well — this is the visible half of that guard, and it
+    // keeps the draft in the box so a newer query is only delayed until the
+    // spinner clears, never thrown away without a trace.
+    if (searching) return;
     const term = draft.trim();
     if (!term) return;
     onSearch(term);
   };
+
+  // Both exits from a search must land in the same place. `Back to library`
+  // in the results panel calls the hook's clear() directly, which flips
+  // `active` false but cannot reach this draft — without this the old query
+  // stayed in the box while the X that clears it disappeared. Only runs on an
+  // active transition, so it never touches text the user is still typing.
+  useEffect(() => {
+    if (!active) setDraft('');
+  }, [active]);
 
   const clear = () => {
     setDraft('');

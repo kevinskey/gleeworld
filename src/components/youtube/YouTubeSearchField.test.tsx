@@ -70,4 +70,49 @@ describe('YouTubeSearchField', () => {
     render(<YouTubeSearchField {...props} searching />);
     expect(screen.getByRole('button', { name: /search youtube/i })).toBeDisabled();
   });
+
+  // Each YouTube search costs ~100 of the platform's 10,000 daily quota units,
+  // shared across every tenant. The button is disabled while searching, but
+  // Enter bypasses the button entirely — so without a guard in submit(),
+  // holding Enter spends the whole budget from one keyboard.
+  it('does not re-search on Enter while a search is already in flight', () => {
+    const onSearch = vi.fn();
+    const { rerender } = render(<YouTubeSearchField {...props} onSearch={onSearch} />);
+    const input = screen.getByLabelText('Search YouTube');
+
+    fireEvent.change(input, { target: { value: 'handel' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    expect(onSearch).toHaveBeenCalledTimes(1);
+
+    // The parent flips `searching` on while the request is out; more Enters
+    // land in that window.
+    rerender(<YouTubeSearchField {...props} onSearch={onSearch} searching />);
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(onSearch).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the typed query in the box while the search is in flight', () => {
+    const { rerender } = render(<YouTubeSearchField {...props} />);
+    const input = screen.getByLabelText('Search YouTube') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'handel' } });
+    rerender(<YouTubeSearchField {...props} searching />);
+    // A blocked Enter must not discard what the user typed — it is only
+    // delayed until the spinner clears.
+    expect(input.value).toBe('handel');
+  });
+
+  it('empties the box when the search is cleared from outside (Back to library)', () => {
+    const { rerender } = render(<YouTubeSearchField {...props} active />);
+    const input = screen.getByLabelText('Search YouTube') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'handel' } });
+    expect(input.value).toBe('handel');
+
+    // The results panel's `Back to library` calls the hook's clear() directly,
+    // which the field only sees as `active` going false.
+    rerender(<YouTubeSearchField {...props} active={false} />);
+    expect(input.value).toBe('');
+  });
 });
