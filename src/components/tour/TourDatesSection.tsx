@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Calendar, MapPin, Clock, Music, Loader2, Plus, Trash2, Edit, FileText, Building, DollarSign, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useActiveTrip } from "@/components/tour-manager/ActiveTripContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface TourEvent {
@@ -82,6 +83,7 @@ interface AddDateFormProps {
 }
 
 const AddDateForm = ({ onSuccess, onClose, editingEvent, onGenerateContract }: AddDateFormProps) => {
+  const { tripId: activeTripId } = useActiveTrip();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
@@ -166,6 +168,10 @@ const AddDateForm = ({ onSuccess, onClose, editingEvent, onGenerateContract }: A
         venue_phone: formData.venue_phone || null,
         honorarium_amount: parseFloat(formData.honorarium_amount) || 0,
         deposit_amount: parseFloat(formData.deposit_amount) || 0,
+        // Stamp the trip so roster and permission slips can later be resolved
+        // per trip rather than per individual date. Null when this section is
+        // rendered outside Travel Manager, where no trip is selected.
+        trip_id: activeTripId ?? null,
         created_by: user.id
       };
 
@@ -500,6 +506,7 @@ interface TourDatesSectionProps {
 }
 
 export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) => {
+  const { tripId: activeTripId } = useActiveTrip();
   const [tourEvents, setTourEvents] = useState<TourEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -508,14 +515,20 @@ export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) 
 
   useEffect(() => {
     fetchTourEvents();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTripId]);
 
   const fetchTourEvents = async () => {
     try {
-      const { data, error } = await supabase
+      // Scope to the selected trip when there is one. Dates created before
+      // trips existed have trip_id NULL, so they stay visible rather than
+      // vanishing from a workspace that has always shown them.
+      let q = supabase
         .from('gw_tour_events')
         .select('*')
         .order('start_date', { ascending: true });
+      if (activeTripId) q = q.or(`trip_id.eq.${activeTripId},trip_id.is.null`);
+      const { data, error } = await q;
 
       if (error) throw error;
       setTourEvents(data || []);
