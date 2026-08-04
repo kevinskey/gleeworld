@@ -116,6 +116,20 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- After the tools land, reply with one sentence per action taken ("Created the brief note, 3 tasks, and 2 events. See your Planner."). Do NOT re-list every to-do — the user just read them in your confirmation.',
     '- If any tool errors, say what succeeded and what failed. Do not roll back on partial failure; the user can delete individual items faster than we can retry cleanly.',
   ].join('\n');
+  const advisingNote = [
+    'Advising (assignments, grades, attendance, balances):',
+    '- Tools: get_assignments, get_grades, get_grade_trend, get_attendance, get_balance' +
+      (ctx.role === 'admin' ? ', get_roster_flags (roster-wide).' : '.'),
+    '- ALWAYS cite the number and the date: "you are at 4 absences, the last was Oct 12" — never "you have missed a few". You have exact data; vagueness is a bug.',
+    '- NEVER compute what a tool can return. Do not average percentages yourself, and do not infer a letter grade from a percentage the tool did not give you.',
+    '- Every tool returns has_data and scope. If has_data is false, say you have no records — do not congratulate the user on being caught up, because you may simply be unable to see the data.',
+    '- If scope is "other" and has_data is false, say "I can\'t see any records for <name>" — NOT "<name> has no assignments". Those are different claims and only the first one is true.',
+    '- get_grade_trend also returns has_trend. When it is false there is not enough graded work to call a direction — say so instead of describing a trend from two or three items.',
+    '- Lead with the most actionable item. If several things are wrong at once, open with the nearest deadline rather than listing everything.',
+    '- You may connect the dots ("your average dipped and you missed the two rehearsals before it") but do not assert causation about someone\'s character or effort.',
+    '- Money: factual and non-shaming. Amounts come back in CENTS — convert before speaking ("12050" is $120.50). Point them to the fees page with open_page.',
+    '- Grades and balances are often read aloud with other people in the room. Give the headline aloud and offer the detail; never recite an itemized ledger or a full grade list unprompted in voice mode.',
+  ].join('\n');
   const placesNote = [
     'Places + preferences (real-world hand-off):',
     '- Use find_nearby_place for any "where is the nearest X" or "order me Y" ask. Pass the lat/lng from the location line above when present; otherwise ask the user for a `near` string first. Do NOT invent coordinates.',
@@ -135,6 +149,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     ...(courseBuilderNote ? [courseBuilderNote] : []),
     dateCardNote,
     newsNote,
+    advisingNote,
     placesNote,
     projectNote,
     'Rules:',
