@@ -11,6 +11,7 @@ import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipCont
 import { QueryClientProvider } from "@tanstack/react-query";
 import { QueryClient } from "@tanstack/query-core";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
@@ -31,6 +32,8 @@ if (typeof window !== 'undefined') installDemoWriteInterceptor();
 
 import { MessengerProvider } from "@/contexts/MessengerContext";
 import { ActiveMeetingProvider } from "@/contexts/ActiveMeetingContext";
+import { IosCalendarAutoPull } from "@/components/app/IosCalendarAutoPull";
+import { isNativeCalendarAvailable } from "@/plugins/gwCalendar";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { ControlCenterRedirect } from "@/components/routing/ControlCenterRedirect";
@@ -145,7 +148,8 @@ const ForcePasswordChange = lazy(() => import("./pages/ForcePasswordChange"));
 const AuditionApplicationPage = lazy(() => import("./pages/AuditionApplicationPage"));
 const FanDashboard = lazy(() => import("./pages/FanDashboard"));
 // import AdminDashboard from "./pages/AdminDashboard";
-const DuesManagement = lazy(() => import("./pages/DuesManagement").then(m => ({ default: m.DuesManagement })));
+const FeesAdminPage = lazy(() => import("./pages/dashboard/FeesAdminPage"));
+const MyFeesPage = lazy(() => import("./pages/dashboard/MyFeesPage"));
 const PermissionsPage = lazy(() => import("./pages/admin/Permissions"));
 const WeekPage = lazy(() => import("./pages/music-theory/WeekPage"));
 
@@ -153,6 +157,7 @@ const ContractSigning = lazy(() => import("./pages/ContractSigning"));
 const AdminSigning = lazy(() => import("./pages/AdminSigning"));
 const ActivityLogs = lazy(() => import("./pages/ActivityLogs"));
 const W9FormPage = lazy(() => import("./pages/W9FormPage"));
+const ParentPermissionSlip = lazy(() => import("./pages/ParentPermissionSlip"));
 import NotFound from "./pages/NotFound";
 const Accounting = lazy(() => import("./pages/Accounting"));
 const DocsArchitecture = lazy(() => import("./pages/DocsArchitecture"));
@@ -193,13 +198,20 @@ const Messages = lazy(() => import("./pages/Messages"));
 const EmailComposerPage = lazy(() => import("./pages/EmailComposerPage"));
 const OnboardingInfo = lazy(() => import("./pages/OnboardingInfo"));
 const MemberRegistration = lazy(() => import("./pages/MemberRegistration"));
+const ParentRegistration = lazy(() => import("./pages/ParentRegistration"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const MusicLibraryPage = lazy(() => import("./pages/member/MusicLibraryPage"));
 const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPage"));
+const PartTracksPage = lazy(() => import("./pages/dashboard/PartTracksPage"));
+const RepertoirePage = lazy(() => import("./pages/dashboard/RepertoirePage"));
+const SeatingChartsDashboardPage = lazy(() => import("./pages/seating-charts/DashboardPage"));
+const SeatingChartEditorPage = lazy(() => import("./pages/seating-charts/EditorPage"));
+const SeatingChartViewPage = lazy(() => import("./pages/seating-charts/ViewPage"));
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
 const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
+const ReadingMusicPage = lazy(() => import("./pages/dashboard/ReadingMusicPage"));
 const NotationEditorPage = lazy(() => import("./pages/notation/NotationEditorPage"));
 const BoxOfficePage = lazy(() => import("./pages/dashboard/BoxOfficePage"));
 const BoxOfficeEventPage = lazy(() => import("./pages/dashboard/BoxOfficeEventPage"));
@@ -208,12 +220,11 @@ const BoxOfficeWillCallPage = lazy(() => import("./pages/dashboard/BoxOfficeWill
 const ConcertTicketsPublicPage = lazy(() => import("./pages/public/ConcertTicketsPublicPage"));
 const TicketsOrderPage = lazy(() => import("./pages/public/TicketsOrderPage"));
 const BoxOfficeIndexPage = lazy(() => import("./pages/public/BoxOfficeIndexPage"));
-const PartTracksModule = lazy(() => import("./components/modules/PartTracksModule"));
-const PartTracksLandingPage = lazy(() => import("./pages/dashboard/PartTracksLandingPage"));
 const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPage"));
 const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/SongwritingLibraryPage"));
 const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));
 const PlannerPage = lazy(() => import("./pages/planner/PlannerPage"));
+const PrayerApp = lazy(() => import("./pages/prayer/PrayerApp"));
 const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
 const ConcertPlannerEditorPage = lazy(() => import("./pages/dashboard/ConcertPlannerEditorPage"));
 const PublicConcertProgramPage = lazy(() => import("./pages/public/PublicConcertProgramPage"));
@@ -256,7 +267,7 @@ const TermsOfService = lazy(() => import("./pages/policies/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/policies/PrivacyPolicy"));
 const TrustCenter = lazy(() => import("./pages/policies/Security"));
 const DataProcessingAddendum = lazy(() => import("./pages/policies/DataProcessingAddendum"));
-const GraduatesManagementModule = lazy(() => import("./components/modules/GraduatesManagementModule").then((m) => ({ default: (m as any).GraduatesManagementModule ?? (m as any).default })));
+const GraduatesManagementModule = lazy(() => import("./components/modules/GraduatesManagementModule").then((m) => ({ default: m.GraduatesManagementModule })));
 const SendNotificationPage = lazy(() => import("./pages/SendNotificationPage"));
 const AuditionPage = lazy(() => import("./pages/AuditionPage"));
 const Handbook = lazy(() => import("./pages/Handbook"));
@@ -359,6 +370,12 @@ const PeerReviewBrowserPage = lazy(() => import("./pages/mus240/PeerReviewBrowse
 const MidtermExam = lazy(() => import("./pages/mus240/MidtermExam"));
 const SMUS100MidtermExamPage = lazy(() => import("./pages/SMUS100MidtermExamPage"));
 const CourseStatistics = lazy(() => import("./pages/admin/CourseStatistics"));
+const PartnersAdmin = lazy(() => import("./pages/admin/PartnersAdmin"));
+const PartnerInviteRedeem = lazy(() => import("./pages/partner/PartnerInviteRedeem"));
+const PartnerPortal = lazy(() => import("./pages/partner/PartnerPortal"));
+const PartnerProfile = lazy(() => import("./pages/partner/PartnerProfile"));
+const PartnerScoresList = lazy(() => import("./pages/partner/PartnerScoresList"));
+const PartnerScoreUpload = lazy(() => import("./pages/partner/PartnerScoreUpload"));
 const PaymentSuccess = lazy(() => import("./pages/dues-management/PaymentSuccess").then(m => ({ default: m.PaymentSuccess })));
 
 const WritingGraderPage = lazy(() => import("./pages/writing/WritingGraderPage"));
@@ -391,6 +408,11 @@ const StudentAssignmentPage = lazy(() => import("./pages/grading/student/Student
 const CourseAudioPage = lazy(() => import("./pages/courses/CourseAudioPage"));
 const GlobalMiniPlayer = lazy(() => import("./components/audio/GlobalMiniPlayer").then((m) => ({ default: m.GlobalMiniPlayer })));
 import { ModuleGate } from "./components/auth/ModuleGate";
+import { StoreShell } from "./pages/store/StoreShell";
+const StorePage = lazy(() => import("./pages/store/StorePage"));
+const StoreScoreDetail = lazy(() => import("./pages/store/StoreScoreDetail"));
+const StorePartnerPage = lazy(() => import("./pages/store/StorePartnerPage"));
+const StoreThanksPage = lazy(() => import("./pages/store/StoreThanksPage"));
 
 // Legacy MUS240 redirect component
 const LegacyMus240Redirect = () => {
@@ -398,6 +420,10 @@ const LegacyMus240Redirect = () => {
   const newPath = location.pathname.replace('/classes/mus240', '/mus-240');
   return <Navigate to={newPath} replace />;
 };
+
+// /dashboard/part-tracks briefly redirected to /studio after the old
+// editor retired (2026-07-29); it now hosts the PartTrack rehearsal-track
+// pipeline (PR #335).
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -500,6 +526,7 @@ const App = () => {
         <TenantThemeRoot />
         <NativeTenantGate>
         <AuthProvider>
+          {isNativeCalendarAvailable() && <IosCalendarAutoPull />}
           <ThemeProvider>
             <TooltipProvider>
               <CustomTooltipProvider>
@@ -657,13 +684,21 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
+              <Route
+                path="/register/parent"
+                element={
+                  <PublicRoute>
+                    <ParentRegistration />
+                  </PublicRoute>
+                }
+              />
+              <Route
                 path="/reset-password"
                 element={
                   <PublicRoute>
                     <ResetPassword />
                   </PublicRoute>
-                } 
+                }
               />
               <Route 
                 path="/force-password-change"
@@ -1341,7 +1376,44 @@ const App = () => {
                 } 
                />
                {/* /admin routes — only deep links below, no bare /admin home. */}
-                 <Route 
+                 <Route
+                   path="/admin/partners"
+                   element={
+                     <ProtectedRoute>
+                       <AdminOnlyRoute>
+                         <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                           <DashboardShell><PartnersAdmin /></DashboardShell>
+                         </UniversalLayout>
+                       </AdminOnlyRoute>
+                     </ProtectedRoute>
+                   }
+                 />
+                 <Route
+                   path="/partner/invite/:token"
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><PartnerInviteRedeem /></DashboardShell>
+                       </UniversalLayout>
+                     </ProtectedRoute>
+                   }
+                 />
+                 <Route
+                   path="/partner"
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><PartnerPortal /></DashboardShell>
+                       </UniversalLayout>
+                     </ProtectedRoute>
+                   }
+                 >
+                   <Route index element={<PartnerProfile />} />
+                   <Route path="profile" element={<PartnerProfile />} />
+                   <Route path="scores" element={<PartnerScoresList />} />
+                   <Route path="scores/new" element={<PartnerScoreUpload />} />
+                 </Route>
+                 <Route
                    path="/admin/academy-courses" 
                    element={
                      <ProtectedRoute>
@@ -1444,6 +1516,56 @@ const App = () => {
                   }
                 />
                 <Route
+                  path="/dashboard/repertoire"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><RepertoirePage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/seating-charts"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><SeatingChartsDashboardPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/seating-charts/:chartId/edit"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><SeatingChartEditorPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/seating-charts/:chartId"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><SeatingChartEditorPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/seating-charts/:chartId/view"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><SeatingChartViewPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/dashboard/music-tools"
                   element={
                     <ProtectedRoute>
@@ -1474,14 +1596,22 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/dashboard/sight-reading"
+                  path="/dashboard/reading-music"
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><SightReadingStudio /></DashboardShell>
+                        <DashboardShell><ReadingMusicPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
+                />
+                <Route
+                  path="/dashboard/sight-reading"
+                  element={<RedirectWithSearch to="/dashboard/reading-music" />}
+                />
+                <Route
+                  path="/dashboard/sight-reading/:rest"
+                  element={<RedirectWithSearch to="/dashboard/reading-music" />}
                 />
                 <Route
                   path="/dashboard/sight-reading/editor/:exerciseId?"
@@ -1538,21 +1668,7 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <PartTracksLandingPage />
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard/part-tracks/:projectId"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <PartTracksLandingPage />
-                        </DashboardShell>
+                        <DashboardShell><PartTracksPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
@@ -1601,6 +1717,23 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell>
                           <ModuleGate moduleId="songwriting"><SongwritingEditorPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Prayer App — Phase 0/1 preview. No ModuleGate yet: the 'prayer'
+                    module is not registered in billing, so gating on it would
+                    make the page unreachable. The nav link is restricted to
+                    platform admins instead; swap both to the module gate once
+                    the module exists. */}
+                <Route
+                  path="/prayer"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <PrayerApp />
                         </DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
@@ -1720,7 +1853,10 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><GraduatesManagementModule /></DashboardShell>
+                        {/* isFullPage: this is a routed page — without it the
+                            module renders its embedded variant (no container
+                            padding) and the title sits flush at x=0 on phones. */}
+                        <DashboardShell><GraduatesManagementModule isFullPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
@@ -1958,12 +2094,14 @@ const App = () => {
                    } 
                    />
                  <Route
-                   path="/notifications/send" 
+                   path="/notifications/send"
                    element={
                      <ProtectedRoute>
-                       <SendNotificationPage />
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><SendNotificationPage /></DashboardShell>
+                       </UniversalLayout>
                      </ProtectedRoute>
-                   } 
+                   }
                   />
                  <Route
                    path="/announcements" 
@@ -2240,15 +2378,14 @@ const App = () => {
                      path="/music-library"
                      element={<RedirectWithSearch to="/dashboard/music-library" />}
                     />
-                      <Route 
-                        path="/librarian-dashboard" 
-                        element={
-                          <ProtectedRoute>
-                            <UniversalLayout>
-                              <LibrarianDashboardPage />
-                            </UniversalLayout>
-                          </ProtectedRoute>
-                        } 
+                      {/* Legacy path. It used to render the page under a bare
+                          UniversalLayout — no DashboardShell — so the librarian
+                          got a different chrome depending on which URL they
+                          arrived by. Redirects to the canonical route instead,
+                          matching /calendar, /messenger and the rest. */}
+                      <Route
+                        path="/librarian-dashboard"
+                        element={<RedirectWithSearch to="/dashboard/librarian" />}
                       />
                       <Route 
                         path="/budgets" 
@@ -2266,13 +2403,29 @@ const App = () => {
                          </ProtectedRoute>
                        } 
                       />
-                       <Route 
-                         path="/dues-management" 
+                       <Route
+                         path="/dues-management"
+                         element={<Navigate to="/dashboard/fees" replace />}
+                       />
+                       <Route
+                         path="/dashboard/fees"
                          element={
                            <ProtectedRoute>
-                             <DuesManagement />
+                             <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                               <DashboardShell><FeesAdminPage /></DashboardShell>
+                             </UniversalLayout>
                            </ProtectedRoute>
-                         } 
+                         }
+                       />
+                       <Route
+                         path="/dashboard/my-fees"
+                         element={
+                           <ProtectedRoute>
+                             <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                               <DashboardShell><MyFeesPage /></DashboardShell>
+                             </UniversalLayout>
+                           </ProtectedRoute>
+                         }
                        />
                        <Route 
                          path="/dues-management/success" 
@@ -2613,6 +2766,26 @@ const App = () => {
                                    </ProtectedRoute>
                                  }
                                 />
+                                <Route
+                                  path="/travel-manager"
+                                  element={
+                                    <ProtectedRoute>
+                                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                        <DashboardShell><TourPlanner /></DashboardShell>
+                                      </UniversalLayout>
+                                    </ProtectedRoute>
+                                  }
+                                />
+                                <Route
+                                  path="/travel-planner"
+                                  element={
+                                    <ProtectedRoute>
+                                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                        <DashboardShell><TourPlanner /></DashboardShell>
+                                      </UniversalLayout>
+                                    </ProtectedRoute>
+                                  }
+                                />
                                 <Route 
                                   path="/weather" 
                                   element={
@@ -2665,15 +2838,63 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                                />
-                               <Route 
-                                path="/store" 
+                               <Route
+                                path="/store/products"
                                 element={
                                   <ProtectedRoute>
                                     <ProductManagement />
                                   </ProtectedRoute>
-                                } 
+                                }
                                />
-                               <Route 
+                               <Route
+                                 path="/store"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StorePage /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
+                                 path="/store/scores/:id"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StoreScoreDetail /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
+                                 path="/store/partners/:id"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StorePartnerPage /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
+                                 path="/store/thanks"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StoreThanksPage /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
                                  path="/handbook" 
                                  element={
                                    <ProtectedRoute>
@@ -2774,13 +2995,15 @@ const App = () => {
                                      </PublicRoute>
                                    } 
                                  />
-                                 <Route 
-                                   path="/first-year" 
+                                 <Route
+                                   path="/first-year"
                                    element={
                                      <ProtectedRoute>
-                                       <FirstYearHub />
+                                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                         <DashboardShell><FirstYearHub /></DashboardShell>
+                                       </UniversalLayout>
                                      </ProtectedRoute>
-                                   } 
+                                   }
                                  />
                                  {/* /console/first-year route removed with First Year Console module. */}
 
@@ -3255,6 +3478,11 @@ const App = () => {
                                          <StudentAssignmentPage />
                                        </ProtectedRoute>
                                      } 
+                                   />
+                                   {/* Public parent-facing permission slip — no auth required */}
+                                   <Route
+                                     path="/parent/permission-slip"
+                                     element={<ParentPermissionSlip />}
                                    />
                                    {/* Catch-all route for 404 */}
                                    <Route path="*" element={<NotFound />} />

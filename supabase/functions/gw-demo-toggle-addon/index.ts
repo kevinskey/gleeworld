@@ -12,6 +12,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { verifyClaims } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,14 +25,6 @@ const corsHeaders = {
 // slug='demo' from gw_tenants.
 const DEMO_TENANT_ID = "ae2fbec2-7562-45f9-9028-c4df93b99cef";
 
-function decodeJwtPayload(jwt: string): Record<string, unknown> | null {
-  try {
-    const part = jwt.split(".")[1];
-    const padded = part + "===".slice((part.length + 3) % 4);
-    return JSON.parse(atob(padded.replace(/-/g, "+").replace(/_/g, "/")));
-  } catch { return null; }
-}
-
 function err(status: number, code: string, detail?: string) {
   return new Response(JSON.stringify({ error: code, detail }), {
     status, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -42,11 +35,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return err(405, "method_not_allowed");
 
-  const auth = req.headers.get("Authorization") || "";
-  const jwt = auth.replace(/^Bearer\s+/i, "");
-  if (!jwt) return err(401, "unauthorized");
-
-  const payload = decodeJwtPayload(jwt);
+  const payload = await verifyClaims(req);
+  if (!payload) return err(401, "unauthorized");
   // deno-lint-ignore no-explicit-any
   const tenantId = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
   if (!tenantId) return err(400, "no_tenant_in_jwt");

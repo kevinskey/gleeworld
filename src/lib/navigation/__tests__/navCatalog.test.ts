@@ -3,7 +3,7 @@ import { NAV_CATALOG, resolveNav, entrySurfaces, hideableNavItems, type NavConte
 
 const openCtx = (over: Partial<NavContext> = {}): NavContext => ({
   hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: true,
-  canLibrarian: true, hiddenRoutes: new Set(), ...over,
+  canLibrarian: true, isPartner: true, hiddenRoutes: new Set(), ...over,
 });
 
 describe('NAV_CATALOG integrity', () => {
@@ -15,15 +15,14 @@ describe('NAV_CATALOG integrity', () => {
     const byKey = new Map(NAV_CATALOG.map((e) => [e.key, e]));
     const frozen: Array<[string, string, string]> = [
       ['music', '/dashboard/viewer', 'Music'],
-      ['tracks', '/dashboard/part-tracks', 'Tracks'],
       ['studio', '/studio', 'Studio'],
-      ['sight', '/dashboard/sight-reading', 'Sight Reading'],
+      ['sight', '/dashboard/reading-music', 'Reading Music'],
       ['attendance', '/attendance', 'Attendance'],
       ['academy', '/dashboard/academy', 'Academy'],
       ['tickets', '/box-office', 'Tickets'],
       ['planner', '/dashboard/concert-planner', 'Programs'],
       ['finance', '/dashboard/finance', 'Finance'],
-      ['merch', '/store', 'Merch'],
+      ['merch', '/store/products', 'Merch'],
     ];
     for (const [key, to, gridLabel] of frozen) {
       const e = byKey.get(key);
@@ -72,7 +71,7 @@ describe('resolveNav gates', () => {
     expect(out.find((e) => e.to === '/dashboard/pr-hub')).toBeUndefined();
   });
   it('flagless core (Music Library, People, Video) survives an all-off context', () => {
-    const out = resolveNav({ hasModule: () => false, isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, hiddenRoutes: new Set() });
+    const out = resolveNav({ hasModule: () => false, isTenantAdmin: true, isPlatformAdmin: false, canLibrarian: false, isPartner: false, hiddenRoutes: new Set() });
     for (const key of ['music-library', 'people', 'video', 'music-tools', 'office-hours', 'analytics', 'settings', 'attendance', 'academy']) {
       expect(out.find((e) => e.key === key), key).toBeDefined();
     }
@@ -110,7 +109,7 @@ describe('hideableNavItems (Workspace Settings source)', () => {
   });
   it('includes grid-only tiles so admins can hide them from the home grid', () => {
     const paths = items.map((i) => i.path);
-    for (const p of ['/attendance', '/box-office', '/store']) expect(paths, p).toContain(p);
+    for (const p of ['/attendance', '/box-office', '/store/products']) expect(paths, p).toContain(p);
   });
   it('paths are unique and every item has a section label', () => {
     expect(new Set(items.map((i) => i.path)).size).toBe(items.length);

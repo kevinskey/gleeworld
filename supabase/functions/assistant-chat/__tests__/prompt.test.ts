@@ -35,3 +35,33 @@ describe('buildSystemPrompt', () => {
     expect(member).not.toContain('create_course_draft');
   });
 });
+
+describe('academy guidance', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Test Choir',
+    activeModules: [], nowIso: '2026-08-04T12:00:00Z', timezone: 'America/New_York',
+  };
+
+  it('tells the assistant to search before answering subject questions', () => {
+    expect(buildSystemPrompt(ctx)).toContain('search_academy');
+  });
+
+  it('names the covered domains', () => {
+    const prompt = buildSystemPrompt(ctx);
+    expect(prompt).toMatch(/conducting history/i);
+    expect(prompt).toMatch(/terminology/i);
+    expect(prompt).toMatch(/repertoire/i);
+  });
+
+  it('forbids inventing an answer when nothing is found', () => {
+    expect(buildSystemPrompt(ctx)).toMatch(/do not (guess|invent)/i);
+  });
+
+  it('forbids attributing the material to another source', () => {
+    expect(buildSystemPrompt(ctx)).toMatch(/never attribute/i);
+  });
+
+  it('gives the guidance to admins too', () => {
+    expect(buildSystemPrompt({ ...ctx, role: 'admin' as const })).toContain('search_academy');
+  });
+});

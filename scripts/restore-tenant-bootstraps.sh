@@ -22,6 +22,10 @@ ANON_KEY=$(grep -E '^ANON_KEY=' "$ENV_FILE" | head -1 | cut -d= -f2-)
 
 write_boot() {
   local slug="$1" org="$2"
+  # The apex serves tenants/main via nginx alias, and a truthy org flips
+  # gleeworld.org from the MarketingSite into the tenant-clone events landing
+  # (regressed 2026-07-31 when this script wrote gw_tenants.name for main).
+  [ "$slug" = "main" ] && org=""
   mkdir -p "$HTML_ROOT/tenants/$slug"
   cat > "$HTML_ROOT/tenants/$slug/tenant-bootstrap.js" <<JS
 window.__TENANT_CONFIG__ = {

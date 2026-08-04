@@ -227,13 +227,15 @@ export default function CourseShell() {
   return (
     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
       <DashboardShell>
-    <div className="min-h-screen bg-[hsl(40,10%,96%)]">
-      {/* Top bar */}
-      <div className="bg-slate-900 text-white">
+    <div className="min-h-screen bg-background">
+      {/* Top bar — pt reserves the iOS safe-area inset so the transparent
+          status bar (overlaysWebView) doesn't collide with the back button
+          and title. env() is 0 outside the app; desktop is unchanged. */}
+      <div className="bg-primary text-primary-foreground" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <button
             onClick={() => navigate("/control-center?module=glee-academy")}
-            className="inline-flex items-center gap-1.5 text-xs text-slate-300 hover:text-white mb-3"
+            className="inline-flex items-center gap-1.5 text-xs text-primary-foreground/70 hover:text-primary-foreground mb-3"
           >
             <ArrowLeft className="w-4 h-4" />
             Glee Academy
@@ -242,13 +244,13 @@ export default function CourseShell() {
             <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: '-0.02em' }}>
               {course.title}
             </h1>
-            <Badge className="bg-slate-700 text-slate-200 border-slate-600">{course.course_code}</Badge>
+            <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/25">{course.course_code}</Badge>
             {course.semester && (
-              <span className="text-sm text-slate-300">{fmtSemester(course.semester)}</span>
+              <span className="text-sm text-primary-foreground/80">{fmtSemester(course.semester)}</span>
             )}
           </div>
           {course.instructor_name && (
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-primary-foreground/70">
               Instructor: {course.instructor_name}
             </p>
           )}

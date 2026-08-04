@@ -4,7 +4,7 @@ import { authenticateCaller, unauthorizedResponse } from '../_shared/auth.ts';
 import { toolsForRole, toOpenAiTools, TOOL_CATALOG, type AssistantRole } from './toolCatalog.ts';
 import { buildSystemPrompt } from './prompt.ts';
 import { buildChatRequest, callModel, type ChatMessage } from './provider.ts';
-import { executeServerTool } from './executors.ts';
+import { executeServerTool, type ConciergeResult } from './executors.ts';
 import { validateCourseSpec } from '../_shared/courseSpec.ts';
 
 const corsHeaders = {
@@ -15,7 +15,11 @@ const corsHeaders = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-const MAX_TOOL_ITERATIONS = 6;
+// Model rounds per turn. Providers that call tools one-at-a-time burn a
+// round per action, so 6 exhausted on any compound request ("make a note,
+// add three tasks, and schedule it") — Kevin hit the wall 2026-08-02.
+// Cost stays bounded: each round is one capped (max_tokens 1000) call.
+const MAX_TOOL_ITERATIONS = 12;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -24,6 +28,10 @@ serve(async (req) => {
   const caller = await authenticateCaller(req);
   if (!caller || !caller.userId) return unauthorizedResponse(corsHeaders);
   const role: AssistantRole = caller.isAdmin ? 'admin' : 'member';
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const webSearchUrl = supabaseUrl ? `${supabaseUrl.replace(/\/$/, '')}/functions/v1/web-search` : undefined;
+  const webSearchAuthHeader = req.headers.get('Authorization') ?? undefined;
 
   const apiKey = Deno.env.get('DEEPSEEK_API_KEY');
   const apiUrl = Deno.env.get('ASSISTANT_API_URL') ?? 'https://api.deepseek.com/chat/completions';
@@ -118,15 +126,17 @@ serve(async (req) => {
     role?: string | null;
     voice_part?: string | null;
     class_year?: string | null;
+    home_address?: string | null;
   } | null = null;
   try {
     const { data } = await userClient
       .from('gw_profiles')
-      .select('full_name, role, voice_part, class_year')
+      .select('full_name, role, voice_part, class_year, home_address')
       .eq('user_id', caller.userId)
       .maybeSingle();
     profile = (data as typeof profile) ?? null;
   } catch { /* ignore — the assistant still works with fallback context */ }
+  const homeAddress = (profile?.home_address ?? '').trim() || undefined;
 
   const fullName = (profile?.full_name ?? '').trim();
   const inferredFirst = fullName.split(/\s+/)[0] || '';
@@ -136,6 +146,17 @@ serve(async (req) => {
   const rawGeo = body.context?.geo as { lat?: unknown; lng?: unknown } | undefined;
   const geo = rawGeo && typeof rawGeo.lat === 'number' && typeof rawGeo.lng === 'number'
     ? { lat: rawGeo.lat, lng: rawGeo.lng }
+    : undefined;
+  // Page list the client's build actually ships (from navCatalog). Sanitized
+  // hard: model-visible strings from the request body. Cap 100 entries so a
+  // hostile client can't balloon the prompt.
+  const rawTargets = body.context?.navTargets;
+  const navTargets = Array.isArray(rawTargets)
+    ? rawTargets
+        .filter((t): t is { key: unknown; label: unknown } => !!t && typeof t === 'object')
+        .map((t) => ({ key: String(t.key ?? '').slice(0, 60), label: String(t.label ?? '').slice(0, 60) }))
+        .filter((t) => /^[a-z0-9-]+$/.test(t.key) && t.label.length > 0)
+        .slice(0, 100)
     : undefined;
   const ctx = {
     firstName: inferredFirst || String(body.context?.firstName ?? 'there'),
@@ -149,6 +170,7 @@ serve(async (req) => {
     nowIso: new Date().toISOString(),
     timezone: String(body.context?.timezone ?? 'America/New_York'),
     geo,
+    navTargets,
   };
 
   const tools = toolsForRole(role);
@@ -158,6 +180,7 @@ serve(async (req) => {
     ...history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
   ];
   const actions: Array<{ tool: string; args: Record<string, unknown>; confirm: boolean }> = [];
+  let resultsPanel: ConciergeResult | undefined = undefined;
 
   // Persist the user's turn immediately so we don't lose it if the model
   // call fails downstream. The assistant reply is saved once we have it.
@@ -196,22 +219,44 @@ serve(async (req) => {
       const toolCalls = message.tool_calls ?? [];
       if (toolCalls.length === 0) {
         const reply = message.content ?? '';
+        // Empty replies are ONLY legal on action turns (silent-action UX).
+        // The model over-applied the rule to plain conversation ("how are
+        // you today" → empty → the client renders dead silence, which
+        // users read as "assistant not reachable" — Kevin, iOS, 08-03).
+        // Give it one corrective nudge; if it stays silent, fall through
+        // with a minimal honest reply rather than nothing.
+        if (!reply.trim() && actions.length === 0) {
+          messages.push({ role: 'assistant', content: '' });
+          messages.push({
+            role: 'user',
+            content: 'Your last message was empty but you queued no action this turn. Empty replies are only allowed when you actually performed a UI action. Answer the user now in one or two sentences.',
+          });
+          continue;
+        }
         await persistAssistantReply(reply);
-        return json({ reply, actions, thread_id: threadId });
+        return json({ reply, actions, resultsPanel, thread_id: threadId });
       }
       messages.push({ role: 'assistant', content: message.content ?? null, tool_calls: toolCalls });
       for (const tc of toolCalls) {
         const def = tools.find((t) => t.name === tc.function.name);
         let args: Record<string, unknown> = {};
         try { args = JSON.parse(tc.function.arguments || '{}'); } catch { /* leave empty */ }
-        let result: string;
+        let result: string = JSON.stringify({ error: `Unhandled execution type for tool ${def?.name ?? 'unknown'}` });
         if (!def) {
           result = JSON.stringify({ error: `Tool not available: ${tc.function.name}` });
         } else if (def.execution === 'server') {
-          result = await executeServerTool(def.name, args, {
+          const toolOut = await executeServerTool(def.name, args, {
             supabase: userClient,
             youtubeApiKey: Deno.env.get('YOUTUBE_API_KEY') ?? undefined,
+            googleMapsApiKey: Deno.env.get('GOOGLE_MAPS_API_KEY') ?? undefined,
+            homeAddress,
+            webSearchUrl,
+            webSearchAuthHeader,
           });
+          result = toolOut.replyJson;
+          // Multi-tool iterations: last non-undefined panel wins. The panel is a UI
+          // surface, not an accumulator — the client shows one card at a time.
+          if (toolOut.resultsPanel) resultsPanel = toolOut.resultsPanel;
         } else {
           // Client-executed: queue it for the browser and tell the model it's underway.
           if (def.name === 'create_course_draft') {
@@ -233,11 +278,26 @@ serve(async (req) => {
         messages.push({ role: 'tool', content: result, tool_call_id: tc.id });
       }
     }
-    const timeoutReply = 'That took too many steps — try breaking the request into smaller pieces.';
+    // Tool budget exhausted. Don't scold-and-discard: every action queued so
+    // far still runs on the client, so ask the model — WITHOUT tools — to
+    // tell the user what got done and what's left. Static fallback only if
+    // even that plain completion fails.
+    let timeoutReply = "That was a big request — I finished part of it. Ask me to continue and I'll pick up the rest.";
+    try {
+      messages.push({
+        role: 'user',
+        content: 'You have used your tool budget for this turn. Do not call any more tools. In one or two sentences, tell the user what you completed and what remains, and suggest they say "continue" to finish the rest.',
+      });
+      const { message } = await callModel(buildChatRequest(messages, [], model), apiKey, apiUrl);
+      if (message.content?.trim()) timeoutReply = message.content;
+    } catch { /* keep the static fallback */ }
     await persistAssistantReply(timeoutReply);
-    return json({ reply: timeoutReply, actions, thread_id: threadId });
+    return json({ reply: timeoutReply, actions, resultsPanel, thread_id: threadId });
   } catch (e) {
     console.error('assistant-chat error:', e);
+    // Intentionally no resultsPanel here — the model crashed mid-turn; the
+    // client keeps whatever panel it last showed and moves on with the next
+    // successful turn.
     return json({ error: "I couldn't reach the assistant right now. Please try again." }, 502);
   }
 });

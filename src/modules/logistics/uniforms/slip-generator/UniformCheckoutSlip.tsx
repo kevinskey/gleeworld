@@ -61,7 +61,7 @@ const CheckoutSlipComponent = ({ userId, userName, assignments, issuedBy }: Chec
   const today = format(new Date(), 'MMMM dd, yyyy');
 
   return (
-    <div className="checkout-slip bg-white p-8 max-w-4xl mx-auto print:shadow-none">
+    <div className="checkout-slip bg-white p-4 sm:p-8 max-w-4xl mx-auto print:shadow-none">
       <style>{`
         @media print {
           .checkout-slip {
@@ -110,6 +110,7 @@ const CheckoutSlipComponent = ({ userId, userName, assignments, issuedBy }: Chec
       {/* Items Table */}
       <div className="mb-8">
         <h3 className="text-lg font-semibold mb-4">Assigned Items:</h3>
+        <div className="overflow-x-auto">
         <table className="w-full border-collapse border border-gray-300">
           <thead>
             <tr className="bg-gray-100">
@@ -145,6 +146,7 @@ const CheckoutSlipComponent = ({ userId, userName, assignments, issuedBy }: Chec
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Notes Section */}
@@ -184,7 +186,7 @@ const CheckoutSlipComponent = ({ userId, userName, assignments, issuedBy }: Chec
       {/* Footer */}
       <div className="mt-8 pt-4 border-t border-gray-300 text-sm text-gray-600 text-center">
         <p>Please return all items in good condition by the due date.</p>
-        <p>Contact the Glee Club office for any questions or concerns.</p>
+        <p>Contact the program office for any questions or concerns.</p>
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -27,8 +28,8 @@ import {
 } from '@/components/ui/select';
 import {
   Users, UserPlus, Search, Loader2, Shield, GraduationCap, Music, Heart,
-  AlertCircle, MoreVertical, Trash2, Power, Check, Upload, FileSpreadsheet,
-  ChevronDown, Download,
+  HeartHandshake, AlertCircle, MoreVertical, Trash2, Power, Check, Upload,
+  FileSpreadsheet, ChevronDown, Download,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -60,9 +61,10 @@ const ROLE_PALETTE: Record<string, { Icon: React.ElementType; tone: string; labe
   'member':      { Icon: Music,          tone: 'bg-emerald-50 text-emerald-700 border-emerald-200', label: 'Student' },
   'fan':         { Icon: Heart,          tone: 'bg-amber-50 text-amber-700 border-amber-200',   label: 'Fan' },
   'vip':         { Icon: Heart,          tone: 'bg-amber-50 text-amber-700 border-amber-200',   label: 'Fan (VIP)' },
+  'parent':      { Icon: HeartHandshake, tone: 'bg-rose-50 text-rose-700 border-rose-200',       label: 'Parent' },
 };
 
-type Filter = 'all' | 'admin' | 'instructor' | 'student' | 'fan' | 'disabled';
+type Filter = 'all' | 'admin' | 'instructor' | 'student' | 'fan' | 'parent' | 'disabled';
 
 export default function WorkspaceUsersPage() {
   const { user } = useAuth();
@@ -97,8 +99,17 @@ export default function WorkspaceUsersPage() {
   });
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return people.filter((p) => {
+    // Accent-insensitive, token-based search: every word the admin types
+    // must appear somewhere in the person's name/email/phone/role, in any
+    // order — so "brown aaliyah", "aali br", "josé" vs "jose", and pasted
+    // phone digits all hit. The old bare substring missed all of those,
+    // which read as "search is broken" on a 134-person roster.
+    const norm = (v: string) =>
+      v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const tokens = norm(search.trim()).split(/\s+/).filter(Boolean);
+    const digits = search.replace(/\D/g, '');
+
+    const matches = people.filter((p) => {
       // Role filter
       if (filter === 'disabled' && !p.disabled) return false;
       if (filter !== 'all' && filter !== 'disabled') {
@@ -107,18 +118,32 @@ export default function WorkspaceUsersPage() {
         if (filter === 'instructor' && r !== 'instructor') return false;
         if (filter === 'student'    && !(r === 'student' || r === 'member')) return false;
         if (filter === 'fan'        && !(r === 'fan' || r === 'vip')) return false;
+        if (filter === 'parent'     && r !== 'parent') return false;
       }
       // Search
-      if (!q) return true;
-      return (
-        (p.full_name || '').toLowerCase().includes(q) ||
-        (p.email || '').toLowerCase().includes(q)
-      );
+      if (tokens.length === 0) return true;
+      const hay = norm(`${p.full_name || ''} ${p.email || ''} ${roleOf(p) || ''}`);
+      const phoneDigits = (p.phone_number || '').replace(/\D/g, '');
+      return tokens.every((t) =>
+        hay.includes(t) || (digits.length >= 3 && phoneDigits.includes(digits)));
     });
+
+    // Rank: name starts-with the query first, then email starts-with,
+    // then everything else in the existing alphabetical order.
+    if (tokens.length === 0) return matches;
+    const first = tokens[0];
+    const rank = (p: Person): number => {
+      const name = norm(p.full_name || '');
+      const email = norm(p.email || '');
+      if (name.startsWith(first) || name.split(/\s+/).some((w) => w.startsWith(first))) return 0;
+      if (email.startsWith(first)) return 1;
+      return 2;
+    };
+    return [...matches].sort((a, b) => rank(a) - rank(b));
   }, [people, search, filter]);
 
   const counts = useMemo(() => {
-    const c = { total: people.length, admin: 0, instructor: 0, student: 0, fan: 0, disabled: 0 };
+    const c = { total: people.length, admin: 0, instructor: 0, student: 0, fan: 0, parent: 0, disabled: 0 };
     people.forEach((p) => {
       const r = roleOf(p);
       if (p.disabled) c.disabled++;
@@ -126,6 +151,7 @@ export default function WorkspaceUsersPage() {
       else if (r === 'instructor') c.instructor++;
       else if (r === 'student' || r === 'member') c.student++;
       else if (r === 'fan' || r === 'vip') c.fan++;
+      else if (r === 'parent') c.parent++;
     });
     return c;
   }, [people]);
@@ -135,7 +161,7 @@ export default function WorkspaceUsersPage() {
       <DashboardShell>
     <DashboardPageShell
       title="People"
-      subtitle="Everyone in this workspace — teachers, students, fans."
+      subtitle="Everyone in this workspace — teachers, students, parents, fans."
       actions={
         canManage && (
           <div className="flex items-center gap-2">
@@ -183,10 +209,11 @@ export default function WorkspaceUsersPage() {
       }
     >
       {/* Stat strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
         <StatPill label="All"         value={counts.total}     active={filter === 'all'}        onClick={() => setFilter('all')} />
         <StatPill label="Teachers"    value={counts.instructor + counts.admin} active={filter === 'instructor' || filter === 'admin'} onClick={() => setFilter('instructor')} />
         <StatPill label="Students"    value={counts.student}   active={filter === 'student'}    onClick={() => setFilter('student')} />
+        <StatPill label="Parents"     value={counts.parent}    active={filter === 'parent'}     onClick={() => setFilter('parent')} />
         <StatPill label="Fans"        value={counts.fan}       active={filter === 'fan'}        onClick={() => setFilter('fan')} />
         <StatPill label="Disabled"    value={counts.disabled}  active={filter === 'disabled'}   onClick={() => setFilter('disabled')} tone="rose" />
       </div>
@@ -324,7 +351,7 @@ function PersonRow({
 
 // ── Invite dialog ───────────────────────────────────────────────────────
 
-type CsvRow = { email: string; full_name?: string; role?: 'student' | 'instructor' | 'fan' | 'admin' };
+type CsvRow = { email: string; full_name?: string; role?: 'student' | 'instructor' | 'fan' };
 
 // Naive CSV splitter — no quoted-comma support. Handles the 90% case:
 // spreadsheets exported with no embedded commas in fields. If a real
@@ -337,8 +364,10 @@ function splitCsvLine(line: string): string[] {
 // Parse a CSV blob into invite rows. Requires a header row with at
 // minimum an `email` column. Optional columns: `full_name` (or `name`,
 // or `first_name` + `last_name`), and `role` (student|teacher|instructor|
-// fan|admin). Rows with invalid emails are silently dropped so a stray
-// header/footer line doesn't kill the import.
+// fan). `admin` is deliberately not importable — gw-invite-student clamps
+// unknown roles to student, so surfacing it here would lie in the preview;
+// promote people in the Edit dialog instead. Rows with invalid emails are
+// silently dropped so a stray header/footer line doesn't kill the import.
 function parseInviteCsv(text: string): { rows: CsvRow[]; skipped: number; error?: string } {
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
   if (!lines.length) return { rows: [], skipped: 0, error: 'CSV is empty.' };
@@ -367,7 +396,6 @@ function parseInviteCsv(text: string): { rows: CsvRow[]; skipped: number; error?
     if (rawRole === 'teacher' || rawRole === 'instructor') role = 'instructor';
     else if (rawRole === 'student' || rawRole === 'member') role = 'student';
     else if (rawRole === 'fan' || rawRole === 'supporter') role = 'fan';
-    else if (rawRole === 'admin') role = 'admin';
     rows.push({ email, full_name, role });
   }
   return { rows, skipped };
@@ -496,7 +524,12 @@ function CsvImportDialog({
   onInvited: () => void;
 }) {
   const [fallbackRole, setFallbackRole] = useState<'student' | 'instructor' | 'fan'>('student');
+  // Off by default: adding a roster shouldn't blast hundreds of emails unless
+  // the director explicitly opts in. Accounts are created either way; people
+  // can sign in anytime with their email.
+  const [sendEmails, setSendEmails] = useState(false);
   const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(0);
 
   if (!payload) return null;
   const { fileName, rows, skipped } = payload;
@@ -505,27 +538,39 @@ function CsvImportDialog({
 
   async function send() {
     setSending(true);
+    setDone(0);
     let ok = 0; const fails: string[] = [];
-    for (const row of rows) {
-      try {
-        const { data, error } = await supabase.functions.invoke('gw-invite-student', {
-          body: {
-            email: row.email,
-            role: row.role || fallbackRole,
-            full_name: row.full_name,
-            appOrigin: window.location.origin,
-          },
-        });
-        if (error) throw new Error(error.message || 'invoke failed');
-        if ((data as any)?.error) throw new Error((data as any).error);
-        ok++;
-      } catch (e: any) {
-        fails.push(`${row.email} — ${e.message}`);
+    // Modest worker pool — one-at-a-time makes a 700-row roster take many
+    // minutes; unbounded hammers the functions gateway.
+    const queue = [...rows];
+    async function worker() {
+      for (;;) {
+        const row = queue.shift();
+        if (!row) return;
+        try {
+          const { data, error } = await supabase.functions.invoke('gw-invite-student', {
+            body: {
+              email: row.email,
+              role: row.role || fallbackRole,
+              full_name: row.full_name,
+              sendEmail: sendEmails,
+              appOrigin: window.location.origin,
+            },
+          });
+          if (error) throw new Error(error.message || 'invoke failed');
+          if ((data as any)?.error) throw new Error((data as any).error);
+          ok++;
+        } catch (e: any) {
+          fails.push(`${row.email} — ${e.message}`);
+        } finally {
+          setDone((d) => d + 1);
+        }
       }
     }
+    await Promise.all(Array.from({ length: Math.min(4, rows.length) }, worker));
     setSending(false);
     if (ok > 0) {
-      toast.success(`Invited ${ok}${fails.length ? ` · ${fails.length} failed` : ''}`);
+      toast.success(`${sendEmails ? 'Invited' : 'Added'} ${ok}${fails.length ? ` · ${fails.length} failed` : ''}`);
       onInvited();
     }
     if (fails.length > 0) toast.error(fails[0], { description: fails.length > 1 ? `${fails.length - 1} more failed` : undefined });
@@ -536,7 +581,11 @@ function CsvImportDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Import from CSV</DialogTitle>
-          <DialogDescription>Review before sending — every row triggers a real invite email.</DialogDescription>
+          <DialogDescription>
+            {sendEmails
+              ? 'Review before sending — every row triggers a real invite email.'
+              : 'Review before adding — accounts are created right away, no emails go out.'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3">
@@ -566,6 +615,18 @@ function CsvImportDialog({
             <p className="text-xs text-muted-foreground">
               Used for rows that don't include a <code>role</code> column. Per-row roles win.
             </p>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="csv-send-emails" className="text-sm">Send invite emails</Label>
+              <p className="text-xs text-muted-foreground">
+                {sendEmails
+                  ? 'Everyone gets a sign-in link in their inbox.'
+                  : 'Off — people are added quietly and can sign in anytime with their email.'}
+              </p>
+            </div>
+            <Switch id="csv-send-emails" checked={sendEmails} onCheckedChange={setSendEmails} disabled={sending} />
           </div>
 
           {/* Compact preview of the first few rows so directors can
@@ -599,7 +660,11 @@ function CsvImportDialog({
           <Button variant="outline" onClick={onClose} disabled={sending}>Cancel</Button>
           <Button onClick={send} disabled={sending}>
             {sending ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <UserPlus className="w-4 h-4 mr-1.5" />}
-            Send {rows.length} invite{rows.length === 1 ? '' : 's'}
+            {sending
+              ? `${done}/${rows.length}…`
+              : sendEmails
+                ? `Send ${rows.length} invite${rows.length === 1 ? '' : 's'}`
+                : `Add ${rows.length} ${rows.length === 1 ? 'person' : 'people'}`}
           </Button>
         </DialogFooter>
       </DialogContent>

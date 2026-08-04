@@ -982,7 +982,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
               }}>
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateSession} disabled={creating} className="bg-[#150d26]">
+                  <Button onClick={handleCreateSession} disabled={creating} className="bg-[hsl(var(--brand-navy))]">
                     {creating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
                     {newSession.is_recurring ? 'Create Sessions' : 'Create Session'}
                   </Button>
@@ -1431,7 +1431,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                   {/* Legend */}
                   <div className="flex flex-wrap gap-4 mb-4 text-xs">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-3 rounded bg-[#150d26]/10 border border-[#150d26]/30" />
+                      <div className="w-3 h-3 rounded bg-[hsl(var(--brand-navy))]/10 border border-[hsl(var(--brand-navy))]/30" />
                       <span className="text-foreground">Class Sessions</span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -1654,8 +1654,8 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
                                 </div> : <div className="space-y-2">
                                   {daySessions.map(session => {
                           const typeConfig = getSessionTypeConfig(session.session_type);
-                          return <div key={session.id} className="p-3 bg-[#150d26]/5 border border-[#150d26]/20 rounded-lg">
-                                        <div className="flex items-center gap-2 font-medium text-[#150d26]">
+                          return <div key={session.id} className="p-3 bg-[hsl(var(--brand-navy))]/5 border border-[hsl(var(--brand-navy))]/20 rounded-lg">
+                                        <div className="flex items-center gap-2 font-medium text-[hsl(var(--brand-navy))]">
                                           <typeConfig.icon className="h-4 w-4" />
                                           {session.title}
                                         </div>

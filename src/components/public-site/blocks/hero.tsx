@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
-import { Image as ImageIcon, Plus, Trash2 } from 'lucide-react';
+import { Image as ImageIcon, Plus, Trash2, GripVertical, MoveDiagonal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -71,6 +71,15 @@ const schema = z.object({
   // because the buttons used to sit directly under the text.
   buttonsX: z.number().min(0).max(100).default(50),
   buttonsY: z.number().min(0).max(100).default(70),
+  // Per-field placement (Canva-style). ABSENT = the field renders inside
+  // the classic centered stack at textX/textY, pixel-identical to configs
+  // saved before these fields existed. A field's first drag measures its
+  // current on-screen center and seeds these, so pulling one field out of
+  // the stack never causes a visual jump.
+  headlineX: z.number().min(0).max(100).optional(),
+  headlineY: z.number().min(0).max(100).optional(),
+  subheadlineX: z.number().min(0).max(100).optional(),
+  subheadlineY: z.number().min(0).max(100).optional(),
 });
 type Config = z.infer<typeof schema>;
 
@@ -95,15 +104,29 @@ function contrastText(bg: string): string {
 // and tiny on 4K displays. Desktop = `px`. Mobile = `mobilePx` when the
 // user set one; otherwise auto-derives at ~55% of desktop (14px absolute
 // floor so nothing becomes illegible).
-function fluidPx(px: number, mobilePx?: number): string {
+//
+// The auto-derived mobile floor is CAPPED at 40px: the floor exists for
+// legibility, and 55% of a large desktop headline (easy to reach with
+// the corner-resize handle) used to become an un-fitting phone size —
+// e.g. 160px desktop → 88px clamp MINIMUM, overflowing a 390px viewport.
+// With the cap, big headlines scale down to the fluid term on phones. An
+// explicit mobilePx is still honored as-is. Exported for tests.
+//
+// Sizes are in cqw (container-query width units — the hero section is a
+// container, see .gw-hero-section), NOT vw: the builder's phone preview
+// renders the page in a narrow canvas where the browser viewport is still
+// desktop-sized, so vw-based text stayed huge. cqw tracks the hero's own
+// width, which is correct on real phones, in the preview canvas, and in
+// iframes alike.
+export function fluidPx(px: number, mobilePx?: number): string {
   const max = Math.max(12, Math.round(px));
-  const autoMin = Math.max(14, Math.round(max * 0.55));
+  const autoMin = Math.max(14, Math.min(40, Math.round(max * 0.55)));
   const min = typeof mobilePx === 'number'
     ? Math.max(12, Math.min(max, Math.round(mobilePx)))
     : autoMin;
-  // Slope chosen so the size reaches `max` around a 1280px viewport.
-  const vw = (max / 12).toFixed(2);
-  return `clamp(${min}px, ${vw}vw, ${max}px)`;
+  // Slope chosen so the size reaches `max` around a 1280px-wide hero.
+  const cqw = (max / 12).toFixed(2);
+  return `clamp(${min}px, ${cqw}cqw, ${max}px)`;
 }
 
 function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
@@ -123,22 +146,59 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   // across screen sizes. `dragging` tracks which group is currently in motion
   // so we can switch the cursor + suppress the other group's pointer events.
   const sectionRef = useRef<HTMLElement>(null);
+  type DragTarget = 'text' | 'buttons' | 'headline' | 'subheadline';
   const dragRef = useRef<{
-    target: 'text' | 'buttons';
+    target: DragTarget;
     x: number; y: number;
     sx: number; sy: number;
     rect: DOMRect;
+    /** Half the dragged box's size as % of the section — clamps keep the
+     * whole box inside the hero instead of letting half of it hang off. */
+    halfW: number; halfH: number;
   } | null>(null);
-  const [dragging, setDragging] = useState<'text' | 'buttons' | null>(null);
+  const [dragging, setDragging] = useState<DragTarget | null>(null);
   const draggable = !!onConfigChange;
 
-  const makePointerHandlers = (target: 'text' | 'buttons') => ({
+  // Start coords for a drag. Per-field targets without stored coords are
+  // seeded from the element's CURRENT rendered center so pulling a field
+  // out of the legacy stack keeps it exactly where it appears.
+  const dragStartCoords = (target: DragTarget, el: HTMLElement, section: DOMRect): { sx: number; sy: number } => {
+    if (target === 'text') return { sx: config.textX ?? 50, sy: config.textY ?? 50 };
+    if (target === 'buttons') return { sx: config.buttonsX ?? 50, sy: config.buttonsY ?? 70 };
+    const storedX = target === 'headline' ? config.headlineX : config.subheadlineX;
+    const storedY = target === 'headline' ? config.headlineY : config.subheadlineY;
+    if (storedX != null && storedY != null) return { sx: storedX, sy: storedY };
+    const r = el.getBoundingClientRect();
+    return {
+      sx: ((r.left + r.width / 2 - section.left) / section.width) * 100,
+      sy: ((r.top + r.height / 2 - section.top) / section.height) * 100,
+    };
+  };
+  const dragPatch = (target: DragTarget, x: number, y: number): Partial<Config> => {
+    switch (target) {
+      case 'text': return { textX: x, textY: y };
+      case 'buttons': return { buttonsX: x, buttonsY: y };
+      case 'headline': return { headlineX: x, headlineY: y };
+      case 'subheadline': return { subheadlineX: x, subheadlineY: y };
+    }
+  };
+
+  const makePointerHandlers = (target: DragTarget, opts?: { fieldEl?: () => HTMLElement | null }) => ({
     onPointerDown: (e: React.PointerEvent) => {
       if (!draggable || !sectionRef.current) return;
+      // Per-field handles must not also start the stack/group drag.
+      if (target === 'headline' || target === 'subheadline') e.stopPropagation();
       const rect = sectionRef.current.getBoundingClientRect();
-      const sx = target === 'text' ? (config.textX ?? 50) : (config.buttonsX ?? 50);
-      const sy = target === 'text' ? (config.textY ?? 50) : (config.buttonsY ?? 70);
-      dragRef.current = { target, x: e.clientX, y: e.clientY, sx, sy, rect };
+      // Measure the FIELD box, not the grip handle the pointer landed on —
+      // it feeds both coord seeding and the containment clamp.
+      const measureEl = opts?.fieldEl?.()
+        ?? ((e.currentTarget as HTMLElement).closest('[data-hero-field]') as HTMLElement | null)
+        ?? (e.currentTarget as HTMLElement);
+      const { sx, sy } = dragStartCoords(target, measureEl, rect);
+      const box = measureEl.getBoundingClientRect();
+      const halfW = Math.min(50, (box.width / 2 / rect.width) * 100);
+      const halfH = Math.min(50, (box.height / 2 / rect.height) * 100);
+      dragRef.current = { target, x: e.clientX, y: e.clientY, sx, sy, rect, halfW, halfH };
       setDragging(target);
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
@@ -147,13 +207,12 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
       if (!s || s.target !== target) return;
       const dxPct = ((e.clientX - s.x) / s.rect.width) * 100;
       const dyPct = ((e.clientY - s.y) / s.rect.height) * 100;
-      const newX = Math.max(0, Math.min(100, s.sx + dxPct));
-      const newY = Math.max(0, Math.min(100, s.sy + dyPct));
-      onConfigChange?.(
-        target === 'text'
-          ? ({ textX: newX, textY: newY } as Partial<Config>)
-          : ({ buttonsX: newX, buttonsY: newY } as Partial<Config>),
-      );
+      // Clamp the box CENTER so the whole box stays inside the section —
+      // "responsiveness is an epic fail" screenshot: half the headline
+      // hanging off the left edge.
+      const newX = Math.max(s.halfW, Math.min(100 - s.halfW, s.sx + dxPct));
+      const newY = Math.max(s.halfH, Math.min(100 - s.halfH, s.sy + dyPct));
+      onConfigChange?.(dragPatch(target, newX, newY));
     },
     onPointerUp: (e: React.PointerEvent) => {
       if (!dragRef.current || dragRef.current.target !== target) return;
@@ -164,6 +223,39 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   });
   const textDrag = makePointerHandlers('text');
   const buttonsDrag = makePointerHandlers('buttons');
+
+  // Corner-handle resize per field — a direct-manipulation view of the same
+  // headlineSize/subheadlineSize values the settings sliders edit. Bounds
+  // mirror the zod schema so a drag can never produce an unsaveable config.
+  const resizeRef = useRef<{ field: 'headline' | 'subheadline'; x: number; size: number } | null>(null);
+  const RESIZE_BOUNDS = { headline: [16, 160], subheadline: [12, 60] } as const;
+  const makeResizeHandlers = (field: 'headline' | 'subheadline') => ({
+    onPointerDown: (e: React.PointerEvent) => {
+      if (!draggable) return;
+      e.stopPropagation();
+      const size = field === 'headline' ? (config.headlineSize ?? 60) : (config.subheadlineSize ?? 22);
+      resizeRef.current = { field, x: e.clientX, size };
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    onPointerMove: (e: React.PointerEvent) => {
+      const r = resizeRef.current;
+      if (!r || r.field !== field) return;
+      const [lo, hi] = RESIZE_BOUNDS[field];
+      // 200px of horizontal drag doubles/halves the size — direct enough to
+      // feel connected to the pointer without being twitchy.
+      const next = Math.max(lo, Math.min(hi, Math.round(r.size * (1 + (e.clientX - r.x) / 200))));
+      onConfigChange?.(
+        field === 'headline'
+          ? ({ headlineSize: next } as Partial<Config>)
+          : ({ subheadlineSize: next } as Partial<Config>),
+      );
+    },
+    onPointerUp: (e: React.PointerEvent) => {
+      if (!resizeRef.current || resizeRef.current.field !== field) return;
+      resizeRef.current = null;
+      try { (e.target as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* noop */ }
+    },
+  });
 
   const rawBgImage = config.variant === 'image' ? config.imageUrl : slides[slide];
   const bgImage = imgFailed ? '' : rawBgImage;
@@ -219,7 +311,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     <section
       ref={sectionRef}
       id="top"
-      className={`relative overflow-hidden text-white max-w-6xl mx-auto w-full ${hasImage ? '' : 'min-h-[40vh]'}`}
+      className={`gw-hero-section relative overflow-hidden text-white max-w-6xl mx-auto w-full ${hasImage ? '' : 'min-h-[40vh]'}`}
       style={hasImage ? undefined : { background: 'var(--site-primary)' }}
     >
       {/* Image (when present) always renders at its natural aspect — the
@@ -296,70 +388,153 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           </div>
         )
       )}
-      {(showHeadline || showSubheadline) && (
-        <div
-          className={`text-center ${hasImage ? 'absolute max-sm:!left-1/2 max-sm:!w-[92%]' : 'relative pt-20 sm:pt-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
-            draggable && hasImage ? (dragging === 'text' ? 'cursor-grabbing' : 'cursor-grab') : ''
-          }`}
-          style={
-            hasImage
-              ? {
-                  left: `${config.textX ?? 50}%`,
-                  top: `${config.textY ?? 50}%`,
-                  transform: 'translate(-50%, -50%)',
-                  padding: '0 1rem',
-                  width: 'max-content',
-                  maxWidth: '100%',
-                  touchAction: draggable ? 'none' : undefined,
-                }
-              : undefined
-          }
-          onPointerDown={hasImage ? textDrag.onPointerDown : undefined}
-          onPointerMove={hasImage ? textDrag.onPointerMove : undefined}
-          onPointerUp={hasImage ? textDrag.onPointerUp : undefined}
-          onPointerCancel={hasImage ? textDrag.onPointerUp : undefined}
-        >
-          {showHeadline && (
-            <EditableText
-              as="h1"
-              editable={editable}
-              value={config.headline}
-              onChange={(v) => onConfigChange?.({ headline: v } as Partial<Config>)}
-              placeholder="Your headline"
-              ariaLabel="Hero headline"
-              className="normal-case font-bold mb-4 leading-tight drop-shadow"
+      {(() => {
+        // Per-field placement: a field with stored coords "floats" free of
+        // the stack (only meaningful over an image, where positioning is
+        // absolute). Coordless fields keep rendering in the legacy stack —
+        // pixel-identical to pre-feature configs.
+        const headlineFloating = hasImage && config.headlineX != null && config.headlineY != null;
+        const subFloating = hasImage && config.subheadlineX != null && config.subheadlineY != null;
+        const stackFields = [
+          showHeadline && !headlineFloating ? 'headline' : null,
+          showSubheadline && !subFloating ? 'subheadline' : null,
+        ].filter(Boolean) as Array<'headline' | 'subheadline'>;
+
+        const fieldText = (field: 'headline' | 'subheadline') => field === 'headline' ? (
+          <EditableText
+            as="h1"
+            editable={editable}
+            value={config.headline}
+            onChange={(v) => onConfigChange?.({ headline: v } as Partial<Config>)}
+            placeholder="Your headline"
+            ariaLabel="Hero headline"
+            className="normal-case font-bold mb-4 leading-tight drop-shadow"
+            style={{
+              color: config.headlineColor || '#ffffff',
+              fontSize: fluidPx(config.headlineSize ?? 60, config.headlineSizeMobile),
+            }}
+          />
+        ) : (
+          <EditableText
+            as="p"
+            editable={editable}
+            value={config.subheadline}
+            onChange={(v) => onConfigChange?.({ subheadline: v } as Partial<Config>)}
+            placeholder="A short line under the headline"
+            ariaLabel="Hero subheadline"
+            className="leading-relaxed"
+            style={{
+              color: config.subheadlineColor || '#ffffff',
+              opacity: 0.9,
+              fontSize: fluidPx(config.subheadlineSize ?? 22, config.subheadlineSizeMobile),
+            }}
+          />
+        );
+
+        // Hover handles: grip (move just this field) + corner (resize its
+        // font). The grip drag seeds per-field coords from the measured
+        // center, which is what pulls a field out of the stack.
+        const fieldHandles = (field: 'headline' | 'subheadline') => {
+          if (!draggable || !hasImage) return null;
+          const drag = makePointerHandlers(field);
+          const resize = makeResizeHandlers(field);
+          return (
+            <>
+              <span
+                {...drag}
+                className="absolute -left-8 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded bg-slate-900/80 text-white cursor-grab opacity-0 group-hover/field:opacity-100 transition-opacity select-none"
+                title={`Drag to move the ${field}`}
+              >
+                <GripVertical className="w-3.5 h-3.5" />
+              </span>
+              <span
+                {...resize}
+                className="absolute -right-7 -bottom-1 flex h-6 w-6 items-center justify-center rounded bg-slate-900/80 text-white cursor-nwse-resize opacity-0 group-hover/field:opacity-100 transition-opacity select-none"
+                title={`Drag to resize the ${field}`}
+              >
+                <MoveDiagonal className="w-3.5 h-3.5" />
+              </span>
+            </>
+          );
+        };
+
+        const floatingField = (field: 'headline' | 'subheadline') => {
+          const x = field === 'headline' ? config.headlineX : config.subheadlineX;
+          const y = field === 'headline' ? config.headlineY : config.subheadlineY;
+          const drag = draggable ? makePointerHandlers(field) : null;
+          return (
+            <div
+              key={field}
+              data-hero-field
+              className={`gw-hero-overlay text-center absolute group/field ${
+                draggable ? (dragging === field ? 'cursor-grabbing' : 'cursor-grab') : ''
+              }`}
               style={{
-                color: config.headlineColor || '#ffffff',
-                fontSize: fluidPx(config.headlineSize ?? 60, config.headlineSizeMobile),
+                left: `${x}%`,
+                top: `${y}%`,
+                transform: 'translate(-50%, -50%)',
+                padding: '0 1rem',
+                width: 'max-content',
+                maxWidth: '100%',
+                touchAction: draggable ? 'none' : undefined,
               }}
-            />
-          )}
-          {showSubheadline && (
-            <EditableText
-              as="p"
-              editable={editable}
-              value={config.subheadline}
-              onChange={(v) => onConfigChange?.({ subheadline: v } as Partial<Config>)}
-              placeholder="A short line under the headline"
-              ariaLabel="Hero subheadline"
-              className="leading-relaxed"
-              style={{
-                color: config.subheadlineColor || '#ffffff',
-                opacity: 0.9,
-                fontSize: fluidPx(config.subheadlineSize ?? 22, config.subheadlineSizeMobile),
-              }}
-            />
-          )}
-          {draggable && hasImage && (
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-slate-900/80 text-white px-2 py-0.5 rounded whitespace-nowrap pointer-events-none select-none">
-              Drag text
+              onPointerDown={drag?.onPointerDown}
+              onPointerMove={drag?.onPointerMove}
+              onPointerUp={drag?.onPointerUp}
+              onPointerCancel={drag?.onPointerUp}
+            >
+              {fieldText(field)}
+              {fieldHandles(field)}
             </div>
-          )}
-        </div>
-      )}
+          );
+        };
+
+        return (
+          <>
+            {stackFields.length > 0 && (
+              <div
+                className={`text-center ${hasImage ? 'gw-hero-overlay absolute' : 'relative pt-20 cq-sm:pt-28 max-w-5xl mx-auto px-4 cq-sm:px-6'} ${
+                  draggable && hasImage ? (dragging === 'text' ? 'cursor-grabbing' : 'cursor-grab') : ''
+                }`}
+                style={
+                  hasImage
+                    ? {
+                        left: `${config.textX ?? 50}%`,
+                        top: `${config.textY ?? 50}%`,
+                        transform: 'translate(-50%, -50%)',
+                        padding: '0 1rem',
+                        width: 'max-content',
+                        maxWidth: '100%',
+                        touchAction: draggable ? 'none' : undefined,
+                      }
+                    : undefined
+                }
+                onPointerDown={hasImage ? textDrag.onPointerDown : undefined}
+                onPointerMove={hasImage ? textDrag.onPointerMove : undefined}
+                onPointerUp={hasImage ? textDrag.onPointerUp : undefined}
+                onPointerCancel={hasImage ? textDrag.onPointerUp : undefined}
+              >
+                {stackFields.map((field) => (
+                  <div key={field} data-hero-field className="relative group/field">
+                    {fieldText(field)}
+                    {fieldHandles(field)}
+                  </div>
+                ))}
+                {draggable && hasImage && (
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-slate-900/80 text-white px-2 py-0.5 rounded whitespace-nowrap pointer-events-none select-none">
+                    Drag text · grip = one field · corner = resize
+                  </div>
+                )}
+              </div>
+            )}
+            {showHeadline && headlineFloating && floatingField('headline')}
+            {showSubheadline && subFloating && floatingField('subheadline')}
+          </>
+        );
+      })()}
       {showCta && (
         <div
-          className={`text-center ${hasImage ? 'absolute max-sm:!left-1/2 max-sm:!w-[92%]' : 'relative pb-20 sm:pb-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
+          className={`text-center ${hasImage ? 'gw-hero-overlay absolute' : 'relative pb-20 cq-sm:pb-28 max-w-5xl mx-auto px-4 cq-sm:px-6'} ${
             draggable && hasImage ? (dragging === 'buttons' ? 'cursor-grabbing' : 'cursor-grab') : ''
           }`}
           style={
@@ -783,7 +958,12 @@ function EditorForm({ config, onChange, theme }: BlockEditorFormProps<Config>) {
                 </span>
                 <button
                   type="button"
-                  onClick={() => set({ textX: 50, textY: 50, buttonsX: 50, buttonsY: 70 })}
+                  onClick={() => set({
+                    textX: 50, textY: 50, buttonsX: 50, buttonsY: 70,
+                    // Clear per-field placements — fields return to the stack.
+                    headlineX: undefined, headlineY: undefined,
+                    subheadlineX: undefined, subheadlineY: undefined,
+                  })}
                   className="text-xs text-sky-600 hover:underline"
                 >
                   Reset positions

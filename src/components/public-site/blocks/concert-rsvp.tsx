@@ -81,7 +81,7 @@ function Stepper({
   value, onChange, min = 0, max = 20, label,
 }: { value: number; onChange: (n: number) => void; min?: number; max?: number; label: string }) {
   // 44px targets through md (phones and iPad are both touch); density at lg+.
-  const btn = 'w-11 h-11 lg:w-9 lg:h-9 grid place-items-center disabled:opacity-30 hover:bg-muted transition-colors';
+  const btn = 'w-11 h-11 cq-lg:w-9 cq-lg:h-9 grid place-items-center disabled:opacity-30 hover:bg-muted transition-colors';
   return (
     <div className="inline-flex items-center rounded-full border border-border overflow-hidden shrink-0">
       <button
@@ -173,13 +173,13 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   return (
     <section id="rsvp-section" className="border-y border-border bg-muted/30">
       {config.showCard && (
-        <div className="px-6 sm:px-10 lg:px-16">
+        <div className="px-6 cq-sm:px-10 cq-lg:px-16">
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading event details…
             </div>
           ) : (
-            <div className="grid gap-10 lg:grid-cols-2 lg:gap-16 lg:items-center">
+            <div className="grid gap-10 cq-lg:grid-cols-2 cq-lg:gap-16 cq-lg:items-center">
               {/* Left: what it is */}
               <div>
                 {config.heading && (
@@ -191,7 +191,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                   </p>
                 )}
                 <h2
-                  className="mt-3 normal-case text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1]"
+                  className="mt-3 normal-case text-3xl cq-sm:text-4xl cq-lg:text-5xl font-bold tracking-tight leading-[1.1]"
                   style={{ fontFamily: 'var(--site-heading-font)' }}
                 >
                   {ev!.title}
@@ -211,7 +211,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
               {/* Right: when, where, and the way in */}
               <div
-                className="bg-card border border-border p-6 sm:p-8"
+                className="bg-card border border-border p-6 cq-sm:p-8"
                 style={{ borderRadius: 'var(--site-radius)' }}
               >
                 <dl className="space-y-5">
@@ -467,7 +467,7 @@ function RsvpDialog({
                               id={`size-${item.id}`}
                               value={sel?.size ?? ''}
                               onChange={(e) => updateMerch(item, { size: e.target.value })}
-                              className="mt-1 w-full h-11 lg:h-10 rounded-md border border-input bg-background px-3 text-sm"
+                              className="mt-1 w-full h-11 cq-lg:h-10 rounded-md border border-input bg-background px-3 text-sm"
                             >
                               {item.sizes.map((s) => (
                                 <option key={s} value={s}>{s}</option>
@@ -493,7 +493,7 @@ function RsvpDialog({
                                     aria-label={c.name}
                                     title={c.name}
                                     onClick={() => updateMerch(item, { color: c.name })}
-                                    className={`w-11 h-11 lg:w-9 lg:h-9 rounded-full overflow-hidden border-2 transition-shadow ${
+                                    className={`w-11 h-11 cq-lg:w-9 cq-lg:h-9 rounded-full overflow-hidden border-2 transition-shadow ${
                                       active ? 'border-foreground shadow-md' : 'border-border hover:border-foreground/40'
                                     }`}
                                     style={c.swatch ? undefined : { background: c.hex ?? '#e5e5e5' }}

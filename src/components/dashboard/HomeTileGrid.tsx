@@ -17,7 +17,7 @@ import {
   SortableContext, arrayMove, rectSortingStrategy, useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Destination } from '@/lib/navigation/appDestinations';
 import { NAV_SECTION_LABELS, type NavSectionKey } from '@/lib/navigation/navCatalog';
@@ -204,9 +204,14 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
             </button>
           </span>
         ) : (
-          <button type="button" onClick={() => setDraft(primary.map((t) => t.key))}
-            className="text-sm text-muted-foreground min-h-[44px]">
-            Edit
+          <button
+            type="button"
+            onClick={() => setDraft(primary.map((t) => t.key))}
+            className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-full text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/15 transition-colors min-h-[44px] sm:min-h-[36px]"
+            title="Rearrange or add tiles"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            Edit apps
           </button>
         )}
       </div>
@@ -273,6 +278,13 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
             <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
               {primary.map((t) => (
                 <Link key={t.key} to={t.to}
+                  // Browsers treat <a> as natively draggable, which
+                  // hijacked pointerdown before the long-press timer
+                  // could fire — tenants tried to rearrange tiles and
+                  // got a URL preview icon instead. Cede the pointer
+                  // stream so the long-press-to-edit + drag flow works.
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
                   onPointerDown={onTilePointerDown}
                   onPointerMove={onTilePointerMove}
                   onPointerUp={clearPress}
@@ -292,6 +304,8 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
               <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2 pt-2">
                 {overflow.map((t) => (
                   <Link key={t.key} to={t.to}
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
                     className={`flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground min-h-[44px]`}>
                     <span className="w-full aspect-square bg-card border border-border flex items-center justify-center">
                       <span className={`${CHIP_SIZE} rounded-xl md:rounded-2xl flex items-center justify-center ${t.tone || DEFAULT_TONE}`}>

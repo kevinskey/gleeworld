@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ImageUploadField } from '../ImageUploadField';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Press & Recognition'),
@@ -23,20 +24,20 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const items = config.items.filter((i) => i.outlet || i.quote);
-  if (items.length === 0) return null;
+  if (items.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Press" /> : null;
   return (
-    <section id="press" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="press" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <Newspaper className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
       )}
       {config.intro && <p className="text-muted-foreground mb-8 max-w-3xl">{config.intro}</p>}
       {config.layout === 'list' ? (
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid cq-sm:grid-cols-2 gap-4">
           {items.map((it, i) => (
             <article key={i} className="rounded-xl border border-border bg-card p-5">
               <div className="flex items-start gap-3">
@@ -81,10 +82,10 @@ function Render({ config }: BlockRenderProps<Config>) {
             it.logoUrl ? (
               it.url ? (
                 <a key={i} href={it.url} target="_blank" rel="noopener noreferrer" title={it.outlet}>
-                  <img src={it.logoUrl} alt={it.outlet} className="h-12 sm:h-16 w-auto object-contain grayscale hover:grayscale-0 transition" />
+                  <img src={it.logoUrl} alt={it.outlet} className="h-12 cq-sm:h-16 w-auto object-contain grayscale hover:grayscale-0 transition" />
                 </a>
               ) : (
-                <img key={i} src={it.logoUrl} alt={it.outlet} title={it.outlet} className="h-12 sm:h-16 w-auto object-contain grayscale" />
+                <img key={i} src={it.logoUrl} alt={it.outlet} title={it.outlet} className="h-12 cq-sm:h-16 w-auto object-contain grayscale" />
               )
             ) : (
               <span key={i} className="font-semibold text-lg text-muted-foreground">{it.outlet}</span>

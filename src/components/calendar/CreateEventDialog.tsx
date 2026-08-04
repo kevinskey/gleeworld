@@ -575,8 +575,9 @@ export const CreateEventDialog = ({
             />
           </div>
 
-          {/* Date/Time Row - Zoom Style */}
-          <div className="flex items-center gap-2 mb-4 flex-wrap">
+          {/* Date/Time Row — 2-up grid on mobile so the four w-[100px]
+              triggers stop overflowing at 390px. Zoom-style flex on sm+. */}
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 mb-4 sm:flex-wrap">
             {/* Start Date */}
             <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
               <PopoverTrigger asChild>
@@ -912,10 +913,11 @@ export const CreateEventDialog = ({
             </div>
           </div>
 
-          {/* Event Type */}
+          {/* Event Type — stack on mobile so type + category + calendar
+              don't compete for width; side-by-side on sm+. */}
           <div className="mb-6">
             <Label className="text-sm font-bold mb-2 block">Event Type</Label>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <Select value={formData.event_type} onValueChange={value => setFormData(prev => ({ ...prev, event_type: value }))}>
                 <SelectTrigger className="flex-1 h-10">
                   <SelectValue />
@@ -958,7 +960,7 @@ export const CreateEventDialog = ({
                 }}
                 onCalendarCreated={handleCalendarCreated}
                 placeholder="Calendar"
-                triggerClassName="w-48 h-10"
+                triggerClassName="w-full sm:w-48 h-10"
               />
             </div>
           </div>

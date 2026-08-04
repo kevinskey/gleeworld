@@ -11,6 +11,7 @@ import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { decodeJwtClaims } from '@/lib/demoSession';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { applyTenantThemeVars } from '@/components/theme/TenantThemeRoot';
 import { ASSISTANT_VOICES, BROWSER_VOICE_ID, DEFAULT_VOICE_ID } from '@/lib/assistant/voices';
 import { speak } from '@/lib/assistant/speech';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,29 +28,37 @@ import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor, type PlanTier } f
 import { ArrowRight } from 'lucide-react';
 import {
   Loader2, CheckCircle2, ExternalLink, CreditCard, Palette,
-  Plug, Save, Building2, Lock, Sparkles, Users, Menu, CalendarDays,
+  Save, Building2, Lock, Sparkles, Users, Menu, CalendarDays,
 } from 'lucide-react';
 import { hideableNavItems, HIDEABLE_NAV_ROLES, type NavRole, type HideableNavItem } from '@/lib/navigation/navCatalog';
 import { getPreviewRole, setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { toast } from 'sonner';
+import { billingPortalErrorMessage } from '@/lib/billingPortalError';
 import { cn } from '@/lib/utils';
 import { DateCardTabPanel } from '@/components/home/date-card/DateCardTabPanel';
+import { ParentsTabPanel } from '@/components/workspace-settings/ParentsTabPanel';
+import { K12ToggleField } from '@/components/travel-manager/K12ToggleField';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { PlatformTenantWarning } from '@/components/admin/PlatformTenantWarning';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
   boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
 };
 
-const TAB_VALUES = new Set(['plan', 'modules', 'navigation', 'branding', 'datecard', 'billing', 'general']);
+const TAB_VALUES = new Set(['plan', 'navigation', 'branding', 'datecard', 'parents', 'billing', 'general']);
 
 export default function WorkspaceSettingsPage() {
   const { isSuperAdmin, isAdmin } = useUserRole();
   const canManage = isSuperAdmin() || isAdmin();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab');
-  const activeTab = tab && TAB_VALUES.has(tab) ? tab : 'plan';
+  // `modules` is the retired Add-ons tab — bounce old bookmarks to Plan
+  // (the tier's included feature list) instead of a dead 404 tab state.
+  const activeTab = tab === 'modules'
+    ? 'plan'
+    : (tab && TAB_VALUES.has(tab) ? tab : 'plan');
   const setActiveTab = (value: string) => {
     const sp = new URLSearchParams(searchParams);
     sp.set('tab', value);
@@ -70,23 +79,26 @@ export default function WorkspaceSettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        {/* Mobile: one swipeable scroll strip (no wrap) so 7 sections read as
-            a single row instead of a scattered 2-col grid. md+: 7-across grid. */}
-        <TabsList className="flex md:grid md:grid-cols-7 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto md:overflow-visible scrollbar-hide">
-          <TabsTrigger value="plan" className="shrink-0"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
-          <TabsTrigger value="modules" className="shrink-0"><Plug className="w-3.5 h-3.5 mr-1.5" />Add-ons</TabsTrigger>
-          <TabsTrigger value="navigation" className="shrink-0"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>
-          <TabsTrigger value="branding" className="shrink-0"><Palette className="w-3.5 h-3.5 mr-1.5" />Branding</TabsTrigger>
-          <TabsTrigger value="datecard" className="shrink-0"><CalendarDays className="w-3.5 h-3.5 mr-1.5" />Date card</TabsTrigger>
-          <TabsTrigger value="billing" className="shrink-0"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Billing</TabsTrigger>
-          <TabsTrigger value="general" className="shrink-0"><Building2 className="w-3.5 h-3.5 mr-1.5" />General</TabsTrigger>
+        {/* Mobile: one swipeable scroll strip (no wrap) so 6 sections read as
+            a single row instead of a scattered 2-col grid. md+: 6-across grid.
+            The Add-ons tab was removed 2026-07-28 — features are now bundled
+            by plan tier, not toggled à la carte. A legacy ?tab=modules query
+            param transparently redirects to `plan` below. */}
+        <TabsList className="flex md:grid md:grid-cols-7 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto touch-pan-x overscroll-x-contain md:overflow-visible scrollbar-hide">
+          <TabsTrigger value="plan" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
+          <TabsTrigger value="navigation" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>
+          <TabsTrigger value="branding" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Palette className="w-3.5 h-3.5 mr-1.5" />Branding</TabsTrigger>
+          <TabsTrigger value="datecard" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><CalendarDays className="w-3.5 h-3.5 mr-1.5" />Date card</TabsTrigger>
+          <TabsTrigger value="parents" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Users className="w-3.5 h-3.5 mr-1.5" />Parents</TabsTrigger>
+          <TabsTrigger value="billing" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Billing</TabsTrigger>
+          <TabsTrigger value="general" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Building2 className="w-3.5 h-3.5 mr-1.5" />General</TabsTrigger>
         </TabsList>
 
         <TabsContent value="plan"><PlanTabPanel canManage={canManage} /></TabsContent>
-        <TabsContent value="modules"><ModulesTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="navigation"><NavigationTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="branding"><BrandingTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="datecard"><DateCardTabPanel canManage={canManage} /></TabsContent>
+        <TabsContent value="parents"><ParentsTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="billing"><BillingTabPanel /></TabsContent>
         <TabsContent value="general"><GeneralTabPanel canManage={canManage} /></TabsContent>
       </Tabs>
@@ -621,7 +633,7 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
 
           <div className="mb-3">
             <div className="text-sm font-medium mb-2">Editing view for:</div>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+            <div className="flex gap-2 overflow-x-auto touch-pan-x overscroll-x-contain scrollbar-hide pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
               {HIDEABLE_NAV_ROLES.map((r) => (
                 <button
                   key={r.value}
@@ -631,8 +643,8 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
                   className={cn(
                     'shrink-0 inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
                     role === r.value
-                      ? 'bg-slate-900 text-white hover:bg-slate-800'
-                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80',
                   )}
                 >
                   {r.label}
@@ -643,7 +655,7 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
 
           <div className="mb-4 rounded-lg bg-slate-50 border px-3 py-2">
             <div className="text-xs text-muted-foreground mb-2">Preview my sidebar as:</div>
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
+            <div className="flex gap-2 overflow-x-auto touch-pan-x overscroll-x-contain scrollbar-hide pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0">
               <button
                 type="button"
                 data-compact
@@ -651,8 +663,8 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
                 className={cn(
                   'shrink-0 inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
                   !preview
-                    ? 'bg-slate-900 text-white hover:bg-slate-800'
-                    : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80',
                 )}
               >
                 Super-admin (me)
@@ -666,8 +678,8 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
                   className={cn(
                     'shrink-0 inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
                     preview === r.value
-                      ? 'bg-slate-900 text-white hover:bg-slate-800'
-                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300',
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80',
                   )}
                 >
                   {r.label}
@@ -764,6 +776,25 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
     }
   }, [settings]);
 
+  // Live preview: paint the tenant's chosen colors onto the CSS vars the
+  // whole app reads (--primary, --accent, --site-primary, --site-accent,
+  // and their foregrounds/contrast) the instant the color picker changes.
+  // No save required — the tenant SEES the effect on the surrounding UI
+  // (sidebar tint, buttons, Command Center accents) in real time.
+  //
+  // On unmount (tab switch or route change) we re-apply the persisted
+  // branding values so navigating away without saving reverts the
+  // preview. TenantThemeRoot's own effect also re-asserts on any
+  // branding refetch, so a successful save just keeps the same values.
+  useEffect(() => {
+    applyTenantThemeVars(form.primary_color, form.accent_color);
+    return () => {
+      const persistedPrimary = (settings as { primary_color?: string } | null)?.primary_color ?? null;
+      const persistedAccent = (settings as { accent_color?: string } | null)?.accent_color ?? null;
+      applyTenantThemeVars(persistedPrimary, persistedAccent);
+    };
+  }, [form.primary_color, form.accent_color, settings]);
+
   async function save() {
     // ImageUploadField hands us a `blob:` URL during the upload window and
     // swaps it for the real public URL once storage has the file. Persisting
@@ -822,6 +853,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
   return (
     <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
       <CardContent className="p-4 sm:p-5 space-y-3">
+        <PlatformTenantWarning />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Organization name</Label>
@@ -1014,63 +1046,91 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
 // ── Billing ─────────────────────────────────────────────────────────
 
 function BillingTabPanel() {
-  const { data: active = [] } = useQuery({
-    queryKey: ['billing-active-modules'],
+  // Reads gw_tenant_plans (the new plan-tier model) rather than
+  // gw_tenant_active_addons (the retired per-add-on model). The Plan
+  // tab handles browsing/upgrading; this tab is about the money side —
+  // what you're on, when it renews, and how to update your card /
+  // download invoices via Stripe.
+  const { data: current, isLoading } = useQuery({
+    queryKey: ['workspace-billing-current-plan'],
     queryFn: async () => {
       const { data } = await supabase
-        .from('gw_tenant_active_addons')
-        .select('module_id, activated_at, name, monthly_price_cents');
-      return data ?? [];
+        .from('gw_tenant_plans')
+        .select('plan_id, billing_cycle, status, current_period_end, trial_ends_at')
+        .maybeSingle();
+      return data;
     },
   });
 
-  const monthlyTotal = (active as Array<{ monthly_price_cents: number | null }>).reduce(
-    (s, m) => s + ((m.monthly_price_cents ?? 0) / 100),
-    0,
-  );
+  const tier = current ? PLAN_TIERS.find((t) => t.id === current.plan_id) ?? null : null;
+  const cycle = current?.billing_cycle === 'annual' ? 'annual' : 'monthly';
+  const priceCents = tier
+    ? cycle === 'annual' ? tier.annualCents : tier.monthlyCents
+    : 0;
+  const cycleLabel = cycle === 'annual' ? '/year' : '/month';
+  const renewal = current?.current_period_end
+    ? new Date(current.current_period_end)
+    : null;
+  const trialEnds = current?.trial_ends_at ? new Date(current.trial_ends_at) : null;
 
   return (
     <div className="space-y-4">
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-4 sm:p-5">
-          <h2 className="text-lg font-semibold mb-1">Your subscription</h2>
-          <p className="text-sm text-muted-foreground mb-4">Active add-ons and their monthly cost.</p>
-          {active.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">No paid add-ons active. Browse the Modules tab to activate features.</p>
+        <CardContent className="p-4 sm:p-5 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold">Current subscription</h2>
+            <p className="text-sm text-muted-foreground">
+              Change or compare plans in the <strong>Plan</strong> tab. Manage payment method and
+              invoices through the Stripe portal below.
+            </p>
+          </div>
+
+          {isLoading ? (
+            <div className="py-4 flex justify-center">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : !current || !tier ? (
+            <div className="rounded-lg border border-dashed p-4 text-center space-y-1">
+              <p className="text-sm font-medium">No paid plan yet.</p>
+              <p className="text-xs text-muted-foreground">
+                You're on the free tier — pick a plan from the Plan tab when you're ready.
+              </p>
+            </div>
           ) : (
-            <>
-              <ul className="divide-y">
-                {active.map((m: any) => (
-                  <li key={m.module_id} className="py-2.5 flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-base font-semibold truncate">{m.name}</div>
-                      {m.activated_at && (
-                        <div className="text-sm text-muted-foreground">
-                          Active since {new Date(m.activated_at).toLocaleDateString()}
-                        </div>
-                      )}
-                    </div>
-                    <Badge variant="outline" className="text-xs">
-                      ${((m.monthly_price_cents ?? 0) / 100).toFixed(2)}/mo
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-3 pt-3 border-t flex items-center justify-between">
-                <div className="text-sm font-semibold">Total</div>
-                <div className="text-lg font-bold">${monthlyTotal.toFixed(2)}<span className="text-xs text-muted-foreground font-normal">/month</span></div>
+            <div className="rounded-xl border p-4 flex items-center gap-4 flex-wrap">
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xl font-bold">{tier.label}</span>
+                  <Badge variant="outline" className="text-xs capitalize">{current.status}</Badge>
+                  <Badge variant="outline" className="text-xs capitalize">{cycle}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">{tier.tagline}</p>
+                {trialEnds && current.status === 'trial' && (
+                  <p className="text-xs text-amber-700 font-medium">
+                    Trial ends {trialEnds.toLocaleDateString()}
+                  </p>
+                )}
+                {renewal && current.status !== 'trial' && (
+                  <p className="text-xs text-muted-foreground">
+                    Next renewal {renewal.toLocaleDateString()}
+                  </p>
+                )}
               </div>
-            </>
+              <div className="text-right">
+                <div className="text-2xl font-bold">{formatPrice(priceCents)}</div>
+                <div className="text-xs text-muted-foreground">{cycleLabel}</div>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
 
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-        <CardContent className="p-8 text-center space-y-3">
+        <CardContent className="p-6 sm:p-8 text-center space-y-3">
           <CreditCard className="w-10 h-10 text-muted-foreground/40 mx-auto" />
-          <h2 className="text-lg font-semibold">Stripe customer portal</h2>
+          <h2 className="text-lg font-semibold">Payment method &amp; invoices</h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Update payment method, download invoices, and cancel add-ons through Stripe.
+            Update your card, review past invoices, or cancel your subscription through Stripe.
           </p>
           <StripePortalButton />
         </CardContent>
@@ -1087,11 +1147,15 @@ function StripePortalButton() {
       const { data, error } = await supabase.functions.invoke('create-customer-portal-session', {
         body: { return_url: window.location.href },
       });
-      if (error) throw error;
-      if ((data as any)?.url) {
+      // Non-2xx responses arrive as a thrown FunctionsHttpError with data
+      // null, so the real reason (e.g. no_stripe_customer_for_tenant on
+      // free-tier tenants) must be recovered from the error body — checking
+      // data.error here was dead code and users saw only the generic toast.
+      const failure = await billingPortalErrorMessage(error, data as Record<string, unknown> | null);
+      if (failure) {
+        toast.error(failure);
+      } else if ((data as any)?.url) {
         window.location.href = (data as any).url;
-      } else if ((data as any)?.error === 'no_stripe_customer_for_tenant') {
-        toast.error('No Stripe customer yet — activate an add-on first.');
       } else {
         toast.error('Portal session failed.');
       }
@@ -1266,6 +1330,18 @@ function GeneralTabPanel({ canManage }: { canManage: boolean }) {
               </Button>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+        <CardContent className="p-4 sm:p-5 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold mb-1">Ensemble type</h2>
+            <p className="text-sm text-muted-foreground">
+              Controls age-specific features such as guardian permission slips for Travel Manager.
+            </p>
+          </div>
+          <K12ToggleField canManage={canManage} />
         </CardContent>
       </Card>
 

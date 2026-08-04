@@ -12,6 +12,7 @@ import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { readableOnLightHex } from '@/lib/readableColor';
 
 interface PublicSiteTheme {
   theme?: { primaryColor?: string; accentColor?: string; fontFamily?: string };
@@ -53,6 +54,68 @@ function yiqForegroundTriplet(hex: string): string | null {
   return (r * 299 + g * 587 + b * 114) / 1000 >= 150 ? '0 0% 6%' : '0 0% 100%';
 }
 
+/** Write tenant primary + accent hex values into the CSS variables the app
+ *  chrome reads (--site-primary, --site-accent, --primary, --ring,
+ *  --accent, their foregrounds, and --site-*-contrast). Extracted from
+ *  TenantThemeRoot so the Branding form can call it directly for a
+ *  real-time preview as the tenant drags a color picker — no need to
+ *  save first. Passing null for a color removes its properties, letting
+ *  the next paint fall back to the base tokens in index.css.
+ *
+ *  Callers that want a "cancel/revert" affordance should re-invoke this
+ *  with the persisted branding values on unmount. TenantThemeRoot's own
+ *  effect re-asserts on every branding change so cancelling the form
+ *  without saving is a natural next-render restore. */
+export function applyTenantThemeVars(primary: string | null, accent: string | null): void {
+  const root = document.documentElement;
+  // App-chrome tokens (--primary/--accent/--ring) are contrast-clamped:
+  // a tenant's light gold looks great on their dark hero photo but is
+  // unreadable as icon/text/button color on the app's white cards. The
+  // clamp keeps hue/saturation and darkens only as far as needed; dark
+  // brands pass through unchanged. The RAW hex still flows to
+  // --site-primary/--site-accent below — the public site keeps the
+  // tenant's exact colors.
+  const readablePrimary = primary ? (readableOnLightHex(primary) ?? primary) : null;
+  const readableAccent = accent ? (readableOnLightHex(accent) ?? accent) : null;
+  const primaryTriplet = readablePrimary ? hexToHslTriplet(readablePrimary) : null;
+  const accentTriplet = readableAccent ? hexToHslTriplet(readableAccent) : null;
+  const primaryFg = readablePrimary ? yiqForegroundTriplet(readablePrimary) : null;
+  const accentFg = readableAccent ? yiqForegroundTriplet(readableAccent) : null;
+  // Foregrounds for the RAW site colors (public-site pairs) — derived
+  // from the unclamped hex, since that's what they sit on.
+  const sitePrimaryFg = primary ? yiqForegroundTriplet(primary) : null;
+  const siteAccentFg = accent ? yiqForegroundTriplet(accent) : null;
+
+  if (primary) root.style.setProperty('--site-primary', primary);
+  else root.style.removeProperty('--site-primary');
+  if (accent) root.style.setProperty('--site-accent', accent);
+  else root.style.removeProperty('--site-accent');
+
+  if (accent && siteAccentFg) {
+    root.style.setProperty('--site-accent-contrast', `hsl(${siteAccentFg})`);
+  } else {
+    root.style.removeProperty('--site-accent-contrast');
+  }
+  if (primary && sitePrimaryFg) {
+    root.style.setProperty('--site-primary-contrast', `hsl(${sitePrimaryFg})`);
+  } else {
+    root.style.removeProperty('--site-primary-contrast');
+  }
+
+  if (primaryTriplet) {
+    root.style.setProperty('--primary', primaryTriplet);
+    root.style.setProperty('--ring', primaryTriplet);
+    if (primaryFg) root.style.setProperty('--primary-foreground', primaryFg);
+  }
+  if (accentTriplet) {
+    root.style.setProperty('--accent', accentTriplet);
+    if (accentFg) root.style.setProperty('--accent-foreground', accentFg);
+  }
+
+  document.body.classList.add('gw-tenant-themed');
+  if (primary) document.body.dataset.tenantPrimaryFg = primaryFg === '0 0% 100%' ? 'light' : 'dark';
+}
+
 export function TenantThemeRoot() {
   const { settings: branding } = useBrandingSettings();
 
@@ -68,44 +131,19 @@ export function TenantThemeRoot() {
     },
   });
 
-  const primary = data?.theme?.primaryColor || branding.primary_color || null;
-  const accent = data?.theme?.accentColor || branding.accent_color || null;
+  // Branding is the single source of truth for the palette (matches the merge
+  // order in PublicPageEditor's theme useMemo). The public site's stored theme
+  // may still carry a legacy primaryColor/accentColor from an older code path
+  // — those are the fallback, not the winner. Previously we had this backwards
+  // and Workspace Settings → Branding color changes silently did nothing until
+  // the tenant republished their public site.
+  const primary = branding.primary_color || data?.theme?.primaryColor || null;
+  const accent = branding.accent_color || data?.theme?.accentColor || null;
 
   useEffect(() => {
-    const root = document.documentElement;
-    const accentTriplet = accent ? hexToHslTriplet(accent) : null;
-    const accentFg = accent ? yiqForegroundTriplet(accent) : null;
-    const primaryFg = primary ? yiqForegroundTriplet(primary) : null;
-
-    // Tenant-direct vars (consumed by inline styles in public-site blocks,
-    // header, footer, etc.)
-    if (primary) root.style.setProperty('--site-primary', primary);
-    else root.style.removeProperty('--site-primary');
-    if (accent) root.style.setProperty('--site-accent', accent);
-    else root.style.removeProperty('--site-accent');
-
-    // shadcn design tokens — when accent is set, route --primary / --accent /
-    // --ring through it so every default Button + outline-hover + focus-ring
-    // tints to the brand. accent-foreground is YIQ-derived.
-    if (accentTriplet) {
-      root.style.setProperty('--primary', accentTriplet);
-      root.style.setProperty('--ring', accentTriplet);
-      root.style.setProperty('--accent', accentTriplet);
-      if (accentFg) {
-        root.style.setProperty('--primary-foreground', accentFg);
-        root.style.setProperty('--accent-foreground', accentFg);
-      }
-    }
-
-    // Class flag so the CSS override layer (tenant-theme.css) can target
-    // legacy modules' hardcoded Tailwind colors.
-    document.body.classList.add('gw-tenant-themed');
-    if (primary) document.body.dataset.tenantPrimaryFg = primaryFg === '0 0% 100%' ? 'light' : 'dark';
-
-    return () => {
-      // Don't strip on unmount — the App keeps this mounted for the whole
-      // session, so there's nothing to clean up except in HMR scenarios.
-    };
+    applyTenantThemeVars(primary, accent);
+    // Don't strip on unmount — the App keeps this mounted for the whole
+    // session, so there's nothing to clean up except in HMR scenarios.
   }, [primary, accent]);
 
   return null;

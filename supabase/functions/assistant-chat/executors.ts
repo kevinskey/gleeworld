@@ -1,32 +1,75 @@
 // Read-only tool executors. The supabase client is constructed with the
 // CALLER's JWT (Task 5), so RLS scopes every query to their tenant/role.
+import { executeStudentPictureTool } from './studentPicture.ts';
+import { ACADEMY_CORPUS } from '../_shared/academy/corpus.ts';
+import { buildIndex, searchAcademy } from '../_shared/academy/search.ts';
 
 type SupabaseLike = {
   from: (table: string) => any;
   functions?: { invoke: (name: string, opts: { body: unknown }) => Promise<{ data: any; error: any }> };
+  rpc?: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 };
 
-interface Deps { supabase: SupabaseLike; youtubeApiKey?: string }
+export interface Deps {
+  supabase: SupabaseLike;
+  youtubeApiKey?: string;
+  googleMapsApiKey?: string;
+  homeAddress?: string;
+  webSearchUrl?: string;
+  webSearchAuthHeader?: string;
+}
+
+export interface PlaceEntry {
+  name: string;
+  address: string;
+  rating?: number | null;
+  ratingCount?: number;
+  isOpen?: boolean | null;
+  phone?: string | null;
+  mapsUrl?: string | null;
+}
+
+export type ConciergeResult =
+  | { kind: 'ride'; query: string; resolvedAddress: string; uberUrl: string; lyftUrl: string; preferred?: 'uber' | 'lyft' }
+  | { kind: 'food'; query: string; services: Array<{ name: 'DoorDash' | 'Uber Eats' | 'Grubhub'; deepLinkUrl: string }>; preferred?: 'doordash' | 'ubereats' | 'grubhub' }
+  | { kind: 'web';  query: string; answer?: string; results: Array<{ title: string; url: string; snippet: string }> }
+  | { kind: 'places'; query: string; near?: string; places: PlaceEntry[] };
+
+export interface ToolResult {
+  replyJson: string;
+  resultsPanel?: ConciergeResult;
+}
 
 export async function executeServerTool(
   name: string,
   args: Record<string, unknown>,
   deps: Deps,
-): Promise<string> {
+): Promise<ToolResult> {
   try {
     switch (name) {
-      case 'query_calendar': return await queryCalendar(args, deps);
-      case 'search_music': return await searchMusic(args, deps);
-      case 'find_user': return await findUser(args, deps);
-      case 'search_youtube': return await searchYoutube(args, deps);
-      case 'get_date_card': return await getDateCard(deps);
-      case 'read_news_feeds': return await readNewsFeeds(args, deps);
+      case 'query_calendar': return { replyJson: await queryCalendar(args, deps) };
+      case 'search_music': return { replyJson: await searchMusic(args, deps) };
+      case 'search_academy': return { replyJson: searchAcademyTool(args) };
+      case 'find_user': return { replyJson: await findUser(args, deps) };
+      case 'search_youtube': return { replyJson: await searchYoutube(args, deps) };
+      case 'get_ride': return await getRide(args, deps);
+      case 'order_food': return await orderFood(args);
+      case 'get_date_card': return { replyJson: await getDateCard(deps) };
+      case 'read_news_feeds': return { replyJson: await readNewsFeeds(args, deps) };
       case 'find_nearby_place': return await findNearbyPlace(args, deps);
-      case 'get_preference': return await getPreference(args, deps);
-      default: return JSON.stringify({ error: `Unknown tool: ${name}` });
+      case 'get_preference': return { replyJson: await getPreference(args, deps) };
+      case 'web_search': return await webSearch(args, deps);
+      case 'get_assignments':
+      case 'get_grades':
+      case 'get_grade_trend':
+      case 'get_attendance':
+      case 'get_balance':
+      case 'get_roster_flags':
+        return { replyJson: await executeStudentPictureTool(name, args, deps) };
+      default: return { replyJson: JSON.stringify({ error: `Unknown tool: ${name}` }) };
     }
   } catch (e) {
-    return JSON.stringify({ error: e instanceof Error ? e.message : 'tool failed' });
+    return { replyJson: JSON.stringify({ error: e instanceof Error ? e.message : 'tool failed' }) };
   }
 }
 
@@ -51,6 +94,28 @@ async function queryCalendar(args: Record<string, unknown>, { supabase }: Deps):
   return JSON.stringify({
     events: events ?? [],
     google_calendar_events: (gcal ?? []).map((g: any) => ({ ...g, read_only: true })),
+  });
+}
+
+// The corpus is bundled and immutable, so the index is built once per instance.
+const academyIndex = buildIndex(ACADEMY_CORPUS);
+
+function searchAcademyTool(args: Record<string, unknown>): string {
+  const query = String(args.query ?? '').trim();
+  const hits = query ? searchAcademy(query, academyIndex) : [];
+  if (hits.length === 0) {
+    return JSON.stringify({
+      passages: [],
+      note: 'No matching passages in the reference library. Say you do not have that information rather than guessing.',
+    });
+  }
+  return JSON.stringify({
+    passages: hits.map((h) => ({
+      title: h.chunk.title,
+      section: h.chunk.pageTitle,
+      text: h.text,
+      url: h.chunk.url,
+    })),
   });
 }
 
@@ -123,21 +188,47 @@ async function readNewsFeeds(args: Record<string, unknown>, { supabase }: Deps):
   return JSON.stringify({ items: trimmed, count: trimmed.length });
 }
 
-async function findNearbyPlace(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
+async function findNearbyPlace(args: Record<string, unknown>, { supabase }: Deps): Promise<ToolResult> {
   const query = typeof args.query === 'string' ? args.query.trim() : '';
-  if (!query) return JSON.stringify({ error: 'query is required' });
+  if (!query) return { replyJson: JSON.stringify({ error: 'query is required' }) };
   const lat = typeof args.lat === 'number' ? args.lat : undefined;
   const lng = typeof args.lng === 'number' ? args.lng : undefined;
   const near = typeof args.near === 'string' ? args.near.trim() : undefined;
   if (!lat && !lng && !near) {
-    return JSON.stringify({ error: 'Need either lat/lng or a `near` string — ask the user where they are.' });
+    return { replyJson: JSON.stringify({ error: 'Need either lat/lng or a `near` string — ask the user where they are.' }) };
   }
-  if (!supabase.functions) return JSON.stringify({ error: 'places lookup unavailable in this context' });
+  if (!supabase.functions) return { replyJson: JSON.stringify({ error: 'places lookup unavailable in this context' }) };
   const { data, error } = await supabase.functions.invoke('nearby-places', {
     body: { query, lat, lng, near, maxResults: 5 },
   });
-  if (error) return JSON.stringify({ error: error.message ?? 'nearby-places failed' });
-  return JSON.stringify(data ?? { places: [] });
+  if (error) return { replyJson: JSON.stringify({ error: error.message ?? 'nearby-places failed' }) };
+  const raw = Array.isArray(data?.places) ? data.places : [];
+  const places: PlaceEntry[] = raw.map((p: any) => ({
+    name: String(p.name ?? ''),
+    address: String(p.address ?? ''),
+    rating: typeof p.rating === 'number' ? p.rating : null,
+    ratingCount: typeof p.ratingCount === 'number' ? p.ratingCount : undefined,
+    isOpen: typeof p.isOpen === 'boolean' ? p.isOpen : null,
+    phone: p.phone ?? null,
+    mapsUrl: p.mapsUrl ?? null,
+  }));
+  // The panel carries the tappable map link — the reply text stays URL-free
+  // so TTS reads clean prose. Give the model just enough context to
+  // narrate: names + rough locations + whether the top hit is open.
+  return {
+    replyJson: JSON.stringify({
+      query,
+      near,
+      count: places.length,
+      top: places.slice(0, 3).map((p) => ({
+        name: p.name,
+        address: p.address,
+        rating: p.rating,
+        isOpen: p.isOpen,
+      })),
+    }),
+    resultsPanel: { kind: 'places', query, near, places },
+  };
 }
 
 async function getPreference(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
@@ -170,4 +261,131 @@ async function searchYoutube(args: Record<string, unknown>, { youtubeApiKey }: D
     url: `https://www.youtube.com/watch?v=${it.id?.videoId}`,
   }));
   return JSON.stringify({ hits });
+}
+
+async function getRide(args: Record<string, unknown>, deps: Deps): Promise<ToolResult> {
+  const rawDest = String(args.destination ?? '').trim();
+  if (!rawDest) {
+    return { replyJson: JSON.stringify({ error: 'Which destination?' }) };
+  }
+  if (!deps.googleMapsApiKey) {
+    return { replyJson: JSON.stringify({ error: 'Rides are not configured on this workspace yet.' }) };
+  }
+
+  // "home" is a first-class shortcut: resolve from the profile, or bail
+  // out with a specific error the model turns into a follow-up question.
+  const isHome = rawDest.toLowerCase() === 'home';
+  const query = isHome ? (deps.homeAddress ?? '') : rawDest;
+  if (isHome && !query) {
+    return { replyJson: JSON.stringify({
+      error: "I don't have your home address saved. Give me the address and I'll remember it for next time.",
+    }) };
+  }
+
+  // Google Places API (New) Text Search — one call gives us both the
+  // canonical address and the coordinates. Fields mask keeps the response tiny.
+  const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Goog-Api-Key': deps.googleMapsApiKey,
+      'X-Goog-FieldMask': 'places.formattedAddress,places.location',
+    },
+    body: JSON.stringify({ textQuery: query, maxResultCount: 1 }),
+  });
+  if (!res.ok) {
+    return { replyJson: JSON.stringify({ error: `Places lookup failed (${res.status}).` }) };
+  }
+  const body = await res.json();
+  const place = body.places?.[0];
+  if (!place?.location) {
+    return { replyJson: JSON.stringify({ error: `I couldn't find "${rawDest}".` }) };
+  }
+  const lat = place.location.latitude;
+  const lng = place.location.longitude;
+  const address = place.formattedAddress ?? rawDest;
+
+  const uberUrl =
+    'https://m.uber.com/ul/?action=setPickup&pickup=my_location'
+    + `&dropoff%5Blatitude%5D=${lat}`
+    + `&dropoff%5Blongitude%5D=${lng}`
+    + `&dropoff%5Bnickname%5D=${encodeURIComponent(address)}`;
+
+  const lyftUrl =
+    'https://ride.lyft.com/ride?id=lyft'
+    + `&destination%5Blatitude%5D=${lat}`
+    + `&destination%5Blongitude%5D=${lng}`;
+
+  const rawPref = String(args.preferred ?? '').toLowerCase();
+  const preferred: 'uber' | 'lyft' | undefined = rawPref === 'uber' || rawPref === 'lyft' ? rawPref : undefined;
+
+  return {
+    replyJson: JSON.stringify({ resolvedAddress: address, preferred }),
+    resultsPanel: { kind: 'ride', query: rawDest, resolvedAddress: address, uberUrl, lyftUrl, preferred },
+  };
+}
+
+const WEB_SEARCH_DAILY_CAP = 100;
+
+async function webSearch(args: Record<string, unknown>, deps: Deps): Promise<ToolResult> {
+  const q = String(args.query ?? '').trim();
+  if (!q) return { replyJson: JSON.stringify({ error: 'What should I search for?' }) };
+  if (!deps.webSearchUrl || !deps.webSearchAuthHeader || !deps.supabase.rpc) {
+    return { replyJson: JSON.stringify({ error: 'Search is not configured.' }) };
+  }
+
+  // Increment first, then check. This is intentional: we want the counter
+  // to advance even if the caller retries — this is the cost meter, not
+  // the request meter.
+  const { data: post, error: rpcErr } = await deps.supabase.rpc('increment_assistant_usage', { p_tool_name: 'web_search' });
+  if (rpcErr) {
+    return { replyJson: JSON.stringify({ error: 'Search rate check failed.' }) };
+  }
+  if (typeof post === 'number' && post > WEB_SEARCH_DAILY_CAP) {
+    return { replyJson: JSON.stringify({
+      error: "You've hit today's daily search limit for this workspace. Try again tomorrow.",
+    }) };
+  }
+
+  const res = await fetch(deps.webSearchUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: deps.webSearchAuthHeader },
+    body: JSON.stringify({ query: q }),
+  });
+  if (!res.ok) {
+    return { replyJson: JSON.stringify({ error: 'Search is unavailable right now. Please try again.' }) };
+  }
+  const body = await res.json();
+  const results = Array.isArray(body.results) ? body.results : [];
+  const answer = typeof body.answer === 'string' ? body.answer : undefined;
+
+  return {
+    replyJson: JSON.stringify({ query: q, answer, resultCount: results.length }),
+    resultsPanel: { kind: 'web', query: q, answer, results },
+  };
+}
+
+async function orderFood(args: Record<string, unknown>): Promise<ToolResult> {
+  const q = String(args.query ?? '').trim();
+  const rawPref = String(args.preferred ?? '').toLowerCase();
+  const preferred: 'doordash' | 'ubereats' | 'grubhub' | undefined =
+    rawPref === 'doordash' || rawPref === 'ubereats' || rawPref === 'grubhub' ? rawPref : undefined;
+  const enc = encodeURIComponent(q);
+
+  // Homepage URLs when the query is empty — the panel still shows three
+  // buttons the user can tap.
+  const services = q ? [
+    { name: 'DoorDash' as const, deepLinkUrl: `https://www.doordash.com/search/store/${enc}` },
+    { name: 'Uber Eats' as const, deepLinkUrl: `https://www.ubereats.com/search?q=${enc}` },
+    { name: 'Grubhub'  as const, deepLinkUrl: `https://www.grubhub.com/search?queryText=${enc}` },
+  ] : [
+    { name: 'DoorDash' as const, deepLinkUrl: 'https://www.doordash.com/' },
+    { name: 'Uber Eats' as const, deepLinkUrl: 'https://www.ubereats.com/' },
+    { name: 'Grubhub'  as const, deepLinkUrl: 'https://www.grubhub.com/' },
+  ];
+
+  return {
+    replyJson: JSON.stringify({ query: q, preferred, count: services.length }),
+    resultsPanel: { kind: 'food', query: q, services, preferred },
+  };
 }

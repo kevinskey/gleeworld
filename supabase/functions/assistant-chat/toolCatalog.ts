@@ -59,12 +59,50 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'admin', execution: 'server', confirm: false,
   },
   {
-    name: 'open_page',
-    description: 'Navigate the user to a GleeWorld page. Valid keys: home, calendar, planner, music-library, studio, video, messenger, academy, sight-reading, part-tracks, media-library, songwriting, concert-planner, tour-manager, attendance, users, analytics.',
+    name: 'get_ride',
+    description:
+      "Prepare a rideshare deep link to a destination. The user speaks naturally ('take me home', 'ride to the Fox Theatre'); you resolve the destination and hand back a card the user taps to launch Uber or Lyft. 'home' resolves to the user's saved home address; if it's not set, ASK for the address instead of calling this tool blindly.",
     parameters: {
       type: 'object',
-      properties: { key: str('Page key from the list in the description') },
+      properties: {
+        destination: { type: 'string', description: 'Where the user wants to go. Free text; may be "home", a place name, or an address.' },
+        preferred: { type: 'string', description: "'uber' or 'lyft' if the user has a preference (optional)" },
+      },
+      required: ['destination'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'order_food',
+    description:
+      "Prepare food-delivery deep links. Pass an optional query like 'donuts' or 'thai near me' and the user gets DoorDash, Uber Eats, and Grubhub buttons pre-loaded with that search. No query is fine — the panel then opens each service's homepage.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str('What the user wants to order (optional)'),
+        preferred: str("'doordash', 'ubereats', or 'grubhub' if the user has a preference (optional)"),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'open_page',
+    description: "Navigate the user to a GleeWorld page. Valid keys are listed in the system prompt under 'Pages you can open' — pass one exactly as listed there.",
+    parameters: {
+      type: 'object',
+      properties: { key: str("Page key from the system prompt's 'Pages you can open' list") },
       required: ['key'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'open_link',
+    description: 'Open an external http(s) link in a new browser tab — e.g. the full article behind a news headline from read_news_feeds. Use the exact link from the tool result; never fabricate URLs.',
+    parameters: {
+      type: 'object',
+      properties: { url: str('The http(s) URL to open'), title: str('Short human name for the link, for the spoken confirmation (optional)') },
+      required: ['url'],
     },
     minRole: 'member', execution: 'client', confirm: false,
   },
@@ -361,6 +399,17 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'admin', execution: 'client', confirm: true,
   },
   {
+    name: 'web_search',
+    description:
+      "Search the live web (Brave) and return a short answer plus a list of result URLs. Use for current-events or fact-check questions your own knowledge can't cover. Daily limit is per-tenant — don't chain multiple searches for a single question.",
+    parameters: {
+      type: 'object',
+      properties: { query: str('The search query') },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'switch_world',
     description: "Switch to one of the user's other tenants ('worlds'). Pass `query` as the name or slug (or a partial match — 'kevinsworld', 'spelman', 'main'). Leave `query` empty to have the tool list the user's available worlds so you can ask which one. If the user is only in one world, this tool is a no-op. On web this cross-navigates to the tenant's subdomain; on native it swaps the cached tenant and reloads in place. Same underlying mechanism as the avatar dropdown's Switch organization list.",
     parameters: {
@@ -371,6 +420,70 @@ export const TOOL_CATALOG: ToolDef[] = [
       required: [],
     },
     minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'get_assignments',
+    description: 'Upcoming or overdue coursework for the caller, or for another student if user_id is given. Use for "what is due", "what am I behind on".',
+    parameters: { type: 'object', properties: {
+      window: str('week | overdue | all — defaults to week'),
+      course_id: str('Optional course uuid to narrow to one class'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_grades',
+    description: 'Per-course grade averages, or every graded item when detail is "all". Use for "how am I doing", "show me all my grades".',
+    parameters: { type: 'object', properties: {
+      detail: str('summary | all — defaults to summary'),
+      course_id: str('Optional course uuid'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_grade_trend',
+    description: 'Compares the average of the last 5 graded items against the 5 before. Use for "am I slipping", "is my grade going up".',
+    parameters: { type: 'object', properties: {
+      course_id: str('Optional course uuid'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_attendance',
+    description: 'Attendance counts by status plus the most recent absences and late arrivals.',
+    parameters: { type: 'object', properties: {
+      days: str('Lookback window in days — defaults to 120'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_balance',
+    description: 'Outstanding balance in cents plus open charges with due dates. Use for "what do I owe", "am I paid up".',
+    parameters: { type: 'object', properties: {
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_roster_flags',
+    description: 'Directors only. Lists students crossing a concern threshold across the whole roster.',
+    parameters: { type: 'object', properties: {
+      flag: str('failing | absences | missing_work | owes'),
+    }, required: ['flag'] },
+    minRole: 'admin', execution: 'server', confirm: false,
+  },
+  {
+    name: 'search_academy',
+    description: 'Search the choral reference library for background on conducting history and technique, beat patterns, spirituals, choral repertoire and major works, musical terminology, church music, choral education, and choral associations. Use this before answering any question about those subjects. Returns source passages.',
+    parameters: {
+      type: 'object',
+      properties: { query: str('The subject to look up, e.g. "hemiola" or "conducting before the baton"') },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
   },
 ];
 

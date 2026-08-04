@@ -92,7 +92,7 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
             <Textarea id="description" {...register('description')} rows={3} />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="assignment_type">Assignment Type</Label>
               <Select value={assignmentType} onValueChange={(value) => setValue('assignment_type', value)}>
@@ -116,7 +116,7 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="points">Points *</Label>
               <Input id="points" type="number" {...register('points', { required: 'Points required', min: 0, valueAsNumber: true })} />

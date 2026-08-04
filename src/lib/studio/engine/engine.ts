@@ -1236,7 +1236,23 @@ export class StudioEngine {
   }
 
   pause(): void {
-    Tone.getTransport().pause();
+    const transport = Tone.getTransport();
+    transport.pause();
+    // Clip Players are free-running (started via player.start(), not
+    // .sync()ed to the transport) — pausing the transport freezes the
+    // playhead but not audio already streaming. Stop them explicitly;
+    // play() rebuilds every schedule from the paused position anyway.
+    for (const track of this.tracks.values()) {
+      for (const pb of track.playbacks) {
+        try { pb.player.stop(); } catch { /* not playing */ }
+      }
+      // MIDI voices are free-running too (triggered directly against
+      // Tone's clock, not .sync()ed) — cut them here or a held synth/
+      // sampler note rings past the pause.
+      try { track.instrument?.releaseAll?.(); } catch { /* nothing held */ }
+    }
+    for (const id of this.playScheduleIds) transport.clear(id);
+    this.playScheduleIds = [];
     this.state.isPlaying = false;
     this.stopMetronomeInterval();
     this.stopLoopInterval();
@@ -1256,6 +1272,7 @@ export class StudioEngine {
       for (const pb of track.playbacks) {
         try { pb.player.stop(); } catch { /* not playing */ }
       }
+      try { track.instrument?.releaseAll?.(); } catch { /* nothing held */ }
     }
     for (const id of this.playScheduleIds) transport.clear(id);
     this.playScheduleIds = [];
@@ -1287,6 +1304,7 @@ export class StudioEngine {
         for (const pb of track.playbacks) {
           try { pb.player.stop(); } catch { /* not playing */ }
         }
+        try { track.instrument?.releaseAll?.(); } catch { /* nothing held */ }
       }
     }
 

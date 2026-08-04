@@ -31,8 +31,11 @@ public enum Studio {
     /// adds v2 mixer routing + automation — same tolerance policy: we
     /// decode the fields, ignore what the native engine doesn't yet
     /// consume, and preserve them on save so a round-trip through the
-    /// iOS app doesn't lose data.
-    public static let acceptedSchemaVersions: Set<String> = ["1.0.0", "1.1.0", "2.0.0"]
+    /// iOS app doesn't lose data. 2.1.0 adds optional accompaniment +
+    /// scoreId fields — the iOS decoder ignores both (native engine
+    /// doesn't consume them yet) and preserves them on round-trip.
+    /// Must stay in sync with STUDIO_SCHEMA_VERSIONS in session.ts.
+    public static let acceptedSchemaVersions: Set<String> = ["1.0.0", "1.1.0", "2.0.0", "2.1.0"]
 
     /// Well-known bus id for the always-present master bus (v2.0.0).
     /// Track / Bus `output.bus_id` defaults here; sends can target any

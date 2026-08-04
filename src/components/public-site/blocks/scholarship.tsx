@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 // Scholarship block: lists scholarships the ensemble offers or sponsors,
 // with optional past recipients. Each award has a title, amount, deadline,
@@ -24,19 +25,19 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const list = config.scholarships.filter((s) => s.name);
-  if (list.length === 0) return null;
+  if (list.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Scholarships" /> : null;
   return (
-    <section id="scholarships" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="scholarships" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <GraduationCap className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
       )}
       {config.intro && <p className="text-muted-foreground mb-8 max-w-3xl">{config.intro}</p>}
-      <div className="grid sm:grid-cols-2 gap-5">
+      <div className="grid cq-sm:grid-cols-2 gap-5">
         {list.map((s, i) => (
           <article key={i} className="rounded-xl border border-border bg-card p-5 flex flex-col">
             <header className="flex items-start justify-between gap-3 mb-3">

@@ -178,7 +178,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
       <div className="bg-primary rounded-xl p-6 shadow-lg">
         <div className="flex items-center gap-3 mb-2">
           <Users className="h-8 w-8 text-primary-foreground" />
-          <h1 className="text-3xl font-bebas tracking-wide text-primary-foreground">User Management</h1>
+          <h1 className="text-2xl md:text-3xl font-bebas tracking-wide text-primary-foreground">User Management</h1>
         </div>
         <p className="text-primary-foreground/80 text-lg">
           Search, filter, and manage user accounts across all roles and permissions

@@ -177,14 +177,14 @@ const AddDateForm = ({ onSuccess, onClose, editingEvent, onGenerateContract }: A
           .eq('id', editingEvent.id);
 
         if (error) throw error;
-        toast({ title: "Success", description: "Tour date updated successfully" });
+        toast({ title: "Success", description: "Travel date updated successfully" });
       } else {
         const { error } = await supabase
           .from('gw_tour_events')
           .insert(eventData);
 
         if (error) throw error;
-        toast({ title: "Success", description: "Tour date added successfully" });
+        toast({ title: "Success", description: "Travel date added successfully" });
       }
 
       onSuccess();
@@ -536,7 +536,7 @@ export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) 
         .eq('id', id);
 
       if (error) throw error;
-      toast({ title: "Success", description: "Tour date deleted" });
+      toast({ title: "Success", description: "Travel date deleted" });
       fetchTourEvents();
     } catch (error) {
       console.error('Error deleting tour date:', error);
@@ -590,13 +590,13 @@ export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) 
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
-              Add Tour Date
+              Add Travel Date
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
-                {editingEvent ? 'Edit Tour Date' : 'Add New Tour Date'}
+                {editingEvent ? 'Edit Travel Date' : 'Add New Travel Date'}
               </DialogTitle>
             </DialogHeader>
             <AddDateForm
@@ -616,8 +616,8 @@ export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) 
         {tourEvents.length === 0 ? (
           <Card className="p-8 text-center">
             <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-            <p className="text-muted-foreground">No tour dates scheduled yet.</p>
-            <p className="text-sm text-muted-foreground mt-2">Click "Add Tour Date" to get started.</p>
+            <p className="text-muted-foreground">No travel dates scheduled yet.</p>
+            <p className="text-sm text-muted-foreground mt-2">Click "Add Travel Date" to get started.</p>
           </Card>
         ) : (
           tourEvents.map((event) => {

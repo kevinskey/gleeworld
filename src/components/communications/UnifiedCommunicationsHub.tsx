@@ -227,7 +227,7 @@ export const UnifiedCommunicationsHub = () => {
             <RadioGroup 
               value={communicationType} 
               onValueChange={(value: 'email' | 'sms') => setCommunicationType(value)}
-              className="flex gap-6"
+              className="flex flex-wrap gap-3 sm:gap-6"
             >
               <div className="flex items-center space-x-2 bg-blue-50 p-3 rounded-lg border-2 border-transparent data-[state=checked]:border-blue-500">
                 <RadioGroupItem value="email" id="email" />

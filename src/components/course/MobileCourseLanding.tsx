@@ -20,6 +20,7 @@ import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { MobilePlaylistDropdown } from './MobilePlaylistDropdown';
 import { TourContractSigningModal } from '@/components/mus070/student/TourContractSigningModal';
 import { useToast } from '@/hooks/use-toast';
+import { RollCallCheckInCard } from '@/components/academy/attendance';
 
 
 interface MobileCourseLandingProps {
@@ -207,7 +208,10 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   if (isMus240) {
     return (
       <div className="min-h-screen bg-background text-foreground">
-        <div className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div
+          className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        >
           <div className="px-4 py-3 flex items-start justify-between gap-3">
             <div className="min-w-0">
               <button
@@ -470,6 +474,8 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
         <AdvertisingHero />
 
         <main className="p-4 space-y-4 pb-32">
+          <RollCallCheckInCard courseId={course.id} />
+
           {isMus070 && activeCheckin && (
             <Card className="border-primary/40 bg-primary/5 shadow-md animate-in fade-in slide-in-from-top-2">
               <CardContent className="py-4">
@@ -486,7 +492,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
                       <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                       <div className="text-right">
                         <p className="text-xs font-semibold text-green-700 dark:text-green-300">Present</p>
-                        <p className="text-xs text-green-600/70 dark:text-green-400/70">
+                        <p className="text-xs text-success-text dark:text-success-text">
                           {format(new Date(myResponse.checked_in_at), 'h:mm a')}
                         </p>
                       </div>

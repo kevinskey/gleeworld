@@ -552,7 +552,7 @@ export default function ConcertPlannerEditorPage() {
           </DialogHeader>
           <div className="space-y-5 pt-2">
             <div>
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 block">Theme</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Theme</Label>
               <div className="grid grid-cols-2 gap-2">
                 {THEME_OPTIONS.map((t) => (
                   <button
@@ -561,7 +561,7 @@ export default function ConcertPlannerEditorPage() {
                     className={`text-left p-3 rounded-lg border transition-all ${program.theme === t.value ? 'border-primary bg-primary/5 ring-2 ring-primary/30' : 'border-border hover:border-primary/40'}`}
                   >
                     <div className="text-sm font-semibold">{t.label}</div>
-                    <div className="text-[11px] text-muted-foreground mt-0.5">{t.sub}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">{t.sub}</div>
                   </button>
                 ))}
               </div>
@@ -569,7 +569,7 @@ export default function ConcertPlannerEditorPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Print format</Label>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Print format</Label>
                 <select
                   value={program.print_format}
                   onChange={(e) => updateProgram.mutate({ print_format: e.target.value as PrintFormat })}
@@ -582,7 +582,7 @@ export default function ConcertPlannerEditorPage() {
                 </select>
               </div>
               <div>
-                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Target length (minutes)</Label>
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">Target length (minutes)</Label>
                 <Input
                   type="number"
                   inputMode="numeric"
@@ -595,7 +595,7 @@ export default function ConcertPlannerEditorPage() {
             </div>
 
             <div>
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 block">Ensemble roster</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-2 block">Ensemble roster</Label>
               <RosterEditor concert={concert} />
             </div>
           </div>
@@ -697,7 +697,7 @@ function ProgramCardView(p: CardViewProps) {
           {(card.kind === 'piece-detail' || card.kind === 'hero-cover') && (
             <button
               onClick={p.onOpenRegen}
-              className="px-2 py-1 hover:bg-amber-50 rounded text-amber-700 flex items-center gap-1 text-[10px] font-semibold"
+              className="px-2 py-1 hover:bg-amber-50 rounded text-amber-700 flex items-center gap-1 text-xs font-semibold"
               aria-label="Regenerate this card with AI"
             >
               <Sparkles className="w-3 h-3" /> Regen
@@ -815,7 +815,7 @@ function ProgramCardView(p: CardViewProps) {
               </div>
               <div className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
                 {piece.duration_seconds ? <span className="font-mono tabular-nums">{formatDuration(piece.duration_seconds)}</span> : null}
-                <span className="text-[10px] uppercase tracking-wider opacity-70">Tap to edit</span>
+                <span className="text-xs uppercase tracking-wider opacity-70">Tap to edit</span>
               </div>
             </button>
           );
@@ -826,7 +826,7 @@ function ProgramCardView(p: CardViewProps) {
               <button
                 type="button"
                 onClick={p.onTogglePieceExpanded}
-                className="no-print mb-2 text-[10px] uppercase tracking-wider text-muted-foreground hover:text-foreground flex items-center gap-1"
+                className="no-print mb-2 text-xs uppercase tracking-wider text-muted-foreground hover:text-foreground flex items-center gap-1"
               >
                 <ChevronUp className="w-3.5 h-3.5" /> Collapse
               </button>
@@ -853,7 +853,7 @@ function ProgramCardView(p: CardViewProps) {
               <div key={sect.id} className="space-y-1">
                 <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-b pb-0.5">{sect.section_name}</h4>
                 {sect.members.length === 0 ? (
-                  <p className="text-[11px] italic text-rose-500">Empty</p>
+                  <p className="text-xs italic text-rose-500">Empty</p>
                 ) : (
                   <ul className="text-xs space-y-0.5">
                     {sect.members.map((m) => <li key={m.id} className="truncate">{m.member_name}</li>)}
@@ -1081,9 +1081,9 @@ function SortableCardRow({
     >
       <div className={`flex items-center gap-2 ${compact ? 'p-2' : 'items-start gap-2.5 p-2.5'}`}>
         {!compact && <GripVertical className="w-3.5 h-3.5 text-muted-foreground/60 group-hover:text-muted-foreground mt-0.5 shrink-0" />}
-        <span className={`font-mono font-bold text-muted-foreground tabular-nums shrink-0 ${compact ? 'text-[11px] w-3' : 'text-xs w-4'}`}>{index}</span>
+        <span className={`font-mono font-bold text-muted-foreground tabular-nums shrink-0 ${compact ? 'text-xs w-3.5' : 'text-xs w-4'}`}>{index}</span>
         <div className="min-w-0 flex-1">
-          {!compact && <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>}
+          {!compact && <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>}
           <div className={`font-semibold leading-tight truncate ${compact ? 'text-[13px]' : 'text-[13px]'}`}>{label.title}</div>
         </div>
         <VisibilityToggle visible={visible} onToggle={onToggleVisible} />
@@ -1116,9 +1116,9 @@ function AnchoredCardRow({
       } ${!visible ? 'opacity-50' : ''}`}
     >
       <div className={`flex gap-2 ${compact ? 'items-center p-2' : 'items-start gap-2.5 p-2.5 pl-[1.6rem]'}`}>
-        <span className={`font-mono font-bold text-muted-foreground tabular-nums shrink-0 ${compact ? 'text-[11px] w-3' : 'text-xs w-4'}`}>{index}</span>
+        <span className={`font-mono font-bold text-muted-foreground tabular-nums shrink-0 ${compact ? 'text-xs w-3.5' : 'text-xs w-4'}`}>{index}</span>
         <div className="min-w-0 flex-1">
-          {!compact && <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>}
+          {!compact && <div className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">{label.kind}</div>}
           <div className={`font-semibold leading-tight truncate ${compact ? 'text-[13px]' : 'text-[13px]'}`}>{label.title}</div>
         </div>
         <VisibilityToggle visible={visible} onToggle={onToggleVisible} />
@@ -1191,7 +1191,7 @@ function ValidationBadge({
         {badgeLabel}
       </button>
       {open && (
-        <div className="no-print fixed bottom-16 left-4 z-30 w-[28rem] max-h-[60vh] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="no-print fixed bottom-16 left-4 z-30 w-[28rem] max-w-[calc(100vw-2rem)] max-h-[60vh] bg-card border border-border rounded-xl shadow-2xl flex flex-col overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <h3 className="font-semibold text-sm uppercase tracking-wide flex items-center gap-2">
               <FileText className="w-4 h-4" /> Validation
@@ -1333,7 +1333,7 @@ function RegenDialog({
         </DialogHeader>
         <div className="space-y-4 py-1">
           <div>
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Tone</Label>
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Tone</Label>
             <div className="mt-1 flex gap-1.5">
               {(['concise', 'warm', 'scholarly'] as const).map((t) => (
                 <button
@@ -1350,7 +1350,7 @@ function RegenDialog({
           </div>
 
           <div>
-            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Current</Label>
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Current</Label>
             <div className="mt-1 p-3 rounded border border-border bg-muted/40 text-sm whitespace-pre-wrap min-h-[3rem]">
               {currentText || <span className="text-muted-foreground italic">(empty)</span>}
             </div>
@@ -1358,7 +1358,7 @@ function RegenDialog({
 
           <div>
             <div className="flex items-center justify-between">
-              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Suggested</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Suggested</Label>
               <Button size="sm" variant="outline" onClick={runRegen} disabled={busy}>
                 {busy ? <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> : <Sparkles className="w-3.5 h-3.5 mr-1" />}
                 {suggestion ? 'Regenerate' : 'Generate'}
@@ -1509,7 +1509,7 @@ function PieceDetailEditor({
       {/* Row 1 — Title (wide) + Composer + Arranger */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-start">
         <div className="md:col-span-6 relative">
-          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Title</label>
+          <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Title</label>
           <Input
             value={local.title}
             onChange={(e) => setField('title', e.target.value)}
@@ -1523,7 +1523,7 @@ function PieceDetailEditor({
           />
         </div>
         <div className="md:col-span-3">
-          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Composer</label>
+          <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Composer</label>
           <Input
             value={local.composer}
             onChange={(e) => setField('composer', e.target.value)}
@@ -1532,7 +1532,7 @@ function PieceDetailEditor({
           />
         </div>
         <div className="md:col-span-3">
-          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Arranger</label>
+          <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Arranger</label>
           <Input
             value={local.arranger}
             onChange={(e) => setField('arranger', e.target.value)}
@@ -1545,7 +1545,7 @@ function PieceDetailEditor({
       {/* Row 2 — Duration + Rights + Copyright (only when licensed) */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-start">
         <div className="md:col-span-3">
-          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Duration (sec)</label>
+          <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Duration (sec)</label>
           <Input
             type="number"
             value={local.duration_seconds}
@@ -1555,7 +1555,7 @@ function PieceDetailEditor({
           />
         </div>
         <div className={local.rights_status === 'licensed' ? 'md:col-span-3' : 'md:col-span-9'}>
-          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Rights</label>
+          <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Rights</label>
           <select
             value={local.rights_status}
             onChange={(e) => setField('rights_status', e.target.value as RightsStatus)}
@@ -1568,7 +1568,7 @@ function PieceDetailEditor({
         </div>
         {local.rights_status === 'licensed' && (
           <div className="md:col-span-6">
-            <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Publisher / copyright</label>
+            <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Publisher / copyright</label>
             <Input
               value={local.copyright_info}
               onChange={(e) => setField('copyright_info', e.target.value)}
@@ -1581,7 +1581,7 @@ function PieceDetailEditor({
 
       {/* Row 3 — Program notes textarea spans full width */}
       <div>
-        <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-0.5">Program notes</label>
+        <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-0.5">Program notes</label>
         <div className="relative">
           <Textarea
             rows={4}
@@ -1625,7 +1625,7 @@ function FieldInline({ label, value, onChange, type = 'text', centered = false }
   // dark text-muted-foreground default on the outer container.
   return (
     <label className={`block ${centered ? 'text-center' : ''}`} style={{ color: 'inherit' }}>
-      <span className="text-[10px] uppercase font-bold tracking-wider opacity-70" style={{ color: 'inherit' }}>{label}</span>
+      <span className="text-xs uppercase font-bold tracking-wider opacity-70" style={{ color: 'inherit' }}>{label}</span>
       <input
         type={type}
         value={value}

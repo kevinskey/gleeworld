@@ -17,6 +17,7 @@ const fromMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { from: fromMock },
+  getTenantSlug: () => 'main',
 }));
 
 import { useDateCardConfig } from './useDateCardConfig';

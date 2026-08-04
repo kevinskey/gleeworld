@@ -50,3 +50,8 @@ export class MidiTimebase {
     this.anchorSec = 0;
   }
 }
+
+/** Human label for the Studio MIDI settings panel. */
+export function formatMonitoringLatency(ms: number): string {
+  return `monitoring ≈ ${Math.max(0, Math.round(ms))}ms`;
+}

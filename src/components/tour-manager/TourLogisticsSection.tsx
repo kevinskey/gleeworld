@@ -542,14 +542,11 @@ export const TourLogisticsSection = () => {
     <div className="space-y-3 sm:space-y-4">
       {/* Header with tour selector */}
       <div className="space-y-2">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold text-foreground">Operations Timeline</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">Call times, transport, performances, meals & crew</p>
-        </div>
+        {/* Title + description come from DashboardPageShell (section "Itinerary"). */}
         <div className="flex flex-col sm:flex-row gap-2">
           <Select value={selectedTourId} onValueChange={setSelectedTourId}>
             <SelectTrigger className="w-full sm:w-[260px] bg-card border-border">
-              <SelectValue placeholder="Select Tour" />
+              <SelectValue placeholder="Select Travel" />
             </SelectTrigger>
             <SelectContent>
               {tours.map(t => (
@@ -774,7 +771,7 @@ export const TourLogisticsSection = () => {
             <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
             <p className="text-muted-foreground font-medium">No timeline events</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {selectedTourId ? 'Add events or set up route cities to populate the timeline' : 'Select a tour to view its timeline'}
+              {selectedTourId ? 'Add events or set up route cities to populate the timeline' : 'Select a travel to view its timeline'}
             </p>
           </CardContent>
         </Card>

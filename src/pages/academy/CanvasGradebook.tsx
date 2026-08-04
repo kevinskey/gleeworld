@@ -205,14 +205,14 @@ function GradeRow({
       <td className="p-3">
         {row.workflow_state === 'unsubmitted' ? (
           row.missing
-            ? <Badge variant="outline" className="text-[10px] bg-rose-50 text-rose-700 border-rose-200">Missing</Badge>
+            ? <Badge variant="outline" className="text-xs bg-rose-50 text-rose-700 border-rose-200">Missing</Badge>
             : <span className="text-xs text-muted-foreground">No submission</span>
         ) : row.workflow_state === 'graded' ? (
-          <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200"><CheckCircle2 className="w-3 h-3 mr-0.5" /> Graded</Badge>
+          <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200"><CheckCircle2 className="w-3 h-3 mr-0.5" /> Graded</Badge>
         ) : (
-          <Badge variant="outline" className="text-[10px]">{row.workflow_state}</Badge>
+          <Badge variant="outline" className="text-xs">{row.workflow_state}</Badge>
         )}
-        {row.late && <Badge variant="outline" className="ml-1 text-[10px] bg-amber-50 text-amber-700 border-amber-200">Late</Badge>}
+        {row.late && <Badge variant="outline" className="ml-1 text-xs bg-amber-50 text-amber-700 border-amber-200">Late</Badge>}
       </td>
       <td className="p-3">
         <div className="flex items-center gap-1">

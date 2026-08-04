@@ -487,7 +487,18 @@ export const MessengerModal: React.FC = () => {
     return (
       <>
         <Dialog open={isOpen} onOpenChange={(open) => !open && requestClose()}>
-          <DialogContent className="p-0 gap-0 bg-background max-w-[100vw] w-[100vw] h-[calc(100dvh-56px)] max-h-[calc(100dvh-56px)] rounded-none m-0 border-0 !top-14 !left-0 !translate-x-0 !translate-y-0">
+          {/* Top offset + height use CSS vars set by DashboardShell/DemoBar
+              so the modal always sits below the current chrome — a hardcoded
+              !top-14 broke when DemoBar was active or the header safe-area
+              inset changed. */}
+          <DialogContent
+            className="p-0 gap-0 bg-background max-w-[100vw] w-[100vw] rounded-none m-0 border-0 !left-0 !translate-x-0 !translate-y-0"
+            style={{
+              top: 'calc(var(--gw-header-h, 3.5rem) + var(--gw-demo-bar-h, 0px))',
+              height: 'calc(100dvh - var(--gw-header-h, 3.5rem) - var(--gw-demo-bar-h, 0px))',
+              maxHeight: 'calc(100dvh - var(--gw-header-h, 3.5rem) - var(--gw-demo-bar-h, 0px))',
+            }}
+          >
           <DialogHeader className={`border-b bg-gradient-to-r from-primary/10 via-background to-primary/5 ${isMobile ? 'px-3 py-3' : 'px-6 py-4'}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">

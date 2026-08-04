@@ -13,6 +13,10 @@ import { Slider } from '@/components/ui/slider';
 import { StudioEngineStatus } from '@/components/studio/StudioEngineStatus';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { renderRegionMix, renderRegionStems, renderRegionBuffer, zipBlobs, safeName } from '@/lib/studio/engine/regionExport';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,11 +25,11 @@ import { PitchPipe } from '@/components/audioTools/PitchPipe';
 import { Tuner } from '@/components/audioTools/Tuner';
 import { InstrumentPlayer } from '@/components/audioTools/InstrumentPlayer';
 import {
-  Loader2, ArrowLeft, AlertCircle, Play, Pause, Square, Mic, Plus, Download, Scissors,
+  Loader2, ArrowLeft, ArrowRight, AlertCircle, Play, Pause, Square, Mic, Plus, Download, Scissors,
   Volume2, MoveHorizontal, Trash2, Music2, Drum, Upload, Circle, Timer, Palette,
   FileJson, Activity, Save, SkipBack, SkipForward, Rewind, FastForward, Settings as SettingsIcon,
   ChevronLeft, ChevronRight, Repeat, SlidersHorizontal, X, MoreVertical, Undo2, Flag,
-  Magnet, Wrench,
+  Magnet, Wrench, BookOpen, BookX,
 } from 'lucide-react';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -39,21 +43,24 @@ import { applyStatusBarSurface } from '@/lib/statusBarStyle';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import {
   appendTakeNote, recordStartMode, grownSessionLength, HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY,
-  type HeldPress, type CapturedCc,
+  createMidiCommitQueue, shouldCaptureMidi, ensureTakeClip, MIN_NOTE_SECONDS,
+  type HeldPress, type CapturedCc, type MidiCommitQueue,
 } from '@/lib/studio/midiRecord';
-import { MidiTimebase } from '@/lib/studio/midiTimebase';
+import { MidiTimebase, formatMonitoringLatency } from '@/lib/studio/midiTimebase';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset, type TransportTickStore } from '@/hooks/useStudio';
 import { useTransportPosition, useTransportTick } from './useTransportTick';
 import { retainUnsavedWork } from '@/lib/unsavedWork';
+import { withUploadRetry } from '@/lib/studio/uploadRetry';
 import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defaults';
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
-import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
+import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioTrack, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
 import {
-  formatTime, formatBarBeat, formatSamples, nextCounterMode, type CounterMode,
+  formatTime, formatBarBeat, formatBarBeatCompact, formatSamples, nextCounterMode, type CounterMode,
   preRollStartSeconds, postRollEndSeconds, punchTransition,
   nextMarker, prevMarker, sortMarkers, defaultMarkerName, shuttleStepSeconds,
 } from '@/lib/studio/transport';
 import { MidiClockSender } from '@/lib/studio/midiClock';
+import { useIsPhone } from '@/hooks/use-mobile';
 import { PianoRollPanel } from '@/pages/studio/pianoroll/PianoRollPanel';
 import { MidiClipPreview } from '@/pages/studio/pianoroll/MidiClipPreview';
 import type { EngineState } from '@/lib/studio/engine/engine';
@@ -65,11 +72,20 @@ import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { audioBufferToWavBlob } from '@/lib/studio/engine/mixdown';
 import { getAssetUrlSync } from '@/lib/studio/engine/assetUrlCache';
 import { splitAudioClips, sliceClipChannels, duplicateClip } from '@/lib/studio/clipOps';
+import { trimNotesToDuration } from '@/lib/studio/midiEdit';
 import { encodeMp3 } from '@/lib/audio/encodeMp3';
 import { exportSession, hasResumableExport, clearExportProgress, type ExportPreset } from '@/lib/studio/engine/exportRender';
-import { getAssetUrl, uploadAudioAsset } from '@/lib/studio/storage';
+import { getAssetUrl, saveSession, uploadAudioAsset } from '@/lib/studio/storage';
 import { toast } from 'sonner';
 import { MixerView } from './MixerView';
+import { useStreamingAccompaniment } from '@/lib/studio/streamingBacking/useStreamingAccompaniment';
+import { captureFromPlayback } from '@/lib/studio/streamingBacking/captureFromPlayback';
+import { AccompanimentLane } from '@/components/studio/AccompanimentLane';
+import { AttachScoreDialog } from '@/components/studio/AttachScoreDialog';
+import { FloatingScorePanel } from '@/components/studio/FloatingScorePanel';
+import { useQuery } from '@tanstack/react-query';
+import { followPlayheadScroll } from './followPlayhead';
+import { nudgeStepSeconds } from './nudge';
 
 const PX_PER_SECOND_DEFAULT = 40;
 const PX_PER_SECOND_MIN = 8;
@@ -243,11 +259,9 @@ function computePeaks(buffer: AudioBuffer, target = 300): number[] {
  * Returns the trimmed AudioBuffer plus a freshly encoded WAV blob.
  * If the recording is shorter than the trim, the original is kept.
  *
- * The latency configuration + ms→samples math are shared with Part
- * Tracks via src/lib/audio/sharedRecorder.ts (see
- * docs/superpowers/plans/2026-07-05-part-tracks-shared-engine.md, Task
- * 1); the decode/copy/re-encode steps below are unchanged from before
- * that extraction. */
+ * The latency configuration + ms→samples math live in
+ * src/lib/audio/sharedRecorder.ts; the decode/copy/re-encode steps
+ * below are unchanged from before that extraction. */
 /** Safari / any iOS browser shell reports vendor "Apple Computer, Inc.".
  *  On those engines MediaRecorder emits a fragmented mp4 that
  *  decodeAudioData can't read ("decoding failed" — recorded takes never
@@ -396,7 +410,7 @@ function Editor({
   sessionState, engineState,
 }: { sessionState: ReturnType<typeof useStudioSession>; engineState: ReturnType<typeof useStudioEngine> }) {
   const session = sessionState.session!;
-  const { update } = sessionState;
+  const { update, flushSave } = sessionState;
   const {
     state, start, play, pause, stop, updateTrackStrip, updateTempo,
     updateTimeSignature, setMetronome, transportTick,
@@ -413,6 +427,7 @@ function Editor({
   const [exportOpen, setExportOpen] = useState(false);
   const [toolsOpen, setToolsOpen] = useState(false);
   const [regionExportOpen, setRegionExportOpen] = useState(false);
+  const [attachScoreOpen, setAttachScoreOpen] = useState(false);
 
   // Timeline vs Mixer — same route, transport/header stay mounted; only
   // the main tracks-area block below swaps content (B1 Task 6).
@@ -501,6 +516,11 @@ function Editor({
   // CC events captured during the take (absolute compensated seconds).
   const midiCcRef = useRef<CapturedCc[]>([]);
   const midiPedalRef = useRef(false);   // dedupe (WP06 broadcasts CC64 on 3 channels)
+  // Continuous physical pedal state — updated on every sustain message
+  // regardless of capture gating, so a fresh take (or a punch-in mid-hold)
+  // can seed midiPedalRef from what the foot is ACTUALLY doing right now,
+  // instead of always assuming "up".
+  const lastPedalDownRef = useRef(false);
   // Capture compensation for this take, seconds (auto output latency + trim).
   const midiCompSecRef = useRef(0);
   // Hardware-timestamp → transport mapping for the current take. The
@@ -569,27 +589,10 @@ function Editor({
     midiPedalRef.current = false;
   }, [midiInputTrack, midiHeld]);
 
-  // Pending press queue + coalesce timer for MIDI-take commits. Every
-  // released note used to trigger its own update() → the whole session
-  // subtree re-rendered per keystroke and the engine-reload effect saw
-  // a new skeleton per keystroke. Even after deferring reloads mid-take
-  // (useStudio.ts), the React-render pressure alone still glitched
-  // longer takes. Batch releases into a ref and flush every 250 ms so
-  // one update lands per quarter-second of playing instead of per
-  // finger. Immediate-flush path is used when NOT recording (single
-  // notes need to land in state right away) and from stopRecording so
-  // the take fully commits before setRecordingActive(false).
-  const pendingMidiCommitsRef = useRef<Array<{ presses: HeldPress[]; upAbs: number }>>([]);
-  const pendingFlushTimerRef = useRef<number | null>(null);
-
-  const flushPendingMidiCommits = () => {
-    if (pendingFlushTimerRef.current !== null) {
-      window.clearTimeout(pendingFlushTimerRef.current);
-      pendingFlushTimerRef.current = null;
-    }
-    const items = pendingMidiCommitsRef.current;
+  // Builds/updates the take clip from a coalesced batch of presses. See the
+  // comment above `midiCommitQueueRef` below for why batching exists.
+  const flushPendingMidiCommits = (items: Array<{ presses: HeldPress[]; upAbs: number }>) => {
     if (items.length === 0 || !midiInputTrack) return;
-    pendingMidiCommitsRef.current = [];
     const trackId = midiInputTrack.id;
     const freshClipId = crypto.randomUUID();
     update((s) => ({
@@ -612,6 +615,31 @@ function Editor({
       }),
     }));
   };
+  // The queue below is created ONCE (lazy ref) and outlives every render,
+  // so its onFlush must not close over this render's flushPendingMidiCommits
+  // directly (that would freeze onFlush to the FIRST render's midiInputTrack/
+  // update — a stale closure). Indirect through a ref that's reassigned to
+  // the latest closure on every render instead.
+  const flushPendingMidiCommitsRef = useRef(flushPendingMidiCommits);
+  flushPendingMidiCommitsRef.current = flushPendingMidiCommits;
+
+  // Pending press queue + coalesce timer for MIDI-take commits. Every
+  // released note used to trigger its own update() → the whole session
+  // subtree re-rendered per keystroke and the engine-reload effect saw
+  // a new skeleton per keystroke. Even after deferring reloads mid-take
+  // (useStudio.ts), the React-render pressure alone still glitched
+  // longer takes. Batch releases into a queue and flush every 250 ms so
+  // one update lands per quarter-second of playing instead of per
+  // finger. Immediate-flush path is used when NOT recording (single
+  // notes need to land in state right away) and from stopRecording so
+  // the take fully commits before setRecordingActive(false).
+  const midiCommitQueueRef = useRef<MidiCommitQueue<{ presses: HeldPress[]; upAbs: number }> | null>(null);
+  if (!midiCommitQueueRef.current) {
+    midiCommitQueueRef.current = createMidiCommitQueue({
+      coalesceMs: 250,
+      onFlush: (batch) => flushPendingMidiCommitsRef.current(batch),
+    });
+  }
 
   // Write finished presses into the take clip. Coalesces to ~4 updates/
   // second during recording; commits immediately outside a take or when
@@ -619,23 +647,17 @@ function Editor({
   // final held-note flush lands in state synchronously).
   const commitMidiPresses = (presses: HeldPress[], upAbs: number, immediate = false) => {
     if (presses.length === 0 || !midiInputTrack) return;
-    pendingMidiCommitsRef.current.push({ presses, upAbs });
+    const queue = midiCommitQueueRef.current!;
+    queue.add({ presses, upAbs });
     if (immediate || !state?.recordingActive) {
-      flushPendingMidiCommits();
-      return;
-    }
-    if (pendingFlushTimerRef.current === null) {
-      pendingFlushTimerRef.current = window.setTimeout(() => {
-        pendingFlushTimerRef.current = null;
-        flushPendingMidiCommits();
-      }, 250);
+      queue.flushNow();
     }
   };
 
   const handleMidiNoteOn = (pitch: number, velocity: number, timeStampMs?: number) => {
     if (!midiInputTrack) return; // no armed MIDI track → keyboard is silent
-    liveVoicesRef.current?.noteOn(pitch, velocity / 127);
-    if (state?.recordingActive) {
+    liveVoicesRef.current?.noteOn(pitch, velocity / 127); // monitoring stays UNgated
+    if (shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null)) {
       const at = compAt(timeStampMs);
       const stale = midiHeld.keyDown(pitch, velocity, at);
       if (stale) commitMidiPresses([stale], at); // missed note-off
@@ -643,22 +665,36 @@ function Editor({
   };
   const handleMidiNoteOff = (pitch: number, timeStampMs?: number) => {
     if (!midiInputTrack) return;
-    liveVoicesRef.current?.noteOff(pitch);
+    liveVoicesRef.current?.noteOff(pitch); // monitoring stays UNgated
+    // No explicit gate check here by design: midiHeld only ever holds a
+    // press whose key-DOWN passed shouldCaptureMidi (see handleMidiNoteOn),
+    // so keyUp() already answers "was this press captured?" — deciding by
+    // where the press STARTED. That matters for punch: a note struck
+    // during 'rec' whose physical release lands after the punch-out (once
+    // phase is already 'post') must still commit, not be dropped because
+    // the CURRENT phase no longer allows capture. Gating this commit on
+    // the current phase would silently lose that note.
     const press = midiHeld.keyUp(pitch);
     if (!press) return;
     commitMidiPresses([press], compAt(timeStampMs));
   };
   const handleMidiSustain = (down: boolean, timeStampMs?: number) => {
+    // Physical pedal truth — updated unconditionally, before any gating or
+    // even the armed-track check, so it's always right when a take seeds
+    // from it (resetMidiCapture) regardless of what was armed when the
+    // foot moved.
+    lastPedalDownRef.current = down;
     if (!midiInputTrack) return;
-    liveVoicesRef.current?.sustain(down); // monitoring feel unchanged
-    if (state?.recordingActive && down !== midiPedalRef.current) {
+    liveVoicesRef.current?.sustain(down); // monitoring feel unchanged, UNgated
+    const capturing = shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null);
+    if (capturing && down !== midiPedalRef.current) {
       midiPedalRef.current = down;
       midiCcRef.current.push({ controller: 64, value: down ? 127 : 0, timeAbsSeconds: compAt(timeStampMs) });
     }
-    if (!state?.recordingActive) midiPedalRef.current = down;
+    if (!capturing) midiPedalRef.current = down;
   };
   const handleMidiCc = (controller: number, value: number, timeStampMs?: number) => {
-    if (!midiInputTrack || !state?.recordingActive) return;
+    if (!midiInputTrack || !shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null)) return;
     const prev = midiCcRef.current[midiCcRef.current.length - 1];
     if (prev && prev.controller === controller && prev.value === value) return; // coalesce dupes
     midiCcRef.current.push({ controller, value, timeAbsSeconds: compAt(timeStampMs) });
@@ -724,6 +760,23 @@ function Editor({
     }));
     setSelectedClip(null);
     toast.success('Clip deleted');
+  };
+
+  /** Move the selected clip along the timeline by `deltaSeconds`,
+   * clamped at 0. Shared by the Alt+Arrow shortcut and the phone-only
+   * action bar's ◀ ▶ buttons (no keyboard on touch). */
+  const nudgeSelectedClip = (deltaSeconds: number) => {
+    if (!selectedClip) return;
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => t.id !== selectedClip.trackId ? t : {
+        ...t,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        clips: (t as any).clips.map((c: { id: string; start_seconds: number }) =>
+          c.id !== selectedClip.clipId ? c : { ...c, start_seconds: Math.max(0, c.start_seconds + deltaSeconds) },
+        ),
+      } as Track),
+    }));
   };
 
   /** Logic-style split of the selected clip at the playhead. Shared by
@@ -1018,24 +1071,29 @@ function Editor({
   // together. Each scrollable child registers itself via the context.
   const scrollSync = useScrollSyncProvider();
 
-  // Auto-follow the playhead while playing so it never runs off-screen.
-  // When the playhead nears the right edge (or is left of view after a
-  // seek/loop), page the timeline forward so the playhead sits ~15% from
-  // the left, giving some lookahead. Runs on each position tick; cheap.
-  // Driven by the tick store (not React state, which no longer updates
-  // per position tick). Latest-ref pattern: the handler is refreshed
-  // every render so it always sees current pxPerSecond/scrollSync,
-  // while the subscription itself is mounted once.
+  // Auto-follow the playhead so it never sits off-screen: pages forward
+  // during playback, and jumps to the head after a parked seek/rewind
+  // (see followPlayheadScroll for the policy — a position-unchanged
+  // emit must never hijack a manual scroll). Runs on each position
+  // tick; cheap. Driven by the tick store (not React state, which no
+  // longer updates per position tick). Latest-ref pattern: the handler
+  // is refreshed every render so it always sees current
+  // pxPerSecond/scrollSync, while the subscription is mounted once.
+  const lastTickPosRef = useRef(0);
   const followPlayheadRef = useRef<() => void>(() => {});
   followPlayheadRef.current = () => {
-    if (!state?.isPlaying) return;
+    const pos = transportTick.get().positionSeconds;
+    const positionMoved = pos !== lastTickPosRef.current;
+    lastTickPosRef.current = pos;
     const vp = scrollSync.getViewport();
-    if (!vp || vp.clientWidth <= 0) return;
-    const playheadX = transportTick.get().positionSeconds * pxPerSecond;
-    const margin = Math.min(80, vp.clientWidth * 0.15);
-    if (playheadX > vp.scrollLeft + vp.clientWidth - margin || playheadX < vp.scrollLeft) {
-      scrollSync.scrollToX(playheadX - vp.clientWidth * 0.15);
-    }
+    if (!vp) return;
+    const x = followPlayheadScroll({
+      playheadX: pos * pxPerSecond,
+      viewport: vp,
+      isPlaying: !!state?.isPlaying,
+      positionMoved,
+    });
+    if (x !== null) scrollSync.scrollToX(x);
   };
   useEffect(() => transportTick.subscribe(() => followPlayheadRef.current()), [transportTick]);
 
@@ -1067,6 +1125,282 @@ function Editor({
   // PluginListenerHandle for the native recordPeak subscription —
   // unwired in stopRecording().
   const nativePeakSubRef = useRef<{ remove: () => Promise<void> } | null>(null);
+
+  // ── Streaming accompaniment + capture-from-playback ──────────────────
+  const streaming = useStreamingAccompaniment(session.accompaniment);
+  const [capturing, setCapturing] = useState(false);
+  // When a streaming-backed take starts, this ref holds the wall-clock ms
+  // at which the streaming source became audible. stopRecording() uses it
+  // to override transportStartWallMs in computeTakeAlignment so head-trim
+  // measures against the actual backing onset rather than the Studio
+  // transport start (which may lag by hundreds of ms on buffered sources).
+  // Null when the take was started without a streaming backing (file/null).
+  const streamingTransportWallMsRef = useRef<number | null>(null);
+
+  const ACCOMPANIMENT_TRACK_COLOR = '#64748b'; // slate-500
+  const ACCOMPANIMENT_TRACK_NAME = 'Accompaniment';
+
+  // Extract the storage path portion from any studio-bucket URL so we can
+  // match tracks by asset identity rather than by URL string (which
+  // changes every time we re-sign).
+  const storagePathOf = (url: string | undefined | null): string | null => {
+    if (!url) return null;
+    const m =
+      url.match(/\/storage\/v1\/object\/(?:public|sign|authenticated)\/studio\/(.+?)(?:\?|$)/);
+    return m ? decodeURIComponent(m[1]) : null;
+  };
+
+  // Auto-repair + de-dupe: the earliest cut of the file-upload path used
+  // getPublicUrl on a private bucket, which produced 403 URLs baked into
+  // `accompaniment.fileUrl`. A subsequent auto-repair added a SECOND
+  // Accompaniment track because the seed guard matched by URL and the
+  // URL had just changed. This effect:
+  //   1. re-signs any stale public URL,
+  //   2. collapses duplicate Accompaniment tracks whose clips point at
+  //      the same storage path,
+  //   3. refreshes the assetUrlCache so the audio engine loads the fresh URL.
+  // Runs once per unique fileUrl.
+  const repairedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (session.accompaniment?.kind !== 'file') return;
+    const fileUrl = session.accompaniment.fileUrl;
+    if (!fileUrl) return;
+    if (repairedRef.current === fileUrl) return;
+    repairedRef.current = fileUrl;
+
+    const publicMatch = fileUrl.match(/\/storage\/v1\/object\/public\/studio\/(.+?)(?:\?|$)/);
+    if (!publicMatch) {
+      // URL already signed (or non-repairable). Still de-dupe any leftover
+      // duplicate accompaniment tracks from a previous repair pass.
+      dedupeAccompaniment(fileUrl);
+      return;
+    }
+    const path = decodeURIComponent(publicMatch[1]);
+    void supabase.storage
+      .from('studio')
+      .createSignedUrl(path, 60 * 60 * 24 * 365)
+      .then(({ data, error }) => {
+        if (error || !data?.signedUrl) {
+          console.warn('[studio] accompaniment auto-repair failed', error);
+          return;
+        }
+        // Flip the manifest to the fresh URL AND collapse duplicates in
+        // one update so persistence sees the final state.
+        update((s) => {
+          if (s.accompaniment?.kind !== 'file' || s.accompaniment.fileUrl !== fileUrl) return s;
+          return applyDedupe(
+            { ...s, accompaniment: { ...s.accompaniment, fileUrl: data.signedUrl } },
+            path,
+            data.signedUrl,
+          );
+        });
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.accompaniment?.kind === 'file' ? session.accompaniment.fileUrl : null]);
+
+  // De-dupe helper — collapses redundant Accompaniment tracks by storage
+  // path and refreshes the surviving asset's URL cache.
+  const dedupeAccompaniment = (currentUrl: string) => {
+    const targetPath = storagePathOf(currentUrl);
+    if (!targetPath) return;
+    update((s) => applyDedupe(s, targetPath, currentUrl));
+  };
+
+  // Pure reducer: removes duplicate Accompaniment tracks, keeps the
+  // first one whose clip resolves to `targetPath`, and points its asset
+  // at `newUrl` via the assetUrlCache.
+  const applyDedupe = (s: Session, targetPath: string, newUrl: string): Session => {
+    let firstSeen = false;
+    const kept: typeof s.tracks = [];
+    for (const t of s.tracks) {
+      if (!isAudioTrack(t) || t.name !== ACCOMPANIMENT_TRACK_NAME) {
+        kept.push(t);
+        continue;
+      }
+      // Does this track's first clip belong to the current accompaniment path?
+      const clip = t.clips[0];
+      const asset = clip ? s.assets.find((a) => a.id === clip.asset_id) : undefined;
+      // Determine the track's path either from the cached URL for its
+      // asset id, or from the accompaniment filename fallback.
+      const cachedUrl = clip ? getAssetUrlSync(clip.asset_id) : null;
+      const cachedPath = storagePathOf(cachedUrl);
+      const filename = asset?.filename ?? null;
+      const matchesTarget =
+        cachedPath === targetPath ||
+        (filename !== null && targetPath.endsWith(filename));
+      if (matchesTarget) {
+        if (!firstSeen) {
+          firstSeen = true;
+          if (clip) setAssetUrl(clip.asset_id, newUrl);
+          kept.push(t);
+        }
+        // else drop the duplicate
+        continue;
+      }
+      kept.push(t);
+    }
+    return { ...s, tracks: kept };
+  };
+
+  // Effect: when accompaniment.kind === 'file', ensure a track exists in the
+  // session backed by that URL so it loads in the mixer as a normal audio clip.
+  // Idempotent by ASSET IDENTITY (filename OR storage path) so re-signing
+  // the URL doesn't cause a duplicate seed.
+  useEffect(() => {
+    if (session.accompaniment?.kind !== 'file') return;
+    const fileUrl = session.accompaniment.fileUrl;
+    const title = session.accompaniment.title ?? ACCOMPANIMENT_TRACK_NAME;
+    const targetPath = storagePathOf(fileUrl);
+
+    const alreadySeeded = session.tracks.some(
+      (t) =>
+        isAudioTrack(t) &&
+        t.clips.some((c) => {
+          const asset = session.assets.find((a) => a.id === c.asset_id);
+          if (asset?.filename === title) return true;
+          const cachedPath = storagePathOf(getAssetUrlSync(c.asset_id));
+          return targetPath !== null && cachedPath === targetPath;
+        }),
+    );
+    if (alreadySeeded) {
+      // Refresh the URL cache for the existing asset so the audio engine
+      // picks up the fresh signed URL on next load/play.
+      const track = session.tracks.find(
+        (t) =>
+          isAudioTrack(t) &&
+          t.clips.some((c) => {
+            const asset = session.assets.find((a) => a.id === c.asset_id);
+            return asset?.filename === title;
+          }),
+      );
+      if (track && isAudioTrack(track) && track.clips[0]) {
+        setAssetUrl(track.clips[0].asset_id, fileUrl);
+      }
+      return;
+    }
+    const assetId = `accomp-${newId()}`;
+    const trackId = `accomp-track-${newId()}`;
+    setAssetUrl(assetId, fileUrl);
+    // Signed URLs carry a `?token=…` query string, which broke the naive
+    // `fileUrl.endsWith('.mp3')` check (it always fell through to 'wav')
+    // and made the audio engine try to decode MP3/M4A bytes as WAV.
+    // Strip the query + hash first, then match on the true file extension
+    // — or use the accompaniment title's extension as a second signal.
+    const pickFormat = (): AudioAsset['format'] => {
+      const stripped = fileUrl.split('?')[0].split('#')[0].toLowerCase();
+      const nameHint = title.toLowerCase();
+      const match = (s: string) => (s.endsWith('.mp3') ? 'mp3' : s.endsWith('.m4a') ? 'm4a' : s.endsWith('.wav') ? 'wav' : null);
+      return match(stripped) ?? match(nameHint) ?? 'wav';
+    };
+    const asset: AudioAsset = {
+      id: assetId,
+      filename: title,
+      format: pickFormat(),
+      duration_seconds: session.length_seconds,
+      sample_rate: 44100,
+      channels: 2,
+      size_bytes: 0,
+    };
+    const clip: AudioClip = {
+      id: newId(), kind: 'audio', asset_id: assetId,
+      start_seconds: 0, duration_seconds: session.length_seconds,
+      offset_seconds: 0, gain_db: 0,
+      fade_in_seconds: 0, fade_out_seconds: 0,
+      reverse: false, pitch_semitones: 0, time_stretch: 1,
+    };
+    const track: AudioTrack = {
+      id: trackId, kind: 'audio', name: ACCOMPANIMENT_TRACK_NAME,
+      color: ACCOMPANIMENT_TRACK_COLOR,
+      volume_db: 0, pan: 0, mute: false, solo: false, arm: false,
+      fx: [], clips: [clip],
+    };
+    update((s) => ({ ...s, tracks: [track, ...s.tracks], assets: [...s.assets, asset] }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session.accompaniment?.kind === 'file' ? session.accompaniment.fileUrl : null]);
+
+  const isStreaming =
+    session.accompaniment?.kind === 'apple_music' ||
+    session.accompaniment?.kind === 'apple_music_album' ||
+    session.accompaniment?.kind === 'youtube';
+
+  // Phase 2 gap: on iOS native studio, streaming backing (Apple Music /
+  // YouTube) is not yet coordinated with the native recorder's audio
+  // session. Recording against a streaming backing on device would capture
+  // silence. Disable capture-from-playback and streaming take-start on iOS
+  // until Phase 2 resolves the .mixWithOthers audio session sequencing.
+  const isNativeStreamingBlocked = engineState.native && isStreaming;
+  const captureDisabledReason = isNativeStreamingBlocked
+    ? 'Not yet available on iOS — coming in the next update.'
+    : undefined;
+
+  // C2: Declare captureRecorderRef ABOVE onCapture so the ref allocation
+  // textually precedes the function that writes to it. React's runtime is
+  // unaffected (refs allocate before any handler runs), but this prevents
+  // a linter, code-splitter, or hand-refactor from reordering into a broken state.
+  const captureRecorderRef = useRef<MicRecorder | null>(null);
+
+  const onCapture = async () => {
+    if (!session.accompaniment) return;
+    setCapturing(true);
+    try {
+      // Open the mic (reuse the same openMicRecorder path as a normal take).
+      const inputDeviceId = localStorage.getItem('studio.inputDeviceId') || undefined;
+      const inputGainDb = Number(localStorage.getItem('studio.micInputGainDb') || 0);
+      const channelIndex = Number(localStorage.getItem('studio.inputChannelIndex') || 0) || 0;
+      // Disable AEC/noise-suppression/AGC for the capture-from-playback
+      // flow: the user is recording the room while a backing track plays,
+      // and the browser would otherwise echo-cancel the very signal being
+      // captured. Normal take recording does NOT pass constraints and keeps
+      // using Tone.UserMedia (which already disables AEC internally) — this
+      // only affects the capture path.
+      const captureRecorder = await openMicRecorder({
+        inputDeviceId, inputGainDb, channelIndex, captureWav: false,
+        constraints: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        },
+      });
+      await captureRecorder.start();
+      // Start the streaming backing from position 0.
+      await streaming.start(0);
+      // Store the recorder for onStopCapture.
+      captureRecorderRef.current = captureRecorder;
+    } catch (e) {
+      setCapturing(false);
+      toast.error(e instanceof Error ? e.message : 'Capture failed to start');
+    }
+  };
+
+  const onStopCapture = async () => {
+    const captureRecorder = captureRecorderRef.current;
+    captureRecorderRef.current = null;
+    try {
+      streaming.stop();
+      if (!captureRecorder) throw new Error('No capture recorder active');
+      const blob = await captureRecorder.stop();
+      captureRecorder.dispose();
+      if (!blob || blob.size < 1024) throw new Error('No audio captured — check mic and speaker volume');
+      const captured = await captureFromPlayback({ blob, sessionId: session.id, tenantId: session.tenant_id });
+      // Flip the session accompaniment to kind='file' with the captured WAV URL.
+      const nextSession = { ...session, accompaniment: { kind: 'file' as const, title: captured.title, fileUrl: captured.url } };
+      update(() => nextSession);
+      // I2: Persist immediately AND cancel the debounce timer via flushSave.
+      // Previously we called saveSession(nextSession) directly, which left
+      // the 800ms queueSave timer running — any edit within that window would
+      // fire a second write that could race the direct save. flushSave clears
+      // the timer atomically, then writes the override session so React
+      // batching can't hand us a stale local `session` value.
+      await flushSave(nextSession).catch((err) => {
+        console.error('[studio] failed to persist accompaniment capture', err);
+      });
+      toast.success('Accompaniment captured — future takes lock to this WAV.');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Capture failed');
+    } finally {
+      setCapturing(false);
+    }
+  };
 
   // Undo stack — snapshots of the session taken right before each
   // structural change (recording finalize, track add/remove, etc.).
@@ -1145,7 +1479,11 @@ function Editor({
   // path and punch-record's in-point.
   const resetMidiCapture = () => {
     midiCcRef.current = [];
-    midiPedalRef.current = false;
+    // Seed from the CONTINUOUS physical state, not false — a pedal held
+    // down when the take starts (or across a punch-in) is truly down, and
+    // must dedupe against handleMidiSustain's next message correctly
+    // instead of the take wrongly believing it starts released.
+    midiPedalRef.current = lastPedalDownRef.current;
     // Auto compensation measured once per take; ±trim from the settings
     // dial. Do NOT clamp the total at 0 here: the trim UI explicitly
     // promises "go negative if they land early" (MidiLatencyControl), and
@@ -1193,6 +1531,19 @@ function Editor({
       // Audio takes only — a MIDI-only take has no mic to open, so it
       // uses the shared JS count-in + transport path below on iOS too.
       if (mode === 'audio' && engineState.native && engineState.nativeRecordStart) {
+        // Phase 2 gap: streaming backing (Apple Music / YouTube) not yet
+        // coordinated with the native recorder's audio session. Sessions
+        // whose accompaniment.kind is streaming will record against silence
+        // on iOS. Block the take here and show a clear error rather than
+        // producing a broken/silent recording.
+        if (isNativeStreamingBlocked) {
+          toast.error(
+            'Streaming backing (Apple Music / YouTube) is not yet supported for recording on iOS. ' +
+            'Use a file backing to record here, or use the web app.',
+          );
+          return;
+        }
+
         const { NativeStudio } = await import('@/plugins/studioEngine');
         await NativeStudio.prepareRecordSession().catch(() => { /* recordWithCountIn will retry */ });
 
@@ -1320,6 +1671,30 @@ function Editor({
         play();
         transportStartWallMs = performance.now();
       }
+      // For streaming backings (Apple Music / YouTube), kick off the backing
+      // source and capture the wall-clock ms when it became audible. This
+      // precise timestamp overrides transportStartWallMs in computeTakeAlignment
+      // (see stopRecording) so the head-trim accounts for streaming buffer
+      // latency rather than the Studio transport's start time (which is only
+      // the Tone.js clock start — not when sound arrived at the listener).
+      // For file or null backings we leave the ref null so the existing
+      // transport-stamp path in stopRecording is used unchanged.
+      streamingTransportWallMsRef.current = null;
+      if (isStreaming) {
+        try {
+          const recordStartOffsetSec = state?.isPlaying ? (posNow() - startSec) : 0;
+          const { backingAudibleWallMs } = await streaming.start(recordStartOffsetSec);
+          streamingTransportWallMsRef.current = backingAudibleWallMs;
+        } catch (streamErr) {
+          // I3: Non-fatal — the take continues without the streaming backing
+          // rather than aborting the whole recording. Toast as error (not
+          // warning) so the user knows the take may drift and can stop + retry.
+          // Continue but surface clearly — same pattern as the retired
+          // Part Tracks startExternalAccompaniment failure path.
+          console.warn('[studio] streaming backing start failed', streamErr);
+          toast.error('Backing failed to start; take may drift. Stop and try again.');
+        }
+      }
       setRecording({
         recorder, native: false,
         startSeconds: startSec, startWallMs: startedAt,
@@ -1342,16 +1717,27 @@ function Editor({
   // Called once per stop, after the corresponding HeldNotes flush commit.
   const commitTakeCc = () => {
     const ccTake = midiCcRef.current.splice(0);
-    if (ccTake.length && midiTakeClipRef.current && midiInputTrack) {
-      const takeId = midiTakeClipRef.current;
-      const trackId = midiInputTrack.id;
-      update((s) => ({
-        ...s,
-        tracks: s.tracks.map((t) => t.id === trackId && isMidiTrack(t)
-          ? { ...t, clips: attachTakeCc(t.clips, takeId, ccTake) } as Track
-          : t),
-      }));
-    }
+    if (!ccTake.length || !midiInputTrack) return;
+    const trackId = midiInputTrack.id;
+    update((s) => ({
+      ...s,
+      tracks: s.tracks.map((t) => {
+        if (t.id !== trackId || !isMidiTrack(t)) return t;
+        let clips = t.clips;
+        let takeId = midiTakeClipRef.current;
+        // CC-only take: no notes landed, so appendTakeNote never ran and
+        // no clip exists yet — create one at the first captured CC event
+        // so pedal/mod moves alone still produce a clip instead of being
+        // silently dropped.
+        if (!takeId) {
+          const clip = ensureTakeClip(null, ccTake[0].timeAbsSeconds, MIN_NOTE_SECONDS);
+          takeId = clip.id;
+          midiTakeClipRef.current = takeId;
+          clips = [...clips, clip];
+        }
+        return { ...t, clips: attachTakeCc(clips, takeId, ccTake) } as Track;
+      }),
+    }));
   };
 
   const stopRecording = async () => {
@@ -1371,6 +1757,13 @@ function Editor({
       const midiElapsed = (performance.now() - recording.startWallMs) / 1000;
       const takeEndSec = posNow() || recording.startSeconds;
       commitMidiPresses(midiHeld.flush(), takeEndSec, true);
+      // commitMidiPresses early-returns when the held-press flush is empty,
+      // which would otherwise skip draining the coalescing queue — any
+      // batch still waiting on its 250ms timer would flush AFTER
+      // commitTakeCc()/setRecordingActive(false), landing late-shifted or
+      // bleeding into the next take. Flush the queue unconditionally
+      // (no-op if already empty) before finalizing CC.
+      midiCommitQueueRef.current?.flushNow();
       commitTakeCc();
       // Grow the grid to cover a take that ran past it, like the audio
       // path does — otherwise playback stops at the old length_seconds
@@ -1387,9 +1780,23 @@ function Editor({
     // pedal-sustained before the transport gets parked. immediate=true so
     // any coalesced-mid-take presses land in state before we tear down.
     commitMidiPresses(midiHeld.flush(), posNow() || recording.startSeconds, true);
+    // See matching comment in the midi-only branch above: flush the
+    // coalescing queue unconditionally so a pending batch can't land after
+    // commitTakeCc()/setRecordingActive(false).
+    midiCommitQueueRef.current?.flushNow();
     commitTakeCc();
 
-    const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, transportStartWallMs, armedTrackIds: armed } = recording;
+    const { recorder, native: nativeTake, punch, startSeconds, startWallMs, pressWallMs, captureStartWallMs, armedTrackIds: armed } = recording;
+    // If a streaming backing was running during this take, stop it now.
+    // Also grab the streaming-transport override (backingAudibleWallMs) so
+    // computeTakeAlignment measures head-trim against the true backing onset.
+    const streamingBackingWallMs = streamingTransportWallMsRef.current;
+    streamingTransportWallMsRef.current = null;
+    if (isStreaming) { try { streaming.stop(); } catch { /* ignore */ } }
+    // Use the streaming-backing wall-clock as transportStartWallMs when
+    // available (streaming take). Fall back to the Studio transport stamp
+    // (recording.transportStartWallMs) for non-streaming takes.
+    const transportStartWallMs = streamingBackingWallMs ?? recording.transportStartWallMs;
     setRecording(null);
     engineState.setRecordingActive?.(false);
     const elapsed = (performance.now() - startWallMs) / 1000;
@@ -1521,9 +1928,16 @@ function Editor({
       // Background upload — swap the provisional asset for the real
       // one when the network round-trip finishes. The user can play +
       // hear the take immediately in the meantime.
-      (async () => {
+      //
+      // Loss-proofing (2026-07-31 bass-take incident): the upload gets
+      // automatic retries with backoff; until it lands, the unsavedWork
+      // registry keeps the reload/close confirmation armed (the take
+      // exists ONLY in this tab's memory). Terminal failure surfaces a
+      // persistent toast with a manual Retry — never a 4s auto-dismiss.
+      const releaseTakeUpload = retainUnsavedWork('studio-take-upload');
+      const runTakeUpload = async (): Promise<void> => {
         try {
-          const assetRaw = await uploadAudioAsset({
+          const assetRaw = await withUploadRetry(() => uploadAudioAsset({
             tenantId: session.tenant_id,
             sessionId: session.id,
             file: uploadBlob,
@@ -1531,6 +1945,9 @@ function Editor({
             duration_seconds: buf.duration,
             sample_rate: buf.sampleRate,
             channels: buf.numberOfChannels,
+          }), {
+            onRetry: ({ attempt, delayMs, error }) =>
+              console.warn(`[studio] take upload retry ${attempt} in ${delayMs}ms`, error),
           });
           const asset: AudioAsset = { ...assetRaw, peaks };
           const remoteUrl = await getAssetUrl({ tenantId: session.tenant_id, sessionId: session.id, asset });
@@ -1548,14 +1965,18 @@ function Editor({
             });
             return { ...s, assets: nextAssets, tracks: nextTracks };
           });
+          releaseTakeUpload();
           // Local blob URL is no longer referenced — free it.
           try { URL.revokeObjectURL(localUrl); } catch { /* ignore */ }
         } catch (uploadErr) {
-          toast.error('Take upload failed — clip is playable locally but not saved', {
-            description: uploadErr instanceof Error ? uploadErr.message : String(uploadErr),
+          toast.error('Take upload failed — the recording is NOT saved yet', {
+            description: `Keep this tab open and retry. Closing it loses the take. (${uploadErr instanceof Error ? uploadErr.message : String(uploadErr)})`,
+            duration: Infinity,
+            action: { label: 'Retry upload', onClick: () => { void runTakeUpload(); } },
           });
         }
-      })();
+      };
+      void runTakeUpload();
       // Park the playhead at the take's start so the user can press
       // Play (or hit Space) once and immediately hear the take. Auto-
       // play is intentionally NOT triggered here — the engine reload
@@ -1586,6 +2007,8 @@ function Editor({
     // than committing it, or it leaks into the next take's clip.
     midiHeld.flush();
     midiCcRef.current = [];
+    midiCommitQueueRef.current?.clear();  // discard coalesced-but-unflushed notes
+    midiTakeClipRef.current = null;       // next take must not adopt this clip
     engineState.setRecordingActive?.(false);
   };
 
@@ -1633,6 +2056,16 @@ function Editor({
 
   const beginPunchTake = async (recorder: MicRecorder) => {
     if (!loopRegion) return;
+    // Pre-roll noodling was armed (recordingActive=true) back at
+    // startPunchRecord, before the phase gate closes capture — reset the
+    // take-scoped capture state right at the actual punch-in so nothing
+    // queued during 'pre' can leak into this take.
+    // Pedal state is physical, not per-take — resetMidiCapture seeds
+    // midiPedalRef from lastPedalDownRef, so a pedal held across punch-in
+    // is still correctly "down" for this take.
+    resetMidiCapture();
+    midiTakeClipRef.current = null;
+    midiCommitQueueRef.current?.clear();
     try {
       await recorder.start();
       const startedAt = performance.now();
@@ -1728,8 +2161,12 @@ function Editor({
     update((s) => ({ ...s, tracks: [...s.tracks, newMidiTrack(`MIDI ${s.tracks.length + 1}`)] }));
   };
   const removeTrack = (id: string) => {
+    const name = session.tracks.find((t) => t.id === id)?.name ?? 'track';
     pushHistory(session);
     update((s) => ({ ...s, tracks: s.tracks.filter((t) => t.id !== id) }));
+    // Deletion IS undoable (snapshot pushed above) — say so and offer it
+    // right where the accident happens.
+    toast.success(`Deleted "${name}"`, { action: { label: 'Undo', onClick: undo } });
   };
 
   // Keyboard shortcuts. Placed here so all referenced handlers
@@ -1824,27 +2261,18 @@ function Editor({
         e.preventDefault();
         splitSelectedClipAtPlayhead();
       } else if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && selectedClip) {
-        // Alt+arrow nudges the selected clip ±50ms (or ±10ms with Shift),
-        // perfect for slipping a take into the pocket after the fact.
+        // Alt+arrow nudges the selected clip by the snap-grid value
+        // (snap "free" falls back to 50ms); Shift+Alt is a fine 10ms
+        // slip for putting a take in the pocket after the fact.
         e.preventDefault();
-        const step = e.shiftKey ? 0.01 : 0.05;
-        const delta = e.key === 'ArrowLeft' ? -step : +step;
-        update((s) => ({
-          ...s,
-          tracks: s.tracks.map((t) => t.id !== selectedClip.trackId ? t : {
-            ...t,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            clips: (t as any).clips.map((c: { id: string; start_seconds: number }) =>
-              c.id !== selectedClip.clipId ? c : { ...c, start_seconds: Math.max(0, c.start_seconds + delta) },
-            ),
-          } as Track),
-        }));
+        const step = nudgeStepSeconds(snapSeconds, e.shiftKey);
+        nudgeSelectedClip(e.key === 'ArrowLeft' ? -step : +step);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, start, play, pause, stop, setMetronome, update, recording, selectedClip, session, session.tempo_bpm, session.time_signature.numerator, session.length_seconds, loopEnabled, loopRegion?.start, loopRegion?.end, punchEnabled, markers]);
+  }, [state, start, play, pause, stop, setMetronome, update, recording, selectedClip, session, session.tempo_bpm, session.time_signature.numerator, session.length_seconds, loopEnabled, loopRegion?.start, loopRegion?.end, punchEnabled, markers, snapSeconds]);
 
   // Timeline extent — the grid must NEVER stop before the content does.
   // Clips (and an in-flight recording) can run past session.length_seconds
@@ -1944,6 +2372,8 @@ function Editor({
               deviceId: midiInputDeviceId, setDeviceId: setMidiInputDeviceId,
               inputs: midiIn.inputs, status: midiIn.status, supported: midiIn.supported,
               targetTrackName: midiInputTrack?.name,
+              monitoringLatencyMs: engineState.engine?.getOutputLatencyMs() ?? getOutputLatencyMs(),
+              locked: !!recording || !!punchRef.current,
             }}
           />
           <Button
@@ -1974,6 +2404,29 @@ function Editor({
             <Scissors className="w-4 h-4 sm:mr-1" />
             <span className="hidden sm:inline">Region</span>
           </Button>
+          {session.scoreId ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => update((s) => ({ ...s, scoreId: null }))}
+              title="Remove attached score"
+              className="h-7 text-sm px-2 sm:px-3"
+            >
+              <BookX className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Remove score</span>
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setAttachScoreOpen(true)}
+              title="Attach a score from the music library"
+              className="h-7 text-sm px-2 sm:px-3"
+            >
+              <BookOpen className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Attach score</span>
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={() => exportSessionJson(session)} title="Download session JSON" className="h-7 w-7 p-0">
             <FileJson className="w-4 h-4" />
           </Button>
@@ -1982,6 +2435,19 @@ function Editor({
 
       <ExportSheet session={session} open={exportOpen} onOpenChange={setExportOpen} engineState={engineState} />
       <RegionExportSheet session={session} region={loopRegion} open={regionExportOpen} onOpenChange={setRegionExportOpen} />
+      {/* Score attach dialog — music library search, picks a scoreId. */}
+      <AttachScoreDialog
+        open={attachScoreOpen}
+        onOpenChange={setAttachScoreOpen}
+        onAttach={(id) => update((s) => ({ ...s, scoreId: id }))}
+      />
+      {/* Floating PDF score panel — mounts whenever a scoreId is set. */}
+      {session.scoreId && (
+        <StudioScorePanel
+          scoreId={session.scoreId}
+          onClose={() => update((s) => ({ ...s, scoreId: null }))}
+        />
+      )}
       {/* Clip MP3 export prompt — name + destination before rendering.
        * `dark` classes forced: DialogContent portals to document.body,
        * outside the Studio's .dark scope (same trap as the old EQ sheet). */}
@@ -2042,25 +2508,33 @@ function Editor({
         </DialogContent>
       </Dialog>
 
-      {/* Transport bar — three-cell grid keeps the LCD dead-center at every
-       *  breakpoint. Row 1: primary transport | LCD | secondary actions.
-       *  Row 2 (md+): tempo, punch, snap, grid, end chips. Row 3: engine
-       *  status. On phones the chip row lives inside the settings sheet. */}
+      {/* Transport bar. sm+: three-cell grid keeps the LCD dead-center
+       *  (primary transport | LCD | secondary actions), chip row below on
+       *  md+. PHONES: the LCD gets a full-width line of its own up top and
+       *  EVERY button — left and right cells alike — flows in one wrapping
+       *  stream beneath it (the cells use `contents` below sm, so their
+       *  buttons become direct flex items of this row). The old grid
+       *  crammed all buttons into a tall left column beside a huge LCD. */}
       <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 space-y-1.5">
-        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:justify-normal sm:gap-3">
 
         {/* LEFT — transport controls. Play/Pause/Stop/Rec/Metro are
          *  visible on every breakpoint; nav (skip start/end + scrub) and
-         *  markers appear on wider screens where there's room. */}
-        <div className="flex items-center gap-0.5 sm:gap-1 min-w-0">
+         *  markers appear on wider screens where there's room. Every
+         *  button is shrink-0 — squeezed cells must wrap to a second
+         *  line (flex-wrap), never compress the buttons into slivers. */}
+        <div className="contents sm:flex sm:flex-wrap sm:items-center sm:gap-1 sm:min-w-0">
+        {/* Skip-to-start + rewind ride every breakpoint — hiding them on
+            phones left mobile with no way back to the top of the song
+            (Kevin's report). The compact phone LCD paid for the room. */}
         <button
           onClick={() => engineState.seek?.(0)}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Go to beginning (Home)">
           <SkipBack className="w-4 h-4" />
         </button>
         <ScrubButton
-          className="hidden sm:flex"
+          className="flex"
           direction={-1}
           getPosition={posNow}
           max={session.length_seconds}
@@ -2079,12 +2553,12 @@ function Editor({
         />
         <button
           onClick={() => engineState.seek?.(session.length_seconds)}
-          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="hidden lg:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Skip to end">
           <SkipForward className="w-4 h-4" />
         </button>
 
-        <div className="hidden sm:block w-px h-7 bg-border mx-0.5" />
+        <div className="hidden sm:block shrink-0 w-px h-7 bg-border mx-0.5" />
 
         {/* Primary transport — always visible */}
         <button onClick={async () => {
@@ -2101,23 +2575,26 @@ function Editor({
               });
             }
           }} disabled={state?.isPlaying}
-          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${state?.isPlaying ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border hover:bg-muted/70'} disabled:opacity-50`}
+          className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${state?.isPlaying ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border hover:bg-muted/70'} disabled:opacity-50`}
           title="Play (Space)">
           <Play className="w-4 h-4" />
         </button>
-        <button onClick={pause} disabled={!state?.isPlaying}
-          className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 flex items-center justify-center"
+        {/* Never disabled: pausing a parked transport is a no-op, and a
+            greyed Pause strands the user if engine state ever disagrees
+            with what's audible (playback OR recording). */}
+        <button onClick={pause}
+          className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
           title="Pause (Space)">
           <Pause className="w-4 h-4" />
         </button>
         <button
           onClick={onStopPressed}
-          className="h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
+          className="shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center"
           title="Stop (S) — also finalizes any active recording">
           <Square className="w-4 h-4" />
         </button>
         <button onClick={onRecordPressed}
-          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${isRecording ? 'bg-rose-500 border-rose-500 text-white animate-pulse' : 'bg-muted border-border hover:bg-rose-100 hover:border-rose-300'}`}
+          className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${isRecording ? 'bg-rose-500 border-rose-500 text-white animate-pulse' : 'bg-muted border-border hover:bg-rose-100 hover:border-rose-300'}`}
           title={punchEnabled ? 'Record (R) — punch mode: rolls pre-roll, then drops in/out at the punch range' : 'Record (R)'}>
           <Circle className={`w-3.5 h-3.5 ${isRecording ? 'fill-white text-white' : 'fill-rose-500 text-rose-500'}`} />
         </button>
@@ -2133,7 +2610,7 @@ function Editor({
             void Promise.resolve(start?.()).catch(() => { /* engine will retry on play */ });
             setMetronome(!state?.metronomeOn);
           }}
-          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${state?.metronomeOn ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border hover:bg-muted/70'}`}
+          className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${state?.metronomeOn ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border hover:bg-muted/70'}`}
           title="Metronome (M)">
           <Timer className="w-4 h-4" />
         </button>
@@ -2165,7 +2642,7 @@ function Editor({
             }
             setLoopEnabled(true);
           }}
-          className={`h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${loopEnabled ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border hover:bg-muted/70'}`}
+          className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${loopEnabled ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border hover:bg-muted/70'}`}
           title={
             selectedClip
               ? 'Loop the selected clip — toggle on/off'
@@ -2178,26 +2655,46 @@ function Editor({
         </button>
 
         {/* Markers — drop a flag at the playhead, hop between flags.
-         *  Flag on sm+, prev/next on md+ (they only help once markers exist). */}
+         *  Flag on md+, prev/next on lg+ (they only help once markers exist). */}
         <button
           onClick={addMarkerAtPlayhead}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="hidden md:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Add marker at playhead (K)">
           <Flag className="w-4 h-4 text-amber-500" />
         </button>
         <button
           onClick={jumpPrevMarker}
           disabled={markers.length === 0}
-          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          className="hidden lg:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
           title="Previous marker (,)">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <button
           onClick={jumpNextMarker}
           disabled={markers.length === 0}
-          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          className="hidden lg:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
           title="Next marker (.)">
           <ChevronRight className="w-4 h-4" />
+        </button>
+
+        {/* Nudge the selected clip — click affordance for the Alt+Arrow
+         *  shortcut. Hidden on phones (the clip action bar has its own
+         *  ◀ ▶ pair there); disabled until a clip is selected. */}
+        <button
+          onClick={() => nudgeSelectedClip(-nudgeStepSeconds(snapSeconds, false))}
+          disabled={!selectedClip}
+          className="hidden sm:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          title={selectedClip ? 'Nudge clip earlier by the snap value (Alt+←)' : 'Nudge — select a clip first'}
+          aria-label="Nudge clip earlier">
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => nudgeSelectedClip(+nudgeStepSeconds(snapSeconds, false))}
+          disabled={!selectedClip}
+          className="hidden sm:flex shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          title={selectedClip ? 'Nudge clip later by the snap value (Alt+→)' : 'Nudge — select a clip first'}
+          aria-label="Nudge clip later">
+          <ArrowRight className="w-4 h-4" />
         </button>
         </div>
 
@@ -2205,7 +2702,7 @@ function Editor({
          *  reads dead-center at every breakpoint regardless of how many
          *  buttons occupy the left cell. Position/length text stacks below
          *  on phones and sits beside the counter on md+ where there's room. */}
-        <div className="flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-3 shrink-0">
+        <div className="order-first w-full sm:order-none sm:w-auto flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-3 shrink-0">
           <TransportCounter
             store={transportTick}
             counterMode={counterMode}
@@ -2224,10 +2721,10 @@ function Editor({
          *  More button opens the settings sheet with tempo/TS/snap/grid/
          *  end/punch — the same controls that live in Row 2's chip row on
          *  desktop, so nothing is ever exclusively phone- or desktop-only. */}
-        <div className="flex items-center gap-1 sm:gap-1.5 justify-end min-w-0">
+        <div className="contents sm:flex sm:items-center sm:gap-1.5 sm:justify-end sm:min-w-0">
           <button
             onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
-            className={`h-8 sm:h-9 px-2 sm:px-3 rounded border text-xs sm:text-sm font-bold whitespace-nowrap ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+            className={`shrink-0 h-8 sm:h-9 px-2 sm:px-3 rounded border text-xs sm:text-sm font-bold whitespace-nowrap ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
             title={countInBars === 0 ? 'Count-in OFF — tap to cycle 1 bar → 2 bars → off' : `Count-in: ${countInBars} bar${countInBars > 1 ? 's' : ''}`}>
             <span className="hidden md:inline">Count-in </span>{countInBars === 0 ? 'Off' : `${countInBars}`}
           </button>
@@ -2238,14 +2735,14 @@ function Editor({
           )}
           <button
             onClick={undo}
-            className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
+            className="shrink-0 h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
             aria-label="Undo" title="Undo (⌘Z)">
             <Undo2 className="w-4 h-4" />
             <span className="hidden lg:inline text-sm font-semibold">Undo</span>
           </button>
           <button
             onClick={() => setSettingsOpen(true)}
-            className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
+            className="shrink-0 h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
             aria-label="Session settings" title="Session — tempo, time signature, snap, grid, punch, end">
             <SlidersHorizontal className="w-4 h-4" />
             <span className="hidden lg:inline text-sm font-semibold">More</span>
@@ -2253,6 +2750,40 @@ function Editor({
           <div className="hidden lg:block ml-1">
             <LiveVuMeter store={transportTick} />
           </div>
+        </div>
+
+        {/* Phone-only: Audio / MIDI / Snap join the transport stream —
+            there's room in the wrapping button rows, and their standalone
+            row below is sm+ only. KEEP IN SYNC with the add-track row
+            near the timeline (same handlers, same labels). */}
+        <div className="contents sm:hidden">
+          <button onClick={addAudioTrack} className="shrink-0 h-8 px-2 bg-muted border border-border rounded hover:bg-muted/70 inline-flex items-center gap-1 text-sm">
+            <Plus className="w-4 h-4" /> Audio
+          </button>
+          <button onClick={addMidiTrack} className="shrink-0 h-8 px-2 bg-muted border border-border rounded hover:bg-muted/70 inline-flex items-center gap-1 text-sm">
+            <Plus className="w-4 h-4" /> MIDI
+          </button>
+          <button
+            onClick={toggleSnap}
+            title={snapMode === 'free'
+              ? 'Snap OFF — clips move freely. Tap to snap to grid.'
+              : `Snap ON (${snapMode}) — clips align to the grid. Tap for free movement.`}
+            aria-pressed={snapMode !== 'free'}
+            className={`shrink-0 h-8 px-2.5 inline-flex items-center gap-1 rounded border text-xs font-semibold ${
+              snapMode !== 'free'
+                ? 'bg-primary/15 text-primary border-primary/40'
+                : 'bg-muted text-muted-foreground border-border'
+            }`}
+          >
+            <Magnet className="w-3.5 h-3.5" />
+            {snapMode !== 'free' ? 'Snap' : 'Free'}
+          </button>
+          {isRecording && (
+            <div className="w-full flex items-center justify-center gap-1.5 text-rose-600 font-semibold text-sm">
+              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+              Recording — {((performance.now() - recording.startWallMs) / 1000).toFixed(1)}s
+            </div>
+          )}
         </div>
         </div>
 
@@ -2574,6 +3105,22 @@ function Editor({
             <div className="flex items-center gap-1.5 bg-card/90 backdrop-blur-xl border border-border/60 rounded-full px-2 py-1.5 overflow-x-auto">
               <span className="text-sm text-muted-foreground flex-1 min-w-0 truncate pl-2">Clip selected</span>
               <button
+                onClick={() => nudgeSelectedClip(-nudgeStepSeconds(snapSeconds, false))}
+                title="Nudge clip earlier (snap value)"
+                aria-label="Nudge clip earlier"
+                className="h-10 w-10 rounded-full border border-border text-[var(--tint)] hover:bg-muted flex items-center justify-center shrink-0"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => nudgeSelectedClip(+nudgeStepSeconds(snapSeconds, false))}
+                title="Nudge clip later (snap value)"
+                aria-label="Nudge clip later"
+                className="h-10 w-10 rounded-full border border-border text-[var(--tint)] hover:bg-muted flex items-center justify-center shrink-0"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              <button
                 onClick={splitSelectedClipAtPlayhead}
                 title={playheadInsideSelectedClip() ? 'Split at playhead (B)' : 'Split at clip center (move the playhead into the clip to cut there)'}
                 className="h-10 px-3 rounded-full border border-border inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--tint)] hover:bg-muted disabled:opacity-40 shrink-0"
@@ -2605,8 +3152,9 @@ function Editor({
               </button>
             </div>
           )}
-          {/* Add-track row */}
-          <div className="flex items-center gap-2 text-sm">
+          {/* Add-track row — sm+ only; on phones these controls live in the
+              transport stream above (KEEP IN SYNC with that copy). */}
+          <div className="hidden sm:flex items-center gap-2 text-sm">
             <button onClick={addAudioTrack} className="h-7 px-2 bg-card border border-border rounded hover:bg-muted inline-flex items-center gap-1">
               <Plus className="w-4 h-4" /> Audio
             </button>
@@ -2645,14 +3193,11 @@ function Editor({
             )}
           </div>
 
-      {/* Tracks — DAW-style numbered + dense */}
-      {session.tracks.length === 0 ? (
-        <div className="border border-dashed border-border rounded-md py-10 text-center text-xs text-muted-foreground space-y-2">
-          <Music2 className="w-5 h-5 mx-auto opacity-40" />
-          <p>Add an audio or MIDI track to begin.</p>
-        </div>
-      ) : (
-        <div className="bg-card border border-border rounded-md overflow-hidden">
+      {/* Tracks — DAW-style numbered + dense. The ruler + click row
+       * render even with zero tracks so the timeline (and the End
+       * caret) is always visible; the add-a-track hint is a row inside
+       * the timeline instead of replacing it. */}
+      <div className="bg-card border border-border rounded-md overflow-hidden">
           {/* Bar/beat ruler */}
           <div className="flex border-b border-border bg-muted/30">
             <div className="shrink-0 border-r border-border" style={{ width: effectiveStripWidth }} />
@@ -2669,6 +3214,8 @@ function Editor({
                 markers={markers}
                 onMarkerJump={(s) => engineState.seek?.(s)}
                 onMarkerEdit={setEditingMarkerId}
+                endSeconds={session.length_seconds}
+                onEndChange={(sec) => update((s) => ({ ...s, length_seconds: sec }))}
               />
             </div>
           </div>
@@ -2695,6 +3242,21 @@ function Editor({
             onSeek={(s) => engineState.seek?.(s)}
             onHeightChange={setTrackHeightClamped}
           />
+          {/* Accompaniment lane — rendered above all tracks when the session
+           * has an accompaniment set. Decorative for kind='file' (the file
+           * is already loaded as a normal audio track); shows a capture
+           * button for streaming kinds (Apple Music / YouTube). */}
+          {session.accompaniment && (
+            <AccompanimentLane
+              accompaniment={session.accompaniment}
+              capturing={capturing}
+              recordingInProgress={!!recording}
+              ytIframeRef={streaming.ytIframeRef}
+              onCapture={onCapture}
+              onStopCapture={onStopCapture}
+              disabledReason={captureDisabledReason}
+            />
+          )}
           {session.tracks.map((t, i) => (
             <DarkTrackRow
               key={t.id}
@@ -2717,6 +3279,15 @@ function Editor({
               onOpenPianoRoll={() => openPianoRollForTrack(t.id)}
             />
           ))}
+          {session.tracks.length === 0 && (
+            <div className="flex">
+              <div className="shrink-0 border-r border-border" style={{ width: effectiveStripWidth }} />
+              <div className="flex-1 py-8 text-center text-xs text-muted-foreground space-y-2">
+                <Music2 className="w-5 h-5 mx-auto opacity-40" />
+                <p>Add an audio or MIDI track to begin.</p>
+              </div>
+            </div>
+          )}
           {/* Single shared horizontal scrollbar — drags here scroll the
            * ruler + every track lane via the ScrollSyncContext. Per-row
            * scrollbars are hidden so the user sees ONE coordinated bar. */}
@@ -2731,7 +3302,6 @@ function Editor({
             </div>
           </div>
         </div>
-      )}
 
       {/* SMART CONTROLS (bottom drawer — selected track's FX rack) */}
       <SmartControls
@@ -3117,10 +3687,17 @@ function MidiClipBlock({
       selected={selected}
       canTrimLeft={false}
       onSelect={onSelect}
-      onChange={(p) => onChange({
-        start_seconds: p.start ?? clip.start_seconds,
-        duration_seconds: p.duration ?? clip.duration_seconds,
-      })}
+      onChange={(p) => {
+        // Right-edge trim (shrink only — a grow or a move must leave
+        // notes untouched) truncates notes so playback always matches
+        // what the piano roll shows.
+        const isRightTrimShrink = p.duration != null && p.duration < clip.duration_seconds;
+        onChange({
+          start_seconds: p.start ?? clip.start_seconds,
+          duration_seconds: p.duration ?? clip.duration_seconds,
+          ...(isRightTrimShrink ? { notes: trimNotesToDuration(clip.notes, p.duration!) } : {}),
+        });
+      }}
       onRemove={onRemove}
       onDuplicate={onDuplicate}
     />
@@ -3560,14 +4137,19 @@ function TransportCounter({
   lengthSeconds: number;
 }) {
   const pos = useTransportPosition(store);
+  // Phones get bar.beat ("7.3") — the padded BBB.beat.tick readout ate a
+  // third of the 390px transport row and crowded the rewind cluster out.
+  const isPhone = useIsPhone();
   return (
     <>
       <button
         onClick={onCycleMode}
-        className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1.5 hover:bg-zinc-800"
+        className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1 sm:gap-1.5 hover:bg-zinc-800"
         title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
         <span className="text-emerald-400 text-sm sm:text-lg">
-          {counterMode === 'bars' && formatBarBeat(pos, tempoBpm, numerator)}
+          {counterMode === 'bars' && (isPhone
+            ? formatBarBeatCompact(pos, tempoBpm, numerator)
+            : formatBarBeat(pos, tempoBpm, numerator))}
           {counterMode === 'time' && formatTime(pos)}
           {counterMode === 'samples' && formatSamples(pos, sampleRate)}
         </span>
@@ -3940,6 +4522,66 @@ function exportSessionJson(session: Session): void {
   URL.revokeObjectURL(url);
 }
 
+// ── StudioScorePanel — fetches gw_sheet_music row and mounts the
+// floating PDF panel. Handles the prop impedance mismatch between
+// FloatingScorePanel (pdfUrl + musicId + musicTitle + onClose) and the
+// session's stored scoreId (just the row id). ──────────────────────────
+
+function StudioScorePanel({ scoreId, onClose }: { scoreId: string; onClose: () => void }) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['studio-score-panel', scoreId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_sheet_music')
+        .select('id, title, composer, voicing, pdf_url')
+        .eq('id', scoreId)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Surface the two silent-fail modes with a toast so the user knows why
+  // the panel didn't open. Previously we early-returned null in both
+  // cases and the "Attach score" action looked broken.
+  const notified = useRef(false);
+  useEffect(() => {
+    if (isLoading || notified.current) return;
+    if (error) {
+      notified.current = true;
+      toast.error('Could not load score', {
+        description: error instanceof Error ? error.message : String(error),
+      });
+      return;
+    }
+    if (!data) {
+      notified.current = true;
+      toast.error('Score not found', {
+        description: 'It may have been deleted or you no longer have access.',
+      });
+      onClose();
+      return;
+    }
+    if (!data.pdf_url) {
+      notified.current = true;
+      toast.error('This score has no PDF', {
+        description: `"${data.title ?? 'Untitled'}" has no pdf_url on file. Attach a PDF from the music library editor first.`,
+      });
+      onClose();
+    }
+  }, [isLoading, error, data, onClose]);
+
+  if (!data || !data.pdf_url) return null;
+  return (
+    <FloatingScorePanel
+      pdfUrl={data.pdf_url}
+      musicId={data.id}
+      musicTitle={data.title ?? null}
+      onClose={onClose}
+    />
+  );
+}
+
 // ── Export sheet (B1 Task 7) — MP3 320 / WAV (CD quality) / Stems ────
 //
 // Controlled (open/onOpenChange from Editor) rather than owning its own
@@ -4129,11 +4771,11 @@ function RegionExportSheet({
               <button
                 onClick={() => { setMode('mix'); setMono(false); }}
                 className={`h-11 rounded border text-sm font-semibold ${mode === 'mix' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
-              >Stereo mix<span className="block text-[10px] font-normal opacity-70">one file</span></button>
+              >Stereo mix<span className="block text-xs font-normal opacity-70">one file</span></button>
               <button
                 onClick={() => { setMode('stems'); setMono(true); }}
                 className={`h-11 rounded border text-sm font-semibold ${mode === 'stems' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
-              >Mono stems<span className="block text-[10px] font-normal opacity-70">one file per track</span></button>
+              >Mono stems<span className="block text-xs font-normal opacity-70">one file per track</span></button>
             </div>
             <label className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
               <input type="checkbox" checked={mono} onChange={(e) => setMono(e.target.checked)} className="accent-primary w-4 h-4" />
@@ -4176,7 +4818,7 @@ function RegionExportSheet({
                 ? <><Upload className="w-4 h-4 mr-2" /> Send {selected.size} track{selected.size === 1 ? '' : 's'} to Library</>
                 : <><Download className="w-4 h-4 mr-2" /> Export {selected.size} track{selected.size === 1 ? '' : 's'}</>}
           </Button>
-          <p className="text-[11px] text-muted-foreground text-center">
+          <p className="text-xs text-muted-foreground text-center">
             {dest === 'library'
               ? 'Saved to Media Library → Studio, in your own subfolder.'
               : 'Downloads to this device.'}
@@ -4355,7 +4997,7 @@ function CompactTimeSignaturePicker({
 function BarRuler({
   lengthSeconds, tempoBpm, numerator, transportTick,
   loopRegion = null, loopEnabled = false, onLoopRegionChange, onSeek,
-  markers = [], onMarkerJump, onMarkerEdit,
+  markers = [], onMarkerJump, onMarkerEdit, endSeconds, onEndChange,
 }: {
   lengthSeconds: number; tempoBpm: number; numerator: number;
   transportTick: TransportTickStore;
@@ -4366,9 +5008,16 @@ function BarRuler({
   markers?: SessionMarker[];
   onMarkerJump?: (seconds: number) => void;
   onMarkerEdit?: (id: string) => void;
+  /** Project end (session.length_seconds) — rendered as a draggable
+   * caret. May be < lengthSeconds (the ruler extends past End when
+   * clips run long). */
+  endSeconds?: number;
+  onEndChange?: (seconds: number) => void;
 }) {
   const pxPerSecond = usePxPerSecond();
   const gridLevel = useGridLevel();
+  // Live position while the End caret is being dragged; null = parked.
+  const [endPreview, setEndPreview] = useState<number | null>(null);
   const secondsPerBeat = 60 / tempoBpm;
   const secondsPerBar = secondsPerBeat * numerator;
   const totalBars = Math.ceil(lengthSeconds / secondsPerBar);
@@ -4487,6 +5136,40 @@ function BarRuler({
           {mk.name}
         </button>
       ))}
+      {/* Project-End caret — draggable. Mirrors the transport bar's
+       * "End … s" number input: dragging commits session.length_seconds.
+       * pointer-down is stopped so tap-to-seek / drag-to-loop don't
+       * also fire. Preview state keeps the caret under the finger; the
+       * session updates once on release. */}
+      {endSeconds !== undefined && (
+        <div
+          className="absolute top-0 bottom-0 z-20 cursor-ew-resize"
+          style={{ left: (endPreview ?? endSeconds) * pxPerSecond - 6, width: 13 }}
+          onPointerDown={(e) => {
+            if (!onEndChange) return;
+            e.stopPropagation();
+            const handle = e.currentTarget as HTMLElement;
+            handle.setPointerCapture(e.pointerId);
+            const ruler = handle.parentElement!.getBoundingClientRect();
+            const secAt = (clientX: number) =>
+              Math.max(4, Math.min(Math.min(lengthSeconds, 3600), (clientX - ruler.left) / pxPerSecond));
+            const move = (ev: PointerEvent) => setEndPreview(secAt(ev.clientX));
+            const up = (ev: PointerEvent) => {
+              try { handle.releasePointerCapture(ev.pointerId); } catch { /* ignore */ }
+              window.removeEventListener('pointermove', move);
+              window.removeEventListener('pointerup', up);
+              setEndPreview(null);
+              onEndChange(Math.round(secAt(ev.clientX)));
+            };
+            window.addEventListener('pointermove', move);
+            window.addEventListener('pointerup', up);
+          }}
+          title="Project end — drag to change the session length"
+        >
+          <div className="absolute inset-y-0 left-1/2 -translate-x-px border-l-2 border-[var(--tint)]" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[8px] border-l-transparent border-r-transparent border-t-[var(--tint)]" />
+        </div>
+      )}
       {/* Playhead chevron on the ruler — moves with transport position. */}
       <RulerPlayheadChevron store={transportTick} />
     </div>
@@ -4581,7 +5264,7 @@ function ClickTrackRow({
           <span className="text-xs font-semibold">Click</span>
           <button
             onClick={onToggle}
-            className={`text-[10px] font-bold px-1 py-px rounded border shrink-0 ${metronomeOn ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
+            className={`text-xs font-bold px-1 py-px rounded border shrink-0 ${metronomeOn ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
             title={metronomeOn ? 'Click is ON — tap to silence' : 'Click is OFF — tap to turn on (M)'}
           >
             {metronomeOn ? 'ON' : 'OFF'}
@@ -4592,7 +5275,7 @@ function ClickTrackRow({
             className="flex-1 min-w-0 h-1 accent-amber-500"
             title={`${metronomeVolumeDb.toFixed(1)} dB`}
           />
-          <span className="text-[10px] text-muted-foreground tabular-nums shrink-0">
+          <span className="text-xs text-muted-foreground tabular-nums shrink-0">
             {session.tempo_bpm} BPM
           </span>
         </div>
@@ -4708,6 +5391,8 @@ function DarkTrackRow({
       onStripChange(p as never);
     }
   };
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const deleteClipCount = isAudioTrack(track) || isMidiTrack(track) ? track.clips.length : 0;
   const isRecordingThisTrack = !!recording && recording.armedTrackIds.includes(track.id);
 
   return (
@@ -4774,13 +5459,7 @@ function DarkTrackRow({
                     </div>
                   )}
                   <button
-                    onClick={() => {
-                      const clipCount = isAudioTrack(track) || isMidiTrack(track) ? track.clips.length : 0;
-                      const msg = clipCount > 0
-                        ? `Delete "${track.name}"? ${clipCount} clip${clipCount === 1 ? '' : 's'} on this track will be removed. This can't be undone.`
-                        : `Delete "${track.name}"? This can't be undone.`;
-                      if (confirm(msg)) onRemove();
-                    }}
+                    onClick={() => setDeleteOpen(true)}
                     className="w-full h-11 rounded border border-border text-destructive inline-flex items-center justify-center gap-2 font-semibold hover:bg-destructive/10"
                   >
                     <Trash2 className="w-4 h-4" /> Delete track
@@ -4811,13 +5490,7 @@ function DarkTrackRow({
               title={`${track.volume_db.toFixed(1)} dB`}
             />
             <button
-              onClick={() => {
-                const clipCount = isAudioTrack(track) || isMidiTrack(track) ? track.clips.length : 0;
-                const msg = clipCount > 0
-                  ? `Delete "${track.name}"? ${clipCount} clip${clipCount === 1 ? '' : 's'} on this track will be removed. This can't be undone.`
-                  : `Delete "${track.name}"? This can't be undone.`;
-                if (confirm(msg)) onRemove();
-              }}
+              onClick={() => setDeleteOpen(true)}
               className="hidden sm:block shrink-0 text-muted-foreground hover:text-rose-600 p-1 rounded hover:bg-rose-50 transition-colors"
               title="Delete track"
               aria-label={`Delete ${track.name}`}
@@ -4825,6 +5498,34 @@ function DarkTrackRow({
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
+          {/* Destructive-confirm dialog shared by the strip trash icon and
+           * the settings sheet's Delete button. A native confirm() was too
+           * easy to blow through — the strip trash sits next to the fader,
+           * so mis-taps happen; a real dialog with the track named and a
+           * destructive-styled action slows that down. Deletion remains
+           * undoable (removeTrack pushes history + offers an Undo toast). */}
+          <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete “{track.name}”?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {deleteClipCount > 0
+                    ? `${deleteClipCount} clip${deleteClipCount === 1 ? '' : 's'} on this track will be removed. `
+                    : ''}
+                  You can undo this right afterward.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  onClick={() => { setDeleteOpen(false); onRemove(); }}
+                >
+                  Delete track
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           {/* Row 3: only MIDI tracks need the instrument picker now.
            * Audio tracks use the Import icon next to the color swatch. */}
           {isMidiTrack(track) && (
@@ -5238,7 +5939,7 @@ function ChannelStrip({
             second output; there isn't — everything routes to the single
             destination. -1 = hard left, 0 = center, +1 = hard right. */}
         <MoveHorizontal className="w-4 h-4" />
-        <span className="text-[10px] font-semibold uppercase tracking-wider">Pan</span>
+        <span className="text-xs font-semibold uppercase tracking-wider">Pan</span>
         <span className="w-10 tabular-nums text-right ml-auto">{pan.toFixed(2)}</span>
       </div>
       <input type="range" min={-1} max={1} step={0.05} value={pan}
@@ -5483,7 +6184,7 @@ function RecordingLatencyControl() {
           title={`Reset to default (${defaultMs} ms)`}
         >R</button>
       </div>
-      <div className="text-[10px] text-muted-foreground italic">
+      <div className="text-xs text-muted-foreground italic">
         {Capacitor.isNativePlatform()
           ? 'Increase if takes land late, decrease if early. Use Snap to beat on a clip after a take.'
           : 'Covers mic/speaker hardware latency only — startup delay is measured automatically per take. Increase if takes still land late.'}
@@ -5519,7 +6220,7 @@ function MidiLatencyControl() {
           title="Reset trim to 0 ms"
         >R</button>
       </div>
-      <div className="text-[10px] text-muted-foreground italic">
+      <div className="text-xs text-muted-foreground italic">
         Auto compensation is measured each take. Add trim if recorded notes still sit late against the click; go negative if they land early.
       </div>
     </div>
@@ -5731,9 +6432,14 @@ interface MidiInputProps {
   status: 'idle' | 'connected' | 'denied';
   supported: boolean;
   targetTrackName?: string;
+  monitoringLatencyMs: number;
+  /** True while a take (normal recording or punch pre/rec/post) is active —
+   *  the device picker locks so switching MIDI input mid-take can't yank
+   *  the session out from under an in-progress recording. */
+  locked?: boolean;
 }
 
-function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, status, supported, targetTrackName }: MidiInputProps) {
+function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, status, supported, targetTrackName, monitoringLatencyMs, locked }: MidiInputProps) {
   if (!supported) return null;
   return (
     <div className="border-t border-border pt-2">
@@ -5753,12 +6459,19 @@ function MidiInputSection({ enabled, setEnabled, deviceId, setDeviceId, inputs, 
         </button>
         {enabled && (
           <select value={deviceId} onChange={(e) => setDeviceId(e.target.value)}
-            className="flex-1 h-8 bg-background border border-border rounded px-2 text-sm">
+            disabled={!!locked}
+            title={locked ? 'Locked while recording' : undefined}
+            className="flex-1 h-8 bg-background border border-border rounded px-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed">
             <option value="">All MIDI inputs</option>
             {inputs.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
           </select>
         )}
       </div>
+      {enabled && (
+        <p className="text-xs text-muted-foreground mt-1">
+          {formatMonitoringLatency(monitoringLatencyMs)}
+        </p>
+      )}
       {enabled && getMidiInputSource().kind === 'native' && (
         <button
           onClick={() => {
@@ -6058,7 +6771,7 @@ function ScrubButton({
       onPointerUp={(e) => { try { (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId); } catch { /* ignore */ } stopScrub(); }}
       onPointerCancel={stopScrub}
       onPointerLeave={stopScrub}
-      className={`h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center ${className ?? ''}`}
+      className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 flex items-center justify-center ${className ?? ''}`}
       title={title}
     >
       {icon}

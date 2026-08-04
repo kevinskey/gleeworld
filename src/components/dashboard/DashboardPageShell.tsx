@@ -46,6 +46,9 @@ interface DashboardPageShellProps {
   title: string;
   subtitle?: ReactNode;
   icon?: LucideIcon;
+  /** Small uppercase eyebrow above the title (e.g. "Music", "Academy").
+   *  Tenant-tinted; when present, replaces the visual monotone of a bare h1. */
+  eyebrow?: string;
   /** Right-aligned header actions (buttons, filters). */
   actions?: ReactNode;
   maxWidth?: '4xl' | '6xl' | '7xl' | 'full';
@@ -68,6 +71,7 @@ export function DashboardPageShell({
   title,
   subtitle,
   icon,
+  eyebrow,
   actions,
   maxWidth = '6xl',
   className,
@@ -76,6 +80,10 @@ export function DashboardPageShell({
   // Anchored to the left edge (no mx-auto) so page titles land at the exact
   // same X coordinate across every page regardless of `maxWidth`. Vertical
   // padding is fixed so the title's Y is also stable across navigations.
+  //
+  // Header carries a subtle tenant-tinted rule underneath (border-primary/15)
+  // to break up the all-gray page rhythm — every page gets one guaranteed
+  // moment of tenant color without touching per-page markup.
   return (
     <div
       className={cn(
@@ -85,8 +93,13 @@ export function DashboardPageShell({
         className,
       )}
     >
-      <header className="flex items-end justify-between gap-3 flex-wrap">
+      <header className="flex items-end justify-between gap-3 flex-wrap pb-4 border-b border-primary/15">
         <div>
+          {eyebrow && (
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">
+              {eyebrow}
+            </p>
+          )}
           <PageTitle icon={icon}>{title}</PageTitle>
           {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
         </div>

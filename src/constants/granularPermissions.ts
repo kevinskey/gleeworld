@@ -627,7 +627,7 @@ export const COMPREHENSIVE_FUNCTIONS_LIST: PermissionFunction[] = [
   },
   {
     id: 'tour_manager_services',
-    name: 'Tour Manager Services',
+    name: 'Travel Manager Services',
     description: 'Executive board tour management tools',
     location: 'TourManagerServices',
     isActive: true,

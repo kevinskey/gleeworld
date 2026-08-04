@@ -26,6 +26,8 @@ export const ROUTES = {
   SHOP_SUCCESS: '/shop/success',
   
   TOUR_PLANNER: '/tour-planner',
+  TRAVEL_MANAGER: '/travel-manager',
+  TRAVEL_PLANNER: '/travel-planner',
   APPOINTMENTS: '/appointments',
   PR_HUB: '/dashboard/pr-hub',
   SIGHT_READING_SUBMISSION: '/sight-reading-submission',
@@ -42,7 +44,8 @@ export const ROUTES = {
   NOTATION_BASICS: '/music-theory/notation-basics',
   WRITING_GRADER: '/writing-grader',
   FULL_ATTENDANCE_RECORD: '/member/attendance/full-record',
-  ATTENDANCE_POLICY: '/handbook/attendance-policy'
+  ATTENDANCE_POLICY: '/handbook/attendance-policy',
+  PARENT_PERMISSION_SLIP: '/parent/permission-slip'
 } as const;
 
 export const PROTECTED_ROUTES = [

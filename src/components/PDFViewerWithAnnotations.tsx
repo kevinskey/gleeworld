@@ -248,21 +248,15 @@ const scrollModePluginInstance = scrollModePlugin();
   const [pdf, setPdf] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  // Fit-to-width by default on touch/small screens (canvas CSS width = scale * 100%).
-  // chromeless = the dedicated reader, which always wants the page filling the
-  // viewport edge-to-edge — scaling above 1 makes the score overflow the iPad
-  // width and forces horizontal scroll.
-  const fitWidthScale = isInMobileViewer || chromeless || (typeof window !== 'undefined' && window.innerWidth < 768) ? 1 : 1.2;
-  const [scale, setScale] = useState(fitWidthScale);
-  // Fill-the-height default zoom for the dedicated reader (chromeless).
-  // The canvas is sized width:scale*100%, so a scale that makes the page
-  // as tall as the viewport also makes it wider than the viewport on
-  // portrait screens — centered by mx-auto and pannable via the scroll
-  // container. This is the forScore-style "fill the screen" the Viewer
-  // reader wants instead of fit-to-width (which leaves a tall gap below a
-  // short page). Pinch / zoom buttons set userZoomedRef so auto-fit stops
-  // fighting the user until the next page turn; pageAspectRef caches the
-  // rendered page's width/height (scale-invariant).
+  // Pages open "contained": the entire page fits inside the viewer with no
+  // scrolling in either axis. The canvas is sized width:scale*100% of the
+  // container, so contained means scale ≤ 1 (width fits) AND the derived
+  // height ≤ container height. Scale 1 is only the pre-measure default —
+  // once the first render reports the page aspect, the contain-fit effect
+  // below computes the exact scale. Pinch / zoom buttons set userZoomedRef
+  // so auto-fit stops fighting the user until the next page turn;
+  // pageAspectRef caches the rendered page's width/height (scale-invariant).
+  const [scale, setScale] = useState(1);
   const pageAspectRef = useRef<number | null>(null);
   const userZoomedRef = useRef(false);
   const [fitTick, setFitTick] = useState(0);
@@ -510,11 +504,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   }, []);
 
   const handleScaleReset = useCallback(() => {
-    // In the reader, "reset" means re-fill the height (recompute the fit);
-    // elsewhere it returns to the fit-to-width baseline.
-    if (chromeless) { userZoomedRef.current = false; setFitTick((t) => t + 1); return; }
-    setScale(fitWidthScale);
-  }, [chromeless, fitWidthScale]);
+    // "Reset" recomputes the contain fit (whole page visible, no scroll).
+    userZoomedRef.current = false;
+    setFitTick((t) => t + 1);
+  }, []);
 
   // Desktop trackpad / mouse-wheel pinch. Browsers fire `wheel` events with
   // ctrlKey=true for pinch gestures on macOS trackpads and for Ctrl+wheel on
@@ -530,6 +523,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       // deltaY is negative when pinching apart (zoom in), positive when
       // pinching together (zoom out). Step proportional to wheel magnitude.
       const step = Math.exp(-e.deltaY / 200);
+      userZoomedRef.current = true;
       setScale((prev) => Math.max(0.5, Math.min(3, prev * step)));
     };
     el.addEventListener('wheel', onWheel, { passive: false });
@@ -1388,10 +1382,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         ctx.drawImage(offscreen, 0, 0);
       }
 
-      // Cache this page's aspect ratio (scale-invariant) so the reader's
-      // fill-height effect can size the page to the viewport. Bump fitTick
-      // once when it first becomes known / changes so the effect re-runs.
-      if (!cancelled && chromeless && canvasRef.current && canvasRef.current.height > 0) {
+      // Cache this page's aspect ratio (scale-invariant) so the contain-fit
+      // effect can size the page to the viewport. Bump fitTick once when it
+      // first becomes known / changes so the effect re-runs.
+      if (!cancelled && canvasRef.current && canvasRef.current.height > 0) {
         const a = canvasRef.current.width / canvasRef.current.height;
         if (pageAspectRef.current !== a) { pageAspectRef.current = a; setFitTick((t) => t + 1); }
       }
@@ -1487,31 +1481,32 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     };
   }, [pdf, currentPage, scale, annotationMode, renderPageToOffscreen, totalPages]);
 
-  // Reader fill-height fit. Recompute on viewport resize (rotate / window
-  // resize) and re-fit each new page — but stop once the user has pinched
-  // or used the zoom buttons, until they turn the page.
+  // Contain fit. Recompute on viewport resize (rotate / window resize) and
+  // re-fit each new page — but stop once the user has pinched or used the
+  // zoom buttons, until they turn the page.
   useEffect(() => {
-    if (!chromeless) return;
     const onResize = () => setFitTick((t) => t + 1);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, [chromeless]);
+  }, []);
 
-  useEffect(() => { if (chromeless) userZoomedRef.current = false; }, [currentPage, chromeless]);
+  useEffect(() => { userZoomedRef.current = false; }, [currentPage]);
 
   useLayoutEffect(() => {
-    if (!chromeless || userZoomedRef.current) return;
+    if (annotationMode || userZoomedRef.current) return;
     const container = containerRef.current;
     const aspect = pageAspectRef.current;
     if (!container || !aspect) return;
     const cw = container.clientWidth;
     const ch = container.clientHeight;
     if (cw <= 0 || ch <= 0) return;
-    // canvas width = fill * cw  ⟹  canvas height = (fill*cw)/aspect = ch.
+    // canvas width = scale*cw ⟹ height = (scale*cw)/aspect. Contained means
+    // scale ≤ 1 (width fits) AND scale ≤ (ch/cw)*aspect (height fits), so
+    // the whole page is visible with no scroll in either axis.
     const fill = (ch / cw) * aspect;
-    const next = Math.max(1, Math.min(3, fill));
+    const next = Math.max(0.25, Math.min(1, fill));
     setScale((s) => (Math.abs(s - next) > 0.01 ? next : s));
-  }, [chromeless, fitTick, currentPage]);
+  }, [annotationMode, fitTick, currentPage]);
 
   // Show loading while getting signed URL
   if (!pdfUrl) {
@@ -1642,7 +1637,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleSave}
                 disabled={isSaving || !musicId}
-                className="h-6 px-1 text-xs sm:h-8 sm:px-2 sm:text-xs"
+                className="h-8 px-2 text-xs sm:h-9 sm:px-2.5 sm:text-xs"
               >
                 {isSaving ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -1658,7 +1653,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant={activeTool === "select" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("select")}
-                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
                 <MousePointer className="h-3 w-3" />
               </Button>
@@ -1666,7 +1661,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant={activeTool === "draw" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("draw")}
-                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
                 <Pencil className="h-3 w-3" />
               </Button>
@@ -1674,7 +1669,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant={activeTool === "erase" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("erase")}
-                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
                 <Eraser className="h-3 w-3" />
               </Button>
@@ -1734,7 +1729,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-6 w-6 p-0 sm:h-8 sm:w-8 rounded-full border-2"
+                  className="h-8 w-8 p-0 sm:h-9 sm:w-9 rounded-full border-2"
                   style={{ backgroundColor: brushColor, borderColor: 'hsl(var(--border))' }}
                 >
                   <span className="sr-only">Select color</span>
@@ -1780,7 +1775,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleZoomOut}
                 disabled={zoomLevel <= 0.5}
-                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                 title="Zoom out"
               >
                 <ZoomOut className="h-3 w-3" />
@@ -1789,7 +1784,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 variant="outline"
                 size="sm"
                 onClick={handleResetZoom}
-                className="h-6 px-1 text-xs sm:h-8 sm:px-2 sm:text-xs"
+                className="h-8 px-2 text-xs sm:h-9 sm:px-2.5 sm:text-xs"
                 title="Reset zoom"
               >
                 {Math.round(zoomLevel * 100)}%
@@ -1799,7 +1794,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleZoomIn}
                 disabled={zoomLevel >= 3}
-                className="h-6 w-6 p-0 sm:h-8 sm:w-8"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
                 title="Zoom in"
               >
                 <ZoomIn className="h-3 w-3" />
@@ -1831,7 +1826,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleUndo}
                 disabled={paths.length === 0}
-                className="h-6 w-6 p-0 sm:h-9 sm:w-9"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
                 <Undo className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
@@ -1840,7 +1835,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 size="sm"
                 onClick={handleClear}
                 disabled={paths.length === 0}
-                className="h-6 w-6 p-0 sm:h-9 sm:w-9"
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
@@ -1856,9 +1851,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
       {/* PDF Content - Full height, no padding */}
       <CardContent className="p-0 flex-1 min-h-0 flex flex-col overflow-hidden">
-        <div 
-          className="relative w-full flex-1 min-h-0 overflow-auto"
-          style={{ 
+        <div
+          // flex flex-col is load-bearing for the contain-fit: the child
+          // containerRef div is flex-1 and the fit effect measures its
+          // clientHeight. In the old block layout flex-1 was a no-op, the
+          // container's height was CONTENT-driven, and the measurement was
+          // self-referential — so the page opened at 100% and scrolled on
+          // landscape containers (desktop) instead of fitting to height.
+          className="relative w-full flex-1 min-h-0 overflow-auto flex flex-col"
+          style={{
             WebkitOverflowScrolling: 'touch',
             touchAction: 'pan-y pinch-zoom'
           } as React.CSSProperties}
@@ -1897,10 +1898,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={handleScaleZoomOut}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleZoomOut(); }}
                   disabled={scale <= 0.5}
-                  className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
+                  className="h-9 w-9 p-0 touch-manipulation rounded-full"
                   aria-label="Zoom out"
                 >
-                  <ZoomOut className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
+                  <ZoomOut className="h-5 w-5" />
                 </Button>
                 <button
                   type="button"
@@ -1918,10 +1919,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={handleScaleZoomIn}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); handleScaleZoomIn(); }}
                   disabled={scale >= 3}
-                  className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
+                  className="h-9 w-9 p-0 touch-manipulation rounded-full"
                   aria-label="Zoom in"
                 >
-                  <ZoomIn className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
+                  <ZoomIn className="h-5 w-5" />
                 </Button>
 
                 <div className="w-px h-4 bg-border mx-0.5" />
@@ -1936,9 +1937,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                     onClick={() => setShowAudioCompanion(true)}
                     onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowAudioCompanion(true); }}
                     aria-label="Listen along with audio"
-                    className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
+                    className="h-9 w-9 p-0 touch-manipulation rounded-full"
                   >
-                    <Music className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
+                    <Music className="h-5 w-5" />
                   </Button>
                 )}
                 
@@ -1949,9 +1950,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={() => setShowPiano(!showPiano)}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setShowPiano(!showPiano); }}
                   aria-label={showPiano ? "Hide piano" : "Show piano"}
-                  className={`h-7 w-7 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-[var(--tint)] text-[var(--tint-contrast)]' : ''}`}
+                  className={`h-9 w-9 p-0 touch-manipulation rounded-full ${showPiano ? 'bg-[var(--tint)] text-[var(--tint-contrast)]' : ''}`}
                 >
-                  <Piano className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
+                  <Piano className="h-5 w-5" />
                 </Button>
                 
                 {/* Annotate Button */}
@@ -1961,9 +1962,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   onClick={() => { setError(null); setAnnotationMode(true); }}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); setError(null); setAnnotationMode(true); }}
                   aria-label="Enable annotations"
-                  className="h-9 w-9 lg:h-7 lg:w-7 p-0 touch-manipulation rounded-full"
+                  className="h-9 w-9 p-0 touch-manipulation rounded-full"
                 >
-                  <Palette className="h-5 w-5 lg:h-3.5 lg:w-3.5" />
+                  <Palette className="h-5 w-5" />
                 </Button>
 
                 {/* Extra toolbar actions (e.g. Crop/Close on mobile) */}
@@ -1979,8 +1980,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
-            <div 
-              className="w-full overflow-auto flex justify-center flex-1" 
+            <div
+              className="w-full overflow-auto flex justify-center flex-1 min-h-0"
               ref={containerRef}
               onTouchStart={(e) => {
                 // Handle pinch-to-zoom start
@@ -2020,7 +2021,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             >
               <canvas
                 ref={canvasRef}
-                className="block bg-white transition-opacity duration-300 mx-auto"
+                className="block bg-white transition-opacity duration-300 m-auto"
                 style={{ 
                   width: `${scale * 100}%`,
                   maxWidth: scale > 1 ? 'none' : '100%',
@@ -2033,8 +2034,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {/* Annotation Mode: PDF + Overlay Canvas with Zoom */}
           {annotationMode && (
-            <div 
-              className="w-full overflow-auto flex-1" 
+            <div
+              className="w-full overflow-auto flex-1 min-h-0"
               style={{
                 WebkitOverflowScrolling: 'touch',
                 touchAction: 'pan-x pan-y'
@@ -2167,7 +2168,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-6 w-6 rounded-full touch-manipulation" 
+                  className="h-9 w-9 rounded-full touch-manipulation" 
                   onClick={prevPage}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); prevPage(); }}
                   disabled={isLoading || currentPage <= 1}
@@ -2180,7 +2181,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="h-6 w-6 rounded-full touch-manipulation" 
+                  className="h-9 w-9 rounded-full touch-manipulation" 
                   onClick={nextPage}
                   onTouchEnd={(e) => { e.preventDefault(); e.stopPropagation(); nextPage(); }}
                   disabled={isLoading || currentPage >= (totalPages || (pdf?.numPages ?? 0) || 1)}

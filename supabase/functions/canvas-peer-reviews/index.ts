@@ -8,20 +8,13 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { getCanvasClientForTenant } from "../_shared/canvas.ts";
+import { verifyClaims } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-function decodeJwtPayload(jwt: string): Record<string, unknown> | null {
-  try {
-    const part = jwt.split(".")[1];
-    const padded = part + "===".slice((part.length + 3) % 4);
-    return JSON.parse(atob(padded.replace(/-/g, "+").replace(/_/g, "/")));
-  } catch { return null; }
-}
 
 function err(status: number, code: string, detail?: string) {
   return new Response(JSON.stringify({ error: code, detail }), {
@@ -33,9 +26,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return err(405, "method_not_allowed");
 
-  const jwt = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-  if (!jwt) return err(401, "unauthorized");
-  const payload = decodeJwtPayload(jwt);
+  const payload = await verifyClaims(req);
+  if (!payload) return err(401, "unauthorized");
   // deno-lint-ignore no-explicit-any
   const tenantId = (payload as any)?.tenant_id ?? (payload as any)?.app_metadata?.tenant_id;
   // deno-lint-ignore no-explicit-any

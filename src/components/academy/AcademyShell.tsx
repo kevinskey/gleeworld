@@ -32,10 +32,13 @@ export function AcademyShell({ children }: { children: ReactNode }) {
         {/* Mobile topbar — the sidebar (with its Back to Workspace exit)
             is lg-only, so below lg every Academy page needs its own way
             out and into the academy nav. */}
-        <div className="lg:hidden sticky top-0 z-30 flex items-center gap-1 h-12 px-2 bg-card border-b border-border">
+        <div
+          className="lg:hidden sticky top-0 z-30 flex items-center gap-1 px-2 bg-card border-b border-border min-h-[calc(3rem+env(safe-area-inset-top,0px))]"
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+        >
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-1.5 px-2 h-10 text-sm font-medium text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1.5 px-2 h-11 text-sm font-medium text-muted-foreground hover:text-foreground"
             aria-label="Back to Workspace"
           >
             <ArrowLeft className="w-4 h-4" /> Workspace

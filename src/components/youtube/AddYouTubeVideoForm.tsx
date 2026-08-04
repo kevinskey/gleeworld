@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Plus, X, Loader2, Search, Upload, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { parseYouTubeInput } from '@/lib/youtubeId';
@@ -23,15 +24,66 @@ interface SearchHit {
 }
 
 type Mode = 'search' | 'url' | 'upload';
+type AddOutcome = 'added' | 'duplicate' | 'failed';
 
 const MAX_UPLOAD_BYTES = 500 * 1024 * 1024; // 500 MB — Supabase edge default; large enough for member submissions.
 const ACCEPT_VIDEO = 'video/*,.mkv,.avi,.wmv,.flv';
+
+const PASTE_HELP =
+  'Paste a YouTube, Vimeo, Dailymotion, Twitch, Facebook, Instagram, TikTok, Loom, Wistia, SoundCloud URL, or a direct link to a video file (.mp4, .mov, .webm, .m3u8).';
+
+// Split a pasted blob into candidate links, preserving order and dropping
+// repeats. Whitespace is the only separator: some CDN video URLs legitimately
+// contain commas, so a trailing comma from a pasted list is stripped off the
+// token instead of being treated as a delimiter.
+function tokenizeLinks(raw: string): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const piece of raw.split(/\s+/)) {
+    const token = piece.replace(/[,;]+$/, '').trim();
+    if (!token || seen.has(token)) continue;
+    seen.add(token);
+    out.push(token);
+  }
+  return out;
+}
+
+// Failure lists go in an inline error, so show a few verbatim and count the
+// rest rather than printing 30 URLs into the form.
+function summarizeFailures(failed: string[]): string {
+  const shown = failed.slice(0, 3).join(', ');
+  return failed.length > 3 ? `${shown} … and ${failed.length - 3} more` : shown;
+}
+
+// Bounded-parallel map. Used for oEmbed title lookups so pasting 40 links
+// doesn't open 40 sockets at once, while still finishing in seconds.
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let cursor = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const i = cursor;
+      cursor += 1;
+      out[i] = await fn(items[i]!, i);
+    }
+  });
+  await Promise.all(workers);
+  return out;
+}
 
 // Add-a-video control for /youtube. Was YouTube-only; now accepts any
 // major streaming URL (Vimeo, TikTok, Twitch, etc.) and direct file
 // uploads to the shared media-library bucket. YouTube search remains
 // the default since the /youtube page is still primarily YT-shaped
 // (thumbnails, embeds, channel metaphor).
+//
+// The Paste URLs tab takes a whole list, not just one link: paste 30 links
+// and each is parsed, titled, and inserted, with duplicates and unreadable
+// lines reported back rather than aborting the batch.
 //
 // Gating who SEES this form is the caller's job (YouTubeChannel checks
 // useUserRole().isAdmin) — this component assumes it should render. Note
@@ -48,6 +100,8 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  // Bulk-paste progress: how many of the pasted links have been processed.
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   // Search state — mirrors AccompanimentPicker's 300ms debounce + edge fn
   // call so quota (~100 units per search of the 10k/day free tier) isn't
@@ -65,6 +119,7 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
     setHits([]);
     setSearchErr(null);
     setUploadProgress(null);
+    setProgress(null);
   };
 
   const handleCancel = () => {
@@ -97,12 +152,15 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
     return () => { cancelled = true; window.clearTimeout(handle); };
   }, [open, mode, query]);
 
-  // Insert a video row. Accepts either a legacy YT-shaped payload
-  // (videoId + videoTitle) or a fully parsed source (any provider).
-  // Kept unified so both the search-result click and the URL/upload
-  // flows go through the same code path.
-  const insertRow = async (source: ParsedVideoSource, providedTitle: string) => {
-    setSubmitting(true);
+  // Insert one video row and report the outcome instead of toasting, so the
+  // bulk path can tally a whole batch and the single-add path can keep its
+  // one-video-shaped messages. Accepts either a legacy YT-shaped payload
+  // (videoId + videoTitle) or a fully parsed source (any provider), so the
+  // search-result click and the URL/upload flows share one code path.
+  const insertSource = async (
+    source: ParsedVideoSource,
+    providedTitle: string,
+  ): Promise<{ outcome: AddOutcome; message?: string }> => {
     try {
       const { data, error: insertError } = await supabase
         .from('youtube_videos')
@@ -120,24 +178,34 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
         .select();
 
       if (insertError) {
-        if (insertError.code === '23505') {
-          toast({ title: 'Already added', description: 'That video is already in the library.', variant: 'destructive' });
-        } else {
-          toast({ title: 'Could not add video', description: insertError.message, variant: 'destructive' });
-        }
-        return;
+        if (insertError.code === '23505') return { outcome: 'duplicate' };
+        return { outcome: 'failed', message: insertError.message };
       }
       if (!data?.length) {
-        toast({ title: 'Could not add video', description: 'No row was returned — check permissions.', variant: 'destructive' });
+        return { outcome: 'failed', message: 'No row was returned — check permissions.' };
+      }
+      return { outcome: 'added' };
+    } catch (err) {
+      return { outcome: 'failed', message: err instanceof Error ? err.message : 'Unknown error' };
+    }
+  };
+
+  const insertRow = async (source: ParsedVideoSource, providedTitle: string) => {
+    setSubmitting(true);
+    try {
+      const result = await insertSource(source, providedTitle);
+      if (result.outcome === 'duplicate') {
+        toast({ title: 'Already added', description: 'That video is already in the library.', variant: 'destructive' });
         return;
       }
-
+      if (result.outcome === 'failed') {
+        toast({ title: 'Could not add video', description: result.message, variant: 'destructive' });
+        return;
+      }
       toast({ title: 'Video added', description: 'It will appear in the grid now.' });
       reset();
       setOpen(false);
       onAdded();
-    } catch (err) {
-      toast({ title: 'Could not add video', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
@@ -156,18 +224,131 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
     );
   };
 
+  // Real title via YouTube's oEmbed endpoint — CORS-enabled, keyless, and
+  // not billed against the Data API quota. Returns '' on any failure so
+  // insertRow's videoId fallback still applies (offline, deleted/region-
+  // blocked video, CSP misconfig). www.youtube.com must stay in the
+  // index.html connect-src for this to work.
+  const fetchYouTubeTitle = async (videoId: string): Promise<string> => {
+    try {
+      const ctrl = new AbortController();
+      const timer = window.setTimeout(() => ctrl.abort(), 4000);
+      const res = await fetch(
+        `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&format=json`,
+        { signal: ctrl.signal },
+      );
+      window.clearTimeout(timer);
+      if (!res.ok) return '';
+      const body = (await res.json()) as { title?: unknown };
+      return typeof body.title === 'string' ? body.title.trim() : '';
+    } catch {
+      return '';
+    }
+  };
+
+  // Turn one pasted token into something insertable. YouTube links get their
+  // real title from oEmbed here; other providers fall back to insertSource's
+  // "<Provider> video" default since there's no keyless title endpoint.
+  const resolveToken = async (
+    token: string,
+  ): Promise<{ source: ParsedVideoSource; title: string } | { badToken: string }> => {
+    const ytId = parseYouTubeInput(token);
+    if (ytId) {
+      return {
+        source: {
+          provider: 'youtube',
+          videoId: ytId,
+          embedUrl: `https://www.youtube.com/embed/${ytId}`,
+          canonicalUrl: `https://www.youtube.com/watch?v=${ytId}`,
+          thumbnailUrl: `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`,
+        },
+        title: await fetchYouTubeTitle(ytId),
+      };
+    }
+    const source = parseVideoSource(token);
+    if (!source) return { badToken: token };
+    return { source, title: '' };
+  };
+
+  // Many links at once. Titles resolve in parallel because each oEmbed call
+  // can burn its full 4s timeout, but the inserts run sequentially in pasted
+  // order so published_at — and therefore the grid's "recent" sort — follows
+  // the order they were listed. The per-link title box is ignored here; with
+  // a batch there's no sane way to apply one typed title.
+  const addManyLinks = async (tokens: string[]) => {
+    setSubmitting(true);
+    setError(null);
+    setProgress({ done: 0, total: tokens.length });
+    try {
+      const resolved = await mapWithConcurrency(tokens, 4, resolveToken);
+      let added = 0;
+      let duplicate = 0;
+      const failed: string[] = [];
+
+      for (let i = 0; i < resolved.length; i += 1) {
+        const entry = resolved[i]!;
+        if ('badToken' in entry) {
+          failed.push(entry.badToken);
+        } else {
+          const result = await insertSource(entry.source, entry.title);
+          if (result.outcome === 'added') added += 1;
+          else if (result.outcome === 'duplicate') duplicate += 1;
+          else failed.push(tokens[i]!);
+        }
+        setProgress({ done: i + 1, total: tokens.length });
+      }
+
+      if (added > 0) onAdded();
+
+      if (added === 0 && duplicate === 0) {
+        // Nothing landed at all — most likely the paste wasn't links.
+        setError(`${PASTE_HELP}\n\nCouldn't use: ${summarizeFailures(failed)}`);
+        return;
+      }
+
+      const parts = [`${added} added`];
+      if (duplicate > 0) parts.push(`${duplicate} already in the library`);
+      if (failed.length > 0) parts.push(`${failed.length} couldn't be read`);
+      toast({ title: `Added ${added} of ${tokens.length} links`, description: parts.join(' · ') });
+
+      if (failed.length > 0) {
+        // Keep the form open so Kevin can see and fix the ones that failed.
+        setUrl(failed.join('\n'));
+        setError(`These couldn't be read — fix or remove them: ${summarizeFailures(failed)}`);
+        return;
+      }
+      reset();
+      setOpen(false);
+    } finally {
+      setSubmitting(false);
+      setProgress(null);
+    }
+  };
+
   const handleUrlSubmit = async () => {
     setError(null);
-    const trimmed = url.trim();
+    const tokens = tokenizeLinks(url);
+    if (tokens.length === 0) {
+      setError(PASTE_HELP);
+      return;
+    }
+    if (tokens.length > 1) {
+      await addManyLinks(tokens);
+      return;
+    }
+
+    const trimmed = tokens[0]!;
     // Fast path: YouTube 11-char id or any YouTube URL shape.
     const ytId = parseYouTubeInput(trimmed);
     if (ytId) {
-      await addYouTube(ytId, title.trim());
+      setSubmitting(true);
+      const resolvedTitle = title.trim() || (await fetchYouTubeTitle(ytId));
+      await addYouTube(ytId, resolvedTitle);
       return;
     }
     const source = parseVideoSource(trimmed);
     if (!source) {
-      setError('Paste a YouTube, Vimeo, Dailymotion, Twitch, Facebook, Instagram, TikTok, Loom, Wistia, SoundCloud URL, or a direct link to a video file (.mp4, .mov, .webm, .m3u8).');
+      setError(PASTE_HELP);
       return;
     }
     await insertRow(source, title.trim());
@@ -219,6 +400,8 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
     }
   };
 
+  const linkCount = mode === 'url' ? tokenizeLinks(url).length : 0;
+
   if (!open) {
     return (
       <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-2 text-xs">
@@ -240,7 +423,7 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
       <div className="flex rounded-md border border-border bg-muted/40 p-0.5 text-xs">
         {([
           { key: 'search' as const, label: 'Search YouTube', icon: Search },
-          { key: 'url' as const, label: 'Paste URL', icon: LinkIcon },
+          { key: 'url' as const, label: 'Paste URLs', icon: LinkIcon },
           { key: 'upload' as const, label: 'Upload file', icon: Upload },
         ]).map(({ key, label, icon: Icon }) => (
           <button
@@ -313,30 +496,45 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
       {mode === 'url' && (
         <div className="space-y-3">
           <div>
-            <Input
+            <Textarea
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              placeholder="YouTube, Vimeo, TikTok, Twitch, .mp4 link…"
-              className="text-xs"
+              placeholder={'Paste one link per line:\nhttps://youtu.be/…\nhttps://www.youtube.com/watch?v=…'}
+              className="text-xs min-h-24 font-mono"
               aria-label="Video URL"
+              rows={4}
               autoFocus
+              disabled={submitting}
             />
-            {error && <p className="text-xs text-destructive mt-1">{error}</p>}
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {linkCount > 1
+                ? `${linkCount} links — titles are pulled from YouTube automatically.`
+                : 'One link, or paste a whole list to add them all at once.'}
+            </p>
+            {error && <p className="text-xs text-destructive mt-1 whitespace-pre-line break-words">{error}</p>}
           </div>
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title (optional)"
-            className="text-xs"
-            aria-label="Video title (optional)"
-          />
-          <div className="flex justify-end gap-2">
+          {linkCount <= 1 && (
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Title (optional)"
+              className="text-xs"
+              aria-label="Video title (optional)"
+              disabled={submitting}
+            />
+          )}
+          <div className="flex items-center justify-end gap-2">
+            {progress && (
+              <span className="text-[11px] text-muted-foreground mr-auto">
+                Adding {progress.done} of {progress.total}…
+              </span>
+            )}
             <Button variant="ghost" size="sm" className="text-xs" onClick={handleCancel} disabled={submitting}>
               Cancel
             </Button>
             <Button size="sm" className="text-xs gap-2" onClick={handleUrlSubmit} disabled={submitting || !url.trim()}>
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              Add video
+              {linkCount > 1 ? `Add ${linkCount} videos` : 'Add video'}
             </Button>
           </div>
         </div>

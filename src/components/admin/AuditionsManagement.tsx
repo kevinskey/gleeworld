@@ -48,6 +48,19 @@ import {
   UserCheck,
   Trash2
 } from "lucide-react";
+
+// Tab strip config. Analytics uses TrendingUp rather than a second BarChart3 —
+// Overview already owns that glyph, and two identical icons in one strip is a
+// coin flip for the reader.
+const AUDITION_TABS = [
+  { value: 'overview', label: 'Overview', icon: BarChart3 },
+  { value: 'roster', label: 'Roster', icon: Users },
+  { value: 'evaluations', label: 'Evaluations', icon: Star },
+  { value: 'sessions', label: 'Sessions', icon: Calendar },
+  { value: 'analytics', label: 'Analytics', icon: TrendingUp },
+  { value: 'appointments', label: 'Appointments', icon: Clock },
+] as const;
+
 import { AuditionTimeGrid } from '@/components/admin/AuditionTimeGrid';
 import { MobileScoreWindow } from "@/components/scoring/MobileScoreWindow";
 import { SightReadingScoreWindow } from "@/components/scoring/SightReadingScoreWindow";
@@ -754,37 +767,29 @@ export const AuditionsManagement = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-6 space-y-6">
-      {/* Header */}
-      <div className={SOFT_CARD + ' p-6'} style={SOFT_CARD_STYLE}>
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-primary rounded-md">
-                <Music className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold tracking-tight">
-                  Auditions Management
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Manage audition sessions, applications, and evaluations
-                </p>
-              </div>
+    // No max-width or horizontal padding here: the /dashboard/auditions route
+    // already wraps this in `max-w-6xl mx-auto px-6 py-6`, and repeating it
+    // double-padded the page.
+    <div className="space-y-4 md:space-y-6">
+      {/* Stats + actions.
+          The title, description and icon come from ModuleWrapper. This block
+          used to repeat all three, so the heading rendered twice on every
+          viewport — worst on phones, where the two copies stacked and ate the
+          first screenful before any content. */}
+      <div className={SOFT_CARD + ' p-4 md:p-6'} style={SOFT_CARD_STYLE}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          {/* Wraps instead of overflowing when the two counts can't share a row. */}
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              <span>{applications.length} Applications</span>
             </div>
-            
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>{applications.length} Applications</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>{sessions.length} Sessions</span>
-              </div>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              <span>{sessions.length} Sessions</span>
             </div>
           </div>
-          
+
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <Button asChild variant="outline" size="sm" className="shrink-0">
               <Link to="/auditions">
@@ -809,51 +814,30 @@ export const AuditionsManagement = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        {/* Responsive tab navigation */}
+        {/* One horizontal strip at every width, matching the Graduates module.
+            The old markup was `grid-cols-2 md:grid-cols-7` for SIX tabs, which
+            broke twice:
+              • iPad (768–1024): seven equal columns left each label ~78px after
+                px-4, so "Evaluations" and "Appointments" overflowed their cell
+                and collided with the neighbouring label.
+              • Phone (<640px): `hidden sm:inline` dropped every label, leaving
+                six unlabelled icons stacked in a 2-col grid — and two of them
+                were the SAME BarChart3 glyph, so Overview and Analytics were
+                literally indistinguishable.
+            Labels now always render and the strip scrolls, with the swipe
+            locked to its own axis so it can't hijack vertical page scroll. */}
         <div className="border-b border-border">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 h-auto bg-transparent p-0 gap-0">
-            <TabsTrigger 
-              value="overview" 
-              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Overview</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="roster" 
-              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
-            >
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Roster</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="evaluations" 
-              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
-            >
-              <Star className="h-4 w-4" />
-              <span className="hidden sm:inline">Evaluations</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="sessions" 
-              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
-            >
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Sessions</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="analytics" 
-              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
-            >
-              <BarChart3 className="h-4 w-4" />
-              <span className="hidden sm:inline">Analytics</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="appointments" 
-              className="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
-            >
-              <Clock className="h-4 w-4" />
-              <span className="hidden sm:inline">Appointments</span>
-            </TabsTrigger>
+          <TabsList className="w-full h-auto justify-start bg-transparent p-0 gap-0 rounded-none overflow-x-auto flex-nowrap touch-pan-x overscroll-x-contain scrollbar-hide">
+            {AUDITION_TABS.map(({ value, label, icon: TabIcon }) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="flex-shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary bg-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-none"
+              >
+                <TabIcon className="h-4 w-4 shrink-0" />
+                <span>{label}</span>
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
 
@@ -1387,26 +1371,12 @@ export const AuditionsManagement = () => {
           ) : (
             <>
               {/* Adjudicator Panel Header */}
-              <Card className="bg-gradient-to-r from-primary/5 to-secondary/5 border-primary/20">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 border-2 border-primary/20">
-                      <Shield className="h-6 w-6 text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="flex items-center gap-2">
-                        <UserCheck className="h-5 w-5 text-primary" />
-                        Professional Adjudicator Interface
-                      </CardTitle>
-                      <CardDescription>
-                        Select an applicant below to begin professional evaluation using the comprehensive scoring system
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              {/* Applicant Selection for Adjudication */}
+              {/* Applicant Selection for Adjudication.
+                  A contentless "Professional Adjudicator Interface" banner card
+                  used to sit above this one, saying "Select an applicant below
+                  to begin professional evaluation…" — the same instruction this
+                  card's own header gives, one line lower. It had a CardHeader
+                  and no CardContent, so it was pure restatement. */}
               <Card>
                 <CardHeader>
                   <CardTitle>Select Applicant for Professional Evaluation</CardTitle>

@@ -127,18 +127,34 @@ serve(async (req: Request) => {
     const tsbJson: ProvisionResponse | { error: string } = await tsbResp.json();
     if (!tsbResp.ok) {
       const msg = "error" in tsbJson ? tsbJson.error : `TSB responded ${tsbResp.status}`;
-      return jsonError(502, `Provisioning failed: ${msg}`);
+      // Pass a client-fixable status through unchanged. A 409 ("slug already
+      // used") is the caller's problem to resolve, not a bad gateway, and
+      // reporting it as 502 makes it look like TSB is down when it is fine.
+      const status = tsbResp.status >= 400 && tsbResp.status < 500 ? tsbResp.status : 502;
+      return jsonError(status, `Provisioning failed: ${msg}`);
     }
     const store = tsbJson as ProvisionResponse;
 
-    // Persist the link back to gw_tenants.
-    await admin
+    // Persist the link back to gw_tenants. This MUST be checked: the store
+    // already exists at TSB by this point, so a silent failure here orphans
+    // it — created upstream, invisible to GleeWorld, and the UI keeps showing
+    // "Enable" forever while every retry hits a slug conflict.
+    const { error: linkErr } = await admin
       .from("gw_tenants")
       .update({
         tsb_store_slug: store.slug,
         tsb_store_subdomain: store.subdomain,
       })
       .eq("id", tenant.id);
+    if (linkErr) {
+      console.error("[provision-tsb-store] link write-back failed", {
+        tenant_id: tenant.id, store_slug: store.slug, error: linkErr.message,
+      });
+      return jsonError(
+        500,
+        `Store "${store.slug}" was created at TSB but could not be linked to this tenant: ${linkErr.message}. Re-running will report a slug conflict until the link is repaired.`,
+      );
+    }
 
     return jsonOk({
       slug: store.slug,

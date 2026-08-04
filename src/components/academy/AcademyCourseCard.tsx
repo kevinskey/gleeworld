@@ -51,7 +51,7 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
       </h3>
 
       {/* Course Title - Italic style */}
-      <h4 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-semibold text-[#150d26] italic mb-2 sm:mb-4 leading-snug line-clamp-2">
+      <h4 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-semibold text-[hsl(var(--brand-navy))] italic mb-2 sm:mb-4 leading-snug line-clamp-2">
         {course.title}
       </h4>
 
@@ -68,10 +68,10 @@ export const AcademyCourseCard: React.FC<AcademyCourseCardProps> = ({
           w-fit
           px-3 sm:px-6 py-1.5 sm:py-2
           rounded-full
-          border-[#150d26]
-          text-[#150d26]
+          border-[hsl(var(--brand-navy))]
+          text-[hsl(var(--brand-navy))]
           bg-transparent
-          hover:bg-[#150d26]
+          hover:bg-[hsl(var(--brand-navy))]
           hover:text-white
           transition-colors
           font-medium

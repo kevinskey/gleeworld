@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Loader2, Music2, Plus, Trash2, Mic, Sliders, AudioLines } from 'lucide-react';
+import { Loader2, Music2, Plus, Trash2, Mic, Sliders, AudioLines, Users } from 'lucide-react';
 import {
   useMySessions, useCreateStudioSession, useDeleteStudioSession, useStudioOwner,
 } from '@/hooks/useStudio';
 import { toast } from 'sonner';
+import type { Accompaniment } from '@/lib/studio/session';
+import { AccompanimentPicker, type PickerResult } from '@/components/studio/AccompanimentPicker';
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
@@ -25,13 +27,21 @@ export default function StudioHome() {
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
 
-  const onCreated = async (title: string) => {
+  type Template = 'empty' | 'satb' | 'custom';
+
+  const onCreated = async (i: { title: string; template: Template; accompaniment: Accompaniment | null; accompanimentFile?: File | null }) => {
     if (!owner.data) return;
     try {
       const s = await createMut.mutateAsync({
         tenantId: owner.data.tenantId,
         ownerUserId: owner.data.userId,
-        title: title || 'Untitled session',
+        title: i.title || 'Untitled session',
+        template: i.template,
+        // File variant: pass the raw File so the mutation uploads it at
+        // create time and the manifest gets a real public URL.
+        ...(i.accompanimentFile
+          ? { accompanimentFile: i.accompanimentFile }
+          : { accompaniment: i.accompaniment }),
       });
       setCreateOpen(false);
       navigate(`/studio/sessions/${s.id}`);
@@ -71,6 +81,7 @@ export default function StudioHome() {
 
       <CreateSessionDialog open={createOpen} onOpenChange={setCreateOpen} onSubmit={onCreated} busy={createMut.isPending} />
 
+
       {sessions.isLoading ? (
         <div className="flex items-center justify-center py-12 text-muted-foreground">
           <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading sessions…
@@ -89,7 +100,7 @@ export default function StudioHome() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-sm leading-tight truncate">{s.title}</div>
-                      <div className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                      <div className="text-xs text-muted-foreground mt-0.5 truncate">
                         {s.track_count} {s.track_count === 1 ? 'track' : 'tracks'} · {Math.round(s.duration_seconds)}s · {formatDate(s.updated_at)}
                       </div>
                     </div>
@@ -160,31 +171,192 @@ function FeatureChip({ icon: Icon, label }: { icon: typeof Mic; label: string })
   return (
     <div className="flex flex-col items-center gap-1 py-2 px-2 rounded-lg bg-background/40 backdrop-blur-sm border border-border/60">
       <Icon className="w-4 h-4 text-primary" />
-      <span className="text-[11px] font-medium text-foreground/85 drop-shadow-sm">{label}</span>
+      <span className="text-xs font-medium text-foreground/85 drop-shadow-sm">{label}</span>
+    </div>
+  );
+}
+
+// Three-card create flow:
+//   pick → (satb/custom → backing) → title → create + navigate.
+//   empty → title → create + navigate (skips backing step).
+
+type Template = 'empty' | 'satb' | 'custom';
+type Step = 'pick' | 'backing' | 'title';
+
+/** Maps the picker's internal PickerResult into the session Accompaniment type.
+ * NOTE: 'file' picks must be routed through accompanimentFile (raw File →
+ * upload in mutation) and must NOT pass through here. handlePick enforces this
+ * so this branch should never be reached. */
+function mapPickerResult(r: PickerResult): Accompaniment {
+  if (r.kind === 'file') {
+    // Should not be reached — handlePick routes file picks to accompanimentFile.
+    // Guard here so a future refactor can't accidentally regress to fileUrl:''.
+    throw new Error('[mapPickerResult] file picks must use accompanimentFile, not this mapper');
+  }
+  if (r.kind === 'apple_music') {
+    return {
+      kind: 'apple_music',
+      title: r.title,
+      appleMusicId: r.id,
+      appleMusicStorefront: r.storefront,
+      appleMusicArtist: r.artist,
+      appleMusicArtworkUrl: r.artworkUrl,
+    };
+  }
+  if (r.kind === 'apple_music_album') {
+    return {
+      kind: 'apple_music_album',
+      title: r.title,
+      appleMusicId: r.id,
+      appleMusicStorefront: r.storefront,
+      appleMusicArtist: r.artist,
+      appleMusicArtworkUrl: r.artworkUrl,
+    };
+  }
+  // youtube
+  return { kind: 'youtube', title: null, youtubeUrl: r.url };
+}
+
+function TemplateCard({
+  label, icon: Icon, description, onClick,
+}: { label: string; icon: typeof Sliders; description: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group text-left rounded-xl border-2 border-border hover:border-primary focus:border-primary focus:outline-none bg-card p-4 transition-colors"
+    >
+      <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center mb-2">
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="text-sm font-semibold mb-1">{label}</div>
+      <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
+    </button>
+  );
+}
+
+function TitleStep({
+  busy, onBack, onCancel, onSubmit,
+}: { busy: boolean; onBack: () => void; onCancel: () => void; onSubmit: (t: string) => void }) {
+  const [title, setTitle] = useState('');
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-xs">Session title (optional)</Label>
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="e.g. Spring concert demo"
+          autoFocus
+          onKeyDown={(e) => { if (e.key === 'Enter') onSubmit(title.trim()); }}
+        />
+      </div>
+      <div className="flex justify-between gap-2 pt-1">
+        <Button variant="ghost" onClick={onBack}>← Back</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onCancel}>Cancel</Button>
+          <Button onClick={() => onSubmit(title.trim())} disabled={busy}>
+            {busy ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Creating…</> : 'Create'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
 
 function CreateSessionDialog({
   open, onOpenChange, onSubmit, busy,
-}: { open: boolean; onOpenChange: (o: boolean) => void; onSubmit: (title: string) => void; busy: boolean }) {
-  const [title, setTitle] = useState('');
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onSubmit: (i: { title: string; template: Template; accompaniment: Accompaniment | null; accompanimentFile?: File | null }) => void;
+  busy: boolean;
+}) {
+  const [step, setStep] = useState<Step>('pick');
+  const [template, setTemplate] = useState<Template>('empty');
+  // Non-file accompaniment kinds (apple_music, youtube, etc.) — already
+  // fully mappable to the Accompaniment manifest type at pick time.
+  const [accompaniment, setAccompaniment] = useState<Accompaniment | null>(null);
+  // File picks: keep the raw File object here so the mutation can upload
+  // it at create time. Never written as accompaniment (no placeholder URL).
+  const [accompanimentFile, setAccompanimentFile] = useState<File | null>(null);
+
+  const handleOpenChange = (o: boolean) => {
+    if (!o) {
+      setStep('pick');
+      setTemplate('empty');
+      setAccompaniment(null);
+      setAccompanimentFile(null);
+    }
+    onOpenChange(o);
+  };
+
+  const titleFor: Record<Step, string> = {
+    pick: 'New session',
+    backing: 'Choose backing track',
+    title: 'Name your session',
+  };
+
+  const handlePick = (r: PickerResult) => {
+    if (r.kind === 'file') {
+      // Keep the raw File; don't map to Accompaniment yet — the mutation
+      // uploads it and writes the real URL into the manifest.
+      setAccompanimentFile(r.file);
+      setAccompaniment(null);
+    } else {
+      setAccompaniment(mapPickerResult(r));
+      setAccompanimentFile(null);
+    }
+    setStep('title');
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>New Studio session</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label className="text-xs">Title (optional)</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Spring concert demo" autoFocus />
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{titleFor[step]}</DialogTitle>
+        </DialogHeader>
+
+        {step === 'pick' && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <TemplateCard
+              label="Empty"
+              icon={Sliders}
+              description="Blank multitrack — add tracks yourself."
+              onClick={() => { setTemplate('empty'); setStep('title'); }}
+            />
+            <TemplateCard
+              label="Voice parts (SATB)"
+              icon={Users}
+              description="Four pre-labeled tracks: Soprano, Alto, Tenor, Bass."
+              onClick={() => { setTemplate('satb'); setStep('backing'); }}
+            />
+            <TemplateCard
+              label="Custom"
+              icon={AudioLines}
+              description="Start with your own part layout and a backing track."
+              onClick={() => { setTemplate('custom'); setStep('backing'); }}
+            />
           </div>
-          <div className="flex justify-end gap-2 pt-1">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button onClick={() => onSubmit(title.trim())} disabled={busy}>
-              {busy ? <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Creating…</> : 'Create'}
-            </Button>
-          </div>
-        </div>
+        )}
+
+        {step === 'backing' && (
+          <AccompanimentPicker
+            open={true}
+            embedded
+            onPick={handlePick}
+            onSkip={() => { setAccompaniment(null); setAccompanimentFile(null); setStep('title'); }}
+          />
+        )}
+
+        {step === 'title' && (
+          <TitleStep
+            busy={busy}
+            onBack={() => setStep(template === 'empty' ? 'pick' : 'backing')}
+            onCancel={() => handleOpenChange(false)}
+            onSubmit={(t) => onSubmit({ title: t, template, accompaniment, accompanimentFile })}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

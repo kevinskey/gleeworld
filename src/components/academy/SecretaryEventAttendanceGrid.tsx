@@ -502,11 +502,11 @@ export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGrid
 
                     {/* Totals Header - smaller on mobile */}
                     <div className="flex bg-muted sticky right-0 z-30 border-l-2 border-primary/20">
-                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-xs border-r" title="Present">P</div>
-                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-xs border-r" title="Absent">A</div>
-                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-xs border-r" title="Excused">E</div>
-                      <div className="w-8 sm:w-10 p-1 text-center text-[9px] sm:text-xs border-r" title="Late">L</div>
-                      <div className="w-10 sm:w-12 p-1 text-center text-[9px] sm:text-xs" title="Attendance Rate">Rate</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-xs border-r" title="Present">P</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-xs border-r" title="Absent">A</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-xs border-r" title="Excused">E</div>
+                      <div className="w-8 sm:w-10 p-1 text-center text-xs border-r" title="Late">L</div>
+                      <div className="w-10 sm:w-12 p-1 text-center text-xs" title="Attendance Rate">Rate</div>
                     </div>
                   </div>
 

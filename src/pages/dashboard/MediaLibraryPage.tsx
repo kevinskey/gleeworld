@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   Image as ImageIcon, Music, Video, FileText, FolderOpen, Upload, Search,
-  Loader2, Trash2, Download, X, Share2, Mail,
+  Loader2, Trash2, Download, X, Share2, Mail, Pencil, Check,
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { toast } from 'sonner';
@@ -135,6 +135,23 @@ export default function MediaLibraryPage() {
       qc.invalidateQueries({ queryKey: ['media-library'] });
     },
     onError: (e: any) => toast.error(e?.message || 'Delete failed.'),
+  });
+
+  const renameRow = useMutation({
+    mutationFn: async ({ id, title }: { id: string; title: string }) => {
+      const trimmed = title.trim();
+      if (!trimmed) throw new Error('Title cannot be empty');
+      const { error } = await supabase
+        .from('gw_media_library')
+        .update({ title: trimmed })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Title updated.');
+      qc.invalidateQueries({ queryKey: ['media-library'] });
+    },
+    onError: (e: any) => toast.error(e?.message || 'Rename failed.'),
   });
 
   return (
@@ -256,6 +273,7 @@ export default function MediaLibraryPage() {
               row={r}
               courseCode={r.course_id ? courseCodeById[r.course_id] ?? null : null}
               onDelete={() => deleteRow.mutate(r.id)}
+              onRename={(title) => renameRow.mutate({ id: r.id, title })}
               onOpen={() => setPlaying(r)}
             />
           ))}
@@ -388,7 +406,7 @@ function ShareFolderDialog({
   );
 }
 
-function MediaCard({ row, courseCode, onDelete, onOpen }: { row: MediaRow; courseCode: string | null; onDelete: () => void; onOpen: () => void }) {
+function MediaCard({ row, courseCode, onDelete, onRename, onOpen }: { row: MediaRow; courseCode: string | null; onDelete: () => void; onRename: (title: string) => void; onOpen: () => void }) {
   const k = kindOf(row.file_type);
   const tone = {
     audio:    'bg-rose-50 text-rose-600',
@@ -398,14 +416,22 @@ function MediaCard({ row, courseCode, onDelete, onOpen }: { row: MediaRow; cours
     other:    'bg-muted text-muted-foreground',
   }[k];
   const Icon = { audio: Music, video: Video, document: FileText, image: ImageIcon, other: FolderOpen }[k];
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(row.title || '');
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== row.title) onRename(trimmed);
+    setEditing(false);
+  };
+  const cancel = () => { setDraft(row.title || ''); setEditing(false); };
   return (
     <Card
-      className={`${SOFT_CARD} cursor-pointer transition-colors hover:bg-accent/30`}
+      className={`${SOFT_CARD} ${editing ? '' : 'cursor-pointer'} transition-colors hover:bg-accent/30`}
       style={SOFT_CARD_STYLE}
-      onClick={onOpen}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(); } }}
+      onClick={editing ? undefined : onOpen}
+      role={editing ? undefined : 'button'}
+      tabIndex={editing ? -1 : 0}
+      onKeyDown={(e) => { if (!editing && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen(); } }}
     >
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
@@ -413,7 +439,22 @@ function MediaCard({ row, courseCode, onDelete, onOpen }: { row: MediaRow; cours
             <Icon className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-base font-semibold leading-snug truncate">{row.title || 'Untitled'}</div>
+            {editing ? (
+              <Input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  if (e.key === 'Enter') { e.preventDefault(); commit(); }
+                  if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+                }}
+                autoFocus
+                className="text-base font-semibold h-8"
+              />
+            ) : (
+              <div className="text-base font-semibold leading-snug truncate">{row.title || 'Untitled'}</div>
+            )}
             <div className="flex items-center gap-2 mt-1">
               <span className="text-xs text-muted-foreground capitalize">{k}</span>
               {courseCode ? (
@@ -427,17 +468,36 @@ function MediaCard({ row, courseCode, onDelete, onOpen }: { row: MediaRow; cours
             </div>
           </div>
         </div>
-        {/* Only delete remains. Open-in-new-tab affordance removed — the
-            card click opens the in-app player instead. */}
         <div className="flex items-center justify-end gap-1 mt-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4 text-muted-foreground" />
-          </Button>
+          {editing ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); commit(); }} title="Save">
+                <Check className="w-4 h-4 text-muted-foreground" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); cancel(); }} title="Cancel">
+                <X className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); setDraft(row.title || ''); setEditing(true); }}
+                title="Rename"
+              >
+                <Pencil className="w-4 h-4 text-muted-foreground" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
+                title="Delete"
+              >
+                <Trash2 className="w-4 h-4 text-muted-foreground" />
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

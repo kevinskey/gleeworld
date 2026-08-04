@@ -16,21 +16,20 @@
   font-style: italic;
 }
 
-/* Mobile-preview overrides for the public site editor.
-   Tailwind's `sm:` variants fire against the real browser viewport, so
-   previewing the site at a 390px width still shows the desktop nav (the
-   editor's viewport is wider than 640px). Force the header block into its
-   mobile arrangement when the preview device is set to mobile. Scoped to
-   `.gw-site[data-preview-device="mobile"]` so the actual `/sites/:slug`
-   route is untouched. */
-.gw-site[data-preview-device="mobile"] header nav.hidden.sm\:flex {
-  display: none;
-}
-.gw-site[data-preview-device="mobile"] header button.sm\:hidden {
-  display: inline-flex;
-}
-.gw-site[data-preview-device="mobile"] header div.sm\:hidden {
-  display: block;
+/* The published-site root is a size container named `gwsite`, so blocks can
+   lay themselves out against the frame they actually occupy instead of the
+   browser viewport (`cq-sm:` / `cq-lg:` in tailwind.config.ts). On
+   `/sites/:slug` that frame IS the viewport, so nothing changes there; in the
+   builder's 390px phone preview it's the difference between an honest preview
+   and the desktop layout spilling out of the frame.
+
+   `container-type: inline-size` makes the root a containing block for any
+   `position: fixed` descendant — no public-site block uses one today, and a
+   new one should use the block-scoped `sticky` pattern the header block uses
+   rather than reaching for `fixed`. */
+.gw-site {
+  container-type: inline-size;
+  container-name: gwsite;
 }
 
 /* Fast collapsible expand/collapse animation */
@@ -157,6 +156,13 @@
     padding: 0 !important;
     width: 100%;
     max-width: 100%;
+    /* A sideways swipe must never navigate. A two-finger trackpad swipe or a
+       touch drag that overscrolls horizontally is "go back/forward" in Chrome,
+       Edge and Safari, which in a SPA reads as the app jumping pages on its
+       own. `none` keeps the overscroll from chaining up to the browser while
+       leaving normal scrolling — and the score viewer's own swipe-to-paginate,
+       which is a touch handler, not overscroll — untouched. */
+    overscroll-behavior-x: none;
     /* Kill sideways scroll WITHOUT creating a scroll container.
        overflow-x: hidden promotes body to the page scroller on iOS
        Safari, which demotes position:fixed children (the mobile tab
@@ -245,15 +251,15 @@
     --message-received-fg: 220 20% 18%; /* Near-black text for readability */
 
     /* ── iOS 26 neutrals (HIG values; HSL triples for shadcn plumbing) ── */
-    --background: 240 24% 96%;        /* #F2F2F7 systemGray6 — canvas */
+    --background: 40 47% 96%;         /* #FAF7F1 warm oatmeal — canvas (per design spec) */
     --foreground: 0 0% 0%;            /* label */
     --card: 0 0% 100%;                /* #FFFFFF */
     --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
     --muted: 240 24% 96%;             /* systemGray6 — secondary fill */
-    --muted-foreground: 240 2% 55%;   /* #8A8A8E = secondaryLabel flattened on white */
-    --accent: 240 24% 96%;
+    --muted-foreground: 240 2% 44%;   /* #6E6E72 — darkened from #8A8A8E to pass WCAG AA (4.6:1) on white */
+    --accent: 293 74% 95%;            /* light primary tint — visible hover on white/canvas; tenant-overridden by TenantThemeRoot */
     --accent-foreground: 0 0% 0%;
     --border: 240 2% 78%;             /* #C7C7C9 = separator (3C3C43 @29%) flattened */
     --input: 0 0% 100%;
@@ -261,8 +267,8 @@
 
     /* Tiered text (flattened Apple label opacities on white) */
     --text-primary: 0 0% 0%;
-    --text-secondary: 240 2% 55%;     /* #8A8A8E — secondaryLabel */
-    --text-metadata: 240 2% 55%;
+    --text-secondary: 240 2% 44%;     /* #6E6E72 — WCAG AA on white */
+    --text-metadata: 240 2% 44%;
 
     /* iOS system grays 1–6 (light) */
     --gray-1: 240 2% 57%;  /* #8E8E93 */
@@ -272,12 +278,22 @@
     --gray-5: 240 11% 91%; /* #E5E5EA */
     --gray-6: 240 24% 96%; /* #F2F2F7 */
 
-    /* ── Tint: the ONE accent (Apple AccentColor model). Full-color token;
-       composes with tenant plumbing: tenant sets --site-accent, default
-       falls through to --primary (GleeWorld purple, iOS 26 family). ── */
-    --primary: 293 74% 53%;           /* #CB30E0 iOS purple (light) */
+    /* ── Tint: the ONE accent (Apple AccentColor model). Full-color token.
+       Reads --primary, which TenantThemeRoot sets from the tenant's
+       primary_color AFTER contrast-clamping it against the app's white
+       cards. It deliberately does NOT read --site-accent: that var holds
+       the tenant's RAW, unclamped hex for the public site, and routing
+       buttons through it skipped the very clamp that keeps button text
+       legible (a light brand accent rendered ~2:1 against white). Because
+       --tint now equals hsl(var(--primary)), `bg-primary` and
+       `bg-[var(--tint)]` paint identically — one button color everywhere,
+       whether a surface uses the token or the Tailwind class. ── */
+    --primary: 293 74% 45%;           /* #A826BF — darkened from #CB30E0 for WCAG AA button contrast (5.9:1 w/ white) */
     --primary-foreground: 0 0% 100%;
-    --tint: var(--site-accent, hsl(var(--primary)));
+    --tint: hsl(var(--primary));
+    /* --tint-contrast pairs with --tint. TenantThemeRoot derives
+       --primary-foreground from the clamped primary via YIQ, so this stays
+       readable on both light and dark tenant brands. */
     --tint-contrast: hsl(var(--primary-foreground));
     --secondary: 240 24% 96%;         /* iOS "gray button" fill, NOT cyan */
     --secondary-foreground: 0 0% 0%;
@@ -287,11 +303,12 @@
     /* ── iOS system semantics ── */
     --destructive: 359 100% 61%;      /* #FF383C */
     --destructive-foreground: 0 0% 100%;
-    --success: 135 59% 49%;           /* #34C759 */
+    --success: 135 59% 49%;           /* #34C759 — surface/icon green (needs bold+large or non-text use) */
     --success-foreground: 0 0% 100%;
+    --success-text: 135 59% 28%;      /* #226E3F — WCAG AA green for body text on white (7.2:1) */
     --warning: 48 100% 50%;           /* #FFCC00 */
     --warning-foreground: 0 0% 0%;
-    --info: 212 100% 50%;             /* #0088FF */
+    --info: 212 100% 40%;             /* #0066CC — darkened from #0088FF for WCAG AA text on white (5.7:1) */
     --info-foreground: 0 0% 100%;
 
     /* Status colors — fixed semantics, NOT tenant-routed. Exist so status
@@ -355,6 +372,7 @@
   .bg-brand-900,
   [class*="from-[#002244]"],
   [class*="from-[#150d26]"],
+  [class*="from-[hsl(var(--brand-navy))]"],
   .bg-gradient-to-r[class*="from-[#002"] {
     color: hsl(0 0% 100%) !important;
   }
@@ -363,6 +381,7 @@
      to prevent bleeding into nested light-background containers */
   [class*="from-[#002244]"] > *,
   [class*="from-[#150d26]"] > *,
+  [class*="from-[hsl(var(--brand-navy))]"] > *,
   [class*="bg-gradient"][class*="002244"] > *,
   [class*="bg-gradient"][class*="003666"] > * {
     color: hsl(0 0% 100%) !important;
@@ -626,7 +645,9 @@ button.module-card-solid:hover,
     --input: 240 2% 11%;
     --primary: 294 88% 58%;           /* #DB34F2 iOS purple (dark variant) */
     --primary-foreground: 0 0% 100%;
-    --tint: var(--site-accent, hsl(var(--primary)));
+    --tint: hsl(var(--primary));
+    /* Dark-mode pair — same reasoning as the light block above: the tint
+       rides the clamped --primary, never the raw --site-accent. */
     --tint-contrast: hsl(var(--primary-foreground));
     --secondary: 240 2% 16%;
     --secondary-foreground: 0 0% 100%;
@@ -637,6 +658,7 @@ button.module-card-solid:hover,
     --destructive: 359 100% 63%;      /* #FF4245 */
     --destructive-foreground: 0 0% 100%;
     --success: 135 63% 50%;           /* #30D158 */
+    --success-text: 135 55% 65%;      /* #6ED390 — WCAG AA green for body text on near-black card (6.5:1) */
     --warning: 50 100% 50%;           /* #FFD600 */
     --info: 206 100% 50%;             /* #0091FF */
     --gray-4: 240 3% 23%;             /* #3A3A3C — button secondary hover */
@@ -660,7 +682,7 @@ html[data-theme="brand-blue"] {
   --primary: 271 76% 53%;
   --primary-foreground: 0 0% 100%;
   --secondary: 203 85% 63%;
-  --secondary-foreground: 0 0% 100%;
+  --secondary-foreground: 0 0% 0%;      /* Black on sky-blue — flipped from white (2.32:1) to black (9.05:1) for WCAG AA */
   --accent: 40 10% 96%;                /* Warm neutral accent */
   --accent-foreground: 0 0% 10%;       /* Dark text */
   --background: 0 0% 100%;             /* PURE WHITE background */
@@ -2451,4 +2473,41 @@ button[role="combobox"] > svg {
    keyboard can fill the full viewport width. Toggled from MusicToolsPage. */
 body.gw-stage-mode .gw-collapsible-sidebar {
   display: none !important;
+}
+
+/* Hero block (public-site builder): the section is a size container so
+   its text (cqw units in fluidPx) and overlay layout respond to the
+   HERO's width — correct on real phones AND in the builder's narrow
+   phone-preview canvas, where viewport-based media queries never fire.
+   Below 640px of container width, free-positioned overlays are forced
+   to center horizontally and fit, matching the old max-sm behavior. */
+.gw-hero-section {
+  container-type: inline-size;
+}
+@container (max-width: 639px) {
+  .gw-hero-overlay {
+    left: 50% !important;
+    width: 92% !important;
+  }
+}
+
+/* Two-column layout block: side-by-side normally, stacking to one
+   column below 640px of CONTAINER width (works in the builder's
+   phone-preview canvas, not just real narrow viewports). */
+.gw-columns-section {
+  container-type: inline-size;
+}
+.gw-columns-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+@container (max-width: 639px) {
+  .gw-columns-grid {
+    grid-template-columns: 1fr;
+  }
+  .gw-columns-right-first .gw-columns-col:last-child {
+    order: -1;
+  }
 }

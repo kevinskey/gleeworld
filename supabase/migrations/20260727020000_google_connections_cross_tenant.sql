@@ -1,0 +1,25 @@
+-- gw_google_connections: drop the tenant RLS restrictive policy so a
+-- user's Google Calendar connection follows them across every subdomain
+-- they visit.
+--
+-- Before: `tenant_isolation_restrict` narrowed reads/writes to rows where
+-- `tenant_id = current_tenant_id()`. This meant the connection only
+-- surfaced on the tenant where the OAuth flow started. Kevin (platform
+-- owner) connecting on `kevin.gleeworld.org` was invisible on
+-- `gleeworld.org` — the UI kept prompting "Connect Google Calendar"
+-- even though the token was stored.
+--
+-- After: only the PERMISSIVE per-user policies (`user_id = auth.uid()`)
+-- gate access. A user still sees only their own connection row; that
+-- row is now valid from any subdomain they're a member of.
+--
+-- Google EVENTS (gw_google_events) keep their tenant RLS — events synced
+-- while on tenant A stay scoped to tenant A's calendar view. If a user
+-- syncs the same Google calendar from tenant B, they get a separate
+-- per-tenant events snapshot, which is the intended behavior.
+--
+-- Demo-tenant guards (demo_viewer_no_modify, demo_viewer_no_delete) are
+-- left in place — read-only demo accounts still can't tamper with a
+-- connection.
+
+DROP POLICY IF EXISTS tenant_isolation_restrict ON public.gw_google_connections;

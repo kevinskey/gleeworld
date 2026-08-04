@@ -315,7 +315,7 @@ export const MasterCalendar = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-primary">Master Calendar Management</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-primary">Master Calendar Management</h1>
           <p className="text-muted-foreground">
             Complete calendar system with events, appointments, and scheduling
           </p>

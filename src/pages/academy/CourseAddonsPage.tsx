@@ -40,7 +40,7 @@ type AddonDef = {
 // The course add-on catalog. Adding new ones is just appending to this list
 // + matching slug used by the corresponding course feature renderer.
 const ADDONS: AddonDef[] = [
-  { slug: 'tour-manager',         title: 'Tour Manager',           description: 'Itinerary, transportation, lodging for touring ensembles.', icon: Plane,      tone: 'bg-sky-50 text-sky-600' },
+  { slug: 'tour-manager',         title: 'Travel Manager',          description: 'Itinerary, transportation, lodging for touring ensembles.', icon: Plane,      tone: 'bg-sky-50 text-sky-600' },
   { slug: 'qr-attendance',        title: 'QR Attendance',          description: 'Generate codes students scan to check in.',                  icon: QrCode,     tone: 'bg-purple-50 text-purple-600' },
   { slug: 'polls',                title: 'Polls',                  description: 'Live or async polls inside this class.',                     icon: ListMusic,  tone: 'bg-amber-50 text-amber-600' },
   { slug: 'sight-reading',        title: 'Sight Reading',          description: 'Sight-singing drills + generator.',                          icon: Mic,        tone: 'bg-violet-50 text-violet-600' },

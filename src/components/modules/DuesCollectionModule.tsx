@@ -5,34 +5,34 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { CreditCard, Users, DollarSign, Calendar, AlertCircle, Plus, Bell, ExternalLink } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ModuleProps } from "@/types/unified-modules";
-import { useDuesManagement, type DuesRecord } from "@/hooks/useDuesManagement";
+import { useFeesManagement, type StudentFee } from "@/hooks/useFeesManagement";
 import { PaymentPlanSelectionDialog } from "@/components/dialogs/PaymentPlanSelectionDialog";
 import { useState } from "react";
 
 export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
   const navigate = useNavigate();
-  const { 
-    duesRecords, 
-    paymentPlans, 
-    loading, 
-    createDuesForSemester, 
+  const {
+    studentFees,
+    paymentPlans,
+    loading,
+    createFeesForSemester,
     createPaymentPlan,
     markPaymentComplete,
-    sendBulkReminders 
-  } = useDuesManagement();
-  
+    sendBulkReminders
+  } = useFeesManagement();
+
   const [showPaymentPlanDialog, setShowPaymentPlanDialog] = useState(false);
-  const [selectedDuesRecord, setSelectedDuesRecord] = useState<DuesRecord | null>(null);
+  const [selectedDuesRecord, setSelectedDuesRecord] = useState<StudentFee | null>(null);
   const [showCreateDuesDialog, setShowCreateDuesDialog] = useState(false);
 
-  const totalDues = duesRecords.reduce((sum, record) => sum + record.amount, 0);
-  const paidDues = duesRecords.filter(record => record.status === 'paid').reduce((sum, record) => sum + record.amount, 0);
-  const overdueDues = duesRecords
+  const totalDues = studentFees.reduce((sum, record) => sum + record.amount, 0);
+  const paidDues = studentFees.filter(record => record.status === 'paid').reduce((sum, record) => sum + record.amount, 0);
+  const overdueDues = studentFees
     .filter(record => record.status === 'overdue' || (record.status === 'pending' && new Date(record.due_date) < new Date()))
     .reduce((sum, record) => sum + record.amount, 0);
 
-  const handleCreatePaymentPlan = (duesRecord: DuesRecord) => {
-    setSelectedDuesRecord(duesRecord);
+  const handleCreatePaymentPlan = (feeRecord: StudentFee) => {
+    setSelectedDuesRecord(feeRecord);
     setShowPaymentPlanDialog(true);
   };
 
@@ -44,7 +44,7 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
   };
 
   const handleCreateDuesForSemester = async () => {
-    await createDuesForSemester('Fall 2025', '2025-09-15', 100);
+    await createFeesForSemester('Fall 2025', '2025-09-15', 100);
     setShowCreateDuesDialog(false);
   };
 
@@ -161,12 +161,12 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {duesRecords.length === 0 ? (
+              {studentFees.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No dues records found. Create dues records for the semester to get started.
                 </div>
               ) : (
-                duesRecords.map((record) => (
+                studentFees.map((record) => (
                   <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-4">
                       <Users className="h-5 w-5 text-blue-500" />
@@ -244,7 +244,7 @@ export const DuesCollectionModule = ({ user, isFullPage, onNavigate }: ModulePro
               {totalDues > 0 ? Math.round((paidDues/totalDues) * 100) : 0}% collection rate
             </div>
             <div className="text-sm">
-              {duesRecords.filter(d => d.status === 'overdue').length} overdue payments
+              {studentFees.filter(d => d.status === 'overdue').length} overdue payments
             </div>
           </div>
           <Button 

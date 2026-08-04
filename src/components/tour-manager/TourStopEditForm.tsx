@@ -60,7 +60,7 @@ export const TourStopEditForm = ({ stop, open, onOpenChange, onSaved, busCompani
         .eq('id', stop.id);
 
       if (error) throw error;
-      toast({ title: 'Saved', description: 'Tour stop updated successfully' });
+      toast({ title: 'Saved', description: 'Travel stop updated successfully' });
       onSaved();
       onOpenChange(false);
     } catch (err: any) {
@@ -95,7 +95,7 @@ export const TourStopEditForm = ({ stop, open, onOpenChange, onSaved, busCompani
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
-          <DialogTitle>Edit Tour Stop: {stop.title}</DialogTitle>
+          <DialogTitle>Edit Travel Stop: {stop.title}</DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(90vh-120px)] px-6 pb-6">
           <div className="space-y-5 py-2">

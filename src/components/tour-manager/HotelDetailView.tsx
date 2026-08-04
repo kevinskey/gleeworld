@@ -231,7 +231,7 @@ export const HotelDetailView: React.FC<HotelDetailViewProps> = ({ hotel, onBack 
           </h2>
           {hotel.tour_city && (
             <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-              Tour Stop: {hotel.tour_city.city_name}, {hotel.tour_city.state_code}
+              Travel Stop: {hotel.tour_city.city_name}, {hotel.tour_city.state_code}
             </p>
           )}
         </div>

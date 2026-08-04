@@ -61,7 +61,7 @@ export const ContractManager = ({ user, initialContractData }: ContractManagerPr
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-base font-semibold">Tour Contracts</h3>
+          <h3 className="text-base font-semibold">Travel Contracts</h3>
           <p className="text-xs text-muted-foreground">
             Manage contracts for performers, venues, and vendors
           </p>
@@ -74,7 +74,7 @@ export const ContractManager = ({ user, initialContractData }: ContractManagerPr
           <TabsTrigger value="user" className="text-xs px-3 py-1.5">My Contracts</TabsTrigger>
           <TabsTrigger value="tour-template" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
             <Route className="h-3.5 w-3.5" />
-            <span>Tour Template</span>
+            <span>Travel Template</span>
           </TabsTrigger>
           <TabsTrigger value="templates" className="text-xs px-3 py-1.5">Templates</TabsTrigger>
           <TabsTrigger value="upload" className="flex items-center gap-1.5 text-xs px-3 py-1.5">

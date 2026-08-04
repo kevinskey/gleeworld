@@ -48,7 +48,7 @@ const EXEC_BOARD_ROLES = [
   { label: 'President', value: 'president' },
   { label: 'Secretary', value: 'secretary' },
   { label: 'Treasurer', value: 'treasurer' },
-  { label: 'Tour Manager', value: 'tour_manager' },
+  { label: 'Travel Manager', value: 'tour_manager' },
   { label: 'Librarian', value: 'librarian' },
   { label: 'Historian', value: 'historian' },
   { label: 'PR Coordinator', value: 'pr_coordinator' },

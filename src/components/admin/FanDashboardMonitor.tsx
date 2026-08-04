@@ -177,7 +177,7 @@ export const FanDashboardMonitor = () => {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold text-primary flex items-center gap-3">
             <Heart className="h-8 w-8" />
             Fan Dashboard Monitor
           </h1>

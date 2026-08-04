@@ -10,6 +10,12 @@ interface PDFThumbnailProps {
   alt: string;
   className?: string;
   title?: string;
+  /**
+   * Bare mode for embedding inside a styled container (e.g. the store's
+   * StoreScoreCover): drops the card chrome (bg/border/rounded), the title
+   * footer, and the min-height so the parent's aspect box governs sizing.
+   */
+  bare?: boolean;
 }
 
 /**
@@ -21,6 +27,7 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   alt,
   className = 'w-full h-full',
   title,
+  bare = false,
 }) => {
   const elementRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -98,10 +105,10 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   return (
     <div
       ref={elementRef}
-      className={`flex flex-col bg-white border-2 border-gray-200 rounded-lg overflow-hidden ${className}`}
+      className={`flex flex-col overflow-hidden ${bare ? '' : 'bg-white border-2 border-gray-200 rounded-lg '}${className}`}
     >
       {/* Preview area — canvas is always mounted so its ref stays stable. */}
-      <div className="flex-1 relative bg-slate-50 min-h-[180px]">
+      <div className={`flex-1 relative bg-slate-50 ${bare ? '' : 'min-h-[180px]'}`}>
         <canvas
           ref={canvasRef}
           aria-label={alt}
@@ -122,7 +129,7 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
         )}
       </div>
 
-      {title && (
+      {title && !bare && (
         <div className="p-2 border-t border-gray-100">
           <div className="text-xs text-center text-slate-700 font-medium line-clamp-2 leading-tight">
             {title}

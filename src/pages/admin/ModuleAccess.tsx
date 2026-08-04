@@ -194,7 +194,7 @@ const ModuleAccess: React.FC = () => {
     <UniversalLayout showHeader={false} showFooter={false}>
       <DashboardShell>
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        <div className="container mx-auto px-6 py-6">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-6">
         <Card className="mb-4 bg-background/50 border-border">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>

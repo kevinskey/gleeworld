@@ -194,7 +194,7 @@ export function CourseHomeDashboard({
                         className="flex flex-col items-center justify-center rounded-md px-2.5 py-1 min-w-[52px]"
                         style={{ background: isLight ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }}
                       >
-                        <span className={`text-[10px] uppercase tracking-wider ${mutedCls}`}>{format(d, 'MMM')}</span>
+                        <span className={`text-xs uppercase tracking-wider ${mutedCls}`}>{format(d, 'MMM')}</span>
                         <span className={`text-lg font-bold leading-none ${titleCls}`}>{format(d, 'd')}</span>
                       </div>
                       <div className="flex-1 min-w-0">
@@ -208,7 +208,7 @@ export function CourseHomeDashboard({
                             </span>
                           )}
                           {ev.event_type && (
-                            <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${isLight ? 'border-white/20 text-white/80 bg-transparent' : ''}`}>
+                            <Badge variant="outline" className={`text-xs py-0 px-1.5 ${isLight ? 'border-white/20 text-white/80 bg-transparent' : ''}`}>
                               {ev.event_type}
                             </Badge>
                           )}
@@ -261,11 +261,11 @@ export function CourseHomeDashboard({
                       >
                         {due ? (
                           <>
-                            <span className={`text-[10px] uppercase tracking-wider ${mutedCls}`}>{format(due, 'MMM')}</span>
+                            <span className={`text-xs uppercase tracking-wider ${mutedCls}`}>{format(due, 'MMM')}</span>
                             <span className={`text-lg font-bold leading-none ${titleCls}`}>{format(due, 'd')}</span>
                           </>
                         ) : (
-                          <span className={`text-[10px] uppercase tracking-wider ${mutedCls}`}>—</span>
+                          <span className={`text-xs uppercase tracking-wider ${mutedCls}`}>—</span>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -283,7 +283,7 @@ export function CourseHomeDashboard({
                             </span>
                           )}
                           {a.points != null && (
-                            <Badge variant="outline" className={`text-[10px] py-0 px-1.5 ${isLight ? 'border-white/20 text-white/80 bg-transparent' : ''}`}>
+                            <Badge variant="outline" className={`text-xs py-0 px-1.5 ${isLight ? 'border-white/20 text-white/80 bg-transparent' : ''}`}>
                               {a.points} pts
                             </Badge>
                           )}

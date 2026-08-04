@@ -44,9 +44,10 @@ import {
   Sparkles,
   PanelLeft,
   PanelLeftClose,
+  Bug,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { HIDEABLE_NAV_ROLES, applyPreviewRole, type NavRole } from '@/lib/navigation/navCatalog';
 import {
   DndContext, PointerSensor, useDroppable, useSensor, useSensors, type DragEndEvent,
@@ -83,11 +84,13 @@ import {
 } from '@/components/ui/sheet';
 import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
 import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
+import { ReportBugDialog } from '@/components/feedback/ReportBugDialog';
 import { isDemoTenant } from '@/lib/demoTenant';
 import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
 import { AssistantFab } from '@/components/assistant/AssistantFab';
 import { AssistantSheet } from '@/components/assistant/AssistantSheet';
 import { TrialBanner } from '@/components/dashboard/TrialBanner';
+import { PermissionSlipBell } from '@/components/dashboard/PermissionSlipBell';
 import {
   resolveNav, entrySurfaces, NAV_SECTION_LABELS,
   type CatalogEntry, type NavContext, type NavSectionKey,
@@ -102,9 +105,9 @@ const SECTION_ORDER: NavSectionKey[] = ['today', 'music', 'teach', 'make', 'plan
 const GLEE_PLATFORM_LOGO = '/lovable-uploads/gleeworld-logo.png?v=6';
 function platformLogoFor(brandingLogoUrl?: string | null): string | undefined {
   if (brandingLogoUrl) return brandingLogoUrl;
-  const slug = (typeof window !== 'undefined'
-    && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
-  return slug === 'main' ? GLEE_PLATFORM_LOGO : undefined;
+  // getTenantSlug() falls back to 'main' when no tenant bootstrap exists —
+  // which is exactly the gleeworld.org apex, where this fallback matters.
+  return getTenantSlug() === 'main' ? GLEE_PLATFORM_LOGO : undefined;
 }
 
 // Groups resolved sidebar-surface entries into the render shape both nav
@@ -117,21 +120,20 @@ function buildNavSections(
   sectionOverrides?: Record<string, string> | null,
 ): Array<{ key: string; label: string; items: CatalogEntry[] }> {
   const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
-  // users may re-home an item into any section; the override wins over
-  // the catalog's section (invalid section names fall back to catalog)
   const sectionOf = (e: CatalogEntry): string => {
     const override = sectionOverrides?.[e.key];
     return override && (SECTION_ORDER as readonly string[]).includes(override) ? override : e.section;
   };
-  // per-user ordering within each (possibly overridden) section; items
-  // the user hasn't ordered keep catalog order after ordered ones
   const rank = new Map((userOrder ?? []).map((k, i) => [k, i]));
   const sortItems = (items: CatalogEntry[]) =>
     userOrder?.length
       ? [...items].sort((a, b) => (rank.get(a.key) ?? Infinity) - (rank.get(b.key) ?? Infinity))
       : items;
+  // Sections always render in catalog order. Users can reorder items
+  // (and move them between sections) but not the sections themselves;
+  // any sectionOrder still stored in user_preferences is ignored.
   return SECTION_ORDER
-    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s], items: sortItems(resolved.filter((e) => sectionOf(e) === s)) }))
+    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s as NavSectionKey], items: sortItems(resolved.filter((e) => sectionOf(e) === s)) }))
     .filter((s) => s.items.length > 0);
 }
 
@@ -148,8 +150,16 @@ function DroppableSection({ sectionKey, className, children }: {
   );
 }
 
-// Sortable wrapper for a sidebar nav row. The 8px activation distance
-// keeps plain clicks navigating; only a real drag reorders.
+// Sortable wrapper for a sidebar nav row. The press-and-hold activation
+// constraint keeps plain clicks navigating; only a deliberate hold-then-
+// move reorders.
+//
+// - touch-none:   required so touch devices don't treat the pointer as
+//                 a scroll and steal it before dnd-kit sees enough movement.
+// - select-none:  avoids the browser starting a text selection during
+//                 the drag (which cancels the sortable).
+// - cursor-grab:  gives tenants a visual hint that the row is movable.
+//                 flips to grabbing during an active drag.
 function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id });
   return (
@@ -158,7 +168,9 @@ function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
       {...attributes}
       {...listeners}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={isDragging ? 'opacity-60' : undefined}
+      className={`touch-none select-none ${
+        isDragging ? 'cursor-grabbing opacity-60' : 'cursor-grab'
+      }`}
     >
       {children}
     </div>
@@ -231,19 +243,17 @@ const NAV_ACTIVE = 'bg-primary/10 text-primary font-semibold';
 const iconTextOnly = (tone: string) =>
   tone.replace(/bg-\S+/g, '').replace(/\s+/g, ' ').trim() || 'text-foreground/70';
 
-// Sections start collapsed unless the user is currently on a page inside
-// the section (auto-expand) or they've toggled it open before (persisted
-// in localStorage so the preference sticks across reloads). Bumping the
-// key version invalidates any stale preference from earlier defaults.
-const COLLAPSED_SECTIONS_KEY = 'gw_sidebar_collapsed_v2';
-const DEFAULT_COLLAPSED = ['Admin'] as const;
+// Every fresh app load lands in the prescribed state: Today + Admin
+// expanded, every other section collapsed to its header (Kevin,
+// 2026-07-31 — a uniform landing view for every user/role; non-admins
+// simply have no Admin card). Collapse toggles still work during the
+// session but are deliberately NOT persisted across loads — the old
+// localStorage restore (gw_sidebar_collapsed_v2) is what made landings
+// unpredictable per user. Auto-expand of the active route's section is
+// unaffected (see the render-time check below).
+const DEFAULT_COLLAPSED = ['Music', 'Teach', 'Make', 'Plan', 'Reach', 'Money', 'People'] as const;
 
 function loadCollapsed(): Set<string> {
-  if (typeof window === 'undefined') return new Set(DEFAULT_COLLAPSED);
-  try {
-    const raw = window.localStorage.getItem(COLLAPSED_SECTIONS_KEY);
-    if (raw) return new Set(JSON.parse(raw));
-  } catch { /* fall through */ }
   return new Set(DEFAULT_COLLAPSED);
 }
 
@@ -270,9 +280,6 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
       const next = new Set(prev);
       if (next.has(label)) next.delete(label);
       else next.add(label);
-      try {
-        window.localStorage.setItem(COLLAPSED_SECTIONS_KEY, JSON.stringify(Array.from(next)));
-      } catch { /* ignore */ }
       return next;
     });
   };
@@ -285,7 +292,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
 
   // Add-on modules — only render the nav entry if the tenant has access.
-  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner'] as const;
+  const MODULE_KEYS = ['sight_reading', 'box_office', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner'] as const;
   // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
   const moduleAccess: Record<string, boolean> = {};
   for (const key of MODULE_KEYS) {
@@ -309,18 +316,32 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const navCtx: NavContext = applyPreviewRole({
     hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole);
   const { navOrder, saveNavOrder } = useNavItemOrder();
+  // Section order is deliberately NOT passed — sections always render in
+  // catalog order; only items within them are user-orderable.
   const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
-  const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  // Press-and-hold to drag: the old 8px movement threshold made rows
+  // move on any slightly-sloppy click or scroll flick. With a delay
+  // constraint, a plain click navigates instantly, and a drag only
+  // starts after the pointer has been held still (within `tolerance`
+  // px) for `delay` ms — accidental reorders effectively disappear.
+  const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 250, tolerance: 6 } }));
+  // Id namespaces in onDragEnd:
+  //   'section:<key>' — the DroppableSection body (target when an item
+  //                     is dragged INTO a section)
+  //   '<item.key>'    — the bare item row (SortableContext)
+  // Sections themselves are NOT sortable — their order is fixed to the
+  // catalog SECTION_ORDER.
   const onNavDragEnd = (e: DragEndEvent) => {
     const activeId = String(e.active.id);
     const overId = e.over ? String(e.over.id) : null;
     if (!overId || activeId === overId) return;
+
     const from = sections.find((s) => s.items.some((i) => i.key === activeId));
     if (!from) return;
-    // target: another row, or a section container (id "section:<key>")
     const overSectionKey = overId.startsWith('section:') ? overId.slice(8) : null;
     const to = overSectionKey
       ? sections.find((s) => s.key === overSectionKey)
@@ -349,7 +370,9 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
     const overrides = { ...(navOrder?.sections ?? {}) };
     if (to.key === catalogSection) delete overrides[activeId];
     else if (to.key !== from.key) overrides[activeId] = to.key;
-    void saveNavOrder(flat, overrides);
+    // sectionOrder is intentionally reset to [] — section order is fixed
+    // to the catalog and any previously-dragged order should not persist.
+    void saveNavOrder(flat, overrides, []);
   };
 
   // Studio session editor needs the full window for clips + mixer.
@@ -415,37 +438,47 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
         {sections.map((section, idx) => {
           if (section.items.length === 0) return null;
           const isCollapsible = !!section.label;
-          // Honor the user's manual collapse intent regardless of which
-          // route they're on. The previous `&& !hasActive` override
-          // re-expanded any section containing the current route, which
-          // made the chevron silently no-op on the section you most
-          // wanted to collapse (e.g. clicking "Music" while reading a
-          // score in the viewer).
           const isCollapsed = isCollapsible && collapsed.has(section.label!);
           return (
-            // Each section is its own card-like surface with a muted
-            // background so the long nav reads as grouped sections rather
-            // than one giant flat list. Section labels are bigger and
-            // higher-contrast to give the eye an anchor.
-            <DroppableSection
-              key={section.key ?? `section-${idx}`}
-              sectionKey={section.key}
-              className={section.label ? 'rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5' : 'space-y-0.5 px-1'}
-            >
-              {section.label && (
-                <button
-                  type="button"
-                  onClick={() => toggleSection(section.label!)}
-                  className="w-full flex items-center justify-between px-2.5 pb-1 pt-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground hover:text-foreground transition-colors"
+                <DroppableSection
+                  key={section.key ?? `section-${idx}`}
+                  sectionKey={section.key}
+                  className={section.label ? 'rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5' : 'space-y-0.5 px-1'}
                 >
-                  <span>{section.label}</span>
-                  {isCollapsed ? (
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5" />
+                  {section.label && (
+                    <div
+                      // Sections are fixed in place — the whole header
+                      // row is a plain expand/collapse toggle.
+                      className="flex items-center pb-1 pt-1.5 pl-1.5 pr-1 select-none text-[11px] font-black uppercase tracking-[0.08em] text-foreground"
+                    >
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => toggleSection(section.label!)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            toggleSection(section.label!);
+                          }
+                        }}
+                        className="flex-1 cursor-pointer hover:text-foreground transition-colors"
+                      >
+                        {section.label}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleSection(section.label!)}
+                        aria-label={isCollapsed ? `Expand ${section.label}` : `Collapse ${section.label}`}
+                        className="px-1.5 py-0.5 rounded hover:bg-muted transition-colors cursor-pointer"
+                      >
+                        {isCollapsed ? (
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
                   )}
-                </button>
-              )}
               {!isCollapsed && (
               <SortableContext items={section.items.map((i) => i.key)} strategy={verticalListSortingStrategy}>
               {section.items.map((item) => (
@@ -454,6 +487,15 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
                   to={item.to}
                   end={item.end}
                   data-tour={item.tourId}
+                  // Browsers treat <a> elements as natively draggable —
+                  // the OS starts a URL-drag on pointerdown, which
+                  // steals the pointer stream before dnd-kit's 8px
+                  // activation threshold fires. Result: user tries to
+                  // reorder, gets a URL preview icon, nav doesn't move.
+                  // Disable the native drag and let SortableNavRow's
+                  // listeners own the pointer.
+                  draggable={false}
+                  onDragStart={(e) => e.preventDefault()}
                   className={({ isActive }) => {
                     if (item.hero) {
                       return `${NAV_BASE} ${
@@ -478,7 +520,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
               ))}
               </SortableContext>
               )}
-            </DroppableSection>
+                </DroppableSection>
           );
         })}
         </DndContext>
@@ -515,7 +557,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
   const userCanLibrarian = canEditMusicLibrary();
-  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner'] as const;
+  const MODULE_KEYS = ['sight_reading', 'box_office', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner'] as const;
   // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
   const moduleAccess: Record<string, boolean> = {};
   for (const key of MODULE_KEYS) {
@@ -533,12 +575,30 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const navCtx: NavContext = applyPreviewRole({
     hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole);
   // same per-user ordering + section overrides as the desktop sidebar
   // (read-only here; reordering by drag is a desktop affordance)
   const { navOrder } = useNavItemOrder();
   const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
+
+  // Collapsible sections — nine expanded groups made the drawer a long
+  // scroll to reach anything below Music. Headers toggle; the choice
+  // persists per device so a member who only uses Today + Music keeps
+  // a short drawer. Default expanded (current behavior) until tapped.
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
+    try { return JSON.parse(localStorage.getItem('gw_mobile_nav_collapsed') || '{}'); }
+    catch { return {}; }
+  });
+  const toggleSection = (label: string) => {
+    setCollapsedSections((prev) => {
+      const next = { ...prev, [label]: !prev[label] };
+      try { localStorage.setItem('gw_mobile_nav_collapsed', JSON.stringify(next)); }
+      catch { /* private mode — collapse just won't persist */ }
+      return next;
+    });
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -557,10 +617,21 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         {sections.map((section) => (
           section.items.length === 0 ? null : (
             <div key={section.label} className="rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5">
-              <div className="px-2.5 pb-1 pt-1.5 text-[12px] font-black tracking-[0.08em] text-foreground uppercase">
-                {section.label}
-              </div>
-              {section.items.map((item) => (
+              <button
+                type="button"
+                onClick={() => toggleSection(section.label)}
+                aria-expanded={!collapsedSections[section.label]}
+                className="flex w-full min-h-[40px] items-center justify-between px-2.5 py-1"
+              >
+                <span className="text-[12px] font-black tracking-[0.08em] text-foreground uppercase">
+                  {section.label}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 text-muted-foreground transition-transform ${collapsedSections[section.label] ? '-rotate-90' : ''}`}
+                  aria-hidden
+                />
+              </button>
+              {!collapsedSections[section.label] && section.items.map((item) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
@@ -710,6 +781,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [becomeTenantOpen, setBecomeTenantOpen] = useState(false);
+  const [reportBugOpen, setReportBugOpen] = useState(false);
   const showBecomeTenantCta = isDemoTenant();
 
   // min-height INCLUDES the safe-area inset: with border-box, a fixed
@@ -811,7 +883,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           input was simply `hidden sm:block`, which left mobile users with
           no path to search at all. The mobile button opens a focused
           search prompt (browser-native via <dialog>-style fallback). */}
-      <form onSubmit={onSearch} className="hidden sm:block w-full max-w-md">
+      <form onSubmit={onSearch} className="hidden sm:block w-full max-w-md min-w-0">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -846,6 +918,10 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 
       {/* Views switcher — tenant super-admins only */}
       <ViewsSwitcher />
+
+      {/* Permission-slip signed bell — tour managers only; RLS scopes
+          the query so non-managers see 0 rows and the bell stays hidden. */}
+      <PermissionSlipBell />
 
       {/* Notification bell — opens the personal notifications inbox
           (matches the unread badge, which counts gw_notifications).
@@ -890,7 +966,11 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div className="hidden md:block text-left leading-tight">
+            {/* lg+, not md+ — at 768-1023 (iPad portrait) the sidebar +
+                search + action buttons already fill the row; this 176px
+                text block was the piece that pushed the bell/avatar into
+                the shell's overflow-hidden crop. */}
+            <div className="hidden lg:block text-left leading-tight">
               <div className="text-base font-semibold truncate max-w-[160px]">{displayName}</div>
               <div className="text-xs text-muted-foreground truncate max-w-[160px]">{subRole}</div>
             </div>
@@ -909,6 +989,9 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
             <Link to="/settings" className="flex items-center gap-2">
               <Settings className="w-4 h-4" /> Settings
             </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setReportBugOpen(true)} className="flex items-center gap-2">
+            <Bug className="w-4 h-4" /> Report a Bug
           </DropdownMenuItem>
           {/* Switch organization — every tenant this user belongs to.
               On web, navigation crosses subdomains (full-page load into
@@ -997,6 +1080,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           onClose={() => setBecomeTenantOpen(false)}
         />
       )}
+      <ReportBugDialog open={reportBugOpen} onClose={() => setReportBugOpen(false)} />
     </header>
   );
 }
@@ -1010,10 +1094,6 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
   const isCalendar = pathname.startsWith('/dashboard/calendar');
-  // Tour Manager is a full-height self-scrolling layout (own header +
-  // section sidebar); it fills the viewport below the topbar exactly, so
-  // any main padding would force a phantom page scroll.
-  const isTourManager = pathname.startsWith('/tour-manager') || pathname.startsWith('/tour-planner');
   // User-controlled nav collapse (persisted). Collapsing frees the full
   // window width for work surfaces like Calendar and Studio; the topbar
   // grows an expand button + compact brand while collapsed.
@@ -1042,19 +1122,22 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               sticky topbar — pages that want more (CommandCenter, Viewer
               landing) add their own larger top padding on top of this.
               The bottom padding reserves room for the docked MobileBottomNav
-              bar (phones only; sm+ has no bottom nav) so content ends ABOVE
-              it and never scrolls under. Bar = 56px tall + the bottom
+              bar (below md; md+ has the sidebar instead) so content ends
+              ABOVE it and never scrolls under. Bar = 56px tall + the bottom
               safe-area inset, plus a small gap. */}
           <main className={cn(
             "flex-1 min-w-0 min-h-0 overflow-y-auto overflow-x-hidden",
-            isTourManager ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0",
-            // Calendar and Tour Manager manage their own compact header
-            // spacing — no extra breathing room below the topbar.
-            isCalendar || isTourManager ? "pt-0" : "pt-3 sm:pt-4",
+            "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0",
+            // Calendar manages its own compact header spacing — no extra
+            // breathing room below the topbar. Tour Manager used to be
+            // exempt here too, back when it shipped its own full-height
+            // shell; it's an ordinary DashboardPageShell page now.
+            isCalendar ? "pt-0" : "pt-3 sm:pt-4",
           )}>{children}</main>
         </div>
-        {/* Phone-only persistent bottom nav. Self-gates via useIsPhone()
-            so it returns null on tablet/desktop — safe to mount globally. */}
+        {/* Persistent bottom nav below md. Self-gates via useIsCompactNav()
+            so it returns null once the sidebar exists — safe to mount
+            globally. */}
         <MobileBottomNav />
         {/* Mounts only when ?tour=admin is in the URL; otherwise a no-op. */}
         <ProductTour />

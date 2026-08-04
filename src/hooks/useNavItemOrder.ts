@@ -7,26 +7,36 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface NavOrder {
-  v: 2;
+  v: 3;
   /** flat display order of catalog keys */
   order: string[];
   /** per-item section override: catalog key → section key */
   sections: Record<string, string>;
+  /** user-preferred order of the section columns themselves (e.g.
+   *  ['music','today','teach']). Any section not in this list falls
+   *  back to catalog order after the ranked ones. */
+  sectionOrder: string[];
 }
 
 export function parseNavOrder(raw: unknown): NavOrder | null {
   if (!raw || typeof raw !== 'object') return null;
-  const candidate = raw as { v?: unknown; order?: unknown; sections?: unknown };
-  if ((candidate.v !== 1 && candidate.v !== 2) || !Array.isArray(candidate.order)) return null;
+  const candidate = raw as { v?: unknown; order?: unknown; sections?: unknown; sectionOrder?: unknown };
+  const version = candidate.v;
+  if (version !== 1 && version !== 2 && version !== 3) return null;
+  if (!Array.isArray(candidate.order)) return null;
   const order = candidate.order.filter((k): k is string => typeof k === 'string');
   if (!order.length) return null;
   const sections: Record<string, string> = {};
-  if (candidate.v === 2 && candidate.sections && typeof candidate.sections === 'object') {
+  if ((version === 2 || version === 3) && candidate.sections && typeof candidate.sections === 'object') {
     for (const [k, v] of Object.entries(candidate.sections as Record<string, unknown>)) {
       if (typeof v === 'string') sections[k] = v;
     }
   }
-  return { v: 2, order, sections };
+  const sectionOrder: string[] = [];
+  if (version === 3 && Array.isArray(candidate.sectionOrder)) {
+    for (const s of candidate.sectionOrder) if (typeof s === 'string') sectionOrder.push(s);
+  }
+  return { v: 3, order, sections, sectionOrder };
 }
 
 export function useNavItemOrder() {
@@ -60,21 +70,38 @@ export function useNavItemOrder() {
   const saveNavOrder = useCallback(async (
     order: string[],
     sections: Record<string, string> = {},
+    sectionOrder: string[] = [],
   ): Promise<boolean> => {
     if (!uid) return false;
+    const next: NavOrder = { v: 3, order, sections, sectionOrder };
+    // Optimistic update — write the new order to the cache BEFORE the
+    // RPC round-trip. Without this the sidebar re-renders from the
+    // stale cache during the ~200-500ms the save takes, snapping every
+    // dropped item back to its old position and then jumping forward
+    // when the RPC resolves. Reading as a whole-screen "blink".
+    const previous = queryClient.getQueryData<NavOrder | null>(['nav-item-order', uid]) ?? null;
+    queryClient.setQueryData(['nav-item-order', uid], next);
     try {
-      const next: NavOrder = { v: 2, order, sections };
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({ user_id: uid, nav_item_order: next }, { onConflict: 'user_id' });
+      // save_nav_item_order is a SECURITY DEFINER RPC that bypasses the
+      // RESTRICTIVE tenant_isolation_restrict policy on user_preferences
+      // and RESYNCS tenant_id to current_tenant_id() on every save. This
+      // is needed because a direct upsert failed with 403 whenever the
+      // caller's subdomain-derived current_tenant_id() didn't match the
+      // tenant_id stored on the existing row — a common state now that
+      // current_tenant_id() is subdomain-aware. See migration
+      // 20260729180000_save_nav_item_order_rpc.sql.
+      const { error } = await supabase.rpc('save_nav_item_order' as never, {
+        p_nav_item_order: next,
+      });
       if (error) {
         console.warn('[useNavItemOrder] save failed:', error.message);
+        queryClient.setQueryData(['nav-item-order', uid], previous);
         return false;
       }
-      queryClient.setQueryData(['nav-item-order', uid], next);
       return true;
     } catch (err) {
       console.warn('[useNavItemOrder] save failed:', err);
+      queryClient.setQueryData(['nav-item-order', uid], previous);
       return false;
     }
   }, [uid, queryClient]);

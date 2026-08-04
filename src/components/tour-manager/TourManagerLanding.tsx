@@ -16,6 +16,7 @@ import { TourStopEditForm } from './TourStopEditForm';
 import { CreateTourGroupButton } from '@/components/tour/CreateTourGroupButton';
 import { exportItineraryPdf, exportRosterPdf } from '@/utils/tourPdfExport';
 import { useTourCourseId } from './TourCourseContext';
+import { useActiveTrip } from './ActiveTripContext';
 interface TourManagerLandingProps {
   onNavigate: (section: string) => void;
   stats?: {
@@ -54,6 +55,8 @@ export const TourManagerLanding = ({
   const tourCourseId = useTourCourseId();
   const [contractTourDates, setContractTourDates] = useState<ContractTourDate[]>([]);
   const [tourTitle, setTourTitle] = useState<string | null>(null);
+  const { trip: activeTrip } = useActiveTrip();
+  useEffect(() => { setTourTitle(activeTrip?.name ?? null); }, [activeTrip?.name]);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [tourEvents, setTourEvents] = useState<TourStopFull[]>([]);
   const [selectedStop, setSelectedStop] = useState<TourStopFull | null>(null);
@@ -80,16 +83,11 @@ export const TourManagerLanding = ({
         .order('start_date', { ascending: true });
       if (data) setTourEvents(data as TourStopFull[]);
     };
-    const fetchTourName = async () => {
-      let q = supabase
-        .from('gw_tours')
-        .select('name')
-        .eq('status', 'planning')
-        .limit(1);
-      if (tourCourseId) q = q.eq('course_id', tourCourseId);
-      const { data } = await q.maybeSingle();
-      if (data) setTourTitle(data.name);
-    };
+    // Trip name now comes from the switcher (see the useEffect below). It used
+    // to be resolved here as status='planning' limit 1, which could name a
+    // different trip than the one the rest of the page was showing — and that
+    // name is what labels the exported itinerary and roster PDFs.
+    const fetchTourName = async () => {};
     const fetchRoster = async () => {
       const { data: roster } = await supabase
         .from('gw_tour_roster')
@@ -206,15 +204,15 @@ export const TourManagerLanding = ({
     fetchContractTourDates();
   }, []);
   const [keyPersonnel, setKeyPersonnel] = useState<KeyPerson[]>([{
-    role: 'Tour Manager',
+    role: 'Travel Manager',
     name: 'Aaliyah Deere',
     icon: Users
   }, {
-    role: 'Tour Manager',
+    role: 'Travel Manager',
     name: 'Onnesty Peele',
     icon: Users
   }, {
-    role: 'Tour Manager',
+    role: 'Travel Manager',
     name: 'Soleil',
     icon: Users
   }]);
@@ -277,7 +275,7 @@ export const TourManagerLanding = ({
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium flex items-center gap-2">
               <CalendarDays className="h-4 w-4 text-primary" />
-              Tour Schedule
+              Travel Schedule
             </CardTitle>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setWeekStart(prev => subWeeks(prev, 1))}>
@@ -415,7 +413,7 @@ export const TourManagerLanding = ({
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <MapPinned className="h-4 w-4 text-primary" />
-                  Tour Itinerary
+                  Travel Itinerary
                   <Badge variant="secondary" className="text-xs ml-1">{tourEvents.length} stops</Badge>
                 </CardTitle>
                 <div className="flex items-center gap-1">
@@ -552,7 +550,7 @@ export const TourManagerLanding = ({
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
-                  Tour Roster
+                  Travel Roster
                   <Badge variant="secondary" className="text-xs ml-1">{rosterMembers.length}</Badge>
                 </CardTitle>
                 <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", rosterOpen && "rotate-180")} />
@@ -634,7 +632,7 @@ export const TourManagerLanding = ({
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-primary" />
-                  Tour Hosts
+                  Travel Hosts
                   <Badge variant="secondary" className="text-xs ml-1">{hosts.length}</Badge>
                 </CardTitle>
                 <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", hostsOpen && "rotate-180")} />
@@ -725,7 +723,7 @@ export const TourManagerLanding = ({
         </Card>
       </Collapsible>
 
-      {/* Tour Budgets Section */}
+      {/* Travel Budgets Section */}
       <Collapsible open={budgetsOpen} onOpenChange={setBudgetsOpen}>
         <Card>
           <CollapsibleTrigger asChild>
@@ -733,7 +731,7 @@ export const TourManagerLanding = ({
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
                   <Wallet className="h-4 w-4 text-primary" />
-                  Tour Budgets
+                  Travel Budgets
                   <Badge variant="secondary" className="text-xs ml-1">{budgets.length}</Badge>
                 </CardTitle>
                 <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", budgetsOpen && "rotate-180")} />
@@ -746,7 +744,7 @@ export const TourManagerLanding = ({
                 <div className="text-center py-4">
                   <Wallet className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
                   <p className="text-sm text-muted-foreground">No budgets created yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Add a main tour budget and sub-budgets for expenses</p>
+                  <p className="text-xs text-muted-foreground mt-1">Add a main travel budget and sub-budgets for expenses</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -931,15 +929,15 @@ export const TourManagerLanding = ({
 
       {/* Two Column Layout: Route & Upcoming Dates - hidden on mobile */}
       <div className="hidden sm:grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Tour Route Timeline */}
-        
-        {/* Upcoming Tour Dates */}
+        {/* Travel Route Timeline */}
+
+        {/* Upcoming Travel Dates */}
         <Card>
           <CardHeader className="py-3 px-4">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-medium flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary" />
-                Upcoming Tour Dates
+                Upcoming Travel Dates
               </CardTitle>
               <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => onNavigate('tour-dates')}>
                 View All
@@ -990,7 +988,7 @@ export const TourManagerLanding = ({
             <div className="mt-3 pt-3 border-t">
               <p className="text-xs flex items-center gap-1 text-muted-foreground">
                 <CalendarDays className="h-3 w-3" />
-                Tour dates from signed contracts
+                Travel dates from signed contracts
               </p>
             </div>
           </CardContent>

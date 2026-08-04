@@ -451,13 +451,13 @@ export const HotelManagement = () => {
                   Search Google to find and verify the hotel. Only verified hotels with real addresses can be added.
                 </p>
 
-                {/* Tour City Selection — pre-fills city/state for search */}
+                {/* Travel City Selection — pre-fills city/state for search */}
                 {tourCities.length > 0 && (
                   <div className="space-y-2">
-                    <Label>Tour City (narrows search)</Label>
+                    <Label>Travel City (narrows search)</Label>
                     <Select value={formData.tour_city_id} onValueChange={handleTourCityChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a tour city..." />
+                        <SelectValue placeholder="Select a travel city..." />
                       </SelectTrigger>
                       <SelectContent>
                         {tourCities.map(city => (
@@ -512,7 +512,7 @@ export const HotelManagement = () => {
                       <button
                         key={place.place_id}
                         onClick={() => handleSelectPlace(place)}
-                        className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                        className="w-full text-left p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
@@ -570,13 +570,13 @@ export const HotelManagement = () => {
                   </div>
                 )}
 
-                {/* Tour City Selection */}
+                {/* Travel City Selection */}
                 {tourCities.length > 0 && !formData.tour_city_id && (
                   <div className="space-y-2">
-                    <Label>Link to Tour City</Label>
+                    <Label>Link to Travel City</Label>
                     <Select value={formData.tour_city_id} onValueChange={(value) => setFormData(prev => ({ ...prev, tour_city_id: value }))}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Link to a tour city..." />
+                        <SelectValue placeholder="Link to a travel city..." />
                       </SelectTrigger>
                       <SelectContent>
                         {tourCities.map(city => (

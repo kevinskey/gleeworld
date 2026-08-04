@@ -32,6 +32,7 @@ import { SuperAdminControlPanel } from "./SuperAdminControlPanel";
 import { CalendarSettingsDialog } from "./CalendarSettingsDialog";
 import { useEventCategories } from "@/hooks/useEventCategories";
 import { useGoogleEvents } from "@/hooks/useGoogleEvents";
+import { useIosEvents } from "@/hooks/useIosCalendar";
 import { CalendarRightSidebar } from "./CalendarRightSidebar";
 import { CalendarLegend } from "./CalendarLegend";
 
@@ -170,6 +171,7 @@ export const CommandCenterCalendar = () => {
 
   const { events: rawEvents, loading, fetchEvents } = useGleeWorldEvents();
   const { data: googleRows = [] } = useGoogleEvents();
+  const { data: iosRows = [] } = useIosEvents();
 
   // Merge the caller's personal Google events into the events stream so they
   // show on the grid. Two protections:
@@ -210,9 +212,37 @@ export const CommandCenterCalendar = () => {
         // Carry a marker so the rest of the UI knows this row is read-only
         // and external — edit/delete dialogs check this.
         source: 'google' as any,
+        // Carry the real Google event id so EventPeekPopover can pass it
+        // to PublishToCalendarPicker (share edge fn queries by this value).
+        google_event_id: g.google_event_id,
       } as any));
-    return [...rawEvents, ...synthetic];
-  }, [rawEvents, googleRows]);
+    const iosSynthetic = iosRows
+      .filter((g) => g.start_at)
+      .map<GleeWorldEvent>((g) => ({
+        id: 'ios-' + g.id,
+        title: g.title || '(iPhone event)',
+        description: g.description,
+        event_type: 'personal_ios',
+        category: 'personal_ios',
+        start_date: g.start_at,
+        end_date: g.end_at,
+        location: g.location,
+        venue_name: null,
+        address: null,
+        max_attendees: null,
+        registration_required: false,
+        is_public: false,
+        status: null,
+        calendar_id: null,
+        course_id: null,
+        created_by: null,
+        created_at: null,
+        updated_at: null,
+        source: 'ios' as any,
+        apple_event_id: g.apple_event_id,
+      } as any));
+    return [...rawEvents, ...synthetic, ...iosSynthetic];
+  }, [rawEvents, googleRows, iosRows]);
   const { data: calendars, isLoading: calendarsLoading } = useCalendars();
   const { data: dbCategories = [] } = useEventCategories();
 

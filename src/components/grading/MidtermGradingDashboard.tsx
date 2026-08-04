@@ -74,7 +74,7 @@ export const MidtermGradingDashboard: React.FC = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Midterm Grading Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold">Midterm Grading Dashboard</h1>
           <p className="text-muted-foreground">Review and grade submitted midterm exams</p>
         </div>
         <Badge variant="outline" className="text-lg px-4 py-2">
@@ -299,7 +299,7 @@ export const MidtermGradingDashboard: React.FC = () => {
                           </div>
                           
                           <div className="text-center">
-                            <div className="text-4xl font-bold text-primary">
+                            <div className="text-2xl md:text-4xl font-bold text-primary">
                               {((totalInstructor / 90) * 100).toFixed(1)}%
                             </div>
                             <div className="text-sm text-muted-foreground">Overall Grade</div>

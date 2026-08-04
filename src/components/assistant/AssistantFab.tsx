@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ChevronUp, Mic, Square, X } from 'lucide-react';
-import { useIsPhone } from '@/hooks/use-mobile';
+import { AudioLines, ChevronUp, Mic, Square, X } from 'lucide-react';
+import { useIsCompactNav } from '@/hooks/use-mobile';
 import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
 import { sectionKeyFromPath, isFabCollapsed, setFabCollapsed } from '@/lib/assistant/fabPrefs';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,9 @@ const CAPTION_MS = 6000;
 export const AssistantFab = () => {
   const assistant = useAssistantOptional();
   const { pathname } = useLocation();
-  const isPhone = useIsPhone();
+  // Tracks the docked bottom tab bar's own <768 gate so the FAB floats
+  // above the bar exactly when the bar exists.
+  const isCompactNav = useIsCompactNav();
   const section = sectionKeyFromPath(pathname);
   const [collapsed, setCollapsed] = useState(() => isFabCollapsed(section));
   // Re-read the pref when the section changes (collapse is per-section).
@@ -33,7 +35,7 @@ export const AssistantFab = () => {
   }, [captionReply]);
 
   if (!assistant) return null;
-  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state } = assistant;
+  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state, liveStatus, startLive, endLive } = assistant;
   if (sheetOpen || videoRoom) return null;
 
   // Immersive full-screen routes (Viewer reader, Studio session editor)
@@ -46,7 +48,7 @@ export const AssistantFab = () => {
     /^\/studio\/sessions\/[^/]+/.test(pathname);
   const bottom = isImmersive
     ? 'calc(env(safe-area-inset-bottom, 0px) + 12px)'
-    : isPhone
+    : isCompactNav
       ? 'calc(env(safe-area-inset-bottom, 0px) + 68px)'
       : '1.25rem';
 
@@ -56,7 +58,7 @@ export const AssistantFab = () => {
         type="button"
         aria-label="Show assistant"
         onClick={() => { setCollapsed(false); setFabCollapsed(section, false); }}
-        className="fixed right-0 z-40 h-8 w-4 rounded-l-full bg-primary/25 backdrop-blur-xl border border-r-0 border-primary/30 shadow-md hover:bg-primary/40 transition-colors"
+        className="fixed right-0 z-40 h-8 w-4 rounded-l-full bg-background/80 backdrop-blur-xl border border-r-0 border-border shadow-md hover:bg-muted transition-colors"
         style={{ bottom }}
       />
     );
@@ -81,7 +83,11 @@ export const AssistantFab = () => {
           {caption}
         </button>
       )}
-      <div className="group relative flex items-center gap-1 rounded-full bg-primary/20 backdrop-blur-xl border border-primary/30 shadow-lg p-1">
+      {/* Neutral adaptive surface (Kevin 2026-08-03): the old bg-primary/20
+          translucency dissolved into photo/dark backgrounds — the pill now
+          sits on the theme's background token at near-opacity so it reads
+          on ANY backdrop, with primary reserved for the icons. */}
+      <div className="group relative flex items-center gap-1 rounded-full bg-background/85 backdrop-blur-xl border border-border shadow-lg p-1">
         <button
           type="button"
           aria-label="Hide assistant on this page"
@@ -94,7 +100,7 @@ export const AssistantFab = () => {
           type="button"
           aria-label="Open assistant chat"
           onClick={() => setSheetOpen(true)}
-          className="h-6 w-6 rounded-full flex items-center justify-center text-primary hover:bg-primary/20 transition-colors"
+          className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           <ChevronUp className="w-4 h-4" />
         </button>
@@ -102,7 +108,25 @@ export const AssistantFab = () => {
             silences her (Kevin: "she won't stop talking"). Otherwise it's
             the mic; tapping the mic also barges in (stops speech) via the
             provider. */}
-        {speaking ? (
+        {/* Live conversation (ElevenLabs full-duplex): while live, the
+            agent hears the user THROUGH its own speech — voice interrupts
+            voice, no tapping. The live button replaces the push-to-talk
+            mic's job entirely for the session, so mic/stop hide. */}
+        {liveStatus !== 'off' ? (
+          <button
+            type="button"
+            aria-label="End live conversation"
+            title="End live conversation"
+            onClick={endLive}
+            className={cn(
+              'h-9 rounded-full px-3 flex items-center gap-1.5 transition-colors bg-destructive/20 text-destructive hover:bg-destructive/30',
+              liveStatus === 'connecting' && 'opacity-70',
+            )}
+          >
+            <AudioLines className={cn('w-4 h-4', liveStatus === 'live' && 'animate-pulse')} />
+            <span className="text-xs font-semibold">{liveStatus === 'connecting' ? '…' : 'End'}</span>
+          </button>
+        ) : speaking ? (
           <button
             type="button"
             aria-label="Stop talking"
@@ -124,6 +148,17 @@ export const AssistantFab = () => {
             )}
           >
             <Mic className="w-4 h-4" />
+          </button>
+        )}
+        {liveStatus === 'off' && (
+          <button
+            type="button"
+            aria-label="Start live conversation"
+            title="Live conversation — talk naturally, your voice can interrupt"
+            onClick={startLive}
+            className="h-9 w-9 rounded-full flex items-center justify-center text-primary/80 hover:bg-primary/20 transition-colors"
+          >
+            <AudioLines className="w-4 h-4" />
           </button>
         )}
       </div>

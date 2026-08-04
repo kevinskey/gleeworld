@@ -52,69 +52,37 @@ const CourseOnboarding = () => {
 
   const CourseIcon = course.icon;
 
-  // Directly enroll existing logged-in users
+  // Directly enroll existing logged-in users through the SHARED endpoint
+  // that /join/:code also uses (gw-course-enroll). Consolidating avoids the
+  // two-path drift where this file's direct insert differed from the
+  // invite path on role, enrollment_status, and error handling.
   const handleEnrollExistingUser = async () => {
     if (!user) return;
-    
+
     setEnrolling(true);
     try {
-      // Get course UUID from database using various formats
-      let courseId: string | null = null;
-      
-      // Try exact match with hyphen
-      const { data: courseData } = await supabase
-        .from('gw_courses')
-        .select('id')
-        .eq('course_code', course.courseCode.replace(' ', '-'))
-        .maybeSingle();
-      
-      if (courseData) {
-        courseId = courseData.id;
-      } else {
-        // Try ilike search
-        const { data: altCourseData } = await supabase
-          .from('gw_courses')
-          .select('id')
-          .ilike('course_code', `%${course.courseCode.replace(' ', '%')}%`)
-          .maybeSingle();
-        
-        if (altCourseData) {
-          courseId = altCourseData.id;
-        }
-      }
-      
-      if (!courseId) {
-        toast.error('Course not found in database. Please contact support.');
-        return;
-      }
-      
-      // Insert enrollment record
-      const { error } = await supabase
-        .from('gw_course_enrollments')
-        .insert({
-          course_id: courseId,
-          user_id: user.id,
-          role: 'student',
-          enrollment_status: 'enrolled'
-        });
-      
-      if (error) {
-        if (error.code === '23505') {
-          toast.info('You are already enrolled in this course!');
-        } else {
-          throw error;
-        }
-      } else {
+      const { data, error } = await supabase.functions.invoke('gw-course-enroll', {
+        body: { courseCode: course.courseCode },
+      });
+      if (error) throw error;
+      const result = data as {
+        enrolled?: boolean;
+        alreadyEnrolled?: boolean;
+        courseSlug?: string;
+      } | null;
+
+      if (result?.alreadyEnrolled) {
+        toast.info('You are already enrolled in this course!');
+      } else if (result?.enrolled) {
         toast.success(`Successfully enrolled in ${course.title}!`);
       }
-      
-      // Navigate to the course page
-      const courseSlug = course.courseCode.toLowerCase().replace(' ', '-');
+
+      const courseSlug = result?.courseSlug || course.courseCode.toLowerCase().replace(' ', '-');
       navigate(`/academy/${courseSlug}`);
-      
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Enrollment error:', err);
-      toast.error('Failed to enroll. Please try again.');
+      const message = err instanceof Error ? err.message : 'Failed to enroll. Please try again.';
+      toast.error(message);
     } finally {
       setEnrolling(false);
     }
@@ -138,7 +106,7 @@ const CourseOnboarding = () => {
     return (
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#150d26]" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--brand-navy))]" />
         </div>
       </UniversalLayout>
     );
@@ -150,7 +118,7 @@ const CourseOnboarding = () => {
         {/* Hero Section - Compact on mobile */}
         <div 
           className="w-full py-6 sm:py-10 md:py-16"
-          style={{ backgroundColor: '#150d26' }}
+          style={{ backgroundColor: 'hsl(var(--brand-navy))' }}
         >
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
@@ -179,7 +147,7 @@ const CourseOnboarding = () => {
                 {/* Course Overview Card - Compact */}
                 <Card className="shadow-sm">
                   <CardHeader className="py-3 sm:py-4 md:py-6 px-3 sm:px-4 md:px-6">
-                    <CardTitle className="flex items-center gap-2 text-[#150d26] text-sm sm:text-base md:text-lg">
+                    <CardTitle className="flex items-center gap-2 text-[hsl(var(--brand-navy))] text-sm sm:text-base md:text-lg">
                       <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
                       Course Overview
                     </CardTitle>
@@ -191,14 +159,14 @@ const CourseOnboarding = () => {
                     
                     <div className="flex flex-row gap-2 sm:gap-3 md:gap-4">
                       <div className="flex-1 flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg">
-                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-[#150d26] flex-shrink-0" />
+                        <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-[hsl(var(--brand-navy))] flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-xs text-muted-foreground">Duration</p>
                           <p className="font-medium text-xs sm:text-sm truncate">{course.duration}</p>
                         </div>
                       </div>
                       <div className="flex-1 flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-50 rounded-lg">
-                        <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 text-[#150d26] flex-shrink-0" />
+                        <GraduationCap className="h-4 w-4 sm:h-5 sm:w-5 text-[hsl(var(--brand-navy))] flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-xs text-muted-foreground">Level</p>
                           <p className="font-medium text-xs sm:text-sm truncate">{course.level}</p>
@@ -211,7 +179,7 @@ const CourseOnboarding = () => {
                 {/* What You'll Learn - Compact */}
                 <Card className="shadow-sm">
                   <CardHeader className="py-3 sm:py-4 md:py-6 px-3 sm:px-4 md:px-6">
-                    <CardTitle className="flex items-center gap-2 text-[#150d26] text-sm sm:text-base md:text-lg">
+                    <CardTitle className="flex items-center gap-2 text-[hsl(var(--brand-navy))] text-sm sm:text-base md:text-lg">
                       <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
                       What You'll Learn
                     </CardTitle>
@@ -231,7 +199,7 @@ const CourseOnboarding = () => {
                 {/* Instructor - Compact */}
                 <Card className="shadow-sm">
                   <CardHeader className="py-3 sm:py-4 md:py-6 px-3 sm:px-4 md:px-6">
-                    <CardTitle className="flex items-center gap-2 text-[#150d26] text-sm sm:text-base md:text-lg">
+                    <CardTitle className="flex items-center gap-2 text-[hsl(var(--brand-navy))] text-sm sm:text-base md:text-lg">
                       <User className="h-4 w-4 sm:h-5 sm:w-5" />
                       Instructor
                     </CardTitle>
@@ -260,8 +228,8 @@ const CourseOnboarding = () => {
 
               {/* Enrollment Card - Compact */}
               <div className="md:col-span-1 order-first md:order-last">
-                <Card className="sticky top-4 border-2 border-[#150d26]/20 shadow-sm">
-                  <CardHeader className="bg-[#150d26] text-white rounded-t-lg py-3 sm:py-4">
+                <Card className="sticky top-4 border-2 border-[hsl(var(--brand-navy))]/20 shadow-sm">
+                  <CardHeader className="bg-[hsl(var(--brand-navy))] text-white rounded-t-lg py-3 sm:py-4">
                     <CardTitle className="text-center text-sm sm:text-base">Get Started</CardTitle>
                   </CardHeader>
                   <CardContent className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4">

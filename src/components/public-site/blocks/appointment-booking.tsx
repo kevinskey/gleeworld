@@ -306,7 +306,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
         </p>
       )}
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <CalendarClock className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
@@ -320,7 +320,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   // External scheduler: the tenant has opted out of the inline flow.
   if (external) {
     return (
-      <section id="appointments" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+      <section id="appointments" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
         {heading}
         {intro}
         <div className="text-center">
@@ -342,10 +342,10 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   // email to wait on, no account to check.
   if (receipt) {
     return (
-      <section id="appointments" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+      <section id="appointments" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
         {heading}
         <div
-          className="border border-border bg-card p-6 sm:p-8 max-w-2xl"
+          className="border border-border bg-card p-6 cq-sm:p-8 max-w-2xl"
           style={{ borderRadius: 'var(--site-radius)' }}
         >
           <div className="flex items-center gap-3 mb-4">
@@ -393,7 +393,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   if (!isLoading && !live) {
     const listed = config.services.filter((s) => s.name);
     return (
-      <section id="appointments" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+      <section id="appointments" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
         {heading}
         {intro}
         {listed.length > 0 && (
@@ -431,7 +431,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   const canSubmit = Boolean(slot && form.name.trim() && form.email.trim()) && !submit.isPending;
 
   return (
-    <section id="appointments" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="appointments" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
       {heading}
       {intro}
 
@@ -562,7 +562,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           {slot && (
             <Step n={4} label="Your details">
               <div
-                className="border border-border bg-card p-4 sm:p-6"
+                className="border border-border bg-card p-4 cq-sm:p-6"
                 style={{ borderRadius: 'var(--site-radius)' }}
               >
                 <div className="flex items-start justify-between gap-3 pb-4 mb-4 border-b border-border">

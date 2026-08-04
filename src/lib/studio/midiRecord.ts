@@ -29,7 +29,7 @@ export function grownSessionLength(currentSeconds: number, takeEndSeconds: numbe
   return Math.max(currentSeconds, Math.ceil(takeEndSeconds));
 }
 
-const MIN_NOTE_SECONDS = 0.05; // floor so a fast tap still has audible length
+export const MIN_NOTE_SECONDS = 0.05; // floor so a fast tap still has audible length
 
 // Turn a captured key press (absolute transport seconds for down/up) into a
 // clip-relative MidiNote. Pure — the timing math is unit-tested.
@@ -79,6 +79,22 @@ export function appendTakeNote(
     notes: [note],
   };
   return { takeClipId: clip.id, clips: [...clips, clip] };
+}
+
+// A take's clip may not exist yet when it's time to attach something to
+// it — a CC-only take (pedal/mod moves with no notes played) never runs
+// appendTakeNote, so midiTakeClipRef stays null all the way to stop.
+// Returns the existing clip untouched (notes already created it), or a
+// fresh empty-notes clip anchored at the first captured event — same id
+// generator and defaults as appendTakeNote's fresh-clip branch above.
+export function ensureTakeClip(existing: MidiClip | null, firstEventAbsSeconds: number, minDuration: number): MidiClip {
+  if (existing) return existing;
+  return {
+    id: crypto.randomUUID(), kind: 'midi',
+    start_seconds: firstEventAbsSeconds,
+    duration_seconds: minDuration,
+    notes: [],
+  };
 }
 
 // ── Held-note bookkeeping (recording) ────────────────────────────────
@@ -138,11 +154,57 @@ export function attachTakeCc(clips: MidiClip[], takeClipId: string, events: Capt
   });
 }
 
+// ── Commit coalescing queue ──────────────────────────────────────────
+
+export interface MidiCommitQueue<T> {
+  add(item: T): void;        // starts/extends the coalesce timer
+  flushNow(): T[];           // cancel timer, drain, return items
+  clear(): void;             // cancel timer, drop items — "leave no trace"
+  size(): number;
+}
+
+/** Coalescing commit queue for captured MIDI presses. StudioEditor batches
+ * note commits ~250ms so chords land as one manifest write; punch-cancel
+ * must be able to discard the batch entirely ("leave no trace"). */
+export function createMidiCommitQueue<T>(opts: {
+  coalesceMs: number;
+  onFlush: (items: T[]) => void;
+  setTimer?: typeof setTimeout;
+  clearTimer?: typeof clearTimeout;
+}): MidiCommitQueue<T> {
+  const setT = opts.setTimer ?? setTimeout;
+  const clearT = opts.clearTimer ?? clearTimeout;
+  let items: T[] = [];
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  const cancel = () => { if (timer !== null) { clearT(timer); timer = null; } };
+  const drain = () => { const out = items; items = []; return out; };
+  return {
+    add(item) {
+      items.push(item);
+      if (timer === null) timer = setT(() => { timer = null; opts.onFlush(drain()); }, opts.coalesceMs);
+    },
+    flushNow() { cancel(); const out = drain(); if (out.length) opts.onFlush(out); return out; },
+    clear() { cancel(); items = []; },
+    size() { return items.length; },
+  };
+}
+
 // ── MIDI recording offset (auto + trim) ──────────────────────────────
 // The player performs in time with what they HEAR, which is late by the
 // audio output latency — so captured event times are shifted earlier by
 // getOutputLatencyMs() (read once per take by the caller) plus this
 // user trim. Mirrors the audio path's takeAlignment approach.
+
+// ── Punch capture gate ────────────────────────────────────────────────
+// Whether an incoming MIDI event should be CAPTURED into the take right
+// now. Live monitoring (LiveVoices) is never gated by this — the player
+// must always hear themselves, including during punch pre/post-roll.
+// A normal (non-punch) take has punchPhase === null, so the punch clause
+// is vacuously true and this reduces to the old bare `recordingActive`
+// check.
+export function shouldCaptureMidi(recordingActive: boolean, punchPhase: 'pre' | 'rec' | 'post' | null): boolean {
+  return recordingActive && (punchPhase === null || punchPhase === 'rec');
+}
 
 export const MIDI_TRIM_STORAGE_KEY = 'studio.midiTrimMs';
 

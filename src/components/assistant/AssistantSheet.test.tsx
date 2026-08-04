@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AssistantSheet } from './AssistantSheet';
 import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
 
@@ -11,6 +12,11 @@ vi.mock('@/hooks/useUserRole', () => ({
 }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { functions: { invoke: vi.fn() } },
+}));
+// AssistantProvider → useAssistantVoice → useBrandingSettings, which needs
+// getTenantSlug + a queryable supabase client; stub the hook instead.
+vi.mock('@/hooks/useBrandingSettings', () => ({
+  useBrandingSettings: () => ({ settings: {}, isLoading: false }),
 }));
 
 function setViewportWidth(width: number) {
@@ -26,9 +32,11 @@ function setViewportWidth(width: number) {
 const renderSheet = () =>
   render(
     <MemoryRouter>
-      <AssistantProvider initialSheetOpen>
-        <AssistantSheet />
-      </AssistantProvider>
+      <QueryClientProvider client={new QueryClient()}>
+        <AssistantProvider initialSheetOpen>
+          <AssistantSheet />
+        </AssistantProvider>
+      </QueryClientProvider>
     </MemoryRouter>,
   );
 

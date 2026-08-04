@@ -30,7 +30,7 @@ export const PaymentPlansList = ({ paymentPlans, onRefresh }: PaymentPlansListPr
     
     try {
       const { error } = await (supabase as any)
-        .from('gw_dues_payment_plans')
+        .from('gw_fee_payment_plans')
         .update({ status: newStatus })
         .eq('id', planId);
 
@@ -53,9 +53,9 @@ export const PaymentPlansList = ({ paymentPlans, onRefresh }: PaymentPlansListPr
   };
 
   const calculateProgress = (plan: any) => {
-    if (!plan.gw_payment_plan_installments) return 0;
+    if (!plan.gw_fee_plan_installments) return 0;
     
-    const paidInstallments = plan.gw_payment_plan_installments.filter(
+    const paidInstallments = plan.gw_fee_plan_installments.filter(
       (inst: any) => inst.status === 'paid'
     ).length;
     
@@ -207,11 +207,11 @@ export const PaymentPlansList = ({ paymentPlans, onRefresh }: PaymentPlansListPr
             </div>
             
             {/* Installments preview */}
-            {plan.gw_payment_plan_installments && plan.gw_payment_plan_installments.length > 0 && (
+            {plan.gw_fee_plan_installments && plan.gw_fee_plan_installments.length > 0 && (
               <div className="border-t pt-3">
                 <div className="text-sm font-medium mb-2">Recent Installments</div>
                 <div className="space-y-1">
-                  {plan.gw_payment_plan_installments.slice(0, 3).map((installment: any) => (
+                  {plan.gw_fee_plan_installments.slice(0, 3).map((installment: any) => (
                     <div key={installment.id} className="flex items-center justify-between text-sm">
                       <span>
                         Installment #{installment.installment_number}

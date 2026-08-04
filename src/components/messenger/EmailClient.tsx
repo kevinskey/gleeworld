@@ -12,13 +12,15 @@ import { useToast } from '@/hooks/use-toast';
 import {
   X, Send, Loader2, Mail, Paperclip, FileIcon, PenSquare, Inbox, ChevronLeft,
 } from 'lucide-react';
+import { roleForGroup, type ComposerGroup } from '@/lib/messengerGroups';
 
-type Group = 'all' | 'students' | 'admins' | 'fans' | 'custom';
+type Group = ComposerGroup;
 const GROUPS: Array<{ value: Group; label: string }> = [
   { value: 'all', label: 'Everyone' },
   { value: 'students', label: 'Students only' },
   { value: 'admins', label: 'Staff / Admins only' },
   { value: 'fans', label: 'Fans only' },
+  { value: 'parents', label: 'Parents only' },
   { value: 'custom', label: 'Specific people…' },
 ];
 
@@ -92,8 +94,8 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
     queryFn: async () => {
       let q = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
       if (group !== 'all') {
-        const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
-        q = q.eq('role', role);
+        const role = roleForGroup(group);
+        if (role) q = q.eq('role', role);
       }
       const { count } = await q;
       return count ?? 0;
@@ -159,10 +161,8 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
         emails = selectedPeople.map((p) => p.email).filter(Boolean) as string[];
       } else {
         let rq = supabase.from('gw_profiles_directory').select('email').not('email', 'is', null);
-        if (group !== 'all') {
-          const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
-          rq = rq.eq('role', role);
-        }
+        const role = roleForGroup(group);
+        if (role) rq = rq.eq('role', role);
         const { data: recipients, error: rErr } = await rq;
         if (rErr) throw rErr;
         emails = (recipients ?? []).map((r: any) => r.email).filter(Boolean);

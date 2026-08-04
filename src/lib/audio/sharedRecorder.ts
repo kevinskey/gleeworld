@@ -1,12 +1,10 @@
 // Shared web recording engine — mic capture + sample-accurate head-trim.
 //
 // This module was extracted from Studio's `engine/recorder.ts` and
-// `StudioEditor.tsx`'s `finalizeRecordingBlob` (see
-// docs/superpowers/plans/2026-07-05-part-tracks-shared-engine.md, Task 1)
-// so Part Tracks can adopt the same hardened capture + latency-compensation
-// pipeline Studio already relies on. Studio re-exports from here — its
-// call sites and behavior are unchanged; the engine tests under
-// src/lib/studio/engine/__tests__ prove it.
+// `StudioEditor.tsx`'s `finalizeRecordingBlob` so Studio's hardened
+// capture + latency-compensation pipeline could be shared. Studio
+// re-exports from here — its call sites and behavior are unchanged;
+// the engine tests under src/lib/studio/engine/__tests__ prove it.
 //
 // Two layers live here:
 //  1. A handle-based mic recorder (`openMicRecorder` → `MicRecorder`) that

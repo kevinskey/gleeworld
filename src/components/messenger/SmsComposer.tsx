@@ -10,14 +10,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { X, Send, Loader2, Smartphone } from 'lucide-react';
+import { roleForGroup, type ComposerGroup } from '@/lib/messengerGroups';
 
-type Group = 'all' | 'students' | 'admins' | 'fans' | 'custom';
+type Group = ComposerGroup;
 const GROUPS: Array<{ value: Group; label: string }> = [
   { value: 'custom', label: 'Specific people or numbers…' },
   { value: 'all', label: 'Everyone' },
   { value: 'students', label: 'Students only' },
   { value: 'admins', label: 'Staff / Admins only' },
   { value: 'fans', label: 'Fans only' },
+  { value: 'parents', label: 'Parents only' },
 ];
 
 interface Person {
@@ -69,10 +71,8 @@ export function SmsComposer({ onClose, inline = false }: { onClose: () => void; 
     enabled: group !== 'custom',
     queryFn: async () => {
       let p = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true }).not('phone', 'is', null);
-      if (group !== 'all') {
-        const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
-        p = p.eq('role', role);
-      }
+      const role = roleForGroup(group);
+      if (role) p = p.eq('role', role);
       const { count } = await p;
       return count ?? 0;
     },
@@ -104,10 +104,8 @@ export function SmsComposer({ onClose, inline = false }: { onClose: () => void; 
         numbers = recipients.map((p) => p.phone).filter(Boolean) as string[];
       } else {
         let pq = supabase.from('gw_profiles_directory').select('phone').not('phone', 'is', null);
-        if (group !== 'all') {
-          const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
-          pq = pq.eq('role', role);
-        }
+        const role = roleForGroup(group);
+        if (role) pq = pq.eq('role', role);
         const { data: phones, error: pErr } = await pq;
         if (pErr) throw pErr;
         numbers = (phones ?? []).map((p: any) => p.phone).filter(Boolean);
