@@ -9,6 +9,7 @@ import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { Heart, Mail, Lock, AlertCircle, CheckCircle, Music } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
+import { getOrgName } from '@/lib/orgName';
 import { useToast } from '@/hooks/use-toast';
 
 const MemberRegistration = () => {
@@ -147,7 +148,7 @@ const MemberRegistration = () => {
             <Music className="h-8 w-8 text-primary" />
           </div>
         </div>
-        <CardTitle className="text-2xl">Join the Glee Club Family</CardTitle>
+        <CardTitle className="text-2xl">Join the {getOrgName()} Family</CardTitle>
         <p className="text-muted-foreground">
           Enter your email to get started with your musical journey
         </p>
