@@ -120,6 +120,9 @@ describe('getTabItems', () => {
 // Copied here (not imported) so this list only changes when someone
 // deliberately re-verifies it against App.tsx's <Route path="..."> entries.
 const KNOWN_ROUTES = new Set([
+  // Verified against src/App.tsx 2026-08-04.
+  '/dashboard/fees',
+  '/dashboard/my-fees',
   '/dashboard/viewer', '/studio',
   '/dashboard/sight-reading', '/dashboard/reading-music', '/attendance', '/dashboard/academy',
   '/box-office', '/dashboard/concert-planner', '/dashboard/finance',
