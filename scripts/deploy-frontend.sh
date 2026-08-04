@@ -9,17 +9,64 @@
 #      stale bundle even after a rsync. Fix perms every deploy.
 #   2. Verifies the CACHE_VERSION on the live site matches the local
 #      build so we notice broken pushes immediately.
+#   3. Refuses to publish a tree that is behind origin/main (see below).
 #
 # Usage: from repo root:  bash scripts/deploy-frontend.sh
 #   Skip the build step:  bash scripts/deploy-frontend.sh --skip-build
+#   Publish anyway:       bash scripts/deploy-frontend.sh --allow-behind
 set -euo pipefail
 
 DROPLET="root@198.211.113.144"
 REMOTE_DIR="/var/www/gleeworld/html"
 SITE="https://gleeworld.org"
 
+SKIP_BUILD=0
+ALLOW_BEHIND=0
+for arg in "$@"; do
+  case "$arg" in
+    --skip-build)   SKIP_BUILD=1 ;;
+    --allow-behind) ALLOW_BEHIND=1 ;;
+    *) echo "!! Unknown option: $arg"; exit 1 ;;
+  esac
+done
+
+# 0. Staleness guard.
+#
+# One build serves every tenant, so publishing a feature branch that forked
+# before other work landed silently REMOVES that work from the live site —
+# and every check below still reports success, because the bundle it verifies
+# is exactly the (stale) one we just pushed. That happened on 2026-08-04: a
+# branch that predated the Audition block went out, and the block vanished
+# from the builder for every tenant while the deploy reported "Done".
+#
+# So: origin/main must be an ancestor of HEAD. Merge it, or pass
+# --allow-behind if you genuinely mean to publish something older (rollback).
+if [ "$ALLOW_BEHIND" -eq 0 ] && git rev-parse --git-dir >/dev/null 2>&1; then
+  echo "==> Checking this tree against origin/main"
+  git fetch -q origin main 2>/dev/null || echo "   (fetch failed — using the last-known origin/main)"
+  if git rev-parse --verify -q origin/main >/dev/null; then
+    if ! git merge-base --is-ancestor origin/main HEAD; then
+      echo "!! This tree is missing $(git rev-list --count HEAD..origin/main) commit(s) from origin/main."
+      echo "   Publishing it would take that work off the live site."
+      echo "   Fix:      git merge origin/main"
+      echo "   Override: bash scripts/deploy-frontend.sh --allow-behind"
+      exit 1
+    fi
+  else
+    echo "   (no origin/main ref — skipping)"
+  fi
+fi
+
+# Not fatal, and deliberately outside the guard above so it still prints under
+# --allow-behind: the build reads the working tree, so uncommitted edits ship
+# and this deploy records them nowhere.
+if git rev-parse --git-dir >/dev/null 2>&1 \
+   && [ -n "$(git status --porcelain -- src public index.html 2>/dev/null)" ]; then
+  echo "==> note: uncommitted changes in src/ will be included in this build"
+fi
+
 # 1. Build (unless caller says otherwise)
-if [ "${1:-}" != "--skip-build" ]; then
+if [ "$SKIP_BUILD" -eq 0 ]; then
   echo "==> Building"
   npm run build
 fi
