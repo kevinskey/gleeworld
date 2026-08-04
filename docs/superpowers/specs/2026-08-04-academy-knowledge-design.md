@@ -14,7 +14,7 @@ young choir?", it answers from whatever the base model happens to carry, with no
 grounding and no consistency.
 
 kevinphillipjohnson.com/academy hosts a substantial, authored reference library on
-exactly these subjects: roughly 70,000 words across 17 pages plus a 183-piece
+exactly these subjects: roughly 65,000 words across 16 pages plus a 183-piece
 repertoire database. This spec gives the assistant retrieval access to that
 library.
 
@@ -48,7 +48,7 @@ exist only under `/academy/` — the local copies are 8.7 KB stubs. Ingest reads
 
 Pages fall into three extraction modes.
 
-### Mode `data` — 12 pages
+### Mode `data` — 11 pages
 
 Content lives in a top-level `const` in a classic `<script>`, so it is reachable
 from `page.evaluate(() => NAME)` in the same realm. This mode is mandatory, not a
@@ -69,7 +69,6 @@ it.
 | `works` | `CHORAL_WORKS` |
 | `minor-works` | `MINOR_CHORAL_WORKS` |
 | `mini-major-works` | `MINI_MAJOR_WORKS` |
-| `performance-wear` | `CHAPTERS` |
 
 `AUDIO_FILES` (conductors-guide) and `SP_AUDIO_FILES` (spirituals) are media
 manifests, not prose — skipped.
@@ -181,7 +180,7 @@ does not know rather than fall back to invention.
 
 About six lines added to `buildSystemPrompt`, listing the covered domains —
 conducting history and technique, beat patterns, spirituals, choral repertoire,
-terminology, church music, choral education, concert attire — and one rule: call
+terminology, church music, and choral education — and one rule: call
 `search_academy` before answering questions in those domains, answer only from the
 returned passages, and say so when nothing relevant comes back.
 

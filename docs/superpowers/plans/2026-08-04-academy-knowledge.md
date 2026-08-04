@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Give the GleeWorld Assistant a `search_academy` tool that answers choral-conducting questions from a generated corpus of the ~70,000-word reference library at kevinphillipjohnson.com/academy.
+**Goal:** Give the GleeWorld Assistant a `search_academy` tool that answers choral-conducting questions from a generated corpus of the ~65,000-word reference library at kevinphillipjohnson.com/academy.
 
-**Architecture:** A Node script renders the 17 live source pages with Playwright, extracts their underlying data, and generates a typed TypeScript module of ~700 text chunks. A pure, dependency-free scorer ranks those chunks lexically in memory. A new server-side tool in `assistant-chat` calls the scorer and returns the top passages. No database, no migration, no RLS, no frontend deploy.
+**Architecture:** A Node script renders the 16 live sources with Playwright, extracts their underlying data, and generates a typed TypeScript module of ~700 text chunks. A pure, dependency-free scorer ranks those chunks lexically in memory. A new server-side tool in `assistant-chat` calls the scorer and returns the top passages. No database, no migration, no RLS, no frontend deploy.
 
 **Tech Stack:** TypeScript, Deno (edge runtime), Node 22 + Playwright (ingest, run manually on Kevin's Mac), Vitest (tests).
 
@@ -29,7 +29,7 @@
 | `supabase/functions/_shared/academy/corpus.ts` | **Generated.** Exports `ACADEMY_CORPUS: AcademyChunk[]`. Never hand-edited. |
 | `supabase/functions/_shared/academy/__tests__/search.test.ts` | Scorer unit tests against a fixture corpus. |
 | `supabase/functions/_shared/academy/__tests__/corpus.test.ts` | Integrity tests against the real generated corpus. |
-| `scripts/academy/manifest.mjs` | The 17 sources: URL, mode, globals/selectors, and per-page chunking config. The only file to edit when the site changes. |
+| `scripts/academy/manifest.mjs` | The 16 sources: URL, mode, globals/selectors, and per-page chunking config. The only file to edit when the site changes. |
 | `scripts/academy/normalize.mjs` | Pure: raw record → `AcademyChunk`. Testable without a browser. |
 | `scripts/academy/__tests__/normalize.test.ts` | Normalizer unit tests using real records copied from the live pages. |
 | `scripts/ingest-academy.mjs` | Playwright runner. Fetches, extracts, normalizes, writes `corpus.ts`. |
@@ -567,7 +567,7 @@ git commit -m "feat: Academy record normalizers"
 
 Three extraction modes, all verified against the live site:
 
-- `data` (12 pages) — content lives in a top-level `const` in a classic `<script>`, reachable from `page.evaluate`. **Mandatory** for `conductors-guide`, which renders one chapter at a time behind prev/next buttons; DOM scraping would capture ~8% of it.
+- `data` (11 pages) — content lives in a top-level `const` in a classic `<script>`, reachable from `page.evaluate`. **Mandatory** for `conductors-guide`, which renders one chapter at a time behind prev/next buttons; DOM scraping would capture ~8% of it.
 - `dom` (4 pages) — class-keyed markup. Uses `textContent`, which matters for `education.html`: its accordions hide with CSS rather than unmounting, so collapsed panels are still captured.
 - `api` (1 source) — `repertoire.html` has no inline content; it fetches `/api/repertoire` (183 pieces).
 
@@ -625,10 +625,6 @@ export const SOURCES = [
   { page: 'mini-major-works', pageTitle: 'Mini-Major Choral Works', url: url('mini-major-works'), mode: 'data',
     globals: ['MINI_MAJOR_WORKS'],
     cfg: { titleField: 'title', fields: ['composer', 'year', 'era', 'voicing', 'duration', 'movements', 'description', 'notes'] } },
-
-  { page: 'performance-wear', pageTitle: 'Concert Attire', url: url('performance-wear'), mode: 'data',
-    globals: ['CHAPTERS'],
-    cfg: { titleField: 'name', idField: 'id', fields: ['summary', 'history', 'developments', 'techniques', 'subcategories'] } },
 
   { page: 'education', pageTitle: 'Choral Education', url: url('education'), mode: 'dom',
     blockSelector: '.info-card, .glos-item', titleSelector: '.info-card-title, .glos-term' },
@@ -878,7 +874,7 @@ describe('ACADEMY_CORPUS', () => {
       'conductors-guide': 10, 'conducting-history': 5, conductors: 150,
       spirituals: 5, history: 5, patterns: 5, terms: 5, workbook: 5,
       works: 20, 'minor-works': 20, 'mini-major-works': 20,
-      'performance-wear': 5, education: 40, church: 15,
+      education: 40, church: 15,
       associations: 7, conventions: 15, repertoire: 150,
     };
 
@@ -1002,7 +998,7 @@ In `supabase/functions/assistant-chat/toolCatalog.ts`, add as the last entry of 
 ```ts
   {
     name: 'search_academy',
-    description: 'Search the choral reference library for background on conducting history and technique, beat patterns, spirituals, choral repertoire and major works, musical terminology, church music, choral education, choral associations, and concert attire. Use this before answering any question about those subjects. Returns source passages.',
+    description: 'Search the choral reference library for background on conducting history and technique, beat patterns, spirituals, choral repertoire and major works, musical terminology, church music, choral education and choral associations. Use this before answering any question about those subjects. Returns source passages.',
     parameters: {
       type: 'object',
       properties: { query: str('The subject to look up, e.g. "hemiola" or "conducting before the baton"') },
@@ -1117,7 +1113,7 @@ In `supabase/functions/assistant-chat/prompt.ts`, define near the other note con
 ```ts
   const academyNote = [
     'Choral reference library (search_academy):',
-    '- You have a reference library covering conducting history and technique, beat patterns, spirituals, choral repertoire and major works, musical terminology, church music, choral education, choral associations, and concert attire.',
+    '- You have a reference library covering conducting history and technique, beat patterns, spirituals, choral repertoire and major works, musical terminology, church music, choral education and choral associations.',
     '- Call search_academy BEFORE answering any question in those subjects, including questions that sound like general knowledge.',
     '- Answer from the passages it returns. Do not guess or invent details, and do not pad an answer with outside claims.',
     '- If it returns no passages, say you do not have that information.',
@@ -1160,8 +1156,8 @@ Expected: PASS. Compare the failure count against `origin/main` — the repo car
 
 - [ ] **Step 2: Typecheck**
 
-Run: `npm run typecheck`
-Expected: no new errors versus `origin/main`. `corpus.ts` is a large literal; if typecheck slows noticeably, note the timing in the PR.
+Run: `npm run typecheck:guard`
+Expected: PASS. This is the real gate — it runs `tsc --noCheck false` and diffs against `.typecheck-baseline.txt`, failing only on newly-introduced errors. Do not edit the baseline. `corpus.ts` is a large literal; if the run slows noticeably, note the timing in the PR.
 
 - [ ] **Step 3: Deno-check the edge function**
 

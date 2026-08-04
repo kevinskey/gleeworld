@@ -4,6 +4,10 @@ const url = (page) => `${BASE}/${page}.html`;
 // merch.html is deliberately excluded: a product-and-price list, not reference
 // knowledge, and stale prices across ~50 tenants is a liability.
 //
+// performance-wear.html (concert attire) is excluded at Kevin's request
+// 2026-08-04. If it is ever added back, restore "concert attire" to the
+// search_academy tool description and to the prompt's domain list.
+//
 // Also excluded: ENRICHMENTS on conductors.html (a map of Wikipedia URLs keyed
 // by conductor id, no prose), and the /api/jwpepper-catalog and
 // /api/carlfischer-catalog endpoints (live vendor search proxies, not content).
@@ -30,15 +34,20 @@ export const SOURCES = [
 
   { page: 'patterns', pageTitle: 'Conducting Patterns', url: url('patterns'), mode: 'data',
     globals: ['PATTERNS'],
-    cfg: { titleField: 'name', idField: 'id', fields: ['description', 'summary', 'beats', 'meter', 'technique', 'notes'] } },
+    cfg: { titleField: 'name', fields: ['beats_num', 'motion', 'meters', 'character', 'gesture_path', 'repertoire', 'tips'] } },
 
   { page: 'terms', pageTitle: 'Choral Terminology', url: url('terms'), mode: 'data',
     globals: ['TERM_CATEGORIES'],
     cfg: { titleField: 'name', idField: 'id', fields: ['description', 'terms'] } },
 
+  // The three workbook globals have different record shapes, so each carries
+  // its own cfg rather than sharing a page-level one.
   { page: 'workbook', pageTitle: 'Conducting Workbook', url: url('workbook'), mode: 'data',
-    globals: ['COURSE_OBJECTIVES', 'WEEKLY_SCHEDULE', 'GRADING_BREAKDOWN'],
-    cfg: { titleField: 'name', fields: ['description', 'summary', 'objectives', 'topics', 'weight', 'notes'] } },
+    globals: [
+      { name: 'COURSE_OBJECTIVES', cfg: { titleField: 'description', fields: ['description'] } },
+      { name: 'WEEKLY_SCHEDULE', cfg: { titleField: 'dates', fields: ['topics', 'assignments'] } },
+      { name: 'GRADING_BREAKDOWN', cfg: { titleField: 'category', fields: ['percentage', 'description'] } },
+    ] },
 
   { page: 'works', pageTitle: 'Major Choral Works', url: url('works'), mode: 'data',
     globals: ['CHORAL_WORKS'],
@@ -52,12 +61,10 @@ export const SOURCES = [
     globals: ['MINI_MAJOR_WORKS'],
     cfg: { titleField: 'title', fields: ['composer', 'year', 'era', 'voicing', 'duration', 'movements', 'description', 'notes'] } },
 
-  { page: 'performance-wear', pageTitle: 'Concert Attire', url: url('performance-wear'), mode: 'data',
-    globals: ['CHAPTERS'],
-    cfg: { titleField: 'name', idField: 'id', fields: ['summary', 'history', 'developments', 'techniques', 'subcategories'] } },
-
   { page: 'education', pageTitle: 'Choral Education', url: url('education'), mode: 'dom',
-    blockSelector: '.info-card, .glos-item', titleSelector: '.info-card-title, .glos-term' },
+    // Glossary items are `<div class="glos-item"><strong>TERM</strong> definition</div>`,
+    // so the term is a direct <strong> child, not a titled element.
+    blockSelector: '.info-card, .glos-item', titleSelector: '.info-card-title, :scope > strong' },
 
   { page: 'church', pageTitle: 'Church Music', url: url('church'), mode: 'dom',
     blockSelector: '.card', titleSelector: '.card-title' },

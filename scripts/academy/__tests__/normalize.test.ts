@@ -64,6 +64,16 @@ describe('renderFacets', () => {
   it('omits empty, null, and missing fields', () => {
     expect(renderFacets(conductor, ['photo', 'missing'])).toBe('');
   });
+
+  it('humanizes snake_case field names', () => {
+    const out = renderFacets({ key_signature: 'G Dorian', beats_num: 5 }, ['key_signature', 'beats_num']);
+    expect(out).toBe('Key signature: G Dorian\nBeats num: 5');
+  });
+
+  it('renders the DOM-mode body field with no label prefix', () => {
+    const out = renderFacets({ body: 'American Choral Directors Association' }, ['body']);
+    expect(out).toBe('American Choral Directors Association');
+  });
 });
 
 describe('recordToChunk', () => {

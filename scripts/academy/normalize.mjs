@@ -20,7 +20,12 @@ const LABELS = {
   subcategories: 'Subcategories', notes: 'Notes',
 };
 
-const label = (field) => LABELS[field] ?? field.replace(/([a-z])([A-Z])/g, '$1 $2')
+// `body` is the DOM-mode catch-all field; a "Body:" prefix is pure noise.
+const UNLABELED = new Set(['body']);
+
+const label = (field) => LABELS[field] ?? field
+  .replace(/([a-z])([A-Z])/g, '$1 $2')   // camelCase -> camel Case
+  .replace(/_/g, ' ')                     // snake_case -> snake case
   .replace(/^./, (c) => c.toUpperCase());
 
 function stripHtml(value) {
@@ -56,7 +61,7 @@ export function renderFacets(record, fields) {
     .map((field) => {
       const rendered = renderValue(record[field]);
       if (!rendered) return '';
-      return `${label(field)}: ${rendered}`;
+      return UNLABELED.has(field) ? rendered : `${label(field)}: ${rendered}`;
     })
     .filter(Boolean)
     .join('\n');
