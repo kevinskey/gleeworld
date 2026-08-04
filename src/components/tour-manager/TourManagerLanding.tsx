@@ -16,6 +16,7 @@ import { TourStopEditForm } from './TourStopEditForm';
 import { CreateTourGroupButton } from '@/components/tour/CreateTourGroupButton';
 import { exportItineraryPdf, exportRosterPdf } from '@/utils/tourPdfExport';
 import { useTourCourseId } from './TourCourseContext';
+import { useActiveTrip } from './ActiveTripContext';
 interface TourManagerLandingProps {
   onNavigate: (section: string) => void;
   stats?: {
@@ -54,6 +55,8 @@ export const TourManagerLanding = ({
   const tourCourseId = useTourCourseId();
   const [contractTourDates, setContractTourDates] = useState<ContractTourDate[]>([]);
   const [tourTitle, setTourTitle] = useState<string | null>(null);
+  const { trip: activeTrip } = useActiveTrip();
+  useEffect(() => { setTourTitle(activeTrip?.name ?? null); }, [activeTrip?.name]);
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
   const [tourEvents, setTourEvents] = useState<TourStopFull[]>([]);
   const [selectedStop, setSelectedStop] = useState<TourStopFull | null>(null);
@@ -80,16 +83,11 @@ export const TourManagerLanding = ({
         .order('start_date', { ascending: true });
       if (data) setTourEvents(data as TourStopFull[]);
     };
-    const fetchTourName = async () => {
-      let q = supabase
-        .from('gw_tours')
-        .select('name')
-        .eq('status', 'planning')
-        .limit(1);
-      if (tourCourseId) q = q.eq('course_id', tourCourseId);
-      const { data } = await q.maybeSingle();
-      if (data) setTourTitle(data.name);
-    };
+    // Trip name now comes from the switcher (see the useEffect below). It used
+    // to be resolved here as status='planning' limit 1, which could name a
+    // different trip than the one the rest of the page was showing — and that
+    // name is what labels the exported itinerary and roster PDFs.
+    const fetchTourName = async () => {};
     const fetchRoster = async () => {
       const { data: roster } = await supabase
         .from('gw_tour_roster')
