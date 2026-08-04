@@ -42,6 +42,7 @@ describe('toolCatalog', () => {
       'order_food',
       'query_calendar',
       'read_news_feeds',
+      'search_academy',
       'search_music',
       'search_youtube',
       'web_search',
@@ -61,5 +62,24 @@ describe('toolCatalog', () => {
     expect(def!.execution).toBe('client');
     expect(def!.confirm).toBe(true);
     expect(toolsForRole('member').map((t) => t.name)).not.toContain('create_course_draft');
+  });
+});
+
+describe('search_academy', () => {
+  it('is available to members', () => {
+    const tool = TOOL_CATALOG.find((t) => t.name === 'search_academy');
+    expect(tool).toBeDefined();
+    expect(tool!.minRole).toBe('member');
+    expect(tool!.execution).toBe('server');
+    expect(tool!.confirm).toBe(false);
+  });
+
+  it('is included in the member tool list', () => {
+    expect(toolsForRole('member').map((t) => t.name)).toContain('search_academy');
+  });
+
+  it('requires a query parameter', () => {
+    const tool = TOOL_CATALOG.find((t) => t.name === 'search_academy')!;
+    expect((tool.parameters as any).required).toEqual(['query']);
   });
 });

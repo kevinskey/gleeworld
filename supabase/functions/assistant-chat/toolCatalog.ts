@@ -475,6 +475,16 @@ export const TOOL_CATALOG: ToolDef[] = [
     }, required: ['flag'] },
     minRole: 'admin', execution: 'server', confirm: false,
   },
+  {
+    name: 'search_academy',
+    description: 'Search the choral reference library for background on conducting history and technique, beat patterns, spirituals, choral repertoire and major works, musical terminology, church music, choral education, and choral associations. Use this before answering any question about those subjects. Returns source passages.',
+    parameters: {
+      type: 'object',
+      properties: { query: str('The subject to look up, e.g. "hemiola" or "conducting before the baton"') },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
 ];
 
 export function toolsForRole(role: AssistantRole): ToolDef[] {
