@@ -12,7 +12,6 @@ import {
   FileSpreadsheet,
   Package,
   FileText,
-  ArrowLeft,
   Scissors,
   BarChart3,
   Clock,
@@ -20,7 +19,6 @@ import {
   ChevronLeft,
   AlertTriangle,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PDFImportManager } from './PDFImportManager';
@@ -33,8 +31,8 @@ import { BulkPDFCroppingTool } from '@/components/glee-library/BulkPDFCroppingTo
 import { SinglePDFCropTool } from './SinglePDFCropTool';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useHomePath } from '@/hooks/useHomePath';
 import { CopyrightPolicyLink } from '@/components/policies/CopyrightPolicyLink';
+import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 
 type ModuleKey = 'home' | 'library' | 'pdf-import' | 'ai-tools' | 'inventory' | 'csv';
 
@@ -62,8 +60,6 @@ export const LibrarianDashboard = () => {
   // mounts after they acknowledge. Shown each time so the librarian
   // is reminded what they're certifying before they capture.
   const [scanDisclaimerOpen, setScanDisclaimerOpen] = useState(false);
-  const navigate = useNavigate();
-  const homePath = useHomePath();
   const { toast } = useToast();
   const isMobile = useIsMobile();
 
@@ -130,48 +126,30 @@ export const LibrarianDashboard = () => {
     );
   }
 
-  // HOME VIEW — mobile-first card grid
+  // HOME VIEW — mobile-first card grid.
+  // Uses DashboardPageShell so the title renders at the same size, face and
+  // X coordinate as every other dashboard page. This replaced a hand-rolled
+  // sticky header whose back arrow ran window.history.back() — it advertised
+  // a parent this page doesn't have, so it read as "← Media Library" (or
+  // whatever you happened to arrive from). The sidebar is the way out.
   return (
-    <div className={cn("min-h-[100dvh] bg-background", isMobile ? "pb-24" : "")}>
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center justify-between px-4 py-3 max-w-5xl mx-auto">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                // Browser-history back so we land on whatever page the
-                // librarian was opened from (e.g. /control-center?module=…)
-                // instead of hard-jumping to /control-center via homePath.
-                if (window.history.length > 1) {
-                  navigate(-1);
-                } else {
-                  navigate(homePath);
-                }
-              }}
-              className="h-9 w-9 p-0 shrink-0"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-primary" />
-              <h1 className="text-lg font-bold">Music Librarian</h1>
-            </div>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setScanDisclaimerOpen(true)}
-            className="h-9 gap-1.5"
-          >
-            <Camera className="h-4 w-4" />
-            <span className="hidden sm:inline">Scan</span>
-          </Button>
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 py-4 space-y-5">
+    <DashboardPageShell
+      title="Music Librarian"
+      icon={BookOpen}
+      className={isMobile ? 'pb-24' : undefined}
+      actions={
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setScanDisclaimerOpen(true)}
+          className="h-9 gap-1.5"
+        >
+          <Camera className="h-4 w-4" />
+          <span className="hidden sm:inline">Scan</span>
+        </Button>
+      }
+    >
+      <>
         {/* Stats Bar */}
         <LibrarianStats />
 
@@ -272,7 +250,7 @@ export const LibrarianDashboard = () => {
             </Card>
           </div>
         </div>
-      </div>
+      </>
 
       {/* Copyright disclaimer — gates the scanner. The librarian must
           tap "I understand" before the camera + scan flow mounts. */}
@@ -315,6 +293,6 @@ export const LibrarianDashboard = () => {
       )}
 
       <CopyrightPolicyLink />
-    </div>
+    </DashboardPageShell>
   );
 };
