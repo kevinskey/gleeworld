@@ -89,14 +89,49 @@ GleeWorld currently runs `tenant_id` + RESTRICTIVE RLS on 586 of 606 tables. Pra
 
 **Tenant + user data** — `tenant_id NOT NULL DEFAULT current_tenant_id()`, BEFORE INSERT trigger, RESTRICTIVE RLS, per the established multi-tenant pattern:
 - `gw_prayer_devotionals` (tenant overlay rows)
-- `gw_prayer_intentions` — title, body, tags, cadence, `answered_at`, visibility (`private` | `circle` | `tenant`)
+- **`gw_prayer_requests`** — the intentions table. **Already exists; extend it, do not create a parallel one.** See the correction below.
 - `gw_prayer_journal` — **owner-private by design**, same precedent as Planner notes
 - `gw_prayer_sessions` — what was prayed, when, how long
 - `gw_prayer_reminders`
-- `gw_prayer_circles`, `gw_prayer_circle_members`, `gw_prayer_circle_intentions`
-- `gw_prayer_prayed_for` — who prayed for which intention
+- `gw_prayer_circles`, `gw_prayer_circle_members`, `gw_prayer_circle_requests`
+- `gw_prayer_prayed_for` — who prayed for which request
 
 > **This mixed model must get a security-auditor pass before merge.** A shared, tenant-less table in a platform whose entire safety story is tenant RLS is exactly where a leak would hide.
+
+> ### CORRECTION (2026-08-04, after Phase 0 shipped): use `gw_prayer_requests`
+>
+> This spec originally called for a new `gw_prayer_intentions` table. **That was
+> wrong, and it was caught only when Phase 0's migrations were applied to
+> production.** Two prayer tables already exist:
+>
+> | Table | Columns | Rows | RLS |
+> |---|---|---|---|
+> | `gw_prayer_requests` | `user_id`, `content`, `is_anonymous`, `status`, `chaplain_response`, `responded_at`, `tenant_id` | **0** | `tenant_isolation_restrict` (RESTRICTIVE) + `demo_viewer_no_modify` |
+> | `gw_prayer_rotations` | `member_id`, `assigned_date`, `assigned_event_id`, `role_type`, `completed`, `tenant_id` | **0** | chaplain-manage, member-view, `anon_tenant_isolation`, demo guards |
+>
+> Both are **empty**, and grep finds them referenced **only** in the generated
+> `src/integrations/supabase/types.ts` — no hook, no page, no edge function.
+> They are dormant scaffolding that never shipped.
+>
+> **Adopt `gw_prayer_requests` as the intentions table anyway.** Creating
+> `gw_prayer_intentions` beside it would leave the platform with two
+> prayer-request tables, one of them permanently dead — exactly the kind of
+> duplication that makes a schema unreadable a year later. The existing table
+> already has correct tenant plumbing, and its `chaplain_response` /
+> `responded_at` pair encodes a pastoral-care workflow this spec never proposed
+> and should have: a named person answers a request, and the answer is recorded.
+> That directly serves the duty-of-care risk in the Risks section.
+>
+> What Phase 2 must add to it, rather than replacing it:
+> `answered_at` (distinct from `responded_at` — a chaplain replying is not the
+> same as a prayer being answered), `tags`, `visibility`
+> (`private` | `circle` | `tenant`), and a `title`. `content` stays the body.
+>
+> **`gw_prayer_rotations` is a different concept** — who leads prayer at which
+> event — and maps onto the Prayer Room idea in Phase 4. Leave it alone for now;
+> do not fold it into intentions.
+>
+> Whoever picks up Phase 2: read this block before writing a migration.
 
 ### 4.2 The user-facing surfaces
 

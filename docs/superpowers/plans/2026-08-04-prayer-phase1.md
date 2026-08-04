@@ -449,6 +449,16 @@ git commit -m "feat(prayer): serve readings from local WEBCE instead of scraping
 
 No Today screen, no Bible reader UI, no concordance UI, no intentions, no circles, no module registration or `useModuleAccess('prayer')` gating, no Strong's/TSK import. Those are Phase 2. This phase changes where existing screens get their data, and nothing else.
 
+> **Before starting Phase 2, read this.** `gw_prayer_requests` and
+> `gw_prayer_rotations` **already exist** in production — both empty, and
+> referenced only in the generated `src/integrations/supabase/types.ts` (no
+> hook, no page, no edge function). The design doc's original call for a new
+> `gw_prayer_intentions` table was wrong and has been corrected: **extend
+> `gw_prayer_requests` instead.** It already carries correct tenant plumbing
+> plus a `chaplain_response` / `responded_at` pastoral-care workflow worth
+> keeping. See the CORRECTION block in
+> `docs/superpowers/specs/2026-08-04-prayer-module-design.md`.
+
 ## Risks
 
 1. **Deployed iOS clients.** The contract test is the guard. If it cannot be made to pass identically, stop and consult Kevin before shipping — a broken contract bricks the readings sheet on installed builds.
