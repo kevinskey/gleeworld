@@ -67,8 +67,8 @@ function Render({ config }: BlockRenderProps<Config>) {
 
   return (
     <section id="appointments" className="max-w-6xl mx-auto w-full">
-      <div className="px-4 sm:px-6 py-10 sm:py-14">
-        <div className="grid gap-8 lg:gap-12 lg:grid-cols-[5fr_7fr]">
+      <div className="px-4 cq-sm:px-6 py-10 cq-sm:py-14">
+        <div className="grid gap-8 cq-lg:gap-12 cq-lg:grid-cols-[5fr_7fr]">
           {/* Left column — editorial pitch + CTA card */}
           <div className="flex flex-col">
             {config.eyebrow && (
@@ -82,19 +82,19 @@ function Render({ config }: BlockRenderProps<Config>) {
             )}
             {config.heading && (
               <h2
-                className="normal-case text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight mb-4"
+                className="normal-case text-3xl cq-sm:text-4xl cq-lg:text-5xl font-bold leading-[1.05] tracking-tight mb-4"
                 style={{ fontFamily: 'var(--site-heading-font, "Playfair Display", Georgia, serif)' }}
               >
                 {config.heading}
               </h2>
             )}
             {config.intro && (
-              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-6 max-w-xl">
+              <p className="text-base cq-sm:text-lg text-muted-foreground leading-relaxed mb-6 max-w-xl">
                 {config.intro}
               </p>
             )}
             <div
-              className="mt-auto rounded-2xl p-5 sm:p-6 shadow-lg border"
+              className="mt-auto rounded-2xl p-5 cq-sm:p-6 shadow-lg border"
               style={{
                 background:
                   'linear-gradient(135deg, color-mix(in oklab, var(--site-accent) 96%, black 4%) 0%, var(--site-accent) 100%)',
@@ -105,7 +105,7 @@ function Render({ config }: BlockRenderProps<Config>) {
               <div className="text-xs uppercase tracking-widest opacity-80 mb-2">
                 Ready when you are
               </div>
-              <div className="text-xl sm:text-2xl font-semibold mb-4">
+              <div className="text-xl cq-sm:text-2xl font-semibold mb-4">
                 Grab a slot on the calendar
               </div>
               <a
@@ -159,7 +159,7 @@ function Render({ config }: BlockRenderProps<Config>) {
                       style={{ background: 'var(--site-accent)' }}
                       aria-hidden
                     />
-                    <div className="pl-5 pr-4 sm:pr-5 py-5 flex items-start gap-4">
+                    <div className="pl-5 pr-4 cq-sm:pr-5 py-5 flex items-start gap-4">
                       <div
                         className="w-12 h-12 rounded-xl inline-flex items-center justify-center shrink-0 shadow-sm"
                         style={{

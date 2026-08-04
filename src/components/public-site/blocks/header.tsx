@@ -122,7 +122,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
       style={{ paddingTop: 'env(safe-area-inset-top)', color: linkColor, background: 'var(--site-primary)' }}
     >
       <div
-        className="flex items-center justify-between gap-4 px-4 sm:px-6"
+        className="flex items-center justify-between gap-4 px-4 cq-sm:px-6"
         style={{ height: barHeight }}
       >
         {/* In the editor, unwrap the <a href="#top"> so clicking the site
@@ -147,7 +147,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
               onChange={(v) => onConfigChange?.({ siteName: v } as Partial<Config>)}
               placeholder={ctx.orgName}
               ariaLabel="Site name"
-              className="font-bold text-base sm:text-lg truncate"
+              className="font-bold text-base cq-sm:text-lg truncate"
               // Inline like the nav links: the global .bg-card/.bg-muted span
               // contrast guards match this span directly and beat the color
               // inherited from <header>.
@@ -165,18 +165,18 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
                 onError={(e) => { (e.currentTarget.style.display = 'none'); }}
               />
             )}
-            <span className="font-bold text-base sm:text-lg truncate" style={{ color: linkColor }}>{name}</span>
+            <span className="font-bold text-base cq-sm:text-lg truncate" style={{ color: linkColor }}>{name}</span>
           </a>
         )}
         {/* Desktop: inline links. Mobile: a hamburger that toggles the dropdown below. */}
-        <nav className="hidden sm:flex items-center gap-4 text-sm">{navInline}</nav>
+        <nav className="hidden cq-sm:flex items-center gap-4 text-sm">{navInline}</nav>
         {hasLinks && (
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
-            className="sm:hidden inline-flex items-center justify-center w-11 h-11 rounded-md hover:bg-white/10 transition-colors"
+            className="cq-sm:hidden inline-flex items-center justify-center w-11 h-11 rounded-md hover:bg-white/10 transition-colors"
             style={{ color: linkColor }}
           >
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -188,7 +188,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
           the dropdown's background is fixed regardless of the theme primary. */}
       {hasLinks && menuOpen && (
         <div
-          className="sm:hidden absolute left-0 right-0 top-full bg-white shadow-lg border-t border-slate-200"
+          className="cq-sm:hidden absolute left-0 right-0 top-full bg-white shadow-lg border-t border-slate-200"
           style={{ color: '#0f172a' }}
         >
           <nav className="px-4 py-3 flex flex-col gap-1">

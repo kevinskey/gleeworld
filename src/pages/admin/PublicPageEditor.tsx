@@ -1124,14 +1124,13 @@ export default function PublicPageEditor() {
             >
             <div
               ref={previewInnerRef}
+              // `.gw-site` is a `gwsite` size container (index.css), and the
+              // blocks lay themselves out with `cq-*` container variants, so
+              // this frame's own width — not the editor's viewport — decides
+              // what the preview shows. That's what makes the phone preview
+              // honest; it used to render the desktop layout inside 390px and
+              // spill out, and only the header block had a CSS workaround.
               className="gw-site bg-white"
-              // Sibling styling hook. Tailwind's `sm:` media queries fire
-              // against the real editor viewport, not the previewed 390px
-              // frame, so the site's `hidden sm:flex` desktop nav still
-              // appears when previewing on phone. index.css forces the
-              // header block into mobile behavior when this attribute is
-              // "mobile", using selectors scoped to `.gw-site`.
-              data-preview-device={device}
               style={{
                 width: deviceWidth,
                 transform: 'scale(var(--gw-preview-scale))',

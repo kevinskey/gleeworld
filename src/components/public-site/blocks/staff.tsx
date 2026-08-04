@@ -38,15 +38,15 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     }));
   if (people.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Staff" /> : null;
   return (
-    <section id="staff" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="staff" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-6 flex items-center gap-2">
           <Users className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
       )}
       {config.layout === 'grid' ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid cq-sm:grid-cols-2 cq-lg:grid-cols-3 gap-6">
           {people.map((p, i) => (
             <div key={i} className="text-center">
               {p.photoUrl ? (

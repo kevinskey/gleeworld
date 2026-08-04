@@ -97,7 +97,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     : undefined;
 
   return (
-    <section className="gw-columns-section max-w-6xl mx-auto w-full px-4 sm:px-6" style={{ paddingBlock: 'var(--site-section-py, 3rem)' }}>
+    <section className="gw-columns-section max-w-6xl mx-auto w-full px-4 cq-sm:px-6" style={{ paddingBlock: 'var(--site-section-py, 3rem)' }}>
       <div className={`gw-columns-grid ${config.stackOrder === 'right-first' ? 'gw-columns-right-first' : ''}`}>
         <div className="gw-columns-col min-w-0 space-y-6">
           <ColumnChildren items={config.left} side="left" editable={editable} onPatchChild={patchChild} />

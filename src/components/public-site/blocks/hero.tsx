@@ -493,7 +493,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           <>
             {stackFields.length > 0 && (
               <div
-                className={`text-center ${hasImage ? 'gw-hero-overlay absolute' : 'relative pt-20 sm:pt-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
+                className={`text-center ${hasImage ? 'gw-hero-overlay absolute' : 'relative pt-20 cq-sm:pt-28 max-w-5xl mx-auto px-4 cq-sm:px-6'} ${
                   draggable && hasImage ? (dragging === 'text' ? 'cursor-grabbing' : 'cursor-grab') : ''
                 }`}
                 style={
@@ -534,7 +534,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
       })()}
       {showCta && (
         <div
-          className={`text-center ${hasImage ? 'gw-hero-overlay absolute' : 'relative pb-20 sm:pb-28 max-w-5xl mx-auto px-4 sm:px-6'} ${
+          className={`text-center ${hasImage ? 'gw-hero-overlay absolute' : 'relative pb-20 cq-sm:pb-28 max-w-5xl mx-auto px-4 cq-sm:px-6'} ${
             draggable && hasImage ? (dragging === 'buttons' ? 'cursor-grabbing' : 'cursor-grab') : ''
           }`}
           style={

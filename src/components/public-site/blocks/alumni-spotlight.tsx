@@ -27,16 +27,16 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const list = config.graduates.filter((g) => g.name);
   if (list.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Graduate Spotlight" /> : null;
   return (
-    <section id="graduates" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="graduates" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <Star className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
       )}
       {config.intro && <p className="text-muted-foreground mb-8 max-w-3xl">{config.intro}</p>}
       {config.layout === 'cards' ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid cq-sm:grid-cols-2 cq-lg:grid-cols-3 gap-5">
           {list.map((g, i) => (
             <div key={i} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
               {g.photoUrl && <img src={g.photoUrl} alt={g.name} className="w-full aspect-square object-cover" />}
@@ -55,12 +55,12 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           ))}
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-6">
+        <div className="grid cq-sm:grid-cols-2 gap-6">
           {list.map((g, i) => (
             <blockquote key={i} className="rounded-xl border border-border bg-card p-5 relative">
               <Quote className="absolute top-3 right-3 w-6 h-6 opacity-20" style={{ color: 'var(--site-accent)' }} />
               {g.story && (
-                <p className="text-sm sm:text-base text-foreground leading-relaxed italic">"{g.story}"</p>
+                <p className="text-sm cq-sm:text-base text-foreground leading-relaxed italic">"{g.story}"</p>
               )}
               <div className="flex items-center gap-3 mt-4">
                 {g.photoUrl && <img src={g.photoUrl} alt={g.name} className="w-10 h-10 rounded-full object-cover" />}

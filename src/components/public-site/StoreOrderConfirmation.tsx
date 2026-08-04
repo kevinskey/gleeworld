@@ -74,23 +74,23 @@ export function StoreOrderConfirmation({ order, token }: { order: string; token:
 
   return (
     <div
-      className="max-w-2xl mx-auto mt-6 mb-2 px-4 sm:px-6"
+      className="max-w-2xl mx-auto mt-6 mb-2 px-4 cq-sm:px-6"
       role="status"
       aria-live="polite"
     >
-      <div className="flex items-center gap-3 border border-border bg-card px-4 py-3 sm:px-5 sm:py-4">
+      <div className="flex items-center gap-3 border border-border bg-card px-4 py-3 cq-sm:px-5 cq-sm:py-4">
         {state === 'paid' ? (
           <CheckCircle2 className="h-6 w-6 shrink-0" style={{ color: 'var(--site-accent)' }} />
         ) : (
           <Loader2 className="h-6 w-6 shrink-0 animate-spin text-muted-foreground" />
         )}
         <div className="min-w-0">
-          <p className="font-semibold text-sm sm:text-base">
+          <p className="font-semibold text-sm cq-sm:text-base">
             {state === 'paid' && 'Payment confirmed'}
             {state === 'checking' && 'Confirming your payment…'}
             {state === 'still-processing' && 'Still processing'}
           </p>
-          <p className="text-xs sm:text-sm text-muted-foreground">
+          <p className="text-xs cq-sm:text-sm text-muted-foreground">
             {state === 'paid' && "Thank you for your order! A receipt has been sent to your email."}
             {state === 'checking' && "We're confirming your payment with Stripe. This usually takes a few seconds."}
             {state === 'still-processing' && "Your payment is taking longer than usual — we'll email your receipt as soon as it's ready."}

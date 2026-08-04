@@ -45,9 +45,9 @@ function displayPrice(p: TenantProduct): number {
 // has no way to tell them apart, and shouldn't need to.
 function ComingSoon({ heading }: { heading: string }) {
   return (
-    <section id="merch" className="max-w-6xl mx-auto px-4 sm:px-6 py-5 text-center">
+    <section id="merch" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5 text-center">
       <ShoppingBag className="w-10 h-10 mx-auto mb-4" style={{ color: 'var(--site-accent)' }} />
-      <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-3">{heading}</h2>
+      <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-3">{heading}</h2>
       <p className="text-muted-foreground">Our store is coming soon.</p>
     </section>
   );
@@ -134,7 +134,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
   if (isLoading) {
     return (
-      <section id="merch" className="max-w-6xl mx-auto px-4 sm:px-6 py-10 text-center">
+      <section id="merch" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-10 text-center">
         <Loader2 className="w-6 h-6 mx-auto animate-spin text-muted-foreground" />
       </section>
     );
@@ -147,13 +147,13 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   }
 
   return (
-    <section id="merch" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
-      <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
+    <section id="merch" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
+      <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-6 flex items-center gap-2">
         <ShoppingBag className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
         {config.heading}
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 cq-sm:grid-cols-2 cq-lg:grid-cols-3 gap-4 cq-sm:gap-6">
         {products.map((product) => {
           const price = displayPrice(product);
           const onSale = product.sale_price != null && product.sale_price < product.price;
@@ -209,7 +209,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
       </div>
 
       {cartCount > 0 && (
-        <div className="mt-10 border border-border bg-card p-4 sm:p-6 max-w-xl mx-auto">
+        <div className="mt-10 border border-border bg-card p-4 cq-sm:p-6 max-w-xl mx-auto">
           <h3 className="text-lg font-semibold mb-4">Your cart ({cartCount})</h3>
           <ul className="divide-y divide-border mb-4">
             {cartLines.map((line) => (

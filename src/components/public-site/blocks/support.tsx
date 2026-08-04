@@ -34,9 +34,9 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   if (!showCampaign && sponsors.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Support" /> : null;
   const pct = Math.max(0, Math.min(100, config.campaign.progressPercent ?? 0));
   return (
-    <section id="support" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="support" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <HeartHandshake className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
@@ -89,7 +89,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
             {sponsors.map((s, i) => {
               const inner = s.logoUrl ? (
-                <img src={s.logoUrl} alt={s.name} className="h-10 sm:h-14 w-auto object-contain grayscale hover:grayscale-0 transition" />
+                <img src={s.logoUrl} alt={s.name} className="h-10 cq-sm:h-14 w-auto object-contain grayscale hover:grayscale-0 transition" />
               ) : (
                 <span className="font-medium text-muted-foreground">{s.name}</span>
               );

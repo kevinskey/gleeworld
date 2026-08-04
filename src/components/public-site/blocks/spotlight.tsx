@@ -39,16 +39,16 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const list = config.people.filter((p) => p.name);
   if (list.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Spotlight" /> : null;
   return (
-    <section id="spotlight" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="spotlight" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <Sparkles className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
       )}
       {config.intro && <p className="text-muted-foreground mb-8 max-w-3xl">{config.intro}</p>}
       {config.layout === 'cards' ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid cq-sm:grid-cols-2 cq-lg:grid-cols-3 gap-5">
           {list.map((p, i) => {
             const card = (
               <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col h-full">

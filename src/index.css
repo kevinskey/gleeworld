@@ -32,23 +32,6 @@
   container-name: gwsite;
 }
 
-/* Mobile-preview overrides for the public site editor.
-   Tailwind's `sm:` variants fire against the real browser viewport, so
-   previewing the site at a 390px width still shows the desktop nav (the
-   editor's viewport is wider than 640px). Force the header block into its
-   mobile arrangement when the preview device is set to mobile. Scoped to
-   `.gw-site[data-preview-device="mobile"]` so the actual `/sites/:slug`
-   route is untouched. */
-.gw-site[data-preview-device="mobile"] header nav.hidden.sm\:flex {
-  display: none;
-}
-.gw-site[data-preview-device="mobile"] header button.sm\:hidden {
-  display: inline-flex;
-}
-.gw-site[data-preview-device="mobile"] header div.sm\:hidden {
-  display: block;
-}
-
 /* Fast collapsible expand/collapse animation */
 [data-state="open"][data-radix-collapsible-content] {
   animation: collapsible-open 150ms ease-out;

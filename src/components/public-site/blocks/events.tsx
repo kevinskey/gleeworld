@@ -98,7 +98,7 @@ function MonthCalendar({ events }: { events: PublicEvent[] }) {
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <div className="text-base sm:text-lg font-semibold">
+        <div className="text-base cq-sm:text-lg font-semibold">
           {viewMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
         </div>
         <button
@@ -110,7 +110,7 @@ function MonthCalendar({ events }: { events: PublicEvent[] }) {
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
-      <div className="grid grid-cols-7 text-xs sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground border-b border-border">
+      <div className="grid grid-cols-7 text-xs cq-sm:text-xs font-semibold uppercase tracking-wide text-muted-foreground border-b border-border">
         {WEEKDAYS.map((w) => (
           <div key={w} className="px-2 py-2 text-center">{w}</div>
         ))}
@@ -123,13 +123,13 @@ function MonthCalendar({ events }: { events: PublicEvent[] }) {
           return (
             <div
               key={i}
-              className={`min-h-[64px] sm:min-h-[88px] border-t border-r border-border last-in-row p-1.5 ${
+              className={`min-h-[64px] cq-sm:min-h-[88px] border-t border-r border-border last-in-row p-1.5 ${
                 inMonth ? 'bg-card' : 'bg-muted/30'
               }`}
             >
               <div className="flex items-center justify-between">
                 <span
-                  className={`text-xs sm:text-sm ${inMonth ? 'text-foreground' : 'text-muted-foreground'} ${
+                  className={`text-xs cq-sm:text-sm ${inMonth ? 'text-foreground' : 'text-muted-foreground'} ${
                     isToday ? 'font-bold' : ''
                   }`}
                 >
@@ -152,7 +152,7 @@ function MonthCalendar({ events }: { events: PublicEvent[] }) {
                 {dayEvents.slice(0, 2).map((ev) => (
                   <div
                     key={ev.id}
-                    className="text-xs sm:text-xs rounded px-1 py-0.5 truncate"
+                    className="text-xs cq-sm:text-xs rounded px-1 py-0.5 truncate"
                     title={ev.title}
                     style={{ background: 'var(--site-accent)', color: 'white', opacity: 0.9 }}
                   >
@@ -174,7 +174,7 @@ function MonthCalendar({ events }: { events: PublicEvent[] }) {
 function UpcomingList({ events }: { events: PublicEvent[] }) {
   if (events.length === 0) return null;
   return (
-    <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="mt-6 grid cq-sm:grid-cols-2 cq-lg:grid-cols-3 gap-3">
       {events.map((ev) => {
         const d = new Date(ev.start_date);
         return (
@@ -238,8 +238,8 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   if (events.length === 0 && config.style !== 'month') return onConfigChange ? <EmptyBlockPlaceholder name="Events" /> : null;
 
   return (
-    <section id="events" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
-      <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
+    <section id="events" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
+      <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-6 flex items-center gap-2">
         <Calendar className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
         {config.heading}
       </h2>
@@ -277,7 +277,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
       )}
 
       {config.style === 'cards' && (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid cq-sm:grid-cols-2 cq-lg:grid-cols-4 gap-4">
           {events.map((ev) => {
             const d = new Date(ev.start_date);
             return (

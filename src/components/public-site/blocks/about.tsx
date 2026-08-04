@@ -111,7 +111,7 @@ function renderParagraphText(text: string): ReactNode[] {
         key={`in-${i++}`}
         src={m[1]}
         alt={m[2] ?? ''}
-        className="inline-block align-middle mx-1 h-10 sm:h-12 w-auto rounded-md shadow-sm"
+        className="inline-block align-middle mx-1 h-10 cq-sm:h-12 w-auto rounded-md shadow-sm"
         loading="lazy"
       />,
     );
@@ -145,7 +145,7 @@ function InlineImage({ token }: { token: ImgToken }) {
 
   if (mode === 'top-bottom') {
     return (
-      <figure className="mx-auto my-4 clear-both max-w-full sm:max-w-[42rem]">
+      <figure className="mx-auto my-4 clear-both max-w-full cq-sm:max-w-[42rem]">
         <img
           src={url}
           alt={caption ?? ''}
@@ -153,7 +153,7 @@ function InlineImage({ token }: { token: ImgToken }) {
           loading="lazy"
         />
         {caption && (
-          <figcaption className="text-xs sm:text-sm text-muted-foreground italic mt-1.5 text-center">
+          <figcaption className="text-xs cq-sm:text-sm text-muted-foreground italic mt-1.5 text-center">
             {caption}
           </figcaption>
         )}
@@ -181,8 +181,8 @@ function InlineImage({ token }: { token: ImgToken }) {
   // Float modes: square-left/right, tight-left/right, through-left/right.
   const side = mode.endsWith('-left') ? 'left' : 'right';
   const floatClass = side === 'left'
-    ? 'sm:float-left sm:mr-6 sm:mb-3'
-    : 'sm:float-right sm:ml-6 sm:mb-3';
+    ? 'cq-sm:float-left cq-sm:mr-6 cq-sm:mb-3'
+    : 'cq-sm:float-right cq-sm:ml-6 cq-sm:mb-3';
   const isTight = mode.startsWith('tight-') || mode.startsWith('through-');
   const shapeMargin = mode.startsWith('through-') ? '0px' : '8px';
   // `shape-outside: url(...)` reads the image's alpha channel to build the
@@ -198,7 +198,7 @@ function InlineImage({ token }: { token: ImgToken }) {
       } as React.CSSProperties)
     : {};
   return (
-    <figure className={`${floatClass} mb-4 sm:mb-3 max-w-full sm:w-[20rem] md:w-[24rem]`}>
+    <figure className={`${floatClass} mb-4 cq-sm:mb-3 max-w-full cq-sm:w-[20rem] cq-md:w-[24rem]`}>
       <img
         src={url}
         alt={caption ?? ''}
@@ -208,7 +208,7 @@ function InlineImage({ token }: { token: ImgToken }) {
         loading="lazy"
       />
       {caption && (
-        <figcaption className="text-xs sm:text-sm text-muted-foreground italic mt-1.5 text-center">
+        <figcaption className="text-xs cq-sm:text-sm text-muted-foreground italic mt-1.5 text-center">
           {caption}
         </figcaption>
       )}
@@ -306,7 +306,7 @@ function BodyContent({ body }: { body: string }) {
       return (
         <p
           key={key}
-          className="text-base sm:text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap mb-4 last:mb-0"
+          className="text-base cq-sm:text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap mb-4 last:mb-0"
         >
           {renderParagraphText(child.text)}
         </p>
@@ -316,7 +316,7 @@ function BodyContent({ body }: { body: string }) {
       return (
         <ul
           key={key}
-          className="list-disc pl-6 mb-4 last:mb-0 space-y-1 text-base sm:text-lg text-muted-foreground leading-relaxed marker:text-[color:var(--site-accent)]"
+          className="list-disc pl-6 mb-4 last:mb-0 space-y-1 text-base cq-sm:text-lg text-muted-foreground leading-relaxed marker:text-[color:var(--site-accent)]"
         >
           {child.items.map((it, i) => (
             <li key={i}>{renderParagraphText(it)}</li>
@@ -327,7 +327,7 @@ function BodyContent({ body }: { body: string }) {
     return (
       <ol
         key={key}
-        className="list-decimal pl-6 mb-4 last:mb-0 space-y-1 text-base sm:text-lg text-muted-foreground leading-relaxed marker:text-[color:var(--site-accent)]"
+        className="list-decimal pl-6 mb-4 last:mb-0 space-y-1 text-base cq-sm:text-lg text-muted-foreground leading-relaxed marker:text-[color:var(--site-accent)]"
       >
         {child.items.map((it, i) => (
           <li key={i}>{renderParagraphText(it)}</li>
@@ -362,7 +362,7 @@ function BodyContent({ body }: { body: string }) {
           {/* Text sits above a `behind` image via z-10; float images sit in
               normal flow (their own float context) between overlays and
               paragraphs. */}
-          <div className={hasOverlay ? 'relative z-10 p-4 sm:p-6' : ''}>
+          <div className={hasOverlay ? 'relative z-10 p-4 cq-sm:p-6' : ''}>
             {segImgs.map((token, i) => (
               <InlineImage key={`${key}-img${i}`} token={token} />
             ))}
@@ -426,7 +426,7 @@ function BodyContent({ body }: { body: string }) {
         out.push(
           <div key={key} className="[&:not(:first-child)]:mt-2">
             <InlineImage token={p.token} />
-            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap mb-4">
+            <p className="text-base cq-sm:text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap mb-4">
               {renderParagraphText(p.rest)}
             </p>
           </div>,
@@ -453,7 +453,7 @@ function BodyContent({ body }: { body: string }) {
       out.push(
         <h3
           key={key}
-          className="clear-both normal-case text-xl sm:text-2xl font-semibold text-foreground mt-8 mb-3 first:mt-0"
+          className="clear-both normal-case text-xl cq-sm:text-2xl font-semibold text-foreground mt-8 mb-3 first:mt-0"
         >
           {p.text}
         </h3>,
@@ -462,7 +462,7 @@ function BodyContent({ body }: { body: string }) {
       out.push(
         <h4
           key={key}
-          className="clear-both normal-case text-base sm:text-lg font-semibold text-foreground mt-5 mb-2"
+          className="clear-both normal-case text-base cq-sm:text-lg font-semibold text-foreground mt-5 mb-2"
         >
           {p.text}
         </h4>,
@@ -485,15 +485,15 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     <img
       src={config.imageUrl}
       alt=""
-      className={`w-full sm:w-[18rem] md:w-[22rem] h-auto max-h-[28rem] object-cover rounded-2xl shadow-lg mb-6 sm:mb-2 ${
-        config.imageSide === 'left' ? 'sm:float-left sm:mr-8' : 'sm:float-right sm:ml-8'
+      className={`w-full cq-sm:w-[18rem] cq-md:w-[22rem] h-auto max-h-[28rem] object-cover rounded-2xl shadow-lg mb-6 cq-sm:mb-2 ${
+        config.imageSide === 'left' ? 'cq-sm:float-left cq-sm:mr-8' : 'cq-sm:float-right cq-sm:ml-8'
       }`}
     />
   ) : null;
   return (
-    <section id="about" className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+    <section id="about" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
       {(config.title || editable) && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-6 flex items-center gap-2">
           <Info className="w-6 h-6 shrink-0" style={{ color: 'var(--site-accent)' }} />
           <EditableText
             as="span"
