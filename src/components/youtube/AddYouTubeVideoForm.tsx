@@ -94,9 +94,6 @@ export const AddYouTubeVideoForm: React.FC<AddYouTubeVideoFormProps> = ({ onAdde
   // Bulk-paste progress: how many of the pasted links have been processed.
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  // Search state — mirrors AccompanimentPicker's 300ms debounce + edge fn
-  // call so quota (~100 units per search of the 10k/day free tier) isn't
-  // burned per keystroke.
   const [query, setQuery] = useState('');
   const { hits, searching, error: searchErr, search: runSearch, clear: clearSearch } = useYouTubeSearch(10);
 
