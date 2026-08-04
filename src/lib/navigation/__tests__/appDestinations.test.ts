@@ -131,6 +131,8 @@ const KNOWN_ROUTES = new Set([
   '/dashboard/music-tools', '/dashboard/liturgy', '/tour-manager',
   '/dashboard/auditions', '/dashboard/pr-hub', '/admin/fan-page',
   '/dashboard/feeds', '/dashboard/shop', '/dashboard/alumni',
+  // Verified against src/App.tsx: <Route path="/prayer"> exists.
+  '/prayer',
   '/dashboard/box-office', '/dashboard/users', '/admin/public-page',
   '/dashboard/analytics', '/dashboard/workspace', '/songwriting',
   '/planner', '/dashboard/fundraising',
