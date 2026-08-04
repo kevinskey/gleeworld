@@ -51,11 +51,19 @@ create or replace view student_picture.led_finance
 with (security_invoker = on) as
 select r.user_id, r.tenant_id, 'finance'::text, r.id,
        coalesce(r.description, r.category, 'Ledger entry')::text,
+       -- Magnitude only; direction is carried separately below.
        round(abs(r.amount) * 100)::bigint,
-       case when lower(coalesce(r.type,'')) in ('payment','credit','refund')
+       -- A NEGATIVE amount means money moving TO the person (e.g. a stipend)
+       -- and is therefore never a charge against them. The sign is checked
+       -- FIRST because finance_records.type is free text with no CHECK
+       -- constraint, so it cannot be relied on alone. Getting this backwards
+       -- reports money the user is OWED as money the user OWES.
+       case when r.amount < 0
+              or lower(coalesce(r.type,'')) in ('payment','credit','refund')
             then 'credit' else 'charge' end,
        r.date::timestamptz, null::timestamptz,
-       case when lower(coalesce(r.type,'')) in ('payment','credit','refund')
+       case when r.amount < 0
+              or lower(coalesce(r.type,'')) in ('payment','credit','refund')
             then 'paid' else 'outstanding' end,
        null::uuid
 from public.finance_records r where r.user_id is not null;

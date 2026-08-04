@@ -52,6 +52,22 @@ begin
     raise exception 'a refunded fee must map to waived, got % (it would be counted as owed)', r.status;
   end if;
 
+  -- A negative finance_records amount is money paid TO the person (a stipend,
+  -- a reimbursement) and must never be reported as a charge they owe.
+  insert into public.finance_records
+      (id, user_id, date, type, category, description, amount, tenant_id)
+    values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', v_stu, current_date,
+            'debit', 'Performance Stipends', 'Stipend paid to student',
+            -100.00, v_tenant);
+  select * into r from student_picture.v_student_ledger
+   where source_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+  if r.direction <> 'credit' then
+    raise exception 'a negative finance amount must be a credit, got direction % (this would tell the student they OWE money paid TO them)', r.direction;
+  end if;
+  if r.status <> 'paid' then
+    raise exception 'a negative finance amount must be settled, got status %', r.status;
+  end if;
+
   raise notice 'ALL ASSERTIONS PASSED';
 end $$;
 rollback;
