@@ -13,5 +13,16 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: ['./vitest.setup.ts'],
+    // e2e/ holds Playwright specs. Vitest was collecting them, and calling
+    // Playwright's test.describe() outside a Playwright runner throws
+    // "Playwright Test did not expect test.describe() to be called here",
+    // which surfaced as unhandled rejections and two failing suites.
+    // Playwright runs them via its own config; vitest must not.
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/.claude/worktrees/**',
+      'e2e/**',
+    ],
   },
 });
