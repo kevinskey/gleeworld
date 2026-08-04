@@ -132,7 +132,7 @@ const KNOWN_ROUTES = new Set([
   '/dashboard/feeds', '/dashboard/shop', '/dashboard/alumni',
   '/dashboard/box-office', '/dashboard/users', '/admin/public-page',
   '/dashboard/analytics', '/dashboard/workspace', '/songwriting',
-  '/planner', '/dashboard/fundraising',
+  '/planner', '/dashboard/fundraising', '/qr-generator',
 ]);
 
 describe('getAppTiles', () => {

@@ -2078,12 +2078,12 @@ const App = () => {
                   } 
                 />
                 <Route 
-                  path="/qr-generator" 
+                  path="/qr-generator"
                   element={
-                    <PublicRoute>
+                    <ProtectedRoute>
                       <QRGeneratorPage />
-                    </PublicRoute>
-                  } 
+                    </ProtectedRoute>
+                  }
                 />
                 <Route 
                   path="/qr-analytics" 
