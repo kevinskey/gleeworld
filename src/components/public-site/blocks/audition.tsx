@@ -80,10 +80,16 @@ function Render({ config }: BlockRenderProps<Config>) {
 
   return (
     <section id="auditions" className="max-w-6xl mx-auto w-full">
-      <div className="px-4 sm:px-6 py-10 sm:py-14">
-        <div className="grid gap-8 lg:gap-12 lg:grid-cols-[5fr_7fr]">
+      <div className="px-4 cq-sm:px-6 py-10 cq-sm:py-14">
+        {/* `cq-*` (container queries against `.gw-site`), not `sm:`/`lg:`, so
+            the builder's phone preview stacks like a phone instead of laying
+            out for the editor's viewport and overflowing the 390px frame.
+            `min-w-0` on both columns: grid items default to `min-width: auto`,
+            which lets a long location line or requirement title push the
+            column past its `fr` share and widen the whole section. */}
+        <div className="grid gap-8 cq-lg:gap-12 cq-lg:grid-cols-[5fr_7fr]">
           {/* Left column — editorial pitch + CTA card */}
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             {config.eyebrow && (
               <div
                 className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] font-semibold mb-4 self-start"
@@ -95,20 +101,20 @@ function Render({ config }: BlockRenderProps<Config>) {
             )}
             {config.heading && (
               <h2
-                className="normal-case text-3xl sm:text-4xl lg:text-5xl font-bold leading-[1.05] tracking-tight mb-4"
+                className="normal-case text-3xl cq-sm:text-4xl cq-lg:text-5xl font-bold leading-[1.05] tracking-tight mb-4 break-words"
                 style={{ fontFamily: 'var(--site-heading-font, "Playfair Display", Georgia, serif)' }}
               >
                 {config.heading}
               </h2>
             )}
             {config.intro && (
-              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-6 max-w-xl">
+              <p className="text-base cq-sm:text-lg text-muted-foreground leading-relaxed mb-6 max-w-xl">
                 {config.intro}
               </p>
             )}
             {config.signupUrl && (
               <div
-                className="mt-auto rounded-2xl p-5 sm:p-6 shadow-lg border"
+                className="mt-auto rounded-2xl p-5 cq-sm:p-6 shadow-lg border"
                 style={{
                   background:
                     'linear-gradient(135deg, color-mix(in oklab, var(--site-accent) 96%, black 4%) 0%, var(--site-accent) 100%)',
@@ -119,7 +125,7 @@ function Render({ config }: BlockRenderProps<Config>) {
                 <div className="text-xs uppercase tracking-widest opacity-80 mb-2">
                   Ready to audition?
                 </div>
-                <div className="text-xl sm:text-2xl font-semibold mb-4">
+                <div className="text-xl cq-sm:text-2xl font-semibold mb-4">
                   Reserve your slot
                 </div>
                 <a
@@ -139,10 +145,10 @@ function Render({ config }: BlockRenderProps<Config>) {
           </div>
 
           {/* Right column — session banner + requirements + openings */}
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             {hasSession && (
               <div
-                className="rounded-2xl p-4 sm:p-5 border grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4"
+                className="rounded-2xl p-4 cq-sm:p-5 border grid grid-cols-1 cq-sm:grid-cols-3 gap-3 cq-sm:gap-4"
                 style={{
                   background: 'color-mix(in oklab, var(--site-accent) 6%, transparent)',
                   borderColor: 'color-mix(in oklab, var(--site-accent) 24%, transparent)',
@@ -201,7 +207,7 @@ function Render({ config }: BlockRenderProps<Config>) {
                       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
                         Location
                       </div>
-                      <div className="font-semibold text-sm truncate">
+                      <div className="font-semibold text-sm break-words">
                         {config.session.location}
                       </div>
                     </div>
@@ -241,7 +247,7 @@ function Render({ config }: BlockRenderProps<Config>) {
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-lg normal-case leading-snug">
+                          <div className="font-semibold text-lg normal-case leading-snug break-words">
                             {r.title}
                           </div>
                           {r.detail && (

@@ -1,5 +1,26 @@
 import type { Config } from 'tailwindcss';
 import defaultTheme from 'tailwindcss/defaultTheme';
+import plugin from 'tailwindcss/plugin';
+
+// Container-query variants for the public-site blocks: `cq-sm:`, `cq-md:`,
+// `cq-lg:` mirror the `sm:`/`md:`/`lg:` breakpoints but resolve against the
+// nearest `gwsite` container (the `.gw-site` root) instead of the viewport.
+//
+// Why: the public page builder previews a site inside a 390px-wide frame that
+// still lives in the editor's (wide) viewport, so plain `sm:`/`lg:` media
+// queries fire and the "phone" preview renders the desktop layout, overflowing
+// the frame. On the published `/sites/:slug` route `.gw-site` spans the
+// viewport, so `cq-*` and the media-query breakpoints agree there.
+const siteContainerVariants = plugin(({ matchVariant }) => {
+  matchVariant('cq', (value: string) => `@container gwsite ${value}`, {
+    values: {
+      sm: '(min-width: 640px)',
+      md: '(min-width: 768px)',
+      lg: '(min-width: 1024px)',
+      xl: '(min-width: 1280px)',
+    },
+  });
+});
 
 const config: Config = {
   darkMode: ['class'],
@@ -170,7 +191,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
+  plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography'), siteContainerVariants],
 };
 
 export default config;
