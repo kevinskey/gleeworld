@@ -7,7 +7,7 @@
 -- times for one trip. What a school actually wants is one signed slip covering
 -- the trip.
 --
--- Requires 20260804120000_link_tour_events_to_trips.sql, which added
+-- Requires 20260804150000_link_tour_events_to_trips.sql, which added
 -- gw_tour_events.trip_id. Without that link an event cannot name its trip.
 --
 -- SAFETY
