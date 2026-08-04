@@ -137,10 +137,13 @@ export const BlockFrame = forwardRef<HTMLDivElement, BlockFrameProps>(function B
     >
       {/* Outline overlay lives above the block content but below the toolbar.
           `outline` (not `border`) so it never nudges layout — critical when
-          the block has `position: sticky` (header) or measured heights. */}
+          the block has `position: sticky` (header) or measured heights.
+          z-40 (not z-10): the header block renders `sticky top-0 z-40` and is
+          a sibling in this same stacking context, so a lower outline gets
+          painted over wherever the header's bar sits. */}
       <div
         aria-hidden
-        className={`pointer-events-none absolute inset-0 z-10 transition-[outline-color,outline-style] ${
+        className={`pointer-events-none absolute inset-0 z-40 transition-[outline-color,outline-style] ${
           selected
             ? 'outline outline-2 -outline-offset-2 outline-primary'
             : hovered
@@ -150,14 +153,19 @@ export const BlockFrame = forwardRef<HTMLDivElement, BlockFrameProps>(function B
       />
 
       {/* Floating toolbar pinned to the top-right of the block. Sits above
-          the outline so its buttons stay clickable. */}
+          the outline so its buttons stay clickable.
+          z-50 (not z-20): blocks render their own content as a sibling in
+          this stacking context, and the header block is `sticky top-0 z-40`
+          — at z-20 the pill was painted *behind* the header's bar, leaving
+          only the sliver past its max-w-6xl edge visible and clickable.
+          Keep this above the highest z any block's content uses. */}
       {showChrome && (
         <div
           // Bumped padding + gap so the pill reads at the size of the icons
           // it holds rather than crowding them. Prior px-1 py-1 gap-0.5
           // wrapped everything into a cramped ~26px strip that was hard
           // to hit on touch.
-          className="absolute top-2 right-2 z-20 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 backdrop-blur px-1.5 py-1 shadow-lg"
+          className="absolute top-2 right-2 z-50 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/95 backdrop-blur px-1.5 py-1 shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Drag handle — spreads the dnd-kit sortable listeners so grabbing
