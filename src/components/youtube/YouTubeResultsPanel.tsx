@@ -69,7 +69,7 @@ export const YouTubeResultsPanel: React.FC<YouTubeResultsPanelProps> = ({
               <button
                 type="button"
                 onClick={() => onPreview(hit)}
-                aria-label={`${hit.title} thumbnail`}
+                aria-label={`Play ${hit.title}`}
                 className="shrink-0 aspect-video w-40 rounded overflow-hidden bg-muted relative group"
               >
                 {hit.thumbnail ? (

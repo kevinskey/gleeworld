@@ -9,11 +9,21 @@ afterEach(() => cleanup());
 const props = { searching: false, active: false, onSearch: vi.fn(), onClear: vi.fn() };
 
 describe('YouTubeSearchField', () => {
-  it('does not search while the user is only typing', () => {
-    const onSearch = vi.fn();
-    render(<YouTubeSearchField {...props} onSearch={onSearch} />);
-    fireEvent.change(screen.getByLabelText('Search YouTube'), { target: { value: 'handel' } });
-    expect(onSearch).not.toHaveBeenCalled();
+  it('does not search while the user is only typing, even after a debounce-length delay', () => {
+    // Fake timers so this genuinely rules out a debounced onChange (e.g. a
+    // stray setTimeout(() => onSearch(...), 300)), not just a synchronous
+    // type-triggered search. Without advancing timers, a debounced
+    // implementation would pass this test too.
+    vi.useFakeTimers();
+    try {
+      const onSearch = vi.fn();
+      render(<YouTubeSearchField {...props} onSearch={onSearch} />);
+      fireEvent.change(screen.getByLabelText('Search YouTube'), { target: { value: 'handel' } });
+      vi.advanceTimersByTime(2000);
+      expect(onSearch).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('searches once on Enter', () => {
