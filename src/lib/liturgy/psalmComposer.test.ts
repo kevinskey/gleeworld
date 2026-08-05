@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  degreeToPitch, tonicOf, psalmSyllables, measuresPerLine, measureCount,
+  degreeToPitch, tonicOf, psalmSyllables, psalmLines, measuresPerLine, measureCount,
   psalmScoreTitle, PSALM_WIDTH_PX,
 } from './psalmComposer';
 import { emptyScore, noteOf, type EditorScore, type Pitch } from '@/lib/notation/model';
@@ -87,6 +87,54 @@ describe('psalmSyllables', () => {
 
   it('is empty for empty input', () => {
     expect(psalmSyllables('   ')).toEqual([]);
+  });
+});
+
+// The real text, as Universalis actually delivers it: no "R." marker, the
+// refrain simply recurring between verses.
+const REAL_PSALM = [
+  'The Lord will guard us, as a shepherd guards his flock.',
+  'O nations, hear the word of the Lord,',
+  'proclaim it to the far-off coasts.',
+  'The Lord will guard us, as a shepherd guards his flock.',
+  'For the Lord has ransomed Jacob,',
+].join('\n');
+
+describe('psalmLines — the refrain/verse shape IS the form', () => {
+  it('keeps one line per line rather than one paragraph', () => {
+    expect(psalmLines(REAL_PSALM)).toHaveLength(5);
+  });
+
+  it('finds the refrain by recurrence, with no "R." marker to go on', () => {
+    const lines = psalmLines(REAL_PSALM);
+    expect(lines.map((l) => l.isRefrain)).toEqual([true, false, false, true, false]);
+  });
+
+  it('still honours an explicit R. marker on a line that appears once', () => {
+    const lines = psalmLines('R. Taste and see\nI will bless the Lord');
+    expect(lines[0].isRefrain).toBe(true);
+    expect(lines[0].text).toBe('Taste and see');   // marker not sung
+    expect(lines[1].isRefrain).toBe(false);
+  });
+
+  it('indexes each line into the flat token list the notes consume', () => {
+    const lines = psalmLines(REAL_PSALM);
+    const flat = psalmSyllables(REAL_PSALM);
+    for (const line of lines) {
+      expect(flat.slice(line.startIndex, line.startIndex + line.tokens.length))
+        .toEqual(line.tokens);
+    }
+  });
+
+  // The guarantee that makes the highlight trustworthy: the word shown as
+  // "next" is the word the next note actually takes.
+  it('flattens to exactly psalmSyllables, in order', () => {
+    expect(psalmLines(REAL_PSALM).flatMap((l) => l.tokens)).toEqual(psalmSyllables(REAL_PSALM));
+  });
+
+  it('is empty for empty text', () => {
+    expect(psalmLines('')).toEqual([]);
+    expect(psalmLines('   \n  ')).toEqual([]);
   });
 });
 

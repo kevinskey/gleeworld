@@ -102,27 +102,84 @@ export function degreeToPitch(
   return { step, octave: tonic.octave + wrapped + octaveShift, alter };
 }
 
-/**
- * Split psalm text into the syllable-ish tokens a user assigns to notes.
- *
- * Deliberately word-level, not a hyphenation engine: English syllabification
- * is genuinely ambiguous ("ev-ery" vs "eve-ry"), and a cantor setting a psalm
- * makes that call themselves. What this DOES do is honour a hyphen the user
- * already typed, so "glo-ry" arrives as two tokens ready for two notes, and
- * drop the verse numbers and refrain markers that ride along in scraped text
- * and are never sung.
- */
-export function psalmSyllables(text: string): string[] {
-  return text
-    .replace(/\r/g, '')
-    // Bracketed verse refs and standalone verse numbers are apparatus.
+/** One line of the psalm, with the tokens a user assigns to notes. */
+export interface PsalmLine {
+  /** Display text, with the "R." marker and verse apparatus removed. */
+  text: string;
+  /** Refrains are the sung response — set apart, and repeated between verses. */
+  isRefrain: boolean;
+  /** Singable tokens on this line. */
+  tokens: string[];
+  /** Index of this line's first token in the flat psalmSyllables() list, so a
+   *  word can be highlighted from the same cursor that drives note entry. */
+  startIndex: number;
+}
+
+/** Strip what is printed but never sung: bracketed refs, bare verse numbers
+ *  in parentheses, and the leading "R." response marker. */
+function cleanLine(line: string): string {
+  return line
     .replace(/\[[^\]]*\]/g, ' ')
     .replace(/\(\s*[\d:,\s-]+\s*\)/g, ' ')
-    .replace(/^\s*R[.:]?\s*/gim, ' ')
+    .replace(/^\s*R[.:]?\s*/i, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function tokenize(line: string): string[] {
+  return line
     .split(/\s+/)
+    // A hyphen the user typed is them choosing the syllable break; keep it on
+    // the leading token so the engraved lyric still reads "glo-".
     .flatMap((word) => word.split(/(?<=-)/))
-    .map((t) => t.replace(/^[^\p{L}\p{N}'’-]+|[^\p{L}\p{N}'’-]+$/gu, ''))
+    .map((t) => t.replace(/^[^\p{L}\p{N}'\u2019-]+|[^\p{L}\p{N}'\u2019-]+$/gu, ''))
     .filter((t) => t.length > 0 && !/^\d+$/.test(t));
+}
+
+/**
+ * Parse psalm text into refrain and verse lines.
+ *
+ * A responsorial psalm is not prose: the assembly sings a refrain, a cantor
+ * sings a verse, the refrain returns. Run together as one paragraph it is
+ * unusable for setting music, because the shape IS the form.
+ *
+ * The refrain is found by RECURRENCE rather than by its "R." marker, because
+ * the scraped text usually has no marker — the same line simply comes back
+ * between verses. Both signals are accepted.
+ */
+export function psalmLines(text: string): PsalmLine[] {
+  const cleaned = (text ?? '')
+    .replace(/\r/g, '')
+    .split('\n')
+    .map((l) => ({ raw: l.trim(), text: cleanLine(l) }))
+    .filter((l) => l.text.length > 0);
+
+  const counts = new Map<string, number>();
+  for (const l of cleaned) counts.set(l.text.toLowerCase(), (counts.get(l.text.toLowerCase()) ?? 0) + 1);
+
+  let cursor = 0;
+  return cleaned.map(({ raw, text: lineText }) => {
+    const tokens = tokenize(lineText);
+    const line: PsalmLine = {
+      text: lineText,
+      isRefrain: /^\s*R[.:]?\s/i.test(raw) || (counts.get(lineText.toLowerCase()) ?? 0) > 1,
+      tokens,
+      startIndex: cursor,
+    };
+    cursor += tokens.length;
+    return line;
+  });
+}
+
+/**
+ * The flat list of singable tokens, in order.
+ *
+ * Derived from psalmLines rather than parsed separately, so the word the
+ * display highlights is by construction the word the next note will take.
+ * Two independent parsers would drift the moment either changed.
+ */
+export function psalmSyllables(text: string): string[] {
+  return psalmLines(text).flatMap((l) => l.tokens);
 }
 
 /**

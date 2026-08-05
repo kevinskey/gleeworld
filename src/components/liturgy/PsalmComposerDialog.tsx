@@ -15,10 +15,12 @@ import { playPitch } from '@/lib/notation/pitchAudio';
 import { useMidiInput, midiToPitch } from '@/lib/notation/useMidiInput';
 import { svgToJpegBlob, imageFileName, downloadBlob } from '@/lib/notation/exportImage';
 import {
-  degreeToPitch, measuresPerLine, psalmSyllables, psalmScoreTitle, PSALM_WIDTH_PX, PSALM_WIDTH_IN,
+  degreeToPitch, measuresPerLine, psalmSyllables, psalmLines, psalmScoreTitle,
+  PSALM_WIDTH_PX, PSALM_WIDTH_IN,
 } from '@/lib/liturgy/psalmComposer';
 import { savePsalmToLibrary } from '@/lib/liturgy/psalmScores';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 /**
  * Compose a setting of the day's responsorial psalm.
@@ -115,6 +117,7 @@ export function PsalmComposerDialog({
   const staffRef = useRef<HTMLDivElement>(null);
 
   const syllables = useMemo(() => psalmSyllables(psalmText ?? ''), [psalmText]);
+  const lines = useMemo(() => psalmLines(psalmText ?? ''), [psalmText]);
 
   // DERIVED, not tracked. A hand-maintained cursor drifts the moment undo,
   // delete or a click-and-retype enters the picture — every one of those has
@@ -486,7 +489,7 @@ export function PsalmComposerDialog({
           </p>
 
           {/* Syllable queue */}
-          {syllables.length > 0 && (
+          {lines.length > 0 && (
             <div className="border border-border p-2">
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-xs font-medium">Psalm text</span>
@@ -494,19 +497,41 @@ export function PsalmComposerDialog({
                   {remaining > 0 ? `${remaining} words left` : 'all words placed'}
                 </span>
               </div>
-              <p className="text-sm leading-relaxed">
-                {syllables.map((s, i) => (
-                  <span
-                    key={`${s}-${i}`}
-                    className={
-                      i < syllableIndex ? 'text-muted-foreground/50'
-                      : i === syllableIndex ? 'bg-primary/15 font-semibold' : ''
-                    }
-                  >
-                    {s}{' '}
-                  </span>
-                ))}
-              </p>
+              {/* Refrain/verse shape, not a paragraph. The refrain is set in
+                  bold with a blank line around it, matching how the planner
+                  already prints the psalm — the form is what a cantor reads
+                  off when deciding where the music goes. */}
+              <div className="space-y-1">
+                {lines.map((line, li) => {
+                  const prev = lines[li - 1];
+                  const spaceAbove = li > 0 && (line.isRefrain || prev?.isRefrain);
+                  return (
+                    <p
+                      key={`${line.text}-${li}`}
+                      className={cn(
+                        'text-sm leading-relaxed',
+                        line.isRefrain ? 'font-semibold' : 'text-foreground/90 pl-3',
+                        spaceAbove && 'mt-4',
+                      )}
+                    >
+                      {line.tokens.map((tok, ti) => {
+                        const i = line.startIndex + ti;
+                        return (
+                          <span
+                            key={`${tok}-${i}`}
+                            className={
+                              i < syllableIndex ? 'text-muted-foreground/50'
+                              : i === syllableIndex ? 'bg-primary/15 font-semibold' : ''
+                            }
+                          >
+                            {tok}{' '}
+                          </span>
+                        );
+                      })}
+                    </p>
+                  );
+                })}
+              </div>
             </div>
           )}
 
