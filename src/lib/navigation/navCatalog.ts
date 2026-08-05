@@ -55,11 +55,17 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'messages', to: '/dashboard/messenger', label: 'Messages',       icon: MessageSquare, section: 'today', tone: 'bg-cyan-50 text-cyan-600',   tourId: 'nav-messenger',      surfaces: ['sidebar'] },
   { key: 'calendar', to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      section: 'today', tone: 'bg-purple-50 text-purple-600', tourId: 'nav-calendar',     surfaces: ['sidebar'] },
   { key: 'notes',    to: '/planner',             label: 'Notes',          icon: NotebookPen,   section: 'today', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-notes', gate: { module: 'planner' } },
-  // Prayer — Phase 0/1 preview. Gated to platform admins on purpose while the
-  // module is unfinished: the reference data is applied by hand, so an
-  // ungated link would show every tenant a page that cannot load. Swap this
-  // for `gate: { module: 'prayer' }` once the module is registered in billing.
-  { key: 'prayer',   to: '/prayer',              label: 'Prayer App',     icon: HandHeart,     section: 'today', tone: 'bg-violet-50 text-violet-700', tourId: 'nav-prayer', gate: { platformAdminOnly: true } },
+  // Prayer — visible to everyone. The platform-admin gate is gone now that the
+  // reference data (calendar, readings, 22 prayers) is loaded in production, so
+  // the page actually renders for a normal user.
+  //
+  // NOTE: the content is Roman Catholic. On a ~50-tenant platform that includes
+  // Protestant, secular and school choirs, this is a deliberate call by Kevin to
+  // ship it to everyone rather than gate it. When the module is registered in
+  // billing, swap this for `gate: { module: 'prayer' }` so a tenant opts in —
+  // and the design doc's `rite` column already allows a Revised Common
+  // Lectionary or plain devotional track per tenant.
+  { key: 'prayer',   to: '/prayer',              label: 'Prayer App',     icon: HandHeart,     section: 'today', tone: 'bg-violet-50 text-violet-700', tourId: 'nav-prayer' },
   // Music
   { key: 'music-library',   to: '/dashboard/music-library', label: 'Music Library',  icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
   { key: 'repertoire',     to: '/dashboard/repertoire',    label: 'Repertoire',     icon: BookOpen, section: 'music', tone: 'bg-sky-50 text-sky-700',       tourId: 'nav-repertoire' },
