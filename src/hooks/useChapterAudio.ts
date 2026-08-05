@@ -4,6 +4,58 @@ import { speak, stopSpeaking } from '@/lib/assistant/speech';
 import type { BibleVerse } from '@/hooks/useBible';
 
 /**
+ * Speaks an ordered list of text chunks, one after another.
+ *
+ * Chunking matters: a whole chapter or a full Gospel reading is far past a
+ * comfortable TTS payload, and one long request means a long silence before
+ * anything plays. Chunked, playback starts almost immediately and can be
+ * stopped part-way.
+ */
+export function useSpokenText(chunks: string[]) {
+  const [playing, setPlaying] = useState(false);
+  const [index, setIndex] = useState<number | null>(null);
+  // Bumped on every stop so a late chunk from a cancelled run can tell that it
+  // no longer belongs to the current playback.
+  const runRef = useRef(0);
+
+  const stop = useCallback(() => {
+    runRef.current += 1;
+    stopSpeaking();
+    setPlaying(false);
+    setIndex(null);
+  }, []);
+
+  // Never let audio outlive what it was reading.
+  useEffect(() => stop, [stop]);
+
+  const play = useCallback(async () => {
+    const parts = chunks.map((c) => c.trim()).filter(Boolean);
+    if (!parts.length) return;
+    runRef.current += 1;
+    const run = runRef.current;
+    setPlaying(true);
+
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data?.session?.access_token;
+
+    for (let i = 0; i < parts.length; i++) {
+      if (runRef.current !== run) return;
+      setIndex(i);
+      await new Promise<void>((resolve) => {
+        speak(parts[i], { accessToken, supabaseUrl: SUPABASE_URL, onEnd: () => resolve() });
+      });
+    }
+
+    if (runRef.current === run) {
+      setPlaying(false);
+      setIndex(null);
+    }
+  }, [chunks]);
+
+  return { playing, index, play, stop };
+}
+
+/**
  * Reads a chapter aloud through ElevenLabs.
  *
  * Reuses the assistant's `speak()` rather than calling elevenlabs-tts directly:

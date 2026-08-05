@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Loader2, ExternalLink } from 'lucide-react';
+import { Loader2, ExternalLink, Volume2, Square } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useSpokenText } from '@/hooks/useChapterAudio';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 
@@ -25,6 +27,36 @@ function formatDate(iso: string): string {
   return parseISODate(iso).toLocaleDateString(undefined, {
     weekday: 'short', year: 'numeric', month: 'short', day: 'numeric',
   });
+}
+
+/** Reading HTML → sentences to speak.
+ *
+ *  Sentence-sized chunks, not whole readings: a Gospel is several hundred
+ *  words, which is a long silence before the first sound and impossible to
+ *  stop part-way. Split on sentence ends, then regrouped so no chunk is
+ *  absurdly short. The heading and citation are spoken first so a listener
+ *  knows what is being read.
+ */
+function readingsToSpeech(readings: ReadingBlock[]): string[] {
+  const out: string[] = [];
+  for (const r of readings) {
+    out.push(r.citation ? `${r.heading}. ${r.citation}.` : `${r.heading}.`);
+    const text = r.html
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!text) continue;
+    let buf = '';
+    for (const piece of text.split(/(?<=[.!?])\s+/)) {
+      buf = buf ? `${buf} ${piece}` : piece;
+      if (buf.length >= 180) { out.push(buf); buf = ''; }
+    }
+    if (buf.trim()) out.push(buf.trim());
+  }
+  return out;
 }
 
 export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
@@ -59,6 +91,12 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
 
   // modal={false}: no focus trap and no scroll lock, so the page behind stays
   // usable while the readings sit open beside it.
+  const speech = useMemo(
+    () => (data?.readings?.length ? readingsToSpeech(data.readings) : []),
+    [data],
+  );
+  const audio = useSpokenText(speech);
+
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }} modal={false}>
       {/* Vertical companion panel, never wider than half the UI — readings are
@@ -75,13 +113,35 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
         onInteractOutside={(e) => e.preventDefault()}
       >
         <SheetHeader className="px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-2 border-b border-border shrink-0">
-          <SheetTitle className="font-extrabold tracking-tight text-lg sm:text-xl text-left">
-            {data?.liturgicalTitle || 'Daily Readings'}
-          </SheetTitle>
-          <p className="text-xs text-muted-foreground text-left">
-            {formatDate(isoDate)} · via{' '}
-            <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">Universalis</a>
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <SheetTitle className="font-extrabold tracking-tight text-lg sm:text-xl text-left">
+                {data?.liturgicalTitle || 'Daily Readings'}
+              </SheetTitle>
+              <p className="text-xs text-muted-foreground text-left">
+                {formatDate(isoDate)} · via{' '}
+                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">Universalis</a>
+              </p>
+            </div>
+            {/* Read aloud. Sits in the header so it is reachable without
+                scrolling back up through a long Gospel. Placed left of the
+                sheet's own close button, which occupies the top-right. */}
+            {speech.length > 0 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 mr-8"
+                onClick={() => (audio.playing ? audio.stop() : audio.play())}
+                aria-label={audio.playing ? 'Stop reading' : 'Read these aloud'}
+              >
+                {audio.playing
+                  ? <Square className="w-4 h-4 sm:mr-1.5" aria-hidden />
+                  : <Volume2 className="w-4 h-4 sm:mr-1.5" aria-hidden />}
+                <span className="hidden sm:inline">{audio.playing ? 'Stop' : 'Listen'}</span>
+              </Button>
+            )}
+          </div>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {loading && (
