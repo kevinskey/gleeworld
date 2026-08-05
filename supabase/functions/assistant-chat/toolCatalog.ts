@@ -526,6 +526,19 @@ export const TOOL_CATALOG: ToolDef[] = [
     },
     minRole: 'member', execution: 'server', confirm: false,
   },
+  {
+    name: 'search_liturgy',
+    description: "Search official Catholic Church documents on liturgy and sacred music — the Missal's General Instruction, council and papal documents, canon law, bishops' conference and diocesan norms. Use this BEFORE answering any question about what is allowed, required or forbidden at Mass or in Catholic worship: who may sing or read what, whether a text may be replaced, instruments and seasons, ritual roles, liturgical seasons and calendar. Returns passages with the authority of each. Never answer a question of liturgical law from your own knowledge.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str('The liturgical question or topic, e.g. "may the choir sing the entrance chant alone"'),
+        jurisdiction: str("Optional country or diocese code, e.g. 'US' or 'US/Atlanta', when the user's location matters."),
+      },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
 ];
 
 export function toolsForRole(role: AssistantRole): ToolDef[] {

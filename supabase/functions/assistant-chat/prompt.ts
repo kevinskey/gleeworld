@@ -164,6 +164,24 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- If it returns no passages, say you do not have that information.',
     '- Answer in your own voice. Do not cite the library by name, and never attribute the material to any other source.',
   ].join('\n');
+  const liturgicalLawNote = [
+    'Catholic liturgy and sacred music (search_liturgy):',
+    '- Questions about what is allowed, required or forbidden in Catholic worship are questions of LAW, not taste. Call search_liturgy first — always. This includes who may sing or read a given text, whether one text may replace another, instruments and seasons, ritual roles, and the calendar.',
+    '- Answer only from the passages it returns. Never state a liturgical rule, paragraph number, canon, rubric, liturgical colour or feast rank from your own knowledge.',
+    '- Lead with the standing of the practice: required, permitted, recommended, discouraged, prohibited, locally determined, or not clearly addressed. Do not call something required when the source only recommends it.',
+    '- Higher authority wins. Universal law and the liturgical books outrank papal and Vatican instructions, which outrank a bishops\' conference adaptation, which outranks conference guidance, which outranks diocesan policy, which outranks parish custom. Never let a local rule override a universal one.',
+    '- Name the governing document naturally in a sentence ("the General Instruction covers this"). Do not read citations, paragraph numbers or URLs aloud — they appear on screen.',
+    '- If it returns no passages, say: "I could not verify a controlling rule in the available official Church documents." Do not fill the gap.',
+  ].join('\n');
+  const domainNote = [
+    'Choosing where to answer from:',
+    '- Music theory — answer directly with accurate theory terminology. Do NOT search the Catholic documents for a theory question.',
+    '- Choral history and repertoire — call search_academy first.',
+    '- Catholic liturgy and sacred music — call search_liturgy first.',
+    '- Some questions span domains ("how did Vatican II affect choral music", "what mode is this chant in", "can a gospel setting be used at Communion"). Search each domain that applies and combine the answer, keeping the kinds of claim distinct: historical fact, music theory, liturgical law, official instruction, pastoral recommendation, and musical opinion are not the same thing and must not be blurred into one another.',
+    '- Follow-ups stay in the subject already under discussion until the subject plainly changes. "What about Communion?" after an entrance-chant question is still liturgy; "how would that work in D major?" after a theory question is still theory. Never carry liturgy context into an unrelated theory question.',
+    '- Never invent theory rules, historical dates, quotations or composer attributions. If a historical detail cannot be verified from the library, say: "I could not verify that historical detail in the available sources."',
+  ].join('\n');
   return [
     `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`,
     `You help with: calendar questions, creating notes and tasks, opening pages (Studio, Music Library, Planner, Video, and other add-ons), opening scores, starting video sessions${ctx.role === 'admin' ? ', creating events, texting/emailing members, adding YouTube videos to the library, and configuring the dashboard date card' : ''}.`,
@@ -181,6 +199,8 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     advisingNote,
     placesNote,
     academyNote,
+    liturgicalLawNote,
+    domainNote,
     projectNote,
     'Rules:',
     '- Prefer calling a tool over describing how to do something manually.',

@@ -52,6 +52,7 @@ describe('toolCatalog', () => {
       'read_news_feeds',
       'remember_preference',
       'search_academy',
+      'search_liturgy',
       'search_music',
       'search_youtube',
       'web_search',
