@@ -73,6 +73,27 @@ const METERS: { beats: number; beatType: number }[] = [
 
 const LETTERS: Pitch['step'][] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
+/**
+ * Engraving size per layout choice.
+ *
+ * Four inches is narrow, so bars-per-line and note size trade directly
+ * against each other: the layout space is 384/scale units and the clef and
+ * time signature take ~70 of it before a note is drawn. At NotationView's
+ * reading default of 1.35 that leaves ~198 units — which one bar of quarter
+ * notes under lyrics consumes on its own, which is exactly why every line
+ * came out one measure wide.
+ *
+ * So two-per-line is engraved near full size and four-per-line noticeably
+ * smaller. Small print is the honest consequence of fitting four bars in
+ * four inches, not a regression.
+ */
+const ENGRAVING_SCALE: Record<2 | 4, number> = { 2: 1.0, 4: 0.62 };
+
+/** On-screen magnification. Presentation only — see the staff markup. */
+const SCREEN_ZOOM = 1.6;
+
+const PER_LINE_CHOICES = [2, 4] as const;
+
 const CHROMA: Record<Pitch['step'], number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 const midiOf = (p: Pitch) => (p.octave + 1) * 12 + CHROMA[p.step] + p.alter;
 
@@ -251,7 +272,21 @@ export function PsalmComposerDialog({
     setScore(next);
   }, []);
 
-  const perRow = useMemo(() => measuresPerLine(score), [score]);
+  // How many bars share a printed line. Kevin's call, not the engine's — a
+  // psalm card is a physical thing and how dense it should be is a taste
+  // decision. measuresPerLine only seeds the opening choice from the lyric
+  // load; from there the toggle wins.
+  const [perLine, setPerLine] = useState<2 | 4>(2);
+  useEffect(() => {
+    if (open) setPerLine(measuresPerLine(score) >= 3 ? 4 : 2);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  // What the engraver ACTUALLY packed. targetPerRow is a request the fit
+  // check can refuse, and it did: at the default reading size a 4-inch staff
+  // has ~198 logical units of room, which one bar of lyrics fills on its own
+  // — so every line came out single-measure while the caption claimed two.
+  const [layout, setLayout] = useState<{ rows: number; perRow: number } | null>(null);
 
   const renderJpeg = useCallback(async (): Promise<Blob | null> => {
     const svg = staffRef.current?.querySelector('svg');
@@ -472,21 +507,60 @@ export function PsalmComposerDialog({
             ))}
           </div>
 
-          {/* The staff, at exactly 4 inches */}
-          <div className="flex justify-center border border-border bg-card p-3">
-            <div ref={staffRef} style={{ width: PSALM_WIDTH_PX }}>
-              <NotationView
-                score={score}
-                width={PSALM_WIDTH_PX}
-                targetPerRow={perRow}
-                selectedIndex={selected}
-                onNoteClick={(i) => setSelected(i)}
-              />
+          {/* The staff is laid out at its true 4-inch print size and then
+              CSS-zoomed for the screen. Laying it out larger and shrinking
+              the export would change which measures share a line — the
+              layout has to be decided at the size it will be printed. The
+              zoom is presentation only; the SVG's own coordinates, and so
+              the JPEG, stay at 4 inches. */}
+          <div className="flex justify-center overflow-x-auto border border-border bg-card p-3">
+            <div style={{ width: PSALM_WIDTH_PX * SCREEN_ZOOM }}>
+              <div
+                ref={staffRef}
+                style={{
+                  width: PSALM_WIDTH_PX,
+                  transform: `scale(${SCREEN_ZOOM})`,
+                  transformOrigin: 'top left',
+                }}
+              >
+                <NotationView
+                  score={score}
+                  width={PSALM_WIDTH_PX}
+                  targetPerRow={perLine}
+                  scale={ENGRAVING_SCALE[perLine]}
+                  onLayout={setLayout}
+                  selectedIndex={selected}
+                  onNoteClick={(i) => setSelected(i)}
+                />
+              </div>
             </div>
           </div>
-          <p className="text-center text-xs text-muted-foreground">
-            {PSALM_WIDTH_IN}″ wide · {perRow} {perRow === 1 ? 'measure' : 'measures'} per line
-          </p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              {PSALM_WIDTH_IN}″ wide · print
+            </span>
+            {PER_LINE_CHOICES.map((n) => (
+              <Button
+                key={n}
+                type="button"
+                size="sm"
+                variant={perLine === n ? 'default' : 'outline'}
+                aria-pressed={perLine === n}
+                onClick={() => setPerLine(n)}
+                className="text-xs"
+              >
+                {n} per line
+              </Button>
+            ))}
+            {/* The engraver can still refuse: a bar dense enough not to fit
+                drops the row below the request. Reporting what it actually
+                did beats printing the number we asked for. */}
+            {layout && layout.perRow > 0 && layout.perRow !== perLine && (
+              <span className="text-xs text-muted-foreground">
+                (fits {layout.perRow} here)
+              </span>
+            )}
+          </div>
 
           {/* Syllable queue */}
           {lines.length > 0 && (

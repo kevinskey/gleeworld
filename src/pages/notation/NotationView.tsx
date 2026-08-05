@@ -44,7 +44,7 @@ const SELECTED_COLOR = '#ea580c'; // orange-600
 export function NotationView({
   score, width, onNoteClick, selectedIndex,
   editingLyric, lyricValue, onLyricChange, onLyricAdvance, onLyricExit,
-  onToggleSystemBreak, targetPerRow,
+  onToggleSystemBreak, targetPerRow, scale = SCALE, onLayout,
 }: {
   score: EditorScore; width?: number; onNoteClick?: (index: number) => void; selectedIndex?: number | null;
   /** Prefer full rows of this many measures (phones still cap at 2): the fit
@@ -53,6 +53,15 @@ export function NotationView({
    *  fit. Sight-reading exercises pass 4; the editor leaves it unset and keeps
    *  the looser content-aware wrap. */
   targetPerRow?: number;
+  /** Engraving size. Lower fits more bars in a narrow staff at the cost of
+   *  note size — a 4-inch psalm card cannot hold two bars of lyrics at the
+   *  default reading size. Defaults to SCALE. */
+  scale?: number;
+  /** Reports what the packer ACTUALLY did. targetPerRow is a request: the
+   *  fit check drops below it whenever the measures' minimum widths don't
+   *  fit, so a caller that prints "N measures per line" needs the real
+   *  number rather than the one it asked for. */
+  onLayout?: (info: { rows: number; perRow: number }) => void;
   // Inline lyric editing: when on, a text cursor sits under the selected note (no dialog).
   editingLyric?: boolean; lyricValue?: string;
   onLyricChange?: (v: string) => void; onLyricAdvance?: () => void; onLyricExit?: () => void;
@@ -78,6 +87,8 @@ export function NotationView({
   const [barTargets, setBarTargets] = useState<Array<{ x: number; y: number; h: number; measureIndex: number }>>([]);
 
   useEffect(() => { onNoteClickRef.current = onNoteClick; }, [onNoteClick]);
+  const onLayoutRef = useRef(onLayout);
+  useEffect(() => { onLayoutRef.current = onLayout; }, [onLayout]);
 
   useEffect(() => {
     if (width) return;                    // explicit width wins; skip measuring
@@ -97,9 +108,9 @@ export function NotationView({
     const measures = layoutMeasures(score);
     const renderer = new Renderer(host, Renderer.Backends.SVG);
 
-    // The SVG is cssWidth CSS px wide; ctx.scale(SCALE) then draws everything SCALE× larger,
-    // so we lay out in a logical space of cssWidth / SCALE.
-    const logicalWidth = cssWidth / SCALE;
+    // The SVG is cssWidth CSS px wide; ctx.scale(scale) then draws everything
+    // scale× larger, so we lay out in a logical space of cssWidth / scale.
+    const logicalWidth = cssWidth / scale;
     // Content-aware line wrapping. Instead of a fixed 4-measures-per-row,
     // walk the measures accumulating each one's minimum content width;
     // start a new system when the next measure wouldn't fit. This means
@@ -194,10 +205,16 @@ export function NotationView({
       forcedBreaks: new Set(score.systemBreaks ?? []),
     });
     const rows = Math.max(1, rowsPacked.length);
+    onLayoutRef.current?.({
+      rows,
+      perRow: rowsPacked.length
+        ? Math.max(...rowsPacked.map((r) => r.end - r.start + 1))
+        : 0,
+    });
     const logicalHeight = TOP + rows * SYSTEM_H + BOTTOM;
-    renderer.resize(cssWidth, Math.ceil(logicalHeight * SCALE));
+    renderer.resize(cssWidth, Math.ceil(logicalHeight * scale));
     const ctx = renderer.getContext();
-    ctx.scale(SCALE, SCALE);
+    ctx.scale(scale, scale);
 
     // Pass 2 — lay out each system with proportional bar widths, then draw.
     let globalIndex = 0;
@@ -236,7 +253,7 @@ export function NotationView({
             (sn as any).getSVGElement?.()?.addEventListener('click', () => onNoteClickRef.current?.(idx));
             if (idx === selectedIndex && b.m.elements[k].kind === 'note') {   // inline lyric cursor position
               const yb = typeof (stave as any).getYForBottomText === 'function' ? (stave as any).getYForBottomText(1) : stave.getBottomY();
-              selPos = { x: (sn as any).getAbsoluteX() * SCALE, y: yb * SCALE };
+              selPos = { x: (sn as any).getAbsoluteX() * scale, y: yb * scale };
               // Auto-scroll the current measure into view. Uses the note's
               // own SVG element and `block: 'nearest'` so we only scroll
               // when the note is actually off-screen — never fights the
@@ -280,9 +297,9 @@ export function NotationView({
         // end of a system that's already the last row (same reason).
         if (mi < measures.length - 1) {
           barTargetsBuf.push({
-            x: x * SCALE,
-            y: (TOP + r * SYSTEM_H - 4) * SCALE,
-            h: 50 * SCALE,
+            x: x * scale,
+            y: (TOP + r * SYSTEM_H - 4) * scale,
+            h: 50 * scale,
             measureIndex: mi,
           });
         }
@@ -291,7 +308,7 @@ export function NotationView({
     }
     setLyricPos(selPos);
     setBarTargets(barTargetsBuf);
-  }, [score, width, measuredW, selectedIndex, targetPerRow]);
+  }, [score, width, measuredW, selectedIndex, targetPerRow, scale]);
 
   const forcedBreakSet = new Set(score.systemBreaks ?? []);
   return (
