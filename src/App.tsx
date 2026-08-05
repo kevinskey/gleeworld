@@ -226,6 +226,8 @@ const PlannerPage = lazy(() => import("./pages/planner/PlannerPage"));
 const PrayerApp = lazy(() => import("./pages/prayer/PrayerApp"));
 const BibleApp = lazy(() => import("./pages/bible/BibleApp"));
 const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
+const WorshipAidPage = lazy(() => import("./pages/dashboard/WorshipAidPage"));
+const WorshipAidPublicPage = lazy(() => import("./pages/WorshipAidPublicPage"));
 const ConcertPlannerEditorPage = lazy(() => import("./pages/dashboard/ConcertPlannerEditorPage"));
 const PublicConcertProgramPage = lazy(() => import("./pages/public/PublicConcertProgramPage"));
 const AuditionsModule = lazy(() => import("./components/modules/AuditionsModule").then(m => ({ default: m.AuditionsModule })));
@@ -1793,6 +1795,24 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+                {/* Worship aid: the printable folded program for a Mass. */}
+                <Route
+                  path="/dashboard/liturgy/:id/worship-aid"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <WorshipAidPage />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* The phone edition, reached by scanning the QR on the printed
+                    cover. Public by capability token and read through a
+                    SECURITY DEFINER projection — no shell, no auth, and no
+                    access to anything the printed aid does not already show. */}
+                <Route path="/worship-aid/:token" element={<WorshipAidPublicPage />} />
                 {/* Anonymous public program — gated server-side by the
                     anon RLS policy that requires published_at IS NOT NULL. */}
                 <Route

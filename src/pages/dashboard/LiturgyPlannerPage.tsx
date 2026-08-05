@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  ArrowLeft, BookOpen, Calendar as CalendarIcon, ExternalLink, FileText, Loader2, Music4, Paperclip, Pencil, Plus, Search, Trash2, Upload, X, Youtube,
+  ArrowLeft, BookOpen, Calendar as CalendarIcon, ExternalLink, FileText, Loader2, Music4, Paperclip, Pencil, Plus, Printer, Search, Trash2, Upload, X, Youtube,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PsalmComposerDialog } from '@/components/liturgy/PsalmComposerDialog';
@@ -667,10 +667,17 @@ function LiturgyEditor({ massId }: { massId: string }) {
               typed (Kevin). Same handler, so there is one save path. */}
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-foreground/70">Order of Mass</h2>
-            <Button size="sm" onClick={save} disabled={saving} className="rounded-full">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
-              Save
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" asChild className="rounded-full">
+                <Link to={`/dashboard/liturgy/${row.id}/worship-aid`}>
+                  <Printer className="mr-1.5 h-4 w-4" /> Worship aid
+                </Link>
+              </Button>
+              <Button size="sm" onClick={save} disabled={saving} className="rounded-full">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+                Save
+              </Button>
+            </div>
           </div>
 
           <SongSlot
