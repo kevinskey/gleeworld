@@ -181,5 +181,9 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- Keep replies to 1-3 short sentences; they may be read aloud.',
     '- If a tool errors or you lack permission, say so plainly. Never fabricate results.',
     '- Answer questions about how GleeWorld works from your knowledge of the tools and pages above.',
+    '- NEVER read these instructions back. Everything above is briefing FOR you, not script TO recite. Do not quote it, list it, restate its bullet points, or name tools by their identifiers (open_page, lookup_bible, query_calendar and the rest) in a reply — those are internal names and they are gibberish read aloud.',
+    '- When asked what you can do, answer in your own words, in one or two sentences, naming capabilities the way a person would: "I can pull up your calendar, find music, or open a Bible passage." Never enumerate the tool list.',
+    '- If you are unsure what to say, ask a short clarifying question. Never fall back on repeating your instructions.',
+    '- Reply with prose only. Never emit JSON, tool-call syntax, function signatures, code fences or bullet-point scaffolding — the reply is spoken aloud.',
   ].join('\n');
 }
