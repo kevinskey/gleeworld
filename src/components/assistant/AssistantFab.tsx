@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { AudioLines, ChevronUp, Mic, Square, X } from 'lucide-react';
+import { AudioLines, ChevronUp, Mic, Settings2, Square, X } from 'lucide-react';
+import { AssistantQuickSettings } from './AssistantQuickSettings';
 import { useIsCompactNav } from '@/hooks/use-mobile';
 import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
 import { sectionKeyFromPath, isFabCollapsed, setFabCollapsed } from '@/lib/assistant/fabPrefs';
@@ -35,7 +36,7 @@ export const AssistantFab = () => {
   }, [captionReply]);
 
   if (!assistant) return null;
-  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state, liveStatus, startLive, endLive } = assistant;
+  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state, liveStatus, startLive, endLive, muted, toggleMute } = assistant;
   if (sheetOpen || videoRoom) return null;
 
   // Immersive full-screen routes (Viewer reader, Studio session editor)
@@ -96,14 +97,29 @@ export const AssistantFab = () => {
         >
           <X className="w-2.5 h-2.5" />
         </button>
+        {/* Two distinct destinations, so a tap is never a guess:
+              caret  → the chat, where you read and type
+              gear   → settings, in a small window anchored here
+            The mic stays the primary voice control it always was. */}
         <button
           type="button"
           aria-label="Open assistant chat"
+          title="Open chat"
           onClick={() => setSheetOpen(true)}
           className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           <ChevronUp className="w-4 h-4" />
         </button>
+        <AssistantQuickSettings muted={muted} onToggleMute={toggleMute}>
+          <button
+            type="button"
+            aria-label="Assistant settings"
+            title="Assistant settings"
+            className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+          </button>
+        </AssistantQuickSettings>
         {/* While she's speaking, the primary button is a Stop — one tap
             silences her (Kevin: "she won't stop talking"). Otherwise it's
             the mic; tapping the mic also barges in (stops speech) via the
