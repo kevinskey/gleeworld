@@ -3,6 +3,10 @@
 import { executeStudentPictureTool } from './studentPicture.ts';
 import { ACADEMY_CORPUS } from '../_shared/academy/corpus.ts';
 import { buildIndex, searchAcademy } from '../_shared/academy/search.ts';
+import { LITURGY_CORPUS } from '../_shared/liturgy/corpus.ts';
+import {
+  appliesTo, authorityLabel, byAuthorityThenScore, formatCitation,
+} from '../_shared/liturgy/types.ts';
 
 type SupabaseLike = {
   from: (table: string) => any;
@@ -50,6 +54,7 @@ export async function executeServerTool(
       case 'query_calendar': return { replyJson: await queryCalendar(args, deps) };
       case 'search_music': return { replyJson: await searchMusic(args, deps) };
       case 'search_academy': return { replyJson: searchAcademyTool(args) };
+      case 'search_liturgy': return { replyJson: searchLiturgyTool(args) };
       case 'find_user': return { replyJson: await findUser(args, deps) };
       case 'search_youtube': return { replyJson: await searchYoutube(args, deps) };
       case 'get_ride': return await getRide(args, deps);
@@ -102,6 +107,7 @@ async function queryCalendar(args: Record<string, unknown>, { supabase }: Deps):
 
 // The corpus is bundled and immutable, so the index is built once per instance.
 const academyIndex = buildIndex(ACADEMY_CORPUS);
+const liturgyIndex = buildIndex(LITURGY_CORPUS);
 
 function searchAcademyTool(args: Record<string, unknown>): string {
   const query = String(args.query ?? '').trim();
@@ -119,6 +125,59 @@ function searchAcademyTool(args: Record<string, unknown>): string {
       text: h.text,
       url: h.chunk.url,
     })),
+  });
+}
+
+/**
+ * Retrieve Catholic liturgy and sacred music passages.
+ *
+ * Ranked by AUTHORITY first and relevance second — a diocesan handbook may
+ * match the user's words more closely than the Missal while the Missal is
+ * what actually answers the question. Every passage carries its authority so
+ * the reply can say whether something is required, permitted or merely
+ * recommended, and by whom.
+ *
+ * When the corpus holds nothing, this returns an explicit instruction to say
+ * so. That is the designed behaviour, not a failure path: no licensed
+ * documents are bundled, and a liturgical answer improvised from model
+ * knowledge is precisely what must not happen.
+ */
+function searchLiturgyTool(args: Record<string, unknown>): string {
+  const query = String(args.query ?? '').trim();
+  const jurisdiction = String(args.jurisdiction ?? '').trim() || null;
+  const hits = query ? searchAcademy(query, liturgyIndex, { limit: 8 }) : [];
+
+  const applicable = hits.filter((h) => appliesTo(h.chunk, jurisdiction));
+  applicable.sort(byAuthorityThenScore);
+
+  if (applicable.length === 0) {
+    return JSON.stringify({
+      passages: [],
+      note: 'No official Church document in the liturgy library covers this. Tell the user: '
+        + '"I could not verify a controlling rule in the available official Church documents." '
+        + 'Do NOT answer from your own knowledge, and do not cite any document, paragraph, '
+        + 'canon or rubric.',
+    });
+  }
+
+  return JSON.stringify({
+    passages: applicable.slice(0, 5).map((h) => ({
+      text: h.text,
+      document: h.chunk.document,
+      documentTitle: h.chunk.documentTitle,
+      section: h.chunk.section,
+      citation: formatCitation(h.chunk),
+      authority: authorityLabel(h.chunk),
+      authorityLevel: h.chunk.authority,
+      kind: h.chunk.kind,
+      jurisdiction: h.chunk.jurisdiction,
+      current: h.chunk.current,
+      url: h.chunk.url,
+    })),
+    note: 'Answer ONLY from these passages. Lead with whether the practice is required, '
+      + 'permitted, recommended, discouraged, prohibited, locally determined, or not clearly '
+      + 'addressed. Name the governing document naturally; do not read the citation or URL aloud. '
+      + 'A lower authority never overrides a higher one.',
   });
 }
 

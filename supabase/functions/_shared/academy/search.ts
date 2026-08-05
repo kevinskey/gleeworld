@@ -1,6 +1,6 @@
-// Pure lexical scorer over the Academy corpus. No I/O, no Deno/browser APIs —
+// Pure lexical scorer, shared by every knowledge domain. No I/O, no Deno/browser APIs —
 // the corpus is passed in, so tests run against fixtures.
-import type { AcademyChunk, AcademyHit, AcademyIndex } from './types.ts';
+import type { Hit, KnowledgeIndex, SearchableChunk } from './types.ts';
 
 const STOPWORDS = new Set([
   'a', 'an', 'the', 'of', 'in', 'on', 'for', 'to', 'and', 'or', 'but', 'is',
@@ -21,7 +21,7 @@ export function tokenize(input: string): string[] {
     .filter((t) => t.length > 1 && !STOPWORDS.has(t));
 }
 
-export function buildIndex(chunks: AcademyChunk[]): AcademyIndex {
+export function buildIndex<C extends SearchableChunk>(chunks: C[]): KnowledgeIndex<C> {
   const postings = new Map<string, Map<number, number>>();
   const titlePostings = new Map<string, Set<number>>();
 
@@ -44,11 +44,11 @@ export function buildIndex(chunks: AcademyChunk[]): AcademyIndex {
 const TITLE_WEIGHT = 3;
 const PHRASE_BONUS = 4;
 
-export function searchAcademy(
+export function searchAcademy<C extends SearchableChunk>(
   query: string,
-  index: AcademyIndex,
+  index: KnowledgeIndex<C>,
   opts: { limit?: number; maxChars?: number } = {},
-): AcademyHit[] {
+): Hit<C>[] {
   const limit = opts.limit ?? 6;
   const maxChars = opts.maxChars ?? 10_000; // ~2,500 tokens
   const terms = [...new Set(tokenize(query))];
@@ -82,7 +82,7 @@ export function searchAcademy(
     .sort((a, b) => b[1] - a[1] || a[0] - b[0])
     .slice(0, limit);
 
-  const hits: AcademyHit[] = [];
+  const hits: Hit<C>[] = [];
   let used = 0;
   for (const [i, score] of ranked) {
     const chunk = index.chunks[i];
