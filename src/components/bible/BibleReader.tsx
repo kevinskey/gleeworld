@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  ChevronLeft, ChevronRight, Loader2, PenLine, Search, Settings2, Trash2, X,
+  ChevronDown, ChevronLeft, ChevronRight, Loader2, PenLine, Search, Settings2, Trash2, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -72,6 +72,7 @@ export interface BibleReaderProps {
   reference: { book: BibleBook; chapter: number; verse: number | null } | null;
   onGoTo: (bookId: string, chapter: number) => void;
   onExit: () => void;
+  onBrowse: () => void;
 }
 
 export function BibleReader(props: BibleReaderProps) {
@@ -79,7 +80,7 @@ export function BibleReader(props: BibleReaderProps) {
     book, chapter, chapterCount, verses, versesLoading, annotations, notes,
     color, onColorChange, onMark, onOpenNote, onDeleteNote,
     onPrev, onNext, atStart, atEnd,
-    search, onSearchChange, searching, hits, reference, onGoTo, onExit,
+    search, onSearchChange, searching, hits, reference, onGoTo, onExit, onBrowse,
   } = props;
 
   const [toolsOpen, setToolsOpen] = useState(false);
@@ -145,9 +146,17 @@ export function BibleReader(props: BibleReaderProps) {
           capped, because a full-width line of scripture is unreadable. */}
       <div className="mx-auto w-full max-w-[34rem] md:max-w-2xl lg:max-w-4xl xl:max-w-5xl px-5 sm:px-8 lg:px-10 py-10 sm:py-14">
         <header className="mb-8 text-center">
-          <h1 className="!text-2xl sm:!text-3xl font-bold tracking-tight">
-            {book?.name} {chapter}
-          </h1>
+          <button
+            type="button"
+            onClick={onBrowse}
+            className="mx-auto flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Choose a book and chapter"
+          >
+            <h1 className="!text-2xl sm:!text-3xl font-bold tracking-tight">
+              {book?.name} {chapter}
+            </h1>
+            <ChevronDown className="w-5 h-5 text-muted-foreground" aria-hidden />
+          </button>
           <p className="mt-1 text-xs text-muted-foreground tabular-nums">
             Chapter {chapter} of {chapterCount}
           </p>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, Loader2, Maximize2, PenLine, Search, Trash2, X } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, Loader2, Maximize2, PenLine, Search, Trash2, X } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { parseReference } from '@/lib/bible/reference';
 import { BibleReader } from '@/components/bible/BibleReader';
+import { BookPicker } from '@/components/bible/BookPicker';
 import { SpeechInputButton } from '@/components/concertPlanner/SpeechInputButton';
 import { cn } from '@/lib/utils';
 import { VerseRow } from '@/components/bible/VerseRow';
@@ -43,6 +44,7 @@ export default function BibleApp() {
   const [noteVerse, setNoteVerse] = useState<number | null>(null);
   const [draft, setDraft] = useState('');
   const [reading, setReading] = useState(false);
+  const [picking, setPicking] = useState(false);
   const [search, setSearch] = useState('');
   const { data: hits = [], isFetching: searching } = useBibleSearch(search);
 
@@ -135,6 +137,18 @@ export default function BibleApp() {
       maxWidth="4xl"
       actions={
         <div className="flex items-center gap-1">
+          {/* Browse — the non-search way to move around. Sits beside Read so
+              the two ways into a passage are together. */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setPicking(true)}
+            disabled={!books?.length}
+          >
+            <BookOpen className="w-4 h-4 mr-1.5" aria-hidden />
+            {book ? `${book.name} ${chapter}` : 'Books'}
+            <ChevronDown className="w-4 h-4 ml-1" aria-hidden />
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -340,6 +354,15 @@ export default function BibleApp() {
         </section>
       )}
 
+      <BookPicker
+        open={picking}
+        onOpenChange={setPicking}
+        books={books ?? []}
+        currentBookId={bookId}
+        currentChapter={chapter}
+        onPick={(id, ch) => { setBookId(id); setChapter(ch); }}
+      />
+
       {reading && (
         <BibleReader
           book={book}
@@ -365,6 +388,7 @@ export default function BibleApp() {
           reference={reference}
           onGoTo={(bookId, ch) => { setBookId(bookId); setChapter(ch); }}
           onExit={() => setReading(false)}
+          onBrowse={() => setPicking(true)}
         />
       )}
 
