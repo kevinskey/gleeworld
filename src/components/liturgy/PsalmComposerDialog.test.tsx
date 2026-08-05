@@ -10,17 +10,19 @@ vi.mock('@/lib/liturgy/psalmScores', () => ({
   savePsalmToLibrary: (...args: unknown[]) => savePsalmToLibrary(...args),
 }));
 // jsdom has no AudioContext; the entry click would otherwise throw on every note.
-vi.mock('@/lib/notation/pitchAudio', () => ({ playPitch: vi.fn() }));
+const playPitch = vi.fn();
+vi.mock('@/lib/notation/pitchAudio', () => ({ playPitch: (...a: unknown[]) => playPitch(...a) }));
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: { id: 'u1', email: 'cantor@example.org', user_metadata: { full_name: 'A Cantor' } } }),
 }));
 // The engraver is exercised by the notation module's own tests; here it is
 // noise (VexFlow measures real DOM boxes, which jsdom reports as zero).
 vi.mock('@/pages/notation/NotationView', () => ({
-  NotationView: ({ score, targetPerRow, scale, onLayout }: {
+  NotationView: ({ score, targetPerRow, scale, onLayout, onNoteClick }: {
     score: { elements: unknown[] };
     targetPerRow?: number; scale?: number;
     onLayout?: (i: { rows: number; perRow: number }) => void;
+    onNoteClick?: (i: number) => void;
   }) => {
     // Stand in for the real packer honouring the request, so the dialog's
     // reporting can be tested without VexFlow measuring real glyph boxes.
@@ -37,7 +39,11 @@ vi.mock('@/pages/notation/NotationView', () => ({
         data-notes={score.elements.length}
         data-per-row={targetPerRow}
         data-scale={scale}
-      />
+      >
+        {score.elements.map((_, i) => (
+          <button key={i} type="button" data-testid={`note-${i}`} onClick={() => onNoteClick?.(i)} />
+        ))}
+      </div>
     );
   },
 }));
@@ -66,7 +72,7 @@ function open(props: Partial<React.ComponentProps<typeof PsalmComposerDialog>> =
   );
 }
 
-beforeEach(() => savePsalmToLibrary.mockClear());
+beforeEach(() => { savePsalmToLibrary.mockClear(); playPitch.mockClear(); });
 afterEach(cleanup);
 
 describe('PsalmComposerDialog', () => {
@@ -259,6 +265,71 @@ describe('PsalmComposerDialog', () => {
     open();
     // The stub honours the request, so no discrepancy is reported.
     expect(screen.queryByText(/fits \d+ here/)).not.toBeInTheDocument();
+  });
+
+  // Kevin: "i cant add a flat or sharp". Without these a minor psalm tone
+  // cannot have its raised leading tone, which is how most of them cadence.
+  it('offers flat, natural and sharp', () => {
+    open();
+    for (const n of ['Flat', 'Natural', 'Sharp']) {
+      expect(screen.getByRole('button', { name: n })).toBeInTheDocument();
+    }
+  });
+
+  it('applies an armed sharp to the next note entered by letter', async () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Sharp' }));
+    fireEvent.click(screen.getByRole('button', { name: 'F' }));
+    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
+    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
+    expect(savePsalmToLibrary.mock.calls[0][0].score.elements[0].pitch)
+      .toMatchObject({ step: 'F', alter: 1 });
+  });
+
+  // A degree is already spelled by the key, so an accidental SHIFTS it: in
+  // D minor, sharpening degree 7 has to give C sharp, not C natural.
+  it('raises a scale degree rather than replacing its spelling', async () => {
+    open();
+    fireEvent.change(screen.getByLabelText(/^key$/i), { target: { value: '-1' } });
+    fireEvent.change(screen.getByLabelText(/mode/i), { target: { value: 'minor' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Sharp' }));
+    fireEvent.click(screen.getByRole('button', { name: '7' }));
+    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
+    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
+    expect(savePsalmToLibrary.mock.calls[0][0].score.elements[0].pitch)
+      .toMatchObject({ step: 'C', alter: 1 });
+  });
+
+  it('sounds a note when it is clicked', () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: '1' }));
+    playPitch.mockClear();
+    fireEvent.click(screen.getByTestId('note-0'));
+    expect(playPitch).toHaveBeenCalled();
+  });
+
+  it('moves the selected note by a semitone with the arrow keys', async () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
+    fireEvent.click(screen.getByTestId('note-0'));
+    fireEvent.keyDown(window, { key: 'ArrowUp' });
+    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
+    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
+    const p = savePsalmToLibrary.mock.calls[0][0].score.elements[0].pitch;
+    expect(`${p.step}${p.alter}`).not.toBe('C0');   // it moved
+  });
+
+  it('respells the selected note enharmonically on Enter', async () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Sharp' }));
+    fireEvent.click(screen.getByRole('button', { name: 'F' }));
+    fireEvent.click(screen.getByTestId('note-0'));
+    fireEvent.keyDown(window, { key: 'Enter' });
+    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
+    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
+    // F sharp respells as G flat — same sound, different spelling.
+    expect(savePsalmToLibrary.mock.calls[0][0].score.elements[0].pitch)
+      .toMatchObject({ step: 'G', alter: -1 });
   });
 
   it('does not crash when the day has no psalm text yet', () => {

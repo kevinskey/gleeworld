@@ -9,7 +9,8 @@ import { NotationView } from '@/pages/notation/NotationView';
 import { emptyScore, noteOf, restOf, type EditorScore, type Pitch } from '@/lib/notation/model';
 import type { BaseDur } from '@/lib/notation/duration';
 import {
-  insertElement, deleteElement, setLyric, CommandStack,
+  insertElement, deleteElement, setLyric, setAccidental, transpose, respellEnharmonic,
+  CommandStack,
 } from '@/lib/notation/commands';
 import { playPitch } from '@/lib/notation/pitchAudio';
 import { useMidiInput, midiToPitch } from '@/lib/notation/useMidiInput';
@@ -126,6 +127,10 @@ export function PsalmComposerDialog({
   const [score, setScore] = useState<EditorScore>(() => emptyScore());
   const [armed, setArmed] = useState<BaseDur>('quarter');
   const [armedDots, setArmedDots] = useState<0 | 1 | 2>(0);
+  // Chromatic alteration on top of whatever the key gives. Without this a
+  // minor psalm tone cannot have its raised leading tone, which is not an
+  // edge case — it is how most of them cadence.
+  const [armedAlter, setArmedAlter] = useState<-1 | 0 | 1>(0);
   const [octaveShift, setOctaveShift] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [title, setTitle] = useState('');
@@ -202,13 +207,20 @@ export function PsalmComposerDialog({
   const addByLetter = useCallback((step: Pitch['step']) => {
     const prev = [...scoreRef.current.elements].reverse()
       .find((el): el is Extract<typeof el, { kind: 'note' }> => el.kind === 'note');
-    addNote(nearestPitch(step, prev ? prev.pitch : null));
-  }, [addNote]);
+    // A letter names an absolute pitch, so the armed accidental IS its alter.
+    addNote({ ...nearestPitch(step, prev ? prev.pitch : null), alter: armedAlter });
+  }, [addNote, armedAlter]);
 
   const addByDegree = useCallback((degree: number) => {
     const s = scoreRef.current;
-    addNote(degreeToPitch(degree, s.keyFifths, s.mode, octaveShift));
-  }, [addNote, octaveShift]);
+    const base = degreeToPitch(degree, s.keyFifths, s.mode, octaveShift);
+    // The degree is already spelled for the key, so the accidental SHIFTS it
+    // rather than replacing it: sharpening degree 7 in D minor gives C sharp,
+    // and sharpening the tonic of E flat gives E natural. VexFlow prints
+    // whichever sign the key signature makes necessary.
+    const alter = Math.max(-2, Math.min(2, base.alter + armedAlter));
+    addNote({ ...base, alter });
+  }, [addNote, octaveShift, armedAlter]);
 
   const addRest = useCallback(() => {
     const s = scoreRef.current;
@@ -236,10 +248,57 @@ export function PsalmComposerDialog({
   // MIDI keyboard: exact pitch, armed duration — the same "arm a duration,
   // play the notes" rhythm as every scoring app.
   const onMidiNote = useCallback((midiNote: number) => {
-    const prefer = scoreRef.current.keyFifths < 0 ? 'flat' : 'sharp';
+    // An explicitly armed flat or sharp is the user's spelling decision and
+    // outranks the key's default; otherwise flat keys spell black notes as
+    // flats and sharp keys as sharps.
+    const prefer: 'sharp' | 'flat' =
+      armedAlter === -1 ? 'flat'
+      : armedAlter === 1 ? 'sharp'
+      : scoreRef.current.keyFifths < 0 ? 'flat' : 'sharp';
     addNote(midiToPitch(midiNote, prefer));
-  }, [addNote]);
+  }, [addNote, armedAlter]);
   const midi = useMidiInput(onMidiNote);
+
+  /**
+   * Arm an accidental for the next note — and if a note is selected, apply it
+   * to that note now.
+   *
+   * Both, because both are what a user means depending on where they are: mid
+   * entry it is "the next note is sharp", and after clicking a wrong note it
+   * is "make THAT one sharp". Applying only to the selection would break
+   * entry; only arming would leave no way to fix a note without deleting it.
+   */
+  const armAccidental = useCallback((alter: -1 | 0 | 1) => {
+    setArmedAlter((cur) => (cur === alter ? 0 : alter));
+    const el = scoreRef.current.elements[selected ?? -1];
+    if (selected != null && el?.kind === 'note') {
+      playPitch(midiOf({ ...el.pitch, alter }));
+      dispatch(setAccidental(selected, alter));
+    }
+  }, [selected, dispatch]);
+
+  /** Move the selected note by a semitone, sounding where it lands. */
+  const nudgePitch = useCallback((dir: 1 | -1) => {
+    if (selected == null) return;
+    const el = scoreRef.current.elements[selected];
+    if (el?.kind !== 'note') return;
+    playPitch(midiOf(el.pitch) + dir);
+    dispatch(transpose(selected, dir));
+  }, [selected, dispatch]);
+
+  /** Same sound, different spelling: F sharp becomes G flat. */
+  const respell = useCallback(() => {
+    if (selected == null) return;
+    if (scoreRef.current.elements[selected]?.kind !== 'note') return;
+    dispatch(respellEnharmonic(selected));
+  }, [selected, dispatch]);
+
+  /** Select a note and sound it, so the staff can be read by ear. */
+  const selectNote = useCallback((index: number) => {
+    setSelected(index);
+    const el = scoreRef.current.elements[index];
+    if (el?.kind === 'note') playPitch(midiOf(el.pitch));
+  }, []);
 
   // Keyboard entry. Letters A-G are pitches; digits 1-7 are scale degrees.
   useEffect(() => {
@@ -253,11 +312,32 @@ export function PsalmComposerDialog({
       if (LETTERS.includes(k as Pitch['step'])) { e.preventDefault(); addByLetter(k as Pitch['step']); return; }
       if (/^[1-7]$/.test(e.key)) { e.preventDefault(); addByDegree(Number(e.key)); return; }
       if (e.key === 'Backspace') { e.preventDefault(); removeLast(); return; }
-      if (e.key === 'r' || e.key === 'R') { e.preventDefault(); addRest(); }
+      if (e.key === 'r' || e.key === 'R') { e.preventDefault(); addRest(); return; }
+      // '-' and '=' sit either side of the number row the degrees use, so an
+      // accidental is reachable without leaving the entry hand.
+      // '=' is the unshifted '+', so both reach sharp without a modifier.
+      if (e.key === '-' || e.key === '_') { e.preventDefault(); armAccidental(-1); return; }
+      if (e.key === '+' || e.key === '=') { e.preventDefault(); armAccidental(1); return; }
+      if (e.key === '0') { e.preventDefault(); armAccidental(0); return; }
+      if (selected != null) {
+        if (e.key === 'ArrowUp') { e.preventDefault(); nudgePitch(1); return; }
+        if (e.key === 'ArrowDown') { e.preventDefault(); nudgePitch(-1); return; }
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          selectNote(Math.max(0, selected - 1));
+          return;
+        }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          selectNote(Math.min(scoreRef.current.elements.length - 1, selected + 1));
+          return;
+        }
+        if (e.key === 'Enter') { e.preventDefault(); respell(); }
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, addByLetter, addByDegree, removeLast, addRest]);
+  }, [open, addByLetter, addByDegree, removeLast, addRest, armAccidental, nudgePitch, respell, selectNote, selected]);
 
   /**
    * Key, mode and metre change the SCORE, not a note, so they bypass the
@@ -341,8 +421,11 @@ export function PsalmComposerDialog({
           </DialogTitle>
           <DialogDescription>
             Type letters <strong>A–G</strong> for pitches or <strong>1–7</strong> for scale
-            degrees in the key — or play a MIDI keyboard. Words from the day&rsquo;s psalm
-            attach as you go.
+            degrees in the key — or play a MIDI keyboard. <strong>−</strong> and{' '}
+            <strong>+</strong> flat and sharp. Click a note to hear it, then{' '}
+            <strong>↑↓</strong> to move its pitch, <strong>←→</strong> between notes, and{' '}
+            <strong>Enter</strong> for the enharmonic spelling. Words from the day&rsquo;s
+            psalm attach as you go.
           </DialogDescription>
         </DialogHeader>
 
@@ -444,6 +527,29 @@ export function PsalmComposerDialog({
                 {d.label}
               </Button>
             ))}
+            {/* Accidentals. Flat and sharp arm for the next note; natural
+                clears the arming and, on a selected note, cancels an
+                accidental already there. */}
+            {([
+              { alter: -1 as const, glyph: '\u266d', name: 'Flat' },
+              { alter: 0 as const, glyph: '\u266e', name: 'Natural' },
+              { alter: 1 as const, glyph: '\u266f', name: 'Sharp' },
+            ]).map((a) => (
+              <Button
+                key={a.name}
+                type="button"
+                size="sm"
+                variant={armedAlter === a.alter ? 'default' : 'secondary'}
+                aria-pressed={armedAlter === a.alter}
+                aria-label={a.name}
+                title={`${a.name} \u2014 arms the next note, or changes the selected one`}
+                onClick={() => armAccidental(a.alter)}
+                className="min-w-9 text-base leading-none"
+              >
+                {a.glyph}
+              </Button>
+            ))}
+            <span className="mx-1 h-5 w-px bg-border" aria-hidden />
             {/* Dots multiply the armed duration; two dots is as far as psalm
                 writing ever needs. */}
             {([1, 2] as const).map((d) => (
@@ -535,7 +641,7 @@ export function PsalmComposerDialog({
                   scale={ENGRAVING_SCALE[perLine]}
                   onLayout={setLayout}
                   selectedIndex={selected}
-                  onNoteClick={(i) => setSelected(i)}
+                  onNoteClick={selectNote}
                 />
               </div>
             </div>
