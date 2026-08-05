@@ -94,6 +94,10 @@ function LiturgyList() {
       .insert({
         owner_user_id: user.id,
         mass_date: isoDate,
+        // Most parishes plan a 10:30 principal Mass, so seeding it saves the
+        // common case a step. Editable like any other field — this is a
+        // default, not a constraint.
+        mass_time: DEFAULT_MASS_TIME,
         observation: day.observation,
         sunday_cycle: day.cycle,
         liturgical_season: day.season,
@@ -263,6 +267,10 @@ function PsalmField({
     </div>
   );
 }
+
+/** Seeded on a new Mass. 'HH:MM:SS' to match the column; the time input
+ *  accepts it and shows 10:30 AM. */
+const DEFAULT_MASS_TIME = '10:30:00';
 
 // ── Universalis → MassRow field mapping ──────────────────────────────
 // The readings function returns a flat list of {heading, citation, html}
