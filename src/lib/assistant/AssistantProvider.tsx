@@ -62,6 +62,11 @@ export function useAssistantOptional(): AssistantContextValue | null {
 // Mounted once in DashboardShell; AssistantSheet and AssistantFab are
 // pure consumers. The thread mirrors to sessionStorage so a reload keeps
 // the conversation (see threadStorage for the confirm-card sanitizing).
+/** How long a reply will wait for the voice preference to resolve before
+ *  speaking anyway. Long enough for a warm query, short enough that a stalled
+ *  one never reads as the assistant ignoring you. */
+const VOICE_RESOLVE_TIMEOUT_MS = 2500;
+
 export const AssistantProvider = ({ children, initialSheetOpen = false }: { children: ReactNode; initialSheetOpen?: boolean }) => {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -82,9 +87,40 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   const [videoRoom, setVideoRoom] = useState<string | null>(null);
   const [resultsPanel, setResultsPanel] = useState<ConciergeResult | null>(null);
   const [captionReply, setCaptionReply] = useState<{ id: string; text: string } | null>(null);
-  const { voiceId } = useAssistantVoice();
+  /**
+   * The voice, and whether it has actually been decided yet.
+   *
+   * `loading` used to be dropped on the floor here. Until the tenant's
+   * branding AND this user's own preference have both resolved, voiceId is
+   * null — and speak() maps null to the app default. So the first reply after
+   * a page load came out in Jessica and later ones in the chosen voice, which
+   * is what "the voice changes through the conversation" was.
+   */
+  const { voiceId, loading: voiceLoading } = useAssistantVoice();
   const voiceIdRef = useRef<string | null>(voiceId);
   useEffect(() => { voiceIdRef.current = voiceId; }, [voiceId]);
+
+  // Waiters parked by speakNow while the voice is still resolving.
+  const voiceReadyRef = useRef({ ready: false, waiters: [] as Array<() => void> });
+  useEffect(() => {
+    if (voiceLoading) return;
+    voiceReadyRef.current.ready = true;
+    voiceReadyRef.current.waiters.splice(0).forEach((w) => w());
+  }, [voiceLoading]);
+
+  /**
+   * Wait for the voice to be decided — but never for long.
+   *
+   * Bounded because being SILENT is worse than being in the wrong voice: if
+   * branding is slow or fails, the assistant still has to answer. One
+   * consistent voice for a whole conversation is the goal; a stalled query
+   * must not buy silence.
+   */
+  const awaitVoice = useCallback(() => new Promise<void>((resolve) => {
+    if (voiceReadyRef.current.ready) { resolve(); return; }
+    const timer = setTimeout(resolve, VOICE_RESOLVE_TIMEOUT_MS);
+    voiceReadyRef.current.waiters.push(() => { clearTimeout(timer); resolve(); });
+  }), []);
   const speechRef = useRef(getSpeechInput());
   const confirmQueueRef = useRef(new ConfirmActionQueue());
   // Async send() must see the CURRENT open state, not the one captured at
@@ -125,6 +161,9 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     const myRequest = speakRequestRef.current;
     // Grab the current auth token on every speak() so a token refresh
     // doesn't leave us stuck on a 401 — cheap, session cache is in memory.
+    // Let the voice settle before speaking, so a conversation does not start
+    // in one voice and continue in another.
+    await awaitVoice();
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
     // Stop was tapped while we awaited the token — honor it; calling

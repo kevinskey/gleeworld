@@ -10,6 +10,10 @@ export interface SpeechInputSource {
 
 const MUTE_KEY = 'gw-assistant-muted';
 
+/** Pause before the single TTS retry. Long enough for a rate limit to clear,
+ *  short enough not to read as a hang before the reply is spoken. */
+const TTS_RETRY_DELAY_MS = 400;
+
 interface NativeSpeechBackend { available: boolean; plugin: GWSpeechPluginShape }
 
 /** SpeechInputSource over the GWSpeech Capacitor plugin (iOS app only —
@@ -378,7 +382,20 @@ export function speak(
 
   void (async () => {
     try {
-      const res = await fetch(`${supabaseUrl}/functions/v1/elevenlabs-tts`, {
+      /**
+       * One retry before giving up on the real voice.
+       *
+       * The fallback below drops to the OS voice, which is a completely
+       * different-sounding person — so a single rate limit or network blip
+       * used to change the assistant's voice mid-conversation and then change
+       * it back. That is what "the voice keeps changing" was. A blip deserves
+       * a retry, not a new voice.
+       *
+       * 4xx other than 429 are not retried: a bad voice id or an expired
+       * token will fail again identically, and the delay would just be
+       * silence before the same outcome.
+       */
+      const call = () => fetch(`${supabaseUrl}/functions/v1/elevenlabs-tts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -386,6 +403,22 @@ export function speak(
         },
         body: JSON.stringify({ text, voiceId }),
       });
+
+      let res: Response;
+      try {
+        res = await call();
+      } catch {
+        // Network-level failure — nothing came back at all.
+        res = undefined as unknown as Response;
+      }
+      const worthRetrying = !res || res.status === 429 || res.status >= 500;
+      if (worthRetrying) {
+        if (mySession !== speakSession) return;
+        await new Promise((r) => setTimeout(r, TTS_RETRY_DELAY_MS));
+        if (mySession !== speakSession) return;
+        res = await call();
+      }
+
       if (mySession !== speakSession) return; // superseded by a newer speak()
       if (!res.ok) throw new Error(`elevenlabs-tts ${res.status}`);
       const blob = await res.blob();
@@ -408,9 +441,12 @@ export function speak(
       audio.onended = cleanup;
       audio.onerror = cleanup;
       await audio.play();
-    } catch {
+    } catch (err) {
       // Fall back to browser TTS on ANY ElevenLabs failure — a rate limit,
       // network hiccup, or bad voice_id must never leave the assistant mute.
+      // Logged, because an unexplained change of voice mid-conversation is
+      // otherwise impossible to diagnose from a bug report.
+      console.warn('[assistant] ElevenLabs TTS failed, using the browser voice:', err);
       // Except on native: WKWebView's synth fires events but produces no
       // sound, so "falling back" there just fakes a spoken reply. End
       // honestly instead.
