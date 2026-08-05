@@ -7,6 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
+import {
+  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { VerseRow } from '@/components/bible/VerseRow';
 import {
@@ -24,6 +27,14 @@ import {
  */
 
 const COLORS: AnnotationColor[] = ['yellow', 'green', 'blue', 'pink', 'orange', 'purple'];
+
+// Order matters: canon order, with the deuterocanon where the Catholic canon
+// puts it — between the Old and New Testaments.
+const BOOK_GROUPS = [
+  { key: 'OT', label: 'Old Testament' },
+  { key: 'DC', label: 'Deuterocanonical' },
+  { key: 'NT', label: 'New Testament' },
+] as const;
 
 const SWATCH: Record<AnnotationColor, string> = {
   yellow: 'bg-yellow-300', green: 'bg-green-400', blue: 'bg-blue-400',
@@ -112,40 +123,55 @@ export default function BibleApp() {
         </CardContent></Card>
       )}
 
-      {/* Book + chapter pickers */}
+      {/* Book + chapter pickers. Two dropdowns rather than 73 book buttons and
+          up to 150 chapter buttons — the grids pushed the text itself below
+          the fold, which is the wrong thing to make someone scroll past in a
+          Bible. Books group by testament so the deuterocanon is findable. */}
       {books && books.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-1.5">
-            {books.map((b) => (
-              <button
-                key={b.id}
-                type="button"
-                onClick={() => { setBookId(b.id); setChapter(1); }}
-                className={cn(
-                  'px-2 py-1 text-xs border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  b.id === bookId ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted',
-                )}
-              >
-                {b.name}
-              </button>
-            ))}
-          </div>
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="space-y-1">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Book
+            </span>
+            <Select
+              value={bookId ?? undefined}
+              onValueChange={(v) => { setBookId(v); setChapter(1); }}
+            >
+              <SelectTrigger className="w-[15rem]" aria-label="Choose a book">
+                <SelectValue placeholder="Choose a book" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[60vh]">
+                {BOOK_GROUPS.map((g) => {
+                  const items = books.filter((b) => b.testament === g.key);
+                  if (!items.length) return null;
+                  return (
+                    <SelectGroup key={g.key}>
+                      <SelectLabel>{g.label}</SelectLabel>
+                      {items.map((b) => (
+                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </label>
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            {Array.from({ length: chapterCount }, (_, i) => i + 1).map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setChapter(c)}
-                className={cn(
-                  'w-8 h-8 text-xs tabular-nums border border-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  c === chapter ? 'bg-primary text-primary-foreground' : 'bg-card hover:bg-muted',
-                )}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
+          <label className="space-y-1">
+            <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Chapter
+            </span>
+            <Select value={String(chapter)} onValueChange={(v) => setChapter(Number(v))}>
+              <SelectTrigger className="w-[7rem]" aria-label="Choose a chapter">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-[60vh]">
+                {Array.from({ length: chapterCount }, (_, i) => i + 1).map((c) => (
+                  <SelectItem key={c} value={String(c)}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </label>
         </div>
       )}
 
