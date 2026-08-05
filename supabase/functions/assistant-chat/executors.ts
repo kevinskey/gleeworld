@@ -58,6 +58,7 @@ export async function executeServerTool(
       case 'read_news_feeds': return { replyJson: await readNewsFeeds(args, deps) };
       case 'find_nearby_place': return await findNearbyPlace(args, deps);
       case 'get_preference': return { replyJson: await getPreference(args, deps) };
+      case 'remember_preference': return { replyJson: await rememberPreference(args, deps) };
       case 'lookup_bible': return { replyJson: await lookupBible(args, deps) };
       case 'liturgical_day': return { replyJson: await liturgicalDay(args, deps) };
       case 'web_search': return await webSearch(args, deps);
@@ -246,6 +247,37 @@ async function getPreference(args: Record<string, unknown>, { supabase }: Deps):
   if (error) return JSON.stringify({ error: error.message });
   if (!data) return JSON.stringify({ key, value: null });
   return JSON.stringify({ key: (data as any).key, value: (data as any).value, updated_at: (data as any).updated_at });
+}
+
+/**
+ * Save one preference for later recall.
+ *
+ * Runs on the SERVER, beside getPreference, on purpose. It used to run in the
+ * browser, and the two halves resolved the tenant differently:
+ * current_tenant_id() prefers the x-tenant-slug header, which the browser
+ * sends and this function does not. So a write from a subdomain that is not
+ * the user's home tenant landed on a row the read could never see — saved,
+ * then instantly forgotten. Same client, same tenant, both ways.
+ *
+ * tenant_id and user_id come from the column DEFAULTs (current_tenant_id() /
+ * auth.uid()) under the caller's JWT; the owner policy's WITH CHECK is what
+ * actually guarantees a user can only write their own row.
+ */
+async function rememberPreference(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
+  const key = typeof args.key === 'string' ? args.key.trim() : '';
+  const value = typeof args.value === 'string' ? args.value.trim() : '';
+  if (!key) return JSON.stringify({ error: 'key is required' });
+  if (!value) return JSON.stringify({ error: 'value is required' });
+  if (key.length > 128) return JSON.stringify({ error: 'key must be 128 characters or fewer' });
+  // Matches the CHECK on the column, so an over-long value is a clear message
+  // instead of a raw constraint violation read aloud to the user.
+  if (value.length > 4000) return JSON.stringify({ error: 'value must be 4000 characters or fewer' });
+
+  const { error } = await supabase
+    .from('gw_user_preferences')
+    .upsert({ key, value }, { onConflict: 'tenant_id,user_id,key' });
+  if (error) return JSON.stringify({ error: error.message });
+  return JSON.stringify({ ok: true, key, value });
 }
 
 async function searchYoutube(args: Record<string, unknown>, { youtubeApiKey }: Deps): Promise<string> {

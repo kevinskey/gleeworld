@@ -416,7 +416,7 @@ export const TOOL_CATALOG: ToolDef[] = [
       },
       required: ['key', 'value'],
     },
-    minRole: 'member', execution: 'client', confirm: false,
+    minRole: 'member', execution: 'server', confirm: false,
   },
   {
     name: 'get_date_card',
