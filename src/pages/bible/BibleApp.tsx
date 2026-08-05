@@ -116,7 +116,10 @@ export default function BibleApp() {
     const same = lastUsfm.current
       ? books.find((b) => b.usfm_code === lastUsfm.current)
       : null;
-    setBookId((same ?? books.find((b) => b.usfm_code === 'JHN') ?? books[0]).id);
+    // Genesis is the default — the beginning of the book, and books are
+    // already in canon order so this is also books[0] for every translation
+    // except JPS1917, which is Tanakh-only and starts there too.
+    setBookId((same ?? books.find((b) => b.usfm_code === 'GEN') ?? books[0]).id);
   }, [books, bookId]);
 
   // The assistant's open_bible navigates to /bible?ref=Psalm+23, so a passage
