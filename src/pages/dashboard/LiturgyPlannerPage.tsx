@@ -182,14 +182,75 @@ function MassListRow({ row }: { row: MassRow }) {
   );
 }
 
+/** Renders a responsorial psalm the way it is printed: each line on its own
+ *  line, with the refrain lines — the ones opening "R." — set in bold, so the
+ *  alternation between cantor and assembly is visible at a glance. Plain text
+ *  in, no HTML, so nothing here can inject markup. */
+function PsalmText({ text }: { text: string }) {
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return null;
+  return (
+    <div className="border border-border bg-card p-3 space-y-0.5">
+      {lines.map((line, i) => {
+        const isRefrain = /^R\.?\s*(\(|\b)/i.test(line);
+        return (
+          <p
+            key={i}
+            className={
+              isRefrain
+                ? 'text-sm font-semibold'
+                : 'text-sm text-foreground/90'
+            }
+          >
+            {line}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
 // ── Universalis → MassRow field mapping ──────────────────────────────
 // The readings function returns a flat list of {heading, citation, html}
 // blocks. We pattern-match heading text (case-insensitive) to the
 // columns we store. psalm_full gets the readable html of the psalm
 // block stripped to plain text since it's a textarea, not rich HTML.
 
-function stripHtml(s: string): string {
-  return s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+// Named/numeric HTML entities that actually turn up in the readings HTML.
+// &#160; (nbsp) and the curly quotes were rendering as literal "&#160;" in
+// the planner because the old stripper removed TAGS but never decoded
+// ENTITIES.
+const ENTITIES: Record<string, string> = {
+  nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'",
+  ldquo: '\u201c', rdquo: '\u201d', lsquo: '\u2018', rsquo: '\u2019',
+  mdash: '\u2014', ndash: '\u2013', hellip: '\u2026',
+};
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&([a-z]+);/gi, (m, name) => ENTITIES[name.toLowerCase()] ?? m);
+}
+
+/** HTML → plain text, KEEPING line structure.
+ *
+ *  A psalm is refrain-and-verses, and the old version collapsed every run of
+ *  whitespace — including the newlines — into single spaces, so it arrived as
+ *  one unreadable paragraph. Block-level tags become newlines before the tags
+ *  are stripped, and each line is trimmed individually. */
+function htmlToText(s: string): string {
+  return decodeEntities(
+    s
+      .replace(/<\s*br\s*\/?\s*>/gi, '\n')
+      .replace(/<\/\s*(?:p|div|li|h[1-6])\s*>/gi, '\n')
+      .replace(/<[^>]+>/g, ' '),
+  )
+    .split('\n')
+    .map((line) => line.replace(/[ \t\u00a0]+/g, ' ').trim())
+    .filter((line, i, all) => line !== '' || (i > 0 && all[i - 1] !== ''))
+    .join('\n')
+    .trim();
 }
 
 function mapReadingBlocksToFields(blocks: Array<{ heading: string; citation: string | null; html: string }>): Partial<MassRow> {
@@ -200,7 +261,7 @@ function mapReadingBlocksToFields(blocks: Array<{ heading: string; citation: str
     const cite = b.citation || null;
     if (/responsorial\s*psalm/.test(h)) {
       if (cite) out.responsorial_psalm = cite;
-      const txt = stripHtml(b.html);
+      const txt = htmlToText(b.html);
       if (txt) out.psalm_full = txt;
     } else if (/gospel\s*acclamation|verse\s*before\s*the\s*gospel|alleluia/.test(h)) {
       if (cite) out.gospel_acclamation = cite;
@@ -564,9 +625,12 @@ function LiturgyEditor({ massId }: { massId: string }) {
               massId={row.id}
             />
             <Field label="Psalm full text (refrain + verses)">
-              <Textarea rows={3} value={row.psalm_full ?? ''}
-                onChange={(e) => update({ psalm_full: e.target.value || null })}
-                placeholder="Paste or type the full Psalm refrain + verses…" />
+              <div className="space-y-2">
+                {row.psalm_full && <PsalmText text={row.psalm_full} />}
+                <Textarea rows={row.psalm_full ? 4 : 3} value={row.psalm_full ?? ''}
+                  onChange={(e) => update({ psalm_full: e.target.value || null })}
+                  placeholder="Paste or type the full Psalm refrain + verses…" />
+              </div>
             </Field>
           </OrderItem>
 
