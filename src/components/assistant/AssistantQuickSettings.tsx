@@ -4,37 +4,35 @@ import { ExternalLink, Volume2, VolumeX } from 'lucide-react';
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { speak } from '@/lib/assistant/speech';
-import { ASSISTANT_VOICES, BROWSER_VOICE_ID, DEFAULT_VOICE_ID } from '@/lib/assistant/voices';
+import {
+  ASSISTANT_VOICES, BROWSER_VOICE_ID, DEFAULT_VOICE_ID, useMyAssistantVoice,
+} from '@/lib/assistant/voices';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
-import { useUserRole } from '@/hooks/useUserRole';
-import { cn } from '@/lib/utils';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 /**
  * Assistant settings, reachable from the FAB instead of only from Workspace
  * Settings → Branding.
  *
- * Two kinds of setting live here and they are NOT the same:
+ * Both settings here are PER USER:
  *
- *  - Mute is PER USER, in localStorage. Anyone can change it, and it only
- *    affects them.
- *  - Voice is PER TENANT — it is branding, the voice everyone in the workspace
- *    hears — so it stays admin-only. Non-admins see which voice is set and can
- *    preview it, but the control is disabled rather than hidden, because a
- *    setting that silently vanishes reads as a bug.
+ *  - Mute lives in localStorage. Per device, which is right — you mute on the
+ *    laptop in an office, not on your phone.
+ *  - Voice is a personal OVERRIDE stored in user_preferences. Leaving it unset
+ *    keeps whatever the workspace branded, so tenants that already chose a
+ *    voice are unaffected and nothing needed backfilling.
  *
- * Keeping the voice tenant-wide is deliberate: making it per-user here would
- * quietly change what the field means and orphan the value tenants have
- * already chosen.
- *
- * This panel deliberately does NOT write branding. gw_branding_settings has a
- * known trap — a bare upsert without onConflict:'tenant_id' and a tenant pin
- * has poisoned the main tenant's row twice — and the safe write already exists
- * in Workspace Settings. Duplicating it behind a popover would be a third way
- * to get it wrong, so the voice is previewed here and changed there.
+ * The tenant's branding voice remains the default everyone starts from, and is
+ * still edited in Workspace Settings — this panel never writes branding.
+ * gw_branding_settings has a known trap (a bare upsert without
+ * onConflict:'tenant_id' and a tenant pin has poisoned the main tenant's row
+ * twice), and a second write path behind a popover would be a third way to get
+ * that wrong.
  */
 export function AssistantQuickSettings({
   muted, onToggleMute, children,
@@ -44,35 +42,33 @@ export function AssistantQuickSettings({
   children: React.ReactNode;
 }) {
   const { settings } = useBrandingSettings();
-  const { profile } = useUserRole();
-  const canManage =
-    !!profile && (
-      (profile as { is_admin?: boolean }).is_admin === true ||
-      (profile as { is_super_admin?: boolean }).is_super_admin === true ||
-      ['admin', 'super_admin', 'super-admin'].includes(String((profile as { role?: string }).role ?? ''))
-    );
+  const { voiceId: mine, save } = useMyAssistantVoice();
 
-  const current =
+  const tenantVoice =
     (settings as { assistant_voice_id?: string | null })?.assistant_voice_id || DEFAULT_VOICE_ID;
-  const voiceLabel =
-    current === BROWSER_VOICE_ID
+  // WORKSPACE is the sentinel for "no personal choice" — a Select can't hold
+  // null, and an empty string renders as a blank trigger.
+  const WORKSPACE = '__workspace__';
+  const current = mine ?? WORKSPACE;
+  const tenantLabel =
+    tenantVoice === BROWSER_VOICE_ID
       ? 'Browser default'
-      : ASSISTANT_VOICES.find((v) => v.id === current)?.label ?? 'App default';
-  const [previewing, setPreviewing] = useState(false);
+      : ASSISTANT_VOICES.find((v) => v.id === tenantVoice)?.label ?? 'App default';
 
-  const preview = async () => {
-    setPreviewing(true);
+  const pick = async (value: string) => {
+    const voiceId = value === WORKSPACE ? null : value;
+    const heard = voiceId ?? tenantVoice;
     const { data: { session } } = await supabase.auth.getSession();
-    // Preview bypasses mute on purpose: this is an explicit action, not an
-    // assistant reply.
+    // Preview bypasses mute on purpose: picking a voice is an explicit action,
+    // not an assistant reply.
     speak('This is how I sound.', {
-      voiceId: current,
+      voiceId: heard,
       accessToken: session?.access_token,
       supabaseUrl: SUPABASE_URL,
       volume: 0.55,
       muted: false,
-      onEnd: () => setPreviewing(false),
     });
+    save.mutate(voiceId);
   };
 
   return (
@@ -98,32 +94,29 @@ export function AssistantQuickSettings({
 
         <div className="space-y-1.5">
           <Label className="text-xs">Voice</Label>
-          <div className="flex items-center justify-between gap-2 border border-border px-3 py-2">
-            <span className="text-sm truncate">{voiceLabel}</span>
-            <Button
-              type="button" variant="ghost" size="sm"
-              onClick={preview}
-              disabled={previewing}
-            >
-              {previewing ? 'Playing…' : 'Preview'}
-            </Button>
-          </div>
+          <Select value={current} onValueChange={pick} disabled={save.isPending}>
+            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+            <SelectContent className="max-h-[50vh]">
+              <SelectItem value={WORKSPACE}>Workspace voice ({tenantLabel})</SelectItem>
+              {ASSISTANT_VOICES.map((v) => (
+                <SelectItem key={v.id} value={v.id}>{v.label}</SelectItem>
+              ))}
+              <SelectItem value={BROWSER_VOICE_ID}>Browser default</SelectItem>
+            </SelectContent>
+          </Select>
           <p className="text-xs text-muted-foreground">
-            {canManage
-              ? 'The voice everyone in this workspace hears.'
-              : 'Set for the whole workspace by an administrator.'}
+            Your choice, on every device you sign in to. Picking one plays a
+            preview and saves it.
           </p>
         </div>
 
-        {canManage && (
-          <Link
-            to="/dashboard/workspace?tab=branding"
-            className="flex items-center gap-1.5 text-xs text-[hsl(var(--link))] hover:underline"
-          >
-            <ExternalLink className="w-3.5 h-3.5" aria-hidden />
-            Change voice in Branding
-          </Link>
-        )}
+        <Link
+          to="/dashboard/workspace?tab=branding"
+          className="flex items-center gap-1.5 text-xs text-[hsl(var(--link))] hover:underline"
+        >
+          <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+          Workspace branding
+        </Link>
       </PopoverContent>
     </Popover>
   );

@@ -8,6 +8,8 @@
 // ElevenLabs quota and stays functional if ELEVENLABS_API_KEY is
 // unavailable on the server.
 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 
 export interface AssistantVoice {
@@ -79,7 +81,66 @@ export function voiceLabel(voiceId: string | null | undefined): string {
 // every user in the tenant. Returns `null` while loading (callers fall
 // back to the app default). No setter here: the picker lives on the
 // branding form; this hook is read-only.
+/** The voice this person hears, resolved in order:
+ *
+ *    1. their own choice   (user_preferences.assistant_voice_id)
+ *    2. the workspace's    (gw_branding_settings.assistant_voice_id)
+ *    3. the app default
+ *
+ *  A personal choice is an OVERRIDE, not a replacement — leaving it unset
+ *  keeps whatever the tenant branded, which is what every existing account
+ *  does without any backfill. */
 export function useAssistantVoice(): { voiceId: string | null; loading: boolean } {
   const { settings, isLoading } = useBrandingSettings();
-  return { voiceId: settings.assistant_voice_id, loading: isLoading };
+  const { voiceId: mine, isLoading: mineLoading } = useMyAssistantVoice();
+  return {
+    voiceId: mine ?? settings.assistant_voice_id,
+    loading: isLoading || mineLoading,
+  };
+}
+
+/** Read + write this user's own voice choice. */
+export function useMyAssistantVoice() {
+  const qc = useQueryClient();
+  const query = useQuery({
+    queryKey: ['my-assistant-voice'],
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+    queryFn: async (): Promise<string | null> => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('assistant_voice_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      // A missing column or row is "no personal choice", not an error worth
+      // surfacing — the tenant voice still applies.
+      if (error) return null;
+      return (data as { assistant_voice_id?: string | null } | null)?.assistant_voice_id ?? null;
+    },
+  });
+
+  const save = useMutation({
+    mutationFn: async (voiceId: string | null) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) throw new Error('Not signed in.');
+      // .select() and check the error: silent write failures have bitten this
+      // codebase before on demo tenants.
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert(
+          { user_id: user.id, assistant_voice_id: voiceId },
+          { onConflict: 'user_id' },
+        )
+        .select('user_id')
+        .single();
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-assistant-voice'] });
+    },
+  });
+
+  return { voiceId: query.data ?? null, isLoading: query.isLoading, save };
 }
