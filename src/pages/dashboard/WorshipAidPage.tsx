@@ -15,7 +15,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 import { WorshipAidSheets } from '@/components/liturgy/WorshipAidSheets';
 import {
-  buildWorshipAid, DEFAULT_SETTINGS, panelSpacing, SPACING_MAX, SPACING_MIN,
+  buildWorshipAid, coverImageScale, coverTitleSize, COVER_IMAGE_MAX, COVER_IMAGE_MIN,
+  COVER_TITLE_MAX, COVER_TITLE_MIN, DEFAULT_SETTINGS, panelSpacing, SPACING_MAX, SPACING_MIN,
   type AidSource, type PanelId, type WorshipAidSettings,
 } from '@/lib/liturgy/worshipAid';
 
@@ -255,6 +256,36 @@ export default function WorshipAidPage() {
               own image control AND its own spacing, to open a sparse panel
               out or tighten a full one. */}
           <div className="space-y-3">
+            {/* The cover's two elements size against each other: a long parish
+                name wants smaller type, and a mark with the season already
+                lettered into it wants a big picture and a small title. */}
+            <div className="flex flex-wrap items-center gap-4 border border-border p-2">
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                Title size
+                <input
+                  type="range"
+                  min={COVER_TITLE_MIN} max={COVER_TITLE_MAX} step={0.5}
+                  value={coverTitleSize(settings)}
+                  onChange={(e) => patch({ coverTitleSize: Number(e.target.value) })}
+                  aria-label="Cover title size"
+                  className="w-32"
+                />
+                <span className="w-12 tabular-nums">{coverTitleSize(settings).toFixed(1)}pt</span>
+              </label>
+              <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                Picture size
+                <input
+                  type="range"
+                  min={COVER_IMAGE_MIN} max={COVER_IMAGE_MAX} step={0.01}
+                  value={coverImageScale(settings)}
+                  onChange={(e) => patch({ coverImageScale: Number(e.target.value) })}
+                  aria-label="Cover picture size"
+                  className="w-32"
+                />
+                <span className="w-12 tabular-nums">{Math.round(coverImageScale(settings) * 100)}%</span>
+              </label>
+            </div>
+
             <div className="flex flex-wrap items-center gap-2">
               <Button type="button" variant="outline" size="sm" disabled={uploading !== null}
                 onClick={() => pickImage('cover')}>

@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   buildWorshipAid, splitCredit, formatLongDate, SHEETS, DEFAULT_SETTINGS,
   panelSpacing, seasonWordIsRedundant, SPACING_MIN, SPACING_MAX,
+  coverTitleSize, coverImageScale, COVER_TITLE_MIN, COVER_TITLE_MAX,
+  COVER_IMAGE_MIN, COVER_IMAGE_MAX, COVER_TITLE_DEFAULT, COVER_IMAGE_DEFAULT,
   type AidSource, type WorshipAidSettings,
 } from './worshipAid';
 
@@ -253,5 +255,31 @@ describe('panelSpacing', () => {
     const bad = { ...DEFAULT_SETTINGS, spacing: { back: NaN } };
     expect(panelSpacing(bad, 'back')).toBe(1);
     expect(panelSpacing({ ...DEFAULT_SETTINGS, spacing: {} }, 'front')).toBe(1);
+  });
+});
+
+describe('cover sizing', () => {
+  it('defaults to a readable title and a full-width picture', () => {
+    expect(coverTitleSize(DEFAULT_SETTINGS)).toBe(COVER_TITLE_DEFAULT);
+    expect(coverImageScale(DEFAULT_SETTINGS)).toBe(COVER_IMAGE_DEFAULT);
+  });
+
+  it('returns what the user set', () => {
+    expect(coverTitleSize({ ...DEFAULT_SETTINGS, coverTitleSize: 14 })).toBe(14);
+    expect(coverImageScale({ ...DEFAULT_SETTINGS, coverImageScale: 0.6 })).toBe(0.6);
+  });
+
+  // Below the floor the title is unreadable at arm's length in a pew; above
+  // the ceiling it crowds the artwork off the panel.
+  it('clamps a value that would ruin the cover', () => {
+    expect(coverTitleSize({ ...DEFAULT_SETTINGS, coverTitleSize: 200 })).toBe(COVER_TITLE_MAX);
+    expect(coverTitleSize({ ...DEFAULT_SETTINGS, coverTitleSize: 1 })).toBe(COVER_TITLE_MIN);
+    expect(coverImageScale({ ...DEFAULT_SETTINGS, coverImageScale: 5 })).toBe(COVER_IMAGE_MAX);
+    expect(coverImageScale({ ...DEFAULT_SETTINGS, coverImageScale: 0 })).toBe(COVER_IMAGE_MIN);
+  });
+
+  it('ignores a stored value that is not a usable number', () => {
+    expect(coverTitleSize({ ...DEFAULT_SETTINGS, coverTitleSize: NaN })).toBe(COVER_TITLE_DEFAULT);
+    expect(coverImageScale({ ...DEFAULT_SETTINGS, coverImageScale: undefined })).toBe(COVER_IMAGE_DEFAULT);
   });
 });

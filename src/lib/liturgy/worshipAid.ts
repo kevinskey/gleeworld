@@ -66,6 +66,15 @@ export interface WorshipAidSettings {
    * back to printing the psalm as prose while the paper showed the music.
    */
   psalmImageUrl?: string | null;
+  /**
+   * Cover sizing. The two things a cover is made of — the title and the
+   * artwork — need to move against each other: a long parish name wants
+   * smaller type, a tall woodcut wants more of the panel, and a mark with
+   * the season already lettered into it wants the title small and the image
+   * large. Points for the title, a fraction of the panel width for the art.
+   */
+  coverTitleSize?: number;
+  coverImageScale?: number;
   /** Extra images the user drops into a panel. */
   images: Partial<Record<PanelId, string | null>>;
   /**
@@ -78,6 +87,34 @@ export interface WorshipAidSettings {
    * one so it does not run past the fold.
    */
   spacing: Partial<Record<PanelId, number>>;
+}
+
+/**
+ * Cover sizing bounds.
+ *
+ * Clamped for the same reason panel spacing is: a stored value can come from
+ * an older record or a hand-edited one. Below the floor the title is
+ * unreadable at arm's length in a pew; above the ceiling it crowds the
+ * artwork off the panel.
+ */
+export const COVER_TITLE_MIN = 11;
+export const COVER_TITLE_MAX = 30;
+export const COVER_TITLE_DEFAULT = 19;
+export const COVER_IMAGE_MIN = 0.35;
+export const COVER_IMAGE_MAX = 1;
+export const COVER_IMAGE_DEFAULT = 1;
+
+function clamp(raw: unknown, min: number, max: number, fallback: number): number {
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return fallback;
+  return Math.max(min, Math.min(max, raw));
+}
+
+export function coverTitleSize(settings: WorshipAidSettings): number {
+  return clamp(settings.coverTitleSize, COVER_TITLE_MIN, COVER_TITLE_MAX, COVER_TITLE_DEFAULT);
+}
+
+export function coverImageScale(settings: WorshipAidSettings): number {
+  return clamp(settings.coverImageScale, COVER_IMAGE_MIN, COVER_IMAGE_MAX, COVER_IMAGE_DEFAULT);
 }
 
 export const DEFAULT_SETTINGS: WorshipAidSettings = {
@@ -94,6 +131,8 @@ export const DEFAULT_SETTINGS: WorshipAidSettings = {
   sendingNotice:
     'Having shared in the Eucharist, you are compelled to go and work for peace and justice, '
     + "thereby building God's kingdom now.",
+  coverTitleSize: COVER_TITLE_DEFAULT,
+  coverImageScale: COVER_IMAGE_DEFAULT,
   psalmImageUrl: null,
   images: {},
   spacing: {},
