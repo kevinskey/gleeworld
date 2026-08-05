@@ -6,6 +6,7 @@ import {
   ArrowLeft, Image as ImageIcon, Link2, Loader2, Printer, QrCode, Save, X,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadFileAndGetUrl } from '@/utils/storage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,7 +46,10 @@ export default function WorshipAidPage() {
   const [token, setToken] = useState<string | null>(null);
   const [qr, setQr] = useState<string | null>(null);
   const [psalmImage, setPsalmImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<PanelId | 'cover' | null>(null);
   const uploadTarget = useRef<PanelId | 'cover'>('cover');
+  // Read inside the upload callback so a slider moved mid-upload is not lost.
+  const settingsRef = useRef(settings); settingsRef.current = settings;
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -108,15 +112,22 @@ export default function WorshipAidPage() {
 
   const patch = (p: Partial<WorshipAidSettings>) => setSettings((s) => ({ ...s, ...p }));
 
-  const save = async () => {
-    setSaving(true);
+  /** The single writer. Both the Save button and an image upload go through
+   *  it, so they cannot drift into saving different shapes. */
+  const persist = useCallback(async (value: WorshipAidSettings) => {
     const { error } = await supabase
       .from('gw_liturgy_masses')
-      .update({ worship_aid: settings as unknown as Record<string, unknown> })
+      .update({ worship_aid: value as unknown as Record<string, unknown> })
       .eq('id', id!);
+    if (error) { toast.error(error.message); return false; }
+    return true;
+  }, [id]);
+
+  const save = async () => {
+    setSaving(true);
+    const ok = await persist(settings);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success('Worship aid saved.');
+    if (ok) toast.success('Worship aid saved.');
   };
 
   const publish = async () => {
@@ -135,21 +146,50 @@ export default function WorshipAidPage() {
     fileRef.current?.click();
   };
 
+  /**
+   * Add an image to the aid.
+   *
+   * Goes through uploadFileAndGetUrl rather than supabase.storage.upload
+   * directly. This droplet's storage writes objects to a versioned, prefixed
+   * key while the public proxy reads a flat one, and a daemon flattens the
+   * two a couple of seconds later. An upload therefore SUCCEEDS while its
+   * public URL still 403s — so the previous version handed an <img> a URL
+   * that was not live yet, the image failed to load, and it never retried.
+   * That is why the cover looked broken while the file was sitting in the
+   * bucket perfectly intact. The helper waits for the URL to become
+   * reachable, and deletes the orphan if it never does.
+   *
+   * The result is SAVED immediately rather than left for the Save button.
+   * Uploading a picture is already a deliberate act; making it depend on a
+   * second, easily-missed step is how a cover ends up in storage with a null
+   * in the record — which is exactly what happened.
+   */
   const upload = useCallback(async (file: File) => {
     if (!id) return;
     const target = uploadTarget.current;
-    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    const path = `liturgy/${id}/aid-${target}.${ext}`;
-    const { error } = await supabase.storage
-      .from(BUCKET)
-      .upload(path, file, { contentType: file.type || 'image/jpeg', upsert: true });
-    if (error) { toast.error(error.message); return; }
-    // Cache-bust: replacing an image must show the new one, not the cached old.
-    const url = `${supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl}?v=${Date.now()}`;
-    if (target === 'cover') patch({ coverImageUrl: url });
-    else patch({ images: { ...settings.images, [target]: url } });
-    toast.success('Image added. Save to keep it.');
-  }, [id, settings.images]);
+    setUploading(target);
+    try {
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      // Timestamped rather than fixed: a fixed name would need an overwrite,
+      // and storage UPDATE is owner-only — a second person editing the same
+      // plan could not replace an image the first had added.
+      const result = await uploadFileAndGetUrl(
+        file, BUCKET, `liturgy/${id}`, `aid-${target}-${Date.now()}.${ext}`,
+      );
+      if (!result) {
+        toast.error("The image uploaded but never became readable. That's usually a storage hiccup — try again.");
+        return;
+      }
+      const next: WorshipAidSettings = target === 'cover'
+        ? { ...settingsRef.current, coverImageUrl: result.url }
+        : { ...settingsRef.current, images: { ...settingsRef.current.images, [target]: result.url } };
+      setSettings(next);
+      await persist(next);
+      toast.success('Image added.');
+    } finally {
+      setUploading(null);
+    }
+  }, [id, persist]);
 
   if (loading) {
     return (
@@ -216,15 +256,21 @@ export default function WorshipAidPage() {
               out or tighten a full one. */}
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => pickImage('cover')}>
-                <ImageIcon className="mr-1.5 h-4 w-4" />
-                {settings.coverImageUrl ? 'Replace cover image' : 'Cover image'}
+              <Button type="button" variant="outline" size="sm" disabled={uploading !== null}
+                onClick={() => pickImage('cover')}>
+                {uploading === 'cover'
+                  ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                  : <ImageIcon className="mr-1.5 h-4 w-4" />}
+                {uploading === 'cover' ? 'Uploading…' : settings.coverImageUrl ? 'Replace cover image' : 'Cover image'}
               </Button>
               {settings.coverImageUrl && (
                 <>
                   <img src={settings.coverImageUrl} alt="" className="h-10 w-10 border border-border object-contain" />
                   <Button type="button" variant="ghost" size="sm"
-                    onClick={() => patch({ coverImageUrl: null })} className="text-destructive">
+                    onClick={() => {
+                      const next = { ...settingsRef.current, coverImageUrl: null };
+                      setSettings(next); void persist(next);
+                    }} className="text-destructive">
                     <X className="mr-1 h-3.5 w-3.5" /> Remove
                   </Button>
                 </>
@@ -237,14 +283,24 @@ export default function WorshipAidPage() {
               return (
                 <div key={p} className="flex flex-wrap items-center gap-2 border border-border p-2">
                   <span className="w-24 shrink-0 text-xs font-medium">{name}</span>
-                  <Button type="button" variant="outline" size="sm" onClick={() => pickImage(p)}>
-                    <ImageIcon className="mr-1.5 h-4 w-4" /> {img ? 'Replace' : 'Add image'}
+                  <Button type="button" variant="outline" size="sm" disabled={uploading !== null}
+                    onClick={() => pickImage(p)}>
+                    {uploading === p
+                      ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                      : <ImageIcon className="mr-1.5 h-4 w-4" />}
+                    {uploading === p ? 'Uploading…' : img ? 'Replace' : 'Add image'}
                   </Button>
                   {img && (
                     <>
                       <img src={img} alt="" className="h-10 w-10 border border-border object-contain" />
                       <Button type="button" variant="ghost" size="sm" className="text-destructive"
-                        onClick={() => patch({ images: { ...settings.images, [p]: null } })}>
+                        onClick={() => {
+                          const next = {
+                            ...settingsRef.current,
+                            images: { ...settingsRef.current.images, [p]: null },
+                          };
+                          setSettings(next); void persist(next);
+                        }}>
                         <X className="mr-1 h-3.5 w-3.5" /> Remove
                       </Button>
                     </>
