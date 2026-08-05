@@ -203,7 +203,6 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const MusicLibraryPage = lazy(() => import("./pages/member/MusicLibraryPage"));
 const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPage"));
 const PartTracksPage = lazy(() => import("./pages/dashboard/PartTracksPage"));
-const RepertoirePage = lazy(() => import("./pages/dashboard/RepertoirePage"));
 const SeatingChartsDashboardPage = lazy(() => import("./pages/seating-charts/DashboardPage"));
 const SeatingChartEditorPage = lazy(() => import("./pages/seating-charts/EditorPage"));
 const SeatingChartViewPage = lazy(() => import("./pages/seating-charts/ViewPage"));
@@ -225,6 +224,7 @@ const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/Songwritin
 const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));
 const PlannerPage = lazy(() => import("./pages/planner/PlannerPage"));
 const PrayerApp = lazy(() => import("./pages/prayer/PrayerApp"));
+const BibleApp = lazy(() => import("./pages/bible/BibleApp"));
 const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
 const ConcertPlannerEditorPage = lazy(() => import("./pages/dashboard/ConcertPlannerEditorPage"));
 const PublicConcertProgramPage = lazy(() => import("./pages/public/PublicConcertProgramPage"));
@@ -1516,16 +1516,6 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/dashboard/repertoire"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><RepertoirePage /></DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
                   path="/seating-charts"
                   element={
                     <ProtectedRoute>
@@ -1717,6 +1707,19 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell>
                           <ModuleGate moduleId="songwriting"><SongwritingEditorPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* The Bible — full text, highlights, Apple Pencil underlines, notes. */}
+                <Route
+                  path="/bible"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <BibleApp />
                         </DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
