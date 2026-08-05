@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   ChevronLeft, ChevronRight, Loader2, PenLine, Search, Settings2, Trash2, X,
 } from 'lucide-react';
@@ -23,6 +24,14 @@ import type {
  * text while you read. Safe-area insets are honoured because this covers the
  * status bar in the iOS shell, where a naive inset-0 would put the first verse
  * under the clock.
+ *
+ * PORTALLED TO document.body ON PURPOSE. Rendered in place, the dashboard
+ * header showed through the top of the overlay — not a z-index problem (the
+ * shell bar is z-30) but a containing-block one: an ancestor
+ * with transform/filter/contain makes position:fixed resolve against that
+ * ancestor instead of the viewport, trapping the overlay inside the content
+ * column. A portal escapes it entirely, which is the same reason Radix's own
+ * Dialog and Sheet portal.
  */
 
 const COLORS: AnnotationColor[] = ['yellow', 'green', 'blue', 'pink', 'orange', 'purple'];
@@ -79,15 +88,31 @@ export function BibleReader(props: BibleReaderProps) {
 
   const noteFor = (v: number) => notes.find((n) => n.verse === v) ?? null;
 
+  // Stop the page behind from scrolling while the reader is open.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  // Escape closes, matching every other overlay in the app.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !toolsOpen) onExit();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [toolsOpen, onExit]);
+
   const jump = (bookId: string, ch: number) => {
     onGoTo(bookId, ch);
     onSearchChange('');
     setToolsOpen(false);
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 bg-background overflow-y-auto"
+      className="fixed inset-0 z-[90] bg-background overflow-y-auto"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         paddingBottom: 'env(safe-area-inset-bottom)',
@@ -299,6 +324,7 @@ export function BibleReader(props: BibleReaderProps) {
           </div>
         </SheetContent>
       </Sheet>
-    </div>
+    </div>,
+    document.body,
   );
 }
