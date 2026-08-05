@@ -21,7 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  ArrowLeft, BookOpen, Calendar as CalendarIcon, ExternalLink, FileText, Loader2, Paperclip, Plus, Search, Trash2, Upload, X, Youtube,
+  ArrowLeft, BookOpen, Calendar as CalendarIcon, ExternalLink, FileText, Loader2, Paperclip, Pencil, Plus, Search, Trash2, Upload, X, Youtube,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -218,6 +218,48 @@ function PsalmText({ text }: { text: string }) {
           </p>
         );
       })}
+    </div>
+  );
+}
+
+/** The psalm field. Shows the FORMATTED psalm, not both the formatted and raw
+ *  versions — having the same text twice on screen, once with spacing and once
+ *  without, just reads as a duplicate.
+ *
+ *  The raw textarea is still reachable behind Edit, because psalms captured
+ *  before the formatting fix are stored flattened and hand-editing is the only
+ *  way to repair them. When there is no text yet, the editor shows directly —
+ *  there is nothing to preview. */
+function PsalmField({
+  value, onChange,
+}: { value: string | null; onChange: (v: string | null) => void }) {
+  const [editing, setEditing] = useState(false);
+
+  if (!value || editing) {
+    return (
+      <div className="space-y-2">
+        <Textarea
+          rows={8}
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value || null)}
+          placeholder="Paste or type the full Psalm refrain + verses…"
+        />
+        {value && (
+          <Button type="button" variant="outline" size="sm" onClick={() => setEditing(false)}>
+            Done
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <PsalmText text={value} />
+      <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(true)}>
+        <Pencil className="w-3.5 h-3.5 mr-1.5" aria-hidden />
+        Edit text
+      </Button>
     </div>
   );
 }
@@ -637,12 +679,10 @@ function LiturgyEditor({ massId }: { massId: string }) {
               massId={row.id}
             />
             <Field label="Psalm full text (refrain + verses)">
-              <div className="space-y-2">
-                {row.psalm_full && <PsalmText text={row.psalm_full} />}
-                <Textarea rows={row.psalm_full ? 4 : 3} value={row.psalm_full ?? ''}
-                  onChange={(e) => update({ psalm_full: e.target.value || null })}
-                  placeholder="Paste or type the full Psalm refrain + verses…" />
-              </div>
+              <PsalmField
+                value={row.psalm_full}
+                onChange={(v) => update({ psalm_full: v })}
+              />
             </Field>
           </OrderItem>
 
