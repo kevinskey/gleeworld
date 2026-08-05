@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, ChevronDown, ChevronLeft, ChevronRight, Loader2, Maximize2, PenLine, Search, Trash2, X } from 'lucide-react';
+import { BookOpen, ChevronDown, Loader2, Maximize2, PenLine, Search, Trash2, X } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -137,8 +137,11 @@ export default function BibleApp() {
       maxWidth="4xl"
       actions={
         <div className="flex items-center gap-1">
-          {/* Browse — the non-search way to move around. Sits beside Read so
-              the two ways into a passage are together. */}
+          {/* This page is a launcher: Browse or search to pick a passage, then
+              Read it. Chapter-by-chapter arrows used to live here too, but with
+              Browse showing "John 2" they were unlabelled and redundant —
+              sequential movement belongs in reading mode, which has proper
+              Previous/Next at the foot of the chapter. */}
           <Button
             variant="outline"
             size="sm"
@@ -159,23 +162,7 @@ export default function BibleApp() {
             <Maximize2 className="w-4 h-4 mr-1.5" aria-hidden />
             Read
           </Button>
-          <Button
-            variant="outline" size="icon" aria-label="Previous chapter"
-            disabled={atStart}
-            onClick={goPrev}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <span className="text-xs text-muted-foreground tabular-nums px-1">
-            {chapter}/{chapterCount}
-          </span>
-          <Button
-            variant="outline" size="icon" aria-label="Next chapter"
-            disabled={atEnd}
-            onClick={goNext}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+
         </div>
       }
     >
