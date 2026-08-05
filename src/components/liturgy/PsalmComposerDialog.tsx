@@ -294,7 +294,12 @@ export function PsalmComposerDialog({
     try {
       return await svgToJpegBlob(svg as SVGSVGElement);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not render the image.');
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error(
+        /music font/.test(msg)
+          ? "Couldn't load the music font, so the notes would export as empty boxes. Reload and try again."
+          : 'Could not render the image.',
+      );
       return null;
     }
   }, []);
