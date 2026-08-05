@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, ChevronDown, Loader2, Maximize2, PenLine, Search, Trash2, X } from 'lucide-react';
+import { BookOpen, ChevronDown, Loader2, Maximize2, PenLine, Play, Search, Square, Trash2, X } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { parseReference } from '@/lib/bible/reference';
+import { useChapterAudio } from '@/hooks/useChapterAudio';
+import { useSearchParams } from 'react-router-dom';
 import { BibleReader } from '@/components/bible/BibleReader';
 import { BookPicker } from '@/components/bible/BookPicker';
 import { SpeechInputButton } from '@/components/concertPlanner/SpeechInputButton';
@@ -68,6 +70,7 @@ export default function BibleApp() {
 
 
   const { data: verses, isLoading: versesLoading } = useBibleChapter(bookId, chapter);
+  const audio = useChapterAudio(verses ?? []);
   const { data: chapterCount = 1 } = useChapterCount(bookId);
   const { annotations, add, remove } = useAnnotations(translation, book?.usfm_code ?? null, chapter);
   const { notes, save, remove: removeNote } = useBibleNotes(translation, book?.usfm_code ?? null, chapter);
@@ -115,6 +118,26 @@ export default function BibleApp() {
       : null;
     setBookId((same ?? books.find((b) => b.usfm_code === 'JHN') ?? books[0]).id);
   }, [books, bookId]);
+
+  // The assistant's open_bible navigates to /bible?ref=Psalm+23, so a passage
+  // can be opened from anywhere in the app. Applied once per distinct ref.
+  const [params, setParams] = useSearchParams();
+  const appliedRef = useRef<string | null>(null);
+  useEffect(() => {
+    const ref = params.get('ref');
+    const t = params.get('t');
+    if (t && t !== translation) setTranslation(t);
+    if (!ref || !books?.length || appliedRef.current === ref) return;
+    const parsed = parseReference(ref);
+    const target = parsed && books.find((b) => b.usfm_code === parsed.usfmCode);
+    if (target) {
+      setBookId(target.id);
+      setChapter(parsed.chapter);
+      appliedRef.current = ref;
+      // Clear the params so a later manual navigation isn't yanked back.
+      setParams({}, { replace: true });
+    }
+  }, [params, books, translation, setParams]);
 
   const bookIndex = books?.findIndex((b) => b.id === bookId) ?? -1;
   const atStart = bookIndex <= 0 && chapter <= 1;
@@ -189,6 +212,18 @@ export default function BibleApp() {
             <BookOpen className="w-4 h-4 mr-1.5" aria-hidden />
             {book ? `${book.name} ${chapter}` : 'Books'}
             <ChevronDown className="w-4 h-4 ml-1" aria-hidden />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => (audio.playing ? audio.stop() : audio.play())}
+            disabled={!verses?.length}
+            aria-label={audio.playing ? 'Stop listening' : 'Listen to this chapter'}
+          >
+            {audio.playing
+              ? <Square className="w-4 h-4 mr-1.5" aria-hidden />
+              : <Play className="w-4 h-4 mr-1.5" aria-hidden />}
+            {audio.playing ? 'Stop' : 'Listen'}
           </Button>
           <Button
             variant="outline"

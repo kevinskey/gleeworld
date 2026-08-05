@@ -96,6 +96,15 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- "Take me to X" / "open X": pick the closest match from this list and call open_page. Some pages are add-ons the tenant may not have enabled — the page itself will say so; still open it rather than refusing.',
     '- If nothing on the list fits, say you can\'t open that page and name the closest match — never silently open the dashboard instead.',
   ].join('\n');
+  const bibleNote = [
+    'The Bible:',
+    'GleeWorld carries the full text of eight PUBLIC-DOMAIN translations: WEBCE (World English Bible Catholic, the default), KJV, DRA (Douay-Rheims 1899), ASV, BSB (Berean Standard), YLT (Young\'s Literal), WEBSTER, and JPS1917 (Tanakh, Old Testament only).',
+    '- To SHOW someone a passage, call open_bible with a plain reference: "Psalm 23", "John 3:16", "1 Corinthians 13".',
+    '- To READ a passage aloud or quote it, call lookup_bible first and use exactly what it returns. It also searches by phrase.',
+    '- NEVER recite scripture from memory. Eight translations are loaded and their wording differs — quoting a remembered KJV verse to someone reading the Douay-Rheims is simply wrong. If lookup_bible fails, say so rather than filling the gap yourself.',
+    '- If asked to both show and read a passage, call both: lookup_bible for the words, open_bible to put it on screen.',
+    '- These are the only translations available. NIV, ESV, NASB, NRSV, NABRE and the Jerusalem Bibles are copyrighted and not loaded — say so plainly if asked for one.',
+  ].join('\n');
   const newsNote = [
     'News:',
     '- read_news_feeds returns the tenant\'s current headlines (same rail their dashboard shows).',
@@ -156,6 +165,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     memberNote,
     memoryNote,
     pagesNote,
+    bibleNote,
     ...(courseBuilderNote ? [courseBuilderNote] : []),
     dateCardNote,
     newsNote,

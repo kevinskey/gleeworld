@@ -97,6 +97,33 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
+    name: 'open_bible',
+    description: "Open The Bible at a passage. Pass a plain reference like 'Psalm 23', 'John 3:16' or '1 Corinthians 13'. Use this when the user wants to SEE a passage. To read it aloud or quote it, call lookup_bible instead (or as well).",
+    parameters: {
+      type: 'object',
+      properties: {
+        reference: str("Scripture reference, e.g. 'Psalm 23' or 'John 3:16'"),
+        translation: str("Optional translation code: WEBCE, KJV, DRA, ASV, BSB, YLT, WEBSTER, JPS1917. Defaults to WEBCE."),
+      },
+      required: ['reference'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'lookup_bible',
+    description: "Get the actual TEXT of a Bible passage, or search scripture for a phrase. Use this to read a passage aloud or quote it. Only ever quote what this returns — never recite scripture from memory, because the wording differs between translations and the user is reading a specific one.",
+    parameters: {
+      type: 'object',
+      properties: {
+        reference: str("Scripture reference, e.g. 'Psalm 23' or 'John 3:16'. Omit if searching by phrase."),
+        query: str("Words or phrase to search for, e.g. 'living water'. Omit if looking up a reference."),
+        translation: str('Translation code: WEBCE, KJV, DRA, ASV, BSB, YLT, WEBSTER, JPS1917. Defaults to WEBCE.'),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'open_link',
     description: 'Open an external http(s) link in a new browser tab — e.g. the full article behind a news headline from read_news_feeds. Use the exact link from the tool result; never fabricate URLs.',
     parameters: {

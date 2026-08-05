@@ -58,6 +58,7 @@ export async function executeServerTool(
       case 'read_news_feeds': return { replyJson: await readNewsFeeds(args, deps) };
       case 'find_nearby_place': return await findNearbyPlace(args, deps);
       case 'get_preference': return { replyJson: await getPreference(args, deps) };
+      case 'lookup_bible': return { replyJson: await lookupBible(args, deps) };
       case 'web_search': return await webSearch(args, deps);
       case 'get_assignments':
       case 'get_grades':
@@ -388,4 +389,101 @@ async function orderFood(args: Record<string, unknown>): Promise<ToolResult> {
     replyJson: JSON.stringify({ query: q, preferred, count: services.length }),
     resultsPanel: { kind: 'food', query: q, services, preferred },
   };
+}
+
+
+// ── The Bible ────────────────────────────────────────────────────────
+//
+// Two modes: resolve a REFERENCE ("Psalm 23", "John 3:16") to its verses, or
+// SEARCH scripture for a phrase. Both read gw_bible_verses, which is shared
+// reference data — no tenant scoping, readable by any signed-in user.
+//
+// The assistant must quote from here rather than from memory: eight
+// translations are loaded and their wording differs, so reciting a remembered
+// KJV verse to someone reading the Douay-Rheims is simply wrong.
+
+const BIBLE_BOOK_ALIASES: Record<string, string> = {
+  genesis: 'GEN', gen: 'GEN', exodus: 'EXO', exod: 'EXO', leviticus: 'LEV', lev: 'LEV',
+  numbers: 'NUM', num: 'NUM', deuteronomy: 'DEU', deut: 'DEU', joshua: 'JOS', josh: 'JOS',
+  judges: 'JDG', ruth: 'RUT', '1 samuel': '1SA', '2 samuel': '2SA', '1 kings': '1KI',
+  '2 kings': '2KI', '1 chronicles': '1CH', '2 chronicles': '2CH', ezra: 'EZR',
+  nehemiah: 'NEH', esther: 'EST', job: 'JOB', psalm: 'PSA', psalms: 'PSA', ps: 'PSA',
+  proverbs: 'PRO', prov: 'PRO', ecclesiastes: 'ECC', 'song of solomon': 'SNG',
+  'song of songs': 'SNG', isaiah: 'ISA', isa: 'ISA', jeremiah: 'JER', jer: 'JER',
+  lamentations: 'LAM', ezekiel: 'EZK', daniel: 'DAN', hosea: 'HOS', joel: 'JOL',
+  amos: 'AMO', obadiah: 'OBA', jonah: 'JON', micah: 'MIC', nahum: 'NAM',
+  habakkuk: 'HAB', zephaniah: 'ZEP', haggai: 'HAG', zechariah: 'ZEC', malachi: 'MAL',
+  tobit: 'TOB', judith: 'JDT', wisdom: 'WIS', sirach: 'SIR', baruch: 'BAR',
+  '1 maccabees': '1MA', '2 maccabees': '2MA',
+  matthew: 'MAT', matt: 'MAT', mt: 'MAT', mark: 'MRK', mk: 'MRK', luke: 'LUK', lk: 'LUK',
+  john: 'JHN', jn: 'JHN', acts: 'ACT', romans: 'ROM', rom: 'ROM',
+  '1 corinthians': '1CO', '1 cor': '1CO', '2 corinthians': '2CO', '2 cor': '2CO',
+  galatians: 'GAL', ephesians: 'EPH', philippians: 'PHP', colossians: 'COL',
+  '1 thessalonians': '1TH', '2 thessalonians': '2TH', '1 timothy': '1TI',
+  '2 timothy': '2TI', titus: 'TIT', philemon: 'PHM', hebrews: 'HEB', james: 'JAS',
+  '1 peter': '1PE', '2 peter': '2PE', '1 john': '1JN', '2 john': '2JN',
+  '3 john': '3JN', jude: 'JUD', revelation: 'REV', rev: 'REV',
+};
+
+const SINGLE_CHAPTER = new Set(['OBA', 'PHM', '2JN', '3JN', 'JUD']);
+
+function parseBibleReference(input: string) {
+  const m = /^\s*((?:[1-3]\s*)?[A-Za-z][A-Za-z\s']*?)\s*(?:(\d+)\s*(?::\s*(\d+)(?:\s*-\s*(\d+))?)?)?\s*$/.exec(input || '');
+  if (!m) return null;
+  const code = BIBLE_BOOK_ALIASES[m[1].trim().toLowerCase().replace(/\s+/g, ' ')];
+  if (!code) return null;
+  const single = SINGLE_CHAPTER.has(code);
+  // For a one-chapter book, a bare number is a VERSE, not a chapter.
+  const chapter = single ? 1 : (m[2] ? Number(m[2]) : 1);
+  const startVerse = single && m[2] && !m[3] ? Number(m[2]) : (m[3] ? Number(m[3]) : null);
+  return { code, chapter, startVerse, endVerse: m[4] ? Number(m[4]) : startVerse };
+}
+
+async function lookupBible(args: Record<string, unknown>, deps: Deps): Promise<string> {
+  const translation = String(args.translation ?? 'WEBCE').toUpperCase();
+  const reference = typeof args.reference === 'string' ? args.reference.trim() : '';
+  const query = typeof args.query === 'string' ? args.query.trim() : '';
+
+  if (!reference && !query) {
+    return JSON.stringify({ error: 'Pass either a reference or a search query.' });
+  }
+
+  if (reference) {
+    const ref = parseBibleReference(reference);
+    if (!ref) return JSON.stringify({ error: `I could not read "${reference}" as a scripture reference.` });
+
+    let q = deps.supabase
+      .from('gw_bible_verses')
+      .select('chapter, verse, text, book:gw_bible_books!inner(name, usfm_code, gw_bible_translations!inner(code))')
+      .eq('book.usfm_code', ref.code)
+      .eq('book.gw_bible_translations.code', translation)
+      .eq('chapter', ref.chapter)
+      .order('verse');
+    if (ref.startVerse) q = q.gte('verse', ref.startVerse).lte('verse', ref.endVerse ?? ref.startVerse);
+
+    const { data, error } = await q.limit(200);
+    if (error) return JSON.stringify({ error: error.message });
+    const rows = (data ?? []) as Array<{ chapter: number; verse: number; text: string; book: { name: string } }>;
+    if (!rows.length) return JSON.stringify({ error: `Nothing found for "${reference}" in ${translation}.` });
+
+    return JSON.stringify({
+      translation,
+      reference: `${rows[0].book.name} ${ref.chapter}${ref.startVerse ? `:${ref.startVerse}${ref.endVerse && ref.endVerse !== ref.startVerse ? `-${ref.endVerse}` : ''}` : ''}`,
+      verses: rows.map((r) => ({ verse: r.verse, text: r.text })),
+    });
+  }
+
+  const { data, error } = await deps.supabase
+    .from('gw_bible_verses')
+    .select('chapter, verse, text, book:gw_bible_books!inner(name, gw_bible_translations!inner(code))')
+    .eq('book.gw_bible_translations.code', translation)
+    .textSearch('search_tsv', query, { type: 'websearch', config: 'english' })
+    .limit(12);
+  if (error) return JSON.stringify({ error: error.message });
+  const rows = (data ?? []) as Array<{ chapter: number; verse: number; text: string; book: { name: string } }>;
+  return JSON.stringify({
+    translation,
+    query,
+    matches: rows.map((r) => ({ reference: `${r.book.name} ${r.chapter}:${r.verse}`, text: r.text })),
+  });
 }
