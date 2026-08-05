@@ -21,9 +21,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  ArrowLeft, BookOpen, Calendar as CalendarIcon, ExternalLink, FileText, Loader2, Paperclip, Pencil, Plus, Search, Trash2, Upload, X, Youtube,
+  ArrowLeft, BookOpen, Calendar as CalendarIcon, ExternalLink, FileText, Loader2, Music4, Paperclip, Pencil, Plus, Search, Trash2, Upload, X, Youtube,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PsalmComposerDialog } from '@/components/liturgy/PsalmComposerDialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ReadingsModal } from '@/components/liturgy/ReadingsModal';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -433,6 +434,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
   const [pullingReadings, setPullingReadings] = useState(false);
   // Which song slot's inline YouTube player is open (one at a time).
   const [playingSlot, setPlayingSlot] = useState<string | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
   // Cached blocks from the last Universalis pull. Keyed for the inline
   // hover popovers so each citation field can show its full text without
   // re-hitting the upstream.
@@ -693,6 +695,17 @@ function LiturgyEditor({ massId }: { massId: string }) {
               onYouTube={(v) => update({ psalm_youtube: v || null })}
               onPdf={(v) => update({ psalm_pdf: v })}
               massId={row.id}
+              extra={
+                <button
+                  type="button"
+                  onClick={() => setComposerOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
+                  title="Write a setting of this psalm on a staff"
+                >
+                  <Music4 className="h-3.5 w-3.5" />
+                  Compose setting
+                </button>
+              }
             />
             <Field label="Psalm full text (refrain + verses)">
               <PsalmField
@@ -825,6 +838,17 @@ function LiturgyEditor({ massId }: { massId: string }) {
         isoDate={row.mass_date}
         sourceUrl={readingsHref}
       />
+
+      <PsalmComposerDialog
+        open={composerOpen}
+        onClose={() => setComposerOpen(false)}
+        citation={row.responsorial_psalm}
+        observation={row.observation}
+        psalmText={row.psalm_full}
+        // Saving the setting fills the sung-setting title, so the plan shows
+        // what will be sung without the user retyping it.
+        onSaved={(_id, title) => update({ psalm_title: title })}
+      />
     </div>
   );
 }
@@ -876,9 +900,12 @@ function useHymnSearch(q: string) {
 
 function SongSlot({
   label, title, youtube, pdf, onTitle, onYouTube, onPdf, slotKey, massId,
-  playing = false, onPlayToggle,
+  playing = false, onPlayToggle, extra,
 }: {
   label: string; title: string; youtube: string; pdf: string | null;
+  /** An extra pill rendered beside the attachment pills — used by the psalm
+   *  slot for "Compose setting". Kept generic so the slot stays reusable. */
+  extra?: React.ReactNode;
   onTitle: (v: string) => void; onYouTube: (v: string) => void; onPdf: (v: string | null) => void;
   // Inline playback: parent owns which slot is playing (one at a time).
   slotKey?: string; playing?: boolean; onPlayToggle?: (slotKey: string | null) => void;
@@ -967,7 +994,10 @@ function SongSlot({
         placeholder="YouTube URL (optional)"
         className="text-xs"
       />
-      <PdfAttachment pdf={pdf} onPdf={onPdf} massId={massId} slotKey={slotKey ?? label} />
+      <div className="flex flex-wrap items-center gap-2">
+        <PdfAttachment pdf={pdf} onPdf={onPdf} massId={massId} slotKey={slotKey ?? label} />
+        {extra}
+      </div>
       {playing && videoId && (
         <div className="rounded-xl overflow-hidden border border-border">
           <div className="flex items-center gap-1 px-3 py-1.5 bg-muted/50">
