@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 import {
-  ArrowLeft, Image as ImageIcon, Link2, Loader2, Printer, QrCode, Save, Trash2, X,
+  ArrowLeft, Image as ImageIcon, Link2, Loader2, Printer, QrCode, Save, X,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 import { WorshipAidSheets } from '@/components/liturgy/WorshipAidSheets';
 import {
-  buildWorshipAid, DEFAULT_SETTINGS, type AidSource, type PanelId, type WorshipAidSettings,
+  buildWorshipAid, DEFAULT_SETTINGS, panelSpacing, SPACING_MAX, SPACING_MIN,
+  type AidSource, type PanelId, type WorshipAidSettings,
 } from '@/lib/liturgy/worshipAid';
 
 /**
@@ -77,7 +78,12 @@ export default function WorshipAidPage() {
         .not('thumbnail_url', 'is', null)
         .order('created_at', { ascending: false })
         .limit(1);
-      if (data?.[0]?.thumbnail_url) setPsalmImage(data[0].thumbnail_url as string);
+      const url = data?.[0]?.thumbnail_url as string | undefined;
+      if (!url) return;
+      setPsalmImage(url);
+      // Persist it onto the aid: the phone edition is public and cannot query
+      // the library, so the engraved setting has to travel with the record.
+      setSettings((cur) => (cur.psalmImageUrl === url ? cur : { ...cur, psalmImageUrl: url }));
     })();
   }, [row?.responsorial_psalm]);
 
@@ -203,23 +209,63 @@ export default function WorshipAidPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => pickImage('cover')}>
-              <ImageIcon className="mr-1.5 h-4 w-4" /> Cover image
-            </Button>
-            {(['insideLeft', 'insideRight', 'back'] as PanelId[]).map((p) => (
-              <Button key={p} type="button" variant="outline" size="sm" onClick={() => pickImage(p)}>
+          {/* Only the cover art is used every time (Kevin). The other slots
+              are often empty, and how much air is left over changes with how
+              many hymns and readings a Sunday has — so each panel carries its
+              own image control AND its own spacing, to open a sparse panel
+              out or tighten a full one. */}
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => pickImage('cover')}>
                 <ImageIcon className="mr-1.5 h-4 w-4" />
-                {p === 'insideLeft' ? 'Inside left' : p === 'insideRight' ? 'Inside right' : 'Back'} image
+                {settings.coverImageUrl ? 'Replace cover image' : 'Cover image'}
               </Button>
-            ))}
-            {settings.coverImageUrl && (
-              <Button type="button" variant="ghost" size="sm"
-                onClick={() => patch({ coverImageUrl: null })}
-                className="text-destructive">
-                <Trash2 className="mr-1.5 h-4 w-4" /> Remove cover image
-              </Button>
-            )}
+              {settings.coverImageUrl && (
+                <>
+                  <img src={settings.coverImageUrl} alt="" className="h-10 w-10 border border-border object-contain" />
+                  <Button type="button" variant="ghost" size="sm"
+                    onClick={() => patch({ coverImageUrl: null })} className="text-destructive">
+                    <X className="mr-1 h-3.5 w-3.5" /> Remove
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {(['insideLeft', 'insideRight', 'back'] as PanelId[]).map((p) => {
+              const name = p === 'insideLeft' ? 'Inside left' : p === 'insideRight' ? 'Inside right' : 'Back';
+              const img = settings.images?.[p] ?? null;
+              return (
+                <div key={p} className="flex flex-wrap items-center gap-2 border border-border p-2">
+                  <span className="w-24 shrink-0 text-xs font-medium">{name}</span>
+                  <Button type="button" variant="outline" size="sm" onClick={() => pickImage(p)}>
+                    <ImageIcon className="mr-1.5 h-4 w-4" /> {img ? 'Replace' : 'Add image'}
+                  </Button>
+                  {img && (
+                    <>
+                      <img src={img} alt="" className="h-10 w-10 border border-border object-contain" />
+                      <Button type="button" variant="ghost" size="sm" className="text-destructive"
+                        onClick={() => patch({ images: { ...settings.images, [p]: null } })}>
+                        <X className="mr-1 h-3.5 w-3.5" /> Remove
+                      </Button>
+                    </>
+                  )}
+                  <label className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+                    Line spacing
+                    <input
+                      type="range"
+                      min={SPACING_MIN} max={SPACING_MAX} step={0.05}
+                      value={panelSpacing(settings, p)}
+                      onChange={(e) => patch({
+                        spacing: { ...settings.spacing, [p]: Number(e.target.value) },
+                      })}
+                      aria-label={`${name} line spacing`}
+                      className="w-32"
+                    />
+                    <span className="w-10 tabular-nums">{panelSpacing(settings, p).toFixed(2)}×</span>
+                  </label>
+                </div>
+              );
+            })}
           </div>
           <input
             ref={fileRef}
@@ -283,7 +329,7 @@ export default function WorshipAidPage() {
       </Card>
 
       <div className="overflow-x-auto">
-        <WorshipAidSheets aid={aid} qrDataUrl={qr} />
+        <WorshipAidSheets aid={aid} qrDataUrl={qr} settings={settings} />
       </div>
     </div>
   );
