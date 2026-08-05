@@ -1,4 +1,7 @@
-import { panelSpacing, type AidEntry, type WorshipAid, type PanelId, type WorshipAidSettings } from '@/lib/liturgy/worshipAid';
+import {
+  coverImageScale, coverTitleSize, panelSpacing,
+  type AidEntry, type WorshipAid, type PanelId, type WorshipAidSettings,
+} from '@/lib/liturgy/worshipAid';
 
 /**
  * Brand colour, taken from the tenant's theme rather than hardcoded.
@@ -111,17 +114,22 @@ function Panel({ children, style }: { children: React.ReactNode; style?: React.C
   );
 }
 
-function FrontPanel({ aid, qrDataUrl }: { aid: WorshipAid; qrDataUrl?: string | null }) {
+function FrontPanel({ aid, qrDataUrl, titleSize, imageScale }: {
+  aid: WorshipAid; qrDataUrl?: string | null; titleSize: number; imageScale: number;
+}) {
   return (
     <Panel style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: '19pt', lineHeight: 1.15, marginBottom: '0.22in' }}>
+      <div style={{ fontSize: `${titleSize}pt`, lineHeight: 1.15, marginBottom: '0.22in' }}>
         {aid.front.title}
       </div>
       {aid.front.imageUrl && (
         <img
           src={aid.front.imageUrl}
           alt=""
-          style={{ display: 'block', width: '100%', maxHeight: '4.6in', objectFit: 'contain', margin: '0 auto' }}
+          style={{
+            display: 'block', width: `${Math.round(imageScale * 100)}%`,
+            maxHeight: '4.6in', objectFit: 'contain', margin: '0 auto',
+          }}
         />
       )}
       <div className="worship-aid-brand-text" style={{
@@ -266,7 +274,12 @@ export function WorshipAidSheets({ aid, qrDataUrl, settings }: WorshipAidSheetsP
 
       <div className="worship-aid-sheet">
         <BackPanel aid={aid} spacing={gap('back')} />
-        <FrontPanel aid={aid} qrDataUrl={qrDataUrl} />
+        <FrontPanel
+          aid={aid}
+          qrDataUrl={qrDataUrl}
+          titleSize={coverTitleSize(settings)}
+          imageScale={coverImageScale(settings)}
+        />
         <div className="worship-aid-fold" aria-hidden />
       </div>
 
