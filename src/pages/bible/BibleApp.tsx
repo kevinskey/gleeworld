@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { DialPicker, type DialOption } from '@/components/bible/DialPicker';
+import { parseReference } from '@/lib/bible/reference';
 import { cn } from '@/lib/utils';
 import { VerseRow } from '@/components/bible/VerseRow';
 import {
@@ -42,6 +43,17 @@ export default function BibleApp() {
   const [draft, setDraft] = useState('');
   const [search, setSearch] = useState('');
   const { data: hits = [], isFetching: searching } = useBibleSearch(search);
+
+  // "Psalm 23" is a REFERENCE, not content — full-text search looks for those
+  // words inside verse text and finds nothing. Resolve references separately
+  // and offer them above the text matches. Both are shown, because a word like
+  // "Mark" or "Job" is a legitimate content search as well as a book name.
+  const reference = useMemo(() => {
+    const r = parseReference(search);
+    if (!r) return null;
+    const b = books?.find((x) => x.usfm_code === r.usfmCode);
+    return b ? { book: b, chapter: r.chapter, verse: r.verse } : null;
+  }, [search, books]);
 
   const book = useMemo(() => books?.find((b) => b.id === bookId) ?? null, [books, bookId]);
 
@@ -163,14 +175,34 @@ export default function BibleApp() {
 
           {search.trim().length >= 2 && (
             <Card><CardContent className="p-0 max-h-[22rem] overflow-y-auto">
+              {reference && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBookId(reference.book.id);
+                    setChapter(reference.chapter);
+                    setSearch('');
+                  }}
+                  className="block w-full text-left px-4 py-3 border-b border-border bg-primary/5 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Go to passage
+                  </span>
+                  <span className="block text-sm font-semibold text-primary">
+                    {reference.book.name} {reference.chapter}
+                    {reference.verse ? `:${reference.verse}` : ''}
+                  </span>
+                </button>
+              )}
               {searching && (
                 <p className="p-4 text-sm text-muted-foreground flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" /> Searching…
                 </p>
               )}
-              {!searching && hits.length === 0 && (
+              {!searching && hits.length === 0 && !reference && (
                 <p className="p-4 text-sm text-muted-foreground">
-                  Nothing found for “{search.trim()}”.
+                  Nothing found for “{search.trim()}”. Try a word from a verse, or a
+                  reference like “Psalm 23”.
                 </p>
               )}
               {hits.map((h) => (
