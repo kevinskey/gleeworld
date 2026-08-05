@@ -1,4 +1,13 @@
-import type { AidEntry, WorshipAid } from '@/lib/liturgy/worshipAid';
+import { panelSpacing, type AidEntry, type WorshipAid, type PanelId, type WorshipAidSettings } from '@/lib/liturgy/worshipAid';
+
+/**
+ * Brand colour, taken from the tenant's theme rather than hardcoded.
+ *
+ * --primary is what TenantThemeRoot writes from the tenant's accent, so a
+ * parish's aid prints in its own colour. It resolves in print too: the
+ * variable lives on <html> and print does not re-cascade.
+ */
+const BRAND = 'hsl(var(--primary))';
 
 /**
  * The two printed sheets of a bifold worship aid.
@@ -18,10 +27,11 @@ import type { AidEntry, WorshipAid } from '@/lib/liturgy/worshipAid';
 const PANEL_W = 5.5;
 const SHEET_H = 8.5;
 
-function Notice({ text }: { text: string }) {
+function Notice({ text, spacing = 1 }: { text: string; spacing?: number }) {
   return (
     <div style={{
-      border: '1px solid #000', padding: '0.09in 0.11in', margin: '0.10in 0',
+      border: `1px solid ${BRAND}`, padding: '0.09in 0.11in',
+      margin: `${(0.10 * spacing).toFixed(3)}in 0`,
       fontStyle: 'italic', fontSize: '7.6pt', lineHeight: 1.35, textAlign: 'center',
     }}>
       {text}
@@ -29,11 +39,12 @@ function Notice({ text }: { text: string }) {
   );
 }
 
-function Divider({ label }: { label: string }) {
+function Divider({ label, spacing = 1 }: { label: string; spacing?: number }) {
   return (
-    <div style={{
+    <div className="worship-aid-brand-text" style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.10in',
-      margin: '0.16in 0 0.10in', fontWeight: 700, fontSize: '11pt', letterSpacing: '0.02em',
+      margin: `${(0.16 * spacing).toFixed(3)}in 0 ${(0.10 * spacing).toFixed(3)}in`,
+      fontWeight: 700, fontSize: '11pt', letterSpacing: '0.02em', color: BRAND,
     }}>
       <span aria-hidden>✠</span>
       <span>{label}</span>
@@ -42,12 +53,12 @@ function Divider({ label }: { label: string }) {
   );
 }
 
-function Entry({ entry }: { entry: AidEntry }) {
-  if (entry.notice) return <Notice text={entry.notice} />;
-  if (entry.divider) return <Divider label={entry.label} />;
+function Entry({ entry, spacing = 1 }: { entry: AidEntry; spacing?: number }) {
+  if (entry.notice) return <Notice text={entry.notice} spacing={spacing} />;
+  if (entry.divider) return <Divider label={entry.label} spacing={spacing} />;
 
   return (
-    <div style={{ margin: '0 0 0.11in' }}>
+    <div style={{ margin: `0 0 ${(0.11 * spacing).toFixed(3)}in` }}>
       {entry.label && (
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.12in' }}>
           <span style={{ fontWeight: 700, fontSize: '8.6pt', letterSpacing: '0.01em' }}>
@@ -113,9 +124,9 @@ function FrontPanel({ aid, qrDataUrl }: { aid: WorshipAid; qrDataUrl?: string | 
           style={{ display: 'block', width: '100%', maxHeight: '4.6in', objectFit: 'contain', margin: '0 auto' }}
         />
       )}
-      <div style={{
+      <div className="worship-aid-brand-text" style={{
         position: 'absolute', left: '0.40in', right: '0.40in', bottom: qrDataUrl ? '1.15in' : '0.55in',
-        fontSize: '30pt', letterSpacing: '0.02em', textTransform: 'uppercase',
+        fontSize: '30pt', letterSpacing: '0.02em', textTransform: 'uppercase', color: BRAND,
       }}>
         {aid.front.word}
       </div>
@@ -129,7 +140,7 @@ function FrontPanel({ aid, qrDataUrl }: { aid: WorshipAid; qrDataUrl?: string | 
   );
 }
 
-function BackPanel({ aid }: { aid: WorshipAid }) {
+function BackPanel({ aid, spacing }: { aid: WorshipAid; spacing: number }) {
   return (
     <Panel>
       {aid.spineText && (
@@ -147,7 +158,7 @@ function BackPanel({ aid }: { aid: WorshipAid }) {
         </div>
       )}
       <div style={{ marginLeft: aid.spineText ? '0.22in' : 0 }}>
-        {aid.back.map((e, i) => <Entry key={i} entry={e} />)}
+        {aid.back.map((e, i) => <Entry key={i} entry={e} spacing={spacing} />)}
       </div>
     </Panel>
   );
@@ -158,7 +169,7 @@ function SideBand({ day, date }: { day: string; date: string }) {
   return (
     <div className="worship-aid-band" style={{
       position: 'absolute', right: 0, top: 0, bottom: 0, width: '0.62in',
-      background: '#5b4a86', color: '#fff',
+      background: BRAND, color: 'hsl(var(--primary-foreground))',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
       <span style={{
@@ -174,6 +185,8 @@ function SideBand({ day, date }: { day: string; date: string }) {
 export interface WorshipAidSheetsProps {
   aid: WorshipAid;
   qrDataUrl?: string | null;
+  /** Read for its per-panel spacing multipliers. */
+  settings: WorshipAidSettings;
 }
 
 /**
@@ -184,7 +197,8 @@ export interface WorshipAidSheetsProps {
  * them prints a program that reads back-to-front once folded, which looks
  * fine on screen and is only discovered after the copies are made.
  */
-export function WorshipAidSheets({ aid, qrDataUrl }: WorshipAidSheetsProps) {
+export function WorshipAidSheets({ aid, qrDataUrl, settings }: WorshipAidSheetsProps) {
+  const gap = (p: PanelId) => panelSpacing(settings, p);
   return (
     <div className="worship-aid-sheets">
       <style>{`
@@ -227,10 +241,17 @@ export function WorshipAidSheets({ aid, qrDataUrl }: WorshipAidSheetsProps) {
              lost the band entirely. print-color-adjust tells the browser to
              render it as specified rather than "optimising" it away. */
           .worship-aid-band {
-            background: #5b4a86 !important; color: #fff !important;
+            background: hsl(var(--primary)) !important;
+            color: hsl(var(--primary-foreground)) !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
+
+          /* Section headings and notice rules are brand-coloured too — the
+             same global reset would flatten them to black. */
+          .worship-aid-brand-text { color: hsl(var(--primary)) !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important; }
 
           /* That same global block prints every link's href in parentheses
              after it. Useful in an article, ruinous in a program. */
@@ -244,17 +265,17 @@ export function WorshipAidSheets({ aid, qrDataUrl }: WorshipAidSheetsProps) {
       `}</style>
 
       <div className="worship-aid-sheet">
-        <BackPanel aid={aid} />
+        <BackPanel aid={aid} spacing={gap('back')} />
         <FrontPanel aid={aid} qrDataUrl={qrDataUrl} />
         <div className="worship-aid-fold" aria-hidden />
       </div>
 
       <div className="worship-aid-sheet">
         <Panel>
-          {aid.insideLeft.map((e, i) => <Entry key={i} entry={e} />)}
+          {aid.insideLeft.map((e, i) => <Entry key={i} entry={e} spacing={gap('insideLeft')} />)}
         </Panel>
         <Panel style={{ paddingRight: '0.80in' }}>
-          {aid.insideRight.map((e, i) => <Entry key={i} entry={e} />)}
+          {aid.insideRight.map((e, i) => <Entry key={i} entry={e} spacing={gap('insideRight')} />)}
           <SideBand day={aid.sideBand.day} date={aid.sideBand.date} />
         </Panel>
         <div className="worship-aid-fold" aria-hidden />

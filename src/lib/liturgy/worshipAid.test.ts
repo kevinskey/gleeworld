@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildWorshipAid, splitCredit, formatLongDate, SHEETS, DEFAULT_SETTINGS,
+  panelSpacing, seasonWordIsRedundant, SPACING_MIN, SPACING_MAX,
   type AidSource, type WorshipAidSettings,
 } from './worshipAid';
 
@@ -168,6 +169,34 @@ describe('buildWorshipAid', () => {
   });
 });
 
+describe('the composed psalm travels with the aid', () => {
+  // The phone edition is public and cannot query the tenant's library, so a
+  // URL resolved only at edit time would leave the paper showing music and
+  // the phone showing prose.
+  it('uses the saved engraving when none is passed in', () => {
+    const a = buildWorshipAid(source, { ...settings, psalmImageUrl: 'https://example.org/saved.jpg' });
+    const psalm = a.insideLeft.find((e) => e.label === 'RESPONSORIAL PSALM');
+    expect(psalm?.imageUrl).toBe('https://example.org/saved.jpg');
+  });
+
+  it('prefers a freshly resolved engraving over the saved one', () => {
+    const a = buildWorshipAid(
+      source,
+      { ...settings, psalmImageUrl: 'https://example.org/stale.jpg' },
+      'https://example.org/fresh.jpg',
+    );
+    expect(a.insideLeft.find((e) => e.label === 'RESPONSORIAL PSALM')?.imageUrl)
+      .toBe('https://example.org/fresh.jpg');
+  });
+
+  it('still prints the citation when nothing has been composed', () => {
+    const a = buildWorshipAid(source, { ...settings, psalmImageUrl: null });
+    const psalm = a.insideLeft.find((e) => e.label === 'RESPONSORIAL PSALM');
+    expect(psalm?.citation).toBe('Psalm 24');
+    expect(psalm?.imageUrl).toBeNull();
+  });
+});
+
 describe('formatLongDate', () => {
   it('writes the date the way the printed band does', () => {
     expect(formatLongDate('2013-12-22')).toBe('December 22, 2013');
@@ -183,5 +212,46 @@ describe('formatLongDate', () => {
   it('passes anything unparseable straight through', () => {
     expect(formatLongDate('')).toBe('');
     expect(formatLongDate('not a date')).toBe('not a date');
+  });
+});
+
+describe('seasonWordIsRedundant', () => {
+  // "19th Sunday in Ordinary Time" over "ORDINARY TIME" reads as a mistake.
+  it('spots a season word the day already contains', () => {
+    expect(seasonWordIsRedundant('Ordinary Time', '19th Sunday in Ordinary Time')).toBe(true);
+    expect(seasonWordIsRedundant('ADVENT', 'Fourth Sunday of Advent')).toBe(true);
+  });
+
+  it('keeps a word that says something the day does not', () => {
+    expect(seasonWordIsRedundant('Christ the King', '34th Sunday in Ordinary Time')).toBe(false);
+    expect(seasonWordIsRedundant('Lent', 'Ash Wednesday')).toBe(false);
+  });
+
+  it('is false when either side is empty', () => {
+    expect(seasonWordIsRedundant('', 'Easter Sunday')).toBe(false);
+    expect(seasonWordIsRedundant('Easter', '')).toBe(false);
+  });
+});
+
+describe('panelSpacing', () => {
+  it('defaults to normal spacing', () => {
+    expect(panelSpacing(DEFAULT_SETTINGS, 'insideLeft')).toBe(1);
+  });
+
+  it('returns what the user chose', () => {
+    expect(panelSpacing({ ...DEFAULT_SETTINGS, spacing: { back: 1.4 } }, 'back')).toBe(1.4);
+  });
+
+  // A stored value can come from an older record or a hand-edited one; below
+  // the floor entries collide, above the ceiling a panel runs past the fold.
+  it('clamps a value that would break the panel', () => {
+    expect(panelSpacing({ ...DEFAULT_SETTINGS, spacing: { back: 9 } }, 'back')).toBe(SPACING_MAX);
+    expect(panelSpacing({ ...DEFAULT_SETTINGS, spacing: { back: 0 } }, 'back')).toBe(SPACING_MIN);
+  });
+
+  it('ignores a value that is not a usable number', () => {
+    const bad = { ...DEFAULT_SETTINGS, spacing: { back: NaN } };
+    expect(panelSpacing(bad, 'back')).toBe(1);
+    expect(panelSpacing({ ...DEFAULT_SETTINGS, spacing: {} }, 'front')).toBe(1);
   });
 });

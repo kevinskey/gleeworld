@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  buildWorshipAid, DEFAULT_SETTINGS, formatLongDate,
+  buildWorshipAid, DEFAULT_SETTINGS, formatLongDate, seasonWordIsRedundant,
   type AidEntry, type AidSource, type WorshipAidSettings,
 } from '@/lib/liturgy/worshipAid';
 import { psalmLines } from '@/lib/liturgy/psalmComposer';
@@ -72,14 +72,14 @@ export default function WorshipAidPublicPage() {
       {entries.map((e, i) => {
         if (e.notice) {
           return (
-            <p key={i} className="my-4 border border-border px-3 py-2 text-center text-xs italic leading-relaxed text-foreground/80">
+            <p key={i} className="my-4 border border-primary/40 px-3 py-2 text-center text-xs italic leading-relaxed text-foreground/80">
               {e.notice}
             </p>
           );
         }
         if (e.divider) {
           return (
-            <h2 key={i} className="mb-3 mt-7 text-center text-sm font-bold uppercase tracking-[0.08em]">
+            <h2 key={i} className="mb-3 mt-7 text-center text-sm font-bold uppercase tracking-[0.08em] text-primary">
               {e.label}
             </h2>
           );
@@ -121,16 +121,21 @@ export default function WorshipAidPublicPage() {
           <p className="mt-2 text-sm font-semibold">{aid.sideBand.day}</p>
         )}
         <p className="text-xs text-muted-foreground">{formatLongDate(row.mass_date)}</p>
-        {aid.front.word && (
-          <p className="mt-3 text-2xl uppercase tracking-wide">{aid.front.word}</p>
+        {/* Not when the day already says it: "19th Sunday in Ordinary Time"
+            over "ORDINARY TIME" is two lines saying one thing (Kevin). On
+            paper the two sit on different panels and never meet. */}
+        {aid.front.word && !seasonWordIsRedundant(aid.front.word, aid.sideBand.day) && (
+          <p className="mt-3 text-2xl uppercase tracking-wide text-primary">{aid.front.word}</p>
         )}
       </header>
 
       <Section entries={aid.insideLeft} />
 
-      {/* The psalm text in full — the printed aid has room only for the
-          refrain, but a phone can carry every verse. */}
-      {psalm.length > 0 && (
+      {/* The psalm as MUSIC when a setting has been composed for this Mass
+          (Kevin: "should be on worship aid not text"). The words alone are a
+          fallback for a Sunday nobody has set yet — and then the phone shows
+          every verse, which the printed panel has no room for. */}
+      {psalm.length > 0 && !settings.psalmImageUrl && (
         <div className="my-5 border-t border-border pt-4">
           {psalm.map((line, i) => {
             const prev = psalm[i - 1];

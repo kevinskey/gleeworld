@@ -56,8 +56,28 @@ export interface WorshipAidSettings {
   communionNotice: string;
   /** Boxed notice at the end. */
   sendingNotice: string;
+  /**
+   * The composed responsorial psalm, engraved.
+   *
+   * Resolved from the music library by the editor and STORED here rather than
+   * looked up again at read time. The phone edition is public and reads
+   * through a curated projection — it cannot query the tenant's library at
+   * all — so if the URL did not travel with the aid, the phone would fall
+   * back to printing the psalm as prose while the paper showed the music.
+   */
+  psalmImageUrl?: string | null;
   /** Extra images the user drops into a panel. */
   images: Partial<Record<PanelId, string | null>>;
+  /**
+   * Vertical spacing multiplier per panel.
+   *
+   * Only the cover art is used every time; the other image slots often sit
+   * empty, and how much air is left over changes with how many hymns and
+   * readings a given Sunday has. Rather than guess at a balance, the spacing
+   * is the user's: open a sparse panel out to fill the page, tighten a full
+   * one so it does not run past the fold.
+   */
+  spacing: Partial<Record<PanelId, number>>;
 }
 
 export const DEFAULT_SETTINGS: WorshipAidSettings = {
@@ -74,7 +94,9 @@ export const DEFAULT_SETTINGS: WorshipAidSettings = {
   sendingNotice:
     'Having shared in the Eucharist, you are compelled to go and work for peace and justice, '
     + "thereby building God's kingdom now.",
+  psalmImageUrl: null,
   images: {},
+  spacing: {},
 };
 
 /** The fields this module reads off a Mass plan. */
@@ -150,6 +172,8 @@ export function buildWorshipAid(
   settings: WorshipAidSettings,
   psalmImageUrl?: string | null,
 ): WorshipAid {
+  // A freshly-resolved URL wins; otherwise whatever was saved with the aid.
+  const psalmImage = psalmImageUrl ?? settings.psalmImageUrl ?? null;
   const insideLeft = compact([
     { label: '', notice: settings.welcomeNotice || null },
     { label: 'INTRODUCTORY RITES', divider: true },
@@ -160,13 +184,13 @@ export function buildWorshipAid(
     reading('FIRST READING', row.first_reading),
     // The psalm carries its engraved setting when one has been composed —
     // the composer's JPEG drops straight in here.
-    row.responsorial_psalm || psalmImageUrl
+    row.responsorial_psalm || psalmImage
       ? {
           label: 'RESPONSORIAL PSALM',
           citation: row.responsorial_psalm,
           title: splitCredit(row.psalm_title).title,
           credit: splitCredit(row.psalm_title).credit,
-          imageUrl: psalmImageUrl ?? null,
+          imageUrl: psalmImage,
         }
       : null,
     settings.images.insideLeft ? { label: '', imageUrl: settings.images.insideLeft } : null,
@@ -232,3 +256,33 @@ export const SHEETS: ReadonlyArray<readonly [PanelId, PanelId]> = [
   ['back', 'front'],          // outside of the folded sheet
   ['insideLeft', 'insideRight'], // inside
 ];
+
+/**
+ * The spacing multiplier for a panel, clamped.
+ *
+ * Bounded rather than free: below about half, consecutive entries collide
+ * into an unreadable block; above two, a panel with any content at all runs
+ * past the fold. A stored value from an older or hand-edited record can be
+ * anything, so it is clamped on the way out rather than trusted.
+ */
+export const SPACING_MIN = 0.5;
+export const SPACING_MAX = 2;
+export function panelSpacing(settings: WorshipAidSettings, panel: PanelId): number {
+  const raw = settings.spacing?.[panel];
+  if (typeof raw !== 'number' || !Number.isFinite(raw)) return 1;
+  return Math.max(SPACING_MIN, Math.min(SPACING_MAX, raw));
+}
+
+/**
+ * Whether the season word merely repeats what the day already says.
+ *
+ * "19th Sunday in Ordinary Time" followed by "ORDINARY TIME" reads as a
+ * mistake. On the printed aid the two sit on different panels and never meet,
+ * but stacked in a phone header they are two lines saying one thing.
+ */
+export function seasonWordIsRedundant(word: string, day: string): boolean {
+  const w = word.trim().toLowerCase();
+  const d = day.trim().toLowerCase();
+  if (!w || !d) return false;
+  return d.includes(w);
+}
