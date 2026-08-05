@@ -11,6 +11,56 @@
  *  background rasterises to BLACK, which looks like a broken export. */
 const DEFAULT_BACKGROUND = '#ffffff';
 
+/**
+ * The music font, embedded into the exported SVG.
+ *
+ * This is the whole reason exports came out as rows of empty boxes. VexFlow
+ * draws every notehead, clef, rest and accidental as TEXT in the SMuFL font
+ * Bravura, which the app self-hosts. But an SVG rasterised through an <img>
+ * is an isolated document: it cannot reach /fonts/Bravura.otf, and the page's
+ * @font-face does not apply to it. Every glyph fell back to a font that has
+ * no such characters — tofu. Lyrics survived only because they are ordinary
+ * words in a generic serif the rasteriser already has.
+ *
+ * So the font travels WITH the SVG, as a base64 @font-face. ~513KB of font
+ * becomes ~684KB of data URL, which is transient: it exists only while the
+ * image rasterises and never reaches the JPEG.
+ */
+const MUSIC_FONT_FAMILY = 'Bravura';
+const MUSIC_FONT_URL = '/fonts/Bravura.otf';
+
+/** Fetched once per session — the bytes never change. */
+let musicFontCss: Promise<string> | null = null;
+
+/** btoa over a large buffer, in chunks: String.fromCharCode(...bytes) on a
+ *  half-megabyte font blows the call stack. */
+function base64(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  const CHUNK = 0x8000;
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+  }
+  return btoa(binary);
+}
+
+async function embeddedMusicFontCss(): Promise<string> {
+  if (!musicFontCss) {
+    musicFontCss = (async () => {
+      const res = await fetch(MUSIC_FONT_URL);
+      if (!res.ok) throw new Error(`music font ${res.status}`);
+      const data = base64(await res.arrayBuffer());
+      return `@font-face{font-family:'${MUSIC_FONT_FAMILY}';`
+        + `src:url(data:font/otf;base64,${data}) format('opentype');}`;
+    })().catch((err) => {
+      // Let the next export try again rather than caching the failure.
+      musicFontCss = null;
+      throw err;
+    });
+  }
+  return musicFontCss;
+}
+
 export interface SvgToJpegOptions {
   /** Pixel density multiplier. 2 keeps the notation crisp when the JPEG is
    *  printed or viewed on a retina display at its 4-inch size. */
@@ -44,12 +94,23 @@ export async function svgToJpegBlob(
   clone.setAttribute('height', String(height));
   if (!clone.getAttribute('viewBox')) clone.setAttribute('viewBox', `0 0 ${width} ${height}`);
 
+  // Carry the music font into the isolated SVG document. Deliberately fatal
+  // rather than best-effort: without it every notehead rasterises as an empty
+  // box, and a silent broken export is worse than a message saying why.
+  const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+  style.textContent = await embeddedMusicFontCss();
+  clone.insertBefore(style, clone.firstChild);
+
   const source = new XMLSerializer().serializeToString(clone);
   // A data: URL rather than a blob: URL on purpose — an <img> loading a blob:
   // URL taints the canvas in some WebKit versions, and a tainted canvas makes
   // toBlob throw SecurityError. Encoded UTF-8 first so non-ASCII lyrics
   // ("Espíritu") survive btoa, which is Latin-1 only.
-  const encoded = btoa(String.fromCharCode(...new TextEncoder().encode(source)));
+  //
+  // Chunked, via the same helper as the font: with the font embedded this
+  // document is ~700KB, and String.fromCharCode(...bytes) over that many
+  // arguments overflows the call stack.
+  const encoded = base64(new TextEncoder().encode(source).buffer as ArrayBuffer);
   const url = `data:image/svg+xml;base64,${encoded}`;
 
   const img = new Image();
@@ -83,9 +144,11 @@ export function imageFileName(title: string, ext = 'jpg'): string {
     .normalize('NFKD')
     // Combining marks, spelled out: the literal range is invisible in a diff.
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\w\s-]/g, '')
+    // Punctuation becomes a SEPARATOR, not nothing: dropping the colon in
+    // "Psalm 34:2-9" fuses it into "342-9".
+    .replace(/[^\w\s-]+/g, ' ')
     .trim()
-    .replace(/\s+/g, '-')
+    .replace(/[\s-]+/g, '-')
     .slice(0, 80) || 'score';
   return `${stem}.${ext}`;
 }
