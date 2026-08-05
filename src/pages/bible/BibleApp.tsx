@@ -8,7 +8,6 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
-import { DialPicker, type DialOption } from '@/components/bible/DialPicker';
 import { parseReference } from '@/lib/bible/reference';
 import { cn } from '@/lib/utils';
 import { VerseRow } from '@/components/bible/VerseRow';
@@ -89,27 +88,40 @@ export default function BibleApp() {
     add.mutate({ verse, style, color, createdVia: pointerType });
   };
 
+  // Rolling to the PREVIOUS book means landing on its last chapter, but that
+  // count isn't known until the new book's data loads — so ask for "the end"
+  // and clamp once we know.
+  const [wantLastChapter, setWantLastChapter] = useState(false);
+  useEffect(() => {
+    if (wantLastChapter && chapterCount > 0) {
+      setChapter(chapterCount);
+      setWantLastChapter(false);
+    }
+  }, [wantLastChapter, chapterCount]);
+
+  const bookIndex = books?.findIndex((b) => b.id === bookId) ?? -1;
+  const atStart = bookIndex <= 0 && chapter <= 1;
+  const atEnd = books ? bookIndex === books.length - 1 && chapter >= chapterCount : true;
+
+  const goPrev = () => {
+    if (chapter > 1) { setChapter((c) => c - 1); return; }
+    if (books && bookIndex > 0) {
+      setBookId(books[bookIndex - 1].id);
+      setWantLastChapter(true);
+    }
+  };
+
+  const goNext = () => {
+    if (chapter < chapterCount) { setChapter((c) => c + 1); return; }
+    if (books && bookIndex >= 0 && bookIndex < books.length - 1) {
+      setBookId(books[bookIndex + 1].id);
+      setChapter(1);
+    }
+  };
+
   const isNotInstalled = !booksLoading && books === null;
 
-  // One flat list in canon order — Genesis through Revelation, deuterocanon in
-  // its Catholic position. No testament suffix: at a single row it truncates
-  // names like "Wisdom of Solomon", and the ordering already carries it.
-  const bookOptions: DialOption[] = useMemo(
-    () =>
-      (books ?? []).map((b) => ({
-        value: b.id,
-        label: b.name,
-      })),
-    [books],
-  );
 
-  const chapterOptions: DialOption[] = useMemo(
-    () => Array.from({ length: chapterCount }, (_, i) => ({
-      value: String(i + 1),
-      label: String(i + 1),
-    })),
-    [chapterCount],
-  );
 
   return (
     <DashboardPageShell
@@ -122,8 +134,8 @@ export default function BibleApp() {
         <div className="flex items-center gap-1">
           <Button
             variant="outline" size="icon" aria-label="Previous chapter"
-            disabled={chapter <= 1}
-            onClick={() => setChapter((c) => Math.max(1, c - 1))}
+            disabled={atStart}
+            onClick={goPrev}
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
@@ -132,8 +144,8 @@ export default function BibleApp() {
           </span>
           <Button
             variant="outline" size="icon" aria-label="Next chapter"
-            disabled={chapter >= chapterCount}
-            onClick={() => setChapter((c) => Math.min(chapterCount, c + 1))}
+            disabled={atEnd}
+            onClick={goNext}
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
@@ -149,24 +161,29 @@ export default function BibleApp() {
         </CardContent></Card>
       )}
 
-      {/* Search — the fastest way into 35,379 verses is typing, not spinning. */}
+      {/* Search IS the navigation. A wheel of 73 books plus up to 150 chapters
+          was both ugly and unusable at one row tall — typing a reference or a
+          phrase gets anywhere in the Bible in one move. */}
       {books && books.length > 0 && (
         <div className="space-y-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground"
+              aria-hidden
+            />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={'Search the whole Bible \u2014 try: shepherd, or "living water"'}
-              aria-label="Search the Bible"
-              className="pl-9 pr-9"
+              placeholder="Psalm 23, John 3:16, or a phrase like living water"
+              aria-label="Search the Bible or jump to a passage"
+              className="h-14 pl-12 pr-11 !text-base"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => setSearch('')}
                 aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -174,7 +191,7 @@ export default function BibleApp() {
           </div>
 
           {search.trim().length >= 2 && (
-            <Card><CardContent className="p-0 max-h-[22rem] overflow-y-auto">
+            <Card><CardContent className="p-0 max-h-[26rem] overflow-y-auto">
               {reference && (
                 <button
                   type="button"
@@ -183,26 +200,35 @@ export default function BibleApp() {
                     setChapter(reference.chapter);
                     setSearch('');
                   }}
-                  className="block w-full text-left px-4 py-3 border-b border-border bg-primary/5 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex w-full items-center gap-3 px-4 py-3.5 border-b border-border hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Go to passage
-                  </span>
-                  <span className="block text-sm font-semibold text-primary">
-                    {reference.book.name} {reference.chapter}
-                    {reference.verse ? `:${reference.verse}` : ''}
+                  <BookOpen className="w-4 h-4 shrink-0 text-primary" aria-hidden />
+                  <span className="text-left">
+                    <span className="block text-sm font-semibold">
+                      {reference.book.name} {reference.chapter}
+                      {reference.verse ? `:${reference.verse}` : ''}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">Open this passage</span>
                   </span>
                 </button>
               )}
+
               {searching && (
                 <p className="p-4 text-sm text-muted-foreground flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" /> Searching…
                 </p>
               )}
+
               {!searching && hits.length === 0 && !reference && (
                 <p className="p-4 text-sm text-muted-foreground">
                   Nothing found for “{search.trim()}”. Try a word from a verse, or a
                   reference like “Psalm 23”.
+                </p>
+              )}
+
+              {hits.length > 0 && (
+                <p className="px-4 pt-3 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {hits.length} {hits.length === 1 ? 'verse' : 'verses'}
                 </p>
               )}
               {hits.map((h) => (
@@ -214,7 +240,7 @@ export default function BibleApp() {
                     setChapter(h.chapter);
                     setSearch('');
                   }}
-                  className="block w-full text-left px-4 py-2.5 border-b border-border last:border-0 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="block w-full text-left px-4 py-3 border-b border-border last:border-0 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <span className="text-xs font-semibold text-primary">
                     {h.book.name} {h.chapter}:{h.verse}
@@ -224,27 +250,6 @@ export default function BibleApp() {
               ))}
             </CardContent></Card>
           )}
-        </div>
-      )}
-
-      {/* Book + chapter dials. A wheel is the right control for a long ordered
-          list you browse; search above is the right one for jumping. */}
-      {books && books.length > 0 && (
-        <div className="flex items-end gap-3">
-          <DialPicker
-            className="w-[13rem] shrink-0"
-            label="Book"
-            options={bookOptions}
-            value={bookId}
-            onChange={(v) => { setBookId(v); setChapter(1); }}
-          />
-          <DialPicker
-            className="w-[6.5rem] shrink-0"
-            label="Chapter"
-            options={chapterOptions}
-            value={String(chapter)}
-            onChange={(v) => setChapter(Number(v))}
-          />
         </div>
       )}
 
