@@ -35,7 +35,7 @@ const LONG_PRESS_SLOP_PX = 10;
 // whose section isn't in this list (or has no section at all) falls
 // through to the catch-all group below instead of vanishing — see the
 // draftOverflow filter in the edit-mode More renderer.
-const MORE_SECTIONS: NavSectionKey[] = ['music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
+const MORE_SECTIONS: NavSectionKey[] = ['church', 'music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
 
 // A first pass painted each tile's full card in its `tone` — with every
 // app pulling an unrelated color (plus one nav entry using a solid

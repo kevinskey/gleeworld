@@ -125,7 +125,7 @@ const KNOWN_ROUTES = new Set([
   '/box-office', '/dashboard/concert-planner', '/dashboard/finance',
   '/store', '/store/products', '/dashboard/people',
   '/partner', '/admin/partners',
-  '/dashboard/music-library', '/dashboard/repertoire', '/dashboard/part-tracks', '/dashboard/media-library', '/dashboard/librarian',
+  '/dashboard/music-library', '/dashboard/part-tracks', '/dashboard/media-library', '/dashboard/librarian',
   '/seating-charts', '/dashboard/workspace?tab=parents',
   '/dashboard/office-hours', '/dashboard/practice-recordings', '/video',
   '/dashboard/music-tools', '/dashboard/liturgy', '/tour-manager',
@@ -135,8 +135,8 @@ const KNOWN_ROUTES = new Set([
   // <Route path="/dashboard/my-fees"> exist. Both were missed when the Student
   // Fees ledger shipped — exactly the drift this test is here to catch.
   '/dashboard/fees', '/dashboard/my-fees',
-  // Verified against src/App.tsx: <Route path="/prayer"> exists.
-  '/prayer',
+  // Verified against src/App.tsx: both routes exist.
+  '/prayer', '/bible',
   '/dashboard/box-office', '/dashboard/users', '/admin/public-page',
   '/dashboard/analytics', '/dashboard/workspace', '/songwriting',
   '/planner', '/dashboard/fundraising',
