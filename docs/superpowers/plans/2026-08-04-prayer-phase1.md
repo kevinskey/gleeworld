@@ -181,7 +181,7 @@ git commit -m "feat(prayer): book-name resolver for lectionary citations"
   `VerseRange = { startChapter: number | null; startVerse: number; endChapter: number | null; endVerse: number; chapterLabel?: string }`.
   `unparsed` collects segments that could not be read, so a malformed fragment degrades one segment instead of the whole citation.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -284,12 +284,12 @@ describe('parseCitation', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `npx vitest run src/lib/prayer/citation.test.ts`
 Expected: FAIL, cannot resolve `./citation`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Suggested order inside `parseCitation`:
 1. Take the substring before the first `|`.
@@ -299,7 +299,7 @@ Suggested order inside `parseCitation`:
 5. For each segment: strip letter suffixes with `/([0-9]+)[a-d]\b/ → $1`, then match `N:M—P:Q`, `N:M-Q`, `N:M`, or bare `M`/`M-Q` (verses, using the current chapter; chapter 1 for single-chapter books).
 6. Anything left unmatched goes to `unparsed`.
 
-- [ ] **Step 4: Confirm green**
+- [x] **Step 4: Confirm green**
 
 Run: `npx vitest run src/lib/prayer/citation.test.ts`
 
@@ -310,7 +310,13 @@ npx tsx scripts/check-citation-coverage.ts
 ```
 Expected: **≥ 99% of the 1,165 citations fully parsed, 0 unresolved book names.** Print every unparsed segment. Investigate each before proceeding — do not raise the threshold to make it pass.
 
-- [ ] **Step 6: Commit**
+> **Deviation:** not run. This execution environment has no outbound network
+> access to Supabase and no `SUPABASE_SERVICE_ROLE_KEY` — the same
+> egress-policy constraint Task 1 hit. The script is written and typechecks,
+> but coverage against the real 1,165-citation corpus is unverified. Someone
+> with DB access must run it before this parser is trusted in production.
+
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/lib/prayer/citation.ts src/lib/prayer/citation.test.ts scripts/check-citation-coverage.ts
