@@ -10,10 +10,16 @@ import { cn } from '@/lib/utils';
 const CAPTION_MS = 6000;
 
 // Floating assistant entry point: tenant-glass mic (primary, voice-first)
-// + caret that opens the chat sheet. Lives bottom-right on every
-// dashboard page; the × collapses it to an edge dot, remembered per
-// section (fabPrefs). Hidden entirely while the sheet or a video call is
-// up — the sheet has its own mic and the call owns the screen.
+// + caret that opens the chat sheet.
+//
+// RESTS as a tab on the right edge and slides out when tapped. It used to
+// float over the bottom-right corner by default, which is exactly where
+// pages put their Save button (Kevin: "assistant always blocks right bottom
+// corner"). Pulling it out is remembered per section, so a page where you
+// actually talk to it keeps it out; everywhere else stays clear.
+//
+// Hidden entirely while the sheet or a video call is up — the sheet has its
+// own mic and the call owns the screen.
 export const AssistantFab = () => {
   const assistant = useAssistantOptional();
   const { pathname } = useLocation();
@@ -53,15 +59,23 @@ export const AssistantFab = () => {
       ? 'calc(env(safe-area-inset-bottom, 0px) + 68px)'
       : '1.25rem';
 
+  // Tucked: a tab on the right edge, which is the RESTING state. The old
+  // version of this was a bare 16x32 sliver with no icon — findable only if
+  // you already knew it was there, and well under a 44pt touch target. It
+  // now carries the mic so it reads as the assistant, and is tall enough to
+  // hit with a thumb.
   if (collapsed) {
     return (
       <button
         type="button"
         aria-label="Show assistant"
+        title="Assistant"
         onClick={() => { setCollapsed(false); setFabCollapsed(section, false); }}
-        className="fixed right-0 z-40 h-8 w-4 rounded-l-full bg-background/80 backdrop-blur-xl border border-r-0 border-border shadow-md hover:bg-muted transition-colors"
+        className="fixed right-0 z-40 flex h-11 w-7 items-center justify-center rounded-l-full border border-r-0 border-border bg-background/85 text-primary shadow-md backdrop-blur-xl transition-colors hover:bg-muted"
         style={{ bottom }}
-      />
+      >
+        <Mic className="h-4 w-4" aria-hidden />
+      </button>
     );
   }
 
@@ -88,14 +102,15 @@ export const AssistantFab = () => {
           translucency dissolved into photo/dark backgrounds — the pill now
           sits on the theme's background token at near-opacity so it reads
           on ANY backdrop, with primary reserved for the icons. */}
-      <div className="group relative flex items-center gap-1 rounded-full bg-background/85 backdrop-blur-xl border border-border shadow-lg p-1">
+      <div className="group relative flex items-center gap-1 rounded-full bg-background/85 backdrop-blur-xl border border-border shadow-lg p-1 animate-in slide-in-from-right-4 fade-in duration-200">
         <button
           type="button"
           aria-label="Hide assistant on this page"
+          title="Tuck away"
           onClick={() => { setCollapsed(true); setFabCollapsed(section, true); }}
-          className="absolute -top-1.5 -left-1.5 h-4 w-4 rounded-full bg-background/80 backdrop-blur border border-border shadow flex items-center justify-center text-muted-foreground opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+          className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-background/90 backdrop-blur border border-border shadow flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
         >
-          <X className="w-2.5 h-2.5" />
+          <X className="w-3 h-3" />
         </button>
         {/* Two distinct destinations, so a tap is never a guess:
               caret  → the chat, where you read and type

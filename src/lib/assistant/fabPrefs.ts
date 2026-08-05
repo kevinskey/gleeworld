@@ -1,4 +1,13 @@
 // Per-section collapse preference for the floating assistant mic.
+//
+// The FAB now starts TUCKED (Kevin: "assistant always blocks right bottom
+// corner"). A floating control parked over the corner where pages put their
+// Save button is in the way far more often than it is wanted, so it waits as
+// an edge tab and comes out when asked.
+//
+// Because the default flipped, "not stored" now means COLLAPSED, and pulling
+// the pill out has to be recorded explicitly as false rather than by deleting
+// the key — otherwise it would tuck itself away again on the next visit.
 // "Section" = the page family a user thinks of as one place: the second
 // path segment under /dashboard (calendar, viewer, …; bare /dashboard is
 // 'home'), the first segment elsewhere (studio, tour-manager). Collapsing
@@ -20,13 +29,14 @@ function read(): Record<string, boolean> {
 }
 
 export function isFabCollapsed(section: string): boolean {
-  return read()[section] === true;
+  // Absent = collapsed. Only an explicit `false` keeps it out.
+  return read()[section] !== false;
 }
 
 export function setFabCollapsed(section: string, collapsed: boolean): void {
   try {
     const map = read();
-    if (collapsed) map[section] = true; else delete map[section];
+    map[section] = collapsed;
     localStorage.setItem(KEY, JSON.stringify(map));
   } catch { /* private mode */ }
 }
