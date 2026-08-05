@@ -11,7 +11,7 @@
 // tab — frictionless way to find a video. If a URL is pasted, the
 // button becomes a direct link.
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { getYouTubeId } from '@/lib/youtubeId';
@@ -110,6 +110,12 @@ function LiturgyList() {
     navigate(`/dashboard/liturgy/${data!.id}`);
   };
 
+  // Drop a deleted plan from the list in place rather than refetching — the
+  // row is already gone server-side, and a refetch would flash the whole list.
+  const dropRow = useCallback((id: string) => {
+    setRows((cur) => cur.filter((r) => r.id !== id));
+  }, []);
+
   const upcoming = useMemo(
     () => rows.filter((r) => r.mass_date >= todayISO(new Date())).slice().reverse(),
     [rows],
@@ -129,14 +135,17 @@ function LiturgyList() {
         </Button>
       </div>
 
-      <Section title="Upcoming" rows={upcoming} loading={loading} emptyMsg="No upcoming Masses planned." />
-      <Section title="Recent" rows={past.slice(0, 20)} loading={loading} emptyMsg="No past Masses on file." />
+      <Section title="Upcoming" rows={upcoming} loading={loading} emptyMsg="No upcoming Masses planned."
+        onDeleted={dropRow} />
+      <Section title="Recent" rows={past.slice(0, 20)} loading={loading} emptyMsg="No past Masses on file."
+        onDeleted={dropRow} />
     </div>
   );
 }
 
-function Section({ title, rows, loading, emptyMsg }: {
+function Section({ title, rows, loading, emptyMsg, onDeleted }: {
   title: string; rows: MassRow[]; loading: boolean; emptyMsg: string;
+  onDeleted: (id: string) => void;
 }) {
   return (
     <div className="space-y-2.5">
@@ -149,21 +158,35 @@ function Section({ title, rows, loading, emptyMsg }: {
         <Card><CardContent className="py-6 text-sm text-muted-foreground text-center">{emptyMsg}</CardContent></Card>
       ) : (
         <ul className="space-y-1.5">
-          {rows.map((r) => <MassListRow key={r.id} row={r} />)}
+          {rows.map((r) => <MassListRow key={r.id} row={r} onDeleted={onDeleted} />)}
         </ul>
       )}
     </div>
   );
 }
 
-function MassListRow({ row }: { row: MassRow }) {
+function MassListRow({ row, onDeleted }: { row: MassRow; onDeleted: (id: string) => void }) {
   const dateLabel = formatDate(row.mass_date);
   const timeLabel = row.mass_time ? formatTime(row.mass_time) : null;
+  const [deleting, setDeleting] = useState(false);
+
+  const remove = async () => {
+    if (!confirm(`Delete the plan for ${row.observation || dateLabel}? This cannot be undone.`)) return;
+    setDeleting(true);
+    const { error } = await supabase.from('gw_liturgy_masses').delete().eq('id', row.id);
+    if (error) { setDeleting(false); toast.error(error.message); return; }
+    toast.success('Mass plan deleted.');
+    onDeleted(row.id);
+  };
+
+  // The delete button is a SIBLING of the link, not inside it: a <button>
+  // nested in an <a> is invalid, and stopPropagation on a nested control
+  // still leaves the row navigable by keyboard straight through the button.
   return (
-    <li>
+    <li className="flex items-stretch border border-border bg-card transition-colors hover:border-foreground/40">
       <Link
         to={`/dashboard/liturgy/${row.id}`}
-        className="block border border-border bg-card hover:border-foreground/40 transition-colors px-4 py-3"
+        className="min-w-0 flex-1 px-4 py-3"
       >
         <div className="flex items-baseline justify-between gap-3 flex-wrap">
           <div className="min-w-0">
@@ -183,6 +206,16 @@ function MassListRow({ row }: { row: MassRow }) {
           )}
         </div>
       </Link>
+      <button
+        type="button"
+        onClick={remove}
+        disabled={deleting}
+        aria-label={`Delete the plan for ${row.observation || dateLabel}`}
+        title="Delete this plan"
+        className="shrink-0 px-3 text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+      >
+        {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+      </button>
     </li>
   );
 }
@@ -628,7 +661,17 @@ function LiturgyEditor({ massId }: { massId: string }) {
           reading rows below in place. */}
       <Card>
         <CardContent className="p-4 space-y-5">
-          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-foreground/70">Order of Mass</h2>
+          {/* Save sits here as well as at the foot of the page. The Order of
+              Mass is a long card, and a plan is edited from the top down —
+              reaching the only Save meant scrolling past everything you just
+              typed (Kevin). Same handler, so there is one save path. */}
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-foreground/70">Order of Mass</h2>
+            <Button size="sm" onClick={save} disabled={saving} className="rounded-full">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+              Save
+            </Button>
+          </div>
 
           <SongSlot
             label="Mass Setting Used" slotKey="setting" playing={playingSlot === 'setting'} onPlayToggle={setPlayingSlot}

@@ -25,6 +25,13 @@ import { PsalmComposerDialog } from './PsalmComposerDialog';
 
 const PSALM = 'R. Taste and see the goodness of the Lord.\nI will bless the Lord at all times';
 
+// The real shape: no "R." marker, the refrain simply recurring between verses.
+const REFRAIN_PSALM = [
+  'The Lord will guard us, as a shepherd guards his flock.',
+  'O nations, hear the word of the Lord,',
+  'The Lord will guard us, as a shepherd guards his flock.',
+].join('\n');
+
 function open(props: Partial<React.ComponentProps<typeof PsalmComposerDialog>> = {}) {
   return render(
     <PsalmComposerDialog
@@ -160,6 +167,43 @@ describe('PsalmComposerDialog', () => {
     for (let i = 0; i < 6; i++) fireEvent.click(screen.getByRole('button', { name: '1' }));
     expect(screen.queryByText(/1 measure per line/)).not.toBeInTheDocument();
     expect(screen.getByText(/\d+ measures per line/)).toBeInTheDocument();
+  });
+
+  // Each word is its own <span> so it can be highlighted, so text matchers
+  // have to read textContent rather than look for a single text node. The
+  // dialog also renders in a portal, outside `container`.
+  const psalmParagraphs = () =>
+    Array.from(document.body.querySelectorAll('p'))
+      .filter((el) => /guard us|O nations/.test(el.textContent ?? ''));
+
+  it('lays the psalm out as refrain and verse, not one paragraph', () => {
+    open({ psalmText: REFRAIN_PSALM });
+    const paras = psalmParagraphs();
+    expect(paras).toHaveLength(3);
+    expect(paras[0].textContent).toMatch(/The Lord will guard us/);
+    expect(paras[1].textContent).toMatch(/O nations/);
+  });
+
+  it('sets the refrain apart in bold with space around it', () => {
+    open({ psalmText: REFRAIN_PSALM });
+    const paras = psalmParagraphs();
+    expect(paras[0].className).toContain('font-semibold');      // refrain
+    expect(paras[1].className).not.toContain('font-semibold');  // verse
+    expect(paras[1].className).toContain('mt-4');               // space after the refrain
+    expect(paras[2].className).toContain('font-semibold');      // refrain returns
+    expect(paras[2].className).toContain('mt-4');               // space before it
+  });
+
+  // The highlight has to track the flat cursor even though the words are now
+  // split across lines, or the "next word" shown is not the one the note takes.
+  it('advances the highlight across a line break', () => {
+    open({ psalmText: REFRAIN_PSALM });
+    expect(screen.getByText(/30 words left/)).toBeInTheDocument();
+    // 11 words is exactly the first refrain line — the 12th lands on the verse.
+    for (let i = 0; i < 12; i++) fireEvent.click(screen.getByRole('button', { name: '1' }));
+    expect(screen.getByText(/18 words left/)).toBeInTheDocument();
+    const verse = psalmParagraphs()[1];
+    expect(verse.querySelector('.bg-primary\\/15')).not.toBeNull();
   });
 
   it('reports the fixed 4-inch width so the layout intent is visible', () => {
