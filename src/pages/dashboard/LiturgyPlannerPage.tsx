@@ -447,7 +447,15 @@ function LiturgyEditor({ massId }: { massId: string }) {
         .eq('id', massId)
         .single();
       if (error) { toast.error(error.message); setLoading(false); return; }
-      setRow(data as MassRow);
+      // Every plan made before the 10:30 default shipped has a blank time, and
+      // seeding only on INSERT would leave them blank forever. Fill the blank
+      // on open so the default shows on ALL plans, not just new ones.
+      //
+      // Local state only — this does NOT write to a plan the user merely
+      // looked at. It rides along with the next Save, which already sends the
+      // whole row.
+      const loaded = data as MassRow;
+      setRow(loaded.mass_time ? loaded : { ...loaded, mass_time: DEFAULT_MASS_TIME });
       setLoading(false);
 
       // First-time auto-pull: if the row has no reading citations yet,
