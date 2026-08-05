@@ -182,23 +182,35 @@ function MassListRow({ row }: { row: MassRow }) {
   );
 }
 
-/** Renders a responsorial psalm the way it is printed: each line on its own
- *  line, with the refrain lines — the ones opening "R." — set in bold, so the
- *  alternation between cantor and assembly is visible at a glance. Plain text
- *  in, no HTML, so nothing here can inject markup. */
+/** Renders a responsorial psalm the way it is printed: refrain set off from
+ *  the verses, in bold, with a line space either side.
+ *
+ *  Finding the refrain is the whole trick. USCCB prints it with an "R."
+ *  prefix, but Universalis — where these actually come from — does not: it
+ *  simply repeats the line. So the refrain is detected as THE LINE THAT
+ *  RECURS, with the "R." form still honoured when present. A psalm has one
+ *  repeated line by construction, which makes this reliable in a way that
+ *  pattern-matching a prefix was not.
+ *
+ *  Plain text in, no HTML, so nothing here can inject markup. */
 function PsalmText({ text }: { text: string }) {
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
   if (!lines.length) return null;
+
+  const counts = new Map<string, number>();
+  for (const l of lines) counts.set(l, (counts.get(l) ?? 0) + 1);
+  const isRefrain = (l: string) => /^R\.?\s/i.test(l) || (counts.get(l) ?? 0) > 1;
+
   return (
-    <div className="border border-border bg-card p-3 space-y-0.5">
+    <div className="border border-border bg-card p-3">
       {lines.map((line, i) => {
-        const isRefrain = /^R\.?\s*(\(|\b)/i.test(line);
+        const refrain = isRefrain(line);
         return (
           <p
             key={i}
             className={
-              isRefrain
-                ? 'text-sm font-semibold'
+              refrain
+                ? `text-sm font-semibold${i > 0 ? ' mt-4' : ''}${i < lines.length - 1 ? ' mb-4' : ''}`
                 : 'text-sm text-foreground/90'
             }
           >
