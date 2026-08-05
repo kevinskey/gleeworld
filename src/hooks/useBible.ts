@@ -9,7 +9,36 @@ import { supabase } from '@/integrations/supabase/client';
  * pass a user id: RLS scopes every read and write to auth.uid().
  */
 
-export const TRANSLATION = 'WEBCE';
+/** Default translation. Others are selectable; this is what a new reader gets. */
+export const DEFAULT_TRANSLATION = 'WEBCE';
+
+export interface BibleTranslation {
+  id: string;
+  code: string;
+  name: string;
+  has_deuterocanon: boolean;
+  attribution: string | null;
+}
+
+/** Every translation loaded on this site, in name order. */
+export function useTranslations() {
+  return useQuery({
+    queryKey: ['bible_translations'],
+    staleTime: Infinity,
+    retry: false,
+    queryFn: async (): Promise<BibleTranslation[]> => {
+      const { data, error } = await supabase
+        .from('gw_bible_translations')
+        .select('id, code, name, has_deuterocanon, attribution')
+        .order('name');
+      if (error) {
+        if (MISSING.has(error.code ?? '')) return [];
+        throw error;
+      }
+      return (data ?? []) as BibleTranslation[];
+    },
+  });
+}
 
 export interface BibleBook {
   id: string;
@@ -53,16 +82,16 @@ export interface BibleNote {
 /** A missing table means the migration hasn't been applied — a setup state. */
 const MISSING = new Set(['42P01', 'PGRST205']);
 
-export function useBibleBooks() {
+export function useBibleBooks(translation: string) {
   return useQuery({
-    queryKey: ['bible_books', TRANSLATION],
+    queryKey: ['bible_books', translation],
     staleTime: Infinity,
     retry: false,
     queryFn: async (): Promise<BibleBook[] | null> => {
       const { data, error } = await supabase
         .from('gw_bible_books')
         .select('id, usfm_code, name, canon_order, testament, gw_bible_translations!inner(code)')
-        .eq('gw_bible_translations.code', TRANSLATION)
+        .eq('gw_bible_translations.code', translation)
         .order('canon_order');
       if (error) {
         if (MISSING.has(error.code ?? '')) return null;
@@ -112,9 +141,9 @@ export function useChapterCount(bookId: string | null) {
   });
 }
 
-export function useAnnotations(usfmCode: string | null, chapter: number) {
+export function useAnnotations(translation: string, usfmCode: string | null, chapter: number) {
   const qc = useQueryClient();
-  const key = ['bible_annotations', usfmCode, chapter];
+  const key = ['bible_annotations', translation, usfmCode, chapter];
 
   const query = useQuery({
     queryKey: key,
@@ -124,7 +153,7 @@ export function useAnnotations(usfmCode: string | null, chapter: number) {
       const { data, error } = await supabase
         .from('gw_bible_annotations')
         .select('id, usfm_code, chapter, verse, start_offset, end_offset, style, color, created_via')
-        .eq('translation_code', TRANSLATION)
+        .eq('translation_code', translation)
         .eq('usfm_code', usfmCode!)
         .eq('chapter', chapter);
       if (error) {
@@ -149,7 +178,7 @@ export function useAnnotations(usfmCode: string | null, chapter: number) {
       const { data, error } = await supabase
         .from('gw_bible_annotations')
         .insert({
-          translation_code: TRANSLATION,
+          translation_code: translation,
           usfm_code: usfmCode,
           chapter,
           verse: a.verse,
@@ -178,9 +207,9 @@ export function useAnnotations(usfmCode: string | null, chapter: number) {
   return { annotations: query.data ?? [], isLoading: query.isLoading, add, remove };
 }
 
-export function useBibleNotes(usfmCode: string | null, chapter: number) {
+export function useBibleNotes(translation: string, usfmCode: string | null, chapter: number) {
   const qc = useQueryClient();
-  const key = ['bible_notes', usfmCode, chapter];
+  const key = ['bible_notes', translation, usfmCode, chapter];
 
   const query = useQuery({
     queryKey: key,
@@ -190,7 +219,7 @@ export function useBibleNotes(usfmCode: string | null, chapter: number) {
       const { data, error } = await supabase
         .from('gw_bible_notes')
         .select('id, usfm_code, chapter, verse, body, updated_at')
-        .eq('translation_code', TRANSLATION)
+        .eq('translation_code', translation)
         .eq('usfm_code', usfmCode!)
         .eq('chapter', chapter)
         .order('verse', { nullsFirst: true });
@@ -215,7 +244,7 @@ export function useBibleNotes(usfmCode: string | null, chapter: number) {
       const { error } = await supabase
         .from('gw_bible_notes')
         .insert({
-          translation_code: TRANSLATION,
+          translation_code: translation,
           usfm_code: usfmCode,
           chapter,
           verse: n.verse,
@@ -255,18 +284,19 @@ export interface BibleSearchHit {
  * `websearch` parsing means a reader can type quoted phrases and -exclusions
  * the way they would in a search engine.
  */
-export function useBibleSearch(query: string) {
+export function useBibleSearch(query: string, translation: string) {
   const q = query.trim();
   return useQuery({
-    queryKey: ['bible_search', q],
+    queryKey: ['bible_search', q, translation],
     enabled: q.length >= 2,
     retry: false,
     staleTime: 5 * 60 * 1000,
     queryFn: async (): Promise<BibleSearchHit[]> => {
       const { data, error } = await supabase
         .from('gw_bible_verses')
-        .select('id, chapter, verse, text, book:gw_bible_books!inner(id, usfm_code, name, canon_order)')
+        .select('id, chapter, verse, text, book:gw_bible_books!inner(id, usfm_code, name, canon_order, gw_bible_translations!inner(code))')
         .textSearch('search_tsv', q, { type: 'websearch', config: 'english' })
+        .eq('book.gw_bible_translations.code', translation)
         .limit(60);
       if (error) {
         if (MISSING.has(error.code ?? '')) return [];

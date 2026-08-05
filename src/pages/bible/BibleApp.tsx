@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, ChevronDown, Loader2, Maximize2, PenLine, Search, Trash2, X } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,8 +16,11 @@ import { cn } from '@/lib/utils';
 import { VerseRow } from '@/components/bible/VerseRow';
 import {
   useBibleBooks, useBibleChapter, useChapterCount, useAnnotations, useBibleNotes,
-  useBibleSearch, type AnnotationColor,
+  useBibleSearch, useTranslations, DEFAULT_TRANSLATION, type AnnotationColor,
 } from '@/hooks/useBible';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 /**
  * The Bible — read, mark, and take notes.
@@ -37,7 +40,9 @@ const SWATCH: Record<AnnotationColor, string> = {
 };
 
 export default function BibleApp() {
-  const { data: books, isLoading: booksLoading } = useBibleBooks();
+  const { data: translations = [] } = useTranslations();
+  const [translation, setTranslation] = useState(DEFAULT_TRANSLATION);
+  const { data: books, isLoading: booksLoading } = useBibleBooks(translation);
   const [bookId, setBookId] = useState<string | null>(null);
   const [chapter, setChapter] = useState(1);
   const [color, setColor] = useState<AnnotationColor>('yellow');
@@ -46,7 +51,7 @@ export default function BibleApp() {
   const [reading, setReading] = useState(false);
   const [picking, setPicking] = useState(false);
   const [search, setSearch] = useState('');
-  const { data: hits = [], isFetching: searching } = useBibleSearch(search);
+  const { data: hits = [], isFetching: searching } = useBibleSearch(search, translation);
 
   // "Psalm 23" is a REFERENCE, not content — full-text search looks for those
   // words inside verse text and finds nothing. Resolve references separately
@@ -61,18 +66,11 @@ export default function BibleApp() {
 
   const book = useMemo(() => books?.find((b) => b.id === bookId) ?? null, [books, bookId]);
 
-  // Default to John — a kinder landing place than Genesis 1 for a reader
-  // opening the app cold.
-  useEffect(() => {
-    if (!bookId && books?.length) {
-      setBookId((books.find((b) => b.usfm_code === 'JHN') ?? books[0]).id);
-    }
-  }, [books, bookId]);
 
   const { data: verses, isLoading: versesLoading } = useBibleChapter(bookId, chapter);
   const { data: chapterCount = 1 } = useChapterCount(bookId);
-  const { annotations, add, remove } = useAnnotations(book?.usfm_code ?? null, chapter);
-  const { notes, save, remove: removeNote } = useBibleNotes(book?.usfm_code ?? null, chapter);
+  const { annotations, add, remove } = useAnnotations(translation, book?.usfm_code ?? null, chapter);
+  const { notes, save, remove: removeNote } = useBibleNotes(translation, book?.usfm_code ?? null, chapter);
 
   const noteFor = (v: number | null) => notes.find((n) => n.verse === v) ?? null;
 
@@ -103,6 +101,20 @@ export default function BibleApp() {
       setWantLastChapter(false);
     }
   }, [wantLastChapter, chapterCount]);
+
+  // Books are per-translation rows, so a switch invalidates the current id.
+  // Re-resolve by USFM code to hold the reader's place instead of dumping them
+  // back at John 1.
+  const lastUsfm = useRef<string | null>(null);
+  useEffect(() => { if (book) lastUsfm.current = book.usfm_code; }, [book]);
+  useEffect(() => {
+    if (!books?.length) return;
+    if (bookId && books.some((b) => b.id === bookId)) return;
+    const same = lastUsfm.current
+      ? books.find((b) => b.usfm_code === lastUsfm.current)
+      : null;
+    setBookId((same ?? books.find((b) => b.usfm_code === 'JHN') ?? books[0]).id);
+  }, [books, bookId]);
 
   const bookIndex = books?.findIndex((b) => b.id === bookId) ?? -1;
   const atStart = bookIndex <= 0 && chapter <= 1;
@@ -142,6 +154,20 @@ export default function BibleApp() {
               Browse showing "John 2" they were unlabelled and redundant —
               sequential movement belongs in reading mode, which has proper
               Previous/Next at the foot of the chapter. */}
+          {translations.length > 1 && (
+            <Select value={translation} onValueChange={setTranslation}>
+              <SelectTrigger className="w-[7.5rem] h-9" aria-label="Translation">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {translations.map((t) => (
+                  <SelectItem key={t.code} value={t.code} title={t.name}>
+                    {t.code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <Button
             variant="outline"
             size="sm"
