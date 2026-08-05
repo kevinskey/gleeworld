@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
+import { fetchPassage, searchScripture } from '@/lib/bible/fetchPassage';
 import { assistantNavTargets } from '@/lib/navigation/navCatalog';
 import { threadReducer, INITIAL_THREAD } from './threadReducer';
 import { executeClientAction, resolvePageRoute } from './clientActions';
@@ -314,10 +315,16 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         liveVoiceId && liveVoiceId !== BROWSER_VOICE_ID
           ? { overrides: { tts: { voiceId: liveVoiceId } } }
           : {};
+      const firstName = profile?.full_name?.trim().split(/\s+/)[0] || '';
       const session = await Conversation.startSession({
         conversationToken: token,
         connectionType: 'webrtc',
         ...voiceOverride,
+        // Greets by name. The agent's first_message is "Hi, {{user_first_name}}!"
+        // and ElevenLabs substitutes this before speaking, so the greeting is
+        // personal without a round trip. A blank name would leave a dangling
+        // "Hi," so it falls back to "there".
+        dynamicVariables: { user_first_name: firstName || 'there' },
         clientTools: {
           open_page: async (params: { name?: string }) => {
             const resolved = resolvePageRoute(String(params?.name ?? ''));
@@ -344,6 +351,39 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
               })),
             });
           },
+          /**
+           * Scripture in live voice.
+           *
+           * Live mode is a DIFFERENT brain from the typed assistant — an
+           * ElevenLabs agent with its own tool list — so the Bible tools the
+           * chat path has had all along simply did not exist here. Asking her
+           * to read a psalm out loud got nothing.
+           *
+           * lookup_bible RETURNS text for her to speak; open_bible only
+           * navigates. Both, because "read me Psalm 23 and put it up" is one
+           * request, not two.
+           */
+          lookup_bible: async (params: { reference?: string; query?: string; translation?: string }) => {
+            const translation = String(params?.translation ?? '') || undefined;
+            const ref = String(params?.reference ?? '').trim();
+            const query = String(params?.query ?? '').trim();
+            if (!ref && !query) return 'Ask which passage or phrase they want.';
+            const result = ref
+              ? await fetchPassage(ref, translation)
+              : await searchScripture(query, translation);
+            // Returned verbatim either way: on failure she is told to say she
+            // could not find it rather than recite from memory, and eight
+            // translations differ enough that a remembered verse is wrong.
+            return result.text;
+          },
+          open_bible: async (params: { reference?: string; translation?: string }) => {
+            const ref = String(params?.reference ?? '').trim();
+            if (!ref) return 'Ask which passage they want to see.';
+            const qs = new URLSearchParams({ ref });
+            if (params?.translation) qs.set('translation', String(params.translation));
+            navigate(`/bible?${qs.toString()}`);
+            return `Opened ${ref}.`;
+          },
           open_link: async (params: { url?: string; title?: string }) => {
             const url = String(params?.url ?? '');
             if (!/^https?:\/\/\S+$/i.test(url)) return 'That link is invalid — do not retry it.';
@@ -364,7 +404,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     } finally {
       liveConnectingRef.current = false;
     }
-  }, [navigate, stopSpeakingNow, failVisibly]);
+  }, [navigate, stopSpeakingNow, failVisibly, profile?.full_name]);
 
   // End the live session if the provider ever unmounts (sign-out, tenant
   // switch) — a dangling WebRTC session would keep the mic open.
