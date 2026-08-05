@@ -93,7 +93,7 @@ export async function executeClientAction(
   action: AssistantAction,
   depsOverride?: Partial<ActionDeps>,
 ): Promise<ActionOutcome> {
-  const needsDeps = !['open_page', 'open_link', 'open_song', 'start_video_session'].includes(action.tool);
+  const needsDeps = !['open_page', 'open_link', 'open_song', 'open_bible', 'start_video_session'].includes(action.tool);
   const deps = { ...(needsDeps && !depsOverride ? await defaultDeps() : {}), ...depsOverride } as ActionDeps;
   const a = action.args;
   try {
@@ -102,6 +102,17 @@ export async function executeClientAction(
         const resolved = resolvePageRoute(String(a.key));
         if (!resolved) return { ok: false, message: `I don't know a page called "${a.key}".` };
         return { ok: true, navigateTo: resolved.route, message: `Opening ${resolved.label}.` };
+      }
+      case 'open_bible': {
+        // The Bible reads its passage from the query string, so navigation is
+        // the whole action. The reference is model-supplied, so it is passed
+        // through encodeURIComponent and length-capped rather than trusted.
+        const ref = String(a.reference ?? '').trim().slice(0, 60);
+        if (!ref) return { ok: false, message: 'Which passage would you like?' };
+        const tr = String(a.translation ?? '').trim().toUpperCase().slice(0, 12);
+        const qs = new URLSearchParams({ ref });
+        if (tr) qs.set('t', tr);
+        return { ok: true, navigateTo: `/bible?${qs.toString()}`, message: `Opening ${ref}.` };
       }
       case 'open_link': {
         // External article/link hand-off (e.g. "open the full article" on a

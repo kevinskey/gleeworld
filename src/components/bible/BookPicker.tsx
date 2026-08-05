@@ -6,9 +6,14 @@ import { useChapterCount, type BibleBook } from '@/hooks/useBible';
 /**
  * Browse to a book and chapter — the alternative to typing a reference.
  *
- * Two panes: books on the left, chapters for the highlighted book on the
- * right. Picking a book only highlights it; the jump happens when a chapter is
- * chosen, so you can look around without losing your place.
+ * Two panes: books on the left, chapters for the chosen book on the right.
+ *
+ * Choosing a book GOES THERE — to chapter 1 — and leaves the dialog open so a
+ * different chapter can be picked straight after. An earlier version only
+ * highlighted the book and waited for a chapter click, which meant clicking
+ * "Genesis" appeared to do nothing at all: no navigation, no feedback, and the
+ * title behind still said John 1. Navigating immediately makes the choice
+ * visible in the page behind the dialog.
  *
  * This replaced three worse attempts, and the reasons are worth keeping:
  * a 73-button grid pushed scripture below the fold, dropdowns read as
@@ -67,7 +72,13 @@ export function BookPicker({
                     <button
                       key={b.id}
                       type="button"
-                      onClick={() => setPendingId(b.id)}
+                      onClick={() => {
+                        setPendingId(b.id);
+                        // Go there now — chapter 1 — so the choice is visible
+                        // behind the dialog. The chapter grid stays open for
+                        // anyone who wants a different chapter.
+                        onPick(b.id, 1);
+                      }}
                       className={cn(
                         'block w-full text-left px-4 py-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                         b.id === pendingId

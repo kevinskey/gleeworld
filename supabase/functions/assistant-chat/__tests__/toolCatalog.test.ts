@@ -39,6 +39,7 @@ describe('toolCatalog', () => {
       'get_preference',
       'get_ride',
       'get_roster_flags',
+      'lookup_bible',
       'order_food',
       'query_calendar',
       'read_news_feeds',
