@@ -96,6 +96,14 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- "Take me to X" / "open X": pick the closest match from this list and call open_page. Some pages are add-ons the tenant may not have enabled — the page itself will say so; still open it rather than refusing.',
     '- If nothing on the list fits, say you can\'t open that page and name the closest match — never silently open the dashboard instead.',
   ].join('\n');
+  const liturgyNote = [
+    'The liturgical calendar:',
+    '- liturgical_day answers "what Sunday is coming up", "what season are we in", "what are the readings this Sunday". Pass when=sunday for the coming Sunday, today/tomorrow, or an explicit date.',
+    '- It returns the celebration exactly as the Church names it — say it back that way ("the 19th Sunday of Ordinary Time"), with the Sunday cycle if it is relevant.',
+    '- For "what is the responsorial psalm this Sunday", call liturgical_day with include_psalm_text=true. Recite it in order: the refrain, then the first verse group, then the refrain again between each group, the way it is actually sung. Say the citation once at the start.',
+    '- If it returns psalm_text_error, give the citation and say the text could not be fetched. NEVER supply a psalm from memory.',
+    '- The calendar covers one liturgical year. Outside that range it says so — pass that on rather than guessing.',
+  ].join('\n');
   const bibleNote = [
     'The Bible:',
     'GleeWorld carries the full text of eight PUBLIC-DOMAIN translations: WEBCE (World English Bible Catholic, the default), KJV, DRA (Douay-Rheims 1899), ASV, BSB (Berean Standard), YLT (Young\'s Literal), WEBSTER, and JPS1917 (Tanakh, Old Testament only).',
@@ -165,6 +173,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     memberNote,
     memoryNote,
     pagesNote,
+    liturgyNote,
     bibleNote,
     ...(courseBuilderNote ? [courseBuilderNote] : []),
     dateCardNote,
