@@ -59,6 +59,7 @@ export async function executeServerTool(
       case 'find_nearby_place': return await findNearbyPlace(args, deps);
       case 'get_preference': return { replyJson: await getPreference(args, deps) };
       case 'lookup_bible': return { replyJson: await lookupBible(args, deps) };
+      case 'liturgical_day': return { replyJson: await liturgicalDay(args, deps) };
       case 'web_search': return await webSearch(args, deps);
       case 'get_assignments':
       case 'get_grades':
@@ -486,4 +487,124 @@ async function lookupBible(args: Record<string, unknown>, deps: Deps): Promise<s
     query,
     matches: rows.map((r) => ({ reference: `${r.book.name} ${r.chapter}:${r.verse}`, text: r.text })),
   });
+}
+
+
+// ── The liturgical calendar ──────────────────────────────────────────
+//
+// Answers "what Sunday is coming up" and "what's the psalm this Sunday" from
+// gw_prayer_calendar_days / gw_prayer_readings — shared reference data, no
+// tenant scoping. The calendar currently covers one liturgical year, so a date
+// outside it returns a plain "not loaded" rather than a guess.
+
+function resolveLiturgicalDate(args: Record<string, unknown>): string {
+  const explicit = typeof args.date === 'string' ? args.date.trim() : '';
+  if (/^\d{4}-\d{2}-\d{2}$/.test(explicit)) return explicit;
+
+  const when = String(args.when ?? 'today').toLowerCase();
+  const d = new Date();
+  d.setHours(12, 0, 0, 0); // midday, so a timezone shift can't roll the date
+  if (when === 'tomorrow') d.setDate(d.getDate() + 1);
+  else if (when === 'sunday' || when === 'next_sunday') {
+    // getDay(): 0 = Sunday. "sunday" is the coming Sunday, which is TODAY when
+    // today is a Sunday — asking "what's this Sunday" on a Sunday means today.
+    // "next_sunday" is the same but never today.
+    const ahead = (7 - d.getDay()) % 7;
+    d.setDate(d.getDate() + (ahead === 0 && when === 'next_sunday' ? 7 : ahead));
+  }
+  return d.toISOString().slice(0, 10);
+}
+
+/** Psalm HTML → { refrain, verses }.
+ *
+ *  The refrain is the line that RECURS. USCCB prefixes it with "R."; the
+ *  Universalis feed these come from does not — it simply repeats the line — so
+ *  detecting repetition works for both. */
+function structurePsalm(html: string): { refrain: string | null; verses: string[] } {
+  const text = html
+    .replace(/<\s*br\s*\/?\s*>/gi, '\n')
+    .replace(/<\/\s*(?:p|div|li)\s*>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&');
+
+  const lines = text.split('\n').map((l) => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const counts = new Map<string, number>();
+  for (const l of lines) counts.set(l, (counts.get(l) ?? 0) + 1);
+  const isRefrain = (l: string) => /^R\.?\s/i.test(l) || (counts.get(l) ?? 0) > 1;
+
+  const refrain = lines.find(isRefrain) ?? null;
+  const verses = lines.filter((l) => !isRefrain(l));
+  return { refrain: refrain ? refrain.replace(/^R\.?\s*(\([^)]*\))?\s*/i, '') : null, verses };
+}
+
+async function liturgicalDay(args: Record<string, unknown>, deps: Deps): Promise<string> {
+  const date = resolveLiturgicalDate(args);
+
+  const { data: days, error } = await deps.supabase
+    .from('gw_prayer_calendar_days')
+    .select('id, name, rank_label, liturgical_season, sunday_cycle, is_holy_day_of_obligation, color')
+    .eq('rite', 'roman_catholic')
+    .eq('day_date', date)
+    .order('rank_grade', { ascending: false })
+    .limit(1);
+  if (error) return JSON.stringify({ error: error.message });
+
+  const day = (days ?? [])[0] as
+    | { id: string; name: string; rank_label: string | null; liturgical_season: string | null;
+        sunday_cycle: string | null; is_holy_day_of_obligation: boolean; color: string[] }
+    | undefined;
+  if (!day) {
+    return JSON.stringify({
+      date,
+      error: `The liturgical calendar isn't loaded for ${date}. It currently covers one liturgical year.`,
+    });
+  }
+
+  const { data: readingRows } = await deps.supabase
+    .from('gw_prayer_readings')
+    .select('slot, citation, sort_order')
+    .eq('calendar_day_id', day.id)
+    .order('sort_order');
+
+  const readings = ((readingRows ?? []) as Array<{ slot: string; citation: string }>)
+    .map((r) => ({ slot: r.slot, citation: r.citation }));
+
+  const result: Record<string, unknown> = {
+    date,
+    celebration: day.name,
+    rank: day.rank_label,
+    // ORDINARY_TIME reads badly aloud; the assistant should say "Ordinary Time".
+    season: day.liturgical_season
+      ? day.liturgical_season.toLowerCase().split('_')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+      : null,
+    sunday_cycle: day.sunday_cycle,
+    holy_day_of_obligation: day.is_holy_day_of_obligation,
+    liturgical_colour: day.color?.[0] ?? null,
+    readings,
+  };
+
+  if (String(args.include_psalm_text ?? '').toLowerCase() === 'true' && deps.supabase.functions) {
+    // The psalm TEXT is not in our tables — only its citation — so it comes
+    // from the readings function. If that fails, say so rather than dropping
+    // the field silently; the assistant must not invent a psalm.
+    try {
+      const { data, error: fnErr } = await deps.supabase.functions.invoke('usccb-readings', {
+        body: { date },
+      });
+      const block = (data?.readings ?? []).find((b: { heading?: string }) =>
+        /responsorial\s*psalm/i.test(b.heading ?? ''));
+      if (fnErr || !block) {
+        result.psalm_text_error = 'Could not fetch the psalm text for that day.';
+      } else {
+        result.psalm = { citation: block.citation ?? null, ...structurePsalm(block.html ?? '') };
+      }
+    } catch (_e) {
+      result.psalm_text_error = 'Could not fetch the psalm text for that day.';
+    }
+  }
+
+  return JSON.stringify(result);
 }

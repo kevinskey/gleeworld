@@ -110,6 +110,20 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
+    name: 'liturgical_day',
+    description: "What day it is in the Church's calendar, and what is read at Mass. Returns the celebration name ('19th Sunday of Ordinary Time'), season, Sunday cycle, and every reading citation. Set include_psalm_text when the user wants the responsorial psalm actually recited — it returns the refrain and verses separately, in order.",
+    parameters: {
+      type: 'object',
+      properties: {
+        when: str("'today' (default), 'tomorrow', 'sunday' (the coming Sunday, or today if today is Sunday), or 'next_sunday'"),
+        date: str('Explicit date as YYYY-MM-DD. Overrides `when`.'),
+        include_psalm_text: str("Pass 'true' to also fetch the responsorial psalm's full text as refrain + verses."),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'lookup_bible',
     description: "Get the actual TEXT of a Bible passage, or search scripture for a phrase. Use this to read a passage aloud or quote it. Only ever quote what this returns — never recite scripture from memory, because the wording differs between translations and the user is reading a specific one.",
     parameters: {
