@@ -25,7 +25,13 @@ describe('toolCatalog', () => {
     expect(confirmed).toEqual(['create_course_draft', 'send_email', 'send_sms', 'set_date_card']);
   });
 
-  it('server tools are exactly the read-only set', () => {
+  // Server tools are read-only with ONE deliberate exception. remember_preference
+  // writes, and it runs here anyway because current_tenant_id() prefers the
+  // x-tenant-slug header that only the BROWSER sends: split across the two
+  // sides, a preference was written where get_preference could never read it.
+  // Keeping the pair together is what makes the assistant's memory work, so the
+  // exception is named rather than quietly widening "read-only".
+  it('server tools are the read-only set, plus remember_preference', () => {
     const server = TOOL_CATALOG.filter((t) => t.execution === 'server').map((t) => t.name).sort();
     expect(server).toEqual([
       'find_nearby_place',
@@ -44,6 +50,7 @@ describe('toolCatalog', () => {
       'order_food',
       'query_calendar',
       'read_news_feeds',
+      'remember_preference',
       'search_academy',
       'search_music',
       'search_youtube',
