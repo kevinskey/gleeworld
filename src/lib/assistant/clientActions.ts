@@ -272,25 +272,6 @@ export async function executeClientAction(
             : `Added "${title}" to your YouTube videos (couldn't pin it to the dashboard section).`,
         };
       }
-      case 'remember_preference': {
-        const key = String(a.key ?? '').trim();
-        const value = String(a.value ?? '').trim();
-        if (!key || !value) return { ok: false, message: 'Missing key or value.' };
-        // RLS scopes to auth.uid(); user_id column is filled by the DEFAULT
-        // auth.uid() would-be pattern OR by our explicit assignment below.
-        // Setting it here rather than trusting a DEFAULT keeps the same
-        // upsert working even if the table default ever changes.
-        const { data: { user } } = await (deps.supabase as any).auth?.getUser?.() ?? { data: { user: null } };
-        if (!user?.id) return { ok: false, message: "You aren't signed in." };
-        const { error } = await deps.supabase
-          .from('gw_user_preferences')
-          .upsert(
-            { user_id: user.id, key, value },
-            { onConflict: 'user_id,key' } as unknown as Record<string, unknown>,
-          );
-        if (error) return { ok: false, message: `Couldn't save that preference: ${error.message}` };
-        return { ok: true, message: `Got it — I'll remember your ${key.replace(/_/g, ' ')}.` };
-      }
       case 'set_date_card': {
         // Import lazily so the registry (which pulls in lucide + zod) stays out
         // of the base bundle — no user hits it until they ask the assistant to
