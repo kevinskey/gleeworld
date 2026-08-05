@@ -10,6 +10,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { parseReference } from '@/lib/bible/reference';
 import { BibleReader } from '@/components/bible/BibleReader';
+import { SpeechInputButton } from '@/components/concertPlanner/SpeechInputButton';
 import { cn } from '@/lib/utils';
 import { VerseRow } from '@/components/bible/VerseRow';
 import {
@@ -375,12 +376,25 @@ export default function BibleApp() {
             </SheetTitle>
           </SheetHeader>
           <div className="space-y-3 pt-4">
-            <Textarea
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              rows={10}
-              placeholder="What do you want to remember about this verse?"
-            />
+            <div className="relative">
+              <Textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                rows={10}
+                placeholder="What do you want to remember about this verse? Type, or tap the mic to speak."
+                className="pr-12"
+              />
+              {/* Dictation APPENDS rather than replaces — a note is usually
+                  built up in passes, and speaking a second thought should not
+                  wipe the first. */}
+              <SpeechInputButton
+                label="Speak your note"
+                className="absolute right-2 top-2"
+                onTranscript={(t) =>
+                  setDraft((d) => (d.trim() ? `${d.replace(/\s+$/, '')} ${t}` : t))
+                }
+              />
+            </div>
             <div className="flex gap-2">
               <Button
                 onClick={() => {

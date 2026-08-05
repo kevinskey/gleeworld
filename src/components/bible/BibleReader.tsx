@@ -140,7 +140,10 @@ export function BibleReader(props: BibleReaderProps) {
       </Button>
 
       {/* The page itself: one comfortable measure, centred. */}
-      <div className="mx-auto max-w-[38rem] px-6 sm:px-10 py-12 sm:py-16">
+      {/* Measure grows with the viewport instead of sitting at one narrow
+          column — a 38rem block on a 1700px desktop is mostly margin. Still
+          capped, because a full-width line of scripture is unreadable. */}
+      <div className="mx-auto w-full max-w-[34rem] md:max-w-2xl lg:max-w-4xl xl:max-w-5xl px-5 sm:px-8 lg:px-10 py-10 sm:py-14">
         <header className="mb-8 text-center">
           <h1 className="!text-2xl sm:!text-3xl font-bold tracking-tight">
             {book?.name} {chapter}
@@ -156,10 +159,11 @@ export function BibleReader(props: BibleReaderProps) {
           </p>
         )}
 
-        <div className={cn('space-y-1', sizeCls)}>
+        <div className="space-y-1">
           {verses.map((v) => (
             <VerseRow
               key={v.id}
+              textClassName={sizeCls}
               verse={v}
               annotations={annotations.filter((a) => a.verse === v.verse)}
               hasNote={!!noteFor(v.verse)}
@@ -181,7 +185,13 @@ export function BibleReader(props: BibleReaderProps) {
 
       {/* Tools flyout */}
       <Sheet open={toolsOpen} onOpenChange={setToolsOpen}>
-        <SheetContent side="left" className="w-full sm:max-w-sm overflow-y-auto">
+        <SheetContent
+          side="left"
+          // z-[95] on purpose: the reader overlay is z-[90], and the Sheet
+          // primitive defaults to z-50 — without this the flyout opens
+          // BEHIND the reader and looks like the tab does nothing.
+          className="w-full sm:max-w-sm overflow-y-auto z-[95]"
+        >
           <SheetHeader>
             <SheetTitle>Reading tools</SheetTitle>
           </SheetHeader>

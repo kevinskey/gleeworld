@@ -35,13 +35,19 @@ const UNDERLINE_CLASS: Record<AnnotationColor, string> = {
 
 export interface VerseRowProps {
   verse: BibleVerse;
+  /** Size classes for the verse text. The reader passes its own so the text
+   *  sizer works — a hardcoded text-sm here silently overrode it. */
+  textClassName?: string;
   annotations: BibleAnnotation[];
   hasNote: boolean;
   onMark: (verse: number, pointerType: string) => void;
   onOpenNote: (verse: number) => void;
 }
 
-export function VerseRow({ verse, annotations, hasNote, onMark, onOpenNote }: VerseRowProps) {
+export function VerseRow({
+  verse, annotations, hasNote, onMark, onOpenNote,
+  textClassName = 'text-sm sm:text-base',
+}: VerseRowProps) {
   // pointerType is only available on the pointer event, not on click, so it is
   // captured here and read again when the click fires.
   const pointerType = useRef<string>('mouse');
@@ -83,7 +89,8 @@ export function VerseRow({ verse, annotations, hasNote, onMark, onOpenNote }: Ve
           }
         }}
         className={cn(
-          'text-sm sm:text-base cursor-pointer rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          'cursor-pointer rounded-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          textClassName,
           highlight && HIGHLIGHT_CLASS[highlight.color],
           underline && `underline decoration-2 underline-offset-4 ${UNDERLINE_CLASS[underline.color]}`,
         )}
