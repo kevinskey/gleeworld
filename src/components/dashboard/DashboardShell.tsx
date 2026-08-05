@@ -182,7 +182,12 @@ function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
 // Brand glyph — tries the tenant's logo, then the GleeWorld platform
 // fallback, then a monogram tile. Tracks `<img>` onError so a broken URL
 // never leaves an empty space where the brand should be.
-function BrandLogo({
+//
+// Exported for its own test: the size logic (a banner logo must be wide, not
+// boxed square) is the whole point of the open-nav brand block, and testing
+// it through the full shell would mean standing up routing, auth and branding
+// providers to assert one className.
+export function BrandLogo({
   logoUrl,
   fallbackInitial,
   alt,
@@ -191,7 +196,7 @@ function BrandLogo({
   logoUrl: string | null | undefined;
   fallbackInitial: string;
   alt: string;
-  size?: 'md' | 'lg' | 'xl';
+  size?: 'md' | 'lg' | 'xl' | 'banner';
 }) {
   // No global fallback to the GleeWorld marketing globe — that bled
   // platform branding into every tenant that hadn't uploaded a logo
@@ -204,20 +209,29 @@ function BrandLogo({
     setSrc(logoUrl ?? null);
   }, [logoUrl]);
   // xl is the desktop left-nav brand: w-12 (48px) grown ~40% → 67px.
-  const dim = size === 'xl' ? 'w-[67px] h-[67px]' : size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
+  //
+  // `banner` is the open left-nav: the logo stands alone with no site name
+  // beside it, so it gets the full width and grows to fill it. Crucially it
+  // is NOT square — most parish and school marks are wide horizontal lockups
+  // (a device plus two lines of type), and forcing one into a 67px box
+  // letterboxes it down to an illegible stamp. Height is capped so a tall
+  // or square logo cannot push the nav's first item off the screen.
+  const dim = size === 'banner'
+    ? 'w-full h-auto max-h-[76px]'
+    : size === 'xl' ? 'w-[67px] h-[67px]' : size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
   if (src) {
     return (
       <img
         src={src}
         alt={alt}
-        className={`${dim} object-contain shrink-0`}
+        className={`${dim} object-contain ${size === 'banner' ? 'object-left' : 'shrink-0'}`}
         onError={() => setSrc(null)}
       />
     );
   }
   return (
     <span
-      className={`${dim} rounded-lg bg-primary text-primary-foreground inline-flex items-center justify-center text-lg font-bold shrink-0`}
+      className={`${size === 'banner' ? 'w-[67px] h-[67px]' : dim} rounded-lg bg-primary text-primary-foreground inline-flex items-center justify-center text-lg font-bold shrink-0`}
       aria-hidden
     >
       {fallbackInitial}
@@ -387,6 +401,10 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const inViewerReader = /^\/dashboard\/viewer\/[^/]+/.test(location.pathname);
   if (inStudioSession || inViewerReader) return null;
 
+  // Whether there is a real logo to stand on its own, as opposed to the
+  // monogram BrandLogo falls back to.
+  const hasLogo = !!platformLogoFor(branding?.logo_url);
+
   return (
     <aside className="hidden md:flex flex-col w-56 lg:w-64 shrink-0 bg-card self-stretch min-h-[100dvh] gw-collapsible-sidebar">
       {/* Site brand — tenant logo when set; if the logo image fails to
@@ -394,25 +412,36 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
           colored monogram so the brand block never disappears. Larger
           glyph + bigger type so it visibly anchors the page. */}
       <div
-        className="flex items-center border-b border-border pr-2 pt-[env(safe-area-inset-top,0px)] h-[calc(80px+env(safe-area-inset-top,0px))]"
+        className="flex items-center border-b border-border pr-2 pt-[env(safe-area-inset-top,0px)] h-[calc(92px+env(safe-area-inset-top,0px))]"
       >
+        {/* Open nav: the LOGO alone, at full width (Kevin). A logo beside a
+            site name has to share ~150px with it, which squeezed a wide
+            lockup down to a stamp and still truncated the name to "The L…".
+            Standing alone it can be read. The name is not lost — it is what
+            the collapsed-nav header shows instead, where there is no logo
+            competing for the room.
+
+            A tenant with NO logo keeps the name: dropping it there would
+            leave a single monogram letter identifying the workspace. */}
         <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-4 h-full">
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={(branding?.short_name || tenantName).charAt(0).toUpperCase()}
             alt={tenantName}
-            size="xl"
+            size={hasLogo ? 'banner' : 'xl'}
           />
-          <div className="min-w-0 flex-1">
-            <div className="font-bold text-[22px] leading-tight tracking-tight truncate">
-              {tenantName}
-            </div>
-            {branding?.short_name && branding?.org_name && branding.short_name !== branding.org_name && (
-              <div className="text-[12px] text-muted-foreground truncate leading-tight mt-0.5">
-                {branding.org_name}
+          {!hasLogo && (
+            <div className="min-w-0 flex-1">
+              <div className="font-bold text-[22px] leading-tight tracking-tight truncate">
+                {tenantName}
               </div>
-            )}
-          </div>
+              {branding?.short_name && branding?.org_name && branding.short_name !== branding.org_name && (
+                <div className="text-[12px] text-muted-foreground truncate leading-tight mt-0.5">
+                  {branding.org_name}
+                </div>
+              )}
+            </div>
+          )}
         </Link>
         {onCollapse && (
           <button
