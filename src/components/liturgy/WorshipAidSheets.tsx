@@ -156,7 +156,7 @@ function BackPanel({ aid }: { aid: WorshipAid }) {
 function SideBand({ day, date }: { day: string; date: string }) {
   if (!day && !date) return null;
   return (
-    <div style={{
+    <div className="worship-aid-band" style={{
       position: 'absolute', right: 0, top: 0, bottom: 0, width: '0.62in',
       background: '#5b4a86', color: '#fff',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -204,6 +204,37 @@ export function WorshipAidSheets({ aid, qrDataUrl }: WorshipAidSheetsProps) {
         @media print {
           .worship-aid-fold { display: none; }
           .worship-aid-sheet { box-shadow: none; margin: 0; }
+
+          /* Print ONLY the sheets.
+             This page renders inside the dashboard shell, so without this the
+             sidebar and header print alongside the program and push it off
+             the paper. Hiding by visibility rather than display keeps the
+             sheets' own absolute positioning intact, and works without this
+             component having to know the shell's class names. */
+          body * { visibility: hidden !important; }
+          .worship-aid-sheets, .worship-aid-sheets * { visibility: visible !important; }
+          .worship-aid-sheets {
+            position: absolute !important; left: 0 !important; top: 0 !important;
+            margin: 0 !important; padding: 0 !important; width: auto !important;
+          }
+          html, body {
+            margin: 0 !important; padding: 0 !important; background: #fff !important;
+          }
+
+          /* The app's global print reset flattens every colour to black on
+             white, which is right for a document and wrong for a design
+             element: it turned the day/date band into black text on white and
+             lost the band entirely. print-color-adjust tells the browser to
+             render it as specified rather than "optimising" it away. */
+          .worship-aid-band {
+            background: #5b4a86 !important; color: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* That same global block prints every link's href in parentheses
+             after it. Useful in an article, ruinous in a program. */
+          .worship-aid-sheets a[href]::after { content: none !important; }
         }
         @media screen {
           .worship-aid-sheet {
