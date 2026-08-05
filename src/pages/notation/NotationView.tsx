@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode, Beam, Annotation } from 'vexflow';
+import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode, Beam } from 'vexflow';
 // VexFlow's TS shim doesn't declare Articulation / Tuplet / Curve as named
 // exports (they exist at runtime — the shim is just incomplete), so pull
 // them via a cast on the module namespace rather than a `named import` that
@@ -40,6 +40,10 @@ const MAX_PER_ROW_PHONE = 2;
 const PHONE_MAX_WIDTH = 768;
 
 const SELECTED_COLOR = '#ea580c'; // orange-600
+// Which text line below the stave the lyrics sit on, and their size. One
+// value for the whole system is the entire point — see the draw loop.
+const LYRIC_LINE = 1;
+const LYRIC_SIZE = 10;
 
 export function NotationView({
   score, width, onNoteClick, selectedIndex,
@@ -146,11 +150,13 @@ export function NotationView({
         } else {
           sn = new StaveNote({ keys: [toVexKey(el.pitch)], duration: toVexDuration(el.base, el.dots), clef: VEX_CLEF[score.clef] });
           if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });
-          if (el.lyric) {   // sung syllable, rendered under the staff
-            const ann = new Annotation(el.lyric);
-            ann.setVerticalJustification(Annotation.VerticalJustify.BOTTOM);
-            sn.addModifier(ann, 0);
-          }
+          // Lyrics are NOT attached as Annotations. VexFlow positions an
+          // annotation relative to its own note's extents, so a low note
+          // pushed its syllable further down than a high one and the words
+          // wandered up and down the page instead of sitting on one line
+          // (Kevin: "lyrics all have sit on the same baseline"). They are
+          // drawn by hand below, at a y taken from the STAVE, which is
+          // constant across the system.
           // Staccato dot — VexFlow 'a.' glyph. Position ABOVE by default so
           // it clears the stem side; VexFlow flips it below when the note
           // is already up-stem, so we don't need to compute stem direction.
@@ -248,6 +254,22 @@ export function NotationView({
           new Formatter().joinVoices([b.voice]).format([b.voice], justifyW);
           b.voice.draw(ctx, stave);
           b.beams.forEach((bm) => bm.setContext(ctx).draw());
+
+          // Lyrics, on one baseline for the whole system.
+          const lyricY = stave.getYForBottomText(LYRIC_LINE);
+          ctx.save();
+          ctx.setFont('Times New Roman, serif', LYRIC_SIZE);
+          b.notes.forEach((sn, k) => {
+            const el = b.m.elements[k];
+            if (el?.kind !== 'note' || !el.lyric) return;
+            // Centre each syllable on its notehead, the way engraved lyrics
+            // sit. measureText is approximate for a proportional face, which
+            // is fine — being a pixel off centre is invisible; being on a
+            // different line is not.
+            const w = ctx.measureText(el.lyric).width;
+            ctx.fillText(el.lyric, sn.getAbsoluteX() - w / 2, lyricY);
+          });
+          ctx.restore();
           b.notes.forEach((sn, k) => {
             const idx = globalIndex + k;
             (sn as any).getSVGElement?.()?.addEventListener('click', () => onNoteClickRef.current?.(idx));
