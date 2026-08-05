@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, Loader2, PenLine, Trash2 } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, Loader2, PenLine, Search, Trash2, X } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,14 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
-import {
-  Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { DialPicker, type DialOption } from '@/components/bible/DialPicker';
 import { cn } from '@/lib/utils';
 import { VerseRow } from '@/components/bible/VerseRow';
 import {
   useBibleBooks, useBibleChapter, useChapterCount, useAnnotations, useBibleNotes,
-  type AnnotationColor,
+  useBibleSearch, type AnnotationColor,
 } from '@/hooks/useBible';
 
 /**
@@ -48,6 +47,8 @@ export default function BibleApp() {
   const [color, setColor] = useState<AnnotationColor>('yellow');
   const [noteVerse, setNoteVerse] = useState<number | null>(null);
   const [draft, setDraft] = useState('');
+  const [search, setSearch] = useState('');
+  const { data: hits = [], isFetching: searching } = useBibleSearch(search);
 
   const book = useMemo(() => books?.find((b) => b.id === bookId) ?? null, [books, bookId]);
 
@@ -84,6 +85,26 @@ export default function BibleApp() {
   };
 
   const isNotInstalled = !booksLoading && books === null;
+
+  // The dial is one flat ordered list, so the testament shows as a suffix on
+  // the centred row rather than as a group header the wheel can't render.
+  const bookOptions: DialOption[] = useMemo(
+    () =>
+      (books ?? []).map((b) => ({
+        value: b.id,
+        label: b.name,
+        groupLabel: BOOK_GROUPS.find((g) => g.key === b.testament)?.label,
+      })),
+    [books],
+  );
+
+  const chapterOptions: DialOption[] = useMemo(
+    () => Array.from({ length: chapterCount }, (_, i) => ({
+      value: String(i + 1),
+      label: String(i + 1),
+    })),
+    [chapterCount],
+  );
 
   return (
     <DashboardPageShell
@@ -123,56 +144,83 @@ export default function BibleApp() {
         </CardContent></Card>
       )}
 
-      {/* Book + chapter pickers. Two dropdowns rather than 73 book buttons and
-          up to 150 chapter buttons — the grids pushed the text itself below
-          the fold, which is the wrong thing to make someone scroll past in a
-          Bible. Books group by testament so the deuterocanon is findable. */}
+      {/* Search — the fastest way into 35,379 verses is typing, not spinning. */}
       {books && books.length > 0 && (
-        <div className="flex flex-wrap items-end gap-3">
-          <label className="space-y-1">
-            <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Book
-            </span>
-            <Select
-              value={bookId ?? undefined}
-              onValueChange={(v) => { setBookId(v); setChapter(1); }}
-            >
-              <SelectTrigger className="w-[15rem]" aria-label="Choose a book">
-                <SelectValue placeholder="Choose a book" />
-              </SelectTrigger>
-              <SelectContent className="max-h-[60vh]">
-                {BOOK_GROUPS.map((g) => {
-                  const items = books.filter((b) => b.testament === g.key);
-                  if (!items.length) return null;
-                  return (
-                    <SelectGroup key={g.key}>
-                      <SelectLabel>{g.label}</SelectLabel>
-                      {items.map((b) => (
-                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
-                      ))}
-                    </SelectGroup>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </label>
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={'Search the whole Bible \u2014 try: shepherd, or "living water"'}
+              aria-label="Search the Bible"
+              className="pl-9 pr-9"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
 
-          <label className="space-y-1">
-            <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              Chapter
-            </span>
-            <Select value={String(chapter)} onValueChange={(v) => setChapter(Number(v))}>
-              <SelectTrigger className="w-[7rem]" aria-label="Choose a chapter">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="max-h-[60vh]">
-                {Array.from({ length: chapterCount }, (_, i) => i + 1).map((c) => (
-                  <SelectItem key={c} value={String(c)}>{c}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
+          {search.trim().length >= 2 && (
+            <Card><CardContent className="p-0 max-h-[22rem] overflow-y-auto">
+              {searching && (
+                <p className="p-4 text-sm text-muted-foreground flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Searching…
+                </p>
+              )}
+              {!searching && hits.length === 0 && (
+                <p className="p-4 text-sm text-muted-foreground">
+                  Nothing found for “{search.trim()}”.
+                </p>
+              )}
+              {hits.map((h) => (
+                <button
+                  key={h.id}
+                  type="button"
+                  onClick={() => {
+                    setBookId(h.book.id);
+                    setChapter(h.chapter);
+                    setSearch('');
+                  }}
+                  className="block w-full text-left px-4 py-2.5 border-b border-border last:border-0 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className="text-xs font-semibold text-primary">
+                    {h.book.name} {h.chapter}:{h.verse}
+                  </span>
+                  <span className="block text-sm text-foreground/90 line-clamp-2">{h.text}</span>
+                </button>
+              ))}
+            </CardContent></Card>
+          )}
         </div>
+      )}
+
+      {/* Book + chapter dials. A wheel is the right control for a long ordered
+          list you browse; search above is the right one for jumping. */}
+      {books && books.length > 0 && (
+        <Card><CardContent className="p-4 sm:p-6">
+          <div className="grid grid-cols-2 gap-4 sm:gap-8 max-w-md">
+            <DialPicker
+              label="Book"
+              options={bookOptions}
+              value={bookId}
+              onChange={(v) => { setBookId(v); setChapter(1); }}
+            />
+            <DialPicker
+              label="Chapter"
+              options={chapterOptions}
+              value={String(chapter)}
+              onChange={(v) => setChapter(Number(v))}
+            />
+          </div>
+        </CardContent></Card>
       )}
 
       {/* Marking colour + how it works */}

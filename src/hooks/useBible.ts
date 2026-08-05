@@ -238,3 +238,48 @@ export function useBibleNotes(usfmCode: string | null, chapter: number) {
 
   return { notes: query.data ?? [], isLoading: query.isLoading, save, remove };
 }
+
+export interface BibleSearchHit {
+  id: string;
+  chapter: number;
+  verse: number;
+  text: string;
+  book: { id: string; usfm_code: string; name: string };
+}
+
+/**
+ * Full-text search across every verse, using the generated `search_tsv` column
+ * and its GIN index — so "create" matches "created" and the query stays fast
+ * over 35,379 rows without any external search service.
+ *
+ * `websearch` parsing means a reader can type quoted phrases and -exclusions
+ * the way they would in a search engine.
+ */
+export function useBibleSearch(query: string) {
+  const q = query.trim();
+  return useQuery({
+    queryKey: ['bible_search', q],
+    enabled: q.length >= 2,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async (): Promise<BibleSearchHit[]> => {
+      const { data, error } = await supabase
+        .from('gw_bible_verses')
+        .select('id, chapter, verse, text, book:gw_bible_books!inner(id, usfm_code, name, canon_order)')
+        .textSearch('search_tsv', q, { type: 'websearch', config: 'english' })
+        .limit(60);
+      if (error) {
+        if (MISSING.has(error.code ?? '')) return [];
+        throw error;
+      }
+      const rows = (data ?? []) as unknown as (BibleSearchHit & { book: { canon_order: number } })[];
+      // Canon order, then reference — a reader expects Genesis before John.
+      return rows.sort(
+        (a, b) =>
+          a.book.canon_order - b.book.canon_order ||
+          a.chapter - b.chapter ||
+          a.verse - b.verse,
+      );
+    },
+  });
+}
