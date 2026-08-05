@@ -41,10 +41,32 @@ import { useAuth } from '@/contexts/AuthContext';
  * load, per measuresPerLine().
  */
 
+// Words, not glyphs. The whole/half note characters live in the Unicode
+// Supplementary Plane (U+1D15D, U+1D15E) and no bundled font covers them —
+// they rendered as black tofu boxes. ♩/♪ happen to work, but a toolbar that
+// is half symbols and half boxes is worse than one that just says what it is.
 const DURATIONS: { code: BaseDur; label: string }[] = [
-  { code: 'whole', label: '𝅝' }, { code: 'half', label: '𝅗𝅥' },
-  { code: 'quarter', label: '♩' }, { code: 'eighth', label: '♪' },
-  { code: '16th', label: '♬' },
+  { code: 'whole', label: 'Whole' }, { code: 'half', label: 'Half' },
+  { code: 'quarter', label: 'Quarter' }, { code: 'eighth', label: '8th' },
+  { code: '16th', label: '16th' },
+];
+
+// Sharp side then flat side, as the circle of fifths is read.
+const KEYS: { fifths: number; label: string }[] = [
+  { fifths: -7, label: 'C♭ / A♭m' }, { fifths: -6, label: 'G♭ / E♭m' },
+  { fifths: -5, label: 'D♭ / B♭m' }, { fifths: -4, label: 'A♭ / Fm' },
+  { fifths: -3, label: 'E♭ / Cm' }, { fifths: -2, label: 'B♭ / Gm' },
+  { fifths: -1, label: 'F / Dm' }, { fifths: 0, label: 'C / Am' },
+  { fifths: 1, label: 'G / Em' }, { fifths: 2, label: 'D / Bm' },
+  { fifths: 3, label: 'A / F♯m' }, { fifths: 4, label: 'E / C♯m' },
+  { fifths: 5, label: 'B / G♯m' }, { fifths: 6, label: 'F♯ / D♯m' },
+  { fifths: 7, label: 'C♯ / A♯m' },
+];
+
+const METERS: { beats: number; beatType: number }[] = [
+  { beats: 4, beatType: 4 }, { beats: 3, beatType: 4 }, { beats: 2, beatType: 4 },
+  { beats: 2, beatType: 2 }, { beats: 6, beatType: 8 }, { beats: 9, beatType: 8 },
+  { beats: 12, beatType: 8 }, { beats: 5, beatType: 4 },
 ];
 
 const LETTERS: Pitch['step'][] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
@@ -80,6 +102,7 @@ export function PsalmComposerDialog({
   const { user } = useAuth();
   const [score, setScore] = useState<EditorScore>(() => emptyScore());
   const [armed, setArmed] = useState<BaseDur>('quarter');
+  const [armedDots, setArmedDots] = useState<0 | 1 | 2>(0);
   const [octaveShift, setOctaveShift] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [title, setTitle] = useState('');
@@ -147,10 +170,10 @@ export function PsalmComposerDialog({
     // the word off the note before removing the note — what a user expects
     // after realising they attached the wrong syllable.
     const syl = syllables[syllableIndex];
-    if (syl) dispatchAll(insertElement(at, noteOf(pitch, armed, 0)), setLyric(at, syl));
-    else dispatchAll(insertElement(at, noteOf(pitch, armed, 0)));
+    if (syl) dispatchAll(insertElement(at, noteOf(pitch, armed, armedDots)), setLyric(at, syl));
+    else dispatchAll(insertElement(at, noteOf(pitch, armed, armedDots)));
     setSelected(selected != null ? at : null);
-  }, [armed, selected, dispatchAll, syllables, syllableIndex]);
+  }, [armed, armedDots, selected, dispatchAll, syllables, syllableIndex]);
 
   const addByLetter = useCallback((step: Pitch['step']) => {
     const prev = [...scoreRef.current.elements].reverse()
@@ -166,8 +189,8 @@ export function PsalmComposerDialog({
   const addRest = useCallback(() => {
     const s = scoreRef.current;
     const at = selected != null ? selected + 1 : s.elements.length;
-    dispatch(insertElement(at, restOf(armed, 0)));
-  }, [armed, selected, dispatch]);
+    dispatch(insertElement(at, restOf(armed, armedDots)));
+  }, [armed, armedDots, selected, dispatch]);
 
   const undo = useCallback(() => {
     // undo() returns the score unchanged when there is nothing to undo, so
@@ -211,6 +234,19 @@ export function PsalmComposerDialog({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [open, addByLetter, addByDegree, removeLast, addRest]);
+
+  /**
+   * Key, mode and metre change the SCORE, not a note, so they bypass the
+   * command stack — undo walks back through note entry, and having a key
+   * change interleaved in that history would make undo unpredictable. They
+   * are also re-read by degreeToPitch on the next entry, so changing the key
+   * re-aims the number row immediately without touching existing notes.
+   */
+  const setAttrs = useCallback((patch: Partial<EditorScore>) => {
+    const next = { ...scoreRef.current, ...patch };
+    scoreRef.current = next;
+    setScore(next);
+  }, []);
 
   const perRow = useMemo(() => measuresPerLine(score), [score]);
 
@@ -284,6 +320,69 @@ export function PsalmComposerDialog({
             </div>
           </div>
 
+          {/* Score attributes — what the staff IS, before what goes on it */}
+          <div className="flex flex-wrap items-end gap-3 border border-border p-2">
+            <div className="space-y-1">
+              <Label htmlFor="psalm-key" className="text-xs">Key</Label>
+              <select
+                id="psalm-key"
+                value={score.keyFifths}
+                onChange={(e) => setAttrs({ keyFifths: Number(e.target.value) })}
+                className="h-9 border border-input bg-background px-2 text-sm"
+              >
+                {KEYS.map((k) => (
+                  <option key={k.fifths} value={k.fifths}>{k.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="psalm-mode" className="text-xs">Mode</Label>
+              <select
+                id="psalm-mode"
+                value={score.mode}
+                onChange={(e) => setAttrs({ mode: e.target.value as 'major' | 'minor' })}
+                className="h-9 border border-input bg-background px-2 text-sm"
+              >
+                <option value="major">Major</option>
+                <option value="minor">Minor</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="psalm-meter" className="text-xs">Metre</Label>
+              <select
+                id="psalm-meter"
+                value={`${score.timeSig.beats}/${score.timeSig.beatType}`}
+                onChange={(e) => {
+                  const [beats, beatType] = e.target.value.split('/').map(Number);
+                  setAttrs({ timeSig: { beats, beatType } });
+                }}
+                className="h-9 border border-input bg-background px-2 text-sm"
+              >
+                {METERS.map((m) => (
+                  <option key={`${m.beats}/${m.beatType}`} value={`${m.beats}/${m.beatType}`}>
+                    {m.beats}/{m.beatType}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="psalm-clef" className="text-xs">Clef</Label>
+              <select
+                id="psalm-clef"
+                value={score.clef}
+                onChange={(e) => setAttrs({ clef: e.target.value as EditorScore['clef'] })}
+                className="h-9 border border-input bg-background px-2 text-sm"
+              >
+                <option value="treble">Treble</option>
+                <option value="bass">Bass</option>
+                <option value="alto">Alto</option>
+              </select>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              The number keys follow the key — in E♭, <strong>3</strong> is G.
+            </p>
+          </div>
+
           {/* Entry toolbar */}
           <div className="flex flex-wrap items-center gap-1.5 border border-border p-2">
             {DURATIONS.map((d) => (
@@ -294,14 +393,36 @@ export function PsalmComposerDialog({
                 variant={armed === d.code ? 'default' : 'secondary'}
                 onClick={() => setArmed(d.code)}
                 aria-pressed={armed === d.code}
-                aria-label={d.code}
-                className="min-w-9 text-base leading-none"
+                // No aria-label: the visible word IS the name now. An
+                // aria-label of "eighth" over a button reading "8th" would
+                // make the spoken name differ from the printed one.
+                className="text-xs"
               >
                 {d.label}
               </Button>
             ))}
+            {/* Dots multiply the armed duration; two dots is as far as psalm
+                writing ever needs. */}
+            {([1, 2] as const).map((d) => (
+              <Button
+                key={d}
+                type="button"
+                size="sm"
+                variant={armedDots === d ? 'default' : 'secondary'}
+                aria-pressed={armedDots === d}
+                aria-label={d === 1 ? 'Dotted' : 'Double dotted'}
+                title={d === 1 ? 'Dotted' : 'Double dotted'}
+                onClick={() => setArmedDots((cur) => (cur === d ? 0 : d))}
+                className="min-w-9 text-base leading-none"
+              >
+                {'.'.repeat(d)}
+              </Button>
+            ))}
             <span className="mx-1 h-5 w-px bg-border" aria-hidden />
-            <Button type="button" size="sm" variant="secondary" onClick={addRest}>Rest</Button>
+            <Button type="button" size="sm" variant="secondary" onClick={addRest}
+              title="Add a rest of the armed duration">
+              Rest
+            </Button>
             <Button type="button" size="sm" variant="secondary" onClick={undo} aria-label="Undo">
               <Undo2 className="h-4 w-4" />
             </Button>

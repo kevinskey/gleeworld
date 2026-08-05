@@ -118,12 +118,22 @@ describe('measuresPerLine — 4 inches is the constraint, lyrics are the load', 
     expect(short).toBeGreaterThanOrEqual(long);
   });
 
-  it('never returns fewer than one or more than four', () => {
-    for (const text of ['a', 'Lord', 'incomprehensibilities']) {
-      const n = measuresPerLine(withLyrics(16, text));
-      expect(n).toBeGreaterThanOrEqual(1);
+  // A single bar stretched across four inches is not a layout anyone would
+  // choose — two is the floor even when the bar is dense.
+  it('never puts one lone measure on a four-inch line', () => {
+    for (const text of ['a', 'Lord', 'incomprehensibilities', 'supercalifragilistic']) {
+      const n = measuresPerLine(withLyrics(32, text));
+      expect(n).toBeGreaterThanOrEqual(2);
       expect(n).toBeLessThanOrEqual(4);
     }
+  });
+
+  it('holds the floor for compound metres too', () => {
+    const compound: EditorScore = {
+      ...withLyrics(24, 'everlasting'),
+      timeSig: { beats: 6, beatType: 8 },
+    };
+    expect(measuresPerLine(compound)).toBeGreaterThanOrEqual(2);
   });
 
   it('handles an empty score without dividing by zero', () => {

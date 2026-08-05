@@ -149,9 +149,13 @@ export function measuresPerLine(score: EditorScore): number {
   const perMeasurePx = notesPerMeasure * (26 + avgLyric * 7);
   const fit = Math.floor((PSALM_WIDTH_PX - 40) / Math.max(1, perMeasurePx));
 
-  // Never fewer than 1, and more than 4 bars across 4 inches is unreadable
-  // however sparse the notes are.
-  return Math.max(1, Math.min(4, fit, Math.ceil(beatsPerMeasure >= 6 ? 2 : 4)));
+  // TWO is the floor, not one. A single bar stretched across four inches is
+  // not a layout anyone would choose (Kevin: "i will never use one measure
+  // wide on a four inch wide space") — engravers would rather cramp a busy
+  // bar than leave that much air. Four is the ceiling: past that the lyrics
+  // collide at this width.
+  const ceiling = beatsPerMeasure >= 6 ? 3 : 4;
+  return Math.max(2, Math.min(ceiling, Math.max(2, fit)));
 }
 
 /** Number of (possibly partial) measures the elements occupy. */

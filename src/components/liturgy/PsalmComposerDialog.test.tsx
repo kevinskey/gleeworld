@@ -97,6 +97,71 @@ describe('PsalmComposerDialog', () => {
     expect(arg.score.elements).toHaveLength(1);
   });
 
+  it('offers key, mode, metre and clef', () => {
+    open();
+    expect(screen.getByLabelText(/^key$/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/mode/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/metre/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/clef/i)).toBeInTheDocument();
+  });
+
+  it('offers rests and dotted durations', () => {
+    open();
+    expect(screen.getByRole('button', { name: /^rest$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^dotted$/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /double dotted/i })).toBeInTheDocument();
+  });
+
+  // Spelled-out durations rather than 𝅝/𝅗𝅥: those live in the Unicode
+  // Supplementary Plane and rendered as tofu boxes with the bundled fonts.
+  it('names durations in text so none of them render as tofu', () => {
+    open();
+    for (const label of ['Whole', 'Half', 'Quarter', '8th', '16th']) {
+      expect(screen.getByRole('button', { name: label })).toBeInTheDocument();
+    }
+  });
+
+  it('carries the armed dot onto the next note', () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: /^dotted$/i }));
+    fireEvent.click(screen.getByRole('button', { name: '1' }));
+    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
+    return vi.waitFor(() => {
+      const el = savePsalmToLibrary.mock.calls[0][0].score.elements[0];
+      expect(el.dots).toBe(1);
+    });
+  });
+
+  // The whole point of keying the number row: after switching to E flat,
+  // degree 3 has to be G rather than E.
+  it('re-aims the number row when the key changes', async () => {
+    open();
+    fireEvent.change(screen.getByLabelText(/^key$/i), { target: { value: '-3' } });
+    fireEvent.click(screen.getByRole('button', { name: '3' }));
+    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
+    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
+    const saved = savePsalmToLibrary.mock.calls[0][0].score;
+    expect(saved.keyFifths).toBe(-3);
+    expect(saved.elements[0].pitch).toMatchObject({ step: 'G', alter: 0 });
+  });
+
+  it('keeps the chosen metre on the saved score', async () => {
+    open();
+    fireEvent.change(screen.getByLabelText(/metre/i), { target: { value: '6/8' } });
+    fireEvent.click(screen.getByRole('button', { name: '1' }));
+    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
+    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
+    expect(savePsalmToLibrary.mock.calls[0][0].score.timeSig).toEqual({ beats: 6, beatType: 8 });
+  });
+
+  // Kevin: "i will never use one measure wide on a four inch wide space."
+  it('never lays out a single measure per line', () => {
+    open();
+    for (let i = 0; i < 6; i++) fireEvent.click(screen.getByRole('button', { name: '1' }));
+    expect(screen.queryByText(/1 measure per line/)).not.toBeInTheDocument();
+    expect(screen.getByText(/\d+ measures per line/)).toBeInTheDocument();
+  });
+
   it('reports the fixed 4-inch width so the layout intent is visible', () => {
     open();
     expect(screen.getByText(/4″ wide/)).toBeInTheDocument();
