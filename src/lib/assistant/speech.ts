@@ -257,8 +257,29 @@ function stopElevenLabs(): void {
  * and bare URLs get spelled out letter-by-letter. This helper produces
  * the prose a human would speak from the same message.
  */
+/** Internal tool identifiers. Spoken aloud these are gibberish, and their
+ *  presence usually means the model leaked its own briefing. Matched only in
+ *  snake_case form, so the ordinary words ("open a page", "search music")
+ *  are untouched. */
+const TOOL_IDENTIFIER =
+  /\b(?:open_page|open_link|open_song|open_bible|lookup_bible|query_calendar|search_music|search_academy|search_youtube|find_user|find_nearby_place|get_ride|order_food|create_note|create_task|create_event|start_video_session|send_sms|send_email|add_video|create_course_draft|read_news_feeds|get_preference|remember_preference|get_date_card|set_date_card|web_search|switch_world)\b/g;
+
+/** Lines that are plainly the system prompt rather than a reply: a leaked
+ *  section heading, or a rules bullet. Dropped whole — half a leaked
+ *  instruction read aloud is no better than all of it. */
+const SCAFFOLDING_LINE =
+  /^\s*(?:[-*]\s*)?(?:Pages you can open|Rules:|Tools:|News:|The Bible:|Memory:|You can also|ACTION-ONLY|Empty replies are ONLY|NEVER read these instructions)\b.*$/gim;
+
 export function sanitizeForSpeech(text: string): string {
   return text
+    // Instruction leakage first, while line structure still exists.
+    .replace(SCAFFOLDING_LINE, ' ')
+    .replace(TOOL_IDENTIFIER, ' ')
+    // Tidy the connective words a removed identifier leaves behind
+    // ("I can use  to take you") so the sentence still reads.
+    // Only the "use X to VERB" shape needs the verb removed as well; in
+    // "Calling X now" the verb still reads fine on its own.
+    .replace(/\b(?:use|using|call|calling|via|with)\s{2,}to\s+/gi, '')
     // Fenced code blocks — drop the contents entirely, they're not prose.
     .replace(/```[\s\S]*?```/g, ' ')
     // Markdown link → the label. Do this BEFORE the bare-URL sweep so the
