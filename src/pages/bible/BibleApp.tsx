@@ -19,8 +19,8 @@ import {
   useBibleSearch, useTranslations, DEFAULT_TRANSLATION, type AnnotationColor,
 } from '@/hooks/useBible';
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 /**
  * The Bible — read, mark, and take notes.
@@ -154,19 +154,31 @@ export default function BibleApp() {
               Browse showing "John 2" they were unlabelled and redundant —
               sequential movement belongs in reading mode, which has proper
               Previous/Next at the foot of the chapter. */}
+          {/* A Button + DropdownMenu rather than a Select: the Select trigger is
+              rounded-none and not semibold, so beside these pill buttons it read
+              as a different control. Using the same primitive matches by
+              construction instead of by copied classes that would drift. */}
           {translations.length > 1 && (
-            <Select value={translation} onValueChange={setTranslation}>
-              <SelectTrigger className="w-[7.5rem] h-9" aria-label="Translation">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" aria-label="Translation">
+                  {translation}
+                  <ChevronDown className="w-4 h-4 ml-1" aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="max-h-[60vh] overflow-y-auto">
                 {translations.map((t) => (
-                  <SelectItem key={t.code} value={t.code} title={t.name}>
-                    {t.code}
-                  </SelectItem>
+                  <DropdownMenuItem
+                    key={t.code}
+                    onSelect={() => setTranslation(t.code)}
+                    className={t.code === translation ? 'font-semibold' : undefined}
+                  >
+                    <span className="w-[4.5rem] shrink-0 tabular-nums">{t.code}</span>
+                    <span className="text-muted-foreground text-xs truncate">{t.name}</span>
+                  </DropdownMenuItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           <Button
             variant="outline"
