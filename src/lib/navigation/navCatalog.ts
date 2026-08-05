@@ -17,11 +17,11 @@ import {
 } from 'lucide-react';
 
 export type NavSectionKey =
-  'today' | 'music' | 'teach' | 'make' | 'plan' | 'reach' | 'money' | 'people' | 'admin';
+  'today' | 'church' | 'music' | 'teach' | 'make' | 'plan' | 'reach' | 'money' | 'people' | 'admin';
 
 export const NAV_SECTION_LABELS: Record<NavSectionKey, string> = {
-  today: 'Today', music: 'Music', teach: 'Teach', make: 'Make', plan: 'Plan',
-  reach: 'Reach', money: 'Money', people: 'People', admin: 'Admin',
+  today: 'Today', church: 'Church', music: 'Music', teach: 'Teach', make: 'Make',
+  plan: 'Plan', reach: 'Reach', money: 'Money', people: 'People', admin: 'Admin',
 };
 
 export interface NavGate {
@@ -58,7 +58,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // The Bible — full text, highlights, Apple Pencil underlines, notes.
   // Formerly "Prayer App"; the prayers and daily readings still live at
   // /prayer and are reachable from inside the Bible page.
-  { key: 'bible',    to: '/bible',               label: 'The Bible',      icon: BookOpen,      section: 'today', tone: 'bg-violet-50 text-violet-700', tourId: 'nav-bible' },
+  { key: 'bible',    to: '/bible',               label: 'The Bible',      icon: BookOpen,      section: 'church', tone: 'bg-violet-50 text-violet-700', tourId: 'nav-bible' },
   // Music
   { key: 'music-library',   to: '/dashboard/music-library', label: 'Music Library',  icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
   { key: 'music',         to: '/dashboard/viewer',        label: 'Viewer',        icon: ScanEye,  section: 'music', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-viewer',        gridLabel: 'Music', gridIcon: Music, gate: { module: 'viewer' } },
@@ -84,7 +84,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'songwriting', to: '/songwriting', label: 'Songwriting', icon: PenLine, section: 'make', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-songwriting', gate: { module: 'songwriting' } },
   // Plan
   { key: 'planner',   to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, section: 'plan', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-concert-planner', gridLabel: 'Programs', gridIcon: ListMusic, gate: { module: 'concert_planner' } },
-  { key: 'liturgy',   to: '/dashboard/liturgy',         label: 'Liturgy Planner', icon: Church,        section: 'plan', tone: 'bg-amber-50 text-amber-700',     tourId: 'nav-liturgy-planner', gate: { module: 'liturgy_planner' } },
+  { key: 'liturgy',   to: '/dashboard/liturgy',         label: 'Liturgy Planner', icon: Church,        section: 'church', tone: 'bg-amber-50 text-amber-700',     tourId: 'nav-liturgy-planner', gate: { module: 'liturgy_planner' } },
   { key: 'tour',      to: '/tour-manager',              label: 'Travel Manager',  icon: RouteIcon,     section: 'plan', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-tour-manager', gate: { module: 'tour' } },
   { key: 'seating-charts', to: '/seating-charts',       label: 'Seating Charts',  icon: Armchair,      section: 'plan', tone: 'bg-indigo-50 text-indigo-600',   tourId: 'nav-seating-charts' },
   { key: 'auditions', to: '/dashboard/auditions',       label: 'Auditions',       icon: ScanLine,      section: 'plan', tone: 'bg-lime-50 text-lime-600',       tourId: 'nav-auditions', gate: { module: 'auditions' } },

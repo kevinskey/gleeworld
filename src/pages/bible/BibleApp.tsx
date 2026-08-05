@@ -27,13 +27,6 @@ import {
 
 const COLORS: AnnotationColor[] = ['yellow', 'green', 'blue', 'pink', 'orange', 'purple'];
 
-// Order matters: canon order, with the deuterocanon where the Catholic canon
-// puts it — between the Old and New Testaments.
-const BOOK_GROUPS = [
-  { key: 'OT', label: 'Old Testament' },
-  { key: 'DC', label: 'Deuterocanonical' },
-  { key: 'NT', label: 'New Testament' },
-] as const;
 
 const SWATCH: Record<AnnotationColor, string> = {
   yellow: 'bg-yellow-300', green: 'bg-green-400', blue: 'bg-blue-400',
@@ -86,14 +79,14 @@ export default function BibleApp() {
 
   const isNotInstalled = !booksLoading && books === null;
 
-  // The dial is one flat ordered list, so the testament shows as a suffix on
-  // the centred row rather than as a group header the wheel can't render.
+  // One flat list in canon order — Genesis through Revelation, deuterocanon in
+  // its Catholic position. No testament suffix: at a single row it truncates
+  // names like "Wisdom of Solomon", and the ordering already carries it.
   const bookOptions: DialOption[] = useMemo(
     () =>
       (books ?? []).map((b) => ({
         value: b.id,
         label: b.name,
-        groupLabel: BOOK_GROUPS.find((g) => g.key === b.testament)?.label,
       })),
     [books],
   );
@@ -205,22 +198,22 @@ export default function BibleApp() {
       {/* Book + chapter dials. A wheel is the right control for a long ordered
           list you browse; search above is the right one for jumping. */}
       {books && books.length > 0 && (
-        <Card><CardContent className="p-4 sm:p-6">
-          <div className="grid grid-cols-2 gap-4 sm:gap-8 max-w-md">
-            <DialPicker
-              label="Book"
-              options={bookOptions}
-              value={bookId}
-              onChange={(v) => { setBookId(v); setChapter(1); }}
-            />
-            <DialPicker
-              label="Chapter"
-              options={chapterOptions}
-              value={String(chapter)}
-              onChange={(v) => setChapter(Number(v))}
-            />
-          </div>
-        </CardContent></Card>
+        <div className="flex items-end gap-3">
+          <DialPicker
+            className="w-[13rem] shrink-0"
+            label="Book"
+            options={bookOptions}
+            value={bookId}
+            onChange={(v) => { setBookId(v); setChapter(1); }}
+          />
+          <DialPicker
+            className="w-[6.5rem] shrink-0"
+            label="Chapter"
+            options={chapterOptions}
+            value={String(chapter)}
+            onChange={(v) => setChapter(Number(v))}
+          />
+        </div>
       )}
 
       {/* Marking colour + how it works */}

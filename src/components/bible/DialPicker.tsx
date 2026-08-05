@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
@@ -19,7 +20,6 @@ import { cn } from '@/lib/utils';
  */
 
 const ITEM_H = 40; // px — must match the item class height below
-const VISIBLE = 5; // odd, so there is a true centre row
 
 export interface DialOption {
   value: string;
@@ -34,9 +34,13 @@ export interface DialPickerProps {
   onChange: (value: string) => void;
   label: string;
   className?: string;
+  /** Rows of context shown around the selection. 0 = a single-line dial. */
+  context?: number;
 }
 
-export function DialPicker({ options, value, onChange, label, className }: DialPickerProps) {
+export function DialPicker({
+  options, value, onChange, label, className, context = 0,
+}: DialPickerProps) {
   const ref = useRef<HTMLDivElement>(null);
   const settle = useRef<number | null>(null);
   // Guards the scroll handler while we scroll programmatically, so setting the
@@ -81,7 +85,8 @@ export function DialPicker({ options, value, onChange, label, className }: DialP
     scrollToIndex(i, 'smooth');
   };
 
-  const pad = ((VISIBLE - 1) / 2) * ITEM_H;
+  const visible = context * 2 + 1;
+  const pad = context * ITEM_H;
 
   return (
     <div className={cn('space-y-1', className)}>
@@ -89,23 +94,40 @@ export function DialPicker({ options, value, onChange, label, className }: DialP
         {label}
       </span>
 
-      <div className="relative" style={{ height: VISIBLE * ITEM_H }}>
-        {/* Selection band. Purely decorative — pointer-events off so it never
-            eats a scroll or a tap. */}
+      <div
+        className="relative border border-input bg-background"
+        style={{ height: visible * ITEM_H }}
+      >
+        {/* Selection band, only meaningful when context rows are shown — at
+            context={0} the control IS the selection, so its own border does
+            the job and a second band would just double the outline. */}
+        {context > 0 && (
+          <>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 z-10 border-y-2 border-primary/70 bg-primary/5"
+              style={{ top: pad, height: ITEM_H }}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-10"
+              style={{
+                background:
+                  'linear-gradient(hsl(var(--background)) 0%, hsl(var(--background) / 0) 38%, hsl(var(--background) / 0) 62%, hsl(var(--background)) 100%)',
+              }}
+            />
+          </>
+        )}
+
+        {/* Spin affordance: without neighbouring rows there is nothing to show
+            the control moves, so the chevrons carry that signal. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 z-10 border-y-2 border-primary/70 bg-primary/5"
-          style={{ top: pad, height: ITEM_H }}
-        />
-        {/* Fade the rows away from centre so the wheel reads as a wheel. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 z-10"
-          style={{
-            background:
-              'linear-gradient(hsl(var(--card)) 0%, hsl(var(--card) / 0) 38%, hsl(var(--card) / 0) 62%, hsl(var(--card)) 100%)',
-          }}
-        />
+          className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 z-10 flex flex-col text-muted-foreground"
+        >
+          <ChevronUp className="w-3.5 h-3.5 -mb-1" />
+          <ChevronDown className="w-3.5 h-3.5" />
+        </div>
 
         <div
           ref={ref}
@@ -130,9 +152,9 @@ export function DialPicker({ options, value, onChange, label, className }: DialP
               aria-selected={i === index}
               onClick={() => { onChange(o.value); scrollToIndex(i, 'smooth'); }}
               className={cn(
-                'flex items-center justify-center px-3 cursor-pointer select-none text-center',
+                'flex items-center justify-center px-3 pr-7 cursor-pointer select-none text-center',
                 i === index
-                  ? 'text-base font-semibold text-foreground'
+                  ? 'text-sm font-medium text-foreground'
                   : 'text-sm text-muted-foreground',
               )}
               style={{ height: ITEM_H, scrollSnapAlign: 'center' }}
