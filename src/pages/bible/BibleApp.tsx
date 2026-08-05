@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, Loader2, PenLine, Search, Trash2, X } from 'lucide-react';
+import { BookOpen, ChevronLeft, ChevronRight, Loader2, Maximize2, PenLine, Search, Trash2, X } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { parseReference } from '@/lib/bible/reference';
+import { BibleReader } from '@/components/bible/BibleReader';
 import { cn } from '@/lib/utils';
 import { VerseRow } from '@/components/bible/VerseRow';
 import {
@@ -40,6 +41,7 @@ export default function BibleApp() {
   const [color, setColor] = useState<AnnotationColor>('yellow');
   const [noteVerse, setNoteVerse] = useState<number | null>(null);
   const [draft, setDraft] = useState('');
+  const [reading, setReading] = useState(false);
   const [search, setSearch] = useState('');
   const { data: hits = [], isFetching: searching } = useBibleSearch(search);
 
@@ -132,6 +134,16 @@ export default function BibleApp() {
       maxWidth="4xl"
       actions={
         <div className="flex items-center gap-1">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setReading(true)}
+            disabled={!verses?.length}
+            className="mr-1"
+          >
+            <Maximize2 className="w-4 h-4 mr-1.5" aria-hidden />
+            Read
+          </Button>
           <Button
             variant="outline" size="icon" aria-label="Previous chapter"
             disabled={atStart}
@@ -325,6 +337,34 @@ export default function BibleApp() {
             </CardContent></Card>
           ))}
         </section>
+      )}
+
+      {reading && (
+        <BibleReader
+          book={book}
+          chapter={chapter}
+          chapterCount={chapterCount}
+          verses={verses ?? []}
+          versesLoading={versesLoading}
+          annotations={annotations}
+          notes={notes}
+          color={color}
+          onColorChange={setColor}
+          onMark={handleMark}
+          onOpenNote={setNoteVerse}
+          onDeleteNote={(id) => removeNote.mutate(id)}
+          onPrev={goPrev}
+          onNext={goNext}
+          atStart={atStart}
+          atEnd={atEnd}
+          search={search}
+          onSearchChange={setSearch}
+          searching={searching}
+          hits={hits}
+          reference={reference}
+          onGoTo={(bookId, ch) => { setBookId(bookId); setChapter(ch); }}
+          onExit={() => setReading(false)}
+        />
       )}
 
       <Sheet open={noteVerse !== null} onOpenChange={(o) => !o && setNoteVerse(null)}>
