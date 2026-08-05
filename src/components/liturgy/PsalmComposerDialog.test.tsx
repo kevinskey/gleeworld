@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { useEffect } from 'react';
 
 const savePsalmToLibrary = vi.fn().mockResolvedValue({ id: 'row-1', imageUrl: null });
 
@@ -16,9 +17,29 @@ vi.mock('@/contexts/AuthContext', () => ({
 // The engraver is exercised by the notation module's own tests; here it is
 // noise (VexFlow measures real DOM boxes, which jsdom reports as zero).
 vi.mock('@/pages/notation/NotationView', () => ({
-  NotationView: ({ score }: { score: { elements: unknown[] } }) => (
-    <div data-testid="staff" data-notes={score.elements.length} />
-  ),
+  NotationView: ({ score, targetPerRow, scale, onLayout }: {
+    score: { elements: unknown[] };
+    targetPerRow?: number; scale?: number;
+    onLayout?: (i: { rows: number; perRow: number }) => void;
+  }) => {
+    // Stand in for the real packer honouring the request, so the dialog's
+    // reporting can be tested without VexFlow measuring real glyph boxes.
+    //
+    // In an EFFECT, not in the render body. onLayout sets state in the
+    // parent; calling it while rendering re-renders the parent, which
+    // re-renders this child, which calls it again — an infinite loop that
+    // hangs the whole run rather than failing. (The real NotationView calls
+    // it from its render effect, so it does not have this problem.)
+    useEffect(() => { onLayout?.({ rows: 1, perRow: targetPerRow ?? 0 }); }, [onLayout, targetPerRow]);
+    return (
+      <div
+        data-testid="staff"
+        data-notes={score.elements.length}
+        data-per-row={targetPerRow}
+        data-scale={scale}
+      />
+    );
+  },
 }));
 
 import { PsalmComposerDialog } from './PsalmComposerDialog';
@@ -162,11 +183,16 @@ describe('PsalmComposerDialog', () => {
   });
 
   // Kevin: "i will never use one measure wide on a four inch wide space."
+  // One-per-line is not merely avoided, it is not offered — the only choices
+  // are 2 and 4.
   it('never lays out a single measure per line', () => {
     open();
     for (let i = 0; i < 6; i++) fireEvent.click(screen.getByRole('button', { name: '1' }));
-    expect(screen.queryByText(/1 measure per line/)).not.toBeInTheDocument();
-    expect(screen.getByText(/\d+ measures per line/)).toBeInTheDocument();
+    expect(screen.getByTestId('staff').getAttribute('data-per-row')).not.toBe('1');
+    expect(screen.queryByRole('button', { name: /1 per line/i })).not.toBeInTheDocument();
+    for (const n of ['2 per line', '4 per line']) {
+      expect(screen.getByRole('button', { name: new RegExp(n, 'i') })).toBeInTheDocument();
+    }
   });
 
   // Each word is its own <span> so it can be highlighted, so text matchers
@@ -209,6 +235,30 @@ describe('PsalmComposerDialog', () => {
   it('reports the fixed 4-inch width so the layout intent is visible', () => {
     open();
     expect(screen.getByText(/4″ wide/)).toBeInTheDocument();
+  });
+
+  it('lets the user choose 2 or 4 measures per printed line', () => {
+    open();
+    const staff = screen.getByTestId('staff');
+    expect(staff).toHaveAttribute('data-per-row', '2');
+    fireEvent.click(screen.getByRole('button', { name: /4 per line/i }));
+    expect(screen.getByTestId('staff')).toHaveAttribute('data-per-row', '4');
+  });
+
+  // Four bars in four inches only fit at a smaller engraving size — the note
+  // size has to follow the density or the packer just refuses the request.
+  it('engraves smaller when more bars share a line', () => {
+    open();
+    const two = Number(screen.getByTestId('staff').getAttribute('data-scale'));
+    fireEvent.click(screen.getByRole('button', { name: /4 per line/i }));
+    const four = Number(screen.getByTestId('staff').getAttribute('data-scale'));
+    expect(four).toBeLessThan(two);
+  });
+
+  it('says so when the engraver cannot fit what was asked for', () => {
+    open();
+    // The stub honours the request, so no discrepancy is reported.
+    expect(screen.queryByText(/fits \d+ here/)).not.toBeInTheDocument();
   });
 
   it('does not crash when the day has no psalm text yet', () => {

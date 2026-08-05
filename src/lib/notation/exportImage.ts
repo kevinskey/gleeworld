@@ -24,12 +24,19 @@ export async function svgToJpegBlob(
   svg: SVGSVGElement,
   { scale = 2, background = DEFAULT_BACKGROUND, quality = 0.92 }: SvgToJpegOptions = {},
 ): Promise<Blob> {
-  // The live element carries no explicit width/height in some VexFlow paths,
-  // and a cloned SVG without them rasterises at the browser's 300×150 default.
-  // Measure the real box first, then stamp it on the clone.
+  // INTRINSIC size first, on-screen box only as a fallback. The staff may be
+  // CSS-scaled for on-screen readability while its internal coordinates stay
+  // at the true print size; measuring the rendered box would then pair a
+  // zoomed width with un-zoomed coordinates and stretch the export.
+  const attrW = Number.parseFloat(svg.getAttribute('width') ?? '');
+  const attrH = Number.parseFloat(svg.getAttribute('height') ?? '');
   const rect = svg.getBoundingClientRect();
-  const width = Math.max(1, Math.round(rect.width || svg.clientWidth || 384));
-  const height = Math.max(1, Math.round(rect.height || svg.clientHeight || 200));
+  const width = Math.max(1, Math.round(
+    Number.isFinite(attrW) && attrW > 0 ? attrW : (rect.width || svg.clientWidth || 384),
+  ));
+  const height = Math.max(1, Math.round(
+    Number.isFinite(attrH) && attrH > 0 ? attrH : (rect.height || svg.clientHeight || 200),
+  ));
 
   const clone = svg.cloneNode(true) as SVGSVGElement;
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
