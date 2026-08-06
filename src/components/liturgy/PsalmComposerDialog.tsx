@@ -16,7 +16,7 @@ import { playPitch } from '@/lib/notation/pitchAudio';
 import { useMidiInput, midiToPitch } from '@/lib/notation/useMidiInput';
 import { svgToJpegBlob, imageFileName, downloadBlob } from '@/lib/notation/exportImage';
 import {
-  degreeToPitch, measuresPerLine, psalmSyllables, psalmLines, psalmScoreTitle,
+  measuresPerLine, psalmSyllables, psalmLines, psalmScoreTitle,
   PSALM_WIDTH_PX, PSALM_WIDTH_IN,
 } from '@/lib/liturgy/psalmComposer';
 import { savePsalmToLibrary } from '@/lib/liturgy/psalmScores';
@@ -309,17 +309,6 @@ export function PsalmComposerDialog({
     addNote({ ...nearestPitch(step, prev ? prev.pitch : null), alter: armedAlter });
   }, [addNote, armedAlter]);
 
-  const addByDegree = useCallback((degree: number) => {
-    const s = scoreRef.current;
-    const base = degreeToPitch(degree, s.keyFifths, s.mode, octaveShift);
-    // The degree is already spelled for the key, so the accidental SHIFTS it
-    // rather than replacing it: sharpening degree 7 in D minor gives C sharp,
-    // and sharpening the tonic of E flat gives E natural. VexFlow prints
-    // whichever sign the key signature makes necessary.
-    const alter = Math.max(-2, Math.min(2, base.alter + armedAlter));
-    addNote({ ...base, alter });
-  }, [addNote, octaveShift, armedAlter]);
-
   const addRest = useCallback(() => {
     const s = scoreRef.current;
     const at = selected != null ? selected + 1 : s.elements.length;
@@ -452,7 +441,6 @@ export function PsalmComposerDialog({
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const k = e.key.toUpperCase();
       if (LETTERS.includes(k as Pitch['step'])) { e.preventDefault(); addByLetter(k as Pitch['step']); return; }
-      if (/^[1-7]$/.test(e.key)) { e.preventDefault(); addByDegree(Number(e.key)); return; }
       if (e.key === 'Backspace') { e.preventDefault(); removeLast(); return; }
       if (e.key === 'r' || e.key === 'R') { e.preventDefault(); addRest(); return; }
       // '-' and '=' sit either side of the number row the degrees use, so an
@@ -479,14 +467,13 @@ export function PsalmComposerDialog({
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [open, addByLetter, addByDegree, removeLast, addRest, armAccidental, nudgePitch, respell, selectNote, selected]);
+  }, [open, addByLetter, removeLast, addRest, armAccidental, nudgePitch, respell, selectNote, selected]);
 
   /**
    * Key, mode and metre change the SCORE, not a note, so they bypass the
    * command stack — undo walks back through note entry, and having a key
    * change interleaved in that history would make undo unpredictable. They
-   * are also re-read by degreeToPitch on the next entry, so changing the key
-   * re-aims the number row immediately without touching existing notes.
+   * take effect on the next note entered, without touching existing ones.
    */
   const setAttrs = useCallback((patch: Partial<EditorScore>) => {
     const next = { ...scoreRef.current, ...patch };
@@ -562,9 +549,8 @@ export function PsalmComposerDialog({
             Compose the responsorial psalm
           </DialogTitle>
           <DialogDescription>
-            Type letters <strong>A–G</strong> for pitches or <strong>1–7</strong> for scale
-            degrees in the key — or play a MIDI keyboard. <strong>−</strong> and{' '}
-            <strong>+</strong> flat and sharp. Click a note to hear it, then{' '}
+            Type letters <strong>A–G</strong> for pitches, or play a MIDI keyboard.
+            <strong> −</strong> and <strong>+</strong> flat and sharp. Click a note to hear it, then{' '}
             <strong>↑↓</strong> to move its pitch, <strong>←→</strong> between notes, and{' '}
             <strong>Enter</strong> for the enharmonic spelling. Words from the day&rsquo;s
             psalm attach as you go.
@@ -646,9 +632,7 @@ export function PsalmComposerDialog({
                 <option value="alto">Alto</option>
               </select>
             </div>
-            <p className="text-xs text-muted-foreground">
-              The number keys follow the key — in E♭, <strong>3</strong> is G.
-            </p>
+
           </div>
 
           {/* Entry toolbar */}
@@ -748,31 +732,7 @@ export function PsalmComposerDialog({
               current key: bare numbers left people asking what they were for,
               and the answer changes with the key signature, so the button has
               to say it rather than a caption elsewhere. */}
-          <p className="text-xs text-muted-foreground">
-            <strong>Scale degrees</strong> follow the key — the note under each number is what
-            it will write. <strong>Letters</strong> are absolute pitches.
-          </p>
           <div className="flex flex-wrap gap-1.5">
-            {[1, 2, 3, 4, 5, 6, 7].map((d) => {
-              const p = degreeToPitch(d, score.keyFifths, score.mode, octaveShift);
-              const name = `${p.step}${p.alter > 0 ? '♯'.repeat(p.alter) : p.alter < 0 ? '♭'.repeat(-p.alter) : ''}`;
-              return (
-                <Button
-                  key={d}
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={() => addByDegree(d)}
-                  title={`Scale degree ${d} — ${name} in this key`}
-                  aria-label={`Scale degree ${d}, ${name}`}
-                  className="h-auto min-w-11 flex-col gap-0 py-1 leading-none"
-                >
-                  <span className="text-sm tabular-nums">{d}</span>
-                  <span className="text-[10px] font-normal text-muted-foreground">{name}</span>
-                </Button>
-              );
-            })}
-            <span className="mx-1 h-5 w-px bg-border" aria-hidden />
             {LETTERS.map((l) => (
               <Button key={l} type="button" size="sm" variant="outline"
                 onClick={() => addByLetter(l)} className="min-w-9">
