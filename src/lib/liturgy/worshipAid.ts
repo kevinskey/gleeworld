@@ -232,15 +232,22 @@ export function buildWorshipAid(
           imageUrl: psalmImage,
         }
       : null,
-    settings.images.insideLeft ? { label: '', imageUrl: settings.images.insideLeft } : null,
-  ]);
-
-  const insideRight = compact([
+    // The Liturgy of the Word stays WHOLE on one panel (Kevin). It used to
+    // break after the psalm, with the second reading and Gospel carried over
+    // to the facing panel — so the part of the Mass a congregation follows
+    // most closely was split across a fold, and the Gospel sat under a
+    // heading about the Eucharist.
     reading('SECOND READING', row.second_reading),
     reading('GOSPEL ACCLAMATION', row.gospel_acclamation),
     reading('GOSPEL', row.gospel),
     { label: 'HOMILY' },
     { label: 'PROFESSION OF FAITH', credit: 'on pew card' },
+    settings.images.insideLeft ? { label: '', imageUrl: settings.images.insideLeft } : null,
+  ]);
+
+  // The facing panel now opens at the Eucharist, which is also where the
+  // page turn naturally falls in the celebration itself.
+  const insideRight = compact([
     { label: 'LITURGY OF THE EUCHARIST', divider: true },
     song('PREPARATION OF THE ALTAR AND THE GIFTS', row.preparation_title),
     { label: 'EUCHARISTIC PRAYER' },

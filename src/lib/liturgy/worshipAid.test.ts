@@ -90,19 +90,27 @@ describe('buildWorshipAid', () => {
     });
   });
 
-  it('follows the order of the Mass down the first inside panel', () => {
+  // The Liturgy of the Word stays whole on one panel: split across the fold,
+  // the part a congregation follows most closely is the part they lose.
+  it('keeps the entire Liturgy of the Word on the first inside panel', () => {
     expect(labels(aid.insideLeft)).toEqual([
       'INTRODUCTORY RITES', 'THE ORDER OF MASS', 'PRELUDE', 'OPENING HYMN',
       'LITURGY OF THE WORD', 'FIRST READING', 'RESPONSORIAL PSALM',
+      'SECOND READING', 'GOSPEL', 'HOMILY', 'PROFESSION OF FAITH',
     ]);
   });
 
-  it('carries on into the Eucharist on the second inside panel', () => {
+  it('opens the facing panel at the Eucharist', () => {
     expect(labels(aid.insideRight)).toEqual([
-      'SECOND READING', 'GOSPEL', 'HOMILY', 'PROFESSION OF FAITH',
       'LITURGY OF THE EUCHARIST', 'PREPARATION OF THE ALTAR AND THE GIFTS',
       'EUCHARISTIC PRAYER', 'MEMORIAL ACCLAMATION', 'DOXOLOGY and AMEN', 'OUR FATHER',
     ]);
+  });
+
+  it('does not leave the Gospel under a heading about the Eucharist', () => {
+    const right = labels(aid.insideRight);
+    expect(right).not.toContain('GOSPEL');
+    expect(right).not.toContain('SECOND READING');
   });
 
   it('finishes the communion rite on the back cover', () => {
@@ -114,7 +122,7 @@ describe('buildWorshipAid', () => {
   // An empty heading with nothing under it is worse than no heading: it reads
   // as a mistake in a document handed to a congregation.
   it('omits sections the plan has nothing for', () => {
-    expect(labels(aid.insideRight)).not.toContain('GOSPEL ACCLAMATION');
+    expect(labels(aid.insideLeft)).not.toContain('GOSPEL ACCLAMATION');
     // Only one communion hymn was entered, so only one prints.
     expect(labels(aid.back).filter((l) => l === 'COMMUNION')).toHaveLength(1);
   });
@@ -165,7 +173,9 @@ describe('buildWorshipAid', () => {
     };
     const a = buildWorshipAid(blank, DEFAULT_SETTINGS);
     expect(a.front.title).toBe('');
-    expect(labels(a.insideLeft)).toEqual(['INTRODUCTORY RITES', 'LITURGY OF THE WORD']);
+    expect(labels(a.insideLeft)).toEqual([
+      'INTRODUCTORY RITES', 'LITURGY OF THE WORD', 'HOMILY', 'PROFESSION OF FAITH',
+    ]);
   });
 });
 
