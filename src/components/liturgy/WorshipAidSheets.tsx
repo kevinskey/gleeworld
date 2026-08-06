@@ -90,14 +90,29 @@ function Entry({ entry, spacing = 1 }: { entry: AidEntry; spacing?: number }) {
         </p>
       )}
       {entry.imageUrl && (
-        // Images are the one thing a user drops in by hand, so they are
-        // constrained rather than trusted: full panel width, natural height,
-        // never overflowing the fold.
-        <img
-          src={entry.imageUrl}
-          alt=""
-          style={{ display: 'block', width: '100%', height: 'auto', margin: '0.08in 0' }}
-        />
+        // An engraved setting is a block of its own, not a picture beside
+        // text: centred, with clear air above and below so it never reads as
+        // part of the entry above it or collides with the one below.
+        //
+        // maxWidth rather than width, and a height cap, so it REDUCES to fit
+        // (Kevin) — a wide engraving shrinks to the panel instead of running
+        // over the fold, and a tall one cannot push the rest of the panel off
+        // the page. Aspect ratio is preserved either way.
+        <div style={{
+          margin: `${(0.16 * spacing).toFixed(3)}in 0`,
+          textAlign: 'center',
+        }}>
+          <img
+            src={entry.imageUrl}
+            alt=""
+            style={{
+              display: 'inline-block',
+              maxWidth: '100%', maxHeight: '2.6in',
+              width: 'auto', height: 'auto',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
       )}
     </div>
   );

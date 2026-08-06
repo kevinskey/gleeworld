@@ -40,10 +40,20 @@ const MAX_PER_ROW_PHONE = 2;
 const PHONE_MAX_WIDTH = 768;
 
 const SELECTED_COLOR = '#ea580c'; // orange-600
+
+/** Width of a syllable at the engraved size. Falls back to a per-character
+ *  estimate where no canvas is available (jsdom, older WebViews). */
+function measureLyric(ctx: CanvasRenderingContext2D | null, text: string): number {
+  const w = ctx?.measureText(text).width;
+  return typeof w === 'number' && w > 0 ? w : text.length * (LYRIC_SIZE * 0.5);
+}
 // Which text line below the stave the lyrics sit on, and their size. One
 // value for the whole system is the entire point — see the draw loop.
 const LYRIC_LINE = 1;
 const LYRIC_SIZE = 10;
+/** Minimum clear space between one syllable and the next. Below about this
+ *  the words read as a single run even when they technically do not touch. */
+const LYRIC_GUTTER = 6;
 
 export function NotationView({
   score, width, onNoteClick, selectedIndex,
@@ -138,6 +148,12 @@ export function NotationView({
 
     const beamSpec = `${score.timeSig.beats}/${score.timeSig.beatType}`;
 
+    // A canvas 2D context used only to MEASURE lyric widths during pass 1.
+    // The renderer's own context is not usable yet — it is created and scaled
+    // after the row packing, which is precisely what these widths decide.
+    const ctxProbe = document.createElement('canvas').getContext('2d');
+    if (ctxProbe) ctxProbe.font = `${LYRIC_SIZE}px "Times New Roman", Times, serif`;
+
     // Pass 1 — build each measure's tickables + its minimum content width, so a system can
     // size bars PROPORTIONALLY to their content (a busy bar gets more width than a sparse one)
     // instead of forcing every bar to the same width (which cramps busy bars).
@@ -196,6 +212,25 @@ export function NotationView({
         beams = Beam.generateBeams(voice.getTickables(), { groups: Beam.getDefaultBeamGroups(beamSpec) });
         try { minW = new Formatter().joinVoices([voice]).preCalculateMinTotalWidth([voice]); }
         catch { minW = 44 * notes.length; }
+
+        // Reserve room for the WORDS as well as the notes.
+        //
+        // Lyrics used to be VexFlow Annotations, so the formatter counted
+        // their width when spacing notes. Drawing them by hand — which is
+        // what puts them all on one baseline — made them invisible to it, and
+        // notes packed tighter than their syllables needed: "guards his
+        // flock" ran into the barline. The formatter cannot see them, so the
+        // minimum width has to.
+        //
+        // Measured at the real lyric size rather than estimated per
+        // character, because "O" and "shepherd" differ by a factor of six and
+        // an average would over-space one and collide the other.
+        const lyricW = m.elements.reduce((sum, el) => (
+          el.kind === 'note' && el.lyric
+            ? sum + measureLyric(ctxProbe, el.lyric) + LYRIC_GUTTER
+            : sum
+        ), 0);
+        minW = Math.max(minW, lyricW);
       }
       return { m, notes, voice, beams, tuplets, minW };
     });
