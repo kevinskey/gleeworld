@@ -37,7 +37,9 @@ export type ConciergeResult =
   | { kind: 'ride'; query: string; resolvedAddress: string; uberUrl: string; lyftUrl: string; preferred?: 'uber' | 'lyft' }
   | { kind: 'food'; query: string; services: Array<{ name: 'DoorDash' | 'Uber Eats' | 'Grubhub'; deepLinkUrl: string }>; preferred?: 'doordash' | 'ubereats' | 'grubhub' }
   | { kind: 'web';  query: string; answer?: string; results: Array<{ title: string; url: string; snippet: string }> }
-  | { kind: 'places'; query: string; near?: string; places: PlaceEntry[] };
+  | { kind: 'places'; query: string; near?: string; places: PlaceEntry[] }
+  /** A video to PLAY on screen, not a link to follow. The panel embeds it. */
+  | { kind: 'video'; query: string; videoId: string; title: string; channel?: string };
 
 export interface ToolResult {
   replyJson: string;
@@ -57,6 +59,7 @@ export async function executeServerTool(
       case 'search_liturgy': return { replyJson: searchLiturgyTool(args) };
       case 'find_user': return { replyJson: await findUser(args, deps) };
       case 'search_youtube': return { replyJson: await searchYoutube(args, deps) };
+      case 'play_video': return await playVideo(args, deps);
       case 'get_ride': return await getRide(args, deps);
       case 'order_food': return await orderFood(args);
       case 'get_date_card': return { replyJson: await getDateCard(deps) };
@@ -337,6 +340,44 @@ async function rememberPreference(args: Record<string, unknown>, { supabase }: D
     .upsert({ key, value }, { onConflict: 'tenant_id,user_id,key' });
   if (error) return JSON.stringify({ error: error.message });
   return JSON.stringify({ ok: true, key, value });
+}
+
+/**
+ * Put a video on screen.
+ *
+ * search_youtube hands the model a list to talk about; this plays one. The
+ * distinction matters because "play me Ave Verum" is not answered by reciting
+ * three titles and a URL — it is answered by the music starting. The panel
+ * embeds the player, so nothing leaves GleeWorld and no URL is read aloud.
+ */
+async function playVideo(args: Record<string, unknown>, deps: Deps): Promise<ToolResult> {
+  const q = String(args.q ?? args.query ?? '').trim();
+  const explicitId = String(args.videoId ?? '').trim();
+
+  if (explicitId) {
+    return {
+      replyJson: JSON.stringify({ playing: explicitId, note: 'The video is on screen. Say what is playing; do not read the URL.' }),
+      resultsPanel: { kind: 'video', query: q || explicitId, videoId: explicitId, title: String(args.title ?? '') },
+    };
+  }
+  if (!q) return { replyJson: JSON.stringify({ error: 'Ask which song or video they want.' }) };
+
+  const raw = await searchYoutube({ q }, deps);
+  let first: { id?: string; title?: string; channel?: string } | undefined;
+  try { first = JSON.parse(raw)?.videos?.[0]; } catch { /* fall through */ }
+  if (!first?.id) {
+    return { replyJson: JSON.stringify({ error: `Nothing on YouTube matched "${q}".` }) };
+  }
+  return {
+    replyJson: JSON.stringify({
+      playing: first.id, title: first.title, channel: first.channel,
+      note: 'The video is now on screen. Say what is playing; never read the URL or the id aloud.',
+    }),
+    resultsPanel: {
+      kind: 'video', query: q, videoId: first.id,
+      title: first.title ?? q, channel: first.channel,
+    },
+  };
 }
 
 async function searchYoutube(args: Record<string, unknown>, { youtubeApiKey }: Deps): Promise<string> {

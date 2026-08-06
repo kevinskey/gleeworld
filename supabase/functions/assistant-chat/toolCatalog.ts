@@ -50,13 +50,30 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'search_youtube',
-    description: 'Search YouTube for videos. Returns video ids, titles, channels, and URLs.',
+    description: 'Search YouTube for videos. Returns video ids, titles, channels, and URLs. Use this to LIST options; to actually play something, call play_video.',
     parameters: {
       type: 'object',
       properties: { q: str('Search query') },
       required: ['q'],
     },
-    minRole: 'admin', execution: 'server', confirm: false,
+    // Read-only search, and a member asking to hear a piece is the whole
+    // point — this was admin-gated, which left ordinary singers unable to
+    // ask for the music they are learning.
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'play_video',
+    description: "Play a video or song ON SCREEN. Use whenever the user asks to hear, play, watch or pull up a piece of music, a recording or a video — 'play Ave Verum', 'pull up the Hall Johnson recording', 'let me hear that'. Pass what they asked for as `q` and it finds and plays the best match; pass `videoId` instead when you already have one from search_youtube. The player appears in the app — never read the URL or the video id aloud.",
+    parameters: {
+      type: 'object',
+      properties: {
+        q: str("What to play, e.g. 'Ave Verum Corpus Mozart' or 'Hall Johnson Ain't Got Time to Die'"),
+        videoId: str('A known YouTube video id, when you already have one'),
+        title: str('Title, when you already have one'),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
   },
   {
     name: 'get_ride',
