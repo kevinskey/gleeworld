@@ -400,18 +400,51 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
             const question = String(params?.question ?? '').trim();
             if (!question) return 'Ask the user what they would like to know.';
             try {
+              // The SAME context the typed path sends. Without it the
+              // delegated brain is half-blind: no geo means "find me a
+              // coffee" cannot locate anything, and no navTargets means it
+              // cannot resolve a page by name. A question asked aloud
+              // deserves the same footing as one typed.
+              const geo = await getFreshGeo();
               const { data, error } = await supabase.functions.invoke('assistant-chat', {
                 body: {
                   messages: [{ role: 'user', content: question }],
                   thread_id: liveThreadRef.current ?? undefined,
+                  context: {
+                    firstName: profile?.full_name?.split(' ')[0] ?? 'there',
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    navTargets: assistantNavTargets(),
+                    ...(geo ? { geo } : {}),
+                  },
                 },
               });
               if (error) throw error;
-              const reply = (data as { reply?: string; thread_id?: string } | null);
-              if (reply?.thread_id) liveThreadRef.current = reply.thread_id;
-              // Returned verbatim for the agent to speak. Its own prompt
-              // governs delivery; this is the content.
-              return reply?.reply || "I couldn't find anything on that.";
+              const res = (data as {
+                reply?: string;
+                thread_id?: string;
+                actions?: AssistantAction[];
+                resultsPanel?: unknown;
+              } | null);
+              if (res?.thread_id) liveThreadRef.current = res.thread_id;
+
+              // Its ACTIONS matter as much as its words. A spoken "find me a
+              // coffee" should still raise the card with the tap-to-open-maps
+              // button, and "open the calendar" should still open it —
+              // dropping these left voice describing things it had not done.
+              if (res?.resultsPanel && typeof res.resultsPanel === 'object' && 'kind' in res.resultsPanel) {
+                setResultsPanel(res.resultsPanel as ConciergeResult);
+              }
+              const spokenId = crypto.randomUUID();
+              const actions = res?.actions ?? [];
+              // Confirm-gated actions (texts, emails, deletes) are NOT run
+              // from a voice turn: they are registered so the sheet shows
+              // their card and a human presses the button. Speaking is not
+              // consent to send something on someone's behalf.
+              const { first: needsConfirm, autoRun } = confirmQueueRef.current.register(spokenId, actions);
+              for (const action of autoRun) await runAction(spokenId, action);
+              if (needsConfirm) setSheetOpen(true);
+
+              return res?.reply || "I couldn't find anything on that.";
             } catch (err) {
               return `I couldn't look that up: ${err instanceof Error ? err.message : 'unknown error'}`;
             }
@@ -505,7 +538,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     } finally {
       liveConnectingRef.current = false;
     }
-  }, [navigate, stopSpeakingNow, failVisibly, profile?.full_name]);
+  }, [navigate, stopSpeakingNow, failVisibly, profile?.full_name, getFreshGeo, runAction, setSheetOpen]);
 
   // End the live session if the provider ever unmounts (sign-out, tenant
   // switch) — a dangling WebRTC session would keep the mic open.
