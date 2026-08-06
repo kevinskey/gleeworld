@@ -14,6 +14,10 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import {
   handleIntake,
+  resolveAttemptCounts,
+  assertNoPgError,
+  lookupUserByEmail,
+  pickAuditionApplicationFields,
   type IntakeDeps,
   type IntakeInput,
   type IntakeAccount,
@@ -161,6 +165,39 @@ serve(async (req: Request): Promise<Response> => {
       payload: (body.payload ?? {}) as Record<string, unknown>,
     };
 
+    // C3/C4: resolve the tenant ONCE, up front, from the caller-supplied
+    // slug — never trust it bare. The service-role client below carries no
+    // x-tenant-slug header of its own, so every query it makes is otherwise
+    // tenant-blind: current_tenant_id() returns NULL for a service-role
+    // caller and the anon fallback reads a header that was never forwarded.
+    // Without this, gw_services and audition_sessions lookups (below) would
+    // silently match ANY tenant's rows rather than this request's tenant.
+    // A submission whose tenant cannot be resolved is rejected outright —
+    // there is no safe default to fall back to.
+    if (!input.tenantSlug) {
+      return json(
+        {
+          ok: false,
+          reason: "invalid_input",
+          message: "This site is not configured for public submissions. Please contact the organization directly.",
+        },
+        400,
+      );
+    }
+    const { data: tenantRow } = await admin
+      .from("gw_tenants").select("id").eq("slug", input.tenantSlug).maybeSingle();
+    if (!tenantRow?.id) {
+      return json(
+        {
+          ok: false,
+          reason: "invalid_input",
+          message: "This site is not configured for public submissions. Please contact the organization directly.",
+        },
+        400,
+      );
+    }
+    const tenantId: string = tenantRow.id;
+
     // Resolves a tenant's branding row by slug. Named and pulled out of the
     // `deps` object below because inlined as a nested arrow it reads as one
     // long unreadable expression (two queries chained through a subselect).
@@ -187,17 +224,32 @@ serve(async (req: Request): Promise<Response> => {
             .select("id", { count: "exact", head: true })
             .eq("source_ip", ip).gte("created_at", since),
         ]);
-        return { email: byEmail.count ?? 0, ip: byIp.count ?? 0 };
+        // C1: resolveAttemptCounts throws on either query's error instead of
+        // defaulting to 0 — a missing gw_public_intake_attempts table (the
+        // literal state before this feature's migration is applied) must
+        // fail the submission closed, not silently disable the rate limit.
+        return resolveAttemptCounts(byEmail, byIp);
       },
 
       async recordAttempt(email, ip) {
-        await admin.from("gw_public_intake_attempts").insert({ email, source_ip: ip });
+        const result = await admin.from("gw_public_intake_attempts").insert({ email, source_ip: ip });
+        // C1: the insert's error was previously discarded entirely. A
+        // failure here means this attempt is invisible to every future
+        // count, so it must fail the whole submission rather than proceed
+        // as if the attempt had been recorded.
+        assertNoPgError(result, "recordAttempt");
       },
 
       async preflight(inp) {
         if (inp.kind === "audition") {
+          // C4: scoped to the resolved tenant. Unscoped, this matched
+          // whichever tenant's session sorted first — a visitor on a
+          // tenant with no audition process of its own would silently
+          // attach to a stranger tenant's session instead of being
+          // rejected.
           const { data } = await admin
-            .from("audition_sessions").select("id").eq("is_active", true).limit(1);
+            .from("audition_sessions").select("id")
+            .eq("is_active", true).eq("tenant_id", tenantId).limit(1);
           if (!data || data.length === 0) {
             return {
               ok: false, reason: "no_active_session",
@@ -206,11 +258,15 @@ serve(async (req: Request): Promise<Response> => {
           }
           return { ok: true };
         }
-        // Appointment: the service must exist and be active, and the slot free.
+        // Appointment: the service must exist, be active, and belong to
+        // THIS tenant, and the slot free. The tenant check is what stops a
+        // visitor on tenant A from booking a service that belongs to
+        // tenant B (gw_services has no RLS restricting an anon-facing
+        // lookup by id alone).
         const serviceId = inp.payload.serviceId as string;
         const { data: svc } = await admin
           .from("gw_services").select("id, duration_minutes")
-          .eq("id", serviceId).eq("is_active", true).maybeSingle();
+          .eq("id", serviceId).eq("is_active", true).eq("tenant_id", tenantId).maybeSingle();
         if (!svc) {
           return { ok: false, reason: "unavailable", message: "That service is no longer available." };
         }
@@ -231,10 +287,12 @@ serve(async (req: Request): Promise<Response> => {
 
       async findUserByEmail(email) {
         // gw_profiles mirrors auth.users and is directly queryable by email,
-        // which avoids paging the admin user list.
-        const { data } = await admin
-          .from("gw_profiles").select("user_id").ilike("email", email).maybeSingle();
-        return data?.user_id ? { id: data.user_id } : null;
+        // which avoids paging the admin user list. I1: this MUST be an
+        // exact match — lookupUserByEmail's type only exposes `.eq(...)`,
+        // so this call site cannot regress to `.ilike(...)` (which treats
+        // `%`/`_` in attacker-supplied input as LIKE wildcards, letting
+        // e.g. `victi_@example.com` resolve to victim@example.com).
+        return lookupUserByEmail(admin.from("gw_profiles").select("user_id"), email);
       },
 
       async createAccount(acct, tenantSlug) {
@@ -294,8 +352,13 @@ serve(async (req: Request): Promise<Response> => {
           return { id: data.appointment_id as string };
         }
 
+        // C4: same tenant scoping as preflight — re-checked here rather
+        // than trusted from preflight's result, since the two run in
+        // separate requests to the DB with a real (if narrow) gap between
+        // them.
         const { data: sessions } = await admin
-          .from("audition_sessions").select("id").eq("is_active", true).limit(1);
+          .from("audition_sessions").select("id")
+          .eq("is_active", true).eq("tenant_id", tenantId).limit(1);
         if (!sessions || sessions.length === 0) {
           // Preflight already confirmed a session was active; this only fires
           // if it went inactive in the gap between preflight and write. Named
@@ -303,10 +366,28 @@ serve(async (req: Request): Promise<Response> => {
           // of a bare "Cannot read properties of undefined".
           throw new Error("audition_session_no_longer_active");
         }
+        // I2: only the columns the real audition form submits are ever
+        // written. `inp.payload.application` is attacker-controlled JSON —
+        // spreading it directly would let a crafted request set `status`,
+        // `user_id`, `session_id`, or any other column audition_applications
+        // happens to have. user_id/session_id/status are set explicitly
+        // below and always win regardless of what pickAuditionApplicationFields
+        // lets through.
+        //
+        // audition_applications has no tenant_id column (verified against
+        // every migration that touches this table — see
+        // .superpowers/sdd/2026-08-06-public-tenant-intake/final-fix-report.md,
+        // C3), so none is set here. The row's tenant is established
+        // transitively through session_id, which preflight and this
+        // function both just confirmed belongs to `tenantId`.
         const { data, error } = await admin
           .from("audition_applications")
-          .insert({ ...(inp.payload.application as Record<string, unknown>),
-                    user_id: userId, session_id: sessions[0].id, status: "submitted" })
+          .insert({
+            ...pickAuditionApplicationFields((inp.payload.application ?? {}) as Record<string, unknown>),
+            user_id: userId,
+            session_id: sessions[0].id,
+            status: "submitted",
+          })
           .select("id").single();
         if (error) throw new Error(error.message);
         return { id: data.id as string };
