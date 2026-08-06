@@ -204,9 +204,9 @@ export default function PublicBookingPage() {
               <button
                 type="button"
                 onClick={() => { setSubmitError(null); setStep('service'); }}
-                className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
               >
-                <ChevronLeft className="w-3.5 h-3.5" /> Back to services
+                <ChevronLeft className="w-4 h-4" /> Back to services
               </button>
               <div>
                 <div className="text-base font-bold text-foreground">{selectedService.name}</div>
@@ -249,9 +249,9 @@ export default function PublicBookingPage() {
               <button
                 type="button"
                 onClick={() => { setSubmitError(null); setStep('slot'); }}
-                className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+                className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
               >
-                <ChevronLeft className="w-3.5 h-3.5" /> Back to times
+                <ChevronLeft className="w-4 h-4" /> Back to times
               </button>
 
               <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm text-foreground">

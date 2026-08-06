@@ -57,8 +57,8 @@ export function BookingServicePicker({ services, selectedId, onSelect }: {
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-foreground">{s.name}</div>
                 <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="inline-flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock className="w-4 h-4" />
                     {s.duration_minutes} min
                   </span>
                   <span>•</span>
@@ -66,8 +66,8 @@ export function BookingServicePicker({ services, selectedId, onSelect }: {
                   {s.location && (
                     <>
                       <span>•</span>
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5" />
+                      <span className="inline-flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4" />
                         {s.location}
                       </span>
                     </>
