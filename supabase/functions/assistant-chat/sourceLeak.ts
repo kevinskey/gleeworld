@@ -20,23 +20,45 @@
  */
 
 /**
- * Naming the retrieval corpus: a corpus adjective followed by a collection
- * noun, allowing one word between them.
- *
- * Written as a cross-product rather than a list of literals ON PURPOSE. Three
- * successive live tests produced three different wordings — "reference
- * library", then "choral records available to me", then "choral reference
- * materials". Enumerating phrasings loses to a model that generates new ones;
- * only the adjective set is small and stable.
- *
- * The adjectives are the safety mechanism. "music library" and "media library"
- * are real app features the assistant SHOULD talk about, and neither adjective
- * appears here.
+ * Corpus names that are not "<something> library" — handled separately below
+ * by namesACorpusLibrary(), which allow-lists our own collections instead of
+ * trying to enumerate theirs.
  */
 const CORPUS_NAMES = [
-  /\b(?:reference|academy|choral|internal|knowledge)\s+(?:\w+\s+)?(?:librar(?:y|ies)|materials?|records?|sources?|documents?|base)\b/i,
   /\bknowledge base\b/i,
+  /\bchoral records\b/i,
 ];
+
+/**
+ * Collections the assistant SHOULD talk about — real features of the app.
+ * Everything else modifying "library" is a retrieval corpus and a leak.
+ *
+ * This is an allow-list of the legitimate ones, NOT a block-list of corpus
+ * names. The block-list lost: it named reference/academy/choral, and then
+ * search_music_facts shipped and the model said "the instrument facts
+ * library". Every new corpus invents a new name; the set of user-facing
+ * collections is small and changes only when we add a feature.
+ */
+const APP_COLLECTIONS = new Set([
+  'music', 'media', 'sheet', 'personal', 'score', 'scores', 'video', 'audio',
+  'digital', 'glee', 'your', 'their', 'our', 'the', 'this', 'that', 'a', 'my',
+]);
+
+/** "<word> library" where <word> is not one of ours. */
+function namesACorpusLibrary(text: string): boolean {
+  for (const m of text.matchAll(/\b(\w+)\s+librar(?:y|ies)\b/gi)) {
+    if (!APP_COLLECTIONS.has(m[1].toLowerCase())) return true;
+  }
+  return false;
+}
+
+/**
+ * "the choral reference", "our reference", "the reference doesn't cover" —
+ * "reference" used as a NOUN for a source. Excluded: its legitimate adjectival
+ * uses, "reference pitch" and "reference recording".
+ */
+const REFERENCE_AS_SOURCE =
+  /\b(?:our|the|my|its)\s+(?:\w+\s+)?references?\b(?!\s+(?:pitch|recording|track|tone|point))/i;
 
 /**
  * Narrating consultation or possession of sources, independent of what the
@@ -66,6 +88,8 @@ export function namesItsSources(reply: string): boolean {
   // Strip the sanctioned liturgy phrasing before testing, so a liturgy answer
   // that ALSO leaks the choral corpus is still caught.
   const text = reply.replace(LITURGY_ALLOWED, ' ');
+  if (namesACorpusLibrary(text)) return true;
+  if (REFERENCE_AS_SOURCE.test(text)) return true;
   return [...CORPUS_NAMES, ...CONSULTATION].some((re) => re.test(text));
 }
 

@@ -16,6 +16,11 @@ describe('namesItsSources', () => {
       // same meaning, third wording. This is why CORPUS_NAMES is a
       // cross-product and CONSULTATION matches possession, not phrasing.
       'I could not verify that. The name "Halvard Brennemann" doesn\'t appear in the choral reference materials or broader web sources I have access to.',
+      // Fourth wording, produced the moment search_music_facts shipped and
+      // gave the model a new corpus to name. This is why the check is an
+      // allow-list of OUR collections, not a block-list of corpus names.
+      'I could not verify the sarrusophone\'s range — neither the instrument facts library nor the choral reference had an entry for it.',
+      'Our reference doesn\'t currently cover that instrument.',
     ]) {
       expect(namesItsSources(reply), reply.slice(0, 50)).toBe(true);
     }
@@ -32,6 +37,9 @@ describe('namesItsSources', () => {
       'You have four scores in your personal library.',
       'Opening the Music Library now.',
       'The library has three copies of that octavo.',
+      'I saved it to your personal library.',
+      'Play the reference recording first, then sing it back.',
+      'Tune to the reference pitch before the downbeat.',
     ]) {
       expect(namesItsSources(reply), reply.slice(0, 50)).toBe(false);
     }
