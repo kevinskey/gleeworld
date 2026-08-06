@@ -33,14 +33,16 @@ const BRAND = 'hsl(var(--primary))';
 const PANEL_W = 5.5;
 const SHEET_H = 8.5;
 
-function Notice({ text, spacing = 1 }: { text: string; spacing?: number }) {
+function Notice({ text, spacing = 1, editable, onCommit }: {
+  text: string; spacing?: number; editable?: boolean; onCommit?: (v: string) => void;
+}) {
   return (
     <div style={{
       border: `1px solid ${BRAND}`, padding: '0.09in 0.11in',
       margin: `${(0.10 * spacing).toFixed(3)}in 0`,
       fontStyle: 'italic', fontSize: '7.6pt', lineHeight: 1.35, textAlign: 'center',
     }}>
-      {text}
+      <Editable value={text} editable={editable} onCommit={onCommit} />
     </div>
   );
 }
@@ -59,17 +61,77 @@ function Divider({ label, spacing = 1 }: { label: string; spacing?: number }) {
   );
 }
 
-function Entry({ entry, spacing = 1 }: { entry: AidEntry; spacing?: number }) {
-  if (entry.notice) return <Notice text={entry.notice} spacing={spacing} />;
+/**
+ * A field you can type into directly on the page.
+ *
+ * contentEditable rather than an input: an input would carry its own box,
+ * font and metrics, so the thing being edited would not be the thing that
+ * prints. Editing the rendered element means what you see is literally the
+ * printed output — which is the entire point of a fixed-format document.
+ *
+ * Commit is on BLUR, not on every keystroke: this text feeds the pagination,
+ * and re-flowing the document on each character would move the line you are
+ * typing on out from under you.
+ */
+function Editable({ value, onCommit, editable, style, className }: {
+  value: string;
+  onCommit?: (next: string) => void;
+  editable?: boolean;
+  style?: React.CSSProperties;
+  className?: string;
+}) {
+  if (!editable) return <span style={style} className={className}>{value}</span>;
+  return (
+    <span
+      contentEditable
+      suppressContentEditableWarning
+      spellCheck={false}
+      className={`${className ?? ''} worship-aid-editable`}
+      style={style}
+      onBlur={(e) => {
+        const next = e.currentTarget.textContent ?? '';
+        if (next !== value) onCommit?.(next);
+      }}
+      onKeyDown={(e) => {
+        // Enter commits rather than inserting a newline — a heading is one
+        // line by definition, and a stray <br> would silently change layout.
+        if (e.key === 'Enter') { e.preventDefault(); (e.currentTarget as HTMLElement).blur(); }
+        if (e.key === 'Escape') { e.currentTarget.textContent = value; (e.currentTarget as HTMLElement).blur(); }
+      }}
+    >
+      {value}
+    </span>
+  );
+}
+
+function Entry({ entry, spacing = 1, editable, onEdit }: {
+  entry: AidEntry;
+  spacing?: number;
+  editable?: boolean;
+  onEdit?: (field: 'label' | 'title' | 'credit' | 'summary', value: string) => void;
+}) {
+  if (entry.notice) {
+    return (
+      <Notice
+        text={entry.notice}
+        spacing={spacing}
+        editable={editable}
+        onCommit={(v) => onEdit?.('summary', v)}
+      />
+    );
+  }
   if (entry.divider) return <Divider label={entry.label} spacing={spacing} />;
 
   return (
     <div style={{ margin: `0 0 ${(0.11 * spacing).toFixed(3)}in` }}>
       {entry.label && (
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.12in' }}>
-          <span style={{ fontWeight: 700, fontSize: '8.6pt', letterSpacing: '0.01em' }}>
-            {entry.label}
-          </span>
+          <Editable
+            value={entry.label}
+            editable={editable}
+            onCommit={(v) => onEdit?.('label', v)}
+            style={{ fontWeight: 700, fontSize: '8.6pt', letterSpacing: '0.01em' }}
+          />
           {(entry.citation || (!entry.title && entry.credit)) && (
             <span style={{ fontStyle: 'italic', fontSize: '8.6pt', whiteSpace: 'nowrap' }}>
               {entry.citation ?? entry.credit}
@@ -79,7 +141,12 @@ function Entry({ entry, spacing = 1 }: { entry: AidEntry; spacing?: number }) {
       )}
       {entry.title && (
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.12in' }}>
-          <span style={{ fontStyle: 'italic', fontSize: '8.6pt' }}>{entry.title}</span>
+          <Editable
+            value={entry.title}
+            editable={editable}
+            onCommit={(v) => onEdit?.('title', v)}
+            style={{ fontStyle: 'italic', fontSize: '8.6pt' }}
+          />
           {entry.credit && (
             <span style={{ fontStyle: 'italic', fontSize: '8.6pt', whiteSpace: 'nowrap' }}>
               {entry.credit}
@@ -89,7 +156,7 @@ function Entry({ entry, spacing = 1 }: { entry: AidEntry; spacing?: number }) {
       )}
       {entry.summary && (
         <p style={{ fontStyle: 'italic', fontSize: '8pt', lineHeight: 1.35, margin: '0.04in 0 0' }}>
-          {entry.summary}
+          <Editable value={entry.summary} editable={editable} onCommit={(v) => onEdit?.('summary', v)} />
         </p>
       )}
       {entry.imageUrl && (
@@ -183,8 +250,8 @@ function FrontPanel({ aid, titleSize, imageScale }: {
   );
 }
 
-function BackPanel({ aid, spacing, qrDataUrl, blocks }: {
-  aid: WorshipAid; spacing: number; qrDataUrl?: string | null; blocks: RenderedBlock[];
+function BackPanel({ aid, qrDataUrl, children }: {
+  aid: WorshipAid; qrDataUrl?: string | null; children: React.ReactNode;
 }) {
   return (
     <Panel>
@@ -203,11 +270,7 @@ function BackPanel({ aid, spacing, qrDataUrl, blocks }: {
         </div>
       )}
       <div style={{ marginLeft: aid.spineText ? '0.22in' : 0 }}>
-        {blocks.map((b) => (
-          <div key={b.key} style={b.gapAfter ? { marginBottom: `${b.gapAfter}in` } : undefined}>
-            <Entry entry={b.entry} spacing={spacing} />
-          </div>
-        ))}
+        {children}
         {/* The phone code belongs on the BACK, not the cover: it is what you
             look for as you leave, and the cover is the parish's face. */}
         {qrDataUrl && (
@@ -249,6 +312,12 @@ export interface WorshipAidSheetsProps {
   /** Lines of content that will not fit in the four pages at all. The
    *  document cannot grow, so this is what the editor must surface. */
   onFlow?: (result: FlowResult) => void;
+  /** Type directly on the page. Screen only — print never shows the affordance. */
+  editable?: boolean;
+  /** A field on a block was edited. */
+  onEditBlock?: (key: string, field: 'label' | 'title' | 'credit' | 'summary', value: string) => void;
+  /** A block was deleted from the page. */
+  onDeleteBlock?: (key: string) => void;
 }
 
 /**
@@ -260,7 +329,7 @@ export interface WorshipAidSheetsProps {
  * fine on screen and is only discovered after the copies are made.
  */
 export function WorshipAidSheets({
-  aid, qrDataUrl, settings, edits, onFlow,
+  aid, qrDataUrl, settings, edits, onFlow, editable, onEditBlock, onDeleteBlock,
 }: WorshipAidSheetsProps) {
   const gap = (p: PanelId) => panelSpacing(settings, p);
 
@@ -286,6 +355,33 @@ export function WorshipAidSheets({
   const flowRef = useRef(onFlow); flowRef.current = onFlow;
   useEffect(() => { flowRef.current?.(flowed); });
   const page = (p: 'insideLeft' | 'insideRight' | 'back') => flowed.pages[p];
+
+  /** A page's blocks, editable in place with a delete affordance on hover. */
+  const renderPage = (p: 'insideLeft' | 'insideRight' | 'back') =>
+    page(p).map((b) => (
+      <div
+        key={b.key}
+        className={editable ? 'worship-aid-block' : undefined}
+        style={b.gapAfter ? { marginBottom: `${b.gapAfter}in`, position: 'relative' } : { position: 'relative' }}
+      >
+        <Entry
+          entry={b.entry}
+          spacing={gap(p)}
+          editable={editable}
+          onEdit={(field, value) => onEditBlock?.(b.key, field, value)}
+        />
+        {editable && (
+          <button
+            type="button"
+            aria-label={`Remove ${b.entry.label || 'this block'}`}
+            onClick={() => onDeleteBlock?.(b.key)}
+            className="worship-aid-remove"
+          >
+            ×
+          </button>
+        )}
+      </div>
+    ));
   return (
     <div className="worship-aid-sheets">
       <style>{`
@@ -302,7 +398,24 @@ export function WorshipAidSheets({
           position: absolute; top: 0; bottom: 0; left: 5.5in; width: 0;
           border-left: 1px dashed #bbb;
         }
+        /* Editing affordances are SCREEN ONLY — the printed sheet must carry
+           no trace of them, which is why they live here rather than inline. */
+        @media screen {
+          .worship-aid-editable:hover { background: rgba(0,0,0,0.05); }
+          .worship-aid-editable:focus {
+            outline: 2px solid hsl(var(--primary)); outline-offset: 1px; background: #fff;
+          }
+          .worship-aid-block:hover > .worship-aid-remove { opacity: 1; }
+          .worship-aid-remove {
+            position: absolute; top: -2px; right: -14px; width: 14px; height: 14px;
+            line-height: 12px; font-size: 12px; opacity: 0; cursor: pointer;
+            border: 1px solid #ccc; background: #fff; color: #b00; border-radius: 999px;
+            transition: opacity .12s;
+          }
+        }
         @media print {
+          .worship-aid-remove { display: none !important; }
+          .worship-aid-editable { background: none !important; outline: none !important; }
           .worship-aid-fold { display: none; }
           .worship-aid-sheet { box-shadow: none; margin: 0; }
 
@@ -354,10 +467,10 @@ export function WorshipAidSheets({
       <div className="worship-aid-sheet">
         <BackPanel
           aid={aid}
-          spacing={gap('back')}
           qrDataUrl={qrDataUrl}
-          blocks={page('back')}
-        />
+        >
+          {renderPage('back')}
+        </BackPanel>
         <FrontPanel
           aid={aid}
           titleSize={coverTitleSize(settings)}
@@ -368,18 +481,10 @@ export function WorshipAidSheets({
 
       <div className="worship-aid-sheet">
         <Panel>
-          {page('insideLeft').map((b) => (
-            <div key={b.key} style={b.gapAfter ? { marginBottom: `${b.gapAfter}in` } : undefined}>
-              <Entry entry={b.entry} spacing={gap('insideLeft')} />
-            </div>
-          ))}
+          {renderPage('insideLeft')}
         </Panel>
         <Panel style={{ paddingRight: '0.80in' }}>
-          {page('insideRight').map((b) => (
-            <div key={b.key} style={b.gapAfter ? { marginBottom: `${b.gapAfter}in` } : undefined}>
-              <Entry entry={b.entry} spacing={gap('insideRight')} />
-            </div>
-          ))}
+          {renderPage('insideRight')}
           <SideBand day={aid.sideBand.day} date={aid.sideBand.date} />
         </Panel>
         <div className="worship-aid-fold" aria-hidden />
