@@ -153,8 +153,25 @@ export function PsalmComposerDialog({
   const scoreRef = useRef(score); scoreRef.current = score;
   const staffRef = useRef<HTMLDivElement>(null);
 
-  const syllables = useMemo(() => psalmSyllables(psalmText ?? ''), [psalmText]);
+  /**
+   * The words still to be placed, as STATE rather than a derived list.
+   *
+   * Derived, it could only ever hand out whole words — so "shepherd" went on
+   * one note and there was no way to sing it across two, which is most of
+   * what setting a psalm actually involves. As state it can be split: the
+   * next word breaks into two syllables in place, and everything after it
+   * shifts along.
+   */
+  const [syllables, setSyllables] = useState<string[]>([]);
+  const initialSyllables = useMemo(() => psalmSyllables(psalmText ?? ''), [psalmText]);
   const lines = useMemo(() => psalmLines(psalmText ?? ''), [psalmText]);
+
+  // Refill when the dialog opens, not on every psalmText change: a split the
+  // user made must survive the readings being refetched.
+  useEffect(() => {
+    if (open) setSyllables(initialSyllables);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   // DERIVED, not tracked. A hand-maintained cursor drifts the moment undo,
   // delete or a click-and-retype enters the picture — every one of those has
@@ -380,6 +397,50 @@ export function PsalmComposerDialog({
     const el = scoreRef.current.elements[index];
     if (el?.kind === 'note') playPitch(midiOf(el.pitch));
   }, []);
+
+  /**
+   * Break the next queued word into two syllables.
+   *
+   * Splits halfway unless told otherwise, leaving a hyphen on the first part
+   * so the engraved lyric reads "shep-" as a singer expects. psalmSyllables
+   * already treats a trailing hyphen as a syllable break, so a split word
+   * survives being saved and reopened.
+   *
+   * Repeatable: splitting "shepherd", then splitting again, gives three
+   * syllables — so a long word can be divided without anyone having to type
+   * the whole psalm out hyphenated in advance.
+   */
+  const splitNextWord = useCallback((at?: number) => {
+    setSyllables((cur) => {
+      const i = syllableIndex;
+      const word = cur[i];
+      if (!word) return cur;
+      const bare = word.replace(/-$/, '');
+      if (bare.length < 2) return cur;          // nothing left to split
+      const cut = Math.min(Math.max(1, at ?? Math.ceil(bare.length / 2)), bare.length - 1);
+      const head = `${bare.slice(0, cut)}-`;
+      const tail = bare.slice(cut) + (word.endsWith('-') ? '-' : '');
+      return [...cur.slice(0, i), head, tail, ...cur.slice(i + 1)];
+    });
+  }, [syllableIndex]);
+
+  /** Rejoin the next word with the one after it — undoing a split. */
+  const joinNextWord = useCallback(() => {
+    setSyllables((cur) => {
+      const i = syllableIndex;
+      if (!cur[i] || !cur[i + 1]) return cur;
+      const joined = cur[i].replace(/-$/, '') + cur[i + 1];
+      return [...cur.slice(0, i), joined, ...cur.slice(i + 2)];
+    });
+  }, [syllableIndex]);
+
+  /** Set the lyric on the selected note outright — the escape hatch for
+   *  anything the queue cannot express. */
+  const setSelectedLyric = useCallback((text: string) => {
+    if (selected == null) return;
+    if (scoreRef.current.elements[selected]?.kind !== 'note') return;
+    dispatch(setLyric(selected, text));
+  }, [selected, dispatch]);
 
   // Keyboard entry. Letters A-G are pitches; digits 1-7 are scale degrees.
   useEffect(() => {
@@ -720,6 +781,21 @@ export function PsalmComposerDialog({
             ))}
           </div>
 
+          {/* Whatever the queue cannot express, type here. Clicking a note
+              selects it; this is its syllable. */}
+          {selected != null && score.elements[selected]?.kind === 'note' && (
+            <div className="flex items-center gap-2">
+              <Label htmlFor="psalm-note-lyric" className="shrink-0 text-xs">Lyric on this note</Label>
+              <Input
+                id="psalm-note-lyric"
+                value={(score.elements[selected] as { lyric?: string }).lyric ?? ''}
+                onChange={(e) => setSelectedLyric(e.target.value)}
+                placeholder="e.g. shep-"
+                className="h-8 text-sm"
+              />
+            </div>
+          )}
+
           {/* The staff is laid out at its true 4-inch print size and then
               CSS-zoomed for the screen. Laying it out larger and shrinking
               the export would change which measures share a line — the
@@ -778,11 +854,32 @@ export function PsalmComposerDialog({
           {/* Syllable queue */}
           {lines.length > 0 && (
             <div className="border border-border p-2">
-              <div className="mb-1 flex items-center justify-between">
+              <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs font-medium">Psalm text</span>
-                <span className="text-xs text-muted-foreground">
-                  {remaining > 0 ? `${remaining} words left` : 'all words placed'}
-                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {syllables[syllableIndex] && (
+                    <>
+                      <span className="text-xs text-muted-foreground">
+                        next: <strong data-testid="next-syllable">{syllables[syllableIndex]}</strong>
+                      </span>
+                      <Button type="button" size="sm" variant="outline" className="h-7 text-xs"
+                        onClick={() => splitNextWord()}
+                        title="Break this word into two syllables">
+                        Split
+                      </Button>
+                      {syllables[syllableIndex + 1] && (
+                        <Button type="button" size="sm" variant="ghost" className="h-7 text-xs"
+                          onClick={joinNextWord}
+                          title="Rejoin with the next syllable">
+                          Join
+                        </Button>
+                      )}
+                    </>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    {remaining > 0 ? `${remaining} left` : 'all words placed'}
+                  </span>
+                </div>
               </div>
               {/* Refrain/verse shape, not a paragraph. The refrain is set in
                   bold with a blank line around it, matching how the planner
