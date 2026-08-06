@@ -1509,6 +1509,9 @@ breaks.
 - Create: `src/components/audition/auditionPages.ts`
 - Test: `src/components/audition/__tests__/auditionPages.test.ts`
 - Modify: `src/components/audition/AuditionFormProvider.tsx:107,143-207`
+- Modify: `src/components/audition/pages/RegistrationPage.tsx:13,24,56` — it reads and sets
+  `isNewUser`, which Step 5 deletes. Remove those references only; the rest of that file is
+  Task 9's job.
 
 **Interfaces:**
 - Consumes: nothing.
@@ -1734,9 +1737,12 @@ In `src/pages/AuditionPage.tsx`, replace the body of `onSubmit` (lines 39–295)
 - Keep building `submissionData` as today, but **remove `user_id` and `session_id`** from it.
   The edge function supplies both; a client-supplied `user_id` would let anyone file an
   application against another account.
-- Delete the whole idempotent-save block (the `audition_applications` lookup, the update
-  path, the `minimalData` fallback, lines 156 onward). The service-role insert in the edge
-  function replaces all of it.
+- **Move**, do not delete, the idempotent-save block (the `audition_applications` lookup,
+  the update path, the `minimalData` fallback, lines 156 onward) into a
+  `submitAsAuthenticatedUser(submissionData)` helper, unchanged. It remains the write path
+  for a signed-in user, who has no account step and therefore no password for the server to
+  validate. Anonymous visitors — the case this feature exists for — go through
+  `submitPublicIntake` instead. Two paths, one branch, both legible.
 - Submit with:
 
 ```tsx
@@ -1760,10 +1766,9 @@ clearAuditionDraft();
 setShowCongratulations(true);
 ```
 
-- For a signed-in user, `data.password` is empty and there is no account step. Branch: when
-  `user` is set, keep writing through the existing authenticated client path rather than
-  `submitPublicIntake`, since the server would reject the empty password. Extract that into
-  a small `submitAsAuthenticatedUser(submissionData)` helper so both branches stay legible.
+- The branch itself: `if (user) return submitAsAuthenticatedUser(submissionData);` before
+  the `submitPublicIntake` call above. A signed-in user has no password to send, and the
+  server's 8-character rule would reject them.
 - In `CongratulationsDialog`, when `result.accountStatus === 'existing'`, add a line saying
   an account already exists for that email and linking to `/auth`.
 
