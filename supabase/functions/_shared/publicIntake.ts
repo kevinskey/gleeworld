@@ -45,6 +45,143 @@ export function evaluateRateLimit(counts: { email: number; ip: number }): { allo
   };
 }
 
+// ---------------------------------------------------------------------------
+// C1: the rate limit must fail CLOSED, not open.
+//
+// index.ts's real countRecentAttempts/recordAttempt talk to Postgrest, whose
+// responses are always `{ data | count, error }` — an error (including "the
+// table doesn't exist yet", which is the literal current state before this
+// migration is applied) must never be treated as "zero attempts." These two
+// helpers are the only place that PostgREST result shape gets interpreted,
+// so index.ts's real deps route through them instead of destructuring
+// `{ count }`/discarding the insert result directly.
+// ---------------------------------------------------------------------------
+
+export interface PgCountResult {
+  count: number | null;
+  error: { message: string } | null;
+}
+
+export interface PgWriteResult {
+  error: { message: string } | null;
+}
+
+/** Throws on any Postgrest error instead of letting it fall through as "ok." */
+export function assertNoPgError(result: PgWriteResult, context: string): void {
+  if (result.error) {
+    throw new Error(`${context}: ${result.error.message}`);
+  }
+}
+
+/**
+ * Turns the two raw `{ count, error }` head-count queries into the counts
+ * evaluateRateLimit expects. Throws — rather than defaulting either side to
+ * 0 — the moment either query errors, so a missing table or a transient
+ * Postgrest failure fails the submission closed (handleIntake's outer try
+ * converts the throw into a clean 'unavailable' response) instead of
+ * silently disabling rate limiting.
+ */
+export function resolveAttemptCounts(
+  byEmail: PgCountResult,
+  byIp: PgCountResult,
+): { email: number; ip: number } {
+  assertNoPgError(byEmail, 'countRecentAttempts(email)');
+  assertNoPgError(byIp, 'countRecentAttempts(ip)');
+  return { email: byEmail.count ?? 0, ip: byIp.count ?? 0 };
+}
+
+// ---------------------------------------------------------------------------
+// I1: email lookup must be an exact match, never a LIKE pattern.
+//
+// `%` and `_` are valid characters in an email's local part under EMAIL_RE,
+// so an attacker-supplied `victi_@example.com` must never resolve to
+// `victim@example.com`. This helper is deliberately typed against a plain
+// `.eq(...)` filter shape — there is no way to reach `.ilike` through it —
+// so index.ts's real findUserByEmail is structurally prevented from doing
+// a pattern match here.
+// ---------------------------------------------------------------------------
+
+export interface EmailLookupRow {
+  user_id: string;
+}
+
+export interface EmailLookupQuery {
+  eq(column: 'email', value: string): {
+    limit(n: number): Promise<{ data: EmailLookupRow[] | null; error: unknown }>;
+  };
+}
+
+/**
+ * Resolves at most one profile for an exact email match. Multiple matching
+ * rows (a data-integrity situation, not something a caller can trigger via
+ * wildcards once the lookup is an exact match) are treated the same as zero
+ * matches — handleIntake then attempts to create a new account, which fails
+ * safely at the provider (duplicate email) rather than silently attaching
+ * the submission to an ambiguous account. `maybeSingle()` in the old
+ * implementation would have masked this same ambiguity as "no account"
+ * without even the safety of an explicit check, so this makes the fallback
+ * intentional rather than incidental.
+ */
+export async function lookupUserByEmail(
+  table: EmailLookupQuery,
+  email: string,
+): Promise<{ id: string } | null> {
+  const { data, error } = await table.eq('email', email).limit(5);
+  if (error || !data || data.length !== 1) return null;
+  return { id: data[0].user_id };
+}
+
+// ---------------------------------------------------------------------------
+// I2: audition_applications insert must never accept arbitrary columns.
+//
+// `payload.application` is attacker-controlled JSON. Spreading it directly
+// into the insert would let a crafted request set `tenant_id`, `id`,
+// `status`, `user_id`, `session_id`, or any other column the table happens
+// to have. Only the fields the real audition form actually submits
+// (src/pages/AuditionPage.tsx's `submissionData`) are allowed through.
+// ---------------------------------------------------------------------------
+
+export const ALLOWED_AUDITION_APPLICATION_COLUMNS = [
+  'full_name',
+  'email',
+  'phone_number',
+  'date_of_birth',
+  'profile_image_url',
+  'student_id',
+  'academic_year',
+  'major',
+  'minor',
+  'gpa',
+  'previous_choir_experience',
+  'voice_part_preference',
+  'years_of_vocal_training',
+  'instruments_played',
+  'music_theory_background',
+  'prepared_pieces',
+  'sight_reading_level',
+  'why_glee_club',
+  'vocal_goals',
+  'availability_conflicts',
+  'audition_time_slot',
+  'notes',
+  'section_type',
+  'years_instrument_experience',
+  'can_dance',
+  'tshirt_size',
+] as const;
+
+export function pickAuditionApplicationFields(
+  application: Record<string, unknown>,
+): Record<string, unknown> {
+  const picked: Record<string, unknown> = {};
+  for (const key of ALLOWED_AUDITION_APPLICATION_COLUMNS) {
+    if (Object.prototype.hasOwnProperty.call(application, key)) {
+      picked[key] = application[key];
+    }
+  }
+  return picked;
+}
+
 export type IntakeKind = 'appointment' | 'audition';
 
 export interface IntakeAccount {

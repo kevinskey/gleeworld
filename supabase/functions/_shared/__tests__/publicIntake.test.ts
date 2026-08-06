@@ -6,8 +6,14 @@ import {
   RATE_LIMIT_PER_EMAIL_PER_HOUR,
   RATE_LIMIT_PER_IP_PER_HOUR,
   handleIntake,
+  resolveAttemptCounts,
+  assertNoPgError,
+  lookupUserByEmail,
+  pickAuditionApplicationFields,
+  ALLOWED_AUDITION_APPLICATION_COLUMNS,
   type IntakeDeps,
   type IntakeInput,
+  type EmailLookupQuery,
 } from '../publicIntake';
 
 describe('renderSmsTemplate', () => {
@@ -46,6 +52,141 @@ describe('renderSmsTemplate', () => {
 
   it('exports the documented default', () => {
     expect(DEFAULT_WELCOME_SMS_TEMPLATE).toBe('Thanks for joining {org_name}!');
+  });
+});
+
+describe('assertNoPgError (C1)', () => {
+  it('does nothing when there is no error', () => {
+    expect(() => assertNoPgError({ error: null }, 'ctx')).not.toThrow();
+  });
+
+  it('throws when the result carries a Postgrest error', () => {
+    // This is the exact shape a Postgrest response takes when
+    // gw_public_intake_attempts doesn't exist yet — the literal state
+    // before this feature's migration is applied. Reverting the C1 fix
+    // (going back to discarding `recordAttempt`'s insert result) would make
+    // this a silent no-op instead of a thrown error, and this test would
+    // stop failing to catch that regression.
+    expect(() =>
+      assertNoPgError({ error: { message: 'relation "gw_public_intake_attempts" does not exist' } }, 'recordAttempt'),
+    ).toThrow(/gw_public_intake_attempts/);
+  });
+});
+
+describe('resolveAttemptCounts (C1)', () => {
+  it('returns the counts when neither query errored', () => {
+    expect(
+      resolveAttemptCounts({ count: 2, error: null }, { count: 7, error: null }),
+    ).toEqual({ email: 2, ip: 7 });
+  });
+
+  it('treats a null count as zero, not an error', () => {
+    expect(
+      resolveAttemptCounts({ count: null, error: null }, { count: null, error: null }),
+    ).toEqual({ email: 0, ip: 0 });
+  });
+
+  it('throws — does not default to 0 — when the email-count query errors', () => {
+    // The vulnerability this guards: the old code destructured only
+    // `{ count }` from this result, so `byEmail.count ?? 0` silently became
+    // 0 attempts whenever the table was missing, mid-migration, or the
+    // query failed for any other reason — disabling the rate limit with no
+    // log line. A revert to that destructuring pattern would make this
+    // throw disappear and the rate limit would fail open again.
+    expect(() =>
+      resolveAttemptCounts(
+        { count: null, error: { message: 'relation "gw_public_intake_attempts" does not exist' } },
+        { count: 0, error: null },
+      ),
+    ).toThrow(/countRecentAttempts\(email\)/);
+  });
+
+  it('throws when the IP-count query errors, even if the email count succeeded', () => {
+    expect(() =>
+      resolveAttemptCounts(
+        { count: 0, error: null },
+        { count: null, error: { message: 'timeout' } },
+      ),
+    ).toThrow(/countRecentAttempts\(ip\)/);
+  });
+});
+
+describe('lookupUserByEmail (I1)', () => {
+  // A fake table that only implements exact equality — there is no `ilike`
+  // on this object at all, so a call site that regressed to
+  // `.ilike('email', email)` would throw `table.ilike is not a function`
+  // rather than silently matching.
+  function exactMatchTable(rows: Array<{ user_id: string; email: string }>): EmailLookupQuery {
+    return {
+      eq(column, value) {
+        return {
+          async limit() {
+            return { data: rows.filter((r) => r[column] === value), error: null };
+          },
+        };
+      },
+    };
+  }
+
+  it('resolves an exact email match', async () => {
+    const table = exactMatchTable([{ user_id: 'ada-1', email: 'ada@example.com' }]);
+    expect(await lookupUserByEmail(table, 'ada@example.com')).toEqual({ id: 'ada-1' });
+  });
+
+  it('does not resolve a LIKE-wildcard email to a different victim account', async () => {
+    // This is the I1 vulnerability itself: `%` and `_` pass the email
+    // regex, so a `.ilike('email', email)` lookup would let an attacker's
+    // `victi_@example.com` match victim@example.com. Because this table
+    // only offers `.eq`, the wildcard characters are matched literally and
+    // there is no account to find.
+    const table = exactMatchTable([{ user_id: 'victim-1', email: 'victim@example.com' }]);
+    expect(await lookupUserByEmail(table, 'victi_@example.com')).toBeNull();
+    expect(await lookupUserByEmail(table, 'victim%@example.com')).toBeNull();
+  });
+
+  it('treats multiple matching rows as unresolved rather than guessing which one', async () => {
+    const table = exactMatchTable([
+      { user_id: 'a', email: 'dup@example.com' },
+      { user_id: 'b', email: 'dup@example.com' },
+    ]);
+    expect(await lookupUserByEmail(table, 'dup@example.com')).toBeNull();
+  });
+
+  it('returns null on no match', async () => {
+    const table = exactMatchTable([]);
+    expect(await lookupUserByEmail(table, 'nobody@example.com')).toBeNull();
+  });
+
+  it('returns null when the query itself errors', async () => {
+    const table: EmailLookupQuery = {
+      eq: () => ({ limit: async () => ({ data: null, error: { message: 'down' } }) }),
+    };
+    expect(await lookupUserByEmail(table, 'ada@example.com')).toBeNull();
+  });
+});
+
+describe('pickAuditionApplicationFields (I2)', () => {
+  it('passes through every allowed column', () => {
+    const application = Object.fromEntries(
+      ALLOWED_AUDITION_APPLICATION_COLUMNS.map((c) => [c, `value-${c}`]),
+    );
+    expect(pickAuditionApplicationFields(application)).toEqual(application);
+  });
+
+  it('strips columns that let a crafted request escalate privilege', () => {
+    const application = {
+      full_name: 'Ada Lovelace',
+      tenant_id: 'stranger-tenant',
+      id: 'attacker-chosen-id',
+      user_id: 'someone-elses-account',
+      session_id: 'stranger-session',
+      status: 'accepted',
+    };
+    expect(pickAuditionApplicationFields(application)).toEqual({ full_name: 'Ada Lovelace' });
+  });
+
+  it('does not invent fields that were never present', () => {
+    expect(pickAuditionApplicationFields({})).toEqual({});
   });
 });
 
