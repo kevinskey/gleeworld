@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react';
+import { applyPanelEdits, type AidEditsByPanel, type RenderedBlock } from '@/lib/liturgy/aidEdits';
 import {
   coverImageScale, coverTitleSize, panelSpacing,
   type AidEntry, type WorshipAid, type PanelId, type WorshipAidSettings,
@@ -118,12 +120,50 @@ function Entry({ entry, spacing = 1 }: { entry: AidEntry; spacing?: number }) {
   );
 }
 
-function Panel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+/**
+ * One printed panel, which measures whether its content still fits.
+ *
+ * A worship aid is four fixed pages — the sheet cannot grow, so content that
+ * runs past the bottom is simply CUT, silently, and only discovered once it
+ * is printed. The panel reports how far over it is so the editor can say so
+ * before that happens. Nothing is shrunk automatically: what to cut is the
+ * user's decision, not the layout's.
+ */
+function Panel({ children, style, panelId, onOverflow }: {
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+  panelId?: PanelId;
+  onOverflow?: (panel: PanelId, inchesOver: number) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !panelId || !onOverflow) return;
+    const measure = () => {
+      // scrollHeight vs clientHeight: the panel clips at overflow:hidden, so
+      // the difference IS the amount that will not print. 96 = CSS px per inch.
+      onOverflow(panelId, Math.max(0, (el.scrollHeight - el.clientHeight) / 96));
+    };
+    measure();
+    // Images arrive after layout — an engraved psalm loading late is exactly
+    // what tips a panel over, so re-measure when the box changes.
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    for (const img of Array.from(el.querySelectorAll('img'))) {
+      img.addEventListener('load', measure);
+    }
+    return () => ro.disconnect();
+  });
+
   return (
-    <div style={{
-      width: `${PANEL_W}in`, height: `${SHEET_H}in`, padding: '0.42in 0.40in',
-      boxSizing: 'border-box', overflow: 'hidden', position: 'relative', ...style,
-    }}>
+    <div
+      ref={ref}
+      style={{
+        width: `${PANEL_W}in`, height: `${SHEET_H}in`, padding: '0.42in 0.40in',
+        boxSizing: 'border-box', overflow: 'hidden', position: 'relative', ...style,
+      }}
+    >
       {children}
     </div>
   );
@@ -172,11 +212,12 @@ function FrontPanel({ aid, titleSize, imageScale }: {
   );
 }
 
-function BackPanel({ aid, spacing, qrDataUrl }: {
+function BackPanel({ aid, spacing, qrDataUrl, blocks, onOverflow }: {
   aid: WorshipAid; spacing: number; qrDataUrl?: string | null;
+  blocks: RenderedBlock[]; onOverflow?: (p: PanelId, over: number) => void;
 }) {
   return (
-    <Panel>
+    <Panel panelId="back" onOverflow={onOverflow}>
       {aid.spineText && (
         // Up the outer edge of the back cover, as on the parish original.
         <div style={{
@@ -192,7 +233,11 @@ function BackPanel({ aid, spacing, qrDataUrl }: {
         </div>
       )}
       <div style={{ marginLeft: aid.spineText ? '0.22in' : 0 }}>
-        {aid.back.map((e, i) => <Entry key={i} entry={e} spacing={spacing} />)}
+        {blocks.map((b) => (
+          <div key={b.key} style={b.gapAfter ? { marginBottom: `${b.gapAfter}in` } : undefined}>
+            <Entry entry={b.entry} spacing={spacing} />
+          </div>
+        ))}
         {/* The phone code belongs on the BACK, not the cover: it is what you
             look for as you leave, and the cover is the parish's face. */}
         {qrDataUrl && (
@@ -229,6 +274,10 @@ export interface WorshipAidSheetsProps {
   qrDataUrl?: string | null;
   /** Read for its per-panel spacing multipliers. */
   settings: WorshipAidSettings;
+  /** The user's edits, merged over the generated panels. */
+  edits?: AidEditsByPanel;
+  /** How far each panel runs past its page, in inches. 0 = it fits. */
+  onOverflow?: (panel: PanelId, inchesOver: number) => void;
 }
 
 /**
@@ -239,8 +288,12 @@ export interface WorshipAidSheetsProps {
  * them prints a program that reads back-to-front once folded, which looks
  * fine on screen and is only discovered after the copies are made.
  */
-export function WorshipAidSheets({ aid, qrDataUrl, settings }: WorshipAidSheetsProps) {
+export function WorshipAidSheets({
+  aid, qrDataUrl, settings, edits, onOverflow,
+}: WorshipAidSheetsProps) {
   const gap = (p: PanelId) => panelSpacing(settings, p);
+  /** Generated entries with the user's edits merged over them. */
+  const blocks = (p: PanelId, entries: AidEntry[]) => applyPanelEdits(entries, edits?.[p]);
   return (
     <div className="worship-aid-sheets">
       <style>{`
@@ -307,7 +360,13 @@ export function WorshipAidSheets({ aid, qrDataUrl, settings }: WorshipAidSheetsP
       `}</style>
 
       <div className="worship-aid-sheet">
-        <BackPanel aid={aid} spacing={gap('back')} qrDataUrl={qrDataUrl} />
+        <BackPanel
+          aid={aid}
+          spacing={gap('back')}
+          qrDataUrl={qrDataUrl}
+          blocks={blocks('back', aid.back)}
+          onOverflow={onOverflow}
+        />
         <FrontPanel
           aid={aid}
           titleSize={coverTitleSize(settings)}
@@ -317,11 +376,19 @@ export function WorshipAidSheets({ aid, qrDataUrl, settings }: WorshipAidSheetsP
       </div>
 
       <div className="worship-aid-sheet">
-        <Panel>
-          {aid.insideLeft.map((e, i) => <Entry key={i} entry={e} spacing={gap('insideLeft')} />)}
+        <Panel panelId="insideLeft" onOverflow={onOverflow}>
+          {blocks('insideLeft', aid.insideLeft).map((b) => (
+            <div key={b.key} style={b.gapAfter ? { marginBottom: `${b.gapAfter}in` } : undefined}>
+              <Entry entry={b.entry} spacing={gap('insideLeft')} />
+            </div>
+          ))}
         </Panel>
-        <Panel style={{ paddingRight: '0.80in' }}>
-          {aid.insideRight.map((e, i) => <Entry key={i} entry={e} spacing={gap('insideRight')} />)}
+        <Panel panelId="insideRight" onOverflow={onOverflow} style={{ paddingRight: '0.80in' }}>
+          {blocks('insideRight', aid.insideRight).map((b) => (
+            <div key={b.key} style={b.gapAfter ? { marginBottom: `${b.gapAfter}in` } : undefined}>
+              <Entry entry={b.entry} spacing={gap('insideRight')} />
+            </div>
+          ))}
           <SideBand day={aid.sideBand.day} date={aid.sideBand.date} />
         </Panel>
         <div className="worship-aid-fold" aria-hidden />
