@@ -47,6 +47,16 @@ describe('the assistant does not narrate where it looked', () => {
     }
   });
 
+  it('prescribes an exact sentence for an ordinary miss, not just a ban list', () => {
+    // A ban list alone did not hold in live testing: the model invented a new
+    // phrasing ("Neither the choral reference library nor a web search turned
+    // up anything"). It reproduces PRESCRIBED sentences reliably — that is how
+    // the liturgy miss-message behaves — so the ordinary miss needs one too.
+    const p = prompt();
+    expect(p).toMatch(/the sentence is: "I could not verify that\."/i);
+    expect(p).toMatch(/Do NOT append what you consulted/i);
+  });
+
   it('carves out liturgical law explicitly, and scopes it to liturgy alone', () => {
     const p = prompt();
     expect(p).toMatch(/ONE exception is Catholic liturgical law/i);

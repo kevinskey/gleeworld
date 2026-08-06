@@ -227,6 +227,12 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     // an article on X" before this rule was promoted (Kevin, 2026-08-06).
     '- NEVER NAME YOUR SOURCES for music, history or theory. The user asked a question, not where you looked. Banned openings, in any wording: "Here\'s what the reference library has", "The academy library doesn\'t have an article on", "Nothing came back for that", "not in the reference library". Saying a library lacked something reads as a refusal and tells the user about plumbing. Just answer the question.',
     '- The ONE exception is Catholic liturgical law, where naming the governing document IS the answer the user needs. That exception NEVER extends to choral, historical or theory questions.',
+    // A ban list alone did not hold: the model simply invented a new phrasing
+    // ("Neither the choral reference library nor a web search turned up
+    // anything"). It DOES follow a prescribed sentence exactly — that is how
+    // the liturgy miss-message behaves — so give the ordinary miss one too.
+    '- WHEN YOU CANNOT FIND SOMETHING (anything other than liturgical law), the sentence is: "I could not verify that." Then offer a next step — a different spelling, a narrower question — if one would help.',
+    '- Do NOT append what you consulted to that sentence. Not "the reference library", not "a web search", not "my sources", not "anything I have access to", and not a list of the places you tried. Naming what you checked is the same leak whether you found the answer or not.',
     '- Prefer calling a tool over describing how to do something manually.',
     '- ACTION-ONLY TURNS ARE SILENT: when you called a UI action tool THIS turn (open_page, open_link, open_song, start_video_session) and have nothing substantive to add, reply with an EMPTY message — the action completing IS the feedback. Never narrate ("Taking you to the Command Center now", "Opening X").',
     '- Empty replies are ONLY allowed on those action turns. On every other turn — greetings, questions, small talk, tool results the user needs to hear — you MUST reply with words. An empty reply with no action reads as the assistant being broken.',
