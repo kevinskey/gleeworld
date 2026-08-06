@@ -31,6 +31,20 @@ export type FlowPage = typeof FLOW_PAGES[number];
 const CHARS_PER_LINE = 52;
 
 /**
+ * Lines a passage of prose occupies, counting the breaks the user typed.
+ *
+ * Wrapping alone is not enough: a blank line inserted while editing is
+ * deliberate spacing, and a budget that ignored it would let the page run
+ * over by exactly the amount the user added on purpose. An empty line still
+ * costs one line, which is what makes it visible in the layout.
+ */
+function textLines(text: string): number {
+  return text
+    .split('\n')
+    .reduce((sum, line) => sum + Math.max(1, Math.ceil(line.length / CHARS_PER_LINE)), 0);
+}
+
+/**
  * How many lines a block occupies.
  *
  * Approximate by nature — a proportional face makes any character count an
@@ -45,14 +59,14 @@ export function blockLines(block: RenderedBlock): number {
   if (entry.notice) {
     // Boxed, centred, with its own border and padding: the text plus about a
     // line and a half of box.
-    lines += Math.ceil((entry.notice.length || 1) / CHARS_PER_LINE) + 2;
+    lines += textLines(entry.notice) + 2;
   } else if (entry.divider) {
     // A rule with a centred heading, set larger, with air above and below.
     lines += 3;
   } else {
     if (entry.label) lines += 1;
     if (entry.title) lines += 1;
-    if (entry.summary) lines += Math.ceil(entry.summary.length / CHARS_PER_LINE);
+    if (entry.summary) lines += textLines(entry.summary);
   }
 
   if (entry.imageUrl) {

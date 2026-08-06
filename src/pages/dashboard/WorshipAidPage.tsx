@@ -712,6 +712,13 @@ export default function WorshipAidPage() {
               .find((p) => panelBlocks(p).some((b) => b.key === key));
             if (panel) setText(panel, key, field, value);
           }}
+          onSpaceBlock={(key, delta) => {
+            const panel = (['insideLeft', 'insideRight', 'back'] as PanelId[])
+              .find((p) => panelBlocks(p).some((b) => b.key === key));
+            if (!panel) return;
+            const cur = panelBlocks(panel).find((b) => b.key === key)?.gapAfter ?? 0;
+            setGap(panel, key, Math.max(0, cur + delta));
+          }}
           onDeleteBlock={(key) => {
             const panel = (['insideLeft', 'insideRight', 'back'] as PanelId[])
               .find((p) => panelBlocks(p).some((b) => b.key === key));

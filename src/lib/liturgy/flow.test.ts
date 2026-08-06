@@ -143,3 +143,21 @@ describe('the orphan guard is narrow', () => {
     expect(flowBlocks(blocks).pages.insideLeft).toHaveLength(LINES_PER_PAGE);
   });
 });
+
+describe('blank lines are real space', () => {
+  // A blank line typed while editing is deliberate spacing. A budget that
+  // ignored it would let the page run over by exactly what the user added.
+  it('counts the breaks a user typed', () => {
+    const one = blockLines(block({ label: '', summary: 'Alpha' }));
+    const three = blockLines(block({ label: '', summary: 'Alpha\n\nBeta' }));
+    expect(three).toBe(one + 2);
+  });
+
+  it('charges an empty line the same as a full one', () => {
+    expect(blockLines(block({ label: '', summary: '\n\n\n' }))).toBeGreaterThanOrEqual(4);
+  });
+
+  it('still wraps a long single line', () => {
+    expect(blockLines(block({ label: '', summary: 'x'.repeat(200) }))).toBeGreaterThan(3);
+  });
+});
