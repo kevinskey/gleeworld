@@ -9,6 +9,7 @@ export interface StipendPeriod {
   default_amount: number;
   required_services: number;
   event_filter: { event_types?: string[] };
+  course_ids: string[];
   policy_id: string | null;
   status: 'draft' | 'active' | 'closed' | 'paid';
   closed_at: string | null;
@@ -21,6 +22,8 @@ export interface NewPeriod {
   default_amount: number;
   required_services: number;
   event_filter?: { event_types?: string[] };
+  /** Courses whose class meetings count as services. Empty = events only. */
+  course_ids?: string[];
 }
 
 // types.ts predates these tables; cast at the client boundary only.
@@ -49,7 +52,11 @@ export function useStipendPeriods() {
     // Always .select() back — a silent RLS rejection returns no error.
     const { data, error: err } = await db
       .from('gw_stipend_periods')
-      .insert({ ...input, event_filter: input.event_filter ?? {} })
+      .insert({
+        ...input,
+        event_filter: input.event_filter ?? {},
+        course_ids: input.course_ids ?? [],
+      })
       .select()
       .single();
     if (err) throw new Error(err.message);

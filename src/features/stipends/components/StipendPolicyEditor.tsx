@@ -11,6 +11,7 @@ const db = supabase as any;
 const LABELS: Record<string, string> = {
   present: 'Present', late: 'Late', tardy: 'Tardy',
   excused: 'Excused absence', absent: 'Absent',
+  in_rehearsal: 'Checked in, no checkout',
 };
 
 export function StipendPolicyEditor() {
@@ -59,7 +60,7 @@ export function StipendPolicyEditor() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <div className="grid gap-3 sm:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-6">
           {Object.keys(DEFAULT_STATUS_WEIGHTS).map((status) => (
             <div key={status}>
               <Label htmlFor={`w-${status}`} className="text-xs">

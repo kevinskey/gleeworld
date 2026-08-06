@@ -106,6 +106,21 @@ describe('calculateStanding', () => {
     expect(r.forfeited).toBe(500);
   });
 
+  it('gives half credit for a check-in that was never scanned out', () => {
+    // QR check-in writes 'in_rehearsal'; only a checkout scan upgrades it to
+    // 'present'. The student was there, so this must not score zero.
+    const r = calculateStanding({
+      baseAmount: 500,
+      requiredServices: 20,
+      marks: marks(...Array(19).fill('present'), 'in_rehearsal'),
+      weights: DEFAULT_STATUS_WEIGHTS,
+    });
+    expect(r.creditedServices).toBe(19.5);
+    expect(r.absences).toBe(0);
+    expect(r.unmappedCount).toBe(0);
+    expect(r.earned).toBe(487.5);
+  });
+
   it('counts an unmapped status as zero credit and flags it', () => {
     const r = calculateStanding({
       baseAmount: 500,
