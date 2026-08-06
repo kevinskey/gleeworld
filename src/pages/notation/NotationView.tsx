@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode, Beam } from 'vexflow';
+import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode, Beam, Annotation } from 'vexflow';
 // VexFlow's TS shim doesn't declare Articulation / Tuplet / Curve as named
 // exports (they exist at runtime — the shim is just incomplete), so pull
 // them via a cast on the module namespace rather than a `named import` that
@@ -166,13 +166,33 @@ export function NotationView({
         } else {
           sn = new StaveNote({ keys: [toVexKey(el.pitch)], duration: toVexDuration(el.base, el.dots), clef: VEX_CLEF[score.clef] });
           if (el.dots > 0) Dot.buildAndAttach([sn], { all: true });
-          // Lyrics are NOT attached as Annotations. VexFlow positions an
-          // annotation relative to its own note's extents, so a low note
-          // pushed its syllable further down than a high one and the words
-          // wandered up and down the page instead of sitting on one line
-          // (Kevin: "lyrics all have sit on the same baseline"). They are
-          // drawn by hand below, at a y taken from the STAVE, which is
-          // constant across the system.
+          // Lyrics get an INVISIBLE Annotation, and are drawn by hand below.
+          //
+          // Both halves are needed and neither works alone. The formatter
+          // only reserves horizontal space for things attached to a note, so
+          // without an annotation adjacent syllables collide — "The" and
+          // "Lord" printed as "TheLord". But an annotation positions itself
+          // relative to its OWN note's extents, so a low note drags its word
+          // down and the text wanders instead of sitting on a line.
+          //
+          // So: attach one to buy the width, render it transparent, and paint
+          // the visible word ourselves at a y taken from the STAVE, which is
+          // constant across the system. Widening the measure alone was not
+          // enough — that spaces bars, while collisions happen between notes
+          // inside a bar.
+          if (el.lyric) {
+            const ann = new Annotation(el.lyric);
+            ann.setVerticalJustification(Annotation.VerticalJustify.BOTTOM);
+            ann.setFont('Times New Roman, Times, serif', LYRIC_SIZE);
+            // Its DRAW is suppressed, not its style. setStyle does not reach
+            // the emitted <text> — checked, the element came out with no fill
+            // attribute and would have printed in black at the note-relative
+            // y, doubling every word at two different heights. Formatting
+            // reads a modifier's metrics, and drawing is a separate step, so
+            // removing the draw keeps the reserved width and emits nothing.
+            (ann as unknown as { draw: () => void }).draw = () => {};
+            sn.addModifier(ann, 0);
+          }
           // Staccato dot — VexFlow 'a.' glyph. Position ABOVE by default so
           // it clears the stem side; VexFlow flips it below when the note
           // is already up-stem, so we don't need to compute stem direction.
@@ -213,14 +233,10 @@ export function NotationView({
         try { minW = new Formatter().joinVoices([voice]).preCalculateMinTotalWidth([voice]); }
         catch { minW = 44 * notes.length; }
 
-        // Reserve room for the WORDS as well as the notes.
-        //
-        // Lyrics used to be VexFlow Annotations, so the formatter counted
-        // their width when spacing notes. Drawing them by hand — which is
-        // what puts them all on one baseline — made them invisible to it, and
-        // notes packed tighter than their syllables needed: "guards his
-        // flock" ran into the barline. The formatter cannot see them, so the
-        // minimum width has to.
+        // A floor for the whole measure, on top of the per-note space the
+        // annotations above already reserve. The two do different jobs: the
+        // annotations stop syllables colliding INSIDE a bar, this stops a bar
+        // full of long words being squeezed by the row packer.
         //
         // Measured at the real lyric size rather than estimated per
         // character, because "O" and "shepherd" differ by a factor of six and
