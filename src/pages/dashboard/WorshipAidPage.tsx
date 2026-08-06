@@ -579,11 +579,20 @@ export default function WorshipAidPage() {
         </Card>
       )}
 
-      {/* Panel editor */}
+      {/* Type directly on the pages below. This drawer is only for what
+          cannot be done by typing — reordering, inserting, and spacing. */}
       <Card className="print:hidden">
-        <CardContent className="space-y-3 p-4">
+        <CardContent className="p-4">
+          <details>
+            <summary className="cursor-pointer select-none text-sm font-semibold">
+              Reorder, insert &amp; spacing
+              <span className="ml-2 font-normal text-xs text-muted-foreground">
+                — to change wording, just click the text on the page
+              </span>
+            </summary>
+            <div className="space-y-3 pt-3">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="mr-2 text-sm font-semibold">Edit panel</h2>
+            <h2 className="mr-2 text-sm font-semibold">Panel</h2>
             {(['insideLeft', 'insideRight', 'back'] as PanelId[]).map((p) => (
               <Button
                 key={p}
@@ -683,6 +692,8 @@ export default function WorshipAidPage() {
               ))}
             </div>
           )}
+            </div>
+          </details>
         </CardContent>
       </Card>
 
@@ -692,6 +703,22 @@ export default function WorshipAidPage() {
           qrDataUrl={qr}
           settings={settings}
           edits={edits}
+          editable
+          onEditBlock={(key, field, value) => {
+            // The key identifies the block, but which PANEL owns it decides
+            // where the edit is stored. Found rather than assumed, because a
+            // reflowed block no longer prints on the panel it came from.
+            const panel = (['insideLeft', 'insideRight', 'back'] as PanelId[])
+              .find((p) => panelBlocks(p).some((b) => b.key === key));
+            if (panel) setText(panel, key, field, value);
+          }}
+          onDeleteBlock={(key) => {
+            const panel = (['insideLeft', 'insideRight', 'back'] as PanelId[])
+              .find((p) => panelBlocks(p).some((b) => b.key === key));
+            if (!panel) return;
+            const block = panelBlocks(panel).find((b) => b.key === key);
+            if (block?.inserted) removeInsert(panel, key); else hide(panel, key);
+          }}
           onFlow={(r) => setFlow((cur) => (
             cur.overflowLines === r.overflowLines && cur.dropped === r.dropped.length
               ? cur
