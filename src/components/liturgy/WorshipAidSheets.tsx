@@ -117,29 +117,54 @@ function Panel({ children, style }: { children: React.ReactNode; style?: React.C
 function FrontPanel({ aid, qrDataUrl, titleSize, imageScale }: {
   aid: WorshipAid; qrDataUrl?: string | null; titleSize: number; imageScale: number;
 }) {
+  /**
+   * A column, so the picture gets everything left over.
+   *
+   * It used to be a fixed maxHeight of 4.6in with the season word and QR
+   * absolutely positioned over the bottom of the panel. That capped the
+   * artwork at roughly half the page however large the slider went — the
+   * slider only ever controlled WIDTH, and a tall portrait mark hit the
+   * height limit long before it ran out of width. Laying the panel out as a
+   * column means the image takes the real remaining space, and the slider
+   * now trims it back from full size rather than being the only thing
+   * holding it up.
+   */
   return (
-    <Panel style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: `${titleSize}pt`, lineHeight: 1.15, marginBottom: '0.22in' }}>
+    <Panel style={{ textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ fontSize: `${titleSize}pt`, lineHeight: 1.15, marginBottom: '0.16in', flexShrink: 0 }}>
         {aid.front.title}
       </div>
+
       {aid.front.imageUrl && (
-        <img
-          src={aid.front.imageUrl}
-          alt=""
-          style={{
-            display: 'block', width: `${Math.round(imageScale * 100)}%`,
-            maxHeight: '4.6in', objectFit: 'contain', margin: '0 auto',
-          }}
-        />
+        // min-height:0 is what actually lets a flex child shrink to its
+        // container instead of forcing the column taller than the panel.
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img
+            src={aid.front.imageUrl}
+            alt=""
+            style={{
+              display: 'block',
+              maxWidth: `${Math.round(imageScale * 100)}%`,
+              maxHeight: '100%',
+              width: 'auto', height: 'auto',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
       )}
-      <div className="worship-aid-brand-text" style={{
-        position: 'absolute', left: '0.40in', right: '0.40in', bottom: qrDataUrl ? '1.15in' : '0.55in',
-        fontSize: '30pt', letterSpacing: '0.02em', textTransform: 'uppercase', color: BRAND,
-      }}>
-        {aid.front.word}
-      </div>
+
+      {aid.front.word && (
+        <div className="worship-aid-brand-text" style={{
+          flexShrink: 0, marginTop: '0.14in',
+          fontSize: '30pt', lineHeight: 1.05, letterSpacing: '0.02em',
+          textTransform: 'uppercase', color: BRAND,
+        }}>
+          {aid.front.word}
+        </div>
+      )}
+
       {qrDataUrl && (
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: '0.34in', textAlign: 'center' }}>
+        <div style={{ flexShrink: 0, marginTop: '0.14in' }}>
           <img src={qrDataUrl} alt="" style={{ width: '0.72in', height: '0.72in' }} />
           <div style={{ fontSize: '6.6pt', marginTop: '0.03in' }}>Follow along on your phone</div>
         </div>
