@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/integrations/supabase/client';
 import type { NewPeriod } from '../useStipendPeriods';
+
+const db = supabase as any;
+
+interface Course { id: string; title: string; course_code: string | null }
 
 interface Props {
   open: boolean;
@@ -14,10 +20,32 @@ interface Props {
 export function StipendPeriodForm({ open, onOpenChange, onSubmit }: Props) {
   const [form, setForm] = useState<NewPeriod>({
     name: '', starts_on: '', ends_on: '',
-    default_amount: 0, required_services: 1,
+    default_amount: 0, required_services: 1, course_ids: [],
   });
+  const [courses, setCourses] = useState<Course[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data } = await db
+        .from('gw_courses')
+        .select('id, title, course_code')
+        .order('title');
+      setCourses((data ?? []) as Course[]);
+    })();
+  }, [open]);
+
+  const toggleCourse = (id: string) => {
+    const picked = form.course_ids ?? [];
+    setForm({
+      ...form,
+      course_ids: picked.includes(id)
+        ? picked.filter((c) => c !== id)
+        : [...picked, id],
+    });
+  };
 
   const perService = form.required_services > 0
     ? form.default_amount / form.required_services : 0;
@@ -68,6 +96,34 @@ export function StipendPeriodForm({ open, onOpenChange, onSubmit }: Props) {
                 onChange={(e) => setForm({ ...form, required_services: Number(e.target.value) })} />
             </div>
           </div>
+          <div>
+            <Label className="text-xs">Courses that count</Label>
+            <div className="mt-1 max-h-32 overflow-y-auto rounded-md border p-2 space-y-1">
+              {courses.map((c) => (
+                <label key={c.id}
+                  className="flex items-center gap-2 rounded px-1 py-1 hover:bg-muted cursor-pointer">
+                  <Checkbox
+                    checked={(form.course_ids ?? []).includes(c.id)}
+                    onCheckedChange={() => toggleCourse(c.id)}
+                  />
+                  <span className="text-sm">
+                    {c.title}
+                    {c.course_code && (
+                      <span className="text-muted-foreground"> · {c.course_code}</span>
+                    )}
+                  </span>
+                </label>
+              ))}
+              {courses.length === 0 && (
+                <p className="p-2 text-xs text-muted-foreground">No courses yet.</p>
+              )}
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Class meetings in these courses count as services. Leave empty to
+              count only calendar events.
+            </p>
+          </div>
+
           <p className="text-xs text-muted-foreground">
             Each service is worth{' '}
             <span className="font-medium text-foreground">
