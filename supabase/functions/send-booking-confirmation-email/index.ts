@@ -3,11 +3,25 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
 import { resolveTenantBranding } from "../_shared/tenantBranding.ts";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// I3: escapes attacker-controlled strings (notes, service/location names)
+// before they're interpolated into the email HTML. Everything on this path
+// ultimately traces back to a public-intake caller with no session, so
+// treat every field from `payload` as hostile.
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 interface BookingConfirmationRequest {
   recordId: string;
@@ -42,6 +56,14 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // I3: this function sends email from the platform domain. Its only
+  // legitimate caller is public-intake, which calls with the service-role
+  // key (authenticateCaller resolves that to { internal: true }). Without
+  // this gate, anyone could POST an arbitrary { to, payload } here and use
+  // gleeworld.org to phish, since it was otherwise wide open.
+  const caller = await authenticateCaller(req);
+  if (!caller) return unauthorizedResponse(corsHeaders);
+
   try {
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
@@ -55,7 +77,27 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('📅 Sending booking confirmation email to:', to);
 
-    const serviceName = (payload?.serviceName as string) || 'your appointment';
+    // I4: the page (src/pages/PublicBookingPage.tsx) only ever sends
+    // { serviceId, appointmentDate, startTime, notes } — it never had a
+    // serviceName or location field to send, so this always fell back to
+    // "your appointment" with no location line. Resolved server-side by
+    // serviceId instead of trusting more client-supplied strings: it's one
+    // extra admin-client lookup, it can't be spoofed, and it needs no
+    // frontend payload changes.
+    const serviceId = payload?.serviceId as string | undefined;
+    let serviceName = 'your appointment';
+    let location = '';
+    if (serviceId) {
+      const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+      const { data: service } = await admin
+        .from('gw_services')
+        .select('name, location')
+        .eq('id', serviceId)
+        .maybeSingle();
+      if (service?.name) serviceName = service.name;
+      if (service?.location) location = service.location;
+    }
+
     const appointmentDateRaw = payload?.appointmentDate as string | undefined;
     const formattedDate = appointmentDateRaw
       ? new Date(appointmentDateRaw).toLocaleDateString('en-US', {
@@ -65,9 +107,10 @@ const handler = async (req: Request): Promise<Response> => {
           day: 'numeric',
         })
       : 'the scheduled date';
-    const startTime = (payload?.startTime as string) || '';
-    const location = (payload?.location as string) || '';
-    const notes = (payload?.notes as string) || '';
+    const startTime = escapeHtml((payload?.startTime as string) || '');
+    const notes = escapeHtml((payload?.notes as string) || '');
+    serviceName = escapeHtml(serviceName);
+    location = escapeHtml(location);
 
     const emailResponse = await resend.emails.send({
       from: `${orgName} <bookings@gleeworld.org>`,
