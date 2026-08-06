@@ -171,15 +171,15 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   // Full-bleed band, matching the hero's edge-to-edge width. Vertical padding
   // comes from the site's own `.gw-site > section` rule, so none is set here.
   return (
-    <section id="rsvp-section" className="border-y border-border bg-muted/30">
+    <section id="rsvp-section" className="max-w-6xl mx-auto w-full border-y border-border bg-muted/30">
       {config.showCard && (
-        <div className="px-6 sm:px-10 lg:px-16">
+        <div className="px-4 cq-sm:px-6 py-10 cq-sm:py-14">
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading event details…
             </div>
           ) : (
-            <div className="grid gap-10 lg:grid-cols-2 lg:gap-16 lg:items-center">
+            <div className="grid gap-10 cq-lg:grid-cols-2 cq-lg:gap-16 cq-lg:items-center">
               {/* Left: what it is */}
               <div>
                 {config.heading && (
@@ -191,7 +191,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                   </p>
                 )}
                 <h2
-                  className="mt-3 normal-case text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1]"
+                  className="mt-3 normal-case text-3xl cq-sm:text-4xl cq-lg:text-5xl font-bold tracking-tight leading-[1.1]"
                   style={{ fontFamily: 'var(--site-heading-font)' }}
                 >
                   {ev!.title}
@@ -211,7 +211,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
               {/* Right: when, where, and the way in */}
               <div
-                className="bg-card border border-border p-6 sm:p-8"
+                className="bg-card border border-border p-6 cq-sm:p-8"
                 style={{ borderRadius: 'var(--site-radius)' }}
               >
                 <dl className="space-y-5">
