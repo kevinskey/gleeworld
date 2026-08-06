@@ -12,9 +12,35 @@ import { supabase } from '@/integrations/supabase/client';
 vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: () => ({ profile: { user_id: 'u1', full_name: 'Test User', email: 't@example.com', role: 'member' } }),
 }));
+// `auth.getSession` matters: speakNow() awaits it before calling speak(), so
+// without it every speech assertion below is vacuous — the call throws first
+// and speak() is never reached. That is exactly how a silent-reply bug shipped
+// (Kevin, 2026-08-06: "who wrote the german requiem" → nothing).
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { functions: { invoke: vi.fn() } },
+  supabase: {
+    functions: { invoke: vi.fn() },
+    auth: { getSession: vi.fn(async () => ({ data: { session: { access_token: 'test-token' } } })) },
+  },
+  SUPABASE_URL: 'https://supabase.test',
 }));
+
+// Partial-mock speech so a test can choose whether audio actually STARTS.
+// Real speak() signals this precisely: onStart fires only on real audio
+// (utterance.onstart / audio.onplay), while every silent path — muted, dead
+// WKWebView synth, ElevenLabs error, blocked autoplay — calls onEnd alone.
+type SpeakOpts = { muted?: boolean; onStart?: () => void; onEnd?: () => void };
+const speakBehavior = { current: 'audible' as 'audible' | 'silent' };
+vi.mock('./speech', async (importActual) => {
+  const actual = await importActual<typeof import('./speech')>();
+  return {
+    ...actual,
+    speak: vi.fn((_text: string, opts?: SpeakOpts) => {
+      // Real speak() returns early when muted — onEnd, never onStart.
+      if (!opts?.muted && speakBehavior.current === 'audible') opts?.onStart?.();
+      opts?.onEnd?.();
+    }),
+  };
+});
 // AssistantProvider → useAssistantVoice → useBrandingSettings, which needs
 // getTenantSlug + a queryable supabase client; stub the hook instead.
 const brandingVoice = { current: null as string | null };
@@ -51,7 +77,23 @@ const renderProbe = () =>
     </MemoryRouter>,
   );
 
-beforeEach(() => { sessionStorage.clear(); brandingVoice.current = null; startSession.mockClear(); });
+beforeEach(() => { sessionStorage.clear(); brandingVoice.current = null; startSession.mockClear(); speakBehavior.current = 'audible'; });
+
+/**
+ * Click send, then let the speech path finish. speakNow() waits up to
+ * VOICE_RESOLVE_TIMEOUT_MS (2500) for the tenant voice to settle before it
+ * calls speak(), so any assertion about speaking — or about the caption that
+ * stands in for it — has to get past that wait first.
+ */
+const sendAndSettleSpeech = async () => {
+  vi.useFakeTimers();
+  try {
+    await act(async () => { screen.getByText('go').click(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(3000); });
+  } finally {
+    vi.useRealTimers();
+  }
+};
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
 describe('AssistantProvider', () => {
@@ -70,12 +112,27 @@ describe('AssistantProvider', () => {
   });
 
   it('a spoken reply with the sheet closed is NOT printed as a caption (voice-first)', async () => {
+    speakBehavior.current = 'audible';
     vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'spoken answer', actions: [] }, error: null } as never);
     renderProbe();
-    await act(async () => { screen.getByText('go').click(); });
+    await sendAndSettleSpeech();
     // Kevin 2026-08-03: only speak; the text lives in the sheet behind the
     // FAB caret. The caption is reserved for replies she can't speak.
     expect(screen.getByTestId('caption')).toHaveTextContent('');
+  });
+
+  it('a reply that never becomes audible surfaces as a caption, even unmuted', async () => {
+    // The regression: the caption used to be gated on isMuted(), which is only
+    // ONE of the ways a reply goes unheard. A dead WKWebView synth, an
+    // ElevenLabs failure, or a blocked autoplay all end via onEnd with no
+    // onStart — leaving no audio AND no text, which reads as a broken
+    // assistant. Kevin, 2026-08-06: asked who wrote the German Requiem and got
+    // nothing, while the server had persisted a correct 382-character answer.
+    speakBehavior.current = 'silent';
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'Johannes Brahms wrote it.', actions: [] }, error: null } as never);
+    renderProbe();
+    await sendAndSettleSpeech();
+    expect(screen.getByTestId('caption')).toHaveTextContent('Johannes Brahms wrote it.');
   });
 
   it('a muted reply with the sheet closed still surfaces as a caption', async () => {
@@ -83,7 +140,7 @@ describe('AssistantProvider', () => {
     try {
       vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'silent answer', actions: [] }, error: null } as never);
       renderProbe();
-      await act(async () => { screen.getByText('go').click(); });
+      await sendAndSettleSpeech();
       expect(screen.getByTestId('caption')).toHaveTextContent('silent answer');
     } finally {
       setMuted(false);
