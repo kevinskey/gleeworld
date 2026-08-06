@@ -122,9 +122,9 @@ describe('PsalmComposerDialog', () => {
   // The refrain marker "R." and the verse numbers are apparatus, never sung.
   it('queues the psalm words and consumes them as notes are entered', () => {
     open();
-    expect(screen.getByText(/16 words left/)).toBeInTheDocument();
+    expect(screen.getByText(/16 left/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
-    expect(screen.getByText(/15 words left/)).toBeInTheDocument();
+    expect(screen.getByText(/15 left/)).toBeInTheDocument();
   });
 
   it('refuses to save an empty staff rather than filing a blank score', async () => {
@@ -243,10 +243,10 @@ describe('PsalmComposerDialog', () => {
   // split across lines, or the "next word" shown is not the one the note takes.
   it('advances the highlight across a line break', () => {
     open({ psalmText: REFRAIN_PSALM });
-    expect(screen.getByText(/30 words left/)).toBeInTheDocument();
+    expect(screen.getByText(/30 left/)).toBeInTheDocument();
     // 11 words is exactly the first refrain line — the 12th lands on the verse.
     for (let i = 0; i < 12; i++) fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
-    expect(screen.getByText(/18 words left/)).toBeInTheDocument();
+    expect(screen.getByText(/18 left/)).toBeInTheDocument();
     const verse = psalmParagraphs()[1];
     expect(verse.querySelector('.bg-primary\\/15')).not.toBeNull();
   });
@@ -345,9 +345,47 @@ describe('PsalmComposerDialog', () => {
       .toMatchObject({ step: 'G', alter: -1 });
   });
 
+  // Kevin: "the lyric editor does not allow for word with more than 1
+  // syllable". A queue that only ever hands out whole words cannot set
+  // "shep-herd" across two notes, which is most of what psalm-setting is.
+  it('splits a word into syllables, hyphenating the first', () => {
+    open({ psalmText: 'Taste shepherd' });
+    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));  // uses "Taste"
+    expect(screen.getByTestId('next-syllable')).toHaveTextContent('shepherd');
+
+    fireEvent.click(screen.getByRole('button', { name: /^split$/i }));
+    // Halved, with a hyphen on the leading part so it engraves as a singer expects.
+    expect(screen.getByTestId('next-syllable').textContent).toMatch(/-$/);
+  });
+
+  it('puts the two halves on consecutive notes', async () => {
+    open({ psalmText: 'shepherd' });
+    fireEvent.click(screen.getByRole('button', { name: /^split$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 2,/ }));
+    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
+    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
+    const notes = savePsalmToLibrary.mock.calls[0][0].score.elements;
+    expect(notes[0].lyric.endsWith('-')).toBe(true);
+    expect(notes[0].lyric.replace('-', '') + notes[1].lyric).toBe('shepherd');
+  });
+
+  it('rejoins a split word', () => {
+    open({ psalmText: 'shepherd' });
+    fireEvent.click(screen.getByRole('button', { name: /^split$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^join$/i }));
+    expect(screen.getByTestId('next-syllable')).toHaveTextContent('shepherd');
+  });
+
+  it('refuses to split something with nothing left to split', () => {
+    open({ psalmText: 'O' });
+    fireEvent.click(screen.getByRole('button', { name: /^split$/i }));
+    expect(screen.getByTestId('next-syllable')).toHaveTextContent('O');
+  });
+
   it('does not crash when the day has no psalm text yet', () => {
     open({ psalmText: null, citation: null, observation: null });
     expect(screen.getByLabelText(/title/i)).toHaveValue('Responsorial Psalm');
-    expect(screen.queryByText(/words left/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ left$/)).not.toBeInTheDocument();
   });
 });
