@@ -918,6 +918,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
           },
         })}
         existingScoreId={(row.worship_aid as { psalmScoreId?: string } | null)?.psalmScoreId ?? null}
+        settingTitle={row.psalm_title}
       />
     </div>
   );
