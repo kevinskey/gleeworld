@@ -136,9 +136,24 @@ serve(async (req) => {
       .maybeSingle();
     profile = (data as typeof profile) ?? null;
   } catch { /* ignore — the assistant still works with fallback context */ }
-  const homeAddress = (profile?.home_address ?? '').trim() || undefined;
+  /**
+   * Profile fields are coerced with String() before trimming.
+   *
+   * `(value ?? '').trim()` assumes every column is text. class_year is an
+   * INTEGER, so for the two accounts that have one this threw
+   * "((intermediate value) ?? '').trim is not a function" and took down the
+   * entire assistant request — every question, typed or spoken, for those
+   * users only. It survived unnoticed because the accounts used for testing
+   * have no class year.
+   *
+   * Coercing all of them rather than only the integer one: the next column
+   * to change type should not be able to do this again.
+   */
+  const text = (value: unknown): string => (value == null ? '' : String(value).trim());
 
-  const fullName = (profile?.full_name ?? '').trim();
+  const homeAddress = text(profile?.home_address) || undefined;
+
+  const fullName = text(profile?.full_name);
   const inferredFirst = fullName.split(/\s+/)[0] || '';
   // Coarse geolocation, if the client got permission from the browser.
   // Server just passes lat/lng through to the prompt; the model uses
@@ -161,9 +176,9 @@ serve(async (req) => {
   const ctx = {
     firstName: inferredFirst || String(body.context?.firstName ?? 'there'),
     fullName: fullName || undefined,
-    tenantRole: (profile?.role ?? '').trim() || undefined,
-    voicePart: (profile?.voice_part ?? '').trim() || undefined,
-    classYear: (profile?.class_year ?? '').trim() || undefined,
+    tenantRole: text(profile?.role) || undefined,
+    voicePart: text(profile?.voice_part) || undefined,
+    classYear: text(profile?.class_year) || undefined,
     role,
     tenantName: String(body.context?.tenantName ?? 'GleeWorld'),
     activeModules: Array.isArray(body.context?.activeModules) ? body.context!.activeModules as string[] : [],
