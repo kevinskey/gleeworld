@@ -155,9 +155,25 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     /** Half the dragged box's size as % of the section — clamps keep the
      * whole box inside the hero instead of letting half of it hang off. */
     halfW: number; halfH: number;
+    /** True once the pointer has travelled far enough to count as a drag.
+     *  Until then the press is still a click, and the text under it stays
+     *  editable. */
+    moved: boolean;
   } | null>(null);
   const [dragging, setDragging] = useState<DragTarget | null>(null);
   const draggable = !!onConfigChange;
+
+  /**
+   * Travel, in px, before a press becomes a drag.
+   *
+   * The hero's text is contentEditable, so a press puts a caret in it and a
+   * sweep selects words — which is what happened when you tried to move a
+   * field. Suppressing selection outright would cost inline editing, so
+   * instead the press stays a click until it has clearly moved: under the
+   * threshold you get a caret, past it you get a drag with the selection
+   * cleared and the field released from focus.
+   */
+  const DRAG_THRESHOLD_PX = 4;
 
   // Start coords for a drag. Per-field targets without stored coords are
   // seeded from the element's CURRENT rendered center so pulling a field
@@ -198,13 +214,27 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
       const box = measureEl.getBoundingClientRect();
       const halfW = Math.min(50, (box.width / 2 / rect.width) * 100);
       const halfH = Math.min(50, (box.height / 2 / rect.height) * 100);
-      dragRef.current = { target, x: e.clientX, y: e.clientY, sx, sy, rect, halfW, halfH };
-      setDragging(target);
+      // Pressing anywhere that ISN'T editable text can never mean "edit", so
+      // stop the browser starting a selection at all. On editable text the
+      // press stays live and DRAG_THRESHOLD_PX decides.
+      const hit = e.target as HTMLElement;
+      if (!hit.isContentEditable && !hit.closest('[contenteditable="true"]')) e.preventDefault();
+      dragRef.current = { target, x: e.clientX, y: e.clientY, sx, sy, rect, halfW, halfH, moved: false };
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
     },
     onPointerMove: (e: React.PointerEvent) => {
       const s = dragRef.current;
       if (!s || s.target !== target) return;
+      if (!s.moved) {
+        if (Math.hypot(e.clientX - s.x, e.clientY - s.y) < DRAG_THRESHOLD_PX) return;
+        s.moved = true;
+        // Drop whatever the press selected on its way here, and let go of the
+        // field so the caret does not keep extending as the pointer moves.
+        window.getSelection()?.removeAllRanges();
+        const active = document.activeElement as HTMLElement | null;
+        if (active?.isContentEditable) active.blur();
+        setDragging(target);
+      }
       const dxPct = ((e.clientX - s.x) / s.rect.width) * 100;
       const dyPct = ((e.clientY - s.y) / s.rect.height) * 100;
       // Clamp the box CENTER so the whole box stays inside the section —
@@ -233,6 +263,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     onPointerDown: (e: React.PointerEvent) => {
       if (!draggable) return;
       e.stopPropagation();
+      e.preventDefault();   // a resize drag must never sweep a text selection
       const size = field === 'headline' ? (config.headlineSize ?? 60) : (config.subheadlineSize ?? 22);
       resizeRef.current = { field, x: e.clientX, size };
       (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -311,7 +342,9 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     <section
       ref={sectionRef}
       id="top"
-      className={`gw-hero-section relative overflow-hidden text-white max-w-6xl mx-auto w-full ${hasImage ? '' : 'min-h-[40vh]'}`}
+      // `select-none` only WHILE dragging: a permanent one would make the
+      // hero's own text unselectable, and these fields are edited in place.
+      className={`gw-hero-section relative overflow-hidden text-white max-w-6xl mx-auto w-full ${hasImage ? '' : 'min-h-[40vh]'} ${dragging ? 'select-none' : ''}`}
       style={hasImage ? undefined : { background: 'var(--site-primary)' }}
     >
       {/* Image (when present) always renders at its natural aspect — the
