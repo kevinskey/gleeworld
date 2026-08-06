@@ -114,8 +114,8 @@ function Panel({ children, style }: { children: React.ReactNode; style?: React.C
   );
 }
 
-function FrontPanel({ aid, qrDataUrl, titleSize, imageScale }: {
-  aid: WorshipAid; qrDataUrl?: string | null; titleSize: number; imageScale: number;
+function FrontPanel({ aid, titleSize, imageScale }: {
+  aid: WorshipAid; titleSize: number; imageScale: number;
 }) {
   /**
    * A column, so the picture gets everything left over.
@@ -153,27 +153,13 @@ function FrontPanel({ aid, qrDataUrl, titleSize, imageScale }: {
         </div>
       )}
 
-      {aid.front.word && (
-        <div className="worship-aid-brand-text" style={{
-          flexShrink: 0, marginTop: '0.14in',
-          fontSize: '30pt', lineHeight: 1.05, letterSpacing: '0.02em',
-          textTransform: 'uppercase', color: BRAND,
-        }}>
-          {aid.front.word}
-        </div>
-      )}
-
-      {qrDataUrl && (
-        <div style={{ flexShrink: 0, marginTop: '0.14in' }}>
-          <img src={qrDataUrl} alt="" style={{ width: '0.72in', height: '0.72in' }} />
-          <div style={{ fontSize: '6.6pt', marginTop: '0.03in' }}>Follow along on your phone</div>
-        </div>
-      )}
     </Panel>
   );
 }
 
-function BackPanel({ aid, spacing }: { aid: WorshipAid; spacing: number }) {
+function BackPanel({ aid, spacing, qrDataUrl }: {
+  aid: WorshipAid; spacing: number; qrDataUrl?: string | null;
+}) {
   return (
     <Panel>
       {aid.spineText && (
@@ -192,6 +178,14 @@ function BackPanel({ aid, spacing }: { aid: WorshipAid; spacing: number }) {
       )}
       <div style={{ marginLeft: aid.spineText ? '0.22in' : 0 }}>
         {aid.back.map((e, i) => <Entry key={i} entry={e} spacing={spacing} />)}
+        {/* The phone code belongs on the BACK, not the cover: it is what you
+            look for as you leave, and the cover is the parish's face. */}
+        {qrDataUrl && (
+          <div style={{ marginTop: '0.18in', textAlign: 'center' }}>
+            <img src={qrDataUrl} alt="" style={{ width: '0.72in', height: '0.72in' }} />
+            <div style={{ fontSize: '6.6pt', marginTop: '0.03in' }}>Follow along on your phone</div>
+          </div>
+        )}
       </div>
     </Panel>
   );
@@ -298,10 +292,9 @@ export function WorshipAidSheets({ aid, qrDataUrl, settings }: WorshipAidSheetsP
       `}</style>
 
       <div className="worship-aid-sheet">
-        <BackPanel aid={aid} spacing={gap('back')} />
+        <BackPanel aid={aid} spacing={gap('back')} qrDataUrl={qrDataUrl} />
         <FrontPanel
           aid={aid}
-          qrDataUrl={qrDataUrl}
           titleSize={coverTitleSize(settings)}
           imageScale={coverImageScale(settings)}
         />

@@ -236,12 +236,6 @@ export default function WorshipAidPage() {
                 onChange={(e) => patch({ coverTitle: e.target.value })}
                 placeholder="Your parish or ensemble name" />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="aid-word" className="text-xs">Season word</Label>
-              <Input id="aid-word" value={settings.coverWord}
-                onChange={(e) => patch({ coverWord: e.target.value })}
-                placeholder={row.liturgical_season ?? 'ADVENT'} />
-            </div>
             <div className="space-y-1.5 sm:col-span-2">
               <Label htmlFor="aid-spine" className="text-xs">Spine text (runs up the back cover)</Label>
               <Input id="aid-spine" value={settings.spineText}
