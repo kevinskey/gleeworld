@@ -133,26 +133,53 @@ export async function handleIntake(
     return fail('invalid_input', 'Please choose a password of at least 8 characters.');
   }
 
-  const counts = await deps.countRecentAttempts(email, input.sourceIp);
-  if (!evaluateRateLimit(counts).allowed) {
-    // Deliberately uniform: never disclose whether the email is registered.
-    return fail('rate_limited', 'Too many attempts. Please try again shortly.');
-  }
-  await deps.recordAttempt(email, input.sourceIp);
-
-  const pre = await deps.preflight(input);
-  if (!pre.ok) return fail(pre.reason, pre.message);
-
-  const existing = await deps.findUserByEmail(email);
+  // countRecentAttempts / recordAttempt / preflight / findUserByEmail /
+  // createAccount are all real I/O (DB, auth admin API) that can throw on a
+  // transient failure (network blip, provider 5xx) with nothing wrong about
+  // the submission itself. The function's signature promises it always
+  // resolves to IntakeSuccess | IntakeError, never rejects, so every one of
+  // those calls is covered by this single try — a throw here becomes a
+  // controlled `unavailable` error instead of an uncaught rejection. `stage`
+  // exists only so the log line says which dependency actually failed.
   let userId: string;
   let accountStatus: 'created' | 'existing';
-  if (existing) {
-    userId = existing.id;
-    accountStatus = 'existing';
-  } else {
-    const created = await deps.createAccount({ ...input.account, email }, input.tenantSlug);
-    userId = created.id;
-    accountStatus = 'created';
+  let stage = 'rate_limit_check';
+  try {
+    const counts = await deps.countRecentAttempts(email, input.sourceIp);
+    if (!evaluateRateLimit(counts).allowed) {
+      // Deliberately uniform: never disclose whether the email is registered.
+      return fail('rate_limited', 'Too many attempts. Please try again shortly.');
+    }
+
+    stage = 'record_attempt';
+    await deps.recordAttempt(email, input.sourceIp);
+
+    stage = 'preflight';
+    const pre = await deps.preflight(input);
+    if (!pre.ok) return fail(pre.reason, pre.message);
+
+    stage = 'find_user';
+    const existing = await deps.findUserByEmail(email);
+    if (existing) {
+      userId = existing.id;
+      accountStatus = 'existing';
+    } else {
+      stage = 'create_account';
+      const created = await deps.createAccount({ ...input.account, email }, input.tenantSlug);
+      userId = created.id;
+      accountStatus = 'created';
+    }
+  } catch (err) {
+    // `unavailable` (not `write_failed`) deliberately: write_failed carries
+    // compensating-delete semantics that only apply once an account exists
+    // and a record write was actually attempted. Nothing has been written
+    // yet at this point, so it's a plain "come back later," not a case that
+    // could ever have created an orphan.
+    deps.log('intake_unavailable', { stage, kind: input.kind, error: String(err) });
+    return fail(
+      'unavailable',
+      'We could not process your submission right now. Please try again.',
+    );
   }
 
   let recordId: string;

@@ -5,8 +5,10 @@ import {
   evaluateRateLimit,
   RATE_LIMIT_PER_EMAIL_PER_HOUR,
   RATE_LIMIT_PER_IP_PER_HOUR,
+  handleIntake,
+  type IntakeDeps,
+  type IntakeInput,
 } from '../publicIntake';
-import { handleIntake, type IntakeDeps, type IntakeInput } from '../publicIntake';
 
 describe('renderSmsTemplate', () => {
   it('substitutes org_name and first_name', () => {
@@ -216,5 +218,31 @@ describe('handleIntake', () => {
     const deps = makeDeps();
     await handleIntake(deps, { ...INPUT, account: { ...INPUT.account, email: 'Ada@Example.COM' } });
     expect(deps.findUserByEmail).toHaveBeenCalledWith('ada@example.com');
+  });
+
+  it('resolves to an IntakeError instead of rejecting when createAccount throws', async () => {
+    const deps = makeDeps({ createAccount: vi.fn().mockRejectedValue(new Error('auth admin down')) });
+    const result = await handleIntake(deps, INPUT);
+    expect(result).toEqual({
+      ok: false, reason: 'unavailable',
+      message: 'We could not process your submission right now. Please try again.',
+    });
+    expect(deps.writeRecord).not.toHaveBeenCalled();
+    expect(deps.sendEmail).not.toHaveBeenCalled();
+    expect(deps.sendSms).not.toHaveBeenCalled();
+  });
+
+  it('still returns write_failed, with the orphan logged, when the compensating deleteAccount itself throws', async () => {
+    const deps = makeDeps({
+      writeRecord: vi.fn().mockRejectedValue(new Error('slot gone')),
+      deleteAccount: vi.fn().mockRejectedValue(new Error('cannot delete')),
+    });
+    const result = await handleIntake(deps, INPUT);
+    expect(result).toEqual({
+      ok: false, reason: 'write_failed',
+      message: 'We could not save your submission. Please try again.',
+    });
+    expect(deps.deleteAccount).toHaveBeenCalledWith('new-user');
+    expect(deps.log).toHaveBeenCalledWith('orphan_account', expect.anything());
   });
 });
