@@ -35,6 +35,55 @@ export const MUSIC_FACTS: MusicFactChunk[] = [
     "text": "Full range D1–F4. Non-transposing; sounds as written. Notated in bass clef. Registers: E1–B♭1; B♭1–B♭2; B♭2–F3; F3–C4. Euphonium / Baritone horn: Range E1–F4."
   },
   {
+    "id": "ensemble/chamber-orchestra",
+    "domain": "ensemble",
+    "subject": "Chamber orchestra",
+    "title": "Chamber orchestra — standard instrumentation",
+    "text": "Instrumentation: 1.1.1.1 — 1.1.0.0 — str (6.5.4.3.1) or similar. The numbers read flutes.oboes.clarinets.bassoons — horns.trumpets.trombones.tuba — timpani and percussion — harp and keyboards — strings."
+  },
+  {
+    "id": "ensemble/classical-mozart-orchestra",
+    "domain": "ensemble",
+    "subject": "Classical / \"Mozart\" orchestra",
+    "title": "Classical / \"Mozart\" orchestra — standard instrumentation",
+    "text": "Instrumentation: 2.2.2.2 — 2.2.0.0 — timp — str (8.6.4.4.2). The numbers read flutes.oboes.clarinets.bassoons — horns.trumpets.trombones.tuba — timpani and percussion — harp and keyboards — strings."
+  },
+  {
+    "id": "ensemble/early-romantic",
+    "domain": "ensemble",
+    "subject": "Early Romantic",
+    "title": "Early Romantic — standard instrumentation",
+    "text": "Instrumentation: 2.2.2.2 — 4.2.3.0 — timp — str (10.8.6.4.3). The numbers read flutes.oboes.clarinets.bassoons — horns.trumpets.trombones.tuba — timpani and percussion — harp and keyboards — strings."
+  },
+  {
+    "id": "ensemble/full-romantic-triple-wind",
+    "domain": "ensemble",
+    "subject": "Full Romantic (\"triple wind\")",
+    "title": "Full Romantic (\"triple wind\") — standard instrumentation",
+    "text": "Instrumentation: 3.3.3.3 — 4.3.3.1 — timp, 3–4 perc, hp — str (16.14.12.10.8). The numbers read flutes.oboes.clarinets.bassoons — horns.trumpets.trombones.tuba — timpani and percussion — harp and keyboards — strings."
+  },
+  {
+    "id": "ensemble/late-romantic-quadruple-wind",
+    "domain": "ensemble",
+    "subject": "Late Romantic / \"quadruple wind\"",
+    "title": "Late Romantic / \"quadruple wind\" — standard instrumentation",
+    "text": "Instrumentation: 4.4.4.4 — 8.4.4.1 — timp, 5 perc, 2 hp, cel — str (16.16.12.10.8). The numbers read flutes.oboes.clarinets.bassoons — horns.trumpets.trombones.tuba — timpani and percussion — harp and keyboards — strings."
+  },
+  {
+    "id": "ensemble/sinfonietta-pierrot",
+    "domain": "ensemble",
+    "subject": "Sinfonietta / Pierrot+",
+    "title": "Sinfonietta / Pierrot+ — standard instrumentation",
+    "text": "Instrumentation: Variable, typically 8–20 players. The numbers read flutes.oboes.clarinets.bassoons — horns.trumpets.trombones.tuba — timpani and percussion — harp and keyboards — strings."
+  },
+  {
+    "id": "ensemble/standard-double-wind",
+    "domain": "ensemble",
+    "subject": "Standard \"double wind\"",
+    "title": "Standard \"double wind\" — standard instrumentation",
+    "text": "Instrumentation: 2.2.2.2 — 4.2.3.1 — timp, perc — str. The numbers read flutes.oboes.clarinets.bassoons — horns.trumpets.trombones.tuba — timpani and percussion — harp and keyboards — strings."
+  },
+  {
     "id": "keyboard-and-plucked/guitar",
     "domain": "instrument",
     "subject": "Guitar",
@@ -61,6 +110,13 @@ export const MUSIC_FACTS: MusicFactChunk[] = [
     "subject": "Timpani",
     "title": "Timpani — range and transposition (percussion)",
     "text": "Non-transposing; sounds as written. Notated in bass clef."
+  },
+  {
+    "id": "score-order/orchestra",
+    "domain": "score-order",
+    "subject": "Orchestral score order",
+    "title": "Orchestral score order, top to bottom — who goes where on the page",
+    "text": "Standard orchestral score order, from the top of the page down. Woodwinds: Piccolo, Flutes, Alto flute, Oboes, English horn, Clarinets, Bass clarinet, Bassoons, Contrabassoon, Saxophones. Brass: Horns, Trumpets, Trombones, Bass trombone, Tuba. Percussion: Timpani, Percussion. Keyboards / Harp / Voices: Harp, Keyboard(s) — piano, celesta, organ, Solo voice, Chorus. Strings: Violin I, Violin II, Viola, Violoncello, Contrabass. Horns sit above trumpets by convention, despite sounding lower."
   },
   {
     "id": "strings/contrabass-double-bass",

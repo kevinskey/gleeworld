@@ -9,7 +9,7 @@ export interface MusicFactChunk extends SearchableChunk {
   /** Stable id, e.g. "strings/viola" or "voice/satb-alto". */
   id: string;
   /** Which body of facts this came from. */
-  domain: 'instrument' | 'voice';
+  domain: 'instrument' | 'voice' | 'score-order' | 'ensemble';
   /** The thing the chunk is about: "Viola", "Alto (SATB)". */
   subject: string;
 }

@@ -119,12 +119,42 @@ function voiceChunk(x) {
   };
 }
 
+
+function scoreOrderChunk(groups) {
+  const body = groups
+    .map((g) => `${g.family}: ${g.items.join(', ')}.`)
+    .join(' ');
+  return {
+    id: 'score-order/orchestra',
+    domain: 'score-order',
+    subject: 'Orchestral score order',
+    title: 'Orchestral score order, top to bottom — who goes where on the page',
+    text: `Standard orchestral score order, from the top of the page down. ${body} Horns sit above trumpets by convention, despite sounding lower.`,
+  };
+}
+
+function ensembleChunk(x) {
+  return {
+    id: x.id,
+    domain: 'ensemble',
+    subject: x.name,
+    title: `${x.name} — standard instrumentation`,
+    // The shorthand reads Flutes.Oboes.Clarinets.Bassoons — Horns.Trumpets.
+    // Trombones.Tuba — Timpani, Percussion — Harp, Keyboards — Strings.
+    text: `Instrumentation: ${x.instrumentation}. The numbers read flutes.oboes.clarinets.bassoons — horns.trumpets.trombones.tuba — timpani and percussion — harp and keyboards — strings.`,
+  };
+}
+
 const instruments = read('instruments');
 const voices = read('voices');
+const scoreOrder = read('score-order');
+const ensembles = read('ensembles');
 
 const chunks = [
   ...instruments.map(instrumentChunk),
   ...voices.map(voiceChunk),
+  ...(scoreOrder.length ? [scoreOrderChunk(scoreOrder)] : []),
+  ...ensembles.map(ensembleChunk),
 ].filter((c) => c.text.trim().length > 0);
 
 chunks.sort((a, b) => a.id.localeCompare(b.id));
@@ -144,4 +174,6 @@ const body = [
 writeFileSync(OUT, body, 'utf8');
 console.log(`  instruments ${String(instruments.length).padStart(3)}`);
 console.log(`  voices      ${String(voices.length).padStart(3)}`);
+console.log(`  score order ${String(scoreOrder.length).padStart(3)} groups`);
+console.log(`  ensembles   ${String(ensembles.length).padStart(3)}`);
 console.log(`\n  TOTAL ${chunks.length} chunks -> ${path.relative(process.cwd(), OUT)}`);
