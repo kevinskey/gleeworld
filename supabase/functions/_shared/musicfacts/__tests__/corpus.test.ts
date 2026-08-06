@@ -18,10 +18,11 @@ function midi(p: string): number {
 }
 
 describe('MUSIC_FACTS corpus', () => {
-  it('has both domains and a plausible size', () => {
-    expect(MUSIC_FACTS.length).toBeGreaterThanOrEqual(28);
-    expect(MUSIC_FACTS.some((c) => c.domain === 'instrument')).toBe(true);
-    expect(MUSIC_FACTS.some((c) => c.domain === 'voice')).toBe(true);
+  it('has every domain and a plausible size', () => {
+    expect(MUSIC_FACTS.length).toBeGreaterThanOrEqual(36);
+    for (const d of ['instrument', 'voice', 'score-order', 'ensemble']) {
+      expect(MUSIC_FACTS.some((c) => c.domain === d), d).toBe(true);
+    }
   });
 
   it('has a unique id and non-empty text on every chunk', () => {
@@ -80,6 +81,11 @@ describe('retrieval', () => {
   it('finds choral voice parts', () => {
     expect(top('alto range SATB')?.domain).toBe('voice');
     expect(top('TTBB baritone range')?.subject).toMatch(/Baritone/);
+  });
+
+  it('finds score order and ensemble instrumentation', () => {
+    expect(top('orchestral score order')?.domain).toBe('score-order');
+    expect(top('chamber orchestra instrumentation')?.domain).toBe('ensemble');
   });
 
   it('returns nothing for a subject it does not cover', () => {

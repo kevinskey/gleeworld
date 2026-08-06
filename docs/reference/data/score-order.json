@@ -1,0 +1,53 @@
+[
+  {
+    "family": "Woodwinds",
+    "items": [
+      "Piccolo",
+      "Flutes",
+      "Alto flute",
+      "Oboes",
+      "English horn",
+      "Clarinets",
+      "Bass clarinet",
+      "Bassoons",
+      "Contrabassoon",
+      "Saxophones"
+    ]
+  },
+  {
+    "family": "Brass",
+    "items": [
+      "Horns",
+      "Trumpets",
+      "Trombones",
+      "Bass trombone",
+      "Tuba"
+    ]
+  },
+  {
+    "family": "Percussion",
+    "items": [
+      "Timpani",
+      "Percussion"
+    ]
+  },
+  {
+    "family": "Keyboards / Harp / Voices",
+    "items": [
+      "Harp",
+      "Keyboard(s) — piano, celesta, organ",
+      "Solo voice",
+      "Chorus"
+    ]
+  },
+  {
+    "family": "Strings",
+    "items": [
+      "Violin I",
+      "Violin II",
+      "Viola",
+      "Violoncello",
+      "Contrabass"
+    ]
+  }
+]
