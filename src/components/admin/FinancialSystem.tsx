@@ -7,7 +7,7 @@ import { FinancialOverview } from "./financial/FinancialOverview";
 import { UserFinancialRecords } from "./financial/UserFinancialRecords";
 import { PaymentTracking } from "./financial/PaymentTracking";
 import { FinancialReports } from "./financial/FinancialReports";
-import { StipendManagement } from "./financial/StipendManagement";
+import { StipendPeriodsPanel } from "@/features/stipends/components/StipendPeriodsPanel";
 import { BudgetTracking } from "./financial/BudgetTracking";
 import { MonthlyStatements } from "./financial/MonthlyStatements";
 import { W9Management } from "./W9Management";
@@ -112,7 +112,7 @@ export const FinancialSystem = ({ initialTab }: FinancialSystemProps) => {
         </TabsContent>
 
         <TabsContent value="stipends" className="space-y-4 md:space-y-6">
-          <StipendManagement />
+          <StipendPeriodsPanel />
         </TabsContent>
 
         <TabsContent value="budget" className="space-y-4 md:space-y-6">
