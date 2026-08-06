@@ -83,8 +83,12 @@ export const UniversalLayout = ({
   const primary = branding.primary_color || publicSite?.theme?.primaryColor;
   const shellBackground = primary ? tint(primary, 0.06) : 'hsl(40, 10%, 96%)';
 
-  // Use PublicHeader for public, fan, graduates, academy, and calendar pages
-  const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/graduates', '/glee-academy', '/public-calendar'];
+  // Use PublicHeader for public, fan, graduates, academy, and calendar pages.
+  // '/book' must be here too: without it, a tenant-subdomain visit to /book
+  // would hit the IS_TENANT_DOMAIN branch below and render DashboardShell —
+  // the authenticated admin shell — for a visitor with no session, which is
+  // exactly the login-wall problem this route exists to remove.
+  const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/graduates', '/glee-academy', '/public-calendar', '/book'];
   const shouldUsePublicHeader =
     usePublicHeaderPaths.includes(location.pathname) ||
     location.pathname.startsWith('/glee-academy') ||

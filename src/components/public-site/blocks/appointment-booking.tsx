@@ -58,10 +58,10 @@ const SERVICE_ICONS = [Music2, Mic2, Piano, Sparkles] as const;
 function Render({ config }: BlockRenderProps<Config>) {
   const services = config.services.filter((s) => s.name);
   // Fall back to the in-app Studio Hours flow when the tenant hasn't
-  // filled in a booking link. Blocks saved before /book-appointment
-  // became the default were rendering NO button; the CTA card + card
-  // arrows all key off this value now, so it's always safe to click.
-  const effectiveBookingUrl = config.bookingUrl?.trim() || '/book-appointment';
+  // filled in a booking link. Blocks saved before /book became the
+  // default were rendering NO button; the CTA card + card arrows all key
+  // off this value now, so it's always safe to click.
+  const effectiveBookingUrl = config.bookingUrl?.trim() || '/book';
   const noContent = !config.heading && services.length === 0;
   if (noContent) return null;
 
@@ -317,10 +317,10 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
           <Input
             value={config.bookingUrl}
             onChange={(e) => set({ bookingUrl: e.target.value })}
-            placeholder="/book-appointment"
+            placeholder="/book"
           />
           <p className="text-[10px] text-slate-500 leading-snug">
-            <code className="bg-slate-100 px-1 rounded">/book-appointment</code> uses the
+            <code className="bg-slate-100 px-1 rounded">/book</code> uses the
             built-in Studio Hours flow. Or paste a Calendly / Cal.com URL.
           </p>
         </div>
@@ -401,7 +401,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
               />
               <p className="text-[10px] text-slate-500">
                 Overrides the section CTA. Leave blank to use the main link (defaults to
-                Studio Hours at <code className="bg-slate-100 px-1 rounded">/book-appointment</code>).
+                Studio Hours at <code className="bg-slate-100 px-1 rounded">/book</code>).
               </p>
             </div>
           </div>
@@ -523,7 +523,7 @@ export const appointmentBookingBlock: BlockModule<typeof schema> = {
       'Private sessions, tailored to where you are. Choose a service below, then pick a time that works.',
     // Default to the built-in Studio Hours flow. Tenants can override
     // per-service or globally to point at Calendly / Cal.com / external.
-    bookingUrl: '/book-appointment',
+    bookingUrl: '/book',
     ctaLabel: 'Book now',
     ctaFootnote: 'Response within 24 hours',
     services: [

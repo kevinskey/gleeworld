@@ -146,6 +146,7 @@ const Auth = lazy(() => import("./pages/Auth"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const ForcePasswordChange = lazy(() => import("./pages/ForcePasswordChange"));
 const AuditionApplicationPage = lazy(() => import("./pages/AuditionApplicationPage"));
+const PublicBookingPage = lazy(() => import("./pages/PublicBookingPage"));
 const FanDashboard = lazy(() => import("./pages/FanDashboard"));
 // import AdminDashboard from "./pages/AdminDashboard";
 const FeesAdminPage = lazy(() => import("./pages/dashboard/FeesAdminPage"));
@@ -1058,9 +1059,13 @@ const App = () => {
               {/* Legacy course lounge redirect - now goes to dashboard */}
               <Route path="/course-lounge/:courseId" element={<Navigate to="/dashboard" replace />} />
               
-              {/* Legacy booking page — now redirects into the dashboard shell so
-                  every link / bookmark in the wild lands on the redesigned UI. */}
-              <Route path="/book-appointment" element={<Navigate to="/dashboard/office-hours" replace />} />
+              {/* /book is public by design — the appointment block on every tenant's
+                  public page links here. This used to redirect to /dashboard/office-hours,
+                  which is a ProtectedRoute, so every visitor who clicked "Book now" hit a
+                  login screen. Blocks saved before this change still point at
+                  /book-appointment, hence the redirect. */}
+              <Route path="/book" element={<PublicRoute><PublicBookingPage /></PublicRoute>} />
+              <Route path="/book-appointment" element={<Navigate to="/book" replace />} />
               {/* Control Center retired for tenants — every tenant uses the
                   Command Center at /dashboard now. But the platform owner's
                   old /control-center bookmarks should land on the mother
