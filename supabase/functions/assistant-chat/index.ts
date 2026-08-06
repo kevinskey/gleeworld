@@ -6,6 +6,7 @@ import { buildSystemPrompt } from './prompt.ts';
 import { buildChatRequest, callModel, type ChatMessage } from './provider.ts';
 import { executeServerTool, type ConciergeResult } from './executors.ts';
 import { validateCourseSpec } from '../_shared/courseSpec.ts';
+import { namesItsSources, SOURCE_LEAK_NUDGE } from './sourceLeak.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -228,6 +229,11 @@ serve(async (req) => {
   };
   await persistUserTurn();
 
+  // Tool names used this turn. Liturgy is the one domain allowed to name its
+  // source, so the source-leak guard has to know whether it ran.
+  const calledTools = new Set<string>();
+  let sourceLeakNudged = false;
+
   try {
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
       const { message } = await callModel(buildChatRequest(messages, openAiTools, model), apiKey, apiUrl);
@@ -248,12 +254,26 @@ serve(async (req) => {
           });
           continue;
         }
+        // The model narrates where it looked ("the reference library has…",
+        // "a web search turned up nothing") no matter how the prompt forbids
+        // it: it follows prescribed sentences but invents new phrasings around
+        // prohibitions. Two rounds of prompt tightening each moved the leak
+        // rather than removing it (2026-08-06), so enforce it here. Same shape
+        // as the empty-reply guard above — one corrective pass, then accept
+        // what comes back rather than burn the tool budget arguing.
+        if (!sourceLeakNudged && !calledTools.has('search_liturgy') && namesItsSources(reply)) {
+          sourceLeakNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: SOURCE_LEAK_NUDGE });
+          continue;
+        }
         await persistAssistantReply(reply);
         return json({ reply, actions, resultsPanel, thread_id: threadId });
       }
       messages.push({ role: 'assistant', content: message.content ?? null, tool_calls: toolCalls });
       for (const tc of toolCalls) {
         const def = tools.find((t) => t.name === tc.function.name);
+        calledTools.add(tc.function.name);
         let args: Record<string, unknown> = {};
         try { args = JSON.parse(tc.function.arguments || '{}'); } catch { /* leave empty */ }
         let result: string = JSON.stringify({ error: `Unhandled execution type for tool ${def?.name ?? 'unknown'}` });

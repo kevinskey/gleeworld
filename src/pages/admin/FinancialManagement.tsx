@@ -8,6 +8,7 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { StipendPeriodsPanel } from '@/features/stipends/components/StipendPeriodsPanel';
 
 // Spreadsheet-style finance dashboard over the tenant's REAL money data:
 // gw_student_fees (dues/wardrobe/trip fees) + gw_running_ledger (treasurer
@@ -147,6 +148,11 @@ const FinancialManagement = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Stipends. This page is what /dashboard/finance actually renders, so
+          the stipend tools live here — not only in FinanceHub, which is a
+          different (modular-dashboard) surface. */}
+      <StipendPeriodsPanel />
 
       {/* Reports row, also as a compact spreadsheet-style strip */}
       <div className="border border-border rounded-lg bg-card divide-y divide-border">

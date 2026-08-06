@@ -7,6 +7,7 @@ import { DuesCollectionModule } from './DuesCollectionModule';
 import { InvoiceMakerModule } from './InvoiceMakerModule';
 import StipendPaymentModule from './StipendPaymentModule';
 import { ContractsModule } from './ContractsModule';
+import { StipendPeriodsPanel } from '@/features/stipends/components/StipendPeriodsPanel';
 
 /**
  * Finance Hub — single entry point for admin financial operations.
@@ -78,7 +79,8 @@ export const FinanceHub = () => {
         <TabsContent value="invoices" className="m-0">
           <InvoiceMakerModule />
         </TabsContent>
-        <TabsContent value="stipends" className="m-0">
+        <TabsContent value="stipends" className="m-0 space-y-6">
+          <StipendPeriodsPanel />
           <StipendPaymentModule />
         </TabsContent>
         <TabsContent value="contracts" className="m-0">

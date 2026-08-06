@@ -172,7 +172,14 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
 
   // Speak a reply while tracking `speaking` so the UI can show a Stop
   // control; stopSpeakingNow cuts her off immediately (barge-in / Stop tap).
-  const speakNow = useCallback(async (text: string) => {
+  /**
+   * @param onSilent Called when the reply never became audible — speak()
+   *   reported onEnd without ever reporting onStart. That covers muting, a
+   *   dead WKWebView synth, an ElevenLabs failure and a blocked autoplay
+   *   alike. Callers use it to surface the text instead, so a failed voice
+   *   can never leave a turn with no audio AND no words on screen.
+   */
+  const speakNow = useCallback(async (text: string, onSilent?: () => void) => {
     // Speaking goes true the moment a spoken reply is REQUESTED, not when
     // audio starts. ElevenLabs synthesis of a long reply (news rundown)
     // takes many seconds, and waiting for onplay left that whole window
@@ -192,6 +199,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // Stop was tapped while we awaited the token — honor it; calling
     // speak() now would start a fresh TTS session the tap can't cancel.
     if (speakRequestRef.current !== myRequest) return;
+    // onStart fires ONLY on real audio (utterance.onstart / audio.onplay);
+    // every silent path in speak() calls onEnd alone. So "ended without
+    // starting" is a reliable signal that the user heard nothing.
+    let started = false;
     speak(text, {
       muted,
       voiceId: voiceIdRef.current,
@@ -202,8 +213,8 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       // to browser SpeechSynthesis and ignores voiceId — every reply comes
       // out in the OS default voice regardless of the tenant's pick.
       supabaseUrl: SUPABASE_URL,
-      onStart: () => setSpeaking(true),
-      onEnd: () => setSpeaking(false),
+      onStart: () => { started = true; setSpeaking(true); },
+      onEnd: () => { setSpeaking(false); if (!started) onSilent?.(); },
     });
   }, [muted]);
 
@@ -647,7 +658,18 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       const replyText = (data.reply ?? '').trim();
       if (replyText || confirmAction) {
         dispatch({ type: 'reply', id: replyId, content: data.reply ?? '', pendingAction: confirmAction });
-        speakNow(replyText);
+        // If she never actually speaks it, print it instead. The caption used
+        // to be gated on isMuted(), which is only ONE of the ways a reply goes
+        // unheard — a dead WKWebView synth, an ElevenLabs error or a blocked
+        // autoplay left no audio AND no text, which users read as the
+        // assistant being broken (Kevin, 2026-08-06: asked who wrote the
+        // German Requiem, saw nothing, while the server had persisted a
+        // correct answer).
+        speakNow(replyText, () => {
+          if (!sheetOpenRef.current && !confirmAction && data.reply) {
+            setCaptionReply({ id: replyId, text: data.reply });
+          }
+        });
       } else {
         dispatch({ type: 'settle' });
       }
@@ -657,10 +679,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       // The caption remains only as the fallback when she can't speak
       // (muted), and NEVER leave a confirm card invisible — SMS/email sends
       // must show their Send/Cancel, so open the sheet.
-      if (!sheetOpenRef.current) {
-        if (confirmAction) setSheetOpen(true);
-        else if (data.reply && isMuted()) setCaptionReply({ id: replyId, text: data.reply });
-      }
+      if (!sheetOpenRef.current && confirmAction) setSheetOpen(true);
       // Non-confirm actions run immediately, in order.
       for (const action of autoRun) {
         await runAction(replyId, action);

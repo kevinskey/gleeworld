@@ -172,7 +172,7 @@ export const COMPREHENSIVE_FUNCTIONS_LIST: PermissionFunction[] = [
     id: 'manage_stipends',
     name: 'Manage Stipends',
     description: 'Create and manage student stipends',
-    location: 'useAdminStipends',
+    location: 'useStipendPeriods',
     isActive: true,
     category: 'Financial Management'
   },
