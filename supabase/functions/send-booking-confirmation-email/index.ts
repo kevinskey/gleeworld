@@ -56,13 +56,18 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // I3: this function sends email from the platform domain. Its only
-  // legitimate caller is public-intake, which calls with the service-role
-  // key (authenticateCaller resolves that to { internal: true }). Without
-  // this gate, anyone could POST an arbitrary { to, payload } here and use
-  // gleeworld.org to phish, since it was otherwise wide open.
+  // I3: this function sends email from the platform domain. Its ONLY
+  // legitimate caller is public-intake, which uses the service-role key —
+  // authenticateCaller resolves that, and only that, to { internal: true }.
+  //
+  // Checking merely that the caller is non-null is not enough: authenticateCaller
+  // returns a Caller for ANY valid user JWT, so a null-check would still let
+  // any signed-in user on any of the ~50 tenants send arbitrary mail from this
+  // domain to any address. That narrows the phishing primitive from "the whole
+  // internet" to "anyone with an account" — it does not close it. Require
+  // internal.
   const caller = await authenticateCaller(req);
-  if (!caller) return unauthorizedResponse(corsHeaders);
+  if (!caller?.internal) return unauthorizedResponse(corsHeaders, 403);
 
   try {
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
@@ -168,7 +173,7 @@ const handler = async (req: Request): Promise<Response> => {
 
               <div class="detail-row">
                 <span class="detail-label">Confirmation ID:</span>
-                <span class="detail-value">${recordId}</span>
+                <span class="detail-value">${escapeHtml(recordId ?? '')}</span>
               </div>
 
               ${notes ? `
