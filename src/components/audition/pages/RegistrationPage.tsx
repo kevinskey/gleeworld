@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { getOrgName } from '@/lib/orgName';
 
 export function RegistrationPage() {
-  const { form, setIsNewUser } = useAuditionForm();
+  const { form } = useAuditionForm();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isRegistering, setIsRegistering] = useState(false);
@@ -21,7 +21,6 @@ export function RegistrationPage() {
   }
 
   const handleExistingUserLogin = () => {
-    setIsNewUser(false);
     // Redirect to login page with audition redirect
     navigate('/auth?redirect=/auditions');
   };
@@ -53,7 +52,6 @@ export function RegistrationPage() {
 
       if (data.user) {
         toast.success("Account created! Please continue with your audition.");
-        setIsNewUser(true);
         // The form will automatically proceed to the next page
       }
     } catch (error: any) {
