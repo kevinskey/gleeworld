@@ -351,6 +351,8 @@ export interface WorshipAidSheetsProps {
   onDeleteBlock?: (key: string) => void;
   /** Nudge the blank space after a block, in inches. */
   onSpaceBlock?: (key: string, delta: number) => void;
+  /** Move a block up or down the running order — graphics included. */
+  onMoveBlock?: (key: string, dir: -1 | 1) => void;
 }
 
 /**
@@ -363,6 +365,7 @@ export interface WorshipAidSheetsProps {
  */
 export function WorshipAidSheets({
   aid, qrDataUrl, settings, edits, onFlow, editable, onEditBlock, onDeleteBlock, onSpaceBlock,
+  onMoveBlock,
 }: WorshipAidSheetsProps) {
   const gap = (p: PanelId) => panelSpacing(settings, p);
 
@@ -404,34 +407,28 @@ export function WorshipAidSheets({
           onEdit={(field, value) => onEditBlock?.(b.key, field, value)}
         />
         {editable && (
+          // INSIDE the panel, not hanging off its edge. These sat at
+          // right:-46px, outside a box with overflow:hidden — so the fold
+          // sliced them in half and what survived was unreadable.
           <span className="worship-aid-tools">
-            {/* Blank space, addable where you can see its effect. Buried in a
-                drawer it was findable only if you knew it existed. */}
-            <button
-              type="button"
+            {/* Move applies to ANY block, graphics included. Reordering used
+                to live only in the drawer's text list, which left an
+                inserted score with no way to move at all. */}
+            <button type="button" title="Move up"
+              aria-label={`Move ${b.entry.label || 'this block'} up`}
+              onClick={() => onMoveBlock?.(b.key, -1)}>↑</button>
+            <button type="button" title="Move down"
+              aria-label={`Move ${b.entry.label || 'this block'} down`}
+              onClick={() => onMoveBlock?.(b.key, 1)}>↓</button>
+            <button type="button" title="Add a blank line"
               aria-label={`Add space after ${b.entry.label || 'this block'}`}
-              title="Add a blank line"
-              onClick={() => onSpaceBlock?.(b.key, 0.16)}
-            >
-              +
-            </button>
-            <button
-              type="button"
+              onClick={() => onSpaceBlock?.(b.key, 0.16)}>+</button>
+            <button type="button" title="Remove a blank line"
               aria-label={`Less space after ${b.entry.label || 'this block'}`}
-              title="Remove a blank line"
-              onClick={() => onSpaceBlock?.(b.key, -0.16)}
-            >
-              −
-            </button>
-            <button
-              type="button"
+              onClick={() => onSpaceBlock?.(b.key, -0.16)}>−</button>
+            <button type="button" title="Remove" className="worship-aid-danger"
               aria-label={`Remove ${b.entry.label || 'this block'}`}
-              title="Remove"
-              onClick={() => onDeleteBlock?.(b.key)}
-              className="worship-aid-danger"
-            >
-              ×
-            </button>
+              onClick={() => onDeleteBlock?.(b.key)}>×</button>
           </span>
         )}
       </div>
@@ -459,16 +456,24 @@ export function WorshipAidSheets({
           .worship-aid-editable:focus {
             outline: 2px solid hsl(var(--primary)); outline-offset: 1px; background: #fff;
           }
-          .worship-aid-block:hover > .worship-aid-tools { opacity: 1; }
+          .worship-aid-block { position: relative; }
+          .worship-aid-block:hover > .worship-aid-tools,
+          .worship-aid-tools:focus-within { opacity: 1; }
+          /* Inside the panel and above the text, on a solid pill so the
+             controls read against whatever they overlap. */
           .worship-aid-tools {
-            position: absolute; top: -3px; right: -46px; display: flex; gap: 2px;
+            position: absolute; top: -2px; right: 0; z-index: 5;
+            display: flex; gap: 3px; padding: 2px;
+            background: #fff; border: 1px solid #d4d4d4; border-radius: 999px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.18);
             opacity: 0; transition: opacity .12s;
           }
           .worship-aid-tools button {
-            width: 14px; height: 14px; line-height: 12px; font-size: 11px;
-            cursor: pointer; border: 1px solid #ccc; background: #fff; color: #444;
+            width: 20px; height: 20px; line-height: 18px; font-size: 13px;
+            cursor: pointer; border: 0; background: transparent; color: #333;
             border-radius: 999px;
           }
+          .worship-aid-tools button:hover { background: #eee; }
           .worship-aid-tools .worship-aid-danger { color: #b00; }
         }
         @media print {

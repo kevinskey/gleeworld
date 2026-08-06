@@ -712,6 +712,14 @@ export default function WorshipAidPage() {
               .find((p) => panelBlocks(p).some((b) => b.key === key));
             if (panel) setText(panel, key, field, value);
           }}
+          onMoveBlock={(key, dir) => {
+            // The owning panel is FOUND, not assumed: with the flow engine a
+            // block can print on a page it did not come from, so its edits
+            // still live with the panel that generated it.
+            const panel = (['insideLeft', 'insideRight', 'back'] as PanelId[])
+              .find((p) => panelBlocks(p).some((b) => b.key === key));
+            if (panel) move(panel, key, dir);
+          }}
           onSpaceBlock={(key, delta) => {
             const panel = (['insideLeft', 'insideRight', 'back'] as PanelId[])
               .find((p) => panelBlocks(p).some((b) => b.key === key));
