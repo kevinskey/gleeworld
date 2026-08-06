@@ -907,17 +907,17 @@ function LiturgyEditor({ massId }: { massId: string }) {
         // (Jeremiah 31) while the citation field still reads "Psalm 84(85)"
         // has two different strings for one piece of music. Writing the URL
         // here removes the guessing.
-        onSaved={(_id, title, imageUrl) => update({
+        onSaved={(id, title, imageUrl) => update({
           psalm_title: title,
-          ...(imageUrl
-            ? {
-                worship_aid: {
-                  ...(row.worship_aid ?? {}),
-                  psalmImageUrl: imageUrl,
-                },
-              }
-            : {}),
+          worship_aid: {
+            ...(row.worship_aid ?? {}),
+            // The id is what lets the composer reopen this setting for
+            // editing instead of starting blank and filing a second copy.
+            psalmScoreId: id,
+            ...(imageUrl ? { psalmImageUrl: imageUrl } : {}),
+          },
         })}
+        existingScoreId={(row.worship_aid as { psalmScoreId?: string } | null)?.psalmScoreId ?? null}
       />
     </div>
   );

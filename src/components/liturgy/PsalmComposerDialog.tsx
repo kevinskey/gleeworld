@@ -20,6 +20,8 @@ import {
   PSALM_WIDTH_PX, PSALM_WIDTH_IN,
 } from '@/lib/liturgy/psalmComposer';
 import { savePsalmToLibrary } from '@/lib/liturgy/psalmScores';
+import { musicXmlToEditorScore } from '@/lib/notation/musicxmlRead';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 
@@ -120,10 +122,13 @@ export interface PsalmComposerDialogProps {
    *  planner can record the image on the Mass instead of trying to find it
    *  again later by matching titles. */
   onSaved?: (id: string, title: string, imageUrl: string | null) => void;
+  /** A setting already composed for this Mass. Reopening loads it back so it
+   *  can be edited, rather than starting a blank staff and saving a duplicate. */
+  existingScoreId?: string | null;
 }
 
 export function PsalmComposerDialog({
-  open, onClose, citation, observation, psalmText, onSaved,
+  open, onClose, citation, observation, psalmText, onSaved, existingScoreId,
 }: PsalmComposerDialogProps) {
   const { user } = useAuth();
   const [score, setScore] = useState<EditorScore>(() => emptyScore());
@@ -157,11 +162,45 @@ export function PsalmComposerDialog({
     [score],
   );
 
+  /**
+   * Reopen the setting already composed for this Mass.
+   *
+   * The MusicXML has always been saved; nothing loaded it back, so every
+   * visit began on a blank staff and saving filed a SECOND copy rather than
+   * revising the first. The score is parsed from the stored MusicXML — the
+   * same document the library holds — so what is edited is exactly what was
+   * saved, not a re-derivation of it.
+   */
+  useEffect(() => {
+    if (!open || !existingScoreId) return;
+    let alive = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from('gw_sheet_music')
+        .select('title, composer, xml_content')
+        .eq('id', existingScoreId)
+        .maybeSingle();
+      if (!alive || error || !data?.xml_content) return;
+      try {
+        setScore(musicXmlToEditorScore(data.xml_content as string));
+        setSavedId(existingScoreId);          // so Save revises rather than duplicates
+        if (data.title) setTitle(data.title as string);
+        if (data.composer) setComposer(data.composer as string);
+      } catch {
+        // A score that will not parse must not blank the editor silently —
+        // say so and leave the staff empty to start again.
+        toast.error('That saved setting could not be reopened. Starting a new one.');
+      }
+    })();
+    return () => { alive = false; };
+  }, [open, existingScoreId]);
+
   // Seed title/composer when the dialog opens. Deliberately not on every
   // prop change — the user may have edited them, and clobbering a typed
-  // title because the readings refetched would be maddening.
+  // title because the readings refetched would be maddening. Skipped entirely
+  // when an existing setting is being loaded, which brings its own title.
   useEffect(() => {
-    if (!open) return;
+    if (!open || existingScoreId) return;
     setTitle(psalmScoreTitle(citation, observation));
     setComposer(
       (user?.user_metadata?.full_name as string | undefined)
