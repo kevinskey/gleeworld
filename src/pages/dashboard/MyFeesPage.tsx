@@ -3,6 +3,7 @@ import DashboardPageShell from '@/components/dashboard/DashboardPageShell';
 import { useMyFees } from '@/hooks/useMyFees';
 import { useTenantStripeConnect } from '@/hooks/useTenantStripeConnect';
 import { StudentFeeCard } from '@/components/fees/StudentFeeCard';
+import { MyStipendCard } from '@/features/stipends/components/MyStipendCard';
 import { supabase } from '@/integrations/supabase/client';
 import { CreditCard } from 'lucide-react';
 
@@ -55,6 +56,9 @@ export default function MyFeesPage() {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* Renders nothing unless this student has a stipend award. */}
+          <MyStipendCard />
+
           {/* Balance summary card */}
           <section className="rounded-2xl bg-primary/5 p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
