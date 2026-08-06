@@ -682,14 +682,35 @@ export function PsalmComposerDialog({
             </Button>
           </div>
 
-          {/* Degree + letter pads — phones and iPads have no hardware keyboard */}
+          {/* Degree + letter pads — phones and iPads have no hardware keyboard.
+              Each degree shows the note it will actually produce in the
+              current key: bare numbers left people asking what they were for,
+              and the answer changes with the key signature, so the button has
+              to say it rather than a caption elsewhere. */}
+          <p className="text-xs text-muted-foreground">
+            <strong>Scale degrees</strong> follow the key — the note under each number is what
+            it will write. <strong>Letters</strong> are absolute pitches.
+          </p>
           <div className="flex flex-wrap gap-1.5">
-            {[1, 2, 3, 4, 5, 6, 7].map((d) => (
-              <Button key={d} type="button" size="sm" variant="outline"
-                onClick={() => addByDegree(d)} className="min-w-9 tabular-nums">
-                {d}
-              </Button>
-            ))}
+            {[1, 2, 3, 4, 5, 6, 7].map((d) => {
+              const p = degreeToPitch(d, score.keyFifths, score.mode, octaveShift);
+              const name = `${p.step}${p.alter > 0 ? '♯'.repeat(p.alter) : p.alter < 0 ? '♭'.repeat(-p.alter) : ''}`;
+              return (
+                <Button
+                  key={d}
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => addByDegree(d)}
+                  title={`Scale degree ${d} — ${name} in this key`}
+                  aria-label={`Scale degree ${d}, ${name}`}
+                  className="h-auto min-w-11 flex-col gap-0 py-1 leading-none"
+                >
+                  <span className="text-sm tabular-nums">{d}</span>
+                  <span className="text-[10px] font-normal text-muted-foreground">{name}</span>
+                </Button>
+              );
+            })}
             <span className="mx-1 h-5 w-px bg-border" aria-hidden />
             {LETTERS.map((l) => (
               <Button key={l} type="button" size="sm" variant="outline"
