@@ -43,7 +43,18 @@ const handler = async (req: Request): Promise<Response> => {
       day: 'numeric'
     });
 
-    const location = auditionLocation || 'Spelman College Music Department';
+    // No hardcoded institution fallback: auditionLocation is optional end to
+    // end (client type, this request type, and here). When it's absent —
+    // audition_sessions has no location column, so most tenants will never
+    // send one — the location row is omitted from the email entirely rather
+    // than printing a placeholder or another tenant's real address.
+    const locationRow = auditionLocation
+      ? `
+              <div class="detail-row">
+                <span class="detail-label">Location:</span>
+                <span class="detail-value">${auditionLocation}</span>
+              </div>`
+      : '';
     const dashboardUrl = `${Deno.env.get('SITE_URL') || 'https://gleeworld.org'}/auditioner-dashboard`;
 
     const emailResponse = await resend.emails.send({
@@ -97,11 +108,7 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
               </div>
               
-              <div class="detail-row">
-                <span class="detail-label">Location:</span>
-                <span class="detail-value">${location}</span>
-              </div>
-              
+              ${locationRow}
               <div class="detail-row">
                 <span class="detail-label">Application ID:</span>
                 <span class="detail-value">${applicationId}</span>
