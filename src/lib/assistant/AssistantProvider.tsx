@@ -102,6 +102,8 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
 
   // Waiters parked by speakNow while the voice is still resolving.
   const voiceReadyRef = useRef({ ready: false, waiters: [] as Array<() => void> });
+  /** Thread used by spoken questions, so a follow-up keeps its context. */
+  const liveThreadRef = useRef<string | null>(null);
   useEffect(() => {
     if (voiceLoading) return;
     voiceReadyRef.current.ready = true;
@@ -376,6 +378,44 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         // "Hi," so it falls back to "there".
         dynamicVariables: { user_first_name: firstName || 'there' },
         clientTools: {
+          /**
+           * Everything the typed assistant can do, spoken.
+           *
+           * Live voice is a different brain — an ElevenLabs agent with its own
+           * small tool list — so it could not reach the choral library, the
+           * calendar, the liturgical calendar or the user's own data. Asked
+           * about the Negro spiritual it had nothing to consult, which is no
+           * use to someone who only wants to speak.
+           *
+           * Porting each tool across would mean maintaining two catalogues
+           * that drift. Instead this hands the question to assistant-chat —
+           * the same brain, the same tools, the same prompt — and speaks what
+           * comes back. One tool here buys every capability there, and
+           * anything added to the text assistant reaches voice for free.
+           *
+           * The thread id is carried so a spoken follow-up keeps its context,
+           * exactly as it would when typed.
+           */
+          ask_gleeworld: async (params: { question?: string }) => {
+            const question = String(params?.question ?? '').trim();
+            if (!question) return 'Ask the user what they would like to know.';
+            try {
+              const { data, error } = await supabase.functions.invoke('assistant-chat', {
+                body: {
+                  messages: [{ role: 'user', content: question }],
+                  thread_id: liveThreadRef.current ?? undefined,
+                },
+              });
+              if (error) throw error;
+              const reply = (data as { reply?: string; thread_id?: string } | null);
+              if (reply?.thread_id) liveThreadRef.current = reply.thread_id;
+              // Returned verbatim for the agent to speak. Its own prompt
+              // governs delivery; this is the content.
+              return reply?.reply || "I couldn't find anything on that.";
+            } catch (err) {
+              return `I couldn't look that up: ${err instanceof Error ? err.message : 'unknown error'}`;
+            }
+          },
           open_page: async (params: { name?: string }) => {
             const resolved = resolvePageRoute(String(params?.name ?? ''));
             if (!resolved) return `No page called "${String(params?.name ?? '')}" — tell the user you couldn't find it.`;
