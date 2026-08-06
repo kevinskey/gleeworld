@@ -128,7 +128,7 @@ const KNOWN_ROUTES = new Set([
   '/dashboard/music-library', '/dashboard/part-tracks', '/dashboard/media-library', '/dashboard/librarian',
   '/seating-charts', '/dashboard/workspace?tab=parents',
   '/dashboard/office-hours', '/dashboard/practice-recordings', '/video',
-  '/dashboard/music-tools', '/dashboard/liturgy', '/tour-manager',
+  '/dashboard/music-tools', '/dashboard/liturgy', '/dashboard/worship-aids', '/tour-manager',
   '/dashboard/auditions', '/dashboard/pr-hub', '/admin/fan-page',
   '/dashboard/feeds', '/dashboard/shop', '/dashboard/alumni',
   // Verified against src/App.tsx: both <Route path="/dashboard/fees"> and

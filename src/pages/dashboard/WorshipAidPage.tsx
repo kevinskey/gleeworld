@@ -3,10 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 import {
-  ArrowLeft, Image as ImageIcon, Link2, Loader2, Printer, QrCode, Save, X,
+  ArrowLeft, FileDown, Image as ImageIcon, Link2, Loader2, Printer, QrCode, Save, X,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFileAndGetUrl } from '@/utils/storage';
+import { worshipAidToPdf, worshipAidFileName } from '@/lib/liturgy/worshipAidPdf';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,6 +51,8 @@ export default function WorshipAidPage() {
   const [qr, setQr] = useState<string | null>(null);
   const [psalmImage, setPsalmImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState<PanelId | 'cover' | null>(null);
+  const [filing, setFiling] = useState(false);
+  const sheetsRef = useRef<HTMLDivElement>(null);
   const uploadTarget = useRef<PanelId | 'cover'>('cover');
   // Read inside the upload callback so a slider moved mid-upload is not lost.
   const settingsRef = useRef(settings); settingsRef.current = settings;
@@ -215,6 +218,54 @@ export default function WorshipAidPage() {
     }
   }, [id, persist]);
 
+  /**
+   * File the program in the Media Library, under Documents / Worship Aids.
+   *
+   * An ARCHIVE copy, not the one to hand out: Print produces real vector type
+   * at the printer's resolution, which is sharper than any rasterisation.
+   * This is what makes a program findable next year, or mailable to a cantor
+   * who was not there.
+   */
+  const fileToLibrary = async () => {
+    if (!sheetsRef.current || !row) return;
+    setFiling(true);
+    try {
+      const { blob, pages } = await worshipAidToPdf(sheetsRef.current);
+      const name = worshipAidFileName(row.observation ?? '', row.mass_date);
+      const file = new File([blob], name, { type: 'application/pdf' });
+
+      // Through the helper, which waits for the URL to be readable — this
+      // droplet's storage serves a fresh upload as 403 for a second or two.
+      const result = await uploadFileAndGetUrl(file, 'media-library', 'worship-aids', name);
+      if (!result) {
+        toast.error("The PDF uploaded but never became readable. Try again.");
+        return;
+      }
+
+      const { data: auth } = await supabase.auth.getUser();
+      const { error } = await supabase.from('gw_media_library').insert({
+        title: `${row.observation || 'Worship Aid'} — ${row.mass_date}`,
+        description: `Worship aid, ${pages} printed sides.`,
+        file_url: result.url,
+        file_path: result.path,
+        file_type: 'application/pdf',
+        file_size: blob.size,
+        // Documents is derived from file_type, so a PDF lands there on its
+        // own; the folder is what groups the programs together.
+        folder: 'Worship Aids',
+        category: 'general',
+        tags: ['worship-aid', 'liturgy'],
+        uploaded_by: auth?.user?.id ?? null,
+      });
+      if (error) { toast.error(error.message); return; }
+      toast.success('Filed under Documents → Worship Aids.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not build the PDF.');
+    } finally {
+      setFiling(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 p-8 text-sm text-muted-foreground">
@@ -237,6 +288,10 @@ export default function WorshipAidPage() {
           <Button variant="outline" onClick={save} disabled={saving}>
             {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />}
             Save
+          </Button>
+          <Button variant="outline" onClick={fileToLibrary} disabled={filing}>
+            {filing ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <FileDown className="mr-1.5 h-4 w-4" />}
+            {filing ? 'Filing…' : 'Save PDF to library'}
           </Button>
           <Button onClick={() => window.print()}>
             <Printer className="mr-1.5 h-4 w-4" /> Print
@@ -432,7 +487,7 @@ export default function WorshipAidPage() {
         </CardContent>
       </Card>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto" ref={sheetsRef}>
         <WorshipAidSheets aid={aid} qrDataUrl={qr} settings={settings} />
       </div>
     </div>
