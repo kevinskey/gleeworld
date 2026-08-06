@@ -11,6 +11,10 @@
 // with deployed clients; only the upstream and parser changed.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import {
+  isReadingsPageForDate,
+  READINGS_OUT_OF_RANGE,
+} from "../_shared/liturgy/readingsWindow.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,6 +62,22 @@ serve(async (req: Request) => {
   if (!upstream.ok) {
     return json({ error: `Upstream ${upstream.status}`, sourceUrl }, 502);
   }
+
+  // Universalis 302s out-of-window dates to /n-otherdates.htm. fetch follows
+  // redirects, so that arrives as a healthy 200 with no readings in it. Report
+  // the real reason instead of letting the parser come up empty and look
+  // broken.
+  if (!isReadingsPageForDate(upstream.url, yyyymmdd)) {
+    return json({
+      date,
+      sourceUrl,
+      liturgicalTitle: null,
+      readings: [],
+      error: READINGS_OUT_OF_RANGE,
+      outOfRange: true,
+    }, 200);
+  }
+
   const html = await upstream.text();
 
   const parsed = parseUniversalisReadings(html, yyyymmdd);

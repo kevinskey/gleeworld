@@ -17,6 +17,8 @@ export interface ReadingsResp {
   liturgicalTitle: string | null;
   readings: ReadingBlock[];
   error?: string;
+  /** Set when the date lies outside the window Universalis publishes. */
+  outOfRange?: boolean;
 }
 
 function parseISODate(iso: string): Date {
@@ -79,6 +81,11 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
       if (cancelled) return;
       if (fnErr) {
         setError(fnErr.message || 'Could not fetch readings');
+      } else if (resp && (resp as ReadingsResp).error) {
+        // The function reports WHY there is nothing to show — most often that
+        // Universalis has not published this date yet. Surface that instead of
+        // falling through to the empty-readings copy, which blames the parser.
+        setError((resp as ReadingsResp).error as string);
       } else if (resp && (resp as ReadingsResp).readings) {
         setData(resp as ReadingsResp);
       } else {
