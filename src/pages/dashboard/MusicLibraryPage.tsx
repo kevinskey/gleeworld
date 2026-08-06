@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Music, Search, Loader2, FileMusic, ListMusic,
-  LayoutGrid, List as ListIcon, Store, CheckSquare, Share2,
+  LayoutGrid, List as ListIcon, Store, CheckSquare, Share2, X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useScopeFilter } from '@/hooks/useScopeFilter';
@@ -343,12 +343,39 @@ export default function MusicLibraryPage() {
       {topTab === 'scores' && (
         <>
           <Card className={SOFT_CARD}>
-            {/* One row instead of three. The scope chips were a per-class list
-                that wrapped to 3-4 lines once a director was in more than a
-                couple of classes, and the "SCOPE" caps label cost another row
-                to say what the control already says. Desktop reads
-                scope | search | layout; phone stacks search underneath. */}
-            <CardContent className="p-3 sm:p-4">
+            {/* Search gets its own row, the controls get the next one.
+                Sharing one row, search was the only element with min-w-0 — so
+                it was the only one that could shrink, and between the scope
+                select, collections, Filters, sort and the layout toggle it
+                collapsed to about one character. Everything else has a
+                natural width and holds it; the thing people actually use had
+                none.
+
+                It is also the primary action on this page: a director looking
+                for a score types a title far more often than they change
+                scope or sort. */}
+            <CardContent className="space-y-2.5 p-3 sm:p-4">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => changeSearch(e.target.value)}
+                  placeholder="Search by title, composer, arranger, tag…"
+                  aria-label="Search scores"
+                  className="h-12 rounded-full pl-11 pr-10 text-base"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => changeSearch('')}
+                    aria-label="Clear search"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <ScopeFilterSelect
                   active={scope}
@@ -356,15 +383,6 @@ export default function MusicLibraryPage() {
                   onChange={setScope}
                   className="flex-1 min-w-0 sm:flex-none sm:w-52"
                 />
-                <div className="relative w-full order-last sm:order-none sm:flex-1 sm:min-w-0">
-                  <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={search}
-                    onChange={(e) => changeSearch(e.target.value)}
-                    placeholder="Search by title, composer, arranger, tag…"
-                    className="pl-9"
-                  />
-                </div>
                 {collections.length > 0 && (
                   <Select
                     value={collectionId ?? 'all'}
