@@ -14,6 +14,12 @@ import { useAssistantVoice, BROWSER_VOICE_ID } from './voices';
 import type { AssistantAction, ThreadState } from './types';
 import type { ConciergeResult } from './conciergeTypes';
 
+export interface NowPlaying {
+  videoId: string;
+  title?: string;
+  channel?: string;
+}
+
 export interface AssistantContextValue {
   state: ThreadState;
   send: (content: string) => Promise<void>;
@@ -33,6 +39,11 @@ export interface AssistantContextValue {
   setVideoRoom: (room: string | null) => void;
   resultsPanel: ConciergeResult | null;
   setResultsPanel: (r: ConciergeResult | null) => void;
+  /** The video playing in the floating window, if any. Deliberately NOT part
+   *  of resultsPanel: music has to keep playing while the sheet is closed and
+   *  while the next question is being asked. */
+  nowPlaying: NowPlaying | null;
+  setNowPlaying: (v: NowPlaying | null) => void;
   captionReply: { id: string; text: string } | null;
   /** Tenant-configured assistant voice from Workspace Settings → Branding.
    *  Null while loading, or if the tenant hasn't picked one (app default). */
@@ -102,6 +113,16 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
 
   // Waiters parked by speakNow while the voice is still resolving.
   const voiceReadyRef = useRef({ ready: false, waiters: [] as Array<() => void> });
+  /**
+   * Music starts, the assistant stops talking.
+   *
+   * Two audio sources competing for the same speaker is not a preference
+   * question: the reply is "Playing Ave Verum" while Ave Verum is already
+   * playing over it. Anything spoken is cut the moment a video appears.
+   */
+  const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
+
+
   /** Thread used by spoken questions, so a follow-up keeps its context. */
   const liveThreadRef = useRef<string | null>(null);
   useEffect(() => {
@@ -191,6 +212,27 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     stopSpeaking();
     setSpeaking(false);
   }, []);
+
+  /**
+   * Route an incoming panel result: video to the floating player, everything
+   * else to the sheet's panel.
+   *
+   * A video is the one result you keep using AFTER the answer — you listen to
+   * it, and you go on talking to the assistant while it plays. In the panel it
+   * died the moment the sheet closed and it took half the sheet away from the
+   * conversation meanwhile.
+   *
+   * Anything being spoken is cut when the music starts: two audio sources on
+   * one speaker means the reply is read out over the recording it announced.
+   */
+  const showResult = useCallback((result: ConciergeResult) => {
+    if (result.kind === 'video' && result.videoId) {
+      stopSpeakingNow();
+      setNowPlaying({ videoId: result.videoId, title: result.title, channel: result.channel });
+      return;
+    }
+    setResultsPanel(result);
+  }, [stopSpeakingNow]);
 
 
   const advanceConfirmQueue = useCallback((msgId: string) => {
@@ -432,7 +474,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
               // button, and "open the calendar" should still open it —
               // dropping these left voice describing things it had not done.
               if (res?.resultsPanel && typeof res.resultsPanel === 'object' && 'kind' in res.resultsPanel) {
-                setResultsPanel(res.resultsPanel as ConciergeResult);
+                showResult(res.resultsPanel as ConciergeResult);
               }
               const spokenId = crypto.randomUUID();
               const actions = res?.actions ?? [];
@@ -538,7 +580,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     } finally {
       liveConnectingRef.current = false;
     }
-  }, [navigate, stopSpeakingNow, failVisibly, profile?.full_name, getFreshGeo, runAction, setSheetOpen]);
+  }, [navigate, stopSpeakingNow, showResult, failVisibly, profile?.full_name, getFreshGeo, runAction, setSheetOpen]);
 
   // End the live session if the provider ever unmounts (sign-out, tenant
   // switch) — a dangling WebRTC session would keep the mic open.
@@ -593,7 +635,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         return;
       }
       if (data.resultsPanel && typeof data.resultsPanel === 'object' && 'kind' in data.resultsPanel) {
-        setResultsPanel(data.resultsPanel as ConciergeResult);
+        showResult(data.resultsPanel as ConciergeResult);
       }
       const replyId = crypto.randomUUID();
       const actions: AssistantAction[] = data.actions ?? [];
@@ -626,7 +668,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     } catch {
       failVisibly("I couldn't reach the assistant right now.");
     }
-  }, [state.busy, state.messages, profile, speakNow, runAction, setSheetOpen, getFreshGeo, failVisibly]);
+  }, [state.busy, state.messages, profile, speakNow, showResult, runAction, setSheetOpen, getFreshGeo, failVisibly]);
 
   const toggleMic = useCallback(() => {
     // Live mode owns the mic — push-to-talk stays out of the way.
@@ -664,6 +706,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       liveStatus, startLive, endLive,
       videoRoom, setVideoRoom,
       resultsPanel, setResultsPanel,
+      nowPlaying, setNowPlaying,
       captionReply,
       voiceId,
     }}>
