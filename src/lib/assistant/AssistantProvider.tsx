@@ -77,6 +77,14 @@ export function useAssistantOptional(): AssistantContextValue | null {
  *  speaking anyway. Long enough for a warm query, short enough that a stalled
  *  one never reads as the assistant ignoring you. */
 const VOICE_RESOLVE_TIMEOUT_MS = 2500;
+/**
+ * Last-resort delay before printing a reply that has not started speaking.
+ * Generous on purpose: a normal spoken reply waits up to
+ * VOICE_RESOLVE_TIMEOUT_MS for the tenant voice and then several seconds for
+ * ElevenLabs synthesis, and captioning THAT would undo the voice-first
+ * behaviour. This only catches turns where speech never reports back at all.
+ */
+const CAPTION_FALLBACK_MS = 8000;
 
 export const AssistantProvider = ({ children, initialSheetOpen = false }: { children: ReactNode; initialSheetOpen?: boolean }) => {
   const navigate = useNavigate();
@@ -179,7 +187,17 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
    *   alike. Callers use it to surface the text instead, so a failed voice
    *   can never leave a turn with no audio AND no words on screen.
    */
-  const speakNow = useCallback(async (text: string, onSilent?: () => void) => {
+  const speakNow = useCallback(async (
+    text: string,
+    cbs?: { onStarted?: () => void; onSilent?: () => void },
+  ) => {
+    // EVERY exit path must report. The previous version returned early on a
+    // speak-token bump and had no catch, so a Stop tap, a barge-in, or a
+    // throw in getSession() left the caller waiting forever — no audio, no
+    // text, an invisible turn. That is the bug this whole guard exists for.
+    let started = false;
+    const reportSilent = () => { if (!started) cbs?.onSilent?.(); };
+    try {
     // Speaking goes true the moment a spoken reply is REQUESTED, not when
     // audio starts. ElevenLabs synthesis of a long reply (news rundown)
     // takes many seconds, and waiting for onplay left that whole window
@@ -198,11 +216,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     const accessToken = sessionData?.session?.access_token;
     // Stop was tapped while we awaited the token — honor it; calling
     // speak() now would start a fresh TTS session the tap can't cancel.
-    if (speakRequestRef.current !== myRequest) return;
+    if (speakRequestRef.current !== myRequest) { reportSilent(); return; }
     // onStart fires ONLY on real audio (utterance.onstart / audio.onplay);
     // every silent path in speak() calls onEnd alone. So "ended without
     // starting" is a reliable signal that the user heard nothing.
-    let started = false;
     speak(text, {
       muted,
       voiceId: voiceIdRef.current,
@@ -213,9 +230,15 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       // to browser SpeechSynthesis and ignores voiceId — every reply comes
       // out in the OS default voice regardless of the tenant's pick.
       supabaseUrl: SUPABASE_URL,
-      onStart: () => { started = true; setSpeaking(true); },
-      onEnd: () => { setSpeaking(false); if (!started) onSilent?.(); },
+      onStart: () => { started = true; setSpeaking(true); cbs?.onStarted?.(); },
+      onEnd: () => { setSpeaking(false); reportSilent(); },
     });
+    } catch (err) {
+      // Speech never got as far as playback. Say so rather than hanging.
+      console.warn('[assistant] speech failed before playback:', err);
+      setSpeaking(false);
+      reportSilent();
+    }
   }, [muted]);
 
   const stopSpeakingNow = useCallback(() => {
@@ -665,10 +688,20 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         // assistant being broken (Kevin, 2026-08-06: asked who wrote the
         // German Requiem, saw nothing, while the server had persisted a
         // correct answer).
-        speakNow(replyText, () => {
+        // Belt AND braces. onSilent covers the speech pipeline reporting
+        // failure; the timer covers it never reporting at all — a hang, a
+        // rejected promise, a code path added later that forgets to call
+        // back. Kevin lost a turn to exactly that (2026-08-06) AFTER the
+        // first fix, so the caption no longer depends on speech behaving.
+        const showCaption = () => {
           if (!sheetOpenRef.current && !confirmAction && data.reply) {
             setCaptionReply({ id: replyId, text: data.reply });
           }
+        };
+        const captionTimer = window.setTimeout(showCaption, CAPTION_FALLBACK_MS);
+        speakNow(replyText, {
+          onStarted: () => window.clearTimeout(captionTimer),
+          onSilent: () => { window.clearTimeout(captionTimer); showCaption(); },
         });
       } else {
         dispatch({ type: 'settle' });
