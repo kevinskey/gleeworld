@@ -1,26 +1,26 @@
 import { useAuditionForm } from "./AuditionFormProvider";
-import { useAuth } from "@/contexts/AuthContext";
+import type { AuditionPageId } from "./auditionPages";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 
-export function AuditionFormProgress() {
-  const { currentPage, totalPages } = useAuditionForm();
-  const { user } = useAuth();
+// Labels keyed by page id, not position — the account step moved to the end
+// of the anonymous flow (auditionPages.ts) and isn't shown at all for
+// signed-in visitors. Deriving from `pages` here instead of a hardcoded
+// array keeps this indicator honest about whichever order is actually
+// rendered, rather than a second, independently-maintained copy of it.
+const PAGE_LABELS: Record<AuditionPageId, string> = {
+  basic: "Basic Info",
+  background: "Musical Background",
+  skills: "Music Skills",
+  personal: "Personal Info",
+  scheduling: "Schedule & Photo",
+  account: "Create Account",
+};
 
-  const pageNames = user ? [
-    "Basic Info",
-    "Musical Background", 
-    "Music Skills",
-    "Personal Info",
-    "Schedule & Photo"
-  ] : [
-    "Create Account",
-    "Basic Info",
-    "Musical Background", 
-    "Music Skills",
-    "Personal Info",
-    "Schedule & Photo"
-  ];
+export function AuditionFormProgress() {
+  const { currentPage, totalPages, pages } = useAuditionForm();
+
+  const pageNames = pages.map((pageId) => PAGE_LABELS[pageId]);
 
   return (
     <div className="w-full mb-3 md:mb-8">
