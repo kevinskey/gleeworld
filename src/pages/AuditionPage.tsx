@@ -187,7 +187,11 @@ function AuditionFormContent() {
         applicantEmail: form.getValues('email'),
         auditionDate: format(form.getValues('auditionDate'), 'yyyy-MM-dd'),
         auditionTime: form.getValues('auditionTime'),
-        auditionLocation: 'Rockefeller Fine Arts Building Room 109'
+        // No location data source exists: audition_sessions has no location
+        // column (see migration 20250804132905), so there is nothing
+        // tenant-real to put here. auditionLocation is optional on both the
+        // client type and the edge function request body — omitting it is
+        // the correct behavior, not a placeholder.
       });
       if (!sendResult?.success) {
         console.warn('Email not sent or suppressed:', sendResult);
@@ -397,14 +401,7 @@ function AuditionFormContent() {
               <Button 
                 type="button"
                 onClick={async () => {
-                  console.log('🔘 MOBILE Submit button clicked directly!');
-                  console.log('🔘 isSubmitting:', isSubmitting);
-                  console.log('🔘 canProceed():', canProceed());
-                  
-                  const formData = form.getValues();
-                  console.log('🔘 Form data:', formData);
-                  
-                  await onSubmit(formData);
+                  await onSubmit(form.getValues());
                 }}
                 className="bg-purple-600 hover:bg-purple-700 text-white flex-1"
                 disabled={isSubmitting || !canProceed()}
@@ -445,14 +442,7 @@ function AuditionFormContent() {
                   <Button 
                     type="button"
                     onClick={async () => {
-                      console.log('🔘 Submit button clicked directly!');
-                      console.log('🔘 isSubmitting:', isSubmitting);
-                      console.log('🔘 canProceed():', canProceed());
-                      
-                      const formData = form.getValues();
-                      console.log('🔘 Form data:', formData);
-                      
-                      await onSubmit(formData);
+                      await onSubmit(form.getValues());
                     }}
                     className="bg-purple-600 hover:bg-purple-700 text-white"
                     disabled={isSubmitting || !canProceed()}
