@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  buildWorshipAid, DEFAULT_SETTINGS, formatLongDate, seasonWordIsRedundant,
+  buildWorshipAid, DEFAULT_SETTINGS, formatLongDate,
   type AidEntry, type AidSource, type WorshipAidSettings,
 } from '@/lib/liturgy/worshipAid';
 import { psalmLines } from '@/lib/liturgy/psalmComposer';
@@ -121,12 +121,6 @@ export default function WorshipAidPublicPage() {
           <p className="mt-2 text-sm font-semibold">{aid.sideBand.day}</p>
         )}
         <p className="text-xs text-muted-foreground">{formatLongDate(row.mass_date)}</p>
-        {/* Not when the day already says it: "19th Sunday in Ordinary Time"
-            over "ORDINARY TIME" is two lines saying one thing (Kevin). On
-            paper the two sit on different panels and never meet. */}
-        {aid.front.word && !seasonWordIsRedundant(aid.front.word, aid.sideBand.day) && (
-          <p className="mt-3 text-2xl uppercase tracking-wide text-primary">{aid.front.word}</p>
-        )}
       </header>
 
       <Section entries={aid.insideLeft} />

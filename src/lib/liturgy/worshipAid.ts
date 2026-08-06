@@ -45,8 +45,6 @@ export interface AidEntry {
 export interface WorshipAidSettings {
   /** Church name on the cover. */
   coverTitle: string;
-  /** Big word under the cover art: ADVENT, EASTER. */
-  coverWord: string;
   coverImageUrl: string | null;
   /** Runs vertically up the back cover's outer edge. */
   spineText: string;
@@ -119,7 +117,6 @@ export function coverImageScale(settings: WorshipAidSettings): number {
 
 export const DEFAULT_SETTINGS: WorshipAidSettings = {
   coverTitle: '',
-  coverWord: '',
   coverImageUrl: null,
   spineText: '',
   welcomeNotice:
@@ -189,7 +186,10 @@ function compact(entries: Array<AidEntry | null>): AidEntry[] {
 }
 
 export interface WorshipAid {
-  front: { title: string; word: string; imageUrl: string | null };
+  /** The cover carries the parish name and the artwork, and nothing else
+   *  (Kevin). A season word printed under a mark that already has the season
+   *  lettered into it says it twice. */
+  front: { title: string; imageUrl: string | null };
   insideLeft: AidEntry[];
   insideRight: AidEntry[];
   back: AidEntry[];
@@ -265,7 +265,6 @@ export function buildWorshipAid(
   return {
     front: {
       title: settings.coverTitle,
-      word: settings.coverWord || (row.liturgical_season ?? ''),
       imageUrl: settings.coverImageUrl ?? settings.images.front ?? null,
     },
     insideLeft,
@@ -312,16 +311,3 @@ export function panelSpacing(settings: WorshipAidSettings, panel: PanelId): numb
   return Math.max(SPACING_MIN, Math.min(SPACING_MAX, raw));
 }
 
-/**
- * Whether the season word merely repeats what the day already says.
- *
- * "19th Sunday in Ordinary Time" followed by "ORDINARY TIME" reads as a
- * mistake. On the printed aid the two sit on different panels and never meet,
- * but stacked in a phone header they are two lines saying one thing.
- */
-export function seasonWordIsRedundant(word: string, day: string): boolean {
-  const w = word.trim().toLowerCase();
-  const d = day.trim().toLowerCase();
-  if (!w || !d) return false;
-  return d.includes(w);
-}

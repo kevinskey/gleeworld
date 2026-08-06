@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   buildWorshipAid, splitCredit, formatLongDate, SHEETS, DEFAULT_SETTINGS,
-  panelSpacing, seasonWordIsRedundant, SPACING_MIN, SPACING_MAX,
+  panelSpacing, SPACING_MIN, SPACING_MAX,
   coverTitleSize, coverImageScale, COVER_TITLE_MIN, COVER_TITLE_MAX,
   COVER_IMAGE_MIN, COVER_IMAGE_MAX, COVER_TITLE_DEFAULT, COVER_IMAGE_DEFAULT,
   type AidSource, type WorshipAidSettings,
@@ -30,7 +30,6 @@ const source: AidSource = {
 const settings: WorshipAidSettings = {
   ...DEFAULT_SETTINGS,
   coverTitle: 'Our Lady of Lourdes Catholic Church',
-  coverWord: 'Advent',
   coverImageUrl: 'https://example.org/cover.jpg',
   spineText: 'www.lourdesatlanta.org',
 };
@@ -81,15 +80,14 @@ describe('splitCredit', () => {
 describe('buildWorshipAid', () => {
   const aid = buildWorshipAid(source, settings, 'https://example.org/psalm.jpg');
 
-  it('puts the church name, season word and art on the cover', () => {
-    expect(aid.front.title).toBe('Our Lady of Lourdes Catholic Church');
-    expect(aid.front.word).toBe('Advent');
-    expect(aid.front.imageUrl).toBe('https://example.org/cover.jpg');
-  });
-
-  it('falls back to the liturgical season when no cover word is set', () => {
-    const a = buildWorshipAid(source, { ...settings, coverWord: '' });
-    expect(a.front.word).toBe('Advent');
+  // The cover carries the parish name and the artwork, and nothing else. A
+  // season word printed under a mark that already has the season lettered
+  // into it says it twice.
+  it('puts the church name and art on the cover, and nothing else', () => {
+    expect(aid.front).toEqual({
+      title: 'Our Lady of Lourdes Catholic Church',
+      imageUrl: 'https://example.org/cover.jpg',
+    });
   });
 
   it('follows the order of the Mass down the first inside panel', () => {
@@ -217,23 +215,6 @@ describe('formatLongDate', () => {
   });
 });
 
-describe('seasonWordIsRedundant', () => {
-  // "19th Sunday in Ordinary Time" over "ORDINARY TIME" reads as a mistake.
-  it('spots a season word the day already contains', () => {
-    expect(seasonWordIsRedundant('Ordinary Time', '19th Sunday in Ordinary Time')).toBe(true);
-    expect(seasonWordIsRedundant('ADVENT', 'Fourth Sunday of Advent')).toBe(true);
-  });
-
-  it('keeps a word that says something the day does not', () => {
-    expect(seasonWordIsRedundant('Christ the King', '34th Sunday in Ordinary Time')).toBe(false);
-    expect(seasonWordIsRedundant('Lent', 'Ash Wednesday')).toBe(false);
-  });
-
-  it('is false when either side is empty', () => {
-    expect(seasonWordIsRedundant('', 'Easter Sunday')).toBe(false);
-    expect(seasonWordIsRedundant('Easter', '')).toBe(false);
-  });
-});
 
 describe('panelSpacing', () => {
   it('defaults to normal spacing', () => {
