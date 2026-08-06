@@ -201,9 +201,11 @@ Leave the three `apple-touch-icon` lines below unchanged — they are not rewrit
 
 - [ ] **Step 2: Verify the build still produces the icon lines verbatim**
 
-Run: `npm run build && grep -c 'lovable-uploads/gleeworld-logo-192.png' dist/index.html`
+Run: `npm run build && grep -o '<link rel="icon"[^>]*>\|<link rel="shortcut icon"[^>]*>' dist/index.html`
 
-Expected: `2`. Vite copies `index.html` through with the icon tags intact; if this prints anything else, the sub_filter match strings would not appear in the served HTML and Task 3 cannot work.
+Expected: both tags printed byte-for-byte as they appear in `index.html`. Vite copies them through unchanged; if either differs, the sub_filter match strings would not appear in the served HTML and Task 3 cannot work.
+
+Do **not** count occurrences of the filename — `dist/index.html` also references `gleeworld-logo-192.png` in `msapplication-TileImage` and in a boot-splash `<img>`. Neither is an icon `<link>` and neither is rewritten.
 
 - [ ] **Step 3: Commit**
 
