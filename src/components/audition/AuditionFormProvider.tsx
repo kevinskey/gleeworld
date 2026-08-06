@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { buildAuditionPages, canLeavePage, AuditionPageId } from './auditionPages';
+import { buildAuditionPages, canLeavePage, type AuditionPageId } from './auditionPages';
 
 const auditionSchema = z.object({
   // Registration info (for new users)
@@ -143,7 +143,10 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
   };
 
   const canProceed = (): boolean => {
-    return canLeavePage(pages[currentPage - 1], form.getValues(), { capturedImage });
+    return canLeavePage(pages[currentPage - 1], form.getValues(), {
+      capturedImage,
+      errors: form.formState.errors,
+    });
   };
 
   const value: AuditionFormContextType = {

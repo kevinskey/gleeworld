@@ -34,7 +34,7 @@ function wordCount(text: string | undefined | null): number {
 export function canLeavePage(
   pageId: AuditionPageId,
   values: AuditionFormData,
-  ctx: { capturedImage: string | null },
+  ctx: { capturedImage: string | null; errors: Record<string, unknown> },
 ): boolean {
   switch (pageId) {
     case 'basic':
@@ -44,7 +44,13 @@ export function canLeavePage(
     case 'skills':
       return true;
     case 'personal':
-      return wordCount(values.personalityDescription) >= MIN_PERSONALITY_WORDS;
+      // The old signed-in branch required word count AND no outstanding
+      // react-hook-form errors anywhere in the form before advancing past
+      // personal info. Preserve that — it was dropped in an earlier pass.
+      return (
+        wordCount(values.personalityDescription) >= MIN_PERSONALITY_WORDS &&
+        Object.keys(ctx.errors).length === 0
+      );
     case 'scheduling':
       return !!(values.auditionDate && values.auditionTime && ctx.capturedImage && values.tshirtSize);
     case 'account':

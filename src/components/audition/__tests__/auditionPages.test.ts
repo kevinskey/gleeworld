@@ -28,7 +28,7 @@ describe('buildAuditionPages', () => {
 });
 
 describe('canLeavePage', () => {
-  const ctx = { capturedImage: 'data:image/png;base64,x' };
+  const ctx = { capturedImage: 'data:image/png;base64,x', errors: {} };
 
   it('requires name, email, and phone on basic', () => {
     expect(canLeavePage('basic', FULL, ctx)).toBe(true);
@@ -49,9 +49,18 @@ describe('canLeavePage', () => {
     expect(canLeavePage('personal', { ...FULL, personalityDescription: 'too short' } as never, ctx)).toBe(false);
   });
 
+  it('blocks personal when a valid description coexists with outstanding form errors', () => {
+    // Old signed-in behavior required word count AND zero outstanding
+    // react-hook-form errors anywhere in the form. A 50-word description
+    // alone must not be enough to advance if something else on the form is
+    // still invalid.
+    expect(canLeavePage('personal', FULL, { ...ctx, errors: { phone: { message: 'bad' } } })).toBe(false);
+    expect(canLeavePage('personal', FULL, { ...ctx, errors: {} })).toBe(true);
+  });
+
   it('requires slot, selfie, and shirt size on scheduling', () => {
     expect(canLeavePage('scheduling', FULL, ctx)).toBe(true);
-    expect(canLeavePage('scheduling', FULL, { capturedImage: null })).toBe(false);
+    expect(canLeavePage('scheduling', FULL, { capturedImage: null, errors: {} })).toBe(false);
     expect(canLeavePage('scheduling', { ...FULL, tshirtSize: '' } as never, ctx)).toBe(false);
   });
 
