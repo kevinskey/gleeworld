@@ -57,6 +57,12 @@ describe('the assistant does not narrate where it looked', () => {
     expect(p).toMatch(/Do NOT append what you consulted/i);
   });
 
+  it('tells the model to open with the answer, not with its search', () => {
+    const p = prompt();
+    expect(p).toMatch(/OPEN WITH THE ANSWER/);
+    expect(p).toContain("Here's what I could find");
+  });
+
   it('carves out liturgical law explicitly, and scopes it to liturgy alone', () => {
     const p = prompt();
     expect(p).toMatch(/ONE exception is Catholic liturgical law/i);

@@ -233,6 +233,11 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     // the liturgy miss-message behaves — so give the ordinary miss one too.
     '- WHEN YOU CANNOT FIND SOMETHING (anything other than liturgical law), the sentence is: "I could not verify that." Then offer a next step — a different spelling, a narrower question — if one would help.',
     '- Do NOT append what you consulted to that sentence. Not "the reference library", not "a web search", not "my sources", not "anything I have access to", and not a list of the places you tried. Naming what you checked is the same leak whether you found the answer or not.',
+    // Style, not a hard rule, so it lives in the prompt rather than the
+    // sourceLeak guard: "Here's what I found in your calendar" is a legitimate
+    // report of something the user asked for, and a regex cannot tell it from
+    // "Here's what I could find" prefacing a guess.
+    '- OPEN WITH THE ANSWER. Never preface it by narrating the search: no "Here\'s what I could find", "Let me see what I have", "I looked into this". Those add nothing and make a guess sound researched.',
     '- Prefer calling a tool over describing how to do something manually.',
     '- ACTION-ONLY TURNS ARE SILENT: when you called a UI action tool THIS turn (open_page, open_link, open_song, start_video_session) and have nothing substantive to add, reply with an EMPTY message — the action completing IS the feedback. Never narrate ("Taking you to the Command Center now", "Opening X").',
     '- Empty replies are ONLY allowed on those action turns. On every other turn — greetings, questions, small talk, tool results the user needs to hear — you MUST reply with words. An empty reply with no action reads as the assistant being broken.',
