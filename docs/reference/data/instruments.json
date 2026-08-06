@@ -1,0 +1,837 @@
+[
+  {
+    "id": "strings/violin",
+    "name": "Violin",
+    "family": "strings",
+    "section": "7.1",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [
+      "treble"
+    ],
+    "ranges": {
+      "full": [
+        "G3",
+        "C8"
+      ],
+      "section": [
+        "G3",
+        "B6"
+      ],
+      "advanced-student": [
+        "G3",
+        "E6"
+      ],
+      "soloist": [
+        "G3",
+        "E7"
+      ]
+    },
+    "registers": [
+      {
+        "name": "G string",
+        "low": "G3",
+        "high": "D4"
+      },
+      {
+        "name": "D string",
+        "low": "D4",
+        "high": "A4"
+      },
+      {
+        "name": "A string",
+        "low": "A4",
+        "high": "E5"
+      },
+      {
+        "name": "E string",
+        "low": "E5",
+        "high": "E6"
+      },
+      {
+        "name": "Extreme high",
+        "low": "E6",
+        "high": "C8"
+      }
+    ],
+    "variants": []
+  },
+  {
+    "id": "strings/viola",
+    "name": "Viola",
+    "family": "strings",
+    "section": "7.2",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [
+      "treble",
+      "alto"
+    ],
+    "ranges": {
+      "full": [
+        "C3",
+        "A6"
+      ],
+      "section": [
+        "C3",
+        "D6"
+      ],
+      "student": [
+        "C3",
+        "G5"
+      ]
+    },
+    "registers": [
+      {
+        "name": "C string",
+        "low": "C3",
+        "high": "G3"
+      },
+      {
+        "name": "G string",
+        "low": "G3",
+        "high": "D4"
+      },
+      {
+        "name": "D string",
+        "low": "D4",
+        "high": "A4"
+      },
+      {
+        "name": "A string",
+        "low": "A4",
+        "high": "A5"
+      }
+    ],
+    "variants": []
+  },
+  {
+    "id": "strings/violoncello",
+    "name": "Violoncello",
+    "family": "strings",
+    "section": "7.3",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [
+      "treble",
+      "bass",
+      "tenor"
+    ],
+    "ranges": {
+      "full": [
+        "C2",
+        "C6"
+      ],
+      "section": [
+        "C2",
+        "A5"
+      ],
+      "student": [
+        "C2",
+        "E5"
+      ]
+    },
+    "registers": [
+      {
+        "name": "C string",
+        "low": "C2",
+        "high": "G2"
+      },
+      {
+        "name": "G string",
+        "low": "G2",
+        "high": "D3"
+      },
+      {
+        "name": "D string",
+        "low": "D3",
+        "high": "A3"
+      },
+      {
+        "name": "A string",
+        "low": "A3",
+        "high": "A4"
+      },
+      {
+        "name": "High (A string, high positions)",
+        "low": "A4",
+        "high": "C6"
+      }
+    ],
+    "variants": []
+  },
+  {
+    "id": "strings/contrabass-double-bass",
+    "name": "Contrabass (Double Bass)",
+    "family": "strings",
+    "section": "7.4",
+    "transposition": {
+      "interval": "one octave",
+      "direction": "lower"
+    },
+    "transpositionVariants": [],
+    "clefs": [
+      "bass"
+    ],
+    "ranges": {
+      "four-string-instrument": [
+        "E1",
+        "G4"
+      ],
+      "written": [
+        "E2",
+        "G5"
+      ]
+    },
+    "registers": [
+      {
+        "name": null,
+        "low": "C1",
+        "high": "A1"
+      },
+      {
+        "name": null,
+        "low": "A1",
+        "high": "D2"
+      },
+      {
+        "name": null,
+        "low": "D2",
+        "high": "A2"
+      },
+      {
+        "name": null,
+        "low": "A2",
+        "high": "G3"
+      }
+    ],
+    "variants": []
+  },
+  {
+    "id": "woodwinds/piccolo",
+    "name": "Piccolo",
+    "family": "woodwinds",
+    "section": "8.1",
+    "transposition": {
+      "interval": "one octave",
+      "direction": "higher"
+    },
+    "transpositionVariants": [],
+    "clefs": [],
+    "ranges": {
+      "written": [
+        "D4",
+        "C7"
+      ],
+      "sounding": [
+        "D5",
+        "C8"
+      ]
+    },
+    "registers": [
+      {
+        "name": null,
+        "low": "D4",
+        "high": "G4"
+      },
+      {
+        "name": null,
+        "low": "G4",
+        "high": "G5"
+      },
+      {
+        "name": null,
+        "low": "G5",
+        "high": "D6"
+      },
+      {
+        "name": null,
+        "low": "D6",
+        "high": "C7"
+      }
+    ],
+    "variants": []
+  },
+  {
+    "id": "woodwinds/flute",
+    "name": "Flute",
+    "family": "woodwinds",
+    "section": "8.2",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [],
+    "ranges": {
+      "full": [
+        "B3",
+        "D7"
+      ]
+    },
+    "registers": [
+      {
+        "name": null,
+        "low": "B3",
+        "high": "G4"
+      },
+      {
+        "name": null,
+        "low": "G4",
+        "high": "G5"
+      },
+      {
+        "name": null,
+        "low": "G5",
+        "high": "D6"
+      },
+      {
+        "name": null,
+        "low": "D6",
+        "high": "D7"
+      }
+    ],
+    "variants": [
+      {
+        "name": "Alto flute in G",
+        "transposition": {
+          "interval": "perfect fourth",
+          "direction": "lower"
+        },
+        "range": [
+          "C4",
+          "C6"
+        ]
+      },
+      {
+        "name": "Bass flute in C",
+        "transposition": {
+          "interval": "one octave",
+          "direction": "lower"
+        },
+        "range": [
+          "C3",
+          "C6"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "woodwinds/oboe",
+    "name": "Oboe",
+    "family": "woodwinds",
+    "section": "8.3",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [],
+    "ranges": {
+      "full": [
+        "B♭3",
+        "A6"
+      ]
+    },
+    "registers": [
+      {
+        "name": null,
+        "low": "B♭3",
+        "high": "F4"
+      },
+      {
+        "name": null,
+        "low": "F4",
+        "high": "C6"
+      },
+      {
+        "name": null,
+        "low": "C6",
+        "high": "A6"
+      }
+    ],
+    "variants": []
+  },
+  {
+    "id": "woodwinds/english-horn-cor-anglais",
+    "name": "English Horn (Cor anglais)",
+    "family": "woodwinds",
+    "section": "8.4",
+    "transposition": {
+      "interval": "perfect fifth",
+      "direction": "lower"
+    },
+    "transpositionVariants": [],
+    "clefs": [],
+    "ranges": {
+      "written-range": [
+        "B3",
+        "G6"
+      ],
+      "sounding": [
+        "E3",
+        "C6"
+      ]
+    },
+    "registers": [],
+    "variants": []
+  },
+  {
+    "id": "woodwinds/clarinet",
+    "name": "Clarinet",
+    "family": "woodwinds",
+    "section": "8.5",
+    "transposition": null,
+    "transpositionVariants": [
+      {
+        "name": "Clarinet in B♭",
+        "key": "B",
+        "interval": "major second",
+        "direction": "lower"
+      },
+      {
+        "name": "Clarinet in A",
+        "key": "A",
+        "interval": "minor third",
+        "direction": "lower"
+      },
+      {
+        "name": "Clarinet in E♭",
+        "key": "E",
+        "interval": "minor third",
+        "direction": "higher"
+      },
+      {
+        "name": "Clarinet in C",
+        "key": "C",
+        "sounds": "as written"
+      }
+    ],
+    "clefs": [],
+    "ranges": {
+      "written": [
+        "E3",
+        "C7"
+      ],
+      "sounding-b-flat": [
+        "D3",
+        "B♭6"
+      ],
+      "sounding-a": [
+        "C♯3",
+        "A6"
+      ]
+    },
+    "registers": [
+      {
+        "name": "Chalumeau",
+        "low": "E3",
+        "high": "F♯4"
+      },
+      {
+        "name": "Throat tones",
+        "low": "G4",
+        "high": "B♭4"
+      },
+      {
+        "name": "Clarion",
+        "low": "B4",
+        "high": "C6"
+      },
+      {
+        "name": "Altissimo",
+        "low": "C♯6",
+        "high": "C7"
+      }
+    ],
+    "variants": [
+      {
+        "name": "E♭ Clarinet (sopranino)",
+        "transposition": {
+          "interval": "minor third",
+          "direction": "higher"
+        },
+        "range": null
+      },
+      {
+        "name": "Bass Clarinet in B♭",
+        "transposition": {
+          "interval": "major ninth",
+          "direction": "lower"
+        },
+        "range": [
+          "E3",
+          "F5"
+        ]
+      },
+      {
+        "name": "Basset horn in F",
+        "transposition": {
+          "interval": "perfect fifth",
+          "direction": "lower"
+        },
+        "range": null
+      },
+      {
+        "name": "Contrabass clarinet in B♭",
+        "transposition": {
+          "interval": "two octaves and a major second",
+          "direction": "lower"
+        },
+        "range": null
+      }
+    ]
+  },
+  {
+    "id": "woodwinds/bassoon",
+    "name": "Bassoon",
+    "family": "woodwinds",
+    "section": "8.6",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [
+      "bass",
+      "tenor"
+    ],
+    "ranges": {
+      "full": [
+        "B♭1",
+        "E5"
+      ]
+    },
+    "registers": [
+      {
+        "name": null,
+        "low": "B♭1",
+        "high": "F2"
+      },
+      {
+        "name": null,
+        "low": "F2",
+        "high": "F3"
+      },
+      {
+        "name": null,
+        "low": "F3",
+        "high": "D4"
+      },
+      {
+        "name": null,
+        "low": "D4",
+        "high": "C5"
+      }
+    ],
+    "variants": [
+      {
+        "name": "Contrabassoon",
+        "transposition": {
+          "interval": "one octave",
+          "direction": "lower"
+        },
+        "range": [
+          "B♭1",
+          "B♭2"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "brass/horn-french-horn",
+    "name": "Horn (French Horn)",
+    "family": "brass",
+    "section": "9.1",
+    "transposition": {
+      "interval": "perfect fifth",
+      "direction": "lower"
+    },
+    "transpositionVariants": [],
+    "clefs": [
+      "bass"
+    ],
+    "ranges": {
+      "written": [
+        "F♯2",
+        "C6"
+      ],
+      "sounding": [
+        "B1",
+        "F5"
+      ]
+    },
+    "registers": [
+      {
+        "name": null,
+        "low": "F♯2",
+        "high": "C3"
+      },
+      {
+        "name": null,
+        "low": "C3",
+        "high": "C4"
+      },
+      {
+        "name": null,
+        "low": "C4",
+        "high": "C5"
+      },
+      {
+        "name": null,
+        "low": "C5",
+        "high": "G5"
+      },
+      {
+        "name": null,
+        "low": "G5",
+        "high": "C6"
+      }
+    ],
+    "variants": []
+  },
+  {
+    "id": "brass/trumpet",
+    "name": "Trumpet",
+    "family": "brass",
+    "section": "9.2",
+    "transposition": null,
+    "transpositionVariants": [
+      {
+        "name": "Trumpet in C",
+        "key": "C",
+        "sounds": "as written"
+      }
+    ],
+    "clefs": [],
+    "ranges": {
+      "written": [
+        "F♯3",
+        "D6"
+      ]
+    },
+    "registers": [
+      {
+        "name": null,
+        "low": "F♯3",
+        "high": "C4"
+      },
+      {
+        "name": null,
+        "low": "C4",
+        "high": "C5"
+      },
+      {
+        "name": null,
+        "low": "C5",
+        "high": "G5"
+      },
+      {
+        "name": null,
+        "low": "G5",
+        "high": "D6"
+      }
+    ],
+    "variants": []
+  },
+  {
+    "id": "brass/trombone",
+    "name": "Trombone",
+    "family": "brass",
+    "section": "9.3",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [
+      "treble",
+      "bass",
+      "tenor"
+    ],
+    "ranges": {},
+    "registers": [
+      {
+        "name": null,
+        "low": "E2",
+        "high": "B♭2"
+      },
+      {
+        "name": null,
+        "low": "B♭2",
+        "high": "B♭3"
+      },
+      {
+        "name": null,
+        "low": "B♭3",
+        "high": "F4"
+      },
+      {
+        "name": null,
+        "low": "F4",
+        "high": "B♭4"
+      }
+    ],
+    "variants": [
+      {
+        "name": "Tenor Trombone",
+        "transposition": null,
+        "range": [
+          "E2",
+          "B♭4"
+        ]
+      },
+      {
+        "name": "Bass Trombone",
+        "transposition": null,
+        "range": [
+          "B♭0",
+          "B♭4"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "brass/tuba",
+    "name": "Tuba",
+    "family": "brass",
+    "section": "9.4",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [
+      "bass"
+    ],
+    "ranges": {
+      "full": [
+        "D1",
+        "F4"
+      ]
+    },
+    "registers": [
+      {
+        "name": null,
+        "low": "E1",
+        "high": "B♭1"
+      },
+      {
+        "name": null,
+        "low": "B♭1",
+        "high": "B♭2"
+      },
+      {
+        "name": null,
+        "low": "B♭2",
+        "high": "F3"
+      },
+      {
+        "name": null,
+        "low": "F3",
+        "high": "C4"
+      }
+    ],
+    "variants": [
+      {
+        "name": "Euphonium / Baritone horn",
+        "transposition": null,
+        "range": [
+          "E1",
+          "F4"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "percussion/timpani",
+    "name": "Timpani",
+    "family": "percussion",
+    "section": "10.1",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [
+      "bass"
+    ],
+    "ranges": {},
+    "registers": [],
+    "variants": []
+  },
+  {
+    "id": "keyboard-and-plucked/harp",
+    "name": "Harp",
+    "family": "keyboard-and-plucked",
+    "section": "11.1",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [],
+    "ranges": {},
+    "registers": [],
+    "variants": []
+  },
+  {
+    "id": "keyboard-and-plucked/piano",
+    "name": "Piano",
+    "family": "keyboard-and-plucked",
+    "section": "11.2",
+    "transposition": {
+      "sounds": "as written"
+    },
+    "transpositionVariants": [],
+    "clefs": [],
+    "ranges": {
+      "full": [
+        "A0",
+        "C8"
+      ]
+    },
+    "registers": [],
+    "variants": [
+      {
+        "name": "Celesta",
+        "transposition": {
+          "interval": "one octave",
+          "direction": "higher"
+        },
+        "range": null
+      },
+      {
+        "name": "Harpsichord",
+        "transposition": {
+          "sounds": "as written"
+        },
+        "range": [
+          "F1",
+          "F6"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "keyboard-and-plucked/guitar",
+    "name": "Guitar",
+    "family": "keyboard-and-plucked",
+    "section": "11.4",
+    "transposition": {
+      "interval": "one octave",
+      "direction": "lower"
+    },
+    "transpositionVariants": [],
+    "clefs": [
+      "treble"
+    ],
+    "ranges": {
+      "sounding": [
+        "E2",
+        "B5"
+      ]
+    },
+    "registers": [],
+    "variants": []
+  }
+]

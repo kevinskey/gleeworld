@@ -59,6 +59,7 @@ describe('toolCatalog', () => {
       'search_academy',
       'search_liturgy',
       'search_music',
+      'search_music_facts',
       'search_youtube',
       'web_search',
     ]);
