@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Loader2, ExternalLink, Volume2, Square } from 'lucide-react';
+import { Loader2, ExternalLink, Volume2, Square, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpokenText } from '@/hooks/useChapterAudio';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,12 +67,16 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
   const [data, setData] = useState<ReadingsResp | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // "Not published yet" is an expected state, not a failure. Kept apart from
+  // `error` so the two are never styled the same.
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setPending(false);
     setData(null);
     (async () => {
       const { data: resp, error: fnErr } = await supabase.functions.invoke('usccb-readings', {
@@ -86,6 +90,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
         // Universalis has not published this date yet. Surface that instead of
         // falling through to the empty-readings copy, which blames the parser.
         setError((resp as ReadingsResp).error as string);
+        setPending(Boolean((resp as ReadingsResp).outOfRange));
       } else if (resp && (resp as ReadingsResp).readings) {
         setData(resp as ReadingsResp);
       } else {
@@ -158,8 +163,18 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
           )}
 
           {error && (
-            <div className="text-sm py-6 text-center space-y-3">
-              <p className="text-destructive">{error}</p>
+            <div className="text-sm py-10 text-center space-y-3">
+              {/* A date the upstream has not published yet is expected, and
+                  reads as information. Red is reserved for something actually
+                  going wrong, so the two are never confused. */}
+              {pending && (
+                <CalendarClock className="w-8 h-8 mx-auto text-muted-foreground/60" aria-hidden />
+              )}
+              <p className={pending
+                ? 'text-muted-foreground max-w-sm mx-auto'
+                : 'text-destructive'}>
+                {error}
+              </p>
               <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[hsl(var(--link))] hover:underline">
                 <ExternalLink className="w-3.5 h-3.5" /> Open on Universalis
