@@ -64,8 +64,10 @@ export default function WorshipAidPage() {
   const [psalmImage, setPsalmImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState<PanelId | 'cover' | null>(null);
   const [filing, setFiling] = useState(false);
-  /** Inches each panel runs past its page. 0 = it fits. */
-  const [overflow, setOverflow] = useState<Partial<Record<PanelId, number>>>({});
+  /** How the content paginated, and whether any of it has nowhere to go. */
+  const [flow, setFlow] = useState<{ overflowLines: number; dropped: number }>(
+    { overflowLines: 0, dropped: 0 },
+  );
   /** Which panel the edit list is showing. */
   const [editPanel, setEditPanel] = useState<PanelId>('insideLeft');
   const sheetsRef = useRef<HTMLDivElement>(null);
@@ -559,21 +561,19 @@ export default function WorshipAidPage() {
         </CardContent>
       </Card>
 
-      {/* Overflow — the one thing that cannot be left to chance. Four pages
-          is the whole format, so content past the bottom of a panel is simply
-          cut when it prints. Nothing is auto-shrunk: what to cut is a
-          judgement about the liturgy, not about layout. */}
-      {Object.entries(overflow).some(([, v]) => (v ?? 0) > 0.01) && (
+      {/* The document cannot grow past four pages, so anything the flow
+          could not place is reported rather than silently cut at the fold. */}
+      {flow.dropped > 0 && (
         <Card className="border-destructive print:hidden">
           <CardContent className="flex flex-wrap items-center gap-3 p-3">
             <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" aria-hidden />
             <div className="min-w-0 flex-1 text-xs">
-              <span className="font-semibold text-destructive">This will print short. </span>
-              {Object.entries(overflow)
-                .filter(([, v]) => (v ?? 0) > 0.01)
-                .map(([p, v]) => `${PANEL_LABEL[p as PanelId]} is ${v!.toFixed(2)}″ over`)
-                .join('; ')}
-              . Remove or shorten something on that panel, or tighten its line spacing.
+              <span className="font-semibold text-destructive">
+                {flow.dropped} {flow.dropped === 1 ? 'item does' : 'items do'} not fit.
+              </span>{' '}
+              A worship aid is four pages and cannot grow — about{' '}
+              {(flow.overflowLines * 0.16).toFixed(1)}″ of content has nowhere to go. Remove or
+              shorten something, or reduce the space after an item.
             </div>
           </CardContent>
         </Card>
@@ -594,7 +594,6 @@ export default function WorshipAidPage() {
                 className="text-xs"
               >
                 {PANEL_LABEL[p]}
-                {(overflow[p] ?? 0) > 0.01 && <AlertTriangle className="ml-1.5 h-3 w-3" />}
               </Button>
             ))}
             <span className="mx-1 h-5 w-px bg-border" aria-hidden />
@@ -693,8 +692,10 @@ export default function WorshipAidPage() {
           qrDataUrl={qr}
           settings={settings}
           edits={edits}
-          onOverflow={(panel, over) => setOverflow((cur) => (
-            Math.abs((cur[panel] ?? 0) - over) < 0.01 ? cur : { ...cur, [panel]: over }
+          onFlow={(r) => setFlow((cur) => (
+            cur.overflowLines === r.overflowLines && cur.dropped === r.dropped.length
+              ? cur
+              : { overflowLines: r.overflowLines, dropped: r.dropped.length }
           ))}
         />
       </div>
