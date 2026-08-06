@@ -29,12 +29,15 @@ vi.mock('@/integrations/supabase/client', () => ({
 // (utterance.onstart / audio.onplay), while every silent path — muted, dead
 // WKWebView synth, ElevenLabs error, blocked autoplay — calls onEnd alone.
 type SpeakOpts = { muted?: boolean; onStart?: () => void; onEnd?: () => void };
-const speakBehavior = { current: 'audible' as 'audible' | 'silent' };
+const speakBehavior = { current: 'audible' as 'audible' | 'silent' | 'never-reports' };
 vi.mock('./speech', async (importActual) => {
   const actual = await importActual<typeof import('./speech')>();
   return {
     ...actual,
     speak: vi.fn((_text: string, opts?: SpeakOpts) => {
+      // 'never-reports' models a pipeline that calls back neither way —
+      // a hang, or a path that forgets to report.
+      if (speakBehavior.current === 'never-reports') return;
       // Real speak() returns early when muted — onEnd, never onStart.
       if (!opts?.muted && speakBehavior.current === 'audible') opts?.onStart?.();
       opts?.onEnd?.();
@@ -133,6 +136,31 @@ describe('AssistantProvider', () => {
     renderProbe();
     await sendAndSettleSpeech();
     expect(screen.getByTestId('caption')).toHaveTextContent('Johannes Brahms wrote it.');
+  });
+
+  it('captions when the speech pipeline never reports back at all', async () => {
+    // The hole in the FIRST fix: onSilent only fired from speak()'s onEnd, so
+    // a hang, an early return on a Stop tap, or a throw before playback left
+    // the turn invisible. Kevin lost a turn to this after that fix shipped.
+    speakBehavior.current = 'never-reports';
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'highest written note is C7', actions: [] }, error: null } as never);
+    renderProbe();
+    vi.useFakeTimers();
+    try {
+      await act(async () => { screen.getByText('go').click(); });
+      await act(async () => { await vi.advanceTimersByTimeAsync(12000); });
+      expect(screen.getByTestId('caption')).toHaveTextContent('highest written note is C7');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('captions when getSession throws before speech can start', async () => {
+    vi.mocked(supabase.auth.getSession).mockRejectedValueOnce(new Error('token refresh failed'));
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'answer despite auth failure', actions: [] }, error: null } as never);
+    renderProbe();
+    await sendAndSettleSpeech();
+    expect(screen.getByTestId('caption')).toHaveTextContent('answer despite auth failure');
   });
 
   it('a muted reply with the sheet closed still surfaces as a caption', async () => {
