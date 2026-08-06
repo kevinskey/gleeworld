@@ -42,7 +42,7 @@ function Notice({ text, spacing = 1, editable, onCommit }: {
       margin: `${(0.10 * spacing).toFixed(3)}in 0`,
       fontStyle: 'italic', fontSize: '7.6pt', lineHeight: 1.35, textAlign: 'center',
     }}>
-      <Editable value={text} editable={editable} onCommit={onCommit} />
+      <Editable value={text} editable={editable} multiline onCommit={onCommit} />
     </div>
   );
 }
@@ -73,30 +73,56 @@ function Divider({ label, spacing = 1 }: { label: string; spacing?: number }) {
  * and re-flowing the document on each character would move the line you are
  * typing on out from under you.
  */
-function Editable({ value, onCommit, editable, style, className }: {
+/** Read an editable element's text with its line breaks intact.
+ *  textContent flattens <br> to nothing, which silently ate blank lines. */
+function readText(el: HTMLElement): string {
+  return el.innerHTML
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+function Editable({ value, onCommit, editable, style, className, multiline }: {
   value: string;
   onCommit?: (next: string) => void;
   editable?: boolean;
   style?: React.CSSProperties;
   className?: string;
+  /** Body text takes line breaks; a heading does not. */
+  multiline?: boolean;
 }) {
-  if (!editable) return <span style={style} className={className}>{value}</span>;
+  if (!editable) {
+    // Rendered with the breaks the user typed, on screen and in print alike.
+    return <span style={{ whiteSpace: 'pre-wrap', ...style }} className={className}>{value}</span>;
+  }
   return (
     <span
       contentEditable
       suppressContentEditableWarning
       spellCheck={false}
       className={`${className ?? ''} worship-aid-editable`}
-      style={style}
+      style={{ whiteSpace: 'pre-wrap', ...style }}
       onBlur={(e) => {
-        const next = e.currentTarget.textContent ?? '';
+        const next = readText(e.currentTarget);
         if (next !== value) onCommit?.(next);
       }}
       onKeyDown={(e) => {
-        // Enter commits rather than inserting a newline — a heading is one
-        // line by definition, and a stray <br> would silently change layout.
-        if (e.key === 'Enter') { e.preventDefault(); (e.currentTarget as HTMLElement).blur(); }
-        if (e.key === 'Escape') { e.currentTarget.textContent = value; (e.currentTarget as HTMLElement).blur(); }
+        if (e.key === 'Enter') {
+          // Body text takes a line break — including an empty one, which is
+          // how you open up a panel while typing. A heading is one line by
+          // definition, so there Enter commits instead; shift+Enter still
+          // forces a break if one is genuinely wanted.
+          if (multiline || e.shiftKey) return;
+          e.preventDefault();
+          (e.currentTarget as HTMLElement).blur();
+        }
+        if (e.key === 'Escape') {
+          e.currentTarget.textContent = value;
+          (e.currentTarget as HTMLElement).blur();
+        }
       }}
     >
       {value}
@@ -156,7 +182,12 @@ function Entry({ entry, spacing = 1, editable, onEdit }: {
       )}
       {entry.summary && (
         <p style={{ fontStyle: 'italic', fontSize: '8pt', lineHeight: 1.35, margin: '0.04in 0 0' }}>
-          <Editable value={entry.summary} editable={editable} onCommit={(v) => onEdit?.('summary', v)} />
+          <Editable
+            value={entry.summary}
+            editable={editable}
+            multiline
+            onCommit={(v) => onEdit?.('summary', v)}
+          />
         </p>
       )}
       {entry.imageUrl && (
@@ -318,6 +349,8 @@ export interface WorshipAidSheetsProps {
   onEditBlock?: (key: string, field: 'label' | 'title' | 'credit' | 'summary', value: string) => void;
   /** A block was deleted from the page. */
   onDeleteBlock?: (key: string) => void;
+  /** Nudge the blank space after a block, in inches. */
+  onSpaceBlock?: (key: string, delta: number) => void;
 }
 
 /**
@@ -329,7 +362,7 @@ export interface WorshipAidSheetsProps {
  * fine on screen and is only discovered after the copies are made.
  */
 export function WorshipAidSheets({
-  aid, qrDataUrl, settings, edits, onFlow, editable, onEditBlock, onDeleteBlock,
+  aid, qrDataUrl, settings, edits, onFlow, editable, onEditBlock, onDeleteBlock, onSpaceBlock,
 }: WorshipAidSheetsProps) {
   const gap = (p: PanelId) => panelSpacing(settings, p);
 
@@ -371,14 +404,35 @@ export function WorshipAidSheets({
           onEdit={(field, value) => onEditBlock?.(b.key, field, value)}
         />
         {editable && (
-          <button
-            type="button"
-            aria-label={`Remove ${b.entry.label || 'this block'}`}
-            onClick={() => onDeleteBlock?.(b.key)}
-            className="worship-aid-remove"
-          >
-            ×
-          </button>
+          <span className="worship-aid-tools">
+            {/* Blank space, addable where you can see its effect. Buried in a
+                drawer it was findable only if you knew it existed. */}
+            <button
+              type="button"
+              aria-label={`Add space after ${b.entry.label || 'this block'}`}
+              title="Add a blank line"
+              onClick={() => onSpaceBlock?.(b.key, 0.16)}
+            >
+              +
+            </button>
+            <button
+              type="button"
+              aria-label={`Less space after ${b.entry.label || 'this block'}`}
+              title="Remove a blank line"
+              onClick={() => onSpaceBlock?.(b.key, -0.16)}
+            >
+              −
+            </button>
+            <button
+              type="button"
+              aria-label={`Remove ${b.entry.label || 'this block'}`}
+              title="Remove"
+              onClick={() => onDeleteBlock?.(b.key)}
+              className="worship-aid-danger"
+            >
+              ×
+            </button>
+          </span>
         )}
       </div>
     ));
@@ -405,16 +459,20 @@ export function WorshipAidSheets({
           .worship-aid-editable:focus {
             outline: 2px solid hsl(var(--primary)); outline-offset: 1px; background: #fff;
           }
-          .worship-aid-block:hover > .worship-aid-remove { opacity: 1; }
-          .worship-aid-remove {
-            position: absolute; top: -2px; right: -14px; width: 14px; height: 14px;
-            line-height: 12px; font-size: 12px; opacity: 0; cursor: pointer;
-            border: 1px solid #ccc; background: #fff; color: #b00; border-radius: 999px;
-            transition: opacity .12s;
+          .worship-aid-block:hover > .worship-aid-tools { opacity: 1; }
+          .worship-aid-tools {
+            position: absolute; top: -3px; right: -46px; display: flex; gap: 2px;
+            opacity: 0; transition: opacity .12s;
           }
+          .worship-aid-tools button {
+            width: 14px; height: 14px; line-height: 12px; font-size: 11px;
+            cursor: pointer; border: 1px solid #ccc; background: #fff; color: #444;
+            border-radius: 999px;
+          }
+          .worship-aid-tools .worship-aid-danger { color: #b00; }
         }
         @media print {
-          .worship-aid-remove { display: none !important; }
+          .worship-aid-tools { display: none !important; }
           .worship-aid-editable { background: none !important; outline: none !important; }
           .worship-aid-fold { display: none; }
           .worship-aid-sheet { box-shadow: none; margin: 0; }
