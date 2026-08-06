@@ -71,10 +71,17 @@ export const AssistantFab = () => {
         aria-label="Show assistant"
         title="Assistant"
         onClick={() => { setCollapsed(false); setFabCollapsed(section, false); }}
-        className="fixed right-0 z-40 flex h-11 w-7 items-center justify-center rounded-l-full border border-r-0 border-border bg-background/85 text-primary shadow-md backdrop-blur-xl transition-colors hover:bg-muted"
+        className="fixed right-0 z-40 flex h-11 w-7 lg:h-[5.5rem] lg:w-14 items-center justify-center overflow-hidden rounded-l-full border border-r-0 border-border/70 bg-background/55 text-primary shadow-md lg:shadow-xl backdrop-blur-2xl backdrop-saturate-150 transition-colors hover:bg-background/75"
         style={{ bottom }}
       >
-        <Mic className="h-4 w-4" aria-hidden />
+        {/* Liquid glass: light gathers at the top of the pill and pools at the
+            bottom, with a specular line along the lit edge. Built from
+            foreground/background at low opacity rather than white, so it holds
+            up under a tenant's palette and in dark mode. */}
+        <span aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-foreground/10 via-transparent to-foreground/[0.07]" />
+        <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-foreground/20" />
+        <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-px bg-foreground/10" />
+        <Mic className="relative h-4 w-4 lg:h-7 lg:w-7" aria-hidden />
       </button>
     );
   }

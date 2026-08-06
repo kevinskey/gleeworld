@@ -184,15 +184,70 @@ function searchLiturgyTool(args: Record<string, unknown>): string {
   });
 }
 
+/**
+ * Words that carry no search signal but break a whole-phrase match.
+ *
+ * "by" is the important one: people name a piece the way they say it —
+ * "Children, Go Where I Send Thee by Kevin Johnson" — and the composer half
+ * matched nothing, because 77% of the library has no composer recorded.
+ */
+const SEARCH_FILLER = new Set([
+  'by', 'the', 'a', 'an', 'of', 'for', 'in', 'and', 'on', 'to', 'with',
+  'arr', 'arranged', 'arrangement', 'please', 'score', 'piece', 'song',
+]);
+
+/** Words to match on, punctuation and filler removed. */
+function searchTokens(query: string): string[] {
+  return query
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .split(' ')
+    .filter((t) => t.length > 0 && !SEARCH_FILLER.has(t))
+    .slice(0, 12);
+}
+
+/**
+ * Find scores in the music library.
+ *
+ * Matches WORD BY WORD rather than as one contiguous string. The old
+ * single-ILIKE search could not find "Children, Go Where I Send Thee" from
+ * the words "Children Go Where I Send Thee" — the comma in the stored title
+ * breaks the substring, so the assistant reported that a score sitting in the
+ * user's library did not exist. Punctuation, word order and a trailing "by
+ * <composer>" are all things people get right about a piece without matching
+ * the catalogued title character for character.
+ *
+ * Every token must appear, in the title or the composer. If nothing matches,
+ * tokens are dropped from the END and retried — a trailing composer name is
+ * the usual reason a real title finds nothing, and the title itself is what
+ * the user is most likely to have right.
+ */
 async function searchMusic(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
-  const q = String(args.query ?? '').replace(/[%_]/g, '');
-  const { data, error } = await supabase
-    .from('gw_sheet_music')
-    .select('id, title, composer, voicing')
-    .or(`title.ilike.%${q}%,composer.ilike.%${q}%`)
-    .limit(10);
-  if (error) return JSON.stringify({ error: error.message });
-  return JSON.stringify({ scores: data ?? [] });
+  const raw = String(args.query ?? '');
+  const tokens = searchTokens(raw);
+  if (tokens.length === 0) return JSON.stringify({ scores: [] });
+
+  const run = async (toks: string[]) => {
+    let query = supabase.from('gw_sheet_music').select('id, title, composer, voicing');
+    for (const t of toks) {
+      const safe = t.replace(/[%_,()]/g, '');
+      if (!safe) continue;
+      query = query.or(`title.ilike.%${safe}%,composer.ilike.%${safe}%`);
+    }
+    return await query.limit(10);
+  };
+
+  for (let n = tokens.length; n >= 1; n--) {
+    const { data, error } = await run(tokens.slice(0, n));
+    if (error) return JSON.stringify({ error: error.message });
+    if (data && data.length > 0) {
+      // Tell the model when the match was loose, so it can say which piece it
+      // found rather than claiming it found what was asked for.
+      const relaxed = n < tokens.length;
+      return JSON.stringify({ scores: data, ...(relaxed ? { matchedOn: tokens.slice(0, n).join(' ') } : {}) });
+    }
+  }
+  return JSON.stringify({ scores: [] });
 }
 
 async function findUser(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
