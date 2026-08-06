@@ -339,7 +339,18 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     try {
       const { data, error } = await supabase.functions.invoke('elevenlabs-conversation-token');
       const token = (data as { token?: string } | null)?.token;
-      if (error || !token) throw new Error(error?.message ?? 'no conversation token');
+      if (error || !token) {
+        // The function returns a 500 with a body explaining why, but
+        // supabase-js reports non-2xx as a generic FunctionsHttpError and
+        // leaves the body unread — so the specific cause was being thrown
+        // away one step short of the user. Read it back off the response.
+        let detail = (data as { error?: string } | null)?.error ?? '';
+        const res = (error as { context?: Response } | null)?.context;
+        if (!detail && res && typeof res.json === 'function') {
+          try { detail = (await res.json())?.error ?? ''; } catch { /* not JSON */ }
+        }
+        throw new Error(detail || error?.message || 'no conversation token');
+      }
       const { Conversation } = await import('@elevenlabs/client');
       // The agent carries its own TTS voice (Jessica). Without this override
       // every tenant hears Jessica in live mode regardless of the Branding
@@ -437,9 +448,20 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       });
       liveSessionRef.current = session;
       setLiveStatus('live');
-    } catch {
+    } catch (err) {
       setLiveStatus('off');
-      failVisibly("Live voice isn't available right now.");
+      // Say WHY. The reason travelled all the way from ElevenLabs — through
+      // the edge function, through supabase-js — and was thrown away in this
+      // catch, leaving a fixed string that could mean a dead key, a missing
+      // permission, a deleted agent or no microphone. Configuration faults
+      // last hours; a message that cannot distinguish them costs every one of
+      // those hours.
+      const reason = err instanceof Error ? err.message : String(err ?? '');
+      failVisibly(
+        reason && !/^no conversation token$/i.test(reason)
+          ? `Live voice isn't available: ${reason}`
+          : "Live voice isn't available right now.",
+      );
     } finally {
       liveConnectingRef.current = false;
     }
