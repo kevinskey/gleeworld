@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { uploadFileAndGetUrl } from '@/utils/storage';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -96,12 +97,14 @@ export const MusicLibraryManager = () => {
     try {
       const id = editingItem?.id || 'new';
       const ext = file.name.split('.').pop() || 'mp3';
-      const path = `audio/${id}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from('sheet-music')
-        .upload(path, file, { contentType: file.type, upsert: true });
-      if (upErr) throw upErr;
-      const url = supabase.storage.from('sheet-music').getPublicUrl(path).data.publicUrl;
+      // Through the central helper, which WAITS for the URL to become
+      // reachable. This droplet's storage writes a versioned, prefixed key
+      // while the public proxy reads a flat one, and a daemon reconciles them
+      // a couple of seconds later — so a raw upload succeeds while its public
+      // URL still 403s, and the score saves a link to nothing.
+      const result = await uploadFileAndGetUrl(file, 'sheet-music', `audio/${id}`, `${Date.now()}.${ext}`);
+      if (!result) throw new Error('The file uploaded but never became readable. Try again.');
+      const url = result.url;
       const audioTitle = file.name.replace(/\.[^.]+$/, '');
       setFormData((prev) => ({ ...prev, audio_url: url, audio_title: audioTitle }));
       toast({ title: 'Audio uploaded', description: 'Save the score to attach it.' });
@@ -152,10 +155,18 @@ export const MusicLibraryManager = () => {
         });
       } else {
         // Create new item
+        // created_by has to be set here, not left to a default there isn't one
+        // for. Insert is permitted either to a librarian/admin OR to anyone
+        // writing a row in their own name — so without this a non-librarian is
+        // refused outright, and even a librarian ends up owning nothing, which
+        // blocks them from editing their own score later (the update policy is
+        // created_by = auth.uid()).
+        const { data: auth } = await supabase.auth.getUser();
         const { error } = await supabase
           .from('gw_sheet_music')
           .insert([{
             ...validFormData,
+            created_by: auth?.user?.id ?? null,
             title: validFormData.title || 'Untitled'
           }]);
 
@@ -172,9 +183,13 @@ export const MusicLibraryManager = () => {
       fetchItems();
     } catch (error) {
       console.error('Error saving music item:', error);
+      // Say WHY. "Failed to save music item" sent the actual reason — an RLS
+      // rejection, a missing column, a constraint — to the console only,
+      // which is invisible to the person it happened to and leaves them with
+      // nothing to report but "it didn't work".
       toast({
-        title: "Error",
-        description: "Failed to save music item",
+        title: "Couldn't save this score",
+        description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
     }
