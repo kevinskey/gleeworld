@@ -88,6 +88,7 @@ import { ReportBugDialog } from '@/components/feedback/ReportBugDialog';
 import { isDemoTenant } from '@/lib/demoTenant';
 import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
 import { AssistantFab } from '@/components/assistant/AssistantFab';
+import { AssistantMiniPlayer } from '@/components/assistant/AssistantMiniPlayer';
 import { AssistantSheet } from '@/components/assistant/AssistantSheet';
 import { TrialBanner } from '@/components/dashboard/TrialBanner';
 import { PermissionSlipBell } from '@/components/dashboard/PermissionSlipBell';
@@ -1173,6 +1174,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         {/* Floating assistant mic + chat window (shared thread lives in
             AssistantProvider so it survives navigation between pages). */}
         <AssistantFab />
+        <AssistantMiniPlayer />
         <AssistantSheet />
       </div>
     </AssistantProvider>
