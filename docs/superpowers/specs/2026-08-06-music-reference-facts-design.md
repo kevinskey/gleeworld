@@ -138,6 +138,37 @@ contemplated (a range question deserves a lookup, not a guess).
   (measured 2026-08-06 on `origin/main`: 4 failed files / 3 failed tests, 169
   typecheck errors).
 
+## Jazz timeline and album canon: dropped (2026-08-06)
+
+Both were in the original "do all" scope. Neither should be built, and the
+reason is already written down in this repository.
+
+**The timeline.** Individual dates are facts, but the event wording is the
+author's and the selection of which sixty dates are "key" is editorial. The
+obvious workaround — have the model restate each event in its own words — is
+exactly what `_shared/liturgy/corpus.ts` refuses to do:
+
+> "writing the corpus from a model's recollection would be worse than leaving
+> it empty: it would manufacture exactly the invented paragraph numbers, canons
+> and rubrics the assistant is forbidden to produce, while wrapping them in the
+> authority of a citation."
+
+A jazz chronology assembled from recollection has the same defect. A wrong date
+delivered by a lookup tool reads as verified, which is worse than the base model
+answering and being obviously fallible.
+
+**The canon.** Each album, artist and year is a fact, but the document calls the
+list "a working canon — defensible, not definitive." That is an editorial
+selection, and copying it wholesale copies the judgment, not the facts.
+
+**Resolution:** dropped. Revisit only with a licensed or independently
+verifiable source — not by paraphrasing these documents and not by writing the
+entries from memory.
+
+This is also why the corpus stops where it does. Ranges and transpositions are
+worth shipping precisely because they are checkable and because a model gets
+them plausibly wrong. Dates and canon lists fail both halves of that test.
+
 ## Out of scope
 
 - Any prose from the source documents.
