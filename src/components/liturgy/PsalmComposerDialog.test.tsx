@@ -89,33 +89,10 @@ describe('PsalmComposerDialog', () => {
     expect(composer).toHaveValue('Sister Thea');
   });
 
-  it('offers both entry alphabets — scale degrees and letters', () => {
-    open();
-    for (const d of [1, 2, 3, 4, 5, 6, 7]) {
-      expect(screen.getByRole('button', { name: new RegExp(`^Scale degree ${d},`) })).toBeInTheDocument();
-    }
-    for (const l of ['C', 'D', 'E', 'F', 'G', 'A', 'B']) {
-      expect(screen.getByRole('button', { name: l })).toBeInTheDocument();
-    }
-  });
-
-  // "what are these for?" — bare numbers did not say, and the answer changes
-  // with the key signature, so the button has to carry it.
-  it('names the note each degree will write, in the current key', () => {
-    open();
-    // Default key is C major: degree 3 is E.
-    expect(screen.getByRole('button', { name: 'Scale degree 3, E' })).toBeInTheDocument();
-
-    fireEvent.change(screen.getByLabelText(/^key$/i), { target: { value: '-3' } });
-    // E flat major: degree 3 is G.
-    expect(screen.getByRole('button', { name: 'Scale degree 3, G' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Scale degree 1, E♭' })).toBeInTheDocument();
-  });
-
-  it('adds a note when a scale degree is pressed', () => {
+  it('adds a note when a letter is pressed', () => {
     open();
     expect(screen.getByTestId('staff')).toHaveAttribute('data-notes', '0');
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
     expect(screen.getByTestId('staff')).toHaveAttribute('data-notes', '1');
   });
 
@@ -123,7 +100,7 @@ describe('PsalmComposerDialog', () => {
   it('queues the psalm words and consumes them as notes are entered', () => {
     open();
     expect(screen.getByText(/16 left/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
     expect(screen.getByText(/15 left/)).toBeInTheDocument();
   });
 
@@ -135,7 +112,7 @@ describe('PsalmComposerDialog', () => {
 
   it('saves the composed setting with its title and composer', async () => {
     open();
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
     fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
     await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
     const arg = savePsalmToLibrary.mock.calls[0][0];
@@ -171,7 +148,7 @@ describe('PsalmComposerDialog', () => {
   it('carries the armed dot onto the next note', () => {
     open();
     fireEvent.click(screen.getByRole('button', { name: /^dotted$/i }));
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
     fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
     return vi.waitFor(() => {
       const el = savePsalmToLibrary.mock.calls[0][0].score.elements[0];
@@ -179,23 +156,10 @@ describe('PsalmComposerDialog', () => {
     });
   });
 
-  // The whole point of keying the number row: after switching to E flat,
-  // degree 3 has to be G rather than E.
-  it('re-aims the number row when the key changes', async () => {
-    open();
-    fireEvent.change(screen.getByLabelText(/^key$/i), { target: { value: '-3' } });
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 3,/ }));
-    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
-    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
-    const saved = savePsalmToLibrary.mock.calls[0][0].score;
-    expect(saved.keyFifths).toBe(-3);
-    expect(saved.elements[0].pitch).toMatchObject({ step: 'G', alter: 0 });
-  });
-
   it('keeps the chosen metre on the saved score', async () => {
     open();
     fireEvent.change(screen.getByLabelText(/metre/i), { target: { value: '6/8' } });
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
     fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
     await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
     expect(savePsalmToLibrary.mock.calls[0][0].score.timeSig).toEqual({ beats: 6, beatType: 8 });
@@ -206,7 +170,7 @@ describe('PsalmComposerDialog', () => {
   // are 2 and 4.
   it('never lays out a single measure per line', () => {
     open();
-    for (let i = 0; i < 6; i++) fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
+    for (let i = 0; i < 6; i++) fireEvent.click(screen.getByRole('button', { name: 'C' }));
     expect(screen.getByTestId('staff').getAttribute('data-per-row')).not.toBe('1');
     expect(screen.queryByRole('button', { name: /^1 per line$/i })).not.toBeInTheDocument();
     for (const n of ['2 per line', '4 per line']) {
@@ -245,7 +209,7 @@ describe('PsalmComposerDialog', () => {
     open({ psalmText: REFRAIN_PSALM });
     expect(screen.getByText(/30 left/)).toBeInTheDocument();
     // 11 words is exactly the first refrain line — the 12th lands on the verse.
-    for (let i = 0; i < 12; i++) fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
+    for (let i = 0; i < 12; i++) fireEvent.click(screen.getByRole('button', { name: 'C' }));
     expect(screen.getByText(/18 left/)).toBeInTheDocument();
     const verse = psalmParagraphs()[1];
     expect(verse.querySelector('.bg-primary\\/15')).not.toBeNull();
@@ -299,23 +263,9 @@ describe('PsalmComposerDialog', () => {
       .toMatchObject({ step: 'F', alter: 1 });
   });
 
-  // A degree is already spelled by the key, so an accidental SHIFTS it: in
-  // D minor, sharpening degree 7 has to give C sharp, not C natural.
-  it('raises a scale degree rather than replacing its spelling', async () => {
-    open();
-    fireEvent.change(screen.getByLabelText(/^key$/i), { target: { value: '-1' } });
-    fireEvent.change(screen.getByLabelText(/mode/i), { target: { value: 'minor' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Sharp' }));
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 7,/ }));
-    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
-    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
-    expect(savePsalmToLibrary.mock.calls[0][0].score.elements[0].pitch)
-      .toMatchObject({ step: 'C', alter: 1 });
-  });
-
   it('sounds a note when it is clicked', () => {
     open();
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
     playPitch.mockClear();
     fireEvent.click(screen.getByTestId('note-0'));
     expect(playPitch).toHaveBeenCalled();
@@ -350,7 +300,7 @@ describe('PsalmComposerDialog', () => {
   // "shep-herd" across two notes, which is most of what psalm-setting is.
   it('splits a word into syllables, hyphenating the first', () => {
     open({ psalmText: 'Taste shepherd' });
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));  // uses "Taste"
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));  // uses "Taste"
     expect(screen.getByTestId('next-syllable')).toHaveTextContent('shepherd');
 
     fireEvent.click(screen.getByRole('button', { name: /^split$/i }));
@@ -361,8 +311,8 @@ describe('PsalmComposerDialog', () => {
   it('puts the two halves on consecutive notes', async () => {
     open({ psalmText: 'shepherd' });
     fireEvent.click(screen.getByRole('button', { name: /^split$/i }));
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 1,/ }));
-    fireEvent.click(screen.getByRole('button', { name: /^Scale degree 2,/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
+    fireEvent.click(screen.getByRole('button', { name: 'D' }));
     fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
     await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
     const notes = savePsalmToLibrary.mock.calls[0][0].score.elements;
@@ -387,5 +337,18 @@ describe('PsalmComposerDialog', () => {
     open({ psalmText: null, citation: null, observation: null });
     expect(screen.getByLabelText(/title/i)).toHaveValue('Responsorial Psalm');
     expect(screen.queryByText(/ left$/)).not.toBeInTheDocument();
+  });
+});
+
+describe('the degree pad is gone', () => {
+  // Kevin asked what the numbers were for, then asked for them removed.
+  it('offers letters only', () => {
+    render(
+      <PsalmComposerDialog open onClose={vi.fn()} citation="P" observation="D" psalmText="Taste" />,
+    );
+    for (const l of ['C', 'D', 'E', 'F', 'G', 'A', 'B']) {
+      expect(screen.getByRole('button', { name: l })).toBeInTheDocument();
+    }
+    expect(screen.queryByRole('button', { name: /scale degree/i })).not.toBeInTheDocument();
   });
 });
