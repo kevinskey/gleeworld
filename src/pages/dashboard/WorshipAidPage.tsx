@@ -35,7 +35,9 @@ import {
 
 const BUCKET = 'sheet-music';
 
-type Row = AidSource & { id: string; psalm_title: string | null; worship_aid: unknown; share_token: string | null };
+type Row = AidSource & {
+  id: string; psalm_title: string | null; worship_aid: unknown; share_token: string | null;
+};
 
 export default function WorshipAidPage() {
   const { id } = useParams<{ id: string }>();
@@ -69,28 +71,49 @@ export default function WorshipAidPage() {
     })();
   }, [id]);
 
-  // A psalm composed for this Mass is filed in the library tagged
-  // responsorial-psalm; its engraved thumbnail is exactly what the printed
-  // program wants, so it is pulled in rather than asked for again.
+  /**
+   * Find the engraved psalm for this Mass, for plans composed before the
+   * composer started recording it directly.
+   *
+   * Matching is done HERE rather than in the query, and against the plan's
+   * sung-setting title first. The old version filtered on the citation
+   * server-side and missed the common case: the composer titles a score from
+   * the citation at the moment it is saved, so a Sunday whose responsorial is
+   * the Jeremiah canticle produces a score called "Jeremiah 31:10-12,13"
+   * while the plan's citation field still reads "Psalm 84(85):9-14" — two
+   * strings for one piece of music, and no overlap to match on.
+   *
+   * psalm_title is the reliable link, because saving the setting writes it.
+   * The citation is only a fallback for a score titled by hand.
+   */
   useEffect(() => {
-    if (!row?.responsorial_psalm) return;
+    const stored = (row?.worship_aid as { psalmImageUrl?: string } | null)?.psalmImageUrl;
+    if (stored) { setPsalmImage(stored); return; }
+    if (!row) return;
     (async () => {
       const { data } = await supabase
         .from('gw_sheet_music')
-        .select('thumbnail_url, created_at')
+        .select('title, thumbnail_url, created_at')
         .contains('tags', ['responsorial-psalm'])
-        .ilike('title', `%${row.responsorial_psalm}%`)
         .not('thumbnail_url', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(1);
-      const url = data?.[0]?.thumbnail_url as string | undefined;
-      if (!url) return;
-      setPsalmImage(url);
-      // Persist it onto the aid: the phone edition is public and cannot query
-      // the library, so the engraved setting has to travel with the record.
-      setSettings((cur) => (cur.psalmImageUrl === url ? cur : { ...cur, psalmImageUrl: url }));
+        .limit(50);
+      const rows = (data ?? []) as Array<{ title: string; thumbnail_url: string }>;
+      if (rows.length === 0) return;
+
+      const norm = (v: string) => v.toLowerCase().replace(/\s+/g, ' ').trim();
+      const wanted = [row.psalm_title, row.responsorial_psalm]
+        .map((v) => norm(v ?? ''))
+        .filter(Boolean);
+
+      const match = rows.find((r) => wanted.some((w) => norm(r.title).includes(w) || w.includes(norm(r.title))))
+        // Nothing matched by name: the newest psalm setting in this tenant is
+        // a better guess than printing no music at all, and the user can see
+        // on the preview whether it is the right one.
+        ?? rows[0];
+      if (match?.thumbnail_url) setPsalmImage(match.thumbnail_url);
     })();
-  }, [row?.responsorial_psalm]);
+  }, [row]);
 
   const publicUrl = useMemo(
     () => (token ? `${window.location.origin}/worship-aid/${token}` : null),

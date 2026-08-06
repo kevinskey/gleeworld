@@ -116,8 +116,10 @@ export interface PsalmComposerDialogProps {
   observation: string | null;
   /** The psalm text, refrain first. Seeds the syllable queue. */
   psalmText: string | null;
-  /** Called with the saved library row id, so the planner can link it. */
-  onSaved?: (id: string, title: string) => void;
+  /** Called with the saved row id, its title, and the engraved image — so the
+   *  planner can record the image on the Mass instead of trying to find it
+   *  again later by matching titles. */
+  onSaved?: (id: string, title: string, imageUrl: string | null) => void;
 }
 
 export function PsalmComposerDialog({
@@ -395,13 +397,13 @@ export function PsalmComposerDialog({
     setSaving(true);
     try {
       const image = await renderJpeg();
-      const { id } = await savePsalmToLibrary({
+      const { id, imageUrl } = await savePsalmToLibrary({
         score, title: title.trim(), composer: composer.trim() || 'Unknown',
         image, existingId: savedId,
       });
       setSavedId(id);
       toast.success(savedId ? 'Setting updated.' : 'Saved to the music library.');
-      onSaved?.(id, title.trim());
+      onSaved?.(id, title.trim(), imageUrl);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Could not save.');
     } finally {

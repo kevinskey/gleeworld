@@ -57,6 +57,9 @@ interface MassRow {
   gospel_acclamation: string | null;
   gospel: string | null;
   notes: string | null;
+  /** Presentation settings for the printed worship aid, including the URL of
+   *  the engraved psalm once one has been composed. */
+  worship_aid: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -895,9 +898,26 @@ function LiturgyEditor({ massId }: { massId: string }) {
         citation={row.responsorial_psalm}
         observation={row.observation}
         psalmText={row.psalm_full}
-        // Saving the setting fills the sung-setting title, so the plan shows
-        // what will be sung without the user retyping it.
-        onSaved={(_id, title) => update({ psalm_title: title })}
+        // Record the engraved setting ON the Mass, not just its title.
+        //
+        // The worship aid used to go looking for it afterwards by matching
+        // library titles against the psalm citation, which fails exactly when
+        // it matters: the composer titles a score from the citation at the
+        // moment it is saved, and a plan whose responsorial is a canticle
+        // (Jeremiah 31) while the citation field still reads "Psalm 84(85)"
+        // has two different strings for one piece of music. Writing the URL
+        // here removes the guessing.
+        onSaved={(_id, title, imageUrl) => update({
+          psalm_title: title,
+          ...(imageUrl
+            ? {
+                worship_aid: {
+                  ...(row.worship_aid ?? {}),
+                  psalmImageUrl: imageUrl,
+                },
+              }
+            : {}),
+        })}
       />
     </div>
   );
