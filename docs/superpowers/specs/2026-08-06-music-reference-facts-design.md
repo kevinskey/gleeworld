@@ -146,9 +146,33 @@ contemplated (a range question deserves a lookup, not a guess).
 - Embeddings. The lexical scorer is fine for a few hundred short records.
 - Glossary definitions, answer cards, historical narrative.
 
-## Decisions needed before implementation
+## Decisions (resolved 2026-08-06)
 
-1. Practical ranges — ship as GleeWorld guidance with Kevin's review, or omit?
-2. Curation effort is real: ~230 records typed and checked by hand. Confirm the
-   scope is worth it, or trim to instruments + voices only (~53 records) as a
-   first pass and judge from there.
+Kevin: **"do all"** — full scope, practical ranges included.
+
+1. **Practical ranges ship**, as GleeWorld's own guidance rather than reproduced
+   opinion. They are the one field in this corpus that is judgment rather than
+   physics, and they become a recommendation to ~50 choir directors, so they
+   are a **review checkpoint before deploy**, not before build. Kevin sees the
+   full list of practical ranges and signs off; anything he will not vouch for
+   is dropped, and a chunk with a full range and no practical range is still
+   useful.
+2. **Full scope** — all six record types (~230), not the instruments-and-voices
+   first pass.
+
+## Extraction method
+
+Records are **parsed, not retyped.** A script reads the three local `.md` files
+and pulls only the structured factual fields — the `**Transposition:**` line,
+the `**Range:**` bullets, the register table's Register and Span columns,
+score-order lists, timeline years. Prose columns ("Character") and every
+narrative paragraph are never read into the output.
+
+This matters for accuracy as much as for copyright: 230 hand-typed pitch pairs
+would carry transcription errors, and a wrong range is worse than no range.
+The parse is mechanical and the tests assert every pitch is well-formed.
+
+The source `.md` files stay **out of git** (they are the derived documents).
+The extractor reads them from a local path; the committed artifacts are the
+generated JSON facts and the corpus built from them. Re-running extraction
+requires the local files; the JSON is the durable input.

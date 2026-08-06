@@ -4,6 +4,7 @@ import { executeStudentPictureTool } from './studentPicture.ts';
 import { ACADEMY_CORPUS } from '../_shared/academy/corpus.ts';
 import { buildIndex, searchAcademy } from '../_shared/academy/search.ts';
 import { LITURGY_CORPUS } from '../_shared/liturgy/corpus.ts';
+import { MUSIC_FACTS } from '../_shared/musicfacts/corpus.ts';
 import {
   appliesTo, authorityLabel, byAuthorityThenScore, formatCitation,
 } from '../_shared/liturgy/types.ts';
@@ -57,6 +58,7 @@ export async function executeServerTool(
       case 'search_music': return { replyJson: await searchMusic(args, deps) };
       case 'search_academy': return { replyJson: searchAcademyTool(args) };
       case 'search_liturgy': return { replyJson: searchLiturgyTool(args) };
+      case 'search_music_facts': return { replyJson: searchMusicFactsTool(args) };
       case 'find_user': return { replyJson: await findUser(args, deps) };
       case 'search_youtube': return { replyJson: await searchYoutube(args, deps) };
       case 'play_video': return await playVideo(args, deps);
@@ -111,6 +113,26 @@ async function queryCalendar(args: Record<string, unknown>, { supabase }: Deps):
 // The corpus is bundled and immutable, so the index is built once per instance.
 const academyIndex = buildIndex(ACADEMY_CORPUS);
 const liturgyIndex = buildIndex(LITURGY_CORPUS);
+const musicFactsIndex = buildIndex(MUSIC_FACTS);
+
+/**
+ * Exact instrument and voice facts. Ranges and transpositions are precise
+ * numbers a model invents plausibly and wrongly, which is the whole reason
+ * this corpus exists. Every passage is generated from structured data.
+ */
+function searchMusicFactsTool(args: Record<string, unknown>): string {
+  const query = String(args.query ?? '').trim();
+  const hits = query ? searchAcademy(query, musicFactsIndex, { limit: 5 }) : [];
+  if (hits.length === 0) {
+    return JSON.stringify({
+      passages: [],
+      note: 'No matching instrument or voice facts. Do not guess a range or transposition; say you could not verify that.',
+    });
+  }
+  return JSON.stringify({
+    passages: hits.map((h) => ({ subject: h.chunk.subject, title: h.chunk.title, text: h.text })),
+  });
+}
 
 function searchAcademyTool(args: Record<string, unknown>): string {
   const query = String(args.query ?? '').trim();

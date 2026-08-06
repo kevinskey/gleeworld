@@ -544,6 +544,16 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'search_music_facts',
+    description: 'Look up exact instrument and voice facts: playable ranges, practical vs extreme ranges, transposition (what an instrument sounds versus what is written), clefs, register spans, and choral voice-part ranges for SATB, SSAA and TTBB. Call this BEFORE stating any range, transposition or register — those are precise numbers that must not be guessed. Not for concepts or technique.',
+    parameters: {
+      type: 'object',
+      properties: { query: str('The instrument, voice part or fact wanted, e.g. "viola range" or "clarinet transposition"') },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'search_liturgy',
     description: "Search official Catholic Church documents on liturgy and sacred music — the Missal's General Instruction, council and papal documents, canon law, bishops' conference and diocesan norms. Use this BEFORE answering any question about what is allowed, required or forbidden at Mass or in Catholic worship: who may sing or read what, whether a text may be replaced, instruments and seasons, ritual roles, liturgical seasons and calendar. Returns passages with the authority of each. Never answer a question of liturgical law from your own knowledge.",
     parameters: {
