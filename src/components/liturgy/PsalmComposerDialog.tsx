@@ -125,10 +125,14 @@ export interface PsalmComposerDialogProps {
   /** A setting already composed for this Mass. Reopening loads it back so it
    *  can be edited, rather than starting a blank staff and saving a duplicate. */
   existingScoreId?: string | null;
+  /** The plan's sung-setting title. The most reliable way to find a setting
+   *  saved before the id link existed: saving writes this, so it matches the
+   *  score's own title even when the citation does not. */
+  settingTitle?: string | null;
 }
 
 export function PsalmComposerDialog({
-  open, onClose, citation, observation, psalmText, onSaved, existingScoreId,
+  open, onClose, citation, observation, psalmText, onSaved, existingScoreId, settingTitle,
 }: PsalmComposerDialogProps) {
   const { user } = useAuth();
   const [score, setScore] = useState<EditorScore>(() => emptyScore());
@@ -172,18 +176,51 @@ export function PsalmComposerDialog({
    * saved, not a re-derivation of it.
    */
   useEffect(() => {
-    if (!open || !existingScoreId) return;
+    if (!open) return;
     let alive = true;
     (async () => {
+      /**
+       * Find the setting to reopen.
+       *
+       * The id is the reliable link, but it only exists for settings saved
+       * since it was introduced — anything composed before that has a perfect
+       * score sitting in the library and no pointer to it. Rather than make
+       * the user re-save to repair a link they never knew about, fall back to
+       * searching the tenant's psalm settings by name.
+       *
+       * Matched CLIENT-side against the sung-setting title first, then the
+       * citation: the composer names a score from the citation at the moment
+       * it is saved, so a Sunday whose responsorial is a canticle has two
+       * different strings for one piece of music.
+       */
+      let id = existingScoreId ?? null;
+      if (!id) {
+        const { data: candidates } = await supabase
+          .from('gw_sheet_music')
+          .select('id, title, created_at')
+          .contains('tags', ['responsorial-psalm'])
+          .not('xml_content', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(50);
+        const rows = (candidates ?? []) as Array<{ id: string; title: string }>;
+        const norm = (v: string) => v.toLowerCase().replace(/\s+/g, ' ').trim();
+        // Sung-setting title first: it is what saving wrote, so it matches
+        // even when the citation names a different book than the score does.
+        const wanted = [settingTitle, citation, observation].map((v) => norm(v ?? '')).filter(Boolean);
+        id = rows.find((r) => wanted.some((w) => norm(r.title).includes(w) || w.includes(norm(r.title))))?.id
+          ?? null;
+      }
+      if (!alive || !id) return;
+
       const { data, error } = await supabase
         .from('gw_sheet_music')
         .select('title, composer, xml_content')
-        .eq('id', existingScoreId)
+        .eq('id', id)
         .maybeSingle();
       if (!alive || error || !data?.xml_content) return;
       try {
         setScore(musicXmlToEditorScore(data.xml_content as string));
-        setSavedId(existingScoreId);          // so Save revises rather than duplicates
+        setSavedId(id);                       // so Save revises rather than duplicates
         if (data.title) setTitle(data.title as string);
         if (data.composer) setComposer(data.composer as string);
       } catch {
@@ -193,14 +230,17 @@ export function PsalmComposerDialog({
       }
     })();
     return () => { alive = false; };
-  }, [open, existingScoreId]);
+  }, [open, existingScoreId, citation, observation, settingTitle]);
 
   // Seed title/composer when the dialog opens. Deliberately not on every
   // prop change — the user may have edited them, and clobbering a typed
   // title because the readings refetched would be maddening. Skipped entirely
   // when an existing setting is being loaded, which brings its own title.
   useEffect(() => {
-    if (!open || existingScoreId) return;
+    if (!open) return;
+    // Seeded only while nothing has been recovered; the loader overwrites
+    // these with the saved setting's own title and composer if it finds one.
+    if (savedId) return;
     setTitle(psalmScoreTitle(citation, observation));
     setComposer(
       (user?.user_metadata?.full_name as string | undefined)
