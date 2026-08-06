@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { applyPanelEdits, type AidEditsByPanel, type RenderedBlock } from '@/lib/liturgy/aidEdits';
+import { flowBlocks, type FlowResult } from '@/lib/liturgy/flow';
 import {
   coverImageScale, coverTitleSize, panelSpacing,
   type AidEntry, type WorshipAid, type PanelId, type WorshipAidSettings,
@@ -121,49 +122,19 @@ function Entry({ entry, spacing = 1 }: { entry: AidEntry; spacing?: number }) {
 }
 
 /**
- * One printed panel, which measures whether its content still fits.
+ * One printed page of the folded aid.
  *
- * A worship aid is four fixed pages — the sheet cannot grow, so content that
- * runs past the bottom is simply CUT, silently, and only discovered once it
- * is printed. The panel reports how far over it is so the editor can say so
- * before that happens. Nothing is shrunk automatically: what to cut is the
- * user's decision, not the layout's.
+ * It no longer measures itself. Pagination is decided by the line budget in
+ * lib/liturgy/flow before anything renders — two competing measurements would
+ * disagree the moment an image loaded late, and the one that decided the
+ * print would not be the one that warned the user.
  */
-function Panel({ children, style, panelId, onOverflow }: {
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-  panelId?: PanelId;
-  onOverflow?: (panel: PanelId, inchesOver: number) => void;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || !panelId || !onOverflow) return;
-    const measure = () => {
-      // scrollHeight vs clientHeight: the panel clips at overflow:hidden, so
-      // the difference IS the amount that will not print. 96 = CSS px per inch.
-      onOverflow(panelId, Math.max(0, (el.scrollHeight - el.clientHeight) / 96));
-    };
-    measure();
-    // Images arrive after layout — an engraved psalm loading late is exactly
-    // what tips a panel over, so re-measure when the box changes.
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    for (const img of Array.from(el.querySelectorAll('img'))) {
-      img.addEventListener('load', measure);
-    }
-    return () => ro.disconnect();
-  });
-
+function Panel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div
-      ref={ref}
-      style={{
-        width: `${PANEL_W}in`, height: `${SHEET_H}in`, padding: '0.42in 0.40in',
-        boxSizing: 'border-box', overflow: 'hidden', position: 'relative', ...style,
-      }}
-    >
+    <div style={{
+      width: `${PANEL_W}in`, height: `${SHEET_H}in`, padding: '0.42in 0.40in',
+      boxSizing: 'border-box', overflow: 'hidden', position: 'relative', ...style,
+    }}>
       {children}
     </div>
   );
@@ -212,12 +183,11 @@ function FrontPanel({ aid, titleSize, imageScale }: {
   );
 }
 
-function BackPanel({ aid, spacing, qrDataUrl, blocks, onOverflow }: {
-  aid: WorshipAid; spacing: number; qrDataUrl?: string | null;
-  blocks: RenderedBlock[]; onOverflow?: (p: PanelId, over: number) => void;
+function BackPanel({ aid, spacing, qrDataUrl, blocks }: {
+  aid: WorshipAid; spacing: number; qrDataUrl?: string | null; blocks: RenderedBlock[];
 }) {
   return (
-    <Panel panelId="back" onOverflow={onOverflow}>
+    <Panel>
       {aid.spineText && (
         // Up the outer edge of the back cover, as on the parish original.
         <div style={{
@@ -276,8 +246,9 @@ export interface WorshipAidSheetsProps {
   settings: WorshipAidSettings;
   /** The user's edits, merged over the generated panels. */
   edits?: AidEditsByPanel;
-  /** How far each panel runs past its page, in inches. 0 = it fits. */
-  onOverflow?: (panel: PanelId, inchesOver: number) => void;
+  /** Lines of content that will not fit in the four pages at all. The
+   *  document cannot grow, so this is what the editor must surface. */
+  onFlow?: (result: FlowResult) => void;
 }
 
 /**
@@ -289,11 +260,32 @@ export interface WorshipAidSheetsProps {
  * fine on screen and is only discovered after the copies are made.
  */
 export function WorshipAidSheets({
-  aid, qrDataUrl, settings, edits, onOverflow,
+  aid, qrDataUrl, settings, edits, onFlow,
 }: WorshipAidSheetsProps) {
   const gap = (p: PanelId) => panelSpacing(settings, p);
-  /** Generated entries with the user's edits merged over them. */
-  const blocks = (p: PanelId, entries: AidEntry[]) => applyPanelEdits(entries, edits?.[p]);
+
+  /**
+   * One stream, then paginated — not three independent panels.
+   *
+   * The aid reads 1 → 4 like any document, so the content is merged with the
+   * user's edits, joined end to end in reading order, and flowed across the
+   * three content pages. When a page fills the remainder moves to the next
+   * one instead of being cut off at the fold.
+   *
+   * Which panel an entry was generated for still decides its ORDER — that is
+   * the order of the Mass — but no longer decides which page it prints on.
+   */
+  const stream: RenderedBlock[] = [
+    ...applyPanelEdits(aid.insideLeft, edits?.insideLeft),
+    ...applyPanelEdits(aid.insideRight, edits?.insideRight),
+    ...applyPanelEdits(aid.back, edits?.back),
+  ];
+  const flowed: FlowResult = flowBlocks(stream);
+  // Reported after render, not during: calling a parent's setState while
+  // rendering re-renders this component and loops.
+  const flowRef = useRef(onFlow); flowRef.current = onFlow;
+  useEffect(() => { flowRef.current?.(flowed); });
+  const page = (p: 'insideLeft' | 'insideRight' | 'back') => flowed.pages[p];
   return (
     <div className="worship-aid-sheets">
       <style>{`
@@ -364,8 +356,7 @@ export function WorshipAidSheets({
           aid={aid}
           spacing={gap('back')}
           qrDataUrl={qrDataUrl}
-          blocks={blocks('back', aid.back)}
-          onOverflow={onOverflow}
+          blocks={page('back')}
         />
         <FrontPanel
           aid={aid}
@@ -376,15 +367,15 @@ export function WorshipAidSheets({
       </div>
 
       <div className="worship-aid-sheet">
-        <Panel panelId="insideLeft" onOverflow={onOverflow}>
-          {blocks('insideLeft', aid.insideLeft).map((b) => (
+        <Panel>
+          {page('insideLeft').map((b) => (
             <div key={b.key} style={b.gapAfter ? { marginBottom: `${b.gapAfter}in` } : undefined}>
               <Entry entry={b.entry} spacing={gap('insideLeft')} />
             </div>
           ))}
         </Panel>
-        <Panel panelId="insideRight" onOverflow={onOverflow} style={{ paddingRight: '0.80in' }}>
-          {blocks('insideRight', aid.insideRight).map((b) => (
+        <Panel style={{ paddingRight: '0.80in' }}>
+          {page('insideRight').map((b) => (
             <div key={b.key} style={b.gapAfter ? { marginBottom: `${b.gapAfter}in` } : undefined}>
               <Entry entry={b.entry} spacing={gap('insideRight')} />
             </div>
