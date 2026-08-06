@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useStipendStanding } from '../useStipendStanding';
 import type { StipendPeriod } from '../useStipendPeriods';
 import { EnrollStudentsDialog } from './EnrollStudentsDialog';
+import { ClosePeriodDialog } from './ClosePeriodDialog';
 
 const money = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n ?? 0);
@@ -22,8 +23,8 @@ interface Props {
 
 export function StipendRoster({ period, onClose, onActivate }: Props) {
   const { rows, loading, error, refetch } = useStipendStanding(period.id);
-  const [closing, setClosing] = useState(false);
   const [enrollOpen, setEnrollOpen] = useState(false);
+  const [closeOpen, setCloseOpen] = useState(false);
 
   const totalEarned = rows.reduce((s, r) => s + Number(r.earned ?? 0), 0);
   const totalForfeited = rows.reduce((s, r) => s + Number(r.forfeited ?? 0), 0);
@@ -150,20 +151,17 @@ export function StipendRoster({ period, onClose, onActivate }: Props) {
 
       {period.status === 'active' && rows.length > 0 && (
         <div className="flex justify-end">
-          <Button size="sm" disabled={closing}
-            onClick={async () => {
-              if (!window.confirm(
-                'Close this period? Earned amounts are frozen and later attendance edits will no longer change them.')) return;
-              setClosing(true);
-              try { await onClose(); } finally { setClosing(false); }
-            }}>
-            {closing ? 'Closing…' : 'Close period'}
+          <Button size="sm" onClick={() => setCloseOpen(true)}>
+            Close period
           </Button>
         </div>
       )}
 
       <EnrollStudentsDialog period={period} open={enrollOpen}
         onOpenChange={setEnrollOpen} onEnrolled={refetch} />
+
+      <ClosePeriodDialog periodName={period.name} rows={rows}
+        open={closeOpen} onOpenChange={setCloseOpen} onConfirm={onClose} />
     </div>
   );
 }
