@@ -813,11 +813,16 @@ CREATE TABLE IF NOT EXISTS public.gw_public_intake_attempts (
 
 ALTER TABLE public.gw_public_intake_attempts ENABLE ROW LEVEL SECURITY;
 
--- Both lookups are "within the last hour", so the time column leads.
+-- Both lookups are equality-on-caller plus a range on time
+-- (WHERE email = ? AND created_at >= now() - interval '1 hour'), so the
+-- EQUALITY column must lead. A btree can only use a leading range predicate
+-- as a scan bound; with created_at first, the caller column degrades to a
+-- row-by-row filter over every attempt from every caller in the window,
+-- making the rate-limit check O(global recent traffic).
 CREATE INDEX IF NOT EXISTS idx_public_intake_attempts_email
-  ON public.gw_public_intake_attempts (created_at DESC, email);
+  ON public.gw_public_intake_attempts (email, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_public_intake_attempts_ip
-  ON public.gw_public_intake_attempts (created_at DESC, source_ip);
+  ON public.gw_public_intake_attempts (source_ip, created_at DESC);
 
 COMMENT ON TABLE public.gw_public_intake_attempts IS
   'Rate-limit ledger for the public-intake edge function. Service-role only. '
