@@ -16,8 +16,19 @@ interface ModuleGateProps {
 }
 
 /**
- * Wraps content that requires a paid module. Renders children if the tenant has
- * the module; otherwise shows an upgrade panel (or hides, with silent=true).
+ * Wraps content that belongs to a module.
+ *
+ * DURING THE FREE PERIOD (decided 2026-08-06) every tenant gets every
+ * feature — nobody has picked a tier yet, so v_tenant_active_modules admits
+ * all active modules and this gate should essentially never fire. What can
+ * still reach it: a module switched off platform-wide with is_active=false,
+ * or the brief moment before the module list loads.
+ *
+ * The copy therefore no longer talks about add-ons or activation. It used to
+ * say "This feature is an add-on — activate this module", which was the old
+ * per-module billing model and read as a paywall to people whose plan already
+ * included the feature. When tiers start gating features, the honest message
+ * will be about the plan, not about buying a module — and it belongs here.
  */
 export function ModuleGate({ moduleId, children, fallback, silent }: ModuleGateProps) {
   const { isLoading, hasAccess } = useModuleAccess(moduleId);
@@ -25,8 +36,9 @@ export function ModuleGate({ moduleId, children, fallback, silent }: ModuleGateP
   const { userProfile } = useUserProfile(user);
   const navigate = useNavigate();
 
-  // Super admins bypass module gating — they can open any addon without
-  // going through Stripe (for inspection or tenant support).
+  // Super admins bypass gating entirely, for inspection and tenant support.
+  // Worth remembering when testing: a super admin CANNOT reproduce what a
+  // member sees, so a gate that is broken for everyone else looks fine.
   if (userProfile?.is_super_admin) return <>{children}</>;
   if (isLoading) return null;
   if (hasAccess) return <>{children}</>;
@@ -38,12 +50,13 @@ export function ModuleGate({ moduleId, children, fallback, silent }: ModuleGateP
       <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
         <Lock className="w-6 h-6 text-primary" />
       </div>
-      <h3 className="text-lg font-semibold mb-2">This feature is an add-on</h3>
+      <h3 className="text-lg font-semibold mb-2">This feature isn&rsquo;t available yet</h3>
       <p className="text-sm text-muted-foreground mb-6">
-        Activate this module to unlock the feature for your organization.
+        It isn&rsquo;t switched on for your workspace right now. If you expected to see
+        it here, let us know and we&rsquo;ll take a look.
       </p>
-      <Button onClick={() => navigate('/settings/modules')} className="w-full">
-        View available add-ons
+      <Button variant="outline" onClick={() => navigate('/dashboard')} className="w-full">
+        Back to the dashboard
       </Button>
     </div>
   );
