@@ -6,6 +6,11 @@ export type Rounding = 'cent' | 'dollar';
 /**
  * Tenant-editable defaults. `tardy` and `late` both appear in existing
  * attendance data and mean the same thing.
+ *
+ * `in_rehearsal` comes from the course path: a QR check-in writes it and only
+ * a second checkout scan upgrades it to `present`. Left unmapped it would
+ * score zero, charging a student for a scan that never happened, so it carries
+ * half credit like `late`.
  */
 export const DEFAULT_STATUS_WEIGHTS: StatusWeights = {
   present: 1,
@@ -13,6 +18,7 @@ export const DEFAULT_STATUS_WEIGHTS: StatusWeights = {
   tardy: 0.5,
   excused: 1,
   absent: 0,
+  in_rehearsal: 0.5,
 };
 
 /**
