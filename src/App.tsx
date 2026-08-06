@@ -227,6 +227,7 @@ const PrayerApp = lazy(() => import("./pages/prayer/PrayerApp"));
 const BibleApp = lazy(() => import("./pages/bible/BibleApp"));
 const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
 const WorshipAidPage = lazy(() => import("./pages/dashboard/WorshipAidPage"));
+const WorshipAidsPage = lazy(() => import("./pages/dashboard/WorshipAidsPage"));
 const WorshipAidPublicPage = lazy(() => import("./pages/WorshipAidPublicPage"));
 const ConcertPlannerEditorPage = lazy(() => import("./pages/dashboard/ConcertPlannerEditorPage"));
 const PublicConcertProgramPage = lazy(() => import("./pages/public/PublicConcertProgramPage"));
@@ -1790,6 +1791,19 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell>
                           <LiturgyPlannerPage />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Every worship aid, as a document list. */}
+                <Route
+                  path="/dashboard/worship-aids"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <WorshipAidsPage />
                         </DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
