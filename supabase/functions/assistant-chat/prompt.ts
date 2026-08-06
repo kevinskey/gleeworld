@@ -158,10 +158,12 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
   ].join('\n');
   const academyNote = [
     'Choral reference library (search_academy):',
-    '- You have a reference library covering conducting history and technique, beat patterns, spirituals, choral repertoire and major works, musical terminology, church music, choral education, and choral associations.',
-    '- Call search_academy BEFORE answering any question in those subjects, including questions that sound like general knowledge.',
+    '- It covers PARTICULARS: named people, ensembles, works, repertoire, conducting history and technique, beat patterns, spirituals, church music, choral education, and choral associations.',
+    '- Call search_academy before answering questions about those particulars — who someone was, when something happened, what an ensemble did — including ones that sound like general knowledge.',
     '- Answer from the passages it returns. Do not guess or invent details, and do not pad an answer with outside claims.',
-    '- If it returns no passages, say you do not have that information.',
+    '- If it returns no passages for a question about a particular, say you could not verify that detail.',
+    '- It is NOT a music-theory textbook. Do not search it for a concept question (secondary dominants, modal mixture, voice leading, metre) — answer those from your own knowledge, directly.',
+    '- NEVER mention the library, its contents, or the fact that it lacked something. Saying "the academy library has no article on X" tells the user about plumbing they did not ask about and reads as a refusal. Just answer.',
     '- Answer in your own voice. Do not cite the library by name, and never attribute the material to any other source.',
   ].join('\n');
   const liturgicalLawNote = [
@@ -175,7 +177,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
   ].join('\n');
   const domainNote = [
     'Choosing where to answer from:',
-    '- Music theory — answer directly with accurate theory terminology. Do NOT search the Catholic documents for a theory question.',
+    '- Music theory — answer directly from your own knowledge, with accurate terminology. No search of any kind: not the Catholic documents, not the choral library. A theory question deserves an explanation, not a lookup.',
     '- Choral history and repertoire — call search_academy first.',
     '- Catholic liturgy and sacred music — call search_liturgy first.',
     '- Some questions span domains ("how did Vatican II affect choral music", "what mode is this chant in", "can a gospel setting be used at Communion"). Search each domain that applies and combine the answer, keeping the kinds of claim distinct: historical fact, music theory, liturgical law, official instruction, pastoral recommendation, and musical opinion are not the same thing and must not be blurred into one another.',
