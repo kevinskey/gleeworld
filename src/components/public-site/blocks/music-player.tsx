@@ -33,7 +33,11 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
           {config.heading}
         </h2>
       )}
-      <div className="space-y-4 max-w-3xl">
+      {/* Two to a row once there is room, matching the Watch block below it.
+          The old single column was capped at max-w-3xl, which left half the
+          section empty on a desktop. Stacks to one column in a narrow
+          container — `cq-*`, so the builder's phone preview stacks too. */}
+      <div className="grid gap-4 cq-sm:grid-cols-2">
         {tracks.map((t, i) => (
           <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
             {(t.title || t.artist) && (
