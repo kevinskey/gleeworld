@@ -12,8 +12,12 @@ describe('toolCatalog', () => {
     expect(names).not.toContain('send_email');
     expect(names).not.toContain('create_event');
     expect(names).not.toContain('find_user');
-    expect(names).not.toContain('search_youtube');
+    // add_video WRITES to the shared library, so it stays admin-only.
+    // Searching and playing do not, and a singer asking to hear the piece
+    // they are learning is the point — those are open to members.
     expect(names).not.toContain('add_video');
+    expect(names).toContain('search_youtube');
+    expect(names).toContain('play_video');
   });
 
   it('admins get every tool', () => {
@@ -48,6 +52,7 @@ describe('toolCatalog', () => {
       'liturgical_day',
       'lookup_bible',
       'order_food',
+      'play_video',
       'query_calendar',
       'read_news_feeds',
       'remember_preference',

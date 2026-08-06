@@ -1,4 +1,4 @@
-import { X, Car, Utensils, Globe, Sparkles, MapPin, Star } from 'lucide-react';
+import { X, Car, Utensils, Globe, Sparkles, MapPin, Star, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ConciergeResult } from '@/lib/assistant/conciergeTypes';
 
@@ -20,10 +20,12 @@ export function AssistantResultsPanel({ result, onClose, className }: Props) {
           {result.kind === 'food'   && <Utensils className="w-4 h-4 text-sky-600" />}
           {result.kind === 'web'    && <Globe className="w-4 h-4 text-violet-600" />}
           {result.kind === 'places' && <MapPin className="w-4 h-4 text-rose-600" />}
+          {result.kind === 'video'  && <Play className="w-4 h-4 text-red-600" />}
           {result.kind === 'ride'   && 'Ride ready'}
           {result.kind === 'food'   && 'Order ready'}
           {result.kind === 'web'    && 'Search results'}
           {result.kind === 'places' && 'Nearby'}
+          {result.kind === 'video'  && 'Now playing'}
         </div>
         <button
           type="button"
@@ -40,6 +42,7 @@ export function AssistantResultsPanel({ result, onClose, className }: Props) {
         {result.kind === 'food'   && <FoodCard result={result} />}
         {result.kind === 'web'    && <WebCard result={result} />}
         {result.kind === 'places' && <PlacesCard result={result} />}
+        {result.kind === 'video'  && <VideoCard result={result} />}
       </div>
     </div>
   );
@@ -144,6 +147,35 @@ function WebCard({ result }: { result: Extract<ConciergeResult, { kind: 'web' }>
             <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{r.snippet}</p>
           </a>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A video, playing.
+ *
+ * Embedded rather than linked out: the user asked to HEAR something, and
+ * sending them to youtube.com abandons whatever they were doing in GleeWorld.
+ * youtube-nocookie so a rehearsal does not quietly build an ad profile.
+ */
+function VideoCard({ result }: { result: Extract<ConciergeResult, { kind: 'video' }> }) {
+  return (
+    <div className="space-y-2">
+      <div className="relative w-full overflow-hidden border border-border" style={{ aspectRatio: '16 / 9' }}>
+        <iframe
+          src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(result.videoId)}?autoplay=1&rel=0`}
+          title={result.title || 'Video'}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+          className="absolute inset-0 h-full w-full"
+        />
+      </div>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium">{result.title || result.query}</p>
+        {result.channel && (
+          <p className="truncate text-xs text-muted-foreground">{result.channel}</p>
+        )}
       </div>
     </div>
   );

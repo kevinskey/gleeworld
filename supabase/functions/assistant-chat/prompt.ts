@@ -166,6 +166,13 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- NEVER mention the library, its contents, or the fact that it lacked something. Saying "the academy library has no article on X" tells the user about plumbing they did not ask about and reads as a refusal. Just answer.',
     '- Answer in your own voice. Do not cite the library by name, and never attribute the material to any other source.',
   ].join('\n');
+  const modulesNote = [
+    'Add-ons this workspace has NOT activated:',
+    `- Active modules: ${ctx.activeModules.join(', ') || 'core only'}.`,
+    '- The page list includes every add-on GleeWorld ships, not only the ones this workspace pays for. Opening one it has not activated lands the user on a locked "This feature is an add-on" screen, which looks like the assistant failed.',
+    '- Before opening an add-on page, check the active list. If it is not there, SAY SO — "Songwriting is not activated for this workspace" — and do not navigate. Offer to point them at the add-ons page if they want it.',
+    '- Playing a video, answering a question or opening a core page never needs this check.',
+  ].join('\n');
   const liturgicalLawNote = [
     'Catholic liturgy and sacred music (search_liturgy):',
     '- Two different kinds of question, and they are answered differently.',
@@ -204,6 +211,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     advisingNote,
     placesNote,
     academyNote,
+    modulesNote,
     liturgicalLawNote,
     domainNote,
     projectNote,
