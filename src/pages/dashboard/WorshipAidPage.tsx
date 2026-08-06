@@ -3,11 +3,16 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 import {
-  ArrowLeft, FileDown, Image as ImageIcon, Link2, Loader2, Printer, QrCode, Save, X,
+  AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, FileDown, Image as ImageIcon, Link2,
+  Loader2, Plus, Printer, QrCode, RotateCcw, Save, Trash2, X,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFileAndGetUrl } from '@/utils/storage';
 import { worshipAidToPdf, worshipAidFileName } from '@/lib/liturgy/worshipAidPdf';
+import {
+  applyPanelEdits, reorderKeys,
+  type AidEditsByPanel, type PanelEdits,
+} from '@/lib/liturgy/aidEdits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +41,13 @@ import {
 
 const BUCKET = 'sheet-music';
 
+const PANEL_LABEL: Record<PanelId, string> = {
+  front: 'Cover',
+  insideLeft: 'Inside left',
+  insideRight: 'Inside right',
+  back: 'Back',
+};
+
 type Row = AidSource & {
   id: string; psalm_title: string | null; worship_aid: unknown; share_token: string | null;
 };
@@ -52,6 +64,10 @@ export default function WorshipAidPage() {
   const [psalmImage, setPsalmImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState<PanelId | 'cover' | null>(null);
   const [filing, setFiling] = useState(false);
+  /** Inches each panel runs past its page. 0 = it fits. */
+  const [overflow, setOverflow] = useState<Partial<Record<PanelId, number>>>({});
+  /** Which panel the edit list is showing. */
+  const [editPanel, setEditPanel] = useState<PanelId>('insideLeft');
   const sheetsRef = useRef<HTMLDivElement>(null);
   const uploadTarget = useRef<PanelId | 'cover'>('cover');
   // Read inside the upload callback so a slider moved mid-upload is not lost.
@@ -265,6 +281,62 @@ export default function WorshipAidPage() {
       setFiling(false);
     }
   };
+
+  const edits: AidEditsByPanel = (settings.edits ?? {}) as AidEditsByPanel;
+
+  const patchPanel = (panel: PanelId, change: (cur: PanelEdits) => PanelEdits) => {
+    const cur = edits[panel] ?? {};
+    patch({ edits: { ...edits, [panel]: change(cur) } as Record<string, unknown> });
+  };
+
+  /** The blocks as the panel will actually print them. */
+  const panelBlocks = (panel: PanelId) => {
+    if (!aid) return [];
+    const source = panel === 'insideLeft' ? aid.insideLeft
+      : panel === 'insideRight' ? aid.insideRight
+      : panel === 'back' ? aid.back : [];
+    return applyPanelEdits(source, edits[panel]);
+  };
+
+  const move = (panel: PanelId, key: string, dir: -1 | 1) => {
+    const order = (edits[panel]?.order?.length ? edits[panel]!.order! : panelBlocks(panel).map((b) => b.key));
+    patchPanel(panel, (cur) => ({ ...cur, order: reorderKeys(order, key, dir) }));
+  };
+
+  const hide = (panel: PanelId, key: string) =>
+    patchPanel(panel, (cur) => ({ ...cur, hidden: [...(cur.hidden ?? []), key] }));
+
+  const restore = (panel: PanelId, key: string) =>
+    patchPanel(panel, (cur) => ({ ...cur, hidden: (cur.hidden ?? []).filter((k) => k !== key) }));
+
+  const removeInsert = (panel: PanelId, id: string) =>
+    patchPanel(panel, (cur) => ({
+      ...cur,
+      inserts: (cur.inserts ?? []).filter((b) => b.id !== id),
+      order: (cur.order ?? []).filter((k) => k !== id),
+    }));
+
+  const setGap = (panel: PanelId, key: string, inches: number) =>
+    patchPanel(panel, (cur) => ({ ...cur, gaps: { ...(cur.gaps ?? {}), [key]: inches } }));
+
+  const setText = (panel: PanelId, key: string, field: 'label' | 'title' | 'credit' | 'summary', value: string) =>
+    patchPanel(panel, (cur) => ({
+      ...cur,
+      text: { ...(cur.text ?? {}), [key]: { ...(cur.text?.[key] ?? {}), [field]: value } },
+    }));
+
+  const insert = (panel: PanelId, kind: 'text' | 'score' | 'spacer') =>
+    patchPanel(panel, (cur) => ({
+      ...cur,
+      inserts: [
+        ...(cur.inserts ?? []),
+        kind === 'spacer'
+          ? { id: crypto.randomUUID(), kind, height: 0.25 }
+          : kind === 'score'
+            ? { id: crypto.randomUUID(), kind, imageUrl: psalmImage ?? '' }
+            : { id: crypto.randomUUID(), kind, text: 'New text' },
+      ],
+    }));
 
   if (loading) {
     return (
@@ -487,8 +559,144 @@ export default function WorshipAidPage() {
         </CardContent>
       </Card>
 
+      {/* Overflow — the one thing that cannot be left to chance. Four pages
+          is the whole format, so content past the bottom of a panel is simply
+          cut when it prints. Nothing is auto-shrunk: what to cut is a
+          judgement about the liturgy, not about layout. */}
+      {Object.entries(overflow).some(([, v]) => (v ?? 0) > 0.01) && (
+        <Card className="border-destructive print:hidden">
+          <CardContent className="flex flex-wrap items-center gap-3 p-3">
+            <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" aria-hidden />
+            <div className="min-w-0 flex-1 text-xs">
+              <span className="font-semibold text-destructive">This will print short. </span>
+              {Object.entries(overflow)
+                .filter(([, v]) => (v ?? 0) > 0.01)
+                .map(([p, v]) => `${PANEL_LABEL[p as PanelId]} is ${v!.toFixed(2)}″ over`)
+                .join('; ')}
+              . Remove or shorten something on that panel, or tighten its line spacing.
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Panel editor */}
+      <Card className="print:hidden">
+        <CardContent className="space-y-3 p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="mr-2 text-sm font-semibold">Edit panel</h2>
+            {(['insideLeft', 'insideRight', 'back'] as PanelId[]).map((p) => (
+              <Button
+                key={p}
+                type="button"
+                size="sm"
+                variant={editPanel === p ? 'default' : 'outline'}
+                onClick={() => setEditPanel(p)}
+                className="text-xs"
+              >
+                {PANEL_LABEL[p]}
+                {(overflow[p] ?? 0) > 0.01 && <AlertTriangle className="ml-1.5 h-3 w-3" />}
+              </Button>
+            ))}
+            <span className="mx-1 h-5 w-px bg-border" aria-hidden />
+            <Button type="button" size="sm" variant="secondary" onClick={() => insert(editPanel, 'text')}>
+              <Plus className="mr-1 h-3.5 w-3.5" /> Text
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onClick={() => insert(editPanel, 'score')}>
+              <Plus className="mr-1 h-3.5 w-3.5" /> Score
+            </Button>
+            <Button type="button" size="sm" variant="secondary" onClick={() => insert(editPanel, 'spacer')}>
+              <Plus className="mr-1 h-3.5 w-3.5" /> Space
+            </Button>
+          </div>
+
+          <ul className="space-y-1.5">
+            {panelBlocks(editPanel).map((b, i, all) => (
+              <li key={b.key} className="flex flex-wrap items-center gap-2 border border-border p-2">
+                <div className="flex shrink-0 flex-col">
+                  <button type="button" aria-label="Move up" disabled={i === 0}
+                    onClick={() => move(editPanel, b.key, -1)}
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-30">
+                    <ArrowUp className="h-3.5 w-3.5" />
+                  </button>
+                  <button type="button" aria-label="Move down" disabled={i === all.length - 1}
+                    onClick={() => move(editPanel, b.key, 1)}
+                    className="text-muted-foreground hover:text-foreground disabled:opacity-30">
+                    <ArrowDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+
+                <div className="min-w-0 flex-1 space-y-1">
+                  <Input
+                    value={b.entry.label ?? ''}
+                    onChange={(e) => setText(editPanel, b.key, 'label', e.target.value)}
+                    placeholder={b.inserted ? 'Heading (optional)' : 'Heading'}
+                    className="h-8 text-xs font-semibold"
+                  />
+                  {(b.entry.title != null || b.inserted) && b.entry.imageUrl == null && (
+                    <Input
+                      value={b.entry.title ?? b.entry.summary ?? ''}
+                      onChange={(e) => setText(editPanel, b.key,
+                        b.entry.summary != null && b.entry.title == null ? 'summary' : 'title',
+                        e.target.value)}
+                      placeholder="Text"
+                      className="h-8 text-xs"
+                    />
+                  )}
+                  {b.entry.imageUrl && (
+                    <span className="block truncate text-[11px] text-muted-foreground">
+                      Score image
+                    </span>
+                  )}
+                </div>
+
+                <label className="flex shrink-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+                  Space after
+                  <input
+                    type="range" min={0} max={1.5} step={0.05}
+                    value={b.gapAfter}
+                    onChange={(e) => setGap(editPanel, b.key, Number(e.target.value))}
+                    aria-label={`Space after ${b.entry.label || 'block'}`}
+                    className="w-20"
+                  />
+                  <span className="w-9 tabular-nums">{b.gapAfter.toFixed(2)}″</span>
+                </label>
+
+                <Button
+                  type="button" size="sm" variant="ghost" className="shrink-0 text-destructive"
+                  onClick={() => (b.inserted ? removeInsert(editPanel, b.key) : hide(editPanel, b.key))}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </li>
+            ))}
+          </ul>
+
+          {/* Removed entries stay recoverable: hiding is a diff against the
+              plan, so nothing is actually lost. */}
+          {(edits[editPanel]?.hidden ?? []).length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 border-t border-border pt-2">
+              <span className="text-xs text-muted-foreground">Removed:</span>
+              {(edits[editPanel]?.hidden ?? []).map((k) => (
+                <Button key={k} type="button" size="sm" variant="outline" className="text-xs"
+                  onClick={() => restore(editPanel, k)}>
+                  <RotateCcw className="mr-1 h-3 w-3" /> {k}
+                </Button>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="overflow-x-auto" ref={sheetsRef}>
-        <WorshipAidSheets aid={aid} qrDataUrl={qr} settings={settings} />
+        <WorshipAidSheets
+          aid={aid}
+          qrDataUrl={qr}
+          settings={settings}
+          edits={edits}
+          onOverflow={(panel, over) => setOverflow((cur) => (
+            Math.abs((cur[panel] ?? 0) - over) < 0.01 ? cur : { ...cur, [panel]: over }
+          ))}
+        />
       </div>
     </div>
   );

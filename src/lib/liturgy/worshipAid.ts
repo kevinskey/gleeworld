@@ -73,6 +73,13 @@ export interface WorshipAidSettings {
    */
   coverTitleSize?: number;
   coverImageScale?: number;
+  /**
+   * The user's edits to the generated panels — hidden entries, text
+   * overrides, inserted blocks, per-entry gaps. Stored as a DIFF so anything
+   * untouched still tracks the Mass plan. Typed loosely here to keep the
+   * pure model free of the editor's shape; see lib/liturgy/aidEdits.
+   */
+  edits?: Record<string, unknown>;
   /** Extra images the user drops into a panel. */
   images: Partial<Record<PanelId, string | null>>;
   /**
