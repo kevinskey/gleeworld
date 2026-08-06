@@ -15,10 +15,15 @@ export function TenantFavicon() {
   useEffect(() => {
     if (!logoUrl) return;
     try {
-      // Update both rel="icon" (browsers) and rel="apple-touch-icon" (iOS
-      // homescreen). NodeLists aren't writable so don't try to assign into
-      // them — either patch existing links in place, or append a new one.
-      const icons = Array.from(document.querySelectorAll<HTMLLinkElement>('link[rel="icon"]'));
+      // Update rel="icon" and the legacy rel="shortcut icon" (attribute
+      // selectors are exact matches, so 'link[rel="icon"]' alone never matched
+      // the shortcut link in index.html and it kept the GleeWorld mark on
+      // every tenant), plus rel="apple-touch-icon" (iOS homescreen).
+      // NodeLists aren't writable so don't try to assign into them — either
+      // patch existing links in place, or append a new one.
+      const icons = Array.from(
+        document.querySelectorAll<HTMLLinkElement>('link[rel="icon"], link[rel="shortcut icon"]'),
+      );
       if (icons.length === 0) {
         const link = document.createElement('link');
         link.rel = 'icon';
