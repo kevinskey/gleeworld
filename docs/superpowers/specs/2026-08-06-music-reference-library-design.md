@@ -1,9 +1,62 @@
 # Music Reference Library for the GleeWorld Assistant
 
 Date: 2026-08-06
-Status: Approved (design), not yet implemented
+Status: BLOCKED — see "Blocker: source provenance". Do not implement.
 Branch: `feat/music-reference-library`
 Worktree: `~/Documents/GitHub/gw-worktrees/music-reference-library`
+
+## Blocker: source provenance
+
+**2026-08-06.** Kevin confirmed the three source documents are **derived from
+published sources**, not original work. Implementation is halted.
+
+This repository has already answered this question once. `_shared/liturgy/corpus.ts`
+ships deliberately EMPTY, with a header stating that Vatican, USCCB and ICEL
+texts "may not be scraped and bundled into this repository." Bundling material
+derived from published orchestration, harmony and jazz references would
+contradict that decision inside the same codebase.
+
+This is not personal use. The corpus deploys into an edge function serving
+roughly 50 client organizations commercially, so the material reaches third
+parties.
+
+The operative distinction is facts versus expression. Instrument ranges,
+transposition intervals, score order, recording dates and personnel are facts
+and are not copyrightable. The prose that explains them is expression and is.
+A path forward has to keep the first and discard the second.
+
+Do not resume this plan until the provenance question is resolved and this
+section is replaced with the resolution.
+
+## Corrections to this spec (2026-08-06)
+
+Three errors, found when re-reading `origin/main` rather than a stale checkout
+that was 78 commits behind. They stand regardless of how the blocker resolves.
+
+1. **The scorer refactor in "Shared scorer" is unnecessary — delete it.**
+   `_shared/academy/search.ts` on main is already generic
+   (`buildIndex<C extends SearchableChunk>`, `searchAcademy<C extends SearchableChunk>`),
+   and `_shared/academy/types.ts` already defines `SearchableChunk`, `Hit<C>`
+   and `KnowledgeIndex<C>` with a comment anticipating reuse: "reference,
+   Catholic liturgy, whatever comes next." `_shared/liturgy/` already consumes
+   it. A new corpus follows that precedent and touches no live code.
+
+2. **Decision 3 (flag-then-answer) is reversed.** `prompt.ts:167` deliberately
+   instructs the opposite: "NEVER mention the library, its contents, or the
+   fact that it lacked something... reads as a refusal. Just answer." Kevin
+   chose to keep main's rule. The new library must never mention itself or its
+   gaps, matching `search_academy` and `search_liturgy`. The proposed one-line
+   edit to `academyNote` is cancelled.
+
+3. **Routing needs a rewrite, not an added note.** `prompt.ts:166` and `:191`
+   forbid searching a library for concept questions — "It is NOT a music-theory
+   textbook... answer those from your own knowledge, directly" and "Music
+   theory — answer directly from your own knowledge... No search of any kind."
+   Since this corpus is largely craft and concept material, `domainNote` must
+   be rewritten so theory and craft route to `search_music_reference` first,
+   while `search_academy` stays particulars-only. Without that change the tool
+   would ship and never be called.
+
 
 ## Problem
 
