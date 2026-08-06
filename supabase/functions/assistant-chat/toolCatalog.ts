@@ -63,7 +63,7 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'play_video',
-    description: "Play a video or song ON SCREEN. Use whenever the user asks to hear, play, watch or pull up a piece of music, a recording or a video — 'play Ave Verum', 'pull up the Hall Johnson recording', 'let me hear that'. Pass what they asked for as `q` and it finds and plays the best match; pass `videoId` instead when you already have one from search_youtube. The player appears in the app — never read the URL or the video id aloud.",
+    description: "Play a video or song ON SCREEN. Use whenever the user asks to hear, play, watch, OPEN or pull up a piece of music, a recording or a video — 'play Ave Verum', 'pull up the Hall Johnson recording', 'let me hear that', 'open the video'. When they say 'the video' or 'that recording' about something ALREADY DISCUSSED in this conversation, they mean THAT one: pass its title as `q` — never send them to the video library instead. Pass what they asked for as `q` and it finds and plays the best match; pass `videoId` instead when you already have one from search_youtube. The player appears in the app — never read the URL or the video id aloud.",
     parameters: {
       type: 'object',
       properties: {

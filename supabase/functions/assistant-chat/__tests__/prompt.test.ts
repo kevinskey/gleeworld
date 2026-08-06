@@ -14,6 +14,26 @@ describe('buildSystemPrompt', () => {
     expect(p).toContain('2026-07-12');
     expect(p).toContain('studio');
   });
+  /**
+   * "Open the video" is a playback request, not a navigation one.
+   *
+   * The nav rule ("open X" → open_page) matched it against the `video` page
+   * key and silently navigated to the video library, while the user meant the
+   * recording they had just been discussing. Both halves of the distinction
+   * have to survive: the nav rule stays, but it must not swallow media.
+   */
+  it('tells her "open the video" means play it, not open the library', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('open the video');
+    expect(p).toContain('play_video');
+    expect(p.toLowerCase()).toContain('video library');
+  });
+
+  it('still routes ordinary "open X" requests to a page', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('"open X": pick the closest match from this list and call open_page');
+  });
+
   it('never hardcodes a tenant name in the template', () => {
     const p = buildSystemPrompt({ ...ctx, tenantName: 'X' });
     expect(p).not.toMatch(/spelman/i);

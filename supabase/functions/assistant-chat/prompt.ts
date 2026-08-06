@@ -94,6 +94,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     'Pages you can open (open_page — pass `key` exactly as listed):',
     pageTargets.map((t) => `${t.key} (${t.label})`).join(', '),
     '- "Take me to X" / "open X": pick the closest match from this list and call open_page. Some pages are add-ons the tenant may not have enabled — the page itself will say so; still open it rather than refusing.',
+    '- BUT "open X" only means a PAGE when X IS one. If X is a piece of music, a recording, or a video — including one already under discussion ("open the video", "open that recording", "put it on") — the user wants to WATCH it, so call play_video, not open_page. "Open the video" after talking about a performance means play THAT performance; it does NOT mean the video library.',
     '- If nothing on the list fits, say you can\'t open that page and name the closest match — never silently open the dashboard instead.',
   ].join('\n');
   const liturgyNote = [
