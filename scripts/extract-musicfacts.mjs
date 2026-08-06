@@ -314,6 +314,67 @@ function extractVoices(lines) {
   return out;
 }
 
+
+// ---------------------------------------------------------------- score order
+
+/** Strip a trailing parenthetical: "Clarinets (E♭ above B♭/A)" → "Clarinets". */
+const bareName = (t) => stripMd(t).replace(/\s*\([^)]*\)\s*$/, '').trim();
+
+/**
+ * §6.1 — a numbered list broken up by bold family headings. Score order is a
+ * convention, not an opinion: every orchestration text gives the same one.
+ */
+function extractScoreOrder(lines) {
+  const start = lines.findIndex((l) => /^### 6\.1 Standard orchestral score order/.test(l));
+  if (start < 0) return [];
+  const groups = [];
+  let group = null;
+  for (let i = start + 1; i < lines.length; i++) {
+    const l = lines[i].trim();
+    if (/^###? /.test(lines[i])) break;
+    // The heading may carry trailing text: "**Woodwinds** (highest to lowest
+    // within family)". Anchoring on end-of-line dropped the whole group.
+    const fam = /^\*\*([A-Za-z][^*]*)\*\*/.exec(l);
+    if (fam) {
+      // "**Notes on the order:**" ends the list.
+      if (/^notes\b/i.test(fam[1])) break;
+      group = { family: bareName(fam[1]), items: [] };
+      groups.push(group);
+      continue;
+    }
+    const item = /^\d+\.\s+(.+)$/.exec(l);
+    if (item && group) group.items.push(bareName(item[1]));
+  }
+  return groups.filter((g) => g.items.length);
+}
+
+// ------------------------------------------------------------------ ensembles
+
+/**
+ * §26.2 — Name | Instrumentation | Repertoire. The shorthand string is a
+ * standard notation and a fact; the Repertoire column is an editorial pick of
+ * composers and is deliberately not taken.
+ */
+function extractEnsembles(lines) {
+  const out = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (!/^\|\s*Name\s*\|/.test(lines[i])) continue;
+    const { rows, end } = tableAt(lines, i);
+    const header = rows[0].map((c) => c.toLowerCase());
+    const iName = header.findIndex((c) => c.includes('name'));
+    const iInst = header.findIndex((c) => /instrumentation/.test(c));
+    if (iName < 0 || iInst < 0) { i = end - 1; continue; }
+    for (const r of rows.slice(1)) {
+      const name = stripMd(r[iName]);
+      const inst = stripMd(r[iInst]);
+      if (!name || !inst) continue;
+      out.push({ id: `ensemble/${slugify(name)}`, name, instrumentation: inst });
+    }
+    i = end - 1;
+  }
+  return out;
+}
+
 // ----------------------------------------------------------------------- main
 
 const orchestration = readDoc('orchestration');
@@ -321,6 +382,8 @@ const choral = readDoc('choral');
 
 const instruments = extractInstruments(orchestration);
 const voices = extractVoices(choral);
+const scoreOrder = extractScoreOrder(orchestration);
+const ensembles = extractEnsembles(orchestration);
 
 mkdirSync(OUT_DIR, { recursive: true });
 const write = (name, data) => {
@@ -333,4 +396,6 @@ if (voices.length === 0) throw new Error('0 voice parts parsed — the document 
 
 write('instruments', instruments);
 write('voices', voices);
+write('score-order', scoreOrder);
+write('ensembles', ensembles);
 console.log(`\n  -> ${path.relative(process.cwd(), OUT_DIR)}`);

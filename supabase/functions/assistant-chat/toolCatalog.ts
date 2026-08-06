@@ -545,7 +545,7 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'search_music_facts',
-    description: 'Look up exact instrument and voice facts: playable ranges, practical vs extreme ranges, transposition (what an instrument sounds versus what is written), clefs, register spans, and choral voice-part ranges for SATB, SSAA and TTBB. Call this BEFORE stating any range, transposition or register — those are precise numbers that must not be guessed. Not for concepts or technique.',
+    description: 'Look up exact instrument, voice and ensemble facts: playable ranges, practical vs extreme ranges, transposition (what an instrument sounds versus what is written), clefs, register spans, choral voice-part ranges for SATB, SSAA and TTBB, orchestral score order (which instrument goes where on the page), and standard orchestra instrumentations (Classical, Romantic, chamber). Call this BEFORE stating any range, transposition, register, score position or instrumentation — those are precise facts that must not be guessed. Not for concepts or technique.',
     parameters: {
       type: 'object',
       properties: { query: str('The instrument, voice part or fact wanted, e.g. "viola range" or "clarinet transposition"') },
