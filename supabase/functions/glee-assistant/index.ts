@@ -373,7 +373,7 @@ const tools = [
       parameters: {
         type: "object",
         properties: {
-          course_code: { type: "string", description: "Course code to check (e.g., 'MUS-240', 'MUS-070'). Defaults to MUS-070 (Glee Club)." },
+          course_code: { type: "string", description: "Course code to check (e.g., 'MUS-070', 'LH-100'). Defaults to MUS-070 (Glee Club)." },
           status_filter: { type: "string", enum: ["submitted", "not_submitted", "has_conflicts", "all"], description: "Filter by submission status. Defaults to 'all'." },
           semester: { type: "string", description: "Semester to check (e.g., 'Spring 2026'). Defaults to current semester." },
         },
@@ -389,7 +389,7 @@ const tools = [
       parameters: {
         type: "object",
         properties: {
-          course_code: { type: "string", description: "Course code to check (e.g., 'MUS-240', 'MUS-070')." },
+          course_code: { type: "string", description: "Course code to check (e.g., 'MUS-070', 'LH-100')." },
           semester: { type: "string", description: "Semester (e.g., 'Spring 2026'). Defaults to current semester." },
         },
         required: [],
@@ -460,7 +460,7 @@ const tools = [
         properties: {
           student_name: { type: "string", description: "Student name to search for (fuzzy matching supported). Required for individual lookups." },
           student_email: { type: "string", description: "Specific student's email (alternative to name)." },
-          course_code: { type: "string", description: "Course code (e.g., 'MUS-240'). Defaults to MUS-240." },
+          course_code: { type: "string", description: "Course code (e.g., 'MUS-070'). Defaults to MUS-070." },
           format: { 
             type: "string", 
             enum: ["summary", "detailed", "transcript"],
@@ -491,7 +491,7 @@ const tools = [
           subject: { type: "string", description: "Email subject line." },
           message: { type: "string", description: "Email body message. Can include grade placeholders like {grade}, {percentage}, {name}." },
           include_grade: { type: "boolean", description: "Auto-include current grade summary in the email (default false)." },
-          course_code: { type: "string", description: "Course code for context (defaults to MUS-240)." },
+          course_code: { type: "string", description: "Course code for context (defaults to MUS-070)." },
         },
         required: ["subject", "message"],
       },
@@ -518,13 +518,13 @@ const tools = [
     type: "function",
     function: {
       name: "take_attendance",
-      description: "Start taking attendance for a course by displaying the QR code for the current or next class session. Use when the user says 'take attendance' for any course like MUS-240, Glee Club, Bowman Scholars, etc.",
+      description: "Start taking attendance for a course by displaying the QR code for the current or next class session. Use when the user says 'take attendance' for any course like Glee Club, Bowman Scholars, etc.",
       parameters: {
         type: "object",
         properties: {
           course_name: { 
             type: "string", 
-            description: "The course name or code. Examples: 'MUS-240', 'MUS 240', 'Survey of African American Music', 'Glee Club', 'MUS-070', 'Bowman Scholars', 'LH-100', 'GLEE-000', 'Sight Singing'. The system will match natural language to the correct course code."
+            description: "The course name or code. Examples: 'Glee Club', 'MUS-070', 'Bowman Scholars', 'LH-100', 'GLEE-000', 'Sight Singing'. The system will match natural language to the correct course code."
           },
         },
         required: ["course_name"],
@@ -538,13 +538,13 @@ const tools = [
     type: "function",
     function: {
       name: "get_my_grade",
-      description: "Get the current user's own grade in a specific course. Use when a student asks 'What is my grade?' or 'How am I doing in MUS-240?'",
+      description: "Get the current user's own grade in a specific course. Use when a student asks 'What is my grade?' or 'How am I doing in Glee Club?'",
       parameters: {
         type: "object",
         properties: {
           course_code: { 
             type: "string", 
-            description: "Course code (e.g., 'MUS-240', 'Survey of African American Music', 'Glee Club'). Defaults to MUS-240." 
+            description: "Course code (e.g., 'MUS-070', 'Glee Club'). Defaults to MUS-070." 
           },
           format: {
             type: "string",
@@ -583,7 +583,7 @@ const tools = [
         properties: {
           course_code: { 
             type: "string", 
-            description: "Course code (e.g., 'MUS-240', 'Glee Club'). Required." 
+            description: "Course code (e.g., 'MUS-070', 'Glee Club'). Required." 
           },
           absence_date: { 
             type: "string", 
@@ -613,7 +613,7 @@ const tools = [
         properties: {
           course_code: { 
             type: "string", 
-            description: "Course code or name (e.g., 'MUS-240', 'Survey of African American Music', 'Glee Academy'). If not specified, shows all enrolled courses." 
+            description: "Course code or name (e.g., 'MUS-070', 'Glee Club', 'Glee Academy'). If not specified, shows all enrolled courses." 
           },
           filter: {
             type: "string",
@@ -698,7 +698,7 @@ const tools = [
           max_attendees: { type: "number", description: "Maximum number of attendees allowed." },
           calendar_name: { 
             type: "string", 
-            description: "Which calendar to add the event to. Options include: 'Glee Club', 'MUS 240', 'MUS 070', 'Bowman Scholars', 'LH 100', 'General'. Defaults to 'Glee Club'."
+            description: "Which calendar to add the event to. Options include: 'Glee Club', 'MUS 070', 'Bowman Scholars', 'LH 100', 'General'. Defaults to 'Glee Club'."
           },
           is_recurring: { type: "boolean", description: "Whether this is a recurring event." },
           recurrence_type: { 
@@ -847,7 +847,7 @@ async function executeTool(toolName: string, args: any, userId: string) {
       const rawCourseCode = args.course_code || "MUS-070";
       const semester = args.semester || currentSemester;
 
-      // Normalize course code: "mus240" -> "MUS 240", "MUS-240" -> "MUS 240"
+      // Normalize course code: "mus070" -> "MUS 070", "MUS-070" -> "MUS 070"
       const normalizedCode = rawCourseCode
         .toUpperCase()
         .replace(/[-_]/g, ' ')  // Replace dashes/underscores with spaces
@@ -877,7 +877,7 @@ async function executeTool(toolName: string, args: any, userId: string) {
       }
 
       if (!course) {
-        return { success: false, message: `Course ${rawCourseCode} not found. Try using format like "MUS 240" or "MUS-070".` };
+        return { success: false, message: `Course ${rawCourseCode} not found. Try using format like "MUS 070" or "LH-100".` };
       }
 
       // Get enrollments with profiles - check for both 'enrolled' and 'active' statuses
@@ -1215,13 +1215,10 @@ Format as JSON array:
         return { success: false, message: "Access denied. Only instructors and admins can view student records." };
       }
 
-      const courseCode = args.course_code || "MUS-240";
+      const courseCode = args.course_code || "MUS-070";
       const semester = args.semester || currentSemester;
       const format = args.format || "summary";
-      const includeJournals = args.include_journals ?? (format !== "summary");
-      const includeMidterm = args.include_midterm ?? (format !== "summary");
       const includeAttendance = args.include_attendance ?? true;
-      const includeParticipation = args.include_participation ?? (format !== "summary");
 
       // Get course
       const { data: course } = await supabase
@@ -1274,77 +1271,10 @@ Format as JSON array:
           semester: semester,
         };
 
-        // 1. Get Journal Grades
-        if (includeJournals) {
-          const { data: journals } = await supabase
-            .from("mus240_journal_grades")
-            .select("journal_number, grade, feedback, graded_at, assignment_id")
-            .eq("student_id", student.user_id)
-            .order("journal_number", { ascending: true });
+        // Journal / midterm / participation breakdowns came from the
+        // retired MUS-240 tables and are no longer available.
 
-          const journalGrades = journals || [];
-          const journalTotal = journalGrades.reduce((sum, j) => sum + (j.grade || 0), 0);
-          const journalMax = journalGrades.length * 20; // Assuming 20 pts per journal
-          
-          record.journals = {
-            grades: journalGrades.map(j => ({
-              number: j.journal_number,
-              grade: j.grade,
-              max: 20,
-              percentage: j.grade ? Math.round((j.grade / 20) * 100) : 0,
-              feedback: j.feedback,
-              graded_at: j.graded_at,
-            })),
-            total_earned: journalTotal,
-            total_possible: journalMax,
-            percentage: journalMax > 0 ? Math.round((journalTotal / journalMax) * 100) : 0,
-            count_graded: journalGrades.filter(j => j.grade !== null).length,
-          };
-        }
-
-        // 2. Get Midterm Score
-        if (includeMidterm) {
-          const { data: midterm } = await supabase
-            .from("mus240_midterm_submissions")
-            .select("grade, feedback, graded_at, comprehensive_feedback, selected_essay_question")
-            .eq("user_id", student.user_id)
-            .single();
-
-          if (midterm) {
-            record.midterm = {
-              grade: midterm.grade,
-              max: 90, // Standard midterm max
-              percentage: midterm.grade ? Math.round((midterm.grade / 90) * 100) : 0,
-              feedback: midterm.feedback || midterm.comprehensive_feedback,
-              graded_at: midterm.graded_at,
-              essay_question: midterm.selected_essay_question,
-            };
-          } else {
-            record.midterm = { grade: null, submitted: false, message: "Not yet submitted" };
-          }
-        }
-
-        // 3. Get Participation
-        if (includeParticipation) {
-          const { data: participation } = await supabase
-            .from("mus240_participation_grades")
-            .select("grade, feedback, graded_at")
-            .eq("student_id", student.user_id)
-            .single();
-
-          if (participation) {
-            record.participation = {
-              grade: participation.grade,
-              max: 50, // Standard participation max
-              percentage: participation.grade ? Math.round((participation.grade / 50) * 100) : 0,
-              feedback: participation.feedback,
-            };
-          } else {
-            record.participation = { grade: null, not_graded: true };
-          }
-        }
-
-        // 4. Get Attendance
+        // 4.        // 4. Get Attendance
         if (includeAttendance) {
           const { data: attendance } = await supabase
             .from("gw_attendance_records")
@@ -1378,14 +1308,7 @@ Format as JSON array:
           .eq("student_id", student.user_id)
           .eq("gw_course_assignments.course_id", course.id);
 
-        // Filter out journals (they have their own table)
-        const { data: journalAssignmentIds } = await supabase
-          .from("mus240_journal_grades")
-          .select("assignment_id")
-          .eq("student_id", student.user_id);
-
-        const journalIds = new Set((journalAssignmentIds || []).map(j => j.assignment_id));
-        const otherSubmissions = (submissions || []).filter(s => !journalIds.has(s.gw_course_assignments?.id));
+        const otherSubmissions = submissions || [];
 
         if (otherSubmissions.length > 0) {
           record.other_assignments = otherSubmissions.map(s => ({
@@ -1504,89 +1427,13 @@ Format as JSON array:
         return { success: false, message: `No students enrolled in ${courseCode} for ${semester}.` };
       }
 
-      // Get grade summaries for all students (simplified for class view)
-      const classSummary: any[] = [];
-
-      for (const enrollment of enrollments) {
-        // Quick grade calculation for each student
-        const { data: journals } = await supabase
-          .from("mus240_journal_grades")
-          .select("grade")
-          .eq("student_id", enrollment.user_id);
-        
-        const { data: midterm } = await supabase
-          .from("mus240_midterm_submissions")
-          .select("grade")
-          .eq("user_id", enrollment.user_id)
-          .single();
-
-        const { data: participation } = await supabase
-          .from("mus240_participation_grades")
-          .select("grade")
-          .eq("student_id", enrollment.user_id)
-          .single();
-
-        const journalTotal = (journals || []).reduce((sum, j) => sum + (j.grade || 0), 0);
-        const journalMax = (journals || []).length * 20;
-        const midtermGrade = midterm?.grade || 0;
-        const participationGrade = participation?.grade || 0;
-
-        const totalEarned = journalTotal + midtermGrade + participationGrade;
-        const totalPossible = journalMax + 90 + 50; // journals + midterm + participation
-        const percentage = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
-
-        const getLetterGrade = (pct: number) => {
-          if (pct >= 95) return "A";
-          if (pct >= 90) return "A-";
-          if (pct >= 87) return "B+";
-          if (pct >= 83) return "B";
-          if (pct >= 80) return "B-";
-          if (pct >= 77) return "C+";
-          if (pct >= 73) return "C";
-          if (pct >= 70) return "C-";
-          if (pct >= 65) return "D+";
-          if (pct >= 60) return "D";
-          return "F";
-        };
-
-        classSummary.push({
-          name: enrollment.gw_profiles?.full_name,
-          email: enrollment.gw_profiles?.email,
-          voice_part: enrollment.gw_profiles?.voice_part,
-          percentage: percentage,
-          letter_grade: getLetterGrade(percentage),
-          journals_graded: (journals || []).filter(j => j.grade !== null).length,
-          has_midterm: !!midterm?.grade,
-        });
-      }
-
-      // Sort by percentage descending
-      classSummary.sort((a, b) => b.percentage - a.percentage);
-
-      const avgGrade = classSummary.length > 0
-        ? Math.round(classSummary.reduce((sum, s) => sum + s.percentage, 0) / classSummary.length)
-        : 0;
-
-      // Grade distribution
-      const distribution = {
-        A: classSummary.filter(s => s.percentage >= 90).length,
-        B: classSummary.filter(s => s.percentage >= 80 && s.percentage < 90).length,
-        C: classSummary.filter(s => s.percentage >= 70 && s.percentage < 80).length,
-        D: classSummary.filter(s => s.percentage >= 60 && s.percentage < 70).length,
-        F: classSummary.filter(s => s.percentage < 60).length,
-      };
-
+      // Per-student grade totals came from the retired MUS-240 journal /
+      // midterm / participation tables. There is no replacement source yet.
       return {
-        success: true,
-        course: course.course_code,
-        semester: semester,
-        student_count: classSummary.length,
-        class_average: avgGrade,
-        distribution: distribution,
-        students: classSummary,
-        message: `**${course.course_code} Class Grades** (${semester})\n${classSummary.length} students, ${avgGrade}% average\n\nGrade Distribution: A=${distribution.A}, B=${distribution.B}, C=${distribution.C}, D=${distribution.D}, F=${distribution.F}`,
-        action: "show_class_grades",
+        success: false,
+        message: `Class grade summaries are unavailable: they were computed from the retired MUS-240 grade tables. Use the course gradebook instead.`,
       };
+
     }
 
     case "send_student_email": {
@@ -1601,7 +1448,7 @@ Format as JSON array:
         return { success: false, message: "Access denied. Only instructors and admins can send emails to students." };
       }
 
-      const courseCode = args.course_code || "MUS-240";
+      const courseCode = args.course_code || "MUS-070";
       const studentNameOrGroup = (args.student_name || "").toLowerCase().trim();
       const includeGrade = args.include_grade ?? false;
 
@@ -1646,68 +1493,16 @@ Format as JSON array:
           threshold = letterToThreshold[gradeMatch[1].toLowerCase()] || 70;
         }
 
-        // Get all enrolled students with grades
-        const { data: enrollments } = await supabase
-          .from("gw_course_enrollments")
-          .select(`user_id, gw_profiles!inner(user_id, full_name, email)`)
-          .eq("course_id", course.id)
-          .eq("enrollment_status", "active");
-
-        for (const e of enrollments || []) {
-          // Calculate quick grade
-          const { data: journals } = await supabase.from("mus240_journal_grades").select("grade").eq("student_id", e.user_id);
-          const { data: midterm } = await supabase.from("mus240_midterm_submissions").select("grade").eq("user_id", e.user_id).single();
-          const { data: participation } = await supabase.from("mus240_participation_grades").select("grade").eq("student_id", e.user_id).single();
-
-          const journalTotal = (journals || []).reduce((sum, j) => sum + (j.grade || 0), 0);
-          const journalMax = (journals || []).length * 20;
-          const totalEarned = journalTotal + (midterm?.grade || 0) + (participation?.grade || 0);
-          const totalPossible = journalMax + 90 + 50;
-          const percentage = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
-
-          if (percentage < threshold) {
-            recipients.push({
-              user_id: e.user_id,
-              email: e.gw_profiles?.email || "",
-              full_name: e.gw_profiles?.full_name || "",
-              percentage: percentage,
-              letter_grade: percentage >= 90 ? "A" : percentage >= 80 ? "B" : percentage >= 70 ? "C" : percentage >= 60 ? "D" : "F",
-            });
-          }
-        }
+        return {
+          success: false,
+          message: `Selecting recipients by grade is unavailable: those totals came from the retired MUS-240 grade tables.`,
+        };
 
       } else if (studentNameOrGroup.includes("missing") || studentNameOrGroup.includes("haven't submitted") || studentNameOrGroup.includes("no journal")) {
-        // Students missing journals or assignments
-        const { data: enrollments } = await supabase
-          .from("gw_course_enrollments")
-          .select(`user_id, gw_profiles!inner(user_id, full_name, email)`)
-          .eq("course_id", course.id)
-          .eq("enrollment_status", "active");
-
-        // Get count of published journal assignments
-        const { data: journalAssignments } = await supabase
-          .from("gw_course_assignments")
-          .select("id")
-          .eq("course_id", course.id)
-          .eq("is_published", true)
-          .ilike("title", "%journal%");
-
-        const expectedJournals = journalAssignments?.length || 4;
-
-        for (const e of enrollments || []) {
-          const { data: journals } = await supabase
-            .from("mus240_journal_grades")
-            .select("journal_number")
-            .eq("student_id", e.user_id);
-
-          if ((journals?.length || 0) < expectedJournals) {
-            recipients.push({
-              user_id: e.user_id,
-              email: e.gw_profiles?.email || "",
-              full_name: e.gw_profiles?.full_name || "",
-            });
-          }
-        }
+        return {
+          success: false,
+          message: `Selecting recipients by missing journals is unavailable: listening journals were retired with MUS-240.`,
+        };
 
       } else {
         // Individual student lookup (fuzzy matching)
@@ -1755,29 +1550,9 @@ Format as JSON array:
           .replace(/\{percentage\}/gi, recipient.percentage?.toString() || "N/A");
 
         // Add grade summary if requested
-        let gradeSummary = "";
-        if (includeGrade) {
-          // Quick grade calc
-          const { data: journals } = await supabase.from("mus240_journal_grades").select("grade").eq("student_id", recipient.user_id);
-          const { data: midterm } = await supabase.from("mus240_midterm_submissions").select("grade").eq("user_id", recipient.user_id).single();
-          const { data: participation } = await supabase.from("mus240_participation_grades").select("grade").eq("student_id", recipient.user_id).single();
-
-          const journalTotal = (journals || []).reduce((sum, j) => sum + (j.grade || 0), 0);
-          const journalMax = (journals || []).length * 20;
-          const totalEarned = journalTotal + (midterm?.grade || 0) + (participation?.grade || 0);
-          const totalPossible = journalMax + 90 + 50;
-          const percentage = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
-
-          gradeSummary = `
-            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin: 15px 0;">
-              <h3 style="margin: 0 0 10px 0; color: #1a1a2e;">Your Current Grade Summary</h3>
-              <p><strong>Overall:</strong> ${percentage}%</p>
-              <p><strong>Journals:</strong> ${journalTotal}/${journalMax} pts</p>
-              <p><strong>Midterm:</strong> ${midterm?.grade || 'Not submitted'}${midterm?.grade ? '/90 pts' : ''}</p>
-              <p><strong>Participation:</strong> ${participation?.grade || 'Not graded'}${participation?.grade ? '/50 pts' : ''}</p>
-            </div>
-          `;
-        }
+        // Grade summaries in outbound email came from the retired MUS-240
+        // tables; send the message without one.
+        const gradeSummary = "";
 
         const orgName = await getOrgName();
 
@@ -1853,7 +1628,7 @@ Format as JSON array:
     
     case "get_my_grade": {
       // Get the current user's own grade
-      const courseCode = args.course_code || "MUS-240";
+      const courseCode = args.course_code || "MUS-070";
       const format = args.format || "summary";
 
       // Get user profile
@@ -1871,9 +1646,7 @@ Format as JSON array:
       let courseQuery = courseCode.toLowerCase().replace(/-/g, " ").replace(/\s+/g, " ").trim();
       
       // Handle common aliases
-      if (courseQuery.includes("survey") || courseQuery.includes("african american")) {
-        courseQuery = "MUS 240";
-      } else if (courseQuery.includes("glee club") && !courseQuery.includes("101") && !courseQuery.includes("000")) {
+      if (courseQuery.includes("glee club") && !courseQuery.includes("101") && !courseQuery.includes("000")) {
         courseQuery = "MUS 070";
       } else if (courseQuery.includes("glee") && courseQuery.includes("academy")) {
         // Search all enrolled courses
@@ -1911,7 +1684,7 @@ Format as JSON array:
           const courseList = enrollments.map(e => e.gw_courses?.course_code).filter(Boolean).join(", ");
           return { 
             success: true, 
-            message: `You are enrolled in: ${courseList}. Please specify which course you want to check. For example, "What's my grade in MUS-240?"` 
+            message: `You are enrolled in: ${courseList}. Please specify which course you want to check. For example, "What's my grade in Glee Club?"` 
           };
         }
 
@@ -1924,44 +1697,8 @@ Format as JSON array:
         course: course.course_code,
       };
 
-      // 1. Get Journal Grades
-      const { data: journals } = await supabase
-        .from("mus240_journal_grades")
-        .select("journal_number, grade, feedback")
-        .eq("student_id", userId)
-        .order("journal_number", { ascending: true });
-
-      const journalTotal = (journals || []).reduce((sum, j) => sum + (j.grade || 0), 0);
-      const journalMax = (journals || []).length * 20;
-      
-      record.journals = {
-        total_earned: journalTotal,
-        total_possible: journalMax,
-        count_graded: (journals || []).filter(j => j.grade !== null).length,
-        grades: format === "detailed" ? journals : undefined,
-      };
-
-      // 2. Get Midterm Score
-      const { data: midterm } = await supabase
-        .from("mus240_midterm_submissions")
-        .select("grade, feedback")
-        .eq("user_id", userId)
-        .single();
-
-      record.midterm = midterm?.grade 
-        ? { grade: midterm.grade, max: 90 }
-        : { submitted: false };
-
-      // 3. Get Participation
-      const { data: participation } = await supabase
-        .from("mus240_participation_grades")
-        .select("grade")
-        .eq("student_id", userId)
-        .single();
-
-      record.participation = participation?.grade 
-        ? { grade: participation.grade, max: 50 }
-        : { not_graded: true };
+      // Journal / midterm / participation breakdowns came from the retired
+      // MUS-240 tables; attendance below is still authoritative.
 
       // 4. Get Attendance
       const { data: attendance } = await supabase
@@ -2174,7 +1911,6 @@ Format as JSON array:
       const courseCode = args.course_code.toLowerCase().replace(/-/g, " ");
       let courseQuery = courseCode;
       if (courseCode.includes("glee club") || courseCode === "glee") courseQuery = "MUS 070";
-      if (courseCode.includes("survey") || courseCode.includes("african american")) courseQuery = "MUS 240";
 
       const { data: course } = await supabase
         .from("gw_courses")
@@ -2184,7 +1920,7 @@ Format as JSON array:
         .single();
 
       if (!course) {
-        return { success: false, message: `Could not find course "${args.course_code}". Try "MUS-240" or "Glee Club".` };
+        return { success: false, message: `Could not find course "${args.course_code}". Try "MUS-070" or "Glee Club".` };
       }
 
       // Find the class session for that date
@@ -2384,20 +2120,11 @@ Format as JSON array:
 
       const submissionMap = new Map(submissions?.map(s => [s.assignment_id, s]) || []);
 
-      // Also check journal grades
-      const { data: journalGrades } = await supabase
-        .from("mus240_journal_grades")
-        .select("assignment_id, grade")
-        .eq("student_id", userId);
-
-      const journalMap = new Map(journalGrades?.map(j => [j.assignment_id, j]) || []);
-
       // Build assignment list with status
       const assignmentList = assignments.map(a => {
         const submission = submissionMap.get(a.id);
-        const journal = journalMap.get(a.id);
-        const isSubmitted = !!submission || !!journal;
-        const grade = submission?.grade || journal?.grade;
+        const isSubmitted = !!submission;
+        const grade = submission?.grade;
         const dueDate = new Date(a.due_date);
         const isOverdue = dueDate < now && !isSubmitted;
 
@@ -3298,9 +3025,7 @@ Format as JSON array:
       let courseCode = "";
       
       // Mapping logic
-      if (courseName.includes("240") || courseName.includes("survey") || courseName.includes("african american music") || courseName.includes("african-american music")) {
-        courseCode = "MUS 240";
-      } else if (courseName.includes("070") || courseName.includes("glee club") || courseName.includes("glee") && !courseName.includes("101") && !courseName.includes("000")) {
+      if (courseName.includes("070") || courseName.includes("glee club") || courseName.includes("glee") && !courseName.includes("101") && !courseName.includes("000")) {
         courseCode = "MUS 070";
       } else if (courseName.includes("210") || courseName.includes("conducting") || courseName.includes("choral conducting")) {
         courseCode = "MUS 210";
@@ -3316,7 +3041,7 @@ Format as JSON array:
         // Try to extract course code directly
         courseCode = courseName.replace(/-/g, " ").toUpperCase();
       } else {
-        return { success: false, message: `Could not identify course "${args.course_name}". Try saying the course code like "MUS-240" or "Glee Club".` };
+        return { success: false, message: `Could not identify course "${args.course_name}". Try saying the course code like "MUS-070" or "Glee Club".` };
       }
 
       console.log(`Looking for course: ${courseCode}`);
@@ -3331,7 +3056,7 @@ Format as JSON array:
 
       if (courseError || !course) {
         console.error("Course lookup error:", courseError);
-        return { success: false, message: `Course "${courseCode}" not found. Available courses: MUS-070 (Glee Club), MUS-240, MUS-210, MUS-001, GLEE-101, GLEE-000, LH-100.` };
+        return { success: false, message: `Course "${courseCode}" not found. Available courses: MUS-070 (Glee Club), MUS-210, MUS-001, GLEE-101, GLEE-000, LH-100.` };
       }
 
       console.log(`Found course: ${course.course_code} - ${course.title}`);
@@ -3713,19 +3438,19 @@ ${buildGleeworldKnowledge(orgName)}
 
 ### STUDENT SELF-SERVICE (All Students):
 - **get_my_grade**: Check your own grade in any enrolled course
-  - Examples: "What is my grade?", "How am I doing in MUS-240?", "What's my grade in Survey of African American Music?"
+  - Examples: "What is my grade?", "How am I doing in Glee Club?"
   
 - **get_my_attendance**: View your attendance record
   - Examples: "How many classes have I missed?", "What is my attendance?", "Show my attendance record"
   
 - **file_absence_excuse**: Submit an excuse for a missed or upcoming absence
-  - Examples: "I need to file an excuse for missing class yesterday", "I was sick on Monday and missed MUS-240", "I need to miss Glee Club tomorrow for a doctor's appointment"
+  - Examples: "I need to file an excuse for missing class yesterday", "I was sick on Monday and missed Glee Club", "I need to miss Glee Club tomorrow for a doctor's appointment"
   
 - **get_my_assignments**: View your assignments, due dates, and submission status
   - Examples: "What assignment is due next?", "Am I up-to-date on my assignments?", "What assignments are due in Survey of African American Music?", "Do I have any assignments in Glee Academy?"
   
 - **get_next_rehearsal**: Find out when and where the next rehearsal is
-  - Examples: "When is the next rehearsal?", "Where does the Glee Club rehearse?", "When is the next MUS-240 class?"
+  - Examples: "When is the next rehearsal?", "Where does the Glee Club rehearse?", "When is the next Bowman Scholars class?"
   
 - **send_message_to_instructor**: Send an email or text to instructors or exec board members
   - Examples: "Send the director an email about my grade", "Text the Glee Club president", "Email the secretary about my absence", "Message the treasurer about dues"
@@ -3746,7 +3471,7 @@ ${buildGleeworldKnowledge(orgName)}
 - Answer general questions about GleeWorld features and how to use the site
 
 ### ATTENDANCE MANAGEMENT (Admin/Exec Only):
-- **take_attendance**: Start taking attendance for any course by displaying the QR code. Say "take attendance in MUS-240" or "take attendance for Glee Club"
+- **take_attendance**: Start taking attendance for any course by displaying the QR code. Say "take attendance in Glee Club" or "take attendance for Bowman Scholars"
 
 ### CALENDAR & EVENT MANAGEMENT (Admin/Exec Only):
 - **create_calendar_event**: Create calendar events with full control over:
@@ -3771,12 +3496,12 @@ ${buildGleeworldKnowledge(orgName)}
   - Also returns class-wide grade reports if no student specified
   
   Examples:
-  - "What grade is Kevin Johnson getting in MUS-240?"
+  - "What grade is a student getting in Glee Club?"
   - "List Kevin's transcripts"
   - "Show me Maya Brown's grade breakdown"
   - "Who has an A in my class?"
   - "Which students are failing?"
-  - "Get the class grades for MUS-240"
+  - "Get the class grades for Glee Club"
 
 - **send_student_email**: Email students directly from the assistant
   - Individual: "Email Kevin Johnson about his missing journal"

@@ -219,7 +219,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
         setAssignments(mappedAssignments);
 
-        // Mock current module data - in production, fetch from mus240_module_settings or similar
+        // Mock current module data — replace with a real gw_course_modules lookup
         if (mappedAssignments.length > 0) {
           setCurrentModule({
             id: '1',

@@ -16,13 +16,27 @@ import { AwsClient } from 'https://esm.sh/aws4fetch@1.0.20';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000';
 const SRK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
+// Two naming schemes are in play: this function was written against
+// SPACES_KEY/SPACES_SECRET, while the credentials on the droplet are stored
+// as SPACES_ACCESS_KEY_ID/SPACES_SECRET_ACCESS_KEY (the names the AWS SDK
+// uses). Only the latter pair was ever actually set, so this silently signed
+// with empty credentials against an empty bucket name. Accept either.
 function spacesConfig() {
   return {
-    key: Deno.env.get('SPACES_KEY') ?? '',
-    secret: Deno.env.get('SPACES_SECRET') ?? '',
+    key: Deno.env.get('SPACES_KEY') ?? Deno.env.get('SPACES_ACCESS_KEY_ID') ?? '',
+    secret: Deno.env.get('SPACES_SECRET') ?? Deno.env.get('SPACES_SECRET_ACCESS_KEY') ?? '',
     bucket: Deno.env.get('SPACES_BUCKET') ?? '',
     region: Deno.env.get('SPACES_REGION') ?? 'nyc3',
   };
+}
+
+// Fail loudly rather than minting a URL signed with empty credentials, which
+// returns an opaque 403 from Spaces long after the real cause.
+function assertSpacesConfigured(cfg: ReturnType<typeof spacesConfig>) {
+  const missing = (['key', 'secret', 'bucket'] as const).filter((k) => !cfg[k]);
+  if (missing.length) {
+    throw new Error(`Spaces not configured: missing ${missing.join(', ')}`);
+  }
 }
 
 async function pg(path: string, init?: RequestInit) {
@@ -57,6 +71,7 @@ export async function handler(req: Request): Promise<Response> {
     if (!prod?.digital_object_key) return new Response('no file', { status: 404 });
 
     const SPACES = spacesConfig();
+    assertSpacesConfigured(SPACES);
     const ttl = 300; // 5 min short-TTL presigned link — never a permanent public URL
     const endpoint = `https://${SPACES.bucket}.${SPACES.region}.digitaloceanspaces.com/${prod.digital_object_key}`;
     const aws = new AwsClient({ accessKeyId: SPACES.key, secretAccessKey: SPACES.secret, service: 's3', region: SPACES.region });

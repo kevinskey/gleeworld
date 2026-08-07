@@ -25,7 +25,6 @@ import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
 import { CommunicationsCard } from "@/components/dashboard/CommunicationsCard";
 import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
-import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
 import { AnnouncementsDisplay } from "@/components/dashboard/AnnouncementsDisplay";
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, ChevronRight, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save, Globe, Users, Sun, Moon, Camera } from "lucide-react";

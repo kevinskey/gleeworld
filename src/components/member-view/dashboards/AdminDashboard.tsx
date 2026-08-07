@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CommunicationCenterModule } from "@/components/admin/CommunicationCenterModule";
 import FeesAdminPage from "@/pages/dashboard/FeesAdminPage";
-import { StudentConductorDashboard } from "@/pages/StudentConductorDashboard";
+import { StudentConductorDashboard } from "@/components/musical-leadership/StudentConductorDashboard";
 import GraduatesAdmin from "@/pages/admin/GraduatesAdmin";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -426,7 +426,7 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
         {/* Student Conductor Tab */}
         <TabsContent value="conductor" className="mt-6">
-          <StudentConductorDashboard />
+          <StudentConductorDashboard user={user} />
         </TabsContent>
 
         {/* Graduates Admin Tab */}
