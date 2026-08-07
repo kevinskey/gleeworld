@@ -5,9 +5,11 @@ import { Button } from '@/components/ui/button';
 import { useSpokenText } from '@/hooks/useChapterAudio';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
+import { readingsFromCache } from '@/lib/liturgy/cachedReadings';
 
-// Daily Catholic readings viewer — proxies Universalis via the `usccb-readings`
-// edge function and renders the sanitized reading blocks in a bottom sheet.
+// Daily Catholic readings viewer. Reads the local USCCB table first and falls
+// back to proxying Universalis via the `usccb-readings` edge function, then
+// renders the sanitized reading blocks in a bottom sheet.
 // Shared by the Liturgy Planner and the Command Center's Liturgical Day card.
 
 export interface ReadingBlock { heading: string; citation: string | null; summary?: string | null; html: string }
@@ -79,6 +81,22 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
     setPending(false);
     setData(null);
     (async () => {
+      // The local USCCB table first: Universalis only publishes about a week
+      // either side of today, so anything further out reported "not posted
+      // yet" even when the readings were sitting in the database.
+      const cached = await readingsFromCache(isoDate);
+      if (cancelled) return;
+      if (cached) {
+        setData({
+          date: isoDate,
+          sourceUrl: cached.sourceUrl || sourceUrl,
+          liturgicalTitle: cached.liturgicalTitle,
+          readings: cached.blocks,
+        });
+        setLoading(false);
+        return;
+      }
+
       const { data: resp, error: fnErr } = await supabase.functions.invoke('usccb-readings', {
         body: { date: isoDate },
       });
