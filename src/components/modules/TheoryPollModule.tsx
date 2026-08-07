@@ -23,7 +23,7 @@ export const TheoryPollModule = () => {
   const [polls, setPolls] = useState<PollData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const { isTA, loading: taLoading } = useCourseTA('MUS240');
+  const { isTA, loading: taLoading } = useCourseTA();
 
   useEffect(() => {
     checkAdminStatus();

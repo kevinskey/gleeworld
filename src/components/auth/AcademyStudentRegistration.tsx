@@ -52,9 +52,7 @@ export const AcademyStudentRegistration = () => {
 
     try {
       // Determine the redirect URL based on course
-      const redirectUrl = courseParam === 'MUS 240' 
-        ? `${window.location.origin}/mus-240`
-        : `${window.location.origin}/glee-academy`;
+      const redirectUrl = `${window.location.origin}/glee-academy`;
 
       // Sign up the user with academy registration metadata
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
@@ -84,11 +82,7 @@ export const AcademyStudentRegistration = () => {
       
       // Redirect to the appropriate course page after a short delay
       setTimeout(() => {
-        if (courseParam === 'MUS 240') {
-          navigate('/mus-240');
-        } else {
-          navigate('/glee-academy');
-        }
+        navigate('/glee-academy');
       }, 2000);
 
     } catch (error: any) {

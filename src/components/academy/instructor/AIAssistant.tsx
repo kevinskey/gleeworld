@@ -61,7 +61,7 @@ export const AIAssistant = () => {
     setResponse('');
 
     try {
-      const { data, error } = await supabase.functions.invoke('mus240-instructor-assistant', {
+      const { data, error } = await supabase.functions.invoke('instructor-assistant', {
         body: { task, prompt }
       });
 

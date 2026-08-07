@@ -132,7 +132,6 @@ export const UnifiedDashboard = () => {
     if (path === '/dashboard/member') return 'member';
     if (path === '/dashboard/student') return 'student';
     if (path === '/dashboard/fan') return 'fan';
-    if (path === '/dashboard/mus240') return 'mus240';
     if (path === '/dashboard/public') return 'public';
     // /control-center is the super-admin landing — show the dedicated dashboard
     if (path === '/control-center') return 'control';
@@ -284,35 +283,6 @@ export const UnifiedDashboard = () => {
     }
     // Non-admin somehow landed here — bounce to their own dashboard.
     return <div className="p-8 text-center text-muted-foreground">Control Center is super-admin only.</div>;
-  }
-
-  // MUS240 view for super admins
-  if (viewMode === 'mus240') {
-    if (profile?.is_super_admin) {
-      return <div className="min-h-screen">
-          <ConcertTicketBanner />
-          <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
-            <SuperAdminDashboard user={{
-            id: profile.user_id,
-            email: profile.email || '',
-            full_name: profile.full_name || '',
-            role: profile.role || 'super-admin',
-            created_at: new Date().toISOString()
-          }} />
-            <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded" />}>
-              <MemberNavigation user={{
-              id: profile.user_id,
-              email: profile.email,
-              full_name: profile.full_name,
-              role: profile.role,
-              is_admin: profile.is_admin,
-              is_super_admin: profile.is_super_admin
-            }} />
-            </Suspense>
-          </div>
-        </div>;
-    }
-    return <div className="p-8 text-center">Access denied: Super Admin only</div>;
   }
 
   // Simulated member view

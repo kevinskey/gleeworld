@@ -39,19 +39,6 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
     }
   });
 
-  // Fetch resources from mus240_module_resources (keyed by week-N)
-  const { data: mus240Resources } = useQuery({
-    queryKey: ['mus240-module-resources', courseId],
-    queryFn: async () => {
-      const { data, error } = await supabase.
-      from('mus240_module_resources').
-      select('*').
-      order('display_order', { ascending: true });
-      if (error) throw error;
-      return data || [];
-    }
-  });
-
   // Fetch resources from gw_course_module_resources
   const { data: gwResources } = useQuery({
     queryKey: ['gw-course-module-resources', courseId],
@@ -98,12 +85,6 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
   // Build a map of resources per week
   const resourcesByWeek = React.useMemo(() => {
     const map: Record<string, any[]> = {};
-    // mus240 resources use module_id like "week-1"
-    (mus240Resources || []).forEach((r) => {
-      const key = r.module_id;
-      if (!map[key]) map[key] = [];
-      map[key].push(r);
-    });
     // gw resources use module_id (UUID) – map them to week number via modules
     (gwResources || []).forEach((r) => {
       const mod = modules?.find((m) => m.id === r.module_id);
@@ -114,7 +95,7 @@ export const ModulesSection: React.FC<ModulesSectionProps> = ({ courseId }) => {
       }
     });
     return map;
-  }, [mus240Resources, gwResources, modules]);
+  }, [gwResources, modules]);
 
   const today = new Date();
 

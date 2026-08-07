@@ -49,16 +49,20 @@ export function useStudentDiscussionList(courseId: string) {
   return useQuery({
     queryKey: ['student-discussion-list', courseId],
     queryFn: async () => {
-      // Get enrolled students from mus240_enrollments
+      // Enrolled students for this course. The old implementation read the
+      // retired mus240_enrollments table and ignored courseId entirely, so it
+      // returned every MUS-240 student regardless of which discussion board
+      // was being viewed.
       const enrollmentQuery = await supabase
-        .from('mus240_enrollments')
-        .select('student_id')
-        .eq('enrollment_status', 'active');
+        .from('gw_course_enrollments')
+        .select('user_id')
+        .eq('course_id', courseId)
+        .eq('enrollment_status', 'enrolled');
       
       if (enrollmentQuery.error) throw enrollmentQuery.error;
       const enrollments = enrollmentQuery.data || [];
 
-      const studentIds = enrollments.map((e) => e.student_id) || [];
+      const studentIds = enrollments.map((e) => e.user_id).filter(Boolean) || [];
       if (studentIds.length === 0) return [];
 
       // Get profiles

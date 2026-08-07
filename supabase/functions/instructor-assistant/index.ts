@@ -60,7 +60,7 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error('Error in mus240-instructor-assistant:', error);
+    console.error('Error in instructor-assistant:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
@@ -74,7 +74,7 @@ serve(async (req) => {
 async function generateMusicTheoryPoll(prompt: string, apiKey: string) {
   console.log('Generating poll with OpenAI for prompt:', prompt);
   
-  const systemPrompt = `You are a music theory instructor creating educational polls for MUS 240 (African American Music). 
+  const systemPrompt = `You are a music instructor creating educational polls for a college course. The prompt names the course and topic.
 
 Create a structured quiz based on the user's prompt. Return your response as a valid JSON object with the following structure:
 

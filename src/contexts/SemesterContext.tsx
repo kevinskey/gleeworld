@@ -9,18 +9,18 @@ export interface Semester {
   isActive: boolean;
 }
 
-interface Mus240SemesterContextType {
+interface SemesterContextType {
   currentSemester: string;
   setCurrentSemester: (semester: string) => void;
   availableSemesters: Semester[];
   isLoading: boolean;
 }
 
-const Mus240SemesterContext = createContext<Mus240SemesterContextType | undefined>(undefined);
+const SemesterContext = createContext<SemesterContextType | undefined>(undefined);
 
-const SEMESTER_STORAGE_KEY = 'mus240_selected_semester';
+const SEMESTER_STORAGE_KEY = 'gw_selected_semester';
 
-export const Mus240SemesterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const SemesterProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [currentSemester, setCurrentSemesterState] = useState<string>('');
   const [availableSemesters, setAvailableSemesters] = useState<Semester[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,7 +75,7 @@ export const Mus240SemesterProvider: React.FC<{ children: ReactNode }> = ({ chil
   };
 
   return (
-    <Mus240SemesterContext.Provider
+    <SemesterContext.Provider
       value={{
         currentSemester,
         setCurrentSemester,
@@ -84,21 +84,21 @@ export const Mus240SemesterProvider: React.FC<{ children: ReactNode }> = ({ chil
       }}
     >
       {children}
-    </Mus240SemesterContext.Provider>
+    </SemesterContext.Provider>
   );
 };
 
-export const useMus240Semester = () => {
-  const context = useContext(Mus240SemesterContext);
+export const useSemester = () => {
+  const context = useContext(SemesterContext);
   if (context === undefined) {
-    throw new Error('useMus240Semester must be used within a Mus240SemesterProvider');
+    throw new Error('useSemester must be used within a SemesterProvider');
   }
   return context;
 };
 
 // Hook for components that may be outside the provider (uses default)
-export const useMus240SemesterSafe = () => {
-  const context = useContext(Mus240SemesterContext);
+export const useSemesterSafe = () => {
+  const context = useContext(SemesterContext);
   if (context === undefined) {
     return {
       currentSemester: '',

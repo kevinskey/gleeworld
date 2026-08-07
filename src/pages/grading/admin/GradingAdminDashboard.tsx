@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Plus, Settings } from 'lucide-react';
 import { CreateCourseDialog } from '@/components/grading/admin/CreateCourseDialog';
 import { CourseManagementTable } from '@/components/grading/admin/CourseManagementTable';
-import { MigrationControl } from '@/components/grading/admin/MigrationControl';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const GradingAdminDashboard: React.FC = () => {
@@ -62,7 +61,6 @@ const GradingAdminDashboard: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="migration" className="space-y-6 mt-6">
-            <MigrationControl />
           </TabsContent>
         </Tabs>
 

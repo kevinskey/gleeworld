@@ -21,19 +21,16 @@ import { CalendarWithAttendance } from './CalendarWithAttendance';
 import { CourseVideoLibrary } from '@/components/course/CourseVideoLibrary';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseTestsSection } from './CourseTestsSection';
-import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { useSemesterSafe } from '@/contexts/SemesterContext';
 import Messenger from '@/pages/Messenger';
-import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 import { StudentSyllabusView } from './syllabus/StudentSyllabusView';
 import { CourseHandbook } from './handbook/CourseHandbook';
 import { StudentDossierHome } from './StudentDossierHome';
-import { TeachingFirstHome } from './TeachingFirstHome';
 import { CoursePracticeBar } from './CoursePracticeBar';
 import { CourseModules } from './CourseModules';
 import { CourseGroups } from './groups/CourseGroups';
 import { ClassSessionJournals } from './journals/ClassSessionJournals';
 import { JournalArchives } from './journals/JournalArchives';
-import { Mus240ResourcesTab } from './Mus240ResourcesTab';
 import { DiscussionsSection } from '@/components/course/DiscussionsSection';
 import { CoursePlaylistPlayer } from '@/components/course/CoursePlaylistPlayer';
 import { ClassNotesManager } from '@/components/course/ClassNotesManager';
@@ -93,7 +90,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   } = useAuth();
   const {
     currentSemester
-  } = useMus240SemesterSafe();
+  } = useSemesterSafe();
 
   // Fetch teaching assistants for this course
   const {
@@ -190,17 +187,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
         data: profile
       } = await supabase.from('gw_profiles').select('id, is_admin, is_super_admin, role').eq('user_id', user.id).maybeSingle();
 
-      // Treat course instructors/TAs as "admin" for the purpose of bypassing onboarding redirects
-      // (this does NOT grant global admin privileges; it only affects this page's client-side navigation)
-      let hasCourseStaffAccess = false;
-      if (course.courseCode === 'MUS 240' || course.courseCode === 'MUS240') {
-        const normalizedCode = course.courseCode.replace(' ', '');
-        const {
-          data: taRow
-        } = await supabase.from('course_teaching_assistants').select('id').eq('course_code', normalizedCode).eq('user_id', user.id).eq('is_active', true).maybeSingle();
-        hasCourseStaffAccess = !!taRow || profile?.role === 'instructor';
-      }
-      const adminLikeAccess = !!(profile?.is_admin || profile?.is_super_admin || hasCourseStaffAccess);
+      const adminLikeAccess = !!(profile?.is_admin || profile?.is_super_admin);
       setIsAdmin(adminLikeAccess);
       setIsExecutiveBoard(profile?.is_admin || profile?.is_super_admin || false);
 
@@ -211,54 +198,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
           setEnrollmentLoading(false);
           return;
         }
-      }
-
-      // For MUS 240, accept enrollment from either mus240_enrollments (semester-based)
-      // OR gw_course_enrollments (user_id OR student_profile_id), OR course staff.
-      if (course.id === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37' || course.courseCode === 'MUS 240') {
-        // 1) legacy mus240_enrollments
-        const {
-          data: mus240Enrollment
-        } = await supabase.from('mus240_enrollments').select('id').eq('student_id', user.id).eq('semester', currentSemester).eq('enrollment_status', 'enrolled').maybeSingle();
-
-        // 2) gw_course_enrollments
-        const {
-          data: gwCourseData
-        } = await supabase.from('gw_courses').select('id').or('course_code.ilike.%MUS 240%,course_code.ilike.%MUS-240%,course_code.ilike.%MUS240%,course_code.eq.MUS 240,course_code.eq.MUS240').limit(1).maybeSingle();
-        let gwEnrolled = false;
-        if (gwCourseData?.id) {
-          const {
-            data: gwEnrollmentByUserId
-          } = await supabase.from('gw_course_enrollments').select('id').eq('course_id', gwCourseData.id).eq('user_id', user.id).eq('enrollment_status', 'enrolled').maybeSingle();
-          if (gwEnrollmentByUserId) {
-            gwEnrolled = true;
-          } else if (profile?.id) {
-            const {
-              data: gwEnrollmentByProfileId
-            } = await supabase.from('gw_course_enrollments').select('id').eq('course_id', gwCourseData.id).eq('student_profile_id', profile.id).eq('enrollment_status', 'enrolled').maybeSingle();
-            gwEnrolled = !!gwEnrollmentByProfileId;
-          }
-        }
-        const enrolledValue = !!mus240Enrollment || gwEnrolled || adminLikeAccess;
-        console.log('[UnifiedCoursePage] MUS240 enrollment check', {
-          userId: user.id,
-          currentSemester,
-          courseId: course.id,
-          courseCode: course.courseCode,
-          profileRole: profile?.role,
-          profileId: profile?.id,
-          isAdminFlag: profile?.is_admin,
-          isSuperAdminFlag: profile?.is_super_admin,
-          hasCourseStaffAccess,
-          adminLikeAccess,
-          hasLegacyEnrollment: !!mus240Enrollment,
-          hasGwCourse: !!gwCourseData?.id,
-          gwEnrolled,
-          enrolledValue
-        });
-        setIsEnrolled(enrolledValue);
-        setEnrollmentLoading(false);
-        return;
       }
 
       // Check enrollment for other courses
@@ -350,6 +289,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   // orbs, and hero-chip gradient via getCourseTheme(). MUS 070's
   // deep-sea look is preserved verbatim in the theme registry — no
   // more one-off special-casing here.
+  // The Lyke House courses are stored as LH100 / LH101 (no separator), but
+  // this page historically compared against the spaced form. Normalize so
+  // either spelling matches.
+  const isLH100 = (course.courseCode || '').replace(/[\s-]/g, '').toUpperCase() === 'LH100';
   const theme = getCourseTheme(course.courseCode);
 
   return <div className="academy-neutral">
@@ -457,7 +400,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
               }}>
                 <ScrollArea className="w-full whitespace-nowrap pb-2">
                   <TabsList className="inline-flex w-max gap-1 h-auto bg-muted/50 p-1">
-                    {course.courseCode === 'LH 100' ? <>
+                    {isLH100 ? <>
                         <TabsTrigger value="home" className="text-xs px-3 py-2"><Home className="h-3 w-3 mr-1" />Home</TabsTrigger>
                         <TabsTrigger value="modules" className="text-xs px-3 py-2"><FileText className="h-3 w-3 mr-1" />Modules</TabsTrigger>
                         <TabsTrigger value="groups" className="text-xs px-3 py-2"><Users className="h-3 w-3 mr-1" />Groups</TabsTrigger>
@@ -529,11 +472,9 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
 
             {/* Content Sections */}
-            {activeTab === 'home' && (course.courseCode === 'MUS 240'
-              ? <TeachingFirstHome courseId={course.id} isAdmin={isAdmin} />
-              : (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'LH 100')
+            {activeTab === 'home' && ((course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || isLH100)
                 ? <div className="space-y-6">
-                    {course.courseCode === 'LH 100' && (
+                    {isLH100 && (
                       <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}>
                         <LiturgicalPlanner isAdmin={isAdmin} />
                       </React.Suspense>
@@ -568,11 +509,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
             {activeTab === 'groups' && <CourseGroups courseId={course.id} courseName={course.title} />}
 
-            {activeTab === 'planner' && course.courseCode === 'LH 100' && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}>
+            {activeTab === 'planner' && isLH100 && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}>
                 <LiturgicalPlanner isAdmin={isAdmin} />
               </React.Suspense>}
 
-            {activeTab === 'photo-gallery' && course.courseCode === 'LH 100' && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Photo Gallery...</CardContent></Card>}>
+            {activeTab === 'photo-gallery' && isLH100 && <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Photo Gallery...</CardContent></Card>}>
                 <PhotoGallery />
               </React.Suspense>}
 
@@ -591,9 +532,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
 
             {/* Resources Tab - Available for all courses */}
-            {activeTab === 'resources' && (course.courseCode === 'MUS 240' ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading resources...</CardContent></Card>}>
-                  <Mus240ResourcesTab isAdmin={isAdmin} />
-                </React.Suspense> : course.courseCode === 'MUS 210' ? <Card>
+            {activeTab === 'resources' && (course.courseCode === 'MUS 210' ? <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Library className="h-5 w-5 text-primary" />
@@ -639,8 +578,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                     courseCode={course.courseCode}
                     courseTitle={course.title}
                   />
-                </React.Suspense> : (course.courseCode === 'MUS 240' || course.courseCode === 'MUS240') ? <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
-                  <EmbeddedStudentGradeView courseId={course.id} />
                 </React.Suspense> : <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />)}
 
             {activeTab === 'attendance' && (
@@ -665,7 +602,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </CardContent>
               </Card>}
 
-            {activeTab === 'calendar' && (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || course.courseCode === 'MUS 240' || course.courseCode === 'LH 100' ? <CalendarWithAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} /> : <CourseCalendarView courseId={course.id} />)}
+            {activeTab === 'calendar' && (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || isLH100 ? <CalendarWithAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} /> : <CourseCalendarView courseId={course.id} />)}
 
             {/* Music Library Tab - Only for MUS 070 */}
             {activeTab === 'music-library' && course.courseCode === 'MUS 070' && <Card>

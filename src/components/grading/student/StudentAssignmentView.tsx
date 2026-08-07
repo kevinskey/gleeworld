@@ -149,7 +149,7 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
       setIsEditing(false);
       // Navigate back to course page after successful submission
       if (assignment?.course_id) {
-        navigate(`/academy/mus-240`);
+        navigate(`/academy`);
       }
     },
     onError: (error) => {

@@ -50,16 +50,7 @@ export const TestList = ({
             </div>
 
             <div className="flex flex-wrap gap-1.5 sm:gap-2">
-              {test.id === 'original-midterm' ? <>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/midterm')} className="hover:bg-accent hover:border-primary/30 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3">
-                    <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                    View
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/instructor/console?tab=grades')} className="hover:bg-accent hover:border-primary/30 text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3">
-                    <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                    Grades
-                  </Button>
-                </> : <>
+              {<>
                   <Button variant="outline" size="sm" onClick={() => navigate(`/test-builder/${test.id}`)} className="hover:bg-accent hover:border-primary/30 transition-all text-xs sm:text-sm h-7 sm:h-8 px-2 sm:px-3">
                     <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     Edit

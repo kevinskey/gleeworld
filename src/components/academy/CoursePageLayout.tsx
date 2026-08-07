@@ -11,7 +11,7 @@ import { CourseResourcesList } from './CourseResourcesList';
 import { MusicLibrary } from '@/components/music-library/MusicLibrary';
 import { CoursePlaylistDisplay } from '@/components/public/CoursePlaylistDisplay';
 import { CourseAttendanceGrid } from '@/components/course/CourseAttendanceGrid';
-import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
+import { RubricManager } from '@/components/academy/rubrics/RubricManager';
 interface CoursePageLayoutProps {
   courseId: string;
   courseSemester: string;

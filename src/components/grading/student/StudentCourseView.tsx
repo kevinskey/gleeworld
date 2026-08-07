@@ -177,7 +177,6 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     return 'text-red-600 dark:text-red-400';
   };
 
-  const isMus240 = courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
 
   const getStatusIcon = (status: string) => {
     switch (status) {

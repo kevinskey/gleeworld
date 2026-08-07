@@ -607,16 +607,14 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
 
   // Use editable version for LH100 (check both UUID and slug)
   const LH100_UUID = 'a0000000-0000-0000-0000-000000000100';
-  const MUS240_UUID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
   const isLH100 = courseId === LH100_UUID || courseId === 'lh-100';
-  const isMUS240 = courseId === MUS240_UUID || courseId === 'mus-240';
 
-  // Get modules for the specific course - return empty array if not found (only non-MUS240 courses)
-  const courseModules = !isMUS240 ? COURSE_MODULES[courseId] || [] : [];
+  // Get modules for the specific course - return empty array if not found
+  const courseModules = COURSE_MODULES[courseId] || [];
   const [modules, setModules] = useState<WeeklyModule[]>(courseModules);
   // Default to collapsed state
   const [expandedWeeks, setExpandedWeeks] = useState<string[]>([]);
-  const [loading, setLoading] = useState(isMUS240);
+  const [loading, setLoading] = useState(false);
   const [studentProgress, setStudentProgress] = useState<Set<string>>(new Set());
   const [selectedResource, setSelectedResource] = useState<{
     title: string;
@@ -625,125 +623,6 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
     description?: string | null;
   } | null>(null);
 
-  // For MUS 240, fetch everything from database
-  useEffect(() => {
-    const fetchMUS240Data = async () => {
-      if (!isMUS240) return;
-      setLoading(true);
-
-      try {
-        // Fetch module settings
-        const { data: settings, error: settingsError } = await supabase.
-        from('mus240_module_settings').
-        select('*').
-        order('week_number', { ascending: true });
-
-        if (settingsError) {
-          console.error('Error fetching module settings:', settingsError);
-          setLoading(false);
-          return;
-        }
-
-        // Fetch resources for all modules
-        const { data: resources, error: resourcesError } = await supabase.
-        from('mus240_module_resources').
-        select('*').
-        order('display_order', { ascending: true });
-
-        if (resourcesError) {
-          console.error('Error fetching resources:', resourcesError);
-        }
-
-        // Fetch student progress if user is logged in
-        let progressSet = new Set<string>();
-        if (user) {
-          const { data: progress, error: progressError } = await supabase.
-          from('mus240_student_resource_progress').
-          select('resource_id').
-          eq('student_id', user.id);
-
-          if (!progressError && progress) {
-            progressSet = new Set(progress.map((p) => p.resource_id));
-            setStudentProgress(progressSet);
-          }
-        }
-
-        // Group resources by module_id
-        const resourcesByModule: Record<string, ModuleResource[]> = {};
-        (resources || []).forEach((r) => {
-          if (!resourcesByModule[r.module_id]) {
-            resourcesByModule[r.module_id] = [];
-          }
-          resourcesByModule[r.module_id].push({
-            id: r.id,
-            title: r.title,
-            type: r.resource_type as ModuleResource['type'],
-            url: r.url || undefined,
-            duration: r.duration || undefined,
-            completed: progressSet.has(r.id),
-            description: r.description || undefined
-          });
-        });
-
-        // Get current date for determining active week (use UTC-safe date string comparison)
-        const now = new Date();
-        const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-        // Build modules from settings + resources
-        let builtModules: WeeklyModule[] = (settings || []).
-        map((setting) => {
-          const moduleResources = resourcesByModule[setting.module_id] || [];
-          const completedCount = moduleResources.filter((r) => r.completed).length;
-          const completionPct = moduleResources.length > 0 ?
-          Math.round(completedCount / moduleResources.length * 100) :
-          0;
-
-          // Determine if this is the current active week using string comparison (timezone-safe)
-          let isCurrentWeek = false;
-          if (setting.start_date && setting.end_date) {
-            const startStr = setting.start_date.slice(0, 10);
-            const endStr = setting.end_date.slice(0, 10);
-            isCurrentWeek = todayStr >= startStr && todayStr <= endStr;
-          }
-
-          return {
-            id: setting.module_id,
-            week_number: setting.week_number || parseInt(setting.module_id.replace('week-', '')) || 0,
-            title: setting.title || `Week ${setting.week_number || setting.module_id}`,
-            description: setting.description || '',
-            start_date: setting.start_date || new Date().toISOString(),
-            end_date: setting.end_date || new Date().toISOString(),
-            is_active: isCurrentWeek, // Use date-based detection for "current week"
-            is_locked: setting.is_locked ?? false,
-            is_published: setting.is_published ?? true, // Track visibility separately
-            learning_objectives: setting.learning_objectives as string[] || [],
-            resources: moduleResources,
-            completion_percentage: completionPct
-          };
-        });
-
-        // Filter out unpublished modules for non-admin users (use is_published for visibility)
-        if (!isAdmin) {
-          builtModules = builtModules.filter((mod) => (mod as any).is_published !== false);
-        }
-
-        // Sort: current week first, then descending by week number (most recent first)
-        builtModules.sort((a, b) => {
-          if (a.is_active && !b.is_active) return -1;
-          if (!a.is_active && b.is_active) return 1;
-          return b.week_number - a.week_number;
-        });
-
-        setModules(builtModules);
-      } catch (err) {
-        console.error('Error in fetchMUS240Data:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMUS240Data();
-  }, [isMUS240, isAdmin, user]);
 
   if (isLH100) {
     return <EditableLH100Modules isEnrolled={isEnrolled} isAdmin={isAdmin} />;
@@ -755,28 +634,12 @@ export const CourseModules: React.FC<CourseModulesProps> = ({ courseId, isEnroll
 
     try {
       if (currentlyCompleted) {
-        // Remove completion
-        await supabase.
-        from('mus240_student_resource_progress').
-        delete().
-        eq('student_id', user.id).
-        eq('resource_id', resourceId);
-
         setStudentProgress((prev) => {
           const next = new Set(prev);
           next.delete(resourceId);
           return next;
         });
       } else {
-        // Add completion
-        await supabase.
-        from('mus240_student_resource_progress').
-        insert({
-          student_id: user.id,
-          resource_id: resourceId,
-          module_id: moduleId
-        });
-
         setStudentProgress((prev) => new Set(prev).add(resourceId));
       }
 

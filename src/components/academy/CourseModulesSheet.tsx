@@ -87,22 +87,7 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
     try {
       setLoading(true);
       
-      const isMus240 = courseCode.toUpperCase().includes('MUS') && courseCode.includes('240');
-      
-      // Fetch resources for MUS-240
-      let resourcesMap: Record<string, ModuleResource[]> = {};
-      
-      if (isMus240) {
-        const { data: resourcesData } = await supabase
-          .from('mus240_module_resources')
-          .select('id, module_id, title, resource_type, url, description, duration, is_required, display_order')
-          .order('display_order', { ascending: true });
-        
-        (resourcesData || []).forEach((r: any) => {
-          if (!resourcesMap[r.module_id]) resourcesMap[r.module_id] = [];
-          resourcesMap[r.module_id].push(r);
-        });
-      }
+      const resourcesMap: Record<string, ModuleResource[]> = {};
 
       // Fetch all assignments for the course
       const { data: assignmentsData } = await supabase
@@ -231,22 +216,15 @@ export const CourseModulesSheet: React.FC<CourseModulesSheetProps> = ({
 
   const handleActivityClick = (activity: ModuleActivity, module: WeekModule) => {
     const coursePath = courseCode.toLowerCase().replace(' ', '-');
-    const isMus240 = courseCode.toUpperCase().includes('MUS') && courseCode.includes('240');
-    
-    // For Video activity in MUS-240, show the module videos modal if videos exist
-    if (activity.type === 'Video' && isMus240) {
+    // Video activities open the module video modal when the module has videos.
+    if (activity.type === 'Video') {
       const videos = (module.resources || []).filter(r => r.resource_type === 'video');
-      console.log('[CourseModulesSheet] Video click - module:', module.module_id, 'videos found:', videos.length, videos);
       if (videos.length > 0) {
         setSelectedModule(module);
         setVideoModalOpen(true);
         setOpen(false);
         return;
       }
-      // No videos assigned to this module - show a helpful message instead of going to all resources
-      console.log('[CourseModulesSheet] No videos for module, showing toast');
-      setOpen(false);
-      return;
     }
     
     if (activity.assignmentId) {

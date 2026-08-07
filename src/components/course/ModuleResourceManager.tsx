@@ -65,19 +65,19 @@ export const ModuleResourceManager: React.FC<ModuleResourceManagerProps> = ({
     setSaving(true);
     try {
       const { error } = await supabase.
-      from('mus240_module_resources').
+      from('gw_course_module_resources').
       insert({
-        module_id: `week-${weekNumber}`,
+        course_id: courseId,
+        module_id: moduleId,
         title: title.trim(),
-        url: url.trim() || null,
+        resource_url: url.trim() || null,
         resource_type: resourceType,
         description: description.trim() || null,
-        display_order: 0,
-        created_by: user?.id
+        display_order: 0
       });
       if (error) throw error;
       toast.success('Resource added');
-      queryClient.invalidateQueries({ queryKey: ['mus240-module-resources'] });
+      queryClient.invalidateQueries({ queryKey: ['gw-course-module-resources'] });
       setTitle('');
       setUrl('');
       setDescription('');

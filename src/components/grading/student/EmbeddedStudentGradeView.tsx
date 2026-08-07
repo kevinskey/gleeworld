@@ -12,7 +12,6 @@ import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { StudentGradeSpreadsheet } from './StudentGradeSpreadsheet';
-import { Mus240GradeGrid } from '@/components/mus240/grades/Mus240GradeGrid';
 
 interface EmbeddedStudentGradeViewProps {
   courseId: string;
@@ -280,13 +279,8 @@ export const EmbeddedStudentGradeView: React.FC<EmbeddedStudentGradeViewProps> =
           </TabsTrigger>
         </TabsList>
 
-        {/* Spreadsheet Tab - Use new Mus240GradeGrid for MUS-240 */}
         <TabsContent value="spreadsheet" className="mt-6">
-          {courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37' ? (
-            <Mus240GradeGrid />
-          ) : (
-            <StudentGradeSpreadsheet courseId={courseId} />
-          )}
+          <StudentGradeSpreadsheet courseId={courseId} />
         </TabsContent>
 
         {/* Overview/Breakdown Tab */}

@@ -8,7 +8,7 @@ import { PollCreator } from '@/components/messaging/PollCreator';
 import { BarChart3, Plus, Users, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { useSemesterSafe } from '@/contexts/SemesterContext';
 interface Group {
   id: string;
   name: string;
@@ -23,7 +23,7 @@ interface PollMessage {
 
 export const GroupPollsPage = () => {
   const { user } = useAuth();
-  const { currentSemester, availableSemesters } = useMus240SemesterSafe();
+  const { currentSemester, availableSemesters } = useSemesterSafe();
   const [groups, setGroups] = useState<Group[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [pollMessages, setPollMessages] = useState<PollMessage[]>([]);

@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
-import { Mus240SemesterProvider } from "@/contexts/Mus240SemesterContext";
+import { SemesterProvider } from "@/contexts/SemesterContext";
 import { CourseProvider } from "@/contexts/CourseContext";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,15 +165,12 @@ const DocsApp = lazy(() => import("./features/docs/DocsApp"));
 const SavedFeed = lazy(() => import("./pages/SavedFeed"));
 const FeedControl = lazy(() => import("./pages/FeedControl"));
 const UnifiedDashboard = lazy(() => import("./components/dashboard/UnifiedDashboard").then(m => ({ default: m.UnifiedDashboard })));
-const TestBuilderPage = lazy(() => import("./pages/mus240/TestBuilderPage"));
 const TestBuilderEdit = lazy(() => import("./pages/TestBuilderEdit"));
 // (TestPreview page deleted with the radio purge 2026-05-31 — was the only consumer of useRadioPlayer.)
 const StudentTestPage = lazy(() => import("./pages/StudentTestPage"));
-const TestScoresPage = lazy(() => import("./pages/TestScoresPage"));
 const PollViewPage = lazy(() => import("./pages/PollViewPage"));
 
 const AuditionerDashboardPage = lazy(() => import("./pages/AuditionerDashboardPage"));
-const Mus240Auth = lazy(() => import("./pages/Mus240Auth"));
 
 const EventPlanner = lazy(() => import("./pages/EventPlanner"));
 const BudgetApprovals = lazy(() => import("./pages/BudgetApprovals"));
@@ -327,8 +324,6 @@ const SoundCloudSearch = lazy(() => import("./pages/SoundCloudSearch"));
 const ShoutcastManagement = lazy(() => import("./pages/admin/ShoutcastManagement").then(m => ({ default: m.ShoutcastManagement })));
 const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage").then(m => ({ default: m.ReceiptsPage })));
 const ApprovalSystemPage = lazy(() => import("./pages/ApprovalSystemPage"));
-import GroupUpdatesPresentation from './pages/mus240/GroupUpdatesPresentation';
-import GroupPresentationView from './pages/mus240/GroupPresentationView';
 const AssignmentCreatorPage = lazy(() => import("./pages/AssignmentCreator"));
 const PracticeStudioPage = lazy(() => import("./pages/PracticeStudioPage"));
 const MessagingInterface = lazy(() => import("./components/messaging/MessagingInterface").then(m => ({ default: m.MessagingInterface })));
@@ -348,7 +343,6 @@ const Onboarding = lazy(() => import("./pages/Onboarding").then(m => ({ default:
 const AcademyStudentRegistration = lazy(() => import("./pages/AcademyStudentRegistration"));
 const ProviderDashboard = lazy(() => import("./components/providers/ProviderDashboard").then(m => ({ default: m.ProviderDashboard })));
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
-import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
 import { ProfileCompletionGuard } from "./components/auth/ProfileCompletionGuard";
 const TimesheetPage = lazy(() => import("./pages/TimesheetPage"));
 const BownaScholarLanding = lazy(() => import("./pages/BownaScholarLanding"));
@@ -356,21 +350,7 @@ const SMSTest = lazy(() => import("./pages/SMSTest"));
 const MemberExitInterview = lazy(() => import("./pages/MemberExitInterview"));
 
 
-const ClassLanding = lazy(() => import("./pages/mus240/ClassLanding"));
-const SyllabusPage = lazy(() => import("./pages/mus240/SyllabusPage"));
-const ListeningHub = lazy(() => import("./pages/mus240/ListeningHub"));
-const WeekDetail = lazy(() => import("./pages/mus240/WeekDetail"));
-const Resources = lazy(() => import("./pages/mus240/Resources"));
-const Groups = lazy(() => import("./pages/mus240/Groups"));
-const GroupDetail = lazy(() => import("./pages/mus240/GroupDetail"));
-const GroupUpdateForm = lazy(() => import("./pages/mus240/GroupUpdateForm"));
-const ResourcesAdmin = lazy(() => import("./pages/mus240/admin/ResourcesAdmin"));
 
-const StudentMidtermGrading = lazy(() => import("./pages/mus240/StudentMidtermGrading").then(m => ({ default: m.StudentMidtermGrading })));
-const StudentWorkOverview = lazy(() => import("./pages/mus240/StudentWorkOverview").then(m => ({ default: m.StudentWorkOverview })));
-const StudentDashboard = lazy(() => import("./pages/mus240/StudentDashboard").then(m => ({ default: m.StudentDashboard })));
-const PeerReviewBrowserPage = lazy(() => import("./pages/mus240/PeerReviewBrowserPage").then(m => ({ default: m.PeerReviewBrowserPage })));
-const MidtermExam = lazy(() => import("./pages/mus240/MidtermExam"));
 const SMUS100MidtermExamPage = lazy(() => import("./pages/SMUS100MidtermExamPage"));
 const CourseStatistics = lazy(() => import("./pages/admin/CourseStatistics"));
 const PartnersAdmin = lazy(() => import("./pages/admin/PartnersAdmin"));
@@ -391,8 +371,6 @@ const RegistrationThankYou = lazy(() => import("./pages/RegistrationThankYou"));
 
 const GrandStaves = lazy(() => import("./pages/GrandStaves"));
 const GrandStaffClassroom = lazy(() => import("./pages/GrandStaffClassroom"));
-const Mus240PollPage = lazy(() => import("./pages/Mus240PollPage").then(m => ({ default: m.Mus240PollPage })));
-const JazzPage = lazy(() => import("./pages/mus240/JazzPage"));
 const Tour2026Page = lazy(() => import("./pages/Tour2026Page"));
 const BusInformation = lazy(() => import("./pages/BusInformation"));
 const StudentSchedulesPage = lazy(() => import("./pages/StudentSchedulesPage"));
@@ -417,12 +395,6 @@ const StoreScoreDetail = lazy(() => import("./pages/store/StoreScoreDetail"));
 const StorePartnerPage = lazy(() => import("./pages/store/StorePartnerPage"));
 const StoreThanksPage = lazy(() => import("./pages/store/StoreThanksPage"));
 
-// Legacy MUS240 redirect component
-const LegacyMus240Redirect = () => {
-  const location = useLocation();
-  const newPath = location.pathname.replace('/classes/mus240', '/mus-240');
-  return <Navigate to={newPath} replace />;
-};
 
 // /dashboard/part-tracks briefly redirected to /studio after the old
 // editor retired (2026-07-29); it now hosts the PartTrack rehearsal-track
@@ -534,7 +506,7 @@ const App = () => {
             <TooltipProvider>
               <CustomTooltipProvider>
                 <MusicPlayerProvider>
-                  <Mus240SemesterProvider>
+                  <SemesterProvider>
                   <CourseProvider>
                   <MessengerProvider>
                   <ActiveMeetingProvider>
@@ -621,14 +593,6 @@ const App = () => {
               <Route path="/tour-sandbox" element={<TourSandbox />} />
               {/* One-click prospect demo entry — mints a read-only Director session. */}
               <Route path="/try" element={<TryDemo />} />
-              <Route 
-                path="/auth/mus240" 
-                element={
-                  <PublicRoute>
-                    <Mus240Auth />
-                  </PublicRoute>
-                } 
-              />
               <Route 
                 path="/onboarding" 
                 element={
@@ -1244,7 +1208,6 @@ const App = () => {
               <Route path="/mus-001" element={<Navigate to="/academy/mus-001" replace />} />
               <Route path="/mus-000" element={<Navigate to="/academy/mus-000" replace />} />
               <Route path="/glee-101" element={<Navigate to="/academy/glee-101" replace />} />
-              <Route path="/mus-240" element={<Navigate to="/academy/mus-240" replace />} />
               <Route path="/bowman-scholars" element={<Navigate to="/academy/lh-100" replace />} />
               <Route path="/lh-100" element={<Navigate to="/academy/lh-100" replace />} />
               {/* Grand Staff Classroom page */}
@@ -1306,17 +1269,6 @@ const App = () => {
                  path="/mus100-sight-singing"
                  element={<Navigate to="/dashboard/sight-reading" replace />}
                />
-              {/* MUS 240 Poll System */}
-              <Route 
-                path="/mus240-polls" 
-                element={
-                  <ProtectedRoute>
-                    <Mus240EnrollmentRoute>
-                      <Mus240PollPage />
-                    </Mus240EnrollmentRoute>
-                  </ProtectedRoute>
-                } 
-              />
               {/* Poll View Page - accessible to authenticated users */}
               <Route 
                 path="/polls/:pollId" 
@@ -2004,16 +1956,6 @@ const App = () => {
                        </UniversalLayout>
                      </ProtectedRoute>
                   } 
-                 />
-                <Route
-                  path="/dashboard/mus240" 
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout>
-                        <UnifiedDashboard />
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                   } 
                  />
                  <Route 
                   path="/dashboard/public" 
@@ -3216,183 +3158,10 @@ const App = () => {
                                 </ProtectedRoute>
                               } 
                              />
-                              {/* MUS 240 - Survey of African American Music */}
-                               <Route 
-                                path="/mus-240" 
-                                element={<ClassLanding />}
-                                />
                                 {/* Legacy redirects - catch all subroutes */}
-                                <Route path="/classes/mus240/*" element={<LegacyMus240Redirect />} />
-                                <Route path="/classes/mus240" element={<Navigate to="/mus-240" replace />} />
-                                <Route path="/mus240" element={<Navigate to="/mus-240" replace />} />
                                
-                                 <Route 
-                                  path="/mus-240/student/dashboard" 
-                                  element={<Navigate to="/academy/mus-240" replace />}
-                                  />
-                                  <Route 
-                                   path="/mus-240/student-dashboard" 
-                                   element={<Navigate to="/academy/mus-240" replace />}
-                                  />
-                                 <Route 
-                                  path="/mus-240/student/journal/:journal_id/grade" 
-                                  element={<Navigate to="/academy/mus-240" replace />}
-                                 />
-                              <Route 
-                               path="/mus-240/syllabus" 
-                                element={
-                                  <Mus240EnrollmentRoute>
-                                    <SyllabusPage />
-                                  </Mus240EnrollmentRoute>
-                                }
-                             />
-                               <Route 
-                                 path="/mus-240/listening" 
-                                element={
-                                  <Mus240EnrollmentRoute>
-                                    <ListeningHub />
-                                  </Mus240EnrollmentRoute>
-                                }
-                               />
-                              <Route 
-                                path="/mus-240/listening/:week" 
-                               element={
-                                 <Mus240EnrollmentRoute>
-                                   <WeekDetail />
-                                 </Mus240EnrollmentRoute>
-                               }
-                              />
-                               <Route 
-                                 path="/mus-240/groups" 
-                               element={
-                                 <Mus240EnrollmentRoute>
-                                   <Groups />
-                                 </Mus240EnrollmentRoute>
-                               }
-                               />
-                                <Route 
-                                  path="/mus-240/groups/update" 
-                                 element={
-                                   <Mus240EnrollmentRoute>
-                                     <GroupUpdateForm />
-                                   </Mus240EnrollmentRoute>
-                                 }
-                                 />
-                                  <Route 
-                                    path="/mus-240/groups/presentation" 
-                                   element={
-                                     <Mus240EnrollmentRoute>
-                                       <GroupUpdatesPresentation />
-                                     </Mus240EnrollmentRoute>
-                                   }
-                                  />
-                                  <Route 
-                                    path="/mus-240/groups/presentation/:id" 
-                                   element={
-                                     <Mus240EnrollmentRoute>
-                                       <GroupPresentationView />
-                                     </Mus240EnrollmentRoute>
-                                   }
-                                  />
-                                <Route 
-                                  path="/mus-240/groups/:groupId" 
-                                 element={
-                                   <Mus240EnrollmentRoute>
-                                     <GroupDetail />
-                                   </Mus240EnrollmentRoute>
-                                 }
-                                />
-                               <Route 
-                                 path="/mus-240/resources" 
-                                element={
-                                  <Mus240EnrollmentRoute>
-                                    <Resources />
-                                  </Mus240EnrollmentRoute>
-                                }
-                               />
-                               <Route 
-                                 path="/mus-240/resources/admin" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <AdminOnlyRoute>
-                                       <ResourcesAdmin />
-                                     </AdminOnlyRoute>
-                                   </ProtectedRoute>
-                                 } 
-                                />
-                                 <Route 
-                                  path="/mus-240/midterm" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <Mus240EnrollmentRoute>
-                                        <MidtermExam />
-                                      </Mus240EnrollmentRoute>
-                                    </ProtectedRoute>
-                                  } 
-                                 />
-                                 <Route 
-                                  path="/mus-240/midterm-exam" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <Mus240EnrollmentRoute>
-                                        <MidtermExam />
-                                      </Mus240EnrollmentRoute>
-                                    </ProtectedRoute>
-                                  } 
-                                 />
                                
-                                <Route 
-                                  path="/mus-240/jazz"
-                                  element={
-                                    <Mus240EnrollmentRoute>
-                                      <JazzPage />
-                                    </Mus240EnrollmentRoute>
-                                  }
-                                />
-                                  {/* Legacy MUS-240 instructor routes → redirect to universal console */}
-                                  <Route 
-                                    path="/mus-240/admin" 
-                                    element={<Navigate to="/instructor/mus-240" replace />}
-                                  />
-                                  <Route 
-                                    path="/mus-240/instructor" 
-                                    element={<Navigate to="/instructor/mus-240" replace />}
-                                  />
-                                  {/* /mus-240/instructor/console is now handled by /:courseCode/instructor/console */}
-                                  <Route 
-                                    path="/mus-240/instructor/student/:studentId" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <AdminOnlyRoute>
-                                          <StudentWorkOverview />
-                                        </AdminOnlyRoute>
-                                      </ProtectedRoute>
-                                    } 
-                                  />
-                                  <Route 
-                                    path="/mus-240/instructor/student/:studentId/midterm" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <AdminOnlyRoute>
-                                          <StudentMidtermGrading />
-                                        </AdminOnlyRoute>
-                                      </ProtectedRoute>
-                                    } 
-                                  />
                                   {/* Removed journal/grading routes - journals removed from curriculum */}
-                                  <Route path="/mus-240/instructor/bulk-grading" element={<Navigate to="/instructor/mus-240" replace />} />
-                                  <Route path="/mus-240/journal/:journalId/review" element={<Navigate to="/academy/mus-240" replace />} />
-                                  <Route path="/mus-240/instructor/journals" element={<Navigate to="/instructor/mus-240" replace />} />
-                                  <Route path="/mus-240/instructor/journal/:journal_id/grade" element={<Navigate to="/instructor/mus-240" replace />} />
-                                   <Route path="/mus-240/peer-review" element={<Navigate to="/academy/mus-240" replace />} />
-                                   <Route 
-                                     path="/test-builder"
-                                     element={
-                                       <ProtectedRoute>
-                                         <TestBuilderPage />
-                                       </ProtectedRoute>
-                                     } 
-                                   />
                                    <Route 
                                      path="/test-builder/:testId" 
                                      element={
@@ -3415,14 +3184,6 @@ const App = () => {
                                       element={
                                         <ProtectedRoute>
                                           <StudentTestPage />
-                                        </ProtectedRoute>
-                                      } 
-                                    />
-                                    <Route 
-                                      path="/test/:testId/scores" 
-                                      element={
-                                        <ProtectedRoute>
-                                          <TestScoresPage />
                                         </ProtectedRoute>
                                       } 
                                     />
@@ -3533,7 +3294,7 @@ const App = () => {
                   </ActiveMeetingProvider>
                   </MessengerProvider>
                   </CourseProvider>
-                  </Mus240SemesterProvider>
+                  </SemesterProvider>
                   </MusicPlayerProvider>
                 </CustomTooltipProvider>
               </TooltipProvider>

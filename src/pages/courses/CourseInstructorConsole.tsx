@@ -21,11 +21,9 @@ import { getFilteredNavCategories, InstructorNavCategory } from '@/config/instru
 // Import shared components that can work with any course
 import { CourseAssignmentManager } from '@/components/course/CourseAssignmentManager';
 import { CourseGradesAdmin } from '@/components/course/CourseGradesAdmin';
-import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
+import { AIAssistant } from '@/components/academy/instructor/AIAssistant';
 import { CourseEnrollmentManager } from '@/components/academy/CourseEnrollmentManager';
-import { StudentAnalyticsDashboard } from '@/components/mus240/admin/StudentAnalyticsDashboard';
-import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
-import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
+import { RubricManager } from '@/components/academy/rubrics/RubricManager';
 import { CourseAnnouncementsManager } from '@/components/course/CourseAnnouncementsManager';
 import { SyllabusTemplateEditor } from '@/components/academy/syllabus/SyllabusTemplateEditor';
 import { ModulesSection } from '@/components/course/ModulesSection';
@@ -328,9 +326,7 @@ export const CourseInstructorConsole = () => {
                 semester={semesterLabel}
               />
             )}
-            {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
             {activeTab === 'announcements' && dbCourse && <CourseAnnouncementsManager courseId={dbCourse.id} />}
-            {activeTab === 'resources' && <ResourcesAdmin />}
             {activeTab === 'playlists' && dbCourse && <CoursePlaylistManager courseId={dbCourse.id} />}
             {activeTab === 'videos' && dbCourse && <CourseVideoLibrary courseId={dbCourse.id} isInstructor={true} />}
             {activeTab === 'attendance-security' && dbCourse && (

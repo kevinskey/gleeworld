@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { useSemesterSafe } from '@/contexts/SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
 import { CourseTopicSlider } from './CourseTopicSlider';
 import { GleeCamCard } from '@/components/dashboard/GleeCamCard';
@@ -95,7 +95,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentSemester } = useMus240SemesterSafe();
+  const { currentSemester } = useSemesterSafe();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);

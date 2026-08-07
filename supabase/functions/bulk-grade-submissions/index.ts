@@ -30,39 +30,17 @@ serve(async (req) => {
       .eq('id', assignmentId)
       .maybeSingle();
 
-    // Also check gw_assignments for legacy MUS240 journals
+    // Look up the assignment for submission-table routing
     const { data: gwAssignment } = await supabase
       .from('gw_assignments')
       .select('legacy_source, legacy_id, assignment_type, title')
       .eq('id', assignmentId)
       .maybeSingle();
 
-    const isMus240Journal = gwAssignment?.legacy_source === 'mus240_assignments' || gwAssignment?.assignment_type === 'listening_journal';
-    
     let submissions: any[] = [];
     let fetchError: any = null;
     let submissionTable = '';
 
-    if (isMus240Journal) {
-      // Get legacy ID for MUS240 journals
-      let legacyIdToUse = gwAssignment?.legacy_id;
-      if (gwAssignment?.legacy_source !== 'mus240_assignments') {
-        const match = (gwAssignment?.title || '').match(/Listening\s*Journal\s*(\d+)/i);
-        if (match?.[1]) {
-          legacyIdToUse = `lj${match[1]}`;
-        }
-      }
-
-      const { data, error } = await supabase
-        .from('mus240_journal_entries')
-        .select('id, student_id')
-        .eq('assignment_id', legacyIdToUse)
-        .eq('is_published', true);
-      
-      submissions = data || [];
-      fetchError = error;
-      submissionTable = 'mus240_journal_entries';
-    } else {
       // Try gw_course_submissions first (essay submissions)
       const { data: courseSubmissions, error: courseError } = await supabase
         .from('gw_course_submissions')
@@ -99,8 +77,6 @@ serve(async (req) => {
           submissionTable = 'assignment_submissions';
         }
       }
-    }
-
     if (fetchError) throw fetchError;
 
     console.log(`Found ${submissions.length} submissions in ${submissionTable} for assignment ${assignmentId}`);
@@ -133,25 +109,11 @@ serve(async (req) => {
       const batchResults = await Promise.allSettled(
         batch.map(async (submission) => {
           try {
-            let gradeData: any;
-            let gradeError: any;
-
-            if (isMus240Journal) {
-              const result = await supabase.functions.invoke(
-                'grade-mus240-journal',
-                { body: { journalId: submission.id } }
-              );
-              gradeData = result.data;
-              gradeError = result.error;
-            } else {
-              // Pass submissionTable so the grading function knows where to look
-              const result = await supabase.functions.invoke(
-                'grade-submission-ai',
-                { body: { submissionId: submission.id, submissionTable } }
-              );
-              gradeData = result.data;
-              gradeError = result.error;
-            }
+            // Pass submissionTable so the grading function knows where to look
+            const { data: gradeData, error: gradeError } = await supabase.functions.invoke(
+              'grade-submission-ai',
+              { body: { submissionId: submission.id, submissionTable } }
+            );
 
             if (gradeError) {
               throw new Error(gradeError.message || 'Grading function error');

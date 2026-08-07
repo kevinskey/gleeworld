@@ -42,25 +42,6 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: '23c4ee3c-7bbb-4534-8c0a-eecd88298d37',
-    courseCode: 'MUS 240',
-    title: 'Survey of African American Music',
-    description: 'Explore the rich tapestry of African American musical traditions, from spirituals and blues to jazz, gospel, R&B, and hip-hop.',
-    icon: BookOpen,
-    level: 'All Levels',
-    duration: '16 Weeks',
-    highlights: ['Music History', 'Cultural Context', 'Critical Analysis'],
-    route: '/academy/mus-240',
-    instructor: {
-      name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@riversidechoir.example',
-      office: 'Fine Arts 105',
-      hours: 'MWF 3-5 PM',
-      imageUrl: 'https://supabase.gleeworld.org/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
-    },
-    isActive: true
-  },
-  {
     id: '2026c613-bda7-487a-a5d9-91e57c26a741',
     courseCode: 'MUS 210',
     title: 'Choral Conducting and Literature',

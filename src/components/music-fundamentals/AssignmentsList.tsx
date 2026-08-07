@@ -233,7 +233,7 @@ export const AssignmentsList: React.FC = () => {
                   disabled={status === 'overdue' && !submission}
                   onClick={() => {
                     if (assignment.assignment_type === 'listening_journal') {
-                      navigate(`/classes/mus240/assignments/${assignment.id}`);
+                      navigate(`/academy`);
                     } else {
                       // Handle other assignment types here
                       toast({

@@ -42,7 +42,7 @@ export const TAManagement = () => {
   const [tas, setTas] = useState<TA[]>([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState('');
-  const [courseCode, setCourseCode] = useState('MUS240');
+  const [courseCode, setCourseCode] = useState('MUS070');
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
@@ -172,7 +172,6 @@ export const TAManagement = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="MUS240">MUS 240</SelectItem>
                   <SelectItem value="MUS100">MUS 100</SelectItem>
                   <SelectItem value="MUS200">MUS 200</SelectItem>
                   <SelectItem value="LH100">LH 100 (Bowman Scholars)</SelectItem>

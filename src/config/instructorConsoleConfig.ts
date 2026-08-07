@@ -9,7 +9,7 @@
  * - course-specific extension tools
  */
 
-import { LucideIcon, FileText, FolderOpen, BookOpen, Calendar, Music, ClipboardCheck, BarChart3, ListChecks, Trophy, UserPlus, QrCode, BarChart, Megaphone, ListMusic, Video, Shield, CalendarDays, Brain, Settings, MessageSquare, Images } from 'lucide-react';
+import { LucideIcon, FileText, FolderOpen, BookOpen, Calendar, Music, ClipboardCheck, BarChart3, ListChecks, Trophy, UserPlus, QrCode, Megaphone, ListMusic, Video, Shield, CalendarDays, Brain, Settings, MessageSquare, Images } from 'lucide-react';
 
 export interface InstructorNavItem {
   value: string;
@@ -52,14 +52,12 @@ export const INSTRUCTOR_NAV_CATEGORIES: InstructorNavCategory[] = [
     items: [
       { value: 'students', label: 'Enrollment', icon: UserPlus },
       { value: 'quick-attendance', label: 'Attendance', icon: QrCode },
-      { value: 'analytics', label: 'Analytics', icon: BarChart },
       { value: 'announcements', label: 'Announcements', icon: Megaphone },
     ]
   },
   {
     label: 'Resources',
     items: [
-      { value: 'resources', label: 'Course Materials', icon: BookOpen },
       { value: 'playlists', label: 'Playlists', icon: ListMusic },
       { value: 'videos', label: 'Video Library', icon: Video },
     ]

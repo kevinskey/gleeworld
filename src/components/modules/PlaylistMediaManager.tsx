@@ -101,31 +101,11 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
 
       if (mediaLibError) throw mediaLibError;
 
-      // Fetch from mus240_audio_resources
-      const { data: mus240Data, error: mus240Error } = await supabase
-        .from('mus240_audio_resources')
-        .select('id, title, file_path, category')
-        .order('title');
-
       // Fetch from audio_archive
       const { data: archiveData, error: archiveError } = await supabase
         .from('audio_archive')
         .select('id, title, audio_url, category')
         .order('title');
-
-      // Transform mus240 data to match MediaItem format
-      const mus240Items: MediaItem[] = (mus240Data || []).map(item => {
-        const { data: urlData } = supabase.storage
-          .from('mus240-audio')
-          .getPublicUrl(item.file_path);
-        return {
-          id: item.id,
-          title: item.title,
-          file_url: urlData.publicUrl,
-          file_type: 'audio/mpeg',
-          category: item.category || 'mus240',
-        };
-      });
 
       // Transform audio_archive data to match MediaItem format
       const archiveItems: MediaItem[] = (archiveData || []).map(item => ({
@@ -137,7 +117,7 @@ export function PlaylistMediaManager({ playlistId, playlistTitle, open, onOpenCh
       }));
 
       // Combine all sources
-      const allMedia = [...(mediaLibData || []), ...mus240Items, ...archiveItems];
+      const allMedia = [...(mediaLibData || []), ...archiveItems];
       
       // Sort by title
       allMedia.sort((a, b) => (a.title || '').localeCompare(b.title || ''));

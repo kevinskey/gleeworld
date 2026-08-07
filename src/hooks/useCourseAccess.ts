@@ -211,22 +211,6 @@ export const useCourseAccess = (options: UseCourseAccessOptions): CourseAccessSt
         }
       }
       
-      // Legacy MUS-240 enrollment check (temporary)
-      if (course.courseCode === 'MUS 240') {
-        const { data: legacyEnrollment } = await supabase
-          .from('mus240_enrollments')
-          .select('id')
-          .eq('student_id', user.id)
-          .eq('semester', currentSemester)
-          .eq('enrollment_status', 'enrolled')
-          .maybeSingle();
-        
-        if (legacyEnrollment) {
-          setIsEnrolled(true);
-          setDbLoading(false);
-          return;
-        }
-      }
       
       setIsEnrolled(false);
     } catch (err) {

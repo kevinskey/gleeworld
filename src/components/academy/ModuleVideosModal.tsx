@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Play, ExternalLink, Clock, X, Loader2 } from 'lucide-react';
 import { extractYouTubeVideoId, getYouTubeThumbnail } from '@/utils/youtubeUtils';
 import { isTikTokUrl, getTikTokPlaceholderThumbnail } from '@/utils/tiktokUtils';
-import { TikTokPlayer } from '@/components/mus240/TikTokPlayer';
+import { TikTokPlayer } from '@/components/academy/TikTokPlayer';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
