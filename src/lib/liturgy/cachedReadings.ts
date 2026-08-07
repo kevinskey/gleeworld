@@ -50,7 +50,11 @@ export async function readingsForDate(iso: string): Promise<CachedVariant[]> {
     .from('usccb_readings')
     .select(COLUMNS)
     .eq('liturgical_date', iso)
-    .order('variant_rank', { ascending: true, nullsFirst: true });
+    // NULLs last, not first. An unranked row is one the single-pick backfill
+    // left behind, and sorting those first handed back the wrong Mass — on the
+    // transferred Ascension it produced the Seventh Sunday of Easter, which
+    // reads as an ordinary Sunday and gives nothing away.
+    .order('variant_rank', { ascending: true, nullsFirst: false });
 
   if (error || !data?.length) return [];
 
