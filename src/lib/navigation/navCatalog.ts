@@ -12,7 +12,7 @@ import {
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
   PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, CreditCard, Receipt,
-  HandHeart, ConciergeBell, QrCode,
+  HandHeart, ConciergeBell, QrCode, Award,
   type LucideIcon, FileText } from 'lucide-react';
 
 export type NavSectionKey =
@@ -73,6 +73,9 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // Teach
   { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-primary text-primary-foreground', tourId: 'nav-academy', hero: true },
   { key: 'office-hours', to: '/dashboard/office-hours',        label: 'Studio Hours', icon: CalendarClock, section: 'teach', tone: 'bg-emerald-50 text-emerald-600',     tourId: 'nav-office-hours' },
+  { key: 'all-state',    to: '/all-state',                     label: 'All-State',    icon: Award,         section: 'teach', tone: 'bg-indigo-50 text-indigo-600',       tourId: 'nav-all-state', gate: { module: 'all_state' } },
+  // Editorial canon for every state — GleeWorld staff only, not tenant admins.
+  { key: 'all-state-admin', to: '/dashboard/all-state-admin',  label: 'All-State Data', icon: Award,       section: 'admin', tone: 'bg-indigo-50 text-indigo-600',      tourId: 'nav-all-state-admin', gate: { platformAdminOnly: true }, surfaces: ['sidebar'] },
   { key: 'practice',     to: '/dashboard/practice-recordings', label: 'Practice',     icon: Mic,           section: 'teach', tone: 'bg-teal-50 text-teal-700',           tourId: 'nav-practice', gate: { adminOnly: true } },
   // Make
   { key: 'studio',      to: '/studio',                label: 'Studio',      icon: Disc3,  section: 'make', tone: 'bg-sky-50 text-sky-600',   tourId: 'nav-studio', gate: { module: 'studio' } },

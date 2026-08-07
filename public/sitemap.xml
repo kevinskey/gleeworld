@@ -38,4 +38,13 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+  <!-- All-State. Only the directory is listed: per-state pages render nothing
+       until their programs are flipped to verification_status='verified', so
+       listing an unverified state would point crawlers at an empty page. Add
+       /all-state/<slug> here as each state is verified. -->
+  <url>
+    <loc>https://gleeworld.org/all-state</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>

@@ -201,6 +201,9 @@ const MusicLibraryPage = lazy(() => import("./pages/member/MusicLibraryPage"));
 const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPage"));
 const PartTracksPage = lazy(() => import("./pages/dashboard/PartTracksPage"));
 const SeatingChartsDashboardPage = lazy(() => import("./pages/seating-charts/DashboardPage"));
+const AllStateDirectoryPage = lazy(() => import("./pages/all-state/AllStateDirectoryPage"));
+const AllStateStatePage = lazy(() => import("./pages/all-state/AllStateStatePage"));
+const AllStateAdminPage = lazy(() => import("./pages/all-state/AllStateAdminPage"));
 const SeatingChartEditorPage = lazy(() => import("./pages/seating-charts/EditorPage"));
 const SeatingChartViewPage = lazy(() => import("./pages/seating-charts/ViewPage"));
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
@@ -2308,13 +2311,51 @@ const App = () => {
                 {/* /youtube collapsed into /video (see route above). Kept as a
                     redirect so old links and search hits still land somewhere. */}
                 <Route path="/youtube" element={<Navigate to="/video" replace />} />
-                <Route 
-                  path="/about" 
+                {/* All-State Layer 1 is global editorial canon and anon-readable
+                    (RLS gates public reads on verification_status), so these are
+                    PublicRoute — a director can send a student or parent the link
+                    without an account, and the pages are indexable. */}
+                <Route
+                  path="/all-state"
+                  element={
+                    <PublicRoute>
+                      <UniversalLayout>
+                        <AllStateDirectoryPage />
+                      </UniversalLayout>
+                    </PublicRoute>
+                  }
+                />
+                <Route
+                  path="/all-state/:stateSlug"
+                  element={
+                    <PublicRoute>
+                      <UniversalLayout>
+                        <AllStateStatePage />
+                      </UniversalLayout>
+                    </PublicRoute>
+                  }
+                />
+                {/* Staff editor. ProtectedRoute only checks that you're signed
+                    in — the real fence is RLS on is_platform_owner(), so a
+                    tenant admin who reaches this URL can read but every save
+                    is rejected with an explicit message. */}
+                <Route
+                  path="/dashboard/all-state-admin"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><AllStateAdminPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/about"
                   element={
                     <PublicRoute>
                       <About />
                     </PublicRoute>
-                  } 
+                  }
                 />
                 <Route 
                   path="/2026-tour" 
