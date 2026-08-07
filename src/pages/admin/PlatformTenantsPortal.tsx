@@ -27,6 +27,7 @@ import {
   RefreshCw,
   Loader2,
   Globe,
+  Link2,
   Mail,
 } from 'lucide-react';
 import {
@@ -389,7 +390,7 @@ export default function PlatformTenantsPortal() {
                           ? `Custom domain: ${t.custom_domain}`
                           : 'Set a custom domain for this tenant'}
                       >
-                        <Globe className="w-3.5 h-3.5 mr-1" />
+                        <Link2 className="w-3.5 h-3.5 mr-1" />
                         {t.custom_domain ? 'Domain' : 'Add domain'}
                       </Button>
                     )}

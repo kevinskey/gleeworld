@@ -16,7 +16,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { Globe, Loader2, Save } from 'lucide-react';
+import { Link2, Loader2, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,7 +93,7 @@ export function TenantDomainDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Globe className="w-4 h-4" /> Custom domain
+            <Link2 className="w-4 h-4" /> Custom domain
           </DialogTitle>
           <DialogDescription>
             {tenant?.name || tenant?.slug} keeps its gleeworld.org address either way — a custom
