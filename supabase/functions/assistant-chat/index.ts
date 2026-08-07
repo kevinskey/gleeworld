@@ -287,6 +287,7 @@ serve(async (req) => {
             homeAddress,
             webSearchUrl,
             webSearchAuthHeader,
+            firecrawlKey: (Deno.env.get('FIRECRAWL_API_KEY') ?? '').trim() || undefined,
           });
           result = toolOut.replyJson;
           // Multi-tool iterations: last non-undefined panel wins. The panel is a UI

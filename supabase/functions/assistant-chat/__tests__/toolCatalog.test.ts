@@ -56,6 +56,7 @@ describe('toolCatalog', () => {
       'query_calendar',
       'read_news_feeds',
       'remember_preference',
+      'research_repertoire',
       'search_academy',
       'search_liturgy',
       'search_music',

@@ -22,6 +22,8 @@ export interface Deps {
   homeAddress?: string;
   webSearchUrl?: string;
   webSearchAuthHeader?: string;
+  /** Firecrawl, for reading source pages during repertoire research. */
+  firecrawlKey?: string;
 }
 
 export interface PlaceEntry {
@@ -72,6 +74,7 @@ export async function executeServerTool(
       case 'lookup_bible': return { replyJson: await lookupBible(args, deps) };
       case 'liturgical_day': return { replyJson: await liturgicalDay(args, deps) };
       case 'web_search': return await webSearch(args, deps);
+      case 'research_repertoire': return await researchRepertoire(args, deps);
       case 'get_assignments':
       case 'get_grades':
       case 'get_grade_trend':
@@ -586,6 +589,97 @@ async function webSearch(args: Record<string, unknown>, deps: Deps): Promise<Too
   return {
     replyJson: JSON.stringify({ query: q, answer, resultCount: results.length }),
     resultsPanel: { kind: 'web', query: q, answer, results },
+  };
+}
+
+/** Repertoire research costs more than a plain search, so it gets its own meter. */
+const REPERTOIRE_DAILY_CAP = 40;
+
+/**
+ * Public information about a composer or a work.
+ *
+ * Unlike web_search this reads the best source page in full rather than
+ * stopping at snippets. For repertoire that difference is the whole point: a
+ * search description will say a motet exists, but voicing, publisher, language
+ * and the text's source live in the page body, and those are what a director
+ * actually needs before programming it.
+ *
+ * Two Firecrawl calls at most — one search, one page read — so a question costs
+ * about two credits against a pool shared with the lectionary backfill. The
+ * page read is skipped rather than retried if it fails; snippets alone still
+ * answer plenty, and half an answer beats an error.
+ */
+async function researchRepertoire(args: Record<string, unknown>, deps: Deps): Promise<ToolResult> {
+  const work = String(args.work ?? '').trim();
+  const composer = String(args.composer ?? '').trim();
+  const question = String(args.question ?? '').trim();
+  if (!work && !composer) {
+    return { replyJson: JSON.stringify({ error: 'Which piece or composer should I look up?' }) };
+  }
+  if (!deps.firecrawlKey) {
+    return { replyJson: JSON.stringify({ error: 'Repertoire research is not configured.' }) };
+  }
+
+  if (deps.supabase.rpc) {
+    const { data: post, error: rpcErr } = await deps.supabase.rpc(
+      'increment_assistant_usage', { p_tool_name: 'research_repertoire' });
+    if (rpcErr) return { replyJson: JSON.stringify({ error: 'Research rate check failed.' }) };
+    if (typeof post === 'number' && post > REPERTOIRE_DAILY_CAP) {
+      return { replyJson: JSON.stringify({
+        error: "You've hit today's research limit for this workspace. Try again tomorrow.",
+      }) };
+    }
+  }
+
+  // "choral" steers away from the pop record that shares many a hymn's title.
+  const query = [work && `"${work}"`, composer, question, 'choral music composer']
+    .filter(Boolean).join(' ');
+
+  let results: Array<{ title: string; url: string; snippet: string }> = [];
+  try {
+    const res = await fetch('https://api.firecrawl.dev/v1/search', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${deps.firecrawlKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, limit: 5 }),
+    });
+    if (!res.ok) throw new Error('search failed');
+    const body = await res.json();
+    results = (Array.isArray(body?.data) ? body.data : []).slice(0, 5).map((r: any) => ({
+      title: String(r.title ?? ''), url: String(r.url ?? ''), snippet: String(r.description ?? ''),
+    }));
+  } catch {
+    return { replyJson: JSON.stringify({ error: 'Research is unavailable right now.' }) };
+  }
+  if (!results.length) {
+    return { replyJson: JSON.stringify({ query, found: false, note: 'Nothing found for that piece.' }) };
+  }
+
+  // Read the most promising page in full. Reference sites carry the
+  // catalogue detail; a shop listing rarely does.
+  const PREFERRED = ['imslp', 'wikipedia', 'hymnary', 'cpdl', 'oxford', 'giamusic', 'ocp'];
+  const best = results.find((r) => PREFERRED.some((d) => r.url.toLowerCase().includes(d))) ?? results[0];
+  let page: string | undefined;
+  try {
+    const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${deps.firecrawlKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: best.url, formats: ['markdown'] }),
+    });
+    if (res.ok) {
+      const body = await res.json();
+      const md = String(body?.data?.markdown ?? '');
+      // Enough for the catalogue facts without burying the model in navigation.
+      if (md) page = md.slice(0, 6000);
+    }
+  } catch { /* snippets alone still answer plenty */ }
+
+  return {
+    replyJson: JSON.stringify({
+      query, found: true, source: best.url, sourceTitle: best.title,
+      page, results: results.map((r) => ({ title: r.title, url: r.url, snippet: r.snippet })),
+      note: 'Public web sources. State what is uncertain rather than filling gaps.',
+    }),
+    resultsPanel: { kind: 'web', query: work || composer, results },
   };
 }
 

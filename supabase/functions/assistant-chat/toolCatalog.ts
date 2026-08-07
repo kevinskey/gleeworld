@@ -38,6 +38,27 @@ export const TOOL_CATALOG: ToolDef[] = [
     },
     minRole: 'member', execution: 'server', confirm: false,
   },
+  {
+    name: 'research_repertoire',
+    // Deliberately drawn against search_music so the model picks correctly:
+    // one answers "do we own this", the other "what is this".
+    description:
+      'Research a composer or a choral/liturgical work on the public web: dates and biography, '
+      + "a work's voicing, language, publisher, text source, and background. "
+      + 'Use when asked ABOUT a piece or composer — who wrote it, when, what forces it needs, where the text comes from. '
+      + 'search_music searches OUR library and answers whether we hold a score; this answers what the work is. '
+      + 'Reads the best source page in full, so prefer it over web_search for music questions.',
+    parameters: {
+      type: 'object',
+      properties: {
+        work: str('Title of the piece, e.g. "Sicut cervus" or "Lead Me, Guide Me"'),
+        composer: str('Composer or arranger, e.g. "Palestrina", "Leon C. Roberts"'),
+        question: str('What specifically to find out, e.g. "voicing and publisher" or "when was it written"'),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
     {
     name: 'find_user',
     description: 'Look up a member by name to get their user id, email, and phone. Use before send_sms or send_email to an individual.',
