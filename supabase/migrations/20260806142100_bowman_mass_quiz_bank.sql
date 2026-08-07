@@ -7,7 +7,7 @@
 -- stored as the explanation released with the grade.
 --
 -- Section IV of the final (four essays, 60 points) is NOT here — it ships as
--- an assignment in 20260806140000_bowman_mass_handbook_structure.sql, because
+-- an assignment in 20260806142000_bowman_mass_handbook_structure.sql, because
 -- prose essays cannot auto-grade.
 --
 -- Companion to that structure migration; apply it FIRST (this one reuses its
