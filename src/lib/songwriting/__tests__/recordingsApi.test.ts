@@ -1,5 +1,27 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { pickRecordingMime } from '../recordingsApi';
+import { pickRecordingMime, listRecordings } from '../recordingsApi';
+
+const ROWS = [
+  { id: 'r1', song_id: 's1', user_id: 'u1', storage_key: 'k1', mime_type: 'audio/webm', size_bytes: 10, duration_ms: 1, created_at: '2026-08-06T00:00:02Z' },
+  { id: 'r2', song_id: 's1', user_id: 'u1', storage_key: 'k2', mime_type: 'audio/webm', size_bytes: 20, duration_ms: 2, created_at: '2026-08-06T00:00:01Z' },
+];
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    from: () => ({
+      select: () => ({
+        eq: () => ({ order: () => Promise.resolve({ data: ROWS, error: null }) }),
+      }),
+    }),
+  },
+}));
+
+// k1 signs, k2 cannot — the exact shape of the production failure.
+vi.mock('@/utils/storage', () => ({
+  getSignedUrl: vi.fn(async (_bucket: string, path: string) =>
+    path === 'k1' ? 'https://signed/k1' : null,
+  ),
+}));
 
 describe('pickRecordingMime', () => {
   afterEach(() => vi.unstubAllGlobals());
@@ -34,5 +56,28 @@ describe('pickRecordingMime', () => {
       vendor: 'Apple Computer, Inc.',
     });
     expect(pickRecordingMime().ext).toBe('m4a');
+  });
+});
+
+describe('listRecordings', () => {
+  it('keeps a recording whose audio cannot be signed, with a null url', async () => {
+    // The bug this guards: unsignable rows used to be filtered out, so five
+    // saved recordings rendered as "No recordings yet" while the rows and the
+    // audio files both existed. A saved take must never silently disappear.
+    const out = await listRecordings('s1');
+    expect(out).toHaveLength(2);
+    expect(out.map((r) => r.id)).toEqual(['r1', 'r2']);
+    expect(out[1].url).toBeNull();
+  });
+
+  it('still returns the playable url for rows that do sign', async () => {
+    const out = await listRecordings('s1');
+    expect(out[0].url).toBe('https://signed/k1');
+  });
+
+  it('requests signing with waitForReady so a fresh upload rides out the flatten window', async () => {
+    const { getSignedUrl } = await import('@/utils/storage');
+    await listRecordings('s1');
+    expect(getSignedUrl).toHaveBeenCalledWith('songwriting', 'k1', 3600, true);
   });
 });

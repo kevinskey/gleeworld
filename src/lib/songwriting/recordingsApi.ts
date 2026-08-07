@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { getSignedUrl } from '@/utils/storage';
 
 export type SongRecording = {
   id: string; song_id: string; user_id: string; storage_key: string;
@@ -73,24 +74,28 @@ export async function uploadRecording(args: {
   return data as SongRecording;
 }
 
-export async function listRecordings(songId: string): Promise<(SongRecording & { url: string })[]> {
+// A recording whose audio could not be signed still gets returned, with a null
+// url. It used to be dropped from the array, which turned any storage-side
+// problem into a recording that had visibly saved and then silently vanished —
+// the UI said "No recordings yet" while five rows sat in the table and five
+// files sat in the bucket. A take the singer made must never disappear without
+// saying why.
+export async function listRecordings(songId: string): Promise<(SongRecording & { url: string | null })[]> {
   const { data, error } = await supabase
     .from('gw_song_recordings').select('*')
     .eq('song_id', songId).order('created_at', { ascending: false });
   if (error) throw error;
   const rows = (data ?? []) as SongRecording[];
-  const signed = await Promise.all(
-    rows.map(async (rec) => {
-      const { data: s, error: signErr } = await supabase.storage
-        .from('songwriting').createSignedUrl(rec.storage_key, 3600);
-      if (signErr || !s?.signedUrl) {
-        console.error('[songwriting] could not sign recording url', rec.storage_key, signErr);
-        return null;
-      }
-      return { ...rec, url: s.signedUrl };
-    }),
+  return Promise.all(
+    rows.map(async (rec) => ({
+      ...rec,
+      // waitForReady rides out the stub→flat flatten window, during which
+      // createSignedUrl returns NoSuchKey for a just-uploaded object. This is
+      // the shared helper every other bucket already goes through; songwriting
+      // was calling createSignedUrl raw, with no retry.
+      url: await getSignedUrl('songwriting', rec.storage_key, 3600, true),
+    })),
   );
-  return signed.filter((r): r is SongRecording & { url: string } => r !== null);
 }
 
 export async function deleteRecording(rec: SongRecording): Promise<void> {

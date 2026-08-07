@@ -59,7 +59,19 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-type RecordingRow = SongRecording & { url: string };
+// url is null when the audio could not be signed. The take is still real and
+// still listed — see listRecordings in recordingsApi.
+type RecordingRow = SongRecording & { url: string | null };
+
+// Errors surfaced here come from supabase-js, the MediaDevices/MediaRecorder
+// APIs, and our own throws. None of those guarantee an Error instance, so
+// narrow instead of assuming `.message` exists.
+function errMessage(e: unknown, fallback: string): string {
+  if (e instanceof Error && e.message) return e.message;
+  if (typeof e === 'string' && e) return e;
+  const m = (e as { message?: unknown } | null)?.message;
+  return typeof m === 'string' && m ? m : fallback;
+}
 
 export default function RecorderPanel({ songId, compact = false }: { songId: string; compact?: boolean }) {
   const [recordings, setRecordings] = useState<RecordingRow[]>([]);
@@ -84,7 +96,9 @@ export default function RecorderPanel({ songId, compact = false }: { songId: str
   useEffect(() => { pendingTakeRef.current = pendingTake; }, [pendingTake]);
 
   function loadRecordings() {
-    listRecordings(songId).then(setRecordings).catch((e: any) => toast.error(e.message || 'Could not load recordings'));
+    listRecordings(songId)
+      .then(setRecordings)
+      .catch((e: unknown) => toast.error(errMessage(e, 'Could not load recordings')));
   }
 
   useEffect(() => {
@@ -135,25 +149,26 @@ export default function RecorderPanel({ songId, compact = false }: { songId: str
     let stream: MediaStream;
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraint });
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errName = (err as { name?: string } | null)?.name;
       // If the saved exact-id input no longer works (unplugged etc.), retry default.
-      if (err?.name === 'OverconstrainedError' && deviceId !== 'default') {
+      if (errName === 'OverconstrainedError' && deviceId !== 'default') {
         toast.message('Selected input unavailable — falling back to default mic');
         setDeviceId('default');
         try {
           stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        } catch (err2: any) {
-          toast.error(err2?.message || 'Could not access microphone');
+        } catch (err2: unknown) {
+          toast.error(errMessage(err2, 'Could not access microphone'));
           return;
         }
-      } else if (err && err.name === 'NotAllowedError') {
+      } else if (errName === 'NotAllowedError') {
         toast.error('Microphone access denied. Enable it in your browser settings.');
         return;
-      } else if (err && err.name === 'NotFoundError') {
+      } else if (errName === 'NotFoundError') {
         toast.error('No microphone found.');
         return;
       } else {
-        toast.error(err?.message || 'Could not access microphone');
+        toast.error(errMessage(err, 'Could not access microphone'));
         return;
       }
     }
@@ -165,8 +180,8 @@ export default function RecorderPanel({ songId, compact = false }: { songId: str
     let rec: MediaRecorder;
     try {
       rec = new MediaRecorder(stream, { mimeType });
-    } catch (err: any) {
-      toast.error(err?.message || 'Could not start recorder');
+    } catch (err: unknown) {
+      toast.error(errMessage(err, 'Could not start recorder'));
       stream.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
       return;
@@ -248,7 +263,7 @@ export default function RecorderPanel({ songId, compact = false }: { songId: str
       setState('idle');
       toast.success('Recording saved');
       loadRecordings();
-    } catch (e: any) {
+    } catch {
       setState('failed');
       toast.error('Upload failed — take kept locally');
     }
@@ -267,8 +282,8 @@ export default function RecorderPanel({ songId, compact = false }: { songId: str
     try {
       await deleteRecording(rec);
       setRecordings((prev) => prev.filter((r) => r.id !== rec.id));
-    } catch (e: any) {
-      toast.error(e.message || 'Delete failed');
+    } catch (e: unknown) {
+      toast.error(errMessage(e, 'Delete failed'));
     }
   }
 
@@ -391,7 +406,16 @@ export default function RecorderPanel({ songId, compact = false }: { songId: str
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
-        <audio controls preload="none" src={r.url} className="w-full" />
+        {/* A take with no signed url is still a real, saved take — show it and
+            say what is wrong. Hiding it is what made five recordings look like
+            they had never been made. */}
+        {r.url ? (
+          <audio controls preload="none" src={r.url} className="w-full" />
+        ) : (
+          <p className="text-sm text-rose-600">
+            Saved, but the audio could not be loaded right now. It is not lost — try reloading in a moment.
+          </p>
+        )}
         <div className="mt-1 text-sm text-muted-foreground flex gap-3">
           <span>{formatSize(r.size_bytes)}</span>
           {r.duration_ms ? <span>{formatTime(r.duration_ms)}</span> : null}
