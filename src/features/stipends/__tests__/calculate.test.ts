@@ -143,4 +143,52 @@ describe('calculateStanding', () => {
     expect(r.earned).toBe(0);
     expect(r.perServiceValue).toBe(0);
   });
+
+  it('scores an unmarked service as zero, apart from a marked absence', () => {
+    const r = calculateStanding({
+      baseAmount: 500,
+      requiredServices: 20,
+      marks: marks(...Array(18).fill('present')),
+      unmarkedUnits: 2,
+      weights: DEFAULT_STATUS_WEIGHTS,
+    });
+    // Matches the view: unmarked adds nothing to credit and is reported apart
+    // from absences, which count only a status that was actually recorded.
+    expect(r.creditedServices).toBe(18);
+    expect(r.unmarkedCount).toBe(2);
+    expect(r.absences).toBe(0);
+    expect(r.earned).toBe(450);
+  });
+
+  it('reports the shortfall when roll was never taken at some services', () => {
+    // 15 services recorded against a 20-service requirement: a scholar present
+    // at every one of them still cannot earn the full stipend, and the reason
+    // is the calendar, not the student.
+    const r = calculateStanding({
+      baseAmount: 500,
+      requiredServices: 20,
+      marks: marks(...Array(15).fill('present')),
+      uncoveredUnits: 10,
+      weights: DEFAULT_STATUS_WEIGHTS,
+    });
+    expect(r.creditedServices).toBe(15);
+    expect(r.absences).toBe(0);
+    expect(r.uncoveredUnits).toBe(10);
+    expect(r.shortfallUnits).toBe(5);
+    expect(r.earned).toBe(375);
+    expect(r.forfeited).toBe(125);
+  });
+
+  it('reports no shortfall once the calendar covers the requirement', () => {
+    const r = calculateStanding({
+      baseAmount: 500,
+      requiredServices: 20,
+      marks: marks(...Array(25).fill('present')),
+      weights: DEFAULT_STATUS_WEIGHTS,
+    });
+    expect(r.shortfallUnits).toBe(0);
+    // Over-attendance is clamped to the base amount, never more.
+    expect(r.earned).toBe(500);
+    expect(r.forfeited).toBe(0);
+  });
 });

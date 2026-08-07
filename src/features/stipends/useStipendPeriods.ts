@@ -15,6 +15,14 @@ export interface StipendPeriod {
   closed_at: string | null;
 }
 
+/** Summary returned by close_stipend_period(). */
+export interface CloseResult {
+  period_id: string;
+  awards_closed: number;
+  total_final_amount: number;
+  uncovered_units: number;
+}
+
 export interface NewPeriod {
   name: string;
   starts_on: string;
@@ -76,35 +84,25 @@ export function useStipendPeriods() {
     await refetch();
   }, [refetch]);
 
-  const closePeriod = useCallback(async (id: string) => {
-    // Snapshot the derived amounts, then freeze the period.
-    const { data: standing, error: sErr } = await db
-      .from('v_stipend_standing').select('award_id, earned').eq('period_id', id);
-    if (sErr) throw new Error(sErr.message);
-
-    for (const row of standing ?? []) {
-      const { error: uErr } = await db
-        .from('gw_stipend_awards')
-        .update({ final_amount: row.earned, status: 'closed' })
-        .eq('id', row.award_id);
-      if (uErr) throw new Error(uErr.message);
-    }
-
-    const { data: pol } = await db
-      .from('gw_stipend_periods')
-      .select('policy_id, gw_stipend_policies(weights)')
-      .eq('id', id).maybeSingle();
-
-    const { error: pErr } = await db
-      .from('gw_stipend_periods')
-      .update({
-        status: 'closed',
-        closed_at: new Date().toISOString(),
-        policy_weights: pol?.gw_stipend_policies?.weights ?? null,
-      })
-      .eq('id', id);
-    if (pErr) throw new Error(pErr.message);
+  /**
+   * Closes a period through close_stipend_period().
+   *
+   * This used to be a client-side loop: read the standing view, then one
+   * UPDATE per award, then one for the period, with no transaction around any
+   * of it. A failure partway left some awards frozen and closed while others
+   * stayed active and the period stayed open, and a retry recomputed from the
+   * *current* view — so rows could end up frozen from two different snapshots.
+   * It also meant the browser picked the dollar figure written to final_amount.
+   *
+   * The function does the whole close server-side from one snapshot.
+   */
+  const closePeriod = useCallback(async (id: string): Promise<CloseResult> => {
+    const { data, error: err } = await db.rpc('close_stipend_period', {
+      p_period_id: id,
+    });
+    if (err) throw new Error(err.message);
     await refetch();
+    return (data ?? {}) as CloseResult;
   }, [refetch]);
 
   return { periods, loading, error, createPeriod, updatePeriod, closePeriod, refetch };

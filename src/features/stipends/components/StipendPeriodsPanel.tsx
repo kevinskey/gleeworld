@@ -26,7 +26,9 @@ export function StipendPeriodsPanel() {
         </Button>
         <StipendRoster
           period={current}
-          onClose={() => closePeriod(current.id)}
+          // closePeriod resolves with a close summary; the roster only needs
+          // to know it finished, and errors still propagate to the dialog.
+          onClose={async () => { await closePeriod(current.id); }}
           onActivate={() => updatePeriod(current.id, { status: 'active' })}
         />
       </div>

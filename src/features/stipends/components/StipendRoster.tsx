@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useStipendStanding } from '../useStipendStanding';
+import { useStipendCoverage, useStipendStanding } from '../useStipendStanding';
 import type { StipendPeriod } from '../useStipendPeriods';
 import { EnrollStudentsDialog } from './EnrollStudentsDialog';
 import { ClosePeriodDialog } from './ClosePeriodDialog';
@@ -23,6 +23,7 @@ interface Props {
 
 export function StipendRoster({ period, onClose, onActivate }: Props) {
   const { rows, loading, error, refetch } = useStipendStanding(period.id);
+  const { coverage } = useStipendCoverage(period.id);
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
 
@@ -30,6 +31,8 @@ export function StipendRoster({ period, onClose, onActivate }: Props) {
   const totalForfeited = rows.reduce((s, r) => s + Number(r.forfeited ?? 0), 0);
   const anyUnmarked = rows.some((r) => Number(r.unmarked_count) > 0);
   const anyUnmapped = rows.some((r) => Number(r.unmapped_count) > 0);
+  const uncovered = Number(coverage?.uncovered_units ?? 0);
+  const shortfall = Number(coverage?.shortfall_units ?? 0);
 
   const applyOverride = async (awardId: string) => {
     const raw = window.prompt('Override amount (dollars):');
@@ -73,10 +76,23 @@ export function StipendRoster({ period, onClose, onActivate }: Props) {
         </Card>
       </div>
 
-      {(anyUnmarked || anyUnmapped) && (
+      {(anyUnmarked || anyUnmapped || uncovered > 0) && (
         <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-xs">
           <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600" />
-          <div>
+          <div className="space-y-1">
+            {uncovered > 0 && (
+              <p>
+                Roll was never taken at {uncovered} service
+                {uncovered === 1 ? '' : 's'} in this period, so {uncovered === 1 ? 'it earns' : 'they earn'} credit for
+                nobody and {uncovered === 1 ? 'does' : 'do'} not appear in any student's row below.
+                {shortfall > 0 && (
+                  <> Only {coverage?.covered_units} of the {coverage?.required_services}{' '}
+                  services needed for a full stipend have been recorded, so even
+                  perfect attendance cannot reach 100% until roll is taken or{' '}
+                  <em>required services</em> is lowered.</>
+                )}
+              </p>
+            )}
             {anyUnmarked && (
               <p>Some students have no attendance row for services where roll was taken. Those count as absences — check the roster before closing.</p>
             )}
@@ -160,7 +176,7 @@ export function StipendRoster({ period, onClose, onActivate }: Props) {
       <EnrollStudentsDialog period={period} open={enrollOpen}
         onOpenChange={setEnrollOpen} onEnrolled={refetch} />
 
-      <ClosePeriodDialog periodName={period.name} rows={rows}
+      <ClosePeriodDialog periodName={period.name} rows={rows} coverage={coverage}
         open={closeOpen} onOpenChange={setCloseOpen} onConfirm={onClose} />
     </div>
   );
