@@ -19,8 +19,19 @@ beforeEach(() => {
       choices: [{ message: { content: 'A synthesized answer.' } }],
     }),
   };
+  const firecrawlOk = {
+    ok: true,
+    json: async () => ({
+      success: true,
+      data: [
+        { title: 'FC 1', url: 'https://fc.example/1', description: 'FC first snippet' },
+        { title: 'FC 2', url: 'https://fc.example/2', description: 'FC second snippet' },
+      ],
+    }),
+  };
   vi.stubGlobal('fetch', vi.fn(async (url: string) => {
     if (String(url).includes('brave')) return braveOk;
+    if (String(url).includes('firecrawl')) return firecrawlOk;
     if (String(url).includes('deepseek')) return deepseekOk;
     throw new Error(`unexpected fetch: ${url}`);
   }));
@@ -63,5 +74,32 @@ describe('runWebSearch', () => {
     expect(deepseekCall).toBeDefined();
     const body = JSON.parse((deepseekCall as [string, { body: string }])[1].body);
     expect(body.model).toBe('deepseek-v4-flash');
+  });
+
+  it('searches with Firecrawl when its key is present', async () => {
+    const out = await runWebSearch({ query: 'thea bowman', firecrawlKey: 'f', deepseekKey: 'd' });
+    expect(out.results).toHaveLength(2);
+    expect(out.results[0]).toEqual({
+      title: 'FC 1', url: 'https://fc.example/1', snippet: 'FC first snippet',
+    });
+    expect(out.answer).toBe('A synthesized answer.');
+  });
+
+  it('prefers Firecrawl over Brave when both are configured', async () => {
+    const out = await runWebSearch({ query: 'x', braveKey: 'b', firecrawlKey: 'f', deepseekKey: 'd' });
+    expect(out.results[0].url).toBe('https://fc.example/1');
+  });
+
+  it('still returns results when there is no summarizer key', async () => {
+    // Requiring DeepSeek to answer at all is what made an unset key look like
+    // a total outage. Results without a summary are still useful.
+    const out = await runWebSearch({ query: 'x', firecrawlKey: 'f' });
+    expect(out.results).toHaveLength(2);
+    expect(out.answer).toBeUndefined();
+  });
+
+  it('reports a clear error when no provider is configured', async () => {
+    await expect(runWebSearch({ query: 'x', deepseekKey: 'd' }))
+      .rejects.toThrow(/not configured/i);
   });
 });

@@ -15,9 +15,15 @@ serve(async (req) => {
   const caller = await authenticateCaller(req);
   if (!caller?.userId) return unauthorizedResponse(corsHeaders);
 
-  const braveKey = Deno.env.get('BRAVE_SEARCH_API_KEY');
-  const deepseekKey = Deno.env.get('DEEPSEEK_API_KEY');
-  if (!braveKey || !deepseekKey) {
+  // A search provider is required; the summarizer is not. Requiring both meant
+  // an unset Brave key — which is how this shipped — turned every question into
+  // "Search is not configured" even though results were perfectly obtainable.
+  // Empty strings count as unset: the droplet had BRAVE_SEARCH_API_KEY defined
+  // but blank, which passes a truthiness check on the name alone.
+  const braveKey = (Deno.env.get('BRAVE_SEARCH_API_KEY') ?? '').trim() || undefined;
+  const firecrawlKey = (Deno.env.get('FIRECRAWL_API_KEY') ?? '').trim() || undefined;
+  const deepseekKey = (Deno.env.get('DEEPSEEK_API_KEY') ?? '').trim() || undefined;
+  if (!braveKey && !firecrawlKey) {
     return new Response(JSON.stringify({ error: 'Search is not configured.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
@@ -35,7 +41,7 @@ serve(async (req) => {
 
   const deepseekModel = Deno.env.get('ASSISTANT_MODEL') ?? 'deepseek-v4-pro';
   try {
-    const out = await runWebSearch({ query, braveKey, deepseekKey, deepseekModel });
+    const out = await runWebSearch({ query, braveKey, firecrawlKey, deepseekKey, deepseekModel });
     return new Response(JSON.stringify(out),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (e) {
