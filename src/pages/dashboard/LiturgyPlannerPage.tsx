@@ -1094,11 +1094,28 @@ function SongSlot({
             </button>
           </div>
           <div className="aspect-video w-full">
+            {/* No autoplay, and declare the origin.
+             *
+             * YouTube serves a "Sign in to confirm you're not a bot"
+             * interstitial in place of the player when its bot heuristics
+             * fire. Autoplaying embeds are one of the signals it weighs, and
+             * the parameter was buying that risk for behaviour browsers block
+             * anyway — unmuted autoplay needs a user gesture inside the frame,
+             * so the video did not actually start on its own. Opening the
+             * player is already a deliberate click; one more on the poster is
+             * a fair trade for not looking automated.
+             *
+             * `origin` is what the IFrame API asks embedders to send so the
+             * request is attributable to this site rather than anonymous.
+             *
+             * Neither is a guaranteed cure: the interstitial keys mostly off
+             * the viewer's own IP and account reputation, which no embed
+             * parameter can speak for. */}
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&origin=${encodeURIComponent(window.location.origin)}`}
               title={title.trim() || label}
               className="w-full h-full"
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allow="encrypted-media; picture-in-picture; fullscreen"
               allowFullScreen
             />
           </div>
