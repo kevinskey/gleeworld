@@ -30641,6 +30641,10 @@ export type Database = {
       }
       youtube_videos: {
         Row: {
+          archive_bucket: string | null
+          archive_object_key: string | null
+          archive_region: string | null
+          archive_size_bytes: number | null
           category: string | null
           channel_id: string
           comment_count: number | null
@@ -30662,6 +30666,10 @@ export type Database = {
           view_count: number | null
         }
         Insert: {
+          archive_bucket?: string | null
+          archive_object_key?: string | null
+          archive_region?: string | null
+          archive_size_bytes?: number | null
           category?: string | null
           channel_id: string
           comment_count?: number | null
@@ -30683,6 +30691,10 @@ export type Database = {
           view_count?: number | null
         }
         Update: {
+          archive_bucket?: string | null
+          archive_object_key?: string | null
+          archive_region?: string | null
+          archive_size_bytes?: number | null
           category?: string | null
           channel_id?: string
           comment_count?: number | null

@@ -79,6 +79,21 @@ function formatTime(iso: string): string {
   });
 }
 
+/**
+ * Split a title on a dash separator so each half sits on its own line.
+ *
+ * "Kevin Phillip Johnson — Retirement Concert" is really two things, and left
+ * to normal wrapping the break lands wherever the column runs out — stranding
+ * the dash at the end of a line, or splitting "Retirement Concert" in half.
+ * Breaking at the dash puts it where the meaning already is.
+ *
+ * Titles without a dash are returned untouched and wrap normally.
+ */
+function titleLines(title: string): string[] {
+  const parts = title.split(/\s+[—–-]\s+/);
+  return parts.length > 1 ? parts.map((p) => p.trim()).filter(Boolean) : [title];
+}
+
 /** −/+ stepper. Kept local: the shadcn set has no numeric stepper. */
 function Stepper({
   value, onChange, min = 0, max = 20, label,
@@ -200,11 +215,21 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                     {config.heading}
                   </p>
                 )}
+                {/* hyphens-none: auto-hyphenation split the title mid-word
+                    ("Re-tirement"). Wrap at spaces instead. No text-wrap:balance
+                    either — it evened the lines by making them all short, which
+                    broke "Retirement Concert" across two of them. break-words
+                    stays only as a last resort for a single over-wide word. */}
                 <h2
-                  className="mt-3 normal-case text-3xl cq-sm:text-4xl cq-lg:text-5xl font-bold tracking-tight leading-[1.1] break-words hyphens-auto"
+                  className="mt-3 normal-case text-3xl cq-sm:text-4xl cq-lg:text-5xl font-bold tracking-tight leading-[1.1] break-words hyphens-none"
                   style={{ fontFamily: 'var(--site-heading-font)' }}
                 >
-                  {ev!.title}
+                  {titleLines(ev!.title).map((line, i) => (
+                    // Each half of a dash-separated title gets its own line, so
+                    // the break lands where the meaning does rather than
+                    // wherever the column happens to run out.
+                    <span key={i} className="block">{line}</span>
+                  ))}
                 </h2>
                 {config.blurb && (
                   <p className="mt-5 text-lg text-muted-foreground max-w-2xl">{config.blurb}</p>
