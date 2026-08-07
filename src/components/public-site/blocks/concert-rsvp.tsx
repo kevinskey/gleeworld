@@ -417,8 +417,33 @@ function RsvpDialog({
           </div>
         ) : (
           <form onSubmit={submit} className="px-6 py-5 space-y-6">
+            {/* Who's buying. Name, email, and phone lead the form: a visitor
+                who abandons partway has still told us who they are, and the
+                email is where the tickets go. The notes field deliberately
+                stays at the bottom — it sits after the souvenir steppers,
+                which tell the buyer to "say so in the notes below" for mixed
+                sizes, and that instruction has to stay true. */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="rsvp-name">Your name</Label>
+                <Input id="rsvp-name" value={name} onChange={(e) => setName(e.target.value)}
+                       autoComplete="name" required className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="rsvp-email">Email</Label>
+                <Input id="rsvp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                       autoComplete="email" required className="mt-1" />
+                <p className="mt-1 text-xs text-muted-foreground">Your tickets and receipt are sent here.</p>
+              </div>
+              <div>
+                <Label htmlFor="rsvp-phone">Phone <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Input id="rsvp-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                       autoComplete="tel" className="mt-1" />
+              </div>
+            </div>
+
             {/* Headcount */}
-            <div>
+            <div className="border-t border-border pt-5">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <Label className="text-base font-semibold">How many are coming?</Label>
@@ -520,29 +545,12 @@ function RsvpDialog({
               </div>
             )}
 
-            {/* Buyer */}
-            <div className="border-t border-border pt-5 space-y-4">
-              <div>
-                <Label htmlFor="rsvp-name">Your name</Label>
-                <Input id="rsvp-name" value={name} onChange={(e) => setName(e.target.value)}
-                       autoComplete="name" required className="mt-1" />
-              </div>
-              <div>
-                <Label htmlFor="rsvp-email">Email</Label>
-                <Input id="rsvp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                       autoComplete="email" required className="mt-1" />
-                <p className="mt-1 text-xs text-muted-foreground">Your tickets and receipt are sent here.</p>
-              </div>
-              <div>
-                <Label htmlFor="rsvp-phone">Phone <span className="text-muted-foreground font-normal">(optional)</span></Label>
-                <Input id="rsvp-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
-                       autoComplete="tel" className="mt-1" />
-              </div>
-              <div>
-                <Label htmlFor="rsvp-notes">Anything we should know? <span className="text-muted-foreground font-normal">(optional)</span></Label>
-                <Textarea id="rsvp-notes" value={notes} onChange={(e) => setNotes(e.target.value)}
-                          rows={2} className="mt-1" placeholder="Accessibility needs, mixed shirt sizes, who you're coming with…" />
-              </div>
+            {/* Notes. Stays last so the souvenir steppers' "say so in the
+                notes below" points somewhere that is actually below them. */}
+            <div className="border-t border-border pt-5">
+              <Label htmlFor="rsvp-notes">Anything we should know? <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Textarea id="rsvp-notes" value={notes} onChange={(e) => setNotes(e.target.value)}
+                        rows={2} className="mt-1" placeholder="Accessibility needs, mixed shirt sizes, who you're coming with…" />
             </div>
 
             {/* Total */}
