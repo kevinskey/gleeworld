@@ -507,19 +507,78 @@ function LiturgyEditor({ massId }: { massId: string }) {
     })();
   }, [massId]);
 
-  // Calls the universalis proxy and merges the parsed citations into
-  // the row's reading fields. `overwrite=true` replaces whatever's
-  // there; `false` keeps user-edited values and only fills blanks.
-  async function fetchReadingsAndApply(iso: string, overwrite: boolean): Promise<{ liturgicalTitle: string | null }> {
+  /**
+   * The day's readings out of the local USCCB table, or null if that date
+   * hasn't been backfilled.
+   *
+   * Universalis publishes only about a week either side of today, so planning
+   * any further out came back empty — which is most of the point of a planner.
+   * usccb_readings holds dates taken from the USCCB lectionary, which publishes
+   * the whole liturgical year, and is authoritative for both the day's title
+   * and its cycle.
+   *
+   * Shaped into the same block array the edge function returns so the mapping
+   * and the readings dialog stay one code path rather than two.
+   */
+  async function readingsFromCache(iso: string): Promise<
+    { liturgicalTitle: string | null; cycle: SundayCycle | null;
+      blocks: Array<{ heading: string; citation: string | null; html: string }> } | null
+  > {
+    const { data, error } = await (supabase as any)
+      .from('usccb_readings')
+      .select('liturgical_day, year_cycle, first_reading, first_reading_reference,'
+            + ' responsorial_psalm, psalm_response, second_reading,'
+            + ' second_reading_reference, gospel_acclamation, gospel, gospel_reference')
+      .eq('liturgical_date', iso)
+      .maybeSingle();
+    if (error || !data) return null;
+
+    const blocks = ([
+      { heading: 'First Reading',      citation: data.first_reading_reference,  html: data.first_reading },
+      // The stored psalm text is the R. refrain — the part a music director
+      // actually needs, and what the psalm field is planned against.
+      { heading: 'Responsorial Psalm', citation: data.responsorial_psalm,       html: data.psalm_response },
+      { heading: 'Second Reading',     citation: data.second_reading_reference, html: data.second_reading },
+      { heading: 'Gospel Acclamation', citation: data.gospel_acclamation,       html: null },
+      { heading: 'Gospel',             citation: data.gospel_reference,         html: data.gospel },
+    ] as Array<{ heading: string; citation: string | null; html: string | null }>)
+      .filter((b) => b.citation || b.html)
+      .map((b) => ({ heading: b.heading, citation: b.citation ?? null, html: b.html ?? '' }));
+
+    if (!blocks.length) return null;
+    return {
+      liturgicalTitle: (data.liturgical_day as string) ?? null,
+      cycle: (data.year_cycle as SundayCycle) ?? null,
+      blocks,
+    };
+  }
+
+  // Merges the day's citations into the row's reading fields, preferring the
+  // local USCCB table and falling back to the Universalis proxy for dates it
+  // doesn't cover (near dates, and weekdays the backfill skipped).
+  // `overwrite=true` replaces whatever's there; `false` only fills blanks.
+  async function fetchReadingsAndApply(iso: string, overwrite: boolean): Promise<{ liturgicalTitle: string | null; cycle: SundayCycle | null }> {
     setPullingReadings(true);
     try {
-      const { data: resp, error: fnErr } = await supabase.functions.invoke('usccb-readings', {
-        body: { date: iso },
-      });
-      if (fnErr) throw new Error(fnErr.message);
-      const liturgicalTitle = ((resp as any)?.liturgicalTitle as string | null) ?? null;
-      const blocks = ((resp as any)?.readings as Array<{ heading: string; citation: string | null; html: string }>) || [];
-      if (!blocks.length) return { liturgicalTitle };
+      let liturgicalTitle: string | null = null;
+      let cycle: SundayCycle | null = null;
+      let blocks: Array<{ heading: string; citation: string | null; html: string }> = [];
+
+      const cached = await readingsFromCache(iso);
+      if (cached) {
+        liturgicalTitle = cached.liturgicalTitle;
+        cycle = cached.cycle;
+        blocks = cached.blocks;
+      } else {
+        const { data: resp, error: fnErr } = await supabase.functions.invoke('usccb-readings', {
+          body: { date: iso },
+        });
+        if (fnErr) throw new Error(fnErr.message);
+        liturgicalTitle = ((resp as any)?.liturgicalTitle as string | null) ?? null;
+        blocks = ((resp as any)?.readings as Array<{ heading: string; citation: string | null; html: string }>) || [];
+      }
+
+      if (!blocks.length) return { liturgicalTitle, cycle };
       setReadingBlocks(blocks);
       const mapped = mapReadingBlocksToFields(blocks);
       setRow((cur) => {
@@ -531,10 +590,10 @@ function LiturgyEditor({ massId }: { massId: string }) {
         }
         return Object.keys(next).length ? { ...cur, ...next } : cur;
       });
-      return { liturgicalTitle };
+      return { liturgicalTitle, cycle };
     } catch (e: any) {
       if (overwrite) toast.error(`Couldn't fetch readings: ${e?.message || e}`);
-      return { liturgicalTitle: null };
+      return { liturgicalTitle: null, cycle: null };
     } finally {
       setPullingReadings(false);
     }
@@ -565,17 +624,24 @@ function LiturgyEditor({ massId }: { massId: string }) {
       observation: userCustomized ? row.observation : (day.observation ?? null),
     });
     // Readings are a function of the date — replace them for the new
-    // date. The same pull carries the day's liturgical title, which
-    // Universalis names for ordinary weekdays/Sundays the local table
+    // date. The same pull carries the day's liturgical title, which the
+    // sources name for ordinary weekdays/Sundays the local feast table
     // doesn't (e.g. "Saturday of week 13 in Ordinary Time"). Fill the
     // observation from it when the user hasn't customized it and the
     // local table had no feast.
-    void fetchReadingsAndApply(iso, /*overwrite=*/true).then(({ liturgicalTitle }) => {
-      if (userCustomized || !liturgicalTitle) return;
+    void fetchReadingsAndApply(iso, /*overwrite=*/true).then(({ liturgicalTitle, cycle }) => {
       setRow((cur) => {
         if (!cur || cur.mass_date !== iso) return cur; // date changed again mid-fetch
-        if (cur.observation && !isAutoObservation(cur.observation)) return cur;
-        return { ...cur, observation: liturgicalTitle };
+        const next: Partial<MassRow> = {};
+        // A cached row carries the cycle off the USCCB lectionary, which is
+        // right across the Advent boundary where the liturgical year turns
+        // over mid-term and a date-only guess reads the old year's cycle.
+        if (cycle && cycle !== cur.sunday_cycle) next.sunday_cycle = cycle;
+        if (liturgicalTitle && !userCustomized
+            && !(cur.observation && !isAutoObservation(cur.observation))) {
+          next.observation = liturgicalTitle;
+        }
+        return Object.keys(next).length ? { ...cur, ...next } : cur;
       });
     });
   };
@@ -650,18 +716,18 @@ function LiturgyEditor({ massId }: { massId: string }) {
               onClick={() => fetchReadingsAndApply(row.mass_date, /*overwrite=*/true)}
               disabled={pullingReadings}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline disabled:opacity-50"
-              title="Replace reading citations + psalm with Universalis data for this date"
+              title="Replace reading citations + psalm with the lectionary readings for this date"
             >
               {pullingReadings ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BookOpen className="w-3.5 h-3.5" />}
-              Pull from Universalis
+              Pull readings
             </button>
           </div>
         </CardContent>
       </Card>
 
       {/* Order of Mass — music and readings interleaved in the order the
-          liturgy actually follows. "Pull from Universalis" fills the
-          reading rows below in place. */}
+          liturgy actually follows. "Pull readings" fills the reading rows
+          below in place; choosing a date does the same automatically. */}
       <Card>
         <CardContent className="p-4 space-y-5">
           {/* Save sits here as well as at the foot of the page. The Order of
