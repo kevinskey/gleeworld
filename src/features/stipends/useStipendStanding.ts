@@ -64,6 +64,48 @@ export function useStipendStanding(periodId: string | null) {
   return { rows, loading, error, refetch };
 }
 
+export interface CoverageRow {
+  period_id: string;
+  required_services: number;
+  candidate_units: number;
+  covered_units: number;
+  /** Services matching this period where roll was never taken at all. */
+  uncovered_units: number;
+  /** How far the covered calendar falls below required_services. */
+  shortfall_units: number;
+}
+
+/**
+ * Period-level attendance coverage.
+ *
+ * `unmarked_count` on the standing view cannot see this: it counts units where
+ * this student has no row but some other student does, so a service where roll
+ * was skipped entirely is invisible to it. Those services are not zero-credit
+ * units — they are not units at all, which means a scholar present at every
+ * service that *was* recorded still forfeits the difference against
+ * required_services, silently. This is what makes that visible.
+ */
+export function useStipendCoverage(periodId: string | null) {
+  const [coverage, setCoverage] = useState<CoverageRow | null>(null);
+
+  const refetch = useCallback(async () => {
+    if (!periodId) { setCoverage(null); return; }
+    try {
+      const { data } = await db
+        .from('v_stipend_period_coverage')
+        .select('*').eq('period_id', periodId).maybeSingle();
+      setCoverage((data ?? null) as CoverageRow | null);
+    } catch {
+      // A missing coverage read must never block the roster from rendering.
+      setCoverage(null);
+    }
+  }, [periodId]);
+
+  useEffect(() => { void refetch(); }, [refetch]);
+
+  return { coverage, refetch };
+}
+
 export function useMyStipend() {
   const [standing, setStanding] = useState<StandingRow | null>(null);
   const [period, setPeriod] = useState<StipendPeriod | null>(null);

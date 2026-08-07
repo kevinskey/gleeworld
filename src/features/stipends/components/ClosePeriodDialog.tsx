@@ -3,11 +3,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { StandingRow } from '../useStipendStanding';
+import type { CoverageRow, StandingRow } from '../useStipendStanding';
+
+const money = (n: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n ?? 0);
 
 interface Props {
   periodName: string;
   rows: StandingRow[];
+  coverage?: CoverageRow | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => Promise<void>;
@@ -20,9 +24,16 @@ interface Props {
  * unmarked genuinely means absent most of the time; but a failed scan looks
  * identical. This dialog makes those students impossible to miss without
  * blocking a close that is legitimately correct.
+ *
+ * It also warns on the harder case: a service where roll was never taken at
+ * all. That one scores for nobody and does not show up in unmarked_count,
+ * because there is no attendance row anywhere to compare against. If the
+ * covered calendar has fewer services than required_services, even perfect
+ * attendance cannot earn a full stipend — so that shortfall is called out in
+ * dollars before anything is frozen.
  */
 export function ClosePeriodDialog({
-  periodName, rows, open, onOpenChange, onConfirm,
+  periodName, rows, coverage, open, onOpenChange, onConfirm,
 }: Props) {
   const [acknowledged, setAcknowledged] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -32,7 +43,15 @@ export function ClosePeriodDialog({
     .filter((r) => Number(r.unmarked_count) > 0)
     .sort((a, b) => Number(b.unmarked_count) - Number(a.unmarked_count));
 
-  const needsAck = unmarked.length > 0;
+  const uncovered = Number(coverage?.uncovered_units ?? 0);
+  const shortfall = Number(coverage?.shortfall_units ?? 0);
+
+  // What a full-attendance scholar loses per head to the shortfall, so the
+  // warning lands in dollars rather than in units.
+  const perService = rows.length ? Number(rows[0].per_service_value ?? 0) : 0;
+  const shortfallCost = shortfall * perService;
+
+  const needsAck = unmarked.length > 0 || uncovered > 0;
 
   // Never carry a previous acknowledgement into a fresh close.
   useEffect(() => {
@@ -60,7 +79,29 @@ export function ClosePeriodDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {needsAck && (
+        {uncovered > 0 && (
+          <div className="space-y-1 rounded-md border border-amber-300 bg-amber-50 p-2">
+            <p className="text-xs font-medium">
+              Roll was never taken at {uncovered} service
+              {uncovered === 1 ? '' : 's'} in this period.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Those services earn credit for nobody and are not listed per
+              student below.
+              {shortfall > 0 && (
+                <>
+                  {' '}Only {coverage?.covered_units} of the{' '}
+                  {coverage?.required_services} services needed for a full
+                  stipend were recorded, so even perfect attendance now caps at{' '}
+                  {money(Math.max(0, (rows[0]?.base_amount ?? 0) - shortfallCost))}
+                  {' '}— {money(shortfallCost)} short per scholar.
+                </>
+              )}
+            </p>
+          </div>
+        )}
+
+        {unmarked.length > 0 && (
           <div className="space-y-2">
             <p className="text-xs font-medium">
               {unmarked.length} student{unmarked.length === 1 ? '' : 's'} ha
@@ -82,15 +123,18 @@ export function ClosePeriodDialog({
             <p className="text-xs text-muted-foreground">
               These count as absences and will be frozen into final amounts.
             </p>
-            <label className="flex items-center gap-2 pt-1 cursor-pointer">
-              <Checkbox
-                aria-label="I've reviewed these"
-                checked={acknowledged}
-                onCheckedChange={(v) => setAcknowledged(v === true)}
-              />
-              <span className="text-sm">I've reviewed these</span>
-            </label>
           </div>
+        )}
+
+        {needsAck && (
+          <label className="flex items-center gap-2 pt-1 cursor-pointer">
+            <Checkbox
+              aria-label="I've reviewed these"
+              checked={acknowledged}
+              onCheckedChange={(v) => setAcknowledged(v === true)}
+            />
+            <span className="text-sm">I've reviewed these</span>
+          </label>
         )}
 
         {error && <p className="text-xs text-destructive">{error}</p>}
