@@ -27,6 +27,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { PsalmComposerDialog } from '@/components/liturgy/PsalmComposerDialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ReadingsModal } from '@/components/liturgy/ReadingsModal';
+import { readingsFromCache } from '@/lib/liturgy/cachedReadings';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import {
@@ -507,52 +508,6 @@ function LiturgyEditor({ massId }: { massId: string }) {
     })();
   }, [massId]);
 
-  /**
-   * The day's readings out of the local USCCB table, or null if that date
-   * hasn't been backfilled.
-   *
-   * Universalis publishes only about a week either side of today, so planning
-   * any further out came back empty — which is most of the point of a planner.
-   * usccb_readings holds dates taken from the USCCB lectionary, which publishes
-   * the whole liturgical year, and is authoritative for both the day's title
-   * and its cycle.
-   *
-   * Shaped into the same block array the edge function returns so the mapping
-   * and the readings dialog stay one code path rather than two.
-   */
-  async function readingsFromCache(iso: string): Promise<
-    { liturgicalTitle: string | null; cycle: SundayCycle | null;
-      blocks: Array<{ heading: string; citation: string | null; html: string }> } | null
-  > {
-    const { data, error } = await (supabase as any)
-      .from('usccb_readings')
-      .select('liturgical_day, year_cycle, first_reading, first_reading_reference,'
-            + ' responsorial_psalm, psalm_response, second_reading,'
-            + ' second_reading_reference, gospel_acclamation, gospel, gospel_reference')
-      .eq('liturgical_date', iso)
-      .maybeSingle();
-    if (error || !data) return null;
-
-    const blocks = ([
-      { heading: 'First Reading',      citation: data.first_reading_reference,  html: data.first_reading },
-      // The stored psalm text is the R. refrain — the part a music director
-      // actually needs, and what the psalm field is planned against.
-      { heading: 'Responsorial Psalm', citation: data.responsorial_psalm,       html: data.psalm_response },
-      { heading: 'Second Reading',     citation: data.second_reading_reference, html: data.second_reading },
-      { heading: 'Gospel Acclamation', citation: data.gospel_acclamation,       html: null },
-      { heading: 'Gospel',             citation: data.gospel_reference,         html: data.gospel },
-    ] as Array<{ heading: string; citation: string | null; html: string | null }>)
-      .filter((b) => b.citation || b.html)
-      .map((b) => ({ heading: b.heading, citation: b.citation ?? null, html: b.html ?? '' }));
-
-    if (!blocks.length) return null;
-    return {
-      liturgicalTitle: (data.liturgical_day as string) ?? null,
-      cycle: (data.year_cycle as SundayCycle) ?? null,
-      blocks,
-    };
-  }
-
   // Merges the day's citations into the row's reading fields, preferring the
   // local USCCB table and falling back to the Universalis proxy for dates it
   // doesn't cover (near dates, and weekdays the backfill skipped).
@@ -567,7 +522,7 @@ function LiturgyEditor({ massId }: { massId: string }) {
       const cached = await readingsFromCache(iso);
       if (cached) {
         liturgicalTitle = cached.liturgicalTitle;
-        cycle = cached.cycle;
+        cycle = (cached.cycle as SundayCycle | null);
         blocks = cached.blocks;
       } else {
         const { data: resp, error: fnErr } = await supabase.functions.invoke('usccb-readings', {
