@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { CreateTenantDialog } from '@/components/admin/CreateTenantDialog';
+import { TenantDomainDialog } from '@/components/admin/TenantDomainDialog';
 import {
   ExternalLink,
   Settings,
@@ -79,7 +80,10 @@ export default function PlatformTenantsPortal() {
   const [query, setQuery] = useState('');
 
   const isSuperAdmin = !!userProfile?.is_super_admin;
-  const tenantSlug = typeof window !== 'undefined' ? (window as any).__TENANT_CONFIG__?.tenant : null;
+  const tenantSlug =
+    typeof window !== 'undefined'
+      ? (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant ?? null
+      : null;
   const isPlatformAdmin = isSuperAdmin && tenantSlug === 'main';
 
   const { data, isLoading, refetch, isFetching } = useQuery<{ tenants: TenantRow[] }>({
@@ -148,11 +152,11 @@ export default function PlatformTenantsPortal() {
       if (tab) tab.location.href = body.link;
       else window.open(body.link, '_blank', 'noopener,noreferrer');
       toast({ title: `Opening ${t.name}`, description: `Signed in as ${body.as_email}` });
-    } catch (e: any) {
+    } catch (e: unknown) {
       tab?.close();
       toast({
         title: `Couldn't open ${t.name} admin`,
-        description: e?.message ?? 'Unknown error',
+        description: e instanceof Error ? e.message : 'Unknown error',
         variant: 'destructive',
       });
     }
@@ -162,6 +166,10 @@ export default function PlatformTenantsPortal() {
   // temp password for the tenant's admin (invalidating any staged one),
   // so it always goes through the confirm dialog below.
   const [resendTarget, setResendTarget] = useState<TenantRow | null>(null);
+  // Custom-domain editing for a live tenant. Its old home, SiteSetup, became
+  // unreachable when /admin/site-setup started redirecting away, leaving a
+  // hand-written SQL UPDATE as the only route.
+  const [domainTarget, setDomainTarget] = useState<TenantRow | null>(null);
   // Mirrors resendTarget but only updates when the dialog opens, so the
   // AlertDialogDescription keeps rendering the tenant's name during the
   // close animation instead of going blank the instant resendTarget is
@@ -376,6 +384,20 @@ export default function PlatformTenantsPortal() {
                         size="sm"
                         variant="outline"
                         className="h-8 min-h-0 lg:min-h-0 px-2 text-xs"
+                        onClick={() => setDomainTarget(t)}
+                        title={t.custom_domain
+                          ? `Custom domain: ${t.custom_domain}`
+                          : 'Set a custom domain for this tenant'}
+                      >
+                        <Globe className="w-3.5 h-3.5 mr-1" />
+                        {t.custom_domain ? 'Domain' : 'Add domain'}
+                      </Button>
+                    )}
+                    {!isPlatform && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 min-h-0 lg:min-h-0 px-2 text-xs"
                         onClick={() => openResendDialog(t)}
                         disabled={resendingId === t.id}
                         title="Email this tenant's admin a fresh sign-in (invalidates any staged password)"
@@ -403,6 +425,13 @@ export default function PlatformTenantsPortal() {
           })}
         </div>
       )}
+
+      <TenantDomainDialog
+        tenant={domainTarget}
+        open={!!domainTarget}
+        onOpenChange={(v) => !v && setDomainTarget(null)}
+        onSaved={() => queryClient.invalidateQueries({ queryKey: ['platform-tenants'] })}
+      />
 
       <AlertDialog open={!!resendTarget} onOpenChange={(v) => !v && setResendTarget(null)}>
         <AlertDialogContent>
