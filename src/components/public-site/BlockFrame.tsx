@@ -137,10 +137,13 @@ export const BlockFrame = forwardRef<HTMLDivElement, BlockFrameProps>(function B
     >
       {/* Outline overlay lives above the block content but below the toolbar.
           `outline` (not `border`) so it never nudges layout — critical when
-          the block has `position: sticky` (header) or measured heights. */}
+          the block has `position: sticky` (header) or measured heights.
+          z-40 (not z-10): the header block renders `sticky top-0 z-40` and is
+          a sibling in this same stacking context, so a lower outline gets
+          painted over wherever the header's bar sits. */}
       <div
         aria-hidden
-        className={`pointer-events-none absolute inset-0 z-10 transition-[outline-color,outline-style] ${
+        className={`pointer-events-none absolute inset-0 z-40 transition-[outline-color,outline-style] ${
           selected
             ? 'outline outline-2 -outline-offset-2 outline-primary'
             : hovered

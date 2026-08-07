@@ -114,7 +114,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     'block w-full h-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-lg';
 
   return (
-    <section id="gallery" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
+    <section id="gallery" className="gw-container py-5">
       {config.heading && (
         <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-6 flex items-center gap-2">
           <ImagePlus className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />

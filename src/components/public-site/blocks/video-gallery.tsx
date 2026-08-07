@@ -58,7 +58,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const videos = config.videos.filter((v) => v.url);
   if (videos.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Videos" /> : null;
   return (
-    <section id="watch" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
+    <section id="watch" className="gw-container py-5">
       {config.heading && (
         <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-6 flex items-center gap-2">
           <Video className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />

@@ -342,9 +342,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     <section
       ref={sectionRef}
       id="top"
-      // `select-none` only WHILE dragging: a permanent one would make the
-      // hero's own text unselectable, and these fields are edited in place.
-      className={`gw-hero-section relative overflow-hidden text-white max-w-6xl mx-auto w-full ${hasImage ? '' : 'min-h-[40vh]'} ${dragging ? 'select-none' : ''}`}
+      className={`relative overflow-hidden text-white gw-container-flush ${hasImage ? '' : 'min-h-[40vh]'}`}
       style={hasImage ? undefined : { background: 'var(--site-primary)' }}
     >
       {/* Image (when present) always renders at its natural aspect — the

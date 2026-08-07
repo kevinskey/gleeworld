@@ -12,7 +12,7 @@ import {
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
   PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, CreditCard, Receipt,
-  HandHeart,
+  HandHeart, ConciergeBell, QrCode,
   type LucideIcon, FileText } from 'lucide-react';
 
 export type NavSectionKey =
@@ -58,6 +58,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // Formerly "Prayer App"; the prayers and daily readings still live at
   // /prayer and are reachable from inside the Bible page.
   { key: 'bible',    to: '/bible',               label: 'The Bible',      icon: BookOpen,      section: 'church', tone: 'bg-violet-50 text-violet-700', tourId: 'nav-bible' },
+  { key: 'concierge', to: '/dashboard/concierge', label: 'Concierge',     icon: ConciergeBell, section: 'today', tone: 'bg-sky-50 text-sky-600',       tourId: 'nav-concierge' },
   // Music
   { key: 'music-library',   to: '/dashboard/music-library', label: 'Music Library',  icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
   { key: 'music',         to: '/dashboard/viewer',        label: 'Viewer',        icon: ScanEye,  section: 'music', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-viewer',        gridLabel: 'Music', gridIcon: Music, gate: { module: 'viewer' } },
@@ -92,6 +93,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'pr-hub',    to: '/dashboard/pr-hub', label: 'PR Hub',    icon: Megaphone,     section: 'reach', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-pr-hub', gate: { module: 'pr_hub' } },
   { key: 'fan-page',  to: '/admin/fan-page',   label: 'Fan Page',  icon: Heart,         section: 'reach', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-fan-page', gate: { adminOnly: true } },
   { key: 'feeds',     to: '/dashboard/feeds',  label: 'Feeds',     icon: Newspaper,     section: 'reach', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-feeds', gate: { module: 'feeds' } },
+  { key: 'qr-codes',  to: '/qr-generator',     label: 'QR Codes',  icon: QrCode,        section: 'reach', tone: 'bg-slate-50 text-slate-600',     tourId: 'nav-qr-codes', gate: { adminOnly: true } },
   { key: 'shop',      to: '/dashboard/shop',   label: 'Store',     icon: Store,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-shop', gate: { moduleAny: ['merch', 'store'] } },
   // Destination is the graduates PAGE BUILDER (GraduatesManagementModule opens
   // on its Page Builder tab), which authors the public /alumni page — so it is

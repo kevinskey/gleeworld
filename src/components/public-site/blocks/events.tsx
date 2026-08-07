@@ -238,8 +238,8 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   if (events.length === 0 && config.style !== 'month') return onConfigChange ? <EmptyBlockPlaceholder name="Events" /> : null;
 
   return (
-    <section id="events" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
-      <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-6 flex items-center gap-2">
+    <section id="events" className="gw-container py-5">
+      <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
         <Calendar className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
         {config.heading}
       </h2>

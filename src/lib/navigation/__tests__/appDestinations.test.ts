@@ -120,6 +120,7 @@ describe('getTabItems', () => {
 // Copied here (not imported) so this list only changes when someone
 // deliberately re-verifies it against App.tsx's <Route path="..."> entries.
 const KNOWN_ROUTES = new Set([
+  '/dashboard/concierge',
   '/dashboard/viewer', '/studio',
   '/dashboard/sight-reading', '/dashboard/reading-music', '/attendance', '/dashboard/academy',
   '/box-office', '/dashboard/concert-planner', '/dashboard/finance',
@@ -139,7 +140,7 @@ const KNOWN_ROUTES = new Set([
   '/prayer', '/bible',
   '/dashboard/box-office', '/dashboard/users', '/admin/public-page',
   '/dashboard/analytics', '/dashboard/workspace', '/songwriting',
-  '/planner', '/dashboard/fundraising',
+  '/planner', '/dashboard/fundraising', '/qr-generator',
 ]);
 
 describe('getAppTiles', () => {

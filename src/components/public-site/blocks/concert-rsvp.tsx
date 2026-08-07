@@ -15,7 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { useQuery } from '@tanstack/react-query';
 import {
-  CalendarDays, MapPin, Clock, Ticket, Loader2, Minus, Plus, ShoppingBag,
+  CalendarDays, MapPin, Clock, Ticket, Loader2, Minus, Plus, ShoppingBag, ExternalLink,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,8 +33,11 @@ const schema = z.object({
   buttonLabel: z.string().default('RSVP and reserve seats'),
   /** Hide the inline card when the page already has its own CTA into #rsvp. */
   showCard: z.boolean().default(true),
-  merchHeading: z.string().default('Souvenirs'),
+  merchHeading: z.string().default('Souvenirs and Gifts'),
   merchBlurb: z.string().default('Take something home from the evening. Picked up at the concert.'),
+  /** Link out to the tenant's white-label TSB storefront for the full catalog. */
+  showStoreLink: z.boolean().default(true),
+  storeLinkLabel: z.string().default('Browse the full shop'),
 });
 type Config = z.infer<typeof schema>;
 
@@ -171,9 +174,13 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   // Full-bleed band, matching the hero's edge-to-edge width. Vertical padding
   // comes from the site's own `.gw-site > section` rule, so none is set here.
   return (
-    <section id="rsvp-section" className="max-w-6xl mx-auto w-full border-y border-border bg-muted/30">
+    <section id="rsvp-section" className="border-y border-border bg-muted/30">
       {config.showCard && (
-        <div className="px-4 cq-sm:px-6 py-10 cq-sm:py-14">
+        // Background spans the full width; the content sits in the same
+        // .gw-container every other block uses, so the heading lines up with
+        // the header logo and the sections above and below it whatever the
+        // site's content width is set to.
+        <div className="gw-container">
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Loader2 className="w-4 h-4 animate-spin" /> Loading event details…
@@ -181,7 +188,10 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           ) : (
             <div className="grid gap-10 cq-lg:grid-cols-2 cq-lg:gap-16 cq-lg:items-center">
               {/* Left: what it is */}
-              <div>
+              {/* min-w-0: grid children default to min-width:auto, so a long
+                  unbroken title widens its track and spills into the next
+                  column instead of wrapping. */}
+              <div className="min-w-0">
                 {config.heading && (
                   <p
                     className="text-sm font-semibold uppercase tracking-[0.2em]"
@@ -191,7 +201,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                   </p>
                 )}
                 <h2
-                  className="mt-3 normal-case text-3xl cq-sm:text-4xl cq-lg:text-5xl font-bold tracking-tight leading-[1.1]"
+                  className="mt-3 normal-case text-3xl cq-sm:text-4xl cq-lg:text-5xl font-bold tracking-tight leading-[1.1] break-words hyphens-auto"
                   style={{ fontFamily: 'var(--site-heading-font)' }}
                 >
                   {ev!.title}
@@ -211,20 +221,20 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
               {/* Right: when, where, and the way in */}
               <div
-                className="bg-card border border-border p-6 cq-sm:p-8"
+                className="min-w-0 bg-card border border-border p-6 cq-sm:p-8"
                 style={{ borderRadius: 'var(--site-radius)' }}
               >
                 <dl className="space-y-5">
                   <div className="flex items-start gap-4">
                     <CalendarDays className="w-5 h-5 mt-0.5 shrink-0" style={{ color: 'var(--site-accent)' }} />
-                    <div>
+                    <div className="min-w-0 break-words">
                       <dt className="text-xs uppercase tracking-wider text-muted-foreground">Date</dt>
                       <dd className="mt-0.5 text-lg font-medium">{formatDay(ev!.start_date)}</dd>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <Clock className="w-5 h-5 mt-0.5 shrink-0" style={{ color: 'var(--site-accent)' }} />
-                    <div>
+                    <div className="min-w-0 break-words">
                       <dt className="text-xs uppercase tracking-wider text-muted-foreground">Time</dt>
                       <dd className="mt-0.5 text-lg font-medium">{formatTime(ev!.start_date)}</dd>
                     </div>
@@ -241,10 +251,12 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                   )}
                 </dl>
 
+                {/* h-auto + whitespace-normal so a long label wraps inside the
+                    button instead of running past its edges on a narrow phone. */}
                 <Button
                   size="lg"
                   onClick={() => handleOpenChange(true)}
-                  className="mt-8 w-full font-semibold h-12 text-base"
+                  className="mt-8 w-full font-semibold h-auto min-h-12 py-3 text-base whitespace-normal"
                   style={{
                     background: 'var(--site-accent)',
                     color: 'var(--site-accent-foreground, #fff)',
@@ -265,7 +277,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
       )}
 
       {cancelled && (
-        <p className="mt-6 px-6 text-sm text-muted-foreground text-center">
+        <p className="mt-6 px-4 sm:px-6 text-sm text-muted-foreground text-center">
           Your checkout was cancelled — nothing was charged. You can start again any time.
         </p>
       )}
@@ -280,6 +292,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           isPreview={ctx.isPreview}
           merchHeading={config.merchHeading}
           merchBlurb={config.merchBlurb}
+          storeLabel={config.showStoreLink ? config.storeLinkLabel : ''}
         />
       )}
     </section>
@@ -291,7 +304,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 interface MerchSelection { quantity: number; size: string; color: string }
 
 function RsvpDialog({
-  open, onOpenChange, data, tenantSlug, eventSlug, isPreview, merchHeading, merchBlurb,
+  open, onOpenChange, data, tenantSlug, eventSlug, isPreview, merchHeading, merchBlurb, storeLabel,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -301,6 +314,8 @@ function RsvpDialog({
   isPreview: boolean;
   merchHeading: string;
   merchBlurb: string;
+  /** Empty string hides the storefront link. */
+  storeLabel: string;
 }) {
   const tier = data.tiers[0];
   const [attending, setAttending] = useState(1);
@@ -311,6 +326,22 @@ function RsvpDialog({
   const [merch, setMerch] = useState<Record<string, MerchSelection>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // The tenant's white-label TSB storefront, where the full catalog (and the
+  // mockups behind it) is built. The two souvenirs offered inline are the ones
+  // handed over at the concert; anything else ships from the store, which is a
+  // separate checkout on tshirtbrothers.com — hence a link, not a basket merge.
+  const { data: store } = useQuery({
+    queryKey: ['public-store-url', tenantSlug],
+    enabled: Boolean(storeLabel) && Boolean(tenantSlug),
+    staleTime: 5 * 60_000,
+    queryFn: async (): Promise<string | null> => {
+      const { data, error } = await supabase.rpc('gw_public_store_url', { p_slug: tenantSlug });
+      if (error) throw new Error(error.message);
+      return (data as { url?: string | null } | null)?.url ?? null;
+    },
+  });
+  const storeUrl = storeLabel ? store ?? null : null;
 
   // One updater so quantity/size/color never clobber each other. Defaults come
   // from the first option, matching what the buyer sees pre-selected.
@@ -456,8 +487,10 @@ function RsvpDialog({
               </div>
             </div>
 
-            {/* Souvenirs */}
-            {data.merch.length > 0 && (
+            {/* Souvenirs — renders for the storefront link alone, so an event
+                with nothing to hand over at the door still points buyers at
+                the shop. */}
+            {(data.merch.length > 0 || storeUrl) && (
               <div className="border-t border-border pt-5">
                 <Label className="text-base font-semibold flex items-center gap-2">
                   <ShoppingBag className="w-4 h-4" style={{ color: 'var(--site-accent)' }} />
@@ -542,15 +575,49 @@ function RsvpDialog({
                     );
                   })}
                 </div>
+
+                {storeUrl && (
+                  <a
+                    href={storeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex items-center justify-between gap-3 rounded-lg border border-border p-3 hover:border-foreground/30 transition-colors"
+                  >
+                    <span className="min-w-0">
+                      <span className="block font-medium">{storeLabel}</span>
+                      <span className="block text-sm text-muted-foreground">
+                        More designs, sizes and gifts — ordered and shipped separately.
+                      </span>
+                    </span>
+                    <ExternalLink className="w-4 h-4 shrink-0" style={{ color: 'var(--site-accent)' }} />
+                  </a>
+                )}
               </div>
             )}
 
-            {/* Notes. Stays last so the souvenir steppers' "say so in the
-                notes below" points somewhere that is actually below them. */}
-            <div className="border-t border-border pt-5">
-              <Label htmlFor="rsvp-notes">Anything we should know? <span className="text-muted-foreground font-normal">(optional)</span></Label>
-              <Textarea id="rsvp-notes" value={notes} onChange={(e) => setNotes(e.target.value)}
-                        rows={2} className="mt-1" placeholder="Accessibility needs, mixed shirt sizes, who you're coming with…" />
+            {/* Buyer */}
+            <div className="border-t border-border pt-5 space-y-4">
+              <div>
+                <Label htmlFor="rsvp-name">Your name</Label>
+                <Input id="rsvp-name" value={name} onChange={(e) => setName(e.target.value)}
+                       autoComplete="name" required className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="rsvp-email">Email</Label>
+                <Input id="rsvp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                       autoComplete="email" required className="mt-1" />
+                <p className="mt-1 text-xs text-muted-foreground">Your tickets and receipt are sent here.</p>
+              </div>
+              <div>
+                <Label htmlFor="rsvp-phone">Phone <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Input id="rsvp-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                       autoComplete="tel" className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="rsvp-notes">Anything we should know? <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Textarea id="rsvp-notes" value={notes} onChange={(e) => setNotes(e.target.value)}
+                          rows={2} className="mt-1" placeholder="Accessibility needs, mixed shirt sizes, who you're coming with…" />
+              </div>
             </div>
 
             {/* Total */}
@@ -653,6 +720,29 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
         <Label htmlFor="rsvp-merch-blurb">Souvenir section note</Label>
         <Textarea id="rsvp-merch-blurb" value={config.merchBlurb} onChange={(e) => set({ merchBlurb: e.target.value })} rows={2} className="mt-1" />
       </div>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={config.showStoreLink}
+          onChange={(e) => set({ showStoreLink: e.target.checked })}
+        />
+        Link to our full shop
+      </label>
+      {config.showStoreLink && (
+        <div>
+          <Label htmlFor="rsvp-store-label">Shop link label</Label>
+          <Input
+            id="rsvp-store-label"
+            value={config.storeLinkLabel}
+            onChange={(e) => set({ storeLinkLabel: e.target.value })}
+            className="mt-1"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Points at your branded storefront, where you build the products and mockups. Set it up
+            under Workspace Settings → Fundraising Store; the link hides itself until a store exists.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

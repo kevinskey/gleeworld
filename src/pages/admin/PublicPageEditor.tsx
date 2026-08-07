@@ -50,6 +50,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -83,8 +84,32 @@ function containsBlobUrl(v: unknown): boolean {
   return false;
 }
 
+// Site design choices, kept next to the panel that renders them. Hints show
+// the resolved width so "Normal" is legible as a measurement, not a vibe —
+// tenants asking for a specific column width shouldn't have to guess which
+// label maps to it. Values must stay in sync with CONTENT_MAX in
+// components/public-site/types.ts.
+const CONTENT_WIDTH_OPTIONS: { value: SiteTheme['contentWidth']; label: string; hint: string }[] = [
+  { value: 'narrow', label: 'Narrow', hint: '960' },
+  { value: 'normal', label: 'Normal', hint: '1152' },
+  { value: 'wide', label: 'Wide', hint: '1400' },
+  { value: 'full', label: 'Full', hint: '100%' },
+];
+const SIDE_GUTTER_OPTIONS: { value: SiteTheme['sideGutter']; label: string }[] = [
+  { value: 'none', label: 'None' },
+  { value: 'snug', label: 'Snug' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'roomy', label: 'Roomy' },
+];
+const SECTION_PADDING_OPTIONS: { value: SiteTheme['sectionPaddingScale']; label: string }[] = [
+  { value: 'tight', label: 'Tight' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'generous', label: 'Generous' },
+  { value: 'spacious', label: 'Spacious' },
+];
+
 // A single row in the sidebar Layers panel. Compact — no inline edit form
-// (structured settings live in the right-side Sheet, opened from the canvas
+// (structured settings live in the left-side Sheet, opened from the canvas
 // toolbar). Clicking the name selects the block on the canvas and scrolls it
 // into view.
 function SortableBlockRow({
@@ -179,6 +204,12 @@ export default function PublicPageEditor() {
   const [resetting, setResetting] = useState(false);
   const [packagePickerOpen, setPackagePickerOpen] = useState(false);
   const [applyingPackage, setApplyingPackage] = useState<string | null>(null);
+  // Package staged for confirmation. Applying one DELETEs every block the
+  // tenant has, so the click can't go straight through to applyPackage —
+  // "Change look" sounds cosmetic and read as safe, and it silently wiped a
+  // configured hero (Kevin, 2026-08-04). Nothing is destroyed until the
+  // dialog is confirmed.
+  const [pendingPackage, setPendingPackage] = useState<TemplatePackage | null>(null);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const sensors = useSensors(
@@ -535,10 +566,14 @@ export default function PublicPageEditor() {
   // brand identity survives). Client-side rather than an RPC so package
   // definitions stay in TypeScript alongside the block modules they refer
   // to. RLS scopes the delete + insert to the current tenant.
+
   const applyPackage = async (pkg: TemplatePackage) => {
     if (!site) return;
     if (pkg.comingSoon) return;
     setApplyingPackage(pkg.id);
+    // Capture before the delete so Undo has something to put back. `blocks`
+    // is the live draft list, which is exactly what the delete destroys.
+    const snapshot = blocks.map((b) => ({ ...b }));
     try {
       // NON-DESTRUCTIVE by design (Kevin, 2026-07-31): applying a look
       // changes the THEME only — typography, rhythm, shape. It must never
@@ -728,7 +763,7 @@ export default function PublicPageEditor() {
                         <button
                           key={pkg.id}
                           type="button"
-                          onClick={() => !pkg.comingSoon && applyPackage(pkg)}
+                          onClick={() => !pkg.comingSoon && setPendingPackage(pkg)}
                           disabled={pkg.comingSoon || busy}
                           className={`w-full text-left rounded-xl border p-3 space-y-1 transition-colors ${
                             active
@@ -860,6 +895,63 @@ export default function PublicPageEditor() {
               </div>
             </SheetContent>
           </Sheet>
+          {/* Confirmation gate for "Change look". The label reads cosmetic but
+              applyPackage DELETEs every gw_site_blocks row for the tenant, so
+              a single stray click used to wipe a fully configured page with no
+              warning and no way back. Names the exact blocks about to go so
+              the cost is visible before the click, not after. */}
+          <Dialog
+            open={!!pendingPackage}
+            onOpenChange={(open) => {
+              if (!open) setPendingPackage(null);
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Replace your page with the {pendingPackage?.name} look?</DialogTitle>
+                <DialogDescription asChild>
+                  <div className="space-y-3">
+                    <p>
+                      This <strong className="text-foreground">permanently deletes all {blocks.length} block
+                      {blocks.length === 1 ? '' : 's'}</strong> currently on your page, along with every setting
+                      on them — hero images, headlines, RSVP links, and booking config included — and rebuilds
+                      the page from the preset.
+                    </p>
+                    {blocks.length > 0 && (
+                      <div className="rounded-lg border border-border/60 bg-muted/40 p-3">
+                        <p className="text-xs font-medium text-foreground mb-1.5">About to be deleted:</p>
+                        <ul className="text-xs space-y-0.5">
+                          {blocks.map((b) => (
+                            <li key={b.id}>• {getBlockModule(b.block_type)?.name ?? b.block_type}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    <p>
+                      Your brand colors, uploaded media, and theme are kept. You can Undo straight after
+                      from the toast, but that offer is gone once you leave the page.
+                    </p>
+                  </div>
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter className="gap-2">
+                <Button variant="outline" onClick={() => setPendingPackage(null)}>
+                  Keep my page
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={!!applyingPackage}
+                  onClick={() => {
+                    const pkg = pendingPackage;
+                    setPendingPackage(null);
+                    if (pkg) applyPackage(pkg);
+                  }}
+                >
+                  Delete {blocks.length} block{blocks.length === 1 ? '' : 's'} and apply
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Dialog open={resetOpen} onOpenChange={setResetOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" title="Replace all blocks with the default layout">
@@ -1049,6 +1141,161 @@ export default function PublicPageEditor() {
                 {slugStatus === 'available' && slugDraft !== site.slug && (
                   <Button size="sm" onClick={saveSlug}>Save</Button>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Site design. Site-wide tokens, deliberately not per-block: the
+              whole point is that header through footer stay the same width,
+              so exposing width per block would let them drift apart. Every
+              control writes through updateTheme(), which pushes pendingTheme
+              to the preview immediately and debounces the DB write, so the
+              preview repaints as you drag. Lives in the left column so the
+              preview on the right stays visible while you tune. */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Site design</CardTitle>
+              <CardDescription className="text-xs">
+                Applies to every block, header through footer.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Content width
+                </Label>
+                <div className="grid grid-cols-4 gap-1">
+                  {CONTENT_WIDTH_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => updateTheme({ contentWidth: opt.value })}
+                      className={`rounded-lg border px-1 py-1.5 text-[11px] leading-tight transition-colors ${
+                        theme.contentWidth === opt.value
+                          ? 'border-primary bg-primary/10 text-primary font-semibold'
+                          : 'border-border/60 hover:border-primary/60 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="block">{opt.label}</span>
+                      <span className="block text-[10px] text-muted-foreground">{opt.hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Side padding
+                </Label>
+                <div className="grid grid-cols-4 gap-1">
+                  {SIDE_GUTTER_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => updateTheme({ sideGutter: opt.value })}
+                      className={`rounded-lg border px-1 py-1.5 text-[11px] transition-colors ${
+                        theme.sideGutter === opt.value
+                          ? 'border-primary bg-primary/10 text-primary font-semibold'
+                          : 'border-border/60 hover:border-primary/60 hover:bg-slate-50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Section spacing
+                </Label>
+                <div className="grid grid-cols-4 gap-1">
+                  {SECTION_PADDING_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => updateTheme({ sectionPaddingScale: opt.value })}
+                      className={`rounded-lg border px-1 py-1.5 text-[11px] transition-colors ${
+                        theme.sectionPaddingScale === opt.value
+                          ? 'border-primary bg-primary/10 text-primary font-semibold'
+                          : 'border-border/60 hover:border-primary/60 hover:bg-slate-50'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Text size
+                  </Label>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {Math.round(theme.fontScale * 100)}%
+                  </span>
+                </div>
+                <Slider
+                  value={[theme.fontScale]}
+                  min={0.85}
+                  max={1.4}
+                  step={0.05}
+                  onValueChange={(v) => updateTheme({ fontScale: v[0] })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Letter spacing
+                  </Label>
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    {theme.letterSpacing.toFixed(3)}em
+                  </span>
+                </div>
+                <Slider
+                  value={[theme.letterSpacing]}
+                  min={-0.05}
+                  max={0.3}
+                  step={0.005}
+                  onValueChange={(v) => updateTheme({ letterSpacing: v[0] })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Colors
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="flex items-center gap-2 rounded-lg border border-border/60 px-2 py-1.5">
+                    <input
+                      type="color"
+                      value={theme.primaryColor}
+                      onChange={(e) => updateTheme({ primaryColor: e.target.value })}
+                      className="h-6 w-6 rounded cursor-pointer border-0 bg-transparent p-0"
+                      aria-label="Primary color"
+                    />
+                    <span className="text-xs">Primary</span>
+                  </label>
+                  <label className="flex items-center gap-2 rounded-lg border border-border/60 px-2 py-1.5">
+                    <input
+                      type="color"
+                      value={theme.accentColor}
+                      onChange={(e) => updateTheme({ accentColor: e.target.value })}
+                      className="h-6 w-6 rounded cursor-pointer border-0 bg-transparent p-0"
+                      aria-label="Accent color"
+                    />
+                    <span className="text-xs">Accent</span>
+                  </label>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  These override your palette for this site only.{' '}
+                  <Link to="/settings/branding" className="underline text-primary">
+                    Branding Settings
+                  </Link>{' '}
+                  sets the default everywhere else.
+                </p>
               </div>
             </CardContent>
           </Card>

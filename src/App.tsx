@@ -310,6 +310,7 @@ const HouseHome = lazy(() => import("./pages/dashboard/HouseHome"));
 const PeopleHub = lazy(() => import("./pages/dashboard/PeopleHub"));
 const PracticeRecordingsReview = lazy(() => import("./pages/dashboard/PracticeRecordingsReview"));
 const MusicToolkitPage = lazy(() => import("./pages/dashboard/MusicToolkitPage"));
+const ConciergePage = lazy(() => import("./pages/dashboard/ConciergePage"));
 const OfficeHoursPage = lazy(() => import("./pages/dashboard/OfficeHoursPage"));
 const DashboardShell = lazy(() => import("./components/dashboard/DashboardShell").then(m => ({ default: m.DashboardShell })));
 import { TenantThemeRoot } from "@/components/theme/TenantThemeRoot";
@@ -332,6 +333,7 @@ const BookAppointmentPage = lazy(() => import("./pages/BookAppointmentPage"));
 const GoogleDocsPage = lazy(() => import("./pages/GoogleDocs"));
 const LibrarianDashboardPage = lazy(() => import("./pages/LibrarianDashboardPage"));
 const QRGeneratorPage = lazy(() => import("./pages/QRGenerator"));
+const QRRedirectPage = lazy(() => import("./pages/QRRedirect"));
 const QRScannerPage = lazy(() => import("./pages/QRScanner"));
 const QRAnalytics = lazy(() => import("./pages/QRAnalytics"));
 const ModuleAccess = lazy(() => import("./pages/admin/ModuleAccess"));
@@ -633,9 +635,18 @@ const App = () => {
                   </PublicRoute>
                 } 
               />
+              {/* Tracked QR link — logs the scan, then forwards. */}
+              <Route
+                path="/q/:token"
+                element={
+                  <PublicRoute>
+                    <QRRedirectPage />
+                  </PublicRoute>
+                }
+              />
               {/* Event Check-in via QR Code */}
-              <Route 
-                path="/event-checkin/:token" 
+              <Route
+                path="/event-checkin/:token"
                 element={
                   <PublicRoute>
                     <EventCheckinPage />
@@ -1461,6 +1472,14 @@ const App = () => {
                   }
                 />
                 <Route
+                  path="/dashboard/concierge"
+                  element={
+                    <ProtectedRoute>
+                      <ConciergePage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/dashboard/music-library"
                   element={
                     <ProtectedRoute>
@@ -2195,12 +2214,12 @@ const App = () => {
                   } 
                 />
                 <Route 
-                  path="/qr-generator" 
+                  path="/qr-generator"
                   element={
-                    <PublicRoute>
+                    <ProtectedRoute>
                       <QRGeneratorPage />
-                    </PublicRoute>
-                  } 
+                    </ProtectedRoute>
+                  }
                 />
                 <Route 
                   path="/qr-analytics" 

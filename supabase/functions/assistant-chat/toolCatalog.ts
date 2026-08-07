@@ -38,7 +38,7 @@ export const TOOL_CATALOG: ToolDef[] = [
     },
     minRole: 'member', execution: 'server', confirm: false,
   },
-  {
+    {
     name: 'find_user',
     description: 'Look up a member by name to get their user id, email, and phone. Use before send_sms or send_email to an individual.',
     parameters: {
@@ -89,21 +89,7 @@ export const TOOL_CATALOG: ToolDef[] = [
     },
     minRole: 'member', execution: 'server', confirm: false,
   },
-  {
-    name: 'order_food',
-    description:
-      "Prepare food-delivery deep links. Pass an optional query like 'donuts' or 'thai near me' and the user gets DoorDash, Uber Eats, and Grubhub buttons pre-loaded with that search. No query is fine — the panel then opens each service's homepage.",
-    parameters: {
-      type: 'object',
-      properties: {
-        query: str('What the user wants to order (optional)'),
-        preferred: str("'doordash', 'ubereats', or 'grubhub' if the user has a preference (optional)"),
-      },
-      required: [],
-    },
-    minRole: 'member', execution: 'server', confirm: false,
-  },
-  {
+    {
     name: 'open_page',
     description: "Navigate the user to a GleeWorld page. Valid keys are listed in the system prompt under 'Pages you can open' — pass one exactly as listed there.",
     parameters: {
@@ -171,6 +157,16 @@ export const TOOL_CATALOG: ToolDef[] = [
       type: 'object',
       properties: { score_id: str('gw_sheet_music id'), title: str('Score title, for the reply') },
       required: ['score_id'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'open_note',
+    description: 'Open a specific Planner note by id.',
+    parameters: {
+      type: 'object',
+      properties: { note_id: str('gw_planner_notes id'), title: str('Note title, for the reply') },
+      required: ['note_id'],
     },
     minRole: 'member', execution: 'client', confirm: false,
   },
@@ -409,6 +405,36 @@ export const TOOL_CATALOG: ToolDef[] = [
         near: str("Plain-text location fallback when lat/lng aren't known (e.g. '30303' or 'my school')"),
       },
       required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'book_ride',
+    description: "Open Uber or Lyft with a ride pre-filled to a destination. Resolve the destination with find_nearby_place FIRST to get its exact name, address, lat, and lng — never guess coordinates; omit lat/lng if unresolved. The user confirms and pays inside their own Uber/Lyft app — this only hands off a pre-filled request. REQUIRES user confirmation.",
+    parameters: {
+      type: 'object',
+      properties: {
+        provider: str("'uber' or 'lyft'"),
+        destination_name: str('Place name, e.g. "Hartsfield-Jackson Atlanta International Airport" (optional)'),
+        destination_address: str('Full street address of the destination'),
+        lat: { type: 'number', description: 'Destination latitude from find_nearby_place (omit if unknown)' },
+        lng: { type: 'number', description: 'Destination longitude from find_nearby_place (omit if unknown)' },
+      },
+      required: ['provider', 'destination_address'],
+    },
+    minRole: 'member', execution: 'client', confirm: true,
+  },
+  {
+    name: 'order_food',
+    description:
+      "Prepare food-delivery deep links. Pass an optional query like 'donuts' or 'thai near me' and the user gets DoorDash, Uber Eats, and Grubhub buttons pre-loaded with that search. No query is fine — the panel then opens each service's homepage.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str('What the user wants to order (optional)'),
+        preferred: str("'doordash', 'ubereats', or 'grubhub' if the user has a preference (optional)"),
+      },
+      required: [],
     },
     minRole: 'member', execution: 'server', confirm: false,
   },

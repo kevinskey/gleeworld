@@ -19,7 +19,11 @@ import { join } from 'node:path';
  */
 
 const BLOCKS_DIR = join(__dirname, '..');
-const COLUMN = 'max-w-6xl mx-auto';
+// Two spellings of the same constraint. `.gw-container` (src/index.css) reads
+// the width/gutter theme tokens and superseded the hardcoded literal; blocks
+// that predate it still carry the literal. Either satisfies the rule this test
+// exists to enforce — that a block constrains itself at all.
+const COLUMNS = ['max-w-6xl mx-auto', 'gw-container'];
 
 const blockFiles = readdirSync(BLOCKS_DIR).filter((f) => f.endsWith('.tsx'));
 
@@ -46,7 +50,7 @@ describe('public-site block width conformity', () => {
 
   it.each(blockFiles)('%s constrains itself to the shared content column', (file) => {
     const src = readFileSync(join(BLOCKS_DIR, file), 'utf-8');
-    expect(src).toContain(COLUMN);
+    expect(COLUMNS.some((c) => src.includes(c))).toBe(true);
   });
 
   /**

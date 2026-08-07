@@ -112,13 +112,15 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
 
   return (
     <header
-      // Header fills its 1152 (max-w-6xl) block bounds edge-to-edge, same
-      // footprint as the hero and every other block. Colored bar IS the
-      // outer <header>; nav content is padded from inside. On viewports
-      // narrower than 1152 mx-auto degrades to full-width so header, hero,
-      // and sections all hit the viewport edges together — consistent
-      // widths from mobile through desktop, per the sizing rule.
-      className="sticky top-0 z-40 max-w-6xl mx-auto w-full"
+      // Header fills its content-column bounds edge-to-edge, same footprint
+      // as the hero and every other block. Colored bar IS the outer
+      // <header>; nav content is padded from inside — hence the flush
+      // variant, which takes the column width without the gutter. Below the
+      // column width margin-inline:auto degrades to full-width so header,
+      // hero, and sections all hit the viewport edges together — consistent
+      // widths from mobile through desktop, per the sizing rule. Width comes
+      // from --site-content-max (Site design panel), not a fixed 1152.
+      className="sticky top-0 z-40 gw-container-flush"
       style={{ paddingTop: 'env(safe-area-inset-top)', color: linkColor, background: 'var(--site-primary)' }}
     >
       <div

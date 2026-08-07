@@ -27,7 +27,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const list = config.graduates.filter((g) => g.name);
   if (list.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Graduate Spotlight" /> : null;
   return (
-    <section id="graduates" className="max-w-6xl mx-auto px-4 cq-sm:px-6 py-5">
+    <section id="graduates" className="gw-container py-5">
       {config.heading && (
         <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <Star className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />

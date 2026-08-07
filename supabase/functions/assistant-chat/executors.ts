@@ -272,6 +272,19 @@ async function searchMusic(args: Record<string, unknown>, { supabase }: Deps): P
   return JSON.stringify({ scores: [] });
 }
 
+async function findNote(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
+  const q = String(args.query ?? '').replace(/[%_]/g, '');
+  const { data, error } = await supabase
+    .from('gw_planner_notes')
+    .select('id, title, updated_at')
+    .is('deleted_at', null)
+    .ilike('title', `%${q}%`)
+    .order('updated_at', { ascending: false })
+    .limit(10);
+  if (error) return JSON.stringify({ error: error.message });
+  return JSON.stringify({ notes: data ?? [] });
+}
+
 async function findUser(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
   const q = String(args.name ?? '').replace(/[%_]/g, '');
   const { data, error } = await supabase

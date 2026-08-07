@@ -24,9 +24,9 @@ describe('toolCatalog', () => {
     expect(toolsForRole('admin').length).toBe(TOOL_CATALOG.length);
   });
 
-  it('only send_sms and send_email require confirmation', () => {
+  it('confirm gating covers exactly the side-effectful/outward-facing tools', () => {
     const confirmed = TOOL_CATALOG.filter((t) => t.confirm).map((t) => t.name).sort();
-    expect(confirmed).toEqual(['create_course_draft', 'send_email', 'send_sms', 'set_date_card']);
+    expect(confirmed).toEqual(['book_ride', 'create_course_draft', 'send_email', 'send_sms', 'set_date_card']);
   });
 
   // Server tools are read-only with ONE deliberate exception. remember_preference
