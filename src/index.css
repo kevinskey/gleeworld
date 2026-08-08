@@ -105,6 +105,36 @@
   .gw-site .lg\:text-5xl { font-size: 3em; line-height: 1; }
 }
 
+/* Container-query variants, restated for the same reason — and this block is
+   why the public site had no responsive type at all.
+
+   Tailwind emits `cq-sm:text-3xl` as a BARE class, specificity (0,1,0). The
+   `.gw-site .text-2xl` rules above are (0,2,0). Higher specificity wins
+   regardless of container state, so every `text-2xl cq-sm:text-3xl` heading
+   rendered 24px at EVERY width — phone, tablet and desktop alike. Measured on
+   a live tenant site before this fix: identical type at 390px, 430px and
+   820px, with the only variation coming from one hard breakpoint jump.
+
+   41 declarations across 8 variants were dead. The `sm:` block above was
+   restated for precisely this hazard (see its comment); the `cq-*` variants
+   were added later and never got the same treatment.
+
+   Same source-order rule applies: these MUST stay after the base rules, since
+   specificity ties are broken by order. Only the variants the blocks actually
+   use are listed, matching the convention above. */
+@container gwsite (min-width: 640px) {
+  .gw-site .cq-sm\:text-xs { font-size: 0.75em; line-height: 1.333em; }
+  .gw-site .cq-sm\:text-sm { font-size: 0.875em; line-height: 1.428em; }
+  .gw-site .cq-sm\:text-base { font-size: 1em; line-height: 1.5em; }
+  .gw-site .cq-sm\:text-lg { font-size: 1.125em; line-height: 1.556em; }
+  .gw-site .cq-sm\:text-2xl { font-size: 1.5em; line-height: 1.333em; }
+  .gw-site .cq-sm\:text-3xl { font-size: 1.875em; line-height: 1.2em; }
+  .gw-site .cq-sm\:text-4xl { font-size: 2.25em; line-height: 1.111em; }
+}
+@container gwsite (min-width: 1024px) {
+  .gw-site .cq-lg\:text-5xl { font-size: 3em; line-height: 1; }
+}
+
 /* Fast collapsible expand/collapse animation */
 [data-state="open"][data-radix-collapsible-content] {
   animation: collapsible-open 150ms ease-out;
