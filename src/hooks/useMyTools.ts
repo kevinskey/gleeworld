@@ -16,10 +16,9 @@ export function useMyTools(role: 'student' | 'faculty') {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const uid = user?.id;
-  const key = ['my-tools', uid ?? 'anon'] as const;
 
   const { data: myTools = null, isLoading } = useQuery<MyTools | null>({
-    queryKey: key,
+    queryKey: ['my-tools', uid ?? 'anon'],
     enabled: !!uid,
     staleTime: 60 * 1000,
     queryFn: async () => {
@@ -54,8 +53,8 @@ export function useMyTools(role: 'student' | 'faculty') {
     // re-render from the stale cache for the ~200-500ms the RPC takes,
     // snapping every moved tile back and then forward again — reads as a
     // whole-screen blink. (Same reasoning as the old useNavItemOrder.)
-    const previous = queryClient.getQueryData<MyTools | null>(key) ?? null;
-    queryClient.setQueryData(key, next);
+    const previous = queryClient.getQueryData<MyTools | null>(['my-tools', uid]) ?? null;
+    queryClient.setQueryData(['my-tools', uid], next);
     try {
       // save_nav_item_order is SECURITY DEFINER: it bypasses the RESTRICTIVE
       // tenant_isolation_restrict policy on user_preferences and resyncs
@@ -67,16 +66,16 @@ export function useMyTools(role: 'student' | 'faculty') {
       });
       if (error) {
         console.warn('[useMyTools] save failed:', error.message);
-        queryClient.setQueryData(key, previous);
+        queryClient.setQueryData(['my-tools', uid], previous);
         return false;
       }
       return true;
     } catch (err) {
       console.warn('[useMyTools] save failed:', err);
-      queryClient.setQueryData(key, previous);
+      queryClient.setQueryData(['my-tools', uid], previous);
       return false;
     }
-  }, [uid, myTools?.widgets, queryClient, key]);
+  }, [uid, myTools?.widgets, queryClient]);
 
   return { myTools, loading: isLoading, saveTools };
 }

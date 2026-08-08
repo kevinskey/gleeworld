@@ -22,6 +22,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 }));
 
 import { useMyTools } from '../useMyTools';
+import { DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY } from '@/lib/navigation/myTools';
 
 const wrapper = ({ children }: { children: ReactNode }) => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -53,6 +54,20 @@ describe('useMyTools', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.myTools?.tools[0]).toBe('calendar');
     expect(result.current.myTools?.setupComplete).toBe(false);
+  });
+
+  it('falls back to role defaults when the query returns an error', async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: { message: 'boom' } });
+    const { result } = renderHook(() => useMyTools('faculty'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.myTools?.tools).toEqual(DEFAULT_TOOLS_FACULTY);
+  });
+
+  it('falls back to role defaults when the query throws', async () => {
+    maybeSingle.mockRejectedValue(new Error('boom'));
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.myTools?.tools).toEqual(DEFAULT_TOOLS_STUDENT);
   });
 
   it('saves through the RPC and never through a direct upsert', async () => {
