@@ -46,7 +46,7 @@ function Row({ entry, variant, onNavigate }: {
         `${ROW_BASE} ${size} ${isActive ? ROW_ACTIVE : ROW_INACTIVE}`
       }
     >
-      <entry.icon className={`${icon} shrink-0 text-slate-500`} />
+      <entry.icon className={`${icon} shrink-0 text-slate-500`} aria-hidden />
       <span className="truncate">{entry.label}</span>
     </NavLink>
   );
@@ -85,7 +85,7 @@ export function NavShelf({ home, tools, sections, variant, onNavigate }: NavShel
             className={`${ROW_BASE} ${variant === 'desktop' ? ROW_DESKTOP : ROW_MOBILE} ${ROW_INACTIVE} justify-between`}
           >
             <span className="flex items-center gap-2.5">
-              <LayoutGrid className={`${variant === 'desktop' ? 'w-[18px] h-[18px]' : 'w-5 h-5'} shrink-0 text-slate-500`} />
+              <LayoutGrid className={`${variant === 'desktop' ? 'w-[18px] h-[18px]' : 'w-5 h-5'} shrink-0 text-slate-500`} aria-hidden />
               All Tools
             </span>
             <ChevronDown

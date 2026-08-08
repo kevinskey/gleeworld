@@ -53,8 +53,19 @@ describe('NavShelf', () => {
   it('renders no drag affordance — reordering is not a shelf gesture', () => {
     const { container } = renderShelf();
     // dnd-kit's useSortable stamps aria-roledescription="sortable" and the
-    // old sidebar rows carried cursor-grab. Both must be absent.
+    // old sidebar rows carried cursor-grab. Both must be absent — this is
+    // the regression guard against the retired sortable sidebar.
     expect(container.querySelectorAll('[aria-roledescription="sortable"]')).toHaveLength(0);
     expect(container.querySelectorAll('.cursor-grab')).toHaveLength(0);
+
+    // The component imports no dnd-kit, so those two selectors can only ever
+    // catch a copy-paste of the old sidebar. Also rule out a hand-rolled
+    // drag affordance: no draggable elements, and nothing styled with an
+    // inline grab/grabbing cursor.
+    expect(container.querySelectorAll('[draggable="true"]')).toHaveLength(0);
+    const grabCursorElements = Array.from(container.querySelectorAll<HTMLElement>('*')).filter(
+      (el) => el.style.cursor === 'grab' || el.style.cursor === 'grabbing',
+    );
+    expect(grabCursorElements).toHaveLength(0);
   });
 });
