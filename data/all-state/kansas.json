@@ -1,0 +1,541 @@
+{
+  "state_slug": "kansas",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "KMEA runs three all-state choral ensembles (High School Treble and Mixed Choirs, Middle Level Choir, Elementary Choir), all performing at the KMEA In-Service Workshop at Century II in Wichita in February 2027. The Kansas Choral Directors Association (KCDA) separately runs a Treble Honor Choir that shares the middle-level concert; KMEA warns that a student who auditions for both the KCDA Treble Choir and the KMEA Middle Level Choir will be disqualified. All dates and fees recorded here are explicitly labeled 2026-27 on KMEA's pages. The high school repertoire page carried a 'Please standby for updates' caveat at retrieval, so the listed titles may still change.",
+  "organization": {
+    "name": "Kansas Music Educators Association",
+    "acronym": "KMEA",
+    "website_url": "https://ksmea.org/",
+    "description": "KMEA is the federated Kansas state association of NAfME. It administers the All-State ensembles, whose audition process begins at the student's own school, progresses through the KMEA District Organization, and culminates in selection to the All-State ensembles that perform at KMEA's annual In-Service Workshop."
+  },
+  "sources": [
+    {
+      "name": "KMEA All-State Choirs (High School)",
+      "url": "https://ksmea.org/hschoir/",
+      "source_type": "official"
+    },
+    {
+      "name": "KMEA All-State High School Choir Repertoire 2026-27",
+      "url": "https://ksmea.org/hschoir/repertoire/",
+      "source_type": "official"
+    },
+    {
+      "name": "KMEA All-State Middle Level Choir",
+      "url": "https://ksmea.org/mlchoir/",
+      "source_type": "official"
+    },
+    {
+      "name": "KMEA All-State Elementary Choir",
+      "url": "https://ksmea.org/elemchoir/",
+      "source_type": "official"
+    },
+    {
+      "name": "KMEA All-State Ensembles overview",
+      "url": "https://ksmea.org/allstate/",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "KMEA All-State Mixed Choir",
+      "lineage_key": "kansas-all-state-mixed-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "256-voice All-State Mixed Choir. The Mixed and Treble Choirs are both selected from a single audition; treble voices are alternatingly assigned to the Treble and Mixed Choirs, and assignments are not announced until the state rosters are posted. Both choirs share a combined concert (one ticket admits to both). HS Mixed Choir Chair: Brandon Wade, Pratt HS.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Regular audition registration deadline",
+          "start_at": "2026-10-11T23:59:59",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "description": "11:59:59 PM CT on Sunday, October 11, 2026. Online entries can be made after that point at higher audition fees; fee levels are set by KMEA district and based on entry time-stamps. One registration covers both district and state consideration.",
+          "source_url": "https://ksmea.org/hschoir/"
+        },
+        {
+          "date_type": "event",
+          "title": "KMEA All-State Choirs concert",
+          "start_at": "2027-02-27",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Saturday, Feb. 27, 2027, Century II Convention Hall, Wichita. Concert times TBA; clinicians TBA. Combined concert with the All-State Treble Choir.",
+          "source_url": "https://ksmea.org/hschoir/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "membership",
+          "title": "Sponsoring teacher must be a KMEA member",
+          "description": "For a student to participate in a KMEA All-State ensemble, the sponsoring teacher must be a member of KMEA. For all registration entries, the sponsoring director must be a KMEA member.",
+          "source_url": "https://ksmea.org/hschoir/"
+        },
+        {
+          "category": "format",
+          "title": "Multi-stage audition beginning at the district level",
+          "description": "The audition process begins at the student's own school and progresses through the KMEA District Organization. Students with the top audition scores at the district level are then eligible for selection to the All-State Choirs.",
+          "source_url": "https://ksmea.org/hschoir/"
+        },
+        {
+          "category": "materials",
+          "title": "Published copies of music required",
+          "description": "Every student singing in the District or All-State Choirs will have published copies of each piece of music.",
+          "source_url": "https://ksmea.org/hschoir/"
+        },
+        {
+          "category": "format",
+          "title": "Prepare all performance selections after roster posting",
+          "description": "Following posting of the state rosters, students are to prepare all pieces listed under Performance Selections.",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Kde Sú Krávy Moje",
+          "composer": "Hans Schimmerling",
+          "publisher": "Associated Music Publishers",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "notes": "2026-27 audition selection for Tenor/Bass voices. Page carried a 'Please standby for updates' caveat at retrieval.",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Walk Together Children",
+          "arranger": "Moses Hogan",
+          "voicing": "SSAATTBB",
+          "purpose": "audition",
+          "notes": "2026-27 audition selection for both Treble and Tenor/Bass voices.",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Quare fremuerunt gentes (from Christmas Oratorio)",
+          "composer": "Camille Saint-Saëns",
+          "voicing": "SATB",
+          "purpose": "performance",
+          "notes": "KMEA links an IMSLP download for Oratorio de Noël, Op. 12.",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Amazing Grace",
+          "composer": "E. W. Stradtman",
+          "publisher": "Musicspoke",
+          "voicing": "SSAATTBB",
+          "purpose": "performance",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Animal Crackers",
+          "composer": "Eric Whitacre",
+          "publisher": "Hal Leonard",
+          "voicing": "SATB",
+          "purpose": "performance",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Kde Sú Krávy Moje",
+          "composer": "Hans Schimmerling",
+          "publisher": "Associated Music Publishers",
+          "voicing": "SATB",
+          "purpose": "performance",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "I Gondolieri",
+          "composer": "Gioacchino Rossini",
+          "arranger": "ed. Jennings",
+          "publisher": "Hinshaw Music",
+          "voicing": "SATB",
+          "purpose": "performance",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Walk Together Children",
+          "arranger": "Moses Hogan",
+          "voicing": "SSAATTBB",
+          "purpose": "performance",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "participation",
+          "amount_cents": 7500,
+          "payable_to": "state_association",
+          "description": "A Participation Fee of $75 is assessed to the school of each student selected to sing in the All-State Choirs. Invoices are posted in the KMEA Members portal. The fee is required for each student named to the roster; students who withdraw still incur it; alternates added to the roster are charged the regular fee; schools with an outstanding balance from the previous year may not register students. Exceptions must be approved by the KMEA Executive Council.",
+          "source_url": "https://ksmea.org/hschoir/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "HS Choir Application Worksheet",
+          "url": "https://ksmea.org/assets/hschoir/worksheet.php",
+          "document_type": "form"
+        },
+        {
+          "title": "All-State Choirs Weather Contingency Policy",
+          "url": "https://ksmea.org/hschoir/weather/",
+          "document_type": "rules"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "KMEA All-State Treble Choir",
+      "lineage_key": "kansas-all-state-treble-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "256-voice All-State Treble Choir, selected from the same single audition as the Mixed Choir. Treble voices are alternatingly assigned between the Treble and Mixed Choirs, and assignments are not announced until the state rosters are posted. HS Treble Choir Chair: Olivia Henning, Lawrence-Free State HS.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Regular audition registration deadline",
+          "start_at": "2026-10-11T23:59:59",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "description": "11:59:59 PM CT on Sunday, October 11, 2026. One registration covers both district and state consideration.",
+          "source_url": "https://ksmea.org/hschoir/"
+        },
+        {
+          "date_type": "event",
+          "title": "KMEA All-State Choirs concert",
+          "start_at": "2027-02-27",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Saturday, Feb. 27, 2027, Century II Convention Hall, Wichita. Combined concert with the All-State Mixed Choir; one ticket admits to both.",
+          "source_url": "https://ksmea.org/hschoir/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "membership",
+          "title": "Sponsoring teacher must be a KMEA member",
+          "description": "For a student to participate in a KMEA All-State ensemble, the sponsoring teacher must be a member of KMEA.",
+          "source_url": "https://ksmea.org/hschoir/"
+        },
+        {
+          "category": "format",
+          "title": "Multi-stage audition beginning at the district level",
+          "description": "Auditions begin at the student's own school and progress through the KMEA District Organization; top district scorers are eligible for All-State selection.",
+          "source_url": "https://ksmea.org/hschoir/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Hoj Hura Hoj",
+          "composer": "Otmar Mácha",
+          "publisher": "Alliance Publications Inc.",
+          "voicing": "SSAA",
+          "purpose": "audition",
+          "notes": "2026-27 audition selection for Treble voices. Also listed as a Treble Choir performance selection.",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Walk Together Children",
+          "arranger": "Moses Hogan",
+          "voicing": "SSAATTBB",
+          "purpose": "audition",
+          "notes": "2026-27 audition selection for Treble voices.",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Hoj Hura Hoj",
+          "composer": "Otmar Mácha",
+          "publisher": "Alliance Publications Inc.",
+          "voicing": "SSAA",
+          "purpose": "performance",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Stabat Mater (1st movement)",
+          "composer": "Giovanni Battista Pergolesi",
+          "voicing": "SA",
+          "purpose": "performance",
+          "notes": "KMEA links the CPDL James Gibb edition.",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Ta Na Solbici",
+          "composer": "Salmo Vovk",
+          "voicing": "SSAA",
+          "purpose": "performance",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Wildflowers",
+          "composer": "Brent/Quist",
+          "publisher": "Tim Brent",
+          "voicing": "SSA",
+          "purpose": "performance",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "O Love",
+          "composer": "Elaine Hagenberg",
+          "publisher": "Beckenhorst Press",
+          "voicing": "SSAA",
+          "purpose": "performance",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        },
+        {
+          "title": "Still I Rise",
+          "composer": "Rosephanye Powell",
+          "publisher": "Gentry Publications",
+          "voicing": "SSAA",
+          "purpose": "performance",
+          "source_url": "https://ksmea.org/hschoir/repertoire/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "participation",
+          "amount_cents": 7500,
+          "payable_to": "state_association",
+          "description": "A Participation Fee of $75 is assessed to the school of each student selected to sing in the All-State Choirs.",
+          "source_url": "https://ksmea.org/hschoir/"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano" },
+        { "code": "A1", "label": "Alto" }
+      ]
+    },
+    {
+      "name": "KMEA All-State Middle Level Choir",
+      "lineage_key": "kansas-all-state-middle-level-choir",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "KMEA's middle-level all-state choir, selected by blind judging of uploaded mp3 auditions through the Festival Scores system. Middle Level Choir Chair: Lance Burnett, Chanute MS. Shares a combined concert with the KCDA Treble Honor Choir.",
+      "dates": [
+        {
+          "date_type": "other",
+          "title": "Audition submission system opens",
+          "start_at": "2026-09-01",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Sep. 1, 2026 — ready to receive new mp3 files.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Online application completed (mp3 upload deadline)",
+          "start_at": "2026-10-05",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://ksmea.org/mlchoir/"
+        },
+        {
+          "date_type": "other",
+          "title": "Audition fees due",
+          "start_at": "2026-10-26",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Oct. 26, 2026 — audition fees due, $12 per student. Blind judging of submissions is also completed by this date.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        },
+        {
+          "date_type": "other",
+          "title": "Audition fee disqualification deadline",
+          "start_at": "2026-11-02",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Auditions unpaid by this date will be disqualified.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        },
+        {
+          "date_type": "results",
+          "title": "Website notification of accepted singers",
+          "start_at": "2026-11-09",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Directors submit the $65-per-student Participation Fee, immediately due upon notification of acceptance.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        },
+        {
+          "date_type": "event",
+          "title": "Rehearsals and Performance",
+          "start_at": "2027-02-26",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Friday, Feb. 26, 2027, Century II Concert Hall, Wichita. Concert times TBA; clinicians TBA.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "membership",
+          "title": "Sponsoring teacher must be a KMEA member",
+          "description": "For a student to participate in a KMEA All-State ensemble, the sponsoring teacher must be a member of KMEA.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        },
+        {
+          "category": "materials",
+          "title": "mp3 audition uploaded via Festival Scores",
+          "description": "Teachers register students, create student profiles in Festival Scores (height and shirt size required for each student), and upload the mp3 audition recordings. A KMEA-published event tag activates the audition event in the director's account; the 2026-27 tag was to be published ahead of the Sep. 1 opening.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        },
+        {
+          "category": "rubric",
+          "title": "Blind judging against an established rubric",
+          "description": "Judges log in, listen to auditions as many times as needed, score them using the established rubric, and identify disqualifying factors. Judges do not know who they are listening to and have no access to identifying information. The Middle Level Choir Chair verifies judging, validates disqualifying factors, and generates the final roster.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        },
+        {
+          "category": "eligibility",
+          "title": "May not audition for both KCDA Treble Choir and KMEA Middle Level Choir",
+          "description": "Auditions submitted to BOTH the KCDA Treble Choir and the KMEA Middle Level Choir will be disqualified. Students must select, with assistance from their teacher, only one choir for which they will audition.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 1200,
+          "payable_to": "state_association",
+          "description": "$12 per student, due Oct. 26, 2026.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        },
+        {
+          "fee_type": "participation",
+          "amount_cents": 6500,
+          "payable_to": "state_association",
+          "description": "$65 per selected student, immediately due upon notification of acceptance.",
+          "source_url": "https://ksmea.org/mlchoir/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "Middle Level Choir Guidelines",
+          "url": "https://ksmea.org/mlchoir/guidelines/",
+          "document_type": "rules"
+        },
+        {
+          "title": "Middle Level Choir Auditions",
+          "url": "https://ksmea.org/mlchoir/auditions/",
+          "document_type": "rules"
+        },
+        {
+          "title": "Middle Level Choir Fees",
+          "url": "https://ksmea.org/mlchoir/fees/",
+          "document_type": "other"
+        }
+      ]
+    },
+    {
+      "name": "KMEA All-State Elementary Choir",
+      "lineage_key": "kansas-all-state-elementary-choir",
+      "season": "2026-27",
+      "school_level": "elementary",
+      "ensemble_type": "treble chorus",
+      "description": "KMEA's elementary all-state choir, selected by blind judging of teacher-recorded mp3 auditions uploaded through Festival Scores.",
+      "dates": [
+        {
+          "date_type": "other",
+          "title": "Audition submission system opens",
+          "start_at": "2026-10-01",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Oct. 1, 2026 — ready to receive new mp3 files.",
+          "source_url": "https://ksmea.org/elemchoir/"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Online application completed (mp3 upload deadline)",
+          "start_at": "2026-11-09",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://ksmea.org/elemchoir/"
+        },
+        {
+          "date_type": "other",
+          "title": "Audition fees due",
+          "start_at": "2026-12-01",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Dec. 1, 2026 — audition fees due, $12 per audition. Blind judging is also completed by this date.",
+          "source_url": "https://ksmea.org/elemchoir/"
+        },
+        {
+          "date_type": "other",
+          "title": "Audition fee disqualification deadline",
+          "start_at": "2026-12-14",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Auditions unpaid by this date will be disqualified.",
+          "source_url": "https://ksmea.org/elemchoir/"
+        },
+        {
+          "date_type": "results",
+          "title": "Website notification of accepted singers",
+          "start_at": "2026-12-17",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Directors submit the $65-per-student Participation Fee, immediately due upon notification of acceptance.",
+          "source_url": "https://ksmea.org/elemchoir/"
+        },
+        {
+          "date_type": "event",
+          "title": "Rehearsals and Performance",
+          "start_at": "2027-02-25",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Thursday, Feb. 25, 2027, Century II Concert Hall, Wichita. Concert time TBA; clinician TBA.",
+          "source_url": "https://ksmea.org/elemchoir/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "membership",
+          "title": "Sponsoring teacher must be a KMEA member",
+          "description": "For a student to participate in a KMEA All-State ensemble, the sponsoring teacher must be a member of KMEA.",
+          "source_url": "https://ksmea.org/elemchoir/"
+        },
+        {
+          "category": "materials",
+          "title": "Teacher-recorded mp3 audition uploaded via Festival Scores",
+          "description": "Teachers record their students' auditions to mp3 files, create student profiles in Festival Scores, and upload the recordings. The 2026-27 event tag was to be published ahead of the Oct. 1 opening.",
+          "source_url": "https://ksmea.org/elemchoir/"
+        },
+        {
+          "category": "rubric",
+          "title": "Blind judging against an established rubric",
+          "description": "Judges score auditions using the established rubric without access to any identifying information, and identify disqualifying factors; the Elementary Choir Chair validates and generates the final roster.",
+          "source_url": "https://ksmea.org/elemchoir/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 1200,
+          "payable_to": "state_association",
+          "description": "$12 per audition, due Dec. 1, 2026.",
+          "source_url": "https://ksmea.org/elemchoir/"
+        },
+        {
+          "fee_type": "participation",
+          "amount_cents": 6500,
+          "payable_to": "state_association",
+          "description": "$65 per selected student, immediately due upon notification of acceptance.",
+          "source_url": "https://ksmea.org/elemchoir/"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 clinicians for all four KMEA all-state choirs — listed as TBA",
+    "Concert times for the Feb. 25/26/27, 2027 performances — listed as TBA",
+    "High school district audition dates — set by each of the seven KMEA districts, not published centrally",
+    "High school audition fee amounts — KMEA states fee levels are set by district and based on entry time-stamps",
+    "Elementary and Middle Level Choir audition repertoire — linked on separate repertoire pages that were not retrieved",
+    "Grade-level eligibility ranges for each choir — not stated on the pages read",
+    "2026-27 Festival Scores event tags for the Middle Level and Elementary choirs — both pages still displayed only the 2025-26 tags at retrieval and said the new tags would be posted later",
+    "Detailed audition excerpt cut measures — posted on the separate 2026-27 All-State HS Audition Excerpts page, which was not retrieved"
+  ]
+}

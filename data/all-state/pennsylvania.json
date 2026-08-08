@@ -1,0 +1,72 @@
+{
+  "state_slug": "pennsylvania",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "PMEA runs a three-tier progression for chorus: PMEA District Chorus Festival -> PMEA Region Chorus Festival -> PMEA All-State Chorus, with All-State held at the PMEA Annual In-Service Conference. For 2026-27 the state Long Range Calendar sets District Chorus Jan 28-30 2027, Region Chorus Mar 4-6 2027, and Conference/All-State Apr 14-17 2027 in Erie. Students enter at the District level via a selective audition run by their PMEA district; the top scorers advance to Region, and All-State selection happens at the Region Chorus festival. PMEA's central All-State page (pmea.net/pmeaall-stateinformation) currently carries only the All-State Jazz Ensemble and All-State Harp audition instructions, because those two ensembles audition directly to the state rather than through the District/Region chain — no state-level All-State Chorus audition packet is posted there. District-level audition repertoire is set independently by each of the 12 PMEA districts, not by the state office; the District 7 2026-2027 list is included here as a sourced example and is NOT statewide. Repertoire, conductor, and fees for the 2027 All-State Chorus itself were not published at retrieval time.",
+  "organization": {
+    "name": "Pennsylvania Music Educators Association",
+    "acronym": "PMEA",
+    "website_url": "https://www.pmea.net/",
+    "description": "The Pennsylvania Music Educators Association is the NAfME state affiliate for Pennsylvania, headquartered at 56 South Third Street, Hamburg, PA 19526. PMEA is organized into 12 districts that run Fests and Festivals feeding a District -> Region -> All-State progression, culminating in the All-State ensembles at the PMEA Annual In-Service Conference."
+  },
+  "sources": [
+    { "name": "PMEA All-State Information", "url": "https://www.pmea.net/pmeaall-stateinformation/", "source_type": "official" },
+    { "name": "PMEA Fest & Festival Information", "url": "https://www.pmea.net/festivals/", "source_type": "official" },
+    { "name": "PMEA Long Range Calendar 2026/27 - 2034/35", "url": "https://www.pmea.net/wp-content/uploads/2026/07/PMEA-Long-Range-Calendar-2026-35.pdf", "source_type": "calendar" },
+    { "name": "Terms of an Individual Student's Eligibility to Participate (PMEA Festivals)", "url": "https://www.pmea.net/wp-content/uploads/2023/10/Terms-of-Students-Eligibility-to-Participate-for-website.pdf", "source_type": "handbook_pdf" },
+    { "name": "PMEA District 7 — District Chorus Auditions", "url": "https://www.pmeadistrict7.org/district-chorus-auditions.html", "source_type": "official" },
+    { "name": "PMEA Festival Repertoire Lists", "url": "https://www.pmea.net/festivals/repertoire-lists/", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "PMEA All-State Chorus",
+      "lineage_key": "pennsylvania-all-state-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The top tier of PMEA's three-level choral progression. Students first earn a place in their PMEA District Chorus Festival through a selective district audition; District Chorus members may then audition for the PMEA Region Chorus Festival; All-State Chorus members are selected from the Region Chorus festival. The All-State Chorus rehearses and performs at the PMEA Annual In-Service Conference, held April 14-17, 2027 in Erie, Pennsylvania. Only students in grades 10-12 are eligible for Region and All-State festivals.",
+      "dates": [
+        { "date_type": "audition_round", "title": "PMEA District Chorus Festivals", "start_at": "2027-01-28", "end_at": "2027-01-30", "all_day": true, "timezone": "America/New_York", "description": "Round 1 of the progression. Each of PMEA's 12 districts hosts its own District Chorus Festival on these statewide dates; auditions for entry into District Chorus are held earlier in the fall on district-set dates.", "source_url": "https://www.pmea.net/wp-content/uploads/2026/07/PMEA-Long-Range-Calendar-2026-35.pdf" },
+        { "date_type": "audition_round", "title": "PMEA Region Chorus Festivals", "start_at": "2027-03-04", "end_at": "2027-03-06", "all_day": true, "timezone": "America/New_York", "description": "Round 2 of the progression. Selection for the All-State Chorus is made at the Region Chorus festival.", "source_url": "https://www.pmea.net/wp-content/uploads/2026/07/PMEA-Long-Range-Calendar-2026-35.pdf" },
+        { "date_type": "event", "title": "PMEA Annual In-Service Conference / All-State — Erie, PA", "start_at": "2027-04-14", "end_at": "2027-04-17", "all_day": true, "timezone": "America/New_York", "description": "Round 3 / culminating event. The All-State ensembles, including All-State Chorus, rehearse and perform at the PMEA Annual In-Service Conference.", "source_url": "https://www.pmea.net/wp-content/uploads/2026/07/PMEA-Long-Range-Calendar-2026-35.pdf" },
+        { "date_type": "other", "title": "PMEA Winter State Board Meeting", "start_at": "2027-01-09", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.pmea.net/wp-content/uploads/2026/07/PMEA-Long-Range-Calendar-2026-35.pdf" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 10-12 for Region and All-State", "description": "Students in grades 9-12 may audition for and participate in District Chorus, but only students in grades 10-12 are eligible for Region and All-State festivals. (Stated in PMEA District 7's published District Chorus audition eligibility rules.)", "source_url": "https://www.pmeadistrict7.org/district-chorus-auditions.html" },
+        { "category": "eligibility", "title": "Must participate in the student's own school chorus", "description": "Students must participate in their own school organization to be eligible for any PMEA or NAfME festival — band for band, orchestra for orchestra, chorus for chorus. The only exception is if the high school lacks that organization. Students must also be in good standing in their school's choir.", "source_url": "https://www.pmea.net/wp-content/uploads/2023/10/Terms-of-Students-Eligibility-to-Participate-for-website.pdf" },
+        { "category": "eligibility", "title": "Home schooled and vocational-technical students", "description": "Home schooled and full-time Vocational-Technical School students are eligible if sponsored by their local school district of residence and the appropriate PMEA member-director, and if they are members of that district's ensembles or a community-based equivalent. (April 1995, January 2011, July 2020, July 2023)", "source_url": "https://www.pmea.net/wp-content/uploads/2023/10/Terms-of-Students-Eligibility-to-Participate-for-website.pdf" },
+        { "category": "eligibility", "title": "Private, parochial, charter, cyber and cyber-charter students", "description": "These students must participate in their own school's musical ensembles or a community-based equivalent and be sponsored by the appropriate PMEA member-director in their school. The school must be recognized by the Pennsylvania Department of Education as an official school entity. Cyber and cyber-charter students participate in PMEA events in the district where they live. A public school may not sponsor a private or charter school student under any circumstances. (January 2011, updated July 2020/2023)", "source_url": "https://www.pmea.net/wp-content/uploads/2023/10/Terms-of-Students-Eligibility-to-Participate-for-website.pdf" },
+        { "category": "membership", "title": "Sponsoring director must be a FULL ACTIVE PMEA member", "description": "PMEA directors sponsoring students in PMEA festivals and/or fests must be FULL ACTIVE members of PMEA. Retired members are not eligible to sponsor students in festivals, fests, or adjudication activities. A sponsoring PMEA member-director must be musically qualified and must serve in an audition capacity as assigned.", "source_url": "https://www.pmea.net/festivals/" },
+        { "category": "other", "title": "Full-festival attendance required", "description": "Students should not apply if for any reason (including religious activities) they plan to miss part of the affair. A student must participate in the complete festival program from registration through the final concert, except in case of illness verified in writing by a physician within 5 days of the festival. Students must rehearse and perform all musical compositions selected for the concert. (Amended April 14, 1999)", "source_url": "https://www.pmea.net/wp-content/uploads/2023/10/Terms-of-Students-Eligibility-to-Participate-for-website.pdf" },
+        { "category": "other", "title": "Withdrawal and discipline", "description": "Once selected, if a student cannot participate it is the responsibility of the student's director to contact the host before the registration deadline so an alternate may be selected. A student sent home for disciplinary action will not participate in any subsequent PMEA festival for the remainder of the current school term but may be eligible the following year.", "source_url": "https://www.pmea.net/wp-content/uploads/2023/10/Terms-of-Students-Eligibility-to-Participate-for-website.pdf" },
+        { "category": "format", "title": "Entry is by selective district audition", "description": "Students must earn membership in a District Festival through a 'selective' audition. Audition dates, procedures and repertoire are set by each PMEA district, not by the state office.", "source_url": "https://www.pmeadistrict7.org/district-chorus-auditions.html" }
+      ],
+      "repertoire": [
+        { "title": "Sing Joyfully", "composer": "William Byrd", "purpose": "audition", "notes": "PMEA DISTRICT 7 2026-2027 district chorus audition repertoire only — each PMEA district sets its own list; this is not a statewide requirement. Public domain; score posted by District 7.", "source_url": "https://www.pmeadistrict7.org/district-chorus-auditions.html" },
+        { "title": "Music of Stillness", "composer": "Elaine Hagenberg", "publisher": "Oxford University Press", "voicing": "SATB Divisi", "purpose": "audition", "notes": "PMEA District 7 2026-2027 district chorus audition repertoire only. Must be purchased from a music supplier.", "source_url": "https://www.pmeadistrict7.org/district-chorus-auditions.html" },
+        { "title": "Through Love to Light", "composer": "Elaine Hagenberg", "publisher": "Elaine Hagenberg Music", "voicing": "SATB", "purpose": "audition", "notes": "PMEA District 7 2026-2027 PIANO audition repertoire (student accompanist audition), not a vocal requirement. District 7 only.", "source_url": "https://www.pmeadistrict7.org/district-chorus-auditions.html" }
+      ],
+      "documents": [
+        { "title": "PMEA Long Range Calendar 2026/27 - 2034/35", "url": "https://www.pmea.net/wp-content/uploads/2026/07/PMEA-Long-Range-Calendar-2026-35.pdf", "document_type": "calendar" },
+        { "title": "Terms of an Individual Student's Eligibility to Participate", "url": "https://www.pmea.net/wp-content/uploads/2023/10/Terms-of-Students-Eligibility-to-Participate-for-website.pdf", "document_type": "rules" },
+        { "title": "A Statement of Principles Governing Participation in PMEA Fests and Festivals", "url": "https://www.pmea.net/wp-content/uploads/2016/09/A-Statement-of-Principles-Governing-Participation-in-PMEA-Fests-and-Festivals.pdf", "document_type": "rules" },
+        { "title": "PMEA Festival Documents", "url": "https://www.pmea.net/pmea-festival-forms/", "document_type": "form" },
+        { "title": "State Checklists (Written Format)", "url": "https://www.pmea.net/wp-content/uploads/2026/01/State-Checklists-Written-Format.pdf", "document_type": "other" },
+        { "title": "State Checklists (Grid Format)", "url": "https://www.pmea.net/wp-content/uploads/2026/01/State-Checklists-Grid-Format.pdf", "document_type": "other" },
+        { "title": "Commonly Asked Questions with PMEA Festivals", "url": "https://www.pmea.net/wp-content/uploads/2018/11/Common-questions-with-PMEA-Festivals-18.pdf", "document_type": "other" },
+        { "title": "PMEA Festival Repertoire Lists (all music performed at District/Region/All-State festivals)", "url": "https://www.pmea.net/festivals/repertoire-lists/", "document_type": "other" },
+        { "title": "All-State Guest Conductor Nomination Form", "url": "https://pmea.secure-platform.com/site/solicitations/103026/home", "document_type": "form" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2027 PMEA All-State Chorus conductor — only an All-State Guest Conductor nomination form is posted",
+    "2027 PMEA All-State Chorus performance repertoire",
+    "All-State Chorus participation/registration fee amounts — not published on pmea.net; District and Region fees are set by each district",
+    "A state-level All-State Chorus audition packet — PMEA's All-State page posts audition instructions only for the All-State Jazz Ensemble and All-State Harp, which audition directly to the state; chorus enters through the District/Region chain",
+    "Statewide District Chorus audition repertoire — each of the 12 PMEA districts publishes its own list; only District 7's 2026-2027 list was captured here",
+    "Statewide District Chorus audition dates and registration deadlines — set per district (District 7 example: registration opens Sept 1, closes Oct 15, auditions Oct 24 at Central York High School)",
+    "Clock times for District Chorus, Region Chorus, and the All-State Conference — only date ranges published",
+    "Voice part designations used by the All-State Chorus"
+  ]
+}

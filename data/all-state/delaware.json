@@ -1,0 +1,128 @@
+{
+  "state_slug": "delaware",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "IMPORTANT: as of 2026-08-07 DMEA's All-State page still posts only 2025-2026 materials (the 2025-2026 All-State Student Packet and Directors Packet). No 2026-27 audition materials, dates, or repertoire had been posted, so every program below is labeled season 2025-26 and must not be read as 2026-27. DMEA runs an All-State Junior Chorus (grades 7-8) and All-State Senior Choirs (grades 9-12, Treble and Mixed) alongside band, orchestra, jazz, and modern band ensembles.",
+
+  "organization": {
+    "name": "Delaware Music Educators Association",
+    "acronym": "DMEA",
+    "website_url": "https://www.delawaremea.org/",
+    "description": "DMEA is the Delaware state affiliate of NAfME. It administers the Delaware All-State ensembles, the Let's Make Music Festival, awards and scholarships, and a Young Composers Contest. All-State events are self-supporting, financed by audition and registration fees."
+  },
+
+  "sources": [
+    { "name": "DMEA All-State", "url": "https://www.delawaremea.org/all-state.html", "source_type": "official" },
+    { "name": "2025-2026 All-State Student Packet", "url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit", "source_type": "handbook_pdf" },
+    { "name": "DMEA All-State Operations Manual", "url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit", "source_type": "handbook_pdf" },
+    { "name": "DMEA Calendar", "url": "https://www.delawaremea.org/calendar.html", "source_type": "calendar" }
+  ],
+
+  "programs": [
+    {
+      "name": "All-State Junior Chorus",
+      "lineage_key": "delaware-junior-chorus",
+      "season": "2025-26",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "DMEA's All-State choral ensemble for grades 7-8. Students audition in person, attend a regional reading rehearsal, and then a three-day rehearsal and concert event. Attendance at every event is mandatory for accepted students.",
+
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Applications for All-State Choirs due", "start_at": "2025-10-17", "all_day": true, "timezone": "America/New_York", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "date_type": "audition_round", "title": "Junior Choir auditions", "start_at": "2025-11-22T09:00:00", "end_at": "2025-11-22T17:00:00", "all_day": false, "timezone": "America/New_York", "description": "Held at Smyrna Middle School.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "date_type": "other", "title": "Reading rehearsal", "start_at": "2026-01-31T09:00:00", "end_at": "2026-01-31T12:00:00", "all_day": false, "timezone": "America/New_York", "description": "New Castle County at Wilmington Friends; Kent/Sussex at Frederick Thomas Middle School. Weather date 2/7/26.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "date_type": "event", "title": "All-State Junior Chorus event", "start_at": "2026-03-05", "end_at": "2026-03-07", "all_day": true, "timezone": "America/New_York", "description": "Daily 9am-4pm, with a 4pm concert. Rehearsals at Dover Middle School; concert at Dover High School.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" }
+      ],
+
+      "requirements": [
+        { "category": "eligibility", "title": "Grade levels", "description": "All-State Junior Chorus is open to grades 7-8.", "structured_data": { "grades": [7, 8] }, "source_url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit" },
+        { "category": "membership", "title": "School ensemble enrollment", "description": "Each applicant must be enrolled in and a participating member in good standing of their school's, sister school's, or district's music ensemble for the entire current school year, corresponding to the All-State ensemble applied for. Choral applicants must be in their school's choral ensembles. Home-schooled students are eligible only if they are enrolled in and participate in a school ensemble that regularly rehearses and performs within the local public school district where they reside.", "source_url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit" },
+        { "category": "membership", "title": "Director must be a NAfME/DMEA member", "description": "The music teacher signing the application must be the teacher of record for the qualifying ensemble and a current NAfME/DMEA member; membership is verified through the national affiliate. Students of non-member directors are not eligible to participate.", "source_url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit" },
+        { "category": "eligibility", "title": "No known conflicts", "description": "Students with known conflicts that would preclude participation in any portion of the rehearsals or the event are not eligible to audition. Requests to miss any portion of a rehearsal or concert are not entertained.", "source_url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit" },
+        { "category": "format", "title": "Prepared audition piece", "description": "Music begins at m. 18 on the second half of beat 2; singers begin singing at m. 20 on the second half of beat 2 and sing to the end of the piece. Students sing their voice part along with a recording of the accompaniment. Sheet music is provided at the audition if needed. Memorization is not required.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "category": "rubric", "title": "Assessment criteria", "description": "Students are assessed on Tone Quality, Intonation, Pitch Accuracy, Rhythm & Tempo, Diction & Phrasing, and Range.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "category": "sight_reading", "title": "Sight-reading", "description": "The exercise starts on the tonic and contains only stepwise motion, is 4 measures long, does not exceed one octave in range, uses note values no shorter than eighth notes, and includes rests. Keys by part: Soprano F, Alto C, Tenor A-flat, Baritone E-flat. Solfege letters and numbers are printed below each note; students may sing on 'la' or any syllable or number without penalty and get 2 attempts.", "structured_data": { "length_measures": 4, "attempts": 2, "keys": { "soprano": "F", "alto": "C", "tenor": "Ab", "baritone": "Eb" } }, "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "category": "other", "title": "Concert Black dress code", "description": "Students must wear conservative solid-black Concert Black attire with no prints, patterns, stripes, or dots. Dress/skirt outfits: knee length or longer, short or long sleeves only (no sleeveless), black stockings or tights, black dress shoes with low or no heel. Pant outfits: black dress pants, black long-sleeve dress shirt, black socks, black dress shoes, black belt. Sequins, rhinestones, hats, scarves, jeans, cargo/crop/yoga pants, sandals, flip flops, sneakers, and colored socks are not permitted. Students who do not meet the dress code are not allowed on the concert stage.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" }
+      ],
+
+      "repertoire": [
+        { "title": "Hallelujah, Amen (from Judas Maccabeus)", "composer": "Handel", "purpose": "audition", "notes": "2025-2026 required Junior Choir audition piece.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" }
+      ],
+
+      "fees": [
+        { "fee_type": "application", "amount_cents": 2000, "payable_to": "state_association", "description": "An application fee of $20.00 is charged for each application. The fee may be paid by individuals, district, school, or booster organizations; if the district or school is paying, the Payment Form must be filed within one week after the deadline.", "source_url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit" }
+      ],
+
+      "documents": [
+        { "title": "2025-2026 All-State Student Packet", "url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit", "document_type": "handbook" },
+        { "title": "2025-2026 All-State Directors Packet", "url": "https://docs.google.com/document/d/1yJQYnDTyNjrmjpZfehGEUOUPgI2cA-0rI6IU7-aHxhk/edit", "document_type": "handbook" },
+        { "title": "DMEA All-State Operations Manual", "url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit", "document_type": "rules" },
+        { "title": "DMEA All-State Ensemble Contract", "url": "https://docs.google.com/document/d/1hzcFNPCuoVY3Qgo0S2JcCLk-bNj6y88JofwF5jkl_j0/edit", "document_type": "form" },
+        { "title": "DMEA Signature Page", "url": "https://docs.google.com/document/d/14m1-vQVTQWKkthCV94SN2yRya4X9R_5iZoPLsCZ2rqI/edit", "document_type": "form" },
+        { "title": "Emergency Medical Form", "url": "https://drive.google.com/file/d/1aDMLA1nMqyzqXGhl0-wUQDdMg-G0smHK/view", "document_type": "form" }
+      ],
+
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "BAR", "label": "Baritone" }
+      ]
+    },
+    {
+      "name": "All-State Senior Choirs (Treble and Mixed)",
+      "lineage_key": "delaware-senior-choirs",
+      "season": "2025-26",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus and treble chorus",
+      "description": "DMEA's All-State choral program for grades 9-12, comprising a Treble Choir and a Mixed Choir. Singers audition in person from a single set of published requirements, attend a regional reading rehearsal, and perform at a three-day event.",
+
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Applications for All-State Choirs due", "start_at": "2025-10-17", "all_day": true, "timezone": "America/New_York", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "date_type": "audition_round", "title": "Senior Choir auditions", "start_at": "2025-11-22T09:00:00", "end_at": "2025-11-22T17:00:00", "all_day": false, "timezone": "America/New_York", "description": "Held at Smyrna High School.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "date_type": "other", "title": "Reading rehearsal", "start_at": "2026-02-10T18:00:00", "end_at": "2026-02-10T20:00:00", "all_day": false, "timezone": "America/New_York", "description": "Kent/Sussex at Woodbridge High School; New Castle County at Concord High School. Weather date 2/17/26.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "date_type": "event", "title": "All-State Senior Choirs event", "start_at": "2026-03-05", "end_at": "2026-03-07", "all_day": true, "timezone": "America/New_York", "description": "Daily 9am-4pm, with a 7pm concert. Held at Dover High School.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" }
+      ],
+
+      "requirements": [
+        { "category": "eligibility", "title": "Grade levels", "description": "All-State Senior Choirs (Treble and Mixed) are open to grades 9-12.", "structured_data": { "grades": [9, 10, 11, 12] }, "source_url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit" },
+        { "category": "membership", "title": "School ensemble enrollment", "description": "Each applicant must be enrolled in and a participating member in good standing of their school's, sister school's, or district's choral ensemble for the entire current school year. Home-schooled students are eligible only if they are enrolled in and participate in a choral ensemble that regularly rehearses and performs within the local public school district where they reside.", "source_url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit" },
+        { "category": "membership", "title": "Director must be a NAfME/DMEA member", "description": "The music teacher signing the application must be the teacher of record for the qualifying ensemble and a current NAfME/DMEA member. Students of non-member directors are not eligible to participate.", "source_url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit" },
+        { "category": "format", "title": "Prepared audition piece", "description": "Students learn the vocal part for which they wish to audition and sing measures 61 to the end (accompaniment begins at m. 57 at the piano interlude). Students audition with a track containing the other vocal parts but excluding the part being auditioned. DMEA supplies a PDF of the piece, IPA pronunciation and translation, rehearsal tracks, and audition tracks.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "category": "rubric", "title": "Prepared piece scoring", "description": "0-9 points possible for each of: Tone, Pitch Accuracy, Rhythmic Accuracy, Dynamics, Phrasing, and Diction.", "structured_data": { "points_per_category": 9, "categories": ["Tone", "Pitch Accuracy", "Rhythmic Accuracy", "Dynamics", "Phrasing", "Diction"] }, "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "category": "sight_reading", "title": "Sight-reading", "description": "Students prepare to sight read in the key of C, F, G, Eb, or D. The example begins and ends on the tonic and contains at least one leap of a 3rd or 4th and a dotted rhythm. A track provides a I-IV-V-I progression, the starting pitch, and a 4-beat click to establish tempo. Students sing a cappella using solfege or a neutral syllable and are assessed only on pitch and rhythmic accuracy (0-9 points each).", "structured_data": { "keys": ["C", "F", "G", "Eb", "D"], "scored_on": ["Rhythmic Accuracy", "Pitch Accuracy"], "points_per_category": 9 }, "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" },
+        { "category": "other", "title": "Concert Black dress code", "description": "Students must wear conservative solid-black Concert Black attire with no prints, patterns, stripes, or dots, per the All-State Operations Manual. Students who do not meet the dress code are not allowed on the concert stage.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" }
+      ],
+
+      "repertoire": [
+        { "title": "Sehnsucht, Op. 112 No. 1", "composer": "Johannes Brahms", "arranger": "Edited by Maynard Klein", "voicing": "SATB", "purpose": "audition", "notes": "2025-2026 required Senior Choir audition piece; measures 61 to the end.", "source_url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit" }
+      ],
+
+      "fees": [
+        { "fee_type": "application", "amount_cents": 2000, "payable_to": "state_association", "description": "An application fee of $20.00 is charged for each application. The fee may be paid by individuals, district, school, or booster organizations.", "source_url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit" }
+      ],
+
+      "documents": [
+        { "title": "2025-2026 All-State Student Packet", "url": "https://docs.google.com/document/d/1ZsNnIZWqFnfzHlrnt_1C6rvBqeaXfftmDW8yAeBXWrY/edit", "document_type": "handbook" },
+        { "title": "DMEA All-State Operations Manual", "url": "https://docs.google.com/document/d/1Rve8aCWnnHAnTwvXrKCfvTmVj5mV3xJm/edit", "document_type": "rules" },
+        { "title": "DE All-State Sight Reading Examples", "url": "https://drive.google.com/file/d/1FWK2KOnDXGRSuK3n4XhDeyDA94wT-WoA/view", "document_type": "other" },
+        { "title": "DMEA All-State Ensemble Contract", "url": "https://docs.google.com/document/d/1hzcFNPCuoVY3Qgo0S2JcCLk-bNj6y88JofwF5jkl_j0/edit", "document_type": "form" }
+      ],
+
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+
+  "not_published": [
+    "All 2026-27 All-State choral dates, audition repertoire, and packets — DMEA's All-State page still shows only 2025-2026 materials as of 2026-08-07",
+    "Registration/participation fee amount — the Operations Manual says the Executive Board sets an audition fee and a registration fee annually but does not publish the amounts; only the $20 application fee is stated",
+    "2025-26 All-State choral conductors",
+    "Concert (performance) repertoire for the All-State choirs",
+    "Ticket prices (tickets sold via an external Square link)"
+  ]
+}

@@ -1,0 +1,331 @@
+{
+  "state_slug": "florida",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Florida's All-State choruses are run by the Florida Vocal Association (FVA), a component of the Florida Music Education Association (FMEA), and perform at the FMEA Professional Learning Conference. Data below comes from the All-State Omnibus 2026-2027 (revised 7/14/2026), the current-cycle governing document. Note that fva.net/all-state was still displaying the prior (2026) cycle's announced excerpts when retrieved, so no 2027 announced VQ excerpts are recorded here. FEMEA (Florida Elementary Music Educators Association) separately runs a 2027 All-State Elementary Chorus, included as its own program. The FEMEA page publishes its deadlines as month/day only (9/12, 9/24, 10/15, 10/23, 11/3); the calendar year 2026 is taken from the cycle context (fall before the January 2027 conference).",
+
+  "organization": {
+    "name": "Florida Vocal Association",
+    "acronym": "FVA",
+    "website_url": "https://fva.net/",
+    "description": "FVA is the choral component of the Florida Music Education Association. Its All-State Choruses are select groups of choral students from Florida's junior, middle, and senior high schools who complete a three-step audition process (written musicianship test, sight-reading, and a vocal quality audition on the All-State music) and then rehearse and perform with guest conductors at the annual FMEA Professional Learning Conference."
+  },
+
+  "sources": [
+    { "name": "FVA All-State", "url": "https://fva.net/all-state/", "source_type": "official" },
+    { "name": "FVA All-State Omnibus 2026-2027 (Revised 7/14/2026)", "url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf", "source_type": "handbook_pdf" },
+    { "name": "FMEA All-State", "url": "https://fmea.org/programs/performance-opportunities/all-state/", "source_type": "official" },
+    { "name": "FEMEA 2027 All-State Elementary Chorus", "url": "https://www.femeamember.org/all-state-elementary-chorus", "source_type": "official" }
+  ],
+
+  "programs": [
+    {
+      "name": "All-State High School Concert Chorus",
+      "lineage_key": "florida-hs-concert-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "Approximately 300 singers, grades 9-12, SATB. Seated with the highest 75 composite scores per SATB voice part (37 in part 1 of each section, 38 in part 2). Rehearses and performs at the FMEA Professional Learning Conference. 2027 conductor: Chris Maunu.",
+
+      "dates": [
+        { "date_type": "registration_deadline", "title": "FMEA/FVA membership deadline", "start_at": "2026-09-01", "all_day": true, "timezone": "America/New_York", "description": "Published by FMEA; membership must be current to register students for All-State auditions.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "audition_round", "title": "Musicianship / Sight-Reading testing window", "start_at": "2026-09-09", "end_at": "2026-09-19", "all_day": true, "timezone": "America/New_York", "description": "Exact date within the window is set by each District Chair.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "other", "title": "Announced Vocal Quality audition excerpt posted", "start_at": "2026-09-19", "all_day": true, "timezone": "America/New_York", "description": "One of the three VQ audition excerpts is announced on fva.net.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "other", "title": "Concert Chorus opt-out request deadline", "start_at": "2026-09-25", "all_day": true, "timezone": "America/New_York", "description": "Omnibus states the deadline to submit an opt-out request is Friday, September 25th at midnight, via a Google Form.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "audition_round", "title": "Vocal Quality Audition window", "start_at": "2026-10-07", "end_at": "2026-10-17", "all_day": true, "timezone": "America/New_York", "description": "Exact date within the window is set by each District Chair.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "event", "title": "FMEA Professional Learning Conference and All-State Concerts", "start_at": "2027-01-13", "end_at": "2027-01-16", "all_day": true, "timezone": "America/New_York", "description": "Tampa Convention Center, Tampa, FL.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "requirements": [
+        { "category": "eligibility", "title": "Eligibility", "description": "Students in grades 7-12 who are enrolled in a choral/vocal course at their school or a registered Home Education Music Cooperative are eligible to audition for an All-State ensemble. The Concert Chorus is grades 9-12.", "structured_data": { "grades": [9, 10, 11, 12] }, "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "format", "title": "Three-step audition process", "description": "1) 50-question multiple-choice written musicianship test, graded on-site; 2) individual sight-reading evaluation scored by two approved choral directors on the number of correct measures sung; 3) a Vocal Quality Audition on the All-State music. Composite scores are 30% musicianship, 35% sight-reading, 35% vocal quality.", "structured_data": { "weights": { "musicianship": 0.30, "sight_reading": 0.35, "vocal_quality": 0.35 } }, "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "rubric", "title": "Qualifying scores for the Concert Chorus", "description": "Students must score at least 80% (40/50) on the 9-12 Musicianship Test and correctly read a minimum of 20 measures of the 40-measure Sight-Reading Examination in order to complete the Vocal Quality audition for the Concert Chorus.", "structured_data": { "musicianship_min": 40, "musicianship_total": 50, "sight_reading_min_measures": 20, "sight_reading_total_measures": 40 }, "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "materials", "title": "Vocal Quality Audition repertoire", "description": "Students audition on three excerpts selected from the Concert Chorus repertoire; two of the three are discovered on-site at the Vocal Quality Audition and one is announced on fva.net on September 19. Students must prepare the voice part for which they were registered. Learning tracks for all repertoire are available for purchase from ChoralTracks.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "format", "title": "Registration limits and voice part locking", "description": "Registration is via MPA Online. Each director may register a maximum of 3 students each of Soprano 1, Soprano 2, Alto 1, and Alto 2; there is no limit on Tenors and Basses. Students must register for the voice part for which they wish to be considered (S1, S2, A1, A2, T1, T2, B1, B2) and may not change voice parts after the registration deadline. Directors also supply emergency contact information, height, and a student headshot at registration.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "other", "title": "Testing accommodations", "description": "A director may request visual magnification, preferential seating, or Braille for students with special needs, with ample prior notification to the district chair.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "other", "title": "Opt-out procedure", "description": "Directors may opt students on the lower edge of the Concert Chorus audition pool out of Concert Chorus so they instead audition on the SSAA or TTBB packet. Once a student is moved out of the Concert Chorus pool they cannot be moved back, regardless of score.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "repertoire": [
+        { "title": "Walk through the Streets of the City", "arranger": "Undine Smith Moore", "publisher": "Augsburg Press", "voicing": "SATB divisi", "catalog_number": "979-8-8898-3754-1", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Psaume XXIV", "composer": "Lili Boulanger", "publisher": "IMSLP (public domain)", "voicing": "SATB", "purpose": "performance", "notes": "Listed with piano and orchestra accompaniment.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Threads of Dawn", "composer": "Chris Maunu", "publisher": "Pavane Publishing", "catalog_number": "P1829", "voicing": "SATB", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Song of a Dream (from 'The Dreams that Remain')", "composer": "Thomas LaVoy", "publisher": "GIA Publishing", "catalog_number": "G-9814", "voicing": "SATB Divisi", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Hor Che La Vaga Aurora", "composer": "Vittoria Aleotti", "arranger": "ed. Andrew Hathaway", "publisher": "CPDL (public domain)", "voicing": "SATB", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "The Caged Bird Sings For Freedom", "composer": "Joel Thompson", "publisher": "Mark Foster Music", "catalog_number": "00287118", "voicing": "SATB Divisi", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2500, "payable_to": "state_association", "description": "A minimum $25.00 audition fee is charged for each student registered to take the musicianship test. Only school or booster checks, money orders, or credit cards are accepted; personal checks, cash, and purchase orders are not. No refunds for students who do not show up. Districts may elect to add an additional recording fee.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "documents": [
+        { "title": "All-State Omnibus 2026-2027 (Revised 7/14/2026)", "url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf", "document_type": "handbook", "published_at": "2026-07-14" },
+        { "title": "FVA Governing Documents", "url": "https://fva.net/fva/governing-documents/", "document_type": "rules" },
+        { "title": "High School Vocabulary List", "url": "https://drive.google.com/open?id=1QCbwbJ4KiCkPvYaDXDkD-CW_g5Lggohi", "document_type": "other" },
+        { "title": "High School Sight-Reading Criteria", "url": "https://drive.google.com/file/d/1Mdf7nM8OxdWxSfK5qyHtpQx3F7pqc9Kw/view", "document_type": "other" }
+      ],
+
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" },
+        { "code": "T1", "label": "Tenor 1" },
+        { "code": "T2", "label": "Tenor 2" },
+        { "code": "B1", "label": "Bass 1" },
+        { "code": "B2", "label": "Bass 2" }
+      ]
+    },
+    {
+      "name": "All-State High School SSAA Chorus",
+      "lineage_key": "florida-hs-ssaa-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "Approximately 200 soprano/alto singers, grades 9-12. Seated with the highest 50 composite scores per voice part from singers not placed in the Concert Chorus. 2027 conductor: Cristian Grases.",
+
+      "dates": [
+        { "date_type": "audition_round", "title": "Musicianship / Sight-Reading testing window", "start_at": "2026-09-09", "end_at": "2026-09-19", "all_day": true, "timezone": "America/New_York", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "audition_round", "title": "Vocal Quality Audition window", "start_at": "2026-10-07", "end_at": "2026-10-17", "all_day": true, "timezone": "America/New_York", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "event", "title": "FMEA Professional Learning Conference and All-State Concerts", "start_at": "2027-01-13", "end_at": "2027-01-16", "all_day": true, "timezone": "America/New_York", "description": "Tampa Convention Center, Tampa, FL.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "requirements": [
+        { "category": "rubric", "title": "Qualifying scores", "description": "Students who score at least 70% (35/50) on the 9-12 Musicianship Test and correctly read a minimum of 10 measures of the 40-measure Sight-Reading Exam are eligible to audition for the SSAA or TTBB Chorus.", "structured_data": { "musicianship_min": 35, "musicianship_total": 50, "sight_reading_min_measures": 10, "sight_reading_total_measures": 40 }, "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "materials", "title": "Vocal Quality Audition repertoire", "description": "Students audition on three excerpts from the SSAA repertoire, two of which are discovered on-site at the Vocal Quality Audition; one excerpt is announced on fva.net on September 19.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "repertoire": [
+        { "title": "Core (from 'Earth')", "composer": "Cristian Grases", "voicing": "SSA", "purpose": "performance", "notes": "Listed with drum and body percussion.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Ave Maris Stella", "composer": "Eva Ugalde", "publisher": "Walton", "catalog_number": "WW1991", "voicing": "SSAA", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Psalm 23", "composer": "Franz Schubert", "publisher": "CPDL (public domain)", "voicing": "SSAA", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Blackbird", "arranger": "Matthew Brown", "voicing": "SSAA", "purpose": "performance", "notes": "Solo/small group to be decided and chosen on site.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "La Cucaracha", "arranger": "Alberto Grau", "publisher": "Earthsongs", "voicing": "SSA", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Laudate Dominum", "composer": "Levente Gyongyosi", "publisher": "Kontrapunkt Music", "catalog_number": "K-0243", "voicing": "SSAA Divisi", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2500, "payable_to": "state_association", "description": "A minimum $25.00 audition fee is charged for each student registered to take the musicianship test. Districts may elect to add an additional recording fee.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "documents": [
+        { "title": "All-State Omnibus 2026-2027 (Revised 7/14/2026)", "url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf", "document_type": "handbook", "published_at": "2026-07-14" }
+      ],
+
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" }
+      ]
+    },
+    {
+      "name": "All-State High School TTBB Chorus",
+      "lineage_key": "florida-hs-ttbb-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "tenor-bass chorus",
+      "description": "Approximately 150 tenor/bass singers, grades 9-12. Seated according to the best balance possible with the number of qualifying students available. 2027 conductor: Sydney Guillaume.",
+
+      "dates": [
+        { "date_type": "audition_round", "title": "Musicianship / Sight-Reading testing window", "start_at": "2026-09-09", "end_at": "2026-09-19", "all_day": true, "timezone": "America/New_York", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "audition_round", "title": "Vocal Quality Audition window", "start_at": "2026-10-07", "end_at": "2026-10-17", "all_day": true, "timezone": "America/New_York", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "event", "title": "FMEA Professional Learning Conference and All-State Concerts", "start_at": "2027-01-13", "end_at": "2027-01-16", "all_day": true, "timezone": "America/New_York", "description": "Tampa Convention Center, Tampa, FL.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "requirements": [
+        { "category": "rubric", "title": "Qualifying scores", "description": "Students who score at least 70% (35/50) on the 9-12 Musicianship Test and correctly read a minimum of 10 measures of the 40-measure Sight-Reading Exam are eligible to audition for the TTBB or SSAA Chorus.", "structured_data": { "musicianship_min": 35, "musicianship_total": 50, "sight_reading_min_measures": 10, "sight_reading_total_measures": 40 }, "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "materials", "title": "Vocal Quality Audition repertoire", "description": "Students audition on three excerpts from the TTBB repertoire, two of which are discovered on-site at the Vocal Quality Audition; one excerpt is announced on fva.net on September 19.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "repertoire": [
+        { "title": "Gagot", "composer": "Sydney Guillaume", "voicing": "TTBB", "purpose": "performance", "notes": "A cappella.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "La Bikina", "arranger": "Ruben Reyes", "publisher": "SheetMusicDirect.com", "voicing": "TTBB", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "The Times They Are A-Changin'", "arranger": "Adam Podd", "publisher": "Hal Leonard", "catalog_number": "01359946", "voicing": "TTBB", "purpose": "performance", "notes": "Solo/small group to be decided and chosen on site.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Dies Irae", "composer": "Z. Randall Stroope", "publisher": "Alliance Music", "catalog_number": "AMP0616", "voicing": "TBB", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "There's a Meeting Here Tonight", "arranger": "arr. Cantus, ed. Reinwald & Takach", "publisher": "Timothy C. Takach Publications / Graphite", "catalog_number": "TCT-CTS-001", "voicing": "TTBB", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Tuba", "arranger": "Michael Barrett", "publisher": "Walton Music", "catalog_number": "WW1701", "voicing": "TTBB", "purpose": "performance", "notes": "Two djembes; solo/small group decided on site.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Plakatap", "composer": "Sydney Guillaume", "voicing": "TBB", "purpose": "performance", "notes": "Bongos/djembe.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2500, "payable_to": "state_association", "description": "A minimum $25.00 audition fee is charged for each student registered to take the musicianship test.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "documents": [
+        { "title": "All-State Omnibus 2026-2027 (Revised 7/14/2026)", "url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf", "document_type": "handbook", "published_at": "2026-07-14" }
+      ],
+
+      "voice_parts": [
+        { "code": "T1", "label": "Tenor 1" },
+        { "code": "T2", "label": "Tenor 2" },
+        { "code": "B1", "label": "Bass 1" },
+        { "code": "B2", "label": "Bass 2" }
+      ]
+    },
+    {
+      "name": "All-State High School Reading Chorus",
+      "lineage_key": "florida-hs-reading-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "Approximately 100 singers, grades 9-12; members are the highest sight-reading scorers in the state. This is the first chorus seated, awarded after the musicianship and sight-reading exams and before the Vocal Quality audition. 2027 conductor: Dr. Erynn M. Millard.",
+
+      "dates": [
+        { "date_type": "audition_round", "title": "Musicianship / Sight-Reading testing window", "start_at": "2026-09-09", "end_at": "2026-09-19", "all_day": true, "timezone": "America/New_York", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "event", "title": "FMEA Professional Learning Conference and All-State Concerts", "start_at": "2027-01-13", "end_at": "2027-01-16", "all_day": true, "timezone": "America/New_York", "description": "Tampa Convention Center, Tampa, FL.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "requirements": [
+        { "category": "rubric", "title": "Seating criteria", "description": "Unless a student opts out, the top 25 sight readers in each section (SATB) are awarded the 100 Reading Chorus seats. The minimum sight-reading score accepted is 30 measures out of 40, and Reading Chorus members must have a minimum score of 40 on the Musicianship exam. Seats are awarded before the Vocal Quality audition. Directors indicate at initial online registration which students want to opt out of Reading Chorus consideration.", "structured_data": { "musicianship_min": 40, "sight_reading_min_measures": 30, "sight_reading_total_measures": 40, "seats_per_section": 25 }, "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2500, "payable_to": "state_association", "description": "A minimum $25.00 audition fee is charged for each student registered to take the musicianship test.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "documents": [
+        { "title": "All-State Omnibus 2026-2027 (Revised 7/14/2026)", "url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf", "document_type": "handbook", "published_at": "2026-07-14" }
+      ],
+
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "All-State Middle School Mixed Chorus",
+      "lineage_key": "florida-ms-mixed-chorus",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "Approximately 300 singers, grades 7-8, SATB. Filled based on highest composite scores. 2027 conductor: Julie Yu Oppenheim.",
+
+      "dates": [
+        { "date_type": "audition_round", "title": "Musicianship / Sight-Reading testing window", "start_at": "2026-09-09", "end_at": "2026-09-19", "all_day": true, "timezone": "America/New_York", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "audition_round", "title": "Vocal Quality Audition window", "start_at": "2026-10-07", "end_at": "2026-10-17", "all_day": true, "timezone": "America/New_York", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "event", "title": "FMEA Professional Learning Conference and All-State Concerts", "start_at": "2027-01-13", "end_at": "2027-01-16", "all_day": true, "timezone": "America/New_York", "description": "Tampa Convention Center, Tampa, FL.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "requirements": [
+        { "category": "eligibility", "title": "Grade levels", "description": "Grades 7-8, enrolled in a choral/vocal course at their school or a registered Home Education Music Cooperative.", "structured_data": { "grades": [7, 8] }, "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "rubric", "title": "Qualifying scores", "description": "Middle school students must score at least 70% (35/50) on the 7-8 Musicianship Test and correctly read a minimum of 8 measures of the 32-measure Sight-Reading Examination in order to progress to the Vocal Quality Audition.", "structured_data": { "musicianship_min": 35, "musicianship_total": 50, "sight_reading_min_measures": 8, "sight_reading_total_measures": 32 }, "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "materials", "title": "Vocal Quality Audition repertoire", "description": "Students audition on three excerpts from the Mixed Chorus repertoire, two of which are discovered on-site at the Vocal Quality Audition; one is announced on fva.net on September 19.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "format", "title": "Registration limits", "description": "For the 7-8 Mixed Chorus a director may register a maximum of 3 Sopranos and 3 Altos (6 registered SA singers); there is no limit on Tenors and Basses. Students must register for the chorus and voice part for which they wish to be considered, and no changes are allowed after the registration deadline.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "repertoire": [
+        { "title": "Cum Sancto Spiritu (from 'Gloria')", "composer": "Vivaldi", "arranger": "arr. Liebergen", "publisher": "Alfred", "catalog_number": "16225", "voicing": "SATB", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Three Madrigals", "composer": "Emma Lou Diemer", "publisher": "Hal Leonard", "catalog_number": "48003439", "voicing": "SATB", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Dance Your Dance", "composer": "Jacob Narverud", "publisher": "Carl Fischer", "catalog_number": "CM9560", "voicing": "SATB", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "TaReKiTa", "composer": "Reena Esmail", "publisher": "Oxford University Press", "catalog_number": "V17", "voicing": "SATB", "purpose": "performance", "notes": "A cappella.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "On Some Solemn Shore", "composer": "Andrea Ramsey", "publisher": "Hal Leonard", "catalog_number": "08752681", "voicing": "SATB", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Ujedinite Se", "composer": "Jim Papoulis", "publisher": "Hal Leonard", "catalog_number": "48024483", "voicing": "SAB", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2500, "payable_to": "state_association", "description": "A minimum $25.00 audition fee is charged for each student registered to take the musicianship test. Districts may elect to add an additional recording fee.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "documents": [
+        { "title": "All-State Omnibus 2026-2027 (Revised 7/14/2026)", "url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf", "document_type": "handbook", "published_at": "2026-07-14" },
+        { "title": "Middle School Vocabulary List", "url": "https://drive.google.com/open?id=1ybbQtBZwVF_hWycPJppVlaaQsHlzbYQp", "document_type": "other" },
+        { "title": "Middle School Sight-Reading Criteria", "url": "https://drive.google.com/open?id=1nJWlEmMSkIuadNqlNsXv-JMF0URIIGKg", "document_type": "other" }
+      ],
+
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "All-State Middle School Treble Chorus",
+      "lineage_key": "florida-ms-treble-chorus",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "treble chorus",
+      "description": "Approximately 300 singers, grades 7-8, for females and males with unchanged voices. Filled based on highest composite scores. 2027 conductor: Victor C. Johnson.",
+
+      "dates": [
+        { "date_type": "audition_round", "title": "Musicianship / Sight-Reading testing window", "start_at": "2026-09-09", "end_at": "2026-09-19", "all_day": true, "timezone": "America/New_York", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "audition_round", "title": "Vocal Quality Audition window", "start_at": "2026-10-07", "end_at": "2026-10-17", "all_day": true, "timezone": "America/New_York", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "date_type": "event", "title": "FMEA Professional Learning Conference and All-State Concerts", "start_at": "2027-01-13", "end_at": "2027-01-16", "all_day": true, "timezone": "America/New_York", "description": "Tampa Convention Center, Tampa, FL.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "requirements": [
+        { "category": "eligibility", "title": "Grade levels and voice", "description": "Grades 7-8, females and males with unchanged voices, enrolled in a choral/vocal course at their school or a registered Home Education Music Cooperative.", "structured_data": { "grades": [7, 8] }, "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "rubric", "title": "Qualifying scores", "description": "Middle school students must score at least 70% (35/50) on the 7-8 Musicianship Test and correctly read a minimum of 8 measures of the 32-measure Sight-Reading Examination in order to progress to the Vocal Quality Audition.", "structured_data": { "musicianship_min": 35, "musicianship_total": 50, "sight_reading_min_measures": 8, "sight_reading_total_measures": 32 }, "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "format", "title": "Registration limits", "description": "For the 7-8 Treble Chorus a director may register a maximum of 3 students each of Treble 1, 2, and 3, for a maximum of 9 registered Treble singers. Each director may register a maximum of 15 treble/unchanged singers overall. No changes in chorus or voice part are allowed after the registration deadline.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "category": "materials", "title": "Vocal Quality Audition repertoire", "description": "Students audition on three excerpts from the Treble Chorus repertoire, two of which are discovered on-site at the Vocal Quality Audition; one is announced on fva.net on September 19.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "repertoire": [
+        { "title": "Bel Piacere", "composer": "Handel", "arranger": "arr. Spevacek", "publisher": "Heritage Press", "catalog_number": "15/2542H", "voicing": "SSA", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Silver Rain", "composer": "B.E. Boykin", "publisher": "Oxford University Press", "catalog_number": "SB50", "voicing": "SSA", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Ikan Kekek", "arranger": "Yu Hang Tan", "publisher": "Walton Music", "catalog_number": "WJMS1205", "voicing": "SSA", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Juego a que me quemo (Chispa candela)", "arranger": "Julian Gomez Giraldo", "publisher": "Hal Leonard", "catalog_number": "08748313", "voicing": "SSA", "purpose": "performance", "notes": "A cappella.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Until I Reach My Home", "composer": "Brandon A. Boyd", "publisher": "Hinshaw Music", "catalog_number": "346957", "voicing": "SSA", "purpose": "performance", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" },
+        { "title": "Original commissioned selection (title not yet published)", "composer": "Victor C. Johnson", "voicing": "SSA", "purpose": "performance", "notes": "Written specifically for the 2027 MS Treble All-State Choir; the Omnibus states it will be available on August 1 and sent to Heads House of Music, JWPepper, and Beethoven & Co. for inclusion in the All-State packets. Title not published in the Omnibus.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2500, "payable_to": "state_association", "description": "A minimum $25.00 audition fee is charged for each student registered to take the musicianship test. Districts may elect to add an additional recording fee.", "source_url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf" }
+      ],
+
+      "documents": [
+        { "title": "All-State Omnibus 2026-2027 (Revised 7/14/2026)", "url": "https://fva.net/wp-content/uploads/2026/07/All-State-Omnibus-2026-2027-Revised-7_14_2026.pdf", "document_type": "handbook", "published_at": "2026-07-14" }
+      ],
+
+      "voice_parts": [
+        { "code": "T1", "label": "Treble 1" },
+        { "code": "T2", "label": "Treble 2" },
+        { "code": "T3", "label": "Treble 3" }
+      ]
+    },
+    {
+      "name": "All-State Elementary Chorus",
+      "lineage_key": "florida-elementary-chorus",
+      "season": "2026-27",
+      "school_level": "elementary",
+      "ensemble_type": "treble chorus",
+      "description": "Administered by FEMEA (the Florida Elementary Music Educators Association), a component of FMEA. Teachers select students to audition for All-State, Regionals, or both. Auditions are submitted as recordings judged from an official audition track. FEMEA labels this cycle the '2027 All-State Elementary Chorus'.",
+
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Submit paperwork and payment", "start_at": "2026-09-12", "all_day": true, "timezone": "America/New_York", "description": "FEMEA publishes this as '9/12'; the year is inferred from the 2027 cycle.", "source_url": "https://www.femeamember.org/all-state-elementary-chorus" },
+        { "date_type": "other", "title": "Official audition track released", "start_at": "2026-09-01", "all_day": true, "timezone": "America/New_York", "description": "FEMEA publishes this as '9/1'.", "source_url": "https://www.femeamember.org/all-state-elementary-chorus" },
+        { "date_type": "audition_round", "title": "Upload recordings for judging", "start_at": "2026-09-24", "all_day": true, "timezone": "America/New_York", "description": "FEMEA publishes this as '9/24'.", "source_url": "https://www.femeamember.org/all-state-elementary-chorus" },
+        { "date_type": "results", "title": "Selected students list", "start_at": "2026-10-15", "all_day": true, "timezone": "America/New_York", "description": "FEMEA publishes this as 'Await results October 15th'.", "source_url": "https://www.femeamember.org/all-state-elementary-chorus" },
+        { "date_type": "acceptance_deadline", "title": "Materials fees and participant contract due", "start_at": "2026-10-23", "all_day": true, "timezone": "America/New_York", "description": "FEMEA publishes this as '10/23'.", "source_url": "https://www.femeamember.org/all-state-elementary-chorus" },
+        { "date_type": "other", "title": "Part assignments and tracks released", "start_at": "2026-11-03", "all_day": true, "timezone": "America/New_York", "description": "FEMEA publishes this as '11/3'.", "source_url": "https://www.femeamember.org/all-state-elementary-chorus" }
+      ],
+
+      "requirements": [
+        { "category": "membership", "title": "Teacher membership requirement", "description": "Only teachers holding active memberships in both FMEA and the FEMEA component have access to enter auditions.", "source_url": "https://www.femeamember.org/all-state-elementary-chorus" },
+        { "category": "format", "title": "Recorded audition", "description": "Directors prepare the published audition music with students, follow FEMEA's recording process and directions, practice-record students, and upload recordings for judging. FEMEA notes there is no All-State Packet this cycle; all audition and submission information is posted on the web page.", "source_url": "https://www.femeamember.org/all-state-elementary-chorus" }
+      ],
+
+      "documents": [
+        { "title": "All-State Elementary Chorus Recording Directions", "url": "https://docs.google.com/document/d/1GolZh9bL7R3KKdXwpRN8ciJC89a9AQVxOWdBGYSKzUA/edit", "document_type": "other" },
+        { "title": "All-State Elementary Chorus Audition Music", "url": "https://docs.google.com/document/d/1087BQdwPooxTF0sn7a2-Yg0jTyWdSsHYPuWsgP0qMCk/edit", "document_type": "other" },
+        { "title": "All-State Elementary Chorus Audition Rubric", "url": "https://docs.google.com/document/d/1Rfd6dtMFfa_kf5lkQPgerhqmyPZMxk1xETA-_sofzKA/edit", "document_type": "rules" },
+        { "title": "Anticipated Costs", "url": "https://docs.google.com/document/d/1Fgeo7X0PnvCYVhKmYy7_gspikIDNMmzp6ZZfn31MEBA/edit", "document_type": "other" },
+        { "title": "2027 Parent Letter for All-State Chorus", "url": "https://www.femeamember.org/_files/ugd/4e52d8_bde9b604f2f34446b68a9d3cac6470be.docx", "document_type": "form" }
+      ]
+    }
+  ],
+
+  "not_published": [
+    "2027 announced Vocal Quality audition excerpts — fva.net/all-state still displayed the 2026 cycle's excerpts when retrieved on 2026-08-07",
+    "Exact district-level audition dates — each District Chair sets them within the statewide testing windows",
+    "FMEA conference registration fee amounts for students and directors",
+    "FEMEA All-State Elementary Chorus fee amounts — posted only in a separate 'Anticipated Costs' document not retrieved",
+    "FEMEA All-State Elementary Chorus eligible grade levels and repertoire titles",
+    "Calendar years for the FEMEA elementary deadlines — the page lists month/day only",
+    "Title of the Victor C. Johnson commissioned work for the 2027 MS Treble Chorus"
+  ]
+}

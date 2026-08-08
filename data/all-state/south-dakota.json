@@ -1,0 +1,101 @@
+{
+  "state_slug": "south-dakota",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "IMPORTANT STRUCTURAL NOTE: South Dakota's All-State Chorus is run by the South Dakota High School Activities Association (SDHSAA), NOT by SDMEA. SDMEA (the NAfME state affiliate) runs the Elementary Honor Choir, Elementary Festival Choir, Middle School Festival Choir, Freshman Festival Choir, and Middle School All-State Band/Orchestra/Jazz — but there is no SDMEA middle school All-State CHORUS. South Dakota's All-State Chorus is also unusual in that there is no individual statewide audition: participation is determined by LOCAL school competition, and the unit of entry is a mixed QUARTET (SATB). Each school qualifies 1-5 quartets based on ADM enrollment for grades 9-11. The 2026-27 event is October 30-31, 2026 in Rapid City, with the Grand Concert at 7:00 p.m. Saturday October 31, 2026. CAUTION ON ONE FIELD: the SDHSAA 2026-27 handbook's summary page is headed '2025 ALL-STATE CHORUS AT A GLANCE' but lists a Registration Deadline of October 9, 2026 and names Dr. Morgan Luttig as Guest Conductor with Summit Arena, Rapid City as the rehearsal site. Because the heading year conflicts with the deadline year, the conductor name is reported here only as an unverified handbook artifact and is NOT asserted as the 2026-27 conductor.",
+  "organization": {
+    "name": "South Dakota High School Activities Association",
+    "acronym": "SDHSAA",
+    "website_url": "https://www.sdhsaa.com/",
+    "description": "The SDHSAA, headquartered at PO Box 1217, Pierre, SD 57501, administers the South Dakota All-State Chorus and All-State Orchestra. All financing of the program is handled by the SDHSAA; all receipts go into and all disbursements are made from the SDHSAA treasury. Dates and sites for the event are set by the SDHSAA, and no high school athletic contests may be scheduled on the Friday or Saturday of All-State Chorus and Orchestra."
+  },
+  "sources": [
+    { "name": "SDHSAA All-State Chorus Handbook 2026-27", "url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf", "source_type": "handbook_pdf" },
+    { "name": "SDMEA Elementary Honor Choir", "url": "https://www.sdmea.net/elementary-honor-choir", "source_type": "official" },
+    { "name": "South Dakota Music Education Association", "url": "https://www.sdmea.net/", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "South Dakota All-State Chorus",
+      "lineage_key": "south-dakota-all-state-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "A program of the South Dakota High School Activities Association, held jointly with the All-State Orchestra. Participation is determined by local school competition rather than a statewide audition: the mixed quartet (soprano, alto, tenor, bass) is the unit of entry, and every school in the state may bring between one and five quartets based on ADM enrollment for grades 9-11. Students must arrive with all chorus music memorized and work with a nationally recognized guest conductor. The 2026-27 event is October 30-31, 2026 in Rapid City.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "All-State Chorus registration deadline (online, SDHSAA Bound area)", "start_at": "2026-10-09", "all_day": true, "timezone": "America/Denver", "description": "Registration forms must be submitted electronically via the SDHSAA website. Forms submitted after the deadline are assessed a $50 late penalty.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "date_type": "other", "title": "Spot check schools and quartet numbers announced", "start_at": "2026-10-26", "all_day": true, "timezone": "America/Denver", "description": "The SDHSAA announces the schools and quartet numbers to be heard in spot checks on the Monday prior to All-State Chorus; quartets are randomly selected and announced at least 1 day prior to the first rehearsal.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "date_type": "event", "title": "All-State Chorus and Orchestra — Rapid City", "start_at": "2026-10-30", "end_at": "2026-10-31", "all_day": true, "timezone": "America/Denver", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "date_type": "other", "title": "Spot check music selections released", "start_at": "2026-10-30", "all_day": true, "timezone": "America/Denver", "description": "The music selections to be heard for spot checks are released on the Friday morning of All-State Chorus.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "date_type": "event", "title": "All-State Chorus & Orchestra Grand Concert", "start_at": "2026-10-31T19:00:00", "all_day": false, "timezone": "America/Denver", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "date_type": "event", "title": "Future All-State Chorus and Orchestra — Sioux Falls", "start_at": "2027-10-29", "end_at": "2027-10-30", "all_day": true, "timezone": "America/Chicago", "description": "2027-28 season. Site rotation sequence: Rapid City, Sioux Falls, Sioux Falls (Standard Calendar Week 17).", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "date_type": "event", "title": "Future All-State Chorus and Orchestra — Rapid City", "start_at": "2028-10-27", "end_at": "2028-10-28", "all_day": true, "timezone": "America/Denver", "description": "2028-29 season.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" }
+      ],
+      "requirements": [
+        { "category": "format", "title": "Mixed quartet is the unit of entry", "description": "No entry is to be less than a mixed quartet made up of soprano, alto, tenor, and bass singers. Participation is determined by local school competition. Students selected must meet the requirements of the parallel program rule. A school cannot 'borrow' singers from another school to fill out a quartet. The quartet quota applies to the host school as well. The only exception concerns a girls' school that is a member of the Association, whose 'quartet' is made up of two sopranos and two altos.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "eligibility", "title": "Quartet allotment by ADM enrollment (grades 9-11)", "description": "Under 125 students: 4 students (single mixed quartet). 125 up to 425: 8 students (double mixed quartet). 425 up to 575: 12 students (three mixed quartets). 575 up to 725: 16 students (four mixed quartets). 725 and over: 20 students (five mixed quartets).", "structured_data": { "tiers": [{ "enrollment": "under 125", "students": 4, "quartets": 1 }, { "enrollment": "125-424", "students": 8, "quartets": 2 }, { "enrollment": "425-574", "students": 12, "quartets": 3 }, { "enrollment": "575-724", "students": 16, "quartets": 4 }, { "enrollment": "725+", "students": 20, "quartets": 5 }] }, "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "eligibility", "title": "Eighth-grade students", "description": "An eighth-grade student cannot be a member of a quartet unless he/she is a regular member of the high school music group.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "eligibility", "title": "No dual participation with All-State Orchestra", "description": "A student may not participate in both the All-State Chorus and the All-State Orchestra at the same time.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "materials", "title": "All music must be memorized before arrival", "description": "All chorus music is to be memorized before arrival at All-State.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "other", "title": "Spot check of chorus members", "description": "Forty quartets are spot checked by the Chorus Committee during the first rehearsal to verify preparation; auditions are open only to the directors involved. Schools are entered into a random drawing and a randomizer selects the 40; schools on probation are included in that 40 and moved to the top of the list. Four quartets sing simultaneously with a Choral Committee member in front of each. Any quartet whose preparedness is in question sings alone for the entire Choral Committee. Quartets that do not pass are placed on 'spot check probation', a letter goes to the school's administration, and the school must audition the next time it attends. Two consecutive failures trigger an SDHSAA plan of assistance that must be followed to attend the next event; three consecutive failures bar the school from All-State Chorus for one year.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "other", "title": "Rehearsal attendance policy", "description": "Members are expected to attend all rehearsals and performances unless excused in advance for circumstances of a serious nature beyond control, approved by the All-State Chorus Chairperson and the SDHSAA Assistant Executive Director. Athletic or other practices, athletic or other contests, and standardized testing dates are explicitly unacceptable justifications. Students tardy to a rehearsal must report with their director to the All-State Choir Chairperson or an official before entering. Students missing a rehearsal must meet with the Choral Committee during the next session. Choir students may not leave the rehearsal space during rehearsal times and should have schoolwork or reading material available when their part is not needed; electronic devices are not allowed even when not rehearsing. Schools with quartet members in a playoff football game the Thursday prior may arrive in time for Friday afternoon quartet check-in and, if selected for spot checks, complete them at 1:45 p.m. Friday.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "other", "title": "Cell phone and electronic device policy", "description": "Directors must inform students and parents and insist that devices not be brought into rehearsals or performance. A visible device is confiscated by the instructor or an All-State official and must be retrieved by the student from the instructor after the concert; SDHSAA and the instructor are not responsible for return. A second violation, or insubordination, results in removal from the event and an immediate call to the school's administration.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "other", "title": "Inappropriate behavior penalties", "description": "Incidents are dealt with individually and may include a letter of reprimand to the school administration and director, and a $250.00 fine to the school.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "format", "title": "Concert dress", "description": "It is recommended that students use black concert dress codes; modesty is of the utmost importance. Hats are not to be worn during rehearsals or the performance; the only exception is headwear worn for religious reasons. Chorus members must wear their name badges at all times during rehearsal.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "other", "title": "Alternates and accompanists", "description": "Alternates and accompanists are not a part of the All-State Chorus. They do not receive badges and may not 'sit in' with the chorus during practice; they may observe from the balcony and are expected to purchase tickets to attend the Grand Concert.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "other", "title": "Instrumental parts on choral compositions", "description": "Any instrumental part on a choral composition is assigned by the All-State Orchestra judges and mailed with the student's orchestra parts upon selection into the All-State Orchestra. Very difficult parts are included in the All-State Orchestra audition process and must be made known to the All-State Orchestra Chairperson by February 1 of the year prior to the event (e.g. February 1, 2026 for the fall 2026 event). If the deadline is missed, orchestra members cannot be secured.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "other", "title": "Awards", "description": "Every chorus participant receives an All-State Chorus pin. Four-year members receive a four-year recognition certificate.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "category": "other", "title": "Saturday afternoon rehearsal closed", "description": "The Saturday afternoon All-State rehearsal is closed to all persons except music directors and official All-State personnel.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "late_registration_penalty", "amount_cents": 5000, "payable_to": "state_association", "description": "$50.00 late fee payable to the SDHSAA for any school's form not electronically submitted on or before the due date.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "fee_type": "name_change_penalty", "amount_cents": 1000, "payable_to": "state_association", "description": "$10.00 per student penalty for All-State Chorus name changes beyond one substitution on the registration form resulting from students being selected for the All-State Orchestra.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "fee_type": "concert_ticket", "amount_cents": 2500, "payable_to": "state_association", "description": "Reserved seat ticket: $25.00 plus any additional charges imposed by the All-State venue. Lower-level seats and main floor chairs are the Reserved Seat Area; the upper balcony levels are general admission. Children in grades 1-12 sitting in the Reserved Seat Area must have a reserved seat ticket; a kindergarten-age or younger child on a parent's lap does not. No refunds and no returned tickets.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" },
+        { "fee_type": "behavior_fine", "amount_cents": 25000, "payable_to": "state_association", "description": "$250.00 fine to the school for inappropriate behavior or other disruptions during rehearsal or performance.", "source_url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf" }
+      ],
+      "documents": [
+        { "title": "SDHSAA All-State Chorus Handbook 2026-27", "url": "https://www.sdhsaa.com/Handbook/ACT-AllStateChorus.pdf", "document_type": "handbook" },
+        { "title": "SDHSAA Calendar / All Events", "url": "https://www.sdhsaa.com/all-events/", "document_type": "calendar" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "SDMEA Elementary Honor Choir",
+      "lineage_key": "south-dakota-sdmea-elementary-honor-choir",
+      "season": "2026-27",
+      "school_level": "elementary",
+      "ensemble_type": "children's chorus",
+      "description": "The South Dakota Music Education Association's statewide elementary honor choir. Entry is by recorded audition submitted by SDMEA member teachers; the final roster is announced by email. The 2026 event is held October 31, 2026 at The Monument in Rapid City, SD, with guest conductor Robyn Lana, Founder and Artistic Director Emerita of the Cincinnati Youth Choir.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "EHC 2026 registration checks postmarked", "start_at": "2026-09-04", "all_day": true, "timezone": "America/Chicago", "description": "Registration checks should be postmarked by Friday, September 4. Only one check per school is accepted; no cash.", "source_url": "https://www.sdmea.net/elementary-honor-choir" },
+        { "date_type": "results", "title": "Final roster notification", "start_at": "2026-10-31", "all_day": true, "timezone": "America/Chicago", "description": "SDMEA members who submitted auditions were notified via email of the final roster. (Page dated October 31, 2026 for the event; the roster notice appeared alongside it.)", "source_url": "https://www.sdmea.net/elementary-honor-choir" },
+        { "date_type": "event", "title": "Elementary Honor Choir — The Monument, Rapid City, SD", "start_at": "2026-10-31", "all_day": true, "timezone": "America/Denver", "source_url": "https://www.sdmea.net/elementary-honor-choir" }
+      ],
+      "requirements": [
+        { "category": "membership", "title": "Auditions submitted by SDMEA members", "description": "Auditions are submitted by SDMEA member teachers, who are notified of the final roster by email.", "source_url": "https://www.sdmea.net/elementary-honor-choir" }
+      ],
+      "fees": [
+        { "fee_type": "registration", "amount_cents": 5000, "payable_to": "state_association", "description": "$50 per student. Checks made out to SDMEA, one check per school, mailed to SDMEA c/o Miranda Youngquist, Lawrence Elementary, 724 N. Sanborn St., Canton, SD 57013.", "source_url": "https://www.sdmea.net/elementary-honor-choir" }
+      ],
+      "documents": [
+        { "title": "SDMEA Elementary Honor Choir", "url": "https://www.sdmea.net/elementary-honor-choir", "document_type": "other" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 All-State Chorus guest conductor — the handbook's 'At a Glance' page names Dr. Morgan Luttig but is headed '2025 ALL-STATE CHORUS AT A GLANCE' while listing an October 9, 2026 registration deadline, so the year could not be confirmed",
+    "2026-27 All-State Chorus performance repertoire",
+    "Adult and student general admission ticket prices — listed as TBD in the handbook",
+    "Beginning date for reserved seat ticket sales — the handbook says it will be announced on the SDHSAA website",
+    "Any per-student participation fee for the All-State Chorus — only the late-registration and name-change penalties and ticket prices are published",
+    "Detailed rehearsal schedule and check-in times for October 30-31, 2026",
+    "Elementary Honor Choir program/repertoire details — SDMEA states program details are forthcoming",
+    "Elementary Honor Choir audition requirements and grade eligibility",
+    "A middle school All-State Chorus — SDMEA runs Middle School All-State Band, Orchestra and Jazz plus a Middle School Festival Choir and Freshman Festival Choir, but no middle school All-State chorus was found"
+  ]
+}

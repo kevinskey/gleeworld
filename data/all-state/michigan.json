@@ -1,0 +1,277 @@
+{
+  "state_slug": "michigan",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Michigan's choral honors program is run by the Michigan School Vocal Music Association (MSVMA), not by the Michigan Music Education Association. MSVMA operates a three-tier High School Honors Choir pipeline: Regional Honors Choirs (December), State Honors Choirs (SATB, SSAA, TTBB, at the Michigan Music Conference in January), and a single All-State Honors Choir drawn from singers already in good standing in both a Regional and a State Honors Choir. The High School Honors page carries a fully published '2026 - 2027 Schedule' with dates, fees, and the audition selection. The separate All-State Honors Choir page had NOT been updated for 2026-27 at retrieval — it still showed the '2025 - 2026 Schedule' (rehearsals May 7-9, 2026 at MSU) — so that program is recorded here with season 2025-26 rather than relabeled. MSVMA also runs a 6-7-8-9 Honors Choir, an All-State Jazz Choir, and an All-State Musical Theatre Honors Ensemble, which were not researched for this file.",
+  "organization": {
+    "name": "Michigan School Vocal Music Association",
+    "acronym": "MSVMA",
+    "website_url": "https://msvma.wildapricot.org/",
+    "description": "MSVMA is Michigan's association for school choral music, based in Big Rapids, MI. It administers District and State Choral Festivals, Solo & Ensemble, and the Honors Choir program (Regional, State, and All-State Honors Choirs) for middle and high school singers."
+  },
+  "sources": [
+    {
+      "name": "MSVMA High School Honors Choirs",
+      "url": "https://msvma.wildapricot.org/HighSchool-Honors",
+      "source_type": "official"
+    },
+    {
+      "name": "MSVMA All-State Honors Choir",
+      "url": "https://msvma.wildapricot.org/page-1343173",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "High School Honors Choirs — Regional and State (SATB, SSAA, TTBB)",
+      "lineage_key": "michigan-hs-honors-choirs",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "SATB mixed chorus, SSAA treble chorus, and TTBB tenor-bass chorus",
+      "description": "MSVMA's High School Honors Choir program offers Regional Honors Choirs, State Honors Choirs, and an All-State Honors Choir. Singers audition online individually on their own voice part. Each region seats a choir of up to 170 singers that rehearses and performs in December; the State Honors Choirs (SATB, SSAA, TTBB) rehearse and perform at the Michigan Music Conference in January.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Regional Honors Choir online auditions open",
+          "start_at": "2026-09-01",
+          "all_day": true,
+          "timezone": "America/Detroit",
+          "description": "Online audition submission window opens.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Regional Honors Choir online auditions deadline",
+          "start_at": "2026-10-08",
+          "all_day": true,
+          "timezone": "America/Detroit",
+          "description": "Online audition submissions due Thursday, October 8, 2026. The $15 per student audition fee is also due October 8, 2026.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Regional Honors Choir / State auditions registration & payment deadline",
+          "start_at": "2026-10-30",
+          "all_day": true,
+          "timezone": "America/Detroit",
+          "description": "MSVMA lists this deadline as 'midnight'; no other clock time is published.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "date_type": "event",
+          "title": "Regional Honors Choir day / State auditions",
+          "start_at": "2026-12-05",
+          "all_day": true,
+          "timezone": "America/Detroit",
+          "description": "Regional Honors Choirs rehearse and perform, with a performance at the end of the day; State Honors Choir auditions also take place. 2026-27 region sites: Region A — Caledonia High School, Caledonia; Region B — Western Michigan University, Dalton Center, Kalamazoo; Region C — Allen Park High School, Allen Park; Region D — Bethany Lutheran Church, Escanaba.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "State Honors Choir registration & payment deadline",
+          "start_at": "2026-12-18",
+          "all_day": true,
+          "timezone": "America/Detroit",
+          "description": "MSVMA lists this deadline as 'midnight'; no other clock time is published.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "date_type": "event",
+          "title": "State Honors Choir rehearsal and performance at MMC",
+          "start_at": "2027-01-21",
+          "end_at": "2027-01-23",
+          "all_day": true,
+          "timezone": "America/Detroit",
+          "description": "State Honors Choir rehearsal and performance at the Michigan Music Conference.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Membership in good standing in a school vocal music program",
+          "description": "Membership in all honors choirs is open by audition to students who are members in good standing of their school's vocal music program, as verified by the director of record under the MSVMA school membership.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "category": "eligibility",
+          "title": "Per-school audition quota",
+          "description": "Up to four singers per voice part may audition, with each school sending no more than 32 singers (e.g. 4 Soprano I, 4 Soprano II, 4 Alto I, 4 Alto II, etc.). For Regional auditions only, substitutions of the same voice part are permitted up to three days prior to the event.",
+          "structured_data": { "max_per_voice_part": 4, "max_per_school": 32 },
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "category": "format",
+          "title": "Online video audition, a cappella, one take",
+          "description": "Auditions are submitted online; travel to a regional audition site is not required, and signature forms for parents, directors, and principals are not required for this round. Each director uploads audition videos to their own YouTube channel marked 'Unlisted' and submits the link through the MSVMA Wild Apricot event. The audition piece must be sung in its entirety, a cappella; it does NOT need to be memorized. Recorded in one take — film edits within a piece are not allowed. No artificial amplification or sound enhancements; a microphone may be used for recording purposes only.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "category": "format",
+          "title": "Anonymity and video framing rules",
+          "description": "No school-identifying information may appear in the video, audio, or file name. A full head-to-toe body frame must be visible and the image must be upright. Students introduce themselves by first name, last name, voice part, and title of the piece before singing. Auditions must be performed in the voice part listed on the school's application. Failure to follow the guidelines disqualifies the submission.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "category": "format",
+          "title": "Regional choir size and results",
+          "description": "In each region a choir is chosen with a maximum of 170 singers. Participating schools are notified of audition results by email; individual scores are not released.",
+          "structured_data": { "max_regional_choir_size": 170 },
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "category": "other",
+          "title": "Regions and their districts",
+          "description": "Region A: Districts 1, 2, 3, 5, 7, 9, 10 (except Allegan and Barry counties). Region B: Districts 6, 8, 10 (Allegan and Barry counties), 11. Region C: Districts 4, 12, 15, 16. Region D: Districts 13, 14.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "category": "other",
+          "title": "2026-27 State Honors Choir directors",
+          "description": "HS SATB: Dr. Brandon Ulrich. HS SSAA: Julia Holt. HS TTBB: Dr. Derrick Fox.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Sicut Cervus",
+          "composer": "Palestrina",
+          "arranger": "ed. Hofstader",
+          "purpose": "audition",
+          "notes": "MSVMA states 'The High School Honors Choir Audition selection is: Sicut Cervus - Palestrina (ed. Hofstader)' and lists it as the 2026 piece in its published multi-year rotation (2027: Jubilate Deo - Orlando de Lassus, ed. Klein; 2028: Exsultate Justi - Viadana, ed. Klein; 2029: Ave Verum Corpus - Byrd, ed. Morehen; 2030: O Vos Omnes - Victoria, ed. Dunn). Sung a cappella in its entirety on the student's own voice part. The regional audition selection is also part of the Regional Honors Choir performance repertoire.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 1500,
+          "payable_to": "state_association",
+          "description": "$15 per student, due October 8, 2026.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "fee_type": "regional_participation",
+          "amount_cents": 4000,
+          "payable_to": "state_association",
+          "description": "Regional Honors Choir participation fee.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        },
+        {
+          "fee_type": "state_participation",
+          "amount_cents": 11000,
+          "payable_to": "state_association",
+          "description": "State Honors Choir participation fee.",
+          "source_url": "https://msvma.wildapricot.org/HighSchool-Honors"
+        }
+      ],
+      "documents": [
+        {
+          "title": "Sicut Cervus - Palestrina (audition score PDF)",
+          "url": "https://msvma.wildapricot.org/resources/Documents/Clinician%20Consultant/Sicut%20Cervus%20-%20Palestrina.pdf",
+          "document_type": "other"
+        },
+        {
+          "title": "Sicut Cervus rehearsal tracks (Google Drive folder)",
+          "url": "https://drive.google.com/drive/folders/1i7FezYlEFmMqCDSt6SbH8AzESOkil8e0",
+          "document_type": "other"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano I" },
+        { "code": "S2", "label": "Soprano II" },
+        { "code": "A1", "label": "Alto I" },
+        { "code": "A2", "label": "Alto II" },
+        { "code": "T1", "label": "Tenor 1" },
+        { "code": "T2", "label": "Tenor 2" },
+        { "code": "B1", "label": "Bass 1" },
+        { "code": "B2", "label": "Bass 2" }
+      ]
+    },
+    {
+      "name": "All-State Honors Choir",
+      "lineage_key": "michigan-all-state-honors-choir",
+      "season": "2025-26",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "MSVMA's All-State Honors Choir is drawn from singers in good standing in both a Regional Honors Choir and a State Honors Choir. Students indicate interest on the Regional/State Audition Application Form and confirm willingness to participate by signing the form. RECORDED AS 2025-26: the MSVMA All-State Honors Choir page had not been updated for 2026-27 at retrieval.",
+      "dates": [
+        {
+          "date_type": "results",
+          "title": "All-State selection announced",
+          "start_at": "2026-02-13",
+          "all_day": true,
+          "timezone": "America/Detroit",
+          "description": "Directors are notified by February 13 regarding All-State Choir selection. From the 2025-2026 schedule.",
+          "source_url": "https://msvma.wildapricot.org/page-1343173"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "All-State registration and payment due",
+          "start_at": "2026-03-06",
+          "all_day": true,
+          "timezone": "America/Detroit",
+          "description": "From the 2025-2026 schedule.",
+          "source_url": "https://msvma.wildapricot.org/page-1343173"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State Honors Choir rehearsals and performance",
+          "start_at": "2026-05-07",
+          "end_at": "2026-05-09",
+          "all_day": true,
+          "timezone": "America/Detroit",
+          "description": "Rehearsals Thursday May 7 through Saturday May 9 at the MSU College of Music, East Lansing, MI, with the performance Saturday, May 9 at 3 PM in Fairchild Theater, East Lansing. From the 2025-2026 schedule.",
+          "source_url": "https://msvma.wildapricot.org/page-1343173"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Must be in good standing in both a Regional and a State Honors Choir",
+          "description": "All-State Choir members are singers in good standing in a Regional Honors Choir and in a State Honors Choir. Those interested indicate this when completing their Regional/State Audition Application Form and sign to confirm willingness to participate.",
+          "source_url": "https://msvma.wildapricot.org/page-1343173"
+        },
+        {
+          "category": "format",
+          "title": "Choir size and quotas",
+          "description": "The maximum size of the choir is 80 members. Selections are based on quotas similar to the State Honors Choirs, with flexibility to ensure a balanced choir.",
+          "structured_data": { "max_choir_size": 80 },
+          "source_url": "https://msvma.wildapricot.org/page-1343173"
+        },
+        {
+          "category": "materials",
+          "title": "Music memorized by the first rehearsal, tested individually",
+          "description": "Music must be prepared and memorized by the first rehearsal. Students are tested individually on memorization in the first hour of rehearsal; those unable to demonstrate an adequate level of preparedness may not be allowed to stay for the remainder of the rehearsals or the performance.",
+          "source_url": "https://msvma.wildapricot.org/page-1343173"
+        },
+        {
+          "category": "other",
+          "title": "Residential event rules",
+          "description": "Students are not allowed to leave campus during All-State Honors Choir activities and stay in Michigan State University dormitory housing overnight. Choir members may warm up and perform with their school's ensemble or as a soloist in a Solo and Ensemble Recital.",
+          "source_url": "https://msvma.wildapricot.org/page-1343173"
+        }
+      ],
+      "documents": [
+        {
+          "title": "2026 All State Repertoire List",
+          "url": "https://docs.google.com/document/d/1r7qL-xHReotufPTFfP0fbFARv7L9vbP8lUCjkrIW1dU/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "2026 All State Rehearsal Tracks (Google Drive folder)",
+          "url": "https://drive.google.com/drive/folders/1RElWA0hdAri0kTu20UOoKmyTrs51r0vH",
+          "document_type": "other"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 All-State Honors Choir dates, venue, director, and registration deadlines — the All-State Honors Choir page still showed the 2025-2026 schedule at retrieval",
+    "All-State Honors Choir participation fee — no amount published on the All-State page",
+    "2026-27 Regional/State Honors Choir performance repertoire — the linked repertoire document is labeled '25 - 26 Regional/State Honors Choir Repertoire'",
+    "2026-27 Registration & State/All-State Audition Application form — the linked PDF is the 2025-2026 form",
+    "Regional Honors Choir December performance clock times and venues' schedule detail",
+    "Grade-level eligibility limits for the High School Honors Choirs — stated only as school vocal music program membership"
+  ]
+}

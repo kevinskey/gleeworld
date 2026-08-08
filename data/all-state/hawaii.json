@@ -1,0 +1,21 @@
+{
+  "state_slug": "hawaii",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": true,
+  "notes": "No statewide auditioned All-State chorus could be found for Hawaii. The Hawai'i Music Educators Association (HMEA, hawaiimea.org) runs an annual in-service conference — HMEA 2027 is scheduled for January 16-17, 2027 at Windward Community College — and has historically hosted All-State honor ensembles in other areas (the site retains 'All-State Ukulele 2019' and 'All-State String 2020' pages), but there is no All-State chorus or honor choir page on its site, and the 2026 conference schedule shows only choral professional-development sessions, no honor choir. Hawaii's statewide choral activity instead runs through the Hawai'i Chapter of the American Choral Directors Association (HI-ACDA), an HMEA-affiliated organization, which produces school-level choral FESTIVALS rather than an auditioned honor chorus: Na Leo Hou 2027 (High School Choral Festival, February 12-13, 2027), Na Leo Pili Mai 2027 (Middle School Choral Festival, February 20, 2027), and E Mele Kakou 2027 (Elementary Choral Festival, April 10, 2027). Na Leo Hou's own published mission describes it as providing high school singers a choral experience with a renowned clinician plus individual school choir and mass ensemble performances — participating school choirs, not students selected by individual audition. As of 2026-08-07 HI-ACDA's 2027 festival pages still say 'Clinician TBA' and 'General information coming soon', so no requirements, fees, or repertoire are published. Recheck hawaiiacda.org/upcoming-events and hawaiimea.org later in the fall.",
+
+  "sources": [
+    { "name": "Hawai'i Music Educators Association", "url": "https://www.hawaiimea.org/", "source_type": "official" },
+    { "name": "HMEA Affiliated Organizations", "url": "https://www.hawaiimea.org/organizations.html", "source_type": "official" },
+    { "name": "Hawai'i Chapter, American Choral Directors Association", "url": "https://hawaiiacda.org/", "source_type": "official" },
+    { "name": "2027 Na Leo Hou High School Choral Festival", "url": "https://hawaiiacda.org/high-school-2027/", "source_type": "official" },
+    { "name": "HMEA 2026 Conference", "url": "https://www.hawaiimea.org/hmea-2026.html", "source_type": "official" }
+  ],
+
+  "not_published": [
+    "Any Hawaii All-State chorus — none found on HMEA or HI-ACDA sites as of 2026-08-07",
+    "Na Leo Hou 2027 clinician, registration process, deadlines, fees, and repertoire — page says 'General information coming soon'",
+    "Na Leo Pili Mai 2027 and E Mele Kakou 2027 details beyond their dates",
+    "Whether HI-ACDA festival participation involves any student audition or selection process"
+  ]
+}

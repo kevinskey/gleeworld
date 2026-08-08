@@ -1,0 +1,187 @@
+{
+  "state_slug": "utah",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "UMEA runs three choral All-State/Honor Choir programs: the High School All-State SATB Choir (fall), the High School Treble and TB Honors Choirs (winter), and the Junior High SATB All-State Honor Choir (winter). Registration for the HS SATB choir is done by the school director in two steps (voice-part counts, then names + payment) rather than by individual student audition on the UMEA site. The Treble/TB page still displays a stale 2025-26 performance date (January 23-24, 2026) in its News block even though its registration deadline has been updated to December 9, 2026; the 2026-27 performance date is therefore recorded as not published. Repertoire lists live in Google Docs information letters that were not retrieved.",
+  "organization": {
+    "name": "Utah Music Educators Association",
+    "acronym": "UMEA",
+    "website_url": "https://umea.us/",
+    "description": "UMEA is Utah's state affiliate of NAfME. It administers the state's All-State and Honor Choir ensembles, state band/choir/orchestra festivals, and an annual professional conference."
+  },
+  "sources": [
+    { "name": "UMEA All-State", "url": "https://umea.us/all-state/", "source_type": "official" },
+    { "name": "UMEA All-State — High School SATB Choir", "url": "https://umea.us/all-state/high-school-satb-choir/", "source_type": "official" },
+    { "name": "UMEA All-State — High School Treble and TB Honors Choirs", "url": "https://umea.us/all-state/high-school-ssaa-and-ttbb-honors-choirs/", "source_type": "official" },
+    { "name": "UMEA All-State — Junior High SATB Honor Choir", "url": "https://umea.us/all-state/junior-high-satb-honor-choir/", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "High School SATB Choir (Utah All-State Choir)",
+      "lineage_key": "utah-hs-satb-all-state-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "UMEA's High School All-State SATB Choir, rehearsing and performing at the Salt Lake Tabernacle. Schools register in two steps: a May commitment of student counts by voice part, then an August submission of names with payment.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Step 1 — submit number of participating students by voice part",
+          "start_at": "2026-05-23",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Schools commit the number of students participating, by voice part. No student names required at this step.",
+          "source_url": "https://umea.us/all-state/high-school-satb-choir/"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Step 2 — submit payment and student names",
+          "start_at": "2026-08-28",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Students cannot participate until both registration steps are complete.",
+          "source_url": "https://umea.us/all-state/high-school-satb-choir/"
+        },
+        {
+          "date_type": "event",
+          "title": "Utah All-State Choir",
+          "start_at": "2026-10-08",
+          "end_at": "2026-10-10",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Held at the Salt Lake Tabernacle.",
+          "source_url": "https://umea.us/all-state/high-school-satb-choir/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Two-step registration required",
+          "description": "Registration is completed in two steps and students will not be able to participate until both steps are completed: (1) submit the number of participating students by voice part, (2) submit payment and student names.",
+          "source_url": "https://umea.us/all-state/high-school-satb-choir/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "participation",
+          "amount_cents": 8000,
+          "payable_to": "state_association",
+          "description": "All-State Choir registration/participation fee, paid through the UMEA online store.",
+          "source_url": "https://umea.us/all-state/high-school-satb-choir/"
+        }
+      ],
+      "documents": [
+        { "title": "2026 All-State Information Letter", "url": "https://docs.google.com/document/d/1PzN_5uS8airLuYnig4fc4kCYWnZgpvH7/edit?usp=sharing&ouid=114312605537505140628&rtpof=true&sd=true", "document_type": "other" },
+        { "title": "2026 All-State Choir Registration (for Fall 2026)", "url": "https://docs.google.com/forms/d/e/1FAIpQLScLrIjAWlbHzvmcAVNPh12XCqMoYMKHFLrAcrkOUVf9dKj3OQ/viewform", "document_type": "form" },
+        { "title": "2026 All-State Rehearsal Schedule", "url": "https://docs.google.com/document/d/1hyp8lndOwSD6Ou_8uifbTvC2EcZ71UUf/edit?usp=sharing&ouid=114312605537505140628&rtpof=true&sd=true", "document_type": "calendar" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "High School Treble and TB Honors Choirs",
+      "lineage_key": "utah-hs-treble-tb-honor-choirs",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus and tenor-bass chorus",
+      "description": "UMEA's high school Treble (SSAA) and TB (TTBB) Honor Choirs. Directors register their school, pay the participation fee, and submit student names.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Treble and TB Honor Choir registration deadline",
+          "start_at": "2026-12-09",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "source_url": "https://umea.us/all-state/high-school-ssaa-and-ttbb-honors-choirs/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Three-step registration",
+          "description": "To register for the Honor Choir a director must (1) register the school, (2) pay the Treble and TB Honor Choir participation fee, and (3) submit student names.",
+          "source_url": "https://umea.us/all-state/high-school-ssaa-and-ttbb-honors-choirs/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "participation",
+          "amount_cents": 7000,
+          "payable_to": "state_association",
+          "description": "Treble and TB Honor Choir participation fee.",
+          "source_url": "https://umea.us/all-state/high-school-ssaa-and-ttbb-honors-choirs/"
+        }
+      ],
+      "documents": [
+        { "title": "Information Letter and Invitation", "url": "https://docs.google.com/document/d/1I-kMMD7H20RQd_uiTG_g-PyjHlYXjCChyp2dY4pWbAY/edit?usp=sharing", "document_type": "other" }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" },
+        { "code": "T1", "label": "Tenor 1" },
+        { "code": "T2", "label": "Tenor 2" },
+        { "code": "B1", "label": "Bass 1" },
+        { "code": "B2", "label": "Bass 2" }
+      ]
+    },
+    {
+      "name": "Junior High SATB Honor Choir (Junior High All-State Honor Choir)",
+      "lineage_key": "utah-jh-satb-honor-choir",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "UMEA's junior high All-State Honor Choir. Students must be registered and participation fees paid in order to participate. Victor C. Johnson is announced as the 2027 guest director.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Junior High Honor Choir registration deadline",
+          "start_at": "2026-11-13",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "source_url": "https://umea.us/all-state/junior-high-satb-honor-choir/"
+        },
+        {
+          "date_type": "event",
+          "title": "Junior High SATB Honor Choir performance",
+          "start_at": "2027-01-22",
+          "end_at": "2027-01-23",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "source_url": "https://umea.us/all-state/junior-high-satb-honor-choir/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Registration and paid fee required",
+          "description": "Students must be registered and participation fees paid in order to participate in the Honor Choir.",
+          "source_url": "https://umea.us/all-state/junior-high-satb-honor-choir/"
+        }
+      ],
+      "documents": [
+        { "title": "Junior High All-State Honor Choir Information Letter", "url": "https://docs.google.com/document/d/1L7w0WBE_ZLtvSL7qJJ-PRJibH1deUZj_eAPazDNpbeU/edit?usp=sharing", "document_type": "other" },
+        { "title": "Meet the 2027 Director: Victor C. Johnson", "url": "https://docs.google.com/document/d/1FP944yIM6xteDsSHRtEmc2RTSRb6aGDzxxULFhAOnkY/edit?usp=sharing", "document_type": "other" },
+        { "title": "Register Students (Google Form)", "url": "https://docs.google.com/forms/d/e/1FAIpQLSdhoD5lmn4QknPN95qW7zn57eMMTwXwPIQsz3AvZuKuFbaJlw/viewform?usp=sf_link", "document_type": "form" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+  "not_published": [
+    "Audition requirements, scales, or sight-reading expectations — UMEA's public All-State choir pages describe director registration, not a published student audition protocol",
+    "Performance repertoire for any of the three choirs — not listed on the UMEA pages",
+    "2026-27 performance dates for the High School Treble and TB Honors Choirs — the page still shows the prior season's January 23-24, 2026 date",
+    "Junior High Honor Choir participation fee — the UMEA store link reads 'Coming Soon'",
+    "Eligibility rules (grade levels, school membership requirements) for the high school choirs"
+  ]
+}

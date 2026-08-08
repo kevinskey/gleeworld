@@ -1,0 +1,128 @@
+{
+  "state_slug": "wisconsin",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Wisconsin's statewide honor-choir program is the WSMA State Honors Music Project, run by the Wisconsin School Music Association (NOT by WMEA, which is a separate partner organization). There are two levels: High School State Honors (grades 9-11, five ensembles including Mixed Choir and Treble Choir) and Middle Level State Honors (grades 6-8). Both perform at the Wisconsin State Music Conference in the Madison area in late October. SEASON LABELING: WSMA labels each cycle by the calendar year of its performance, and the cycles straddle school years — the '2026' high school cycle auditioned in February 2026, camps in June 2026, and performs in late October 2026. This file uses WSMA's own year labels. The 2027 high school audition information had not been posted at the retrieval date (WSMA states it posts September 1). The 2027 Middle Level audition dates and locations ARE published, with clock times. Note the middle level eligibility text references 'October 30 & October 31' rehearsals without a year; the year is not stated on the page so it is not asserted here.",
+  "organization": {
+    "name": "Wisconsin School Music Association",
+    "acronym": "WSMA",
+    "website_url": "https://wsmamusic.org/",
+    "description": "WSMA is a 501(c)(3) organization that runs Wisconsin's concert festivals, solo & ensemble festivals, marching band activity, composition project, and the State Honors Music Project. The State Honors Music Project offers musically accomplished students the opportunity to rehearse and perform with nationally known conductors in a professional setting; all Honors groups perform at the Wisconsin State Music Conference. WSMA's partner organizations include the Wisconsin Music Educators Association and the Wisconsin Foundation for School Music."
+  },
+  "sources": [
+    { "name": "WSMA — High School State Honors Project", "url": "https://wsmamusic.org/hs-honors/", "source_type": "official" },
+    { "name": "WSMA — High School State Honors Auditions", "url": "https://wsmamusic.org/hs-honors/auditions/", "source_type": "official" },
+    { "name": "WSMA — High School Audition Requirements", "url": "https://wsmamusic.org/hs-honors/auditions/requirements/", "source_type": "official" },
+    { "name": "WSMA — Middle Level State Honors", "url": "https://wsmamusic.org/ml-honors/", "source_type": "official" },
+    { "name": "WSMA — Middle Level State Honors Audition Information", "url": "https://wsmamusic.org/ml-honors/auditions/", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "WSMA High School State Honors Mixed Choir",
+      "lineage_key": "wisconsin-hs-honors-mixed-choir",
+      "season": "2026",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The Mixed Choir of the WSMA High School State Honors Music Project, one of five high school honors ensembles. Selected students attend a mandatory four-day summer camp in June where the core musical preparation takes place, then perform in Madison during late October as part of the Wisconsin State Music Conference.",
+      "dates": [
+        { "date_type": "audition_round", "title": "High School State Honors auditions — first date", "start_at": "2026-02-07T08:00:00", "end_at": "2026-02-07T16:00:00", "all_day": false, "timezone": "America/Chicago", "description": "Sites: Appleton North High School; UW Eau Claire (Haas Fine Arts Center); Middleton High School; Waukesha South High School.", "source_url": "https://wsmamusic.org/hs-honors/auditions/" },
+        { "date_type": "audition_round", "title": "High School State Honors auditions — second date", "start_at": "2026-02-14T08:00:00", "end_at": "2026-02-14T16:00:00", "all_day": false, "timezone": "America/Chicago", "description": "Sites: Rufus King High School (Milwaukee); Central High School (La Crosse); UW-Stevens Point (Noel Fine Arts Center).", "source_url": "https://wsmamusic.org/hs-honors/auditions/" },
+        { "date_type": "other", "title": "2027 audition information posted", "start_at": "2026-09-01", "all_day": true, "timezone": "America/Chicago", "description": "WSMA states 2027 audition information will be posted on September 1st.", "source_url": "https://wsmamusic.org/hs-honors/auditions/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 9, 10 or 11 at a WSMA-member school", "description": "The project is open to students from WSMA-member schools who are currently in grades 9, 10, or 11.", "source_url": "https://wsmamusic.org/hs-honors/" },
+        { "category": "eligibility", "title": "Regular member of a school music ensemble", "description": "Students must be a regular member of a school music ensemble during both the time of auditions and the fall performance.", "source_url": "https://wsmamusic.org/hs-honors/" },
+        { "category": "eligibility", "title": "Mandatory attendance at camp and concert", "description": "All selected students must attend both the full four-day June summer camp and the fall concert in Madison.", "source_url": "https://wsmamusic.org/hs-honors/" },
+        { "category": "materials", "title": "Prepared solo from the WSMA Festival Music List", "description": "All students must prepare a solo selected from the WSMA Festival Music List.", "source_url": "https://wsmamusic.org/hs-honors/auditions/" },
+        { "category": "scales", "title": "Required scales", "description": "Required scales are part of every audition; specific requirements are given in the full audition guidelines.", "source_url": "https://wsmamusic.org/hs-honors/auditions/" },
+        { "category": "sight_reading", "title": "Sight-reading component", "description": "A sight-reading component is required. WSMA notes that the specific etude is the only element that changes each year.", "source_url": "https://wsmamusic.org/hs-honors/auditions/" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2700, "payable_to": "state_association", "description": "$27.00 per audition.", "source_url": "https://wsmamusic.org/hs-honors/" },
+        { "fee_type": "tuition", "amount_cents": 61000, "payable_to": "state_association", "description": "$610.00 tuition, including summer and fall rehearsals, coaching, all meals and lodging, fall transportation, music, a WSMA State Honors t-shirt, and a downloadable recording of the final concert. Tuition grants are available in limited number through the Wisconsin Foundation for School Music and WSMA.", "source_url": "https://wsmamusic.org/hs-honors/" }
+      ],
+      "documents": [
+        { "title": "Audition Tips & Preparation Guide", "url": "https://wsmamusic.org/hs-honors/auditions/tips/", "document_type": "other" },
+        { "title": "Audition Day Step-by-Step Instructions", "url": "https://wsmamusic.org/hs-honors/auditions/instructions/", "document_type": "other" },
+        { "title": "2026 Project Timeline & Required Dates", "url": "https://wsmamusic.org/hs-honors/timeline/", "document_type": "calendar" },
+        { "title": "Audition Requirements", "url": "https://wsmamusic.org/hs-honors/auditions/requirements/", "document_type": "rules" },
+        { "title": "Refund Policy", "url": "https://wsmamusic.org/hs-honors/refunds/", "document_type": "rules" },
+        { "title": "2026 HS State Honors Conductors", "url": "https://wsmamusic.org/2026-high-school-state-honors-conductors/", "document_type": "other" },
+        { "title": "WSMA Festival Music List", "url": "https://wsmamusic.org/music-list/", "document_type": "other" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "WSMA High School State Honors Treble Choir",
+      "lineage_key": "wisconsin-hs-honors-treble-choir",
+      "season": "2026",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "The Treble Choir of the WSMA High School State Honors Music Project. Same audition process, camp, and October Madison performance as the Mixed Choir.",
+      "dates": [
+        { "date_type": "audition_round", "title": "High School State Honors auditions — first date", "start_at": "2026-02-07T08:00:00", "end_at": "2026-02-07T16:00:00", "all_day": false, "timezone": "America/Chicago", "source_url": "https://wsmamusic.org/hs-honors/auditions/" },
+        { "date_type": "audition_round", "title": "High School State Honors auditions — second date", "start_at": "2026-02-14T08:00:00", "end_at": "2026-02-14T16:00:00", "all_day": false, "timezone": "America/Chicago", "source_url": "https://wsmamusic.org/hs-honors/auditions/" },
+        { "date_type": "other", "title": "2027 audition information posted", "start_at": "2026-09-01", "all_day": true, "timezone": "America/Chicago", "source_url": "https://wsmamusic.org/hs-honors/auditions/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 9, 10 or 11 at a WSMA-member school", "description": "The project is open to students from WSMA-member schools who are currently in grades 9, 10, or 11 and are regular members of a school music ensemble at the time of auditions and the fall performance.", "source_url": "https://wsmamusic.org/hs-honors/" },
+        { "category": "materials", "title": "Solo, scales, and sight-reading", "description": "All students prepare a solo selected from the WSMA Festival Music List, required scales, and a sight-reading component.", "source_url": "https://wsmamusic.org/hs-honors/auditions/" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2700, "payable_to": "state_association", "description": "$27.00 per audition.", "source_url": "https://wsmamusic.org/hs-honors/" },
+        { "fee_type": "tuition", "amount_cents": 61000, "payable_to": "state_association", "description": "$610.00 tuition covering summer and fall rehearsals, coaching, all meals and lodging, fall transportation, music, t-shirt, and a downloadable concert recording.", "source_url": "https://wsmamusic.org/hs-honors/" }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" }
+      ]
+    },
+    {
+      "name": "WSMA Middle Level State Honors Music Project — Choir",
+      "lineage_key": "wisconsin-ml-honors-choir",
+      "season": "2027",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "The choral component of WSMA's Middle Level State Honors Music Project. Middle Level State Honors students receive their music in August and meet for the first time the day before their fall performance; the rehearsal day and formal concert take place in the Madison area as part of the Wisconsin State Music Conference. WSMA has published 2027 audition dates and locations.",
+      "dates": [
+        { "date_type": "audition_round", "title": "Middle Level auditions — Sun Prairie", "start_at": "2027-04-03T08:00:00", "end_at": "2027-04-03T16:00:00", "all_day": false, "timezone": "America/Chicago", "description": "Sun Prairie West High School, 2850 Ironwood Dr, Sun Prairie, WI 53590.", "source_url": "https://wsmamusic.org/ml-honors/auditions/" },
+        { "date_type": "audition_round", "title": "Middle Level auditions — Friday sites (La Crosse and Wausau)", "start_at": "2027-04-09T16:30:00", "end_at": "2027-04-09T21:00:00", "all_day": false, "timezone": "America/Chicago", "description": "Longfellow Middle School, 1900 Denton St, La Crosse, WI 54601; and DC Everest Middle School, 9302 Schofield Ave, Weston, WI 54476.", "source_url": "https://wsmamusic.org/ml-honors/auditions/" },
+        { "date_type": "audition_round", "title": "Middle Level auditions — Appleton, Eau Claire, Kenosha", "start_at": "2027-04-10T08:00:00", "end_at": "2027-04-10T16:00:00", "all_day": false, "timezone": "America/Chicago", "description": "Classical School, 3310 N Durkee St, Appleton, WI 54911; South Middle School, 2115 Mitscher Ave, Eau Claire, WI 54701; Lance Middle School, 4515 80th St, Kenosha, WI 53142.", "source_url": "https://wsmamusic.org/ml-honors/auditions/" },
+        { "date_type": "other", "title": "2027 audition registration opens", "start_at": "2026-12-09", "all_day": true, "timezone": "America/Chicago", "description": "Audition registration for 2027 will be available December 9, 2026.", "source_url": "https://wsmamusic.org/ml-honors/auditions/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 6, 7, 8 at the time of the audition, from a WSMA-member school", "description": "Students in grades 6, 7, 8 (at the time of the audition) from WSMA-member schools are eligible to audition. Students must be a regular member of a school music ensemble at the time of auditions and the fall performance.", "source_url": "https://wsmamusic.org/ml-honors/" },
+        { "category": "eligibility", "title": "Mandatory rehearsal and concert attendance", "description": "All selected students must be able to attend the October 30 and October 31 rehearsals, activities and events. WSMA does not state the year on this page.", "source_url": "https://wsmamusic.org/ml-honors/" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2800, "payable_to": "state_association", "description": "$28 per audition.", "source_url": "https://wsmamusic.org/ml-honors/" },
+        { "fee_type": "tuition", "amount_cents": 30500, "payable_to": "state_association", "description": "Tuition for 2026: $305, including all meals, lodging, coaching, music, a WSMA State Honors t-shirt, State Honors pin, and a downloadable audio recording of the entire concert. This is the 2026 figure; WSMA had not published a 2027 tuition amount at the retrieval date. Limited tuition assistance grants are available through the Wisconsin Foundation for School Music and WSMA.", "source_url": "https://wsmamusic.org/ml-honors/" }
+      ],
+      "documents": [
+        { "title": "Middle Level Audition Requirements", "url": "https://wsmamusic.org/ml-honors/auditions/requirements/", "document_type": "rules" },
+        { "title": "Middle Level Audition Instructions", "url": "https://wsmamusic.org/ml-honors/auditions/instructions/", "document_type": "other" },
+        { "title": "Audition Tips and Practice Tools", "url": "https://wsmamusic.org/hs-honors/auditions/tips/", "document_type": "other" },
+        { "title": "Parent Information Request", "url": "https://docs.google.com/document/d/1nQnm1VYoq7qZeOA0_KuiMTeghphU0lWZWcQi-skY71g/edit?usp=sharing", "document_type": "other" },
+        { "title": "ML Project Timeline", "url": "https://wsmamusic.org/ml-honors/timeline/", "document_type": "calendar" },
+        { "title": "ML Refund Policy", "url": "https://wsmamusic.org/ml-honors/refunds/", "document_type": "rules" },
+        { "title": "2026 ML State Honors Conductors", "url": "https://wsmamusic.org/ml-honors/conductors", "document_type": "other" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2027 High School State Honors audition dates, locations, fees, and tuition — WSMA states this information posts on September 1",
+    "2027 Middle Level tuition amount — only the 2026 figure ($305) is posted",
+    "Voice-specific (vocal) audition requirements — the requirements page lists 'Choir: Vocal' as a category but the detailed vocal etude/scale specification is behind an interactive panel that did not render",
+    "Required audition solo titles for choir — WSMA points to its Festival Music List rather than naming pieces on the honors pages",
+    "Performance repertoire for the Mixed Choir, Treble Choir, or Middle Level choir",
+    "Exact 2026 summer camp dates and October concert dates for the high school project — described only as 'a mandatory four-day summer camp in June' and 'Madison during late October' on the pages read",
+    "The year associated with the Middle Level 'October 30 & October 31' mandatory rehearsal dates"
+  ]
+}

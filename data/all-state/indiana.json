@@ -1,0 +1,392 @@
+{
+  "state_slug": "indiana",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Indiana's all-state CHORAL programs are run by the Indiana Choral Directors Association (ICDA/InACDA), not by IMEA — ICDA administers the All-State Honor Choir, All-State Jazz Choir, and All-State Show Choir. The All-State Honor Choir is presented as part of the IMEA Professional Development Conference. IMEA itself sponsors the Elementary and Middle School/Junior High All-State Honor Choirs through its Circle the State with Song (CSWS) program. ICDA labels ensembles by calendar year of performance (e.g. '2027 All-State Honor Choir' = the 2026-27 school year); the All-State Show Choir performs in October, so ICDA's '2026 All-State Show Choir' falls in the 2026-27 school year and is recorded here as such with the state's own naming preserved. Area audition dates on the ICDA page are mixed: some areas had posted 2027 dates at retrieval and others still showed their 2026 (September 2025) dates — only the explicitly-labeled 2027 dates were recorded.",
+  "organization": {
+    "name": "Indiana Choral Directors Association",
+    "acronym": "ICDA",
+    "website_url": "https://inacda.org/",
+    "description": "ICDA is the Indiana chapter of the American Choral Directors Association. It administers Indiana's All-State Honor Choir, All-State Jazz Choir, and All-State Show Choir. Participation requires a sponsoring choral director who is an active ACDA member."
+  },
+  "sources": [
+    {
+      "name": "ICDA All-State Honor Choir",
+      "url": "https://inacda.org/all-state-choirs/all-state-honor-choir/",
+      "source_type": "official"
+    },
+    {
+      "name": "ICDA All-State Jazz Choir",
+      "url": "https://inacda.org/all-state-choirs/all-state-jazz-choir/",
+      "source_type": "official"
+    },
+    {
+      "name": "ICDA All-State Show Choir",
+      "url": "https://inacda.org/all-state-choirs/all-state-show-choir/",
+      "source_type": "official"
+    },
+    {
+      "name": "IMEA Circle the State with Song — Honor Choir General Information",
+      "url": "https://circlethestate.imeamusic.org/honor-choir-general-information",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "Indiana All-State Honor Choir 2027",
+      "lineage_key": "indiana-all-state-honor-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "ICDA's high school All-State Honor Choir, presented as part of the IMEA Professional Development Conference. The 2027 guest conductor is Dr. Joshua Palkki (Georgia Institute of Technology). ICDA also offers free ASHC audition prep sessions open to students from any area.",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "ASHC area auditions",
+          "start_at": "2026-09-01",
+          "end_at": "2026-09-21",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "Auditions are held on an area-by-area basis within this window; each of the 16 areas (1A-8B) has its own audition date, site, and clock times posted by its area chair.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "date_type": "results",
+          "title": "ASHC roster release (anticipated)",
+          "start_at": "2026-09-28",
+          "end_at": "2026-10-02",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "ICDA states the ASHC roster is anticipated to be released during the week of September 28.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "date_type": "event",
+          "title": "Indiana All-State Honor Choir 2027",
+          "start_at": "2027-01-15",
+          "end_at": "2027-01-16",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "January 15-16, 2027 at The Embassy Theatre & Purdue University Fort Wayne, presented as part of the IMEA Professional Development Conference.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Area 1A audition — Hanover Central High School",
+          "start_at": "2026-09-12",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Saturday, September 12, 2026, Hanover Central High School, Cedar Lake, 12p-4p CT.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Area 2A audition — Elkhart High School",
+          "start_at": "2026-09-12",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "Saturday, September 12, 2026, Elkhart High School, 9a-12p ET.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Area 2B audition — DeKalb High School",
+          "start_at": "2026-09-12",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "Saturday, September 12, 2026, DeKalb High School, Waterloo, 9a-1p ET.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Area 4A audition — Merillat Centre for the Arts, Huntington University",
+          "start_at": "2026-09-16",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "Wednesday, September 16, 2026, Merillat Centre for the Arts, Huntington University, 6p-9p ET.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Area 8B audition — Jeffersonville High School",
+          "start_at": "2026-09-08",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "Tuesday, September 8, Jeffersonville High School, 3:30p-7:30p ET. Auditions first come, first served.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "date_type": "other",
+          "title": "ASHC audition prep session — Area 2A, Elkhart High School",
+          "start_at": "2026-08-07",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "Friday, August 7th, 4p-6:30p, Elkhart High School. Free and open to students from any area; works on the year's ASHC audition piece and the sight reading component.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "date_type": "other",
+          "title": "ASHC audition prep session — Southside Indianapolis",
+          "start_at": "2026-08-26",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "Wednesday, August 26, 2026, 7p-8:15p, University of Indianapolis, Christel DeHaan Fine Arts Center.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "date_type": "other",
+          "title": "ASHC audition prep session — Northside Indianapolis",
+          "start_at": "2026-09-02",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "Wednesday, September 2, 2026, 7p-8:15p, Indianapolis Children's Choir Performing Arts Center.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Open to high school-aged choral singers",
+          "description": "Open to all high school-aged singers who participate regularly in a choral ensemble in their school or community.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "category": "membership",
+          "title": "Sponsoring director must be an active ACDA member",
+          "description": "The singer's sponsoring choral director must be an active member of ACDA.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        },
+        {
+          "category": "format",
+          "title": "Audition includes a prepared audition piece and sight reading",
+          "description": "ICDA's audition prep sessions state that the audition covers the year's ASHC audition piece and a sight reading component. Auditions are held live at area sites.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-honor-choir/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "2027 Audition Materials",
+          "url": "https://drive.google.com/drive/folders/1pHp8y3mEqaDm20ah64TXh3KglhSEst-V?usp=sharing",
+          "document_type": "other"
+        },
+        {
+          "title": "Past Repertoire & Guest Conductors",
+          "url": "https://docs.google.com/document/d/1PVL5fU6cr0pP9FYxd5YBUZgkxI9Zbe60EOLcwXpykso/edit",
+          "document_type": "other"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "Indiana All-State Jazz Choir 2027",
+      "lineage_key": "indiana-all-state-jazz-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "vocal jazz ensemble",
+      "description": "ICDA's All-State Jazz Choir, presented as part of the ICDA Summer Conference.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "Indiana All-State Jazz Choir 2027",
+          "start_at": "2027-06-29",
+          "end_at": "2027-06-30",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "June 29-30, 2027 at the University of Indianapolis, as part of the ICDA Summer Conference.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-jazz-choir/"
+        },
+        {
+          "date_type": "other",
+          "title": "2027 audition info and materials release",
+          "start_at": "2026-12-15",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "ICDA states new info and audition materials for the 2027 All-State Jazz Choir will be posted December 15.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-jazz-choir/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "One year of high school choir completed",
+          "description": "Open to all students who have completed one year of high school choir. Students who graduate in the Spring of 2027 are eligible.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-jazz-choir/"
+        },
+        {
+          "category": "membership",
+          "title": "Sponsoring teacher must be an active ACDA member",
+          "description": "Sponsoring teachers must be active members of ACDA in order to have their students participate.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-jazz-choir/"
+        },
+        {
+          "category": "format",
+          "title": "Recorded audition submitted via the HeartOut app",
+          "description": "Auditions are recorded and submitted through the HeartOut mobile app using voice-part invitation codes provided by the organizer. Students get three recording takes. (Codes and window shown at retrieval were for the 2026 cycle.)",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-jazz-choir/"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "Indiana All-State Show Choir 2026",
+      "lineage_key": "indiana-all-state-show-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "show choir",
+      "description": "ICDA's All-State Show Choir. ICDA labels this ensemble '2026', but it meets in October 2026, within the 2026-27 school year. 2026 guest clinicians: Kassy Krause (vocal clinician) and Ellie Jordan (choreographer).",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "All-State Show Choir audition window",
+          "start_at": "2026-08-01",
+          "end_at": "2026-08-31",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "Video vocal and dance auditions submitted online between August 1 and August 31, 2026.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-show-choir/"
+        },
+        {
+          "date_type": "event",
+          "title": "Indiana All-State Show Choir 2026",
+          "start_at": "2026-10-01",
+          "end_at": "2026-10-03",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "October 1-3, 2026 at Westfield High School, Westfield, IN.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-show-choir/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Open to high school-aged choral singers",
+          "description": "Open to all high school-aged singers who participate regularly in a choral ensemble in their school or community led by a sponsoring choral director who is an active member of ACDA.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-show-choir/"
+        },
+        {
+          "category": "materials",
+          "title": "Vocal audition video",
+          "description": "Record yourself singing the Star Spangled Banner in the assigned key — Soprano/Tenor in C, Alto/Bass in G (tonality and starting pitch tracks provided) — and upload the video. Label the video with last name, first initial, and 'Voice'. Say only your first and last name when recording (no hometown or school name).",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-show-choir/"
+        },
+        {
+          "category": "materials",
+          "title": "Dance audition video",
+          "description": "Learn the provided choreography, record yourself from the front with your entire body visible (feet to above your head), and upload. Label the video with last name, first initial, and 'Dance'.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-show-choir/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "The Star Spangled Banner",
+          "purpose": "audition",
+          "notes": "Vocal audition selection; sung in C for Soprano/Tenor and G for Alto/Bass.",
+          "source_url": "https://inacda.org/all-state-choirs/all-state-show-choir/"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "2027 IMEA Elementary All-State Honor Choir",
+      "lineage_key": "indiana-imea-elementary-all-state-honor-choir",
+      "season": "2026-27",
+      "school_level": "elementary",
+      "ensemble_type": "treble chorus",
+      "description": "IMEA has sponsored an elementary honor choir since 1990. Approximately 150 singers are selected on the basis of teacher recommendations and recorded auditions, drawn from participants across all 12 Circle the State with Song area festivals.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "2027 Elementary All-State Honor Choir performance",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "IMEA lists the 2027 performance dates as TBD; the performance location is the Fort Wayne Embassy Theatre, Fort Wayne, IN.",
+          "source_url": "https://circlethestate.imeamusic.org/honor-choir-general-information"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Must attend a Circle the State with Song Area Festival",
+          "description": "Students attending Circle the State with Song Area Festivals are eligible to audition for the All-State Honor Choirs.",
+          "source_url": "https://circlethestate.imeamusic.org/honor-choir-general-information"
+        },
+        {
+          "category": "materials",
+          "title": "Recorded audition submitted online",
+          "description": "Auditions are recorded along with the audition tracks provided by IMEA and submitted online through the Circle the State with Song site. Audition instructions must be followed exactly; failure to follow instructions and meet deadlines disqualifies the audition.",
+          "source_url": "https://circlethestate.imeamusic.org/honor-choir-general-information"
+        },
+        {
+          "category": "rubric",
+          "title": "Selection by CSWS Committee",
+          "description": "Final selection is made by the CSWS Committee during the fall of 2026, based on teacher recommendations and auditions, with the goal of a well-balanced ensemble drawn from all 12 area festivals.",
+          "source_url": "https://circlethestate.imeamusic.org/honor-choir-general-information"
+        }
+      ]
+    },
+    {
+      "name": "2027 IMEA Middle School/Junior High All-State Honor Choir",
+      "lineage_key": "indiana-imea-middle-school-all-state-honor-choir",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "IMEA's middle school/junior high honor choir, sponsored since 1990. Approximately 150 singers selected by the CSWS Committee from Circle the State with Song area festival participants. Separate audition tracks are provided for Soprano, Alto, Tenor, and Bass.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "2027 Middle School All-State Honor Choir performance",
+          "all_day": true,
+          "timezone": "America/Indiana/Indianapolis",
+          "description": "IMEA lists the 2027 performance dates as TBD; the performance location is the Fort Wayne Embassy Theatre, Fort Wayne, IN.",
+          "source_url": "https://circlethestate.imeamusic.org/honor-choir-general-information"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Must attend a Circle the State with Song Area Festival",
+          "description": "Students attending Circle the State with Song Area Festivals are eligible to audition for the All-State Honor Choirs.",
+          "source_url": "https://circlethestate.imeamusic.org/honor-choir-general-information"
+        },
+        {
+          "category": "materials",
+          "title": "Recorded audition submitted online",
+          "description": "Auditions are recorded along with the IMEA-provided audition tracks (separate tracks for Soprano, Alto, Tenor, Bass) and submitted online. Audition instructions must be followed exactly or the audition is disqualified.",
+          "source_url": "https://circlethestate.imeamusic.org/honor-choir-general-information"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+  "not_published": [
+    "ASHC 2027 audition repertoire titles — materials are in a linked Google Drive folder that was not opened",
+    "ASHC audition or participation fees — no fee amount published on the ICDA All-State Honor Choir page",
+    "ASHC 2027 performance repertoire — not published at retrieval",
+    "2027 All-State Jazz Choir audition window, fees, and repertoire — ICDA states materials release December 15; the window shown at retrieval (January 21-March 14) was the 2026 cycle",
+    "All-State Show Choir fees and performance repertoire — not published; dance audition videos were marked 'coming soon'",
+    "IMEA Elementary/Middle School All-State Honor Choir 2027 registration deadline, audition dates, and performance date — all listed as TBD",
+    "IMEA Elementary/Middle School All-State Honor Choir 2027 fee — only the 2026 fee ($200, covering four meals, All-State music, online rehearsal recordings, and an overnight stay in downtown Fort Wayne) is posted; it was not relabeled as a 2027 fee",
+    "IMEA 2027 Elementary and Middle School Honor Choir clinicians — listed as TBD",
+    "2026-27 audition dates for ICDA ASHC areas 1B, 3A, 3B, 4B, 5A, 5B, 6A, 6B, 7A, 7B, 8A — those area listings still showed 2026 (September 2025) dates at retrieval"
+  ]
+}

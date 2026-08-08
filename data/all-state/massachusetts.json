@@ -1,0 +1,258 @@
+{
+  "state_slug": "massachusetts",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Massachusetts runs District festivals first; students who place highly at their Senior District festival receive a recommendation to audition for All-State. MMEA's All-State choral side comprises an SATB Chorus and an SSAA Chorus (the SSAA Chorus was added for the 2026 festival). CAUTION on source vintage: the MassMEA auditions page carries genuinely 2026-27 information (live audition Saturday January 23, 2027 at Grafton High School, snow date January 24, 2027, and fees explicitly labeled '2027 All State Audition') alongside a registration block that still shows December 2025 dates — those December dates are stale prior-season text and are therefore NOT recorded here. Likewise, the link labeled '2026-27 All-State Audition List' currently resolves to a document titled 'MMEA 2025 ALL-STATE AUDITION LIST (Approved October 2024)', and the linked All-State Ensemble Handbook is the 2026 edition (festival March 21, 2026). Requirements below are taken from that current-linked handbook; the 2027 festival date/venue are not published.",
+  "organization": {
+    "name": "Massachusetts Music Educators Association",
+    "acronym": "MMEA",
+    "website_url": "https://www.massmea.org/",
+    "description": "The Massachusetts Music Educators Association runs the MMEA All-State Festival, selecting roughly 500 students each year from over 1,000 high school auditionees. Students qualify to audition for All-State via their Senior District festival results, and All-State auditions are held on a single live audition day."
+  },
+  "sources": [
+    {
+      "name": "MassMEA All-State Ensemble Auditions",
+      "url": "https://www.massmea.org/auditions",
+      "source_type": "official"
+    },
+    {
+      "name": "MMEA All State Festival Handbook (2026 revision)",
+      "url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit",
+      "source_type": "handbook_pdf"
+    },
+    {
+      "name": "MMEA All-State Audition List (linked from the auditions page as the 2026-27 list; document is titled 'MMEA 2025 All-State Audition List, Approved October 2024')",
+      "url": "https://drive.google.com/file/d/1ipXrJuNHGrSI4lKfLjxYSaNBwcxkgeMk/view",
+      "source_type": "handbook_pdf"
+    }
+  ],
+  "programs": [
+    {
+      "name": "MMEA All-State SATB Chorus",
+      "lineage_key": "massachusetts-all-state-satb-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The MMEA All-State SATB Chorus is selected by live audition from students recommended through Massachusetts Senior District festivals. Sopranos and altos are placed into the SATB and SSAA choruses by alternating highest audition scores until the SATB Chorus is full.",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "All-State Live Auditions",
+          "start_at": "2027-01-23",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "2027 auditions will be live auditions at Grafton High School, Grafton, MA. Audition times are assigned by geographic district and school name: 8:15 AM Western A-M, 9:00 AM Western N-Z, 9:45 AM Eastern A-M, 10:30 AM Eastern N-Z, 11:15 AM Northeastern A-M, 1:00 PM Northeastern N-Z, 1:45 PM Southeastern A-M, 2:30 PM Southeastern N-Z, 3:15 PM Central A-M, 4:00 PM Central N-Z.",
+          "source_url": "https://www.massmea.org/auditions"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "All-State Auditions snow date",
+          "start_at": "2027-01-24",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Snow date for the live All-State auditions at Grafton High School.",
+          "source_url": "https://www.massmea.org/auditions"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "materials",
+          "title": "Required piece sung to a pre-recorded track",
+          "description": "Vocalists sing the required piece to a pre-recorded track minus their own voice part.",
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        },
+        {
+          "category": "sight_reading",
+          "title": "Sight-reading example provided",
+          "description": "Students will be provided an example to sight-read at the audition.",
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        },
+        {
+          "category": "scales",
+          "title": "One major scale, up and down, from memory",
+          "description": "Soprano: E Major. Alto: A Major. Tenor: E Major. Bass: G Major. Metronomes are not allowed during auditions.",
+          "structured_data": {
+            "soprano": "E Major",
+            "alto": "A Major",
+            "tenor": "E Major",
+            "bass": "G Major",
+            "memorized": true,
+            "direction": "ascending and descending",
+            "metronome_allowed": false
+          },
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        },
+        {
+          "category": "eligibility",
+          "title": "All-State audition recommendation via Senior District festival",
+          "description": "Students in the top half (50%) of accepted tenor and bass vocal auditions from Senior District audition scores receive a recommendation to audition for All-State. The top-scoring 45 soprano and 45 alto Senior District auditions receive recommendations. Students must participate fully and completely in their Senior District festival to maintain All-State eligibility.",
+          "structured_data": {
+            "tenor_bass": "top 50% of accepted senior district vocal auditions",
+            "soprano": "top 45 scores",
+            "alto": "top 45 scores"
+          },
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        },
+        {
+          "category": "membership",
+          "title": "Director must hold an active NAfME membership",
+          "description": "Each ensemble director with a student auditioning must have a valid, active NAfME number, active through auditions and through the festival. Students must be registered through the director's District Avenir login; parents may not register students unless they are the principal of a home-school student with active NAfME membership.",
+          "source_url": "https://www.massmea.org/auditions"
+        },
+        {
+          "category": "format",
+          "title": "Anonymous, screened adjudication",
+          "description": "Students receive a four-digit audition number at check-in. Judges sit behind a tri-fold screen and a judge's assistant introduces each student only by number. Students refrain from speaking to judges but are not penalized if they do.",
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        },
+        {
+          "category": "materials",
+          "title": "What to bring to auditions",
+          "description": "The signed Principal Form for the school, a completed paper Medical Form (Medical & Commitment Form), the Chaperone Form, and payment for the amount indicated on the Principal Form. Payment is made to MMEA, PO Box 920004, Needham, MA 02492.",
+          "source_url": "https://www.massmea.org/auditions"
+        },
+        {
+          "category": "format",
+          "title": "Part testing at the festival",
+          "description": "On the first rehearsal day up to 40 singers (10 from each voice part) are chosen at random, assigned to octets, and asked to sing excerpts from every piece in the All-State Chorus program before a panel of music teachers. Each singer is rated well-prepared, prepared, or not prepared, covering text as well as music. A 'not prepared' rating triggers adjudication of that school's other chorus members, and repeated inadequate preparation can cost the school the chance to audition for the All-State Chorus the following year.",
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        },
+        {
+          "category": "format",
+          "title": "Placement between SATB and SSAA choruses",
+          "description": "Sopranos and altos are placed into the two ensembles by alternating the highest scores — highest score to SATB, second highest to SSAA, and so on — until the SATB Chorus is full, at which point the remaining highest scores fill the SSAA Chorus sections.",
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        },
+        {
+          "category": "eligibility",
+          "title": "Accepted students are expected to participate",
+          "description": "Accepted musicians are expected to participate in the Festival. Students who decline acceptance, or who register but do not participate, will not be allowed to participate the following year (medical/family exceptions considered by the Executive Board with documentation).",
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Angelus ad Pastores",
+          "composer": "Hans Leo Hassler",
+          "arranger": "ed. Andreotti",
+          "publisher": "Public Domain only",
+          "catalog_number": "CPDL #07526",
+          "purpose": "audition",
+          "notes": "Listed as the 'Voice' audition selection, 'up to Alleluia', marked 'remains the same'. Source caveat: the MassMEA auditions page links this list as the '2026-27 All-State Audition List', but the document itself is headed 'MMEA 2025 ALL-STATE AUDITION LIST (Approved October 2024)'. Confirm before relying on it for 2026-27.",
+          "source_url": "https://drive.google.com/file/d/1ipXrJuNHGrSI4lKfLjxYSaNBwcxkgeMk/view"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 3000,
+          "payable_to": "state_association",
+          "description": "2027 All State Audition Student Regular Registration Fee. Payment is made to MMEA and brought to auditions with the signed Principal Form.",
+          "source_url": "https://www.massmea.org/auditions"
+        },
+        {
+          "fee_type": "audition_late",
+          "amount_cents": 5000,
+          "payable_to": "state_association",
+          "description": "2027 All State Audition Student Late Registration Fee.",
+          "source_url": "https://www.massmea.org/auditions"
+        }
+      ],
+      "documents": [
+        {
+          "title": "MMEA All-State Ensemble Handbook",
+          "url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit",
+          "document_type": "handbook"
+        },
+        {
+          "title": "All-State Audition List",
+          "url": "https://drive.google.com/file/d/1ipXrJuNHGrSI4lKfLjxYSaNBwcxkgeMk/view",
+          "document_type": "rules"
+        },
+        {
+          "title": "MMEA Medical & Commitment Form",
+          "url": "https://docs.google.com/document/d/18HvAHu5q9pOdf2Z6D-zwptFdFbbPbSsdPMepFY9Vd28/edit",
+          "document_type": "form"
+        },
+        {
+          "title": "Chaperone Form",
+          "url": "https://form.jotform.com/260035061251139",
+          "document_type": "form"
+        },
+        {
+          "title": "Adjudication forms (Avesi Score Forms)",
+          "url": "https://scoreforms.avesi.com",
+          "document_type": "other"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "MMEA All-State SSAA Chorus",
+      "lineage_key": "massachusetts-all-state-ssaa-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "The SSAA Chorus was added to the MMEA All-State Festival for 2026. Sopranos and altos audition once and are distributed between the SATB and SSAA choruses by alternating audition scores.",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "All-State Live Auditions",
+          "start_at": "2027-01-23",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Live auditions at Grafton High School, Grafton, MA, with a snow date of January 24, 2027. Audition times are assigned by geographic district and school name.",
+          "source_url": "https://www.massmea.org/auditions"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "scales",
+          "title": "One major scale, up and down, from memory",
+          "description": "Soprano: E Major. Alto: A Major. Metronomes are not allowed during auditions.",
+          "structured_data": { "soprano": "E Major", "alto": "A Major", "memorized": true },
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        },
+        {
+          "category": "eligibility",
+          "title": "All-State audition recommendation via Senior District festival",
+          "description": "The top-scoring 45 soprano and 45 alto Senior District auditions receive recommendations to audition for All-State.",
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        },
+        {
+          "category": "format",
+          "title": "Placement between SATB and SSAA choruses",
+          "description": "Highest score goes to SATB, second highest to SSAA, alternating until the SATB Chorus is full; remaining highest scores fill the SSAA Chorus.",
+          "source_url": "https://docs.google.com/document/d/1zjdGgqfV5EnW-G8rg9Cd-1g8Qtytb7BBGtxQA3o0V94/edit"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 3000,
+          "payable_to": "state_association",
+          "description": "2027 All State Audition Student Regular Registration Fee.",
+          "source_url": "https://www.massmea.org/auditions"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano" },
+        { "code": "A1", "label": "Alto" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2027 All-State Festival dates and venue — the linked handbook still describes the 2026 festival (two concerts at the Hanover Theater, Worcester, Saturday March 21, 2026)",
+    "2026-27 audition registration open/close dates — the auditions page still lists December 2025 dates from the prior cycle",
+    "2026-27 vocal solo repertoire, confirmed — the link labeled '2026-27 All-State Audition List' resolves to a document titled 'MMEA 2025 All-State Audition List (Approved October 2024)'",
+    "Exact excerpt boundaries for the vocal audition selection — MMEA said exact excerpts would be released in the fall",
+    "Festival participation fee amount (separate from the audition registration fee) — the handbook references participation fees but publishes no amount",
+    "Performance repertoire for the All-State choruses",
+    "Alternate-audition-time request deadline year — the page says 'Friday, January 2nd' without a year"
+  ]
+}

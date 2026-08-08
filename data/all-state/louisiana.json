@@ -1,0 +1,482 @@
+{
+  "state_slug": "louisiana",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "LMEA sponsors two high school All-State choirs (Mixed and Treble) plus an All-State Middle School Choir. Selection is a two-round process: a 1st-round district audition in each of the nine LMEA districts, then a 2nd-round state-level audition that is live-monitored, recorded, and submitted as an mp3 to the Vocal Division Chair. The 2027 clinicians, audition cuts, and full performance programs ARE published for 2026-27 and are recorded here. However, the deadline blocks on both choir pages were still explicitly headed 'DEADLINES for 2025-26' at retrieval (Oct 11/13/21, 2025 for high school; Nov 15, Nov 24, Dec 10, 2025 for middle school), so those dates were NOT recorded as 2026-27 data. District 1st-round dates, fees, and locations are set by each district and are not published centrally. Note also that LMEA's older 'General Information: All-State' page describes the conference as being held in November and names the treble ensemble 'Women's Chorale', while the current choir page and conference page use 'Treble Choir' and place the 2027 conference in January; the newer pages were treated as authoritative.",
+  "organization": {
+    "name": "Louisiana Music Educators Association",
+    "acronym": "LMEA",
+    "website_url": "https://lmeamusic.org/",
+    "description": "LMEA is Louisiana's state music educators association, based in Covington, LA. It sponsors the All-State ensembles, which are selected through district and state auditions and perform at LMEA's annual Professional Development Conference."
+  },
+  "sources": [
+    {
+      "name": "LMEA All-State High School Choir",
+      "url": "https://lmeamusic.org/choir/",
+      "source_type": "official"
+    },
+    {
+      "name": "LMEA All-State Middle School Choir",
+      "url": "https://lmeamusic.org/all-state-middle-school-choir/",
+      "source_type": "official"
+    },
+    {
+      "name": "2027 LMEA Professional Development Conference",
+      "url": "https://lmeamusic.org/2027-lmea-professional-development-conference/",
+      "source_type": "official"
+    },
+    {
+      "name": "LMEA General Information: All-State",
+      "url": "https://lmeamusic.org/all-state-2/",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "All-State Mixed Choir",
+      "lineage_key": "louisiana-all-state-mixed-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "One of LMEA's two high school All-State choirs. Members are selected through district (1st round) and state (2nd round) auditions. The 2027 Mixed Choir clinician is Dr. Edith A. Copley, regents' professor emerita at Northern Arizona University and ACDA National President.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "2027 LMEA Professional Development Conference",
+          "start_at": "2027-01-15",
+          "end_at": "2027-01-18",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "January 15-18, 2027, Hilton New Orleans Riverside, 2 Poydras Street, New Orleans, LA. The All-State ensembles perform at the conference; the detailed conference schedule was marked 'Coming Soon' at retrieval.",
+          "source_url": "https://lmeamusic.org/2027-lmea-professional-development-conference/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Grade level and school enrollment",
+          "description": "Students auditioning must be in 9th-12th grade, must be enrolled in a Louisiana-accredited high school, and must be an active member of that school's choral music program. Where there is no program in the school, the student must be enrolled in a Louisiana-accredited high school and certified by the eligible music teacher at that school or by a private teacher who is an LMEA member. Students are eligible for membership in only one All-State ensemble.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "membership",
+          "title": "Director must be a current LMEA member",
+          "description": "The ensemble director of students auditioning must be a current LMEA member. District directors verify LMEA membership for all students participating in 2nd round auditions.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "format",
+          "title": "Two-round audition process",
+          "description": "Each of the nine LMEA Districts holds a district-level 1st round qualifying audition; students must audition in their school's LMEA district. Dates, fees, and locations for the 1st round are set by each district. All auditions are required to be blind auditions. Each district decides whether the audition is an All-State 1st round only or combined with a District Honor Choir audition. The 2nd round is a live monitored audition, recorded and submitted as an mp3 file to the Vocal Division Chair for adjudication.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "format",
+          "title": "Order of audition",
+          "description": "1) Scales, 2) Prepared Selection (performed with the audition track; performed in its entirety for the 2nd round recorded audition, or with a cut sent by the Vocal Chair that all districts must use), 3) Sight-Reading using the recorded instructions and track.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "scales",
+          "title": "Scale requirements and starting pitches",
+          "description": "Scales are required in both the 1st and 2nd rounds. Each singer sings two scales, each ascending and descending, a cappella using solfege, numbers, or a neutral syllable. Recommended tempo is quarter note = 66-80. Starting pitches: Soprano 1 — E above middle C and G above middle C; Soprano 2 — E above middle C and A below middle C; Alto 1 — D above middle C and G below middle C; Alto 2 — D above middle C and F below middle C; Tenor 1 — F below middle C and A below middle C; Tenor 2 — G below middle C and C below middle C; Bass 1 — E below middle C and A below C3; Bass 2 — D below middle C and F below C3.",
+          "structured_data": {
+            "tempo": "quarter note = 66-80",
+            "a_cappella": true,
+            "syllables_allowed": ["solfege", "numbers", "neutral syllable"],
+            "starting_pitches": {
+              "Soprano 1": ["E above middle C", "G above middle C"],
+              "Soprano 2": ["E above middle C", "A below middle C"],
+              "Alto 1": ["D above middle C", "G below middle C"],
+              "Alto 2": ["D above middle C", "F below middle C"],
+              "Tenor 1": ["F below middle C", "A below middle C"],
+              "Tenor 2": ["G below middle C", "C below middle C"],
+              "Bass 1": ["E below middle C", "A below C3"],
+              "Bass 2": ["D below middle C", "F below C3"]
+            }
+          },
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "sight_reading",
+          "title": "Sight-singing criteria",
+          "description": "Students sight-read a short selection using solfege, numbers, or neutral syllables. Criteria: skips only within the tonic (I) chord and all other motion stepwise; common time (4/4); range no greater than sol (V) below the tonic chord to la (VI) above it; rhythms limited to whole, half, quarter, and dotted quarter followed by an eighth note, with quarter-note rests only; eight measures long; begins and ends on do; no pickup measure and no accidentals. LMEA notes Sight Reading Factory Level 3 is close to this difficulty. Material is emailed to the district director before the audition date and must be kept confidential; monitors return all copies to the district director, who discards them after verifying all copies were returned.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "rubric",
+          "title": "Scoring criteria and tie breakers",
+          "description": "Intonation 20 points; Tone Quality 20; Part Accuracy 20; Diction 10; Technique and Interpretation 10; Scales 10; Sight-Reading 10. If scales are not included in the 1st round, Technique receives 10 points and Interpretation receives 10 points. Ties are broken first by sight-reading score, then by scales, then by tone quality.",
+          "structured_data": {
+            "intonation": 20,
+            "tone_quality": 20,
+            "part_accuracy": 20,
+            "diction": 10,
+            "technique_and_interpretation": 10,
+            "scales": 10,
+            "sight_reading": 10
+          },
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "other",
+          "title": "District quota for advancing to 2nd round",
+          "description": "Each district may advance 10 students per voice part (Soprano 1, Soprano 2, Alto 1, Alto 2, Tenor 1, Tenor 2, Bass 1, Bass 2). All students recommended for 2nd round must have scored at least 50% of the top score at 1st round. No alternates are submitted. Names are submitted to the Vocal Division Chair on the All-State quota spreadsheet, ranked by part; after the deadline districts may not change their 2nd round list. If a district lacks enough qualifiers in a voice part, the Vocal Division Chair is notified so a student from another district may advance.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "materials",
+          "title": "Student Information Release Form required",
+          "description": "The LMEA Student Information Release Form (or the district's own form at 1st round) is required. No 2nd round audition recording is accepted for adjudication without receipt of this form by the district's recording date.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "other",
+          "title": "Ensemble preference for students auditioning for more than one ensemble",
+          "description": "Students auditioning for more than one ensemble must indicate their preference when their audition registration information is submitted; this is used if they are selected to more than one LMEA All-State ensemble.",
+          "source_url": "https://lmeamusic.org/choir/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Ezekiel",
+          "arranger": "Stacey V. Gibbs",
+          "purpose": "audition",
+          "notes": "2027 high school audition selection. Published cut: page 5, pick-up to measure 16, through page 20 (beat 3 of measure 68). Also on the 2027 Mixed Choir performance program. Beginning in 2026 LMEA no longer uses a rotation of audition pieces and instead auditions on a selection chosen from the current year's Mixed Choir repertoire list.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "If You Love for Beauty (Liebst du um Schönheit)",
+          "composer": "Clara Schumann",
+          "arranger": "James McCullough",
+          "purpose": "performance",
+          "notes": "Sung in German.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "Holding the Light",
+          "composer": "B. E. Boykin",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "Hearts Beat Together",
+          "composer": "Emilio Solé-Sempere",
+          "purpose": "performance",
+          "notes": "Sung in Spanish and English.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "In Remembrance",
+          "composer": "Jeffery Ames",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "My Lord, What a Morning",
+          "arranger": "Adam & Matt Podd",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/choir/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 1500,
+          "payable_to": "state_association",
+          "description": "$15 per audition for the 2nd round. Ensemble directors follow their District Director's instructions and deadline for submitting school checks. An audition cannot be adjudicated if the fee has not been received.",
+          "source_url": "https://lmeamusic.org/choir/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "Student Information Release Form",
+          "url": "https://lmeamusic.org/wp-content/uploads/2025/05/Student-Information-Release-Form-2a.pdf",
+          "document_type": "form"
+        },
+        {
+          "title": "2027 All-State Choirs Learning Tracks (HS Mixed, HS Treble, MS Choir)",
+          "url": "https://drive.google.com/drive/folders/1rzYR1DMpryU-wqYIXvzRNxlN_z5wORvB?usp=sharing",
+          "document_type": "other"
+        },
+        {
+          "title": "All-State Choir Scale Requirements / Scale Tracks",
+          "url": "https://lmeamusic.org/all-state-choir-scale-requirements/",
+          "document_type": "other"
+        },
+        {
+          "title": "Recorded instructions and keys for sight-reading auditions",
+          "url": "https://www.lmeamusic.org/sight-reading-instructions-and-keys-for-audition/",
+          "document_type": "other"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" },
+        { "code": "T1", "label": "Tenor 1" },
+        { "code": "T2", "label": "Tenor 2" },
+        { "code": "B1", "label": "Bass 1" },
+        { "code": "B2", "label": "Bass 2" }
+      ]
+    },
+    {
+      "name": "All-State Treble Choir",
+      "lineage_key": "louisiana-all-state-treble-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "LMEA's second high school All-State choir, selected through the same district (1st round) and state (2nd round) audition process as the Mixed Choir. The 2027 Treble Choir clinician is Heather Orr, Assistant Director of Choral Activities at Texas A&M University. (LMEA's older general All-State page still refers to this ensemble as the 'Women's Chorale'.)",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "2027 LMEA Professional Development Conference",
+          "start_at": "2027-01-15",
+          "end_at": "2027-01-18",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "January 15-18, 2027, Hilton New Orleans Riverside, New Orleans, LA.",
+          "source_url": "https://lmeamusic.org/2027-lmea-professional-development-conference/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Grade level and school enrollment",
+          "description": "Students auditioning must be in 9th-12th grade, enrolled in a Louisiana-accredited high school, and an active member of that school's choral music program. Students are eligible for membership in only one All-State ensemble.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "membership",
+          "title": "Director must be a current LMEA member",
+          "description": "The ensemble director of students auditioning must be a current LMEA member.",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "category": "format",
+          "title": "Same two-round audition as the Mixed Choir",
+          "description": "Both high school choirs are filled from the same district 1st round and state 2nd round audition process; results are posted on two lists that students are told to check.",
+          "source_url": "https://lmeamusic.org/choir/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Ezekiel",
+          "arranger": "Stacey V. Gibbs",
+          "purpose": "audition",
+          "notes": "2027 high school audition selection (shared with the Mixed Choir). Cut: page 5, pick-up to measure 16, through page 20 (beat 3 of measure 68).",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "Lorelei",
+          "composer": "Clara Schumann",
+          "arranger": "Brandon Williams",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "Stardust",
+          "composer": "B. E. Boykin",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "Kyrie Eleison from Caribbean Mass",
+          "composer": "Glenn McClure",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "Flight",
+          "composer": "Craig Carnelli",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "Orde-e",
+          "arranger": "Maria Theresa Vizconde-Roldan",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/choir/"
+        },
+        {
+          "title": "Wade in the Water",
+          "arranger": "Kevin Phillip Johnson",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/choir/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 1500,
+          "payable_to": "state_association",
+          "description": "$15 per audition for the 2nd round.",
+          "source_url": "https://lmeamusic.org/choir/"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" }
+      ]
+    },
+    {
+      "name": "All-State Middle School Choir",
+      "lineage_key": "louisiana-all-state-middle-school-choir",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "LMEA's middle school All-State choir, selected through district (1st round) live auditions and a state (2nd round) live monitored audition submitted as an mp3. The 2027 clinician is Dr. Chantae D. Pittman, Director of Choral Activities at Campbell High School, Smyrna, GA.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "2027 LMEA Professional Development Conference",
+          "start_at": "2027-01-15",
+          "end_at": "2027-01-18",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "January 15-18, 2027, Hilton New Orleans Riverside, New Orleans, LA.",
+          "source_url": "https://lmeamusic.org/2027-lmea-professional-development-conference/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Grade level and school enrollment",
+          "description": "Students auditioning must be in 6th, 7th, or 8th grade, must be enrolled in a Louisiana-accredited middle school, and must be an active member of that school's ensemble program. Where there is no ensemble in the school, the student must be certified by the eligible music teacher at that school or a private teacher who is an LMEA member. Students are eligible for membership in only one All-State ensemble.",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "category": "membership",
+          "title": "Director must be a current full LMEA member",
+          "description": "The ensemble director of the students auditioning must be a current full LMEA member.",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "category": "format",
+          "title": "Audition order and procedure",
+          "description": "All 1st round auditions are live. Each District Director assigns a single date for 1st round live auditions, with monitors in each room to certify that each auditioner sings the material without restarts. Students enter the room assigned to their voice part, where a face-down sight-reading copy, a copy of the current year's selection, and a device to play the accompaniment track are provided. The monitor reads an identification script naming only the voice part and audition number. Order: prepared selection, then scale, then sight-reading (one minute of preparation before singing). At 2nd round students sing only the scale and the prepared selection — there is no sight-reading.",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "category": "scales",
+          "title": "Scale requirement and starting pitches",
+          "description": "Each student sings the scale ascending and descending a cappella using solfege, numbers, or a neutral syllable, at a recommended tempo of quarter note = 66-80. Starting pitches: Sopranos F above middle C; Altos D beside middle C; Tenors F below middle C; Basses C below middle C.",
+          "structured_data": {
+            "tempo": "quarter note = 66-80",
+            "starting_pitches": {
+              "Soprano": "F above middle C",
+              "Alto": "D beside middle C",
+              "Tenor": "F below middle C",
+              "Bass": "C below middle C"
+            }
+          },
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "category": "sight_reading",
+          "title": "Sight-reading criteria (1st round only)",
+          "description": "Grade-level-appropriate music consisting of quarter, half, and whole notes and their corresponding rests; stepwise motion only (no skips); starts and ends on do. Worth 5% of the 1st round score and not used at 2nd round.",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "category": "rubric",
+          "title": "Scoring criteria and tie breakers",
+          "description": "Prepared Selection 90% (evaluated on tone quality, note and rhythmic accuracy, intonation, and diction); Scale 5% at 1st round and 10% at 2nd round; Sight-Reading 5% at 1st round and not included at 2nd round. Ties are broken first by sight-reading score, then by scales, then by tone quality.",
+          "structured_data": {
+            "prepared_selection_pct": 90,
+            "scale_pct_round1": 5,
+            "scale_pct_round2": 10,
+            "sight_reading_pct_round1": 5
+          },
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "category": "other",
+          "title": "District quota for advancing to 2nd round",
+          "description": "Each district recommends the top ten students from each voice part (10 Sopranos, 10 Altos, 10 Tenors, 10 Basses). All students recommended must have scored at least 50% of the top score at 1st round. No alternates are submitted.",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "category": "materials",
+          "title": "Student Release of Information Form required",
+          "description": "The form must be printed, signed, and turned in to the district. Auditions cannot be adjudicated without it.",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Sing Out, My Soul",
+          "composer": "Marques L. A. Garrett",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "notes": "2027 middle school audition selection. Cut: measure 95 to the end of the piece; sopranos audition with the Soprano II part. Also on the 2027 Middle School Choir performance program. LMEA's page still lists a 3-year rotation with 'Set 3 (2026-27) – TBA'; the 2027 audition piece is named at the top of the page.",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "title": "Omnis Terra",
+          "composer": "Ruth Morris Gray",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "title": "One Step",
+          "composer": "Jocelyn Hagen",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "title": "Time",
+          "composer": "Jennifer L. Cook",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        },
+        {
+          "title": "United in Purpose",
+          "composer": "Rollo Dilworth",
+          "purpose": "performance",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 1500,
+          "payable_to": "state_association",
+          "description": "$15 per audition. Audition fees must be received before an audition will be recorded or adjudicated. Each District Director submits a single district check made out to LMEA to the Audition Coordinator for all of the district's middle school choir audition entries.",
+          "source_url": "https://lmeamusic.org/all-state-middle-school-choir/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "Student Information Release Form",
+          "url": "https://lmeamusic.org/wp-content/uploads/2025/05/Student-Information-Release-Form-2a.pdf",
+          "document_type": "form"
+        },
+        {
+          "title": "2027 All-State Choirs Learning Tracks (HS Mixed, HS Treble, MS Choir)",
+          "url": "https://drive.google.com/drive/folders/1rzYR1DMpryU-wqYIXvzRNxlN_z5wORvB?usp=sharing",
+          "document_type": "other"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 audition deadlines — both choir pages still showed deadline blocks explicitly headed 'DEADLINES for 2025-26' at retrieval (high school: Oct 11, Oct 13, Oct 21, 2025; middle school: Nov 15, Nov 24, Dec 10, 2025). These were not relabeled as 2026-27.",
+    "District (1st round) audition dates, fees, and locations — set independently by each of the nine LMEA districts and not published centrally",
+    "2nd round recording dates and locations — scheduled by each district director within the state deadlines",
+    "Publisher and catalog information for most of the 2027 performance repertoire — LMEA lists titles and composers/arrangers only",
+    "Publisher/edition of the 2027 high school audition piece 'Ezekiel' and the middle school audition piece 'Sing Out, My Soul'",
+    "Middle School Choir accompanist for 2027 — field present on the page but left blank",
+    "Participation/registration fee for students selected to an ensemble — only the $15 per-audition fee is published",
+    "Detailed 2027 conference schedule including All-State concert dates and times — marked 'Coming Soon'"
+  ]
+}

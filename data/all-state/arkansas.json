@@ -1,0 +1,217 @@
+{
+  "state_slug": "arkansas",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Arkansas's All-State choirs are run by the Arkansas Choral Directors Association (ArkCDA), a standalone nonprofit that has sponsored interscholastic choral activities for Arkansas secondary students since 1967 — not by a NAfME state MEA. Selection is two-tier: students first audition into one of the regional All-Region SATB Choirs, and chairs 1-20 of each All-Region SATB Choir qualify to audition for All-State. Three All-State choirs are formed (SATB Choir, Treble Choir, Tenor/Bass Choir). The 2026-27 state calendar was current at retrieval: All-State Choir Auditions February 5, 2027 in Arkadelphia, and the All-State Music Conference February 18-20, 2027 at the Hot Springs Convention Center. Rules cited come from the ArkCDA All-Region/State Manual, revised Fall 2025 — the current governing edition, and note that a set of proposed constitution and manual amendments was posted for a vote at retrieval. No 2026-27 audition repertoire titles, fee amounts, or clinicians were published on ArkCDA's own pages; audition titles are distributed via a vendor order form (J&B Music Sales) linked from the ArkCDA home page as 'All-Region & All-State Titles - Fall 2026'.",
+
+  "organization": {
+    "name": "Arkansas Choral Directors Association",
+    "acronym": "ArkCDA",
+    "website_url": "https://www.arkcda.org/",
+    "description": "The Arkansas Choral Directors Association has been sponsoring interscholastic choral activities for the secondary students of Arkansas since 1967. ArkCDA is organized exclusively to approve, develop, and direct all interscholastic choral activities among member schools through worthwhile musical experiences for the development of music literacy, discipline, character, and citizenship."
+  },
+
+  "sources": [
+    { "name": "ArkCDA home",
+      "url": "https://www.arkcda.org/",
+      "source_type": "official" },
+    { "name": "ArkCDA State Event Dates 2026-2027",
+      "url": "https://docs.google.com/document/d/1IJ9Ov6BYC6HfMZLCkDcfdE-0PFh8BmtcYuz2icWjltc/edit?usp=sharing",
+      "source_type": "calendar" },
+    { "name": "ArkCDA All-Region/State Manual (revised Fall 2025)",
+      "url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing",
+      "source_type": "handbook_pdf" },
+    { "name": "ArkCDA All-State Auditions — Sight-Reading",
+      "url": "https://www.arkcda.org/all-state-sight-reading",
+      "source_type": "official" },
+    { "name": "ArkCDA Literature",
+      "url": "https://www.arkcda.org/literature",
+      "source_type": "official" },
+    { "name": "ArkCDA All-State Auditions Fees (payment page)",
+      "url": "https://www.arkcda.org/all-state-auditions-fees",
+      "source_type": "official" }
+  ],
+
+  "programs": [
+    {
+      "name": "All-State SATB Choir",
+      "lineage_key": "arkansas-all-state-satb",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The top All-State ensemble. Chairs 1 to 25 in each voice part of the All-State audition results form the SATB Choir. Openings in the All-State SATB Choir are filled by moving students up from the Treble and Tenor/Bass Choruses; students in those choruses may decline the move, in which case the option passes to the next chair.",
+      "dates": [
+        { "date_type": "audition_round",
+          "title": "All-State Choir Auditions",
+          "start_at": "2027-02-05",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Held in Arkadelphia.",
+          "source_url": "https://docs.google.com/document/d/1IJ9Ov6BYC6HfMZLCkDcfdE-0PFh8BmtcYuz2icWjltc/edit?usp=sharing" },
+        { "date_type": "event",
+          "title": "All-State Music Conference",
+          "start_at": "2027-02-18",
+          "end_at": "2027-02-20",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Hot Springs Convention Center. The ArkCDA General Membership Meeting is February 19, 2027.",
+          "source_url": "https://docs.google.com/document/d/1IJ9Ov6BYC6HfMZLCkDcfdE-0PFh8BmtcYuz2icWjltc/edit?usp=sharing" },
+        { "date_type": "other",
+          "title": "All-State audition roster frozen",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "The All-State audition roster is frozen 48 hours prior to the start of All-State audition registration. Any student labeled as an alternate is removed from the audition roster at that time and not allowed to audition. No calendar date is published for this.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "date_type": "other",
+          "title": "All-State audition titles posted",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "The manual requires titles to be posted on the ArkCDA website no later than May 1; titles not reported by May 1 are added as soon as they become known. No specific 2026-27 date is published.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" }
+      ],
+      "requirements": [
+        { "category": "eligibility",
+          "title": "Qualification through All-Region auditions",
+          "description": "Chairs 1-20 of each All-Region SATB Choir are qualified to audition for the All-State Choir. To maintain All-State eligibility, students must place within the region's All-State audition allotment and must participate in the All-Region Clinic. When a region fails to fill its audition slots in a section, remaining slots are made available to other regions in order of the number of students auditioning at the region level.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "eligibility",
+          "title": "School membership and enrollment in a choral program",
+          "description": "Only schools which have paid ArkCDA participation fees and which are members in good standing of the Arkansas Activities Association may participate in the All-Region/State event. Entrants must be a member of a choral program at their respective school, provided such is available.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "eligibility",
+          "title": "Alternate eligibility",
+          "description": "To qualify as an All-State alternate a student must have participated in the All-Region Clinic as a member of one of the All-Region Choirs, unless excused. In regions without a TTBB and/or SSAA chorus, chairs 21-25 may audit the All-Region SATB Choir to retain All-State alternate eligibility. Alternates must be present at the start of the first rehearsal to be eligible for placement in the All-State Treble or Tenor/Bass Chorus.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "materials",
+          "title": "All-State audition selections",
+          "description": "The All-State audition consists of two SATB selections and two SSA/SSAA and TTB/TTBB selections, with only three of the four pieces being used at the audition. Regions may not audition or perform All-State repertoire unless it is designated as a common region piece. Repertoire is determined by the clinicians in consultation with the Executive Director, All-State Chair, President, President-Elect and Past President.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "sight_reading",
+          "title": "Required sight-reading component",
+          "description": "All students participating in All-State Choir auditions must complete a sight-reading component. Two judges score the sight-reading portion. The tonic pitch (\"DO\") is sounded before the study period and not sounded again. Study period is 25 seconds. Students are prompted with a count-in of \"One, two, ready, sing!\" at 60 BPM and have 20 seconds to perform their response, ending when they hear \"End response now.\" Students who do not finish are judged on what is completed within the time limit. Any student who is a no-show for any portion of the All-State audition is disqualified.",
+          "structured_data": { "study_period_seconds": 25, "response_seconds": 20, "count_in_bpm": 60, "judges": 2 },
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "format",
+          "title": "Blind audition procedure",
+          "description": "Students are referred to strictly by audition number; names and schools are never mentioned in the audition room. Students enter one at a time in audition number order and may not speak unless asked by the head judge. No one may enter or leave while a student is performing. A student may not repeat any part of the audition unless the head judge determines a technical difficulty or unusual disturbance occurred that the student did not cause.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "format",
+          "title": "Holding and warm-up procedure; no on-site coaching",
+          "description": "Students are called to line up in groups of ten by group number, then taken by voice part to the warm-up area and seated in audition order. The audition material is played at least three times in the warm-up area. Warm-up room managers may not coach or teach. Students may practice on their own or with other students in the holding area, but no adult, director, or chaperone may deliver direct instruction of the audition material once on-site registration has begun; violators are disqualified.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "rubric",
+          "title": "Five-judge panels at senior high auditions",
+          "description": "Senior high All-Region and All-State auditions use 5-judge panels for all voice parts. All adjudicators at All-Region/All-State auditions must complete ArkCDA adjudicator training in order for their students to be able to audition. Sight-reading exercises must be equitable in difficulty, containing the same elements of the All-State Sight-Reading Rubric and falling within the same vocal range, with an identical first measure.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "other",
+          "title": "Director registration, fee and work obligations",
+          "description": "Each director's final registration list should be submitted no later than two weeks prior to the audition. Fees must be paid for all students registered even if some cancel; there are no refunds of audition fees, though the Chair should be notified of cancellations at least one week prior where possible. Directors who register students to audition are required to work at both junior high and senior high auditions for the entire day, as needed; absences must be approved at least two weeks in advance. Directors with students at the All-State Clinic must have a signed copy of the Code of Conduct form with them at the clinic.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "other",
+          "title": "Sight-reading pieces performed at the clinic",
+          "description": "Sight-reading pieces will be prepared for performance by each All-State Choir. Music is provided by ArkCDA.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "other",
+          "title": "Certificates",
+          "description": "Each student who is selected for the All-State Choir shall receive a certificate from ArkCDA.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" }
+      ],
+      "fees": [
+        { "fee_type": "audition",
+          "payable_to": "state_association",
+          "description": "ArkCDA collects All-State audition fees by school through a PayPal payment page; all fees include a surcharge per the PayPal nonprofit fee rate. No fee amounts are shown on the public page (school fee options load inside a payment widget). Fees must be paid for all registered students even if they cancel, and there are no refunds.",
+          "source_url": "https://www.arkcda.org/all-state-auditions-fees" }
+      ],
+      "documents": [
+        { "title": "ArkCDA All-Region/State Manual (revised Fall 2025)", "url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing", "document_type": "handbook" },
+        { "title": "ArkCDA Constitution & Bylaws", "url": "https://docs.google.com/document/d/1dFPHxpWUzwUvfCPQYSNXu1DGrnF7J46uoYbncIZClOc/edit?usp=sharing", "document_type": "rules" },
+        { "title": "ArkCDA State Event Dates 2026-2027", "url": "https://docs.google.com/document/d/1IJ9Ov6BYC6HfMZLCkDcfdE-0PFh8BmtcYuz2icWjltc/edit?usp=sharing", "document_type": "calendar" },
+        { "title": "All-State Sight-Reading Process", "url": "https://www.arkcda.org/_files/ugd/8e45ee_1327a2e9972143ac9a1c2c80262fd9a0.pdf", "document_type": "rules" },
+        { "title": "All-State Sight-Reading Scoring & Mechanics", "url": "https://www.arkcda.org/_files/ugd/8e45ee_98dd09fefa914815b0dbf084fa94d300.pdf", "document_type": "rules" },
+        { "title": "All-State Sight-Reading Past Exercises", "url": "https://www.arkcda.org/_files/ugd/8e45ee_79638677d654488fbea0b51712568352.pdf", "document_type": "other" },
+        { "title": "Past All-Region and All-State Titles", "url": "https://docs.google.com/spreadsheets/d/1SF3bvhZHp4kKdEy03n28jI33ZfFzAaQDF77croA_fxw/edit?usp=sharing", "document_type": "other" },
+        { "title": "Arkansas Approved Titles List", "url": "https://docs.google.com/spreadsheets/d/1zORfch8RnCOA9izmKn6JtrJPSUpu__Q3V4PrPA8S3A0/edit?usp=sharing", "document_type": "other" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "All-State Treble Choir",
+      "lineage_key": "arkansas-all-state-treble",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "Formed from chairs 25 to 55 in the Soprano and Alto sections of the All-State audition results. Students in the Treble Chorus may be moved up into the SATB Choir to fill openings, and may decline that move. Alternates are moved into the Treble Chorus as slots become available, as quickly as possible in the first rehearsal.",
+      "dates": [
+        { "date_type": "audition_round", "title": "All-State Choir Auditions", "start_at": "2027-02-05", "all_day": true, "timezone": "America/Chicago", "description": "Held in Arkadelphia.", "source_url": "https://docs.google.com/document/d/1IJ9Ov6BYC6HfMZLCkDcfdE-0PFh8BmtcYuz2icWjltc/edit?usp=sharing" },
+        { "date_type": "event", "title": "All-State Music Conference", "start_at": "2027-02-18", "end_at": "2027-02-20", "all_day": true, "timezone": "America/Chicago", "description": "Hot Springs Convention Center.", "source_url": "https://docs.google.com/document/d/1IJ9Ov6BYC6HfMZLCkDcfdE-0PFh8BmtcYuz2icWjltc/edit?usp=sharing" }
+      ],
+      "requirements": [
+        { "category": "eligibility",
+          "title": "Qualification through All-Region auditions",
+          "description": "Chairs 1-20 of each All-Region SATB Choir are qualified to audition for the All-State Choir; placement into the Treble Choir is by All-State audition ranking (chairs 25-55, Soprano and Alto).",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "sight_reading",
+          "title": "Required sight-reading component",
+          "description": "All students participating in All-State Choir auditions must complete a sight-reading component scored by two judges, with a 25-second study period and a 20-second response at a 60 BPM count-in.",
+          "structured_data": { "study_period_seconds": 25, "response_seconds": 20, "count_in_bpm": 60, "judges": 2 },
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "materials",
+          "title": "All-State audition selections",
+          "description": "The All-State audition consists of two SATB selections and two SSA/SSAA and TTB/TTBB selections, with only three of the four pieces being used at the audition.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" }
+      ]
+    },
+    {
+      "name": "All-State Tenor/Bass Choir",
+      "lineage_key": "arkansas-all-state-tenor-bass",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "tenor-bass chorus",
+      "description": "Formed from chairs 25 to 55 in the Tenor and Bass sections of the All-State audition results. Students in the Tenor/Bass Chorus may be moved up into the SATB Choir to fill openings, and may decline that move. Alternates are moved in as slots become available, as quickly as possible in the first rehearsal.",
+      "dates": [
+        { "date_type": "audition_round", "title": "All-State Choir Auditions", "start_at": "2027-02-05", "all_day": true, "timezone": "America/Chicago", "description": "Held in Arkadelphia.", "source_url": "https://docs.google.com/document/d/1IJ9Ov6BYC6HfMZLCkDcfdE-0PFh8BmtcYuz2icWjltc/edit?usp=sharing" },
+        { "date_type": "event", "title": "All-State Music Conference", "start_at": "2027-02-18", "end_at": "2027-02-20", "all_day": true, "timezone": "America/Chicago", "description": "Hot Springs Convention Center.", "source_url": "https://docs.google.com/document/d/1IJ9Ov6BYC6HfMZLCkDcfdE-0PFh8BmtcYuz2icWjltc/edit?usp=sharing" }
+      ],
+      "requirements": [
+        { "category": "eligibility",
+          "title": "Qualification through All-Region auditions",
+          "description": "Chairs 1-20 of each All-Region SATB Choir are qualified to audition for the All-State Choir; placement into the Tenor/Bass Choir is by All-State audition ranking (chairs 25-55, Tenor and Bass).",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "sight_reading",
+          "title": "Required sight-reading component",
+          "description": "All students participating in All-State Choir auditions must complete a sight-reading component scored by two judges, with a 25-second study period and a 20-second response at a 60 BPM count-in.",
+          "structured_data": { "study_period_seconds": 25, "response_seconds": 20, "count_in_bpm": 60, "judges": 2 },
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" },
+        { "category": "materials",
+          "title": "All-State audition selections",
+          "description": "The All-State audition consists of two SATB selections and two SSA/SSAA and TTB/TTBB selections, with only three of the four pieces being used at the audition.",
+          "source_url": "https://docs.google.com/document/d/17ulwjSUrrN9YcmNRC3GGayLUJUOVOE5MrjiK9AZE5Wc/edit?usp=sharing" }
+      ],
+      "voice_parts": [
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+
+  "not_published": [
+    "2026-27 All-State audition repertoire titles, composers and publishers — ArkCDA links these only as 'All-Region & All-State Titles - Fall 2026' on a third-party vendor order form (J&B Music Sales), which was not treated as an authoritative association source",
+    "All-State audition fee amounts — the ArkCDA fees page loads school fee options inside a PayPal payment widget with no amounts in the page text",
+    "2026-27 All-State clinicians",
+    "2026-27 All-State performance repertoire",
+    "All-Region audition dates and region-by-region fees — published in a separate 'Region Dates, Fees, & Venues' spreadsheet, not retrieved",
+    "All-State registration open/close dates and the concrete roster-freeze date (rules give only 'two weeks prior' and '48 hours prior' relative windows)",
+    "Grade-level eligibility ranges (the manual covers both junior and senior high but no grade bands were stated in the sections retrieved)",
+    "Results/selection announcement date",
+    "Whether the proposed constitution and CPA manual amendments posted at retrieval will change any of the rules recorded here"
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "state_slug": "north-carolina",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Naming caution: in North Carolina the name 'All-State Chorus' belongs to the NCMEA Middle School Choral Section event, while the statewide high school honors ensemble is called 'Honors Chorus' (NCMEA High School Choral Section). Both are included. The HS Honors Chorus site has full 2026-27 information posted (registration opened August 1, 2026). The Middle School All-State Chorus page had not yet been updated past the 2026 (2025-26) event when retrieved, so that program is labeled season 2025-26 rather than relabeled. NCMEA's public student event calendar was also still the 2025-2026 edition.",
+  "organization": {
+    "name": "North Carolina Music Educators Association",
+    "acronym": "NCMEA",
+    "website_url": "https://www.ncmea.net/",
+    "description": "NCMEA is North Carolina's state music education association, organized into sections (Middle School Choral, High School Choral, Elementary, Band, Orchestra, Jazz and others) that each administer statewide student events. Its Professional Development Conference and most honors ensemble performances take place at the Benton Convention Center in Winston-Salem."
+  },
+  "sources": [
+    { "name": "NCMEA HS Honors Chorus — Audition Info & Registration", "url": "https://sites.google.com/view/ncmea-hs-honors-chorus/registration-audition-info", "source_type": "official" },
+    { "name": "NCMEA HS Honors Chorus — Dates and Venues", "url": "https://sites.google.com/view/ncmea-hs-honors-chorus/dates-and-venues", "source_type": "official" },
+    { "name": "NCMEA Middle School Choral — All-State Chorus", "url": "https://www.ncmea.net/sections-2/middle-school-choral/programs/all-state-chorus/", "source_type": "official" },
+    { "name": "NCMEA Student Event Calendar 2025-2026", "url": "https://www.ncmea.net/programs/student-event-calendar-2025-2026/", "source_type": "calendar" }
+  ],
+  "programs": [
+    {
+      "name": "High School Honors Chorus",
+      "lineage_key": "north-carolina-hs-honors-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "NCMEA's statewide high school honors choral ensemble, auditioned regionally (West, Central, East) each September and rehearsing and performing in Winston-Salem in conjunction with the NCMEA Professional Development Conference. The 2026 conductor is Dr. Rollo Dilworth of Temple University (Boyer College of Music and Dance).",
+      "dates": [
+        {
+          "date_type": "other",
+          "title": "Audition registration opens",
+          "start_at": "2026-08-01",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Registration opened Saturday, August 1, 2026.",
+          "source_url": "https://sites.google.com/view/ncmea-hs-honors-chorus/registration-audition-info"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Audition registration and postmark deadline",
+          "start_at": "2026-09-10T23:59:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "description": "Thursday, September 10, 2026 at 11:59 PM.",
+          "source_url": "https://sites.google.com/view/ncmea-hs-honors-chorus/registration-audition-info"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "West Auditions",
+          "start_at": "2026-09-24",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "St. Luke's Church, Hickory, NC. NCMEA notes all locations are tentative and subject to venue availability.",
+          "source_url": "https://sites.google.com/view/ncmea-hs-honors-chorus/dates-and-venues"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Central Auditions",
+          "start_at": "2026-09-25",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "UNC Greensboro, Greensboro, NC. Locations tentative.",
+          "source_url": "https://sites.google.com/view/ncmea-hs-honors-chorus/dates-and-venues"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "East Auditions",
+          "start_at": "2026-09-26",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Highland Presbyterian Church, Fayetteville, NC. Locations tentative.",
+          "source_url": "https://sites.google.com/view/ncmea-hs-honors-chorus/dates-and-venues"
+        },
+        {
+          "date_type": "event",
+          "title": "High School Honors Chorus rehearsals",
+          "start_at": "2026-11-07",
+          "end_at": "2026-11-08",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "The Gallery Ballroom - Benton South (Embassy Suites Lower Level), Winston-Salem, NC. Rehearsal locations are subject to change.",
+          "source_url": "https://sites.google.com/view/ncmea-hs-honors-chorus/dates-and-venues"
+        },
+        {
+          "date_type": "event",
+          "title": "High School Honors Chorus performance",
+          "start_at": "2026-11-08T15:00:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "description": "Benton Convention Center - Winston 2 Ballroom, Winston-Salem, NC, 3:00 PM.",
+          "source_url": "https://sites.google.com/view/ncmea-hs-honors-chorus/dates-and-venues"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "School audition allotment",
+          "description": "Each school may audition up to 20% of its choral enrollment, with a floor of 5 audition spots regardless of enrollment size. Each student may be counted only once toward choral enrollment regardless of how many choral classes they are enrolled in, and must be enrolled in chorus for 1.0 credit to be counted. After-school programs that do not receive credit may not be counted.",
+          "structured_data": { "max_percent_of_choral_enrollment": 20, "minimum_spots_per_school": 5, "minimum_credit_to_be_counted": 1.0 },
+          "source_url": "https://sites.google.com/view/ncmea-hs-honors-chorus/registration-audition-info"
+        },
+        {
+          "category": "materials",
+          "title": "Prepared audition piece plus sight-singing",
+          "description": "Students prepare the posted audition piece; NCMEA provides part-specific audition and rehearsal tracks (soprano, alto, tenor, bass) and a separate sight-singing page for the sight-singing portion.",
+          "source_url": "https://sites.google.com/view/ncmea-hs-honors-chorus/registration-audition-info"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Awake the Harp",
+          "composer": "Franz Joseph Haydn",
+          "publisher": "JW Pepper",
+          "catalog_number": "5462924",
+          "purpose": "audition",
+          "notes": "Listed as the 2026 High School Honors Chorus audition piece.",
+          "source_url": "https://sites.google.com/view/ncmea-hs-honors-chorus/registration-audition-info"
+        }
+      ],
+      "documents": [
+        {
+          "title": "Audition Enrollment Chart",
+          "url": "https://drive.google.com/file/d/1Y6aVIAuXdp2hH0_WRdmQRhEOJ7-jEXBN/view?usp=sharing",
+          "document_type": "other"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "Middle School All-State Chorus",
+      "lineage_key": "north-carolina-ms-all-state-chorus",
+      "season": "2025-26",
+      "school_level": "middle",
+      "ensemble_type": "middle school chorus (6th Grade, Treble, Mixed)",
+      "description": "The NCMEA Middle School Choral Section's All-State Chorus is a weekend event comprising three choirs — 6th Grade, Treble Choir, and Mixed Choir — each of roughly 200 singers under a guest clinician. 2026 clinicians: Juliana Child (Pensacola Children's Choir) for 6th Grade, Kari Adams (UNCG) for Treble Choir, and Jason Dungee (UNC Charlotte) for Mixed Choir. NOTE: this reflects the 2025-26 cycle; the NCMEA page had not been updated for 2026-27 at time of retrieval.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "School registration due",
+          "start_at": "2025-11-15",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "2025-26 cycle. Registration invoice must be completed and postmarked no later than November 15, 2025.",
+          "source_url": "https://www.ncmea.net/sections-2/middle-school-choral/programs/all-state-chorus/"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Student registration due",
+          "start_at": "2026-02-01",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "2025-26 cycle.",
+          "source_url": "https://www.ncmea.net/sections-2/middle-school-choral/programs/all-state-chorus/"
+        },
+        {
+          "date_type": "event",
+          "title": "2026 All State Chorus",
+          "start_at": "2026-03-13",
+          "end_at": "2026-03-14",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Elberson Fine Arts Center, Salem College, Winston-Salem, NC. 2025-26 cycle.",
+          "source_url": "https://www.ncmea.net/sections-2/middle-school-choral/programs/all-state-chorus/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "membership",
+          "title": "School registration required",
+          "description": "School registration via the All-State School Registration form is required for all participating schools, separately from student registration.",
+          "source_url": "https://www.ncmea.net/sections-2/middle-school-choral/programs/all-state-chorus/"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 (2027) Middle School All-State Chorus dates, clinicians and deadlines — the NCMEA page still showed the March 2026 event",
+    "Fee amounts for either program — registration invoices and Cheddar Up payment pages are linked but no dollar figures appear on the public pages",
+    "NCMEA Student Event Calendar for 2026-2027 — only the 2025-2026 edition was live",
+    "Sight-singing specifications for HS Honors Chorus (behind a separate sub-page not retrieved)",
+    "Performance repertoire for either ensemble"
+  ]
+}

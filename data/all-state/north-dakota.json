@@ -1,0 +1,63 @@
+{
+  "state_slug": "north-dakota",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "NDMEA runs the North Dakota All-State Music Festival, with a dedicated site at ndallstate.org. At time of retrieval that site was still showing the 2026 (2025-26) audition cycle — registration links dated 9/15/2025, a '2026 Manual.pdf', and 2026 conductor bios. The ONLY firmly published 2026-27 item is the festival date itself: March 21-23, 2027 at the Bismarck Event Center. Audition dates, materials, deadlines and fees for the 2027 cycle were not yet posted. Choral ensembles at the festival include an All-State Mixed Choir, an All-State Treble Choir, and an All-State Jazz Choir.",
+  "organization": {
+    "name": "North Dakota Music Educators Association",
+    "acronym": "NDMEA",
+    "website_url": "https://www.ndmea.org/",
+    "description": "NDMEA is North Dakota's state music education association. It administers the annual North Dakota All-State Music Festival, whose rehearsals and concerts are held at the Bismarck Event Center, and maintains ndallstate.org for audition materials, results and festival information."
+  },
+  "sources": [
+    { "name": "North Dakota All-State (NDMEA All-State Music Festival site)", "url": "https://www.ndallstate.org/", "source_type": "official" },
+    { "name": "ND All-State — Auditions", "url": "https://www.ndallstate.org/auditions", "source_type": "official" },
+    { "name": "ND All-State — Choir page", "url": "https://www.ndallstate.org/copy-of-mixed-choir", "source_type": "official" },
+    { "name": "NDMEA 2026 All-State Conductors and concert schedule", "url": "https://www.ndmea.org/2026allstateconductors", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "North Dakota All-State Music Festival — All-State Choirs",
+      "lineage_key": "north-dakota-all-state-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus, treble chorus, jazz choir",
+      "description": "NDMEA's All-State choral ensembles (Mixed Choir, Treble Choir and Jazz Choir) rehearse and perform at the North Dakota All-State Music Festival at the Bismarck Event Center. Students are entered by their teacher, who submits a teacher form plus a student form for each auditioning student.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "North Dakota All-State Music Festival",
+          "start_at": "2027-03-21",
+          "end_at": "2027-03-23",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Sunday-Monday-Tuesday. All rehearsals and concerts are held at the Bismarck Event Center.",
+          "source_url": "https://www.ndallstate.org/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "other",
+          "title": "Teacher-submitted registration",
+          "description": "Each teacher must complete a teacher form and a separate student form for each auditioning student; payment is made through the All-State registration portal. Teachers registering 50 or more students may request a shared bulk spreadsheet. (Described on the ndallstate.org auditions page, which was still showing the 2026 cycle at time of retrieval.)",
+          "source_url": "https://www.ndallstate.org/auditions"
+        }
+      ],
+      "documents": [
+        {
+          "title": "2026 Manual (North Dakota All-State) — prior-cycle handbook",
+          "url": "https://www.ndallstate.org/_files/ugd/c00551_8e781974d4434c74933b63f054333e95.pdf",
+          "document_type": "handbook"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "2027 audition dates and audition registration deadlines — ndallstate.org was still showing the 2026 cycle (links activated 9/15/2025)",
+    "2027 audition materials / repertoire for the All-State choirs",
+    "Audition and participation fee amounts — payment is via a RegFox page with no figures shown on the site",
+    "2027 All-State choir conductors",
+    "A 2027 All-State Manual (only the 2026 Manual PDF was posted)",
+    "Voice-part breakdown for the All-State choirs"
+  ]
+}

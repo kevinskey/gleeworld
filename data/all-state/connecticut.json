@@ -1,0 +1,111 @@
+{
+  "state_slug": "connecticut",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "CMEA's All-State page has been rolled forward to the 2027 (2026-27 season) audition and festival dates; the conductor/chair roster on that same page is still labeled 2026, so personnel were not captured. Audition repertoire comes from the CMEA HS Region & All-State Repertoire Lists 2025-2028 vocal document, whose most recent revision lists a 2026-2027 selection (the older PDF copy on cmea.org still says TBD for that year). CMEA runs two All-State choral ensembles: a Mixed Choir and a Treble Choir; the published audition materials do not differentiate requirements between them, and final ensemble placement is made by the festival committees.",
+
+  "organization": {
+    "name": "Connecticut Music Educators Association",
+    "acronym": "CMEA",
+    "website_url": "https://cmea.org/",
+    "description": "CMEA produces several auditions and concert festivals during the course of each school year, including regional festivals in four regions and a statewide All-State Music Festival. CMEA expects all students to participate in the audition process."
+  },
+
+  "sources": [
+    { "name": "CMEA All-State Festival", "url": "https://cmea.org/all-state/", "source_type": "official" },
+    { "name": "CMEA HS Region and All State Repertoire Lists 2025-2028", "url": "https://cmea.org/hs-region-and-all-state-repertoire-lists-2025-2028/", "source_type": "official" },
+    { "name": "CMEA High School Audition Repertoire — Vocal (2025-2028)", "url": "https://cmea.org/wp-content/uploads/2025/01/CMEA-HS-Vocal-Audition-Repertoire-2025-2028.docx.pdf", "source_type": "handbook_pdf" },
+    { "name": "CMEA Vocal and Choral Audition Repertoire (current revision, Google Doc)", "url": "https://docs.google.com/document/d/1e3mhq3Ra1a_DpS2pHqcHhNzYyowIt4X9/edit", "source_type": "official" }
+  ],
+
+  "programs": [
+    {
+      "name": "All-State Festival — Mixed Choir",
+      "lineage_key": "connecticut-mixed-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "One of two All-State choral ensembles at the CMEA All-State Music Festival, held at The Klein Memorial Auditorium in Bridgeport. Singers audition at a single statewide audition site; directors submit an ensemble preference at registration but final placement rests with the festival committees.",
+
+      "dates": [
+        { "date_type": "audition_round", "title": "All-State auditions", "start_at": "2027-01-30", "all_day": true, "timezone": "America/New_York", "description": "Held at North Haven High School. Snow date: Saturday, February 6, 2027.", "source_url": "https://cmea.org/all-state/" },
+        { "date_type": "audition_round", "title": "All-State auditions — snow date", "start_at": "2027-02-06", "all_day": true, "timezone": "America/New_York", "description": "Published snow date for the January 30, 2027 auditions.", "source_url": "https://cmea.org/all-state/" },
+        { "date_type": "registration_deadline", "title": "Audition fees due", "start_at": "2027-01-22", "all_day": true, "timezone": "America/New_York", "source_url": "https://cmea.org/all-state/" },
+        { "date_type": "event", "title": "All-State Music Festival", "start_at": "2027-04-08", "end_at": "2027-04-10", "all_day": true, "timezone": "America/New_York", "description": "Held at The Klein Memorial Auditorium. Concerts Friday evening April 9 and Saturday afternoon April 10.", "source_url": "https://cmea.org/all-state/" }
+      ],
+
+      "requirements": [
+        { "category": "format", "title": "Audition components", "description": "Students selected for the All-State vocal audition prepare their part from a prescribed selection drawn from the coming year's All-State concert repertoire, performed in a Music Minus One (MM1) format. Four versions, each missing one voice part, are made available through the CMEA website and are the official MM1 for the audition.", "source_url": "https://cmea.org/wp-content/uploads/2025/01/CMEA-HS-Vocal-Audition-Repertoire-2025-2028.docx.pdf" },
+        { "category": "scales", "title": "Required scales", "description": "Scales are sung from memory using either solfeggio or a neutral syllable at M.M. quarter note = 92. Published starting pitches: Soprano G and D; Alto D and G; Bass D and G.", "structured_data": { "tempo": "quarter = 92", "from_memory": true, "starting_pitches": { "soprano": ["G", "D"], "alto": ["D", "G"], "bass": ["D", "G"] } }, "source_url": "https://cmea.org/wp-content/uploads/2025/01/CMEA-HS-Vocal-Audition-Repertoire-2025-2028.docx.pdf" },
+        { "category": "sight_reading", "title": "Sight-reading procedures", "description": "All-State sight-reading examples use two separate systems in two different keys (one for soprano/tenor, one for alto/bass), each written in both bass and treble clefs. Major keys only: sopranos and tenors in D, Eb, or F; altos and basses in Bb, C, or D. Examples always start on Do and may or may not end on Do, and may include notes from low Sol to high Re. Intervals may include thirds ascending and descending, all fourths, all fifths, and octave leaps. Examples are eight measures in 4/4 and may use half, quarter, and eighth notes and rests, dotted quarters and dotted halves. Students have 60 seconds to practice and are encouraged to sing aloud during that time. Singers may use solfege syllables, numbers, or a neutral syllable.", "structured_data": { "length_measures": 8, "meter": "4/4", "practice_time_seconds": 60, "keys_soprano_tenor": ["D", "Eb", "F"], "keys_alto_bass": ["Bb", "C", "D"] }, "source_url": "https://cmea.org/wp-content/uploads/2025/01/CMEA-HS-Vocal-Audition-Repertoire-2025-2028.docx.pdf" },
+        { "category": "eligibility", "title": "One voice part only", "description": "Students may audition in as many areas as they choose; however, vocal students may audition on one voice part only — Soprano, Alto, Tenor, or Bass.", "source_url": "https://cmea.org/wp-content/uploads/2025/01/CMEA-HS-Vocal-Audition-Repertoire-2025-2028.docx.pdf" },
+        { "category": "other", "title": "Students with a disability", "description": "The child's music director must notify the Region Director of any modifications required for students with an IEP or 504 plan at least 30 days prior to the CMEA adjudication or festival. The school district funds any costs incurred by such modifications.", "source_url": "https://cmea.org/wp-content/uploads/2025/01/CMEA-HS-Vocal-Audition-Repertoire-2025-2028.docx.pdf" }
+      ],
+
+      "repertoire": [
+        { "title": "My Spirit Sang All Day", "composer": "Finzi", "publisher": "Boosey & Hawkes", "purpose": "audition", "notes": "Listed as the 2026-2027 All-State vocal audition selection on the CMEA vocal/choral repertoire list. The list does not distinguish between the Mixed and Treble choirs. Prepared in Music Minus One format.", "source_url": "https://docs.google.com/document/d/1e3mhq3Ra1a_DpS2pHqcHhNzYyowIt4X9/edit" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 3000, "payable_to": "state_association", "description": "Audition fee, due by Friday, January 22, 2027.", "source_url": "https://cmea.org/all-state/" }
+      ],
+
+      "documents": [
+        { "title": "CMEA High School Audition Repertoire — Vocal (2025-2028)", "url": "https://cmea.org/wp-content/uploads/2025/01/CMEA-HS-Vocal-Audition-Repertoire-2025-2028.docx.pdf", "document_type": "rules" },
+        { "title": "CMEA Audition Rubric", "url": "https://cmea.org/wp-content/uploads/2022/10/2022-CMEA-Audition-Rubric-1.pdf", "document_type": "rules" }
+      ],
+
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "All-State Festival — Treble Choir",
+      "lineage_key": "connecticut-treble-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "The second of two All-State choral ensembles at the CMEA All-State Music Festival. Singers audition at the same statewide audition; directors submit an ensemble preference at registration but final placement rests with the festival committees.",
+
+      "dates": [
+        { "date_type": "audition_round", "title": "All-State auditions", "start_at": "2027-01-30", "all_day": true, "timezone": "America/New_York", "description": "Held at North Haven High School. Snow date: Saturday, February 6, 2027.", "source_url": "https://cmea.org/all-state/" },
+        { "date_type": "registration_deadline", "title": "Audition fees due", "start_at": "2027-01-22", "all_day": true, "timezone": "America/New_York", "source_url": "https://cmea.org/all-state/" },
+        { "date_type": "event", "title": "All-State Music Festival", "start_at": "2027-04-08", "end_at": "2027-04-10", "all_day": true, "timezone": "America/New_York", "description": "Held at The Klein Memorial Auditorium. Concerts Friday evening April 9 and Saturday afternoon April 10.", "source_url": "https://cmea.org/all-state/" }
+      ],
+
+      "requirements": [
+        { "category": "format", "title": "Audition components", "description": "Students selected for the All-State vocal audition prepare their part from a prescribed selection drawn from the coming year's All-State concert repertoire in a Music Minus One (MM1) format supplied by CMEA, plus required scales and sight-reading.", "source_url": "https://cmea.org/wp-content/uploads/2025/01/CMEA-HS-Vocal-Audition-Repertoire-2025-2028.docx.pdf" },
+        { "category": "eligibility", "title": "One voice part only", "description": "Students may audition in as many areas as they choose; however, vocal students may audition on one voice part only — Soprano, Alto, Tenor, or Bass.", "source_url": "https://cmea.org/wp-content/uploads/2025/01/CMEA-HS-Vocal-Audition-Repertoire-2025-2028.docx.pdf" }
+      ],
+
+      "repertoire": [
+        { "title": "My Spirit Sang All Day", "composer": "Finzi", "publisher": "Boosey & Hawkes", "purpose": "audition", "notes": "Listed as the 2026-2027 All-State vocal audition selection on the CMEA vocal/choral repertoire list. The list does not distinguish between the Mixed and Treble choirs.", "source_url": "https://docs.google.com/document/d/1e3mhq3Ra1a_DpS2pHqcHhNzYyowIt4X9/edit" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 3000, "payable_to": "state_association", "description": "Audition fee, due by Friday, January 22, 2027.", "source_url": "https://cmea.org/all-state/" }
+      ],
+
+      "documents": [
+        { "title": "CMEA High School Audition Repertoire — Vocal (2025-2028)", "url": "https://cmea.org/wp-content/uploads/2025/01/CMEA-HS-Vocal-Audition-Repertoire-2025-2028.docx.pdf", "document_type": "rules" }
+      ],
+
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" }
+      ]
+    }
+  ],
+
+  "not_published": [
+    "2027 All-State festival participation fee — page says TBD",
+    "2027 festival fee due date — page says TBD",
+    "2026-27 (2027 festival) conductors and ensemble chairs — the All-State page still lists the 2026 roster",
+    "2026-27 All-State concert (performance) repertoire beyond the single audition selection",
+    "Eligibility rules for advancing from region auditions to the All-State audition — referenced but not detailed on the pages reviewed",
+    "Registration open date for All-State auditions"
+  ]
+}

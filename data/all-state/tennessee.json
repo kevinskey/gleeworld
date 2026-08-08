@@ -1,0 +1,172 @@
+{
+  "state_slug": "tennessee",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "This is TENNESSEE's TMEA (tnmea.org, Tennessee Music Education Association, Murfreesboro TN) — not Texas. All data below comes from the TMEA All-State Ensembles Handbook marked '© 2027', i.e. the 2026-27 school year, whose All-State ensembles perform at the 68th Annual TMEA Professional Development Conference, January 13-16, 2027 at the Gaylord Opryland Resort and Convention Center in Nashville (2027 inclement weather dates: April 5-8, Murfreesboro). TMEA sponsors four All-State choral ensembles: 9-10 SATB, 11-12 SATB, SSAA (9-12) and TTBB (9-12). Selection is multi-round: (1) regional honor choir auditions run by TMEA's affiliated regional associations (ETVA, MTVA, WTVMEA and the regional band/orchestra associations), which include sightreading conforming to TMEA Minimum Sightreading Standards; (2) a screening audition on the All-State performance music that must be passed prior to November 8; (3) blind online Second Tier Auditions on excerpts from the assigned choir's All-State repertoire, adjudicated statewide, with results ranked to fill fixed per-part quotas. Registration fee amounts are set by the TMEA Board of Directors and communicated to regional liaisons, not published in the handbook. 2026-27 All-State repertoire and conductors are distributed through regional liaisons and news posts rather than a public list; the news posts read (dated Oct 2025 - Feb 2026) covered the PRIOR season and were not used as 2026-27 data.",
+  "organization": {
+    "name": "Tennessee Music Education Association",
+    "acronym": "TMEA",
+    "website_url": "https://www.tnmea.org/",
+    "description": "The Tennessee Music Education Association represents all phases of music education at all school levels and is located at 2441-Q Old Fort Pkwy #432, Murfreesboro, TN 37128-4162. TMEA sponsors the All-State Ensembles, whose rehearsals and concerts are held in conjunction with the annual TMEA Music Education / Professional Development Conference. Membership in the All-State Ensembles is determined by auditions held at regional levels by TMEA's affiliated associations (ETGMEA, ETSBOA, ETVA, MTGMEA, MTSBOA, MTVA, WTGMEA, WTSBOA, WTVMEA)."
+  },
+  "sources": [
+    { "name": "TMEA All-State Ensembles Handbook (© 2027)", "url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf", "source_type": "handbook_pdf" },
+    { "name": "TnMEA All-State page", "url": "https://www.tnmea.org/about-6", "source_type": "official" },
+    { "name": "TnMEA Future Conference Dates", "url": "https://www.tnmea.org/future-conference-dates", "source_type": "calendar" },
+    { "name": "Tennessee Music Education Association home", "url": "https://www.tnmea.org/", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "TMEA All-State 9th and 10th Grade SATB Choir",
+      "lineage_key": "tennessee-all-state-satb-9-10",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "One of four TMEA All-State choirs. Consists of 144 singers (may be temporarily enlarged due to rounding of percentages). Members are drawn from students who succeeded at their regional honor choir audition, passed a screening audition on the All-State music before November 8, and then ranked highly in the statewide blind online Second Tier Auditions — 18 per part are selected into this choir. Rehearsals and the concert take place at the TMEA Professional Development Conference in Nashville.",
+      "dates": [
+        { "date_type": "audition_round", "title": "Round 1 — Regional honor choir auditions", "all_day": true, "timezone": "America/Chicago", "description": "Held at regional levels by TMEA's affiliated associations; dates are set by each region. Regions must incorporate sightreading conforming to the TMEA Minimum Sightreading Standards, and must submit their sightreading materials to the All-State Choral Chair at least three weeks prior to the region's audition.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "date_type": "audition_round", "title": "Round 2 — Screening audition on All-State music (deadline)", "start_at": "2026-11-08", "all_day": true, "timezone": "America/Chicago", "description": "All students participating in an All-State choral ensemble must have successfully participated in a regional ensemble and have passed a screening audition on the music to be performed at All-State prior to November 8 of the academic year of the performance. In extenuating circumstances an association may seek executive board approval, through the All-State Choral Chair, to extend the November 8 deadline.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "date_type": "audition_round", "title": "Round 3 — Second Tier Auditions (online, blind)", "all_day": true, "timezone": "America/Chicago", "description": "Submitted via an online platform provided by TMEA. The audition window is no fewer than five and no more than nine calendar days; specific dates were not published on the pages read.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "date_type": "event", "title": "68th Annual TMEA Professional Development Conference / All-State — Gaylord Opryland, Nashville", "start_at": "2027-01-13", "end_at": "2027-01-16", "all_day": true, "timezone": "America/Chicago", "description": "Wednesday, January 13 through Saturday, January 16, 2027. 2027 inclement weather dates: April 5-8, Murfreesboro, TN.", "source_url": "https://www.tnmea.org/future-conference-dates" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 9-12, member of own school ensemble", "description": "Students participating in an All-State Ensemble must be enrolled in grades 9-12 at their respective schools and must be a member of their respective school-based ensemble, led by the teacher registering the student for the TMEA event. This choir is limited to grades 9-10.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "membership", "title": "Teacher membership required", "description": "The teacher must be a member in good standing of TMEA and of the regional level association (WTVMEA, ETSBOA, MTGMEA, etc.). All student participation fees, institutional fees, and director fees must be paid in compliance with TMEA policies.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "eligibility", "title": "Students without access to a school-based ensemble", "description": "The student and teacher/sponsor must meet all regional association requirements; the student must be a resident of Tennessee and a member of a performing band, choir, or orchestra ensemble with regularly scheduled rehearsals; the ensemble's teacher/sponsor must be a member in good standing of TMEA and the regional association and is responsible for registration, transportation, supervision, and full liability for those students. All public and private school students must attend a school in Tennessee; all home-school students must be Tennessee residents.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "materials", "title": "Original printed music, correct edition, black folder", "description": "Students must have legally purchased, printed copies of all music to be performed, each piece in the same edition specified by the All-State Choral Chair. Photocopies and digital copies on a mobile device/screen are not permitted; photocopies may be used only with the express permission of the All-State Choral Chair for public domain editions or pieces TMEA has secured permission to photocopy. Music must be in a hard-cover solid black folder kept on site with the student at each rehearsal, and all choral music must have measures numbered. TMEA purchases copies of the All-State music and makes it available for distribution at the regional auditions, charging each Region, which may in turn charge each school.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "format", "title": "Second Tier Audition procedure", "description": "Students eligible for Second Tier learn all of the All-State repertoire of the choir to which they are assigned and audition with excerpts from that repertoire. For pieces in a language other than English or Latin, students may sing their part on a neutral syllable or solfege. The All-State Choral General Chair, with the Ensemble Chairs, determines the audition selections, which are kept secret until the audition window opens. Excerpts may be published up until the window begins; recordings must be made and submitted during the window with no exceptions. Directors — not students — submit the recordings and must confirm that the voice is the student's own and that no unallowed aids were used. All efforts are made to keep auditions blind. Any director with a student eligible for Second Tier is required to judge Second Tier auditions; failure to do so causes any student from that school to lose All-State eligibility.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "format", "title": "Second Tier eligibility quota from each Region", "description": "Grades 9-10 Sopranos/Altos: top 24 chairs from each Region — 14 audition for 9-10 SATB Second Tier, 10 for 9-12 SSAA. Grades 9-10 Tenors/Basses: top 20 chairs — 14 for 9-10 SATB, 6 for 9-12 TTBB. Grades 11-12 Sopranos/Altos: top 30 chairs — 14 for SATB Second Tier, 16 for 9-12 SSAA. Grades 11-12 Tenors/Basses: top 26 chairs — 14 for 11-12 SATB, 12 for 9-12 TTBB. Regions must alternate Second Tier ensemble placements equitably so all ensembles receive a similar distribution of chair placements.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "format", "title": "Selection quotas and minimum score", "description": "Auditions are ranked and the top students from each part are selected into All-State regardless of regional affiliation: 18 per part into 9-10 SATB and 18 per part into 11-12 SATB; 16 per part (grades 9-10) and 24 per part (grades 11-12) into SSAA; 10 per part (9-10) and 18 per part (11-12) into TTBB. A minimum Second Tier score of 50% is required to be eligible for All-State. If quotas cannot be filled at the minimum score, spots cascade to other grade bands and parts per a defined order, and otherwise go unfilled. Students meeting the minimum score become ranked alternates. To ensure regional representation, the top-ranked chairs per part from each Region are guaranteed a spot if they meet the minimum score: 3 per part for grades 9/10 sopranos and altos, 2 for 9/10 tenors and basses, 4 for 11/12 sopranos and altos, 3 for 11/12 tenors and basses; if these students rank below the allowed chair count, the section is temporarily enlarged rather than displacing a higher-scoring student from another region.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "rubric", "title": "Second Tier Audition Rubric", "description": "Five-level rubric (Superior / Excellent / Good / Fair / Poor) across four categories: Technical Preparation — Pitch; Technical Preparation — Rhythm/Pulse; Intonation; and Musicality. Singing incorrect repertoire or a non-assigned part places a student in the lowest band for the relevant category.", "structured_data": { "levels": ["Superior", "Excellent", "Good", "Fair", "Poor"], "categories": ["Technical Preparation - Pitch", "Technical Preparation - Rhythm/Pulse", "Intonation", "Musicality"] }, "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "sight_reading", "title": "Minimum Sightreading Standards for regional auditions, grades 9-10 (2026-2029)", "description": "Tempo 80-90 bpm. Length 4 measures. Starting pitch, pitch played, and ending pitch all Low Do. Leaps ascending Do-Mi and Mi-Sol; descending Sol-Mi and Mi-Do. Range a 6th (may descend below Do). Time signature 4/4. Study time 30 seconds. Percentage of the audition score: 0% in 2026, 5% in 2027-2029.", "structured_data": { "tempo_bpm": "80-90", "measures": 4, "time_signature": "4/4", "study_time_seconds": 30, "score_weight": { "2026": "0%", "2027-2029": "5%" } }, "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "sight_reading", "title": "Minimum Sightreading Standards for regional auditions, grades 11-12 (2026-2029)", "description": "Tempo 80-90 bpm. Length 8 measures. Starting pitch, pitch played, and ending pitch Low or High Do. Leaps ascending Do-Mi, Mi-Sol, Sol-Do; descending Do-Sol, Sol-Mi, Mi-Do. Range an octave (may descend below Low Do or above High Do). Time signature 4/4. Study time 45 seconds. Percentage of the audition score: 0% in 2026, 5% in 2027, 10% in 2028-2029.", "structured_data": { "tempo_bpm": "80-90", "measures": 8, "time_signature": "4/4", "study_time_seconds": 45, "score_weight": { "2026": "0%", "2027": "5%", "2028-2029": "10%" } }, "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "format", "title": "Concert attire for choirs", "description": "Choose from: a long black dress (below the knees when seated) with black socks/hosiery and black dress shoes, with the dress covering the shoulders; or a black long-sleeve button-down shirt/blouse and black skirt/dress pants with black socks/hosiery and black dress shoes, with a black sport coat or tuxedo jacket optional.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "other", "title": "All-State Rules and Regulations (Appendix I)", "description": "Students must attend all rehearsals and All-State concerts (excused one hour prior to a performance with their own school organization at the conference); be seated and ready at least ten minutes before each rehearsal; no gum or food in rehearsal; no talking during rehearsal; alcohol, tobacco and illegal drugs strictly prohibited (violators removed from All-State); cell phones and electronic devices off and put away, with no texting, gaming, or audio/video recording; must have a pencil at rehearsals; must wear name tags at all rehearsals; all choral music must be an original print in a solid black binder with measures numbered. Infractions may result in a warning from the ensemble chair or dismissal by the All-State Disciplinary Committee, which consists of the ensemble chair, the all-state choral or instrumental chair, the state choral or instrumental chair, and the TMEA Executive Committee.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "other", "title": "Chaperone requirement", "description": "Students must be properly chaperoned. Directors must either chaperone or identify in writing to the All-State general chairperson (choral or instrumental) the name and contact information of the chaperone, who assumes all liability for the student.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "other", "title": "Drop procedure", "description": "If a student chooses not to participate in the All-State Screening, the student's director must contact the regional All-State chair by email; that email disqualifies the student from the All-State Screening Audition.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "materials", "title": "Practice sound files", "description": "The All-State Choral General Chair secures and distributes sound files with which students in each ensemble can practice each piece in their choir's repertoire, and when possible diction resources for pieces in languages other than English or Latin. Regional associations are billed for these files according to their number of Second Tier-eligible singers; directors may also purchase them solely to help students prepare. The Chair also prepares sound files of the audition selections and integrates them into the audition platform.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "registration", "payable_to": "state_association", "description": "Each student and director who participates in an All-State organization is charged a registration fee as set by the TMEA Board of Directors. Deadlines for all registrations, fees, and form submissions are communicated to the regional liaisons. Amounts are not published in the handbook.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" }
+      ],
+      "documents": [
+        { "title": "TMEA All-State Ensembles Handbook (© 2027)", "url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf", "document_type": "handbook" },
+        { "title": "TnMEA All-State News", "url": "https://www.tnmea.org/news/categories/all-state-news", "document_type": "other" },
+        { "title": "TMEA Conference Website", "url": "https://site.pheedloop.com/event/tmea26/home", "document_type": "other" },
+        { "title": "TMEA All-State Programs (past)", "url": "https://www.tnmea.org/conferenceallstateprograms", "document_type": "other" }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" },
+        { "code": "T1", "label": "Tenor 1" },
+        { "code": "T2", "label": "Tenor 2" },
+        { "code": "B1", "label": "Bass 1" },
+        { "code": "B2", "label": "Bass 2" }
+      ]
+    },
+    {
+      "name": "TMEA All-State 11th and 12th Grade SATB Choir",
+      "lineage_key": "tennessee-all-state-satb-11-12",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "TMEA All-State mixed choir for grades 11-12, consisting of 144 singers. Selection follows the same three-round process: regional honor choir audition, screening audition on the All-State music before November 8, and blind online Second Tier Auditions. 18 singers per part are selected.",
+      "dates": [
+        { "date_type": "audition_round", "title": "Round 2 — Screening audition on All-State music (deadline)", "start_at": "2026-11-08", "all_day": true, "timezone": "America/Chicago", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "date_type": "audition_round", "title": "Round 3 — Second Tier Auditions (online, blind)", "all_day": true, "timezone": "America/Chicago", "description": "Window of no fewer than 5 and no more than 9 calendar days; specific dates not published.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "date_type": "event", "title": "68th Annual TMEA Professional Development Conference / All-State — Gaylord Opryland, Nashville", "start_at": "2027-01-13", "end_at": "2027-01-16", "all_day": true, "timezone": "America/Chicago", "source_url": "https://www.tnmea.org/future-conference-dates" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 11-12", "description": "This All-State choir is limited to students in grades 11 and 12; all All-State participants must be enrolled in grades 9-12 and be members of their own school-based ensemble.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "format", "title": "Ensemble size and quota", "description": "144 singers; 18 selected per part from the Second Tier Auditions, with the top-ranked 4 chairs per part (sopranos/altos) and 3 chairs per part (tenors/basses) from each Region guaranteed a spot if they meet the 50% minimum score.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "sight_reading", "title": "Minimum Sightreading Standards, grades 11-12 (2026-2029)", "description": "Tempo 80-90 bpm, 8 measures, starting/played/ending pitch Low or High Do, leaps Do-Mi, Mi-Sol, Sol-Do ascending and Do-Sol, Sol-Mi, Mi-Do descending, range of an octave, 4/4 time, 45 seconds study time. Score weight 0% in 2026, 5% in 2027, 10% in 2028-2029.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "registration", "payable_to": "state_association", "description": "Registration fee set by the TMEA Board of Directors; amount not published.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" }
+      ],
+      "documents": [
+        { "title": "TMEA All-State Ensembles Handbook (© 2027)", "url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf", "document_type": "handbook" }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" },
+        { "code": "T1", "label": "Tenor 1" },
+        { "code": "T2", "label": "Tenor 2" },
+        { "code": "B1", "label": "Bass 1" },
+        { "code": "B2", "label": "Bass 2" }
+      ]
+    },
+    {
+      "name": "TMEA All-State SSAA Choir (9th-12th Grade)",
+      "lineage_key": "tennessee-all-state-ssaa",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "TMEA All-State treble choir open to grades 9-12, consisting of 160 singers. Sopranos and altos are routed to SSAA Second Tier Auditions from their regional chair rankings: 10 of the top 24 grade 9-10 chairs and 16 of the top 30 grade 11-12 chairs per Region. 16 per part (grades 9-10) and 24 per part (grades 11-12) are selected.",
+      "dates": [
+        { "date_type": "audition_round", "title": "Round 2 — Screening audition on All-State music (deadline)", "start_at": "2026-11-08", "all_day": true, "timezone": "America/Chicago", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "date_type": "audition_round", "title": "Round 3 — Second Tier Auditions (online, blind)", "all_day": true, "timezone": "America/Chicago", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "date_type": "event", "title": "68th Annual TMEA Professional Development Conference / All-State — Gaylord Opryland, Nashville", "start_at": "2027-01-13", "end_at": "2027-01-16", "all_day": true, "timezone": "America/Chicago", "source_url": "https://www.tnmea.org/future-conference-dates" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 9-12", "description": "The All-State SSAA Choir is open to students in grades 9-12 who are members of their own school-based ensemble with a TMEA/regional member teacher.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "format", "title": "Ensemble size and quota", "description": "160 singers. 16 per part selected from grades 9-10 and 24 per part from grades 11-12, subject to a minimum Second Tier score of 50%. Unfilled spots cascade across grade bands and parts per the handbook's defined order before going unfilled.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "registration", "payable_to": "state_association", "description": "Registration fee set by the TMEA Board of Directors; amount not published.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" }
+      ],
+      "documents": [
+        { "title": "TMEA All-State Ensembles Handbook (© 2027)", "url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf", "document_type": "handbook" }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" }
+      ]
+    },
+    {
+      "name": "TMEA All-State TTBB Choir (9th-12th Grade)",
+      "lineage_key": "tennessee-all-state-ttbb",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "tenor-bass chorus",
+      "description": "TMEA All-State tenor-bass choir open to grades 9-12, consisting of 112 singers. Tenors and basses are routed to TTBB Second Tier Auditions from their regional chair rankings: 6 of the top 20 grade 9-10 chairs and 12 of the top 26 grade 11-12 chairs per Region. 10 per part (grades 9-10) and 18 per part (grades 11-12) are selected.",
+      "dates": [
+        { "date_type": "audition_round", "title": "Round 2 — Screening audition on All-State music (deadline)", "start_at": "2026-11-08", "all_day": true, "timezone": "America/Chicago", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "date_type": "audition_round", "title": "Round 3 — Second Tier Auditions (online, blind)", "all_day": true, "timezone": "America/Chicago", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "date_type": "event", "title": "68th Annual TMEA Professional Development Conference / All-State — Gaylord Opryland, Nashville", "start_at": "2027-01-13", "end_at": "2027-01-16", "all_day": true, "timezone": "America/Chicago", "source_url": "https://www.tnmea.org/future-conference-dates" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 9-12", "description": "The All-State TTBB Choir is open to students in grades 9-12 who are members of their own school-based ensemble with a TMEA/regional member teacher.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" },
+        { "category": "format", "title": "Ensemble size and quota", "description": "112 singers. 10 per part selected from grades 9-10 and 18 per part from grades 11-12, subject to a minimum Second Tier score of 50%.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "registration", "payable_to": "state_association", "description": "Registration fee set by the TMEA Board of Directors; amount not published.", "source_url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf" }
+      ],
+      "documents": [
+        { "title": "TMEA All-State Ensembles Handbook (© 2027)", "url": "https://www.tnmea.org/_files/ugd/49c838_61ca7abfa3f645839608e92136382fc8.pdf", "document_type": "handbook" }
+      ],
+      "voice_parts": [
+        { "code": "T1", "label": "Tenor 1" },
+        { "code": "T2", "label": "Tenor 2" },
+        { "code": "B1", "label": "Bass 1" },
+        { "code": "B2", "label": "Bass 2" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 All-State choir repertoire — TMEA distributes repertoire lists through All-State News posts and regional liaisons; the repertoire posts visible at retrieval were dated Oct 2025 - Feb 2026 and belong to the prior season, so they were not used",
+    "2026-27 All-State choir guest conductors",
+    "Registration fee amounts for students and directors — set by the TMEA Board of Directors and communicated to regional liaisons rather than published",
+    "Second Tier Audition window dates for 2026-27 — the handbook specifies only a 5-9 calendar day window",
+    "Regional honor choir audition dates — set independently by each affiliated regional association (ETVA, MTVA, WTVMEA and others)",
+    "Second Tier audition excerpts — kept secret until the audition window opens",
+    "Cost of the practice/diction sound files billed to regional associations and available to directors",
+    "Rehearsal and concert times within the January 13-16, 2027 conference"
+  ]
+}

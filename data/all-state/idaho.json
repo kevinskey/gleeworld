@@ -1,0 +1,94 @@
+{
+  "state_slug": "idaho",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "IMEA's All-State Honor Groups page carries a complete 2026-27 timeline leading to the All-State Conference at Idaho State University, Pocatello, February 3-6, 2027. Two caveats about IMEA's own wording: the page's prose sentence reads 'The 2026 All-State will be February 3-6, 2027' (IMEA labels the cycle inconsistently; the dates and the timeline are unambiguously the 2026-27 school year), and the IMEA home page listed the registration deadline as '01/06/2026' while the All-State page's timeline gives 'Audition Registration Closes - Midnight, October 9, 2026'. The timeline on the All-State page is used here. The page states 'More information will be posted as it becomes available' — as of 2026-08-07 no choral audition requirements document, fee amount, conductor list, or repertoire had been posted publicly (registration is behind a member login). Idaho's choral audition music files on idahomusiced.org (Alto I/II, Bass I, Tenor II, Jazz Choir Ex1, etc.) are not year-stamped, unlike the band files which sit in a 'band26' folder, so they were not treated as current-cycle repertoire. Separately, the Idaho chapter of ACDA (IDACDA, idacda.org) runs its own All-State Honor Choirs for elementary and junior high singers — a different organization from IMEA; only a 2026 (prior-cycle) edition was visible, so it is not recorded here.",
+
+  "organization": {
+    "name": "Idaho Music Educators Association, Inc.",
+    "acronym": "IMEA",
+    "website_url": "https://idahomusiced.org/",
+    "description": "IMEA is a state division of NAfME, the National Association for Music Education. It administers Idaho's All-State Honor Groups and annual All-State Conference, a Large Group Festival, a Solo & Ensemble Festival, and scholarships and grants."
+  },
+
+  "sources": [
+    { "name": "IMEA All-State Honor Groups", "url": "https://idahomusiced.org/events/allstate/allstate.php", "source_type": "official" },
+    { "name": "IMEA Home", "url": "https://www.idahomusiced.org/", "source_type": "official" },
+    { "name": "IMEA All-State Student Audition Information Form", "url": "https://idahomusiced.org/forms/allstate/Student%20Audition%20Information%20Form.pdf", "source_type": "handbook_pdf" },
+    { "name": "IMEA Forms", "url": "https://idahomusiced.org/forms/forms.php", "source_type": "official" }
+  ],
+
+  "programs": [
+    {
+      "name": "IMEA All-State Choir",
+      "lineage_key": "idaho-all-state-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "One of IMEA's All-State Honor Groups (alongside Band, Orchestra, Jazz Band, and Jazz Choir). Students audition by recording, are notified of acceptance in November, receive mailed music in December, and check in for rehearsals and performances at the All-State Conference at Idaho State University in Pocatello.",
+
+      "dates": [
+        { "date_type": "other", "title": "All-State audition information posted", "start_at": "2026-05-06", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "other", "title": "Online audition registration opens", "start_at": "2026-08-24", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "registration_deadline", "title": "Audition registration closes", "start_at": "2026-10-09T23:59:00", "all_day": false, "timezone": "America/Boise", "description": "IMEA publishes this as 'Midnight, October 9, 2026'.", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "registration_deadline", "title": "Audition fees due", "start_at": "2026-10-23", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "results", "title": "Notification of accepted students", "start_at": "2026-11-02", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "acceptance_deadline", "title": "Registration and payments due", "start_at": "2026-11-23", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "other", "title": "Music mailed", "start_at": "2026-12-07", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "event", "title": "All-State check-in, rehearsals & performances", "start_at": "2027-02-03", "end_at": "2027-02-06", "all_day": true, "timezone": "America/Boise", "description": "Idaho State University, Pocatello, Idaho. Gala Concert tickets are sold through Zeffy.", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" }
+      ],
+
+      "requirements": [
+        { "category": "eligibility", "title": "Year in school", "description": "The All-State Student Audition Information Form asks students to indicate their year in school from Freshman, Sophomore, Junior, or Senior, indicating a high-school program.", "structured_data": { "grades": [9, 10, 11, 12] }, "source_url": "https://idahomusiced.org/forms/allstate/Student%20Audition%20Information%20Form.pdf" },
+        { "category": "format", "title": "Online registration by the director", "description": "Directors enter student information online; the paper Student Audition Information Form is a worksheet only and is explicitly not to be mailed. Students auditioning for more than one group indicate a first preference among Band, Choir, Jazz Band, Jazz Choir, and Orchestra.", "source_url": "https://idahomusiced.org/forms/allstate/Student%20Audition%20Information%20Form.pdf" },
+        { "category": "format", "title": "Jazz Choir add-on", "description": "Students auditioning for the choirs are asked whether they also want to audition for the Jazz Choir; if so, they must record the additional exercises.", "source_url": "https://idahomusiced.org/forms/allstate/Student%20Audition%20Information%20Form.pdf" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition", "payable_to": "state_association", "description": "IMEA's All-State timeline lists an audition fee with a due date of October 23, 2026, and separate 'Registration and Payments Due' on November 23, 2026. The amounts are not published on the public site.", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" }
+      ],
+
+      "documents": [
+        { "title": "All-State Student Audition Information Form", "url": "https://idahomusiced.org/forms/allstate/Student%20Audition%20Information%20Form.pdf", "document_type": "form" }
+      ]
+    },
+    {
+      "name": "IMEA All-State Jazz Choir",
+      "lineage_key": "idaho-all-state-jazz-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "vocal jazz ensemble",
+      "description": "IMEA's All-State vocal jazz ensemble. Students auditioning for the choirs may elect to also audition for the Jazz Choir by recording additional exercises. Students auditioning for the Jazz Rhythm Section indicate whether they prefer the Jazz Choir or the Jazz Band.",
+
+      "dates": [
+        { "date_type": "other", "title": "Online audition registration opens", "start_at": "2026-08-24", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "registration_deadline", "title": "Audition registration closes", "start_at": "2026-10-09T23:59:00", "all_day": false, "timezone": "America/Boise", "description": "IMEA publishes this as 'Midnight, October 9, 2026'.", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "registration_deadline", "title": "Audition fees due", "start_at": "2026-10-23", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "results", "title": "Notification of accepted students", "start_at": "2026-11-02", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "acceptance_deadline", "title": "Registration and payments due", "start_at": "2026-11-23", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "other", "title": "Music mailed", "start_at": "2026-12-07", "all_day": true, "timezone": "America/Boise", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" },
+        { "date_type": "event", "title": "All-State check-in, rehearsals & performances", "start_at": "2027-02-03", "end_at": "2027-02-06", "all_day": true, "timezone": "America/Boise", "description": "Idaho State University, Pocatello, Idaho.", "source_url": "https://idahomusiced.org/events/allstate/allstate.php" }
+      ],
+
+      "requirements": [
+        { "category": "materials", "title": "Additional recorded exercises", "description": "Students auditioning for the choirs who also want to be considered for the Jazz Choir must record additional exercises beyond the standard choir audition.", "source_url": "https://idahomusiced.org/forms/allstate/Student%20Audition%20Information%20Form.pdf" },
+        { "category": "eligibility", "title": "Jazz Rhythm Section preference", "description": "Students auditioning for the Jazz Rhythm Section indicate a preference for the Jazz Choir or the Jazz Band.", "source_url": "https://idahomusiced.org/forms/allstate/Student%20Audition%20Information%20Form.pdf" }
+      ],
+
+      "documents": [
+        { "title": "All-State Student Audition Information Form", "url": "https://idahomusiced.org/forms/allstate/Student%20Audition%20Information%20Form.pdf", "document_type": "form" }
+      ]
+    }
+  ],
+
+  "not_published": [
+    "Audition fee and participation fee amounts — IMEA publishes due dates but not amounts on the public site",
+    "2026-27 choral audition requirements (scales, sight-reading, prepared excerpts, rubric) — the All-State page says 'More information will be posted as it becomes available'",
+    "2026-27 choral audition music / repertoire — the choir audition PDFs on idahomusiced.org are not year-stamped and could not be confirmed as current-cycle",
+    "2027 All-State conductors for the Choir and Jazz Choir",
+    "Voice part names and divisions used by the All-State Choir",
+    "Eligibility rules beyond high school grade level (e.g. school ensemble enrollment, director membership requirements)",
+    "Reconciliation of IMEA's two conflicting registration deadlines (home page '01/06/2026' vs. All-State timeline 'October 9, 2026')",
+    "IDACDA All-State Honor Choirs (elementary/junior high) 2026-27 edition — only a 2026 cycle was visible"
+  ]
+}

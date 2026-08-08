@@ -1,0 +1,298 @@
+{
+  "state_slug": "new-hampshire",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "NHMEA had 2026-2027 All-State information fully posted at retrieval. One live audition day (November 21, 2026, Manchester Memorial High School) feeds all classical All-State ensembles; the two choral ensembles are the All-State Mixed Chorus and the All-State Treble Chorus, both captured here with the shared 'Voice' audition requirements (Rotation #4). The festival is April 15-17, 2027 at Concord High School. NHMEA also runs a separate Jazz All-State, an All-State Modern Band Festival (digital audition window, April 15-16, 2027), Middle School Festivals, and an Elementary Honors Choir Festival — none of those were scraped.",
+  "organization": {
+    "name": "New Hampshire Music Educators Association",
+    "acronym": "NHMEA",
+    "website_url": "https://nhmea.org/",
+    "description": "NHMEA is a federated state association of the National Association for Music Education, based at PO Box 717, Stratham, NH 03885. It runs the All-State Auditions and Festival, Jazz All-State, Large Group Festival, Solo and Ensemble Festival, Middle School Festivals, an Elementary Honors Choir Festival, and an All-State Modern Band Festival."
+  },
+  "sources": [
+    {
+      "name": "NHMEA — All-State Music Festival",
+      "url": "https://nhmea.org/festivals/all-state-music-festival/",
+      "source_type": "official"
+    },
+    {
+      "name": "NHMEA All-State Auditions — eligibility and rules (2026-27)",
+      "url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf",
+      "source_type": "handbook_pdf"
+    },
+    {
+      "name": "NHMEA All-State Auditions 2026-2027 — New Audition Requirements, Rotation #4",
+      "url": "https://docs.google.com/document/d/16JTuuKYp3rS3D0ICt2k05VN6S1iS4wTLFN0ho-NZlvk/edit?usp=sharing",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "NHMEA All-State Mixed Chorus",
+      "lineage_key": "new-hampshire-mixed-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "One of two choral ensembles at the NHMEA All-State Music Festival. Students audition live on a single statewide audition day; registration is submitted by the school's director through the NHMEA website. Mixed Chorus Chair for 2026-27: Will Gunn.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Registration deadline",
+          "start_at": "2026-10-15T23:59:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "description": "Thursday, October 15, 2026 at 11:59 p.m. Registration is submitted by the school's director through the NHMEA website.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "date_type": "other",
+          "title": "NHMEA School Participation Fee due",
+          "start_at": "2026-10-01",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "The student's school district must pay the NHMEA School Participation Fee by October 1 for the student to be eligible.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "date_type": "other",
+          "title": "Audition payment deadline",
+          "start_at": "2026-11-02",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "All audition fees must be received by November 2, 2026. Students with unpaid audition fees will not be allowed to audition.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "All-State auditions",
+          "start_at": "2026-11-21",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Saturday, November 21, 2026 at Manchester Memorial High School, Manchester, NH. A music teacher from the sending school must be in attendance on the day of auditions.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "date_type": "event",
+          "title": "NHMEA All-State Music Festival",
+          "start_at": "2027-04-15",
+          "end_at": "2027-04-17",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "April 15-17, 2027 at Concord High School, Concord, NH.",
+          "source_url": "https://nhmea.org/festivals/all-state-music-festival/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Eligibility conditions",
+          "description": "Students must meet the criteria in the NHMEA Student Eligibility Policy. The school district must pay the NHMEA School Participation Fee by October 1. All audition fees must be paid by November 2, 2026. If auditioning and/or selected, the student's school music teacher must accompany them to the festival as chaperone and stay overnight in the same hotel as their students (NHMEA Director Supervision Policy). Selected students and directors must abide by the NHMEA Code of Conduct and all event-specific policies. Appeals to eligibility criteria must be submitted in writing to the All-State Auditions Chairperson and the NHMEA President thirty days before the registration deadline.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "category": "format",
+          "title": "Voice audition weighting (Rotation #4)",
+          "description": "The 2026-2027 voice audition is weighted: 50% prepared solo, 20% chorale, 20% sight reading, 10% major scale. The Art Song and the Chorale are to be performed from memory. The major scale is sung in the chorale/sight reading room.",
+          "structured_data": {
+            "prepared_solo_pct": 50,
+            "chorale_pct": 20,
+            "sight_reading_pct": 20,
+            "major_scale_pct": 10,
+            "rotation": 4
+          },
+          "source_url": "https://docs.google.com/document/d/16JTuuKYp3rS3D0ICt2k05VN6S1iS4wTLFN0ho-NZlvk/edit?usp=sharing"
+        },
+        {
+          "category": "materials",
+          "title": "Original music required",
+          "description": "All students must have original audition material in their possession at the time of their audition, unless otherwise stated within the requirements (IMSLP versions are available for some material). Students who audition without originals receive comments but no ratings and are therefore not considered for the festival ensembles.",
+          "source_url": "https://docs.google.com/document/d/16JTuuKYp3rS3D0ICt2k05VN6S1iS4wTLFN0ho-NZlvk/edit?usp=sharing"
+        },
+        {
+          "category": "sight_reading",
+          "title": "Sight reading",
+          "description": "The voice audition includes both rhythmic and melodic sight reading, administered in the chorale/sight reading room.",
+          "source_url": "https://docs.google.com/document/d/16JTuuKYp3rS3D0ICt2k05VN6S1iS4wTLFN0ho-NZlvk/edit?usp=sharing"
+        },
+        {
+          "category": "other",
+          "title": "Multiple auditions and ensemble preference",
+          "description": "Each instrument or voice part requires a separate audition and a separate fee. Students auditioning on more than one instrument/voice part should indicate their preference to their director before registration is submitted; preferences are not guaranteed but are helpful to the selection committee.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "category": "other",
+          "title": "Participation and hotel requirement",
+          "description": "If selected for the festival, students are expected to participate. A hotel stay is required unless an exception is approved by the NHMEA Executive Board; schools are given the option of double, triple, or quad rooming configurations.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "category": "other",
+          "title": "Late registration policy",
+          "description": "Schools must submit registrations by the published deadline. Any change affecting the master schedule after the deadline is subject to a Late Change Fee of $25 per application, and any approved additional registration or change of instrumentation/voice part will be scheduled at the end of the audition day. From three days after the schedule is released to directors until the day of auditions there are no additions, part changes, or rescheduling of audition times, with no exceptions.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "category": "other",
+          "title": "ADA and disability accommodations",
+          "description": "NHMEA has an ADA & Disability Accommodation Policy and request form. The accommodations form must be completed by the event registration deadline and signed by all parties to be eligible for consideration.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "I Will Go With My Father Ploughing",
+          "composer": "Roger Quilter",
+          "purpose": "audition",
+          "notes": "Required prepared solo (art song) for the 2026-2027 voice audition, Rotation #4. Public domain; NHMEA provides PDFs and mp3s in High Key (B-flat) and Low Key (F). To be performed from memory.",
+          "source_url": "https://docs.google.com/document/d/16JTuuKYp3rS3D0ICt2k05VN6S1iS4wTLFN0ho-NZlvk/edit?usp=sharing"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 2500,
+          "payable_to": "state_association",
+          "description": "$25.00 per audition. Schools are encouraged to pay by credit card; schools sending checks should send one check to NHMEA, PO Box 717, Stratham, NH 03885 with the invoice number. Payment must be received by November 2, 2026. Schools are responsible for ensuring all student fees are paid, including cancellations.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "fee_type": "late_change",
+          "amount_cents": 2500,
+          "payable_to": "state_association",
+          "description": "$25 per application Late Change Fee for changes affecting the master schedule after the published registration deadline.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        }
+      ],
+      "documents": [
+        {
+          "title": "NHMEA All-State Auditions — eligibility, rules, and student information form",
+          "url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf",
+          "document_type": "rules"
+        },
+        {
+          "title": "NHMEA Student Code of Conduct",
+          "url": "https://nhmea.org/wp-content/uploads/2024/09/Student-Code-of-Conduct-FINAL-Student-Distribution.pdf",
+          "document_type": "rules"
+        },
+        {
+          "title": "2026-2027 Auditions Information (Rotation #4)",
+          "url": "https://docs.google.com/document/d/16JTuuKYp3rS3D0ICt2k05VN6S1iS4wTLFN0ho-NZlvk/edit?usp=sharing",
+          "document_type": "rules"
+        },
+        {
+          "title": "Adjudicator Scoring Guide / Rubric",
+          "url": "https://nhmea.org/wp-content/uploads/2024/11/Adjudicator-Scoring-Guide.pdf",
+          "document_type": "rules"
+        },
+        {
+          "title": "Vocal Resources (Google Drive folder)",
+          "url": "https://drive.google.com/drive/folders/1hi3PTJMTEEp5pD_dC5aEdNDPwLG_yutt?usp=drive_link",
+          "document_type": "other"
+        },
+        {
+          "title": "Classical All-State Auditions Registration Form",
+          "url": "https://nhmea.org/classical-all-state-auditions-registration-form/",
+          "document_type": "form"
+        },
+        {
+          "title": "NHMEA Director Supervision Policy",
+          "url": "https://drive.google.com/file/d/1NSMoPcaP2yNdM65kbiH_54NSu89gH6QB/view?usp=drive_link",
+          "document_type": "rules"
+        }
+      ]
+    },
+    {
+      "name": "NHMEA All-State Treble Chorus",
+      "lineage_key": "new-hampshire-treble-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "The second of NHMEA's two All-State choral ensembles, seated from the same statewide live voice audition. Treble Chorus Chair for 2026-27: Julia Horaj.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Registration deadline",
+          "start_at": "2026-10-15T23:59:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "date_type": "other",
+          "title": "Audition payment deadline",
+          "start_at": "2026-11-02",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "All-State auditions",
+          "start_at": "2026-11-21",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Saturday, November 21, 2026 at Manchester Memorial High School.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        },
+        {
+          "date_type": "event",
+          "title": "NHMEA All-State Music Festival",
+          "start_at": "2027-04-15",
+          "end_at": "2027-04-17",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Concord High School, Concord, NH.",
+          "source_url": "https://nhmea.org/festivals/all-state-music-festival/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Voice audition weighting (Rotation #4)",
+          "description": "Same statewide voice audition as the Mixed Chorus: 50% prepared solo, 20% chorale, 20% sight reading, 10% major scale. Art Song and Chorale from memory; major scale sung in the chorale/sight reading room.",
+          "source_url": "https://docs.google.com/document/d/16JTuuKYp3rS3D0ICt2k05VN6S1iS4wTLFN0ho-NZlvk/edit?usp=sharing"
+        },
+        {
+          "category": "eligibility",
+          "title": "Eligibility conditions",
+          "description": "Identical to the Mixed Chorus: NHMEA Student Eligibility Policy, School Participation Fee paid by October 1, audition fees paid by November 2, teacher chaperone required and staying in the same hotel, and adherence to the NHMEA Code of Conduct.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "I Will Go With My Father Ploughing",
+          "composer": "Roger Quilter",
+          "purpose": "audition",
+          "notes": "Required prepared solo for the 2026-2027 voice audition, Rotation #4; High Key (B-flat) and Low Key (F) editions provided by NHMEA. Performed from memory.",
+          "source_url": "https://docs.google.com/document/d/16JTuuKYp3rS3D0ICt2k05VN6S1iS4wTLFN0ho-NZlvk/edit?usp=sharing"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 2500,
+          "payable_to": "state_association",
+          "description": "$25.00 per audition; payment must be received by November 2, 2026.",
+          "source_url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf"
+        }
+      ],
+      "documents": [
+        {
+          "title": "NHMEA All-State Auditions — eligibility, rules, and student information form",
+          "url": "https://nhmea.org/wp-content/uploads/2026/08/NHMEA-All-State-Auditions.pdf",
+          "document_type": "rules"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "The 2026-2027 audition Chorale — the audition requirements document says 'Chorale - to be posted June 2026' and no chorale title was listed on the document at retrieval",
+    "Festival performance repertoire and guest conductors for the Mixed and Treble Choruses",
+    "Results / acceptance notification date",
+    "Participation fee for selected students, hotel cost, and the NHMEA School Participation Fee amount (a separate School Participation Fees page exists but was not retrieved)",
+    "Voice part list / section breakdown for each chorus",
+    "Concert clock times for the April 15-17, 2027 festival"
+  ]
+}

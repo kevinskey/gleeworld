@@ -1,0 +1,87 @@
+{
+  "state_slug": "wyoming",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Wyoming's All-State Honor Band, Orchestra and Choir is run jointly by the Wyoming Music Educators Association (WMEA) and the Wyoming High School Activities Association (WHSAA). Auditions are RECORDED and uploaded during a fixed window; WMEA vice presidents make selections and WHSAA publishes the official roster. IMPORTANT: at the retrieval date wyomea.org had only an 'All-State Music 2026' page — the 2026-27 cycle page had not been created, and the site stated 2026 audition materials were released September 1, 2025. All dates, fees and repertoire below are therefore the 2025-26 cycle and must NOT be relabeled 2026-27. Separately, WMEA has published that its 80th Annual State Music Education Conference is January 17-19, 2027 at Evanston High School in Evanston, Wyoming, but WMEA has not yet published 2027 All-State choir dates or tied All-State to those conference dates.",
+  "organization": {
+    "name": "Wyoming Music Educators Association",
+    "acronym": "WMEA",
+    "website_url": "https://wyomea.org/",
+    "description": "WMEA is a federated state association of the National Association for Music Education. Together with the Wyoming High School Activities Association it provides the All-State Honor Band, Orchestra, and Choir, and it hosts the annual Wyoming State Music Education Conference."
+  },
+  "sources": [
+    { "name": "WMEA — All-State Music 2026", "url": "https://wyomea.org/programs-events/all-state-music-2026/", "source_type": "official" },
+    { "name": "WMEA — 2026 Vocal AUDITION", "url": "https://wyomea.org/programs-events/all-state-music-2026/2025-vocal-audition/", "source_type": "official" },
+    { "name": "WMEA — State Conference", "url": "https://wyomea.org/stateconference/", "source_type": "official" },
+    { "name": "WHSAA — All State Music", "url": "https://www.whsaa.org/music/allstatemusic.html", "source_type": "official" },
+    { "name": "WMEA — All-State Honor Group Repertoire Archives", "url": "https://wyomea.org/all-state-honor-group-archives/", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "All-State Honor Choir",
+      "lineage_key": "wyoming-all-state-choir",
+      "season": "2025-26",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "Wyoming's All-State Honor Choir, provided jointly by WHSAA and WMEA as a high-quality rehearsal and performance opportunity alongside the All-State Honor Band and Orchestra. Students are chosen by recorded audition; the 2026 guest conductor was Dr. Jeffery Redding of the University of Central Florida.",
+      "dates": [
+        { "date_type": "other", "title": "Audition materials released", "start_at": "2025-09-01", "all_day": true, "timezone": "America/Denver", "description": "2026 All-State audition applications and materials released on the WMEA website Monday, September 1, 2025.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "date_type": "registration_deadline", "title": "Online registration closes", "start_at": "2025-10-27T23:59:59", "all_day": false, "timezone": "America/Denver", "description": "Registration closes Monday, October 27th at 11:59:59 PM. No registrations are accepted after the registration window closes.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "date_type": "other", "title": "Pre-registration notifications sent to directors", "start_at": "2025-10-20", "end_at": "2025-10-24", "all_day": true, "timezone": "America/Denver", "description": "Site Chairs send pre-registration notifications to directors on October 20th and 24th.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "date_type": "other", "title": "Invoices sent to schools", "start_at": "2025-10-29", "all_day": true, "timezone": "America/Denver", "description": "Each school receives an invoice and payment instructions from WMEA on October 29, 2025.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "date_type": "acceptance_deadline", "title": "Payment deadline", "start_at": "2025-11-06", "all_day": true, "timezone": "America/Denver", "description": "All payments or proof of payments must be made by November 6th through the web portal on the invoice.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "date_type": "audition_round", "title": "Audition recording upload window", "start_at": "2025-11-07", "end_at": "2025-11-15", "all_day": true, "timezone": "America/Denver", "description": "Audition uploads may occur anytime from November 7th through November 15th (Friday of week 18 to Saturday of week 19 on the WHSAA calendar).", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "date_type": "results", "title": "Directors receive student results", "start_at": "2025-12-01", "all_day": true, "timezone": "America/Denver", "description": "Directors receive an informational email of their student results on December 1st.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "date_type": "results", "title": "WHSAA releases official roster", "start_at": "2025-12-02", "all_day": true, "timezone": "America/Denver", "description": "WHSAA releases the official roster for the honor ensembles on December 2nd via online posting at whsaa.org.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "date_type": "event", "title": "All-State Music Honor Groups", "start_at": "2026-01-18", "end_at": "2026-01-20", "all_day": true, "timezone": "America/Denver", "description": "Cody High School, Cody, Wyoming.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 9-12 only", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "category": "eligibility", "title": "Apply through the school music teacher", "description": "Students must apply through the appropriate school music teacher.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "category": "eligibility", "title": "Enrolled in a corresponding school ensemble", "description": "Students must be enrolled in a school group corresponding to the All-State group for which they apply, unless an appropriate group does not exist.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "category": "eligibility", "title": "WHSAA member school and WHSAA state-event eligibility", "description": "Students must attend a member school of WHSAA (including home schools), be enrolled both at the time of application AND at the time of the All-State event, and meet WHSAA eligibility requirements for state events.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "category": "format", "title": "Recorded audition", "description": "Students are chosen by recorded auditions. All recordings must be uploaded within the specified recording window. It is the teacher's responsibility to disqualify any student who violates the integrity of the audition process.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "category": "format", "title": "Online registration; one account per ensemble", "description": "Each student must complete an online registration. If auditioning for more than one ensemble, a separate audition account must be created using a DIFFERENT email address.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" },
+        { "category": "format", "title": "Vocal audition order (six components)", "description": "The vocal audition is performed in this order: (1) Scale 1 (low), (2) Scale 2 (high), (3) Vocalise, (4) Excerpt #1, (5) Excerpt #2, (6) Sight Reading.", "structured_data": { "components": ["Scale 1 (low)", "Scale 2 (high)", "Vocalise", "Excerpt #1", "Excerpt #2", "Sight Reading"] }, "source_url": "https://wyomea.org/programs-events/all-state-music-2026/2025-vocal-audition/" },
+        { "category": "rubric", "title": "Scored out of 50 points", "description": "Students are scored on a number of vocal and musical factors with a maximum possible score of 50; see the published Vocal Audition Rubric.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/2025-vocal-audition/" },
+        { "category": "materials", "title": "No metronome; own or teacher-provided music", "description": "The use of a metronome is not permitted. Students may use their own music or copies provided by their teacher. Each student must supply their own audition materials and anything else needed for the audition.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/2025-vocal-audition/" },
+        { "category": "other", "title": "Selection process", "description": "Vice Presidents make the selections for the All-State Honor Groups and provide a detailed list to WHSAA.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" }
+      ],
+      "repertoire": [
+        { "title": "Swilo Yini", "arranger": "Michael Barrett", "purpose": "performance", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/2025-vocal-audition/" },
+        { "title": "Lift Every Voice and Sing", "arranger": "Roland Carter", "purpose": "performance", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/2025-vocal-audition/" },
+        { "title": "Sing Unto God", "composer": "G.F. Handel", "purpose": "performance", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/2025-vocal-audition/" },
+        { "title": "Ritmo", "composer": "Dan Davidson", "purpose": "performance", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/2025-vocal-audition/" },
+        { "title": "Flight", "arranger": "Ryan Murphy", "purpose": "performance", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/2025-vocal-audition/" },
+        { "title": "Sign Me Up", "arranger": "Brandon Boyd", "purpose": "performance", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/2025-vocal-audition/" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 1000, "payable_to": "school", "description": "$10 per audition registration. Fees must be paid by group or school in one payment (for example one payment for Rawlins Schools, or one for Sheridan Choir); checks or POs payable to Wyoming Music Educators Association. Payment may be by school voucher, purchase order, money order, or credit card. No cash or student checks. All registered applicant fees, including scratches, are paid in advance.", "source_url": "https://wyomea.org/programs-events/all-state-music-2026/" }
+      ],
+      "documents": [
+        { "title": "Vocal Audition Packet 2025-2026", "url": "https://wyomea.org/wp-content/uploads/2025/08/2026-Choir-Audition.pdf", "document_type": "handbook" },
+        { "title": "Vocal Audition Rubric", "url": "https://wyomea.org/wp-content/uploads/2024/08/Vocal-Audition-Rubric.pdf", "document_type": "rules" },
+        { "title": "All-State Registration Instructions", "url": "https://wyomea.org/wp-content/uploads/2025/09/All-State-Registration-Instructions-25-1.pdf", "document_type": "other" },
+        { "title": "All-State Registration Site (BandWorld)", "url": "https://bandworld.org/Auditions?eID=308", "document_type": "form" },
+        { "title": "All-State Honor Group Repertoire Archives", "url": "https://wyomea.org/all-state-honor-group-archives/", "document_type": "other" },
+        { "title": "All-State Music Lending Library (LCSD#1)", "url": "http://lcsd1musiclibrary.azurewebsites.net/musiclib.aspx", "document_type": "other" },
+        { "title": "WHSAA Audition Information Letter", "url": "https://wyomea.org/programs-events/all-state-music-2026/whsaa-audition-information-letter/", "document_type": "other" },
+        { "title": "All-State Student Schedule", "url": "https://wyomea.org/programs-events/all-state-music-2026/all-state-student-schedule/", "document_type": "calendar" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 All-State Choir dates, venue, guest conductor, and repertoire — WMEA had not created a 2027 All-State page at the retrieval date",
+    "2026-27 audition material release date, registration deadline, upload window, and fee amount",
+    "Whether the 2027 All-State event coincides with the January 17-19, 2027 WMEA State Music Education Conference in Evanston — WMEA publishes the conference dates but has not tied All-State to them",
+    "Specific scale, vocalise, and excerpt content for the vocal audition — these are inside the linked Vocal Audition Packet PDF, which was not retrieved",
+    "Number of seats or per-voice-part quotas in the All-State Choir",
+    "Student participation/tuition fee (beyond the $10 audition registration fee) and lodging arrangements"
+  ]
+}

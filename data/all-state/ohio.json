@@ -1,0 +1,236 @@
+{
+  "state_slug": "ohio",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "OMEA labels this cycle '2027 All-State' (the conference is January 28-30, 2027); it is the 2026-27 school year program and is recorded here as season 2026-27. All All-State applications are submitted through the Acceptd online digital audition platform — there is no in-person live audition for choir. The application timeline dates (March 1, April 2, May 31) are month/day only on OMEA's page; they belong to spring 2026 for the January 2027 conference. Note an internal contradiction on OMEA's Children's Chorus page: it states auditions are open to students who will be in grades 4 or 5 during 2026-2027, and separately that 'only those students who are currently in Grades 3 or 4 are eligible to audition' — both are reproduced verbatim rather than resolved.",
+  "organization": {
+    "name": "Ohio Music Education Association",
+    "acronym": "OMEA",
+    "website_url": "https://www.omea-ohio.org/",
+    "description": "OMEA is Ohio's state music education association. It administers All-State Band, Choir, Jazz, Orchestra and Children's Chorus ensembles, which rehearse and perform at the annual OMEA Professional Development Conference, and coordinates regional (Northeast, Northwest, East Central, Southwest) events."
+  },
+  "sources": [
+    { "name": "OMEA All-State Ensembles — Acceptd audition information", "url": "https://app.getacceptd.com/omea", "source_type": "official" },
+    { "name": "OMEA All-State Children's Chorus — Acceptd audition information", "url": "https://app.getacceptd.com/omeachildrenschorus", "source_type": "official" },
+    { "name": "OMEA — All-State Ensembles / Region Orchestra", "url": "https://www.omea-ohio.org/all-state_ensembles_region_orc.php", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "OMEA All-State Choir",
+      "lineage_key": "ohio-all-state-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "OMEA's All-State Choir for grades 9-12, selected by recorded audition submitted through Acceptd, rehearsing at required regional rehearsals and performing at the OMEA Professional Development Conference in Columbus.",
+      "dates": [
+        {
+          "date_type": "other",
+          "title": "Audition material available",
+          "start_at": "2026-03-01",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "date_type": "other",
+          "title": "Acceptd application portal opens",
+          "start_at": "2026-04-02",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Deadline for all applications to be submitted",
+          "start_at": "2026-05-31",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "date_type": "results",
+          "title": "Notification of results to applicants and directors",
+          "start_at": "2026-08-31",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "date_type": "acceptance_deadline",
+          "title": "Acceptance forms and membership fee due",
+          "start_at": "2026-09-30",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "date_type": "event",
+          "title": "OMEA Professional Development Conference — All-State Ensembles",
+          "start_at": "2027-01-28",
+          "end_at": "2027-01-30",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Columbus, Ohio.",
+          "source_url": "https://app.getacceptd.com/omea"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Grade level and school ensemble membership",
+          "description": "Students must be enrolled in grades 9-12 for the 2026-2027 academic year. All applicants must be currently enrolled as members of their school's performing ensemble and must continue that participation during 2026-2027 — All-State Choir applicants must be members of their school choir. Home-schooled students may apply if sponsored by their private teacher, who must be an OMEA member, with a parent/guardian serving as the school administrator. Failure to observe these regulations voids the student's All-State eligibility.",
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "category": "membership",
+          "title": "Director must be an OMEA/NAfME member",
+          "description": "The application requires the school ensemble director's contact information and their 9-digit NAfME membership number.",
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "category": "materials",
+          "title": "2027 choir recording requirements",
+          "description": "Each student records a vocalization (any vocal warm-up exercise of the student's choice) that best demonstrates the extent of their range from bottom to top, then a solo from the OMEA Class 'A' or 'B' list. Solo recordings are strongly recommended to be done with piano accompaniment. Individual vocalists should not submit recordings for multiple parts; strong auditions are considered for different parts as needed.",
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "category": "format",
+          "title": "Online submission via Acceptd",
+          "description": "All 2027 All-State auditions are submitted through the Acceptd online digital audition platform. Recordings must be audio-only; accepted formats are MP3, OGG, M4A, WMA, WAV, AAC and FLAC. Each vocalization, etude and movement may be a separate recording. Applicants need student and parent email addresses, the director's contact information and NAfME number, and a credit card for the application fee.",
+          "structured_data": { "accepted_audio_formats": ["MP3", "OGG", "M4A", "WMA", "WAV", "AAC", "FLAC"], "platform": "Acceptd" },
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "category": "other",
+          "title": "Required regional rehearsal",
+          "description": "All-State Choir members are required to attend a regional rehearsal prior to the conference. Dates and locations for the regional rehearsals are included in the acceptance letter.",
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "category": "other",
+          "title": "Housing is the family's responsibility",
+          "description": "New as of 2025, OMEA is not responsible for housing All-State participants; lodging responsibility rests with parents/guardians and/or school district officials. Students may stay at their own home with proper releases filed, and are not permitted to house on their own.",
+          "source_url": "https://app.getacceptd.com/omea"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "application",
+          "amount_cents": 2000,
+          "payable_to": "unknown",
+          "description": "$20 application fee paid directly to Acceptd for administering the online application process. OMEA does not receive this money and cannot process it.",
+          "source_url": "https://app.getacceptd.com/omea"
+        },
+        {
+          "fee_type": "membership",
+          "amount_cents": 22500,
+          "payable_to": "state_association",
+          "description": "$225 membership fee due with acceptance forms by September 30 for students selected to an All-State ensemble.",
+          "source_url": "https://app.getacceptd.com/omea"
+        }
+      ]
+    },
+    {
+      "name": "OMEA All-State Children's Chorus",
+      "lineage_key": "ohio-all-state-childrens-chorus",
+      "season": "2026-27",
+      "school_level": "elementary",
+      "ensemble_type": "children's chorus",
+      "description": "An elementary honors chorus held as part of the OMEA Professional Development Conference. Selected choristers attend three regional rehearsals plus a full-group rehearsal on the event day, which concludes with a final concert.",
+      "dates": [
+        {
+          "date_type": "other",
+          "title": "Application and audition material available online through Acceptd",
+          "start_at": "2026-04-02",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Deadline for all applications to be submitted",
+          "start_at": "2026-05-31",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        },
+        {
+          "date_type": "acceptance_deadline",
+          "title": "Acceptance forms and participation fee due",
+          "start_at": "2026-10-15",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State Children's Chorus rehearsal and concert",
+          "start_at": "2027-01-28",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Columbus, Ohio, as part of the OMEA Professional Development Conference. A full-group rehearsal runs during the day and the day concludes with a final concert at 5:00 pm.",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Grade level",
+          "description": "Auditions are open to public, private and home-schooled students who will be in grades 4 or 5 during the 2026-2027 school year and whose teachers are OMEA members; home-schooled students whose parent or private teacher is an OMEA member are also eligible. The same page separately states that 'only those students who are currently in Grades 3 or 4 are eligible to audition.' Applicants should be able to match pitch, access the head voice, and have the focus and stamina for full-day rehearsals.",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        },
+        {
+          "category": "format",
+          "title": "Recording and application process",
+          "description": "The Acceptd profile must be created using the student's name, under program group 'OMEA All-State Children's Chorus'. Recordings must begin with the student announcing their name and grade level, must not be edited or spliced, and must be performed continuously. Soloists perform a cappella. Recordings may be made on digital recorders, smart phones, iPads or tablets. Applications submitted by any other means are not considered.",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        },
+        {
+          "category": "other",
+          "title": "Three regional rehearsals required",
+          "description": "All selected students are required to attend three regional rehearsals prior to the January event; the regional rehearsal schedule and details are included in the acceptance letter and posted to the OMEA website.",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "America the Beautiful",
+          "purpose": "audition",
+          "notes": "Key of C major, a cappella.",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        },
+        {
+          "title": "O Music",
+          "composer": "Lowell Mason",
+          "purpose": "audition",
+          "notes": "Key of F or G major, a cappella.",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "application",
+          "amount_cents": 2000,
+          "payable_to": "unknown",
+          "description": "$20 application fee paid directly to Acceptd for administering the online application process.",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        },
+        {
+          "fee_type": "participation",
+          "amount_cents": 10000,
+          "payable_to": "state_association",
+          "description": "$100 participation fee made payable to OMEA, due with acceptance forms by October 15.",
+          "source_url": "https://app.getacceptd.com/omeachildrenschorus"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "The contents of the OMEA Class 'A' and 'B' solo lists used for All-State Choir auditions — referenced but not reproduced on the audition-information page",
+    "Regional rehearsal dates and locations for All-State Choir and Children's Chorus — sent with acceptance letters",
+    "All-State Choir voice-part list and ensemble sizes",
+    "All-State Choir and Children's Chorus conductor names for 2027",
+    "Performance repertoire for either ensemble",
+    "Exact clock times for conference events other than the Children's Chorus 5:00 pm concert"
+  ]
+}
