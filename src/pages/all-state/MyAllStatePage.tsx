@@ -5,7 +5,7 @@
 // NOT lead with an explanation of the program — a student who is in an
 // All-State cohort already knows what All-State is.
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,11 +14,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { CalendarClock, Music4, ExternalLink, Award } from 'lucide-react';
+import { CalendarClock, Music4, ExternalLink, Award, Mic, Upload } from 'lucide-react';
 import {
   useMyParticipations, useMyTasks, useMyChildren, useMyChildrenDates,
+  useMyRecordings, useMySubmissions, useSubmitRecording,
   computeReadiness, practiceLinkFor,
 } from '@/features/all-state/useMyAllState';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 import { useToggleTask } from '@/features/all-state/useCohorts';
 import { trackEvent } from '@/lib/analytics';
 
@@ -48,6 +54,12 @@ export default function MyAllStatePage() {
   const ids = useMemo(() => (parts ?? []).map((p) => p.id), [parts]);
   const { data: tasks } = useMyTasks(ids);
   const { data: children } = useMyChildren();
+  const { data: myRecordings } = useMyRecordings();
+  const { data: submissions } = useMySubmissions(ids);
+  const submitApi = useSubmitRecording();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const [submitFor, setSubmitFor] = useState<string | null>(null);
   const childIds = useMemo(() => (children ?? []).map((c) => c.participation_id), [children]);
   const { data: childDates } = useMyChildrenDates(childIds);
   const toggle = useToggleTask();
@@ -196,6 +208,35 @@ export default function MyAllStatePage() {
                   </details>
                 )}
 
+                {/* Recording submission — links an existing practice
+                    recording to this participation. Recording itself happens
+                    in Music Tools; no second recorder is built here. */}
+                <div className="rounded-lg border p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      <Mic className="h-3.5 w-3.5" aria-hidden /> Recordings
+                    </p>
+                    <Button size="sm" variant="outline" onClick={() => setSubmitFor(p.id)}>
+                      <Upload className="mr-1 h-3.5 w-3.5" aria-hidden /> Submit
+                    </Button>
+                  </div>
+                  {(() => {
+                    const mineSubs = (submissions ?? []).filter((sub) => sub.participation_id === p.id);
+                    return mineSubs.length === 0 ? (
+                      <p className="mt-1.5 text-sm text-muted-foreground">
+                        Nothing submitted yet. Record in{' '}
+                        <Link to="/dashboard/music-tools" className="underline underline-offset-2">Music Tools</Link>,
+                        then submit it here for your director.
+                      </p>
+                    ) : (
+                      <p className="mt-1.5 text-sm text-muted-foreground">
+                        {mineSubs.length} recording{mineSubs.length === 1 ? '' : 's'} submitted —
+                        latest {new Date(mineSubs[0].submitted_at).toLocaleDateString()}.
+                      </p>
+                    );
+                  })()}
+                </div>
+
                 <Link to={`/all-state/${p.state_slug}`}
                       className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
                   What {p.state_name} requires <ExternalLink className="h-3 w-3" aria-hidden />
@@ -260,6 +301,49 @@ export default function MyAllStatePage() {
       <Button asChild variant="outline" className="mt-6 w-full sm:w-auto">
         <Link to="/all-state">Browse other states</Link>
       </Button>
+
+      <Dialog open={!!submitFor} onOpenChange={(v) => !v && setSubmitFor(null)}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-md">
+          <DialogHeader><DialogTitle>Submit a recording</DialogTitle></DialogHeader>
+          {(myRecordings?.length ?? 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              You haven&rsquo;t made any recordings yet. Open{' '}
+              <Link to="/dashboard/music-tools" className="underline underline-offset-2"
+                    onClick={() => setSubmitFor(null)}>Music Tools</Link>{' '}
+              to record, then come back and submit it.
+            </p>
+          ) : (
+            <ul className="space-y-1">
+              {myRecordings!.map((r) => (
+                <li key={r.id}>
+                  <button
+                    className="w-full rounded-md border p-2.5 text-left hover:bg-muted/50"
+                    onClick={async () => {
+                      try {
+                        await submitApi.submit(submitFor!, r.id);
+                        toast({ title: 'Recording submitted', description: 'Your director can hear it now.' });
+                        qc.invalidateQueries({ queryKey: ['all-state-me'] });
+                        setSubmitFor(null);
+                      } catch (e) {
+                        toast({ title: "Couldn't submit", description: (e as Error).message, variant: 'destructive' });
+                      }
+                    }}
+                  >
+                    <p className="text-sm font-medium">{r.title ?? 'Untitled recording'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(r.created_at).toLocaleDateString()}
+                      {r.duration_sec ? ` · ${Math.round(r.duration_sec)}s` : ''}
+                    </p>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSubmitFor(null)}>Cancel</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

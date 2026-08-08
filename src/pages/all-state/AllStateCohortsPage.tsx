@@ -26,8 +26,8 @@ import { useAllStateStates, useStatePrograms } from '@/features/all-state/useAll
 import {
   useCohorts, useParticipations, useCohortTasks, useEnsembles, useEnsembleRoster,
   useTenantRoster, useCreateCohort, useAddStudents, useSetParticipationStatus,
-  useToggleTask, useCohortAttempts, useSyncCalendar, readinessByStudent,
-  type CohortWithProgram,
+  useToggleTask, useCohortAttempts, useSyncCalendar, useCohortSubmissions,
+  readinessByStudent, type CohortWithProgram,
 } from '@/features/all-state/useCohorts';
 import { AuditionRounds } from '@/features/all-state/AuditionRounds';
 
@@ -200,6 +200,22 @@ function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: (
   const participationIds = useMemo(
     () => (participations ?? []).map((p) => p.id), [participations]);
   const { data: attempts } = useCohortAttempts(participationIds);
+  const { data: cohortSubs } = useCohortSubmissions(participationIds);
+
+  // Voice-part summary, grouped to section level (S1+S2 → Soprano) from the
+  // students' tenant voice parts — the at-a-glance headcount a director
+  // scans before worrying about individuals.
+  const partSummary = useMemo(() => {
+    const groups: Record<string, number> = {};
+    const NAME: Record<string, string> = { S: 'Soprano', A: 'Alto', T: 'Tenor', B: 'Bass' };
+    for (const p of participations ?? []) {
+      const vp = p.student?.voice_part?.trim();
+      const key = vp ? (NAME[vp[0].toUpperCase()] ?? 'Other') : 'Unassigned';
+      groups[key] = (groups[key] ?? 0) + 1;
+    }
+    const order = ['Soprano', 'Alto', 'Tenor', 'Bass', 'Other', 'Unassigned'];
+    return order.filter((k) => groups[k]).map((k) => ({ label: k, count: groups[k] }));
+  }, [participations]);
   const { data: roster } = useEnsembleRoster(cohort.ensemble_id);
   const addStudents = useAddStudents(cohort.id, cohort.program_id);
   const setStatus = useSetParticipationStatus();
@@ -262,6 +278,17 @@ function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: (
           </Button>
         </div>
       </header>
+
+      {ordered.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2 text-sm">
+          <span className="font-medium">{ordered.length} student{ordered.length === 1 ? '' : 's'}</span>
+          {partSummary.map((g) => (
+            <Badge key={g.label} variant="outline" className="font-normal">
+              {g.label} {g.count}
+            </Badge>
+          ))}
+        </div>
+      )}
 
       {needingAttention > 0 && (
         <Card className="mb-4 border-amber-200 bg-amber-50/60 dark:border-amber-900 dark:bg-amber-950/30">
@@ -335,6 +362,36 @@ function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: (
                   </p>
                 )}
 
+                {isOpen && (() => {
+                  const subs = (cohortSubs ?? []).filter((sub) => sub.participation_id === p.id);
+                  return (
+                    <div className="mt-3 border-t pt-3">
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        Submitted recordings
+                      </p>
+                      {subs.length === 0 ? (
+                        <p className="mt-1 text-sm text-muted-foreground">None submitted.</p>
+                      ) : (
+                        <ul className="mt-1.5 space-y-2">
+                          {subs.map((sub, i) => (
+                            <li key={i} className="flex flex-wrap items-center gap-2">
+                              <span className="text-sm">
+                                {sub.recording?.title ?? 'Recording'}
+                                <span className="ml-1.5 text-xs text-muted-foreground">
+                                  {new Date(sub.submitted_at).toLocaleDateString()}
+                                </span>
+                              </span>
+                              {sub.recording?.audio_url && (
+                                <audio controls preload="none" src={sub.recording.audio_url}
+                                       className="h-8 max-w-[16rem]" />
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })()}
                 {isOpen && (
                   <AuditionRounds
                     participation={p}

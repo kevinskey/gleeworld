@@ -7,6 +7,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { trackEvent } from '@/lib/analytics';
 import { computeReadiness } from './taskGenerator';
 import type { TaskRow } from './useCohorts';
 
@@ -95,6 +96,80 @@ export function useMyChildrenDates(participationIds: string[]) {
       return (data ?? []) as never;
     },
   });
+}
+
+export interface MyRecording {
+  id: string;
+  title: string | null;
+  audio_url: string | null;
+  duration_sec: number | null;
+  created_at: string;
+}
+
+/** The student's own practice recordings (made in Music Tools' recorder). */
+export function useMyRecordings() {
+  return useQuery<MyRecording[]>({
+    queryKey: ['all-state-me', 'my-recordings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_practice_recordings')
+        .select('id,title,audio_url,duration_sec,created_at')
+        .order('created_at', { ascending: false })
+        .limit(25);
+      if (error) throw error;
+      return (data ?? []) as MyRecording[];
+    },
+  });
+}
+
+export interface SubmissionLink {
+  id: string;
+  participation_id: string;
+  external_ref: string | null;
+  created_at: string;
+}
+
+/** Recordings the student has SUBMITTED against their participations. */
+export function useMySubmissions(participationIds: string[]) {
+  return useQuery<SubmissionLink[]>({
+    queryKey: ['all-state-me', 'submissions', participationIds.join(',')],
+    enabled: participationIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_all_state_practice_links')
+        .select('id,participation_id,external_ref,created_at')
+        .in('participation_id', participationIds)
+        .eq('tool', 'recording')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as SubmissionLink[];
+    },
+  });
+}
+
+/**
+ * Submit = link one of the student's existing recordings to their
+ * participation via gw_all_state_practice_links — the adapter table built for
+ * exactly this, so no blob is duplicated and no shared table changes. Also
+ * auto-completes any open 'recording' task on the participation: submitting
+ * IS the completion, and asking the student to also tick a box is busywork.
+ */
+export function useSubmitRecording() {
+  return { async submit(participationId: string, recordingId: string) {
+    const { data, error } = await supabase
+      .from('gw_all_state_practice_links')
+      .insert({ participation_id: participationId, tool: 'recording', external_ref: recordingId })
+      .select();
+    if (error) throw error;
+    if (!data?.length) throw new Error('Submission was rejected.');
+    const { data: userRes } = await supabase.auth.getUser();
+    await supabase.from('gw_all_state_tasks')
+      .update({ completed_at: new Date().toISOString(), completed_by: userRes?.user?.id ?? null })
+      .eq('participation_id', participationId)
+      .eq('task_type', 'recording')
+      .is('completed_at', null);
+    trackEvent('all_state_recording_submitted', {});
+  } };
 }
 
 export { computeReadiness };

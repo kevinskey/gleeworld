@@ -230,6 +230,48 @@ export function useCohortAttempts(participationIds: string[]) {
   });
 }
 
+export interface CohortSubmission {
+  participation_id: string;
+  submitted_at: string;
+  recording: { id: string; title: string | null; audio_url: string | null; duration_sec: number | null } | null;
+}
+
+/**
+ * Submitted recordings across the cohort, joined to the audio rows. Two
+ * queries rather than a PostgREST embed because the link's external_ref is a
+ * plain text column (the adapter is tool-agnostic), not an FK.
+ */
+export function useCohortSubmissions(participationIds: string[]) {
+  return useQuery<CohortSubmission[]>({
+    queryKey: [KEY, 'submissions', participationIds.join(',')],
+    enabled: participationIds.length > 0,
+    queryFn: async () => {
+      const { data: links, error } = await supabase
+        .from('gw_all_state_practice_links')
+        .select('participation_id,external_ref,created_at')
+        .in('participation_id', participationIds)
+        .eq('tool', 'recording')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      const ids = [...new Set((links ?? []).map((l) => l.external_ref).filter(Boolean))] as string[];
+      let recs: Record<string, CohortSubmission['recording']> = {};
+      if (ids.length) {
+        const { data: rows, error: rErr } = await supabase
+          .from('gw_practice_recordings')
+          .select('id,title,audio_url,duration_sec')
+          .in('id', ids);
+        if (rErr) throw rErr;
+        recs = Object.fromEntries((rows ?? []).map((r) => [r.id, r]));
+      }
+      return (links ?? []).map((l) => ({
+        participation_id: l.participation_id,
+        submitted_at: l.created_at,
+        recording: l.external_ref ? (recs[l.external_ref] ?? null) : null,
+      }));
+    },
+  });
+}
+
 function useInvalidate() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: [KEY] });
