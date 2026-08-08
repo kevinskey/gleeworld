@@ -120,10 +120,20 @@ export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav
     .filter((e) => entrySurfaces(e).includes('grid') && !tabRoutes.has(e.to))
     .map((e) => ({ key: e.key, to: e.to, label: e.gridLabel ?? e.label, icon: e.gridIcon ?? e.icon, section: e.section, tone: e.tone }));
 
-  if (!tools || tools.length === 0) {
-    // Default grid frozen: first 8 enabled keys of DEFAULT_GRID_ORDER in
-    // that order; EVERYTHING else (including all sidebar-parity additions)
-    // goes to overflow, in catalog order.
+  if (tools == null) {
+    // No record at all — the hook is still loading, or the member has never
+    // saved a preference. Default grid frozen: first 8 enabled keys of
+    // DEFAULT_GRID_ORDER in that order; EVERYTHING else (including all
+    // sidebar-parity additions) goes to overflow, in catalog order.
+    //
+    // Deliberately NOT taken when `tools` is an empty array: that is a
+    // stored, deliberate "I cleared everything" — the member removed every
+    // keycap and tapped Done. Falling back to the default grid there would
+    // make the grid disagree with the sidebar shelf (which has no such
+    // fallback and correctly renders empty), and — because saveTools writes
+    // optimistically — the cleared grid would visibly snap back to 8 tiles
+    // the instant Done is tapped. Respect the empty set instead: Home and
+    // All Tools always render, so nobody is stranded.
     const byKey = new Map(enabled.map((d) => [d.key, d]));
     const primary = DEFAULT_GRID_ORDER
       .map((k) => byKey.get(k))
@@ -135,7 +145,9 @@ export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav
 
   // My Tools order, filtered to what is still enabled and un-claimed by the
   // tab bar. Stale keys drop silently; the stored record is never rewritten,
-  // so re-enabling a module restores its old spot.
+  // so re-enabling a module restores its old spot. An empty array is a
+  // deliberate, respected choice: primary comes back empty and everything
+  // enabled lands in overflow, one tap away in More.
   const byKey = new Map(enabled.map((d) => [d.key, d]));
   const primary = tools
     .map((k) => byKey.get(k))

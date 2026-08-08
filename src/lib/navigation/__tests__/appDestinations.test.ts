@@ -244,12 +244,29 @@ describe('getAppTiles with a custom tools list', () => {
     const { primary } = getAppTiles('faculty', allOn, navFor(allOn), ['nonsense', 'tickets']);
     expect(primary.map((t) => t.key)).toEqual(['tickets']);
   });
-  it('empty tools list falls back to the default grid, same as null', () => {
-    // Matches getAppTiles's `!tools || tools.length === 0` guard: an empty
-    // My Tools set (never a reachable state via sanitizeTools/saveTools
-    // today, but a valid string[]) is treated as "nothing stored" rather
-    // than "show nothing" — a member is never left staring at a blank grid.
-    expect(getAppTiles('faculty', allOn, navFor(allOn), [])).toEqual(getAppTiles('faculty', allOn, navFor(allOn), null));
+  it('empty tools list is a deliberate clear: empty primary, everything enabled goes to overflow', () => {
+    // Product ruling (round 1 review): a stored empty set means the member
+    // removed every keycap and tapped Done. That is a real choice, not "no
+    // record yet" — respect it. The sidebar shelf has no empty→default
+    // fallback, so if the grid papered over an empty array with
+    // DEFAULT_GRID_ORDER, the two surfaces would disagree again (grid full,
+    // shelf empty) — the exact bug this task exists to eliminate. Home and
+    // All Tools always render, so nobody is stranded by an empty grid.
+    const { primary, overflow } = getAppTiles('faculty', allOn, navFor(allOn), []);
+    expect(primary).toEqual([]);
+    expect(overflow.length).toBeGreaterThan(0);
+  });
+  it('null and an empty array diverge: only null (no record) falls back to the default grid', () => {
+    // Pins the distinction the guard must preserve: `tools == null` (hook
+    // still loading, or no stored preference at all) is not the same state
+    // as `tools: []` (a stored, deliberate empty set). A future refactor
+    // that re-collapses `if (!tools || tools.length === 0)` would pass
+    // every other test in this file yet silently regress this one.
+    const withNull = getAppTiles('faculty', allOn, navFor(allOn), null);
+    const withEmpty = getAppTiles('faculty', allOn, navFor(allOn), []);
+    expect(withNull.primary.length).toBeGreaterThan(0);
+    expect(withEmpty.primary).toEqual([]);
+    expect(withNull).not.toEqual(withEmpty);
   });
   it('custom lists are not capped at 8', () => {
     const defaults = getAppTiles('faculty', allOn, navFor(allOn));
