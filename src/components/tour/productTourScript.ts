@@ -1,13 +1,36 @@
 // Real-product tour script. Activates each step by calling react-router's
-// navigate(path) — purely client-side, no DB writes, no real button clicks.
-// The cursor + spotlight target the DashboardShell sidebar (which stays
-// mounted across navigations), so the animation never desyncs while the
-// inner panel loads asynchronously.
+// navigate(path) — purely client-side, no DB writes. The cursor + spotlight
+// target the DashboardShell sidebar (which stays mounted across
+// navigations), so the animation never desyncs while the inner panel loads
+// asynchronously.
+//
+// Two steps (analytics, settings) target rows that live behind the
+// sidebar's All Tools disclosure and are unmounted while it's closed —
+// ensureAllToolsOpen below is their beforeMeasure, and it IS a real click
+// on the disclosure toggle (not a business action; opens/closes local UI
+// state, no data mutation, no navigation, idempotent). See TourEngine's
+// header comment for why that's the one DOM interaction a script step gets.
 
+import { flushSync } from 'react-dom';
 import type { TourStep } from './types';
 
 interface ProductTourContext {
   navigate: (path: string) => void;
+}
+
+// The sidebar's All Tools disclosure unmounts everything it doesn't show,
+// so a step whose target lives inside it (analytics, settings — neither is
+// in the default My Tools shelf) needs the click applied, and its resulting
+// state update flushed, before TourEngine measures the target. flushSync
+// forces that synchronously so the row already exists in the DOM by the
+// time this returns. Idempotent — no-ops if already open, or if the toggle
+// isn't mounted (e.g. the tour runs against a role/tenant with an empty
+// All Tools section, or the mobile drawer isn't open).
+function ensureAllToolsOpen() {
+  const toggle = document.querySelector('[data-tour="nav-all-tools-toggle"]') as HTMLButtonElement | null;
+  if (toggle && toggle.getAttribute('aria-expanded') === 'false') {
+    flushSync(() => toggle.click());
+  }
 }
 
 export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
@@ -80,8 +103,9 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       targetSelector: '[data-tour="nav-analytics"]',
       title: 'Analytics',
       description:
-        "Program-wide numbers: attendance trends, engagement, dues collection, email open rates.",
+        "Program-wide numbers: attendance trends, engagement, dues collection, email open rates. It's not on your shelf by default — open All Tools in the sidebar any time to reach it.",
       dwellMs: 8500,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard/analytics'),
     },
     {
@@ -89,8 +113,9 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       targetSelector: '[data-tour="nav-settings"]',
       title: 'Settings',
       description:
-        "Workspace branding, billing, and integrations — Google Calendar, Stripe, Resend, Twilio.",
+        "Workspace branding, billing, and integrations — Google Calendar, Stripe, Resend, Twilio. Also under All Tools if it's not one of your shelf picks.",
       dwellMs: 7500,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard/workspace'),
     },
     {

@@ -209,7 +209,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const fallbackName = getOrgName();
   const tenantName = branding?.short_name || branding?.org_name || fallbackName;
   const tenantLongName = branding?.org_name || branding?.short_name || fallbackName;
-  const { profile, canEditMusicLibrary } = useUserRole();
+  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
   // Defensive: tolerate older useUserRole shapes that don't export this fn
   // (avoids "canEditMusicLibrary is not a function" white-screening the shell).
   const userCanLibrarian = typeof canEditMusicLibrary === 'function'
@@ -268,12 +268,16 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   // keys in their My Tools set, and deriving the shelf from `sections`
   // would silently drop them from the shelf they were told they'd see.
   const resolvedEntries = resolveNav(navCtx);
+  // 'home' has no gate, but hiddenRoutes could still remove it (Workspace
+  // Settings → Navigation). NavShelf's `home` prop is optional for exactly
+  // this case — a shelf with no Home row beats blanking the whole nav.
   const homeEntry = resolvedEntries.find((e) => e.key === 'home');
-  const shelfTools = selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
-  // 'home' has no gate, but hiddenRoutes could still remove it. A shell
-  // without a Home row is far better than a white screen. Every hook in
-  // this component has already run above this line.
-  if (!homeEntry) return null;
+  // isFaculty is a guess (profile is still null) until roleLoading clears —
+  // useUserRole(null) reads as student, so a faculty member would flash
+  // DEFAULT_TOOLS_STUDENT before their real shelf swaps in. Render no
+  // guessed tools until the role resolves — same convention as
+  // MobileBottomNav's roleLoading gate on tabs.
+  const shelfTools = roleLoading ? [] : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
 
   // Studio session editor needs the full window for clips + mixer.
   // Hide the sidebar when an open session is loaded. The user can
@@ -379,7 +383,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
 function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { settings: branding } = useBrandingSettings();
   const tenantName = branding?.short_name || branding?.org_name || getOrgName();
-  const { profile, canEditMusicLibrary } = useUserRole();
+  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
   const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
   const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
@@ -417,12 +421,11 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   // Shelf pool is the full gated set from resolveNav, NOT `sections` — see
   // the matching comment in Sidebar above for why.
   const resolvedEntries = resolveNav(navCtx);
+  // 'home' has no gate, but hiddenRoutes could still remove it. NavShelf's
+  // `home` prop is optional for exactly this case — see Sidebar above.
   const homeEntry = resolvedEntries.find((e) => e.key === 'home');
-  const shelfTools = selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
-  // 'home' has no gate, but hiddenRoutes could still remove it. A shell
-  // without a Home row is far better than a white screen. Every hook in
-  // this component has already run above this line.
-  if (!homeEntry) return null;
+  // Same roleLoading gate as Sidebar — see the matching comment there.
+  const shelfTools = roleLoading ? [] : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
 
   return (
     <div className="flex flex-col h-full">

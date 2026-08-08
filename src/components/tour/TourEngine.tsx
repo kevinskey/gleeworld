@@ -1,7 +1,12 @@
 // Reusable, theater-style tour engine. Reads target rects from the DOM
-// but never mutates the DOM, never calls element.click(), and never
+// but never mutates the DOM itself, never calls element.click(), and never
 // navigates. Activation is purely a callback into mock state via the
-// TourActionContext provided by the caller.
+// TourActionContext provided by the caller. A step's optional
+// `beforeMeasure` is the one place a script gets to act before the engine
+// reads the DOM (e.g. clicking open a disclosure that unmounts its own
+// contents when closed, so a target inside it can be found at all) — that
+// DOM interaction is the script's, not the engine's; see productTourScript's
+// ensureAllToolsOpen for the concrete case and why it's scoped that tightly.
 //
 // Architecture:
 //   - A single fixed-position overlay covers the viewport at z-index 9000.
@@ -139,6 +144,11 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
     if (dwellTimerRef.current) window.clearTimeout(dwellTimerRef.current);
     if (pulseTimerRef.current) window.clearTimeout(pulseTimerRef.current);
 
+    try {
+      currentStep.beforeMeasure?.();
+    } catch (e) {
+      console.error('tour beforeMeasure failed:', e);
+    }
     const rect = measureTarget(currentStep.targetSelector);
     setSpotlight(rect);
     setBubbleAnchor(rect);
@@ -178,6 +188,11 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
   useEffect(() => {
     if (phase !== 'reading' || !currentStep) return;
     const remeasure = window.setTimeout(() => {
+      try {
+        currentStep.beforeMeasure?.();
+      } catch (e) {
+        console.error('tour beforeMeasure failed:', e);
+      }
       const r = measureTarget(currentStep.targetSelector);
       if (r) {
         setSpotlight(r);

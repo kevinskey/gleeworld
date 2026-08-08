@@ -95,6 +95,30 @@ describe('useMyTools', () => {
     expect(sent.tools).toHaveLength(8);
   });
 
+  it('keeps faculty and student cache entries separate — no role cross-contamination', async () => {
+    // Regression for I3: DashboardShell computes `role` from a profile that
+    // starts null (useUserRole loading), so the first fetch for the SAME
+    // uid can fire as 'student' before the real role ('faculty') is known.
+    // If the query key doesn't include role, that wrong-guess result sits
+    // in the cache and the later 'faculty' call reads it straight back out
+    // instead of fetching its own defaults. Sharing one QueryClient across
+    // both renders reproduces exactly that shared-cache scenario.
+    maybeSingle.mockResolvedValue({ data: null, error: null });
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const sharedWrapper = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={qc}>{children}</QueryClientProvider>
+    );
+
+    const { result: studentResult } = renderHook(() => useMyTools('student'), { wrapper: sharedWrapper });
+    await waitFor(() => expect(studentResult.current.loading).toBe(false));
+    expect(studentResult.current.myTools?.tools).toEqual(DEFAULT_TOOLS_STUDENT);
+
+    const { result: facultyResult } = renderHook(() => useMyTools('faculty'), { wrapper: sharedWrapper });
+    await waitFor(() => expect(facultyResult.current.loading).toBe(false));
+    expect(facultyResult.current.myTools?.tools).toEqual(DEFAULT_TOOLS_FACULTY);
+    expect(facultyResult.current.myTools?.tools).not.toEqual(DEFAULT_TOOLS_STUDENT);
+  });
+
   it('rolls the cache back when the save fails', async () => {
     maybeSingle.mockResolvedValue({ data: null, error: null });
     rpc.mockResolvedValue({ error: { message: 'denied' } });

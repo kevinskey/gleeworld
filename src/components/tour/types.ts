@@ -13,4 +13,18 @@ export interface TourStep {
   dwellMs?: number;
   /** Fires after the cursor click pulse. Engine never invokes element.click(). */
   onActivate?: () => void;
+  /**
+   * Fires immediately before the engine measures `targetSelector` — on
+   * step-entry and again on the post-arrival remeasure. For a target that's
+   * conditionally unmounted (e.g. behind a disclosure that only renders its
+   * contents when open), this is where a script reveals it so the engine
+   * finds a real rect instead of treating the step as target-less and
+   * skipping straight past the click pulse (which is when onActivate
+   * fires). The engine itself still never touches the DOM here — this is a
+   * closure the script builder provides, same contract as onActivate. Runs
+   * synchronously: an implementation that flips React state must flush it
+   * (e.g. via `flushSync`) so the DOM already reflects the change by the
+   * time this returns.
+   */
+  beforeMeasure?: () => void;
 }

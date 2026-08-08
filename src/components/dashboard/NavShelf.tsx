@@ -17,7 +17,13 @@ import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 import type { CatalogEntry } from '@/lib/navigation/navCatalog';
 
 export interface NavShelfProps {
-  home: CatalogEntry;
+  /**
+   * Optional: 'home' has no gate today, but a tenant's hiddenRoutes could
+   * still remove it (Workspace Settings → Navigation). Absent means the
+   * shelf renders with no Home row rather than the caller blanking the
+   * whole nav — a shelf missing one row beats a white screen.
+   */
+  home?: CatalogEntry;
   tools: CatalogEntry[];
   sections: Array<{ key: string; label: string; items: CatalogEntry[] }>;
   variant: 'desktop' | 'mobile';
@@ -58,8 +64,8 @@ export function NavShelf({ home, tools, sections, variant, onNavigate }: NavShel
   // Defensive cap. useMyTools already sanitizes, but the shelf's whole
   // promise is that it cannot grow into a list — enforce it at the render
   // boundary too, so a stale cache or a future caller can't break it.
-  const shelf = tools.filter((t) => t.key !== home.key).slice(0, MY_TOOLS_CAP);
-  const shelfKeys = new Set([home.key, ...shelf.map((t) => t.key)]);
+  const shelf = tools.filter((t) => t.key !== home?.key).slice(0, MY_TOOLS_CAP);
+  const shelfKeys = new Set([...(home ? [home.key] : []), ...shelf.map((t) => t.key)]);
 
   // Everything not already on the shelf, still grouped, for the disclosure.
   const rest = sections
@@ -69,7 +75,7 @@ export function NavShelf({ home, tools, sections, variant, onNavigate }: NavShel
   return (
     <div className="space-y-1">
       <div data-testid="nav-shelf-tools" className="space-y-0.5">
-        <Row entry={home} variant={variant} onNavigate={onNavigate} />
+        {home && <Row entry={home} variant={variant} onNavigate={onNavigate} />}
         {shelf.map((t) => (
           <Row key={t.key} entry={t} variant={variant} onNavigate={onNavigate} />
         ))}
@@ -80,6 +86,7 @@ export function NavShelf({ home, tools, sections, variant, onNavigate }: NavShel
           <div className="h-px bg-border mx-2 my-2" />
           <button
             type="button"
+            data-tour="nav-all-tools-toggle"
             onClick={() => setAllOpen((o) => !o)}
             aria-expanded={allOpen}
             className={`${ROW_BASE} ${variant === 'desktop' ? ROW_DESKTOP : ROW_MOBILE} ${ROW_INACTIVE} justify-between`}

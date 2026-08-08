@@ -50,6 +50,20 @@ describe('NavShelf', () => {
     expect(within(shelf).getAllByRole('link')).toHaveLength(9);
   });
 
+  it('degrades to no Home row when home is absent, tools and All Tools still render', () => {
+    // I2: 'home' can be hidden via Workspace Settings → Navigation. NavShelf
+    // must not blank the whole nav for that — the shelf renders every other
+    // tool, and the All Tools disclosure still opens.
+    renderShelf({ home: undefined });
+    const shelf = screen.getByTestId('nav-shelf-tools');
+    const labels = within(shelf).getAllByRole('link').map((a) => a.textContent);
+    expect(labels).toEqual(['Calendar', 'Music Library', 'Academy']);
+    expect(within(shelf).queryByText('Command Center')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /all tools/i }));
+    expect(screen.getByText('Finance')).toBeInTheDocument();
+  });
+
   it('renders no drag affordance — reordering is not a shelf gesture', () => {
     const { container } = renderShelf();
     // dnd-kit's useSortable stamps aria-roledescription="sortable" and the

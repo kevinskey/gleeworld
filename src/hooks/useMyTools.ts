@@ -18,7 +18,17 @@ export function useMyTools(role: 'student' | 'faculty') {
   const uid = user?.id;
 
   const { data: myTools = null, isLoading } = useQuery<MyTools | null>({
-    queryKey: ['my-tools', uid ?? 'anon'],
+    // role is part of the key, not just an argument to queryFn: the caller
+    // (DashboardShell) computes `role` from a profile that starts null and
+    // fills in async, so the first fetch for an admin/instructor can fire
+    // with a guessed 'student' before the real role is known. Without role
+    // in the key, that wrong-guess result would sit in the ['my-tools', uid]
+    // cache slot for staleTime and the real 'faculty' call would just read
+    // the stale student defaults back out. Keying by role means the two
+    // guesses get separate cache entries and can never cross-contaminate;
+    // DashboardShell also gates rendering on useUserRole's loading flag so
+    // the wrong-guess fetch's result is never shown even before it resolves.
+    queryKey: ['my-tools', uid ?? 'anon', role],
     enabled: !!uid,
     staleTime: 60 * 1000,
     queryFn: async () => {
@@ -53,8 +63,12 @@ export function useMyTools(role: 'student' | 'faculty') {
     // re-render from the stale cache for the ~200-500ms the RPC takes,
     // snapping every moved tile back and then forward again — reads as a
     // whole-screen blink. (Same reasoning as the old useNavItemOrder.)
-    const previous = queryClient.getQueryData<MyTools | null>(['my-tools', uid]) ?? null;
-    queryClient.setQueryData(['my-tools', uid], next);
+    // Must match the read side's key exactly (uid + role) — the two keys
+    // drifting apart was the I3 bug: an optimistic write to the role-less
+    // key silently missed the role-keyed query entirely.
+    const queryKey = ['my-tools', uid ?? 'anon', role];
+    const previous = queryClient.getQueryData<MyTools | null>(queryKey) ?? null;
+    queryClient.setQueryData(queryKey, next);
     try {
       // save_nav_item_order is SECURITY DEFINER: it bypasses the RESTRICTIVE
       // tenant_isolation_restrict policy on user_preferences and resyncs
@@ -66,16 +80,16 @@ export function useMyTools(role: 'student' | 'faculty') {
       });
       if (error) {
         console.warn('[useMyTools] save failed:', error.message);
-        queryClient.setQueryData(['my-tools', uid], previous);
+        queryClient.setQueryData(queryKey, previous);
         return false;
       }
       return true;
     } catch (err) {
       console.warn('[useMyTools] save failed:', err);
-      queryClient.setQueryData(['my-tools', uid], previous);
+      queryClient.setQueryData(queryKey, previous);
       return false;
     }
-  }, [uid, myTools?.widgets, queryClient]);
+  }, [uid, role, myTools?.widgets, queryClient]);
 
   return { myTools, loading: isLoading, saveTools };
 }
