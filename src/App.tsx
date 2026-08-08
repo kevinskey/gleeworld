@@ -205,6 +205,7 @@ const AllStateDirectoryPage = lazy(() => import("./pages/all-state/AllStateDirec
 const AllStateStatePage = lazy(() => import("./pages/all-state/AllStateStatePage"));
 const AllStateAdminPage = lazy(() => import("./pages/all-state/AllStateAdminPage"));
 const AllStateCohortsPage = lazy(() => import("./pages/all-state/AllStateCohortsPage"));
+const MyAllStatePage = lazy(() => import("./pages/all-state/MyAllStatePage"));
 const SeatingChartEditorPage = lazy(() => import("./pages/seating-charts/EditorPage"));
 const SeatingChartViewPage = lazy(() => import("./pages/seating-charts/ViewPage"));
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
@@ -2348,6 +2349,16 @@ const App = () => {
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell><AllStateCohortsPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/my-all-state"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><MyAllStatePage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
