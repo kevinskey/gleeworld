@@ -64,10 +64,14 @@ export function useRunCrawl() {
 /**
  * Review a change. The two verbs mirror the brief:
  * - dismiss: false alarm; the claim stands.
- * - accept: the discrepancy is real. For date_not_found this DOWNGRADES the
- *   claim's confidence to 'unverified' — the honest state until a human
- *   re-sources it — rather than deleting or rewriting anything. Crawls (and
- *   reviews) never overwrite verified data with guesses.
+ * - accept, WITH a proposed value: the extractor found the new date on the
+ *   page and both verifications passed (its evidence quote appears in the
+ *   content, and the date itself is independently findable there). Accepting
+ *   applies it — this is the one path by which crawled data reaches the
+ *   canon, and it runs through a human every time.
+ * - accept, WITHOUT a proposal: the date genuinely vanished. The claim is
+ *   DOWNGRADED to 'unverified' — the honest state until re-sourced. Nothing
+ *   is deleted; crawls and reviews never overwrite with guesses.
  */
 export function useReviewChange() {
   const { toast } = useToast();
@@ -76,10 +80,18 @@ export function useReviewChange() {
     mutationFn: async ({ change, action }: { change: PendingChange; action: 'accept' | 'dismiss' }) => {
       const { data: userRes } = await supabase.auth.getUser();
       if (action === 'accept' && change.change_type === 'date_not_found' && change.date_id) {
+        const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+        if (change.new_value && /^\d{4}-\d{2}-\d{2}$/.test(change.new_value)) {
+          // Apply at local midnight in the claim's own timezone — the same
+          // all_day convention the canon uses everywhere else.
+          patch.start_at = `${change.new_value}T00:00:00`;
+          patch.retrieved_at = new Date().toISOString();
+          patch.confidence = 'official_source';
+        } else {
+          patch.confidence = 'unverified';
+        }
         const { error: dErr } = await supabase
-          .from('gw_all_state_dates')
-          .update({ confidence: 'unverified', updated_at: new Date().toISOString() })
-          .eq('id', change.date_id);
+          .from('gw_all_state_dates').update(patch).eq('id', change.date_id);
         if (dErr) throw dErr;
       }
       const { data, error } = await supabase
@@ -100,7 +112,9 @@ export function useReviewChange() {
       toast({
         title: v.action === 'accept' ? 'Accepted' : 'Dismissed',
         description: v.action === 'accept' && v.change.change_type === 'date_not_found'
-          ? 'The claim is downgraded to unverified until it is re-sourced.'
+          ? (v.change.new_value
+              ? `Date updated to ${v.change.new_value} from the page's own text.`
+              : 'The claim is downgraded to unverified until it is re-sourced.')
           : undefined,
       });
     },

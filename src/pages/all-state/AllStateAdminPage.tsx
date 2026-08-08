@@ -85,6 +85,11 @@ export default function AllStateAdminPage() {
                     {c.change_type.replace(/_/g, ' ')}
                   </Badge>
                   {c.state && <span className="text-sm font-medium">{c.state.name}</span>}
+                  {c.new_value && (
+                    <Badge variant="outline" className="border-emerald-200 bg-emerald-50 font-normal text-emerald-700">
+                      {c.previous_value?.slice(0, 10)} → {c.new_value}
+                    </Badge>
+                  )}
                   <span className="min-w-0 flex-1 text-sm text-muted-foreground">{c.detail}</span>
                   {c.source?.url && (
                     <a href={c.source.url} target="_blank" rel="noopener noreferrer"
