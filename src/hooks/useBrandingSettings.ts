@@ -22,6 +22,11 @@ export interface BrandingSettings {
    *  color palette. */
   assistant_voice_id: string | null;
   setup_completed: boolean;
+  /** SMS sent after a public appointment booking or audition. Placeholders:
+   *  {org_name}, {first_name}. NULL/blank falls back to the server-side
+   *  default ("Thanks for joining {org_name}!") — see
+   *  supabase/functions/_shared/publicIntake.ts. */
+  welcome_sms_template: string | null;
 }
 
 const TENANT = typeof window !== 'undefined'
@@ -44,6 +49,7 @@ function fallback(): BrandingSettings {
     letter_spacing: 0,
     assistant_voice_id: null,
     setup_completed: false,
+    welcome_sms_template: null,
   };
 }
 

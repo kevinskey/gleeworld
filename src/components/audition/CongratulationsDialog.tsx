@@ -2,17 +2,23 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { getOrgName } from '@/lib/orgName';
 
 interface CongratulationsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // Set only on the anonymous submit path (public-intake). 'existing' means
+  // the email already had an account — the visitor's application still went
+  // through, but they should sign in with their existing credentials rather
+  // than assume the password they just typed took effect.
+  accountStatus?: 'created' | 'existing';
 }
 
-export const CongratulationsDialog: React.FC<CongratulationsDialogProps> = ({ 
-  open, 
-  onOpenChange 
+export const CongratulationsDialog: React.FC<CongratulationsDialogProps> = ({
+  open,
+  onOpenChange,
+  accountStatus,
 }) => {
   const navigate = useNavigate();
 
@@ -41,6 +47,15 @@ export const CongratulationsDialog: React.FC<CongratulationsDialogProps> = ({
             <p className="text-muted-foreground">
               We look forward to hearing your beautiful voice and welcoming you to our musical family.
             </p>
+            {accountStatus === 'existing' && (
+              <p className="text-sm text-muted-foreground">
+                We found an existing account for that email address —{' '}
+                <Link to="/auth" className="underline font-medium text-foreground">
+                  sign in
+                </Link>{' '}
+                to track your application.
+              </p>
+            )}
           </div>
         </DialogHeader>
         <div className="mt-6">

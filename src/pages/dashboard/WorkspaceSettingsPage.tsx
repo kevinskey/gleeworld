@@ -18,6 +18,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -757,6 +758,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
     logo_url: '',
     assistant_voice_id: '' as string,
     youtube_channel_handle: '',
+    welcome_sms_template: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -772,6 +774,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         logo_url: (settings as any).logo_url || '',
         assistant_voice_id: (settings as any).assistant_voice_id || '',
         youtube_channel_handle: (settings as any).youtube_channel_handle || '',
+        welcome_sms_template: settings.welcome_sms_template || '',
       });
     }
   }, [settings]);
@@ -824,6 +827,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         logo_url: form.logo_url,
         assistant_voice_id: form.assistant_voice_id || null,
         youtube_channel_handle: form.youtube_channel_handle.trim().replace(/^@/, '') || null,
+        welcome_sms_template: form.welcome_sms_template.trim() || null,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'tenant_id' })
       .select('id');
@@ -1028,6 +1032,29 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
           <p className="text-xs text-muted-foreground">
             Optional. When set, the Video Library gets a "Sync from YouTube" button that pulls
             the channel's uploads into this workspace.
+          </p>
+        </div>
+        {/* Welcome SMS — sent by the public-intake edge function after an
+            anonymous visitor books an appointment or finishes an audition
+            on this tenant's public site. Server-side rendering + fallback
+            live in supabase/functions/_shared/publicIntake.ts
+            (renderSmsTemplate / DEFAULT_WELCOME_SMS_TEMPLATE) — this field
+            must keep naming exactly those two placeholders. */}
+        <div className="space-y-1.5">
+          <Label className="text-xs">Welcome SMS</Label>
+          <Textarea
+            value={form.welcome_sms_template}
+            disabled={!canManage}
+            onChange={(e) => setForm({ ...form, welcome_sms_template: e.target.value })}
+            placeholder="Thanks for joining {org_name}!"
+            rows={3}
+            className="text-sm"
+          />
+          <p className="text-xs text-muted-foreground">
+            Sent after someone books an appointment or finishes an audition. Use{' '}
+            <code className="text-xs bg-muted/40 px-1 py-0.5 rounded">{'{org_name}'}</code> and{' '}
+            <code className="text-xs bg-muted/40 px-1 py-0.5 rounded">{'{first_name}'}</code>.
+            Leave blank for the default: "Thanks for joining {'{org_name}'}!"
           </p>
         </div>
         {canManage && (

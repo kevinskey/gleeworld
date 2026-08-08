@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useMemo, useEffect, ReactNode } from 'react';
 import { useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
+import { buildAuditionPages, canLeavePage, type AuditionPageId } from './auditionPages';
 
 const auditionSchema = z.object({
   // Registration info (for new users)
@@ -71,18 +72,41 @@ const auditionSchema = z.object({
 
 export type AuditionFormData = z.infer<typeof auditionSchema>;
 
+// Draft persistence — six pages of answers must survive a refresh, which is
+// the entire complaint this feature exists to fix. sessionStorage (not
+// localStorage) so a draft doesn't outlive the tab/visit.
+const DRAFT_KEY = `audition-draft:${getTenantSlug()}`;
+
+// Credentials are never written to storage. capturedImage lives in separate
+// component state (not on the RHF form — see AuditionFormProvider below) and
+// is therefore never part of `values` here, which matters because it's a
+// base64 data URL big enough to blow the ~5MB sessionStorage quota by itself.
+const OMIT_FROM_DRAFT = ['password', 'confirmPassword'] as const;
+
+function readDraft(): Partial<AuditionFormData> {
+  try {
+    return JSON.parse(sessionStorage.getItem(DRAFT_KEY) ?? '{}');
+  } catch {
+    return {};
+  }
+}
+
+export function clearAuditionDraft() {
+  sessionStorage.removeItem(DRAFT_KEY);
+}
+
 interface AuditionFormContextType {
   form: UseFormReturn<AuditionFormData>;
   currentPage: number;
   setCurrentPage: (page: number) => void;
   totalPages: number;
+  pages: AuditionPageId[];
+  currentPageId: AuditionPageId;
   capturedImage: string | null;
   setCapturedImage: (image: string | null) => void;
   nextPage: () => void;
   previousPage: () => void;
   canProceed: () => boolean;
-  isNewUser: boolean;
-  setIsNewUser: (isNew: boolean) => void;
 }
 
 const AuditionFormContext = createContext<AuditionFormContextType | undefined>(undefined);
@@ -102,14 +126,16 @@ interface AuditionFormProviderProps {
 export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [isNewUser, setIsNewUser] = useState(false);
   const { user } = useAuth();
-  const totalPages = user ? 5 : 6; // Add registration page for non-users
+  const pages = useMemo(() => buildAuditionPages(!!user), [user]);
+  const totalPages = pages.length;
+  const currentPageId = pages[currentPage - 1];
+
+  const draft = useMemo(() => readDraft(), []);
 
   const form = useForm<AuditionFormData>({
     resolver: zodResolver(auditionSchema),
     defaultValues: {
-      email: user?.email || "",
       firstName: "",
       lastName: "",
       phone: "",
@@ -125,8 +151,32 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
       interestedInVoiceLessons: null,
       interestedInMusicFundamentals: null,
       interestedInLeadership: null,
+      ...draft,
+      // The draft round-trips through JSON, so a stored auditionDate arrives
+      // as a string — revive it or the date picker gets a string where it
+      // expects a Date. Email prefers the draft (it's what the visitor was
+      // typing) but falls back to the signed-in user's address.
+      email: draft.email || user?.email || "",
+      auditionDate: draft.auditionDate
+        ? new Date(draft.auditionDate as unknown as string)
+        : undefined,
     },
   });
+
+  // Persist every change so a refresh mid-interview restores the answers.
+  // Credentials are stripped before the write lands in sessionStorage.
+  useEffect(() => {
+    const sub = form.watch((values) => {
+      const snapshot = { ...values } as Record<string, unknown>;
+      for (const key of OMIT_FROM_DRAFT) delete snapshot[key];
+      try {
+        sessionStorage.setItem(DRAFT_KEY, JSON.stringify(snapshot));
+      } catch {
+        // Quota or private-mode failure is not worth interrupting the form over.
+      }
+    });
+    return () => sub.unsubscribe();
+  }, [form]);
 
   const nextPage = () => {
     if (currentPage < totalPages) {
@@ -141,69 +191,10 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
   };
 
   const canProceed = (): boolean => {
-    const values = form.getValues();
-    const errors = form.formState.errors;
-    
-    // Debug logging for all pages
-    console.log(`🔍 Page ${currentPage} validation:`, {
-      values,
-      errors,
-      user: !!user
+    return canLeavePage(pages[currentPage - 1], form.getValues(), {
+      capturedImage,
+      errors: form.formState.errors,
     });
-    
-    switch (currentPage) {
-      case 1: // Registration (for new users) or Basic Info (for existing users)
-        if (!user && isNewUser) {
-          return !!(values.email && values.password && values.confirmPassword && 
-                   values.password === values.confirmPassword);
-        }
-        return !!(values.firstName && values.lastName && values.email && values.phone);
-      case 2: // Basic Information (for new users) or Musical Background (for existing users)
-        if (!user) {
-          return !!(values.firstName && values.lastName && values.phone);
-        }
-        // Musical background — sectionType is the only hard requirement.
-        return !!values.sectionType;
-      case 3: // Musical Background or Music Skills
-        // For new users this is musical background; require sectionType.
-        if (!user) return !!values.sectionType;
-        return true;
-      case 4: // Music Skills or Personal Info
-        if (!user) {
-          return true; // Music skills for new users
-        }
-        const personalityText = values.personalityDescription?.trim() || '';
-        const wordCount = personalityText ? personalityText.split(/\s+/).filter(word => word.length > 0).length : 0;
-        const hasValidPersonality = !!(values.personalityDescription && wordCount >= 50);
-        const hasNoErrors = Object.keys(errors).length === 0;
-        
-        console.log('Personal Info validation:', {
-          hasValidPersonality,
-          hasNoErrors,
-          wordCount,
-          errors: Object.keys(errors)
-        });
-        
-        return hasValidPersonality && hasNoErrors;
-      case 5: // Personal Info or Selfie & Scheduling
-        if (!user) {
-          const personalityText = values.personalityDescription?.trim() || '';
-          const wordCount = personalityText ? personalityText.split(/\s+/).filter(word => word.length > 0).length : 0;
-          return !!(values.personalityDescription && wordCount >= 50);
-        }
-        // Final page for existing users: must have slot + photo + tshirt.
-        console.log('Final page validation:', {
-          auditionDate: values.auditionDate,
-          auditionTime: values.auditionTime,
-          capturedImage,
-          tshirtSize: values.tshirtSize,
-        });
-        return !!(values.auditionDate && values.auditionTime && capturedImage && values.tshirtSize);
-      case 6: // Selfie & Scheduling (for new users only)
-        return !!(values.auditionDate && values.auditionTime && capturedImage && values.tshirtSize);
-      default:
-        return false;
-    }
   };
 
   const value: AuditionFormContextType = {
@@ -211,13 +202,13 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
     currentPage,
     setCurrentPage,
     totalPages,
+    pages,
+    currentPageId,
     capturedImage,
     setCapturedImage,
     nextPage,
     previousPage,
     canProceed,
-    isNewUser,
-    setIsNewUser,
   };
 
   return (
