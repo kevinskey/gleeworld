@@ -204,6 +204,7 @@ const SeatingChartsDashboardPage = lazy(() => import("./pages/seating-charts/Das
 const AllStateDirectoryPage = lazy(() => import("./pages/all-state/AllStateDirectoryPage"));
 const AllStateStatePage = lazy(() => import("./pages/all-state/AllStateStatePage"));
 const AllStateAdminPage = lazy(() => import("./pages/all-state/AllStateAdminPage"));
+const AllStateCohortsPage = lazy(() => import("./pages/all-state/AllStateCohortsPage"));
 const SeatingChartEditorPage = lazy(() => import("./pages/seating-charts/EditorPage"));
 const SeatingChartViewPage = lazy(() => import("./pages/seating-charts/ViewPage"));
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
@@ -2339,6 +2340,18 @@ const App = () => {
                     in — the real fence is RLS on is_platform_owner(), so a
                     tenant admin who reaches this URL can read but every save
                     is rejected with an explicit message. */}
+                {/* Director workspace — tenant data, so ProtectedRoute plus
+                    RLS tenant isolation on every Layer 2/3 table. */}
+                <Route
+                  path="/dashboard/all-state"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><AllStateCohortsPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/dashboard/all-state-admin"
                   element={

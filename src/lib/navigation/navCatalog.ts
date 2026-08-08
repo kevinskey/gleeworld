@@ -73,7 +73,11 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // Teach
   { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-primary text-primary-foreground', tourId: 'nav-academy', hero: true },
   { key: 'office-hours', to: '/dashboard/office-hours',        label: 'Studio Hours', icon: CalendarClock, section: 'teach', tone: 'bg-emerald-50 text-emerald-600',     tourId: 'nav-office-hours' },
+  // Reference directory (public, all 49 states) and the director's own
+  // workspace are separate destinations: one answers "what does my state
+  // require", the other "are my students ready".
   { key: 'all-state',    to: '/all-state',                     label: 'All-State',    icon: Award,         section: 'teach', tone: 'bg-indigo-50 text-indigo-600',       tourId: 'nav-all-state', gate: { module: 'all_state' } },
+  { key: 'all-state-cohorts', to: '/dashboard/all-state',      label: 'My All-State', icon: Users,         section: 'teach', tone: 'bg-indigo-50 text-indigo-700',       tourId: 'nav-all-state-cohorts', gate: { module: 'all_state' } },
   // Editorial canon for every state — GleeWorld staff only, not tenant admins.
   { key: 'all-state-admin', to: '/dashboard/all-state-admin',  label: 'All-State Data', icon: Award,       section: 'admin', tone: 'bg-indigo-50 text-indigo-600',      tourId: 'nav-all-state-admin', gate: { platformAdminOnly: true }, surfaces: ['sidebar'] },
   { key: 'practice',     to: '/dashboard/practice-recordings', label: 'Practice',     icon: Mic,           section: 'teach', tone: 'bg-teal-50 text-teal-700',           tourId: 'nav-practice', gate: { adminOnly: true } },
