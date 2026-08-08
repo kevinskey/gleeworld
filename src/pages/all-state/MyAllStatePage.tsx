@@ -134,7 +134,7 @@ export default function MyAllStatePage() {
                 {open.length > 0 && (
                   <ul className="divide-y">
                     {open.map((t) => {
-                      const link = practiceLinkFor(t.task_type);
+                      const link = practiceLinkFor(t);
                       const overdue = t.due_at && new Date(t.due_at) < new Date();
                       return (
                         <li key={t.id} className="flex items-start gap-3 py-3">

@@ -11,7 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   generateTasks, computeReadiness, resolveCohortDate, minusDays,
-  type GenRequirement, type GenDate,
+  type GenRequirement, type GenDate, type GenRepertoire,
 } from '../taskGenerator';
 
 // Shapes taken from the real seeded rows.
@@ -121,6 +121,46 @@ describe('generateTasks', () => {
     const times = dated.map((t) => new Date(t.due_at!).getTime());
     expect(times).toEqual([...times].sort((a, b) => a - b));
     expect(undated).toHaveLength(3);
+  });
+});
+
+const GEORGIA_REP: GenRepertoire[] = [
+  { id: 'p1', title: 'Se Florindo è fedele', purpose: 'audition', sort_order: 10 },
+  { id: 'p2', title: 'Lasciatemi morire', purpose: 'audition', sort_order: 20 },
+];
+
+const TEXAS_REP: GenRepertoire[] = [
+  { id: 'q1', title: 'Cedit, Hyems', composer: 'Abbie Betinis', voicing: 'SATB',
+    purpose: 'audition', notes: 'Designated for Area audition', sort_order: 50 },
+  { id: 'q2', title: 'A concert piece', purpose: 'performance', sort_order: 60 },
+];
+
+describe('repertoire tasks', () => {
+  it('creates one task per audition piece so a student knows WHICH pieces', () => {
+    const tasks = generateTasks({ requirements: [], dates: [], repertoire: GEORGIA_REP });
+    expect(tasks.map((t) => t.title)).toEqual([
+      'Prepare: Se Florindo è fedele',
+      'Prepare: Lasciatemi morire',
+    ]);
+    expect(tasks.every((t) => t.source_repertoire_id)).toBe(true);
+  });
+
+  it('skips performance repertoire — that is sung AFTER selection', () => {
+    const tasks = generateTasks({ requirements: [], dates: [], repertoire: TEXAS_REP });
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].title).toBe('Prepare: Cedit, Hyems');
+  });
+
+  it('puts composer and voicing in the description when published', () => {
+    const tasks = generateTasks({ requirements: [], dates: [], repertoire: TEXAS_REP });
+    expect(tasks[0].description).toContain('Abbie Betinis');
+    expect(tasks[0].description).toContain('SATB');
+  });
+
+  it('leaves description null when the state published no metadata', () => {
+    // Georgia publishes titles only — inventing a composer would be worse.
+    const tasks = generateTasks({ requirements: [], dates: [], repertoire: GEORGIA_REP });
+    expect(tasks[0].description).toBeNull();
   });
 });
 

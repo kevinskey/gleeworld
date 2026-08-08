@@ -2,7 +2,7 @@
 // in-progress) rehearsal tracks. Generation itself starts from a score,
 // so the empty state routes to the Music Library.
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ListMusic, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +43,11 @@ export default function PartTracksPage() {
   const [assignments, setAssignments] = useState<PartTrackAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [openScore, setOpenScore] = useState<Row | null>(null);
+  // ?score=<id> opens that score's player directly, so a link from elsewhere
+  // (an All-State checklist, an assignment, a message) lands a student on the
+  // right rehearsal track instead of a list they have to search.
+  const [search, setSearch] = useSearchParams();
+  const [autoOpened, setAutoOpened] = useState(false);
 
   const refresh = useCallback(async () => {
     const { data, error } = await supabase
@@ -58,6 +63,25 @@ export default function PartTracksPage() {
     }
     setLoading(false);
   }, []);
+
+  // Resolve ?score=<id> once the list has loaded. Guarded by autoOpened so
+  // closing the player doesn't immediately reopen it, and the param is
+  // cleared so a refresh or back-navigation doesn't fight the user.
+  useEffect(() => {
+    if (autoOpened || loading) return;
+    const wanted = search.get('score');
+    if (!wanted) return;
+    const match = rows.find((r) => r.id === wanted);
+    setAutoOpened(true);
+    if (match) {
+      setOpenScore(match);
+    } else {
+      toast.error('That score has no part tracks in this workspace.');
+    }
+    const next = new URLSearchParams(search);
+    next.delete('score');
+    setSearch(next, { replace: true });
+  }, [autoOpened, loading, rows, search, setSearch]);
 
   // Hard delete: gw_parttrack_scores cascades to parts/rights/jobs/renders +
   // player tables, so the whole project disappears in one row delete. RLS

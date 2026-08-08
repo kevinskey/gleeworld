@@ -38,6 +38,16 @@ export interface GenCohortDate {
   is_override?: boolean;
 }
 
+export interface GenRepertoire {
+  id: string;
+  title: string;
+  composer?: string | null;
+  voicing?: string | null;
+  purpose?: string | null;
+  notes?: string | null;
+  sort_order?: number | null;
+}
+
 export interface GeneratedTask {
   title: string;
   description: string | null;
@@ -45,6 +55,7 @@ export interface GeneratedTask {
   source_requirement_id: string | null;
   source_date_id: string | null;
   source_cohort_date_id: string | null;
+  source_repertoire_id: string | null;
   due_at: string | null;
   sort_order: number;
 }
@@ -115,6 +126,7 @@ export interface GenerateInput {
   requirements: GenRequirement[];
   dates: GenDate[];
   cohortDates?: GenCohortDate[];
+  repertoire?: GenRepertoire[];
 }
 
 /**
@@ -124,7 +136,7 @@ export interface GenerateInput {
  * state listed first), with undated preparation tasks after the dated ones.
  */
 export function generateTasks(input: GenerateInput): GeneratedTask[] {
-  const { requirements, dates, cohortDates = [] } = input;
+  const { requirements, dates, cohortDates = [], repertoire = [] } = input;
   const tasks: GeneratedTask[] = [];
 
   // 1. One task per actionable requirement. Undated — these are "prepare"
@@ -139,6 +151,7 @@ export function generateTasks(input: GenerateInput): GeneratedTask[] {
       source_requirement_id: r.id,
       source_date_id: null,
       source_cohort_date_id: null,
+      source_repertoire_id: null,
       due_at: null,
       sort_order: r.sort_order ?? 100,
     });
@@ -154,6 +167,7 @@ export function generateTasks(input: GenerateInput): GeneratedTask[] {
       source_requirement_id: null,
       source_date_id: d.id,
       source_cohort_date_id: null,
+      source_repertoire_id: null,
       due_at: d.start_at ?? null,
       sort_order: d.sort_order ?? 100,
     });
@@ -173,8 +187,30 @@ export function generateTasks(input: GenerateInput): GeneratedTask[] {
       source_requirement_id: null,
       source_date_id: cd.source_date_id ?? null,
       source_cohort_date_id: cd.id,
+      source_repertoire_id: null,
       due_at: due,
       sort_order: 50,   // director deadlines outrank state ones at equal dates
+    });
+  }
+
+  // 4. One task per audition piece. Without these a student gets "Prepare one
+  //    solo from the two published options" and no idea which pieces those
+  //    are — and there is nothing concrete for a practice link to point at.
+  //    Performance repertoire is skipped: it is sung AFTER selection, so it is
+  //    not audition preparation.
+  for (const piece of repertoire) {
+    if (piece.purpose && piece.purpose !== 'audition') continue;
+    const attribution = [piece.composer, piece.voicing].filter(Boolean).join(' · ');
+    tasks.push({
+      title: `Prepare: ${piece.title}`,
+      description: [attribution || null, piece.notes || null].filter(Boolean).join(' — ') || null,
+      task_type: 'repertoire',
+      source_requirement_id: null,
+      source_date_id: null,
+      source_cohort_date_id: null,
+      source_repertoire_id: piece.id,
+      due_at: null,
+      sort_order: (piece.sort_order ?? 100) + 200,  // after requirements
     });
   }
 

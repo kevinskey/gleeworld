@@ -40,6 +40,7 @@ export interface ParticipationRow {
 export interface TaskRow {
   id: string;
   participation_id: string;
+  source_repertoire_id?: string | null;
   title: string;
   description: string | null;
   task_type: string;
@@ -183,10 +184,11 @@ export function useAddStudents(cohortId: string, programId: string) {
     mutationFn: async (studentIds: string[]) => {
       if (studentIds.length === 0) return { added: 0, tasks: 0 };
 
-      const [reqRes, dateRes, cohortDateRes] = await Promise.all([
+      const [reqRes, dateRes, cohortDateRes, repRes] = await Promise.all([
         supabase.from('gw_all_state_requirements').select('*').eq('program_id', programId),
         supabase.from('gw_all_state_dates').select('*').eq('program_id', programId),
         supabase.from('gw_all_state_cohort_dates').select('*').eq('cohort_id', cohortId),
+        supabase.from('gw_all_state_repertoire').select('*').eq('program_id', programId),
       ]);
       if (reqRes.error) throw reqRes.error;
       if (dateRes.error) throw dateRes.error;
@@ -202,6 +204,7 @@ export function useAddStudents(cohortId: string, programId: string) {
         requirements: (reqRes.data ?? []) as never,
         dates: (dateRes.data ?? []) as never,
         cohortDates: (cohortDateRes.data ?? []) as never,
+        repertoire: (repRes.data ?? []) as never,
       });
 
       if (generated.length) {
