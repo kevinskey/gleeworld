@@ -23,6 +23,15 @@ export function MyMusicCard({
   onTogglePublish?: () => void;
 }) {
   const externalOnly = isExternalOnly(score);
+  // The action cluster below is absolutely positioned, so it does not push the
+  // title out of the way — the title has to reserve the space itself. Each
+  // button is w-4 (16px) + p-1 (8px) = 24px, plus gap-0.5 (2px) between them.
+  // Star, edit and delete are always present; publish appears for librarians,
+  // which is when a long filename collided with the icons.
+  const actionCount = onTogglePublish ? 4 : 3;
+  // 3 → pr-20 (80px), 4 → pr-28 (112px). Rounded up past the measured width so
+  // the descender of a wrapped second line never touches an icon.
+  const titlePadding = actionCount === 4 ? 'pr-28' : 'pr-20';
   return (
     <Card className={`${SOFT_CARD} group relative h-full flex flex-col transition-colors hover:bg-accent/40 focus-within:bg-accent/40`}>
       <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
@@ -45,7 +54,7 @@ export function MyMusicCard({
             </div>
             <div className="flex-1 min-w-0">
               <div
-                className="text-sm font-semibold leading-snug line-clamp-2 break-words pr-6"
+                className={`text-sm font-semibold leading-snug line-clamp-2 [overflow-wrap:anywhere] ${titlePadding}`}
                 title={score.title || 'Untitled'}
               >
                 {score.title || 'Untitled'}
