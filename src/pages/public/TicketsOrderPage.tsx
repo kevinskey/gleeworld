@@ -14,7 +14,7 @@ import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { ticketPollInterval } from './ticketPolling';
 
 interface Order {
   id: string;
@@ -53,12 +53,12 @@ function useOrderStatus(token: string | undefined) {
   return useQuery<OrderStatusResponse | null>({
     queryKey: ['ticket_order_status', token],
     enabled: !!token,
-    // Poll while pending. Once paid/refunded/etc, stop.
-    refetchInterval: (q) => {
-      const data = q.state.data as OrderStatusResponse | null | undefined;
-      if (!data?.order) return 2000;
-      return data.order.status === 'pending' ? 2000 : false;
-    },
+    refetchInterval: (q) =>
+      ticketPollInterval(q.state.data as OrderStatusResponse | null | undefined),
+    // Keep polling when the tab is backgrounded. Buyers routinely switch away
+    // while Stripe confirms; without this the poll pauses and the page still
+    // reads "Processing your payment" when they come back.
+    refetchIntervalInBackground: true,
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('box-office-order-status', {
         body: { access_token: token! },
@@ -87,8 +87,13 @@ export default function TicketsOrderPage() {
     return () => clearTimeout(id);
   }, [order?.status]);
 
+  // No UniversalLayout on purpose. This is the page a buyer opens at the
+  // venue door on cellular, and it needs nothing from the app shell — no
+  // header, no footer, no branding fetch. Measured 2026-08-08: a signed-in
+  // buyer waited 22s between the HTML landing and the page even asking for
+  // the ticket, because the whole dashboard stack mounted first.
   return (
-    <UniversalLayout>
+    <div className="min-h-screen bg-background">
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
@@ -112,7 +117,7 @@ export default function TicketsOrderPage() {
           <RefundedState order={order} event={event} />
         )}
       </main>
-    </UniversalLayout>
+    </div>
   );
 }
 

@@ -500,7 +500,44 @@ function AuthenticatedGlobals() {
   );
 }
 
+// Fast path for the at-the-door ticket page.
+//
+// /tickets/<token> is opened by a buyer on cellular, usually standing in a
+// queue, and all it has to do is draw a QR code. Measured on 2026-08-08: a
+// signed-in buyer's browser spent 22 seconds between loading the HTML and
+// making the ONE request that fetches the ticket, because every provider
+// below — AuthProvider, MusicPlayer, Course, Messenger, ActiveMeeting,
+// AudioCompanion — plus AuthenticatedGlobals (Messenger, mini player,
+// meeting overlay, push bridge) had to mount first. The ticket itself had
+// existed for ten seconds before the page was even requested.
+//
+// Evaluated once from window.location, not useLocation: this component sits
+// ABOVE BrowserRouter and never re-renders on navigation. In-app navigation
+// to /tickets/... therefore keeps the normal tree, which is correct — the
+// heavy providers are already mounted by then and nothing is saved by
+// tearing them down.
+//
+// TenantThemeRoot is kept: it is the single writer of the brand tokens, and
+// it is one RPC that does not block paint. Everything else is dropped.
+const IS_TICKET_FAST_PATH =
+  typeof window !== 'undefined' && /^\/tickets\/[^/]+\/?$/.test(window.location.pathname);
+
 const App = () => {
+  if (IS_TICKET_FAST_PATH) {
+    return (
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <TenantThemeRoot />
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/tickets/:token" element={<TicketsOrderPage />} />
+            </Routes>
+          </Suspense>
+        </QueryClientProvider>
+      </BrowserRouter>
+    );
+  }
+
   return (
     <BrowserRouter>
       <ScrollToTop />

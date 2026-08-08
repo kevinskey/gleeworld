@@ -897,6 +897,29 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     // Loading state is now managed by the canvas render effect
   }, [signedUrl, annotationMode, engine]);
 
+  // Bravura is no longer preloaded in index.html — it is 512KB and only this
+  // component draws with it, so paying for it on every page of the platform
+  // was wrong. Canvas fillText does NOT wait for a webfont; it silently falls
+  // back to a system font. So pull the font in explicitly and redraw once it
+  // lands, otherwise a score reopened with saved Bravura stamps renders them
+  // in the wrong glyphs on first paint.
+  useEffect(() => {
+    if (!('fonts' in document)) return;
+    let cancelled = false;
+    document.fonts
+      .load('40px "Bravura"')
+      .then(() => {
+        if (!cancelled) redrawAnnotations();
+      })
+      .catch(() => {
+        /* font unavailable — stamps fall back, which is what happened before */
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const redrawAnnotations = (pathsToRedraw?: any[]) => {
     if (!drawingCanvasRef.current) return;
     
