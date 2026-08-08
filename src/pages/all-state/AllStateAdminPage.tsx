@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
-import { Plus, Eye, EyeOff, Globe, Pencil } from 'lucide-react';
+import { Plus, Eye, EyeOff, Globe, Pencil, RefreshCw, ExternalLink } from 'lucide-react';
 import { useAllStateStates } from '@/features/all-state/useAllState';
 import {
   useAdminPrograms, useSetVerification, useSetStateActive,
@@ -26,6 +26,7 @@ import {
 import { ENTITIES } from '@/features/all-state/admin/fieldSchemas';
 import { RecordEditor } from '@/features/all-state/admin/RecordEditor';
 import { ProgramDialog } from '@/features/all-state/admin/ProgramDialog';
+import { usePendingChanges, useRunCrawl, useReviewChange } from '@/features/all-state/admin/useCrawl';
 import type { VerificationStatus, AllStateProgram } from '@/features/all-state/types';
 
 const STATUS_TONE: Record<VerificationStatus, string> = {
@@ -49,6 +50,9 @@ export default function AllStateAdminPage() {
   const setActive = useSetStateActive();
 
   const state = states?.find((s) => s.id === stateId);
+  const { data: pendingChanges } = usePendingChanges();
+  const runCrawl = useRunCrawl();
+  const review = useReviewChange();
   const program = programs?.find((p) => p.id === programId) ?? programs?.[0];
 
   return (
@@ -60,6 +64,50 @@ export default function AllStateAdminPage() {
           every tenant reads the same rows. Staff only.
         </p>
       </header>
+
+      {(pendingChanges?.length ?? 0) > 0 && (
+        <Card className="mb-6 border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">
+              Review queue — {pendingChanges!.length} pending change{pendingChanges!.length === 1 ? '' : 's'}
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              The crawler proposes; only your review publishes. Accepting a
+              missing-date finding downgrades that claim to unverified — nothing
+              is ever deleted or rewritten automatically.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ul className="divide-y">
+              {pendingChanges!.map((c) => (
+                <li key={c.id} className="flex flex-wrap items-center gap-2 py-2.5">
+                  <Badge variant="outline" className="font-normal">
+                    {c.change_type.replace(/_/g, ' ')}
+                  </Badge>
+                  {c.state && <span className="text-sm font-medium">{c.state.name}</span>}
+                  <span className="min-w-0 flex-1 text-sm text-muted-foreground">{c.detail}</span>
+                  {c.source?.url && (
+                    <a href={c.source.url} target="_blank" rel="noopener noreferrer"
+                       className="inline-flex items-center gap-1 text-xs underline underline-offset-2">
+                      Source <ExternalLink className="h-3 w-3" aria-hidden />
+                    </a>
+                  )}
+                  <span className="flex gap-1.5">
+                    <Button size="sm" variant="outline"
+                            onClick={() => review.mutate({ change: c, action: 'dismiss' })}>
+                      Dismiss
+                    </Button>
+                    <Button size="sm"
+                            onClick={() => review.mutate({ change: c, action: 'accept' })}>
+                      Accept
+                    </Button>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="mb-6 flex flex-wrap items-end gap-3">
         <div className="min-w-[14rem]">
@@ -92,6 +140,11 @@ export default function AllStateAdminPage() {
             </Button>
             <Button onClick={() => { setEditingProgram(null); setProgramDialogOpen(true); }}>
               <Plus className="mr-1.5 h-4 w-4" aria-hidden /> New program
+            </Button>
+            <Button variant="outline" disabled={runCrawl.isPending}
+                    onClick={() => runCrawl.mutate({ state_slug: state.slug })}>
+              <RefreshCw className={`mr-1.5 h-4 w-4 ${runCrawl.isPending ? 'animate-spin' : ''}`} aria-hidden />
+              {runCrawl.isPending ? 'Crawling…' : 'Crawl this state'}
             </Button>
           </>
         )}

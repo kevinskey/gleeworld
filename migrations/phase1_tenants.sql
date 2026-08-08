@@ -67,7 +67,9 @@ DECLARE
     'gw_all_state_states', 'gw_all_state_organizations', 'gw_all_state_programs',
     'gw_all_state_sources', 'gw_all_state_dates', 'gw_all_state_requirements',
     'gw_all_state_repertoire', 'gw_all_state_fees', 'gw_all_state_documents',
-    'gw_all_state_voice_parts'
+    'gw_all_state_voice_parts',
+    -- Phase 4 crawl infrastructure (20260808280000): global like the canon.
+    'gw_all_state_snapshots', 'gw_all_state_staged_extractions', 'gw_all_state_changes'
   ];
 BEGIN
   SELECT id INTO spelman_id FROM public.gw_tenants WHERE slug = 'spelman';
