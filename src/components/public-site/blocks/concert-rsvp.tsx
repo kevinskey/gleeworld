@@ -386,6 +386,10 @@ function RsvpDialog({
     [data.merch, merch],
   );
   const total = ticketCents + merchCents;
+  // A $0 total skips Stripe entirely — the edge function mints the tickets and
+  // sends us straight to the tickets page. Copy must not promise a payment
+  // step that will not happen.
+  const isFree = total === 0;
 
   // No tier configured is not a buyable state either — show the same closed
   // message rather than a form that can only fail at the server.
@@ -669,7 +673,7 @@ function RsvpDialog({
               })}
               <div className="flex justify-between pt-2 border-t border-border text-base font-semibold">
                 <span>Total</span>
-                <span className="tabular-nums">{money(total)}</span>
+                <span className="tabular-nums">{isFree ? 'Free' : money(total)}</span>
               </div>
             </div>
 
@@ -689,11 +693,15 @@ function RsvpDialog({
               }}
             >
               {submitting
-                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Starting secure checkout…</>
-                : <>Continue to payment · {money(total)}</>}
+                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {isFree ? 'Reserving your spot…' : 'Starting secure checkout…'}</>
+                : isFree
+                  ? <>Reserve {attending === 1 ? 'my spot' : `${attending} spots`}</>
+                  : <>Continue to payment · {money(total)}</>}
             </Button>
             <p className="text-center text-xs text-muted-foreground -mt-2">
-              Payments are processed securely by Stripe. Souvenirs are picked up at the concert.
+              {isFree
+                ? 'No payment required. Your tickets appear right away — bring the QR code to the door.'
+                : 'Payments are processed securely by Stripe. Souvenirs are picked up at the concert.'}
             </p>
           </form>
         )}

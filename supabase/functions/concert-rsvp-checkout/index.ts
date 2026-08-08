@@ -14,9 +14,17 @@
 // Commerce rules this obeys, deliberately:
 //   Rule 1 — every price is read from the DB by id. The client sends ids and
 //            quantities only; a tampered body cannot change what is charged.
-//   Rule 2 — this function ONLY creates a `pending` order. Nothing here marks
-//            anything paid. Fulfillment happens in the signature-verified
+//   Rule 2 — for any order that costs money, this function ONLY creates a
+//            `pending` order; fulfillment happens in the signature-verified
 //            webhook, which calls gw_box_office_fulfill_order.
+//
+//            ONE deliberate exception: a $0 total (free tier, no souvenirs).
+//            No payment means no webhook will ever arrive, so this function
+//            calls the SAME fulfillment RPC itself. The rule exists so that
+//            nothing marks an order paid without Stripe having confirmed the
+//            money — with nothing to charge, there is nothing to confirm, and
+//            the price is still read from the DB by id under Rule 1, so the
+//            client cannot talk its way into a free ticket.
 //   Rule 4 — the collecting account is resolved here from tenant state, never
 //            from the request.
 //   Rule 5 — Stripe is reached through _shared/payments, not directly.
@@ -32,6 +40,12 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000';
 const SRK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+// Free RSVPs are fulfilled here rather than by the webhook, so this function
+// needs the same ticket-signing secret the webhook uses. A token signed with a
+// different secret would fail at the door scanner.
+const SIGNING_SECRET = Deno.env.get('TICKET_SIGNING_SECRET') ?? '';
+const RESEND_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
+const ROOT_DOMAIN = Deno.env.get('ROOT_DOMAIN') ?? 'gleeworld.org';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SLUG_RE = /^[a-z0-9-]+$/;
@@ -59,6 +73,74 @@ async function pg(path: string, init?: RequestInit) {
 const j = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
+async function pgRpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      apikey: SRK,
+      Authorization: `Bearer ${SRK}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(args),
+  });
+  if (!res.ok) throw new Error(`rpc ${fn} ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+function escapeHtml(s: string): string {
+  return String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]!));
+}
+
+/** Confirmation for a free reservation. Best-effort: the tickets already
+ *  exist, so a failed send must not fail the request. */
+async function sendFreeRsvpEmail(opts: {
+  toEmail: string;
+  buyerName: string | null;
+  eventTitle: string;
+  eventDate: string;
+  venueName: string | null;
+  tenantSlug: string;
+  tenantName: string;
+  accessToken: string;
+  count: number;
+}) {
+  if (!RESEND_KEY) return;
+  const url = `https://${opts.tenantSlug}.${ROOT_DOMAIN}/tickets/${opts.accessToken}`;
+  const plural = opts.count === 1 ? '' : 's';
+  const when = `${opts.eventDate}${opts.venueName ? ' · ' + opts.venueName : ''}`;
+  const text =
+`You're on the list for ${opts.eventTitle}.
+
+${opts.eventTitle}
+${when}
+
+${opts.count} ticket${plural} reserved. Show this page at the door (scan the QR code from your phone):
+${url}
+
+— ${opts.tenantName}`;
+  const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;color:#111;max-width:560px;margin:0 auto;padding:24px;">
+    <h2 style="margin:0 0 4px;">${escapeHtml(opts.eventTitle)}</h2>
+    <p style="margin:0 0 16px;color:#555;">${escapeHtml(when)}</p>
+    <p>You're on the list${opts.buyerName ? ', ' + escapeHtml(opts.buyerName) : ''} — <strong>${opts.count} ticket${plural}</strong> reserved.</p>
+    <p>Open this page on your phone at the door — each ticket scans individually:</p>
+    <p><a href="${url}" style="display:inline-block;background:#0b1220;color:#fff;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:600;">View your tickets</a></p>
+    <p style="color:#888;font-size:12px;">${escapeHtml(url)}</p>
+    <hr style="border:none;border-top:1px solid #eee;margin:24px 0;">
+    <p style="color:#888;font-size:12px;">— ${escapeHtml(opts.tenantName)}</p>
+  </body></html>`;
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: `Box Office <welcome@${ROOT_DOMAIN}>`,
+      to: [opts.toEmail],
+      subject: `🎟 You're on the list — ${opts.eventTitle}`,
+      text,
+      html,
+    }),
+  });
+}
+
 /** Unguessable order-lookup token. 32 bytes ≈ 256 bits. */
 function randomToken(): string {
   const bytes = new Uint8Array(32);
@@ -69,12 +151,14 @@ function randomToken(): string {
 interface Tenant {
   id: string;
   slug: string;
+  name: string | null;
   stripe_account_id: string | null;
   stripe_charges_enabled: boolean;
   uses_platform_stripe: boolean;
 }
 interface EventRow {
   id: string; title: string; box_office_status: string | null; box_office_slug: string | null;
+  start_date: string; venue_name: string | null;
 }
 interface Tier {
   id: string; name: string; price_cents: number; currency: string;
@@ -127,13 +211,13 @@ export async function handler(req: Request): Promise<Response> {
 
     // ── Resolve tenant / event / tier ───────────────────────────────────────
     const tenants: Tenant[] = await pg(
-      `gw_tenants?slug=eq.${encodeURIComponent(tenantSlug)}&select=id,slug,stripe_account_id,stripe_charges_enabled,uses_platform_stripe`,
+      `gw_tenants?slug=eq.${encodeURIComponent(tenantSlug)}&select=id,slug,name,stripe_account_id,stripe_charges_enabled,uses_platform_stripe`,
     );
     const tenant = tenants[0];
     if (!tenant) return j({ error: 'Tenant not found' }, 404);
 
     const events: EventRow[] = await pg(
-      `gw_events?tenant_id=eq.${tenant.id}&box_office_slug=eq.${encodeURIComponent(eventSlug)}&select=id,title,box_office_status,box_office_slug`,
+      `gw_events?tenant_id=eq.${tenant.id}&box_office_slug=eq.${encodeURIComponent(eventSlug)}&select=id,title,box_office_status,box_office_slug,start_date,venue_name`,
     );
     const event = events[0];
     if (!event) return j({ error: 'Event not found' }, 404);
@@ -225,20 +309,39 @@ export async function handler(req: Request): Promise<Response> {
     const ticketCents = tier.price_cents * quantity;
     const amountCents = ticketCents + merchCents;
 
+    // A $0 total means a free event: free tier, no souvenirs. It is fulfilled
+    // here instead of by the webhook, because there is no payment and so no
+    // webhook will ever arrive. Before this branch existed, a free tier still
+    // built a Stripe session, Stripe rejected the sub-minimum amount, and the
+    // guest was told "Payment could not be started" with no ticket.
+    const isFree = amountCents === 0;
+
+    // Checked BEFORE the order row is created so a misconfigured environment
+    // cannot strand a guest with a permanently pending order.
+    if (isFree && !SIGNING_SECRET) {
+      console.error('TICKET_SIGNING_SECRET unset — cannot fulfill a free RSVP');
+      return j({ error: 'This event is not yet set up to issue tickets' }, 503);
+    }
+
     // ── Resolve the collecting account (Rule 4) ─────────────────────────────
     // Connect account wins when present. The platform account is used ONLY
     // for a tenant explicitly flagged for it; there is no silent fallback,
     // because a fallback would let any unconfigured tenant collect money into
     // the platform's account.
-    let account: string | null;
+    //
+    // Skipped entirely when nothing is being charged: a free event must not
+    // require the tenant to have finished Stripe onboarding.
+    let account: string | null = null;
     let applicationFeeCents = 0;
-    if (tenant.stripe_account_id && tenant.stripe_charges_enabled) {
-      account = tenant.stripe_account_id;
-      applicationFeeCents = amountCents > 0 ? Math.max(1, Math.round(amountCents * 0.01)) : 0;
-    } else if (tenant.uses_platform_stripe) {
-      account = null; // platform account; no fee — it is already our own money
-    } else {
-      return j({ error: 'This event is not yet set up to accept payments' }, 409);
+    if (!isFree) {
+      if (tenant.stripe_account_id && tenant.stripe_charges_enabled) {
+        account = tenant.stripe_account_id;
+        applicationFeeCents = Math.max(1, Math.round(amountCents * 0.01));
+      } else if (tenant.uses_platform_stripe) {
+        account = null; // platform account; no fee — it is already our own money
+      } else {
+        return j({ error: 'This event is not yet set up to accept payments' }, 409);
+      }
     }
 
     // ── Pre-create the pending order (Rule 2) ───────────────────────────────
@@ -265,6 +368,74 @@ export async function handler(req: Request): Promise<Response> {
     const order = Array.isArray(inserted) ? inserted[0] : inserted;
 
     const returnBase = `https://${tenant.slug}.gleeworld.org`;
+    const ticketsUrl = `${returnBase}/tickets/${accessToken}`;
+
+    // ── Free path: mint now, no Stripe ──────────────────────────────────────
+    // Same RPC the paid webhook calls, so free tickets are indistinguishable
+    // at the door: same signed token, same capacity locking, same idempotency.
+    // Passing empty session / payment-intent ids is correct — there is no
+    // Stripe object to reference.
+    if (isFree) {
+      let result: { ok?: boolean; error?: string; already_paid?: boolean } | null = null;
+      try {
+        result = await pgRpc('gw_box_office_fulfill_order', {
+          p_order_id: order.id,
+          p_session_id: '',
+          p_payment_intent_id: '',
+          p_signing_secret: SIGNING_SECRET,
+        });
+      } catch (e) {
+        // The order exists but has no tickets. Mark it failed rather than
+        // leaving it pending forever, which would show the guest a spinner
+        // that never resolves.
+        await pg(`gw_ticket_orders?id=eq.${order.id}`, {
+          method: 'PATCH',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ status: 'failed' }),
+        }).catch(() => {});
+        console.error('concert-rsvp-checkout: free fulfill threw', e);
+        return j({ error: 'Your reservation could not be completed. Please try again.' }, 502);
+      }
+
+      if (result?.error) {
+        await pg(`gw_ticket_orders?id=eq.${order.id}`, {
+          method: 'PATCH',
+          headers: { Prefer: 'return=minimal' },
+          body: JSON.stringify({ status: 'failed' }),
+        }).catch(() => {});
+        // over_capacity is the one a guest can actually act on.
+        const soldOut = result.error === 'over_capacity';
+        return j(
+          { error: soldOut ? 'This event just sold out.' : 'Your reservation could not be completed.' },
+          soldOut ? 409 : 502,
+        );
+      }
+
+      // Best-effort: the tickets exist whether or not the email lands.
+      try {
+        await sendFreeRsvpEmail({
+          toEmail: buyerEmail,
+          buyerName: buyerName || null,
+          eventTitle: event.title,
+          eventDate: new Date(event.start_date).toLocaleString('en-US', {
+            dateStyle: 'full',
+            timeStyle: 'short',
+          }),
+          venueName: event.venue_name,
+          tenantSlug: tenant.slug,
+          tenantName: tenant.name ?? tenant.slug,
+          accessToken,
+          count: quantity,
+        });
+      } catch (e) {
+        console.error('concert-rsvp-checkout: free RSVP email failed', e);
+      }
+
+      // Same shape the paid path returns, so the caller redirects identically —
+      // it just goes straight to the tickets page instead of via Stripe.
+      return j({ url: ticketsUrl, order_id: order.id, access_token: accessToken, free: true });
+    }
+
     const lineItems: LineItem[] = [
       {
         name: `${event.title} — ${tier.name}`,
@@ -284,7 +455,7 @@ export async function handler(req: Request): Promise<Response> {
         storeType: 'box-office',
         buyerEmail,
         applicationFeeCents,
-        successUrl: `${returnBase}/tickets/${accessToken}?session_id={CHECKOUT_SESSION_ID}`,
+        successUrl: `${ticketsUrl}?session_id={CHECKOUT_SESSION_ID}`,
         cancelUrl: `${returnBase}/?rsvp=cancelled`,
         metadata: { event_id: event.id, tier_id: tier.id, tenant_id: tenant.id, quantity: String(quantity) },
       });
