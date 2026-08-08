@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getTabItems, getAppTiles, parseTileLayout, DEFAULT_GRID_ORDER, type ModuleFlags, type TileLayout } from '../appDestinations';
+import { getTabItems, getAppTiles, parseTileLayout, DEFAULT_GRID_ORDER, type ModuleFlags } from '../appDestinations';
 import type { NavContext } from '../navCatalog';
 
 const allOn: ModuleFlags = {
@@ -215,14 +215,12 @@ describe('parseTileLayout', () => {
   });
 });
 
-describe('getAppTiles with a custom layout', () => {
-  const layout = (order: string[]): TileLayout => ({ v: 1, order });
-
-  it('null layout keeps the default slice-at-8 behavior', () => {
+describe('getAppTiles with a custom tools list', () => {
+  it('null tools keeps the default slice-at-8 behavior', () => {
     expect(getAppTiles('faculty', allOn, navFor(allOn), null)).toEqual(getAppTiles('faculty', allOn, navFor(allOn)));
   });
   it('primary follows the saved order exactly; everything else enabled goes to overflow', () => {
-    const { primary, overflow } = getAppTiles('faculty', allOn, navFor(allOn), layout(['tickets', 'finance', 'attendance']));
+    const { primary, overflow } = getAppTiles('faculty', allOn, navFor(allOn), ['tickets', 'finance', 'attendance']);
     expect(primary.map((t) => t.key)).toEqual(['tickets', 'finance', 'attendance']);
     const overflowKeys = overflow.map((t) => t.key);
     expect(overflowKeys).not.toContain('tickets');
@@ -233,28 +231,30 @@ describe('getAppTiles with a custom layout', () => {
     expect(allCustom).toEqual(allDefault);
   });
   it('silently drops stale keys (disabled module) without losing the rest', () => {
-    const { primary } = getAppTiles('faculty', { ...allOn, hasBoxOffice: false }, navFor({ ...allOn, hasBoxOffice: false }), layout(['tickets', 'finance']));
+    const { primary } = getAppTiles('faculty', { ...allOn, hasBoxOffice: false }, navFor({ ...allOn, hasBoxOffice: false }), ['tickets', 'finance']);
     expect(primary.map((t) => t.key)).toEqual(['finance']);
   });
   it('silently drops keys whose route the tab bar claims', () => {
     // Student allOn tab bar contains Music and Studio (see getTabItems test).
-    const { primary, overflow } = getAppTiles('student', allOn, navFor(allOn), layout(['music', 'tickets']));
+    const { primary, overflow } = getAppTiles('student', allOn, navFor(allOn), ['music', 'tickets']);
     expect(primary.map((t) => t.key)).toEqual(['tickets']);
     expect(overflow.map((t) => t.key)).not.toContain('music');
   });
   it('drops unknown keys from a corrupt-but-parseable order', () => {
-    const { primary } = getAppTiles('faculty', allOn, navFor(allOn), layout(['nonsense', 'tickets']));
+    const { primary } = getAppTiles('faculty', allOn, navFor(allOn), ['nonsense', 'tickets']);
     expect(primary.map((t) => t.key)).toEqual(['tickets']);
   });
-  it('empty order means empty primary and everything in overflow', () => {
-    const { primary, overflow } = getAppTiles('faculty', allOn, navFor(allOn), layout([]));
-    expect(primary).toEqual([]);
-    expect(overflow.length).toBeGreaterThan(0);
+  it('empty tools list falls back to the default grid, same as null', () => {
+    // Matches getAppTiles's `!tools || tools.length === 0` guard: an empty
+    // My Tools set (never a reachable state via sanitizeTools/saveTools
+    // today, but a valid string[]) is treated as "nothing stored" rather
+    // than "show nothing" — a member is never left staring at a blank grid.
+    expect(getAppTiles('faculty', allOn, navFor(allOn), [])).toEqual(getAppTiles('faculty', allOn, navFor(allOn), null));
   });
-  it('custom layouts are not capped at 8', () => {
+  it('custom lists are not capped at 8', () => {
     const defaults = getAppTiles('faculty', allOn, navFor(allOn));
     const everyKey = [...defaults.primary, ...defaults.overflow].map((t) => t.key);
-    const { primary, overflow } = getAppTiles('faculty', allOn, navFor(allOn), layout(everyKey));
+    const { primary, overflow } = getAppTiles('faculty', allOn, navFor(allOn), everyKey);
     expect(primary.map((t) => t.key)).toEqual(everyKey);
     expect(overflow).toEqual([]);
   });
@@ -308,9 +308,8 @@ describe('getAppTiles catalog parity', () => {
     const keys = [...getAppTiles('student', allOn, nav).primary, ...getAppTiles('student', allOn, nav).overflow].map((t) => t.key);
     expect(keys).not.toContain('music-tools');
   });
-  it('custom layouts can pin parity destinations', () => {
-    const layout: TileLayout = { v: 1, order: ['people', 'music-library', 'tickets'] };
-    const { primary } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }), layout);
+  it('custom tools lists can pin parity destinations', () => {
+    const { primary } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }), ['people', 'music-library', 'tickets']);
     expect(primary.map((t) => t.key)).toEqual(['people', 'music-library', 'tickets']);
   });
   it('grid tiles carry their catalog section and grid label/icon overrides', () => {
@@ -318,5 +317,34 @@ describe('getAppTiles catalog parity', () => {
     const planner = [...primary, ...overflow].find((t) => t.key === 'planner');
     expect(planner?.label).toBe('Programs');
     expect(planner?.section).toBe('plan');
+  });
+});
+
+describe('getAppTiles with a My Tools key list', () => {
+  const nav: NavContext = {
+    hasModule: () => true, isTenantAdmin: true, isPlatformAdmin: false,
+    canLibrarian: true, isPartner: false, hiddenRoutes: new Set(),
+  };
+  const flags: ModuleFlags = {
+    hasViewer: true, hasStudio: true, hasSightReading: true, hasBoxOffice: true,
+    hasConcertPlanner: true, hasMerch: true, hasFinance: true, hasAcademy: true,
+    hasStore: true, hasSongwriting: true, hasPlanner: true,
+  };
+
+  it('honours stored order', () => {
+    const { primary } = getAppTiles('faculty', flags, nav, ['finance', 'academy']);
+    expect(primary.map((d) => d.key)).toEqual(['finance', 'academy']);
+  });
+
+  it('drops keys the tab bar already claims by route', () => {
+    const tabRoutes = new Set(getTabItems('faculty', flags).map((t) => t.to));
+    const { primary } = getAppTiles('faculty', flags, nav, ['messages', 'finance']);
+    for (const d of primary) expect(tabRoutes.has(d.to)).toBe(false);
+  });
+
+  it('falls back to the frozen default grid when handed nothing', () => {
+    const { primary } = getAppTiles('faculty', flags, nav, null);
+    expect(primary.length).toBeGreaterThan(0);
+    expect(primary.length).toBeLessThanOrEqual(8);
   });
 });

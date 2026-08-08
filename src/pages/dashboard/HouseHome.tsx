@@ -23,7 +23,7 @@ import { toModuleFlags, toModuleSet } from '@/lib/navigation/moduleFlags';
 import { applyPreviewRole, previewRoleIsFaculty, type NavContext } from '@/lib/navigation/navCatalog';
 import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
-import { useHomeTileLayout } from '@/hooks/useHomeTileLayout';
+import { useMyTools } from '@/hooks/useMyTools';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
 import { DateCardSlot } from '@/components/home/date-card/DateCardSlot';
 import { hasParsableEventAt } from '@/components/home/date-card/eventAt';
@@ -176,14 +176,14 @@ export default function HouseHome() {
     isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole), [moduleSet, profile, tenantSlug, canEditMusicLibrary, hiddenNav, previewRole]);
-  const { layout, layoutLoading, save: saveTileLayout } = useHomeTileLayout();
+  const { myTools, loading: layoutLoading, saveTools } = useMyTools(isFaculty ? 'faculty' : 'student');
   const { primary, overflow } = modulesLoading || layoutLoading || roleLoading
     ? { primary: [], overflow: [] }
     // Tile set follows the previewed role too — otherwise previewing as a
     // student still renders the faculty grid.
     : getAppTiles(
         (previewRole ? previewRoleIsFaculty(previewRole) : isFaculty) ? 'faculty' : 'student',
-        flags, nav, layout,
+        flags, nav, myTools?.tools ?? null,
       );
 
   return (
@@ -316,7 +316,7 @@ export default function HouseHome() {
 
         {/* Keycap app grid (editable — see HomeTileGrid) */}
         {!modulesLoading && !layoutLoading && !roleLoading && (
-          <HomeTileGrid primary={primary} overflow={overflow} onSave={saveTileLayout} />
+          <HomeTileGrid primary={primary} overflow={overflow} onSave={saveTools} />
         )}
       </div>
     </DashboardShell>

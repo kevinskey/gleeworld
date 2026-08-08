@@ -107,7 +107,7 @@ export function parseTileLayout(raw: unknown): TileLayout | null {
 // reviewable diff rather than an emergent side effect of catalog order.
 export const DEFAULT_GRID_ORDER = ['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch'];
 
-export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav: NavContext, layout?: TileLayout | null):
+export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav: NavContext, tools?: string[] | null):
   { primary: Destination[]; overflow: Destination[] } {
   // Dedupe against tab ROUTES, not keys — two distinct keys (e.g. Roster
   // and Attendance) can point at the same route, and the grid must not
@@ -120,7 +120,7 @@ export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav
     .filter((e) => entrySurfaces(e).includes('grid') && !tabRoutes.has(e.to))
     .map((e) => ({ key: e.key, to: e.to, label: e.gridLabel ?? e.label, icon: e.gridIcon ?? e.icon, section: e.section, tone: e.tone }));
 
-  if (!layout) {
+  if (!tools || tools.length === 0) {
     // Default grid frozen: first 8 enabled keys of DEFAULT_GRID_ORDER in
     // that order; EVERYTHING else (including all sidebar-parity additions)
     // goes to overflow, in catalog order.
@@ -133,13 +133,11 @@ export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav
     return { primary, overflow: enabled.filter((d) => !pinned.has(d.key)) };
   }
 
-  // Custom layout: saved keys in saved order, filtered to what is still
-  // enabled and un-claimed by the tab bar (stale keys silently drop; the
-  // stored layout is never rewritten, so re-enabling a module restores
-  // its old spot). Everything else enabled falls to overflow — newly
-  // tenant-enabled modules land there, never inside a curated grid.
+  // My Tools order, filtered to what is still enabled and un-claimed by the
+  // tab bar. Stale keys drop silently; the stored record is never rewritten,
+  // so re-enabling a module restores its old spot.
   const byKey = new Map(enabled.map((d) => [d.key, d]));
-  const primary = layout.order
+  const primary = tools
     .map((k) => byKey.get(k))
     .filter((d): d is Destination => d !== undefined);
   const pinned = new Set(primary.map((d) => d.key));

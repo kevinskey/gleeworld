@@ -37,8 +37,8 @@ vi.mock('@/hooks/useEffectivePreviewRole', () => ({
 vi.mock('@/hooks/useTenantNavPrefs', () => ({
   useTenantNavPrefs: () => new Set<string>(),
 }));
-vi.mock('@/hooks/useHomeTileLayout', () => ({
-  useHomeTileLayout: () => ({ layout: null, layoutLoading: false, save: vi.fn() }),
+vi.mock('@/hooks/useMyTools', () => ({
+  useMyTools: () => ({ myTools: null, loading: false, saveTools: vi.fn() }),
 }));
 vi.mock('@/hooks/useBrandingSettings', () => ({
   useBrandingSettings: () => ({
