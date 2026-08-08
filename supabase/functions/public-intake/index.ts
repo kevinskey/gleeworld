@@ -341,11 +341,16 @@ serve(async (req: Request): Promise<Response> => {
           // their dashboard with nothing logged to explain why.
           const { error: createdByError } = await admin
             .from("gw_appointments")
-            .update({ created_by: userId }).eq("id", data.appointment_id);
+            // created_by AND tenant_id: book_appointment runs under the service
+            // role, so auth.uid() is NULL for created_by and
+            // current_tenant_id() is NULL for the tenant default. Left alone,
+            // the booking is invisible to the tenant's own admins.
+            .update({ created_by: userId, tenant_id: tenantId }).eq("id", data.appointment_id);
           if (createdByError) {
-            deps.log("created_by_update_failed", {
+            deps.log("appointment_attribution_failed", {
               appointmentId: data.appointment_id,
               userId,
+              tenantId,
               error: createdByError.message,
             });
           }
@@ -374,12 +379,20 @@ serve(async (req: Request): Promise<Response> => {
         // below and always win regardless of what pickAuditionApplicationFields
         // lets through.
         //
-        // audition_applications has no tenant_id column (verified against
-        // every migration that touches this table — see
-        // .superpowers/sdd/2026-08-06-public-tenant-intake/final-fix-report.md,
-        // C3), so none is set here. The row's tenant is established
-        // transitively through session_id, which preflight and this
-        // function both just confirmed belongs to `tenantId`.
+        // tenant_id IS set explicitly. An earlier pass concluded this table
+        // had no such column, having grepped the migrations — but the
+        // platform-wide tenant retrofit was applied out-of-band, so absence
+        // of an ADD COLUMN proves nothing. Checked against the live catalog
+        // 2026-08-08: audition_applications.tenant_id and
+        // gw_appointments.tenant_id both exist (uuid).
+        //
+        // It has to be set here rather than left to the column default:
+        // current_tenant_id() returns NULL for a service-role caller, so the
+        // row would land unscoped and be invisible to the tenant's own admins
+        // under the RESTRICTIVE tenant policies.
+        //
+        // The transitive check through session_id still runs and is still
+        // correct — it is just no longer the only thing scoping the row.
         const { data, error } = await admin
           .from("audition_applications")
           .insert({
@@ -387,6 +400,7 @@ serve(async (req: Request): Promise<Response> => {
             user_id: userId,
             session_id: sessions[0].id,
             status: "submitted",
+            tenant_id: tenantId,
           })
           .select("id").single();
         if (error) throw new Error(error.message);
