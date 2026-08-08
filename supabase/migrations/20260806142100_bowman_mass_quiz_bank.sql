@@ -1,4 +1,4 @@
--- Bowman Scholars (MUS-240), Fall 2026 — quiz bank.
+-- Bowman Scholars, Fall 2026 — quiz bank.
 --
 -- 21 chapter quizzes (210 questions) and the comprehensive final examination
 -- Sections I-III (65 questions), transcribed from Chapters 22-24 of
@@ -24,13 +24,17 @@ DECLARE
 BEGIN
   SELECT id, tenant_id INTO v_course_id, v_tenant_id
   FROM public.gw_courses
-  WHERE (course_code = 'MUS-240' OR code = 'MUS-240')
+  -- Matched on TITLE + semester, not course_code. The code was assumed to be
+  -- a course code from the UI header; the row actually carries a different
+  -- one. Title + semester identifies exactly one row and does not depend on
+  -- any course code at all.
+  WHERE title ILIKE 'Bowman Scholars'
     AND (semester ILIKE '%Fall%2026%' OR term ILIKE '%Fall%2026%')
   ORDER BY created_at DESC
   LIMIT 1;
 
   IF v_course_id IS NULL THEN
-    RAISE EXCEPTION 'Bowman Scholars MUS-240 Fall 2026 not found; apply the structure migration first.';
+    RAISE EXCEPTION 'Bowman Scholars Fall 2026 not found; apply the structure migration first.';
   END IF;
 
 

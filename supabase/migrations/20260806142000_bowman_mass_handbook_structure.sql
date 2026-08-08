@@ -1,4 +1,4 @@
--- Bowman Scholars (MUS-240), Fall 2026 — course structure built on
+-- Bowman Scholars, Fall 2026 — course structure built on
 -- "Understanding the Mass: A Handbook of Catholic Liturgy and Liturgical Music
 -- for Cantors, Organists, Choir Directors, and All Who Serve the Rite."
 --
@@ -29,14 +29,18 @@ BEGIN
   SELECT id, COALESCE(instructor_id, created_by)
     INTO v_course_id, v_author_id
   FROM public.gw_courses
-  WHERE (course_code = 'MUS-240' OR code = 'MUS-240')
+  -- Matched on TITLE + semester, not course_code. The code was assumed to be
+  -- a course code from the UI header; the row actually carries a different
+  -- one. Title + semester identifies exactly one row and does not depend on
+  -- any course code at all.
+  WHERE title ILIKE 'Bowman Scholars'
     AND (semester ILIKE '%Fall%2026%' OR term ILIKE '%Fall%2026%')
   ORDER BY created_at DESC
   LIMIT 1;
 
   IF v_course_id IS NULL THEN
     RAISE EXCEPTION
-      'Bowman Scholars MUS-240 Fall 2026 not found. Check gw_courses.course_code and semester before re-running; this migration deliberately refuses to guess which course to seed.';
+      'Bowman Scholars Fall 2026 not found. Check gw_courses.title and semester before re-running; this migration deliberately refuses to guess which course to seed.';
   END IF;
 
   -- gw_course_discussions.author_id is NOT NULL. If the course carries no
@@ -308,5 +312,5 @@ BEGIN
       RAISE NOTICE 'gw_courses has no tenant_id column; skipping tenant backfill.';
   END;
 
-  RAISE NOTICE 'Bowman Scholars MUS-240 Fall 2026 seeded: course_id=%, author_id=%', v_course_id, v_author_id;
+  RAISE NOTICE 'Bowman Scholars Fall 2026 seeded: course_id=%, author_id=%', v_course_id, v_author_id;
 END $$;
