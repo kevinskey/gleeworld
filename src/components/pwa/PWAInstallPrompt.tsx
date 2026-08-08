@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Download, Apple } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 
 // GleeWorld PWA install prompt.
 //
@@ -21,6 +22,19 @@ export const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIosSafari, setIsIosSafari] = useState(false);
+
+  // One build serves ~50 white-label tenant subdomains, so a hardcoded
+  // "Install GleeWorld" named the wrong product on every tenant but the
+  // platform's own. useBrandingSettings falls back to __TENANT_CONFIG__.org
+  // synchronously, so the tenant's name is on the FIRST paint rather than
+  // flashing "GleeWorld" and then correcting itself.
+  //
+  // The iOS branch is deliberately NOT renamed: it opens the App Store, where
+  // there is one native app for the whole platform and it is listed as
+  // GleeWorld. Naming the tenant there would promise a store page that does
+  // not exist. Only the installable web app takes the tenant's name.
+  const { settings } = useBrandingSettings();
+  const appName = settings?.org_name?.trim() || 'GleeWorld';
 
   useEffect(() => {
     // Already installed as a PWA → nothing to do.
@@ -89,7 +103,7 @@ export const PWAInstallPrompt = () => {
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-foreground mb-1">
-              {isIosSafari ? 'Get GleeWorld for iPhone' : 'Install GleeWorld'}
+              {isIosSafari ? 'Get GleeWorld for iPhone' : `Install ${appName}`}
             </h3>
             <p className="text-sm text-muted-foreground mb-3">
               {isIosSafari
