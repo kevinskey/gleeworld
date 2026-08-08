@@ -44,18 +44,26 @@ describe('canLeavePage', () => {
     expect(canLeavePage('skills', {} as never, ctx)).toBe(true);
   });
 
-  it('requires a 50-word personality description on personal', () => {
+  it('puts no length condition on the personality description', () => {
+    // The 50-word minimum was removed by request: any amount of text is fine.
     expect(canLeavePage('personal', FULL, ctx)).toBe(true);
-    expect(canLeavePage('personal', { ...FULL, personalityDescription: 'too short' } as never, ctx)).toBe(false);
+    expect(canLeavePage('personal', { ...FULL, personalityDescription: 'ok' } as never, ctx)).toBe(true);
+    expect(canLeavePage('personal', { ...FULL, personalityDescription: '' } as never, ctx)).toBe(true);
+    expect(canLeavePage('personal', { ...FULL, personalityDescription: undefined } as never, ctx)).toBe(true);
   });
 
-  it('blocks personal when a valid description coexists with outstanding form errors', () => {
-    // Old signed-in behavior required word count AND zero outstanding
-    // react-hook-form errors anywhere in the form. A 50-word description
-    // alone must not be enough to advance if something else on the form is
-    // still invalid.
-    expect(canLeavePage('personal', FULL, { ...ctx, errors: { phone: { message: 'bad' } } })).toBe(false);
-    expect(canLeavePage('personal', FULL, { ...ctx, errors: {} })).toBe(true);
+  it('does not deadlock on form-wide errors belonging to later pages', () => {
+    // The regression this guards: canLeavePage('personal') used to require
+    // Object.keys(ctx.errors).length === 0, but ctx.errors spans the WHOLE
+    // form. auditionDate and auditionTime are required and render on the NEXT
+    // page, so once validation ran their errors could never clear from here.
+    // Next stayed disabled forever with no visible message — reported from
+    // production with a 51-word answer typed in.
+    const laterPageErrors = {
+      auditionDate: { message: 'Please select an audition date' },
+      auditionTime: { message: 'Please select an audition time' },
+    };
+    expect(canLeavePage('personal', FULL, { ...ctx, errors: laterPageErrors })).toBe(true);
   });
 
   it('requires slot, selfie, and shirt size on scheduling', () => {

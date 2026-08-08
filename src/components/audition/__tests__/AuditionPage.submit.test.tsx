@@ -73,7 +73,6 @@ vi.mock('@/components/audition/pages/MusicalBackgroundPage', async () => {
       const { form, nextPage } = useAuditionForm();
       useEffect(() => {
         form.setValue('sectionType', 'vocal');
-        form.setValue('sangInHighSchool', true);
         form.setValue('isSoloist', false);
         nextPage();
         // eslint-disable-next-line react-hooks/exhaustive-deps

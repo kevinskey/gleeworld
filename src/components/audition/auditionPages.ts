@@ -24,12 +24,7 @@ export function buildAuditionPages(isSignedIn: boolean): AuditionPageId[] {
   return isSignedIn ? [...INTERVIEW_PAGES] : [...INTERVIEW_PAGES, 'account'];
 }
 
-const MIN_PERSONALITY_WORDS = 50;
 const MIN_PASSWORD_LENGTH = 8;
-
-function wordCount(text: string | undefined | null): number {
-  return (text ?? '').trim().split(/\s+/).filter(Boolean).length;
-}
 
 export function canLeavePage(
   pageId: AuditionPageId,
@@ -44,13 +39,16 @@ export function canLeavePage(
     case 'skills':
       return true;
     case 'personal':
-      // The old signed-in branch required word count AND no outstanding
-      // react-hook-form errors anywhere in the form before advancing past
-      // personal info. Preserve that — it was dropped in an earlier pass.
-      return (
-        wordCount(values.personalityDescription) >= MIN_PERSONALITY_WORDS &&
-        Object.keys(ctx.errors).length === 0
-      );
+      // Nothing on this page is required.
+      //
+      // Two gates lived here and both were wrong. The word count is gone by
+      // request — any amount of text is fine. The form-wide error check was a
+      // deadlock: ctx.errors covers the WHOLE form, including auditionDate and
+      // auditionTime, which are required and live on the NEXT page. Once
+      // validation had run, those errors could never clear from here, so Next
+      // stayed disabled no matter what the visitor typed — and the messages
+      // were invisible because their fields render on a later page.
+      return true;
     case 'scheduling':
       return !!(values.auditionDate && values.auditionTime && ctx.capturedImage && values.tshirtSize);
     case 'account':

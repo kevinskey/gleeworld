@@ -235,23 +235,6 @@ function AuditionFormContent() {
         throw new Error('Invalid time value');
       }
 
-      // Normalize values to satisfy DB CHECK constraints
-      const normalizeVoicePart = (input?: string | null): string | null => {
-        if (!input) return null;
-        const s = input.toLowerCase().trim().replace(/\s+/g, '');
-        // Direct codes like s1, s2, a1, etc.
-        if (/^(s|a|t|b)[12]$/.test(s)) return s.toUpperCase() as 'S1'|'S2'|'A1'|'A2'|'T1'|'T2'|'B1'|'B2';
-        // Names with optional section numbers
-        if (s.includes('sopr')) return s.includes('2') || /ii$/.test(s) ? 'S2' : 'S1';
-        if (s.includes('mezzo')) return 'A2';
-        if (s.includes('contralto')) return 'A2';
-        if (s.includes('alto')) return s.includes('2') ? 'A2' : 'A1';
-        if (s.includes('tenor')) return s.includes('2') ? 'T2' : 'T1';
-        if (s.includes('baritone')) return 'B1';
-        if (s.includes('bass')) return s.includes('2') ? 'B2' : 'B1';
-        return null;
-      };
-      const voicePartCode = normalizeVoicePart(data.highSchoolSection);
 
       // Note: user_id and session_id are intentionally NOT included here.
       // For the anonymous path (submitPublicIntake below) the edge function
@@ -263,14 +246,19 @@ function AuditionFormContent() {
         email: data.email,
         phone_number: data.phone,
         profile_image_url: capturedImage,
-        previous_choir_experience: data.sangInHighSchool ? 'High School Choir' : 'No previous experience',
-        voice_part_preference: voicePartCode,
+        // The middle/high-school questions were removed from the form, so
+        // neither of these has a source any more. Left unset rather than
+        // defaulted: recording 'No previous experience' for every auditioner
+        // because we stopped asking would be worse than recording nothing,
+        // and voice_part_preference came from the high-school section answer.
         years_of_vocal_training: data.isSoloist ? 1 : 0,
         instruments_played: (data.playsInstrument || data.sectionType === 'instrumental') && data.instrumentDetails
           ? [data.instrumentDetails]
           : [],
         music_theory_background: data.readsMusic ? 'Basic' : 'None',
-        why_glee_club: data.personalityDescription,
+        // Optional now, so it can arrive undefined. Empty string rather than
+        // null, because this column's nullability is not guaranteed.
+        why_glee_club: data.personalityDescription ?? '',
         vocal_goals: data.additionalInfo || 'General vocal improvement',
         audition_time_slot: timeParsed.toISOString(),
         status: 'submitted',

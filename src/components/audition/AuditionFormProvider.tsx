@@ -26,15 +26,11 @@ const auditionSchema = z.object({
   }),
 
   // Musical background
-  sangInMiddleSchool: z.boolean().nullable().default(null),
-  sangInHighSchool: z.boolean().nullable().default(null),
-  highSchoolYears: z.string().optional(),
   playsInstrument: z.boolean().nullable().default(null),
   instrumentDetails: z.string().optional(),
   yearsInstrumentExperience: z.number().int().min(0).nullable().optional(),
   isSoloist: z.boolean().nullable().default(null),
   soloistRating: z.string().optional(),
-  highSchoolSection: z.string().optional(),
 
   // Music skills
   readsMusic: z.boolean().nullable().default(null),
@@ -48,12 +44,11 @@ const auditionSchema = z.object({
     required_error: 'Please pick a t-shirt size',
   }),
   
-  // Leadership and personality
-  personalityDescription: z.string().min(50, "Please describe your personality (minimum 50 words)").refine((val) => {
-    const wordCount = val.trim().split(/\s+/).filter(word => word.length > 0).length;
-    return wordCount >= 50;
-  }, "Please write at least 50 words"),
-  interestedInLeadership: z.boolean().nullable().default(null),
+  // Personality. Deliberately unconstrained: any amount of text is fine.
+  // This used to carry three separate gates — a 50-CHARACTER .min() whose
+  // message claimed words, a 50-word .refine(), and a word count in
+  // canLeavePage — and they are all gone on purpose. Do not re-add a minimum.
+  personalityDescription: z.string().optional(),
   additionalInfo: z.string().optional(),
   
   // Audition scheduling
@@ -141,8 +136,6 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
       phone: "",
       password: "",
       confirmPassword: "",
-      sangInMiddleSchool: null,
-      sangInHighSchool: null,
       playsInstrument: null,
       yearsInstrumentExperience: null,
       isSoloist: null,
@@ -150,7 +143,6 @@ export function AuditionFormProvider({ children }: AuditionFormProviderProps) {
       canDance: null,
       interestedInVoiceLessons: null,
       interestedInMusicFundamentals: null,
-      interestedInLeadership: null,
       ...draft,
       // The draft round-trips through JSON, so a stored auditionDate arrives
       // as a string — revive it or the date picker gets a string where it

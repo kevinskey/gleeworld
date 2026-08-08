@@ -77,8 +77,10 @@ const RUN_ID = `${Date.now()}`;
 const EMAIL = `gw-e2e+${RUN_ID}@example.com`;
 const PASSWORD = 'e2e-correct-horse-battery';
 
-/** 50+ words — canLeavePage('personal') counts them. */
-const PERSONALITY = Array.from({ length: 60 }, (_, i) => `word${i}`).join(' ');
+/** Deliberately short. The 50-word minimum was removed; a one-word answer must
+ *  be enough to advance, so filling MORE than the old minimum here would hide a
+ *  regression that re-introduced it. */
+const PERSONALITY = 'friendly';
 
 async function rest(path: string, init: RequestInit = {}) {
   return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -178,7 +180,9 @@ test.describe('public auditions — no login wall', () => {
       // 3 — music skills: nothing required.
       await next().click();
 
-      // 4 — personal: 50-word minimum, counted by canLeavePage.
+      // 4 — personal: nothing here is required. This page once deadlocked —
+      // canLeavePage checked the WHOLE form's errors, including required fields
+      // on the next page, so Next could never enable.
       await page.getByLabel(/describe your personality/i).fill(PERSONALITY);
       await next().click();
 
