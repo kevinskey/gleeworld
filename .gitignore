@@ -36,3 +36,4 @@ deno.lock
 # Playwright
 playwright-report/
 test-results/
+.firecrawl/
