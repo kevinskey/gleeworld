@@ -650,10 +650,12 @@ describe('NavShelf', () => {
     expect(within(shelf).getAllByRole('link')).toHaveLength(9);
   });
 
-  it('renders no drag handles — reordering is not a shelf gesture', () => {
+  it('renders no drag affordance — reordering is not a shelf gesture', () => {
     const { container } = renderShelf();
-    expect(container.querySelector('[data-shelf-draggable]')).toBeNull();
-    expect(screen.getByTestId('nav-shelf-tools').querySelectorAll('.cursor-grab')).toHaveLength(0);
+    // dnd-kit's useSortable stamps aria-roledescription="sortable" and the
+    // old sidebar rows carried cursor-grab. Both must be absent.
+    expect(container.querySelectorAll('[aria-roledescription="sortable"]')).toHaveLength(0);
+    expect(container.querySelectorAll('.cursor-grab')).toHaveLength(0);
   });
 });
 ```
