@@ -23,7 +23,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
-import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import type { BlockModule, BlockEditorFormProps, BlockRenderProps, SiteTheme } from '../types';
+import { themeCssVars } from '../types';
 
 const schema = z.object({
   /** box_office_slug of the gw_events row this form sells. */
@@ -315,6 +316,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           tenantSlug={ctx.slug}
           eventSlug={config.eventSlug}
           isPreview={ctx.isPreview}
+          theme={ctx.theme}
           merchHeading={config.merchHeading}
           merchBlurb={config.merchBlurb}
           storeLabel={config.showStoreLink ? config.storeLinkLabel : ''}
@@ -329,7 +331,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 interface MerchSelection { quantity: number; size: string; color: string }
 
 function RsvpDialog({
-  open, onOpenChange, data, tenantSlug, eventSlug, isPreview, merchHeading, merchBlurb, storeLabel,
+  open, onOpenChange, data, tenantSlug, eventSlug, isPreview, theme, merchHeading, merchBlurb, storeLabel,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -337,6 +339,8 @@ function RsvpDialog({
   tenantSlug: string;
   eventSlug: string;
   isPreview: boolean;
+  /** Needed because this dialog PORTALS to document.body — see DialogContent. */
+  theme: SiteTheme;
   merchHeading: string;
   merchBlurb: string;
   /** Empty string hides the storefront link. */
@@ -450,9 +454,24 @@ function RsvpDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto p-0 gap-0">
+      {/* The --site-* tokens are inline styles on the .gw-site wrapper, never
+          on :root — and DialogContent portals to document.body, OUTSIDE it.
+          Without re-applying them here every var() below resolves to nothing:
+          the submit button lost its radius, the title lost the site heading
+          font, and --site-accent-foreground (never set at :root at all) fell
+          back to #fff. For a tenant whose branding accent is null that meant
+          white text on an unset background over a white dialog — an invisible
+          submit button on a ticketing flow.
+
+          Only the custom properties are applied, deliberately NOT the
+          `gw-site` class: that would also make this a `gwsite` container and
+          swap the whole type scale, which is far more than this bug needs. */}
+      <DialogContent
+        className="max-w-lg max-h-[92dvh] overflow-y-auto p-0 gap-0"
+        style={themeCssVars(theme) as React.CSSProperties}
+      >
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-          <DialogTitle className="text-xl normal-case" style={{ fontFamily: 'var(--site-heading-font)' }}>
+          <DialogTitle className="text-xl normal-case" style={{ fontFamily: 'var(--site-heading-font, inherit)' }}>
             {data.event.title}
           </DialogTitle>
           <DialogDescription>
@@ -687,9 +706,11 @@ function RsvpDialog({
               disabled={submitting}
               className="w-full font-semibold"
               style={{
-                background: 'var(--site-accent)',
+                // Literal fallbacks so a missing token can never render an
+                // invisible button, even if this dialog moves again.
+                background: 'var(--site-accent, #9333ea)',
                 color: 'var(--site-accent-foreground, #fff)',
-                borderRadius: 'var(--site-radius)',
+                borderRadius: 'var(--site-radius, 0.5rem)',
               }}
             >
               {submitting
