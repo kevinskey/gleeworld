@@ -13,13 +13,14 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ErrorState } from '@/components/shared/ErrorState';
 import { MapPin } from 'lucide-react';
-import { useAllStateStates } from '@/features/all-state/useAllState';
+import { useAllStateStates, useStateSeasons } from '@/features/all-state/useAllState';
 import type { AllStateState } from '@/features/all-state/types';
 
 const REGION_ORDER = ['South', 'Northeast', 'Midwest', 'West'] as const;
 
 export default function AllStateDirectoryPage() {
   const { data: states, isLoading, error, refetch } = useAllStateStates();
+  const { data: seasons } = useStateSeasons();
 
   const byRegion = useMemo(() => {
     const groups = new Map<string, AllStateState[]>();
@@ -90,9 +91,24 @@ export default function AllStateDirectoryPage() {
                         <Card className="h-full transition-colors group-hover:border-primary/50">
                           <CardContent className="flex h-full flex-col justify-between p-4">
                             <span className="font-medium">{s.name}</span>
-                            <Badge variant="outline" className="mt-2 w-fit border-emerald-200 bg-emerald-50 font-normal text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
-                              Available
-                            </Badge>
+                            {/* The season label is the state's own wording, shown
+                                verbatim. Associations disagree — Georgia says
+                                "2026-27", Nebraska "2026", Wisconsin "2027" — and
+                                several have only published last season. Any
+                                normalisation would either hide that a state is a
+                                year behind or wrongly brand a current one stale. */}
+                            <span className="mt-2 flex flex-wrap gap-1">
+                              {(seasons?.[s.id] ?? []).slice(0, 2).map((season) => (
+                                <Badge key={season} variant="outline" className="font-normal">
+                                  {season}
+                                </Badge>
+                              ))}
+                              {!seasons?.[s.id]?.length && (
+                                <Badge variant="outline" className="border-emerald-200 bg-emerald-50 font-normal text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300">
+                                  Available
+                                </Badge>
+                              )}
+                            </span>
                           </CardContent>
                         </Card>
                       </Link>
