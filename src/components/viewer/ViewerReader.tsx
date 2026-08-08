@@ -18,6 +18,8 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { getSignedUrl } from '@/utils/storage';
+import { isPersonalScoreId, toTableId } from '@/lib/viewerScoreId';
+import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -227,6 +229,29 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
     queryKey: ['viewer-score', scoreId],
     queryFn: async () => {
       if (!scoreId) return null;
+
+      // My Music scores arrive with a prefixed id and live in a different
+      // table. They are private by RLS, carry no legacy pdf_url, and always
+      // sit in the personal-scores bucket — so once mapped into ScoreMeta the
+      // existing signing path below handles them with no further branching.
+      if (isPersonalScoreId(scoreId)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data } = await (supabase as any)
+          .from('gw_personal_scores')
+          .select('id, title, composer, storage_path')
+          .eq('id', toTableId(scoreId))
+          .maybeSingle();
+        if (!data) return null;
+        return {
+          id: scoreId,
+          title: data.title,
+          composer: data.composer ?? null,
+          pdf_url: null,
+          storage_path: data.storage_path ?? null,
+          storage_bucket: PERSONAL_SCORES_BUCKET,
+        } as ScoreMeta;
+      }
+
       const { data } = await supabase
         .from('gw_sheet_music')
         .select('id, title, composer, pdf_url, storage_path, storage_bucket')
