@@ -2,367 +2,416 @@
   "state_slug": "mississippi",
   "retrieved_at": "2026-08-07",
   "no_program_found": false,
-  "notes": "Mississippi's All-State Honor Choirs are run jointly by the Mississippi Music Educators Association (MSMEA, msmea.org) and the Mississippi chapter of the American Choral Directors Association (MSACDA, msacda.org). MSACDA hosts the choir-specific materials (repertoire, audition selections, rehearsal tracks, chairs) and MSMEA hosts the timeline and division calendars; MSMEA's own All-State Honor Choir page simply points to MSACDA. The All-State Honor Choirs meet at the joint MMEA/ACDA State Conference. IMPORTANT SEASON LABEL: Mississippi calls this cycle '2026' — the '2026 MMEA-ACDA All-State Conference' is November 16-18, 2026 at The University of Southern Mississippi, Hattiesburg, with auditions in August 2026. That falls in the 2026-27 school year, so it is recorded here as season 2026-27 while preserving the state's own '2026' wording in titles. The conference date is noted on MSACDA's site as a 'New Date' (moved from the association's usual January slot). MSACDA's Honor Choir section was updated July 28, 2026.",
+  "notes": "WHO RUNS IT: Mississippi's All-State choirs are split between two bodies, and this was verified in the official MSMEA/MHSAA Senior High Choral Division Informational Manual. The HIGH SCHOOL All-State Honor Choirs (SATB, Treble, and Show Choir) are 'organized and governed by the MS ACDA Executive Board' — Mississippi ACDA, not the MEA. The JUNIOR HIGH All-State Honor Choirs (SATB, Treble, Show Choir) and the ELEMENTARY All-State Honor Choir are MMEA (Mississippi Music Educators Association) events. All of them rehearse and perform together at the joint MMEA / MS ACDA State Conference, all of them audition through the same Opus Event system, and all of them appear on a single shared repertoire list and a single shared timeline, which is why they are recorded here as one state entry. MHSAA (Mississippi High School Activities Association) sanctions the events and hosts the choral division manual but does not run the honor choirs. SEASON LABELING: Mississippi labels this cycle by the calendar year of the conference — the timeline PDF is headed '2026 MMEA•ACDA ALL-STATE CONFERENCE NOV 16-18' and the repertoire spreadsheet is titled '2026 All-State Honor Choir Rep. List'. Those are the CURRENT cycle, not prior-year data: auditions run August 2026 and the conference is November 16-18, 2026, i.e. the 2026-27 school year, and msacda.org stamps its All-State Honor Choirs block 'Updated July 28, 2026'. Season is therefore recorded as 2026-27 while Mississippi's own label is '2026'. DATE CAVEAT: the timeline PDF prints month and day only, with no year beside each milestone; the year 2026 is taken from the document's own title and is consistent with the November 16-18, 2026 conference date confirmed on msacda.org. AGE OF SUPPORTING DOCS: the audition-process and sight-reading rules below come from the 2025-2026 edition of the MSMEA HS Choral Division Manual, which was still the newest posted on misshsaa.com at retrieval (MHSAA had posted a 2026-27 general Handbook but no 2026-27 choral division manual). Those rules are standing procedure rather than dated items, but they have not been reconfirmed against a 2026-27 manual. Note also that the 2025-26 manual says the state conference is 'typically in mid to late January', while both MMEA and MS ACDA now advertise November 16-18, 2026, with MSACDA flagging it as a 'New Date' — the November date is the one used here.",
+
   "organization": {
     "name": "Mississippi American Choral Directors Association",
-    "acronym": "MSACDA",
+    "acronym": "MS ACDA",
     "website_url": "https://msacda.org/",
-    "description": "MSACDA is the Mississippi chapter of the American Choral Directors Association, which states its mission as inspiring excellence in choral music in Mississippi through education, performance, composition, and advocacy. It administers the Mississippi All-State Honor Choirs (SATB and Treble) and the MS All-State Show Choir jointly with the Mississippi Music Educators Association, and co-hosts the annual MMEA/MSACDA State Conference."
+    "description": "MS ACDA organizes and governs Mississippi's high school All-State Honor Choirs — the All-State SATB Honor Choir, the All-State Treble Honor Choir, and the All-State Honor Show Choir — through its Executive Board. Rehearsals and concerts take place in conjunction with the annual joint MMEA / MS ACDA State Conference. The junior high and elementary All-State Honor Choirs on the same timeline are run by the Mississippi Music Educators Association (MMEA/MSMEA)."
   },
+
   "sources": [
-    {
-      "name": "MSACDA — Mississippi ACDA (events, All-State Honor Choirs, leadership)",
-      "url": "https://msacda.org/",
-      "source_type": "official"
-    },
-    {
-      "name": "MSMEA High School All-State Honor Choirs",
-      "url": "https://www.msmea.org/hs-all-state-honor-choir",
-      "source_type": "official"
-    },
-    {
-      "name": "2026 MMEA-ACDA All-State Conference Honor Choirs Timeline (PDF)",
-      "url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf",
-      "source_type": "handbook_pdf"
-    },
-    {
-      "name": "MSMEA High School Division",
-      "url": "https://www.msmea.org/high-school-division",
-      "source_type": "official"
-    }
+    { "name": "MS ACDA — All-State Honor Choirs (home page block, 'Updated July 28, 2026')", "url": "https://msacda.org/", "source_type": "official" },
+    { "name": "2026 All-State Honor Choir Repertoire List and Audition Selections", "url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview", "source_type": "official" },
+    { "name": "2026 MMEA/ACDA All-State Conference Honor Choirs Timeline (PDF)", "url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf", "source_type": "handbook_pdf" },
+    { "name": "MMEA — High School All-State Honor Choirs", "url": "https://www.msmea.org/hs-all-state-honor-choir", "source_type": "official" },
+    { "name": "2025-2026 Mississippi Senior High Choral Division Informational Manual (MSMEA/MHSAA)", "url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf", "source_type": "handbook_pdf" },
+    { "name": "MHSAA — Choral activity page", "url": "https://www.misshsaa.com/choral/", "source_type": "official" }
   ],
+
   "programs": [
     {
-      "name": "High School All-State Honor Choir — SATB",
-      "lineage_key": "mississippi-hs-all-state-satb-honor-choir",
+      "name": "MS ACDA All-State SATB Honor Choir",
+      "lineage_key": "mississippi-hs-satb-honor-choir",
       "season": "2026-27",
       "school_level": "high",
       "ensemble_type": "mixed chorus",
-      "description": "The Mississippi High School All-State SATB Honor Choir, selected by recorded audition submitted through the Opus Event portal, rehearses and performs at the MMEA/MSACDA State Conference. MSACDA's SATB All-State chair is Jordan Durham.",
+      "description": "An enriching choral experience for outstanding high school age vocal students statewide, organized and governed by the MS ACDA Executive Board. Only the highest-scoring auditions are selected to work with nationally recognized conductors. Rehearsals and the concert take place in conjunction with the annual MMEA / MS ACDA State Conference. Mississippi ACDA lists Jordan Durham of Starkville High School as the All-State SATB Honor Choir chair.",
+
       "dates": [
-        {
-          "date_type": "other",
+        { "date_type": "other",
           "title": "All All-State repertoire lists released, with specified audition pieces",
           "start_at": "2026-05-04",
           "all_day": true,
           "timezone": "America/Chicago",
-          "description": "Repertoire lists for all All-State choirs released, including the specified audition pieces.",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "other",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "other",
           "title": "Rehearsal tracks posted online",
           "start_at": "2026-05-29",
           "all_day": true,
           "timezone": "America/Chicago",
-          "description": "Rehearsal tracks posted online, 'or as available'.",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "registration_deadline",
+          "description": "Timeline notes 'or as available'. Junior High cuts posted July 24.",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "other",
           "title": "Opus Event registration opens",
           "start_at": "2026-07-24",
           "all_day": true,
           "timezone": "America/Chicago",
-          "description": "Registration opens in the Opus Event portal. The audition fee must be marked paid before an audition can be submitted.",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "audition_round",
+          "description": "The audition fee must be marked paid before an audition can be submitted.",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "audition_round",
           "title": "High school audition window",
           "start_at": "2026-08-10",
           "end_at": "2026-08-21",
           "all_day": true,
           "timezone": "America/Chicago",
-          "description": "High school All-State auditions are submitted during this window.",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "results",
-          "title": "High school results",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "results",
+          "title": "High school results released",
           "start_at": "2026-09-11",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "acceptance_deadline",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "registration_deadline",
           "title": "All-State registration and payment due",
           "start_at": "2026-10-12",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "event",
-          "title": "2026 MMEA/MSACDA All-State Conference",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "event",
+          "title": "MMEA / MS ACDA State Conference — All-State Honor Choir rehearsals and concerts",
           "start_at": "2026-11-16",
           "end_at": "2026-11-18",
           "all_day": true,
           "timezone": "America/Chicago",
-          "description": "The annual joint in-service conference of the Mississippi Music Educators Association and Mississippi ACDA, at which the All-State Honor Choirs rehearse and perform. Location: The University of Southern Mississippi. MSACDA lists this as a 'New Date'.",
-          "source_url": "https://msacda.org/"
-        }
+          "description": "Held at The University of Southern Mississippi. MS ACDA flags this as a new date for the conference.",
+          "source_url": "https://msacda.org/" }
       ],
+
       "requirements": [
-        {
-          "category": "format",
-          "title": "Auditions submitted through Opus Event with fee paid first",
-          "description": "Registration and audition submission run through the Opus Event portal; the audition fee must be marked paid before an audition can be submitted.",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "category": "materials",
-          "title": "Audition pieces drawn from the published All-State repertoire lists",
-          "description": "MSMEA/MSACDA release the All-State repertoire lists 'with specified audition pieces', and publish audition tracks, individual scores, sight-reading materials, and SATB & SSA rehearsal tracks for the selected repertoire.",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "category": "sight_reading",
-          "title": "Sight-reading materials published",
-          "description": "MSACDA's All-State Honor Choirs section lists 'Sight Reading materials' among the published resources alongside rehearsal tracks and repertoire.",
-          "source_url": "https://msacda.org/"
-        }
+        { "category": "membership",
+          "title": "Director must be a current MS ACDA member and must register for the conference",
+          "description": "The choral director must be a current member of MS ACDA for their students to participate in auditions, and must register for the conference if any of their students are accepted into an honor choir. Because rehearsals and concerts take place in conjunction with the State Conference, a sponsoring MS ACDA member must be registered for the conference to enable honor choir participation.",
+          "source_url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf" },
+
+        { "category": "materials",
+          "title": "Two specified audition pieces from the All-State repertoire list",
+          "description": "Students learn several selections from the released repertoire list; two of those selections are designated as the audition pieces, and students sing excerpts from both at the audition.",
+          "source_url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf" },
+
+        { "category": "rubric",
+          "title": "Audition scoring — 444 points maximum",
+          "description": "The two audition pieces are worth 100 points each, for 200 points. Sight-reading is worth an additional 22 points, making it 10% of the total audition score. There are two judges for each student, resulting in a maximum score of 444 points.",
+          "structured_data": { "pieces": 2, "points_per_piece": 100, "sight_reading_points": 22, "judges": 2, "max_total": 444 },
+          "source_url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf" },
+
+        { "category": "sight_reading",
+          "title": "Mississippi All-State sight-reading — one eight-measure exercise",
+          "description": "One eight-measure exercise, administered from a recorded prompt available on msacda.org, sung in the same audition room immediately after the excerpts. Sopranos and tenors read in G; altos and basses read in D. Students may sing or hum along with the tonal orientation on the recording but may not sing during the 45-second study period. All exercises start on the tonic. Tempo is set at quarter note = 60; students may sing faster but not slower. The exercise may be sung with solfege, numbers, or a neutral syllable. One restart is allowed — if it is used after a completed first reading, only the second reading is scored; the starting pitch may be replayed but no additional study time is given. Exercises include phrase markings and expressive symbols.",
+          "structured_data": { "measures": 8, "key_soprano_tenor": "G", "key_alto_bass": "D", "study_period_seconds": 45, "tempo_bpm": 60, "restarts_allowed": 1 },
+          "source_url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf" },
+
+        { "category": "sight_reading",
+          "title": "Sight-reading content limits and scoring",
+          "description": "Rhythmic components: whole, half, quarter, two eighths, dotted half, and dotted quarter/eighth notes; half and quarter rests. Melodic components: skips of a third in the I chord (D-M, M-D, M-S, S-M), the perfect fifth skip (D-S, S-D), and skips of a third in the V chord (S-T, T-S, T-R, R-T). Scoring out of 22: one point per measure with correct rhythm, one point per measure with correct pitch, up to two points for a steady beat, up to two points for intonation and maintaining the tonal center, and up to two points for observing phrasing and dynamic indications.",
+          "source_url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf" },
+
+        { "category": "format",
+          "title": "Auditions submitted through Opus Event",
+          "description": "Auditions are submitted through Opus Event, a web-based system. The audition fee must be marked paid before an audition can be submitted.",
+          "source_url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf" }
       ],
+
+      "repertoire": [
+        { "title": "Flanders Fields", "composer": "Paul A. Aitken", "voicing": "SSAATTBB", "publisher": "Lawson-Gould 00-OCT9918", "catalog_number": "3193778", "purpose": "audition", "notes": "Listed on the repertoire sheet under 'HS SATB — All Singers Audition!'", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Good Night, Dear Heart", "composer": "Dan Forrest", "voicing": "SATB", "publisher": "Hinshaw Music, Inc. 08764606", "catalog_number": "10065541", "purpose": "audition", "notes": "Listed under 'HS SATB — Tenor/Bass Audition!'", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Requiem: Requiem Aeternam 1", "composer": "Herbert Howells", "voicing": "SATB", "publisher": "Novello & Company Limited 14027133", "catalog_number": "7462500", "purpose": "performance", "notes": "Marked '(truncated)' on the repertoire sheet.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Media Vita", "arranger": "Michael McGlynn", "voicing": "SATB", "publisher": "Michael McGlynn (store.michaelmcglynn.com)", "purpose": "performance", "notes": "Marked '(truncated)' on the repertoire sheet.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "When Memory Fades", "arranger": "Eric Nelson", "voicing": "SATB", "publisher": "MorningStar Music Publishers 50-8914", "catalog_number": "10735114", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Ma fin est mon commencement", "composer": "Guillaume de Machaut", "voicing": "SATB", "publisher": "Provided by clinician", "purpose": "performance", "notes": "Marked '(truncated)' on the repertoire sheet. The sheet lists two settings of this title; this is the Machaut entry.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Ma fin est mon commencement", "composer": "Jackson Hill", "voicing": "SATB", "publisher": "Provided by clinician", "purpose": "performance", "notes": "Marked '(truncated)' on the repertoire sheet. Second of two settings of this title on the list.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Strawberry Fields", "arranger": "The Real Group", "voicing": "SATB", "publisher": "Provided by clinician", "purpose": "performance", "notes": "Marked '(truncated)' on the repertoire sheet.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" }
+      ],
+
       "documents": [
-        {
-          "title": "2026 Conference Honor Choirs Timeline",
-          "url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf",
-          "document_type": "calendar"
-        },
-        {
-          "title": "2026 All-State Honor Choir Repertoire List / Audition selections (Google Sheet)",
-          "url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview",
-          "document_type": "other"
-        },
-        {
-          "title": "Repertoire & Clinician Information (Google Drive folder)",
-          "url": "https://drive.google.com/drive/folders/12LkBSkfvomq4EAOa_W1t2Bzq7_996vEi",
-          "document_type": "other"
-        },
-        {
-          "title": "Audition Tracks (Google Drive folder)",
-          "url": "https://drive.google.com/drive/folders/1EJO2kc8Oxc9EzfA3h0ARRdyXWFWPyHf4",
-          "document_type": "other"
-        },
-        {
-          "title": "Individual Scores (Google Drive folder)",
-          "url": "https://drive.google.com/drive/folders/1ZsFs0GcpS58yvRZAXFtxZWgYSxrQYAcu",
-          "document_type": "other"
-        },
-        {
-          "title": "SATB & SSA Rehearsal Tracks (Dropbox)",
-          "url": "https://www.dropbox.com/scl/fo/3f26qpd2c86dae6qx6z00/AKLQYP1pj-raUQd8-25T8Dg",
-          "document_type": "other"
-        },
-        {
-          "title": "High School Choral Directors Manual",
-          "url": "https://www.msmea.org/_files/ugd/80d403_6ea1b97c440f4dbfba3af76be3aa5513.pdf",
-          "document_type": "handbook"
-        },
-        {
-          "title": "New Teacher Manual for Choral Directors",
-          "url": "https://www.msmea.org/_files/ugd/80d403_5e81de71d54848cdb66c6b13c99b3f9d.pdf",
-          "document_type": "handbook"
-        },
-        {
-          "title": "High School Prescribed Music List",
-          "url": "https://www.msmea.org/_files/ugd/80d403_f801eee2a4ee4d489f61f83c5f27c830.pdf",
-          "document_type": "other"
-        }
-      ],
-      "voice_parts": [
-        { "code": "S", "label": "Soprano" },
-        { "code": "A", "label": "Alto" },
-        { "code": "T", "label": "Tenor" },
-        { "code": "B", "label": "Bass" }
+        { "title": "2026 All-State Honor Choir Repertoire List / Audition Selections", "url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview", "document_type": "other" },
+        { "title": "Repertoire & Clinician Information (Google Drive folder)", "url": "https://drive.google.com/drive/folders/12LkBSkfvomq4EAOa_W1t2Bzq7_996vEi?usp=sharing", "document_type": "other" },
+        { "title": "Audition Tracks (Google Drive folder)", "url": "https://drive.google.com/drive/folders/1EJO2kc8Oxc9EzfA3h0ARRdyXWFWPyHf4", "document_type": "other" },
+        { "title": "Individual Scores (Google Drive folder)", "url": "https://drive.google.com/drive/folders/1ZsFs0GcpS58yvRZAXFtxZWgYSxrQYAcu?usp=sharing", "document_type": "other" },
+        { "title": "SATB & SSA Rehearsal Tracks (Dropbox)", "url": "https://www.dropbox.com/scl/fo/3f26qpd2c86dae6qx6z00/AKLQYP1pj-raUQd8-25T8Dg?rlkey=67fjgl6e8t6e29pw72m4ctcyj&e=1&dl=0", "document_type": "other" },
+        { "title": "2026 MMEA/ACDA All-State Conference Honor Choirs Timeline", "url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf", "document_type": "calendar" },
+        { "title": "2025-2026 Mississippi Senior High Choral Division Informational Manual", "url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf", "document_type": "handbook" }
       ]
     },
+
     {
-      "name": "High School All-State Honor Choir — Treble",
-      "lineage_key": "mississippi-hs-all-state-treble-honor-choir",
+      "name": "MS ACDA All-State Treble Honor Choir",
+      "lineage_key": "mississippi-hs-treble-honor-choir",
       "season": "2026-27",
       "school_level": "high",
       "ensemble_type": "treble chorus",
-      "description": "The Mississippi High School All-State Treble Honor Choir, selected by recorded audition through the Opus Event portal and performing at the MMEA/MSACDA State Conference. MSACDA's Treble All-State chair is Keely Kelso.",
+      "description": "The high school All-State Treble Honor Choir, organized and governed by the MS ACDA Executive Board and performing at the joint MMEA / MS ACDA State Conference. Mississippi ACDA lists Keely Kelso as the All-State Treble Honor Choir chair. Auditions, timeline, scoring, and sight-reading are shared with the All-State SATB Honor Choir.",
+
       "dates": [
-        {
-          "date_type": "audition_round",
+        { "date_type": "audition_round",
           "title": "High school audition window",
           "start_at": "2026-08-10",
           "end_at": "2026-08-21",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "results",
-          "title": "High school results",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "results",
+          "title": "High school results released",
           "start_at": "2026-09-11",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "acceptance_deadline",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "registration_deadline",
           "title": "All-State registration and payment due",
           "start_at": "2026-10-12",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "event",
-          "title": "2026 MMEA/MSACDA All-State Conference",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "event",
+          "title": "MMEA / MS ACDA State Conference — All-State Honor Choir rehearsals and concerts",
           "start_at": "2026-11-16",
           "end_at": "2026-11-18",
           "all_day": true,
           "timezone": "America/Chicago",
-          "description": "At The University of Southern Mississippi.",
-          "source_url": "https://msacda.org/"
-        }
+          "description": "Held at The University of Southern Mississippi.",
+          "source_url": "https://msacda.org/" }
       ],
+
       "requirements": [
-        {
-          "category": "format",
-          "title": "Auditions submitted through Opus Event with fee paid first",
-          "description": "Registration and audition submission run through the Opus Event portal; the audition fee must be marked paid before an audition can be submitted.",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        }
+        { "category": "membership",
+          "title": "Director must be a current MS ACDA member and must register for the conference",
+          "description": "Same requirement as the All-State SATB Honor Choir: the director must be a current MS ACDA member for students to audition, and must register for the State Conference if any of their students are accepted.",
+          "source_url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf" },
+
+        { "category": "rubric",
+          "title": "Audition scoring — 444 points maximum",
+          "description": "Two audition pieces at 100 points each plus 22 points of sight-reading, scored by two judges, for a maximum of 444 points.",
+          "source_url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf" }
+      ],
+
+      "repertoire": [
+        { "title": "Fac, ut ardeat cor meum", "composer": "Giovanni Battista Pergolesi", "voicing": "SA", "publisher": "CPDL", "purpose": "audition", "notes": "Listed under 'HS Treble — Soprano/Alto Audition!'", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "By Night", "composer": "Elaine Hagenberg", "voicing": "SSAA", "publisher": "Elaine Hagenberg Music EH1015", "catalog_number": "11397314", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Abendlied", "composer": "Josef Rheinberger", "voicing": "SSSAAA", "publisher": "Cypress Choral Music CP 1661", "catalog_number": "11197783", "purpose": "performance", "notes": "Spelled 'Abendleid' and the composer given as 'Joseph Rheinberger' on the repertoire sheet.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Gloria #6", "composer": "György Orbán", "voicing": "SA", "publisher": "Hinshaw Music, Inc. HMC2003", "catalog_number": "3301932", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Temporal", "composer": "Diana Sáez & Suzzette Ortiz", "voicing": "SSAA", "publisher": "Las Voz", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "I Can Be Better", "composer": "Coty Raven Morris", "voicing": "SSA + divisi", "publisher": "Carl Fischer LLC CM 9877", "catalog_number": "11673957", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" }
       ]
     },
+
     {
-      "name": "Junior High All-State Honor Choir",
-      "lineage_key": "mississippi-junior-high-all-state-honor-choir",
+      "name": "MS ACDA All-State Honor Show Choir",
+      "lineage_key": "mississippi-hs-honor-show-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "show choir",
+      "description": "An enriching SATB experience for talented high school show choir students of Mississippi, sponsored by MS ACDA. MS ACDA describes the event as a weekend intensive of learning from expert choreographers and directors in the show choir community. Toney Keeler of Northwest Rankin High School is listed as the All-State Honor Show Choir chair.",
+
+      "dates": [
+        { "date_type": "event",
+          "title": "MS All-State Show Choir weekend",
+          "start_at": "2026-10-01",
+          "end_at": "2026-10-03",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Held at the Biloxi High School Fine Arts Wing.",
+          "source_url": "https://msacda.org/" }
+      ],
+
+      "requirements": [
+        { "category": "membership",
+          "title": "Director must be a current MS ACDA member",
+          "description": "The show choir director must be a current member of MS ACDA for their students to participate in auditions, and should only audition their most outstanding and best-prepared students.",
+          "source_url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf" },
+
+        { "category": "format",
+          "title": "Quartet audition with recorded accompaniment, plus sight-reading",
+          "description": "Students learn several selections and audition in quartets with recorded accompaniment. Students then sight-read in a separate room immediately following the quartet audition. Auditions are submitted through Opus Event.",
+          "source_url": "https://www.misshsaa.com/wp-content/uploads/2025/09/2025-2026-MSMEA-HS-Choral-Division-Manual.pdf" }
+      ],
+
+      "documents": [
+        { "title": "2026 All-State Show Choir Information", "url": "https://docs.google.com/document/d/1nba03cnRRhWgGRXHlclOX8Y_6wxCo8bBZiY9fOk8e0w/edit?usp=sharing", "document_type": "other" }
+      ]
+    },
+
+    {
+      "name": "MMEA All-State Junior High SATB Honor Choir",
+      "lineage_key": "mississippi-jh-satb-honor-choir",
       "season": "2026-27",
       "school_level": "middle",
-      "ensemble_type": "chorus",
-      "description": "Junior high tier of the Mississippi All-State Honor Choirs. Named from the MSMEA/MSACDA 2026 Conference Honor Choirs Timeline, which publishes a separate junior high audition window and results date.",
+      "ensemble_type": "mixed chorus",
+      "description": "One of the MMEA All-State Junior High Honor Choirs that perform at the annual MMEA / MS ACDA State Conference. It shares the statewide All-State repertoire list, Opus Event audition system, and conference timeline with the high school and elementary honor choirs.",
+
       "dates": [
-        {
-          "date_type": "other",
-          "title": "Junior High cuts posted",
+        { "date_type": "other",
+          "title": "Junior High audition cuts posted",
           "start_at": "2026-07-24",
           "all_day": true,
           "timezone": "America/Chicago",
-          "description": "The timeline notes 'Junior High cuts posted JULY 24TH'.",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "audition_round",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "audition_round",
           "title": "Junior high audition window",
           "start_at": "2026-08-13",
           "end_at": "2026-08-24",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "results",
-          "title": "Junior high results",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "results",
+          "title": "Junior high results released",
           "start_at": "2026-09-16",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "acceptance_deadline",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "registration_deadline",
           "title": "All-State registration and payment due",
           "start_at": "2026-10-12",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "event",
-          "title": "2026 MMEA/MSACDA All-State Conference",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "event",
+          "title": "MMEA / MS ACDA State Conference — All-State Honor Choir rehearsals and concerts",
           "start_at": "2026-11-16",
           "end_at": "2026-11-18",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://msacda.org/"
-        }
+          "source_url": "https://msacda.org/" }
+      ],
+
+      "repertoire": [
+        { "title": "After the Wind", "composer": "Nicholas Ryan Kelly", "voicing": "SATB", "publisher": "Galaxy Music", "catalog_number": "1.3726", "purpose": "audition", "notes": "Listed under 'Junior High SATB — All Singers Audition!'", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Actus", "composer": "Ryan Main", "voicing": "SATB", "publisher": "Endeavor Music Publishing", "catalog_number": "1001216", "purpose": "audition", "notes": "Listed under 'Junior High SATB — Tenor/Bass Audition!'", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Ubi Caritas", "composer": "Ola Gjeilo", "voicing": "SATB", "publisher": "Walton Music", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Both Sides Now", "arranger": "Roger Emerson", "voicing": "SATB", "publisher": "Hal Leonard", "catalog_number": "1152918", "purpose": "performance", "notes": "The repertoire sheet lists Roger Emerson in the composer/arranger column without distinguishing the role.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Téir Abhaile 'Riú", "arranger": "Cristi Cary Miller", "voicing": "SATB", "purpose": "performance", "notes": "Publisher listed on the sheet as 'Available soon'. The sheet lists Cristi Cary Miller in the composer/arranger column without distinguishing the role.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Water Fountain", "arranger": "Kristopher Fulton", "voicing": "SATB", "publisher": "Mark Foster Music", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" }
       ]
     },
+
     {
-      "name": "Elementary All-State Honor Choir",
-      "lineage_key": "mississippi-elementary-all-state-honor-choir",
+      "name": "MMEA All-State Junior High Treble Honor Choir",
+      "lineage_key": "mississippi-jh-treble-honor-choir",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "treble chorus",
+      "description": "One of the MMEA All-State Junior High Honor Choirs performing at the annual MMEA / MS ACDA State Conference, sharing the statewide All-State repertoire list, Opus Event audition system, and conference timeline.",
+
+      "dates": [
+        { "date_type": "audition_round",
+          "title": "Junior high audition window",
+          "start_at": "2026-08-13",
+          "end_at": "2026-08-24",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "results",
+          "title": "Junior high results released",
+          "start_at": "2026-09-16",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "registration_deadline",
+          "title": "All-State registration and payment due",
+          "start_at": "2026-10-12",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "event",
+          "title": "MMEA / MS ACDA State Conference — All-State Honor Choir rehearsals and concerts",
+          "start_at": "2026-11-16",
+          "end_at": "2026-11-18",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://msacda.org/" }
+      ],
+
+      "repertoire": [
+        { "title": "Silver Rain", "composer": "B.E. Boykin", "voicing": "SSA", "publisher": "Oxford University Press", "catalog_number": "9780193565876", "purpose": "audition", "notes": "Listed under 'Junior High Treble — Soprano/Alto Audition!'", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Worry Bird", "composer": "Andrea Ramsey", "voicing": "SSA", "publisher": "MusicSpoke", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "We Are the Music Makers", "composer": "Reginal Wright", "voicing": "SSA", "publisher": "Oxford University Press", "catalog_number": "9780193564176", "purpose": "performance", "notes": "The repertoire sheet spells the composer 'Regional Wright'.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "La Paloma", "arranger": "Cristian Grases", "voicing": "SSA", "publisher": "Walton Music", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "A Choice to Change the World", "composer": "Kevin Johnson", "voicing": "SSA", "publisher": "Carl Fischer LLC", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Laudamus Te", "arranger": "Doreen Rao", "voicing": "SA", "publisher": "Boosey & Hawkes, Inc.", "catalog_number": "48004348", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" }
+      ]
+    },
+
+    {
+      "name": "MMEA All-State Elementary Honor Choir",
+      "lineage_key": "mississippi-elementary-honor-choir",
       "season": "2026-27",
       "school_level": "elementary",
-      "ensemble_type": "chorus",
-      "description": "Elementary tier of the Mississippi All-State Honor Choirs. Named from the MSMEA/MSACDA 2026 Conference Honor Choirs Timeline, which publishes a separate elementary audition window and results date.",
+      "ensemble_type": "treble chorus",
+      "description": "The MMEA All-State Elementary Honor Choir performs at the annual MMEA / MS ACDA State Conference. It shares the statewide All-State repertoire list and conference timeline with the junior high and high school honor choirs.",
+
       "dates": [
-        {
-          "date_type": "audition_round",
+        { "date_type": "audition_round",
           "title": "Elementary audition window",
           "start_at": "2026-08-17",
           "end_at": "2026-08-28",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "results",
-          "title": "Elementary results",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "results",
+          "title": "Elementary results released",
           "start_at": "2026-09-18",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "acceptance_deadline",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "registration_deadline",
           "title": "All-State registration and payment due",
           "start_at": "2026-10-12",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf"
-        },
-        {
-          "date_type": "event",
-          "title": "2026 MMEA/MSACDA All-State Conference",
+          "source_url": "https://www.msmea.org/_files/ugd/80d403_fae50fe0687b41b098e0cc8f1b739837.pdf" },
+
+        { "date_type": "event",
+          "title": "MMEA / MS ACDA State Conference — All-State Honor Choir rehearsals and concerts",
           "start_at": "2026-11-16",
           "end_at": "2026-11-18",
           "all_day": true,
           "timezone": "America/Chicago",
-          "source_url": "https://msacda.org/"
-        }
-      ]
-    },
-    {
-      "name": "MS All-State Show Choir",
-      "lineage_key": "mississippi-all-state-show-choir",
-      "season": "2026-27",
-      "school_level": "high",
-      "ensemble_type": "show choir",
-      "description": "MSACDA describes the MS All-State Show Choir as an ensemble whose members audition to be selected for a weekend intensive of learning from the show choir community's expert choreographers and directors. MSACDA's All-State Show Choir chairs are Hannah Morris and Amanda Brandon.",
-      "dates": [
-        {
-          "date_type": "event",
-          "title": "MS All-State Show Choir weekend intensive",
-          "start_at": "2026-10-01",
-          "end_at": "2026-10-03",
-          "all_day": true,
-          "timezone": "America/Chicago",
-          "description": "Location: Biloxi High School Fine Arts Wing.",
-          "source_url": "https://msacda.org/"
-        }
+          "source_url": "https://msacda.org/" }
       ],
+
+      "repertoire": [
+        { "title": "Dona Nobis Pacem", "composer": "Traditional Latin", "voicing": "Unison", "purpose": "audition", "notes": "Listed on the repertoire sheet as the Elementary audition piece; the publisher column points to a score PDF hosted on msmea.org rather than naming a publisher.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "Sizalelwe Indodana", "arranger": "Victor Johnson", "voicing": "2-part", "publisher": "Chorister's Guild", "catalog_number": "11620387", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "To Run in the Wild", "composer": "Lucy Shebra, Sherry Blevins", "voicing": "2-part", "purpose": "performance", "notes": "Publisher listed as TBD on the repertoire sheet.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "A Reflection of Light", "composer": "Sherry Blevins", "voicing": "2-part", "publisher": "National Music Publishers", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "What a Song Can Do", "composer": "Raphael Fusco", "voicing": "SA", "publisher": "Alfred Music Publishing", "catalog_number": "11641858", "purpose": "performance", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" },
+        { "title": "New commission, title TBD", "composer": "Sherry Blevins", "voicing": "SA", "purpose": "performance", "notes": "Listed on the repertoire sheet as a new commission with title and publisher still TBD.", "source_url": "https://docs.google.com/spreadsheets/u/0/d/1N6jr0xG3RFNcPQLVEG2Ya29982BKSDwEC2lan2lFThI/htmlview" }
+      ],
+
       "documents": [
-        {
-          "title": "2026 ASSC Information",
-          "url": "https://docs.google.com/document/d/1nba03cnRRhWgGRXHlclOX8Y_6wxCo8bBZiY9fOk8e0w/edit",
-          "document_type": "other"
-        }
+        { "title": "MMEA — Elementary All-State Honor Choir page", "url": "https://www.msmea.org/elementary-all-state-honor-choir", "document_type": "other" }
       ]
     }
   ],
+
   "not_published": [
-    "Audition fee and All-State participation fee amounts — the timeline references an audition fee and an October 12 payment deadline but publishes no amount on any page reviewed",
-    "Eligibility rules (grade levels, per-school quotas, director membership requirements) — not stated on the pages reviewed",
-    "Specific audition selections and repertoire titles/composers — the '2026 All-State Honor Choir Rep. List' Google Sheet did not render its contents when retrieved, so no titles are recorded rather than guessed",
-    "2026-27 All-State Honor Choir clinicians — MSACDA links a 'Repertoire & Clinician Information' Drive folder but names no clinicians on the site itself",
-    "Detailed audition components (scales, sight-reading requirements, tonal memory) — only the existence of published sight-reading materials is confirmed",
-    "Honor choir concert clock times and venues within the conference — MSMEA's linked 'Honor Choirs Conference Schedule' on the page is labeled 2025",
-    "Official ensemble names for the junior high and elementary choirs — derived from the MSMEA/MSACDA timeline PDF's section headings"
+    "Audition fee and participation fee amounts — the timeline PDF states the audition fee must be marked paid before submission but names no amount, and neither msacda.org, msmea.org, nor the choral division manual publishes a dollar figure; the 2026-27 payment pages appear to sit behind Opus Event",
+    "Conference registration fee for directors, which is a prerequisite for a student's participation",
+    "2026-27 edition of the Mississippi Senior High Choral Division Informational Manual — only the 2025-2026 edition was posted on misshsaa.com at retrieval, so the audition-process and sight-reading rules cited here are from that edition",
+    "Eligibility rules — grade ranges for the high school, junior high, and elementary All-State Honor Choirs, and any per-school limit on the number of students a director may enter",
+    "Named conductors/clinicians for the 2026 All-State Honor Choirs — MS ACDA links a 'Repertoire & Clinician Information' Drive folder but the names are not on the public page",
+    "Exact All-State Honor Choir rehearsal and concert times within the November 16-18, 2026 conference — msmea.org links only a '2025 Honor Choirs Conference Schedule'",
+    "Voice-part divisions and section sizes for any of the choirs",
+    "All-State Show Choir audition dates, repertoire, and deadlines — the October 1-3, 2026 event date is published but the audition calendar is inside a Google Doc information packet",
+    "Which specific selections from each repertoire list are excerpted for the audition beyond the pieces the sheet explicitly flags with 'Audition!'",
+    "Junior High Show Choir details — the choral manual lists an MMEA All-State Junior High Show Choir among the conference honor groups, but no 2026-27 repertoire, dates, or contacts were found for it"
   ]
 }

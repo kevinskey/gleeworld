@@ -1,0 +1,1303 @@
+{
+    "notes": "Originally hand-entered as a migration (Georgia 20260808130000, Texas 20260808150000) before the JSON loader existed; exported back to a data file so every state loads the same way.",
+    "sources": [
+        {
+            "url": "https://www.tmea.org/vocal/audition-material/",
+            "name": "TMEA Vocal Division — 2026-27 All-State Audition Material",
+            "source_type": "official"
+        },
+        {
+            "url": "https://www.tmea.org/vocal/all-state/area/",
+            "name": "TMEA Vocal — Area Auditions (dates, sites, chairs)",
+            "source_type": "calendar"
+        },
+        {
+            "url": "https://www.tmea.org/vocal/all-state/small-school/",
+            "name": "TMEA Vocal — 1A-4A / small school track",
+            "source_type": "official"
+        },
+        {
+            "url": "https://www.tmea.org/all-state/eligibility/",
+            "name": "TMEA Eligibility Requirements (revised March 2026 for 2026-27)",
+            "source_type": "official"
+        },
+        {
+            "url": "https://www.tmea.org/all-state/instrumentation-voicing/",
+            "name": "TMEA All-State Instrumentation & Voicing (revised April 2026)",
+            "source_type": "official"
+        },
+        {
+            "url": "https://www.tmea.org/convention/performances/all-state/",
+            "name": "TMEA Clinic/Convention — All-State performances",
+            "source_type": "calendar"
+        },
+        {
+            "url": "https://www.tmea.org/membership/",
+            "name": "TMEA Membership & dues",
+            "source_type": "official"
+        }
+    ],
+    "programs": [
+        {
+            "fees": [
+                {
+                    "fee_type": "area_audition",
+                    "payable_to": "state_association",
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "Charged per student for the Area audition, billed to each Region by TMEA headquarters.",
+                    "amount_cents": 700
+                },
+                {
+                    "fee_type": "participation",
+                    "payable_to": "state_association",
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "All-State membership/participation fee, paid online in the All-State Member Dashboard by students who are named to a choir.",
+                    "amount_cents": 3000
+                }
+            ],
+            "name": "All-State 1A-4A Mixed Choir",
+            "dates": [
+                {
+                    "title": "Errata deadline — notify the Vocal VP",
+                    "all_day": true,
+                    "start_at": "2026-08-30",
+                    "timezone": "America/Chicago",
+                    "date_type": "other",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "No errata are added after September 1. Errata are official only when published on the TMEA audition-material page."
+                },
+                {
+                    "title": "Area Declaration Form due",
+                    "all_day": true,
+                    "start_at": "2026-12-14",
+                    "timezone": "America/Chicago",
+                    "date_type": "registration_deadline",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "Eligibility Section III, Article 2. Students eligible for both tracks declare one; the track is fixed for the audition year."
+                },
+                {
+                    "title": "Area auditions (final round)",
+                    "all_day": true,
+                    "start_at": "2027-01-09",
+                    "timezone": "America/Chicago",
+                    "date_type": "audition_round",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/vocal/all-state/area/",
+                    "description": "Held statewide on one day for both tracks. The Area audition selects the All-State choirs. Eight Areas (A-H) for 5A-6A; five (Central, East, North, South, West) for 1A-4A."
+                },
+                {
+                    "title": "TMEA Clinic/Convention",
+                    "end_at": "2027-02-13",
+                    "all_day": true,
+                    "start_at": "2027-02-10",
+                    "timezone": "America/Chicago",
+                    "date_type": "event",
+                    "sort_order": 50,
+                    "source_url": "https://www.tmea.org/convention/performances/all-state/",
+                    "description": "San Antonio, Texas."
+                },
+                {
+                    "title": "All-State choir concerts",
+                    "all_day": true,
+                    "start_at": "2027-02-13",
+                    "timezone": "America/Chicago",
+                    "date_type": "event",
+                    "sort_order": 60,
+                    "source_url": "https://www.tmea.org/convention/performances/all-state/",
+                    "description": "Henry B. Gonzalez Convention Center, 900 E. Market Street — Stars at Night Ballroom, 3rd floor. Clock times not yet published."
+                }
+            ],
+            "season": "2026-27",
+            "documents": [
+                {
+                    "url": "https://www.tmea.org/vocal/audition-material/",
+                    "title": "2026-27 Vocal All-State Audition Material",
+                    "sort_order": 10,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.tmea.org/all-state/eligibility/",
+                    "title": "Eligibility Requirements (revised March 2026)",
+                    "sort_order": 20,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.tmea.org/wp-content/uploads/Region_Admin/Sightreading/Vocal_Sightreading_Levels_2025.pdf",
+                    "title": "Vocal Sightreading Levels (July 2025)",
+                    "sort_order": 30,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://www.tmea.org/wp-content/uploads/Region_Admin/Vocal_Judging_Tips.pdf",
+                    "title": "Judging Tips and Sightreading Deductions (July 2024)",
+                    "sort_order": 40,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://www.tmea.org/all-state/instrumentation-voicing/",
+                    "title": "All-State Instrumentation and Voicing (April 2026)",
+                    "sort_order": 50,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://align.tmea.org/Align_2628/",
+                    "title": "2026-2028 Region and Area Alignments",
+                    "sort_order": 60,
+                    "document_type": "other"
+                },
+                {
+                    "url": "https://www.tmea.org/regions/",
+                    "title": "Region index — District/Region/Pre-Area dates and fees",
+                    "sort_order": 70,
+                    "document_type": "calendar"
+                }
+            ],
+            "repertoire": [
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Children Go Where I Send Thee",
+                    "purpose": "audition",
+                    "voicing": "SATB",
+                    "arranger": "Kevin Johnson",
+                    "publisher": "Carl Fischer",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "CM9743"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Ne Timeas Maria",
+                    "purpose": "audition",
+                    "voicing": "SATB",
+                    "composer": "Tomás Luis de Victoria",
+                    "publisher": "Hal Leonard",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "HL 366857"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "The Dark Hills",
+                    "purpose": "audition",
+                    "voicing": "SATB",
+                    "composer": "Jenni Brandon",
+                    "publisher": "Jenni Brandon",
+                    "sort_order": 30,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/"
+                },
+                {
+                    "notes": "Designated for Area audition; may also be used earlier. Free download via CPDL.",
+                    "title": "Kyrie",
+                    "purpose": "audition",
+                    "voicing": "SATB",
+                    "composer": "W. A. Mozart",
+                    "publisher": "CPDL",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "CPDL"
+                },
+                {
+                    "notes": "Designated for Area audition; may also be used earlier",
+                    "title": "The Ground",
+                    "purpose": "audition",
+                    "voicing": "SATB divisi",
+                    "composer": "Ola Gjeilo",
+                    "publisher": "Walton Music",
+                    "sort_order": 50,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "WW1460"
+                },
+                {
+                    "notes": "Designated for Area audition; may also be used earlier",
+                    "title": "Beat! Beat! Drums!",
+                    "purpose": "audition",
+                    "voicing": "SATB",
+                    "composer": "Ralph Vaughan Williams",
+                    "publisher": "Oxford University Press",
+                    "sort_order": 60,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "9780193866201"
+                }
+            ],
+            "description": "Restricted to students from UIL 1A-4A schools. A 112-member choir, 28 per voice part. Two or three audition rounds: Region, Pre-Area, Area. Conducted across 13 Regions and 5 Areas.",
+            "lineage_key": "texas-as-1a4a-mixed",
+            "voice_parts": [
+                {
+                    "code": "S",
+                    "label": "Soprano",
+                    "sort_order": 10
+                },
+                {
+                    "code": "A",
+                    "label": "Alto",
+                    "sort_order": 20
+                },
+                {
+                    "code": "T",
+                    "label": "Tenor",
+                    "sort_order": 30
+                },
+                {
+                    "code": "B",
+                    "label": "Bass",
+                    "sort_order": 40
+                }
+            ],
+            "requirements": [
+                {
+                    "title": "Full-time Texas student, certified by a TMEA Active Member director",
+                    "category": "eligibility",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "The student must be enrolled full time in a Texas school for the semester(s) of both the audition and the concert, and be certified by their TMEA Active Member director as an actively participating member of the school choir program for the entire semester. Schools without a choir program use a TMEA Active Member sponsor designated by the chief administrator.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Director must hold current TMEA Active or Life membership",
+                    "category": "membership",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/membership/",
+                    "description": "Only Active or Life members may enter students. The director or sponsor must attend all TMEA auditions and related activities; Regions define proxy guidelines in writing. Active dues are $65/year, membership year July 1 to June 30.",
+                    "structured_data": {
+                        "active_dues_usd": 65
+                    }
+                },
+                {
+                    "title": "Track declaration — one track per audition year",
+                    "category": "eligibility",
+                    "sort_order": 30,
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "Students eligible for both tracks may advance past the Region level in only one. The track is declared when entering the first audition leading to All-State. Directors at 1A-4A schools choose the track student by student, not school-wide.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Duplication rule across All-State groups",
+                    "category": "eligibility",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "A student may initially audition for multiple groups. If they qualify to Area in more than one, only one Area audition may be taken that fall. A student named to All-State Jazz, Orchestra or Mariachi cannot audition for other All-State groups; if not named, they may continue to the Band or Choir Area audition in January.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "District, Region and Pre-Area dates are set by each Region",
+                    "category": "format",
+                    "sort_order": 50,
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "TMEA publishes the Area round centrally. The earlier rounds, their dates, and the Region entry fee are set by each of the 33 Regions and published in that Region's own audition policies. Check your Region's site.",
+                    "structured_data": {
+                        "region_index": "https://www.tmea.org/regions/"
+                    }
+                },
+                {
+                    "title": "Audition cuts are reduced by each Region",
+                    "category": "materials",
+                    "sort_order": 60,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "TMEA publishes the selections; the specific cuts are set regionally. The first day Regions may reduce audition cuts is August 1, 2026. Exact measure numbers are not published centrally.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Pieces must be auditioned before the final round",
+                    "category": "materials",
+                    "sort_order": 70,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "All pieces designated for a track must be auditioned or performed prior to the January final round — except pieces marked \"Designated for Area Audition use\", which may be reserved for the final round.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Sight-reading is part of the audition",
+                    "category": "sight_reading",
+                    "sort_order": 80,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "TMEA publishes sight-reading levels, judging tips and deduction criteria, plus starting-pitch prompt audio (Low So / Do / Mi / So across nine keys, with Treble and Tenor-Bass variants).",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Divisi assignment for 2026-27",
+                    "category": "materials",
+                    "sort_order": 90,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "Areas North, South and West take the upper divisi pitches; Areas East and Central take the lower.",
+                    "structured_data": {
+                        "lower": [
+                            "East",
+                            "Central"
+                        ],
+                        "upper": [
+                            "North",
+                            "South",
+                            "West"
+                        ]
+                    }
+                }
+            ],
+            "school_level": "high",
+            "ensemble_type": "mixed chorus"
+        },
+        {
+            "fees": [
+                {
+                    "fee_type": "area_audition",
+                    "payable_to": "state_association",
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "Charged per student for the Area audition, billed to each Region by TMEA headquarters.",
+                    "amount_cents": 700
+                },
+                {
+                    "fee_type": "participation",
+                    "payable_to": "state_association",
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "All-State membership/participation fee, paid online in the All-State Member Dashboard by students who are named to a choir.",
+                    "amount_cents": 3000
+                }
+            ],
+            "name": "All-State 5A-6A Mixed Choir",
+            "dates": [
+                {
+                    "title": "Errata deadline — notify the Vocal VP",
+                    "all_day": true,
+                    "start_at": "2026-08-30",
+                    "timezone": "America/Chicago",
+                    "date_type": "other",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "No errata are added after September 1. Errata are official only when published on the TMEA audition-material page."
+                },
+                {
+                    "title": "Area Declaration Form due",
+                    "all_day": true,
+                    "start_at": "2026-12-14",
+                    "timezone": "America/Chicago",
+                    "date_type": "registration_deadline",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "Eligibility Section III, Article 2. Students eligible for both tracks declare one; the track is fixed for the audition year."
+                },
+                {
+                    "title": "Area auditions (final round)",
+                    "all_day": true,
+                    "start_at": "2027-01-09",
+                    "timezone": "America/Chicago",
+                    "date_type": "audition_round",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/vocal/all-state/area/",
+                    "description": "Held statewide on one day for both tracks. The Area audition selects the All-State choirs. Eight Areas (A-H) for 5A-6A; five (Central, East, North, South, West) for 1A-4A."
+                },
+                {
+                    "title": "TMEA Clinic/Convention",
+                    "end_at": "2027-02-13",
+                    "all_day": true,
+                    "start_at": "2027-02-10",
+                    "timezone": "America/Chicago",
+                    "date_type": "event",
+                    "sort_order": 50,
+                    "source_url": "https://www.tmea.org/convention/performances/all-state/",
+                    "description": "San Antonio, Texas."
+                },
+                {
+                    "title": "All-State choir concerts",
+                    "all_day": true,
+                    "start_at": "2027-02-13",
+                    "timezone": "America/Chicago",
+                    "date_type": "event",
+                    "sort_order": 60,
+                    "source_url": "https://www.tmea.org/convention/performances/all-state/",
+                    "description": "Henry B. Gonzalez Convention Center, 900 E. Market Street — Stars at Night Ballroom, 3rd floor. Clock times not yet published."
+                }
+            ],
+            "season": "2026-27",
+            "documents": [
+                {
+                    "url": "https://www.tmea.org/vocal/audition-material/",
+                    "title": "2026-27 Vocal All-State Audition Material",
+                    "sort_order": 10,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.tmea.org/all-state/eligibility/",
+                    "title": "Eligibility Requirements (revised March 2026)",
+                    "sort_order": 20,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.tmea.org/wp-content/uploads/Region_Admin/Sightreading/Vocal_Sightreading_Levels_2025.pdf",
+                    "title": "Vocal Sightreading Levels (July 2025)",
+                    "sort_order": 30,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://www.tmea.org/wp-content/uploads/Region_Admin/Vocal_Judging_Tips.pdf",
+                    "title": "Judging Tips and Sightreading Deductions (July 2024)",
+                    "sort_order": 40,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://www.tmea.org/all-state/instrumentation-voicing/",
+                    "title": "All-State Instrumentation and Voicing (April 2026)",
+                    "sort_order": 50,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://align.tmea.org/Align_2628/",
+                    "title": "2026-2028 Region and Area Alignments",
+                    "sort_order": 60,
+                    "document_type": "other"
+                },
+                {
+                    "url": "https://www.tmea.org/regions/",
+                    "title": "Region index — District/Region/Pre-Area dates and fees",
+                    "sort_order": 70,
+                    "document_type": "calendar"
+                }
+            ],
+            "repertoire": [
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Hold to God's Unchanging Hand",
+                    "purpose": "audition",
+                    "voicing": "SATB",
+                    "arranger": "Jason D. Thompson",
+                    "composer": "James Hall",
+                    "publisher": "Hinshaw",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "00346300"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Water Fountain",
+                    "purpose": "audition",
+                    "voicing": "SATB divisi",
+                    "arranger": "Kristopher Fulton",
+                    "publisher": "Mark Foster",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "888680961244"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Hiob (Job Cantata), Movement 1",
+                    "purpose": "audition",
+                    "voicing": "SATB",
+                    "composer": "Fanny Mendelssohn Hensel",
+                    "publisher": "Furore",
+                    "sort_order": 30,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "Fue 5261"
+                },
+                {
+                    "notes": "Designated for Area audition; may also be used earlier",
+                    "title": "Hiob (Job Cantata), Movement 3",
+                    "purpose": "audition",
+                    "voicing": "SATB",
+                    "composer": "Fanny Mendelssohn Hensel",
+                    "publisher": "Furore",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "Fue 5261"
+                },
+                {
+                    "notes": "Designated for Area audition; may also be used earlier",
+                    "title": "Cedit, Hyems",
+                    "purpose": "audition",
+                    "voicing": "SATB",
+                    "composer": "Abbie Betinis",
+                    "publisher": "Hal Leonard",
+                    "sort_order": 50,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "HL 50486492"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "I Dream a World",
+                    "purpose": "audition",
+                    "voicing": "SATB divisi",
+                    "composer": "Kyle Pederson",
+                    "publisher": "ESC Publishing",
+                    "sort_order": 60,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "1.3687"
+                }
+            ],
+            "description": "Open to students from any UIL classification. Part of the 504-seat 5A-6A track. Three or four audition rounds: Region, Pre-Area, Area (some Regions add a District round).",
+            "lineage_key": "texas-as-5a6a-mixed",
+            "voice_parts": [
+                {
+                    "code": "S1",
+                    "label": "Soprano 1",
+                    "sort_order": 10
+                },
+                {
+                    "code": "S2",
+                    "label": "Soprano 2",
+                    "sort_order": 20
+                },
+                {
+                    "code": "A1",
+                    "label": "Alto 1",
+                    "sort_order": 30
+                },
+                {
+                    "code": "A2",
+                    "label": "Alto 2",
+                    "sort_order": 40
+                },
+                {
+                    "code": "T1",
+                    "label": "Tenor 1",
+                    "sort_order": 50
+                },
+                {
+                    "code": "T2",
+                    "label": "Tenor 2",
+                    "sort_order": 60
+                },
+                {
+                    "code": "B1",
+                    "label": "Bass 1",
+                    "sort_order": 70
+                },
+                {
+                    "code": "B2",
+                    "label": "Bass 2",
+                    "sort_order": 80
+                }
+            ],
+            "requirements": [
+                {
+                    "title": "Full-time Texas student, certified by a TMEA Active Member director",
+                    "category": "eligibility",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "The student must be enrolled full time in a Texas school for the semester(s) of both the audition and the concert, and be certified by their TMEA Active Member director as an actively participating member of the school choir program for the entire semester. Schools without a choir program use a TMEA Active Member sponsor designated by the chief administrator.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Director must hold current TMEA Active or Life membership",
+                    "category": "membership",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/membership/",
+                    "description": "Only Active or Life members may enter students. The director or sponsor must attend all TMEA auditions and related activities; Regions define proxy guidelines in writing. Active dues are $65/year, membership year July 1 to June 30.",
+                    "structured_data": {
+                        "active_dues_usd": 65
+                    }
+                },
+                {
+                    "title": "Track declaration — one track per audition year",
+                    "category": "eligibility",
+                    "sort_order": 30,
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "Students eligible for both tracks may advance past the Region level in only one. The track is declared when entering the first audition leading to All-State. Directors at 1A-4A schools choose the track student by student, not school-wide.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Duplication rule across All-State groups",
+                    "category": "eligibility",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "A student may initially audition for multiple groups. If they qualify to Area in more than one, only one Area audition may be taken that fall. A student named to All-State Jazz, Orchestra or Mariachi cannot audition for other All-State groups; if not named, they may continue to the Band or Choir Area audition in January.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "District, Region and Pre-Area dates are set by each Region",
+                    "category": "format",
+                    "sort_order": 50,
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "TMEA publishes the Area round centrally. The earlier rounds, their dates, and the Region entry fee are set by each of the 33 Regions and published in that Region's own audition policies. Check your Region's site.",
+                    "structured_data": {
+                        "region_index": "https://www.tmea.org/regions/"
+                    }
+                },
+                {
+                    "title": "Audition cuts are reduced by each Region",
+                    "category": "materials",
+                    "sort_order": 60,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "TMEA publishes the selections; the specific cuts are set regionally. The first day Regions may reduce audition cuts is August 1, 2026. Exact measure numbers are not published centrally.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Pieces must be auditioned before the final round",
+                    "category": "materials",
+                    "sort_order": 70,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "All pieces designated for a track must be auditioned or performed prior to the January final round — except pieces marked \"Designated for Area Audition use\", which may be reserved for the final round.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Sight-reading is part of the audition",
+                    "category": "sight_reading",
+                    "sort_order": 80,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "TMEA publishes sight-reading levels, judging tips and deduction criteria, plus starting-pitch prompt audio (Low So / Do / Mi / So across nine keys, with Treble and Tenor-Bass variants).",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Divisi assignment for 2026-27",
+                    "category": "materials",
+                    "sort_order": 90,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "Areas A, B, C and D take the lower divisi pitches; Areas E, F, G and H take the upper.",
+                    "structured_data": {
+                        "lower": [
+                            "A",
+                            "B",
+                            "C",
+                            "D"
+                        ],
+                        "upper": [
+                            "E",
+                            "F",
+                            "G",
+                            "H"
+                        ]
+                    }
+                }
+            ],
+            "school_level": "high",
+            "ensemble_type": "mixed chorus"
+        },
+        {
+            "fees": [
+                {
+                    "fee_type": "area_audition",
+                    "payable_to": "state_association",
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "Charged per student for the Area audition, billed to each Region by TMEA headquarters.",
+                    "amount_cents": 700
+                },
+                {
+                    "fee_type": "participation",
+                    "payable_to": "state_association",
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "All-State membership/participation fee, paid online in the All-State Member Dashboard by students who are named to a choir.",
+                    "amount_cents": 3000
+                }
+            ],
+            "name": "All-State Tenor-Bass Choir",
+            "dates": [
+                {
+                    "title": "Errata deadline — notify the Vocal VP",
+                    "all_day": true,
+                    "start_at": "2026-08-30",
+                    "timezone": "America/Chicago",
+                    "date_type": "other",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "No errata are added after September 1. Errata are official only when published on the TMEA audition-material page."
+                },
+                {
+                    "title": "Area Declaration Form due",
+                    "all_day": true,
+                    "start_at": "2026-12-14",
+                    "timezone": "America/Chicago",
+                    "date_type": "registration_deadline",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "Eligibility Section III, Article 2. Students eligible for both tracks declare one; the track is fixed for the audition year."
+                },
+                {
+                    "title": "Area auditions (final round)",
+                    "all_day": true,
+                    "start_at": "2027-01-09",
+                    "timezone": "America/Chicago",
+                    "date_type": "audition_round",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/vocal/all-state/area/",
+                    "description": "Held statewide on one day for both tracks. The Area audition selects the All-State choirs. Eight Areas (A-H) for 5A-6A; five (Central, East, North, South, West) for 1A-4A."
+                },
+                {
+                    "title": "TMEA Clinic/Convention",
+                    "end_at": "2027-02-13",
+                    "all_day": true,
+                    "start_at": "2027-02-10",
+                    "timezone": "America/Chicago",
+                    "date_type": "event",
+                    "sort_order": 50,
+                    "source_url": "https://www.tmea.org/convention/performances/all-state/",
+                    "description": "San Antonio, Texas."
+                },
+                {
+                    "title": "All-State choir concerts",
+                    "all_day": true,
+                    "start_at": "2027-02-13",
+                    "timezone": "America/Chicago",
+                    "date_type": "event",
+                    "sort_order": 60,
+                    "source_url": "https://www.tmea.org/convention/performances/all-state/",
+                    "description": "Henry B. Gonzalez Convention Center, 900 E. Market Street — Stars at Night Ballroom, 3rd floor. Clock times not yet published."
+                }
+            ],
+            "season": "2026-27",
+            "documents": [
+                {
+                    "url": "https://www.tmea.org/vocal/audition-material/",
+                    "title": "2026-27 Vocal All-State Audition Material",
+                    "sort_order": 10,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.tmea.org/all-state/eligibility/",
+                    "title": "Eligibility Requirements (revised March 2026)",
+                    "sort_order": 20,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.tmea.org/wp-content/uploads/Region_Admin/Sightreading/Vocal_Sightreading_Levels_2025.pdf",
+                    "title": "Vocal Sightreading Levels (July 2025)",
+                    "sort_order": 30,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://www.tmea.org/wp-content/uploads/Region_Admin/Vocal_Judging_Tips.pdf",
+                    "title": "Judging Tips and Sightreading Deductions (July 2024)",
+                    "sort_order": 40,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://www.tmea.org/all-state/instrumentation-voicing/",
+                    "title": "All-State Instrumentation and Voicing (April 2026)",
+                    "sort_order": 50,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://align.tmea.org/Align_2628/",
+                    "title": "2026-2028 Region and Area Alignments",
+                    "sort_order": 60,
+                    "document_type": "other"
+                },
+                {
+                    "url": "https://www.tmea.org/regions/",
+                    "title": "Region index — District/Region/Pre-Area dates and fees",
+                    "sort_order": 70,
+                    "document_type": "calendar"
+                }
+            ],
+            "repertoire": [
+                {
+                    "notes": "Designated for Area audition; may also be used earlier",
+                    "title": "Night, Veiled Night",
+                    "purpose": "audition",
+                    "voicing": "TTBB double choir",
+                    "composer": "Anthony Maglione",
+                    "publisher": "Walton Music",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "GIP02765"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Serenade italienne",
+                    "purpose": "audition",
+                    "voicing": "TBB",
+                    "arranger": "Mari Esabel Valverde",
+                    "composer": "Ernest Chausson",
+                    "publisher": "Walton Music",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "WLG170"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Plakatap",
+                    "purpose": "audition",
+                    "voicing": "TBB",
+                    "composer": "Sydney Guillaume",
+                    "publisher": "Sydney Guillaume",
+                    "sort_order": 30,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Tuba",
+                    "purpose": "audition",
+                    "voicing": "TTBB",
+                    "composer": "Michael Barrett",
+                    "publisher": "Walton Music",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "WW1701"
+                }
+            ],
+            "description": "Part of the 504-seat 5A-6A track. Three or four audition rounds ending at the Area audition.",
+            "lineage_key": "texas-as-tenor-bass",
+            "voice_parts": [
+                {
+                    "code": "S1",
+                    "label": "Soprano 1",
+                    "sort_order": 10
+                },
+                {
+                    "code": "S2",
+                    "label": "Soprano 2",
+                    "sort_order": 20
+                },
+                {
+                    "code": "A1",
+                    "label": "Alto 1",
+                    "sort_order": 30
+                },
+                {
+                    "code": "A2",
+                    "label": "Alto 2",
+                    "sort_order": 40
+                },
+                {
+                    "code": "T1",
+                    "label": "Tenor 1",
+                    "sort_order": 50
+                },
+                {
+                    "code": "T2",
+                    "label": "Tenor 2",
+                    "sort_order": 60
+                },
+                {
+                    "code": "B1",
+                    "label": "Bass 1",
+                    "sort_order": 70
+                },
+                {
+                    "code": "B2",
+                    "label": "Bass 2",
+                    "sort_order": 80
+                }
+            ],
+            "requirements": [
+                {
+                    "title": "Full-time Texas student, certified by a TMEA Active Member director",
+                    "category": "eligibility",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "The student must be enrolled full time in a Texas school for the semester(s) of both the audition and the concert, and be certified by their TMEA Active Member director as an actively participating member of the school choir program for the entire semester. Schools without a choir program use a TMEA Active Member sponsor designated by the chief administrator.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Director must hold current TMEA Active or Life membership",
+                    "category": "membership",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/membership/",
+                    "description": "Only Active or Life members may enter students. The director or sponsor must attend all TMEA auditions and related activities; Regions define proxy guidelines in writing. Active dues are $65/year, membership year July 1 to June 30.",
+                    "structured_data": {
+                        "active_dues_usd": 65
+                    }
+                },
+                {
+                    "title": "Track declaration — one track per audition year",
+                    "category": "eligibility",
+                    "sort_order": 30,
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "Students eligible for both tracks may advance past the Region level in only one. The track is declared when entering the first audition leading to All-State. Directors at 1A-4A schools choose the track student by student, not school-wide.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Duplication rule across All-State groups",
+                    "category": "eligibility",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "A student may initially audition for multiple groups. If they qualify to Area in more than one, only one Area audition may be taken that fall. A student named to All-State Jazz, Orchestra or Mariachi cannot audition for other All-State groups; if not named, they may continue to the Band or Choir Area audition in January.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "District, Region and Pre-Area dates are set by each Region",
+                    "category": "format",
+                    "sort_order": 50,
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "TMEA publishes the Area round centrally. The earlier rounds, their dates, and the Region entry fee are set by each of the 33 Regions and published in that Region's own audition policies. Check your Region's site.",
+                    "structured_data": {
+                        "region_index": "https://www.tmea.org/regions/"
+                    }
+                },
+                {
+                    "title": "Audition cuts are reduced by each Region",
+                    "category": "materials",
+                    "sort_order": 60,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "TMEA publishes the selections; the specific cuts are set regionally. The first day Regions may reduce audition cuts is August 1, 2026. Exact measure numbers are not published centrally.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Pieces must be auditioned before the final round",
+                    "category": "materials",
+                    "sort_order": 70,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "All pieces designated for a track must be auditioned or performed prior to the January final round — except pieces marked \"Designated for Area Audition use\", which may be reserved for the final round.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Sight-reading is part of the audition",
+                    "category": "sight_reading",
+                    "sort_order": 80,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "TMEA publishes sight-reading levels, judging tips and deduction criteria, plus starting-pitch prompt audio (Low So / Do / Mi / So across nine keys, with Treble and Tenor-Bass variants).",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Divisi assignment for 2026-27",
+                    "category": "materials",
+                    "sort_order": 90,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "Areas A, B, C and D take the lower divisi pitches; Areas E, F, G and H take the upper.",
+                    "structured_data": {
+                        "lower": [
+                            "A",
+                            "B",
+                            "C",
+                            "D"
+                        ],
+                        "upper": [
+                            "E",
+                            "F",
+                            "G",
+                            "H"
+                        ]
+                    }
+                }
+            ],
+            "school_level": "high",
+            "ensemble_type": "tenor-bass chorus"
+        },
+        {
+            "fees": [
+                {
+                    "fee_type": "area_audition",
+                    "payable_to": "state_association",
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "Charged per student for the Area audition, billed to each Region by TMEA headquarters.",
+                    "amount_cents": 700
+                },
+                {
+                    "fee_type": "participation",
+                    "payable_to": "state_association",
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "All-State membership/participation fee, paid online in the All-State Member Dashboard by students who are named to a choir.",
+                    "amount_cents": 3000
+                }
+            ],
+            "name": "All-State Treble Choir",
+            "dates": [
+                {
+                    "title": "Errata deadline — notify the Vocal VP",
+                    "all_day": true,
+                    "start_at": "2026-08-30",
+                    "timezone": "America/Chicago",
+                    "date_type": "other",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "No errata are added after September 1. Errata are official only when published on the TMEA audition-material page."
+                },
+                {
+                    "title": "Area Declaration Form due",
+                    "all_day": true,
+                    "start_at": "2026-12-14",
+                    "timezone": "America/Chicago",
+                    "date_type": "registration_deadline",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "Eligibility Section III, Article 2. Students eligible for both tracks declare one; the track is fixed for the audition year."
+                },
+                {
+                    "title": "Area auditions (final round)",
+                    "all_day": true,
+                    "start_at": "2027-01-09",
+                    "timezone": "America/Chicago",
+                    "date_type": "audition_round",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/vocal/all-state/area/",
+                    "description": "Held statewide on one day for both tracks. The Area audition selects the All-State choirs. Eight Areas (A-H) for 5A-6A; five (Central, East, North, South, West) for 1A-4A."
+                },
+                {
+                    "title": "TMEA Clinic/Convention",
+                    "end_at": "2027-02-13",
+                    "all_day": true,
+                    "start_at": "2027-02-10",
+                    "timezone": "America/Chicago",
+                    "date_type": "event",
+                    "sort_order": 50,
+                    "source_url": "https://www.tmea.org/convention/performances/all-state/",
+                    "description": "San Antonio, Texas."
+                },
+                {
+                    "title": "All-State choir concerts",
+                    "all_day": true,
+                    "start_at": "2027-02-13",
+                    "timezone": "America/Chicago",
+                    "date_type": "event",
+                    "sort_order": 60,
+                    "source_url": "https://www.tmea.org/convention/performances/all-state/",
+                    "description": "Henry B. Gonzalez Convention Center, 900 E. Market Street — Stars at Night Ballroom, 3rd floor. Clock times not yet published."
+                }
+            ],
+            "season": "2026-27",
+            "documents": [
+                {
+                    "url": "https://www.tmea.org/vocal/audition-material/",
+                    "title": "2026-27 Vocal All-State Audition Material",
+                    "sort_order": 10,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.tmea.org/all-state/eligibility/",
+                    "title": "Eligibility Requirements (revised March 2026)",
+                    "sort_order": 20,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.tmea.org/wp-content/uploads/Region_Admin/Sightreading/Vocal_Sightreading_Levels_2025.pdf",
+                    "title": "Vocal Sightreading Levels (July 2025)",
+                    "sort_order": 30,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://www.tmea.org/wp-content/uploads/Region_Admin/Vocal_Judging_Tips.pdf",
+                    "title": "Judging Tips and Sightreading Deductions (July 2024)",
+                    "sort_order": 40,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://www.tmea.org/all-state/instrumentation-voicing/",
+                    "title": "All-State Instrumentation and Voicing (April 2026)",
+                    "sort_order": 50,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://align.tmea.org/Align_2628/",
+                    "title": "2026-2028 Region and Area Alignments",
+                    "sort_order": 60,
+                    "document_type": "other"
+                },
+                {
+                    "url": "https://www.tmea.org/regions/",
+                    "title": "Region index — District/Region/Pre-Area dates and fees",
+                    "sort_order": 70,
+                    "document_type": "calendar"
+                }
+            ],
+            "repertoire": [
+                {
+                    "notes": "Designated for Area audition; may also be used earlier",
+                    "title": "Moon Goddess",
+                    "purpose": "audition",
+                    "voicing": "SSA",
+                    "composer": "Jocelyn Hagen",
+                    "publisher": "Graphite Publishing",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "JHC020"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Lorelei",
+                    "purpose": "audition",
+                    "voicing": "SSA",
+                    "arranger": "Brandon Williams",
+                    "composer": "Clara Schumann",
+                    "publisher": "Hal Leonard",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "HL 00210352"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Freedom Train",
+                    "purpose": "audition",
+                    "voicing": "SSA divisi",
+                    "composer": "Rollo Dilworth",
+                    "publisher": "Hal Leonard",
+                    "sort_order": 30,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "catalog_number": "HL 00215490"
+                },
+                {
+                    "notes": "Any audition prior to Area",
+                    "title": "Richer for Her",
+                    "purpose": "audition",
+                    "voicing": "SSA",
+                    "composer": "Andrea Ramsey",
+                    "publisher": "Music Spoke",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/"
+                }
+            ],
+            "description": "Part of the 504-seat 5A-6A track. Three or four audition rounds ending at the Area audition.",
+            "lineage_key": "texas-as-treble",
+            "voice_parts": [
+                {
+                    "code": "S1",
+                    "label": "Soprano 1",
+                    "sort_order": 10
+                },
+                {
+                    "code": "S2",
+                    "label": "Soprano 2",
+                    "sort_order": 20
+                },
+                {
+                    "code": "A1",
+                    "label": "Alto 1",
+                    "sort_order": 30
+                },
+                {
+                    "code": "A2",
+                    "label": "Alto 2",
+                    "sort_order": 40
+                },
+                {
+                    "code": "T1",
+                    "label": "Tenor 1",
+                    "sort_order": 50
+                },
+                {
+                    "code": "T2",
+                    "label": "Tenor 2",
+                    "sort_order": 60
+                },
+                {
+                    "code": "B1",
+                    "label": "Bass 1",
+                    "sort_order": 70
+                },
+                {
+                    "code": "B2",
+                    "label": "Bass 2",
+                    "sort_order": 80
+                }
+            ],
+            "requirements": [
+                {
+                    "title": "Full-time Texas student, certified by a TMEA Active Member director",
+                    "category": "eligibility",
+                    "sort_order": 10,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "The student must be enrolled full time in a Texas school for the semester(s) of both the audition and the concert, and be certified by their TMEA Active Member director as an actively participating member of the school choir program for the entire semester. Schools without a choir program use a TMEA Active Member sponsor designated by the chief administrator.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Director must hold current TMEA Active or Life membership",
+                    "category": "membership",
+                    "sort_order": 20,
+                    "source_url": "https://www.tmea.org/membership/",
+                    "description": "Only Active or Life members may enter students. The director or sponsor must attend all TMEA auditions and related activities; Regions define proxy guidelines in writing. Active dues are $65/year, membership year July 1 to June 30.",
+                    "structured_data": {
+                        "active_dues_usd": 65
+                    }
+                },
+                {
+                    "title": "Track declaration — one track per audition year",
+                    "category": "eligibility",
+                    "sort_order": 30,
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "Students eligible for both tracks may advance past the Region level in only one. The track is declared when entering the first audition leading to All-State. Directors at 1A-4A schools choose the track student by student, not school-wide.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Duplication rule across All-State groups",
+                    "category": "eligibility",
+                    "sort_order": 40,
+                    "source_url": "https://www.tmea.org/all-state/eligibility/",
+                    "description": "A student may initially audition for multiple groups. If they qualify to Area in more than one, only one Area audition may be taken that fall. A student named to All-State Jazz, Orchestra or Mariachi cannot audition for other All-State groups; if not named, they may continue to the Band or Choir Area audition in January.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "District, Region and Pre-Area dates are set by each Region",
+                    "category": "format",
+                    "sort_order": 50,
+                    "source_url": "https://www.tmea.org/vocal/all-state/small-school/",
+                    "description": "TMEA publishes the Area round centrally. The earlier rounds, their dates, and the Region entry fee are set by each of the 33 Regions and published in that Region's own audition policies. Check your Region's site.",
+                    "structured_data": {
+                        "region_index": "https://www.tmea.org/regions/"
+                    }
+                },
+                {
+                    "title": "Audition cuts are reduced by each Region",
+                    "category": "materials",
+                    "sort_order": 60,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "TMEA publishes the selections; the specific cuts are set regionally. The first day Regions may reduce audition cuts is August 1, 2026. Exact measure numbers are not published centrally.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Pieces must be auditioned before the final round",
+                    "category": "materials",
+                    "sort_order": 70,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "All pieces designated for a track must be auditioned or performed prior to the January final round — except pieces marked \"Designated for Area Audition use\", which may be reserved for the final round.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Sight-reading is part of the audition",
+                    "category": "sight_reading",
+                    "sort_order": 80,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "TMEA publishes sight-reading levels, judging tips and deduction criteria, plus starting-pitch prompt audio (Low So / Do / Mi / So across nine keys, with Treble and Tenor-Bass variants).",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Divisi assignment for 2026-27",
+                    "category": "materials",
+                    "sort_order": 90,
+                    "source_url": "https://www.tmea.org/vocal/audition-material/",
+                    "description": "Areas A, B, C and D take the lower divisi pitches; Areas E, F, G and H take the upper.",
+                    "structured_data": {
+                        "lower": [
+                            "A",
+                            "B",
+                            "C",
+                            "D"
+                        ],
+                        "upper": [
+                            "E",
+                            "F",
+                            "G",
+                            "H"
+                        ]
+                    }
+                }
+            ],
+            "school_level": "high",
+            "ensemble_type": "treble chorus"
+        }
+    ],
+    "state_slug": "texas",
+    "organization": {
+        "name": "Texas Music Educators Association",
+        "acronym": "TMEA",
+        "description": "Founded 1920, based in Austin. Over 20,000 members across 33 geographic Regions and five divisions (Band, Orchestra, Vocal, Elementary, College). Runs 18 Texas All-State ensembles, four of them choirs, seating 1,810 students from roughly 70,000 annual auditions.",
+        "website_url": "https://www.tmea.org/"
+    },
+    "retrieved_at": "2026-08-07",
+    "not_published": [
+        "District, Region and Pre-Area audition dates — set by each of 33 Regions",
+        "Region entry fee amounts",
+        "Exact audition cuts / measure numbers",
+        "Per-ensemble seat splits among the three 5A-6A choirs",
+        "Clock times for the Feb 13, 2027 concerts",
+        "Results-release date for the Jan 9, 2027 Area auditions"
+    ]
+}
