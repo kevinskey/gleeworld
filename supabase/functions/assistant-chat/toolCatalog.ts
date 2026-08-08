@@ -148,6 +148,19 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'lookup_all_state',
+    description: "Facts about a US state's All-State chorus program: audition dates and deadlines, requirements, fees, and audition repertoire, from the state association's own published materials. Call this for ANY All-State question — never answer from memory, because deadlines move and every state differs. Each fact returns with its official source URL and the date we last checked it; when you state a date, fee, or requirement, tell the user it comes from the association's published materials and that the source link is on screen.",
+    parameters: {
+      type: 'object',
+      properties: {
+        state: str("State name, two-letter abbreviation, or slug — e.g. 'Georgia', 'GA', 'texas'."),
+        topic: str("Optional focus: 'dates', 'requirements', 'repertoire', 'fees', or 'overview'. Omit for everything."),
+      },
+      required: ['state'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'lookup_bible',
     description: "Get the actual TEXT of a Bible passage, or search scripture for a phrase. Use this to read a passage aloud or quote it. Only ever quote what this returns — never recite scripture from memory, because the wording differs between translations and the user is reading a specific one.",
     parameters: {

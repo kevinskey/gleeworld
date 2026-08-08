@@ -71,6 +71,7 @@ export async function executeServerTool(
       case 'find_nearby_place': return await findNearbyPlace(args, deps);
       case 'get_preference': return { replyJson: await getPreference(args, deps) };
       case 'remember_preference': return { replyJson: await rememberPreference(args, deps) };
+      case 'lookup_all_state': return { replyJson: await lookupAllState(args, deps) };
       case 'lookup_bible': return { replyJson: await lookupBible(args, deps) };
       case 'liturgical_day': return { replyJson: await liturgicalDay(args, deps) };
       case 'web_search': return await webSearch(args, deps);
@@ -754,6 +755,116 @@ function parseBibleReference(input: string) {
   const chapter = single ? 1 : (m[2] ? Number(m[2]) : 1);
   const startVerse = single && m[2] && !m[3] ? Number(m[2]) : (m[3] ? Number(m[3]) : null);
   return { code, chapter, startVerse, endVerse: m[4] ? Number(m[4]) : startVerse };
+}
+
+
+// ─── All-State (Phase 5) ────────────────────────────────────────────────
+// Layer 1 canon lives in Postgres and changes (states move deadlines), so
+// this is the search_music/lookup_bible shape — a live query under the
+// caller's JWT — NOT a bundled corpus. RLS already scopes reads to verified
+// programs, so an unverified state simply returns nothing here.
+//
+// This is the SECOND domain allowed to name its sources (liturgy is the
+// first): every fact carries source_url + retrieved_at, and index.ts exempts
+// replies that called this tool from the source-leak nudge. That is the
+// brief's rule — "requirement answers must link the official source".
+async function lookupAllState(args: Record<string, unknown>, deps: Deps): Promise<string> {
+  const raw = String(args.state ?? '').trim();
+  if (!raw) return JSON.stringify({ error: 'state is required' });
+  const topic = String(args.topic ?? 'overview').toLowerCase();
+
+  const or = [
+    `slug.eq.${raw.toLowerCase().replace(/\s+/g, '-')}`,
+    `abbreviation.eq.${raw.toUpperCase().slice(0, 2)}`,
+    `name.ilike.${raw}`,
+  ].join(',');
+  const { data: states } = await deps.supabase.from('gw_all_state_states')
+    .select('id,name,slug,active').or(or).limit(1);
+  const st = states?.[0];
+  if (!st) return JSON.stringify({ error: `No state matched "${raw}".` });
+
+  const { data: programs } = await deps.supabase.from('gw_all_state_programs')
+    .select('id,name,season,slug')
+    .eq('state_id', st.id).eq('active', true).order('name');
+
+  if (!programs?.length) {
+    return JSON.stringify({
+      state: st.name,
+      note: st.active
+        ? 'No verified program data is published for this state yet.'
+        : 'This state has no verified All-State chorus data in GleeWorld — some (like DC and Hawaii) have no statewide auditioned All-State chorus at all. Suggest checking the state music educators association directly.',
+      page: `/all-state/${st.slug}`,
+    });
+  }
+
+  const ids = programs.map((p: { id: string }) => p.id);
+  const want = (t: string) => topic === 'overview' || topic === t;
+  const fact = (r: Record<string, unknown>) => ({
+    source_url: r.source_url ?? null,
+    checked: r.retrieved_at ? String(r.retrieved_at).slice(0, 10) : null,
+    confidence: r.confidence ?? null,
+  });
+
+  const out: Record<string, unknown> = {
+    state: st.name,
+    page: `/all-state/${st.slug}`,
+    programs: programs.map((p: { name: string; season: string }) => ({ name: p.name, season: p.season })),
+    citation_rule: 'Dates, fees and requirements below each carry the official source_url and checked date. State them as coming from the association\'s published materials; the links render on screen.',
+  };
+
+  if (want('dates')) {
+    const { data } = await deps.supabase.from('gw_all_state_dates')
+      .select('program_id,title,date_type,start_at,end_at,all_day,timezone,description,source_url,retrieved_at,confidence')
+      .in('program_id', ids).order('start_at');
+    out.dates = (data ?? []).map((d: Record<string, unknown>) => ({
+      program: programs.find((p: { id: string }) => p.id === d.program_id)?.name,
+      title: d.title, type: d.date_type,
+      date: d.start_at ? String(d.start_at).slice(0, 10) : 'not published',
+      end: d.end_at ? String(d.end_at).slice(0, 10) : undefined,
+      note: d.description ?? undefined, ...fact(d),
+    }));
+  }
+  if (want('requirements')) {
+    const { data } = await deps.supabase.from('gw_all_state_requirements')
+      .select('program_id,category,title,description,source_url,retrieved_at,confidence')
+      .in('program_id', ids).order('sort_order').limit(40);
+    out.requirements = (data ?? []).map((r: Record<string, unknown>) => ({
+      program: programs.find((p: { id: string }) => p.id === r.program_id)?.name,
+      category: r.category, title: r.title, detail: r.description ?? undefined, ...fact(r),
+    }));
+  }
+  if (want('fees')) {
+    const { data } = await deps.supabase.from('gw_all_state_fees')
+      .select('program_id,fee_type,amount_cents,payable_to,description,source_url,retrieved_at,confidence')
+      .in('program_id', ids);
+    out.fees = (data ?? []).map((f: Record<string, unknown>) => ({
+      program: programs.find((p: { id: string }) => p.id === f.program_id)?.name,
+      type: f.fee_type,
+      amount: f.amount_cents != null ? `$${(Number(f.amount_cents) / 100).toFixed(2)}` : 'amount not published',
+      payable_to: f.payable_to, note: f.description ?? undefined, ...fact(f),
+    }));
+    if (!(out.fees as unknown[]).length) {
+      out.fees_note = 'This state publishes no fee amounts publicly. Do not guess or quote figures from third-party sites.';
+    }
+  }
+  if (want('repertoire')) {
+    const { data } = await deps.supabase.from('gw_all_state_repertoire')
+      .select('program_id,title,composer,voicing,purpose,notes,source_url')
+      .in('program_id', ids).order('sort_order').limit(40);
+    out.repertoire = (data ?? []).map((r: Record<string, unknown>) => ({
+      program: programs.find((p: { id: string }) => p.id === r.program_id)?.name,
+      title: r.title, composer: r.composer ?? 'not published', voicing: r.voicing ?? undefined,
+      purpose: r.purpose ?? undefined, note: r.notes ?? undefined, source_url: r.source_url ?? null,
+    }));
+  }
+
+  // Analytics, fire-and-forget under the caller's JWT (emit-own policy).
+  try {
+    await deps.supabase.from('gw_analytics_events')
+      .insert({ event_name: 'all_state_assistant_question', props: { state: st.slug, topic } });
+  } catch { /* analytics never breaks a tool */ }
+
+  return JSON.stringify(out);
 }
 
 async function lookupBible(args: Record<string, unknown>, deps: Deps): Promise<string> {

@@ -50,6 +50,7 @@ describe('toolCatalog', () => {
       'get_ride',
       'get_roster_flags',
       'liturgical_day',
+      'lookup_all_state',
       'lookup_bible',
       'order_food',
       'play_video',

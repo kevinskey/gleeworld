@@ -261,7 +261,12 @@ serve(async (req) => {
         // rather than removing it (2026-08-06), so enforce it here. Same shape
         // as the empty-reply guard above — one corrective pass, then accept
         // what comes back rather than burn the tool budget arguing.
-        if (!sourceLeakNudged && !calledTools.has('search_liturgy') && namesItsSources(reply)) {
+        // Liturgy and All-State are the two domains ALLOWED to name their
+        // sources — both answer questions of published rule/law where the
+        // authority is the point (brief: "requirement answers must link the
+        // official source").
+        if (!sourceLeakNudged && !calledTools.has('search_liturgy')
+            && !calledTools.has('lookup_all_state') && namesItsSources(reply)) {
           sourceLeakNudged = true;
           messages.push({ role: 'assistant', content: reply });
           messages.push({ role: 'user', content: SOURCE_LEAK_NUDGE });
