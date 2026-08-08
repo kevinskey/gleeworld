@@ -118,11 +118,27 @@ function contrastText(bg: string): string {
 // desktop-sized, so vw-based text stayed huge. cqw tracks the hero's own
 // width, which is correct on real phones, in the preview canvas, and in
 // iframes alike.
-export function fluidPx(px: number, mobilePx?: number): string {
+// Floor for the hero H1 on a phone.
+//
+// The auto floor is 55% of the desktop size, so a 42px headline derived a 23px
+// mobile floor — BELOW the 24px `text-2xl` that every section h2 renders at
+// inside .gw-site. Measured on a live tenant at 386px: h1 23px, hero spans
+// 30px, section h2 24px. The page's largest heading was its smallest, which is
+// what made the type read as both oversized and undifferentiated at once.
+//
+// 28px clears the 24px h2 with margin. Applied ONLY to the headline: fluidPx
+// is shared with the subheadline and the CTA buttons, and flooring those at
+// 28px would make a phone hero all-caps shouting.
+const HEADLINE_MIN_PX = 28;
+
+export function fluidPx(px: number, mobilePx?: number, minFloor = 14): string {
   const max = Math.max(12, Math.round(px));
-  const autoMin = Math.max(14, Math.min(40, Math.round(max * 0.55)));
+  // The floor can never exceed the desktop size: a deliberately tiny headline
+  // stays tiny. Keeps the long-standing `fluidPx(20, 60)` behaviour.
+  const floor = Math.min(Math.max(12, Math.round(minFloor)), max);
+  const autoMin = Math.max(floor, Math.min(40, Math.round(max * 0.55)));
   const min = typeof mobilePx === 'number'
-    ? Math.max(12, Math.min(max, Math.round(mobilePx)))
+    ? Math.max(floor, Math.min(max, Math.round(mobilePx)))
     : autoMin;
   // Slope chosen so the size reaches `max` around a 1280px-wide hero.
   const cqw = (max / 12).toFixed(2);
@@ -442,7 +458,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
             className="normal-case font-bold mb-4 leading-tight drop-shadow"
             style={{
               color: config.headlineColor || '#ffffff',
-              fontSize: fluidPx(config.headlineSize ?? 60, config.headlineSizeMobile),
+              fontSize: fluidPx(config.headlineSize ?? 60, config.headlineSizeMobile, HEADLINE_MIN_PX),
             }}
           />
         ) : (
