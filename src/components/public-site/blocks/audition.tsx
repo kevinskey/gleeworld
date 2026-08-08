@@ -101,7 +101,7 @@ function Render({ config }: BlockRenderProps<Config>) {
             )}
             {config.heading && (
               <h2
-                className="normal-case text-3xl cq-sm:text-4xl cq-lg:text-5xl font-bold leading-[1.05] tracking-tight mb-4 break-words"
+                className="normal-case text-2xl cq-sm:text-4xl cq-lg:text-5xl font-bold leading-[1.05] tracking-tight mb-4 break-words"
                 style={{ fontFamily: 'var(--site-heading-font, "Playfair Display", Georgia, serif)' }}
               >
                 {config.heading}

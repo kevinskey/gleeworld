@@ -222,7 +222,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                     broke "Retirement Concert" across two of them. break-words
                     stays only as a last resort for a single over-wide word. */}
                 <h2
-                  className="mt-3 normal-case text-3xl cq-sm:text-4xl cq-lg:text-5xl font-bold tracking-tight leading-[1.1] break-words hyphens-none"
+                  className="mt-3 normal-case text-2xl cq-sm:text-4xl cq-lg:text-5xl font-bold tracking-tight leading-[1.1] break-words hyphens-none"
                   style={{ fontFamily: 'var(--site-heading-font)' }}
                 >
                   {titleLines(ev!.title).map((line, i) => (
