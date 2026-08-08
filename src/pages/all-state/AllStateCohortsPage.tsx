@@ -21,12 +21,13 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Users, Plus, AlertTriangle, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { Users, Plus, AlertTriangle, ArrowLeft, CheckCircle2, CalendarSync } from 'lucide-react';
 import { useAllStateStates, useStatePrograms } from '@/features/all-state/useAllState';
 import {
   useCohorts, useParticipations, useCohortTasks, useEnsembles, useEnsembleRoster,
   useTenantRoster, useCreateCohort, useAddStudents, useSetParticipationStatus,
-  useToggleTask, useCohortAttempts, readinessByStudent, type CohortWithProgram,
+  useToggleTask, useCohortAttempts, useSyncCalendar, readinessByStudent,
+  type CohortWithProgram,
 } from '@/features/all-state/useCohorts';
 import { AuditionRounds } from '@/features/all-state/AuditionRounds';
 
@@ -203,6 +204,7 @@ function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: (
   const addStudents = useAddStudents(cohort.id, cohort.program_id);
   const setStatus = useSetParticipationStatus();
   const toggleTask = useToggleTask();
+  const syncCalendar = useSyncCalendar();
 
   const [addOpen, setAddOpen] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -249,9 +251,16 @@ function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: (
             {cohort.program?.name}{cohort.program?.season ? ` · ${cohort.program.season}` : ''}
           </p>
         </div>
-        <Button onClick={() => { setPicked(new Set()); setAddOpen(true); }}>
-          <Plus className="mr-1.5 h-4 w-4" aria-hidden /> Add students
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => syncCalendar.mutate(cohort.id)}
+                  disabled={syncCalendar.isPending}>
+            <CalendarSync className="mr-1.5 h-4 w-4" aria-hidden />
+            {syncCalendar.isPending ? 'Syncing…' : 'Sync calendar'}
+          </Button>
+          <Button onClick={() => { setPicked(new Set()); setAddOpen(true); }}>
+            <Plus className="mr-1.5 h-4 w-4" aria-hidden /> Add students
+          </Button>
+        </div>
       </header>
 
       {needingAttention > 0 && (

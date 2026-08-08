@@ -246,9 +246,16 @@ export function useCreateCohort() {
         .select();
       if (error) throw error;
       if (!data?.length) throw new Error('Rejected — check you are signed in to the right tenant.');
-      return data[0] as Cohort;
+      const cohort = data[0] as Cohort;
+      // Push the program's dates onto the tenant calendar immediately. Sync
+      // failure must not fail cohort creation — the button in the cohort view
+      // retries it — so this is best-effort by design.
+      try {
+        await supabase.rpc('gw_all_state_sync_cohort_calendar', { p_cohort: cohort.id });
+      } catch { /* surfaced via the Sync calendar button */ }
+      return cohort;
     },
-    onSuccess: () => { invalidate(); toast({ title: 'Cohort created' }); },
+    onSuccess: () => { invalidate(); toast({ title: 'Cohort created', description: 'State deadlines added to your calendar.' }); },
     onError: (e: Error) => toast({ title: "Couldn't create cohort", description: e.message, variant: 'destructive' }),
   });
 }
@@ -328,6 +335,24 @@ export function useSetParticipationStatus() {
     },
     onSuccess: () => invalidate(),
     onError: (e: Error) => toast({ title: "Couldn't update", description: e.message, variant: 'destructive' }),
+  });
+}
+
+/** Push (or refresh) the cohort's dates onto the tenant calendar. */
+export function useSyncCalendar() {
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: async (cohortId: string) => {
+      const { data, error } = await supabase
+        .rpc('gw_all_state_sync_cohort_calendar', { p_cohort: cohortId });
+      if (error) throw error;
+      return data as number;
+    },
+    onSuccess: (n) => toast({
+      title: 'Calendar synced',
+      description: `${n} event${n === 1 ? '' : 's'} on your All-State calendar. Re-syncing after a state moves a date updates them in place.`,
+    }),
+    onError: (e: Error) => toast({ title: "Couldn't sync calendar", description: e.message, variant: 'destructive' }),
   });
 }
 
