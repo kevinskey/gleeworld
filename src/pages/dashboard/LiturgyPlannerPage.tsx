@@ -1538,10 +1538,25 @@ function PdfAttachment({ pdf, onPdf, massId, slotKey }: {
     }
     setUploading(true);
     try {
+      // Read the file into memory BEFORE uploading. Streaming the File handle
+      // dies mid-request if the file changed on disk since it was picked
+      // (Chrome's ERR_UPLOAD_FILE_CHANGED — re-downloaded PDFs and
+      // still-syncing iCloud/Dropbox files hit this constantly). nginx logs a
+      // bodyless 400, supabase-js surfaces a useless "Failed to fetch", and
+      // the user just sees uploads "not working". Reading first turns that
+      // into an instant, explainable failure — and once the bytes are ours,
+      // nothing on disk can corrupt the request.
+      let bytes: ArrayBuffer;
+      try {
+        bytes = await file.arrayBuffer();
+      } catch {
+        toast.error('That file changed on disk since you selected it — if it just downloaded or is still syncing, wait a moment and pick it again.');
+        return;
+      }
       const path = `liturgy/${massId}/${slotKey}.pdf`;
       const { error: upErr } = await supabase.storage
         .from('sheet-music')
-        .upload(path, file, { contentType: 'application/pdf', upsert: true });
+        .upload(path, bytes, { contentType: 'application/pdf', upsert: true });
       if (upErr) throw upErr;
       const url = supabase.storage.from('sheet-music').getPublicUrl(path).data.publicUrl;
       // Cache-bust so replacing a PDF is reflected immediately for viewers.
