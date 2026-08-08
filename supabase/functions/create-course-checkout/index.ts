@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     const tenantRole = payload.tenant_role
     const userEmail = payload.email
     if (!tenantId) throw new Error('JWT missing tenant_id claim')
-    if (!['admin', 'super-admin', 'super_admin'].includes(tenantRole)) {
+    if (!['owner', 'admin', 'super-admin', 'super_admin'].includes(tenantRole)) {
       return new Response(JSON.stringify({ error: 'Only tenant admins can purchase courses' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })

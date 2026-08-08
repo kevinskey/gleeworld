@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
       return bad('Invalid JWT', 401)
     }
     if (!userId || !tenantId) return bad('Sign in to manage requests', 401)
-    if (!['admin', 'super-admin', 'super_admin'].includes(tenantRole ?? '')) {
+    if (!['owner', 'admin', 'super-admin', 'super_admin'].includes(tenantRole ?? '')) {
       return bad('Only tenant admins can decide requests', 403)
     }
 

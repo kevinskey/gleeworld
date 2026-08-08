@@ -47,7 +47,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000';
 const SRK = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ADMIN_TENANT_ROLES = ['admin', 'super-admin', 'super_admin'];
+const ADMIN_TENANT_ROLES = ['owner', 'admin', 'super-admin', 'super_admin'];
 
 const ORDER_SELECT =
   'id,status,store_type,buyer_email,amount_cents,currency,requires_shipping,' +

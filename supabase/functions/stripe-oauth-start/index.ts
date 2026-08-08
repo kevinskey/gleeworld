@@ -38,7 +38,7 @@ const RETURN_PATH_ALLOWLIST = new Set([
   '/store',
 ]);
 
-const ROLES_ALLOWED = ['admin', 'super-admin', 'super_admin'];
+const ROLES_ALLOWED = ['owner', 'admin', 'super-admin', 'super_admin'];
 
 async function pgRead<T>(table: string, query: string): Promise<T[]> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {

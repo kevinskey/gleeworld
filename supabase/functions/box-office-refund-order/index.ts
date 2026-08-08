@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
       return bad('Invalid JWT', 401)
     }
     if (!tenantId) return bad('JWT missing tenant_id', 401)
-    if (!['admin', 'super-admin', 'super_admin'].includes(tenantRole ?? '')) {
+    if (!['owner', 'admin', 'super-admin', 'super_admin'].includes(tenantRole ?? '')) {
       return bad('Only tenant admins can refund orders', 403)
     }
 

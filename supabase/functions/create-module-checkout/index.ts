@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     const userEmail = payload.email
     if (!tenantId) throw new Error('JWT missing tenant_id claim')
     // gw_tenant_members.role uses a hyphen ('super-admin'); accept both.
-    if (!['admin', 'super-admin', 'super_admin'].includes(tenantRole)) {
+    if (!['owner', 'admin', 'super-admin', 'super_admin'].includes(tenantRole)) {
       return new Response(JSON.stringify({ error: 'Only tenant admins can activate modules' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
