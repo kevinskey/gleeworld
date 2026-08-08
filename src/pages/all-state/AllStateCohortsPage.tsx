@@ -26,8 +26,9 @@ import { useAllStateStates, useStatePrograms } from '@/features/all-state/useAll
 import {
   useCohorts, useParticipations, useCohortTasks, useEnsembles, useEnsembleRoster,
   useTenantRoster, useCreateCohort, useAddStudents, useSetParticipationStatus,
-  useToggleTask, readinessByStudent, type CohortWithProgram,
+  useToggleTask, useCohortAttempts, readinessByStudent, type CohortWithProgram,
 } from '@/features/all-state/useCohorts';
+import { AuditionRounds } from '@/features/all-state/AuditionRounds';
 
 const STATUSES = [
   'not_started', 'preparing', 'registered', 'audition_submitted',
@@ -195,6 +196,9 @@ function CreateCohortDialog({ open, onOpenChange }: { open: boolean; onOpenChang
 function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: () => void }) {
   const { data: participations, isLoading } = useParticipations(cohort.id);
   const { data: tasks } = useCohortTasks(cohort.id);
+  const participationIds = useMemo(
+    () => (participations ?? []).map((p) => p.id), [participations]);
+  const { data: attempts } = useCohortAttempts(participationIds);
   const { data: roster } = useEnsembleRoster(cohort.ensemble_id);
   const addStudents = useAddStudents(cohort.id, cohort.program_id);
   const setStatus = useSetParticipationStatus();
@@ -322,6 +326,13 @@ function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: (
                   </p>
                 )}
 
+                {isOpen && (
+                  <AuditionRounds
+                    participation={p}
+                    programId={cohort.program_id}
+                    attempts={(attempts ?? []).filter((a) => a.participation_id === p.id)}
+                  />
+                )}
                 {isOpen && (
                   <ul className="mt-3 divide-y border-t pt-2">
                     {mine.length === 0 && (

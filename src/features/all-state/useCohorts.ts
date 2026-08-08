@@ -172,6 +172,63 @@ export function useEnsembles() {
   });
 }
 
+export interface AttemptRow {
+  id: string;
+  participation_id: string;
+  round_number: number;
+  round_label: string | null;
+  scheduled_at: string | null;
+  submitted_at: string | null;
+  format: 'live' | 'recorded' | 'virtual' | null;
+  score: number | null;
+  score_scale: number | null;
+  rank: number | null;
+  advanced: boolean | null;
+  result: string | null;
+  adjudicator_notes: string | null;
+}
+
+export interface VoicePartOption {
+  id: string;
+  code: string;
+  label: string;
+  sort_order: number;
+}
+
+/** The state's own voice parts for a program — S1..B2 in Georgia, S/A/T/B in
+ * Texas 1A-4A. Feeds the auditioned-as / placed-as pickers. */
+export function useProgramVoiceParts(programId: string | undefined) {
+  return useQuery<VoicePartOption[]>({
+    queryKey: [KEY, 'voice-parts', programId],
+    enabled: !!programId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_all_state_voice_parts')
+        .select('id,code,label,sort_order')
+        .eq('program_id', programId)
+        .order('sort_order');
+      if (error) throw error;
+      return (data ?? []) as VoicePartOption[];
+    },
+  });
+}
+
+export function useCohortAttempts(participationIds: string[]) {
+  return useQuery<AttemptRow[]>({
+    queryKey: [KEY, 'attempts', participationIds.join(',')],
+    enabled: participationIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_all_state_audition_attempts')
+        .select('*')
+        .in('participation_id', participationIds)
+        .order('round_number');
+      if (error) throw error;
+      return (data ?? []) as AttemptRow[];
+    },
+  });
+}
+
 function useInvalidate() {
   const qc = useQueryClient();
   return () => qc.invalidateQueries({ queryKey: [KEY] });
@@ -271,6 +328,67 @@ export function useSetParticipationStatus() {
     },
     onSuccess: () => invalidate(),
     onError: (e: Error) => toast({ title: "Couldn't update", description: e.message, variant: 'destructive' }),
+  });
+}
+
+export function useSaveAttempt() {
+  const { toast } = useToast();
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async ({ id, values }: { id?: string; values: Partial<AttemptRow> & { participation_id: string } }) => {
+      const { data: userRes } = await supabase.auth.getUser();
+      const payload = { ...values, recorded_by: userRes?.user?.id ?? null };
+      const q = id
+        ? supabase.from('gw_all_state_audition_attempts').update(payload).eq('id', id).select()
+        : supabase.from('gw_all_state_audition_attempts').insert(payload).select();
+      const { data, error } = await q;
+      if (error) {
+        // The UNIQUE(participation_id, round_number) constraint reads terribly
+        // raw; say what it means.
+        if (error.message.includes('duplicate') || error.message.includes('unique')) {
+          throw new Error('That round number already exists for this student. Edit the existing round instead.');
+        }
+        throw error;
+      }
+      if (!data?.length) throw new Error('Rejected — staff only.');
+      return data[0];
+    },
+    onSuccess: () => { invalidate(); toast({ title: 'Round saved' }); },
+    onError: (e: Error) => toast({ title: "Couldn't save round", description: e.message, variant: 'destructive' }),
+  });
+}
+
+export function useDeleteAttempt() {
+  const { toast } = useToast();
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data, error } = await supabase
+        .from('gw_all_state_audition_attempts').delete().eq('id', id).select();
+      if (error) throw error;
+      if (!data?.length) throw new Error('Rejected — staff only.');
+    },
+    onSuccess: () => { invalidate(); toast({ title: 'Round deleted' }); },
+    onError: (e: Error) => toast({ title: "Couldn't delete", description: e.message, variant: 'destructive' }),
+  });
+}
+
+/** The S2-auditioned / S1-placed case: two separate columns, set independently. */
+export function useSetVoiceParts() {
+  const { toast } = useToast();
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async ({ id, audition, assigned }: { id: string; audition?: string | null; assigned?: string | null }) => {
+      const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+      if (audition !== undefined) patch.audition_voice_part_id = audition;
+      if (assigned !== undefined) patch.assigned_voice_part_id = assigned;
+      const { data, error } = await supabase
+        .from('gw_all_state_participations').update(patch).eq('id', id).select();
+      if (error) throw error;
+      if (!data?.length) throw new Error('Rejected — staff only.');
+    },
+    onSuccess: () => invalidate(),
+    onError: (e: Error) => toast({ title: "Couldn't update voice part", description: e.message, variant: 'destructive' }),
   });
 }
 
