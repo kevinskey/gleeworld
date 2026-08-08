@@ -231,7 +231,7 @@ export default function MyAllStatePage() {
                     ) : (
                       <p className="mt-1.5 text-sm text-muted-foreground">
                         {mineSubs.length} recording{mineSubs.length === 1 ? '' : 's'} submitted —
-                        latest {new Date(mineSubs[0].submitted_at).toLocaleDateString()}.
+                        latest {new Date(mineSubs[0].created_at).toLocaleDateString()}.
                       </p>
                     );
                   })()}
