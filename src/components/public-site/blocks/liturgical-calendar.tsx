@@ -219,7 +219,13 @@ function Render({ config }: BlockRenderProps<Config>) {
         style={{ background: seasonStyle.bg, color: seasonStyle.fg }}
       >
         <div className="text-xs uppercase tracking-[0.18em] opacity-80 mb-1">Current season</div>
-        <h3 className="text-3xl cq-sm:text-4xl font-bold normal-case mb-2">{season.name}</h3>
+        {/* Ranks BELOW the block's own h2 above (text-2xl cq-sm:text-3xl).
+            At text-3xl this h3 rendered 30px against that h2's 24px on a
+            phone — a child heading outranking its own section heading, and
+            outranking the page h1 too. text-xl keeps it the loudest thing
+            inside its card (blurb 14px, eyebrow 12px) without competing
+            upward. */}
+        <h3 className="text-xl cq-sm:text-2xl font-bold normal-case mb-2">{season.name}</h3>
         <p className="text-sm cq-sm:text-base opacity-90 max-w-2xl leading-relaxed">{season.blurb}</p>
         <div className="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-wider opacity-80">
           <span className="inline-block w-3 h-3 rounded-full border border-white/40" style={{ background: seasonStyle.bg }} />
