@@ -20,6 +20,7 @@ import {
   computeReadiness, practiceLinkFor,
 } from '@/features/all-state/useMyAllState';
 import { useToggleTask } from '@/features/all-state/useCohorts';
+import { trackEvent } from '@/lib/analytics';
 
 const STATUS_LABEL: Record<string, string> = {
   not_started: 'Not started',
@@ -161,6 +162,7 @@ export default function MyAllStatePage() {
                               )}
                               {link && (
                                 <Link to={link.href}
+                                      onClick={() => trackEvent('all_state_practice_started', { task_type: t.task_type })}
                                       className="inline-flex items-center gap-1 text-xs text-primary underline underline-offset-2">
                                   <Music4 className="h-3 w-3" aria-hidden /> {link.label}
                                 </Link>

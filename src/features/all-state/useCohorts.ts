@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { generateTasks, computeReadiness, type Readiness } from './taskGenerator';
+import { trackEvent } from '@/lib/analytics';
 
 export interface Cohort {
   id: string;
@@ -255,7 +256,11 @@ export function useCreateCohort() {
       } catch { /* surfaced via the Sync calendar button */ }
       return cohort;
     },
-    onSuccess: () => { invalidate(); toast({ title: 'Cohort created', description: 'State deadlines added to your calendar.' }); },
+    onSuccess: (c) => {
+      invalidate();
+      toast({ title: 'Cohort created', description: 'State deadlines added to your calendar.' });
+      trackEvent('all_state_cohort_created', { cohort_id: c.id, program_id: c.program_id });
+    },
     onError: (e: Error) => toast({ title: "Couldn't create cohort", description: e.message, variant: 'destructive' }),
   });
 }
@@ -310,6 +315,7 @@ export function useAddStudents(cohortId: string, programId: string) {
     },
     onSuccess: (r) => {
       invalidate();
+      trackEvent('all_state_student_added', { count: r.added, tasks_generated: r.tasks });
       toast({
         title: `Added ${r.added} student${r.added === 1 ? '' : 's'}`,
         description: r.tasks
@@ -378,7 +384,10 @@ export function useSaveAttempt() {
       if (!data?.length) throw new Error('Rejected — staff only.');
       return data[0];
     },
-    onSuccess: () => { invalidate(); toast({ title: 'Round saved' }); },
+    onSuccess: (row) => {
+      invalidate(); toast({ title: 'Round saved' });
+      trackEvent('all_state_audition_submitted', { round: (row as { round_number?: number }).round_number });
+    },
     onError: (e: Error) => toast({ title: "Couldn't save round", description: e.message, variant: 'destructive' }),
   });
 }
@@ -432,6 +441,7 @@ export function useToggleTask() {
         .eq('id', id).select();
       if (error) throw error;
       if (!data?.length) throw new Error('Rejected.');
+      if (done) trackEvent('all_state_task_completed', { task_id: id });
     },
     onSuccess: () => invalidate(),
     onError: (e: Error) => toast({ title: "Couldn't update task", description: e.message, variant: 'destructive' }),

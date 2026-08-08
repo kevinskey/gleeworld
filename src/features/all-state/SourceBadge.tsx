@@ -5,6 +5,7 @@
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink } from 'lucide-react';
 import { CONFIDENCE_LABEL, type Confidence } from './types';
+import { trackEvent } from '@/lib/analytics';
 
 const TONE: Record<Confidence, string> = {
   verified: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-900',
@@ -34,6 +35,7 @@ export function SourceBadge({ confidence, sourceUrl, retrievedAt, className }: P
           href={sourceUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackEvent('all_state_source_opened', { url: sourceUrl })}
           className="inline-flex items-center gap-0.5 text-muted-foreground hover:text-foreground underline underline-offset-2"
         >
           Source <ExternalLink className="h-3 w-3" aria-hidden />
