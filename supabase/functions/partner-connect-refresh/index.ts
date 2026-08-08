@@ -9,7 +9,20 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-06-20" });
+// Connect ACCOUNT MANAGEMENT (accounts.create, accountLinks.create,
+// createLoginLink) is barred to restricted keys outright — Stripe answers
+// "the required permissions are not available for use by restricted keys",
+// so no amount of ticking boxes on an rk_live_ key fixes it. Observed live
+// 2026-08-08 as a StripePermissionError on acct_1TzQxD…
+//
+// STRIPE_SECRET_KEY is deliberately an rk_live_ restricted key across the
+// platform. Rather than downgrade that for everyone, these two Connect
+// functions prefer a dedicated full key and fall back to the restricted one
+// so nothing breaks before it is set.
+const stripe = new Stripe(
+  Deno.env.get("STRIPE_CONNECT_SECRET_KEY") || Deno.env.get("STRIPE_SECRET_KEY")!,
+  { apiVersion: "2024-06-20" },
+);
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
