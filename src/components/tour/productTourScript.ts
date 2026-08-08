@@ -11,7 +11,6 @@
 // state, no data mutation, no navigation, idempotent). See TourEngine's
 // header comment for why that's the one DOM interaction a script step gets.
 
-import { flushSync } from 'react-dom';
 import type { TourStep } from './types';
 
 interface ProductTourContext {
@@ -20,16 +19,21 @@ interface ProductTourContext {
 
 // The sidebar's All Tools disclosure unmounts everything it doesn't show,
 // so a step whose target lives inside it (analytics, settings — neither is
-// in the default My Tools shelf) needs the click applied, and its resulting
-// state update flushed, before TourEngine measures the target. flushSync
-// forces that synchronously so the row already exists in the DOM by the
-// time this returns. Idempotent — no-ops if already open, or if the toggle
-// isn't mounted (e.g. the tour runs against a role/tenant with an empty
-// All Tools section, or the mobile drawer isn't open).
+// in the default My Tools shelf) needs the click applied before
+// TourEngine measures the target. This does NOT force the resulting state
+// update synchronous — flushSync from inside beforeMeasure is a no-op
+// there (see TourEngine's step-transition effect comment for why) and an
+// earlier version of this file relied on it, which meant the click never
+// actually revealed anything. It doesn't need to: TourEngine retries the
+// measurement after a requestAnimationFrame if the first attempt comes up
+// empty, which is enough time for React to commit this click's state
+// update and mount the row. Idempotent — no-ops if already open, or if the
+// toggle isn't mounted (e.g. the tour runs against a role/tenant with an
+// empty All Tools section, or the mobile drawer isn't open).
 function ensureAllToolsOpen() {
   const toggle = document.querySelector('[data-tour="nav-all-tools-toggle"]') as HTMLButtonElement | null;
   if (toggle && toggle.getAttribute('aria-expanded') === 'false') {
-    flushSync(() => toggle.click());
+    toggle.click();
   }
 }
 

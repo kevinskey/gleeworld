@@ -60,6 +60,26 @@ export const DEFAULT_TOOLS_STUDENT = [
   'part-tracks', 'sight', 'studio', 'my-fees',
 ];
 
+/**
+ * Keys both role defaults agree on — safe to show before the caller knows
+ * which role it's rendering for. Computed, not hand-copied, so it can never
+ * drift out of sync with the two lists above as they change. Order follows
+ * DEFAULT_TOOLS_FACULTY.
+ *
+ * Consumer: DashboardShell's Sidebar/MobileNav. `role` is a client-side
+ * guess (`useUserRole().profile` starts null and resolves async) that is
+ * recomputed on every mount — and DashboardShell mounts fresh on every
+ * route change (it's per-route in App.tsx, not a persistent layout), so
+ * "wait for role" is not a one-time startup cost, it recurs on every
+ * navigation. Rendering this set while role is unresolved AND the member
+ * has no confirmed stored record yet (MyTools.setupComplete !== true) means
+ * the shelf never fully blanks and never guesses wrong — see the shelfTools
+ * derivation in DashboardShell.tsx for the actual gate.
+ */
+export const ROLE_INVARIANT_CORE_TOOLS = DEFAULT_TOOLS_FACULTY.filter((k) =>
+  DEFAULT_TOOLS_STUDENT.includes(k),
+);
+
 /** Resolve merges, drop 'home', dedupe keeping first position, cap. */
 export function sanitizeTools(keys: string[], map: Record<string, string> = MERGED_KEYS): string[] {
   const out: string[] = [];

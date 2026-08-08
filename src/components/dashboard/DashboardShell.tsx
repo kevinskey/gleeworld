@@ -91,7 +91,7 @@ import {
 } from '@/lib/navigation/navCatalog';
 import { NavShelf } from './NavShelf';
 import { useMyTools } from '@/hooks/useMyTools';
-import { selectShelfEntries } from '@/lib/navigation/myTools';
+import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS } from '@/lib/navigation/myTools';
 
 const SECTION_ORDER: NavSectionKey[] = ['today', 'church', 'music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
 
@@ -200,7 +200,13 @@ export function BrandLogo({
 const iconTextOnly = (tone: string) =>
   tone.replace(/bg-\S+/g, '').replace(/\s+/g, ' ').trim() || 'text-foreground/70';
 
-function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
+// Exported for its own test (I2 regression guard): asserting that a
+// missing/hidden Home entry degrades the shelf rather than blanking the
+// whole sidebar means rendering Sidebar with mocked hooks, same rationale
+// as BrandLogo's export above — standing up the full DashboardShell (auth,
+// routing, branding, tenant prefs, module access, ×2 for MobileNav) to
+// reach one `if (!homeEntry) return null` guard would be disproportionate.
+export function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const { settings: branding } = useBrandingSettings();
   // Prefer the short_name for sidebar chrome — most org_names overflow
   // the 256px column. Falls back to org_name then the platform/tenant
@@ -273,11 +279,31 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   // this case — a shelf with no Home row beats blanking the whole nav.
   const homeEntry = resolvedEntries.find((e) => e.key === 'home');
   // isFaculty is a guess (profile is still null) until roleLoading clears —
-  // useUserRole(null) reads as student, so a faculty member would flash
-  // DEFAULT_TOOLS_STUDENT before their real shelf swaps in. Render no
-  // guessed tools until the role resolves — same convention as
-  // MobileBottomNav's roleLoading gate on tabs.
-  const shelfTools = roleLoading ? [] : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
+  // useUserRole(null) reads as student, so a faculty member could flash
+  // DEFAULT_TOOLS_STUDENT before their real shelf swaps in. But
+  // DashboardShell mounts fresh on every route (111 usages in App.tsx,
+  // not a persistent layout), and useUserRole caches nothing — roleLoading
+  // is true on literally every navigation, not just first load. Blanking
+  // the shelf every time (`roleLoading ? [] : ...`) traded one bug for a
+  // worse one: a member whose tools were already known instantly would
+  // watch the shelf empty out and refill on every click.
+  //
+  // `role` only changes what myTools.tools resolves to in ONE branch of
+  // migrateToMyTools — the role-default fallback for a member with NO
+  // stored record at all (myTools.ts). Anyone with a real record
+  // (setupComplete: true) gets the SAME tools back regardless of which
+  // role guess fetched them, because the query reads by uid, not by role.
+  // So: once we have a confirmed record, show it immediately — roleLoading
+  // is irrelevant. Only while genuinely guessing (no confirmed record yet)
+  // do we hide the role-specific guess, and even then we don't blank: we
+  // show the tools both role defaults agree on (ROLE_INVARIANT_CORE_TOOLS),
+  // which can never be wrong for either role. This is the MobileBottomNav
+  // convention actually applied correctly — CORE_TAB_KEYS there is the
+  // role-invariant set, not an empty one.
+  const knownGood = myTools?.setupComplete === true;
+  const shelfTools = (roleLoading && !knownGood)
+    ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
+    : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
 
   // Studio session editor needs the full window for clips + mixer.
   // Hide the sidebar when an open session is loaded. The user can
@@ -379,8 +405,9 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
 // Same NavShelf as the desktop sidebar — Home + the member's My Tools set,
 // with everything else behind All Tools. Hides automatically when the user
 // picks a link (onNavigate closes the Sheet).
-
-function MobileNav({ onNavigate }: { onNavigate: () => void }) {
+//
+// Exported for its own test — same rationale as Sidebar above.
+export function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { settings: branding } = useBrandingSettings();
   const tenantName = branding?.short_name || branding?.org_name || getOrgName();
   const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
@@ -424,8 +451,12 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   // 'home' has no gate, but hiddenRoutes could still remove it. NavShelf's
   // `home` prop is optional for exactly this case — see Sidebar above.
   const homeEntry = resolvedEntries.find((e) => e.key === 'home');
-  // Same roleLoading gate as Sidebar — see the matching comment there.
-  const shelfTools = roleLoading ? [] : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
+  // Same knownGood/roleLoading gate as Sidebar — see the matching comment
+  // there for why this isn't `roleLoading ? [] : ...` anymore.
+  const knownGood = myTools?.setupComplete === true;
+  const shelfTools = (roleLoading && !knownGood)
+    ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
+    : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
 
   return (
     <div className="flex flex-col h-full">

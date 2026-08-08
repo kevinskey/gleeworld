@@ -133,6 +133,23 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
 
   // Step transitions — sets up the cursor target and spotlight, then
   // hands off to the RAF loop until arrival.
+  //
+  // A step's beforeMeasure may flip React state to reveal its target (e.g.
+  // opening a disclosure that unmounts its own contents when closed) —
+  // that state update commits asynchronously even though beforeMeasure
+  // itself runs synchronously below. flushSync cannot force it here:
+  // this effect body already executes inside React's passive-effect
+  // commit (CommitContext), where flushSync is a documented no-op (plus a
+  // console warning) rather than a real synchronous flush — an earlier
+  // version of this code called flushSync from inside beforeMeasure and
+  // silently never actually revealed the target. So the first measurement
+  // below is a best-effort synchronous check (the common case: the target
+  // is already mounted, no delay at all). Only when a step DECLARES a
+  // target and that immediate check comes up empty do we wait one
+  // requestAnimationFrame and check again — by then the browser has
+  // painted, which means React has committed whatever beforeMeasure's
+  // state update triggered. Steps with no targetSelector (intro/outro)
+  // never hit the retry path and read immediately, same as before.
   useEffect(() => {
     if (!currentStep) {
       setPhase('done');
@@ -144,26 +161,44 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
     if (dwellTimerRef.current) window.clearTimeout(dwellTimerRef.current);
     if (pulseTimerRef.current) window.clearTimeout(pulseTimerRef.current);
 
+    let rafId: number | null = null;
+
+    const arrive = (rect: Rect | null) => {
+      setSpotlight(rect);
+      setBubbleAnchor(rect);
+      if (rect) {
+        const center = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+        cursorFromRef.current = cursorPosRef.current;
+        cursorTargetRef.current = center;
+        cursorStartMsRef.current = performance.now();
+        setPhase('moving');
+      } else {
+        // Intro / outro, or a target that's still missing after the
+        // one-frame retry. Park the cursor off-screen and just read.
+        cursorTargetRef.current = null;
+        setPhase('reading');
+      }
+    };
+
     try {
       currentStep.beforeMeasure?.();
     } catch (e) {
       console.error('tour beforeMeasure failed:', e);
     }
-    const rect = measureTarget(currentStep.targetSelector);
-    setSpotlight(rect);
-    setBubbleAnchor(rect);
 
-    if (rect) {
-      const center = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-      cursorFromRef.current = cursorPosRef.current;
-      cursorTargetRef.current = center;
-      cursorStartMsRef.current = performance.now();
-      setPhase('moving');
+    const immediate = measureTarget(currentStep.targetSelector);
+    if (immediate || !currentStep.targetSelector) {
+      arrive(immediate);
     } else {
-      // Intro / outro — no target. Park the cursor off-screen and just read.
-      cursorTargetRef.current = null;
-      setPhase('reading');
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        arrive(measureTarget(currentStep.targetSelector));
+      });
     }
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
   }, [stepIndex, currentStep, measureTarget, onComplete]);
 
   // When cursor reaches the target, play the click pulse, then fire the

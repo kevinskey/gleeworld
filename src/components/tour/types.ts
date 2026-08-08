@@ -21,10 +21,18 @@ export interface TourStep {
    * finds a real rect instead of treating the step as target-less and
    * skipping straight past the click pulse (which is when onActivate
    * fires). The engine itself still never touches the DOM here — this is a
-   * closure the script builder provides, same contract as onActivate. Runs
-   * synchronously: an implementation that flips React state must flush it
-   * (e.g. via `flushSync`) so the DOM already reflects the change by the
-   * time this returns.
+   * closure the script builder provides, same contract as onActivate.
+   *
+   * Do NOT assume the reveal is visible in the DOM the instant this
+   * returns. `beforeMeasure` is called from inside a React passive-effect
+   * commit, where `flushSync` is a documented no-op (plus a console
+   * warning), not a real synchronous flush — so a state update triggered
+   * here (e.g. `element.click()` on a toggle wired to `useState`) commits
+   * on its own schedule. The engine accounts for this itself: if the very
+   * next measurement comes up empty, it retries once after a
+   * requestAnimationFrame before concluding the step has no target. A
+   * `beforeMeasure` implementation just needs to trigger the reveal; it
+   * does not need to force it synchronous.
    */
   beforeMeasure?: () => void;
 }
