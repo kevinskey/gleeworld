@@ -25,8 +25,8 @@ import { Users, Plus, AlertTriangle, ArrowLeft, CheckCircle2 } from 'lucide-reac
 import { useAllStateStates, useStatePrograms } from '@/features/all-state/useAllState';
 import {
   useCohorts, useParticipations, useCohortTasks, useEnsembles, useEnsembleRoster,
-  useCreateCohort, useAddStudents, useSetParticipationStatus, useToggleTask,
-  readinessByStudent, type CohortWithProgram,
+  useTenantRoster, useCreateCohort, useAddStudents, useSetParticipationStatus,
+  useToggleTask, readinessByStudent, type CohortWithProgram,
 } from '@/features/all-state/useCohorts';
 
 const STATUSES = [
@@ -203,6 +203,8 @@ function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: (
   const [addOpen, setAddOpen] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [rosterQuery, setRosterQuery] = useState('');
+  const { data: tenantRoster } = useTenantRoster(rosterQuery);
 
   const readiness = useMemo(
     () => readinessByStudent(participations ?? [], tasks ?? []),
@@ -221,6 +223,10 @@ function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: (
 
   const alreadyIn = new Set((participations ?? []).map((p) => p.student_id));
   const candidates = (roster ?? []).filter((r) => !alreadyIn.has(r.id));
+  // The tenant-wide roster is the primary source: production tenants have real
+  // gw_profiles rosters but (today) zero ensembles, so an ensemble-only picker
+  // left directors with nobody to add.
+  const rosterCandidates = (tenantRoster ?? []).filter((r) => !alreadyIn.has(r.id));
   const needingAttention = ordered.filter((p) => (readiness[p.id]?.overdue ?? 0) > 0).length;
 
   return (
@@ -356,20 +362,50 @@ function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: (
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-md">
           <DialogHeader><DialogTitle>Add students</DialogTitle></DialogHeader>
-          {!cohort.ensemble_id && (
+          {cohort.ensemble_id && candidates.length > 0 && (
+            <>
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                From the linked ensemble
+              </p>
+              <ul className="space-y-1">
+                {candidates.map((c) => (
+                  <li key={c.id}>
+                    <label className="flex items-center gap-2 rounded-md p-2 hover:bg-muted/50">
+                      <Checkbox
+                        checked={picked.has(c.id)}
+                        onCheckedChange={(v) => setPicked((s) => {
+                          const n = new Set(s);
+                          if (v) n.add(c.id); else n.delete(c.id);
+                          return n;
+                        })}
+                      />
+                      <span className="flex-1 text-sm">{label(c)}</span>
+                      {c.voice_part && (
+                        <Badge variant="outline" className="font-normal">{c.voice_part}</Badge>
+                      )}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">
+            {cohort.ensemble_id ? 'Anyone in your workspace' : 'Your workspace roster'}
+          </p>
+          <Input
+            value={rosterQuery}
+            onChange={(e) => setRosterQuery(e.target.value)}
+            placeholder="Search by name…"
+          />
+          {rosterCandidates.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              This cohort isn&rsquo;t linked to an ensemble, so there&rsquo;s no roster to pull
-              from. Link one when you create the cohort to enable one-click sync.
+              {rosterQuery ? 'No one matches that search.' : 'Everyone is already in this cohort.'}
             </p>
           )}
-          {cohort.ensemble_id && candidates.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Everyone in the linked ensemble is already in this cohort.
-            </p>
-          )}
-          {candidates.length > 0 && (
-            <ul className="space-y-1">
-              {candidates.map((c) => (
+          {rosterCandidates.length > 0 && (
+            <ul className="max-h-64 space-y-1 overflow-y-auto">
+              {rosterCandidates.map((c) => (
                 <li key={c.id}>
                   <label className="flex items-center gap-2 rounded-md p-2 hover:bg-muted/50">
                     <Checkbox
@@ -392,7 +428,7 @@ function CohortDetail({ cohort, onBack }: { cohort: CohortWithProgram; onBack: (
           <DialogFooter>
             {candidates.length > 0 && (
               <Button variant="outline" onClick={() => setPicked(new Set(candidates.map((c) => c.id)))}>
-                Select all
+                Select ensemble
               </Button>
             )}
             <Button

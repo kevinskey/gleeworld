@@ -15,12 +15,25 @@
 BEGIN;
 
 -- Two real tenants and a real program to hang cohorts off.
+-- Tenants are chosen as ones that HAVE an admin member, and the JWT subs are
+-- those real admins: since 20260808200000 the cohort/participation tables are
+-- staff-only, so a fake non-staff sub correctly sees nothing — which is a
+-- different property than cross-tenant isolation. Acting as each tenant's own
+-- admin tests the boundary that matters: staff of A must not reach B.
 CREATE TEMP TABLE _fixture ON COMMIT DROP AS
+WITH admin_tenants AS (
+  SELECT DISTINCT ON (m.tenant_id) m.tenant_id, m.user_id
+    FROM gw_tenant_members m
+   WHERE m.role IN ('admin','director','owner','super-admin','super_admin')
+   ORDER BY m.tenant_id, m.user_id
+)
 SELECT
-  (SELECT id FROM gw_tenants ORDER BY slug LIMIT 1)        AS tenant_a,
-  (SELECT id FROM gw_tenants ORDER BY slug DESC LIMIT 1)   AS tenant_b,
+  (SELECT tenant_id FROM admin_tenants ORDER BY tenant_id LIMIT 1)                 AS tenant_a,
+  (SELECT user_id   FROM admin_tenants ORDER BY tenant_id LIMIT 1)                 AS admin_a,
+  (SELECT tenant_id FROM admin_tenants ORDER BY tenant_id DESC LIMIT 1)            AS tenant_b,
+  (SELECT user_id   FROM admin_tenants ORDER BY tenant_id DESC LIMIT 1)            AS admin_b,
   (SELECT id FROM gw_all_state_programs ORDER BY slug LIMIT 1) AS program,
-  (SELECT id FROM gw_profiles ORDER BY id LIMIT 1)         AS student;
+  (SELECT id FROM gw_profiles ORDER BY id LIMIT 1)             AS student;
 
 DO $$
 DECLARE a uuid; b uuid;
@@ -53,7 +66,7 @@ BEGIN
   SELECT tenant_a INTO a FROM _fixture;
   PERFORM set_config('request.jwt.claims',
     json_build_object('tenant_id', a::text, 'role', 'authenticated',
-                      'sub', '00000000-0000-0000-0000-000000000000')::text, true);
+                      'sub', (SELECT admin_a FROM _fixture)::text)::text, true);
   SET LOCAL ROLE authenticated;
 
   SELECT count(*) INTO n_cohorts FROM gw_all_state_cohorts
@@ -79,7 +92,7 @@ BEGIN
   SELECT tenant_b INTO b FROM _fixture;
   PERFORM set_config('request.jwt.claims',
     json_build_object('tenant_id', b::text, 'role', 'authenticated',
-                      'sub', '00000000-0000-0000-0000-000000000000')::text, true);
+                      'sub', (SELECT admin_b FROM _fixture)::text)::text, true);
   SET LOCAL ROLE authenticated;
 
   SELECT count(*) INTO n_foreign FROM gw_all_state_participations
@@ -98,7 +111,7 @@ BEGIN
   SELECT tenant_a INTO a FROM _fixture;
   PERFORM set_config('request.jwt.claims',
     json_build_object('tenant_id', a::text, 'role', 'authenticated',
-                      'sub', '00000000-0000-0000-0000-000000000000')::text, true);
+                      'sub', (SELECT admin_a FROM _fixture)::text)::text, true);
   SET LOCAL ROLE authenticated;
 
   -- Reading zero rows is itself the fence: the UPDATE simply matches nothing.

@@ -129,6 +129,34 @@ export function useEnsembleRoster(ensembleId: string | null | undefined) {
   });
 }
 
+/**
+ * The tenant's own roster, searchable — the PRIMARY add-students source.
+ *
+ * Found by auditing against live data rather than fixtures: production has
+ * ZERO gw_ensembles rows in any tenant, so an ensemble-only picker meant no
+ * director could add a single student. Real rosters live in gw_profiles
+ * (tenant-scoped by RLS; no .eq('tenant_id') needed or wanted here).
+ */
+export function useTenantRoster(query: string) {
+  return useQuery<Array<{ id: string; first_name: string | null; last_name: string | null; voice_part: string | null; role: string | null }>>({
+    queryKey: [KEY, 'tenant-roster', query],
+    queryFn: async () => {
+      let q = supabase
+        .from('gw_profiles')
+        .select('id,first_name,last_name,voice_part,role')
+        .order('last_name', { ascending: true, nullsFirst: false })
+        .limit(50);
+      if (query.trim()) {
+        const term = query.trim().replace(/[%_]/g, '');
+        q = q.or(`first_name.ilike.%${term}%,last_name.ilike.%${term}%`);
+      }
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as never;
+    },
+  });
+}
+
 export function useEnsembles() {
   return useQuery<Array<{ id: string; name: string }>>({
     queryKey: [KEY, 'ensembles'],
