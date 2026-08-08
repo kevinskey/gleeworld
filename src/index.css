@@ -490,15 +490,23 @@
     color: hsl(0 0% 100%) !important;
   }
   
-  /* Muted backgrounds get dark text */
-  .bg-muted h1, .bg-muted h2, .bg-muted h3, .bg-muted h4, .bg-muted h5, .bg-muted h6,
-  .bg-muted p, .bg-muted span, .bg-muted label {
+  /* Muted / card backgrounds get a readable default foreground.
+
+     `:where()` is load-bearing. Written as `.bg-card p` these rules are
+     specificity (0,2,0) and beat every Tailwind color utility (0,1,0) — so
+     `<p class="text-muted-foreground">` inside any card painted full
+     card-foreground instead, and the secondary text hierarchy collapsed
+     everywhere. Measured on the public site: ~40 such elements across 29
+     blocks using `bg-card`.
+
+     `:where()` contributes ZERO specificity, so these become (0,0,1) — a
+     bare <p> still gets the default, and any explicit text-* color class
+     now wins, which is what "default" was always supposed to mean. */
+  :where(.bg-muted) :where(h1, h2, h3, h4, h5, h6, p, span, label) {
     color: hsl(var(--foreground));
   }
-  
-  /* Card backgrounds get proper foreground */
-  .bg-card h1, .bg-card h2, .bg-card h3, .bg-card h4, .bg-card h5, .bg-card h6,
-  .bg-card p, .bg-card span, .bg-card label {
+
+  :where(.bg-card) :where(h1, h2, h3, h4, h5, h6, p, span, label) {
     color: hsl(var(--card-foreground));
   }
 }

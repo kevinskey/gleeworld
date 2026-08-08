@@ -57,7 +57,7 @@ function GalleryViewer({
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-2 right-2 z-10 text-white/85 hover:text-white p-2 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+        className="absolute top-2 right-2 z-10 w-11 h-11 grid place-items-center text-white/85 hover:text-white rounded-full bg-black/40 hover:bg-black/60 transition-colors"
         aria-label="Back to gallery"
       >
         <X className="w-5 h-5" />
@@ -67,7 +67,7 @@ function GalleryViewer({
           <button
             type="button"
             onClick={prev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-white/85 hover:text-white p-2 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-11 h-11 grid place-items-center text-white/85 hover:text-white rounded-full bg-black/40 hover:bg-black/60 transition-colors"
             aria-label="Previous photo"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -75,7 +75,7 @@ function GalleryViewer({
           <button
             type="button"
             onClick={next}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-white/85 hover:text-white p-2 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-11 h-11 grid place-items-center text-white/85 hover:text-white rounded-full bg-black/40 hover:bg-black/60 transition-colors"
             aria-label="Next photo"
           >
             <ChevronRight className="w-6 h-6" />

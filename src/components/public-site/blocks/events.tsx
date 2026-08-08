@@ -93,7 +93,7 @@ function MonthCalendar({ events }: { events: PublicEvent[] }) {
         <button
           type="button"
           onClick={() => goto(-1)}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+          className="w-11 h-11 lg:w-8 lg:h-8 grid place-items-center rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
           aria-label="Previous month"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -104,7 +104,7 @@ function MonthCalendar({ events }: { events: PublicEvent[] }) {
         <button
           type="button"
           onClick={() => goto(1)}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+          className="w-11 h-11 lg:w-8 lg:h-8 grid place-items-center rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
           aria-label="Next month"
         >
           <ChevronRight className="w-4 h-4" />

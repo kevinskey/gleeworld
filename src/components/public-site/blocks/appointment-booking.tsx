@@ -502,9 +502,9 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                             boxShadow: active ? '0 0 0 1px var(--site-accent)' : undefined,
                           }}
                         >
-                          <span className="block text-[11px] text-muted-foreground">{l.weekday}</span>
+                          <span className="block text-xs text-muted-foreground">{l.weekday}</span>
                           <span className="block text-lg font-semibold leading-tight tabular-nums">{l.day}</span>
-                          <span className="block text-[11px] text-muted-foreground">{l.month}</span>
+                          <span className="block text-xs text-muted-foreground">{l.month}</span>
                         </button>
                       );
                     })}

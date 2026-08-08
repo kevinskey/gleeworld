@@ -166,7 +166,7 @@ function Render({ config }: BlockRenderProps<Config>) {
                       <CalendarDays className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <div className="text-xs uppercase tracking-widest text-muted-foreground">
                         Date
                       </div>
                       <div className="font-semibold text-sm">{config.session.dateLabel}</div>
@@ -185,7 +185,7 @@ function Render({ config }: BlockRenderProps<Config>) {
                       <Clock className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <div className="text-xs uppercase tracking-widest text-muted-foreground">
                         Time
                       </div>
                       <div className="font-semibold text-sm">{config.session.timeLabel}</div>
@@ -204,7 +204,7 @@ function Render({ config }: BlockRenderProps<Config>) {
                       <MapPin className="w-4 h-4" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                      <div className="text-xs uppercase tracking-widest text-muted-foreground">
                         Location
                       </div>
                       <div className="font-semibold text-sm break-words">
@@ -240,7 +240,7 @@ function Render({ config }: BlockRenderProps<Config>) {
                             <Icon className="w-5 h-5" />
                           </div>
                           <span
-                            className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full text-white text-[10px] font-bold inline-flex items-center justify-center shadow-sm"
+                            className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full text-white text-xs font-bold inline-flex items-center justify-center shadow-sm"
                             style={{ background: 'var(--site-accent)' }}
                           >
                             {i + 1}

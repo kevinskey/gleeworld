@@ -78,7 +78,7 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold">{p.name}</span>
-                  <span className="text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded" style={{ background: 'var(--site-accent)', color: 'white' }}>
+                  <span className="text-xs uppercase tracking-wide font-bold px-2 py-0.5 rounded" style={{ background: 'var(--site-accent)', color: 'white' }}>
                     {ROLE_LABEL[p.role]}
                   </span>
                   {p.detail && <span className="text-xs text-muted-foreground">{p.detail}</span>}

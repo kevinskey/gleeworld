@@ -662,9 +662,17 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
             <button
               key={i}
               onClick={() => setSlide(i)}
-              className={`w-2.5 h-2.5 rounded-full ${i === slide ? 'bg-white' : 'bg-white/40'}`}
+              /* The DOT stays 10px; the BUTTON is 44px. A 10x10 control is a
+                 quarter of the HIG 44pt minimum, so the dots were effectively
+                 unhittable on a phone. Negative margin keeps the visual
+                 spacing identical while the hit areas sit edge to edge. */
+              className="w-11 h-11 -mx-2 grid place-items-center rounded-full"
               aria-label={`Slide ${i + 1}`}
-            />
+            >
+              <span
+                className={`block w-2.5 h-2.5 rounded-full ${i === slide ? 'bg-white' : 'bg-white/40'}`}
+              />
+            </button>
           ))}
         </div>
       )}
