@@ -78,8 +78,19 @@ Deno.serve(async (req) => {
   if (!decoded.exp || decoded.exp * 1000 < Date.now()) return errorRedirect(slug, returnPath, 'expired_state');
 
   try {
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    if (!stripeKey) throw new Error('STRIPE_SECRET_KEY missing');
+    // OAuth token exchange authenticates with the platform's secret key as
+    // the client_secret, and Stripe REJECTS restricted keys here — the
+    // exchange comes back { error: "invalid_client" }, which reads like a
+    // client_id problem and sends you hunting through Connect settings.
+    // Observed live 2026-08-08: the user authorised successfully, Stripe
+    // showed the account as connected, and we never recorded it because the
+    // exchange failed one step later.
+    //
+    // Prefer the dedicated full key, same as partner-connect-onboarding and
+    // partner-connect-refresh; fall back so nothing breaks if it is unset.
+    const stripeKey = Deno.env.get('STRIPE_CONNECT_SECRET_KEY')
+      || Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeKey) throw new Error('No Stripe secret key configured');
 
     // Exchange the authorization code for tokens. Stripe returns the
     // connected account's stripe_user_id — this is the acct_XXXX we store
