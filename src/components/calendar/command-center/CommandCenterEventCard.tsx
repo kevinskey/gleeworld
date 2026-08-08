@@ -219,7 +219,13 @@ export const CommandCenterEventCard = ({
         {event.location && (
           <div className="flex items-center gap-2 text-slate-600">
             <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-muted-foreground" />
-            <span className="text-xs truncate">{event.location}</span>
+            {/* min-w-0 is load-bearing, not decoration. `truncate` sets
+                white-space: nowrap, which makes this span's MIN-content width
+                the full location string; a flex item defaults to
+                min-width: auto and so refuses to shrink below that. Without
+                min-w-0 a long location pushed this row past the viewport and
+                (via the ScrollArea below) clipped the whole agenda. */}
+            <span className="text-xs truncate min-w-0">{event.location}</span>
           </div>
         )}
         {isMobile && canEdit && (
