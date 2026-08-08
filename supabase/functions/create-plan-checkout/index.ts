@@ -83,7 +83,7 @@ serve(async (req) => {
   if (!tenantId) return err(400, "no_tenant_in_jwt");
   // Only a tenant admin may change the org's base plan (matches the role gate
   // in create-module-checkout / create-course-checkout).
-  if (!["admin", "super-admin", "super_admin"].includes(String(tenantRole))) {
+  if (!["owner", "admin", "super-admin", "super_admin"].includes(String(tenantRole))) {
     return err(403, "admin_only", "Only tenant admins can change the plan");
   }
 
