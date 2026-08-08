@@ -16,7 +16,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { CalendarClock, Music4, ExternalLink, Award } from 'lucide-react';
 import {
-  useMyParticipations, useMyTasks, computeReadiness, practiceLinkFor,
+  useMyParticipations, useMyTasks, useMyChildren, useMyChildrenDates,
+  computeReadiness, practiceLinkFor,
 } from '@/features/all-state/useMyAllState';
 import { useToggleTask } from '@/features/all-state/useCohorts';
 
@@ -45,6 +46,9 @@ export default function MyAllStatePage() {
   const { data: parts, isLoading } = useMyParticipations();
   const ids = useMemo(() => (parts ?? []).map((p) => p.id), [parts]);
   const { data: tasks } = useMyTasks(ids);
+  const { data: children } = useMyChildren();
+  const childIds = useMemo(() => (children ?? []).map((c) => c.participation_id), [children]);
+  const { data: childDates } = useMyChildrenDates(childIds);
   const toggle = useToggleTask();
 
   if (isLoading) {
@@ -56,13 +60,13 @@ export default function MyAllStatePage() {
     );
   }
 
-  if (!parts?.length) {
+  if (!parts?.length && !children?.length) {
     return (
       <div className="mx-auto w-full max-w-2xl px-4 py-6">
         <EmptyState
           icon={<Award className="h-8 w-8" />}
           title="You're not in an All-State cohort"
-          description="When your director adds you to one, your checklist and deadlines will appear here. In the meantime you can browse what your state requires."
+          description="When your director adds you to one — or links you as a parent of a participating student — it will appear here. In the meantime you can browse what your state requires."
           actionLabel="Browse All-State by state"
           onAction={() => { window.location.href = '/all-state'; }}
         />
@@ -199,6 +203,57 @@ export default function MyAllStatePage() {
           );
         })}
       </div>
+
+      {(children?.length ?? 0) > 0 && (
+        <section className="mt-8">
+          <h2 className="text-lg font-semibold tracking-tight">Your children</h2>
+          {/* Deliberately spare, per the product rule "dates, cost, and
+              location — and nothing else": no status, results, or progress.
+              Costs and location live on the linked public state page. */}
+          <div className="mt-3 space-y-4">
+            {children!.map((c) => {
+              const upcoming = (childDates ?? [])
+                .filter((d) => d.participation_id === c.participation_id
+                            && new Date(d.due_at) >= new Date())
+                .slice(0, 4);
+              return (
+                <Card key={c.participation_id}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base">
+                      {c.child_first_name ?? 'Your student'} — {c.program_name}
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {c.state_name} · {c.program_season}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {upcoming.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No upcoming dates.</p>
+                    ) : (
+                      <ul className="divide-y">
+                        {upcoming.map((d, i) => (
+                          <li key={i} className="flex items-baseline justify-between gap-3 py-2">
+                            <span className="text-sm">{d.title}</span>
+                            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                              {new Date(d.due_at).toLocaleDateString(undefined,
+                                { weekday: 'short', month: 'short', day: 'numeric' })}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    <Link to={`/all-state/${c.state_slug}`}
+                          className="inline-flex items-center gap-1 text-sm text-primary underline underline-offset-2">
+                      Dates, costs and location for {c.state_name} All-State
+                      <ExternalLink className="h-3 w-3" aria-hidden />
+                    </Link>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <Button asChild variant="outline" className="mt-6 w-full sm:w-auto">
         <Link to="/all-state">Browse other states</Link>

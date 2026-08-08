@@ -54,6 +54,49 @@ export function useMyTasks(participationIds: string[]) {
   });
 }
 
+export interface ChildParticipation {
+  participation_id: string;
+  child_first_name: string | null;
+  program_name: string;
+  program_season: string;
+  state_name: string;
+  state_slug: string;
+  cohort_name: string;
+}
+
+/**
+ * A verified parent's children in All-State cohorts. Scoped by acceptance
+ * criterion 6 — dates, cost, location, nothing else — so the view carries no
+ * status, results, scores, or notes, and this hook cannot add them back.
+ */
+export function useMyChildren() {
+  return useQuery<ChildParticipation[]>({
+    queryKey: ['all-state-me', 'children'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_all_state_my_children').select('*');
+      if (error) throw error;
+      return (data ?? []) as ChildParticipation[];
+    },
+  });
+}
+
+export function useMyChildrenDates(participationIds: string[]) {
+  return useQuery<Array<{ participation_id: string; title: string; due_at: string }>>({
+    queryKey: ['all-state-me', 'children-dates', participationIds.join(',')],
+    enabled: participationIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_all_state_my_children_dates')
+        .select('*')
+        .in('participation_id', participationIds)
+        .order('due_at');
+      if (error) throw error;
+      return (data ?? []) as never;
+    },
+  });
+}
+
 export { computeReadiness };
 
 /**
