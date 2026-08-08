@@ -46,7 +46,8 @@ import {
   Download,
   Shield,
   UserCheck,
-  Trash2
+  Trash2,
+  CalendarDays
 } from "lucide-react";
 
 // Tab strip config. Analytics uses TrendingUp rather than a second BarChart3 —
@@ -59,9 +60,11 @@ const AUDITION_TABS = [
   { value: 'sessions', label: 'Sessions', icon: Calendar },
   { value: 'analytics', label: 'Analytics', icon: TrendingUp },
   { value: 'appointments', label: 'Appointments', icon: Clock },
+  { value: 'schedule', label: 'Schedule', icon: CalendarDays },
 ] as const;
 
 import { AuditionTimeGrid } from '@/components/admin/AuditionTimeGrid';
+import { AuditionScheduleManager } from '@/components/admin/AuditionScheduleManager';
 import { MobileScoreWindow } from "@/components/scoring/MobileScoreWindow";
 import { SightReadingScoreWindow } from "@/components/scoring/SightReadingScoreWindow";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -2587,6 +2590,14 @@ export const AuditionsManagement = () => {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* The write path for audition_time_blocks. Before this tab the
+            table had no insert/update/delete anywhere in the app, so no
+            tenant could publish an audition date and the applicant's
+            date picker was always empty. */}
+        <TabsContent value="schedule" className="space-y-6 pt-6">
+          <AuditionScheduleManager />
         </TabsContent>
       </Tabs>
     </div>
