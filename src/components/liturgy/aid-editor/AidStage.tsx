@@ -100,11 +100,17 @@ export function AidStage({
             transform-origin: top left;
             margin: 0;
           }
+          /* !important is required: FrontPanel (WorshipAidSheets.tsx) renders
+             its root with an inline style={{ display: 'flex', ... }}, and an
+             inline style beats any stylesheet rule at equal or higher
+             specificity unless that rule is !important. Without it, focusing
+             "back" cannot hide the front/Cover panel — verified in real
+             Chrome, where Cover rendered beside Back at half width each. */
           [${AID_VIEW_ATTR}="focus"][data-aid-focus="front"] [data-panel]:not([data-panel="front"]),
           [${AID_VIEW_ATTR}="focus"][data-aid-focus="back"] [data-panel]:not([data-panel="back"]),
           [${AID_VIEW_ATTR}="focus"][data-aid-focus="insideLeft"] [data-panel]:not([data-panel="insideLeft"]),
           [${AID_VIEW_ATTR}="focus"][data-aid-focus="insideRight"] [data-panel]:not([data-panel="insideRight"]) {
-            display: none;
+            display: none !important;
           }
           /* The fold guide means nothing with one panel showing. */
           [${AID_VIEW_ATTR}="focus"] .worship-aid-fold { display: none; }
