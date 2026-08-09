@@ -169,6 +169,7 @@ The archived PDF is the thing most likely to break silently. Isolate the swap in
   - `type AidView = 'focus' | 'full'`
   - `const AID_VIEW_ATTR = 'data-aid-view'`
   - `async function withFullView<T>(el: HTMLElement | null, fn: () => Promise<T>): Promise<T>` — sets the attribute to `'full'`, yields two animation frames so layout settles, runs `fn`, and restores the previous attribute value in a `finally`. Task 5 calls this from `fileToLibrary`.
+  - `const PANEL_LABEL: Record<PanelId, string>` — `front: 'Cover'`, `insideLeft: 'Inside left'`, `insideRight: 'Inside right'`, `back: 'Back'`. The single copy. Tasks 3, 4 and 5 import it; none redeclares it. `WorshipAidPage.tsx:44` currently declares its own — Task 5 deletes that one and imports this instead.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -227,6 +228,8 @@ Expected: FAIL — cannot resolve `../aidView`.
 Create `src/components/liturgy/aid-editor/aidView.ts`:
 
 ```ts
+import type { PanelId } from '@/lib/liturgy/worshipAid';
+
 /**
  * Which view of the sheets the screen is showing.
  *
@@ -237,6 +240,14 @@ export type AidView = 'focus' | 'full';
 
 /** Attribute the stage wrapper carries; screen-only CSS keys off it. */
 export const AID_VIEW_ATTR = 'data-aid-view';
+
+/** The one copy. Rail, stage and page all import this. */
+export const PANEL_LABEL: Record<PanelId, string> = {
+  front: 'Cover',
+  insideLeft: 'Inside left',
+  insideRight: 'Inside right',
+  back: 'Back',
+};
 
 /** Two frames: one to apply the attribute, one for layout to settle under it. */
 function nextFrames(): Promise<void> {
@@ -380,14 +391,7 @@ Create `src/components/liturgy/aid-editor/AidStage.tsx`:
 ```tsx
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { PanelId } from '@/lib/liturgy/worshipAid';
-import { AID_VIEW_ATTR, type AidView } from './aidView';
-
-const PANEL_LABEL: Record<PanelId, string> = {
-  front: 'Cover',
-  insideLeft: 'Inside left',
-  insideRight: 'Inside right',
-  back: 'Back',
-};
+import { AID_VIEW_ATTR, PANEL_LABEL, type AidView } from './aidView';
 
 /** A single panel is half of an 11in sheet. */
 const PANEL_WIDTH_IN = 5.5;
@@ -616,10 +620,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { PanelId, WorshipAidSettings } from '@/lib/liturgy/worshipAid';
+import { PANEL_LABEL } from './aidView';
 
-const PANEL_LABEL: Record<PanelId, string> = {
-  front: 'Cover', insideLeft: 'Inside left', insideRight: 'Inside right', back: 'Back',
-};
 const PANELS: PanelId[] = ['front', 'insideLeft', 'insideRight', 'back'];
 
 /** Collapsed by default; the block list above it is the primary task. */
@@ -697,7 +699,7 @@ export function AidControlRail({
 }
 ```
 
-When the Cover panel is selected, the cover-image upload control currently in `WorshipAidPage.tsx` (the hidden `<input type="file">` and its trigger, around lines 495–514) stays on the page — it owns `fileRef` and `uploadTarget`. Pass it in through `blockList` when `panel === 'front'` in Task 5 if you want it in the rail; otherwise leave it in the Cover section as a follow-up. Do not move `fileRef` into this component.
+The cover-image upload control in `WorshipAidPage.tsx` (the hidden `<input type="file">` and its trigger, around lines 495-514) owns `fileRef` and `uploadTarget`, which must stay on the page. Task 5 passes that control in through the `blockList` prop when `panel === 'front'`, so it appears under the cover fields. This component never imports `fileRef`. That is the decision — do not leave it as a follow-up.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -893,7 +895,7 @@ No spec requirement is unassigned.
 
 **Placeholder scan:** none. Every code step carries real code. Task 6 is verification, so its steps are observations with stated expected results rather than code.
 
-**Type consistency:** `PanelId` imported from `@/lib/liturgy/worshipAid` everywhere and never redefined. `AidView` and `AID_VIEW_ATTR` are defined in Task 2 and consumed unchanged in Tasks 3 and 5. `PANEL_LABEL` is declared separately in `AidStage.tsx` and `AidControlRail.tsx` — deliberate, so neither component depends on the other; if a third consumer appears, lift it to `aidView.ts`.
+**Type consistency:** `PanelId` imported from `@/lib/liturgy/worshipAid` everywhere and never redefined. `AidView` and `AID_VIEW_ATTR` are defined in Task 2 and consumed unchanged in Tasks 3 and 5. `PANEL_LABEL` is declared once, in `aidView.ts` (Task 2), and imported by the stage, the rail and the page. The pre-flight scan caught an earlier draft that duplicated it into all three — that would have been flagged as duplication at review.
 
 **Known soft spots**, flagged rather than hidden:
 
