@@ -93,7 +93,7 @@ import { NavShelf } from './NavShelf';
 import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
-import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS } from '@/lib/navigation/myTools';
+import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
 
 // The fixed module-gate key list a `module: 'x'` catalog gate checks
 // against. One definition shared by Sidebar, MobileNav, and the All Tools
@@ -183,16 +183,21 @@ function useGatedNav() {
 
 // The stored My Tools record + gated catalog behind the All Tools sheet.
 //
-// `pinned` is the RAW STORED array — never `resolveNav`'s gated output and
-// never NavShelf's MY_TOOLS_CAP-capped render of it — and it is used for
-// DISPLAY ONLY (which rows read "In your space", whether the cap banner
-// shows). The APPEND itself is not computed here at all: `onPin` is
-// useMyTools' pinTool, which reads the freshest record out of the query
-// cache at call time and refuses unless the row genuinely loaded. Computing
-// the append from this render-time `pinned` is precisely the bug that
-// persisted a one-key record over a member's eight tools and their widgets
-// whenever the sheet was opened before the query resolved — and the same
-// snapshot that dropped the first of two pins fired in one tick.
+// `pinned` is the UNFILTERED, UNCAPPED stored set — never `resolveNav`'s
+// gated output and never NavShelf's MY_TOOLS_CAP-capped render of it — and
+// it is used for DISPLAY ONLY (which rows read "In your space", whether the
+// cap banner shows). It IS resolved through MERGED_KEYS (via resolvedTools):
+// without that, a stored retired key (e.g. 'merch') would fail to match its
+// living catalog entry's key ('shop') in AllToolsSheet's `pinnedSet.has(...)`
+// check, and the sheet would offer Store Admin as "not yet in your space"
+// when the member already effectively has it (Phase 5 review, 2026-08-09).
+// The APPEND itself is not computed here at all: `onPin` is useMyTools'
+// pinTool, which reads the freshest record out of the query cache at call
+// time and refuses unless the row genuinely loaded. Computing the append
+// from this render-time `pinned` is precisely the bug that persisted a
+// one-key record over a member's eight tools and their widgets whenever the
+// sheet was opened before the query resolved — and the same snapshot that
+// dropped the first of two pins fired in one tick.
 function useAllToolsCatalog(): {
   available: CatalogEntry[];
   pinned: string[];
@@ -202,7 +207,7 @@ function useAllToolsCatalog(): {
   const { resolvedEntries, myTools, myToolsLoaded, pinTool } = useGatedNav();
   return {
     available: resolvedEntries,
-    pinned: myTools?.tools ?? [],
+    pinned: resolvedTools(myTools),
     // No record, no ⊕: pinTool would refuse, and offering an action that
     // can only fail is the "tap does nothing" shape the plan forbids.
     canPin: myToolsLoaded,

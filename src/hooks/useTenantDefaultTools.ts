@@ -40,7 +40,12 @@ export function useTenantDefaultTools() {
         const rows = (data as Array<{ role: string; default_tools: string[] | null }>) ?? [];
         const out: DefaultsByRole = { admin: [], student: [], member: [] };
         for (const r of rows) {
-          if (r.role in out) out[r.role as NavRole] = r.default_tools ?? [];
+          // sanitizeTools (resolve + dedupe), not the raw column: a tenant
+          // that saved 'merch' into a role's defaults before it retired into
+          // 'shop' would otherwise hand MySpaceEditor a dead key — same bug
+          // class as the personal My Tools record, different table
+          // (Phase 5 review, 2026-08-09).
+          if (r.role in out) out[r.role as NavRole] = sanitizeTools(r.default_tools ?? []);
         }
         return out;
       } catch (err) {

@@ -3,10 +3,11 @@
 // Spec: docs/superpowers/specs/2026-07-04-house-and-stage-design.md §5.1–5.2
 import {
   Home, MessageSquare, Music, Disc3, Calendar, Users, ScanEye, Mic,
-  GraduationCap, Ticket, ClipboardList, ListMusic, Wallet, Shirt,
+  GraduationCap, Ticket, ClipboardList, ListMusic, Wallet,
   type LucideIcon,
 } from 'lucide-react';
 import { resolveNav, entrySurfaces, type NavContext, type NavSectionKey } from './navCatalog';
+import { resolveKey, resolveKeys } from './mergedKeys';
 
 export interface ModuleFlags {
   hasViewer: boolean; hasStudio: boolean;
@@ -30,7 +31,9 @@ const D = {
   planner:  { key: 'planner',  to: '/dashboard/concert-planner', label: 'Programs', icon: ListMusic } as Destination,
   attendance: { key: 'attendance', to: '/attendance',       label: 'Attendance', icon: ClipboardList } as Destination,
   finance:  { key: 'finance',  to: '/dashboard/finance',    label: 'Finance',  icon: Wallet } as Destination,
-  merch:    { key: 'merch',    to: '/store/products',       label: 'Merch',    icon: Shirt } as Destination,
+  // 'merch' removed 2026-08-09 — it merged into 'shop' (see mergedKeys.ts)
+  // and was never referenced from STUDENT_TAB_ORDER/FACULTY_TAB_ORDER below,
+  // so this fixed dict never needed a 'shop' replacement entry for it.
 };
 
 // Module flag gating a given destination key, when the destination is
@@ -105,7 +108,21 @@ export function parseTileLayout(raw: unknown): TileLayout | null {
 // built from the shared catalog rather than a hard-coded array — changing
 // this list changes what every tenant sees on day one, so it's a deliberate,
 // reviewable diff rather than an emergent side effect of catalog order.
-export const DEFAULT_GRID_ORDER = ['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch'];
+//
+// 'merch' → 'shop' 2026-08-09: 'merch' retired into 'shop' (mergedKeys.ts).
+// Deliberately kept 'shop' HERE rather than dropping the slot outright —
+// this list is what fills a fresh member's grid on day one, and the
+// pre-merge grid included Merch in that default set, so keeping its
+// successor here preserves that day-one default for the tenants it can
+// still reach. 'shop' is now adminOnly (see navCatalog.ts), so for a
+// non-admin member this slot silently resolves to nothing and the grid is
+// one tile shorter — the same "stale/gated key drops silently" behavior
+// every other entry in this list already gets when its gate is closed; see
+// the byKey.get(...) filter below. The lookups here also run every key
+// through resolveKey as a defensive backstop, so a FUTURE merge doesn't
+// require remembering to hand-edit this frozen literal to avoid the same
+// silent-drop bug getAppTiles's My Tools path had for 'merch' itself.
+export const DEFAULT_GRID_ORDER = ['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'shop'];
 
 export interface AppTilesOptions {
   /**
@@ -157,7 +174,7 @@ export function getAppTiles(
     // All Tools always render, so nobody is stranded.
     const byKey = new Map(enabled.map((d) => [d.key, d]));
     const primary = DEFAULT_GRID_ORDER
-      .map((k) => byKey.get(k))
+      .map((k) => byKey.get(resolveKey(k)))
       .filter((d): d is Destination => d !== undefined)
       .slice(0, 8);
     const pinned = new Set(primary.map((d) => d.key));
@@ -193,8 +210,21 @@ export function getAppTiles(
   // re-enabling a module restores its old spot. An empty array is a
   // deliberate, respected choice: primary comes back empty and everything
   // enabled lands in overflow, one tap away in More.
+  //
+  // resolveKeys here (resolve + dedupe) is the fix for a real regression
+  // (Phase 5 review, 2026-08-09): a stored ['merch'] resolved correctly on
+  // the sidebar shelf (selectShelfEntries calls resolveKeys itself) but NOT
+  // here — this branch did a bare byKey.get(k), so a stored 'merch' key
+  // resolved to nothing once the catalog entry was retired, and the home
+  // grid silently lost the tile the shelf still showed under its new name
+  // ('shop'). Verified: a stored ['merch'] used to yield primary: [] here.
+  // The dedupe half matters separately: a record saved before the merge can
+  // legitimately hold BOTH 'merch' and 'shop' (they were two independently
+  // pinnable entries until this date), which a bare per-key resolve would
+  // render as two identical tiles. See appDestinations.test.ts's "resolves
+  // a merged key" / "collapse to one tile" tests.
   const byKey = new Map(pool.map((d) => [d.key, d]));
-  const primary = tools
+  const primary = resolveKeys(tools)
     .map((k) => byKey.get(k))
     .filter((d): d is Destination => d !== undefined);
   const pinned = new Set(primary.map((d) => d.key));

@@ -16,16 +16,23 @@ const brandingOrgName = vi.hoisted(() => ({ current: null as string | null }));
 const myFeesResult = vi.hoisted(() => ({
   current: { totalOwed: 0, unpaid: [], paid: [], plans: [], loading: false, refetch: vi.fn() },
 }));
+// Hoisted so the resolveKeys/getAppTiles wiring tests below can render an
+// admin, module-enabled context — every other describe block in this file
+// wants the default (non-admin, no modules) and never touches these.
+const profileResult = vi.hoisted(() => ({
+  current: { full_name: 'Kevin', user_id: 'u1', is_admin: false, is_super_admin: false },
+}));
+const tenantModulesResult = vi.hoisted(() => ({ current: [] as Array<{ module_id: string }> }));
 
 vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: () => ({
-    profile: { full_name: 'Kevin', user_id: 'u1', is_admin: false, is_super_admin: false },
+    profile: profileResult.current,
     loading: false,
     canEditMusicLibrary: () => false,
   }),
 }));
 vi.mock('@/hooks/useModuleAccess', () => ({
-  useTenantModules: () => ({ data: [], isLoading: false }),
+  useTenantModules: () => ({ data: tenantModulesResult.current, isLoading: false }),
 }));
 // PR #189 gave HouseHome a preview-role hook that reaches useAuth(). This test
 // renders the component bare (no AuthProvider), so stub the hook rather than
@@ -71,8 +78,18 @@ vi.mock('@/components/dashboard/HomeNewsRail', () => ({
 vi.mock('@/components/dashboard/DashboardShell', () => ({
   DashboardShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
+// Captures the exact props HouseHome hands the grid — primary/overflow
+// (getAppTiles' output) and cap (gridCap) — so the resolveKeys/resolvedTools
+// wiring fix (review round 1, Important 1) can be asserted on without
+// rendering dnd-kit's real drag machinery.
+const capturedGridProps = vi.hoisted(() => ({
+  current: null as { primary: Array<{ key: string }>; overflow: Array<{ key: string }>; cap: number } | null,
+}));
 vi.mock('@/components/dashboard/HomeTileGrid', () => ({
-  HomeTileGrid: () => null,
+  HomeTileGrid: (props: { primary: Array<{ key: string }>; overflow: Array<{ key: string }>; cap: number }) => {
+    capturedGridProps.current = props;
+    return null;
+  },
 }));
 
 // Capture exactly the ctx the page hands to the date-card slot — this is
@@ -121,6 +138,9 @@ afterEach(() => {
   myFeesResult.current = { totalOwed: 0, unpaid: [], paid: [], plans: [], loading: false, refetch: vi.fn() };
   myToolsResult.current = { myTools: null, loading: false, saveTools: vi.fn(), saveMyTools: vi.fn() };
   tenantDefaults.spy.mockClear();
+  profileResult.current = { full_name: 'Kevin', user_id: 'u1', is_admin: false, is_super_admin: false };
+  tenantModulesResult.current = [];
+  capturedGridProps.current = null;
 });
 
 function renderHouseHome() {
@@ -268,5 +288,38 @@ describe('HouseHome ↔ FirstRunSheet seam', () => {
     renderHouseHome();
     expect(screen.queryByText('Set up your space')).not.toBeInTheDocument();
     expect(tenantDefaults.spy).not.toHaveBeenCalled();
+  });
+});
+
+// Review round 1, Important 1: HouseHome computed `storedTools` from the
+// raw `myTools?.tools` — NOT resolvedTools — so it disagreed with
+// `representable` (built from getAppTiles' output, which DOES resolve).
+// That mismatch undercounted gridCap by 1 for every merged key still in a
+// member's stored record, and made mergeGridOrder treat a merged key as
+// "the grid can't show this" even though it demonstrably could, under its
+// new name. This exercises the real HouseHome page end to end (not just
+// the underlying resolvedTools/getAppTiles functions, which have their own
+// direct unit tests) — HomeTileGrid is mocked only enough to capture the
+// props HouseHome computes for it, not to fake the resolution itself.
+describe('HouseHome keycap grid — resolveKeys/resolvedTools wiring for a merged key', () => {
+  it('a stored merged key ("merch") both renders as its successor AND is counted as representable in gridCap', () => {
+    profileResult.current = { full_name: 'Admin', user_id: 'u1', is_admin: true, is_super_admin: false };
+    tenantModulesResult.current = [{ module_id: 'store' }];
+    myToolsResult.current = {
+      myTools: { tools: ['merch'], widgets: [], setupComplete: true },
+      loading: false,
+      saveTools: vi.fn(),
+      saveMyTools: vi.fn(),
+    };
+    renderHouseHome();
+    const grid = capturedGridProps.current;
+    expect(grid).not.toBeNull();
+    expect([...grid!.primary, ...grid!.overflow].map((t) => t.key)).toContain('shop');
+    // MY_TOOLS_CAP (8) minus zero un-representable stored keys — 'merch'
+    // resolves to 'shop', which IS representable, so nothing is held back.
+    // The bug computed this as 7: raw 'merch' matched nothing in
+    // `representable` (which only ever holds resolved keys), so it was
+    // wrongly counted as un-representable.
+    expect(grid!.cap).toBe(8);
   });
 });

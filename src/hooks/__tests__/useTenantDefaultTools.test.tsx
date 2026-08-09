@@ -44,6 +44,20 @@ describe('useTenantDefaultTools', () => {
     expect(result.current.defaultsByRole.admin).toEqual([]);
   });
 
+  // Phase 5 review, 2026-08-09: a tenant that saved 'merch' into a role's
+  // defaults before it retired into 'shop' (MERGED_KEYS) must not hand
+  // MySpaceEditor a dead key — same bug class as the personal My Tools
+  // record (see resolvedTools in myTools.ts), different table.
+  it('resolves a retired key in a stored default list to its successor', async () => {
+    h.select.mockResolvedValue({
+      data: [{ role: 'student', default_tools: ['merch', 'calendar'] }],
+      error: null,
+    });
+    const { result } = renderHook(() => useTenantDefaultTools(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.defaultsByRole.student).toEqual(['shop', 'calendar']);
+  });
+
   it('returns empty arrays for every role when the query fails', async () => {
     h.select.mockResolvedValue({ data: null, error: { message: 'nope' } });
     const { result } = renderHook(() => useTenantDefaultTools(), { wrapper });
