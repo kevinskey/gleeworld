@@ -3,7 +3,7 @@
 // Letterpress plates: bg-card border border-border (+ the up-next plate's
 // top accent stripe); no other elevations.
 // Spec: docs/superpowers/specs/2026-07-04-house-and-stage-design.md
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -20,13 +20,14 @@ import { isFacultyProfile } from '@/lib/roles';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { getAppTiles, type ModuleFlags } from '@/lib/navigation/appDestinations';
 import { toModuleFlags, toModuleSet } from '@/lib/navigation/moduleFlags';
-import { applyPreviewRole, previewRoleIsFaculty, type NavContext } from '@/lib/navigation/navCatalog';
+import { applyPreviewRole, previewRoleIsFaculty, resolveNav, type NavContext } from '@/lib/navigation/navCatalog';
 import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useMyTools } from '@/hooks/useMyTools';
 import { mergeGridOrder, MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 import { resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
+import { FirstRunSheet } from '@/components/dashboard/FirstRunSheet';
 import { DateCardSlot } from '@/components/home/date-card/DateCardSlot';
 import { hasParsableEventAt } from '@/components/home/date-card/eventAt';
 import type { DateCardContext } from '@/components/home/date-card/types';
@@ -178,7 +179,20 @@ export default function HouseHome() {
     isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole), [moduleSet, profile, tenantSlug, canEditMusicLibrary, hiddenNav, previewRole]);
+  // Same gated pool getAppTiles resolves internally (resolveNav(nav), minus
+  // the implicit 'home' entry) — the first-run sheet's ⊕ picker must never
+  // offer an entry this member cannot actually open.
+  const available = useMemo(() => resolveNav(nav).filter((e) => e.key !== 'home'), [nav]);
   const { myTools, loading: layoutLoading, saveTools } = useMyTools(isFaculty ? 'faculty' : 'student');
+  // First-run sheet: shown once, on a brand-new member's very first load of
+  // this page. `firstRunDismissed` is held locally (not derived solely from
+  // myTools.setupComplete) so a Skip/Looks good tap closes the sheet
+  // immediately and it stays closed for the rest of this mount even during
+  // the brief window before the optimistic saveMyTools write is reflected
+  // back in the query cache — without it the sheet could flash open again
+  // before the save round-trips.
+  const [firstRunDismissed, setFirstRunDismissed] = useState(false);
+  const showFirstRun = !firstRunDismissed && !layoutLoading && !roleLoading && myTools?.setupComplete === false;
   // The member's chosen home widgets (My Space, Phase 2) — falls back to
   // the role default pair when unset, so the home never renders zero.
   const shownWidgets = useMemo(
@@ -366,6 +380,13 @@ export default function HouseHome() {
           <HomeTileGrid primary={primary} overflow={overflow} cap={gridCap} onSave={saveGridOrder} />
         )}
       </div>
+
+      <FirstRunSheet
+        open={showFirstRun}
+        onOpenChange={(next) => { if (!next) setFirstRunDismissed(true); }}
+        available={available}
+        role={isFaculty ? 'faculty' : 'student'}
+      />
     </DashboardShell>
   );
 }
