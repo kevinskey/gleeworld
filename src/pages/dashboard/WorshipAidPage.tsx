@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 import {
-  ArrowDown, ArrowLeft, ArrowUp, FileDown, Image as ImageIcon, Link2,
+  AlertTriangle, ArrowDown, ArrowLeft, ArrowUp, FileDown, Image as ImageIcon, Link2,
   Loader2, Plus, Printer, QrCode, RotateCcw, Save, Trash2, X,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +15,8 @@ import {
 } from '@/lib/liturgy/aidEdits';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 import { WorshipAidSheets } from '@/components/liturgy/WorshipAidSheets';
 import { AidStage } from '@/components/liturgy/aid-editor/AidStage';
@@ -66,6 +67,13 @@ export default function WorshipAidPage() {
   const [editPanel, setEditPanel] = useState<PanelId>('insideLeft');
   /** Below `lg` the rail is a drawer; this is its open state. */
   const [railOpen, setRailOpen] = useState(false);
+  // Same 1024px breakpoint as the `lg:` classes elsewhere on this page.
+  // Driving the rail/drawer split from JS, not CSS, means only one
+  // AidControlRail is ever mounted at a time — with two mounted at once
+  // (desktop rail CSS-hidden but still in the DOM, plus an open drawer) the
+  // Cover/Notices fields would carry duplicate ids and the shared file input
+  // could bind to either one.
+  const isMobile = useIsMobile();
   const sheetsRef = useRef<HTMLDivElement>(null);
   const uploadTarget = useRef<PanelId | 'cover'>('cover');
   // Read inside the upload callback so a slider moved mid-upload is not lost.
@@ -356,9 +364,16 @@ export default function WorshipAidPage() {
 
   /**
    * Cover-only controls, shown by the rail under the cover fields when the
-   * Cover panel is selected. Includes the hidden file input, so it must NOT
-   * ride `blockList` — that slot is not rendered on the Cover panel and the
-   * input would never mount, leaving `fileRef` permanently null.
+   * Cover panel is selected. This must NOT ride `blockList` — that slot is
+   * not rendered on the Cover panel, so anything placed there would vanish
+   * on Cover.
+   *
+   * The hidden file input itself is NOT here: `blockList`'s per-panel "Add
+   * image" buttons need it too, and `coverExtras`/`blockList` are mutually
+   * exclusive by construction (the rail renders one or the other, never
+   * both). An input living inside either one would be absent — and its
+   * trigger a silent no-op — whenever the other slot is showing. It is
+   * rendered exactly once, below, as a page-level sibling of both rails.
    */
   const coverUpload = (
     <div className="space-y-3">
@@ -413,18 +428,6 @@ export default function WorshipAidPage() {
           </>
         )}
       </div>
-
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) void upload(f);
-          e.currentTarget.value = '';
-        }}
-      />
     </div>
   );
 
@@ -436,6 +439,11 @@ export default function WorshipAidPage() {
    */
   const blockList = (
     <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        Reorder, insert &amp; adjust spacing below — to change wording, just click the text on
+        the page.
+      </p>
+
       {/* Only the cover art is used every time (Kevin). The other slots are
           often empty, and how much air is left over changes with how many
           hymns and readings a Sunday has — so each panel carries its own
@@ -612,6 +620,22 @@ export default function WorshipAidPage() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col">
+      {/* The one physical file input for both the cover-image upload and
+          every per-panel "Add image" button. It must be mounted exactly
+          once, independent of which panel or which rail (desktop vs.
+          drawer) is currently showing — see the note on `coverUpload`. */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void upload(f);
+          e.currentTarget.value = '';
+        }}
+      />
+
       <div className="flex flex-wrap items-end justify-between gap-3 px-4 py-2 print:hidden sm:px-6">
         <div>
           <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/liturgy/${id}`)} className="mb-1 -ml-2">
@@ -634,18 +658,39 @@ export default function WorshipAidPage() {
         </div>
       </div>
 
-      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(340px,380px)_1fr]">
-        <div className="hidden min-h-0 border-r border-border lg:block">
-          <AidControlRail
-            panel={editPanel}
-            onPanelChange={setEditPanel}
-            settings={settings}
-            onSettingsPatch={patch}
-            blockList={blockList}
-            phoneEdition={phoneEdition}
-            coverExtras={coverUpload}
-          />
+      {/* The document cannot grow past four pages, so anything the flow
+          could not place is reported rather than silently cut at the fold.
+          Page-owned (not the stage's terse sticky badge) so the full
+          explanation is available at every viewport, not just the ones
+          where the badge's tooltip would be discoverable. */}
+      {flow.dropped > 0 && (
+        <div className="flex flex-wrap items-center gap-3 border-y border-destructive/40 bg-destructive/5 px-4 py-2 text-xs print:hidden sm:px-6">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" aria-hidden />
+          <p className="min-w-0 flex-1">
+            <span className="font-semibold text-destructive">
+              {flow.dropped} {flow.dropped === 1 ? 'item does' : 'items do'} not fit.
+            </span>{' '}
+            A worship aid is four pages and cannot grow — about{' '}
+            {(flow.overflowLines * 0.16).toFixed(1)}″ of content has nowhere to go. Remove or
+            shorten something, or reduce the space after an item.
+          </p>
         </div>
+      )}
+
+      <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(340px,380px)_1fr]">
+        {!isMobile && (
+          <div className="min-h-0 border-r border-border">
+            <AidControlRail
+              panel={editPanel}
+              onPanelChange={setEditPanel}
+              settings={settings}
+              onSettingsPatch={patch}
+              blockList={blockList}
+              phoneEdition={phoneEdition}
+              coverExtras={coverUpload}
+            />
+          </div>
+        )}
 
         <AidStage
           focusPanel={editPanel}
@@ -710,17 +755,31 @@ export default function WorshipAidPage() {
           )}
         </Button>
       </div>
-      <Sheet open={railOpen} onOpenChange={setRailOpen}>
+      {/* `open` is also gated on `isMobile`, not just `railOpen`: without
+          that, resizing past `lg` while the drawer happened to be open
+          would leave it mounted alongside the now-visible desktop rail —
+          the exact duplicate-rail condition this split exists to prevent. */}
+      <Sheet open={isMobile && railOpen} onOpenChange={setRailOpen}>
         <SheetContent side="bottom" className="h-[80vh] p-0">
-          <AidControlRail
-            panel={editPanel}
-            onPanelChange={setEditPanel}
-            settings={settings}
-            onSettingsPatch={patch}
-            blockList={blockList}
-            phoneEdition={phoneEdition}
-            coverExtras={coverUpload}
-          />
+          <SheetTitle className="sr-only">Aid controls</SheetTitle>
+          {/* Clears the close button (absolute, top-3 right-3, up to 44px
+              square) so it never sits on top of the panel-switcher row.
+              `h-full` alongside the padding: AidControlRail's own `h-full`
+              (needed for its internal overflow-y-auto to cap at the sheet's
+              height rather than growing past it) resolves against this
+              wrapper, so the wrapper needs a real height of its own, not
+              just top padding. */}
+          <div className="h-full pt-12">
+            <AidControlRail
+              panel={editPanel}
+              onPanelChange={setEditPanel}
+              settings={settings}
+              onSettingsPatch={patch}
+              blockList={blockList}
+              phoneEdition={phoneEdition}
+              coverExtras={coverUpload}
+            />
+          </div>
         </SheetContent>
       </Sheet>
     </div>
