@@ -30,7 +30,7 @@ import { claimPartnerByEmailWithTimeout } from "@/lib/partner/api";
  * Anything else (deep links into protected routes, navigating manually) is
  * left alone — we don't grab people away from where they were going.
  */
-export const useRoleBasedRedirect = () => {
+export const useRoleBasedRedirect = ({ enabled = true }: { enabled?: boolean } = {}) => {
   const { user, loading } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { settings: branding } = useBrandingSettings();
@@ -73,6 +73,10 @@ export const useRoleBasedRedirect = () => {
   }, [user]);
 
   useEffect(() => {
+    // Caller has a standing reason to stay put — currently a tenant's own
+    // branded domain, whose root is public-facing by definition and must
+    // not bounce a signed-in admin to Command Center.
+    if (!enabled) return;
     if (loading) return;
     if (!user) return;
 
@@ -116,7 +120,7 @@ export const useRoleBasedRedirect = () => {
       sessionStorage.removeItem('redirectAfterAuth');
       navigate(dest, { replace: true });
     }
-  }, [user, userProfile, loading, navigate, location.pathname, tenantSlug, partnerId]);
+  }, [enabled, user, userProfile, loading, navigate, location.pathname, tenantSlug, partnerId]);
 
   return { userProfile, loading };
 };
