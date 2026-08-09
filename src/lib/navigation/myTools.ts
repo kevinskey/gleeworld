@@ -15,7 +15,7 @@ import { MERGED_KEYS, resolveKey, resolveKeys } from './mergedKeys';
 // definitions themselves live in mergedKeys.ts now; see that file's header
 // for why (appDestinations.ts needs them too, and importing them from here
 // would have made this module and appDestinations.ts a cycle).
-export { MERGED_KEYS, resolveKey };
+export { MERGED_KEYS, resolveKey, resolveKeys };
 
 /** Matches the shipped keycap cap, so migration never truncates a member's tiles. */
 export const MY_TOOLS_CAP = 8;

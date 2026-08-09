@@ -12,7 +12,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  migrateToMyTools, sanitizeTools, resolveKey, MY_TOOLS_CAP, WIDGETS_CAP, type MyTools,
+  migrateToMyTools, sanitizeTools, resolveKey, resolveKeys, MY_TOOLS_CAP, WIDGETS_CAP, type MyTools,
 } from '@/lib/navigation/myTools';
 
 /** The two user_preferences columns this hook reads, exactly as stored. */
@@ -206,7 +206,20 @@ export function useMyTools(role: 'student' | 'faculty') {
     if (!record) return false;
     const resolved = resolveKey(key);
     if (resolved === 'home') return false;
-    if (record.tools.includes(resolved)) return true;
+    // resolveKeys(record.tools), not the raw record.tools — a bare
+    // `record.tools.includes(resolved)` compares the RESOLVED incoming key
+    // against the RAW stored array. If the record still holds a retired key
+    // (e.g. 'merch') and something calls pinTool('shop'), the raw array
+    // never contains the literal string 'shop', the check misses, and
+    // 'shop' gets appended: the record becomes ['merch', 'shop'] — two
+    // entries resolving to the same destination, burning one of the
+    // member's eight slots. Unreachable through the shipped UI today
+    // (useAllToolsCatalog's `pinned` list already runs through
+    // resolvedTools, so Store Admin isn't offered as pinnable once 'merch'
+    // is stored) but a real latent duplicate, and exactly the kind of gap
+    // that becomes reachable the moment MERGED_KEYS gains a second entry or
+    // another caller appears. Round 2 review, 2026-08-09.
+    if (resolveKeys(record.tools).includes(resolved)) return true;
     if (record.tools.length >= MY_TOOLS_CAP) return false;
     return saveMyTools({ tools: [...record.tools, resolved] });
   }, [readLoadedRecord, saveMyTools]);
