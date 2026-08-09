@@ -22,7 +22,9 @@ describe('scoreEntry', () => {
   });
   it('scores a prefix above a contains', () => {
     const seating = byKey.get('seating-charts')!;
-    expect(scoreEntry(seating, 'seat')).toBeGreaterThan(scoreEntry(seating, 'charts'));
+    // 'seat' is a label prefix (80); 'ting' only occurs mid-word, inside
+    // "Seating" — not a prefix of the label or of either word (40, contains).
+    expect(scoreEntry(seating, 'seat')).toBeGreaterThan(scoreEntry(seating, 'ting'));
   });
   it('matches a later word in the label', () => {
     expect(scoreEntry(byKey.get('seating-charts')!, 'charts')).toBeGreaterThan(0);
@@ -30,6 +32,14 @@ describe('scoreEntry', () => {
   it('matches on the section name', () => {
     // 'finance' lives in the Money section
     expect(scoreEntry(byKey.get('finance')!, 'money')).toBeGreaterThan(0);
+  });
+  it('scores a section-only match on its own, above zero', () => {
+    // 'parents' (label "Parents") lives in the People section. "people"
+    // doesn't match "Parents" by any label rule (not equal, not a prefix of
+    // the label or either word, not contained) — only the section branch
+    // fires. Pinned to the exact section-match score (20) so deleting that
+    // branch (which would drop this to 0) is caught, not just weakened.
+    expect(scoreEntry(byKey.get('parents')!, 'people')).toBe(20);
   });
   it('returns 0 for no match', () => {
     expect(scoreEntry(academy, 'zzzzz')).toBe(0);
@@ -56,15 +66,32 @@ describe('searchNav', () => {
     expect(got.map((e) => e.key)).toEqual(['academy']);
   });
 
-  it('ranks a label prefix above a section-only match', () => {
-    const got = searchNav(pick('finance', 'music-library'), 'mu');
-    expect(got[0].key).toBe('music-library');
+  it('ranks a label match above a section-only match', () => {
+    // 'people' (label "People") matches the query on its label (100).
+    // 'parents' (label "Parents", section People) does not match "people" by
+    // any label rule — it only matches via its section name (20). Both are
+    // real matches for the same query, so this actually compares 100 vs 20
+    // (the original version compared 'finance' against 'mu', but 'finance'
+    // scores 0 for that query — "money" doesn't start with or contain "mu" —
+    // so nothing was really being compared).
+    const got = searchNav(pick('people', 'parents'), 'people');
+    expect(got.map((e) => e.key)).toEqual(['people', 'parents']);
   });
 
-  it('breaks ties by catalog order, deterministically', () => {
-    const a = searchNav(NAV_CATALOG, 'a').map((e) => e.key);
-    const b = searchNav(NAV_CATALOG, 'a').map((e) => e.key);
-    expect(a).toEqual(b);
+  it('breaks ties by catalog order, not alphabetical or reverse', () => {
+    // "st" gives a genuine 3-way tie at score 80 (label starts with "st"):
+    // Studio Hours (index 15), Studio (index 21), Store/shop (index 35).
+    // Catalog order is office-hours < studio < shop. Alphabetical-by-label
+    // order would be Store < Studio < Studio Hours (shop, studio,
+    // office-hours) — the opposite — so this distinguishes the real
+    // index-based tiebreak from either wrong-but-deterministic alternative.
+    const got = searchNav(NAV_CATALOG, 'st').map((e) => e.key);
+    const officeHoursIdx = got.indexOf('office-hours');
+    const studioIdx = got.indexOf('studio');
+    const shopIdx = got.indexOf('shop');
+    expect(officeHoursIdx).toBeGreaterThanOrEqual(0);
+    expect(officeHoursIdx).toBeLessThan(studioIdx);
+    expect(studioIdx).toBeLessThan(shopIdx);
   });
 
   it('never invents an entry that was not passed in', () => {
