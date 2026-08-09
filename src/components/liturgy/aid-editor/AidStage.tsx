@@ -85,6 +85,24 @@ export function AidStage({
 
       <style>{`
         @media screen {
+          /* The focused sheet below is painted with transform: scale(), which
+             (per spec) never changes its layout box — only what is drawn.
+             At scale > 1 that means real, clickable-looking pixels land
+             outside the box overflow-auto thinks it owns. Worse, the
+             transform gives the sheet its own stacking context, and a
+             stacking context with z-index:auto paints ABOVE later,
+             non-positioned in-flow siblings regardless of DOM order — so the
+             overflow rendered on top of WorshipAidPage's mobile drawer
+             trigger and silently ate its clicks (measured with Playwright at
+             834x1112 iPad-portrait width: document.elementFromPoint on the
+             trigger's own rect resolved to a .worship-aid-block from inside
+             the scaled sheet, and a real .click() on the trigger timed out
+             after 30s waiting for actionability). contain: paint forces this
+             scroll container to actually clip everything painted inside it —
+             including transform ink overflow — to its own box, so the scaled
+             sheet can no longer escape it. (Belt and braces: the trigger
+             itself also got relative z-10 in WorshipAidPage.tsx.) */
+          [${AID_VIEW_ATTR}="focus"] { contain: paint; }
           /* Focus: show only the sheet holding the focused panel, only that
              panel within it, and scale the result to the pane.
              Everything here is screen-only — print resets in the sheets'

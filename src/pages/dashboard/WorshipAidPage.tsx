@@ -767,8 +767,18 @@ export default function WorshipAidPage() {
         </AidStage>
       </div>
 
-      {/* Narrow screens: the rail becomes a drawer. */}
-      <div className="border-t border-border p-2 print:hidden lg:hidden">
+      {/* Narrow screens: the rail becomes a drawer.
+          `relative z-10`: AidStage scales the focused panel with a CSS
+          transform, which paints outside its own layout box and — because a
+          transformed element forms a stacking context that paints above
+          later, non-positioned in-flow siblings regardless of DOM order —
+          that overflow rendered on top of this bar and swallowed its clicks
+          (measured with Playwright at 834x1112: elementFromPoint on the
+          trigger resolved to a `.worship-aid-block` inside the sheet, and a
+          real `.click()` timed out). Giving this bar its own stacking
+          context with a positive z-index puts it back above the sheet even
+          if something still paints past AidStage's bounds. */}
+      <div className="relative z-10 border-t border-border p-2 print:hidden lg:hidden">
         <Button variant="outline" className="w-full" onClick={() => setRailOpen(true)}>
           {PANEL_LABEL[editPanel]}
           {/* Either count can be zero while the other is not — content can be
