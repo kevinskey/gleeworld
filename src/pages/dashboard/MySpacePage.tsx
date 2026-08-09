@@ -62,7 +62,15 @@ export default function MySpacePage() {
 
   const isFaculty = isFacultyProfile(profile);
   const role: 'student' | 'faculty' = isFaculty ? 'faculty' : 'student';
-  const { myTools, saveMyTools } = useMyTools(role);
+  const { myTools, loading: toolsLoading, saveMyTools } = useMyTools(role);
+  // Until the record has actually landed, myTools is null and tools/widgets
+  // would read as empty — mounting the editor against that would let a tap
+  // in this window persist an empty/near-empty record over whatever the
+  // member really has stored (useMyTools.saveMyTools fills any omitted
+  // field from the CURRENT myTools, so a widget toggle fired here writes
+  // `tools: []` right over their real 8-tool set). Not ready until loading
+  // is done AND a record actually exists.
+  const ready = !toolsLoading && myTools != null;
   const tools = useMemo(() => myTools?.tools ?? [], [myTools]);
   const widgetOptions = widgetsFor(role);
   const widgets = useMemo(() => resolveWidgets(role, myTools?.widgets ?? []), [role, myTools]);
@@ -97,33 +105,48 @@ export default function MySpacePage() {
         title="My Space"
         subtitle="Choose the tools and widgets you want close at hand."
       >
-        {/* Live preview strip — a small readout of what's currently in the
-            member's space, as keycap-sized glyphs, so the effect of an edit
-            below is visible without navigating away to check the shelf. */}
-        <div data-testid="my-space-preview" className="flex flex-wrap gap-2">
-          {preview.length === 0 ? (
-            <span className="text-sm text-muted-foreground">Nothing chosen yet.</span>
-          ) : (
-            preview.map((entry) => (
-              <span
-                key={entry.key}
-                className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full bg-muted text-xs font-medium"
-              >
-                <entry.icon className="w-3.5 h-3.5 shrink-0" aria-hidden />
-                {entry.label}
-              </span>
-            ))
-          )}
-        </div>
+        {!ready ? (
+          // No editor mounted yet — a null record has nothing safe to save
+          // over it, so no handler exists to (mis)fire while this shows.
+          <div data-testid="my-space-loading" className="space-y-6" aria-live="polite" aria-busy="true">
+            <div className="flex flex-wrap gap-2">
+              <span className="text-sm text-muted-foreground">Loading your space…</span>
+            </div>
+            <div className="h-40 rounded-xl bg-muted animate-pulse" />
+            <div className="h-24 rounded-xl bg-muted animate-pulse" />
+          </div>
+        ) : (
+          <>
+            {/* Live preview strip — a small readout of what's currently in
+                the member's space, as keycap-sized glyphs, so the effect of
+                an edit below is visible without navigating away to check
+                the shelf. */}
+            <div data-testid="my-space-preview" className="flex flex-wrap gap-2">
+              {preview.length === 0 ? (
+                <span className="text-sm text-muted-foreground">Nothing chosen yet.</span>
+              ) : (
+                preview.map((entry) => (
+                  <span
+                    key={entry.key}
+                    className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full bg-muted text-xs font-medium"
+                  >
+                    <entry.icon className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                    {entry.label}
+                  </span>
+                ))
+              )}
+            </div>
 
-        <MySpaceEditor
-          available={available}
-          tools={tools}
-          onToolsChange={handleToolsChange}
-          widgetOptions={widgetOptions}
-          widgets={widgets}
-          onWidgetsChange={handleWidgetsChange}
-        />
+            <MySpaceEditor
+              available={available}
+              tools={tools}
+              onToolsChange={handleToolsChange}
+              widgetOptions={widgetOptions}
+              widgets={widgets}
+              onWidgetsChange={handleWidgetsChange}
+            />
+          </>
+        )}
       </DashboardPageShell>
     </DashboardShell>
   );

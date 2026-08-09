@@ -37,8 +37,11 @@ vi.mock('@/hooks/useEffectivePreviewRole', () => ({
 vi.mock('@/hooks/useTenantNavPrefs', () => ({
   useTenantNavPrefs: () => new Set<string>(),
 }));
+const myToolsResult = vi.hoisted(() => ({
+  current: { myTools: null as { tools: string[]; widgets: string[] } | null, loading: false, saveTools: vi.fn() },
+}));
 vi.mock('@/hooks/useMyTools', () => ({
-  useMyTools: () => ({ myTools: null, loading: false, saveTools: vi.fn() }),
+  useMyTools: () => myToolsResult.current,
 }));
 vi.mock('@/hooks/useBrandingSettings', () => ({
   useBrandingSettings: () => ({
@@ -101,6 +104,7 @@ afterEach(() => {
   brandingOrgName.current = null;
   capturedCtx.current = null;
   myFeesResult.current = { totalOwed: 0, unpaid: [], paid: [], plans: [], loading: false, refetch: vi.fn() };
+  myToolsResult.current = { myTools: null, loading: false, saveTools: vi.fn() };
 });
 
 function renderHouseHome() {
@@ -172,5 +176,38 @@ describe('HouseHome YouOweCard integration', () => {
     myFeesResult.current = { totalOwed: 50, unpaid: [], paid: [], plans: [], loading: true, refetch: vi.fn() };
     renderHouseHome();
     expect(screen.queryByText('You owe')).not.toBeInTheDocument();
+  });
+});
+
+describe('HouseHome member-chosen widgets (My Space, Phase 2)', () => {
+  // Profile mocked above is a non-admin, non-faculty role ('student'
+  // widgets: 'today' and 'practice-ledger').
+  it('renders only the widget the member chose', () => {
+    myToolsResult.current = {
+      myTools: { tools: [], widgets: ['practice-ledger'] },
+      loading: false,
+      saveTools: vi.fn(),
+    };
+    renderHouseHome();
+    expect(screen.getByText('Practice this week')).toBeInTheDocument();
+    expect(screen.queryByText('Today')).not.toBeInTheDocument();
+  });
+
+  it('falls back to both role-default widgets when nothing is stored', () => {
+    myToolsResult.current = { myTools: null, loading: false, saveTools: vi.fn() };
+    renderHouseHome();
+    expect(screen.getByText('Practice this week')).toBeInTheDocument();
+    expect(screen.getByText('Today')).toBeInTheDocument();
+  });
+
+  it('renders neither widget while the record is still loading (Minor 4: same gate as the keycap grid)', () => {
+    myToolsResult.current = {
+      myTools: { tools: [], widgets: ['practice-ledger'] },
+      loading: true,
+      saveTools: vi.fn(),
+    };
+    renderHouseHome();
+    expect(screen.queryByText('Practice this week')).not.toBeInTheDocument();
+    expect(screen.queryByText('Today')).not.toBeInTheDocument();
   });
 });
