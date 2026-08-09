@@ -86,15 +86,21 @@ import { AssistantSheet } from '@/components/assistant/AssistantSheet';
 import { TrialBanner } from '@/components/dashboard/TrialBanner';
 import { PermissionSlipBell } from '@/components/dashboard/PermissionSlipBell';
 import {
-  resolveNav, entrySurfaces, NAV_SECTION_LABELS,
-  type CatalogEntry, type NavContext, type NavSectionKey,
+  resolveNav,
+  type CatalogEntry, type NavContext,
 } from '@/lib/navigation/navCatalog';
 import { NavShelf } from './NavShelf';
+import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
 import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS } from '@/lib/navigation/myTools';
 
-const SECTION_ORDER: NavSectionKey[] = ['today', 'church', 'music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
+// The fixed module-gate key list a `module: 'x'` catalog gate checks
+// against. One definition shared by Sidebar, MobileNav, and the All Tools
+// sheet's own catalog hook below, so the three call sites can't drift out
+// of sync with which modules exist. (Cost us All-State on first deploy,
+// once, when a gated nav entry was added without adding its key here.)
+const MODULE_KEYS = ['sight_reading', 'box_office', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner', 'all_state'] as const;
 
 // The platform ('main') tenant ships no branding.logo_url of its own, so
 // BrandLogo fell back to the monogram there. Use the GleeWorld platform logo
@@ -108,21 +114,56 @@ function platformLogoFor(brandingLogoUrl?: string | null): string | undefined {
   return getTenantSlug() === 'main' ? GLEE_PLATFORM_LOGO : undefined;
 }
 
-// Groups resolved sidebar-surface entries into the render shape both nav
-// columns use. Sections with zero visible entries drop out (unchanged
-// behavior). label:'Today' historically rendered with its section label
-// like every other section.
+// The gated catalog + stored My Tools record behind the All Tools sheet.
+// Sidebar and MobileNav each derive their own navCtx/resolvedEntries/
+// myTools independently (see the matching blocks below) because
+// DashboardShell.shelf.test.tsx renders each of them standalone against
+// mocked hooks — so this is a third, equally independent call site, not a
+// shared prop threaded down from a single computation. Same MODULE_KEYS
+// list as both, so the sheet can never gate a module differently than the
+// shelf that opens it.
 //
-// No user ordering or per-item section overrides: the shelf carries the
-// member's arrangement now, and this list is only the All Tools disclosure
-// behind it — always catalog order, always the catalog's own sections. (The
-// userOrder/sectionOverrides parameters this used to take were passed by
-// nobody after the shelf landed.)
-function buildNavSections(ctx: NavContext): Array<{ key: string; label: string; items: CatalogEntry[] }> {
-  const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
-  return SECTION_ORDER
-    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s as NavSectionKey], items: resolved.filter((e) => e.section === s) }))
-    .filter((s) => s.items.length > 0);
+// `pinned` and `onPin` read/write `myTools.tools` — the RAW STORED array —
+// never `resolveNav`'s gated output and never NavShelf's MY_TOOLS_CAP-
+// capped render of it. A stored key survives even when its gate is closed
+// (selectShelfEntries drops it from the RENDER, not the record, precisely
+// so re-enabling the module restores it — see myTools.ts). Deriving
+// `pinned`/appending in `onPin` from the rendered/capped list instead would
+// silently amputate every such key the next time saveMyTools rewrites the
+// record whole.
+function useAllToolsCatalog(): {
+  available: CatalogEntry[];
+  pinned: string[];
+  onPin: (key: string) => Promise<boolean>;
+} {
+  const { profile, canEditMusicLibrary } = useUserRole();
+  const userCanLibrarian = typeof canEditMusicLibrary === 'function'
+    ? canEditMusicLibrary()
+    : !!(profile?.is_admin || profile?.is_super_admin);
+  const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
+  const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
+  const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
+  const moduleAccess: Record<string, boolean> = {};
+  for (const key of MODULE_KEYS) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
+    moduleAccess[key] = useModuleAccess(key).hasAccess;
+  }
+  const hiddenNav = useTenantNavPrefs();
+  const previewRole = useEffectivePreviewRole();
+  const navCtx: NavContext = applyPreviewRole({
+    hasModule: (k) => k === 'academy' || !!moduleAccess[k],
+    isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    isPartner: !!profile?.is_partner,
+    hiddenRoutes: hiddenNav,
+  }, previewRole);
+  const isFaculty = isFacultyProfile(profile);
+  const { myTools, saveMyTools } = useMyTools(isFaculty ? 'faculty' : 'student');
+  const available = resolveNav(navCtx);
+  const pinned = myTools?.tools ?? [];
+
+  const onPin = async (key: string): Promise<boolean> => saveMyTools({ tools: [...pinned, key] });
+
+  return { available, pinned, onPin };
 }
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
@@ -197,7 +238,12 @@ const iconTextOnly = (tone: string) =>
 // as BrandLogo's export above — standing up the full DashboardShell (auth,
 // routing, branding, tenant prefs, module access, ×2 for MobileNav) to
 // reach one `if (!homeEntry) return null` guard would be disproportionate.
-export function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
+// onOpenAllTools is optional here (rather than required, as NavShelf itself
+// requires it) purely so DashboardShell.shelf.test.tsx — which renders
+// <Sidebar /> standalone to cover the I2/roleLoading regressions and has no
+// reason to exercise the sheet — keeps compiling unchanged; production
+// always supplies it from DashboardShell below.
+export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => void; onOpenAllTools?: () => void }) {
   const { settings: branding } = useBrandingSettings();
   // Prefer the short_name for sidebar chrome — most org_names overflow
   // the 256px column. Falls back to org_name then the platform/tenant
@@ -226,7 +272,6 @@ export function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   // hasModule() below reads this map, not the full tenant module set. Adding a
   // gated nav entry without adding its key here silently hides it, with no
   // error anywhere. (Cost us All-State on first deploy.)
-  const MODULE_KEYS = ['sight_reading', 'box_office', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner', 'all_state'] as const;
   // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
   const moduleAccess: Record<string, boolean> = {};
   for (const key of MODULE_KEYS) {
@@ -236,14 +281,6 @@ export function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const hiddenNav = useTenantNavPrefs();
   const previewRole = useEffectivePreviewRole();
 
-  // Verb-grouped nav (Today / Music / Teach / Make / Plan / Reach /
-  // Money / People / Admin), built from the shared nav catalog so this
-  // sidebar and the mobile drawer can never drift out of sync. Sections
-  // describe what the user is *doing*, not what kind of object the
-  // feature is — so Studio + Video sit together as creation tools,
-  // Concert Planner + Tour Manager + Auditions sit together as
-  // scheduling tools, and so on. Empty sections (no module access)
-  // collapse out of the column.
   // applyPreviewRole narrows the capability flags when a super-admin is
   // previewing — without it the gates read the real profile and admin-only
   // entries (Users, Settings, Tenants) leak into every previewed role.
@@ -253,20 +290,17 @@ export function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
     isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole);
-  // Sections are no longer the shelf — they populate the All Tools
-  // disclosure only. Passing no user order keeps them in catalog order.
-  const sections = buildNavSections(navCtx);
   // isFacultyProfile is the single definition (src/lib/roles.ts) — an inline
   // admin||super||instructor check here missed teacher/conductor/director, so a
   // director got the faculty grid on HouseHome and the STUDENT shelf here.
   const isFaculty = isFacultyProfile(profile);
   const { myTools } = useMyTools(isFaculty ? 'faculty' : 'student');
-  // Shelf pool is the full gated set from resolveNav, NOT `sections` —
-  // buildNavSections filters to entries whose surfaces include 'sidebar',
-  // which drops grid-only catalog entries (merch, tickets, attendance). A
-  // member migrating from home_tile_layout can legitimately have those
-  // keys in their My Tools set, and deriving the shelf from `sections`
-  // would silently drop them from the shelf they were told they'd see.
+  // Shelf pool is the full gated set from resolveNav — the All Tools sheet
+  // (rendered once at DashboardShell level) is the full catalog now, not a
+  // sidebar-only subset, so there is no narrower "sections" list to derive
+  // the shelf from any more. A member migrating from home_tile_layout can
+  // legitimately have grid-only keys (merch, tickets, attendance) in their
+  // My Tools set; resolveNav's unfiltered output keeps those reachable.
   const resolvedEntries = resolveNav(navCtx);
   // 'home' has no gate, but hiddenRoutes could still remove it (Workspace
   // Settings → Navigation). NavShelf's `home` prop is optional for exactly
@@ -366,15 +400,21 @@ export function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
         )}
       </div>
 
-      {/* Nav — Home + the member's My Tools shelf (My Space, Phase 1),
-          with every remaining destination tucked behind the All Tools
-          disclosure. No collapsible sections, no drag reorder here —
-          arranging the shelf is a deliberate action on /dashboard/my-space,
-          not a gesture performed on the live nav. Extra top padding
-          (pt-4 sm:pt-5) gives the first item air below the brand block
-          instead of glueing flush against the divider. */}
+      {/* Nav — Home + the member's My Tools shelf (My Space, Phase 1), with
+          every remaining destination reachable through the All Tools sheet
+          (Phase 3) rather than an in-shelf disclosure. No collapsible
+          sections, no drag reorder here — arranging the shelf is a
+          deliberate action on /dashboard/my-space, not a gesture performed
+          on the live nav. Extra top padding (pt-4 sm:pt-5) gives the first
+          item air below the brand block instead of glueing flush against
+          the divider. */}
       <nav className="flex-1 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2">
-        <NavShelf home={homeEntry} tools={shelfTools} sections={sections} variant="desktop" />
+        <NavShelf
+          home={homeEntry}
+          tools={shelfTools}
+          onOpenAllTools={onOpenAllTools ?? (() => {})}
+          variant="desktop"
+        />
       </nav>
 
       {/* Tenant pill — compact one-row footer. The brand + name are
@@ -400,8 +440,10 @@ export function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
 // with everything else behind All Tools. Hides automatically when the user
 // picks a link (onNavigate closes the Sheet).
 //
-// Exported for its own test — same rationale as Sidebar above.
-export function MobileNav({ onNavigate }: { onNavigate: () => void }) {
+// Exported for its own test — same rationale as Sidebar above. onOpenAllTools
+// is optional for the same reason it is on Sidebar: DashboardShell.shelf.
+// test.tsx renders <MobileNav onNavigate={...} /> without it.
+export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => void; onOpenAllTools?: () => void }) {
   const { settings: branding } = useBrandingSettings();
   const tenantName = branding?.short_name || branding?.org_name || getOrgName();
   const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
@@ -413,7 +455,6 @@ export function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   // hasModule() below reads this map, not the full tenant module set. Adding a
   // gated nav entry without adding its key here silently hides it, with no
   // error anywhere. (Cost us All-State on first deploy.)
-  const MODULE_KEYS = ['sight_reading', 'box_office', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner', 'all_state'] as const;
   // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
   const moduleAccess: Record<string, boolean> = {};
   for (const key of MODULE_KEYS) {
@@ -423,10 +464,6 @@ export function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const hiddenNav = useTenantNavPrefs();
   const previewRole = useEffectivePreviewRole();
 
-  // Verb-grouped to match the desktop sidebar (Today / Music / Teach /
-  // Make / Plan / Reach / Money / People / Admin), built from the same
-  // shared nav catalog. Empty sections drop out so a tenant without
-  // box-office or finance modules doesn't see an empty "Money" header.
   // Preview narrowing applied identically to the desktop sidebar.
   const navCtx: NavContext = applyPreviewRole({
     hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
@@ -434,16 +471,13 @@ export function MobileNav({ onNavigate }: { onNavigate: () => void }) {
     isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole);
-  // Sections are no longer the shelf — they populate the All Tools
-  // disclosure only. Passing no user order keeps them in catalog order.
-  const sections = buildNavSections(navCtx);
   // isFacultyProfile is the single definition (src/lib/roles.ts) — an inline
   // admin||super||instructor check here missed teacher/conductor/director, so a
   // director got the faculty grid on HouseHome and the STUDENT shelf here.
   const isFaculty = isFacultyProfile(profile);
   const { myTools } = useMyTools(isFaculty ? 'faculty' : 'student');
-  // Shelf pool is the full gated set from resolveNav, NOT `sections` — see
-  // the matching comment in Sidebar above for why.
+  // Shelf pool is the full gated set from resolveNav — see the matching
+  // comment in Sidebar above for why.
   const resolvedEntries = resolveNav(navCtx);
   // 'home' has no gate, but hiddenRoutes could still remove it. NavShelf's
   // `home` prop is optional for exactly this case — see Sidebar above.
@@ -472,7 +506,7 @@ export function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
-          sections={sections}
+          onOpenAllTools={onOpenAllTools ?? (() => {})}
           variant="mobile"
           onNavigate={onNavigate}
         />
@@ -549,7 +583,7 @@ function ViewsSwitcher() {
   );
 }
 
-function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean; onExpandNav?: () => void }) {
+function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navCollapsed?: boolean; onExpandNav?: () => void; onOpenAllTools: () => void }) {
   const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { toggleMessenger } = useMessenger();
@@ -637,7 +671,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           </button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-[85vw] max-w-xs">
-          <MobileNav onNavigate={() => setMobileNavOpen(false)} />
+          <MobileNav onNavigate={() => setMobileNavOpen(false)} onOpenAllTools={onOpenAllTools} />
         </SheetContent>
       </Sheet>
 
@@ -913,7 +947,6 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const alreadyInsideShell = useContext(DashboardShellNestedContext);
-  if (alreadyInsideShell) return <>{children}</>;
   // Calendar keeps its compact header spacing but shows the nav like every
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
@@ -928,6 +961,41 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     setNavCollapsed(v);
     try { localStorage.setItem('gw_sidebar_collapsed', v ? '1' : '0'); } catch { /* private mode */ }
   };
+
+  // All Tools sheet — owned here, not by either nav surface, so a phone
+  // (Sidebar hidden, MobileNav inside a Sheet drawer) never ends up with
+  // two independent sheets fighting over open state. Both NavShelf
+  // instances below call the same `openAllTools`.
+  const [allToolsOpen, setAllToolsOpen] = useState(false);
+  const openAllTools = () => setAllToolsOpen(true);
+  const { available: allToolsAvailable, pinned: allToolsPinned, onPin: allToolsOnPin } = useAllToolsCatalog();
+
+  // Global ⌘K / Ctrl+K — registered once here (not once per nav surface),
+  // removed on unmount. Reads document.activeElement rather than the
+  // event's own target: a window-level keydown listener sees `target` as
+  // whatever dispatched the event, which for a real keypress while focused
+  // in a text field IS that field, but tests dispatch on `window` directly
+  // (see DashboardShell.allTools.test.tsx) — activeElement is the only
+  // signal that works both ways. Must not hijack typing in the messenger
+  // or the score search, hence the input/textarea/contenteditable guard.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key.toLowerCase() !== 'k' || !(e.metaKey || e.ctrlKey)) return;
+      const active = document.activeElement as HTMLElement | null;
+      const tag = active?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || active?.isContentEditable) return;
+      e.preventDefault();
+      setAllToolsOpen(true);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // Guards the RENDER, not the hooks above: every hook in this component
+  // must run on every render regardless of nesting (rules-of-hooks), so
+  // this early-out has to come after all of them, not before.
+  if (alreadyInsideShell) return <>{children}</>;
+
   return (
     <DashboardShellNestedContext.Provider value={true}>
     <AssistantProvider>
@@ -936,12 +1004,12 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           instead of pushing the whole document (which used to drag the
           sidebar off-screen with it). */}
       <div className="flex h-[100dvh] w-full bg-background overflow-hidden">
-        {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} />}
+        {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} onOpenAllTools={openAllTools} />}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Trial countdown — self-gates on trial state so it renders null
               for grandfathered / paid / loading / no-tenant. */}
           <TrialBanner />
-          <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} />
+          <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} onOpenAllTools={openAllTools} />
           {/* pt-3 gives every page a small breath of space below the
               sticky topbar — pages that want more (CommandCenter, Viewer
               landing) add their own larger top padding on top of this.
@@ -970,6 +1038,17 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <AssistantFab />
         <AssistantMiniPlayer />
         <AssistantSheet />
+        {/* All Tools — the one searchable catalog behind both nav surfaces'
+            "All Tools" row and global ⌘K/Ctrl+K. Rendered exactly once so a
+            phone user (Sidebar hidden, MobileNav in its own drawer) never
+            gets two independent sheets. */}
+        <AllToolsSheet
+          open={allToolsOpen}
+          onOpenChange={setAllToolsOpen}
+          available={allToolsAvailable}
+          pinned={allToolsPinned}
+          onPin={allToolsOnPin}
+        />
       </div>
     </AssistantProvider>
     </DashboardShellNestedContext.Provider>

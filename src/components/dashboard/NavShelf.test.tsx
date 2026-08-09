@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -9,15 +9,11 @@ import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
 const byKey = new Map(NAV_CATALOG.map((e) => [e.key, e]));
 const home = byKey.get('home')!;
 const tools = ['calendar', 'music-library', 'academy'].map((k) => byKey.get(k)!);
-const sections = [
-  { key: 'money', label: 'Money', items: [byKey.get('finance')!] },
-  { key: 'admin', label: 'Admin', items: [byKey.get('settings')!] },
-];
 
 const renderShelf = (props: Partial<NavShelfProps> = {}) =>
   render(
     <MemoryRouter>
-      <NavShelf home={home} tools={tools} sections={sections} variant="desktop" {...props} />
+      <NavShelf home={home} tools={tools} onOpenAllTools={vi.fn()} variant="desktop" {...props} />
     </MemoryRouter>,
   );
 
@@ -35,12 +31,13 @@ describe('NavShelf', () => {
     expect(within(shelf).queryByText('Money')).toBeNull();
   });
 
-  it('hides every non-shelf destination until All Tools is opened', () => {
-    renderShelf();
-    expect(screen.queryByText('Finance')).toBeNull();
+  it('opens All Tools instead of expanding sections', () => {
+    const onOpenAllTools = vi.fn();
+    renderShelf({ onOpenAllTools });
     fireEvent.click(screen.getByRole('button', { name: /all tools/i }));
-    expect(screen.getByText('Finance')).toBeInTheDocument();
-    expect(screen.getByText('Money')).toBeInTheDocument();
+    expect(onOpenAllTools).toHaveBeenCalled();
+    // no section headers anywhere in the shelf now
+    expect(screen.queryByText('Money')).toBeNull();
   });
 
   it('caps the shelf at Home + 8 tools even if handed more', () => {
@@ -53,15 +50,16 @@ describe('NavShelf', () => {
   it('degrades to no Home row when home is absent, tools and All Tools still render', () => {
     // I2: 'home' can be hidden via Workspace Settings → Navigation. NavShelf
     // must not blank the whole nav for that — the shelf renders every other
-    // tool, and the All Tools disclosure still opens.
-    renderShelf({ home: undefined });
+    // tool, and the All Tools row still opens the sheet.
+    const onOpenAllTools = vi.fn();
+    renderShelf({ home: undefined, onOpenAllTools });
     const shelf = screen.getByTestId('nav-shelf-tools');
     const labels = within(shelf).getAllByRole('link').map((a) => a.textContent);
     expect(labels).toEqual(['Calendar', 'Music Library', 'Academy']);
     expect(within(shelf).queryByText('Command Center')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: /all tools/i }));
-    expect(screen.getByText('Finance')).toBeInTheDocument();
+    expect(onOpenAllTools).toHaveBeenCalled();
   });
 
   it('renders no drag affordance — reordering is not a shelf gesture', () => {
@@ -89,13 +87,12 @@ describe('NavShelf', () => {
     expect(link).toHaveAttribute('href', '/dashboard/my-space');
   });
 
-  it('places Setup after the whole All Tools disclosure block, not wedged between the toggle and what it discloses', () => {
+  it('places Setup after the All Tools row, not before it', () => {
     const { container } = renderShelf();
-    fireEvent.click(screen.getByRole('button', { name: /all tools/i }));
     const order = Array.from(container.querySelectorAll('a, button')).map((el) => el.textContent);
-    const financeIdx = order.indexOf('Finance');
+    const allToolsIdx = order.indexOf('All Tools');
     const setupIdx = order.indexOf('Setup');
-    expect(financeIdx).toBeGreaterThan(-1);
-    expect(setupIdx).toBeGreaterThan(financeIdx);
+    expect(allToolsIdx).toBeGreaterThan(-1);
+    expect(setupIdx).toBeGreaterThan(allToolsIdx);
   });
 });
