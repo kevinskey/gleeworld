@@ -24,7 +24,7 @@ import { applyPreviewRole, previewRoleIsFaculty, resolveNav, type NavContext } f
 import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useMyTools } from '@/hooks/useMyTools';
-import { mergeGridOrder, MY_TOOLS_CAP } from '@/lib/navigation/myTools';
+import { mergeGridOrder, MY_TOOLS_CAP, resolvedTools } from '@/lib/navigation/myTools';
 import { resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
 import { FirstRunSheet } from '@/components/dashboard/FirstRunSheet';
@@ -220,7 +220,15 @@ export default function HouseHome() {
     () => new Set([...primary, ...overflow].map((t) => t.key)),
     [primary, overflow],
   );
-  const storedTools = useMemo(() => myTools?.tools ?? [], [myTools]);
+  // resolvedTools (not the raw myTools?.tools ?? []) so a stored merged key
+  // (e.g. the retired 'merch') matches `representable` by its resolved name
+  // ('shop') below — representable is built from getAppTiles/primary+overflow,
+  // which resolves internally. Comparing a raw stored key against a resolved
+  // representable set undercounted gridCap and made mergeGridOrder treat the
+  // stored key as un-representable, carrying it through unresolved instead
+  // of recognizing it already had a keycap under its new name (Phase 5
+  // review, 2026-08-09).
+  const storedTools = useMemo(() => resolvedTools(myTools), [myTools]);
   // Room left for keycaps once the un-representable stored keys have taken
   // their share of MY_TOOLS_CAP. Without this the merged record could exceed
   // the cap and sanitizeTools would silently truncate the tail — the same

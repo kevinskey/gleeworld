@@ -8,6 +8,14 @@
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §6
 import { parseTileLayout } from './appDestinations';
 import type { CatalogEntry } from './navCatalog';
+import { MERGED_KEYS, resolveKey, resolveKeys } from './mergedKeys';
+
+// Re-exported for backward compatibility — every existing import site
+// (useMyTools.ts, this file's own tests) reads these from here. The
+// definitions themselves live in mergedKeys.ts now; see that file's header
+// for why (appDestinations.ts needs them too, and importing them from here
+// would have made this module and appDestinations.ts a cycle).
+export { MERGED_KEYS, resolveKey };
 
 /** Matches the shipped keycap cap, so migration never truncates a member's tiles. */
 export const MY_TOOLS_CAP = 8;
@@ -23,37 +31,6 @@ export interface MyTools {
   widgets: string[];
   /** true once the member has a deliberate layout (or has seen first-run) */
   setupComplete: boolean;
-}
-
-// Retired catalog keys → their surviving successor. The resolver exists
-// from day one so that when entries merge, no stored layout has to be
-// rewritten — resolution happens on read. NEVER rename a key; add it here
-// instead.
-// 'merch' retired 2026-08-09: it and 'shop' both pointed at the same
-// ProductManagement component (Phase 5 catalog recut, §4) — 'shop's
-// moduleAny: ['merch', 'store'] gate already covers everything 'merch'
-// gated on, so no tenant loses access.
-export const MERGED_KEYS: Record<string, string> = {
-  merch: 'shop',
-};
-
-/**
- * Follow `map` until the key is unmapped. Cycle-safe: before following a
- * hop, checks whether the destination has already been visited in this
- * walk; if so, stops and returns the current key rather than re-entering
- * the cycle. A hand-edited or mistakenly circular map degrades to a
- * stale-but-finite answer instead of hanging the render.
- */
-export function resolveKey(key: string, map: Record<string, string> = MERGED_KEYS): string {
-  const seen = new Set<string>([key]);
-  let k = key;
-  while (map[k] !== undefined) {
-    const next = map[k];
-    if (seen.has(next)) return k;
-    seen.add(next);
-    k = next;
-  }
-  return k;
 }
 
 // Frozen day-one shelves. Changing either list changes what every new member
@@ -205,7 +182,37 @@ export function mergeGridOrder(
  */
 export function selectShelfEntries(resolved: CatalogEntry[], tools: string[]): CatalogEntry[] {
   const byKey = new Map(resolved.map((e) => [e.key, e]));
-  return tools
-    .map((k) => byKey.get(resolveKey(k)))
+  // resolveKeys (resolve + dedupe), not a bare per-element resolveKey: a
+  // record saved before 'merch' merged into 'shop' can legitimately hold
+  // BOTH keys (they were separate pinnable entries until 2026-08-09), and
+  // without the dedupe step they'd resolve to the same entry and render
+  // twice.
+  return resolveKeys(tools)
+    .map((k) => byKey.get(k))
     .filter((e): e is CatalogEntry => e !== undefined);
+}
+
+/**
+ * The member's stored tool keys, ready to consume anywhere: resolved
+ * through MERGED_KEYS, deduped, capped — `sanitizeTools` made a first-class
+ * read helper.
+ *
+ * Every call site that reads `myTools.tools` should go through this rather
+ * than the raw field. `migrateToMyTools` deliberately returns an existing
+ * v4 record's `tools` UNTOUCHED (see its own comment — that "untouched" is
+ * about not silently truncating or reordering a member's real record, not
+ * about skipping key resolution), so a stored key that has since been
+ * retired into MERGED_KEYS reaches every consumer of `myTools.tools` raw.
+ *
+ * `selectShelfEntries` already resolves internally (calling it here first
+ * is a harmless no-op redundancy, not a conflict), which is exactly why the
+ * bug this fixes was invisible on the sidebar shelf and only showed up on
+ * the home keycap grid, the "already pinned" check in the All Tools sheet,
+ * and the My Space editor's chosen-tools list — three consumers that read
+ * `myTools.tools` directly instead of going through selectShelfEntries.
+ * Route ALL of them through here so "did I remember to resolve" can't
+ * become a per-call-site question again.
+ */
+export function resolvedTools(myTools: Pick<MyTools, 'tools'> | null | undefined): string[] {
+  return sanitizeTools(myTools?.tools ?? []);
 }

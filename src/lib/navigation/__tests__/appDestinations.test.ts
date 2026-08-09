@@ -230,6 +230,21 @@ describe('getAppTiles with a custom tools list', () => {
     const allCustom = [...primary, ...overflow].map((t) => t.key).sort();
     expect(allCustom).toEqual(allDefault);
   });
+  // Review round 1, Important 1: this branch did a bare `byKey.get(k)` with
+  // no resolveKey call, so a stored ['merch'] resolved on the sidebar shelf
+  // (selectShelfEntries calls resolveKey itself) but yielded `primary: []`
+  // here — an admin who had the Merch keycap lost it from their home grid
+  // even though the shelf still showed "Store Admin". Verified before the
+  // fix; see myTools.test.ts's resolvedTools tests for the same guard on
+  // the other consumers (AllToolsSheet's pinned check, MySpacePage editor).
+  it('resolves a merged key on the My Tools (grid) path — the bug this fix closes', () => {
+    const { primary } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }), ['merch']);
+    expect(primary.map((t) => t.key)).toEqual(['shop']);
+  });
+  it('a merged key and its own successor in the same stored list collapse to one tile, not two', () => {
+    const { primary } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }), ['merch', 'shop', 'finance']);
+    expect(primary.map((t) => t.key)).toEqual(['shop', 'finance']);
+  });
   it('silently drops stale keys (disabled module) without losing the rest', () => {
     const { primary } = getAppTiles('faculty', { ...allOn, hasBoxOffice: false }, navFor({ ...allOn, hasBoxOffice: false }), ['tickets', 'finance']);
     expect(primary.map((t) => t.key)).toEqual(['finance']);
@@ -282,26 +297,32 @@ describe('getAppTiles catalog parity', () => {
     // Faculty tabs claim /dashboard/viewer (Music); student tabs claim
     // /dashboard/viewer AND /studio — so those keys dedupe out of the grid.
     // With Part Tracks removed, the grid now has more room (8 max, not 8 with tracks).
-    // 'merch' (Phase 5, 2026-08-09) merged into 'shop' and dropped out of the
-    // catalog — DEFAULT_GRID_ORDER's trailing 'merch' slot resolves to
-    // nothing now (byKey.get returns undefined and is filtered, same as any
-    // other stale key — see getAppTiles's "stale keys drop silently"
-    // comment) and 'shop' isn't itself in DEFAULT_GRID_ORDER, so the grid is
-    // simply one slot shorter here. 'shop' is also adminOnly now and this
-    // context (navFor's default) is a non-admin, so it wouldn't resolve
-    // even if it were listed.
+    // 'merch' (Phase 5, 2026-08-09) merged into 'shop' — DEFAULT_GRID_ORDER's
+    // trailing slot was deliberately updated to 'shop' (see that const's own
+    // comment) so a fresh ADMIN member still gets it on day one. It's still
+    // absent from primary here because 'shop' is now adminOnly and this
+    // context (navFor's default) is a non-admin — see the isTenantAdmin:
+    // true variant of this exact check below.
     expect(getAppTiles('faculty', allOn, navFor(allOn)).primary.map((t) => t.key))
       .toEqual(['studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance']);
     expect(getAppTiles('student', allOn, navFor(allOn)).primary.map((t) => t.key))
       .toEqual(['sight', 'attendance', 'academy', 'tickets', 'planner', 'finance']);
   });
-  it('DEFAULT_GRID_ORDER is the frozen 9-key list', () => {
-    expect(DEFAULT_GRID_ORDER).toEqual(['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
+  it('DEFAULT_GRID_ORDER is the frozen 9-key list — merch -> shop as of 2026-08-09', () => {
+    expect(DEFAULT_GRID_ORDER).toEqual(['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'shop']);
+  });
+  it('an admin DOES get Store Admin in the default day-one grid (no stored record)', () => {
+    const { primary } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }));
+    expect(primary.map((t) => t.key)).toContain('shop');
   });
   it('sidebar-parity destinations land in overflow, never default primary', () => {
     const { primary, overflow } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }));
     const overflowKeys = overflow.map((t) => t.key);
-    for (const key of ['music-library', 'media-library', 'office-hours', 'video', 'music-tools', 'people', 'analytics', 'settings', 'shop', 'box-office', 'practice', 'fan-page', 'site-setup']) {
+    // 'shop' deliberately excluded from this list: it IS in DEFAULT_GRID_ORDER
+    // now (as of the merch -> shop swap above), so for an admin context it
+    // belongs in primary, not overflow — see the "an admin DOES get Store
+    // Admin" test just above this one.
+    for (const key of ['music-library', 'media-library', 'office-hours', 'video', 'music-tools', 'people', 'analytics', 'settings', 'box-office', 'practice', 'fan-page', 'site-setup']) {
       expect(overflowKeys, key).toContain(key);
       expect(primary.map((t) => t.key)).not.toContain(key);
     }

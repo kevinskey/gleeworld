@@ -9,7 +9,7 @@
 // /product-management) got the full store admin surface. This test proves
 // the page's own self-gate, independent of the nav catalog's adminOnly
 // flag (src/lib/navigation/__tests__/navCatalog.test.ts covers that half).
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter } from 'react-router-dom';
@@ -50,9 +50,22 @@ const renderPage = () => {
 };
 
 describe('ProductManagement self-gate', () => {
-  it('a non-admin (module enabled, not loading) sees the no-access state, not the store managers', () => {
-    h.isAdmin.mockReturnValue(false);
+  // Round 1 review, minor: `h.roleLoading = false` used to be reset in the
+  // BODY of the "does not flash" test, below its assertions — a failing
+  // assertion there would throw before the reset ran and leak `true` into
+  // whichever test happened to run next. Reset every mutable field for
+  // every test instead, win or lose.
+  beforeEach(() => {
+    h.isAdmin.mockReset().mockReturnValue(false);
+    h.roleLoading = false;
     h.hasStore = true;
+    h.moduleLoading = false;
+  });
+  afterEach(() => {
+    h.roleLoading = false;
+  });
+
+  it('a non-admin (module enabled, not loading) sees the no-access state, not the store managers', () => {
     renderPage();
     expect(screen.getByText('Access Denied')).toBeInTheDocument();
     expect(screen.queryByText('Merch Store Management')).not.toBeInTheDocument();
@@ -64,19 +77,15 @@ describe('ProductManagement self-gate', () => {
 
   it('an admin (module enabled) reaches the real store managers', () => {
     h.isAdmin.mockReturnValue(true);
-    h.hasStore = true;
     renderPage();
     expect(screen.queryByText('Access Denied')).not.toBeInTheDocument();
     expect(screen.getByText('Merch Store Management')).toBeInTheDocument();
   });
 
   it('does not flash the managers before the role check resolves', () => {
-    h.isAdmin.mockReturnValue(false);
     h.roleLoading = true;
-    h.hasStore = true;
     renderPage();
     expect(screen.queryByText('Merch Store Management')).not.toBeInTheDocument();
     expect(screen.queryByText('Access Denied')).not.toBeInTheDocument();
-    h.roleLoading = false;
   });
 });

@@ -38,6 +38,7 @@ import { isNativeCalendarAvailable } from "@/plugins/gwCalendar";
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { ControlCenterRedirect } from "@/components/routing/ControlCenterRedirect";
 import { ScrollToTop } from "@/components/routing/ScrollToTop";
+import { RedirectPreservingQuery } from "@/components/routing/RedirectPreservingQuery";
 
 // Heavy dashboard-only globals — gated behind useAuth() so public landing
 // visitors don't download their chunks. Each lazy() boundary splits the
@@ -2948,9 +2949,11 @@ const App = () => {
                                   ProductManagement directly — the same component /dashboard/shop
                                   renders (see the 'shop' catalog entry). Consolidated 2026-08-09:
                                   redirect so existing links/bookmarks still land on the admin
-                                  screen, now behind the catalog's single gated route. */}
-                              <Route path="/product-management" element={<Navigate to="/dashboard/shop" replace />} />
-                              <Route path="/store/products" element={<Navigate to="/dashboard/shop" replace />} />
+                                  screen, now behind the catalog's single gated route.
+                                  RedirectPreservingQuery (not a bare <Navigate>) so a link like
+                                  /store/products?tab=orders keeps its query string. */}
+                              <Route path="/product-management" element={<RedirectPreservingQuery to="/dashboard/shop" />} />
+                              <Route path="/store/products" element={<RedirectPreservingQuery to="/dashboard/shop" />} />
                                <Route
                                  path="/store"
                                  element={

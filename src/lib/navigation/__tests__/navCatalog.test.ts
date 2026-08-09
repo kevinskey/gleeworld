@@ -33,6 +33,17 @@ describe('NAV_CATALOG integrity', () => {
   it('merch was retired into shop (Phase 5 consolidation) — key no longer in the catalog', () => {
     expect(NAV_CATALOG.find((e) => e.key === 'merch')).toBeUndefined();
   });
+  // Round 1 review, minor: the relabel to "Store Admin" was unpinned —
+  // mutating it back to "Store" failed nothing. The point of the relabel is
+  // disambiguation from 'music-store' ("Music Store", the separate
+  // buyer-facing marketplace at /store) once 'merch' stopped giving the
+  // section a second, differently-labelled entry to contrast against.
+  it('shop is labelled "Store Admin", distinct from music-store\'s "Music Store"', () => {
+    const byKey = new Map(NAV_CATALOG.map((e) => [e.key, e]));
+    expect(byKey.get('shop')!.label).toBe('Store Admin');
+    expect(byKey.get('music-store')!.label).toBe('Music Store');
+    expect(byKey.get('shop')!.label).not.toBe(byKey.get('music-store')!.label);
+  });
 });
 
 describe('resolveNav gates', () => {

@@ -212,6 +212,26 @@ describe('MySpacePage — admin defaults mode', () => {
     expect(screen.getByRole('tab', { name: /defaults for members/i })).toBeInTheDocument();
   });
 
+  // Review round 1, Important 1: MySpacePage read `myTools?.tools` raw, not
+  // resolvedTools. MySpaceEditor renders any key absent from `available` as
+  // an "Unavailable — <key>" row (deliberately, for a TRULY dead key — see
+  // its own comment) — a stored 'merch' has no catalog entry anymore, so it
+  // rendered that way even though it isn't dead, it merged into 'shop'.
+  // Worse, `chosenKeys` (built from the same raw `tools`) never contained
+  // 'shop', so "Store Admin" ALSO showed a second time in More Tools as
+  // addable — the same tool offered as both unavailable-remove-only and
+  // freely-addable at once.
+  it('shows a stored "merch" as its live successor "Store Admin", not a dead row or a duplicate', async () => {
+    h.myTools = { v: 4, tools: ['merch', 'calendar'], widgets: [], setupComplete: true };
+    await renderAdminPage();
+    const chosen = screen.getByTestId('my-space-chosen');
+    expect(chosen).toHaveTextContent('Store Admin');
+    expect(screen.queryByTestId('my-space-unavailable')).toBeNull();
+    // Not ALSO offered as addable in More Tools — that would mean the
+    // resolved key never made it into chosenKeys.
+    expect(within(screen.getByTestId('my-space-more')).queryByText('Store Admin')).toBeNull();
+  });
+
   it('never offers Command Center in MORE TOOLS in defaults mode either', async () => {
     await renderAdminPage();
     switchToDefaultsTab();

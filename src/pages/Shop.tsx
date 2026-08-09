@@ -85,8 +85,11 @@ export const Shop = () => {
         {fromAdmin && (
           <div className="bg-muted/60 border-b border-border">
             <div className="container mx-auto px-4 py-2">
+              {/* /product-management redirects here now (Phase 5 nav
+                  consolidation, 2026-08-09) — point at the live route
+                  directly rather than taking the extra redirect hop. */}
               <Link
-                to="/product-management"
+                to="/dashboard/shop"
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-link hover:text-link-hover"
               >
                 ← Back to Store admin
