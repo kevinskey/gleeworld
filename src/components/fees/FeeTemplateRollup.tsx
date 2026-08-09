@@ -1,37 +1,42 @@
-import { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { supabase } from '@/integrations/supabase/client';
 import { FeeTemplate } from '@/hooks/useFeeTemplates';
+import type { StudentFee } from '@/hooks/useFeesManagement';
 
-interface Rollup {
-  collected: number;
-  expected: number;
-  paid: number;
-  total: number;
-}
-
-export function FeeTemplateRollup({ template }: { template: FeeTemplate }) {
-  const [rollup, setRollup] = useState<Rollup>({
-    collected: 0,
-    expected: 0,
-    paid: 0,
-    total: 0,
-  });
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from('gw_student_fees')
-        .select('amount, paid_amount, status')
-        .eq('template_id', template.id);
-      const rows = (data ?? []) as { amount: number; paid_amount: number; status: string }[];
-      const expected = rows.reduce((s, r) => s + Number(r.amount), 0);
-      const collected = rows.reduce((s, r) => s + Number(r.paid_amount), 0);
-      const paid = rows.filter(r => r.status === 'paid').length;
-      setRollup({ collected, expected, paid, total: rows.length });
-    })();
-  }, [template.id]);
+/**
+ * Collection progress for one fee template.
+ *
+ * Derives from the fees the page has ALREADY loaded rather than running its
+ * own query. It used to fetch in a useEffect keyed on [template.id], and since
+ * assigning fees does not change the template id, the effect never re-ran:
+ * the card sat at "$0 / $0 collected · 0 / 0 paid" while the Individual fees
+ * list right below it — which reads the same refetched data — correctly showed
+ * the new rows. Reported 2026-08-08, immediately after the assign flow started
+ * working for the first time.
+ *
+ * Deriving also drops one network round-trip PER TEMPLATE on every mount.
+ *
+ * Safe because useFeesManagement.fetchStudentFees selects the tenant's fees
+ * with no limit and no status filter, so `fees` is the complete set — a
+ * paginated source would silently undercount here.
+ */
+export function FeeTemplateRollup({
+  template,
+  fees,
+}: {
+  template: FeeTemplate;
+  fees: StudentFee[];
+}) {
+  const rollup = useMemo(() => {
+    const rows = fees.filter(f => f.template_id === template.id);
+    return {
+      expected: rows.reduce((s, r) => s + Number(r.amount ?? 0), 0),
+      collected: rows.reduce((s, r) => s + Number(r.paid_amount ?? 0), 0),
+      paid: rows.filter(r => r.status === 'paid').length,
+      total: rows.length,
+    };
+  }, [fees, template.id]);
 
   const pct = rollup.expected
     ? Math.round((rollup.collected / rollup.expected) * 100)

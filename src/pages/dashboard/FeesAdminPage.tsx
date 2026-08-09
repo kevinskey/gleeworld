@@ -93,7 +93,7 @@ export default function FeesAdminPage() {
                 <div className="grid gap-3 md:grid-cols-2">
                   {templates.map(t => (
                     <div key={t.id} className="space-y-2">
-                      <FeeTemplateRollup template={t} />
+                      <FeeTemplateRollup template={t} fees={studentFees} />
                       <Button
                         variant="outline"
                         size="sm"

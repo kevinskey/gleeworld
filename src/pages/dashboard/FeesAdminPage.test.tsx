@@ -224,7 +224,7 @@ describe('FeeTemplateRollup smoke test', () => {
   it('renders template name', () => {
     render(
       <MemoryRouter>
-        <FeeTemplateRollup template={TEMPLATE_STUB} />
+        <FeeTemplateRollup template={TEMPLATE_STUB} fees={[]} />
       </MemoryRouter>,
     );
     expect(screen.getByText('Spring Dues')).toBeInTheDocument();

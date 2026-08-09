@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useFeeTemplates, FeeTemplate } from '@/hooks/useFeeTemplates';
+import { useFeesManagement } from '@/hooks/useFeesManagement';
 import { CreateFeeTemplateDialog } from '@/components/fees/CreateFeeTemplateDialog';
 import { FeeAssignDialog } from '@/components/fees/FeeAssignDialog';
 import { FeeTemplateRollup } from '@/components/fees/FeeTemplateRollup';
@@ -19,6 +20,10 @@ import { FeeTemplateRollup } from '@/components/fees/FeeTemplateRollup';
  */
 export function TripFeesTab() {
   const { listTemplates } = useFeeTemplates();
+  // The rollups derive from these. This tab had the same staleness bug as
+  // the Fees admin page: the card fetched once per template id and never
+  // updated after an assignment.
+  const { studentFees, refetch: refetchFees } = useFeesManagement();
   const [tourId, setTourId] = useState<string | null>(null);
   const [templates, setTemplates] = useState<FeeTemplate[]>([]);
   const [attendeeIds, setAttendeeIds] = useState<string[]>([]);
@@ -92,7 +97,7 @@ export function TripFeesTab() {
       <div className="grid gap-3">
         {templates.map(t => (
           <div key={t.id} className="space-y-2">
-            <FeeTemplateRollup template={t} />
+            <FeeTemplateRollup template={t} fees={studentFees} />
             <Button
               variant="outline"
               size="sm"
@@ -126,6 +131,7 @@ export function TripFeesTab() {
           restrictToUserIds={attendeeIds}
           onAssigned={() => {
             reload(tourId);
+            refetchFees();
             setAssignFor(null);
           }}
         />
