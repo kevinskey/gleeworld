@@ -13,7 +13,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import { ensureAllToolsOpen } from './productTourScript';
+import { ensureAllToolsOpen, closeAllTools, buildAdminProductTour } from './productTourScript';
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -59,5 +59,78 @@ describe('ensureAllToolsOpen', () => {
     // e.g. a role/tenant whose gated catalog leaves nothing behind All
     // Tools, or the mobile drawer isn't open. No toggle in the DOM at all.
     expect(() => ensureAllToolsOpen('[data-tour="nav-analytics"]')).not.toThrow();
+  });
+
+  it('DOES click when the only copy of the target is inside the sheet', () => {
+    // The consecutive-sheet-steps case. closeAllTools runs from the previous
+    // step's teardown and its state update commits AFTER the next step's
+    // beforeMeasure — so a row visible inside the sheet right now is one
+    // commit away from unmounting, and treating it as "already revealed"
+    // would leave the next step with no target at all. Re-clicking is free
+    // (the button only ever opens) and React batches the pending close with
+    // this open, so the sheet simply stays open.
+    const toggle = mountToggle();
+    let clicked = false;
+    toggle.addEventListener('click', () => { clicked = true; });
+    const sheet = document.createElement('div');
+    sheet.setAttribute('data-all-tools-sheet', '');
+    const target = document.createElement('div');
+    target.setAttribute('data-tour', 'nav-settings');
+    sheet.appendChild(target);
+    document.body.appendChild(sheet);
+
+    ensureAllToolsOpen('[data-tour="nav-settings"]');
+
+    expect(clicked).toBe(true);
+  });
+});
+
+describe('closeAllTools', () => {
+  function mountSheet(): HTMLElement {
+    const sheet = document.createElement('div');
+    sheet.setAttribute('data-all-tools-sheet', '');
+    document.body.appendChild(sheet);
+    return sheet;
+  }
+
+  it('dismisses the sheet when one is mounted', () => {
+    mountSheet();
+    const keys: string[] = [];
+    const listener = (e: Event) => keys.push((e as KeyboardEvent).key);
+    document.addEventListener('keydown', listener);
+
+    closeAllTools();
+
+    document.removeEventListener('keydown', listener);
+    // Escape is what Radix's dismissable layer listens for, and only the
+    // top-most layer responds — exactly "close the sheet, don't reach past
+    // it".
+    expect(keys).toEqual(['Escape']);
+  });
+
+  it('does nothing when no sheet is open', () => {
+    const keys: string[] = [];
+    const listener = (e: Event) => keys.push((e as KeyboardEvent).key);
+    document.addEventListener('keydown', listener);
+
+    closeAllTools();
+
+    document.removeEventListener('keydown', listener);
+    expect(keys).toEqual([]);
+  });
+});
+
+describe('buildAdminProductTour', () => {
+  it('binds a sheet teardown to every step, so an opened sheet cannot outlive its step', () => {
+    // Without this the sheet stayed over the page for the rest of the step
+    // AND through the next step's cursor travel, self-healing only when the
+    // next onActivate happened to navigate and remount the shell.
+    const steps = buildAdminProductTour({ navigate: () => {} });
+    expect(steps.length).toBeGreaterThan(0);
+    for (const step of steps) expect(step.onStepEnd).toBe(closeAllTools);
+    // ...and the reveal is still bound only where there's a target.
+    for (const step of steps) {
+      expect(typeof step.beforeMeasure === 'function').toBe(!!step.targetSelector);
+    }
   });
 });

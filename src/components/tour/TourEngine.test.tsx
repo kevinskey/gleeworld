@@ -103,6 +103,43 @@ describe('TourEngine — beforeMeasure reveal of a conditionally-unmounted targe
     errorSpy.mockRestore();
   }, 5000);
 
+  it('fires onStepEnd when the step is left, so a revealed sheet cannot outlive it', async () => {
+    // beforeMeasure's mirror. Nothing in the engine used to put back what a
+    // step revealed, so the All Tools sheet — a modal dialog — sat over the
+    // page for the rest of the step and through the NEXT step's cursor
+    // travel, self-healing only if that step's onActivate happened to
+    // navigate.
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const onStepEnd = vi.fn();
+    const secondActivated = vi.fn();
+
+    const steps: TourStep[] = [
+      {
+        id: 'first',
+        targetSelector: '[data-tour="hidden-target"]',
+        description: 'first step',
+        dwellMs: 30,
+        beforeMeasure: () => ensureAllToolsOpen('[data-tour="hidden-target"]'),
+        onStepEnd,
+      },
+      {
+        id: 'second',
+        targetSelector: '[data-tour="nav-all-tools-toggle"]',
+        description: 'second step',
+        dwellMs: 30,
+        onActivate: secondActivated,
+      },
+    ];
+
+    render(<Harness steps={steps} />);
+
+    // Not fired merely by mounting the step...
+    expect(onStepEnd).not.toHaveBeenCalled();
+    // ...and fired exactly once when the engine advances past it.
+    await waitFor(() => expect(onStepEnd).toHaveBeenCalledTimes(1), { timeout: 4000 });
+    errorSpy.mockRestore();
+  }, 6000);
+
   it('sanity check: without beforeMeasure the target never mounts — the harness genuinely models absence', () => {
     const steps: TourStep[] = [
       {

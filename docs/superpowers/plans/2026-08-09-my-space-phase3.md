@@ -554,7 +554,7 @@ git commit -m "chore(nav): delete the dead GlobalCommandPalette"
 ## Done criteria
 
 1. All four gates pass with no new failures beyond the 6 known baseline files.
-2. ⌘K opens All Tools from any authenticated page, and does not fire while typing in an input.
+2. ⌘K opens All Tools from any page wrapped in `DashboardShell` — where the sheet and its handler both live — and does not fire while typing in an input. (Amended after the fact: this criterion originally read "from any authenticated page", which the shipped scope never met. Academy renders inside `AcademyShell` and bare-`UniversalLayout` pages have no shell at all, so neither has a ⌘K handler. Widening it means hoisting the sheet above the shell, which is its own change with its own gating questions — out of scope for Phase 3.)
 3. Every gated destination is reachable by typing a prefix of its label; no ungated destination appears in the sheet, in search results, or as a pin target.
 4. Pinning from the sheet appends to the stored `MyTools` list and immediately shows on both the shelf and the home keycaps.
 5. The Phase 1 disclosure is gone — `NavShelf` no longer takes `sections`.

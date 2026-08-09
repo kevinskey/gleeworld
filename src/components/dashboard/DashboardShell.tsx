@@ -166,7 +166,7 @@ function useGatedNav() {
   // admin||super||instructor check here missed teacher/conductor/director, so a
   // director got the faculty grid on HouseHome and the STUDENT shelf here.
   const isFaculty = isFacultyProfile(profile);
-  const { myTools, saveMyTools } = useMyTools(isFaculty ? 'faculty' : 'student');
+  const { myTools, loaded: myToolsLoaded, pinTool } = useMyTools(isFaculty ? 'faculty' : 'student');
   // The full gated set from resolveNav — not filtered to sidebar-surface
   // entries. The All Tools sheet is the full catalog now (Phase 3), and a
   // member migrating from home_tile_layout can legitimately have grid-only
@@ -178,30 +178,36 @@ function useGatedNav() {
   // row" rather than blanking the whole nav.
   const homeEntry = resolvedEntries.find((e) => e.key === 'home');
 
-  return { resolvedEntries, homeEntry, myTools, saveMyTools, roleLoading, isPlatformAdmin };
+  return { resolvedEntries, homeEntry, myTools, myToolsLoaded, pinTool, roleLoading, isPlatformAdmin };
 }
 
 // The stored My Tools record + gated catalog behind the All Tools sheet.
 //
-// `pinned` and `onPin` read/write `myTools.tools` — the RAW STORED array —
-// never `resolveNav`'s gated output and never NavShelf's MY_TOOLS_CAP-
-// capped render of it. A stored key survives even when its gate is closed
-// (selectShelfEntries drops it from the RENDER, not the record, precisely
-// so re-enabling the module restores it — see myTools.ts). Deriving
-// `pinned`/appending in `onPin` from the rendered/capped list instead would
-// silently amputate every such key the next time saveMyTools rewrites the
-// record whole.
+// `pinned` is the RAW STORED array — never `resolveNav`'s gated output and
+// never NavShelf's MY_TOOLS_CAP-capped render of it — and it is used for
+// DISPLAY ONLY (which rows read "In your space", whether the cap banner
+// shows). The APPEND itself is not computed here at all: `onPin` is
+// useMyTools' pinTool, which reads the freshest record out of the query
+// cache at call time and refuses unless the row genuinely loaded. Computing
+// the append from this render-time `pinned` is precisely the bug that
+// persisted a one-key record over a member's eight tools and their widgets
+// whenever the sheet was opened before the query resolved — and the same
+// snapshot that dropped the first of two pins fired in one tick.
 function useAllToolsCatalog(): {
   available: CatalogEntry[];
   pinned: string[];
+  canPin: boolean;
   onPin: (key: string) => Promise<boolean>;
 } {
-  const { resolvedEntries, myTools, saveMyTools } = useGatedNav();
-  const pinned = myTools?.tools ?? [];
-
-  const onPin = async (key: string): Promise<boolean> => saveMyTools({ tools: [...pinned, key] });
-
-  return { available: resolvedEntries, pinned, onPin };
+  const { resolvedEntries, myTools, myToolsLoaded, pinTool } = useGatedNav();
+  return {
+    available: resolvedEntries,
+    pinned: myTools?.tools ?? [],
+    // No record, no ⊕: pinTool would refuse, and offering an action that
+    // can only fail is the "tap does nothing" shape the plan forbids.
+    canPin: myToolsLoaded,
+    onPin: pinTool,
+  };
 }
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
@@ -455,7 +461,11 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
-          onOpenAllTools={onOpenAllTools}
+          // Close the drawer FIRST: the sheet is a modal dialog over the
+          // page, and leaving the drawer mounted underneath it means that
+          // picking the route you are already on (no shell remount, so no
+          // incidental reset) drops you back onto an open drawer.
+          onOpenAllTools={() => { onNavigate(); onOpenAllTools(); }}
           variant="mobile"
           onNavigate={onNavigate}
         />
@@ -917,7 +927,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   // instances below call the same `openAllTools`.
   const [allToolsOpen, setAllToolsOpen] = useState(false);
   const openAllTools = () => setAllToolsOpen(true);
-  const { available: allToolsAvailable, pinned: allToolsPinned, onPin: allToolsOnPin } = useAllToolsCatalog();
+  const {
+    available: allToolsAvailable, pinned: allToolsPinned, canPin: allToolsCanPin, onPin: allToolsOnPin,
+  } = useAllToolsCatalog();
 
   // Global ⌘K / Ctrl+K — registered once here (not once per nav surface),
   // removed on unmount. Reads document.activeElement rather than the
@@ -1008,6 +1020,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           onOpenChange={setAllToolsOpen}
           available={allToolsAvailable}
           pinned={allToolsPinned}
+          canPin={allToolsCanPin}
           onPin={allToolsOnPin}
         />
       </div>

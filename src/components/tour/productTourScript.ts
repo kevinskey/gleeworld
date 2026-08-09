@@ -24,6 +24,9 @@ interface ProductTourContext {
   navigate: (path: string) => void;
 }
 
+/** Marks AllToolsSheet's own subtree — stamped on its CommandList. */
+const ALL_TOOLS_SHEET_SELECTOR = '[data-all-tools-sheet]';
+
 /**
  * Ensures a step's target is actually present in the DOM before TourEngine
  * measures it. Phase 3 replaced the sidebar's inline All Tools disclosure
@@ -34,7 +37,9 @@ interface ProductTourContext {
  * unconditionally opens, never toggles).
  *
  * Takes the step's OWN targetSelector and no-ops if that target is already
- * present — the common case, since most of this script's targets (Home,
+ * present OUTSIDE the sheet (a target found inside it is about to be
+ * unmounted by the previous step's closeAllTools — see the inline comment
+ * below) — the common case, since most of this script's targets (Home,
  * Messenger, Calendar, Academy, Music Library, People) ARE on the default
  * faculty shelf. That guard matters more than it did under the old
  * disclosure: opening the sheet now means popping a modal dialog over the
@@ -62,9 +67,38 @@ interface ProductTourContext {
  * enough time for React to commit the sheet's mount.
  */
 export function ensureAllToolsOpen(targetSelector: string) {
-  if (document.querySelector(targetSelector)) return;
+  const target = document.querySelector(targetSelector);
+  // A target found INSIDE the sheet does NOT count as already revealed.
+  // closeAllTools() below runs from the previous step's teardown, and that
+  // state update commits AFTER this function returns — so the row we can
+  // see here is one React commit away from unmounting. Re-clicking costs
+  // nothing (the All Tools button only ever opens, never toggles closed) and
+  // React batches the pending close with this open into one commit, so a run
+  // of consecutive sheet-bound steps keeps one continuously-open sheet
+  // rather than flickering it shut between them.
+  if (target && !target.closest(ALL_TOOLS_SHEET_SELECTOR)) return;
   const toggle = document.querySelector('[data-tour="nav-all-tools-toggle"]') as HTMLButtonElement | null;
   toggle?.click();
+}
+
+/**
+ * The mirror of ensureAllToolsOpen, bound to every step's `onStepEnd`.
+ *
+ * Without it, a step that opened the sheet to find its target left a modal
+ * dialog covering the page for the remainder of that step's dwell AND
+ * through the next step's cursor travel — self-healing only incidentally,
+ * when the next step's onActivate navigated and remounted the shell.
+ *
+ * Closes by dispatching Escape rather than hunting for the dialog's close
+ * button: Radix's dismissable-layer listens for it on the document and only
+ * the TOP-most layer responds, which is exactly the semantics wanted here
+ * ("close the sheet, don't reach past it"). No-ops when the sheet isn't
+ * mounted, so it is safe on every step including the ones that never opened
+ * it.
+ */
+export function closeAllTools() {
+  if (!document.querySelector(ALL_TOOLS_SHEET_SELECTOR)) return;
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
 }
 
 export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
@@ -164,9 +198,16 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
   // and the selector its own reveal-check queries can never drift apart
   // (they're now structurally the same string, read once). Only 'outro'
   // above has no targetSelector, and is correctly skipped.
-  return steps.map((step) =>
-    step.targetSelector
-      ? { ...step, beforeMeasure: () => ensureAllToolsOpen(step.targetSelector!) }
-      : step,
-  );
+  //
+  // closeAllTools is bound to EVERY step, target-bearing or not: it no-ops
+  // when the sheet isn't mounted, and binding it unconditionally means a
+  // sheet opened by one step can never outlive it — including into the
+  // outro, which has no beforeMeasure of its own to reason about.
+  return steps.map((step) => ({
+    ...step,
+    onStepEnd: closeAllTools,
+    ...(step.targetSelector
+      ? { beforeMeasure: () => ensureAllToolsOpen(step.targetSelector!) }
+      : {}),
+  }));
 }

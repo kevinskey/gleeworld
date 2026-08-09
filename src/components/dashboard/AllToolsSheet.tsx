@@ -29,11 +29,25 @@ export interface AllToolsSheetProps {
   available: CatalogEntry[];
   /** Keys already on the shelf; these render as pinned and cannot be re-pinned. */
   pinned: string[];
+  /**
+   * False until the member's stored record has genuinely loaded. Every ⊕ is
+   * withheld while false, because the write path refuses in that state — an
+   * offered control that can only fail is the "tap does nothing" shape this
+   * sheet exists to avoid.
+   */
+  canPin: boolean;
   /** Append this key to My Tools. Resolves false on failure. */
   onPin: (key: string) => Promise<boolean>;
 }
 
 const SECTION_ORDER = Object.keys(NAV_SECTION_LABELS) as NavSectionKey[];
+
+// Home is always on the shelf and is never stored in My Tools (sanitizeTools
+// strips it at write time). It stays in `available` — it must remain
+// navigable and findable by search, ⌘K → "command" included — but it gets
+// the non-pinnable "In your space" affordance rather than a ⊕ whose write
+// would succeed and change nothing. Spec §5.4: "Home is always here."
+const ALWAYS_PRESENT_KEY = 'home';
 
 const CARD_ITEM =
   'relative flex items-center gap-3 min-h-11 px-3 bg-card text-card-foreground cursor-pointer ' +
@@ -59,11 +73,13 @@ function PinControl({
   entry,
   isPinned,
   atCap,
+  canPin,
   onPin,
 }: {
   entry: CatalogEntry;
   isPinned: boolean;
   atCap: boolean;
+  canPin: boolean;
   onPin: (key: string) => void;
 }) {
   if (isPinned) {
@@ -74,6 +90,9 @@ function PinControl({
       </span>
     );
   }
+  // No stored record yet (still loading, or the load failed): the row stays
+  // navigable, it just offers no pin. See `canPin` on AllToolsSheetProps.
+  if (!canPin) return null;
   // Verified against cmdk 1.0's actual source (not assumed): the item's
   // select handler is wired to onClick only — onPointerMove just moves the
   // keyboard-highlight, it never selects. So stopping propagation on click
@@ -106,12 +125,14 @@ function ToolRow({
   entry,
   isPinned,
   atCap,
+  canPin,
   onSelect,
   onPin,
 }: {
   entry: CatalogEntry;
   isPinned: boolean;
   atCap: boolean;
+  canPin: boolean;
   onSelect: (entry: CatalogEntry) => void;
   onPin: (key: string) => void;
 }) {
@@ -137,12 +158,12 @@ function ToolRow({
     >
       <entry.icon className="w-5 h-5 shrink-0 text-muted-foreground" aria-hidden />
       <span className={ROW_LABEL}>{entry.label}</span>
-      <PinControl entry={entry} isPinned={isPinned} atCap={atCap} onPin={onPin} />
+      <PinControl entry={entry} isPinned={isPinned} atCap={atCap} canPin={canPin} onPin={onPin} />
     </CommandItem>
   );
 }
 
-export function AllToolsSheet({ open, onOpenChange, available, pinned, onPin }: AllToolsSheetProps) {
+export function AllToolsSheet({ open, onOpenChange, available, pinned, canPin, onPin }: AllToolsSheetProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [query, setQuery] = useState('');
@@ -294,7 +315,11 @@ export function AllToolsSheet({ open, onOpenChange, available, pinned, onPin }: 
           Your space is full — remove one in Setup to pin another.
         </p>
       )}
-      <CommandList>
+      {/* data-all-tools-sheet marks the sheet's own subtree for the product
+          tour: productTourScript closes the sheet when a step ends and needs
+          to tell a row it can see INSIDE this sheet (about to unmount) from
+          one on the shelf. Nothing else keys off it. */}
+      <CommandList data-all-tools-sheet="">
         <CommandEmpty>No tools match that.</CommandEmpty>
         {groups.map(({ section, label, entries }) => (
           <CommandGroup key={section ?? '__flat__'} heading={label ?? undefined} className={GROUP_CARD}>
@@ -302,8 +327,12 @@ export function AllToolsSheet({ open, onOpenChange, available, pinned, onPin }: 
               <ToolRow
                 key={entry.key}
                 entry={entry}
-                isPinned={pinnedSet.has(entry.key)}
+                // Home is never stored, so it can never be in `pinnedSet` —
+                // it is nonetheless always there. Folding it into the
+                // `pinned` PROP instead would make `atCap` fire a slot early.
+                isPinned={pinnedSet.has(entry.key) || entry.key === ALWAYS_PRESENT_KEY}
                 atCap={atCap}
+                canPin={canPin}
                 onSelect={handleSelect}
                 onPin={handlePin}
               />

@@ -14,17 +14,20 @@
 // tenant switcher, and the assistant/trial/tour/bottom-nav chrome are all
 // stubbed to trivial stand-ins so this file stays focused on the ⌘K/sheet
 // wiring instead of re-deriving every one of those subsystems' own tests.
-import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, cleanup, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter } from 'react-router-dom';
 import type { MyTools } from '@/lib/navigation/myTools';
 
-const { useUserRoleMock, useMyToolsMock, useTenantNavPrefsMock, saveMyToolsMock, useEffectivePreviewRoleMock } = vi.hoisted(() => ({
+const {
+  useUserRoleMock, useMyToolsMock, useTenantNavPrefsMock, saveMyToolsMock, pinToolMock, useEffectivePreviewRoleMock,
+} = vi.hoisted(() => ({
   useUserRoleMock: vi.fn(),
   useMyToolsMock: vi.fn(),
   useTenantNavPrefsMock: vi.fn(),
   saveMyToolsMock: vi.fn(),
+  pinToolMock: vi.fn(),
   useEffectivePreviewRoleMock: vi.fn(),
 }));
 
@@ -125,10 +128,23 @@ afterAll(() => {
 
 afterEach(cleanup);
 
+// Without this, the pin tests read mock.calls[0] out of a mock that carries
+// every earlier test's calls too — correct only for as long as they happen
+// to run first.
+beforeEach(() => {
+  saveMyToolsMock.mockClear();
+  pinToolMock.mockClear();
+  pinToolMock.mockResolvedValue(true);
+});
+
 function setup({
   myTools = { v: 4, tools: ['calendar', 'messages', 'finance'], widgets: [], setupComplete: true } as MyTools,
+  // `loaded` is useMyTools' "the row genuinely came back" flag, distinct
+  // from `loading`: it is false while loading AND after a failed load, and
+  // it is what gates every ⊕ in the sheet.
+  loaded = true,
   previewRole = null,
-}: { myTools?: MyTools | null; previewRole?: 'admin' | 'student' | 'member' | null } = {}) {
+}: { myTools?: MyTools | null; loaded?: boolean; previewRole?: 'admin' | 'student' | 'member' | null } = {}) {
   useUserRoleMock.mockReturnValue({
     profile: adminProfile,
     loading: false,
@@ -138,8 +154,10 @@ function setup({
   useMyToolsMock.mockReturnValue({
     myTools,
     loading: false,
+    loaded,
     saveTools: vi.fn(),
     saveMyTools: saveMyToolsMock,
+    pinTool: pinToolMock,
   });
   useEffectivePreviewRoleMock.mockReturnValue(previewRole);
 }
@@ -257,34 +275,91 @@ describe('All Tools ⌘K', () => {
   });
 });
 
-describe('All Tools — pinning appends to the STORED list, not the rendered shelf', () => {
-  // The trap: NavShelf caps its render at MY_TOOLS_CAP and DashboardShell
-  // derives shelfTools through selectShelfEntries, which drops any stored
-  // key whose gate has closed. 'partners' is adminOnly and NOT included in
-  // the mocked profile's gate (isTenantAdmin comes from is_admin/
-  // is_super_admin — adminProfile IS an admin, so to get a genuinely
-  // CLOSED gate here we use a platform-admin-only key while the mocked
-  // profile is only a tenant admin, not a platform admin on 'main').
-  // 'tenants' requires platformAdminOnly, which adminProfile does not
-  // satisfy (is_super_admin: false) — so it is stored but never resolves,
-  // never renders on the shelf, and must still be there after a pin.
-  it('a stored-but-gate-closed key survives a pin', async () => {
+describe('All Tools — the shell delegates the append, it never computes one', () => {
+  // The whole append lives in useMyTools.pinTool, over the cache-fresh
+  // record (see useMyTools.test.tsx for the appends themselves). What
+  // belongs here is the wiring: the shell hands the sheet the bare key and
+  // does NOT reconstruct a tools array from its own render-time state —
+  // which is what wrote {tools:['academy']} over a member's whole record
+  // whenever the sheet was opened before the query resolved.
+  it('hands the raw key to pinTool and computes no list of its own', async () => {
     setup({
+      // 'tenants' is platformAdminOnly and adminProfile is not a platform
+      // admin, so this key is stored but never renders — an append computed
+      // from the rendered shelf would silently drop it.
       myTools: { v: 4, tools: ['tenants', 'calendar'], widgets: [], setupComplete: true },
     });
-    saveMyToolsMock.mockResolvedValue(true);
     renderShell();
     fireEvent.keyDown(window, { key: 'k', metaKey: true });
     await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /pin academy to your space/i }));
 
-    await waitFor(() => expect(saveMyToolsMock).toHaveBeenCalled());
-    const patch = saveMyToolsMock.mock.calls[0][0] as { tools: string[] };
-    // The gate-closed 'tenants' key must still be present — appending to a
-    // gate-filtered/capped rendering of the shelf would have silently
-    // dropped it instead.
-    expect(patch.tools).toEqual(['tenants', 'calendar', 'academy']);
+    await waitFor(() => expect(pinToolMock).toHaveBeenCalledWith('academy'));
+    expect(pinToolMock).toHaveBeenCalledTimes(1);
+    // No shell-side write path at all — saveMyTools is not the pin route.
+    expect(saveMyToolsMock).not.toHaveBeenCalled();
+  });
+
+  it('offers no ⊕ at all until a record has genuinely loaded', async () => {
+    // myTools null + loaded false is the real first-paint state: both doors
+    // into the sheet (the shelf row and ⌘K) are live from first paint, and
+    // pinTool refuses in this state. Offering a control that can only fail
+    // is the "tap silently does nothing" shape the plan forbids.
+    setup({ myTools: null, loaded: false });
+    renderShell();
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
+
+    expect(screen.queryByRole('button', { name: /pin .* to your space/i })).toBeNull();
+    // The rows are still there and still navigable — this withholds the pin,
+    // not the catalog.
+    expect(screen.getByText('Academy')).toBeInTheDocument();
+  });
+
+  it('offers ⊕ again once the record is loaded (control for the test above)', async () => {
+    setup({ loaded: true });
+    renderShell();
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
+    expect(screen.getByRole('button', { name: /pin academy to your space/i })).toBeInTheDocument();
+  });
+});
+
+describe('All Tools — Command Center is never offered as a pin target', () => {
+  // `available` is resolveNav's full output, which includes the 'home'
+  // entry. It used to render a working "Pin Command Center to your space"
+  // button whose write sanitizeTools stripped: the RPC succeeded, onPin
+  // resolved true, no toast fired, the badge stayed ⊕, and nothing changed.
+  it('renders Home with the non-pinnable affordance and never calls pinTool for it', async () => {
+    setup();
+    renderShell();
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
+
+    // Scoped to the sheet's own subtree: 'Command Center' also labels the
+    // Home row on each of the two nav surfaces, so an unscoped query is
+    // ambiguous and would pass for the wrong element.
+    const sheet = within(document.querySelector('[data-all-tools-sheet]') as HTMLElement);
+    const homeRow = sheet.getByText('Command Center').closest('[cmdk-item]') as HTMLElement;
+    expect(homeRow).not.toBeNull();
+    // The non-pinnable affordance, exactly as an already-placed tool reads.
+    expect(within(homeRow).getByText('In your space')).toBeInTheDocument();
+    expect(within(homeRow).queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('button', { name: /pin command center to your space/i })).toBeNull();
+    expect(pinToolMock).not.toHaveBeenCalled();
+  });
+
+  it('still reaches Home by search, so ⌘K → "command" is not a dead end', async () => {
+    setup();
+    renderShell();
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
+
+    fireEvent.change(screen.getByPlaceholderText(/search all tools/i), { target: { value: 'command' } });
+
+    const sheet = within(document.querySelector('[data-all-tools-sheet]') as HTMLElement);
+    await waitFor(() => expect(sheet.getByText('Command Center')).toBeInTheDocument());
   });
 });
 

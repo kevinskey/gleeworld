@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { AllToolsSheet, type AllToolsSheetProps } from './AllToolsSheet';
 import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
 import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
+import { closeAllTools } from '@/components/tour/productTourScript';
 
 // Same mocking shape as AddYouTubeVideoForm.test.tsx's toast coverage —
 // vi.hoisted so the mock factory below can close over it, asserting on
@@ -76,7 +77,15 @@ const renderSheet = (props: Partial<AllToolsSheetProps> = {}) => {
   const utils = render(
     <MemoryRouter initialEntries={['/dashboard']}>
       <LocationProbe />
-      <AllToolsSheet open onOpenChange={onOpenChange} available={available} pinned={[]} onPin={onPin} {...props} />
+      <AllToolsSheet
+        open
+        onOpenChange={onOpenChange}
+        available={available}
+        pinned={[]}
+        canPin
+        onPin={onPin}
+        {...props}
+      />
     </MemoryRouter>,
   );
   return { ...utils, onPin, onOpenChange };
@@ -169,6 +178,39 @@ describe('AllToolsSheet — search', () => {
   });
 });
 
+describe('AllToolsSheet — closing resets the search', () => {
+  it('reopens in the grouped browsing layout, not the previous search\'s flat list', async () => {
+    // Radix unmounts the dialog's contents on close, taking cmdk's own
+    // search state with it — but this component does NOT unmount, so its
+    // `query` state survives unless the close effect clears it. Deleting
+    // that effect left the whole suite green: on reopen the input reads
+    // empty (cmdk's fresh state) while `query` still holds the old term, so
+    // the sheet renders the ungrouped searching layout with no section
+    // headings — a stale flat ordering under an empty search box.
+    const { rerender } = render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <AllToolsSheet open onOpenChange={vi.fn()} available={available} pinned={[]} canPin onPin={vi.fn()} />
+      </MemoryRouter>,
+    );
+    fireEvent.change(screen.getByPlaceholderText(/search all tools/i), { target: { value: 'seat' } });
+    await waitFor(() => expect(screen.queryByText('Money')).toBeNull());
+
+    const sheetWith = (open: boolean) => (
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <AllToolsSheet open={open} onOpenChange={vi.fn()} available={available} pinned={[]} canPin onPin={vi.fn()} />
+      </MemoryRouter>
+    );
+    rerender(sheetWith(false));
+    rerender(sheetWith(true));
+
+    // Section headings are the observable difference between the browsing
+    // layout (grouped) and the searching layout (one flat group).
+    await waitFor(() => expect(screen.getByText('Money')).toBeInTheDocument());
+    expect(screen.getByText('Teach')).toBeInTheDocument();
+    expect((screen.getByPlaceholderText(/search all tools/i) as HTMLInputElement).value).toBe('');
+  });
+});
+
 describe('AllToolsSheet — pinning', () => {
   it('pins without navigating or closing', async () => {
     const { onPin, onOpenChange } = renderSheet();
@@ -203,6 +245,45 @@ describe('AllToolsSheet — pinning', () => {
     expect(screen.getByText(/in your space/i)).toBeInTheDocument();
   });
 
+  it('offers no ⊕ at all when the stored record has not loaded', () => {
+    // canPin false is "the write path will refuse" — a ⊕ here could only
+    // ever fail, so the row is rendered without one. The catalog itself is
+    // untouched: every entry is still listed and still navigable.
+    renderSheet({ canPin: false });
+    expect(screen.queryByRole('button', { name: /to your space/i })).toBeNull();
+    for (const e of available) expect(screen.getByText(e.label)).toBeInTheDocument();
+  });
+
+  it('renders Home as always-present rather than as a pin target', () => {
+    // resolveNav's output includes 'home', and sanitizeTools strips it at
+    // write time — so a ⊕ on this row produced a successful RPC, a `true`
+    // return, no toast, and no change whatsoever. It gets the same
+    // "In your space" affordance an already-placed tool gets. The row stays
+    // in `available` (navigable, searchable) rather than being filtered out.
+    const home = byKey.get('home')!;
+    const { onPin } = renderSheet({ available: [home, ...available] });
+
+    expect(screen.getByText('Command Center')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /pin command center to your space/i })).toBeNull();
+    const homeRow = screen.getByText('Command Center').closest('[cmdk-item]') as HTMLElement;
+    expect(within(homeRow).getByText('In your space')).toBeInTheDocument();
+    expect(onPin).not.toHaveBeenCalled();
+  });
+
+  it('does not let Home consume a cap slot', () => {
+    // Folding 'home' into the `pinned` PROP would have been the other way to
+    // mark it — and it would have made the cap banner fire one slot early.
+    const home = byKey.get('home')!;
+    // Exactly one slot short of the cap. If Home were counted, the banner
+    // would appear and every ⊕ would go dead one pin early.
+    renderSheet({
+      available: [home, ...available],
+      pinned: NAV_CATALOG.filter((e) => e.key !== 'home').slice(0, MY_TOOLS_CAP - 1).map((e) => e.key),
+    });
+    expect(screen.queryByText(/your space is full/i)).toBeNull();
+    expect(screen.getByRole('button', { name: /pin academy to your space/i })).toBeEnabled();
+  });
+
   it('disables pinning at the cap and says why', () => {
     renderSheet({ pinned: NAV_CATALOG.slice(0, MY_TOOLS_CAP).map((e) => e.key) });
     expect(screen.getByText(/your space is full/i)).toBeInTheDocument();
@@ -222,6 +303,24 @@ describe('AllToolsSheet — selecting a row', () => {
     // waiting to happen the moment the fixture changes, so hold the same
     // standard.
     expect(screen.getByTestId('location-probe').textContent).toBe('/dashboard/academy');
+  });
+});
+
+describe('AllToolsSheet — the product tour can close it again', () => {
+  it('closes when closeAllTools runs, using the real helper against this real sheet', async () => {
+    // The tour opens this sheet to reach a target that isn't on the
+    // member's shelf, and closes it when the step ends. Both halves are
+    // DOM-only contracts between two files: closeAllTools finds the sheet
+    // by the `data-all-tools-sheet` marker rendered below, and dismisses it
+    // the way Radix expects. Testing the helper against a synthetic div
+    // (productTourScript.test.ts) proves it dispatches; this proves the
+    // dispatch actually lands on THIS component.
+    const { onOpenChange } = renderSheet();
+    expect(document.querySelector('[data-all-tools-sheet]')).not.toBeNull();
+
+    closeAllTools();
+
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
   });
 });
 

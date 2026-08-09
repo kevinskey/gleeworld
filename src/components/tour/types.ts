@@ -35,4 +35,18 @@ export interface TourStep {
    * does not need to force it synchronous.
    */
   beforeMeasure?: () => void;
+  /**
+   * Fires when the step ends — the engine advances past it, or unmounts.
+   * The mirror of `beforeMeasure`: whatever a step revealed to be measured
+   * (the All Tools sheet is the real case) is put back here, so a modal
+   * opened for one step's target does not sit over the page for the rest of
+   * that step and through the next step's cursor travel.
+   *
+   * Same contract as the other two hooks: the engine never touches the DOM
+   * itself, and — as with `beforeMeasure` — a state update triggered here
+   * commits on React's own schedule, not synchronously. The next step's
+   * `beforeMeasure` therefore runs while this one's teardown is still
+   * uncommitted; see ensureAllToolsOpen for how that is handled.
+   */
+  onStepEnd?: () => void;
 }
