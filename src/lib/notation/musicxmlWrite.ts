@@ -23,6 +23,34 @@ function noteXml(el: EditorElement): string {
     + `<duration>${dur}</duration>${tieXml}${type}${dots}${notations}${lyric}</note>`;
 }
 
+/**
+ * The name our lyric nudge travels under inside the score.
+ *
+ * MusicXML has no place for "how far below the notes this engraver likes its
+ * words", and gw_sheet_music has no metadata column to park it in beside the
+ * document. <miscellaneous-field> is the format's own answer to exactly that:
+ * a named string an application may write and every other application ignores.
+ * Storing it here rather than in a sibling column also means the setting
+ * travels with the music — export the MusicXML, mail it, reopen it, and the
+ * spacing is still the one that was engraved.
+ *
+ * Vendor-prefixed because the name is a bare string in a shared namespace.
+ */
+export const LYRIC_OFFSET_FIELD = 'gleeworld-lyric-offset';
+
+/** The <identification> block, or '' when there is nothing to say. Written
+ *  only for a real, non-zero nudge: a score at the automatic placement must
+ *  serialise byte-for-byte as it always did, so nothing downstream sees a
+ *  spurious change and no reader has to special-case a "0" that means
+ *  "unset". */
+function identificationXml(score: EditorScore): string {
+  const off = score.lyricOffset;
+  if (typeof off !== 'number' || !Number.isFinite(off) || off === 0) return '';
+  return '<identification><miscellaneous>'
+    + `<miscellaneous-field name="${LYRIC_OFFSET_FIELD}">${off}</miscellaneous-field>`
+    + '</miscellaneous></identification>';
+}
+
 export function editorScoreToMusicXML(score: EditorScore): string {
   const measures = layoutMeasures(score);
   const clef = CLEF_SIGN[score.clef];
@@ -42,6 +70,8 @@ export function editorScoreToMusicXML(score: EditorScore): string {
     + `<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">`
     + `<score-partwise version="3.1">`
     + `<work><work-title>${escapeXml(score.title)}</work-title></work>`
+    // Element order matters to the DTD: work, then identification, then part-list.
+    + identificationXml(score)
     + `<part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>`
     + `<part id="P1">${body}</part></score-partwise>`;
 }

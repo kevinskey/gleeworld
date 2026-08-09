@@ -116,6 +116,24 @@ const SCREEN_ZOOM = 1.6;
 
 const PER_LINE_CHOICES = [2, 4] as const;
 
+/**
+ * The lyric nudge, in NotationView's engraving units.
+ *
+ * NotationView already places the words clear of whatever the notes actually
+ * do, which is a floor, not a preference: a chant-like tone wants its text
+ * tucked close, a melismatic setting wants air. This moves that finished
+ * baseline without touching the collision logic that produced it.
+ *
+ * A staff space is ten units at any engraving scale, so a step of two is a
+ * fifth of a space — fine enough that no single tap is a jolt, coarse enough
+ * that reaching the end of the range is a few taps and not twenty. The range
+ * runs from a little over a space UP (as close as the words can sit before
+ * they are simply on the notes) to nearly two and a half spaces DOWN.
+ */
+const LYRIC_NUDGE_STEP = 2;
+const LYRIC_NUDGE_MIN = -12;
+const LYRIC_NUDGE_MAX = 24;
+
 const CHROMA: Record<Pitch['step'], number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 const midiOf = (p: Pitch) => (p.octave + 1) * 12 + CHROMA[p.step] + p.alter;
 
@@ -543,6 +561,28 @@ export function PsalmComposerDialog({
   // — so every line came out single-measure while the caption claimed two.
   const [layout, setLayout] = useState<{ rows: number; perRow: number } | null>(null);
 
+  /**
+   * Move the lyric line, and keep the value on the SCORE.
+   *
+   * On the score rather than in component state because it has to be saved:
+   * the spacing a psalm was engraved with is part of the setting, not part of
+   * this session. Through setAttrs, so it bypasses the undo stack for the same
+   * reason key and metre do — undo walks back through note entry, and having
+   * spacing tweaks interleaved there makes it unpredictable.
+   *
+   * Exactly 0 clears the field instead of storing a zero, so a score at the
+   * automatic placement stays indistinguishable from one that never had a
+   * preference — including in the MusicXML, which omits it entirely.
+   */
+  const lyricOffset = score.lyricOffset ?? 0;
+  const nudgeLyrics = useCallback((delta: number) => {
+    const next = Math.max(
+      LYRIC_NUDGE_MIN,
+      Math.min(LYRIC_NUDGE_MAX, (scoreRef.current.lyricOffset ?? 0) + delta),
+    );
+    setAttrs({ lyricOffset: next === 0 ? undefined : next });
+  }, [setAttrs]);
+
   const renderJpeg = useCallback(async (): Promise<Blob | null> => {
     const svg = staffRef.current?.querySelector('svg');
     if (!svg) return null;
@@ -854,6 +894,7 @@ export function PsalmComposerDialog({
                   targetPerRow={perLine}
                   scale={ENGRAVING_SCALE[perLine]}
                   onLayout={setLayout}
+                  lyricOffset={lyricOffset}
                   selectedIndex={selected}
                   onNoteClick={selectNote}
                 />
@@ -885,6 +926,43 @@ export function PsalmComposerDialog({
                 (fits {layout.perRow} here)
               </span>
             )}
+            {/* The lyric nudge shares this row deliberately. The control stack
+                above was compacted precisely so the last system stays on
+                screen on an iPad in landscape, where it comes down to single
+                digit pixels — a new row here would spend more of that budget
+                than every control in it is worth. */}
+            <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />
+            <div className="flex items-center gap-1" role="group" aria-label="Lyric spacing">
+              <span className="text-xs text-muted-foreground">Lyrics</span>
+              <Button
+                type="button" size="sm" variant="secondary" className="px-2.5"
+                onClick={() => nudgeLyrics(-LYRIC_NUDGE_STEP)}
+                disabled={lyricOffset <= LYRIC_NUDGE_MIN}
+                aria-label="Move lyrics closer to the notes"
+                title="Move the words up, closer to the notes"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              {/* "auto" is both the readout and the way home: the user can see
+                  at a glance whether they are on the engraver's own placement
+                  or their own, and stepping back to it says so. */}
+              <span
+                className="min-w-[2.25rem] text-center text-xs tabular-nums text-muted-foreground"
+                aria-live="polite"
+                data-testid="lyric-offset"
+              >
+                {lyricOffset === 0 ? 'auto' : lyricOffset > 0 ? `+${lyricOffset}` : `−${-lyricOffset}`}
+              </span>
+              <Button
+                type="button" size="sm" variant="secondary" className="px-2.5"
+                onClick={() => nudgeLyrics(LYRIC_NUDGE_STEP)}
+                disabled={lyricOffset >= LYRIC_NUDGE_MAX}
+                aria-label="Move lyrics away from the notes"
+                title="Move the words down, away from the notes"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Syllable queue */}
