@@ -8,9 +8,13 @@ import { AID_VIEW_ATTR } from '../aidView';
 afterEach(cleanup);
 
 describe('AidStage', () => {
+  // There is no `view` prop by design: the attribute is owned by the stage
+  // and only ever moved off 'focus' imperatively, by withFullView, for the
+  // length of a capture. A prop would let a re-render inside that await
+  // overwrite 'full' and file a one-panel PDF.
   it('carries the view attribute and the focused panel, so CSS can isolate it', () => {
     const { container } = render(
-      <AidStage focusPanel="insideLeft" view="focus" overflowLines={0} dropped={0}
+      <AidStage focusPanel="insideLeft" overflowLines={0} dropped={0}
         sheetsRef={createRef<HTMLDivElement>()}>
         <div className="worship-aid-sheets" />
       </AidStage>,
@@ -22,7 +26,7 @@ describe('AidStage', () => {
 
   it('reports overflow next to the sheet, where it can be acted on', () => {
     const { getByText } = render(
-      <AidStage focusPanel="back" view="focus" overflowLines={3} dropped={1}
+      <AidStage focusPanel="back" overflowLines={3} dropped={1}
         sheetsRef={createRef<HTMLDivElement>()}>
         <div />
       </AidStage>,
@@ -33,7 +37,7 @@ describe('AidStage', () => {
 
   it('says nothing when everything fits', () => {
     const { queryByText } = render(
-      <AidStage focusPanel="back" view="focus" overflowLines={0} dropped={0}
+      <AidStage focusPanel="back" overflowLines={0} dropped={0}
         sheetsRef={createRef<HTMLDivElement>()}>
         <div />
       </AidStage>,
@@ -44,7 +48,7 @@ describe('AidStage', () => {
   it('exposes one ref: the view wrapper IS the capture root', () => {
     const sheetsRef = createRef<HTMLDivElement>();
     const { container } = render(
-      <AidStage focusPanel="insideRight" view="focus" overflowLines={0} dropped={0}
+      <AidStage focusPanel="insideRight" overflowLines={0} dropped={0}
         sheetsRef={sheetsRef}>
         <div />
       </AidStage>,
@@ -58,7 +62,7 @@ describe('AidStage', () => {
 
   it('keeps "1 lines" singular', () => {
     const { getByText, queryByText } = render(
-      <AidStage focusPanel="back" view="focus" overflowLines={1} dropped={0}
+      <AidStage focusPanel="back" overflowLines={1} dropped={0}
         sheetsRef={createRef<HTMLDivElement>()}>
         <div />
       </AidStage>,
@@ -69,7 +73,7 @@ describe('AidStage', () => {
 
   it('separates lines-over and dropped with a middot when both are present', () => {
     const { getByText } = render(
-      <AidStage focusPanel="back" view="focus" overflowLines={3} dropped={1}
+      <AidStage focusPanel="back" overflowLines={3} dropped={1}
         sheetsRef={createRef<HTMLDivElement>()}>
         <div />
       </AidStage>,

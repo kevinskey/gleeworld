@@ -19,8 +19,9 @@
 //    single-input invariant across every panel a user can select.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { AID_VIEW_ATTR } from '@/components/liturgy/aid-editor/aidView';
 
 afterEach(cleanup);
 
@@ -78,13 +79,15 @@ vi.mock('@/integrations/supabase/client', () => ({
           update: vi.fn().mockReturnThis(),
         };
       }
-      // gw_sheet_music: the psalm-image lookup effect.
+      // gw_sheet_music (the psalm-image lookup effect) and gw_media_library
+      // (the archive row the PDF filing writes).
       return {
         select: vi.fn().mockReturnThis(),
         contains: vi.fn().mockReturnThis(),
         not: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         limit: vi.fn(() => Promise.resolve({ data: [], error: null })),
+        insert: vi.fn(() => Promise.resolve({ data: null, error: null })),
       };
     }),
   },
@@ -92,6 +95,21 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 vi.mock('qrcode', () => ({
   default: { toDataURL: vi.fn(() => Promise.resolve('data:image/png;base64,fake')) },
+}));
+
+// html2canvas cannot run in jsdom, and the point of the capture test is the
+// state of the DOM at the moment it is called — not what it produces.
+const toPdfMock = vi.fn(async (_el: HTMLElement) => ({
+  blob: new Blob(['%PDF-'], { type: 'application/pdf' }),
+  pages: 4,
+}));
+vi.mock('@/lib/liturgy/worshipAidPdf', () => ({
+  worshipAidToPdf: (el: HTMLElement) => toPdfMock(el),
+  worshipAidFileName: () => 'worship-aid.pdf',
+}));
+
+vi.mock('@/utils/storage', () => ({
+  uploadFileAndGetUrl: vi.fn(async () => ({ url: 'https://example.test/a.pdf', path: 'worship-aids/a.pdf' })),
 }));
 
 // jsdom's default innerWidth (1024) already reads as "not mobile" under
@@ -153,15 +171,36 @@ describe('WorshipAidPage — file input singleton (Critical 1 & 2)', () => {
   });
 });
 
-describe('WorshipAidPage — single mounted rail (Important 3)', () => {
-  it('does not duplicate Cover field ids across the desktop rail and the drawer', async () => {
-    await renderPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Cover' }));
+// Duplicate Cover/Notices ids used to be pinned by a test here. It is gone
+// because it could not fail: at jsdom's default 1024px innerWidth useIsMobile
+// is false, so the drawer never mounts and the assertion passed identically
+// against the pre-fix code. AidControlRail now derives its field ids from
+// useId(), which makes a collision impossible however many rails are mounted
+// — a structural guarantee needs no test standing watch over it.
 
-    // At the default (non-mobile) jsdom width the drawer stays closed and
-    // unmounted, so ids that AidControlRail hard-codes must appear once.
-    expect(document.querySelectorAll('#aid-title')).toHaveLength(1);
-    expect(document.querySelectorAll('#aid-spine')).toHaveLength(1);
+describe('WorshipAidPage — archive capture runs on the full spread (Critical)', () => {
+  it('flips the view wrapper to "full" for the duration of the PDF capture', async () => {
+    await renderPage();
+
+    // Asserted INSIDE the mock: the whole point is the state of the DOM at
+    // the moment html2canvas walks it. Checking before or after would pass
+    // even if withFullView were deleted from the call site — capturing while
+    // focused files an archive holding one of the four panels, and nobody
+    // finds out until they open it a year later.
+    let viewDuringCapture: string | null | undefined;
+    toPdfMock.mockImplementation(async (el: HTMLElement) => {
+      viewDuringCapture = el.closest(`[${AID_VIEW_ATTR}]`)?.getAttribute(AID_VIEW_ATTR);
+      return { blob: new Blob(['%PDF-'], { type: 'application/pdf' }), pages: 4 };
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /save pdf to library/i }));
+    await waitFor(() => expect(toPdfMock).toHaveBeenCalled());
+
+    expect(viewDuringCapture).toBe('full');
+    // And it is put back, so the editor is not left showing the full spread.
+    await waitFor(() =>
+      expect(document.querySelector(`[${AID_VIEW_ATTR}]`)?.getAttribute(AID_VIEW_ATTR)).toBe('focus'),
+    );
   });
 });
 

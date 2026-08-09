@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { PanelId } from '@/lib/liturgy/worshipAid';
-import { AID_VIEW_ATTR, PANEL_LABEL, type AidView } from './aidView';
+import { AID_VIEW_ATTR, PANEL_LABEL } from './aidView';
 
 /** A single panel is half of an 11in sheet. */
 const PANEL_WIDTH_IN = 5.5;
@@ -9,7 +9,6 @@ const PX_PER_IN = 96;
 
 export interface AidStageProps {
   focusPanel: PanelId;
-  view: AidView;
   overflowLines: number;
   dropped: number;
   /**
@@ -33,7 +32,7 @@ export interface AidStageProps {
  * rendered result; it never re-flows it.
  */
 export function AidStage({
-  focusPanel, view, overflowLines, dropped, sheetsRef, children,
+  focusPanel, overflowLines, dropped, sheetsRef, children,
 }: AidStageProps) {
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -68,10 +67,16 @@ export function AidStage({
         )}
       </div>
 
+      {/* AID_VIEW_ATTR is written as a literal, never from a prop or state.
+          `withFullView` flips it imperatively for the duration of a PDF
+          capture; a React re-render landing inside that `await` would write
+          'focus' back over 'full' mid-capture and silently file a one-panel
+          archive. Keeping it out of React's hands means withFullView is the
+          only writer for as long as a capture is running. */}
       <div
         ref={sheetsRef}
         className="aid-stage-scroll min-h-0 flex-1 overflow-auto p-4"
-        {...{ [AID_VIEW_ATTR]: view }}
+        {...{ [AID_VIEW_ATTR]: 'focus' }}
         data-aid-focus={focusPanel}
         style={{ ['--aid-scale' as string]: String(scale) }}
       >
@@ -104,13 +109,13 @@ export function AidStage({
           /* The fold guide means nothing with one panel showing. */
           [${AID_VIEW_ATTR}="focus"] .worship-aid-fold { display: none; }
         }
-        @media print {
-          /* Belt and braces: the sheets' own print block already resets the
-             editing affordances, but the focus rules above must not survive
-             into print under any circumstance. */
-          [${AID_VIEW_ATTR}] .worship-aid-sheet { display: flex !important; width: auto !important; transform: none !important; }
-          [${AID_VIEW_ATTR}] [data-panel] { display: flex !important; }
-        }
+        /* There is deliberately NO @media print block here. Every focus rule
+           above is already inside @media screen, so none of it can reach the
+           printer — and a "belt and braces" print reset is not harmless:
+           forcing display:flex on [data-panel] laid the Mass's sibling
+           blocks out in a row across the panel, and width:auto overrode the
+           sheet's declared 11in, which is the dimension that decides where
+           the fold lands. Printed output must not change; leave this alone. */
       `}</style>
     </div>
   );

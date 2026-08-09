@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +34,15 @@ export interface AidControlRailProps {
 export function AidControlRail({
   panel, onPanelChange, settings, onSettingsPatch, blockList, phoneEdition, coverExtras,
 }: AidControlRailProps) {
+  // Ids are per-instance, not hard-coded. The rail is rendered as a desktop
+  // column at one viewport and as a drawer at another, and a future layout
+  // that shows both at once would otherwise put two `#aid-title` nodes in the
+  // document — duplicate ids silently break every `<Label htmlFor>` pairing
+  // and assistive-tech association. useId makes that structurally impossible
+  // rather than something a test has to keep watch over.
+  const uid = useId();
+  const fieldId = (name: string) => `${uid}-${name}`;
+
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto p-4 print:hidden">
       <div className="flex flex-wrap gap-1.5">
@@ -50,14 +59,14 @@ export function AidControlRail({
       {panel === 'front' ? (
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="aid-title" className="text-xs">Cover title</Label>
-            <Input id="aid-title" value={settings.coverTitle}
+            <Label htmlFor={fieldId('title')} className="text-xs">Cover title</Label>
+            <Input id={fieldId('title')} value={settings.coverTitle}
               onChange={(e) => onSettingsPatch({ coverTitle: e.target.value })}
               placeholder="Your parish or ensemble name" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="aid-spine" className="text-xs">Spine text (runs up the back cover)</Label>
-            <Input id="aid-spine" value={settings.spineText}
+            <Label htmlFor={fieldId('spine')} className="text-xs">Spine text (runs up the back cover)</Label>
+            <Input id={fieldId('spine')} value={settings.spineText}
               onChange={(e) => onSettingsPatch({ spineText: e.target.value })}
               placeholder="www.yourparish.org" />
           </div>
@@ -74,8 +83,8 @@ export function AidControlRail({
           ['sendingNotice', 'Sending notice'],
         ] as const).map(([key, label]) => (
           <div key={key} className="space-y-1.5">
-            <Label htmlFor={`aid-${key}`} className="text-xs">{label}</Label>
-            <Textarea id={`aid-${key}`} rows={4} value={settings[key]}
+            <Label htmlFor={fieldId(key)} className="text-xs">{label}</Label>
+            <Textarea id={fieldId(key)} rows={4} value={settings[key]}
               onChange={(e) => onSettingsPatch({ [key]: e.target.value } as Partial<WorshipAidSettings>)} />
           </div>
         ))}

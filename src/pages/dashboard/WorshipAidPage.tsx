@@ -80,6 +80,18 @@ export default function WorshipAidPage() {
   const settingsRef = useRef(settings); settingsRef.current = settings;
   const fileRef = useRef<HTMLInputElement>(null);
 
+  /**
+   * Crossing up past `lg` closes the drawer by dropping `open` to false
+   * without Radix ever firing `onOpenChange`, so `railOpen` would stay true
+   * forever. Rotating an iPad back to portrait (1194 → 834) then re-satisfies
+   * `isMobile && railOpen` and the drawer springs open over the sheet with no
+   * user action. Clear the state at the same moment the drawer stops being
+   * the rail, so reopening is always something the user asked for.
+   */
+  useEffect(() => {
+    if (!isMobile) setRailOpen(false);
+  }, [isMobile]);
+
   useEffect(() => {
     (async () => {
       const { data, error } = await supabase
@@ -618,8 +630,20 @@ export default function WorshipAidPage() {
     </div>
   );
 
+  /**
+   * `h-full`, not `h-[calc(100vh-...)]`. DashboardShell's `<main>` is a flex
+   * item with a definite height, so `h-full` resolves against its content box
+   * and sits inside its paddings at every breakpoint — with no constant to
+   * get wrong. There is no single right constant to subtract: the topbar is
+   * 3.5rem below `md` and 5rem above it, `<main>` adds `pt-3 sm:pt-4` plus a
+   * `pb-[4rem+safe-area]` below `md` to clear the docked MobileBottomNav, the
+   * TrialBanner's height is variable, and `100vh` is not `100dvh` in
+   * WKWebView. Overshooting made the page column taller than its scroll
+   * parent: the shell scrolled, and on phones the bottom bar that is the ONLY
+   * way to open the controls slid under the docked nav.
+   */
   return (
-    <div className="flex h-[calc(100vh-4rem)] flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       {/* The one physical file input for both the cover-image upload and
           every per-panel "Add image" button. It must be mounted exactly
           once, independent of which panel or which rail (desktop vs.
@@ -694,7 +718,6 @@ export default function WorshipAidPage() {
 
         <AidStage
           focusPanel={editPanel}
-          view="focus"
           overflowLines={flow.overflowLines}
           dropped={flow.dropped}
           sheetsRef={sheetsRef}
@@ -748,9 +771,14 @@ export default function WorshipAidPage() {
       <div className="border-t border-border p-2 print:hidden lg:hidden">
         <Button variant="outline" className="w-full" onClick={() => setRailOpen(true)}>
           {PANEL_LABEL[editPanel]}
+          {/* Either count can be zero while the other is not — content can be
+              dropped outright without a partial line spilling — so each side
+              is suppressed on its own rather than printing "0 over". */}
           {(flow.overflowLines > 0 || flow.dropped > 0) && (
             <span className="ml-2 text-xs text-destructive">
-              {flow.overflowLines} over{flow.dropped ? ` · ${flow.dropped} dropped` : ''}
+              {flow.overflowLines > 0 && `${flow.overflowLines} over`}
+              {flow.overflowLines > 0 && flow.dropped > 0 && ' · '}
+              {flow.dropped > 0 && `${flow.dropped} dropped`}
             </span>
           )}
         </Button>
@@ -758,9 +786,20 @@ export default function WorshipAidPage() {
       {/* `open` is also gated on `isMobile`, not just `railOpen`: without
           that, resizing past `lg` while the drawer happened to be open
           would leave it mounted alongside the now-visible desktop rail —
-          the exact duplicate-rail condition this split exists to prevent. */}
-      <Sheet open={isMobile && railOpen} onOpenChange={setRailOpen}>
-        <SheetContent side="bottom" className="h-[80vh] p-0">
+          the exact duplicate-rail condition this split exists to prevent.
+          The effect near the top of the component clears `railOpen` on the
+          same transition, because closing this way never reaches
+          `onOpenChange`.
+
+          NON-MODAL on purpose (`modal={false}` + `hideOverlay`). A modal
+          drawer dims the page 80%, traps pointer events and locks body
+          scroll — which would mean the flagship non-desktop target, iPad
+          portrait at 834px, could not see the panel it is editing while it
+          edited it. Half height leaves the focused panel visible above the
+          controls, so the drawer is a companion to the sheet rather than a
+          round trip away from it. */}
+      <Sheet open={isMobile && railOpen} onOpenChange={setRailOpen} modal={false}>
+        <SheetContent side="bottom" hideOverlay className="h-[55vh] p-0">
           <SheetTitle className="sr-only">Aid controls</SheetTitle>
           {/* Clears the close button (absolute, top-3 right-3, up to 44px
               square) so it never sits on top of the panel-switcher row.
