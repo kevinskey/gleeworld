@@ -352,12 +352,36 @@ export default function PublicPageEditor() {
     }
   };
 
+  // Persist the new order.
+  //
+  // This used to skip any row where `b.position === i`. Every caller
+  // (onDragEnd, moveBlock) renumbers before calling — `arrayMove(...).map((b,
+  // i) => ({ ...b, position: i }))` — so that condition was true for EVERY
+  // row and the function silently wrote nothing, ever. Reordering blocks
+  // looked fine until the next reload, when the editor re-read the old order
+  // from the DB. Draft rows still carry the fossil of that: positions with
+  // gaps and duplicates, because nothing ever renumbered them.
+  //
+  // Write every row unconditionally. There are ~10 blocks, and there is no
+  // unique (tenant_id, position) index to collide with — despite what
+  // duplicateBlock's comment claims — so these can go in parallel.
   const persistPositions = async (ordered: SiteBlock[]) => {
-    await Promise.all(
+    const results = await Promise.all(
       ordered.map((b, i) =>
-        b.position === i ? null : supabase.from('gw_site_blocks').update({ position: i }).eq('id', b.id),
+        supabase.from('gw_site_blocks').update({ position: i }).eq('id', b.id).select('id'),
       ),
     );
+    // .select() is what makes a rejected write observable: without it an
+    // RLS-blocked update returns 204 and reads as success.
+    const failed = results.find((r) => r.error) ?? results.find((r) => !r.data?.length);
+    if (failed) {
+      toast({
+        title: 'Order not saved',
+        description: failed.error?.message ?? 'The new block order could not be saved.',
+        variant: 'destructive',
+      });
+      queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
+    }
   };
 
   const onDragEnd = (e: DragEndEvent) => {
@@ -388,8 +412,23 @@ export default function PublicPageEditor() {
     }
     clearTimeout(saveTimers.current[id]);
     saveTimers.current[id] = setTimeout(async () => {
-      const { error } = await supabase.from('gw_site_blocks').update({ config }).eq('id', id);
-      if (error) toast({ title: 'Save failed', description: error.message, variant: 'destructive' });
+      // .select() so a row the caller is not allowed to touch is reported.
+      // A bare update() returns 204 whether it changed one row or none, so
+      // an RLS rejection is indistinguishable from success.
+      const { data, error } = await supabase
+        .from('gw_site_blocks')
+        .update({ config })
+        .eq('id', id)
+        .select('id');
+      if (error) {
+        toast({ title: 'Save failed', description: error.message, variant: 'destructive' });
+      } else if (!data?.length) {
+        toast({
+          title: 'Save failed',
+          description: 'That block could not be saved — it may have been deleted, or you may not have permission.',
+          variant: 'destructive',
+        });
+      }
     }, 600);
   };
 
