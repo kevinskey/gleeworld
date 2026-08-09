@@ -23,9 +23,12 @@ describe('resolveWidgets', () => {
   it('falls back to the role default when nothing is chosen', () => {
     expect(resolveWidgets('faculty', [])).toEqual(widgetsFor('faculty').slice(0, 2).map((w) => w.key));
   });
-  it('caps at two', () => {
-    const all = widgetsFor('student').map((w) => w.key);
-    expect(resolveWidgets('student', all)).toHaveLength(2);
+  it('caps at two even with duplicates and invalid keys mixed in', () => {
+    const [a, b] = widgetsFor('student').map((w) => w.key);
+    expect(resolveWidgets('student', [a, a, 'nope', b, b])).toHaveLength(2);
+  });
+  it('dedupes a repeated valid key instead of filling both slots with it', () => {
+    expect(resolveWidgets('student', ['today', 'today'])).toEqual(['today']);
   });
   it('drops keys the role cannot have', () => {
     expect(resolveWidgets('student', ['needs-attention', 'today'])).toEqual(['today']);

@@ -15,8 +15,8 @@ export interface HomeWidget {
 export const HOME_WIDGETS: HomeWidget[] = [
   {
     key: 'needs-attention',
-    label: 'Needs You',
-    description: 'Unexcused absences, unreviewed practice, ticket flags.',
+    label: 'Needs attention',
+    description: 'Missing attendance, unread messages, and unreviewed practice recordings.',
     roles: ['faculty'],
   },
   {
@@ -27,8 +27,8 @@ export const HOME_WIDGETS: HomeWidget[] = [
   },
   {
     key: 'practice-ledger',
-    label: 'Practice',
-    description: 'Your practice streak, as a staff of quarter notes.',
+    label: 'Practice this week',
+    description: 'Your practiced days this week, Monday through Sunday, as a staff of quarter notes.',
     roles: ['student'],
   },
 ];
@@ -45,7 +45,7 @@ export function widgetsFor(role: 'student' | 'faculty'): HomeWidget[] {
  */
 export function resolveWidgets(role: 'student' | 'faculty', chosen: string[]): string[] {
   const allowed = new Set(widgetsFor(role).map((w) => w.key));
-  const picked = chosen.filter((k) => allowed.has(k)).slice(0, WIDGETS_CAP);
+  const picked = [...new Set(chosen)].filter((k) => allowed.has(k)).slice(0, WIDGETS_CAP);
   if (picked.length > 0) return picked;
   return widgetsFor(role).slice(0, WIDGETS_CAP).map((w) => w.key);
 }
