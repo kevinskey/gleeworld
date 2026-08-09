@@ -134,9 +134,15 @@ const LYRIC_DESCENT_PAD = 4;
 export function NotationView({
   score, width, onNoteClick, selectedIndex,
   editingLyric, lyricValue, onLyricChange, onLyricAdvance, onLyricExit,
-  onToggleSystemBreak, targetPerRow, scale = SCALE, onLayout,
+  onToggleSystemBreak, targetPerRow, scale = SCALE, onLayout, lyricOffset = 0,
 }: {
   score: EditorScore; width?: number; onNoteClick?: (index: number) => void; selectedIndex?: number | null;
+  /** Nudge the lyric line, in engraving units, ADDED to the baseline computed
+   *  below. 0 (the default) is exactly the automatic placement; positive moves
+   *  the words DOWN, away from the notes; negative moves them UP, closer.
+   *  Folded into the height check too, so a large positive nudge grows the SVG
+   *  rather than pushing the words out of it. */
+  lyricOffset?: number;
   /** Prefer full rows of this many measures (phones still cap at 2): the fit
    *  check drops its per-measure breathing room so rows fill to the target,
    *  falling back to fewer only when the measures' true minimum widths cannot
@@ -508,7 +514,14 @@ export function NotationView({
           clearOfNotes = rowStave.getBottomLineY()
             + 4 * rowStave.getSpacingBetweenLines() + LYRIC_INK_GAP + ascent;
         }
-        const lyricY = Math.max(staveBaseline, clearOfNotes);
+        // The nudge is applied to the FINISHED baseline, deliberately outside
+        // the max() above: it is a taste adjustment on top of the automatic
+        // placement, not a floor competing with it. Folding it into either
+        // candidate would let a negative nudge be swallowed whole whenever the
+        // other candidate happened to win — which is precisely the case a
+        // reciting tone hits, and the control would look broken there and
+        // nowhere else.
+        const lyricY = Math.max(staveBaseline, clearOfNotes) + lyricOffset;
         maxContentBottom = Math.max(maxContentBottom, lyricY + LYRIC_DESCENT_PAD);
         lyricJobs.forEach((b) => {
           b.notes.forEach((sn, k) => {
@@ -547,7 +560,7 @@ export function NotationView({
     }
     setLyricPos(selPos);
     setBarTargets(barTargetsBuf);
-  }, [score, width, measuredW, selectedIndex, targetPerRow, scale]);
+  }, [score, width, measuredW, selectedIndex, targetPerRow, scale, lyricOffset]);
 
   const forcedBreakSet = new Set(score.systemBreaks ?? []);
   return (

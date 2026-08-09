@@ -36,6 +36,16 @@ export interface EditorScore {
    *  measure 4 on its own line adds `3` here. Optional; when absent, the
    *  auto-packer decides breaks on its own. */
   systemBreaks?: number[];
+  /** Per-score nudge of the lyric line, in engraving units, ADDED to the
+   *  baseline NotationView computes for itself (see its draw loop). 0 or
+   *  absent means "wherever the automatic placement puts it"; positive moves
+   *  the words DOWN, away from the notes; negative moves them UP, closer.
+   *
+   *  A taste control, not a correction: the automatic baseline already clears
+   *  the notes, but how much air a psalm card wants between tone and text is
+   *  a judgement the person engraving it makes, and it differs per psalm.
+   *  Optional; unset scores engrave exactly as they always did. */
+  lyricOffset?: number;
 }
 
 export function emptyScore(): EditorScore {

@@ -18,9 +18,9 @@ vi.mock('@/contexts/AuthContext', () => ({
 // The engraver is exercised by the notation module's own tests; here it is
 // noise (VexFlow measures real DOM boxes, which jsdom reports as zero).
 vi.mock('@/pages/notation/NotationView', () => ({
-  NotationView: ({ score, targetPerRow, scale, onLayout, onNoteClick }: {
+  NotationView: ({ score, targetPerRow, scale, onLayout, onNoteClick, lyricOffset }: {
     score: { elements: unknown[] };
-    targetPerRow?: number; scale?: number;
+    targetPerRow?: number; scale?: number; lyricOffset?: number;
     onLayout?: (i: { rows: number; perRow: number }) => void;
     onNoteClick?: (i: number) => void;
   }) => {
@@ -39,6 +39,7 @@ vi.mock('@/pages/notation/NotationView', () => ({
         data-notes={score.elements.length}
         data-per-row={targetPerRow}
         data-scale={scale}
+        data-lyric-offset={lyricOffset}
       >
         {score.elements.map((_, i) => (
           <button key={i} type="button" data-testid={`note-${i}`} onClick={() => onNoteClick?.(i)} />
@@ -337,6 +338,82 @@ describe('PsalmComposerDialog', () => {
     open({ psalmText: null, citation: null, observation: null });
     expect(screen.getByLabelText(/title/i)).toHaveValue('Responsorial Psalm');
     expect(screen.queryByText(/ left$/)).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * The lyric nudge.
+ *
+ * Different psalms want different air between the tone and the words, and the
+ * engraver's automatic placement is a floor rather than a preference — so the
+ * person setting the psalm gets to move it, per score.
+ */
+describe('nudging the lyrics', () => {
+  const readout = () => screen.getByTestId('lyric-offset').textContent;
+  const closer = () => screen.getByRole('button', { name: /closer to the notes/i });
+  const away = () => screen.getByRole('button', { name: /away from the notes/i });
+
+  it('starts on the engraver\'s own placement, and says so', () => {
+    open();
+    expect(readout()).toBe('auto');
+    // Nothing passed down means nothing added — the automatic baseline.
+    expect(screen.getByTestId('staff')).toHaveAttribute('data-lyric-offset', '0');
+  });
+
+  it('moves the words down, and tells the engraver by how much', () => {
+    open();
+    fireEvent.click(away());
+    expect(readout()).toBe('+2');
+    expect(screen.getByTestId('staff')).toHaveAttribute('data-lyric-offset', '2');
+    fireEvent.click(away());
+    expect(screen.getByTestId('staff')).toHaveAttribute('data-lyric-offset', '4');
+  });
+
+  it('moves the words up, closer to the notes', () => {
+    open();
+    fireEvent.click(closer());
+    expect(readout()).toBe('−2');
+    expect(screen.getByTestId('staff')).toHaveAttribute('data-lyric-offset', '-2');
+  });
+
+  it('reads "auto" again once it is stepped back to the default', () => {
+    open();
+    fireEvent.click(away());
+    fireEvent.click(closer());
+    expect(readout()).toBe('auto');
+    expect(screen.getByTestId('staff')).toHaveAttribute('data-lyric-offset', '0');
+  });
+
+  it('stops at the ends of the range rather than running away', () => {
+    open();
+    for (let i = 0; i < 40; i++) fireEvent.click(away());
+    expect(readout()).toBe('+24');
+    expect(away()).toBeDisabled();
+    for (let i = 0; i < 40; i++) fireEvent.click(closer());
+    expect(readout()).toBe('−12');
+    expect(closer()).toBeDisabled();
+  });
+
+  // The spacing is part of the setting, not part of the session: reopening a
+  // psalm engraved with the words tucked close must engrave it that way again.
+  it('saves the nudge with the score', async () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
+    fireEvent.click(away());
+    fireEvent.click(away());
+    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
+    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
+    expect(savePsalmToLibrary.mock.calls[0][0].score.lyricOffset).toBe(4);
+  });
+
+  it('saves nothing at all when the placement is the automatic one', async () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'C' }));
+    fireEvent.click(away());
+    fireEvent.click(closer());
+    fireEvent.click(screen.getByRole('button', { name: /save to library/i }));
+    await vi.waitFor(() => expect(savePsalmToLibrary).toHaveBeenCalled());
+    expect(savePsalmToLibrary.mock.calls[0][0].score.lyricOffset).toBeUndefined();
   });
 });
 
