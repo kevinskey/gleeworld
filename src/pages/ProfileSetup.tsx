@@ -82,6 +82,7 @@ const profileSetupSchema = z.object({
   twitter: z.string().optional(),
   facebook: z.string().optional(),
   youtube: z.string().optional(),
+  patreon: z.string().optional(),
 });
 
 type ProfileSetupFormData = z.infer<typeof profileSetupSchema>;
@@ -251,6 +252,7 @@ const ProfileSetup = () => {
         twitter: data.twitter,
         facebook: data.facebook,
         youtube: data.youtube,
+        patreon: data.patreon,
       };
 
       const { data: updatedRows, error } = await supabase
@@ -826,6 +828,15 @@ const ProfileSetup = () => {
                     {...register("facebook")}
                     className="mt-1"
                     placeholder="Profile URL"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="patreon">Patreon</Label>
+                  <Input
+                    id="patreon"
+                    {...register("patreon")}
+                    className="mt-1"
+                    placeholder="patreon.com/username"
                   />
                 </div>
               </CardContent>
