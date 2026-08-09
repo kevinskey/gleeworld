@@ -7,6 +7,15 @@ import { AllToolsSheet, type AllToolsSheetProps } from './AllToolsSheet';
 import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
 import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 
+// Same mocking shape as AddYouTubeVideoForm.test.tsx's toast coverage —
+// vi.hoisted so the mock factory below can close over it, asserting on
+// calls rather than needing a real <Toaster/> mounted to read rendered
+// text.
+const { toastMock } = vi.hoisted(() => ({ toastMock: vi.fn() }));
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({ toast: toastMock }),
+}));
+
 // jsdom implements neither ResizeObserver nor Element.scrollIntoView, and
 // cmdk's CommandList/CommandItem need both at mount (a height observer for
 // its `--cmdk-list-height` var, scrollIntoView to keep the highlighted row
@@ -73,7 +82,10 @@ const renderSheet = (props: Partial<AllToolsSheetProps> = {}) => {
   return { ...utils, onPin, onOpenChange };
 };
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  toastMock.mockReset();
+});
 
 describe('AllToolsSheet — browsing', () => {
   it('groups by section when there is no query', () => {
@@ -150,7 +162,26 @@ describe('AllToolsSheet — pinning', () => {
     fireEvent.click(screen.getByRole('button', { name: /pin academy to your space/i }));
     await waitFor(() => expect(onPin).toHaveBeenCalledWith('academy'));
     expect(onOpenChange).not.toHaveBeenCalled();
-    expect(screen.getByTestId('location-probe')).toHaveTextContent('/dashboard');
+    // Exact match, not toHaveTextContent('/dashboard') — jest-dom's
+    // toHaveTextContent does a SUBSTRING match, and every entry.to in this
+    // fixture starts with '/dashboard/', so a substring check here would
+    // also be satisfied by a navigation to '/dashboard/academy'. This only
+    // catches a leaked navigate() if it's checked for equality.
+    expect(screen.getByTestId('location-probe').textContent).toBe('/dashboard');
+  });
+
+  it('surfaces a failed pin instead of discarding it silently', async () => {
+    const onPin = vi.fn().mockResolvedValue(false);
+    renderSheet({ onPin });
+    fireEvent.click(screen.getByRole('button', { name: /pin academy to your space/i }));
+    await waitFor(() =>
+      expect(toastMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringMatching(/couldn't pin academy/i),
+          variant: 'destructive',
+        }),
+      ),
+    );
   });
 
   it('marks already-pinned entries and offers no pin button for them', () => {
@@ -172,7 +203,12 @@ describe('AllToolsSheet — selecting a row', () => {
     const { onOpenChange } = renderSheet();
     fireEvent.click(screen.getByText('Academy'));
     expect(onOpenChange).toHaveBeenCalledWith(false);
-    expect(screen.getByTestId('location-probe')).toHaveTextContent('/dashboard/academy');
+    // Exact match for the same reason as the pin test above — substring
+    // matching isn't wrong here in THIS fixture (no other route is a
+    // substring of '/dashboard/academy'), but it's the same class of bug
+    // waiting to happen the moment the fixture changes, so hold the same
+    // standard.
+    expect(screen.getByTestId('location-probe').textContent).toBe('/dashboard/academy');
   });
 });
 

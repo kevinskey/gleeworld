@@ -207,11 +207,27 @@ export function AllToolsSheet({ open, onOpenChange, available, pinned, onPin }: 
   // remounts with fresh ones in mount order — confirmed by mutation-testing
   // this exact scenario before landing on the binary design below, where
   // cmdk's reorder is a no-op (every visible match ties at 1) and ORDER
-  // instead comes from `fullOrder` below, which needs no cooperation from
+  // instead comes from `searchOrder` below, which needs no cooperation from
   // cmdk's internal DOM patching to survive a remount.
+  // cmdk calls `filter` once per registered item, synchronously, all
+  // within the same loop for a given `search` string (see cmdk's `X()`) —
+  // so a same-search cache here turns what would otherwise be an O(n)
+  // `searchNav` call PER ITEM (O(n²) per keystroke) into one `searchNav`
+  // call per keystroke. Harmless either way at this catalog's size (tens
+  // of entries), but free: the cache is a plain closure-scoped variable
+  // recreated every render, doesn't need to persist beyond the render
+  // that made it, and (unlike `searchOrder` below) still keys strictly off
+  // the live `search` argument, not React state, so it doesn't reintroduce
+  // the staleness trap `filter`'s own comment above warns about.
+  let matchCacheSearch: string | null = null;
+  let matchCacheKeys: Set<string> | null = null;
   const filter = (value: string, search: string) => {
     if (!search.trim()) return 1;
-    return searchNav(available, search).some((e) => e.key === value) ? 1 : 0;
+    if (search !== matchCacheSearch) {
+      matchCacheSearch = search;
+      matchCacheKeys = new Set(searchNav(available, search).map((e) => e.key));
+    }
+    return matchCacheKeys!.has(value) ? 1 : 0;
   };
 
   // --- Ordering: searchNav's matches, in its order, followed by everything
