@@ -48,4 +48,21 @@ describe('AidControlRail', () => {
     expect(queryByTestId('blocks')).toBeNull();
     expect(getByLabelText(/cover title/i)).toBeTruthy();
   });
+
+  it('renders coverExtras on the Cover panel', () => {
+    const { getByTestId } = render(
+      <AidControlRail {...base} panel="front" onPanelChange={() => {}}
+        coverExtras={<div data-testid="cover-extras" />} />,
+    );
+    expect(getByTestId('cover-extras')).toBeTruthy();
+  });
+
+  it('does not render coverExtras on an interior panel', () => {
+    const { queryByTestId, getByTestId } = render(
+      <AidControlRail {...base} panel="insideRight" onPanelChange={() => {}}
+        coverExtras={<div data-testid="cover-extras" />} />,
+    );
+    expect(queryByTestId('cover-extras')).toBeNull();
+    expect(getByTestId('blocks')).toBeTruthy();
+  });
 });

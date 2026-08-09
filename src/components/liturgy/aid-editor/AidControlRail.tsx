@@ -27,10 +27,12 @@ export interface AidControlRailProps {
   blockList: ReactNode;
   /** Rendered inside the collapsed "Phone edition" section. */
   phoneEdition: ReactNode;
+  /** Rendered under the cover fields on the Cover panel — the page owns the upload control, which closes over fileRef. */
+  coverExtras?: ReactNode;
 }
 
 export function AidControlRail({
-  panel, onPanelChange, settings, onSettingsPatch, blockList, phoneEdition,
+  panel, onPanelChange, settings, onSettingsPatch, blockList, phoneEdition, coverExtras,
 }: AidControlRailProps) {
   return (
     <div className="flex h-full flex-col gap-4 overflow-y-auto p-4 print:hidden">
@@ -59,6 +61,7 @@ export function AidControlRail({
               onChange={(e) => onSettingsPatch({ spineText: e.target.value })}
               placeholder="www.yourparish.org" />
           </div>
+          {coverExtras}
         </div>
       ) : (
         blockList

@@ -542,6 +542,9 @@ export interface AidControlRailProps {
   blockList: React.ReactNode;
   /** Rendered inside the collapsed "Phone edition" section. */
   phoneEdition: React.ReactNode;
+  /** Rendered under the cover fields, Cover panel only. Carries the page's
+   *  cover-image upload control, which closes over fileRef. */
+  coverExtras?: React.ReactNode;
 }
 export function AidControlRail(props: AidControlRailProps): JSX.Element
 ```
@@ -699,7 +702,7 @@ export function AidControlRail({
 }
 ```
 
-The cover-image upload control in `WorshipAidPage.tsx` (the hidden `<input type="file">` and its trigger, around lines 495-514) owns `fileRef` and `uploadTarget`, which must stay on the page. Task 5 passes that control in through the `blockList` prop when `panel === 'front'`, so it appears under the cover fields. This component never imports `fileRef`. That is the decision — do not leave it as a follow-up.
+The cover-image upload control in `WorshipAidPage.tsx` (the hidden `<input type="file">` and its trigger, around lines 495-514) owns `fileRef` and `uploadTarget`, which must stay on the page. It is passed in through a dedicated `coverExtras` prop, rendered under the cover fields on the Cover panel only. It CANNOT ride the `blockList` prop: `blockList` is not rendered when `panel === 'front'` — the cover fields take that slot — so anything passed there would vanish on the very panel it belongs to. This component never imports `fileRef`.
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -768,6 +771,7 @@ Replace the container and body with:
             onSettingsPatch={patch}
             blockList={blockList}
             phoneEdition={phoneEdition}
+            coverExtras={coverUpload}
           />
         </div>
 
@@ -803,6 +807,7 @@ Replace the container and body with:
             onSettingsPatch={patch}
             blockList={blockList}
             phoneEdition={phoneEdition}
+            coverExtras={coverUpload}
           />
         </SheetContent>
       </Sheet>
@@ -810,6 +815,8 @@ Replace the container and body with:
 ```
 
 Add `const [railOpen, setRailOpen] = useState(false);` beside the other state, and import `Sheet, SheetContent` from `@/components/ui/sheet`.
+
+Extract the cover-image upload control (the hidden `<input type="file">` and its trigger) into `const coverUpload = (...)` and pass it as `coverExtras` — it must NOT go through `blockList`, which is not rendered on the Cover panel.
 
 Extract the existing block-editing JSX (the `<ul>` and its insert buttons, lines ~608–698) into a local `const blockList = (...)` above the return, and the Phone edition card body (lines ~533–565) into `const phoneEdition = (...)`. Both keep their existing handlers — `insert`, `move`, `setText`, `setGap`, `hide`, `restore`, `removeInsert`, `publish` — unchanged.
 
