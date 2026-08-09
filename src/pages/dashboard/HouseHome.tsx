@@ -25,6 +25,7 @@ import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useMyTools } from '@/hooks/useMyTools';
 import { mergeGridOrder, MY_TOOLS_CAP } from '@/lib/navigation/myTools';
+import { resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
 import { DateCardSlot } from '@/components/home/date-card/DateCardSlot';
 import { hasParsableEventAt } from '@/components/home/date-card/eventAt';
@@ -178,6 +179,12 @@ export default function HouseHome() {
     hiddenRoutes: hiddenNav,
   }, previewRole), [moduleSet, profile, tenantSlug, canEditMusicLibrary, hiddenNav, previewRole]);
   const { myTools, loading: layoutLoading, saveTools } = useMyTools(isFaculty ? 'faculty' : 'student');
+  // The member's chosen home widgets (My Space, Phase 2) — falls back to
+  // the role default pair when unset, so the home never renders zero.
+  const shownWidgets = useMemo(
+    () => resolveWidgets(isFaculty ? 'faculty' : 'student', myTools?.widgets ?? []),
+    [isFaculty, myTools],
+  );
   // The phone tab bar is what the grid must not duplicate, and it only
   // exists below md — the same gate MobileBottomNav itself uses. Above it,
   // Calendar/Messages belong on the grid exactly as they do on the shelf.
@@ -252,63 +259,70 @@ export default function HouseHome() {
           )}
         </div>
 
-        {/* Widget 1 */}
+        {/* Widget 1 — 'needs-attention' (faculty) or 'practice-ledger'
+            (student), only when the member chose it in My Space. */}
         {isFaculty ? (
+          shownWidgets.includes('needs-attention') && (
+            <div className="bg-card border border-border p-3">
+              <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Needs attention</div>
+              {urgent.length === 0 ? (
+                <div className="text-sm text-muted-foreground">All caught up.</div>
+              ) : (
+                <ul className="divide-y divide-border">
+                  {urgent.map((r) => (
+                    <li key={r.id}>
+                      <Link to={r.subtype === 'practice_recording' ? '/dashboard/practice-recordings' : '/attendance'}
+                        className="flex items-center justify-between py-2 text-sm min-h-[44px]">
+                        <span className="truncate">{r.title}</span>
+                        <span className="text-xs text-status-warning-fg bg-status-warning-bg border border-status-warning-border px-1.5 py-0.5 ml-2 shrink-0">
+                          {r.detail ?? 'Open'}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )
+        ) : (
+          shownWidgets.includes('practice-ledger') && (
+            <div className="bg-card border border-border p-3">
+              <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Practice this week</div>
+              <div className="text-xl tracking-[0.35em] text-primary"
+                aria-label={`${glyphs.filter((g) => g === 'note').length} of 7 days practiced this week`}>
+                {glyphs.map((g, i) => (
+                  <span key={i} aria-hidden="true" className={g === 'note' ? '' : 'text-muted-foreground/40'}>
+                    {/* '○' rather than the quarter rest U+1D13D — the Musical
+                        Symbols block has no font coverage on Android and some
+                        desktop stacks, so it renders as tofu. */}
+                    {g === 'note' ? '♩' : g === 'rest' ? '○' : '·'}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )
+        )}
+
+        {/* Widget 2: Today */}
+        {shownWidgets.includes('today') && (
           <div className="bg-card border border-border p-3">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Needs attention</div>
-            {urgent.length === 0 ? (
-              <div className="text-sm text-muted-foreground">All caught up.</div>
+            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Today</div>
+            {todayRows.length === 0 ? (
+              <div className="text-sm text-muted-foreground">No sessions today.</div>
             ) : (
               <ul className="divide-y divide-border">
-                {urgent.map((r) => (
-                  <li key={r.id}>
-                    <Link to={r.subtype === 'practice_recording' ? '/dashboard/practice-recordings' : '/attendance'}
-                      className="flex items-center justify-between py-2 text-sm min-h-[44px]">
-                      <span className="truncate">{r.title}</span>
-                      <span className="text-xs text-status-warning-fg bg-status-warning-bg border border-status-warning-border px-1.5 py-0.5 ml-2 shrink-0">
-                        {r.detail ?? 'Open'}
-                      </span>
-                    </Link>
+                {todayRows.map((r) => (
+                  <li key={r.id} className="flex items-center justify-between py-2 text-sm">
+                    <span className="truncate">{r.title}</span>
+                    <span className="tabular-nums text-muted-foreground ml-2 shrink-0">
+                      {format(new Date(r.event_at), 'h:mm a')}
+                    </span>
                   </li>
                 ))}
               </ul>
             )}
           </div>
-        ) : (
-          <div className="bg-card border border-border p-3">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Practice this week</div>
-            <div className="text-xl tracking-[0.35em] text-primary"
-              aria-label={`${glyphs.filter((g) => g === 'note').length} of 7 days practiced this week`}>
-              {glyphs.map((g, i) => (
-                <span key={i} aria-hidden="true" className={g === 'note' ? '' : 'text-muted-foreground/40'}>
-                  {/* '○' rather than the quarter rest U+1D13D — the Musical
-                      Symbols block has no font coverage on Android and some
-                      desktop stacks, so it renders as tofu. */}
-                  {g === 'note' ? '♩' : g === 'rest' ? '○' : '·'}
-                </span>
-              ))}
-            </div>
-          </div>
         )}
-
-        {/* Widget 2: Today */}
-        <div className="bg-card border border-border p-3">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Today</div>
-          {todayRows.length === 0 ? (
-            <div className="text-sm text-muted-foreground">No sessions today.</div>
-          ) : (
-            <ul className="divide-y divide-border">
-              {todayRows.map((r) => (
-                <li key={r.id} className="flex items-center justify-between py-2 text-sm">
-                  <span className="truncate">{r.title}</span>
-                  <span className="tabular-nums text-muted-foreground ml-2 shrink-0">
-                    {format(new Date(r.event_at), 'h:mm a')}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
             </div>
           );
 

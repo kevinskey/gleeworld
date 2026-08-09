@@ -12,9 +12,24 @@
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.2
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { ChevronDown, LayoutGrid } from 'lucide-react';
+import { ChevronDown, LayoutGrid, Settings } from 'lucide-react';
 import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 import type { CatalogEntry } from '@/lib/navigation/navCatalog';
+
+// Not a NAV_CATALOG entry — Setup is a row the shelf always offers on its
+// own, not a gated destination a member picks. Row only reads
+// icon/to/end/tourId/label off its `entry` prop, so a hand-built
+// CatalogEntry-shaped constant is enough; section/tone are unused here but
+// required by the type.
+const SETUP_ENTRY: CatalogEntry = {
+  key: 'my-space-setup',
+  to: '/dashboard/my-space',
+  label: 'Setup',
+  icon: Settings,
+  section: 'today',
+  tone: 'bg-muted text-muted-foreground',
+  tourId: 'nav-my-space-setup',
+};
 
 export interface NavShelfProps {
   /**
@@ -81,41 +96,45 @@ export function NavShelf({ home, tools, sections, variant, onNavigate }: NavShel
         ))}
       </div>
 
-      {rest.length > 0 && (
-        <>
-          <div className="h-px bg-border mx-2 my-2" />
-          <button
-            type="button"
-            data-tour="nav-all-tools-toggle"
-            onClick={() => setAllOpen((o) => !o)}
-            aria-expanded={allOpen}
-            className={`${ROW_BASE} ${variant === 'desktop' ? ROW_DESKTOP : ROW_MOBILE} ${ROW_INACTIVE} justify-between`}
-          >
-            <span className="flex items-center gap-2.5">
-              <LayoutGrid className={`${variant === 'desktop' ? 'w-[18px] h-[18px]' : 'w-5 h-5'} shrink-0 text-slate-500`} aria-hidden />
-              All Tools
-            </span>
-            <ChevronDown
-              className={`w-4 h-4 text-muted-foreground transition-transform ${allOpen ? '' : '-rotate-90'}`}
-              aria-hidden
-            />
-          </button>
+      <div className="h-px bg-border mx-2 my-2" />
 
-          {allOpen && (
-            <div className="space-y-1.5 pt-1">
-              {rest.map((section) => (
-                <div key={section.key} className="rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5">
-                  <div className="px-2 pb-1 pt-0.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground">
-                    {section.label}
-                  </div>
-                  {section.items.map((item) => (
-                    <Row key={item.key} entry={item} variant={variant} onNavigate={onNavigate} />
-                  ))}
-                </div>
+      {rest.length > 0 && (
+        <button
+          type="button"
+          data-tour="nav-all-tools-toggle"
+          onClick={() => setAllOpen((o) => !o)}
+          aria-expanded={allOpen}
+          className={`${ROW_BASE} ${variant === 'desktop' ? ROW_DESKTOP : ROW_MOBILE} ${ROW_INACTIVE} justify-between`}
+        >
+          <span className="flex items-center gap-2.5">
+            <LayoutGrid className={`${variant === 'desktop' ? 'w-[18px] h-[18px]' : 'w-5 h-5'} shrink-0 text-slate-500`} aria-hidden />
+            All Tools
+          </span>
+          <ChevronDown
+            className={`w-4 h-4 text-muted-foreground transition-transform ${allOpen ? '' : '-rotate-90'}`}
+            aria-hidden
+          />
+        </button>
+      )}
+
+      {/* Setup — always present, unlike All Tools above (which only
+          renders when there's something left to disclose). Reaches the
+          personal /dashboard/my-space editor. */}
+      <Row entry={SETUP_ENTRY} variant={variant} onNavigate={onNavigate} />
+
+      {rest.length > 0 && allOpen && (
+        <div className="space-y-1.5 pt-1">
+          {rest.map((section) => (
+            <div key={section.key} className="rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5">
+              <div className="px-2 pb-1 pt-0.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground">
+                {section.label}
+              </div>
+              {section.items.map((item) => (
+                <Row key={item.key} entry={item} variant={variant} onNavigate={onNavigate} />
               ))}
             </div>
-          )}
-        </>
+          ))}
+        </div>
       )}
     </div>
   );

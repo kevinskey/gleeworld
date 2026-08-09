@@ -82,4 +82,10 @@ describe('NavShelf', () => {
     );
     expect(grabCursorElements).toHaveLength(0);
   });
+
+  it('renders a Setup row linking to My Space', () => {
+    renderShelf();
+    const link = screen.getByRole('link', { name: /setup/i });
+    expect(link).toHaveAttribute('href', '/dashboard/my-space');
+  });
 });
