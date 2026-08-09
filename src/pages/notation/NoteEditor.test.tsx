@@ -38,7 +38,12 @@ describe('NoteEditor', () => {
     expect(latest.elements[0]).toMatchObject({ kind: 'rest', base: 'half' });
   });
   it('Backspace deletes the last element', () => {
-    let latest = { ...emptyScore(), elements: [noteOf({ step:'C', octave:4, alter:0 }, 'quarter')] };
+    // Annotated, not inferred: without this `latest` takes the narrow type of
+    // its initialiser (elements: EditorNote[], and every field EditorScore
+    // happened to have that day), so onChange handing back a real EditorScore
+    // is a type error — and one whose MESSAGE spells the whole interface out,
+    // so it re-breaks the typecheck baseline every time a field is added.
+    let latest: EditorScore = { ...emptyScore(), elements: [noteOf({ step:'C', octave:4, alter:0 }, 'quarter')] };
     render(<NoteEditor score={latest} onChange={(s) => { latest = s; }} />);
     fireEvent.keyDown(window, { key: 'Backspace' });
     expect(latest.elements).toHaveLength(0);
