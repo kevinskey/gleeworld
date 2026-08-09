@@ -11,7 +11,7 @@ import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { migrateToMyTools, sanitizeTools, type MyTools } from '@/lib/navigation/myTools';
+import { migrateToMyTools, sanitizeTools, WIDGETS_CAP, type MyTools } from '@/lib/navigation/myTools';
 
 /** The two user_preferences columns this hook reads, exactly as stored. */
 interface StoredNavPrefs {
@@ -72,14 +72,21 @@ export function useMyTools(role: 'student' | 'faculty') {
     [prefs, role],
   );
 
-  const saveTools = useCallback(async (tools: string[]): Promise<boolean> => {
+  // General patch saver: tools, widgets, and setupComplete can each be
+  // updated independently, defaulting to whatever is already on the
+  // member's record when omitted from the patch.
+  const saveMyTools = useCallback(async (patch: {
+    tools?: string[]; widgets?: string[]; setupComplete?: boolean;
+  }): Promise<boolean> => {
     if (!uid) return false;
     const next: MyTools = {
       v: 4,
-      tools: sanitizeTools(tools),
-      widgets: myTools?.widgets ?? [],
-      // Any deliberate save is, by definition, a completed setup.
-      setupComplete: true,
+      tools: patch.tools !== undefined ? sanitizeTools(patch.tools) : (myTools?.tools ?? []),
+      widgets: patch.widgets !== undefined
+        ? patch.widgets.slice(0, WIDGETS_CAP)
+        : (myTools?.widgets ?? []),
+      // Any deliberate save completes setup unless the caller says otherwise.
+      setupComplete: patch.setupComplete ?? true,
     };
     // Optimistic write BEFORE the round-trip. Without it the shelf and grid
     // re-render from the stale cache for the ~200-500ms the RPC takes,
@@ -87,7 +94,12 @@ export function useMyTools(role: 'student' | 'faculty') {
     // whole-screen blink. (Same reasoning as the old useNavItemOrder.)
     // Writing the raw-row shape (not the derived record) means the one
     // cache entry both roles read updates once, so no role can be left
-    // rendering pre-save tools.
+    // rendering pre-save tools. Read useMyTools' query above before
+    // touching this: the query caches the RAW user_preferences row under a
+    // role-less key and migrateToMyTools derives MyTools from it in a
+    // useMemo, so setQueryData MUST write that same StoredNavPrefs shape —
+    // writing `next` (a MyTools) directly here would be discarded by the
+    // derive step and the UI would flicker back to the pre-save state.
     const queryKey = ['my-tools', uid ?? 'anon'];
     const previous = queryClient.getQueryData<StoredNavPrefs | null>(queryKey) ?? null;
     queryClient.setQueryData<StoredNavPrefs>(queryKey, {
@@ -99,7 +111,8 @@ export function useMyTools(role: 'student' | 'faculty') {
       // tenant_isolation_restrict policy on user_preferences and resyncs
       // tenant_id to current_tenant_id() on every save. A direct upsert 403s
       // whenever the caller's subdomain-derived tenant disagrees with the
-      // stored row. Do not replace it.
+      // stored row. Do not replace it. This is the ONE call site — saveTools
+      // below delegates here rather than duplicating the RPC call.
       const { error } = await supabase.rpc('save_nav_item_order' as never, {
         p_nav_item_order: next,
       });
@@ -114,7 +127,12 @@ export function useMyTools(role: 'student' | 'faculty') {
       queryClient.setQueryData(queryKey, previous);
       return false;
     }
-  }, [uid, myTools?.widgets, queryClient]);
+  }, [uid, myTools, queryClient]);
 
-  return { myTools, loading: isLoading, saveTools };
+  const saveTools = useCallback(
+    (tools: string[]) => saveMyTools({ tools }),
+    [saveMyTools],
+  );
+
+  return { myTools, loading: isLoading, saveTools, saveMyTools };
 }

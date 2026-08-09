@@ -12,6 +12,9 @@ import type { CatalogEntry } from './navCatalog';
 /** Matches the shipped keycap cap, so migration never truncates a member's tiles. */
 export const MY_TOOLS_CAP = 8;
 
+/** House spec §5.1 caps the home at two role widgets. */
+export const WIDGETS_CAP = 2;
+
 export interface MyTools {
   v: 4;
   /** ordered catalog keys, max MY_TOOLS_CAP. 'home' is implicit and never stored. */

@@ -144,3 +144,42 @@ describe('useMyTools', () => {
     expect(result.current.myTools?.tools).toEqual(before);
   });
 });
+
+describe('saveMyTools', () => {
+  it('patches widgets without disturbing tools', async () => {
+    maybeSingle.mockResolvedValue({
+      data: { nav_item_order: { v: 4, tools: ['studio'], widgets: [], setupComplete: true }, home_tile_layout: null },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => { await result.current.saveMyTools({ widgets: ['today'] }); });
+
+    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[]; widgets: string[] };
+    expect(sent.tools).toEqual(['studio']);
+    expect(sent.widgets).toEqual(['today']);
+  });
+
+  it('caps widgets at 2', async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: null });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    await act(async () => { await result.current.saveMyTools({ widgets: ['a', 'b', 'c'] }); });
+    const sent = rpc.mock.calls[0][1].p_nav_item_order as { widgets: string[] };
+    expect(sent.widgets).toHaveLength(2);
+  });
+
+  it('can mark setup complete without changing anything else', async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: null });
+    const { result } = renderHook(() => useMyTools('faculty'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    const before = result.current.myTools!.tools;
+
+    await act(async () => { await result.current.saveMyTools({ setupComplete: true }); });
+
+    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[]; setupComplete: boolean };
+    expect(sent.tools).toEqual(before);
+    expect(sent.setupComplete).toBe(true);
+  });
+});

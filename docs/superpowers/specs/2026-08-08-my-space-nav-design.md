@@ -248,9 +248,16 @@ the dependency stays, it just moves to the screen where sorting is the task.
 ```
 
 Same editor; the right-hand mode writes tenant defaults per role instead of the personal
-record. The existing per-role hide list (Workspace Settings → Navigation) folds in here: an
-item withheld from a role is simply one that role cannot ⊕. `WorkspaceSettingsPage`'s
-Navigation tab becomes a link to this screen.
+record.
+
+The per-role hide list (Workspace Settings → Navigation) **stays where it is.** The original
+design folded it into this screen, but hiding is route-based and orthogonal to shelves —
+and removing a shipped admin control is not something a nav redesign should do on the way
+past. What shipped instead (Phase 2): the hide list keeps its editor, and its panel gains a
+card above it linking here — heading *Default tools for each role*, body *Set what new
+members start with in My Space → Defaults for members.* The two controls compose: an item
+withheld from a role never reaches that role's ⊕ pool, because `hiddenRoutes` is part of the
+same `NavContext` this screen resolves.
 
 **First run.** On first login the same component renders as a sheet, pre-filled with the
 tenant default for that member's role, titled *"Set up your space."* Confirm or adjust.
@@ -290,9 +297,13 @@ is common now that `current_tenant_id()` is subdomain-aware. The RPC also resync
 
 ### 6.2 Tenant defaults
 
-`gw_tenant_nav_prefs` gains `default_tools jsonb` — `{ admin: string[], student: string[],
-member: string[] }` — alongside the existing `hidden_items`. Written only by tenant admins,
-read by the first-run sheet and by any member with no personal record.
+`gw_tenant_nav_prefs` gains `default_tools text[]`, alongside the existing `hidden_items`, on
+the same `(tenant_id, role)` row rather than a `{ admin: [], student: [], member: [] }` jsonb
+blob — the table is already `PRIMARY KEY (tenant_id, role)`, one row per role, so a role-keyed
+blob would nest role inside a row already partitioned by role, and every write would have to
+read-modify-write the other roles' data to avoid clobbering it. Empty array means "no tenant
+default set", falling back to the platform role default; `NULL` is not used. Written only by
+tenant admins, read by the first-run sheet and by any member with no personal record.
 
 ### 6.3 Migration of existing preferences
 
@@ -376,7 +387,7 @@ House's `--radius: 0` / cream-canvas language is superseded and does not apply.
 | 10 collapsible sidebar sections + `DEFAULT_COLLAPSED` + `loadCollapsed` | Nothing left to collapse |
 | `buildNavSections` section-grouping and `sectionOrder` handling | Shelf is flat |
 | `useHomeTileLayout` and the `home_tile_layout` column | Superseded by My Tools |
-| Workspace Settings → Navigation panel body | Becomes a link to `/dashboard/my-space` |
+| ~~Workspace Settings → Navigation panel body~~ | **Not deleted.** The hide-list editor stays; the panel gained a link card to `/dashboard/my-space` above it. See §5.4 — hiding is route-based and orthogonal to shelves. |
 | ~34 catalog entries | Merged, folded, or moved to Settings (§4) |
 
 **Kept deliberately:** the iOS jiggle-edit on the keycap grid. It is the Apple pattern, it is
@@ -388,7 +399,8 @@ to nudge one tile; open My Space to actually arrange things.
 - **Phase 1 — My Tools + the shelf.** Data model, migration, flat sidebar, keycaps read My
   Tools, dead code deleted. The visible win: the sidebar stops being a list.
 - **Phase 2 — My Space + first run.** The setup screen, the admin defaults mode, the
-  first-run sheet, Workspace Settings redirect.
+  first-run sheet, and a link card from Workspace Settings → Navigation (not a redirect —
+  see §5.4).
 - **Phase 3 — All Tools + search.** The launcher, ⌘K, in-place ⊕ pinning.
 - **Phase 4 — Usage.** `gw_nav_usage`, Suggestions row, seeded tenant defaults, nudges.
 - **Phase 5 — The catalog recut.** Merges, folds, and the Settings migration. Last on

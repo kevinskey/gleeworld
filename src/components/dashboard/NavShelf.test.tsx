@@ -82,4 +82,20 @@ describe('NavShelf', () => {
     );
     expect(grabCursorElements).toHaveLength(0);
   });
+
+  it('renders a Setup row linking to My Space', () => {
+    renderShelf();
+    const link = screen.getByRole('link', { name: /setup/i });
+    expect(link).toHaveAttribute('href', '/dashboard/my-space');
+  });
+
+  it('places Setup after the whole All Tools disclosure block, not wedged between the toggle and what it discloses', () => {
+    const { container } = renderShelf();
+    fireEvent.click(screen.getByRole('button', { name: /all tools/i }));
+    const order = Array.from(container.querySelectorAll('a, button')).map((el) => el.textContent);
+    const financeIdx = order.indexOf('Finance');
+    const setupIdx = order.indexOf('Setup');
+    expect(financeIdx).toBeGreaterThan(-1);
+    expect(setupIdx).toBeGreaterThan(financeIdx);
+  });
 });

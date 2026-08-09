@@ -5,7 +5,7 @@
 // tenants don't accidentally see platform-owner controls.
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { decodeJwtClaims } from '@/lib/demoSession';
@@ -528,6 +528,7 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
 // ── Navigation ──────────────────────────────────────────────────────
 
 function NavigationTabPanel({ canManage }: { canManage: boolean }) {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [role, setRole] = useState<NavRole>('student');
 
@@ -624,6 +625,36 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
 
   return (
     <div className="space-y-4">
+      {/* Task 5: hiding is route-based (this panel, below) and orthogonal
+          to shelves — what tools a new member's My Space starts with is a
+          separate per-role record, edited on My Space itself so the same
+          editor UI serves both the admin's own space and tenant defaults.
+          Gated on canManage, same as every other control on this panel —
+          no privilege leak either way (a non-manager who somehow reached
+          it would find no admin tab on My Space), but the convention here
+          is every control gates. */}
+      {canManage && (
+        <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold mb-1">Default tools for each role</h2>
+              <p className="text-sm text-muted-foreground">
+                Set what new members start with in My Space → Defaults for members.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="shrink-0"
+              onClick={() => navigate('/dashboard/my-space')}
+            >
+              Go to My Space
+              <ArrowRight className="w-4 h-4 ml-1.5" />
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
         <CardContent className="p-4 sm:p-5">
           <h2 className="text-lg font-semibold mb-1">Navigation</h2>

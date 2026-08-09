@@ -12,9 +12,24 @@
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.2
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { ChevronDown, LayoutGrid } from 'lucide-react';
+import { ChevronDown, LayoutGrid, Settings } from 'lucide-react';
 import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 import type { CatalogEntry } from '@/lib/navigation/navCatalog';
+
+// Not a NAV_CATALOG entry — Setup is a row the shelf always offers on its
+// own, not a gated destination a member picks. Row only reads
+// icon/to/end/tourId/label off its `entry` prop, so a hand-built
+// CatalogEntry-shaped constant is enough; section/tone are unused here but
+// required by the type.
+const SETUP_ENTRY: CatalogEntry = {
+  key: 'my-space-setup',
+  to: '/dashboard/my-space',
+  label: 'Setup',
+  icon: Settings,
+  section: 'today',
+  tone: 'bg-muted text-muted-foreground',
+  tourId: 'nav-my-space-setup',
+};
 
 export interface NavShelfProps {
   /**
@@ -81,9 +96,10 @@ export function NavShelf({ home, tools, sections, variant, onNavigate }: NavShel
         ))}
       </div>
 
+      <div className="h-px bg-border mx-2 my-2" />
+
       {rest.length > 0 && (
         <>
-          <div className="h-px bg-border mx-2 my-2" />
           <button
             type="button"
             data-tour="nav-all-tools-toggle"
@@ -117,6 +133,14 @@ export function NavShelf({ home, tools, sections, variant, onNavigate }: NavShel
           )}
         </>
       )}
+
+      {/* Setup — always present, unlike All Tools above (which only
+          renders when there's something left to disclose). Placed after
+          the whole All Tools block (toggle + its disclosure), not wedged
+          between the toggle and what it discloses — aria-expanded should
+          stay adjacent to what it expands. Reaches the personal
+          /dashboard/my-space editor. */}
+      <Row entry={SETUP_ENTRY} variant={variant} onNavigate={onNavigate} />
     </div>
   );
 }
