@@ -4,13 +4,18 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter } from 'react-router-dom';
 
-// `myToolsState` is mutable so one test (the loading/null gate below) can
-// override the fixture without a second vi.mock factory — vi.mock factories
-// hoist above `const`, so anything they read must come through vi.hoisted().
+// Both state objects are mutable so individual tests can override the
+// fixture (loading/null myTools, a slow-to-resolve tenant default) without a
+// second vi.mock factory per test — vi.mock factories hoist above `const`,
+// so anything they read must come through vi.hoisted().
 const h = vi.hoisted(() => ({
   saveMyTools: vi.fn(),
   myToolsState: {
     myTools: { v: 4 as const, tools: [] as string[], widgets: [] as string[], setupComplete: false },
+    loading: false,
+  },
+  defaultsState: {
+    defaultsByRole: { admin: [] as string[], student: ['calendar', 'academy'], member: [] as string[] },
     loading: false,
   },
 }));
@@ -24,13 +29,23 @@ vi.mock('@/hooks/useMyTools', () => ({
   WIDGETS_CAP: 2,
 }));
 vi.mock('@/hooks/useTenantDefaultTools', () => ({
-  useTenantDefaultTools: () => ({ defaultsByRole: { admin: [], student: ['calendar', 'academy'], member: [] }, loading: false, saveDefaults: vi.fn() }),
+  useTenantDefaultTools: () => ({
+    defaultsByRole: h.defaultsState.defaultsByRole,
+    loading: h.defaultsState.loading,
+    saveDefaults: vi.fn(),
+  }),
 }));
 
 import { FirstRunSheet } from './FirstRunSheet';
 import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
 
 const available = ['calendar', 'academy', 'finance'].map((k) => NAV_CATALOG.find((e) => e.key === k)!);
+
+const sheetEl = () => (
+  <MemoryRouter>
+    <FirstRunSheet open onOpenChange={vi.fn()} available={available} role="student" />
+  </MemoryRouter>
+);
 
 const renderSheet = (role: 'student' | 'faculty' = 'student') =>
   render(
@@ -43,6 +58,8 @@ beforeEach(() => {
   h.saveMyTools.mockReset().mockResolvedValue(true);
   h.myToolsState.myTools = { v: 4, tools: [], widgets: [], setupComplete: false };
   h.myToolsState.loading = false;
+  h.defaultsState.defaultsByRole = { admin: [], student: ['calendar', 'academy'], member: [] };
+  h.defaultsState.loading = false;
   // useIsCompactNav (side selection) reads matchMedia; jsdom has none by default.
   window.matchMedia = ((query: string) => ({
     matches: false, media: query, onchange: null,
@@ -88,5 +105,63 @@ describe('FirstRunSheet', () => {
     fireEvent.click(screen.getByRole('button', { name: /skip/i }));
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(h.saveMyTools).not.toHaveBeenCalled();
+  });
+
+  // Round 1 review, Important: every exit must save, or setupComplete stays
+  // false forever and the sheet re-opens on every future mount.
+  it('Escape closes and saves the shown set exactly like Skip', async () => {
+    renderSheet('student');
+    fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' });
+    await waitFor(() =>
+      expect(h.saveMyTools).toHaveBeenCalledWith({ tools: ['calendar', 'academy'], setupComplete: true }));
+  });
+
+  it('an outside (overlay) click closes and saves the shown set exactly like Skip', async () => {
+    renderSheet('student');
+    // Radix's DismissableLayer registers its outside-pointerdown listener
+    // via a setTimeout(0) (to avoid catching the very click that opened the
+    // layer) and only treats it as "outside" when it lands on the actual
+    // dimming overlay (the real click surface a user has) — a bare
+    // document.body dispatch doesn't reach its handler.
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    const overlay = Array.from(document.querySelectorAll('[data-state="open"]'))
+      .find((el) => el.className.includes('bg-black')) as HTMLElement;
+    expect(overlay).toBeTruthy();
+    fireEvent.pointerDown(overlay);
+    await waitFor(() =>
+      expect(h.saveMyTools).toHaveBeenCalledWith({ tools: ['calendar', 'academy'], setupComplete: true }));
+  });
+
+  it('dismissing while the record is loading closes without saving (nothing safe to write yet)', async () => {
+    h.myToolsState.loading = true;
+    h.myToolsState.myTools = null as unknown as typeof h.myToolsState.myTools;
+    renderSheet('student');
+    fireEvent.keyDown(document, { key: 'Escape', code: 'Escape' });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(h.saveMyTools).not.toHaveBeenCalled();
+  });
+
+  // Round 1 review, Minor: the one-time re-seed effect must not clobber an
+  // edit the member makes while useTenantDefaultTools is still in flight.
+  it('an in-sheet edit survives a late-arriving tenant default', async () => {
+    h.defaultsState.loading = true;
+    h.defaultsState.defaultsByRole = { admin: [], student: [], member: [] };
+    const { rerender } = render(sheetEl());
+
+    // Seeded from the platform default (8 tools) while the tenant query is
+    // still in flight.
+    expect(screen.getByTestId('my-space-count')).toHaveTextContent('8 of 8');
+
+    // Member removes a tool before the tenant default arrives.
+    fireEvent.click(screen.getByRole('button', { name: /remove calendar/i }));
+    expect(screen.getByTestId('my-space-count')).toHaveTextContent('7 of 8');
+
+    // Tenant default resolves late, to a DIFFERENT (2-tool) set.
+    h.defaultsState.loading = false;
+    h.defaultsState.defaultsByRole = { admin: [], student: ['calendar', 'academy'], member: [] };
+    rerender(sheetEl());
+
+    // The member's edit must survive — not be replaced by the late default.
+    expect(screen.getByTestId('my-space-count')).toHaveTextContent('7 of 8');
   });
 });

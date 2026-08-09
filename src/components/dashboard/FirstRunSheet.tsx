@@ -1,10 +1,12 @@
 // FirstRunSheet — greets a brand-new member once, on first login
 // (myTools.setupComplete === false), prefilled with their role's tenant
 // default (falling back to the platform default) so nobody's first
-// impression of My Space is an empty box. `Skip` and `Looks good` are
-// deliberately the SAME action: both persist whatever is currently shown
-// and flip setupComplete so the sheet never reopens — "skipping" a
-// first-run picker must never mean "start with nothing".
+// impression of My Space is an empty box. `Skip`, `Looks good`, and every
+// OTHER way to leave the sheet (Escape, overlay click, the built-in X) are
+// deliberately the SAME action: all persist whatever is currently shown and
+// flip setupComplete so the sheet never reopens. A dismiss that doesn't
+// save would leave setupComplete false forever, re-opening the sheet on
+// every future mount — worse than being slightly insistent.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §6.4
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -54,12 +56,22 @@ export function FirstRunSheet({ open, onOpenChange, available, role }: FirstRunS
   // shows an empty picker while the tenant query is in flight. Re-seeding on
   // every render would stomp the member's in-sheet edits every time
   // defaultsByRole's object identity changes.
-  const [tools, setTools] = useState<string[]>(() => (defaultsLoading ? platformDefault : seed));
+  const [tools, setToolsState] = useState<string[]>(() => (defaultsLoading ? platformDefault : seed));
   const seededRef = useRef(!defaultsLoading);
+  // Flipped the instant the member touches the editor (add/remove/reorder).
+  // Guards the SAME re-seed effect below: without it, a member who edits
+  // while the tenant-default query is still in flight has their edit
+  // silently replaced the moment that query resolves — the effect only
+  // checked "have I already run", not "has the member already acted".
+  const interactedRef = useRef(false);
+  const setTools = (next: string[]) => {
+    interactedRef.current = true;
+    setToolsState(next);
+  };
   useEffect(() => {
-    if (seededRef.current || defaultsLoading) return;
+    if (seededRef.current || interactedRef.current || defaultsLoading) return;
     seededRef.current = true;
-    setTools(seed);
+    setToolsState(seed);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- seed intentionally excluded: this must fire exactly once, when defaultsLoading flips false
   }, [defaultsLoading]);
 
@@ -72,14 +84,24 @@ export function FirstRunSheet({ open, onOpenChange, available, role }: FirstRunS
   // path on the record actually being loaded and present.
   const canSave = !loading && myTools != null;
 
-  const handleAccept = () => {
-    if (!canSave) return;
-    void saveMyTools({ tools, setupComplete: true });
+  // Every exit path — Skip, Looks good, Escape, overlay click, the sheet's
+  // own X — funnels through here (see the Sheet's onOpenChange below), so
+  // "skip" and "dismiss" are the same action: persist whatever is shown and
+  // flip setupComplete. A first-run sheet that can be dismissed WITHOUT
+  // saving leaves setupComplete false forever, so it re-opens on every
+  // future mount — worse than being slightly insistent. When the record
+  // isn't ready yet (canSave false), there is nothing safe to write, so
+  // this just closes; setupComplete stays false and the sheet correctly
+  // reappears next mount.
+  const handleClose = () => {
+    if (canSave) {
+      void saveMyTools({ tools, setupComplete: true });
+    }
     onOpenChange(false);
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={(next) => { if (!next) handleClose(); }}>
       <SheetContent
         side={isCompact ? 'bottom' : 'right'}
         className="flex flex-col gap-4 sm:max-w-md"
@@ -101,10 +123,10 @@ export function FirstRunSheet({ open, onOpenChange, available, role }: FirstRunS
         </div>
 
         <SheetFooter className="flex-row gap-2 sm:justify-end">
-          <Button type="button" variant="ghost" onClick={handleAccept} disabled={!canSave}>
+          <Button type="button" variant="ghost" onClick={handleClose} disabled={!canSave}>
             Skip
           </Button>
-          <Button type="button" onClick={handleAccept} disabled={!canSave}>
+          <Button type="button" onClick={handleClose} disabled={!canSave}>
             Looks good
           </Button>
         </SheetFooter>
