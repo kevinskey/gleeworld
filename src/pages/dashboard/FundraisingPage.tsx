@@ -17,7 +17,7 @@ export default function FundraisingPage() {
     <UniversalLayout showHeader={false} showFooter={false}>
       <DashboardShell>
         <DashboardPageShell
-          title="Fundraising Store"
+          title="Fundraising (T-Shirt Brothers)"
           subtitle={
             available
               ? 'Branded apparel powered by T-Shirt Brothers. TSB fulfills orders; you keep 15% of every sale.'

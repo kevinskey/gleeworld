@@ -76,6 +76,7 @@ const QuizAttemptsPage = lazy(() => import("./pages/academy/QuizAttemptsPage"));
 const QuizAttemptDetailPage = lazy(() => import("./pages/academy/QuizAttemptDetailPage"));
 const WorkspaceUsersPage = lazy(() => import("./pages/dashboard/WorkspaceUsersPage"));
 const WorkspaceSettingsPage = lazy(() => import("./pages/dashboard/WorkspaceSettingsPage"));
+const MySpacePage = lazy(() => import("./pages/dashboard/MySpacePage"));
 const WorkspaceAnalyticsPage = lazy(() => import("./pages/dashboard/WorkspaceAnalyticsPage"));
 const FundraisingPage = lazy(() => import("./pages/dashboard/FundraisingPage"));
 const DiscussionThreadPage = lazy(() => import("./pages/academy/DiscussionThreadPage"));
@@ -932,6 +933,16 @@ const App = () => {
                   <ProtectedRoute>
                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                       <DashboardShell><WorkspaceSettingsPage /></DashboardShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/my-space"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <DashboardShell><MySpacePage /></DashboardShell>
                     </UniversalLayout>
                   </ProtectedRoute>
                 }

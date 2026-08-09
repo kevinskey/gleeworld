@@ -47,3 +47,17 @@ if (typeof HTMLCanvasElement !== 'undefined' && !(HTMLCanvasElement.prototype as
   (HTMLCanvasElement.prototype as any).__gwMeasureShim = true;
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
+
+// A global ResizeObserver/scrollIntoView polyfill was tried here and
+// reverted (see AllToolsSheet.test.tsx, which stubs both locally instead).
+// jsdom genuinely lacks both, and cmdk needs them at mount — but several
+// components elsewhere feature-detect one or the other specifically
+// BECAUSE jsdom lacks them (AutomationPanel.tsx, NotationView.tsx,
+// TourEngine.tsx all read `typeof ResizeObserver`/`typeof el.scrollIntoView`
+// to skip a jsdom-only-unsafe branch), and a handful of others construct a
+// ResizeObserver unconditionally, relying on jsdom's absence never coming
+// up in their own tests. A global stub flips every one of those guards to
+// the "real browser" branch while still doing nothing — TourEngine.tsx's
+// scroll-then-measure-synchronously invariant in particular would silently
+// stop holding. Scope any future ResizeObserver/scrollIntoView stub to the
+// specific suite that needs it.
