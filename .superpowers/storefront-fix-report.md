@@ -63,3 +63,24 @@ I believe `isAdmin()`-only is the right call for *this* fix, not a gap to close 
 ### Recorded, not acted on: /shop has no nav catalog entry
 
 The reviewer's note is confirmed and sharpened by this round's fix: `ProductManagement` has a "View public store" link to `/shop?from=admin` (and `Shop.tsx` has a "Back to Store admin" link the other way) — before this fix, any authenticated member could reach `/shop` via that path since `ProductManagement` was open to everyone. Now that `ProductManagement` is admin-gated, a non-admin member has **no nav path to `/shop` at all** — it was never its own catalog entry, only reachable through the admin screen's outbound link or a direct URL. This is a pre-existing product gap (the buyer-facing storefront was never wired into `NAV_CATALOG`) that closing the security hole makes more visible, not something this fix introduced. Flagging for follow-up; did not add a catalog entry for it since that's a product decision (label, section, icon, whether it's tenant-store-module-gated) outside this task's scope.
+
+---
+
+## Fix round 2 (final item)
+
+### STATUS: DONE
+
+Commit: `8a9baef21e267ff221c8b6b1c9210afdb11595f2` (branch `feat/my-space-phase5`)
+
+`useMyTools.ts`'s `pinTool` checked `record.tools.includes(resolved)` — the RESOLVED incoming key against the RAW stored array. A record still holding a retired key (e.g. `'merch'`, merged into `'shop'`) never contains the literal string `'shop'`, so `pinTool('shop')` missed the already-pinned check and appended a redundant second entry — `['merch', 'shop']`, two keys resolving to the same destination, one of the member's eight slots burned on a duplicate. Unreachable through the shipped UI today (`useAllToolsCatalog`'s `pinned` list already runs through `resolvedTools`, so Store Admin isn't offered as pinnable once `'merch'` is stored) but a real latent duplicate — exactly the class of bug the whole round-1 fix was about: resolution wired to some call sites and not others.
+
+Fixed by comparing `resolveKeys(record.tools)` (the same shared helper `getAppTiles`/`selectShelfEntries` already use) against `resolved`, instead of the raw array. `resolveKeys` re-exported from `myTools.ts` alongside `MERGED_KEYS`/`resolveKey` so `useMyTools.ts` didn't need a second import path.
+
+Added `useMyTools.test.tsx`: a record storing `['merch', 'calendar']`, `pinTool('shop')` — asserts `ok === true` (already-pinned) and `rpc` is never called. Verified red→green: reverting the check back to `record.tools.includes(resolved)` makes this exact test fail with the RPC called once, `tools: ['shop', 'calendar']` — confirming the duplicate write the fix prevents.
+
+### Gates
+
+- `npm run test`: 289/296 files passing (2 consecutive full runs), no failures beyond the 7 known baseline files (heroDrag, appDestinations `/all-state` case, v1_to_v2, WorkspaceSettingsPage.branding-general-upsert, WorshipAidPage, NoteEditor, SightReadingStudio).
+- `npm run typecheck:guard`: OK — 151 errors, all pre-existing (baseline: 170).
+- `npm run lint`: zero errors on every touched file (`useMyTools.ts`, `useMyTools.test.tsx`, `myTools.ts`).
+- `npm run build`: clean.
