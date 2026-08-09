@@ -227,9 +227,11 @@ function Entry({ entry, spacing = 1, editable, onEdit }: {
  * disagree the moment an image loaded late, and the one that decided the
  * print would not be the one that warned the user.
  */
-function Panel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function Panel({ children, style, dataPanel }: {
+  children: React.ReactNode; style?: React.CSSProperties; dataPanel: PanelId;
+}) {
   return (
-    <div style={{
+    <div data-panel={dataPanel} style={{
       width: `${PANEL_W}in`, height: `${SHEET_H}in`, padding: '0.42in 0.40in',
       boxSizing: 'border-box', overflow: 'hidden', position: 'relative', ...style,
     }}>
@@ -238,8 +240,8 @@ function Panel({ children, style }: { children: React.ReactNode; style?: React.C
   );
 }
 
-function FrontPanel({ aid, titleSize, imageScale }: {
-  aid: WorshipAid; titleSize: number; imageScale: number;
+function FrontPanel({ aid, titleSize, imageScale, dataPanel }: {
+  aid: WorshipAid; titleSize: number; imageScale: number; dataPanel: PanelId;
 }) {
   /**
    * A column, so the picture gets everything left over.
@@ -254,7 +256,7 @@ function FrontPanel({ aid, titleSize, imageScale }: {
    * holding it up.
    */
   return (
-    <Panel style={{ textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+    <Panel dataPanel={dataPanel} style={{ textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
       <div style={{ fontSize: `${titleSize}pt`, lineHeight: 1.15, marginBottom: '0.16in', flexShrink: 0 }}>
         {aid.front.title}
       </div>
@@ -281,11 +283,11 @@ function FrontPanel({ aid, titleSize, imageScale }: {
   );
 }
 
-function BackPanel({ aid, qrDataUrl, children }: {
-  aid: WorshipAid; qrDataUrl?: string | null; children: React.ReactNode;
+function BackPanel({ aid, qrDataUrl, children, dataPanel }: {
+  aid: WorshipAid; qrDataUrl?: string | null; children: React.ReactNode; dataPanel: PanelId;
 }) {
   return (
-    <Panel>
+    <Panel dataPanel={dataPanel}>
       {aid.spineText && (
         // Up the outer edge of the back cover, as on the parish original.
         <div style={{
@@ -531,6 +533,7 @@ export function WorshipAidSheets({
         <BackPanel
           aid={aid}
           qrDataUrl={qrDataUrl}
+          dataPanel="back"
         >
           {renderPage('back')}
         </BackPanel>
@@ -538,15 +541,16 @@ export function WorshipAidSheets({
           aid={aid}
           titleSize={coverTitleSize(settings)}
           imageScale={coverImageScale(settings)}
+          dataPanel="front"
         />
         <div className="worship-aid-fold" aria-hidden />
       </div>
 
       <div className="worship-aid-sheet">
-        <Panel>
+        <Panel dataPanel="insideLeft">
           {renderPage('insideLeft')}
         </Panel>
-        <Panel style={{ paddingRight: '0.80in' }}>
+        <Panel style={{ paddingRight: '0.80in' }} dataPanel="insideRight">
           {renderPage('insideRight')}
           <SideBand day={aid.sideBand.day} date={aid.sideBand.date} />
         </Panel>

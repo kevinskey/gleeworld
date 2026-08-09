@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyPanelEdits, entryKey, reorderKeys, type PanelEdits } from './aidEdits';
+import { applyPanelEdits, entryKey, reorderKeys, restoreInsertAt, type InsertedBlock, type PanelEdits } from './aidEdits';
 import type { AidEntry } from './worshipAid';
 
 /**
@@ -124,5 +124,57 @@ describe('reorderKeys', () => {
     expect(reorderKeys(order, 'a', -1)).toEqual(order);
     expect(reorderKeys(order, 'c', 1)).toEqual(order);
     expect(reorderKeys(order, 'zz', 1)).toEqual(order);
+  });
+});
+
+/**
+ * Undoing a delete.
+ *
+ * Kevin deleted the Responsorial Psalm and asked how to type it back in
+ * (2026-08-09). For a generated entry the answer is `hidden`, which never
+ * loses the text. An INSERTED block has no generated source to fall back on,
+ * so its undo has to carry the block itself — and put it back where it was,
+ * not at the end.
+ */
+describe('restoreInsertAt', () => {
+  const b = (id: string): InsertedBlock => ({ id, kind: 'text', text: id });
+
+  it('puts the block back at its original index, not on the end', () => {
+    const edits: PanelEdits = { inserts: [b('a'), b('c')] };
+    const next = restoreInsertAt(edits, b('b'), 1, -1);
+    expect(next.inserts?.map((x) => x.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('restores the order entry at its original position when the block had one', () => {
+    const edits: PanelEdits = { inserts: [b('a')], order: ['GOSPEL', 'a'] };
+    const next = restoreInsertAt(edits, b('z'), 1, 1);
+    expect(next.order).toEqual(['GOSPEL', 'z', 'a']);
+  });
+
+  it('does not invent an order entry for a block that never had one', () => {
+    // A block that was never moved has no order entry; adding one would pin
+    // it in place and change how later plan edits flow around it.
+    const edits: PanelEdits = { inserts: [b('a')] };
+    const next = restoreInsertAt(edits, b('z'), 0, -1);
+    expect(next.order).toBeUndefined();
+  });
+
+  it('is idempotent — a double undo does not duplicate the block', () => {
+    const edits: PanelEdits = { inserts: [b('a')] };
+    const once = restoreInsertAt(edits, b('z'), 0, -1);
+    const twice = restoreInsertAt(once, b('z'), 0, -1);
+    expect(twice.inserts?.filter((x) => x.id === 'z')).toHaveLength(1);
+  });
+
+  it('clamps an index that no longer exists rather than dropping the block', () => {
+    // The panel can change between the delete and the undo click.
+    const edits: PanelEdits = { inserts: [b('a')] };
+    const next = restoreInsertAt(edits, b('z'), 99, 99);
+    expect(next.inserts?.map((x) => x.id)).toEqual(['a', 'z']);
+  });
+
+  it('works from no prior edits at all', () => {
+    const next = restoreInsertAt(undefined, b('z'), 0, -1);
+    expect(next.inserts?.map((x) => x.id)).toEqual(['z']);
   });
 });
