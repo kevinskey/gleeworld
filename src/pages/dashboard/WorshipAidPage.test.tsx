@@ -151,14 +151,20 @@ describe('WorshipAidPage — file input singleton (Critical 1 & 2)', () => {
     clickSpy.mockRestore();
   });
 
-  it('keeps exactly one file input mounted across every panel, including Cover', async () => {
-    await renderPage();
+  it(
+    'keeps exactly one file input mounted across every panel, including Cover',
+    async () => {
+      await renderPage();
 
-    for (const label of ['Cover', 'Inside left', 'Inside right', 'Back']) {
-      fireEvent.click(screen.getByRole('button', { name: label }));
-      expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1);
-    }
-  });
+      for (const label of ['Cover', 'Inside left', 'Inside right', 'Back']) {
+        fireEvent.click(screen.getByRole('button', { name: label }));
+        expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1);
+      }
+    },
+    // Test cycles through all four panels with full re-renders, which is slow.
+    // Needs 7+ seconds; default timeout is 5s.
+    20000,
+  );
 
   it('fires the shared input from the Cover panel’s own trigger too', async () => {
     await renderPage();
@@ -179,29 +185,34 @@ describe('WorshipAidPage — file input singleton (Critical 1 & 2)', () => {
 // — a structural guarantee needs no test standing watch over it.
 
 describe('WorshipAidPage — archive capture runs on the full spread (Critical)', () => {
-  it('flips the view wrapper to "full" for the duration of the PDF capture', async () => {
-    await renderPage();
+  it(
+    'flips the view wrapper to "full" for the duration of the PDF capture',
+    async () => {
+      await renderPage();
 
-    // Asserted INSIDE the mock: the whole point is the state of the DOM at
-    // the moment html2canvas walks it. Checking before or after would pass
-    // even if withFullView were deleted from the call site — capturing while
-    // focused files an archive holding one of the four panels, and nobody
-    // finds out until they open it a year later.
-    let viewDuringCapture: string | null | undefined;
-    toPdfMock.mockImplementation(async (el: HTMLElement) => {
-      viewDuringCapture = el.closest(`[${AID_VIEW_ATTR}]`)?.getAttribute(AID_VIEW_ATTR);
-      return { blob: new Blob(['%PDF-'], { type: 'application/pdf' }), pages: 4 };
-    });
+      // Asserted INSIDE the mock: the whole point is the state of the DOM at
+      // the moment html2canvas walks it. Checking before or after would pass
+      // even if withFullView were deleted from the call site — capturing while
+      // focused files an archive holding one of the four panels, and nobody
+      // finds out until they open it a year later.
+      let viewDuringCapture: string | null | undefined;
+      toPdfMock.mockImplementation(async (el: HTMLElement) => {
+        viewDuringCapture = el.closest(`[${AID_VIEW_ATTR}]`)?.getAttribute(AID_VIEW_ATTR);
+        return { blob: new Blob(['%PDF-'], { type: 'application/pdf' }), pages: 4 };
+      });
 
-    fireEvent.click(screen.getByRole('button', { name: /save pdf to library/i }));
-    await waitFor(() => expect(toPdfMock).toHaveBeenCalled());
+      fireEvent.click(screen.getByRole('button', { name: /save pdf to library/i }));
+      await waitFor(() => expect(toPdfMock).toHaveBeenCalled());
 
-    expect(viewDuringCapture).toBe('full');
-    // And it is put back, so the editor is not left showing the full spread.
-    await waitFor(() =>
-      expect(document.querySelector(`[${AID_VIEW_ATTR}]`)?.getAttribute(AID_VIEW_ATTR)).toBe('focus'),
-    );
-  });
+      expect(viewDuringCapture).toBe('full');
+      // And it is put back, so the editor is not left showing the full spread.
+      await waitFor(() =>
+        expect(document.querySelector(`[${AID_VIEW_ATTR}]`)?.getAttribute(AID_VIEW_ATTR)).toBe('focus'),
+      );
+    },
+    // PDF capture with view transitions and async mock callbacks takes 2-3 seconds.
+    10000,
+  );
 });
 
 describe('WorshipAidPage — overflow guidance restored (Important 4)', () => {
