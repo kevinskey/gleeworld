@@ -8,20 +8,33 @@
 // (leave the page mid-edit and the change is gone). A toast fires only when
 // a save returns false, so a failure is never silent.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.4
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
 import { useMyTools } from '@/hooks/useMyTools';
+import { useTenantDefaultTools } from '@/hooks/useTenantDefaultTools';
 import { useToast } from '@/hooks/use-toast';
 import { isFacultyProfile } from '@/lib/roles';
-import { applyPreviewRole, resolveNav, type NavContext } from '@/lib/navigation/navCatalog';
-import { selectShelfEntries } from '@/lib/navigation/myTools';
+import {
+  applyPreviewRole, resolveNav, HIDEABLE_NAV_ROLES, type NavContext, type NavRole,
+} from '@/lib/navigation/navCatalog';
+import { selectShelfEntries, DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT } from '@/lib/navigation/myTools';
 import { widgetsFor, resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { MySpaceEditor } from '@/components/dashboard/MySpaceEditor';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
+
+/** Platform default shelf for a given tenant-nav role — same seeding rule
+ * DEFAULT_TOOLS_FACULTY/STUDENT already encode: faculty shelf for admins,
+ * student shelf for students AND members (there is no separate member
+ * default; the two roles historically share one plain-member shelf). */
+function platformDefaultFor(role: NavRole): string[] {
+  return role === 'admin' ? DEFAULT_TOOLS_FACULTY : DEFAULT_TOOLS_STUDENT;
+}
 
 // Same fixed key list DashboardShell's Sidebar/MobileNav loop over — a
 // gated nav entry with a module key missing here silently hides for every
@@ -57,8 +70,13 @@ export default function MySpacePage() {
     hiddenRoutes: hiddenNav,
   }, previewRole);
   // resolveNav, NOT buildNavSections — the latter filters to sidebar
-  // surfaces and would hide grid-only entries like merch.
-  const available = useMemo(() => resolveNav(navCtx), [navCtx]);
+  // surfaces and would hide grid-only entries like merch. 'home' is
+  // filtered out here: it carries no gate, so resolveNav returns it like
+  // any other entry, but it always renders on the shelf first and is
+  // never a stored/choosable tool (sanitizeTools deliberately drops it).
+  // Leaving it in `available` offered a ⊕ "Command Center" row that did
+  // nothing when tapped — a dead affordance.
+  const available = useMemo(() => resolveNav(navCtx).filter((e) => e.key !== 'home'), [navCtx]);
 
   const isFaculty = isFacultyProfile(profile);
   const role: 'student' | 'faculty' = isFaculty ? 'faculty' : 'student';
@@ -99,13 +117,82 @@ export default function MySpacePage() {
     }
   };
 
+  // Second mode, admin-only: setting the default shelf each ROLE starts
+  // with, rather than editing the viewer's own. Same editor, different
+  // record — widgets are personal and never part of a tenant default, so
+  // no widgetOptions is passed in this mode.
+  const [spaceMode, setSpaceMode] = useState<'mine' | 'defaults'>('mine');
+  const [defaultsRole, setDefaultsRole] = useState<NavRole>('admin');
+  const { defaultsByRole, saveDefaults } = useTenantDefaultTools();
+  const showDefaults = isTenantAdmin && spaceMode === 'defaults';
+  // Seed from the platform default until this tenant has actually saved
+  // one for the role — an admin edits a real starting point, never an
+  // empty box. (The underlying gw_tenant_nav_prefs.default_tools column
+  // isn't applied to any live DB yet, so this path is also what a
+  // production tenant sees today: the query fails, the hook degrades to
+  // EMPTY for every role, and this seed fills the gap.)
+  const storedDefaults = defaultsByRole[defaultsRole];
+  const defaultsTools = storedDefaults.length > 0 ? storedDefaults : platformDefaultFor(defaultsRole);
+
+  const handleDefaultsChange = async (next: string[]) => {
+    const ok = await saveDefaults(defaultsRole, next);
+    if (!ok) {
+      toast({
+        title: 'Could not save defaults',
+        description: 'Check your connection and try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <DashboardShell>
       <DashboardPageShell
         title="My Space"
         subtitle="Choose the tools and widgets you want close at hand."
       >
-        {!ready ? (
+        {isTenantAdmin && (
+          <Tabs
+            value={spaceMode}
+            onValueChange={(v) => setSpaceMode(v as 'mine' | 'defaults')}
+            className="mb-4"
+          >
+            <TabsList>
+              <TabsTrigger value="mine">Mine</TabsTrigger>
+              <TabsTrigger value="defaults">Defaults for members</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        )}
+
+        {showDefaults ? (
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {HIDEABLE_NAV_ROLES.map((r) => (
+                <button
+                  key={r.value}
+                  type="button"
+                  onClick={() => setDefaultsRole(r.value)}
+                  className={cn(
+                    'inline-flex items-center justify-center h-8 px-3.5 rounded-full text-xs font-medium transition-colors',
+                    defaultsRole === r.value
+                      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                  )}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              New members with this role start with these tools. They can change their own space any time.
+            </p>
+            <MySpaceEditor
+              available={available}
+              tools={defaultsTools}
+              onToolsChange={handleDefaultsChange}
+            />
+          </div>
+        ) : !ready ? (
           // No editor mounted yet — a null record has nothing safe to save
           // over it, so no handler exists to (mis)fire while this shows.
           <div data-testid="my-space-loading" className="space-y-6" aria-live="polite" aria-busy="true">

@@ -126,4 +126,47 @@ describe('MySpacePage', () => {
     // Concierge carries no gate at all — it must still be offered.
     expect(screen.getByRole('button', { name: /^add concierge$/i })).toBeInTheDocument();
   });
+
+  // Bug found by running the app: 'home' carries no gate, so resolveNav
+  // returns it like any other entry, and MySpaceEditor offered a ⊕
+  // "Command Center" row in MORE TOOLS — but sanitizeTools deliberately
+  // drops the 'home' key, so tapping it did nothing. 'home' always
+  // renders on the shelf first and is never a choosable tool.
+  it('never offers Command Center in MORE TOOLS', () => {
+    renderPage();
+    expect(screen.queryByRole('button', { name: /^add command center$/i })).toBeNull();
+  });
+});
+
+describe('MySpacePage — admin defaults mode', () => {
+  beforeEach(() => {
+    vi.doMock('@/hooks/useUserRole', () => ({
+      useUserRole: () => ({ profile: { is_admin: true, role: 'instructor' }, loading: false, canEditMusicLibrary: () => true }),
+    }));
+  });
+
+  it('offers a Defaults for members mode to an admin', async () => {
+    vi.resetModules();
+    const { default: AdminPage } = await import('./MySpacePage');
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter><AdminPage /></MemoryRouter>
+      </QueryClientProvider>,
+    );
+    expect(screen.getByRole('tab', { name: /defaults for members/i })).toBeInTheDocument();
+  });
+
+  it('never offers Command Center in MORE TOOLS in defaults mode either', async () => {
+    vi.resetModules();
+    const { default: AdminPage } = await import('./MySpacePage');
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(
+      <QueryClientProvider client={qc}>
+        <MemoryRouter><AdminPage /></MemoryRouter>
+      </QueryClientProvider>,
+    );
+    fireEvent.click(screen.getByRole('tab', { name: /defaults for members/i }));
+    expect(screen.queryByRole('button', { name: /^add command center$/i })).toBeNull();
+  });
 });
