@@ -125,6 +125,14 @@ function ToolRow({
       // entirely instead of relying on it.
       value={entry.key}
       onSelect={() => onSelect(entry)}
+      // Same data-tour NavShelf's own Row stamps on a shelf-rendered entry.
+      // The product tour's ensureAllToolsOpen (productTourScript.ts)
+      // targets `[data-tour="nav-X"]` regardless of whether the entry it's
+      // after is currently on the member's shelf or only reachable through
+      // this sheet — a tour step whose target isn't on the default shelf
+      // (office-hours, analytics, settings) opens this sheet specifically
+      // to find it here, and needs the identical selector to resolve.
+      data-tour={entry.tourId}
       className={CARD_ITEM}
     >
       <entry.icon className="w-5 h-5 shrink-0 text-muted-foreground" aria-hidden />

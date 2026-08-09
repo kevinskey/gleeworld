@@ -177,6 +177,54 @@ describe('All Tools ⌘K', () => {
     input.remove();
   });
 
+  it('does NOT hijack Cmd+K while focus is in a textarea', () => {
+    setup();
+    renderShell();
+    const textarea = document.createElement('textarea');
+    document.body.appendChild(textarea);
+    textarea.focus();
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    expect(screen.queryByPlaceholderText(/search all tools/i)).toBeNull();
+    textarea.remove();
+  });
+
+  it('does NOT hijack Cmd+K while focus is inside a contenteditable region', () => {
+    // jsdom does not implement the `isContentEditable` IDL attribute (it
+    // reads back `undefined` even on an element with the `contenteditable`
+    // attribute set) — the guard reads the `contenteditable` DOM attribute
+    // via `closest()` instead, specifically so this is provable here. Focus
+    // lands on a DESCENDANT of the editable root (a span inside the div),
+    // matching how a real rich-text editor's caret/selection anchor works,
+    // to prove `closest()` — not just an exact-element check — is doing the
+    // work.
+    setup();
+    renderShell();
+    const root = document.createElement('div');
+    root.setAttribute('contenteditable', 'true');
+    root.tabIndex = -1;
+    const inner = document.createElement('span');
+    inner.tabIndex = -1;
+    root.appendChild(inner);
+    document.body.appendChild(root);
+    inner.focus();
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    expect(screen.queryByPlaceholderText(/search all tools/i)).toBeNull();
+    root.remove();
+  });
+
+  it('DOES fire over a contenteditable="false" region (explicitly non-editable)', async () => {
+    setup();
+    renderShell();
+    const root = document.createElement('div');
+    root.setAttribute('contenteditable', 'false');
+    root.tabIndex = -1;
+    document.body.appendChild(root);
+    root.focus();
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
+    root.remove();
+  });
+
   it('renders exactly one sheet even though both nav surfaces exist', async () => {
     setup();
     renderShell();
@@ -185,11 +233,24 @@ describe('All Tools ⌘K', () => {
   });
 
   it('removes the key handler on unmount', () => {
+    // A DOM-disappears-after-unmount assertion proves nothing here — the
+    // sheet would be gone whether or not the listener leaked, since
+    // unmounting clears the whole tree regardless. Spy on window's real
+    // (un-jsdom-mocked) add/removeEventListener and assert the net
+    // 'keydown' registrations are balanced after unmount: every 'keydown'
+    // listener this render added (DashboardShell's own ⌘K handler, plus
+    // anything else mounted alongside it) must have a matching removal.
     setup();
+    const addSpy = vi.spyOn(window, 'addEventListener');
+    const removeSpy = vi.spyOn(window, 'removeEventListener');
     const { unmount } = renderShell();
+    const keydownAdds = addSpy.mock.calls.filter(([type]) => type === 'keydown').length;
+    expect(keydownAdds).toBeGreaterThan(0);
     unmount();
-    fireEvent.keyDown(window, { key: 'k', metaKey: true });
-    expect(screen.queryByPlaceholderText(/search all tools/i)).toBeNull();
+    const keydownRemoves = removeSpy.mock.calls.filter(([type]) => type === 'keydown').length;
+    expect(keydownRemoves).toBe(keydownAdds);
+    addSpy.mockRestore();
+    removeSpy.mockRestore();
   });
 });
 

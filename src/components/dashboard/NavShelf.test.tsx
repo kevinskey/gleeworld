@@ -25,19 +25,24 @@ describe('NavShelf', () => {
     expect(labels).toEqual(['Command Center', 'Calendar', 'Music Library', 'Academy']);
   });
 
-  it('does not render section headers on the shelf itself', () => {
-    renderShelf();
-    const shelf = screen.getByTestId('nav-shelf-tools');
-    expect(within(shelf).queryByText('Money')).toBeNull();
-  });
-
-  it('opens All Tools instead of expanding sections', () => {
+  it('opens All Tools instead of expanding sections, and adds nothing inline', () => {
+    // NavShelf no longer takes a `sections` prop, so a `queryByText('Money')`
+    // style assertion can never fail regardless of what this component does
+    // — there is no code path left that could render section-header text at
+    // all. The meaningful claim left to prove is behavioral: clicking All
+    // Tools calls the caller's handler and does not grow the shelf's own row
+    // count — nothing mounts inline, which is what would happen if a future
+    // change reintroduced a disclosure here instead of delegating to the
+    // sheet.
     const onOpenAllTools = vi.fn();
     renderShelf({ onOpenAllTools });
+    const shelf = screen.getByTestId('nav-shelf-tools');
+    const rowCountBefore = within(shelf).getAllByRole('link').length;
+
     fireEvent.click(screen.getByRole('button', { name: /all tools/i }));
+
     expect(onOpenAllTools).toHaveBeenCalled();
-    // no section headers anywhere in the shelf now
-    expect(screen.queryByText('Money')).toBeNull();
+    expect(within(shelf).getAllByRole('link')).toHaveLength(rowCountBefore);
   });
 
   it('caps the shelf at Home + 8 tools even if handed more', () => {
@@ -85,6 +90,11 @@ describe('NavShelf', () => {
     renderShelf();
     const link = screen.getByRole('link', { name: /setup/i });
     expect(link).toHaveAttribute('href', '/dashboard/my-space');
+  });
+
+  it('marks the All Tools button as opening a dialog', () => {
+    renderShelf();
+    expect(screen.getByRole('button', { name: /all tools/i })).toHaveAttribute('aria-haspopup', 'dialog');
   });
 
   it('places Setup after the All Tools row, not before it', () => {

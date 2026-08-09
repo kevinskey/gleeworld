@@ -114,14 +114,74 @@ function platformLogoFor(brandingLogoUrl?: string | null): string | undefined {
   return getTenantSlug() === 'main' ? GLEE_PLATFORM_LOGO : undefined;
 }
 
-// The gated catalog + stored My Tools record behind the All Tools sheet.
-// Sidebar and MobileNav each derive their own navCtx/resolvedEntries/
-// myTools independently (see the matching blocks below) because
-// DashboardShell.shelf.test.tsx renders each of them standalone against
-// mocked hooks — so this is a third, equally independent call site, not a
-// shared prop threaded down from a single computation. Same MODULE_KEYS
-// list as both, so the sheet can never gate a module differently than the
-// shelf that opens it.
+// The gated nav shared by Sidebar, MobileNav, and the All Tools sheet's own
+// catalog hook below. Originally landed as three independent copies (one
+// per call site) on the theory that DashboardShell.shelf.test.tsx — which
+// renders Sidebar/MobileNav standalone against mocked hooks — required it.
+// That was wrong: `vi.mock` is module-level, so which function calls the
+// mocked hooks underneath is irrelevant, and a review round proved it by
+// running that test file plus DashboardShell.allTools.test.tsx and
+// NavShelf.test.tsx unchanged against this extraction — 20/20 green. One
+// definition now, used by all three, so gating can never disagree between
+// what the shelf shows and what the sheet offers.
+//
+// Also folds in a real divergence the three-copy version had let through:
+// MobileNav used to call `canEditMusicLibrary()` bare while Sidebar and the
+// sheet's hook guarded it with `typeof === 'function'` (tolerating an older
+// useUserRole shape that doesn't export the fn, so a stale bundle can't
+// white-screen the shell) — this hook always uses the defensive form.
+function useGatedNav() {
+  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
+  const userCanLibrarian = typeof canEditMusicLibrary === 'function'
+    ? canEditMusicLibrary()
+    : !!(profile?.is_admin || profile?.is_super_admin);
+  const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
+  const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
+  const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
+
+  // Add-on modules — only render the nav entry if the tenant has access.
+  // A catalog entry gated on `module: 'x'` renders ONLY if 'x' appears here —
+  // hasModule() below reads this map, not the full tenant module set. Adding a
+  // gated nav entry without adding its key here silently hides it, with no
+  // error anywhere. (Cost us All-State on first deploy.)
+  // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
+  const moduleAccess: Record<string, boolean> = {};
+  for (const key of MODULE_KEYS) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
+    moduleAccess[key] = useModuleAccess(key).hasAccess;
+  }
+  const hiddenNav = useTenantNavPrefs();
+  const previewRole = useEffectivePreviewRole();
+
+  // applyPreviewRole narrows the capability flags when a super-admin is
+  // previewing — without it the gates read the real profile and admin-only
+  // entries (Users, Settings, Tenants) leak into every previewed role.
+  const navCtx: NavContext = applyPreviewRole({
+    hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
+    isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    isPartner: !!profile?.is_partner,
+    hiddenRoutes: hiddenNav,
+  }, previewRole);
+  // isFacultyProfile is the single definition (src/lib/roles.ts) — an inline
+  // admin||super||instructor check here missed teacher/conductor/director, so a
+  // director got the faculty grid on HouseHome and the STUDENT shelf here.
+  const isFaculty = isFacultyProfile(profile);
+  const { myTools, saveMyTools } = useMyTools(isFaculty ? 'faculty' : 'student');
+  // The full gated set from resolveNav — not filtered to sidebar-surface
+  // entries. The All Tools sheet is the full catalog now (Phase 3), and a
+  // member migrating from home_tile_layout can legitimately have grid-only
+  // keys (merch, tickets, attendance) in their My Tools set; resolveNav's
+  // unfiltered output keeps those reachable everywhere this is used.
+  const resolvedEntries = resolveNav(navCtx);
+  // 'home' has no gate, but hiddenRoutes could still remove it (Workspace
+  // Settings → Navigation). Callers treat a missing homeEntry as "no Home
+  // row" rather than blanking the whole nav.
+  const homeEntry = resolvedEntries.find((e) => e.key === 'home');
+
+  return { resolvedEntries, homeEntry, myTools, saveMyTools, roleLoading, isPlatformAdmin };
+}
+
+// The stored My Tools record + gated catalog behind the All Tools sheet.
 //
 // `pinned` and `onPin` read/write `myTools.tools` — the RAW STORED array —
 // never `resolveNav`'s gated output and never NavShelf's MY_TOOLS_CAP-
@@ -136,34 +196,12 @@ function useAllToolsCatalog(): {
   pinned: string[];
   onPin: (key: string) => Promise<boolean>;
 } {
-  const { profile, canEditMusicLibrary } = useUserRole();
-  const userCanLibrarian = typeof canEditMusicLibrary === 'function'
-    ? canEditMusicLibrary()
-    : !!(profile?.is_admin || profile?.is_super_admin);
-  const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
-  const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
-  const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
-  const moduleAccess: Record<string, boolean> = {};
-  for (const key of MODULE_KEYS) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
-    moduleAccess[key] = useModuleAccess(key).hasAccess;
-  }
-  const hiddenNav = useTenantNavPrefs();
-  const previewRole = useEffectivePreviewRole();
-  const navCtx: NavContext = applyPreviewRole({
-    hasModule: (k) => k === 'academy' || !!moduleAccess[k],
-    isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
-    isPartner: !!profile?.is_partner,
-    hiddenRoutes: hiddenNav,
-  }, previewRole);
-  const isFaculty = isFacultyProfile(profile);
-  const { myTools, saveMyTools } = useMyTools(isFaculty ? 'faculty' : 'student');
-  const available = resolveNav(navCtx);
+  const { resolvedEntries, myTools, saveMyTools } = useGatedNav();
   const pinned = myTools?.tools ?? [];
 
   const onPin = async (key: string): Promise<boolean> => saveMyTools({ tools: [...pinned, key] });
 
-  return { available, pinned, onPin };
+  return { available: resolvedEntries, pinned, onPin };
 }
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
@@ -238,12 +276,11 @@ const iconTextOnly = (tone: string) =>
 // as BrandLogo's export above — standing up the full DashboardShell (auth,
 // routing, branding, tenant prefs, module access, ×2 for MobileNav) to
 // reach one `if (!homeEntry) return null` guard would be disproportionate.
-// onOpenAllTools is optional here (rather than required, as NavShelf itself
-// requires it) purely so DashboardShell.shelf.test.tsx — which renders
-// <Sidebar /> standalone to cover the I2/roleLoading regressions and has no
-// reason to exercise the sheet — keeps compiling unchanged; production
-// always supplies it from DashboardShell below.
-export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => void; onOpenAllTools?: () => void }) {
+// onOpenAllTools is required — NavShelf's own prop is required, and this
+// task deliberately doesn't weaken that at the Sidebar boundary. The six
+// call sites in DashboardShell.shelf.test.tsx that used to render
+// <Sidebar /> without it now pass a `vi.fn()`.
+export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => void; onOpenAllTools: () => void }) {
   const { settings: branding } = useBrandingSettings();
   // Prefer the short_name for sidebar chrome — most org_names overflow
   // the 256px column. Falls back to org_name then the platform/tenant
@@ -252,60 +289,8 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
   const fallbackName = getOrgName();
   const tenantName = branding?.short_name || branding?.org_name || fallbackName;
   const tenantLongName = branding?.org_name || branding?.short_name || fallbackName;
-  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
-  // Defensive: tolerate older useUserRole shapes that don't export this fn
-  // (avoids "canEditMusicLibrary is not a function" white-screening the shell).
-  const userCanLibrarian = typeof canEditMusicLibrary === 'function'
-    ? canEditMusicLibrary()
-    : !!(profile?.is_admin || profile?.is_super_admin);
   const location = useLocation();
-  // Switch Site is a platform-owner action — only the super-admin on the
-  // "main" tenant can provision/jump between tenants. Demo-admins and other
-  // tenant super-admins should not see this control.
-  const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
-  const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
-  // Tenant admin (any tenant) — controls who sees admin-only nav like Modules.
-  const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
-
-  // Add-on modules — only render the nav entry if the tenant has access.
-  // A catalog entry gated on `module: 'x'` renders ONLY if 'x' appears here —
-  // hasModule() below reads this map, not the full tenant module set. Adding a
-  // gated nav entry without adding its key here silently hides it, with no
-  // error anywhere. (Cost us All-State on first deploy.)
-  // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
-  const moduleAccess: Record<string, boolean> = {};
-  for (const key of MODULE_KEYS) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
-    moduleAccess[key] = useModuleAccess(key).hasAccess;
-  }
-  const hiddenNav = useTenantNavPrefs();
-  const previewRole = useEffectivePreviewRole();
-
-  // applyPreviewRole narrows the capability flags when a super-admin is
-  // previewing — without it the gates read the real profile and admin-only
-  // entries (Users, Settings, Tenants) leak into every previewed role.
-  const navCtx: NavContext = applyPreviewRole({
-    hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
-    isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
-    isPartner: !!profile?.is_partner,
-    hiddenRoutes: hiddenNav,
-  }, previewRole);
-  // isFacultyProfile is the single definition (src/lib/roles.ts) — an inline
-  // admin||super||instructor check here missed teacher/conductor/director, so a
-  // director got the faculty grid on HouseHome and the STUDENT shelf here.
-  const isFaculty = isFacultyProfile(profile);
-  const { myTools } = useMyTools(isFaculty ? 'faculty' : 'student');
-  // Shelf pool is the full gated set from resolveNav — the All Tools sheet
-  // (rendered once at DashboardShell level) is the full catalog now, not a
-  // sidebar-only subset, so there is no narrower "sections" list to derive
-  // the shelf from any more. A member migrating from home_tile_layout can
-  // legitimately have grid-only keys (merch, tickets, attendance) in their
-  // My Tools set; resolveNav's unfiltered output keeps those reachable.
-  const resolvedEntries = resolveNav(navCtx);
-  // 'home' has no gate, but hiddenRoutes could still remove it (Workspace
-  // Settings → Navigation). NavShelf's `home` prop is optional for exactly
-  // this case — a shelf with no Home row beats blanking the whole nav.
-  const homeEntry = resolvedEntries.find((e) => e.key === 'home');
+  const { resolvedEntries, homeEntry, myTools, roleLoading, isPlatformAdmin } = useGatedNav();
   // isFaculty is a guess (profile is still null) until roleLoading clears —
   // useUserRole(null) reads as student, so a faculty member could flash
   // DEFAULT_TOOLS_STUDENT before their real shelf swaps in. But
@@ -412,7 +397,7 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
-          onOpenAllTools={onOpenAllTools ?? (() => {})}
+          onOpenAllTools={onOpenAllTools}
           variant="desktop"
         />
       </nav>
@@ -441,47 +426,11 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
 // picks a link (onNavigate closes the Sheet).
 //
 // Exported for its own test — same rationale as Sidebar above. onOpenAllTools
-// is optional for the same reason it is on Sidebar: DashboardShell.shelf.
-// test.tsx renders <MobileNav onNavigate={...} /> without it.
-export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => void; onOpenAllTools?: () => void }) {
+// is required for the same reason it is on Sidebar — see that comment.
+export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => void; onOpenAllTools: () => void }) {
   const { settings: branding } = useBrandingSettings();
   const tenantName = branding?.short_name || branding?.org_name || getOrgName();
-  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
-  const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
-  const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
-  const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
-  const userCanLibrarian = canEditMusicLibrary();
-  // A catalog entry gated on `module: 'x'` renders ONLY if 'x' appears here —
-  // hasModule() below reads this map, not the full tenant module set. Adding a
-  // gated nav entry without adding its key here silently hides it, with no
-  // error anywhere. (Cost us All-State on first deploy.)
-  // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
-  const moduleAccess: Record<string, boolean> = {};
-  for (const key of MODULE_KEYS) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
-    moduleAccess[key] = useModuleAccess(key).hasAccess;
-  }
-  const hiddenNav = useTenantNavPrefs();
-  const previewRole = useEffectivePreviewRole();
-
-  // Preview narrowing applied identically to the desktop sidebar.
-  const navCtx: NavContext = applyPreviewRole({
-    hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
-    isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
-    isPartner: !!profile?.is_partner,
-    hiddenRoutes: hiddenNav,
-  }, previewRole);
-  // isFacultyProfile is the single definition (src/lib/roles.ts) — an inline
-  // admin||super||instructor check here missed teacher/conductor/director, so a
-  // director got the faculty grid on HouseHome and the STUDENT shelf here.
-  const isFaculty = isFacultyProfile(profile);
-  const { myTools } = useMyTools(isFaculty ? 'faculty' : 'student');
-  // Shelf pool is the full gated set from resolveNav — see the matching
-  // comment in Sidebar above for why.
-  const resolvedEntries = resolveNav(navCtx);
-  // 'home' has no gate, but hiddenRoutes could still remove it. NavShelf's
-  // `home` prop is optional for exactly this case — see Sidebar above.
-  const homeEntry = resolvedEntries.find((e) => e.key === 'home');
+  const { resolvedEntries, homeEntry, myTools, roleLoading } = useGatedNav();
   // Same knownGood/roleLoading gate as Sidebar — see the matching comment
   // there for why this isn't `roleLoading ? [] : ...` anymore.
   const knownGood = myTools?.setupComplete === true;
@@ -506,7 +455,7 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
-          onOpenAllTools={onOpenAllTools ?? (() => {})}
+          onOpenAllTools={onOpenAllTools}
           variant="mobile"
           onNavigate={onNavigate}
         />
@@ -978,12 +927,24 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   // (see DashboardShell.allTools.test.tsx) — activeElement is the only
   // signal that works both ways. Must not hijack typing in the messenger
   // or the score search, hence the input/textarea/contenteditable guard.
+  //
+  // The contenteditable check reads via `closest('[contenteditable]:not(
+  // [contenteditable="false"])')` rather than `el.isContentEditable`:
+  // jsdom doesn't implement the `HTMLElement.isContentEditable` IDL
+  // attribute at all (it reads back `undefined`, not `false`, even on an
+  // element with the `contenteditable` attribute set), so that branch was
+  // untestable in this suite — a bug there could ship silently. The
+  // attribute selector is real DOM the test can actually set and jsdom can
+  // actually query, and `closest` also covers focus landing on a
+  // descendant of the editable root (contenteditable regions don't always
+  // receive focus on their own outermost element).
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key.toLowerCase() !== 'k' || !(e.metaKey || e.ctrlKey)) return;
       const active = document.activeElement as HTMLElement | null;
       const tag = active?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || active?.isContentEditable) return;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (active?.closest('[contenteditable]:not([contenteditable="false"])')) return;
       e.preventDefault();
       setAllToolsOpen(true);
     }

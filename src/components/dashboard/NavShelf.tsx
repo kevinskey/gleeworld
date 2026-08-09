@@ -102,6 +102,7 @@ export function NavShelf({ home, tools, onOpenAllTools, variant, onNavigate }: N
         type="button"
         data-tour="nav-all-tools-toggle"
         onClick={onOpenAllTools}
+        aria-haspopup="dialog"
         className={`${ROW_BASE} ${variant === 'desktop' ? ROW_DESKTOP : ROW_MOBILE} ${ROW_INACTIVE}`}
       >
         <LayoutGrid className={`${variant === 'desktop' ? 'w-[18px] h-[18px]' : 'w-5 h-5'} shrink-0 text-slate-500`} aria-hidden />

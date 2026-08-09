@@ -85,7 +85,7 @@ afterEach(cleanup);
 describe('Sidebar — I2: a hidden Home must not blank the whole nav', () => {
   it('still renders the rest of the shelf when hiddenRoutes removes Home', () => {
     setup({ hiddenRoutes: new Set(['/dashboard']) });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.queryByText('Command Center')).not.toBeInTheDocument();
     expect(screen.getByText('Calendar')).toBeInTheDocument();
     expect(screen.getByText('Finance')).toBeInTheDocument();
@@ -93,7 +93,7 @@ describe('Sidebar — I2: a hidden Home must not blank the whole nav', () => {
 
   it('renders Home normally when it is not hidden', () => {
     setup();
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Command Center')).toBeInTheDocument();
   });
 });
@@ -103,7 +103,7 @@ describe('MobileNav — I2: a hidden Home must not blank the whole drawer', () =
     setup({ hiddenRoutes: new Set(['/dashboard']) });
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
-        <MobileNav onNavigate={() => {}} />
+        <MobileNav onNavigate={() => {}} onOpenAllTools={vi.fn()} />
       </MemoryRouter>,
     );
     expect(screen.queryByText('Command Center')).not.toBeInTheDocument();
@@ -121,7 +121,7 @@ describe('Sidebar — shelf must not blank on every route change', () => {
       roleLoading: true,
       myTools: { v: 4, tools: ['finance', 'people'], widgets: [], setupComplete: true },
     });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Finance')).toBeInTheDocument();
     expect(screen.getByText('People')).toBeInTheDocument();
   });
@@ -135,7 +135,7 @@ describe('Sidebar — shelf must not blank on every route change', () => {
       roleLoading: true,
       myTools: { v: 4, tools: ['sight', 'studio', 'my-fees'], widgets: [], setupComplete: false },
     });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     // The unresolved guess's student-only tools must not leak through...
     expect(screen.queryByText('Reading Music')).not.toBeInTheDocument();
     expect(screen.queryByText('Studio')).not.toBeInTheDocument();
@@ -149,7 +149,7 @@ describe('Sidebar — shelf must not blank on every route change', () => {
 
   it('renders nothing role-specific when there is no data at all yet (myTools null) and role is loading', () => {
     setup({ roleLoading: true, myTools: null });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     // Home always renders; the core still renders even with zero data,
     // because it doesn't depend on myTools at all.
     expect(screen.getByText('Command Center')).toBeInTheDocument();

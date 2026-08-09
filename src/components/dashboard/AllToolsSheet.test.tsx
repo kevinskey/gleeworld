@@ -98,6 +98,19 @@ describe('AllToolsSheet — browsing', () => {
     renderSheet();
     for (const e of available) expect(screen.getByText(e.label)).toBeInTheDocument();
   });
+
+  it('stamps each row with the catalog entry\'s tourId, same as NavShelf\'s shelf rows', () => {
+    // The product tour's ensureAllToolsOpen (productTourScript.ts) opens
+    // this sheet specifically to find a `[data-tour="nav-X"]` target that
+    // isn't on the member's shelf (office-hours, analytics, settings) — if
+    // this sheet's rows didn't carry the same attribute NavShelf's Row
+    // component stamps for a shelf-rendered entry, the tour would open the
+    // sheet and still find nothing.
+    renderSheet();
+    for (const e of available) {
+      expect(document.querySelector(`[data-tour="${e.tourId}"]`)).not.toBeNull();
+    }
+  });
 });
 
 describe('AllToolsSheet — search', () => {
