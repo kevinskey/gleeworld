@@ -2,33 +2,47 @@
 // as both the sidebar shelf and the home keycap grid. Supersedes
 // useNavItemOrder and useHomeTileLayout.
 //
-// Reads BOTH legacy columns so a member who customized either one keeps
-// their layout; migrateToMyTools resolves the precedence. Writes go only to
+// Reads both preference columns so a member who curated a keycap grid keeps
+// it; migrateToMyTools resolves the precedence (a legacy v1-v3 nav_item_order
+// is deliberately not a source — see its comment). Writes go only to
 // nav_item_order, and only through the RPC.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §6
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { migrateToMyTools, sanitizeTools, type MyTools } from '@/lib/navigation/myTools';
+
+/** The two user_preferences columns this hook reads, exactly as stored. */
+interface StoredNavPrefs {
+  nav_item_order: unknown;
+  home_tile_layout: unknown;
+}
 
 export function useMyTools(role: 'student' | 'faculty') {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const uid = user?.id;
 
-  const { data: myTools = null, isLoading } = useQuery<MyTools | null>({
-    // role is part of the key, not just an argument to queryFn: the caller
-    // (DashboardShell) computes `role` from a profile that starts null and
-    // fills in async, so the first fetch for an admin/instructor can fire
-    // with a guessed 'student' before the real role is known. Without role
-    // in the key, that wrong-guess result would sit in the ['my-tools', uid]
-    // cache slot for staleTime and the real 'faculty' call would just read
-    // the stale student defaults back out. Keying by role means the two
-    // guesses get separate cache entries and can never cross-contaminate;
-    // DashboardShell also gates rendering on useUserRole's loading flag so
-    // the wrong-guess fetch's result is never shown even before it resolves.
-    queryKey: ['my-tools', uid ?? 'anon', role],
+  // The QUERY is keyed by uid alone and caches the RAW row; `role` is
+  // applied afterwards, in memory. That split matters both ways:
+  //
+  //  - Keying the query by role too (an earlier shape) meant two network
+  //    reads per navigation for every faculty member: DashboardShell
+  //    computes `role` from a profile that starts null on EVERY mount
+  //    (useUserRole caches nothing and the shell is per-route), so the
+  //    student-keyed query always fired first and the faculty-keyed one
+  //    followed once the profile resolved. Same row, fetched twice.
+  //  - Caching the DERIVED record under a role-less key would be the old
+  //    cross-contamination bug: the wrong-guess 'student' result would sit
+  //    in the shared slot for staleTime and the faculty render would read
+  //    the student defaults back out.
+  //
+  // Caching the raw row has neither problem: it is role-independent, and
+  // `role` only ever changes what migrateToMyTools derives for a member
+  // with NO stored record at all.
+  const { data: prefs = null, isLoading } = useQuery<StoredNavPrefs | null>({
+    queryKey: ['my-tools', uid ?? 'anon'],
     enabled: !!uid,
     staleTime: 60 * 1000,
     queryFn: async () => {
@@ -40,15 +54,23 @@ export function useMyTools(role: 'student' | 'faculty') {
           .maybeSingle();
         if (error) {
           console.warn('[useMyTools] load failed:', error.message);
-          return migrateToMyTools(null, null, role);
+          return { nav_item_order: null, home_tile_layout: null };
         }
-        return migrateToMyTools(data?.nav_item_order ?? null, data?.home_tile_layout ?? null, role);
+        return {
+          nav_item_order: data?.nav_item_order ?? null,
+          home_tile_layout: data?.home_tile_layout ?? null,
+        };
       } catch (err) {
         console.warn('[useMyTools] load failed:', err);
-        return migrateToMyTools(null, null, role);
+        return { nav_item_order: null, home_tile_layout: null };
       }
     },
   });
+
+  const myTools = useMemo<MyTools | null>(
+    () => (prefs ? migrateToMyTools(prefs.nav_item_order, prefs.home_tile_layout, role) : null),
+    [prefs, role],
+  );
 
   const saveTools = useCallback(async (tools: string[]): Promise<boolean> => {
     if (!uid) return false;
@@ -63,12 +85,15 @@ export function useMyTools(role: 'student' | 'faculty') {
     // re-render from the stale cache for the ~200-500ms the RPC takes,
     // snapping every moved tile back and then forward again — reads as a
     // whole-screen blink. (Same reasoning as the old useNavItemOrder.)
-    // Must match the read side's key exactly (uid + role) — the two keys
-    // drifting apart was the I3 bug: an optimistic write to the role-less
-    // key silently missed the role-keyed query entirely.
-    const queryKey = ['my-tools', uid ?? 'anon', role];
-    const previous = queryClient.getQueryData<MyTools | null>(queryKey) ?? null;
-    queryClient.setQueryData(queryKey, next);
+    // Writing the raw-row shape (not the derived record) means the one
+    // cache entry both roles read updates once, so no role can be left
+    // rendering pre-save tools.
+    const queryKey = ['my-tools', uid ?? 'anon'];
+    const previous = queryClient.getQueryData<StoredNavPrefs | null>(queryKey) ?? null;
+    queryClient.setQueryData<StoredNavPrefs>(queryKey, {
+      nav_item_order: next,
+      home_tile_layout: previous?.home_tile_layout ?? null,
+    });
     try {
       // save_nav_item_order is SECURITY DEFINER: it bypasses the RESTRICTIVE
       // tenant_isolation_restrict policy on user_preferences and resyncs
@@ -89,7 +114,7 @@ export function useMyTools(role: 'student' | 'faculty') {
       queryClient.setQueryData(queryKey, previous);
       return false;
     }
-  }, [uid, role, myTools?.widgets, queryClient]);
+  }, [uid, myTools?.widgets, queryClient]);
 
   return { myTools, loading: isLoading, saveTools };
 }

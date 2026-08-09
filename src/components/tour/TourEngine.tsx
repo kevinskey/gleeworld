@@ -98,6 +98,17 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
     if (!selector) return null;
     const el = document.querySelector(selector) as HTMLElement | null;
     if (!el) return null;
+    // Bring the target on screen BEFORE reading its rect. The sidebar's All
+    // Tools disclosure is its own scroll container and the rows a step most
+    // often needs (Analytics, Settings — anything not on the member's shelf)
+    // sit at the bottom of it, so the spotlight used to be measured, and
+    // drawn, off-screen: the tour visibly "highlighted" nothing. Scrolling
+    // with the default (instant) behavior keeps this synchronous, so the
+    // rect read on the next line is the post-scroll one. Guarded because
+    // jsdom does not implement scrollIntoView.
+    if (typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ block: 'center', inline: 'nearest' });
+    }
     const r = el.getBoundingClientRect();
     if (r.width === 0 && r.height === 0) return null;
     return { x: r.x, y: r.y, width: r.width, height: r.height };

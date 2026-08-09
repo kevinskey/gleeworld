@@ -95,14 +95,23 @@ describe('useMyTools', () => {
     expect(sent.tools).toHaveLength(8);
   });
 
-  it('keeps faculty and student cache entries separate — no role cross-contamination', async () => {
-    // Regression for I3: DashboardShell computes `role` from a profile that
-    // starts null (useUserRole loading), so the first fetch for the SAME
-    // uid can fire as 'student' before the real role ('faculty') is known.
-    // If the query key doesn't include role, that wrong-guess result sits
-    // in the cache and the later 'faculty' call reads it straight back out
-    // instead of fetching its own defaults. Sharing one QueryClient across
-    // both renders reproduces exactly that shared-cache scenario.
+  it('serves both roles from ONE user_preferences read, with no cross-contamination', async () => {
+    // Two findings meet here.
+    //
+    // I3 (round 1): DashboardShell computes `role` from a profile that starts
+    // null (useUserRole loading), so the first render for the SAME uid can
+    // ask as 'student' before the real role ('faculty') is known. The wrong
+    // guess must not be what the faculty render reads back out.
+    //
+    // M8 (final review): making `role` part of the QUERY key fixed that by
+    // fetching the same row twice — two network reads on every navigation
+    // for every faculty member. The row is role-independent; only the
+    // DERIVED record depends on role. So the query caches the raw row under
+    // a role-less key and migrateToMyTools runs in memory per role: one
+    // read, and each role still gets its own answer.
+    //
+    // Sharing one QueryClient across both renders reproduces the real
+    // shared-cache scenario.
     maybeSingle.mockResolvedValue({ data: null, error: null });
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const sharedWrapper = ({ children }: { children: ReactNode }) => (
@@ -117,6 +126,8 @@ describe('useMyTools', () => {
     await waitFor(() => expect(facultyResult.current.loading).toBe(false));
     expect(facultyResult.current.myTools?.tools).toEqual(DEFAULT_TOOLS_FACULTY);
     expect(facultyResult.current.myTools?.tools).not.toEqual(DEFAULT_TOOLS_STUDENT);
+    // M8: the second role reused the cached row instead of re-reading it.
+    expect(maybeSingle).toHaveBeenCalledTimes(1);
   });
 
   it('rolls the cache back when the save fails', async () => {

@@ -90,6 +90,7 @@ import {
   type CatalogEntry, type NavContext, type NavSectionKey,
 } from '@/lib/navigation/navCatalog';
 import { NavShelf } from './NavShelf';
+import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
 import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS } from '@/lib/navigation/myTools';
 
@@ -111,26 +112,16 @@ function platformLogoFor(brandingLogoUrl?: string | null): string | undefined {
 // columns use. Sections with zero visible entries drop out (unchanged
 // behavior). label:'Today' historically rendered with its section label
 // like every other section.
-function buildNavSections(
-  ctx: NavContext,
-  userOrder?: string[] | null,
-  sectionOverrides?: Record<string, string> | null,
-): Array<{ key: string; label: string; items: CatalogEntry[] }> {
+//
+// No user ordering or per-item section overrides: the shelf carries the
+// member's arrangement now, and this list is only the All Tools disclosure
+// behind it — always catalog order, always the catalog's own sections. (The
+// userOrder/sectionOverrides parameters this used to take were passed by
+// nobody after the shelf landed.)
+function buildNavSections(ctx: NavContext): Array<{ key: string; label: string; items: CatalogEntry[] }> {
   const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
-  const sectionOf = (e: CatalogEntry): string => {
-    const override = sectionOverrides?.[e.key];
-    return override && (SECTION_ORDER as readonly string[]).includes(override) ? override : e.section;
-  };
-  const rank = new Map((userOrder ?? []).map((k, i) => [k, i]));
-  const sortItems = (items: CatalogEntry[]) =>
-    userOrder?.length
-      ? [...items].sort((a, b) => (rank.get(a.key) ?? Infinity) - (rank.get(b.key) ?? Infinity))
-      : items;
-  // Sections always render in catalog order. Users can reorder items
-  // (and move them between sections) but not the sections themselves;
-  // any sectionOrder still stored in user_preferences is ignored.
   return SECTION_ORDER
-    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s as NavSectionKey], items: sortItems(resolved.filter((e) => sectionOf(e) === s)) }))
+    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s as NavSectionKey], items: resolved.filter((e) => e.section === s) }))
     .filter((s) => s.items.length > 0);
 }
 
@@ -265,7 +256,10 @@ export function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   // Sections are no longer the shelf — they populate the All Tools
   // disclosure only. Passing no user order keeps them in catalog order.
   const sections = buildNavSections(navCtx);
-  const isFaculty = !!profile?.is_admin || !!profile?.is_super_admin || profile?.role === 'instructor';
+  // isFacultyProfile is the single definition (src/lib/roles.ts) — an inline
+  // admin||super||instructor check here missed teacher/conductor/director, so a
+  // director got the faculty grid on HouseHome and the STUDENT shelf here.
+  const isFaculty = isFacultyProfile(profile);
   const { myTools } = useMyTools(isFaculty ? 'faculty' : 'student');
   // Shelf pool is the full gated set from resolveNav, NOT `sections` —
   // buildNavSections filters to entries whose surfaces include 'sidebar',
@@ -443,7 +437,10 @@ export function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   // Sections are no longer the shelf — they populate the All Tools
   // disclosure only. Passing no user order keeps them in catalog order.
   const sections = buildNavSections(navCtx);
-  const isFaculty = !!profile?.is_admin || !!profile?.is_super_admin || profile?.role === 'instructor';
+  // isFacultyProfile is the single definition (src/lib/roles.ts) — an inline
+  // admin||super||instructor check here missed teacher/conductor/director, so a
+  // director got the faculty grid on HouseHome and the STUDENT shelf here.
+  const isFaculty = isFacultyProfile(profile);
   const { myTools } = useMyTools(isFaculty ? 'faculty' : 'student');
   // Shelf pool is the full gated set from resolveNav, NOT `sections` — see
   // the matching comment in Sidebar above for why.

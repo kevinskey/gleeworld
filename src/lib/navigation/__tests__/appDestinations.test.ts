@@ -364,4 +364,37 @@ describe('getAppTiles with a My Tools key list', () => {
     expect(primary.length).toBeGreaterThan(0);
     expect(primary.length).toBeLessThanOrEqual(8);
   });
+
+  it('surfaces sidebar-only entries as keycaps — the shelf pool, not the grid pool', () => {
+    // C1 (final review): Calendar and Messages are surfaces: ['sidebar'] yet
+    // are the first two entries of BOTH role defaults. Filtering the My
+    // Tools pool by grid surface rendered a shorter grid than the shelf,
+    // and HomeTileGrid then wrote that shorter list back. Kevin's ruling:
+    // the keycaps show the SAME set as the shelf.
+    const { primary } = getAppTiles('faculty', flags, nav, ['calendar', 'messages', 'finance'], { tabBarVisible: false });
+    expect(primary.map((d) => d.key)).toEqual(['calendar', 'messages', 'finance']);
+  });
+
+  it('still hides tab-bar routes while the tab bar is on screen', () => {
+    const { primary } = getAppTiles('faculty', flags, nav, ['calendar', 'messages', 'finance'], { tabBarVisible: true });
+    expect(primary.map((d) => d.key)).toEqual(['finance']);
+  });
+
+  it('defaults to deduping — a caller that has not measured the viewport never duplicates a tab', () => {
+    const withDefault = getAppTiles('faculty', flags, nav, ['calendar', 'finance']);
+    const withExplicit = getAppTiles('faculty', flags, nav, ['calendar', 'finance'], { tabBarVisible: true });
+    expect(withDefault.primary.map((d) => d.key)).toEqual(withExplicit.primary.map((d) => d.key));
+  });
+
+  it('never offers Home as a keycap — it is implicit, and the grid lives on it', () => {
+    const { primary, overflow } = getAppTiles('faculty', flags, nav, ['home', 'finance'], { tabBarVisible: false });
+    expect([...primary, ...overflow].map((d) => d.key)).not.toContain('home');
+  });
+
+  it('leaves the no-record branch untouched regardless of the tab bar', () => {
+    // DEFAULT_GRID_ORDER is a separately frozen list; widening the pool for
+    // a My Tools set must not quietly re-cut the day-one default grid.
+    expect(getAppTiles('faculty', flags, nav, null, { tabBarVisible: false }))
+      .toEqual(getAppTiles('faculty', flags, nav, null, { tabBarVisible: true }));
+  });
 });

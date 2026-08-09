@@ -3,14 +3,14 @@
 // Letterpress plates: bg-card border border-border (+ the up-next plate's
 // top accent stripe); no other elevations.
 // Spec: docs/superpowers/specs/2026-07-04-house-and-stage-design.md
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { HomeNewsRail } from '@/components/dashboard/HomeNewsRail';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { supabase } from '@/integrations/supabase/client';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsCompactNav, useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
@@ -24,6 +24,7 @@ import { applyPreviewRole, previewRoleIsFaculty, type NavContext } from '@/lib/n
 import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useMyTools } from '@/hooks/useMyTools';
+import { mergeGridOrder, MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
 import { DateCardSlot } from '@/components/home/date-card/DateCardSlot';
 import { hasParsableEventAt } from '@/components/home/date-card/eventAt';
@@ -177,14 +178,37 @@ export default function HouseHome() {
     hiddenRoutes: hiddenNav,
   }, previewRole), [moduleSet, profile, tenantSlug, canEditMusicLibrary, hiddenNav, previewRole]);
   const { myTools, loading: layoutLoading, saveTools } = useMyTools(isFaculty ? 'faculty' : 'student');
+  // The phone tab bar is what the grid must not duplicate, and it only
+  // exists below md — the same gate MobileBottomNav itself uses. Above it,
+  // Calendar/Messages belong on the grid exactly as they do on the shelf.
+  const tabBarVisible = useIsCompactNav();
   const { primary, overflow } = modulesLoading || layoutLoading || roleLoading
     ? { primary: [], overflow: [] }
     // Tile set follows the previewed role too — otherwise previewing as a
     // student still renders the faculty grid.
     : getAppTiles(
         (previewRole ? previewRoleIsFaculty(previewRole) : isFaculty) ? 'faculty' : 'student',
-        flags, nav, myTools?.tools ?? null,
+        flags, nav, myTools?.tools ?? null, { tabBarVisible },
       );
+
+  // Which stored keys this grid is able to show at all. A stored key outside
+  // this set (route claimed by the tab bar, module switched off, key retired)
+  // has no keycap, so an edit session cannot speak for it — mergeGridOrder
+  // carries it through untouched instead of letting Done delete it.
+  const representable = useMemo(
+    () => new Set([...primary, ...overflow].map((t) => t.key)),
+    [primary, overflow],
+  );
+  const storedTools = useMemo(() => myTools?.tools ?? [], [myTools]);
+  // Room left for keycaps once the un-representable stored keys have taken
+  // their share of MY_TOOLS_CAP. Without this the merged record could exceed
+  // the cap and sanitizeTools would silently truncate the tail — the same
+  // class of silent drop this whole path exists to prevent.
+  const gridCap = Math.max(0, MY_TOOLS_CAP - storedTools.filter((k) => !representable.has(k)).length);
+  const saveGridOrder = useCallback(
+    (draft: string[]) => saveTools(mergeGridOrder(storedTools, draft, representable)),
+    [saveTools, storedTools, representable],
+  );
 
   return (
     <DashboardShell>
@@ -316,7 +340,7 @@ export default function HouseHome() {
 
         {/* Keycap app grid (editable — see HomeTileGrid) */}
         {!modulesLoading && !layoutLoading && !roleLoading && (
-          <HomeTileGrid primary={primary} overflow={overflow} onSave={saveTools} />
+          <HomeTileGrid primary={primary} overflow={overflow} cap={gridCap} onSave={saveGridOrder} />
         )}
       </div>
     </DashboardShell>

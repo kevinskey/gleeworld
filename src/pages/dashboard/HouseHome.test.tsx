@@ -67,6 +67,9 @@ vi.mock('@/hooks/useMyFees', () => ({
 
 vi.mock('@/hooks/use-mobile', () => ({
   useIsMobile: () => false,
+  // The grid asks whether the phone tab bar is on screen before deciding
+  // which stored tools it can represent as keycaps.
+  useIsCompactNav: () => false,
 }));
 
 vi.mock('@/components/home/date-card/DateCardSlot', () => ({

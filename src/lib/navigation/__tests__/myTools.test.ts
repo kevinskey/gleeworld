@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   MY_TOOLS_CAP, parseMyTools, migrateToMyTools, sanitizeTools, resolveKey,
-  selectShelfEntries, DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY,
+  selectShelfEntries, mergeGridOrder, DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY,
 } from '../myTools';
 import { NAV_CATALOG } from '../navCatalog';
 
@@ -58,14 +58,22 @@ describe('migrateToMyTools', () => {
     const existing = { v: 4, tools: ['studio'], widgets: ['today'], setupComplete: true };
     expect(migrateToMyTools(existing, null, 'student')).toEqual(existing);
   });
-  it('prefers home_tile_layout over legacy nav order', () => {
+  it('prefers home_tile_layout over a legacy nav order', () => {
     const tiles = { v: 1, order: ['studio', 'academy'] };
     const legacy = { v: 3, order: ['finance'], sections: {}, sectionOrder: [] };
     expect(migrateToMyTools(legacy, tiles, 'student').tools).toEqual(['studio', 'academy']);
   });
-  it('falls back to legacy nav order when no tile layout exists', () => {
-    const legacy = { v: 3, order: ['home', 'finance', 'studio'], sections: {}, sectionOrder: [] };
-    expect(migrateToMyTools(legacy, null, 'student').tools).toEqual(['finance', 'studio']);
+  it('IGNORES a legacy v1-v3 nav order entirely — it was never a pick list', () => {
+    // I3 (final review). The old sidebar stored the whole flat display
+    // order of every visible entry, so "first 8" was top-of-catalog order,
+    // not preference: a school admin got messages/calendar/notes/concierge/
+    // bible/... with no Academy, People, Finance or Concert Planner — AND
+    // setupComplete:true, which would skip them past Phase 2's first-run
+    // sheet. Role default + setupComplete:false is the better answer.
+    const legacy = { v: 3, order: NAV_CATALOG.map((e) => e.key), sections: {}, sectionOrder: [] };
+    const migrated = migrateToMyTools(legacy, null, 'faculty');
+    expect(migrated.tools).toEqual(DEFAULT_TOOLS_FACULTY);
+    expect(migrated.setupComplete).toBe(false);
   });
   it('falls back to role defaults when the member has customized nothing', () => {
     expect(migrateToMyTools(null, null, 'student').tools).toEqual(DEFAULT_TOOLS_STUDENT);
@@ -75,9 +83,66 @@ describe('migrateToMyTools', () => {
     expect(migrateToMyTools(null, { v: 1, order: ['studio'] }, 'student').setupComplete).toBe(true);
     expect(migrateToMyTools(null, null, 'student').setupComplete).toBe(false);
   });
-  it('caps a long legacy nav order at 8', () => {
-    const legacy = { v: 3, order: NAV_CATALOG.map((e) => e.key), sections: {}, sectionOrder: [] };
-    expect(migrateToMyTools(legacy, null, 'faculty').tools).toHaveLength(MY_TOOLS_CAP);
+  it('respects a deliberately CLEARED tile layout instead of refilling it', () => {
+    // M6: an empty v4 record is respected everywhere else (getAppTiles
+    // distinguishes null from []), so an empty v1 layout — the same
+    // deliberate "I cleared my grid" — must be too.
+    const cleared = migrateToMyTools(null, { v: 1, order: [] }, 'faculty');
+    expect(cleared.tools).toEqual([]);
+    expect(cleared.setupComplete).toBe(true);
+  });
+  it('documents exactly which 8 of an oversized tile layout survive', () => {
+    // I2: HomeTileGrid's add path is capped now, but layouts written before
+    // that cap could hold every enabled destination, and sanitizeTools keeps
+    // only the first MY_TOOLS_CAP. Truncation is deliberate — pin WHICH keys
+    // survive so it is visible rather than accidental.
+    const twelve = {
+      v: 1,
+      order: [
+        'music-library', 'academy', 'planner', 'people', 'finance', 'part-tracks',
+        'studio', 'sight', 'attendance', 'tickets', 'merch', 'video',
+      ],
+    };
+    const migrated = migrateToMyTools(null, twelve, 'faculty');
+    expect(migrated.tools).toEqual([
+      'music-library', 'academy', 'planner', 'people', 'finance', 'part-tracks',
+      'studio', 'sight',
+    ]);
+    expect(migrated.tools).toHaveLength(MY_TOOLS_CAP);
+    // The tail is dropped, not reordered or shuffled to the front.
+    for (const dropped of ['attendance', 'tickets', 'merch', 'video']) {
+      expect(migrated.tools).not.toContain(dropped);
+    }
+  });
+});
+
+describe('mergeGridOrder', () => {
+  // The grid is a lossy view of the stored record; this is what keeps a
+  // save from deleting what the grid could not show. See
+  // __tests__/gridRoundTrip.test.ts for the same guard end-to-end.
+  const representable = new Set(['a', 'b', 'c', 'd']);
+
+  it('is a no-op when the draft matches what the grid rendered', () => {
+    const stored = ['x', 'a', 'b', 'y', 'c'];
+    expect(mergeGridOrder(stored, ['a', 'b', 'c'], representable)).toEqual(stored);
+  });
+  it('keeps un-representable keys at their stored index', () => {
+    expect(mergeGridOrder(['x', 'a', 'b'], ['b', 'a'], representable)).toEqual(['x', 'b', 'a']);
+  });
+  it('applies the draft order to the representable slots', () => {
+    expect(mergeGridOrder(['a', 'b', 'c'], ['c', 'a', 'b'], representable)).toEqual(['c', 'a', 'b']);
+  });
+  it('drops only what the draft dropped', () => {
+    expect(mergeGridOrder(['x', 'a', 'b', 'c'], ['a', 'c'], representable)).toEqual(['x', 'a', 'c']);
+  });
+  it('appends keys the draft added beyond the available slots', () => {
+    expect(mergeGridOrder(['x', 'a'], ['a', 'b', 'c'], representable)).toEqual(['x', 'a', 'b', 'c']);
+  });
+  it('returns the draft unchanged when nothing is stored yet', () => {
+    expect(mergeGridOrder([], ['a', 'b'], representable)).toEqual(['a', 'b']);
+  });
+  it('returns only the preserved keys when the member clears the grid', () => {
+    expect(mergeGridOrder(['x', 'a', 'b'], [], representable)).toEqual(['x']);
   });
 });
 

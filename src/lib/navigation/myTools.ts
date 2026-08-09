@@ -2,11 +2,11 @@
 // Renders as rows in the sidebar shelf and as keycaps on the House home,
 // replacing the two separate systems it supersedes:
 //   user_preferences.nav_item_order  (v1-v3, sidebar order + section moves)
+//     — superseded, and NOT migrated from: see migrateToMyTools's comment.
 //   user_preferences.home_tile_layout (v1, keycap order)
 // Stored back into the nav_item_order column as v4 — no DDL required.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §6
 import { parseTileLayout } from './appDestinations';
-import { parseNavOrder } from './legacyNavOrder';
 import type { CatalogEntry } from './navCatalog';
 
 /** Matches the shipped keycap cap, so migration never truncates a member's tiles. */
@@ -113,11 +113,22 @@ export function parseMyTools(raw: unknown): MyTools | null {
  * Produce a MyTools record from whatever the member already had, in
  * preference order (spec §6.3):
  *   1. an existing v4 record            → returned untouched
- *   2. home_tile_layout.order           → already a curated <=8 set
- *   3. nav_item_order.order (v1-v3)     → first 8 that survive sanitizing
- *   4. the role default
- * Nobody loses a tool they had placed. setupComplete is true for 2 and 3 so
- * the Phase 2 first-run sheet only greets genuinely new members.
+ *   2. home_tile_layout (any v1 blob)   → a curated pick list, first 8 kept
+ *   3. the role default, setupComplete: false
+ *
+ * A legacy v1-v3 `nav_item_order` blob is deliberately NOT a source. It was
+ * never a pick list: the old sidebar stored the ENTIRE flat display order of
+ * every visible entry (~40 keys), so "first 8" is top-of-catalog order, not
+ * preference — a typical school admin migrated to `messages, calendar,
+ * notes, concierge, bible, music-library, music, sight`, with no Academy,
+ * People, Finance or Concert Planner, and `setupComplete: true` then locked
+ * them out of Phase 2's first-run sheet. Falling through to the role default
+ * with `setupComplete: false` gives them a sane shelf AND the sheet.
+ *
+ * A v1 tile layout IS a pick list (the member added/removed keycaps
+ * deliberately), including an empty one — `{v:1, order:[]}` means "I cleared
+ * my grid", the same deliberate empty set an empty v4 record carries, and is
+ * respected rather than overwritten with the role default.
  */
 export function migrateToMyTools(
   navOrderRaw: unknown,
@@ -128,17 +139,53 @@ export function migrateToMyTools(
   if (existing) return existing;
 
   const tiles = parseTileLayout(tileLayoutRaw);
-  if (tiles && tiles.order.length > 0) {
+  if (tiles) {
     return { v: 4, tools: sanitizeTools(tiles.order), widgets: [], setupComplete: true };
-  }
-
-  const legacy = parseNavOrder(navOrderRaw);
-  if (legacy && legacy.order.length > 0) {
-    return { v: 4, tools: sanitizeTools(legacy.order), widgets: [], setupComplete: true };
   }
 
   const defaults = role === 'faculty' ? DEFAULT_TOOLS_FACULTY : DEFAULT_TOOLS_STUDENT;
   return { v: 4, tools: sanitizeTools(defaults), widgets: [], setupComplete: false };
+}
+
+/**
+ * Fold a keycap-grid edit back into the stored My Tools record WITHOUT
+ * losing what the grid could not show.
+ *
+ * The grid is a lossy view of the record: on a phone the tab bar claims
+ * Home / Messages / Calendar, so those stored keys never render as keycaps,
+ * and a tool whose module was switched off doesn't render either. Writing
+ * the grid's draft back verbatim therefore DELETED every unrepresented key —
+ * Edit → Done with zero edits permanently shortened the record (the branch's
+ * one Critical finding).
+ *
+ * The merge:
+ *   - every stored key the grid could not represent survives, at its stored
+ *     index (so re-widening the viewport or re-enabling a module puts the
+ *     tool back exactly where it was);
+ *   - the slots the grid COULD represent are refilled from `draft`, in the
+ *     draft's order — that is the member's reorder/remove;
+ *   - draft keys with no slot left (the member added tiles) append at the end.
+ *
+ * Pure and total: with `stored: []` it returns the draft unchanged, so a
+ * member with no record yet simply stores what they see.
+ */
+export function mergeGridOrder(
+  stored: string[],
+  draft: string[],
+  representable: ReadonlySet<string>,
+): string[] {
+  const queue = [...draft];
+  const out: string[] = [];
+  for (const key of stored) {
+    if (representable.has(key)) {
+      const next = queue.shift();
+      if (next !== undefined) out.push(next);
+    } else {
+      out.push(key);
+    }
+  }
+  out.push(...queue);
+  return out;
 }
 
 /**

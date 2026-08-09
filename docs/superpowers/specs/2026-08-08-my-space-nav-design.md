@@ -298,15 +298,25 @@ read by the first-run sheet and by any member with no personal record.
 
 Per user, in order of preference:
 
-1. `home_tile_layout.primary` exists → use it verbatim (already a curated ≤8 set).
-2. Else `nav_item_order.order` exists → take the first 8 keys that are sidebar-surfaced and
-   still resolve after the recut.
-3. Else → the tenant default for their role.
-4. Else → the platform default for their role.
+1. `home_tile_layout.order` exists → use it, first 8 after sanitizing (a curated pick
+   list, including a deliberately empty one). `setupComplete: true`.
+2. Else → the tenant default for their role.
+3. Else → the platform default for their role, `setupComplete: false`.
 
-Retired keys resolve through `MERGED_KEYS` before any of the above. No member loses a tool
-they had placed. `setupComplete` is set `true` for anyone with an existing layout, so the
-first-run sheet only greets genuinely new members.
+Retired keys resolve through `MERGED_KEYS` before any of the above. `setupComplete` is set
+`true` only for a member with a curated tile layout, so the first-run sheet greets everyone
+else.
+
+> **Amended 2026-08-08 (final review, I3).** An earlier step between 1 and 2 — "else
+> `nav_item_order.order` (v1–v3) → first 8 keys" — has been **dropped**, and
+> `migrateToMyTools` no longer reads legacy nav orders at all. That column never held a
+> pick list: the old sidebar stored the ENTIRE flat display order of every visible entry
+> (~40 keys), so "first 8" was top-of-catalog order, not preference. A typical school admin
+> would have migrated to `messages, calendar, notes, concierge, bible, music-library, music,
+> sight` — no Academy, People, Finance or Concert Planner — and `setupComplete: true` would
+> then have skipped them past Phase 2's first-run sheet. They now fall through to the role
+> default with `setupComplete: false` instead. Nobody loses a tool they deliberately
+> **placed**; a tile layout is still honoured verbatim.
 
 ### 6.4 Usage telemetry
 
