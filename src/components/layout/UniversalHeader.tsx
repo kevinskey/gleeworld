@@ -29,8 +29,6 @@ import { HEADER_ICON_SIZES } from "@/components/layout/headerIconSizes";
 
 import { LandingPageModal } from "@/components/landing/LandingPageModal";
 
-// import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
-
 interface UniversalHeaderProps {
   viewMode?: 'admin' | 'member';
   onViewModeChange?: (mode: 'admin' | 'member') => void;
