@@ -290,9 +290,13 @@ is common now that `current_tenant_id()` is subdomain-aware. The RPC also resync
 
 ### 6.2 Tenant defaults
 
-`gw_tenant_nav_prefs` gains `default_tools jsonb` — `{ admin: string[], student: string[],
-member: string[] }` — alongside the existing `hidden_items`. Written only by tenant admins,
-read by the first-run sheet and by any member with no personal record.
+`gw_tenant_nav_prefs` gains `default_tools text[]`, alongside the existing `hidden_items`, on
+the same `(tenant_id, role)` row rather than a `{ admin: [], student: [], member: [] }` jsonb
+blob — the table is already `PRIMARY KEY (tenant_id, role)`, one row per role, so a role-keyed
+blob would nest role inside a row already partitioned by role, and every write would have to
+read-modify-write the other roles' data to avoid clobbering it. Empty array means "no tenant
+default set", falling back to the platform role default; `NULL` is not used. Written only by
+tenant admins, read by the first-run sheet and by any member with no personal record.
 
 ### 6.3 Migration of existing preferences
 
