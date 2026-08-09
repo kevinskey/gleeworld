@@ -48,27 +48,16 @@ if (typeof HTMLCanvasElement !== 'undefined' && !(HTMLCanvasElement.prototype as
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-// jsdom (used per-file via `@vitest-environment jsdom`) does not implement
-// ResizeObserver. cmdk's CommandList observes its own height on mount to
-// drive a `--cmdk-list-height` CSS var — with no polyfill, mounting any
-// Command-based UI (AllToolsSheet, GlobalCommandPalette) throws
-// "ResizeObserver is not defined" from inside a passive effect, which
-// React surfaces as an unhandled render error rather than a useful test
-// failure. This is a layout measurement only; nothing here needs real
-// sizes in tests, so the observe/unobserve calls are no-ops.
-if (typeof globalThis.ResizeObserver === 'undefined') {
-  class ResizeObserverStub {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-  (globalThis as any).ResizeObserver = ResizeObserverStub;
-}
-
-// jsdom also does not implement Element.scrollIntoView — cmdk calls it on
-// the selected item whenever the selection moves (mount, filter, keyboard
-// nav). Same rationale as the ResizeObserver stub above: a no-op is enough
-// since tests never assert on scroll position.
-if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
-  Element.prototype.scrollIntoView = function scrollIntoView() {};
-}
+// A global ResizeObserver/scrollIntoView polyfill was tried here and
+// reverted (see AllToolsSheet.test.tsx, which stubs both locally instead).
+// jsdom genuinely lacks both, and cmdk needs them at mount — but several
+// components elsewhere feature-detect one or the other specifically
+// BECAUSE jsdom lacks them (AutomationPanel.tsx, NotationView.tsx,
+// TourEngine.tsx all read `typeof ResizeObserver`/`typeof el.scrollIntoView`
+// to skip a jsdom-only-unsafe branch), and a handful of others construct a
+// ResizeObserver unconditionally, relying on jsdom's absence never coming
+// up in their own tests. A global stub flips every one of those guards to
+// the "real browser" branch while still doing nothing — TourEngine.tsx's
+// scroll-then-measure-synchronously invariant in particular would silently
+// stop holding. Scope any future ResizeObserver/scrollIntoView stub to the
+// specific suite that needs it.
