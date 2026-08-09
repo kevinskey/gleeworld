@@ -501,6 +501,41 @@ export const useFeesManagement = () => {
     loadData();
   }, []);
 
+  /**
+   * Permanently remove a fee row.
+   *
+   * .select() is load-bearing: an RLS-rejected delete returns NO error and
+   * affects zero rows, so without reading the deleted row back a blocked
+   * delete looks like a success and the fee silently reappears on refetch.
+   *
+   * Deliberately destructive and admin-only at the database level
+   * (gw_dues_records_admin_delete, ANDed with tenant isolation). Refund or
+   * waive is usually the right action for a fee that has payments against
+   * it — the caller is responsible for warning about that.
+   */
+  const deleteFee = useCallback(async (feeId: string): Promise<boolean> => {
+    const { data, error } = await supabase
+      .from('gw_student_fees')
+      .delete()
+      .eq('id', feeId)
+      .select('id');
+    if (error) {
+      toast({ title: 'Could not delete fee', description: error.message, variant: 'destructive' });
+      return false;
+    }
+    if (!data || data.length === 0) {
+      toast({
+        title: 'Could not delete fee',
+        description: 'Nothing was removed. Your account may not have permission.',
+        variant: 'destructive',
+      });
+      return false;
+    }
+    toast({ title: 'Fee deleted' });
+    await fetchStudentFees();
+    return true;
+  }, [toast, fetchStudentFees]);
+
   return {
     studentFees,
     paymentPlans,
@@ -512,6 +547,7 @@ export const useFeesManagement = () => {
     recordPayment,
     refundFee,
     waiveFee,
+    deleteFee,
     createReminder,
     sendBulkReminders,
     refetch: async () => {

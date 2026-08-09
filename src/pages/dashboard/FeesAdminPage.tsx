@@ -2,6 +2,11 @@ import { useEffect, useState } from 'react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Trash2 } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useFeeTemplates, FeeTemplate } from '@/hooks/useFeeTemplates';
 import { useFeesManagement } from '@/hooks/useFeesManagement';
 import { CreateFeeTemplateDialog } from '@/components/fees/CreateFeeTemplateDialog';
@@ -33,7 +38,12 @@ export default function FeesAdminPage() {
   } | null>(null);
 
   const { listTemplates } = useFeeTemplates();
-  const { studentFees, refetch } = useFeesManagement();
+  // The fee awaiting delete confirmation. Deleting is irreversible and can
+  // destroy a payment record, so it never fires straight off the row button.
+  const [deleteTarget, setDeleteTarget] = useState<
+    { id: string; name: string; who: string; paid: number } | null
+  >(null);
+  const { studentFees, refetch, deleteFee } = useFeesManagement();
 
   const reload = async () => {
     const data = await listTemplates({
@@ -135,6 +145,22 @@ export default function FeesAdminPage() {
                               Mark paid
                             </Button>
                           )}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="shrink-0 h-11 w-11 text-muted-foreground hover:text-destructive"
+                          aria-label={`Delete ${f.name} for ${f.user_profile?.full_name ?? 'member'}`}
+                          onClick={() =>
+                            setDeleteTarget({
+                              id: f.id,
+                              name: f.name,
+                              who: f.user_profile?.full_name ?? '—',
+                              paid: Number(f.paid_amount ?? 0),
+                            })
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     );
                   })}
@@ -176,6 +202,48 @@ export default function FeesAdminPage() {
           remainingAmount={markPaidFor.remaining}
         />
       )}
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this fee?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget && (
+                <>
+                  <span className="font-medium">{deleteTarget.name}</span> for{' '}
+                  {deleteTarget.who} will be removed permanently. This cannot be undone.
+                  {deleteTarget.paid > 0 && (
+                    <>
+                      {' '}
+                      <strong>
+                        ${deleteTarget.paid.toFixed(2)} has already been recorded as paid
+                        against this fee — deleting it destroys that payment record.
+                      </strong>{' '}
+                      Refund or waive it instead if you need to keep the history.
+                    </>
+                  )}
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={async () => {
+                if (!deleteTarget) return;
+                await deleteFee(deleteTarget.id);
+                setDeleteTarget(null);
+              }}
+            >
+              Delete fee
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardPageShell>
   );
 }

@@ -2,7 +2,7 @@
 // Smoke tests: FeesAdminPage and supporting dialogs mount without crashing.
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 // ── Shared supabase stub ─────────────────────────────────────────────────────
@@ -50,9 +50,28 @@ vi.mock('@/hooks/useFeeTemplates', () => ({
   FeeTemplate: {},
 }));
 
+// Hoisted so the spy and the fixture can be asserted on from the tests below.
+const feeMocks = vi.hoisted(() => ({
+  deleteFee: vi.fn(() => Promise.resolve(true)),
+  fee: {
+    id: 'fee-1',
+    user_id: 'u-1',
+    amount: 25,
+    paid_amount: 0,
+    due_date: '2026-08-07',
+    semester: 'Fall 2026',
+    academic_year: '2026-2027',
+    status: 'pending',
+    category: 'dues',
+    name: 'Choir Fee',
+    user_profile: { full_name: 'Kevin Phillip Johnson' },
+  },
+}));
+
 vi.mock('@/hooks/useFeesManagement', () => ({
   useFeesManagement: () => ({
-    studentFees: [],
+    deleteFee: feeMocks.deleteFee,
+    studentFees: [feeMocks.fee],
     paymentPlans: [],
     loading: false,
     fetchStudentFees: vi.fn(),
@@ -228,5 +247,43 @@ describe('FeeInstallmentScheduleEditor smoke test', () => {
       />,
     );
     expect(getAllByText('#1').length).toBeGreaterThan(0);
+  });
+
+});
+
+// ── Deleting an individual fee ───────────────────────────────────────────────
+// Deleting destroys a financial record, so the row button must never delete
+// straight away, and a fee with money against it must say so specifically.
+describe('FeesAdminPage — deleting a fee', () => {
+  beforeEach(() => {
+    feeMocks.deleteFee.mockClear();
+    feeMocks.fee.paid_amount = 0;
+  });
+
+  const openConfirm = async () => {
+    render(<FeesAdminPage />);
+    fireEvent.click(await screen.findByRole('button', { name: /delete choir fee/i }));
+    return screen.findByRole('alertdialog');
+  };
+
+  it('asks for confirmation, naming the fee and the member', async () => {
+    const dialog = await openConfirm();
+    expect(within(dialog).getByText(/delete this fee\?/i)).toBeInTheDocument();
+    // Scoped to the dialog: the name also appears in the row behind it.
+    expect(within(dialog).getByText(/Kevin Phillip Johnson/)).toBeInTheDocument();
+    expect(feeMocks.deleteFee).not.toHaveBeenCalled();
+  });
+
+  it('deletes only after the confirm button is pressed', async () => {
+    const dialog = await openConfirm();
+    fireEvent.click(within(dialog).getByRole('button', { name: /^delete fee$/i }));
+    await waitFor(() => expect(feeMocks.deleteFee).toHaveBeenCalledWith('fee-1'));
+  });
+
+  it('warns that a recorded payment will be destroyed', async () => {
+    feeMocks.fee.paid_amount = 10;
+    const dialog = await openConfirm();
+    expect(within(dialog).getByText(/has already been recorded as paid/i)).toBeInTheDocument();
+    expect(within(dialog).getByText(/refund or waive/i)).toBeInTheDocument();
   });
 });
