@@ -168,7 +168,13 @@ export function AllToolsSheet({ open, onOpenChange, available, pinned, canPin, o
   const { toast } = useToast();
   const [query, setQuery] = useState('');
   const pinnedSet = new Set(pinned);
-  const atCap = pinned.length >= MY_TOOLS_CAP;
+  // Gated on canPin too: after a failed load, `pinned` is the fabricated
+  // fallback record's 8 role-default tools (see useMyTools), so the raw
+  // length check alone reads "full" even though no ⊕ is offered anywhere
+  // (PinControl already withholds every one while !canPin). Without this,
+  // the banner below told the member to "remove one in Setup" with no ⊕
+  // for that advice to lead to.
+  const atCap = canPin && pinned.length >= MY_TOOLS_CAP;
 
   // Radix unmounts DialogContent (and everything inside it, including
   // cmdk's own search state) on close, but this component itself doesn't

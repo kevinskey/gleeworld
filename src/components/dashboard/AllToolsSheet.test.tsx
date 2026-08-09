@@ -290,6 +290,17 @@ describe('AllToolsSheet — pinning', () => {
     const btn = screen.getByRole('button', { name: /pin finance to your space/i });
     expect(btn).toBeDisabled();
   });
+
+  // Reviewer-found cosmetic bug: after a failed load, `pinned` is 8
+  // FABRICATED role defaults (see useMyTools), so pinned.length >=
+  // MY_TOOLS_CAP reads true — but canPin is already false (the write would
+  // refuse), and every ⊕ is correctly withheld. Showing "Your space is
+  // full — remove one in Setup to pin another." here is misleading: there
+  // is no ⊕ anywhere for the banner's own advice to apply to.
+  it('does not show the cap banner when the record has not genuinely loaded, even though pinned looks full', () => {
+    renderSheet({ pinned: NAV_CATALOG.slice(0, MY_TOOLS_CAP).map((e) => e.key), canPin: false });
+    expect(screen.queryByText(/your space is full/i)).toBeNull();
+  });
 });
 
 describe('AllToolsSheet — selecting a row', () => {

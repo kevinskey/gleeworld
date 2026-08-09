@@ -66,10 +66,17 @@ function setup({
   hiddenRoutes = new Set<string>(),
   roleLoading = false,
   myTools = { v: 4, tools: ['calendar', 'messages', 'finance'], widgets: [], setupComplete: true } as MyTools,
+  // useMyTools' "the row genuinely came back" flag. Sidebar/MobileNav don't
+  // read it at all — they render whatever `myTools` holds regardless — so
+  // it defaults true here purely to match the hook's real shape; see the
+  // "failed load" describe block below for the case that actually exercises
+  // it being false.
+  loaded = true,
 }: {
   hiddenRoutes?: Set<string>;
   roleLoading?: boolean;
   myTools?: MyTools | null;
+  loaded?: boolean;
 } = {}) {
   useUserRoleMock.mockReturnValue({
     profile: adminProfile,
@@ -77,7 +84,7 @@ function setup({
     canEditMusicLibrary: () => true,
   });
   useTenantNavPrefsMock.mockReturnValue(hiddenRoutes);
-  useMyToolsMock.mockReturnValue({ myTools, loading: false, saveTools: vi.fn(), saveMyTools: vi.fn() });
+  useMyToolsMock.mockReturnValue({ myTools, loading: false, loaded, saveTools: vi.fn(), saveMyTools: vi.fn() });
 }
 
 afterEach(cleanup);
@@ -154,5 +161,23 @@ describe('Sidebar — shelf must not blank on every route change', () => {
     // because it doesn't depend on myTools at all.
     expect(screen.getByText('Command Center')).toBeInTheDocument();
     expect(screen.getByText('Calendar')).toBeInTheDocument();
+  });
+});
+
+describe('Sidebar — failed load must still render the shelf', () => {
+  // useMyTools deliberately falls back to FABRICATED role defaults when the
+  // load fails rather than throwing (loaded: false, myTools: the fallback
+  // record, never null) — specifically so the shelf is never blank. The
+  // MySpacePage fix that gates its editor on `loaded` touches only that
+  // page's own write path; it must not change what Sidebar renders for the
+  // exact same failed-load record.
+  it('still renders the shelf from the fabricated fallback record when loaded is false', () => {
+    setup({
+      loaded: false,
+      myTools: { v: 4, tools: ['finance', 'people'], widgets: [], setupComplete: false },
+    });
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    expect(screen.getByText('Finance')).toBeInTheDocument();
+    expect(screen.getByText('People')).toBeInTheDocument();
   });
 });

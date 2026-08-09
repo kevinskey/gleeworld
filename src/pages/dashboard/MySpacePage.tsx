@@ -90,7 +90,7 @@ export default function MySpacePage() {
 
   const isFaculty = isFacultyProfile(profile);
   const role: 'student' | 'faculty' = isFaculty ? 'faculty' : 'student';
-  const { myTools, loading: toolsLoading, saveMyTools } = useMyTools(role);
+  const { myTools, loading: toolsLoading, loaded: toolsLoaded, saveMyTools } = useMyTools(role);
   // Until the record has actually landed, myTools is null and tools/widgets
   // would read as empty — mounting the editor against that would let a tap
   // in this window persist an empty/near-empty record over whatever the
@@ -98,7 +98,18 @@ export default function MySpacePage() {
   // field from the CURRENT myTools, so a widget toggle fired here writes
   // `tools: []` right over their real 8-tool set). Not ready until loading
   // is done AND a record actually exists.
-  const ready = !toolsLoading && myTools != null;
+  //
+  // `myTools != null` is NOT enough on its own: useMyTools deliberately
+  // falls back to FABRICATED role defaults (DEFAULT_TOOLS_STUDENT/FACULTY)
+  // when the load fails, specifically so the shelf elsewhere never blanks —
+  // but that means myTools is non-null after a failed load too. Mounting
+  // the editor against that fabrication let an edit's saveMyTools call fill
+  // every omitted field from it, persisting the role defaults straight over
+  // the member's real curated set. `loaded` is the only signal that
+  // distinguishes "genuinely fetched" from "fabricated fallback" — gate on
+  // it too. The render fallback (shelf/home grid elsewhere) is untouched;
+  // this only withholds the WRITE-capable editor on this page.
+  const ready = !toolsLoading && toolsLoaded && myTools != null;
   const tools = useMemo(() => myTools?.tools ?? [], [myTools]);
   const widgetOptions = widgetsFor(role);
   const widgets = useMemo(() => resolveWidgets(role, myTools?.widgets ?? []), [role, myTools]);
