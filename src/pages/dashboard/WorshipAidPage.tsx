@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { uploadFileAndGetUrl } from '@/utils/storage';
 import { worshipAidToPdf, worshipAidFileName } from '@/lib/liturgy/worshipAidPdf';
 import {
-  applyPanelEdits, reorderKeys,
+  applyPanelEdits, reorderKeys, restoreInsertAt,
   type AidEditsByPanel, type PanelEdits,
 } from '@/lib/liturgy/aidEdits';
 import { Button } from '@/components/ui/button';
@@ -343,6 +343,48 @@ export default function WorshipAidPage() {
       order: (cur.order ?? []).filter((k) => k !== id),
     }));
 
+  /**
+   * Delete a block, with an undo.
+   *
+   * "Delete" reads as permanent, and for a generated entry it is not: the
+   * panels are a diff against the plan, so hiding one keeps every word of it.
+   * But the only way back was a small restore chip in a row that appears
+   * solely on the panel that owned the block — Kevin deleted the Responsorial
+   * Psalm and asked how to type it back in (2026-08-09), which he could not
+   * have: a hidden block renders nothing to click, and an inserted text block
+   * has no label/citation pair to reproduce a reading with.
+   *
+   * So the way back goes where the action happened. An inserted block has no
+   * generated source to fall back on, so its undo carries the block itself.
+   */
+  const deleteBlock = (panel: PanelId, key: string) => {
+    const block = panelBlocks(panel).find((b) => b.key === key);
+    if (!block) return;
+    const name = block.entry.label?.trim() || block.entry.title?.trim() || 'block';
+
+    if (block.inserted) {
+      const inserts = edits[panel]?.inserts ?? [];
+      const removed = inserts.find((b) => b.id === key);
+      const insertIndex = inserts.findIndex((b) => b.id === key);
+      const orderIndex = (edits[panel]?.order ?? []).indexOf(key);
+      removeInsert(panel, key);
+      if (!removed) return;
+      toast(`Removed ${name}`, {
+        action: {
+          label: 'Undo',
+          onClick: () => patchPanel(panel, (cur) => restoreInsertAt(cur, removed, insertIndex, orderIndex)),
+        },
+      });
+      return;
+    }
+
+    hide(panel, key);
+    toast(`Removed ${name}`, {
+      description: 'The wording is kept — undo here, or bring it back later from Removed.',
+      action: { label: 'Undo', onClick: () => restore(panel, key) },
+    });
+  };
+
   const setGap = (panel: PanelId, key: string, inches: number) =>
     patchPanel(panel, (cur) => ({ ...cur, gaps: { ...(cur.gaps ?? {}), [key]: inches } }));
 
@@ -576,7 +618,7 @@ export default function WorshipAidPage() {
 
             <Button
               type="button" size="sm" variant="ghost" className="shrink-0 text-destructive"
-              onClick={() => (b.inserted ? removeInsert(editPanel, b.key) : hide(editPanel, b.key))}
+              onClick={() => deleteBlock(editPanel, b.key)}
             >
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -755,8 +797,7 @@ export default function WorshipAidPage() {
               const panel = (['insideLeft', 'insideRight', 'back'] as PanelId[])
                 .find((p) => panelBlocks(p).some((b) => b.key === key));
               if (!panel) return;
-              const block = panelBlocks(panel).find((b) => b.key === key);
-              if (block?.inserted) removeInsert(panel, key); else hide(panel, key);
+              deleteBlock(panel, key);
             }}
             onFlow={(r) => setFlow((cur) => (
               cur.overflowLines === r.overflowLines && cur.dropped === r.dropped.length

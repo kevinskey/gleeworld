@@ -153,3 +153,37 @@ export function reorderKeys(current: string[], key: string, dir: -1 | 1): string
   [next[i], next[j]] = [next[j], next[i]];
   return next;
 }
+
+/**
+ * Put an inserted block back where it was, for undo.
+ *
+ * removeInsert drops the block from `inserts` AND its key from `order`, so
+ * undoing needs both indices — appending would silently move a restored
+ * block to the end of the panel, which reads as "undo lost my place" rather
+ * than "undo".
+ *
+ * Indices are clamped rather than trusted: the panel may have changed
+ * between the delete and the undo, and landing the block somewhere sane
+ * beats throwing away the user's content.
+ */
+export function restoreInsertAt(
+  edits: PanelEdits | undefined,
+  block: InsertedBlock,
+  insertIndex: number,
+  orderIndex: number,
+): PanelEdits {
+  const cur = edits ?? {};
+  const inserts = [...(cur.inserts ?? [])];
+  // Already there (a double-undo, or a stale toast) — leave it alone.
+  if (inserts.some((b) => b.id === block.id)) return cur;
+  const at = insertIndex < 0 ? inserts.length : Math.min(insertIndex, inserts.length);
+  inserts.splice(at, 0, block);
+
+  const order = [...(cur.order ?? [])];
+  // Only restore an order entry if the block had one; a block that was never
+  // moved has no order entry, and inventing one would pin it in place.
+  if (orderIndex >= 0 && !order.includes(block.id)) {
+    order.splice(Math.min(orderIndex, order.length), 0, block.id);
+  }
+  return { ...cur, inserts, ...(order.length ? { order } : {}) };
+}
