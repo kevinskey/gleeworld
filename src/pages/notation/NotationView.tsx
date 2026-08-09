@@ -49,26 +49,53 @@ function measureLyric(ctx: CanvasRenderingContext2D | null, text: string): numbe
 }
 
 /** How far down (SVG y — larger is lower on the page) a note's own drawn
- *  shape reaches: notehead(s) plus stem tip when it has one. Deliberately
- *  NOT StaveNote.getBoundingBox(), which also merges in every attached
- *  modifier — including the invisible lyric Annotation each note below
- *  carries purely to reserve horizontal width. That annotation positions
- *  itself relative to its OWN note (the exact per-note "wandering" the
- *  shared baseline exists to avoid), so folding it back in here would
+ *  INK reaches: the bottom edge of its lowest notehead, plus the stem tip
+ *  when the stem points down.
+ *
+ *  INK, emphatically, not "position". VexFlow 5's two obvious probes both
+ *  report the notehead's CENTRE, not its underside:
+ *  getNoteHeadBounds().yBottom is `Math.max(...noteheads.map(h => h.getY()))`
+ *  and getStemExtents().baseY is the same number. A notehead is one staff
+ *  space tall, so both sit HALF A SPACE above the glyph's real bottom edge —
+ *  which is why an earlier clearance measured from them landed the words
+ *  exactly on the noteheads and looked like it had done nothing at all.
+ *  Each notehead's own bounding box is the ink, so that is what we ask for,
+ *  with the centre-plus-half-a-space geometry as the backstop.
+ *
+ *  Deliberately NOT StaveNote.getBoundingBox(), which also merges in every
+ *  attached modifier — including the invisible lyric Annotation each note
+ *  below carries purely to reserve horizontal width. That annotation
+ *  positions itself relative to its OWN note (the exact per-note "wandering"
+ *  the shared baseline exists to avoid), so folding it back in here would
  *  reintroduce that same noise into the one number a whole system shares.
- *  Sticks to the public geometry VexFlow 5 actually exposes
- *  (getNoteHeadBounds, getStemExtents) and is defensive about either
- *  returning something other than a finite number — one odd note should
- *  never poison the whole row's baseline. */
-function noteBottomY(sn: StaveNote): number {
+ *
+ *  Returns -Infinity when NOTHING about the note could be measured. The
+ *  caller must treat that as a failure and say so — see the draw loop. */
+function noteInkBottomY(sn: StaveNote, stave: Stave): number {
   let bottom = -Infinity;
-  const { yBottom } = sn.getNoteHeadBounds();
-  if (Number.isFinite(yBottom)) bottom = yBottom;
+  const halfHead = stave.getSpacingBetweenLines() / 2;
+  for (const head of sn.noteHeads) {
+    let ink = NaN;
+    try {
+      const bb = head.getBoundingBox();
+      const b = bb.getY() + bb.getH();
+      if (Number.isFinite(b)) ink = b;
+    } catch { /* no text metrics (jsdom, older WebViews) — estimate below */ }
+    if (!Number.isFinite(ink)) {
+      const centre = head.getY();
+      if (Number.isFinite(centre)) ink = centre + halfHead;
+    }
+    if (Number.isFinite(ink)) bottom = Math.max(bottom, ink);
+  }
+  // A down-stem (and its flag) reaches below the head it hangs from.
+  // topY is the stem TIP, which is the lower end when stems point down;
+  // baseY is the notehead centre again, so it gets the same half-head
+  // correction as above.
   if (!sn.isRest() && sn.hasStem()) {
     const extents = sn.getStemExtents();
     if (extents) {
       if (Number.isFinite(extents.topY)) bottom = Math.max(bottom, extents.topY);
-      if (Number.isFinite(extents.baseY)) bottom = Math.max(bottom, extents.baseY);
+      if (Number.isFinite(extents.baseY)) bottom = Math.max(bottom, extents.baseY + halfHead);
     }
   }
   return bottom;
@@ -80,16 +107,25 @@ const LYRIC_SIZE = 10;
 /** Minimum clear space between one syllable and the next. Below about this
  *  the words read as a single run even when they technically do not touch. */
 const LYRIC_GUTTER = 6;
-/** Minimum gap between the lowest ink in a system — a notehead or a stem
- *  tip, whichever descends further — and the lyric baseline drawn below
- *  it. getYForBottomText(LYRIC_LINE) alone assumes notes sit on or above
- *  the staff; a reciting tone can put every note in a system BELOW the
- *  staff, inside the space that fixed line reserves, so the baseline has
- *  to be pushed clear of whatever is actually there. 12px is roughly the
- *  serif face's own ascent at LYRIC_SIZE (~7-8px for a 10px face) plus a
- *  few px of real visible daylight — any smaller and the tops of tall
- *  letters ("T", "L", ...) would still graze the notehead. */
-const LYRIC_CLEARANCE = 12;
+/** Visible daylight between the lowest ink in a system — a notehead or a
+ *  stem tip, whichever descends further — and the TOP of the tallest letter
+ *  below it. getYForBottomText(LYRIC_LINE) alone assumes notes sit on or
+ *  above the staff; a reciting tone can put every note in a system BELOW the
+ *  staff, inside the space that fixed line reserves, so the baseline has to
+ *  be pushed clear of whatever is actually there.
+ *
+ *  This is a gap between two INK edges, with the face's own ascent measured
+ *  and added separately — not a baseline offset with the ascent guessed into
+ *  it. The guess is what went wrong before: LYRIC_SIZE is a POINT size to
+ *  VexFlow, so a "10px" face is really drawn at 13.3px and its capitals rise
+ *  ~9.4px, not the ~7px a px reading suggests. Three units is about a third
+ *  of a staff space — unmistakable daylight at reading size without spending
+ *  vertical room the 4-inch psalm card cannot spare. */
+const LYRIC_INK_GAP = 3;
+/** Ascent to assume when the renderer cannot measure text at all (jsdom,
+ *  very old WebViews). Deliberately generous: over-reserving pushes the
+ *  words a little low, under-reserving puts them back on the noteheads. */
+const LYRIC_ASCENT_FALLBACK = LYRIC_SIZE * 1.0;
 /** Below-baseline allowance for descenders (g, j, p, q, y) when deciding
  *  whether the engraved system fits inside the SVG's own height — the
  *  baseline is text's anchor point, not a line's true visual bottom. */
@@ -369,7 +405,7 @@ export function NotationView({
           // This measure's notes are in their final drawn position now
           // (stem extensions from the beam draw above included) — fold
           // its lowest point into the row's running minimum.
-          b.notes.forEach((sn) => { rowLowestBottom = Math.max(rowLowestBottom, noteBottomY(sn)); });
+          b.notes.forEach((sn) => { rowLowestBottom = Math.max(rowLowestBottom, noteInkBottomY(sn, stave)); });
           lyricJobs.push(b);
 
           b.notes.forEach((sn, k) => {
@@ -435,10 +471,45 @@ export function NotationView({
       // did — but a reciting tone whose notes descend past it pushes the
       // baseline down to clear them instead of drawing straight through.
       if (lyricJobs.length && rowStave) {
-        const lyricY = Math.max(rowStave.getYForBottomText(LYRIC_LINE), rowLowestBottom + LYRIC_CLEARANCE);
-        maxContentBottom = Math.max(maxContentBottom, lyricY + LYRIC_DESCENT_PAD);
         ctx.save();
+        // Font state FIRST: the baseline below is computed from what this
+        // face actually measures, so the measurement has to happen with the
+        // same font the words will be painted in.
         ctx.setFont('Times New Roman, serif', LYRIC_SIZE);
+        // The face's own ink ascent, measured rather than assumed.
+        // RenderContext.measureText returns the ink box relative to the
+        // baseline, so its `y` is the negative ascent. Taken over the row's
+        // actual syllables because that is what has to clear: "O" rises
+        // less than "The", and reserving for the tallest is the only
+        // reading that keeps every word on one line AND off the notes.
+        let ascent = 0;
+        lyricJobs.forEach((b) => b.m.elements.forEach((el) => {
+          if (el.kind !== 'note' || !el.lyric) return;
+          const m = ctx.measureText(el.lyric);
+          if (m && Number.isFinite(m.y)) ascent = Math.max(ascent, -m.y);
+        }));
+        if (!(ascent > 0)) ascent = LYRIC_ASCENT_FALLBACK;
+
+        const staveBaseline = rowStave.getYForBottomText(LYRIC_LINE);
+        let clearOfNotes: number;
+        if (Number.isFinite(rowLowestBottom)) {
+          clearOfNotes = rowLowestBottom + LYRIC_INK_GAP + ascent;
+        } else {
+          // Nothing about this system's notes could be measured. Falling
+          // back to the stave line here is exactly the bug this code exists
+          // to fix — that line is the one that draws through a low reciting
+          // tone — so assume the worst instead and complain, loudly, rather
+          // than shipping a silent regression that looks like "no change".
+          console.warn(
+            '[NotationView] system %d: no note ink could be measured (%d notes); ' +
+            'placing lyrics below the lowest position the row stride allows.',
+            r, lyricJobs.reduce((n, b) => n + b.notes.length, 0),
+          );
+          clearOfNotes = rowStave.getBottomLineY()
+            + 4 * rowStave.getSpacingBetweenLines() + LYRIC_INK_GAP + ascent;
+        }
+        const lyricY = Math.max(staveBaseline, clearOfNotes);
+        maxContentBottom = Math.max(maxContentBottom, lyricY + LYRIC_DESCENT_PAD);
         lyricJobs.forEach((b) => {
           b.notes.forEach((sn, k) => {
             const el = b.m.elements[k];

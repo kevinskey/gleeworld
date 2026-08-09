@@ -77,6 +77,25 @@ const METERS: { beats: number; beatType: number }[] = [
 const LETTERS: Pitch['step'][] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
 /**
+ * The attribute selects, sized to give the staff its room back.
+ *
+ * The dialog's whole job is to show a score, and the controls had grown
+ * taller than the thing they control: four stacked label-over-select
+ * columns, then two wrapped toolbar rows, then a pad row, pushed the staff
+ * ~460px down and the last system off the bottom of an iPad.
+ *
+ * So the LABELS moved beside their controls rather than above them — same
+ * <label for>, half the height — and the set-and-forget chrome (key, mode,
+ * metre, clef) is the one thing allowed to compact below the touch floor at
+ * lg. The controls a user actually taps while entering a psalm — durations,
+ * accidentals, the pitch pad, undo — stay on Button size="sm", which is
+ * 44pt on touch and only compacts at lg. Density comes from removing ROWS,
+ * not from shrinking what a finger has to hit.
+ */
+const SELECT_CLS = 'h-9 border border-input bg-background px-1.5 text-xs lg:h-8';
+const FIELD_LABEL_CLS = 'shrink-0 text-xs text-muted-foreground';
+
+/**
  * Engraving size per layout choice.
  *
  * Four inches is narrow, so bars-per-line and note size trade directly
@@ -151,7 +170,34 @@ export function PsalmComposerDialog({
 
   const stackRef = useRef(new CommandStack());
   const scoreRef = useRef(score); scoreRef.current = score;
-  const staffRef = useRef<HTMLDivElement>(null);
+  const staffRef = useRef<HTMLDivElement | null>(null);
+
+  /**
+   * The engraved score's own height, in unscaled (4-inch) pixels.
+   *
+   * Read back from the DOM rather than derived, because how tall a score is
+   * depends on how many systems the engraver decided to pack — a number this
+   * dialog asks for but does not get to choose (see `layout`). Measured off
+   * the untransformed element, so ResizeObserver reports layout pixels and
+   * the SCREEN_ZOOM multiplication happens exactly once, in the wrapper.
+   */
+  const [staffH, setStaffH] = useState(0);
+  const staffObsRef = useRef<ResizeObserver | null>(null);
+  // Attached as a ref CALLBACK, not from an effect keyed on `open`. The
+  // staff lives inside a portalled dialog, so "when does the node exist"
+  // is the portal's business, not ours — the callback fires the moment it
+  // does, and again with null when it goes away.
+  const attachStaff = useCallback((el: HTMLDivElement | null) => {
+    staffRef.current = el;
+    staffObsRef.current?.disconnect();
+    staffObsRef.current = null;
+    if (!el) { setStaffH(0); return; }
+    setStaffH(el.offsetHeight);
+    if (typeof ResizeObserver === 'undefined') return;   // jsdom / SSR safety
+    const ro = new ResizeObserver(() => setStaffH(el.offsetHeight));
+    ro.observe(el);
+    staffObsRef.current = ro;
+  }, []);
 
   /**
    * The words still to be placed, as STATE rather than a derived list.
@@ -542,230 +588,260 @@ export function PsalmComposerDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
+      {/* sm:p-4 rather than the shell's sm:p-6: 16px off the top is 16px the
+          staff moves up, and this dialog is judged entirely on whether the
+          last system is on screen. An iPad in landscape (1024×768) is the
+          tightest real case and it comes down to single-digit pixels. */}
+      <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto sm:p-4">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Music4 className="h-4 w-4" aria-hidden />
             Compose the responsorial psalm
           </DialogTitle>
-          <DialogDescription>
-            Type letters <strong>A–G</strong> for pitches, or play a MIDI keyboard.
-            <strong> −</strong> and <strong>+</strong> flat and sharp. Click a note to hear it, then{' '}
-            <strong>↑↓</strong> to move its pitch, <strong>←→</strong> between notes, and{' '}
-            <strong>Enter</strong> for the enharmonic spelling. Words from the day&rsquo;s
-            psalm attach as you go.
+          {/* Same facts, fewer lines. Every key this used to spell out in a
+              paragraph is still here — it just no longer costs the staff
+              four lines of the dialog to say so. */}
+          <DialogDescription className="text-xs">
+            <strong>A–G</strong> or MIDI to enter notes · <strong>−</strong>/<strong>+</strong> flat
+            and sharp · click a note to hear it, <strong>↑↓</strong> pitch, <strong>←→</strong> move,{' '}
+            <strong>Enter</strong> respells. Psalm words attach as you go.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="psalm-title" className="text-xs">Title</Label>
-              <Input id="psalm-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <div className="space-y-1.5">
+          {/* Title and composer, labels beside rather than above: one 32px
+              row instead of two 58px ones, and the field is still labelled. */}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="psalm-title" className={FIELD_LABEL_CLS}>Title</Label>
+              <Input
+                id="psalm-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="h-8 text-sm"
+              />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="psalm-composer" className="text-xs">Composed by</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="psalm-composer" className={FIELD_LABEL_CLS}>Composed by</Label>
               <Input
                 id="psalm-composer"
                 value={composer}
                 onChange={(e) => setComposer(e.target.value)}
                 placeholder="Your name"
-              />
-            </div>
-          </div>
-
-          {/* Score attributes — what the staff IS, before what goes on it */}
-          <div className="flex flex-wrap items-end gap-3 border border-border p-2">
-            <div className="space-y-1">
-              <Label htmlFor="psalm-key" className="text-xs">Key</Label>
-              <select
-                id="psalm-key"
-                value={score.keyFifths}
-                onChange={(e) => setAttrs({ keyFifths: Number(e.target.value) })}
-                className="h-9 border border-input bg-background px-2 text-sm"
-              >
-                {KEYS.map((k) => (
-                  <option key={k.fifths} value={k.fifths}>{k.label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="psalm-mode" className="text-xs">Mode</Label>
-              <select
-                id="psalm-mode"
-                value={score.mode}
-                onChange={(e) => setAttrs({ mode: e.target.value as 'major' | 'minor' })}
-                className="h-9 border border-input bg-background px-2 text-sm"
-              >
-                <option value="major">Major</option>
-                <option value="minor">Minor</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="psalm-meter" className="text-xs">Metre</Label>
-              <select
-                id="psalm-meter"
-                value={`${score.timeSig.beats}/${score.timeSig.beatType}`}
-                onChange={(e) => {
-                  const [beats, beatType] = e.target.value.split('/').map(Number);
-                  setAttrs({ timeSig: { beats, beatType } });
-                }}
-                className="h-9 border border-input bg-background px-2 text-sm"
-              >
-                {METERS.map((m) => (
-                  <option key={`${m.beats}/${m.beatType}`} value={`${m.beats}/${m.beatType}`}>
-                    {m.beats}/{m.beatType}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="psalm-clef" className="text-xs">Clef</Label>
-              <select
-                id="psalm-clef"
-                value={score.clef}
-                onChange={(e) => setAttrs({ clef: e.target.value as EditorScore['clef'] })}
-                className="h-9 border border-input bg-background px-2 text-sm"
-              >
-                <option value="treble">Treble</option>
-                <option value="bass">Bass</option>
-                <option value="alto">Alto</option>
-              </select>
-            </div>
-
-          </div>
-
-          {/* Entry toolbar */}
-          <div className="flex flex-wrap items-center gap-1.5 border border-border p-2">
-            {DURATIONS.map((d) => (
-              <Button
-                key={d.code}
-                type="button"
-                size="sm"
-                variant={armed === d.code ? 'default' : 'secondary'}
-                onClick={() => setArmed(d.code)}
-                aria-pressed={armed === d.code}
-                // No aria-label: the visible word IS the name now. An
-                // aria-label of "eighth" over a button reading "8th" would
-                // make the spoken name differ from the printed one.
-                className="text-xs"
-              >
-                {d.label}
-              </Button>
-            ))}
-            {/* Accidentals. Flat and sharp arm for the next note; natural
-                clears the arming and, on a selected note, cancels an
-                accidental already there. */}
-            {([
-              { alter: -1 as const, glyph: '\u266d', name: 'Flat' },
-              { alter: 0 as const, glyph: '\u266e', name: 'Natural' },
-              { alter: 1 as const, glyph: '\u266f', name: 'Sharp' },
-            ]).map((a) => (
-              <Button
-                key={a.name}
-                type="button"
-                size="sm"
-                variant={armedAlter === a.alter ? 'default' : 'secondary'}
-                aria-pressed={armedAlter === a.alter}
-                aria-label={a.name}
-                title={`${a.name} \u2014 arms the next note, or changes the selected one`}
-                onClick={() => armAccidental(a.alter)}
-                className="min-w-9 text-base leading-none"
-              >
-                {a.glyph}
-              </Button>
-            ))}
-            <span className="mx-1 h-5 w-px bg-border" aria-hidden />
-            {/* Dots multiply the armed duration; two dots is as far as psalm
-                writing ever needs. */}
-            {([1, 2] as const).map((d) => (
-              <Button
-                key={d}
-                type="button"
-                size="sm"
-                variant={armedDots === d ? 'default' : 'secondary'}
-                aria-pressed={armedDots === d}
-                aria-label={d === 1 ? 'Dotted' : 'Double dotted'}
-                title={d === 1 ? 'Dotted' : 'Double dotted'}
-                onClick={() => setArmedDots((cur) => (cur === d ? 0 : d))}
-                className="min-w-9 text-base leading-none"
-              >
-                {'.'.repeat(d)}
-              </Button>
-            ))}
-            <span className="mx-1 h-5 w-px bg-border" aria-hidden />
-            <Button type="button" size="sm" variant="secondary" onClick={addRest}
-              title="Add a rest of the armed duration">
-              Rest
-            </Button>
-            <Button type="button" size="sm" variant="secondary" onClick={undo} aria-label="Undo">
-              <Undo2 className="h-4 w-4" />
-            </Button>
-            <Button type="button" size="sm" variant="secondary" onClick={removeLast} aria-label="Delete note">
-              <Trash2 className="h-4 w-4" />
-            </Button>
-            <span className="mx-1 h-5 w-px bg-border" aria-hidden />
-            <Button type="button" size="sm" variant="secondary"
-              onClick={() => setOctaveShift((o) => Math.max(-2, o - 1))} aria-label="Octave down">
-              <Minus className="h-4 w-4" />
-            </Button>
-            <span className="text-xs tabular-nums text-muted-foreground">8ve {octaveShift >= 0 ? `+${octaveShift}` : octaveShift}</span>
-            <Button type="button" size="sm" variant="secondary"
-              onClick={() => setOctaveShift((o) => Math.min(2, o + 1))} aria-label="Octave up">
-              <Plus className="h-4 w-4" />
-            </Button>
-            <span className="mx-1 h-5 w-px bg-border" aria-hidden />
-            <Button
-              type="button" size="sm"
-              variant={midi.state.connected ? 'default' : 'secondary'}
-              onClick={() => (midi.state.connected ? midi.disable() : void midi.enable())}
-              disabled={!midi.state.supported}
-              title={midi.state.supported ? undefined : 'This browser has no Web MIDI support'}
-            >
-              <Piano className="mr-1.5 h-4 w-4" />
-              {midi.state.connected ? 'MIDI on' : 'MIDI'}
-            </Button>
-          </div>
-
-          {/* Degree + letter pads — phones and iPads have no hardware keyboard.
-              Each degree shows the note it will actually produce in the
-              current key: bare numbers left people asking what they were for,
-              and the answer changes with the key signature, so the button has
-              to say it rather than a caption elsewhere. */}
-          <div className="flex flex-wrap gap-1.5">
-            {LETTERS.map((l) => (
-              <Button key={l} type="button" size="sm" variant="outline"
-                onClick={() => addByLetter(l)} className="min-w-9">
-                {l}
-              </Button>
-            ))}
-          </div>
-
-          {/* Whatever the queue cannot express, type here. Clicking a note
-              selects it; this is its syllable. */}
-          {selected != null && score.elements[selected]?.kind === 'note' && (
-            <div className="flex items-center gap-2">
-              <Label htmlFor="psalm-note-lyric" className="shrink-0 text-xs">Lyric on this note</Label>
-              <Input
-                id="psalm-note-lyric"
-                value={(score.elements[selected] as { lyric?: string }).lyric ?? ''}
-                onChange={(e) => setSelectedLyric(e.target.value)}
-                placeholder="e.g. shep-"
                 className="h-8 text-sm"
               />
             </div>
-          )}
+          </div>
+
+          {/* One controls block, three rows: what the staff IS, what the next
+              note IS, and the pitches themselves. Previously three separate
+              bordered blocks whose borders, padding and the gaps between them
+              cost more height than a whole system of music. */}
+          <div className="space-y-1.5 border border-border p-1.5">
+
+            {/* Row 1 — score attributes, plus the two things that are set once
+                and then left alone (octave offset, MIDI). */}
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+              <div className="flex items-center gap-1">
+                <Label htmlFor="psalm-key" className={FIELD_LABEL_CLS}>Key</Label>
+                <select
+                  id="psalm-key"
+                  value={score.keyFifths}
+                  onChange={(e) => setAttrs({ keyFifths: Number(e.target.value) })}
+                  className={SELECT_CLS}
+                >
+                  {KEYS.map((k) => (
+                    <option key={k.fifths} value={k.fifths}>{k.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="psalm-mode" className={FIELD_LABEL_CLS}>Mode</Label>
+                <select
+                  id="psalm-mode"
+                  value={score.mode}
+                  onChange={(e) => setAttrs({ mode: e.target.value as 'major' | 'minor' })}
+                  className={SELECT_CLS}
+                >
+                  <option value="major">Major</option>
+                  <option value="minor">Minor</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="psalm-meter" className={FIELD_LABEL_CLS}>Metre</Label>
+                <select
+                  id="psalm-meter"
+                  value={`${score.timeSig.beats}/${score.timeSig.beatType}`}
+                  onChange={(e) => {
+                    const [beats, beatType] = e.target.value.split('/').map(Number);
+                    setAttrs({ timeSig: { beats, beatType } });
+                  }}
+                  className={SELECT_CLS}
+                >
+                  {METERS.map((m) => (
+                    <option key={`${m.beats}/${m.beatType}`} value={`${m.beats}/${m.beatType}`}>
+                      {m.beats}/{m.beatType}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="psalm-clef" className={FIELD_LABEL_CLS}>Clef</Label>
+                <select
+                  id="psalm-clef"
+                  value={score.clef}
+                  onChange={(e) => setAttrs({ clef: e.target.value as EditorScore['clef'] })}
+                  className={SELECT_CLS}
+                >
+                  <option value="treble">Treble</option>
+                  <option value="bass">Bass</option>
+                  <option value="alto">Alto</option>
+                </select>
+              </div>
+              <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />
+              <Button type="button" size="sm" variant="secondary" className="px-2.5"
+                onClick={() => setOctaveShift((o) => Math.max(-2, o - 1))} aria-label="Octave down">
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="text-xs tabular-nums text-muted-foreground">8ve {octaveShift >= 0 ? `+${octaveShift}` : octaveShift}</span>
+              <Button type="button" size="sm" variant="secondary" className="px-2.5"
+                onClick={() => setOctaveShift((o) => Math.min(2, o + 1))} aria-label="Octave up">
+                <Plus className="h-4 w-4" />
+              </Button>
+              <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />
+              <Button
+                type="button" size="sm" className="px-2.5 text-xs"
+                variant={midi.state.connected ? 'default' : 'secondary'}
+                onClick={() => (midi.state.connected ? midi.disable() : void midi.enable())}
+                disabled={!midi.state.supported}
+                title={midi.state.supported ? undefined : 'This browser has no Web MIDI support'}
+              >
+                <Piano className="mr-1 h-4 w-4" />
+                {midi.state.connected ? 'MIDI on' : 'MIDI'}
+              </Button>
+            </div>
+
+            {/* Row 2 — what the NEXT note will be, and the two edits */}
+            <div className="flex flex-wrap items-center gap-1 border-t border-border pt-1.5">
+              {DURATIONS.map((d) => (
+                <Button
+                  key={d.code}
+                  type="button"
+                  size="sm"
+                  variant={armed === d.code ? 'default' : 'secondary'}
+                  onClick={() => setArmed(d.code)}
+                  aria-pressed={armed === d.code}
+                  // No aria-label: the visible word IS the name now. An
+                  // aria-label of "eighth" over a button reading "8th" would
+                  // make the spoken name differ from the printed one.
+                  className="text-xs"
+                >
+                  {d.label}
+                </Button>
+              ))}
+              {/* Accidentals. Flat and sharp arm for the next note; natural
+                  clears the arming and, on a selected note, cancels an
+                  accidental already there. */}
+              {([
+                { alter: -1 as const, glyph: '\u266d', name: 'Flat' },
+                { alter: 0 as const, glyph: '\u266e', name: 'Natural' },
+                { alter: 1 as const, glyph: '\u266f', name: 'Sharp' },
+              ]).map((a) => (
+                <Button
+                  key={a.name}
+                  type="button"
+                  size="sm"
+                  variant={armedAlter === a.alter ? 'default' : 'secondary'}
+                  aria-pressed={armedAlter === a.alter}
+                  aria-label={a.name}
+                  title={`${a.name} \u2014 arms the next note, or changes the selected one`}
+                  onClick={() => armAccidental(a.alter)}
+                  className="min-w-9 px-2 text-base leading-none"
+                >
+                  {a.glyph}
+                </Button>
+              ))}
+              <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />
+              {/* Dots multiply the armed duration; two dots is as far as psalm
+                  writing ever needs. */}
+              {([1, 2] as const).map((d) => (
+                <Button
+                  key={d}
+                  type="button"
+                  size="sm"
+                  variant={armedDots === d ? 'default' : 'secondary'}
+                  aria-pressed={armedDots === d}
+                  aria-label={d === 1 ? 'Dotted' : 'Double dotted'}
+                  title={d === 1 ? 'Dotted' : 'Double dotted'}
+                  onClick={() => setArmedDots((cur) => (cur === d ? 0 : d))}
+                  className="min-w-9 px-2 text-base leading-none"
+                >
+                  {'.'.repeat(d)}
+                </Button>
+              ))}
+              <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />
+              <Button type="button" size="sm" variant="secondary" onClick={addRest}
+                className="px-2.5 text-xs"
+                title="Add a rest of the armed duration">
+                Rest
+              </Button>
+              <Button type="button" size="sm" variant="secondary" className="px-2.5"
+                onClick={undo} aria-label="Undo">
+                <Undo2 className="h-4 w-4" />
+              </Button>
+              <Button type="button" size="sm" variant="secondary" className="px-2.5"
+                onClick={removeLast} aria-label="Delete note">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Row 3 — the pitch pad. Phones and iPads have no hardware
+                keyboard, so these are the most-tapped controls on the screen
+                and the last thing that should be shrunk: they keep the full
+                size="sm" touch target. The optional lyric field shares the
+                row rather than claiming another one. */}
+            <div className="flex flex-wrap items-center gap-1 border-t border-border pt-1.5">
+              {LETTERS.map((l) => (
+                <Button key={l} type="button" size="sm" variant="outline"
+                  onClick={() => addByLetter(l)} className="min-w-9 px-2">
+                  {l}
+                </Button>
+              ))}
+              {/* Whatever the queue cannot express, type here. Clicking a note
+                  selects it; this is its syllable. */}
+              {selected != null && score.elements[selected]?.kind === 'note' && (
+                <div className="ml-1 flex min-w-[12rem] flex-1 items-center gap-1.5">
+                  <Label htmlFor="psalm-note-lyric" className={FIELD_LABEL_CLS}>Lyric</Label>
+                  <Input
+                    id="psalm-note-lyric"
+                    value={(score.elements[selected] as { lyric?: string }).lyric ?? ''}
+                    onChange={(e) => setSelectedLyric(e.target.value)}
+                    placeholder="e.g. shep-"
+                    className="h-8 text-sm"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* The staff is laid out at its true 4-inch print size and then
               CSS-zoomed for the screen. Laying it out larger and shrinking
               the export would change which measures share a line — the
               layout has to be decided at the size it will be printed. The
               zoom is presentation only; the SVG's own coordinates, and so
-              the JPEG, stay at 4 inches. */}
-          <div className="flex justify-center overflow-x-auto border border-border bg-card p-3">
-            <div style={{ width: PSALM_WIDTH_PX * SCREEN_ZOOM }}>
+              the JPEG, stay at 4 inches.
+
+              The zoom wrapper is sized EXPLICITLY, in both axes, because
+              transform: scale() paints bigger without laying out bigger.
+              The frame therefore reserved the score's unscaled height —
+              238px for something that paints 398 — and quietly clipped the
+              whole second system into a nested scrollbox. That is half of
+              "I can't see all the measures without scrolling" and no amount
+              of shrinking the controls above would have fixed it. */}
+          <div className="flex justify-center overflow-x-auto border border-border bg-card p-1.5">
+            <div style={{ width: PSALM_WIDTH_PX * SCREEN_ZOOM, height: staffH ? staffH * SCREEN_ZOOM : undefined }}>
               <div
-                ref={staffRef}
+                ref={attachStaff}
                 style={{
                   width: PSALM_WIDTH_PX,
                   transform: `scale(${SCREEN_ZOOM})`,
