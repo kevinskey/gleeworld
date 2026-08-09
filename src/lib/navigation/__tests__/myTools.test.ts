@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   MY_TOOLS_CAP, parseMyTools, migrateToMyTools, sanitizeTools, resolveKey,
   selectShelfEntries, mergeGridOrder, DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY,
+  MERGED_KEYS,
 } from '../myTools';
 import { NAV_CATALOG } from '../navCatalog';
 
@@ -34,6 +35,23 @@ describe('resolveKey', () => {
   });
   it('returns the key unchanged when unmapped', () => {
     expect(resolveKey('calendar', {})).toBe('calendar');
+  });
+});
+
+describe('MERGED_KEYS — merch retired into shop (Phase 5, 2026-08-09)', () => {
+  it('resolveKey follows the real MERGED_KEYS default, not just a hand-built test map', () => {
+    expect(resolveKey('merch')).toBe('shop');
+  });
+  it('a stored layout containing merch resolves to shop', () => {
+    expect(sanitizeTools(['merch'])).toEqual(['shop']);
+  });
+  it('a stored layout with both merch and shop does not duplicate — merch resolves onto the same slot', () => {
+    expect(sanitizeTools(['merch', 'shop'])).toEqual(['shop']);
+    expect(sanitizeTools(['shop', 'merch'])).toEqual(['shop']);
+  });
+  it('merch has no live catalog entry of its own — it only exists via the merge map', () => {
+    expect(NAV_CATALOG.find((e) => e.key === 'merch')).toBeUndefined();
+    expect(MERGED_KEYS.merch).toBe('shop');
   });
 });
 

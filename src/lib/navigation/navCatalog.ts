@@ -104,7 +104,21 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'fan-page',  to: '/admin/fan-page',   label: 'Fan Page',  icon: Heart,         section: 'reach', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-fan-page', gate: { adminOnly: true } },
   { key: 'feeds',     to: '/dashboard/feeds',  label: 'Feeds',     icon: Newspaper,     section: 'reach', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-feeds', gate: { module: 'feeds' } },
   { key: 'qr-codes',  to: '/qr-generator',     label: 'QR Codes',  icon: QrCode,        section: 'reach', tone: 'bg-slate-50 text-slate-600',     tourId: 'nav-qr-codes', gate: { adminOnly: true } },
-  { key: 'shop',      to: '/dashboard/shop',   label: 'Store',     icon: Store,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-shop', gate: { moduleAny: ['merch', 'store'] } },
+  // Consolidated 2026-08-09: this used to be two catalog entries pointing at
+  // the SAME ProductManagement component ('shop' here, and a grid-only
+  // 'merch' at /store/products) — a member browsing All Tools saw "Store"
+  // and "Merch" side by side and landed on one identical admin screen
+  // either way. 'merch' is retired via MERGED_KEYS (myTools.ts), not
+  // deleted outright, so any stored member layout referencing it still
+  // resolves here. Labelled "Store Admin" (not "Store") to read as
+  // distinct from 'music-store' (Music Store, /store — the separate
+  // buyer-facing marketplace). adminOnly added here at the same time:
+  // ProductManagement composes Orders/Customers/Payments/Discounts/Tax
+  // managers reading gw_orders/gw_payments/gw_refunds/gw_disputes, and the
+  // gate used to be module-only, so any member of a merch/store-enabled
+  // tenant could open it. ProductManagement also self-gates now (a member
+  // can still type the URL) — see its own admin check.
+  { key: 'shop',      to: '/dashboard/shop',   label: 'Store Admin', icon: Store,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-shop', gate: { moduleAny: ['merch', 'store'], adminOnly: true } },
   // Destination is the graduates PAGE BUILDER (GraduatesManagementModule opens
   // on its Page Builder tab), which authors the public /alumni page — so it is
   // labelled as a page editor and gated adminOnly to match its sibling Fan
@@ -112,7 +126,9 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // tenant open the editor and hit RLS write failures instead of simply not
   // seeing the entry.
   { key: 'graduates', to: '/dashboard/alumni', label: 'Graduates Page', icon: GraduationCap, section: 'reach', tone: 'bg-teal-50 text-teal-600',       tourId: 'nav-alumni', gate: { module: 'alumni', adminOnly: true } },
-  { key: 'merch',     to: '/store/products',   label: 'Merch',     icon: Shirt,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-merch-grid', surfaces: ['grid'], gate: { module: 'merch' } },
+  // 'merch' retired 2026-08-09 — see the comment on 'shop' above. Key kept
+  // out of the catalog on purpose (NEVER rename/reuse a key); MERGED_KEYS
+  // resolves stored references to 'shop' instead.
   // Money
   { key: 'my-fees',   to: '/dashboard/my-fees',    label: 'My Fees',    icon: CreditCard, section: 'money', tone: 'bg-sky-50 text-sky-700',         tourId: 'nav-my-fees' },
   { key: 'fees-admin', to: '/dashboard/fees',      label: 'Fees',       icon: Receipt,    section: 'money', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-fees-admin', gate: { adminOnly: true } },

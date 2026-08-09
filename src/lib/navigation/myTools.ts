@@ -25,11 +25,17 @@ export interface MyTools {
   setupComplete: boolean;
 }
 
-// Retired catalog keys → their surviving successor. Ships EMPTY: the §4
-// catalog recut is Phase 5. The resolver exists from day one so that when
-// entries do merge, no stored layout has to be rewritten — resolution
-// happens on read. NEVER rename a key; add it here instead.
-export const MERGED_KEYS: Record<string, string> = {};
+// Retired catalog keys → their surviving successor. The resolver exists
+// from day one so that when entries merge, no stored layout has to be
+// rewritten — resolution happens on read. NEVER rename a key; add it here
+// instead.
+// 'merch' retired 2026-08-09: it and 'shop' both pointed at the same
+// ProductManagement component (Phase 5 catalog recut, §4) — 'shop's
+// moduleAny: ['merch', 'store'] gate already covers everything 'merch'
+// gated on, so no tenant loses access.
+export const MERGED_KEYS: Record<string, string> = {
+  merch: 'shop',
+};
 
 /**
  * Follow `map` until the key is unmapped. Cycle-safe: before following a

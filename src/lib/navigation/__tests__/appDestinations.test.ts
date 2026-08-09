@@ -282,10 +282,18 @@ describe('getAppTiles catalog parity', () => {
     // Faculty tabs claim /dashboard/viewer (Music); student tabs claim
     // /dashboard/viewer AND /studio — so those keys dedupe out of the grid.
     // With Part Tracks removed, the grid now has more room (8 max, not 8 with tracks).
+    // 'merch' (Phase 5, 2026-08-09) merged into 'shop' and dropped out of the
+    // catalog — DEFAULT_GRID_ORDER's trailing 'merch' slot resolves to
+    // nothing now (byKey.get returns undefined and is filtered, same as any
+    // other stale key — see getAppTiles's "stale keys drop silently"
+    // comment) and 'shop' isn't itself in DEFAULT_GRID_ORDER, so the grid is
+    // simply one slot shorter here. 'shop' is also adminOnly now and this
+    // context (navFor's default) is a non-admin, so it wouldn't resolve
+    // even if it were listed.
     expect(getAppTiles('faculty', allOn, navFor(allOn)).primary.map((t) => t.key))
-      .toEqual(['studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
+      .toEqual(['studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance']);
     expect(getAppTiles('student', allOn, navFor(allOn)).primary.map((t) => t.key))
-      .toEqual(['sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
+      .toEqual(['sight', 'attendance', 'academy', 'tickets', 'planner', 'finance']);
   });
   it('DEFAULT_GRID_ORDER is the frozen 9-key list', () => {
     expect(DEFAULT_GRID_ORDER).toEqual(['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);

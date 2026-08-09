@@ -1937,9 +1937,12 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        {/* Sidebar "Store" entry → the editable backend
+                        {/* Sidebar "Store Admin" entry → the editable backend
                             (Products, Categories, Inventory, Orders, etc).
-                            The public-facing /shop has its own route. */}
+                            The public-facing /shop has its own route.
+                            /product-management and /store/products
+                            (formerly the "Merch" catalog entry) redirect
+                            here — same component, one gated route. */}
                         <DashboardShell><ProductManagement /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
@@ -2941,22 +2944,13 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                               />
-                              <Route 
-                                path="/product-management" 
-                                element={
-                                  <ProtectedRoute>
-                                    <ProductManagement />
-                                  </ProtectedRoute>
-                                } 
-                               />
-                               <Route
-                                path="/store/products"
-                                element={
-                                  <ProtectedRoute>
-                                    <ProductManagement />
-                                  </ProtectedRoute>
-                                }
-                               />
+                              {/* /product-management and /store/products both used to render
+                                  ProductManagement directly — the same component /dashboard/shop
+                                  renders (see the 'shop' catalog entry). Consolidated 2026-08-09:
+                                  redirect so existing links/bookmarks still land on the admin
+                                  screen, now behind the catalog's single gated route. */}
+                              <Route path="/product-management" element={<Navigate to="/dashboard/shop" replace />} />
+                              <Route path="/store/products" element={<Navigate to="/dashboard/shop" replace />} />
                                <Route
                                  path="/store"
                                  element={
