@@ -87,10 +87,28 @@ one level deeper.
 | `all-state`, `all-state-cohorts`, `my-all-state`, `all-state-admin` | **All-State** |
 | `my-fees`, `fees-admin` | **Fees** |
 | `box-office` (`/dashboard/box-office`), `tickets` (`/box-office`) | **Box Office** |
-| `music-store` (`/store`), `shop` (`/dashboard/shop`), `merch` (`/store/products`), `fundraising` (`/dashboard/fundraising`) | **Store**, with fundraising as a mode |
+| `shop` (`/dashboard/shop`), `merch` (`/store/products`), plus the unlisted `/product-management` | **Store Admin** — one entry, one route |
 
-The four storefronts are four different routes for one concept and must be reconciled as
-part of this work, not deferred — leaving them is what produced the duplication.
+**Corrected 2026-08-09 after reading the routes.** This was written from route names and
+was wrong. There are not four storefronts:
+
+- `/store` renders `StoreShell` → `StorePage` — the buyer-facing marketplace. Keeps its
+  own entry; browsing and administering are different jobs.
+- `/dashboard/shop`, `/store/products`, and `/product-management` all render the **identical**
+  `ProductManagement` component. That is the real duplication: one admin page behind three
+  URLs, surfaced as two differently-labelled catalog entries (`shop` "Store" in Reach,
+  `merch` "Merch" in Reach) so a member sees two features and lands on one screen. Collapse
+  to one entry on one route; retire the other two as redirects, resolving their keys through
+  `MERGED_KEYS` so no stored layout is rewritten.
+- `/dashboard/fundraising` is **not a storefront we run** and must not be merged in.
+  `FundraisingStoreSection` calls `provision-tsb-store` to create a T-Shirt Brothers group
+  store and `tsb-store-sso` to mint a one-click admin login; TSB holds the catalog, fulfils
+  the orders, and collects the money, and the tenant keeps 15%. None of the commerce-core
+  rules in `.claude/skills/gleeworld-commerce` apply, because GleeWorld never touches the
+  goods or the money. Merging it under "Store" would tell a director they were managing
+  their own inventory. It stays a separate entry under Money, labelled
+  **Fundraising (T-Shirt Brothers)** (Kevin, 2026-08-09) so the partner relationship is
+  legible from the nav.
 
 **Views fold into their parents.**
 
