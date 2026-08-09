@@ -64,9 +64,11 @@ import { AutoForm } from '@/components/public-site/AutoForm';
 import { BlockFrame } from '@/components/public-site/BlockFrame';
 import { fontStack, FONT_OPTIONS, safeConfig, themeCssVars, themeSchema, type SiteBlock, type SiteRenderContext, type SiteTheme } from '@/components/public-site/types';
 import { PACKAGE_LIST, type TemplatePackage } from '@/components/public-site/packages';
+import { tenantPublicHostFromRow, type TenantHostRow } from '@/lib/auth/tenantRedirect';
 
 interface SiteRow {
   id: string;
+  tenant_id: string;
   slug: string;
   theme: Record<string, unknown>;
   is_published: boolean;
@@ -222,6 +224,22 @@ export default function PublicPageEditor() {
       const { data, error } = await supabase.from('gw_public_sites').select('*').maybeSingle();
       if (error) throw error;
       return data as SiteRow | null;
+    },
+  });
+
+  // Host for the "View site" link. Kept separate from the site row because
+  // the branded domain lives on gw_tenants, not gw_public_sites.
+  const { data: tenantHostRow } = useQuery<TenantHostRow | null>({
+    queryKey: ['gw_tenants_host', site?.tenant_id],
+    enabled: !!site?.tenant_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_tenants')
+        .select('slug, subdomain, custom_domain')
+        .eq('id', site!.tenant_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data as TenantHostRow | null;
     },
   });
 
@@ -985,13 +1003,15 @@ export default function PublicPageEditor() {
             // and renders the built blocks without any redirect, so the
             // admin sees exactly what a visitor sees regardless of their
             // signed-in state.
+            //
+            // The HOST comes from tenantPublicHostFromRow, so a tenant with a
+            // branded domain gets example.org/sites/<slug> rather than the
+            // gleeworld.org subdomain — this button is how admins check and
+            // share their live site, and the branded host is the one they
+            // mean. Falls back to the subdomain until the tenant row loads.
             <Button variant="outline" asChild title="Open your live site in a new tab">
               <a
-                href={
-                  site.slug === 'main'
-                    ? `https://gleeworld.org/sites/main`
-                    : `https://${site.slug}.gleeworld.org/sites/${site.slug}`
-                }
+                href={`https://${tenantPublicHostFromRow(tenantHostRow ?? null, site.slug)}/sites/${site.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
