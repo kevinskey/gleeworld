@@ -6,7 +6,7 @@
 // Stored back into the nav_item_order column as v4 — no DDL required.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §6
 import { parseTileLayout } from './appDestinations';
-import { parseNavOrder } from '@/hooks/useNavItemOrder';
+import { parseNavOrder } from './legacyNavOrder';
 import type { CatalogEntry } from './navCatalog';
 
 /** Matches the shipped keycap cap, so migration never truncates a member's tiles. */
