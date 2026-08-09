@@ -47,6 +47,32 @@ function measureLyric(ctx: CanvasRenderingContext2D | null, text: string): numbe
   const w = ctx?.measureText(text).width;
   return typeof w === 'number' && w > 0 ? w : text.length * (LYRIC_SIZE * 0.5);
 }
+
+/** How far down (SVG y — larger is lower on the page) a note's own drawn
+ *  shape reaches: notehead(s) plus stem tip when it has one. Deliberately
+ *  NOT StaveNote.getBoundingBox(), which also merges in every attached
+ *  modifier — including the invisible lyric Annotation each note below
+ *  carries purely to reserve horizontal width. That annotation positions
+ *  itself relative to its OWN note (the exact per-note "wandering" the
+ *  shared baseline exists to avoid), so folding it back in here would
+ *  reintroduce that same noise into the one number a whole system shares.
+ *  Sticks to the public geometry VexFlow 5 actually exposes
+ *  (getNoteHeadBounds, getStemExtents) and is defensive about either
+ *  returning something other than a finite number — one odd note should
+ *  never poison the whole row's baseline. */
+function noteBottomY(sn: StaveNote): number {
+  let bottom = -Infinity;
+  const { yBottom } = sn.getNoteHeadBounds();
+  if (Number.isFinite(yBottom)) bottom = yBottom;
+  if (!sn.isRest() && sn.hasStem()) {
+    const extents = sn.getStemExtents();
+    if (extents) {
+      if (Number.isFinite(extents.topY)) bottom = Math.max(bottom, extents.topY);
+      if (Number.isFinite(extents.baseY)) bottom = Math.max(bottom, extents.baseY);
+    }
+  }
+  return bottom;
+}
 // Which text line below the stave the lyrics sit on, and their size. One
 // value for the whole system is the entire point — see the draw loop.
 const LYRIC_LINE = 1;
@@ -54,6 +80,20 @@ const LYRIC_SIZE = 10;
 /** Minimum clear space between one syllable and the next. Below about this
  *  the words read as a single run even when they technically do not touch. */
 const LYRIC_GUTTER = 6;
+/** Minimum gap between the lowest ink in a system — a notehead or a stem
+ *  tip, whichever descends further — and the lyric baseline drawn below
+ *  it. getYForBottomText(LYRIC_LINE) alone assumes notes sit on or above
+ *  the staff; a reciting tone can put every note in a system BELOW the
+ *  staff, inside the space that fixed line reserves, so the baseline has
+ *  to be pushed clear of whatever is actually there. 12px is roughly the
+ *  serif face's own ascent at LYRIC_SIZE (~7-8px for a 10px face) plus a
+ *  few px of real visible daylight — any smaller and the tops of tall
+ *  letters ("T", "L", ...) would still graze the notehead. */
+const LYRIC_CLEARANCE = 12;
+/** Below-baseline allowance for descenders (g, j, p, q, y) when deciding
+ *  whether the engraved system fits inside the SVG's own height — the
+ *  baseline is text's anchor point, not a line's true visual bottom. */
+const LYRIC_DESCENT_PAD = 4;
 
 export function NotationView({
   score, width, onNoteClick, selectedIndex,
@@ -280,15 +320,35 @@ export function NotationView({
     // invisible divs at these positions in the returned JSX so the user
     // can click a bar line to force/unforce a system break.
     const barTargetsBuf: Array<{ x: number; y: number; h: number; measureIndex: number }> = [];
+    // The lowest a lyric baseline actually reached this render, in logical
+    // (pre-scale) SVG coordinates. Starts at what the fixed row stride
+    // already assumed fits (TOP + rows*SYSTEM_H, i.e. logicalHeight minus
+    // its BOTTOM margin) so a normal score with no low-lying notes never
+    // shrinks the canvas — only a system whose baseline is pushed past
+    // that grows it, below.
+    let maxContentBottom = logicalHeight - BOTTOM;
     for (let r = 0; r < rowsPacked.length; r++) {
       const rowItems = built.slice(rowsPacked[r].start, rowsPacked[r].end);
       const weights = rowItems.map((b) => b.minW + 20);
       const totalW = weights.reduce((a, w) => a + w, 0) || 1;
       let x = 8;
+      const rowY = TOP + r * SYSTEM_H;
+      // One shared lyric baseline for the whole system — but WHERE that
+      // baseline sits can only be decided once every measure in the row
+      // has reported how far down its own notes reach (see noteBottomY
+      // above), so painting the lyric text itself is deferred to a second
+      // loop below, after rowLowestBottom is final. Everything else
+      // (notes, beams, ties, slurs, click targets, bar lines) still draws
+      // in the single pass here — only the words move.
+      let rowLowestBottom = -Infinity;
+      let rowStave: Stave | null = null;
+      const lyricJobs: typeof built = [];
+      let selPosXPending: number | null = null;
       rowItems.forEach((b, i) => {
         const mi = rowsPacked[r].start + i;
         const w = (weights[i] / totalW) * availableW + (i === 0 ? MOD_RESERVE : 0);
-        const stave = new Stave(x, TOP + r * SYSTEM_H, w);
+        const stave = new Stave(x, rowY, w);
+        rowStave ??= stave;
         if (i === 0) {
           stave.addClef(VEX_CLEF[score.clef]);                                                     // clef opens every system
           if (score.keyFifths !== 0) stave.addKeySignature(keySpec);                               // key signature too
@@ -306,27 +366,17 @@ export function NotationView({
           b.voice.draw(ctx, stave);
           b.beams.forEach((bm) => bm.setContext(ctx).draw());
 
-          // Lyrics, on one baseline for the whole system.
-          const lyricY = stave.getYForBottomText(LYRIC_LINE);
-          ctx.save();
-          ctx.setFont('Times New Roman, serif', LYRIC_SIZE);
-          b.notes.forEach((sn, k) => {
-            const el = b.m.elements[k];
-            if (el?.kind !== 'note' || !el.lyric) return;
-            // Centre each syllable on its notehead, the way engraved lyrics
-            // sit. measureText is approximate for a proportional face, which
-            // is fine — being a pixel off centre is invisible; being on a
-            // different line is not.
-            const w = ctx.measureText(el.lyric).width;
-            ctx.fillText(el.lyric, sn.getAbsoluteX() - w / 2, lyricY);
-          });
-          ctx.restore();
+          // This measure's notes are in their final drawn position now
+          // (stem extensions from the beam draw above included) — fold
+          // its lowest point into the row's running minimum.
+          b.notes.forEach((sn) => { rowLowestBottom = Math.max(rowLowestBottom, noteBottomY(sn)); });
+          lyricJobs.push(b);
+
           b.notes.forEach((sn, k) => {
             const idx = globalIndex + k;
             (sn as any).getSVGElement?.()?.addEventListener('click', () => onNoteClickRef.current?.(idx));
             if (idx === selectedIndex && b.m.elements[k].kind === 'note') {   // inline lyric cursor position
-              const yb = typeof (stave as any).getYForBottomText === 'function' ? (stave as any).getYForBottomText(1) : stave.getBottomY();
-              selPos = { x: (sn as any).getAbsoluteX() * scale, y: yb * scale };
+              selPosXPending = (sn as any).getAbsoluteX() * scale;
               // Auto-scroll the current measure into view. Uses the note's
               // own SVG element and `block: 'nearest'` so we only scroll
               // when the note is actually off-screen — never fights the
@@ -371,13 +421,58 @@ export function NotationView({
         if (mi < measures.length - 1) {
           barTargetsBuf.push({
             x: x * scale,
-            y: (TOP + r * SYSTEM_H - 4) * scale,
+            y: (rowY - 4) * scale,
             h: 50 * scale,
             measureIndex: mi,
           });
         }
         globalIndex += b.m.elements.length;
       });
+
+      // Paint the row's lyrics now that every measure in it has reported
+      // its lowest note. getYForBottomText(LYRIC_LINE) is the floor — a
+      // system with nothing below the staff sits exactly where it always
+      // did — but a reciting tone whose notes descend past it pushes the
+      // baseline down to clear them instead of drawing straight through.
+      if (lyricJobs.length && rowStave) {
+        const lyricY = Math.max(rowStave.getYForBottomText(LYRIC_LINE), rowLowestBottom + LYRIC_CLEARANCE);
+        maxContentBottom = Math.max(maxContentBottom, lyricY + LYRIC_DESCENT_PAD);
+        ctx.save();
+        ctx.setFont('Times New Roman, serif', LYRIC_SIZE);
+        lyricJobs.forEach((b) => {
+          b.notes.forEach((sn, k) => {
+            const el = b.m.elements[k];
+            if (el?.kind !== 'note' || !el.lyric) return;
+            // Centre each syllable on its notehead, the way engraved lyrics
+            // sit. measureText is approximate for a proportional face, which
+            // is fine — being a pixel off centre is invisible; being on a
+            // different line is not.
+            const w = ctx.measureText(el.lyric).width;
+            ctx.fillText(el.lyric, sn.getAbsoluteX() - w / 2, lyricY);
+          });
+        });
+        ctx.restore();
+        if (selPosXPending != null) selPos = { x: selPosXPending, y: lyricY * scale };
+      }
+    }
+    // A low reciting tone can push a system's lyric baseline below what
+    // the fixed row stride assumed when the canvas was first sized above
+    // — grow the SVG to fit rather than clip the words. Renderer.resize()
+    // / ctx.scale() recompute the viewBox by MULTIPLYING the context's
+    // cumulative scale state, so calling either a second time here
+    // (ctx.scale(scale, scale) already ran once, above) would square the
+    // scale and corrupt every coordinate already drawn. Patching the
+    // <svg> height/viewBox directly changes only how much of the same
+    // logical space is shown — nothing already drawn moves.
+    if (maxContentBottom + BOTTOM > logicalHeight) {
+      const grownHeight = maxContentBottom + BOTTOM;
+      const svgCtx = ctx as unknown as { svg?: SVGSVGElement; setViewBox?: (x: number, y: number, w: number, h: number) => void };
+      if (svgCtx.svg && typeof svgCtx.setViewBox === 'function') {
+        const physicalHeight = Math.ceil(grownHeight * scale);
+        svgCtx.svg.setAttribute('height', String(physicalHeight));
+        svgCtx.svg.style.height = String(physicalHeight);
+        svgCtx.setViewBox(0, 0, logicalWidth, grownHeight);
+      }
     }
     setLyricPos(selPos);
     setBarTargets(barTargetsBuf);
