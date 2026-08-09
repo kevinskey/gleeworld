@@ -381,12 +381,26 @@ export default function HouseHome() {
         )}
       </div>
 
-      <FirstRunSheet
-        open={showFirstRun}
-        onOpenChange={(next) => { if (!next) setFirstRunDismissed(true); }}
-        available={available}
-        role={isFaculty ? 'faculty' : 'student'}
-      />
+      {/* Mounted CONDITIONALLY, not rendered with open={false}. The sheet
+          seeds its draft from the tenant default the moment that query
+          resolves, and useUserRole caches nothing — `roleLoading` starts
+          true on every mount while useTenantDefaultTools has a 60s
+          staleTime, so on any remount inside that window the defaults
+          resolve first and a mounted-but-closed sheet would seed against
+          `role='student'` computed from a still-null profile. The role
+          then flips to 'faculty' and every exit path persists that student
+          shelf. `showFirstRun` already waits on !roleLoading, so gating the
+          MOUNT on it means the seed cannot be computed from a guess. It
+          also stops every member's home load firing a gw_tenant_nav_prefs
+          query for a sheet they will never see. */}
+      {showFirstRun && (
+        <FirstRunSheet
+          open
+          onOpenChange={(next) => { if (!next) setFirstRunDismissed(true); }}
+          available={available}
+          role={isFaculty ? 'faculty' : 'student'}
+        />
+      )}
     </DashboardShell>
   );
 }

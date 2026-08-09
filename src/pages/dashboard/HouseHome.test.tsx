@@ -38,10 +38,25 @@ vi.mock('@/hooks/useTenantNavPrefs', () => ({
   useTenantNavPrefs: () => new Set<string>(),
 }));
 const myToolsResult = vi.hoisted(() => ({
-  current: { myTools: null as { tools: string[]; widgets: string[] } | null, loading: false, saveTools: vi.fn() },
+  current: {
+    myTools: null as { tools: string[]; widgets: string[]; setupComplete?: boolean } | null,
+    loading: false,
+    saveTools: vi.fn(),
+    saveMyTools: vi.fn(),
+  },
 }));
 vi.mock('@/hooks/useMyTools', () => ({
   useMyTools: () => myToolsResult.current,
+}));
+// Spied, not just stubbed: the first-run sheet is the ONLY caller of this
+// hook on this page, so "was it called" is exactly "was the sheet mounted".
+// See the seam tests at the bottom of this file.
+const tenantDefaults = vi.hoisted(() => ({ spy: vi.fn() }));
+vi.mock('@/hooks/useTenantDefaultTools', () => ({
+  useTenantDefaultTools: () => {
+    tenantDefaults.spy();
+    return { defaultsByRole: { admin: [], student: [], member: [] }, loading: false, saveDefaults: vi.fn() };
+  },
 }));
 vi.mock('@/hooks/useBrandingSettings', () => ({
   useBrandingSettings: () => ({
@@ -104,7 +119,8 @@ afterEach(() => {
   brandingOrgName.current = null;
   capturedCtx.current = null;
   myFeesResult.current = { totalOwed: 0, unpaid: [], paid: [], plans: [], loading: false, refetch: vi.fn() };
-  myToolsResult.current = { myTools: null, loading: false, saveTools: vi.fn() };
+  myToolsResult.current = { myTools: null, loading: false, saveTools: vi.fn(), saveMyTools: vi.fn() };
+  tenantDefaults.spy.mockClear();
 });
 
 function renderHouseHome() {
@@ -187,6 +203,7 @@ describe('HouseHome member-chosen widgets (My Space, Phase 2)', () => {
       myTools: { tools: [], widgets: ['practice-ledger'] },
       loading: false,
       saveTools: vi.fn(),
+      saveMyTools: vi.fn(),
     };
     renderHouseHome();
     expect(screen.getByText('Practice this week')).toBeInTheDocument();
@@ -194,7 +211,7 @@ describe('HouseHome member-chosen widgets (My Space, Phase 2)', () => {
   });
 
   it('falls back to both role-default widgets when nothing is stored', () => {
-    myToolsResult.current = { myTools: null, loading: false, saveTools: vi.fn() };
+    myToolsResult.current = { myTools: null, loading: false, saveTools: vi.fn(), saveMyTools: vi.fn() };
     renderHouseHome();
     expect(screen.getByText('Practice this week')).toBeInTheDocument();
     expect(screen.getByText('Today')).toBeInTheDocument();
@@ -205,9 +222,51 @@ describe('HouseHome member-chosen widgets (My Space, Phase 2)', () => {
       myTools: { tools: [], widgets: ['practice-ledger'] },
       loading: true,
       saveTools: vi.fn(),
+      saveMyTools: vi.fn(),
     };
     renderHouseHome();
     expect(screen.queryByText('Practice this week')).not.toBeInTheDocument();
     expect(screen.queryByText('Today')).not.toBeInTheDocument();
+  });
+});
+
+// Final review, Minor 7 + Important 2: nothing covered the seam between
+// this page and the first-run sheet. The sheet must open exactly once — for
+// a member whose record says setupComplete === false — and must not be
+// MOUNTED at all otherwise. Mounting it closed is not free: it seeds its
+// draft from the tenant default the moment that query resolves, and
+// useUserRole caches nothing while useTenantDefaultTools has a 60s
+// staleTime, so a remount inside that window seeds a faculty member with
+// the student shelf that every exit path then persists. It also fires a
+// gw_tenant_nav_prefs read on every member's home load.
+describe('HouseHome ↔ FirstRunSheet seam', () => {
+  const setRecord = (setupComplete: boolean, loading = false) => {
+    myToolsResult.current = {
+      myTools: { tools: ['calendar'], widgets: [], setupComplete },
+      loading,
+      saveTools: vi.fn(),
+      saveMyTools: vi.fn(),
+    };
+  };
+
+  it('opens the sheet for a brand-new member (setupComplete === false)', () => {
+    setRecord(false);
+    renderHouseHome();
+    expect(screen.getByText('Set up your space')).toBeInTheDocument();
+  });
+
+  it('does not open — or even mount — the sheet once setup is complete', () => {
+    setRecord(true);
+    renderHouseHome();
+    expect(screen.queryByText('Set up your space')).not.toBeInTheDocument();
+    // Mounted-but-closed would still run the sheet's hooks. It must not.
+    expect(tenantDefaults.spy).not.toHaveBeenCalled();
+  });
+
+  it('does not mount the sheet while the record is still loading', () => {
+    setRecord(false, true);
+    renderHouseHome();
+    expect(screen.queryByText('Set up your space')).not.toBeInTheDocument();
+    expect(tenantDefaults.spy).not.toHaveBeenCalled();
   });
 });

@@ -75,6 +75,24 @@ export function FirstRunSheet({ open, onOpenChange, available, role }: FirstRunS
     // eslint-disable-next-line react-hooks/exhaustive-deps -- seed intentionally excluded: this must fire exactly once, when defaultsLoading flips false
   }, [defaultsLoading]);
 
+  // Belt and braces for the same class of bug the caller now prevents by
+  // mounting this sheet only once the role has resolved (HouseHome). `role`
+  // is derived from a profile that is null on every fresh mount, so if this
+  // component is ever mounted before that profile lands, the seed above
+  // captures 'student' and the flip to 'faculty' would otherwise leave the
+  // wrong default frozen in place — and every exit path persists it. A role
+  // change the member has not yet reacted to therefore re-seeds outright.
+  // Once they have touched the editor, their edit always wins.
+  const seededRoleRef = useRef(role);
+  useEffect(() => {
+    if (seededRoleRef.current === role) return;
+    seededRoleRef.current = role;
+    if (interactedRef.current) return;
+    seededRef.current = !defaultsLoading;
+    setToolsState(defaultsLoading ? platformDefault : seed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on `role` alone: a defaultsByRole identity change must NOT re-run this
+  }, [role]);
+
   // The one thing that must not go wrong (Task 4 shipped this bug once
   // already): saveMyTools fills any omitted field from whatever is CURRENTLY
   // on the member's record. If this sheet could fire a save before myTools

@@ -66,6 +66,57 @@ describe('useTenantDefaultTools', () => {
     expect(opts).toEqual({ onConflict: 'tenant_id,role' });
   });
 
+  // Final review, Important 3: MySpaceEditor is CONTROLLED by this query's
+  // value in defaults mode, so without an optimistic write the row snapped
+  // back for the whole round-trip and a second tap inside that window
+  // computed its next list from the stale one — silently discarding the
+  // first edit. The personal path (useMyTools.saveMyTools) already takes
+  // exactly these pains; this is the same shape.
+  it('writes the new list into the cache before the upsert resolves', async () => {
+    h.select.mockResolvedValue({
+      data: [{ role: 'student', default_tools: ['calendar'] }],
+      error: null,
+    });
+    let resolveUpsert!: (v: { error: null }) => void;
+    h.upsert.mockReturnValue(new Promise((r) => { resolveUpsert = r; }));
+
+    const { result } = renderHook(() => useTenantDefaultTools(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.defaultsByRole.student).toEqual(['calendar']);
+
+    let done!: Promise<boolean>;
+    act(() => { done = result.current.saveDefaults('student', ['academy']); });
+
+    // Nothing has come back from the server yet — the upsert is still
+    // pending on the promise above — and the editor already reads the new
+    // list.
+    await waitFor(() => expect(result.current.defaultsByRole.student).toEqual(['academy']));
+    expect(h.upsert).toHaveBeenCalledTimes(1);
+
+    resolveUpsert({ error: null });
+    await act(async () => { expect(await done).toBe(true); });
+  });
+
+  it('rolls the cache back to the previous list when the upsert fails', async () => {
+    h.select.mockResolvedValue({
+      data: [{ role: 'student', default_tools: ['calendar'] }],
+      error: null,
+    });
+    h.upsert.mockResolvedValue({ error: { message: 'denied' } });
+
+    const { result } = renderHook(() => useTenantDefaultTools(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let ok = true;
+    await act(async () => { ok = await result.current.saveDefaults('student', ['academy']); });
+    expect(ok).toBe(false);
+    // The optimistic value must not survive a rejected write — otherwise
+    // the admin is looking at a default the tenant does not have.
+    expect(result.current.defaultsByRole.student).toEqual(['calendar']);
+    // Other roles are untouched either way.
+    expect(result.current.defaultsByRole.admin).toEqual([]);
+  });
+
   it('returns false and does not throw when the upsert fails', async () => {
     h.select.mockResolvedValue({ data: [], error: null });
     h.upsert.mockResolvedValue({ error: { message: 'denied' } });

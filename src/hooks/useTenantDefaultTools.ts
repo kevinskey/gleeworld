@@ -51,6 +51,8 @@ export function useTenantDefaultTools() {
   });
 
   const saveDefaults = useCallback(async (role: NavRole, tools: string[]): Promise<boolean> => {
+    // Rolled back on any failure below; null means "nothing written yet".
+    let previous: DefaultsByRole | null = null;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       // tenant_id lives in the TOKEN PAYLOAD (GoTrue custom-claims hook),
@@ -62,22 +64,34 @@ export function useTenantDefaultTools() {
         ?? (session?.user?.user_metadata as Record<string, unknown> | undefined)?.tenant_id as string | undefined;
       if (!tenantId) throw new Error('No tenant in session');
 
+      const nextTools = sanitizeTools(tools);
+      // Optimistic write BEFORE the round-trip, exactly as the personal
+      // path does (useMyTools.saveMyTools). This editor is controlled by
+      // the query's value: without this, MySpaceEditor's `tools` prop stays
+      // at the pre-save list for the whole ~200-500ms upsert, so the row
+      // visibly snaps back, and a second tap in that window computes its
+      // next list from the STALE one — silently discarding the first edit.
+      previous = queryClient.getQueryData<DefaultsByRole>(key) ?? EMPTY;
+      queryClient.setQueryData<DefaultsByRole>(key, { ...previous, [role]: nextTools });
+
       const { error } = await supabase
         .from('gw_tenant_nav_prefs')
         .upsert({
           tenant_id: tenantId,
           role,
-          default_tools: sanitizeTools(tools),
+          default_tools: nextTools,
           updated_by: session?.user?.id,
         }, { onConflict: 'tenant_id,role' });
       if (error) {
         console.warn('[useTenantDefaultTools] save failed:', error.message);
+        queryClient.setQueryData<DefaultsByRole>(key, previous);
         return false;
       }
       await queryClient.invalidateQueries({ queryKey: key });
       return true;
     } catch (err) {
       console.warn('[useTenantDefaultTools] save failed:', err);
+      if (previous) queryClient.setQueryData<DefaultsByRole>(key, previous);
       return false;
     }
   }, [queryClient]);

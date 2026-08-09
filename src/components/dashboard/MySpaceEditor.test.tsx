@@ -42,6 +42,58 @@ describe('MySpaceEditor — chosen list', () => {
     fireEvent.click(screen.getByRole('button', { name: /remove academy/i }));
     expect(onToolsChange).toHaveBeenCalledWith(['calendar', 'finance']);
   });
+
+  it('captions the card with the always-present Home row (spec §5.4)', () => {
+    renderEditor();
+    expect(screen.getByText('Home is always here.')).toBeInTheDocument();
+  });
+
+  // Final review, Important 1: a stored key that has dropped out of
+  // `available` (tenant switched the module off, role gate closed, key
+  // retired) still counts against the cap — the counter and `atCap` both
+  // read the stored record. Rendering rows only for resolvable entries left
+  // a member on "8 of 8 — your space is full" above four visible rows, with
+  // every ⊕ disabled and no ⊖ for the four they cannot see. My Space is the
+  // ONLY surface that can clear such a key (HouseHome's mergeGridOrder
+  // deliberately carries it through untouched), so with no row there was no
+  // exit: that member could never add another tool again.
+  describe('stored keys with no catalog entry', () => {
+    const stored = [
+      'calendar', 'ghost-a', 'messages', 'ghost-b',
+      'academy', 'ghost-c', 'finance', 'ghost-d',
+    ];
+    const ghosts = ['ghost-a', 'ghost-b', 'ghost-c', 'ghost-d'];
+
+    it('renders one row per STORED key, marking the unresolvable ones unavailable', () => {
+      renderEditor({ tools: stored });
+      const group = screen.getByTestId('my-space-chosen');
+      expect(within(group).getAllByRole('listitem')).toHaveLength(8);
+      expect(within(group).getAllByTestId('my-space-unavailable')).toHaveLength(4);
+      // The key is all there is to show — the catalog entry is gone.
+      expect(within(group).getAllByText('Unavailable')).toHaveLength(4);
+      for (const k of ghosts) expect(within(group).getByText(k)).toBeInTheDocument();
+      expect(screen.getByTestId('my-space-count')).toHaveTextContent('8 of 8');
+      expect(screen.getByTestId('my-space-full')).toBeInTheDocument();
+    });
+
+    it('gives every unavailable row a live ⊖ so the member can free the slot', () => {
+      const { onToolsChange } = renderEditor({ tools: stored });
+      for (const k of ghosts) {
+        const btn = screen.getByRole('button', { name: new RegExp(`^remove unavailable tool ${k}$`, 'i') });
+        expect(btn).toBeEnabled();
+        fireEvent.click(btn);
+        expect(onToolsChange).toHaveBeenLastCalledWith(stored.filter((x) => x !== k));
+      }
+    });
+
+    it('gives an unavailable row no drag handle — there is nothing to arrange', () => {
+      renderEditor({ tools: stored });
+      // Guard against passing by absence: the row itself must be there.
+      expect(within(screen.getByTestId('my-space-chosen')).getByText('ghost-a')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /reorder ghost-a/i })).toBeNull();
+      expect(screen.getByRole('button', { name: /reorder calendar/i })).toBeInTheDocument();
+    });
+  });
 });
 
 describe('MySpaceEditor — available list', () => {
@@ -112,14 +164,74 @@ describe('MySpaceEditor — widgets', () => {
     fireEvent.click(screen.getByRole('button', { name: new RegExp(opts[0].label, 'i') }));
     expect(onWidgetsChange).toHaveBeenCalledWith([opts[1].key]);
   });
+
+  // Final review, Minor 4: unchecking the last widget stores [], and
+  // resolveWidgets([]) re-expands an empty pick to both role defaults, so
+  // the checkbox snapped straight back on — a control that looks broken.
+  it('locks the last remaining widget rather than letting it snap back on', () => {
+    const onWidgetsChange = vi.fn();
+    const opts = widgetsFor('faculty');
+    render(
+      <MySpaceEditor
+        available={available}
+        tools={[]}
+        onToolsChange={vi.fn()}
+        widgetOptions={opts}
+        widgets={[opts[0].key]}
+        onWidgetsChange={onWidgetsChange}
+      />,
+    );
+    const last = screen.getByRole('button', { name: new RegExp(opts[0].label, 'i') });
+    expect(last).toBeDisabled();
+    fireEvent.click(last);
+    expect(onWidgetsChange).not.toHaveBeenCalled();
+    // The unchecked one stays available — only the LAST checked is locked.
+    expect(screen.getByRole('button', { name: new RegExp(opts[1].label, 'i') })).toBeEnabled();
+  });
 });
 
+// Final review, Minor 1: the previous version of this block only clicked a
+// button that was already `disabled` — a no-op in jsdom whether or not the
+// `if (disabled) return` guards exist, so it passed vacuously. `disabled`
+// is the first-run sheet's ONLY edit lock while the member's record loads,
+// so it has to actually bite: assert the attribute on every control.
 describe('MySpaceEditor — disabled', () => {
-  it('emits nothing when disabled', () => {
-    const { onToolsChange } = renderEditor({ disabled: true, tools: ['calendar'] });
-    const btn = screen.queryByRole('button', { name: /remove calendar/i });
-    if (btn) fireEvent.click(btn);
+  const renderDisabled = () => {
+    const onToolsChange = vi.fn();
+    const onWidgetsChange = vi.fn();
+    const opts = widgetsFor('faculty');
+    render(
+      <MySpaceEditor
+        available={available}
+        tools={['calendar', 'academy']}
+        onToolsChange={onToolsChange}
+        widgetOptions={opts}
+        widgets={[opts[0].key, opts[1].key]}
+        onWidgetsChange={onWidgetsChange}
+        disabled
+      />,
+    );
+    return { onToolsChange, onWidgetsChange, opts };
+  };
+
+  it('disables the ⊖, the drag handle, every ⊕, and every widget toggle', () => {
+    const { opts } = renderDisabled();
+    expect(screen.getByRole('button', { name: /^remove calendar$/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^reorder calendar$/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^add finance$/i })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^add studio$/i })).toBeDisabled();
+    for (const opt of opts) {
+      expect(screen.getByRole('button', { name: new RegExp(`^${opt.label}$`, 'i') })).toBeDisabled();
+    }
+  });
+
+  it('emits nothing when any of them is driven anyway', () => {
+    const { onToolsChange, onWidgetsChange, opts } = renderDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /^remove calendar$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^add finance$/i }));
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${opts[0].label}$`, 'i') }));
     expect(onToolsChange).not.toHaveBeenCalled();
+    expect(onWidgetsChange).not.toHaveBeenCalled();
   });
 });
 

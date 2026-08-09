@@ -63,12 +63,22 @@ export default function MySpacePage() {
 
   // Identical derivation to DashboardShell's Sidebar — an entry the member
   // cannot open must never be offered by the ⊕ picker below.
-  const navCtx: NavContext = applyPreviewRole({
+  //
+  // MEMOIZED, like HouseHome's equivalent: navCtx is the dep of three
+  // downstream useMemos (available, defaultsAvailable, preview), so a fresh
+  // object every render made all three inert — they re-resolved the whole
+  // catalog on every keystroke-equivalent render. `moduleAccess` is rebuilt
+  // by the loop above on every render, so it can't be a dep; its VALUES are
+  // what matter, and they collapse to a stable bit-string.
+  const moduleAccessKey = MODULE_KEYS.map((k) => (moduleAccess[k] ? '1' : '0')).join('');
+  const isPartner = !!profile?.is_partner;
+  const navCtx: NavContext = useMemo(() => applyPreviewRole({
     hasModule: (k) => k === 'academy' || !!moduleAccess[k],
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
-    isPartner: !!profile?.is_partner,
+    isPartner,
     hiddenRoutes: hiddenNav,
-  }, previewRole);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- moduleAccess is rebuilt every render; moduleAccessKey is its stable value-identity
+  }, previewRole), [moduleAccessKey, isTenantAdmin, isPlatformAdmin, userCanLibrarian, isPartner, hiddenNav, previewRole]);
   // resolveNav, NOT buildNavSections — the latter filters to sidebar
   // surfaces and would hide grid-only entries like merch. 'home' is
   // filtered out here: it carries no gate, so resolveNav returns it like

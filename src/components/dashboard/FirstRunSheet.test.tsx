@@ -41,9 +41,9 @@ import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
 
 const available = ['calendar', 'academy', 'finance'].map((k) => NAV_CATALOG.find((e) => e.key === k)!);
 
-const sheetEl = () => (
+const sheetEl = (role: 'student' | 'faculty' = 'student') => (
   <MemoryRouter>
-    <FirstRunSheet open onOpenChange={vi.fn()} available={available} role="student" />
+    <FirstRunSheet open onOpenChange={vi.fn()} available={available} role={role} />
   </MemoryRouter>
 );
 
@@ -163,5 +163,49 @@ describe('FirstRunSheet', () => {
 
     // The member's edit must survive — not be replaced by the late default.
     expect(screen.getByTestId('my-space-count')).toHaveTextContent('7 of 8');
+  });
+
+  // Final review, Important 2: useUserRole caches nothing, so `role` is
+  // computed from a profile that is null on every fresh mount, while
+  // useTenantDefaultTools is react-query with a 60s staleTime. On a remount
+  // inside that window the defaults resolve FIRST, the one-shot seed runs
+  // against role='student', and the later flip to 'faculty' left that
+  // student shelf frozen in the draft — which every exit path then
+  // persists. HouseHome now gates the MOUNT on !roleLoading; this is the
+  // belt-and-braces inside the component.
+  it('re-seeds for the real role when the profile resolves after the defaults query', async () => {
+    h.defaultsState.defaultsByRole = {
+      admin: ['calendar', 'academy', 'finance'],
+      student: ['calendar'],
+      member: [],
+    };
+    h.defaultsState.loading = false; // defaults already cached — resolve first
+
+    // Mounted before the profile lands: role falls back to 'student'.
+    const { rerender } = render(sheetEl('student'));
+    expect(screen.getByTestId('my-space-count')).toHaveTextContent('1 of 8');
+
+    // Profile resolves: this member is actually faculty.
+    rerender(sheetEl('faculty'));
+
+    // Must now show the ADMIN default (3), not the frozen student guess (1).
+    expect(screen.getByTestId('my-space-count')).toHaveTextContent('3 of 8');
+    fireEvent.click(screen.getByRole('button', { name: /looks good/i }));
+    await waitFor(() => expect(h.saveMyTools).toHaveBeenCalledWith({
+      tools: ['calendar', 'academy', 'finance'], setupComplete: true,
+    }));
+  });
+
+  it('still lets an edit made before the role flip win over the re-seed', () => {
+    h.defaultsState.defaultsByRole = {
+      admin: ['calendar', 'academy', 'finance'],
+      student: ['calendar'],
+      member: [],
+    };
+    const { rerender } = render(sheetEl('student'));
+    fireEvent.click(screen.getByRole('button', { name: /^add academy$/i }));
+    expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
+    rerender(sheetEl('faculty'));
+    expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
   });
 });
