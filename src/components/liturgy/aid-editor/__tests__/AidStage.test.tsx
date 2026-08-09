@@ -40,4 +40,40 @@ describe('AidStage', () => {
     );
     expect(queryByText(/lines over/i)).toBeNull();
   });
+
+  it('exposes one ref: the view wrapper IS the capture root', () => {
+    const sheetsRef = createRef<HTMLDivElement>();
+    const { container } = render(
+      <AidStage focusPanel="insideRight" view="focus" overflowLines={0} dropped={0}
+        sheetsRef={sheetsRef}>
+        <div />
+      </AidStage>,
+    );
+    const wrap = container.querySelector(`[${AID_VIEW_ATTR}]`);
+    // If this fails, withFullView/worshipAidToPdf would be toggling
+    // AID_VIEW_ATTR on a node other than the one the focus CSS matches on —
+    // the exact bug that produces a one-panel archived PDF.
+    expect(sheetsRef.current).toBe(wrap);
+  });
+
+  it('keeps "1 lines" singular', () => {
+    const { getByText, queryByText } = render(
+      <AidStage focusPanel="back" view="focus" overflowLines={1} dropped={0}
+        sheetsRef={createRef<HTMLDivElement>()}>
+        <div />
+      </AidStage>,
+    );
+    expect(getByText(/^1 line over$/i)).toBeTruthy();
+    expect(queryByText(/1 lines over/i)).toBeNull();
+  });
+
+  it('separates lines-over and dropped with a middot when both are present', () => {
+    const { getByText } = render(
+      <AidStage focusPanel="back" view="focus" overflowLines={3} dropped={1}
+        sheetsRef={createRef<HTMLDivElement>()}>
+        <div />
+      </AidStage>,
+    );
+    expect(getByText('3 lines over · 1 dropped')).toBeTruthy();
+  });
 });

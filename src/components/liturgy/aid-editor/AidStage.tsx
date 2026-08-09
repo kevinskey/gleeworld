@@ -12,6 +12,14 @@ export interface AidStageProps {
   view: AidView;
   overflowLines: number;
   dropped: number;
+  /**
+   * The single node AidStage exposes. It is BOTH the view wrapper — the
+   * element carrying `AID_VIEW_ATTR`, `data-aid-focus`, and `--aid-scale` —
+   * and the capture root `worshipAidToPdf`/`withFullView` must act on.
+   * There is deliberately no second, inner ref: a capture call that toggled
+   * `AID_VIEW_ATTR` on a different node than this one would leave the focus
+   * CSS matching through the capture and file a one-panel PDF.
+   */
   sheetsRef: RefObject<HTMLDivElement>;
   children: ReactNode;
 }
@@ -53,7 +61,7 @@ export function AidStage({
         <span className="text-sm font-semibold">{PANEL_LABEL[focusPanel]}</span>
         {hasOverflow && (
           <span className="text-xs font-medium text-destructive">
-            {overflowLines > 0 && `${overflowLines} lines over`}
+            {overflowLines > 0 && `${overflowLines} line${overflowLines === 1 ? '' : 's'} over`}
             {overflowLines > 0 && dropped > 0 && ' · '}
             {dropped > 0 && `${dropped} dropped`}
           </span>
@@ -61,12 +69,13 @@ export function AidStage({
       </div>
 
       <div
+        ref={sheetsRef}
         className="aid-stage-scroll min-h-0 flex-1 overflow-auto p-4"
         {...{ [AID_VIEW_ATTR]: view }}
         data-aid-focus={focusPanel}
         style={{ ['--aid-scale' as string]: String(scale) }}
       >
-        <div ref={sheetsRef}>{children}</div>
+        {children}
       </div>
 
       <style>{`
