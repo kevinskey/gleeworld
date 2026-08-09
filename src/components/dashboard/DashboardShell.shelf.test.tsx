@@ -77,7 +77,7 @@ function setup({
     canEditMusicLibrary: () => true,
   });
   useTenantNavPrefsMock.mockReturnValue(hiddenRoutes);
-  useMyToolsMock.mockReturnValue({ myTools, loading: false, saveTools: vi.fn() });
+  useMyToolsMock.mockReturnValue({ myTools, loading: false, saveTools: vi.fn(), saveMyTools: vi.fn() });
 }
 
 afterEach(cleanup);

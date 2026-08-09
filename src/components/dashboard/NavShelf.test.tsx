@@ -25,24 +25,31 @@ describe('NavShelf', () => {
     expect(labels).toEqual(['Command Center', 'Calendar', 'Music Library', 'Academy']);
   });
 
-  it('opens All Tools instead of expanding sections, and adds nothing inline', () => {
+  it('opens All Tools instead of expanding sections, and adds nothing inline anywhere in the shelf', () => {
     // NavShelf no longer takes a `sections` prop, so a `queryByText('Money')`
     // style assertion can never fail regardless of what this component does
     // — there is no code path left that could render section-header text at
     // all. The meaningful claim left to prove is behavioral: clicking All
-    // Tools calls the caller's handler and does not grow the shelf's own row
-    // count — nothing mounts inline, which is what would happen if a future
-    // change reintroduced a disclosure here instead of delegating to the
-    // sheet.
+    // Tools calls the caller's handler and mounts nothing new anywhere in
+    // this component — which is what a reintroduced disclosure would do.
+    //
+    // Counted across the WHOLE render `container`, not scoped to
+    // `within(shelf)` (the `nav-shelf-tools` sub-div) — the disclosure this
+    // replaced rendered as a SIBLING of the All Tools button, OUTSIDE that
+    // div (see the component's own JSX: the toggle and its disclosure sat
+    // between the `nav-shelf-tools` div and the Setup row). A
+    // `within(shelf)`-scoped count would not see a regression reintroduced
+    // in that exact position — confirmed by a prior round's mutation, which
+    // added a sibling disclosure there and left a `within(shelf)`-scoped
+    // version of this assertion green.
     const onOpenAllTools = vi.fn();
-    renderShelf({ onOpenAllTools });
-    const shelf = screen.getByTestId('nav-shelf-tools');
-    const rowCountBefore = within(shelf).getAllByRole('link').length;
+    const { container } = renderShelf({ onOpenAllTools });
+    const interactiveCountBefore = container.querySelectorAll('a, button').length;
 
     fireEvent.click(screen.getByRole('button', { name: /all tools/i }));
 
     expect(onOpenAllTools).toHaveBeenCalled();
-    expect(within(shelf).getAllByRole('link')).toHaveLength(rowCountBefore);
+    expect(container.querySelectorAll('a, button').length).toBe(interactiveCountBefore);
   });
 
   it('caps the shelf at Home + 8 tools even if handed more', () => {

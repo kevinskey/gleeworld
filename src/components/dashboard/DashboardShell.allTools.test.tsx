@@ -20,11 +20,12 @@ import '@testing-library/jest-dom/vitest';
 import { MemoryRouter } from 'react-router-dom';
 import type { MyTools } from '@/lib/navigation/myTools';
 
-const { useUserRoleMock, useMyToolsMock, useTenantNavPrefsMock, saveMyToolsMock } = vi.hoisted(() => ({
+const { useUserRoleMock, useMyToolsMock, useTenantNavPrefsMock, saveMyToolsMock, useEffectivePreviewRoleMock } = vi.hoisted(() => ({
   useUserRoleMock: vi.fn(),
   useMyToolsMock: vi.fn(),
   useTenantNavPrefsMock: vi.fn(),
   saveMyToolsMock: vi.fn(),
+  useEffectivePreviewRoleMock: vi.fn(),
 }));
 
 // ── Same mock block as DashboardShell.shelf.test.tsx ───────────────────────
@@ -45,7 +46,7 @@ vi.mock('@/hooks/useTenantNavPrefs', () => ({
   useTenantNavPrefs: useTenantNavPrefsMock,
 }));
 vi.mock('@/hooks/useEffectivePreviewRole', () => ({
-  useEffectivePreviewRole: () => null,
+  useEffectivePreviewRole: useEffectivePreviewRoleMock,
   useMyTenantRole: () => null,
 }));
 vi.mock('@/hooks/useMyTools', () => ({
@@ -126,7 +127,8 @@ afterEach(cleanup);
 
 function setup({
   myTools = { v: 4, tools: ['calendar', 'messages', 'finance'], widgets: [], setupComplete: true } as MyTools,
-}: { myTools?: MyTools | null } = {}) {
+  previewRole = null,
+}: { myTools?: MyTools | null; previewRole?: 'admin' | 'student' | 'member' | null } = {}) {
   useUserRoleMock.mockReturnValue({
     profile: adminProfile,
     loading: false,
@@ -139,6 +141,7 @@ function setup({
     saveTools: vi.fn(),
     saveMyTools: saveMyToolsMock,
   });
+  useEffectivePreviewRoleMock.mockReturnValue(previewRole);
 }
 
 function renderShell() {
@@ -282,5 +285,54 @@ describe('All Tools — pinning appends to the STORED list, not the rendered she
     // gate-filtered/capped rendering of the shelf would have silently
     // dropped it instead.
     expect(patch.tools).toEqual(['tenants', 'calendar', 'academy']);
+  });
+});
+
+describe('All Tools — preview role narrowing is actually applied', () => {
+  // applyPreviewRole itself is well covered in isolation (previewRole.
+  // test.ts / navCatalog's own tests) — what's uncovered anywhere is that
+  // useGatedNav (DashboardShell.tsx) actually CALLS it. Every other test in
+  // this file mocks useEffectivePreviewRole to return null, and
+  // applyPreviewRole(ctx, null) returns ctx UNCHANGED — so a regression
+  // that deleted the applyPreviewRole call from useGatedNav entirely would
+  // still pass every other assertion in this file, because nothing else
+  // here can tell "narrowing applied" apart from "narrowing deleted".
+  // Confirmed by mutation: removing the applyPreviewRole call left the
+  // full suite green before this test existed. The consequence if this
+  // regressed for real: a super-admin previewing as a student would see
+  // admin-only entries (Users, Settings, Tenants) in the shelf, the
+  // drawer, AND this sheet, with nothing failing anywhere.
+  it('hides admin-only entries from the sheet when previewing as a lower role', async () => {
+    // adminProfile IS a real tenant admin (is_admin: true) — without the
+    // preview narrowing, 'Site Setup' (gate.adminOnly) would render
+    // regardless of the preview. Previewing as 'student' sets
+    // isTenantAdmin: false for the DURATION of the preview, independent of
+    // the real profile (PREVIEW_ROLE_CAPS in navCatalog.ts) — that's the
+    // capability narrowing under test here, not a different profile.
+    //
+    // 'Site Setup' specifically (not e.g. 'People'): 'People'-the-entry
+    // shares its label with 'People'-the-SECTION-heading, and the People
+    // section also holds 'Attendance' (ungated) — so with the entry gated
+    // closed, the section heading text 'People' still renders from that
+    // sibling, and the assertion would falsely pass either direction. 'Site
+    // Setup' collides with nothing: its own label, no section is named
+    // that.
+    setup({ previewRole: 'student' });
+    renderShell();
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
+    expect(screen.queryByText('Site Setup')).toBeNull();
+  });
+
+  it('control: the same admin-only entry DOES show with no preview active', async () => {
+    // Proves the query above is sensitive — 'Site Setup' genuinely renders
+    // for this profile absent a preview, so hiding it under preview is a
+    // real effect, not a query that would always come back empty
+    // regardless.
+    setup({ previewRole: null });
+    renderShell();
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
+    expect(screen.getByText('Site Setup')).toBeInTheDocument();
   });
 });
