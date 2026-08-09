@@ -122,9 +122,23 @@ export default function MySpacePage() {
   // record — widgets are personal and never part of a tenant default, so
   // no widgetOptions is passed in this mode.
   const [spaceMode, setSpaceMode] = useState<'mine' | 'defaults'>('mine');
-  const [defaultsRole, setDefaultsRole] = useState<NavRole>('admin');
+  // Students are the far more common target for a default shelf — the
+  // first thing an admin will want to set.
+  const [defaultsRole, setDefaultsRole] = useState<NavRole>('student');
   const { defaultsByRole, saveDefaults } = useTenantDefaultTools();
   const showDefaults = isTenantAdmin && spaceMode === 'defaults';
+  // The ⊕ pool must reflect the ROLE being configured, not the viewing
+  // admin — reusing `available` (built from the admin's own navCtx) let an
+  // admin editing Students' or Members' defaults add an adminOnly entry
+  // (People, Finance, …). On a member's own My Space that key is filtered
+  // out by their own adminOnly gate, so it silently occupies one of their
+  // 8 slots forever, invisible and unremovable. applyPreviewRole already
+  // exists for exactly this "edit as if this role" narrowing — the same
+  // helper WorkspaceSettingsPage's preview toggle uses.
+  const defaultsAvailable = useMemo(
+    () => resolveNav(applyPreviewRole(navCtx, defaultsRole)).filter((e) => e.key !== 'home'),
+    [navCtx, defaultsRole],
+  );
   // Seed from the platform default until this tenant has actually saved
   // one for the role — an admin edits a real starting point, never an
   // empty box. (The underlying gw_tenant_nav_prefs.default_tools column
@@ -187,7 +201,7 @@ export default function MySpacePage() {
               New members with this role start with these tools. They can change their own space any time.
             </p>
             <MySpaceEditor
-              available={available}
+              available={defaultsAvailable}
               tools={defaultsTools}
               onToolsChange={handleDefaultsChange}
             />

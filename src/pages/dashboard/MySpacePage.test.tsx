@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, within, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT } from '@/lib/navigation/myTools';
 
 const DEFAULT_MY_TOOLS = { v: 4, tools: ['calendar', 'academy'], widgets: [], setupComplete: true };
 
@@ -15,6 +16,8 @@ const h = vi.hoisted(() => ({
   // so most tests don't have to enumerate the whole MODULE_KEYS list.
   moduleOverrides: {} as Record<string, boolean>,
   hiddenRoutes: new Set<string>(),
+  saveDefaults: vi.fn(),
+  defaultsByRole: { admin: [], student: [], member: [] } as { admin: string[]; student: string[]; member: string[] },
 }));
 
 vi.mock('@/hooks/useMyTools', () => ({
@@ -25,7 +28,9 @@ vi.mock('@/hooks/useUserRole', () => ({ useUserRole: () => ({ profile: { is_admi
 vi.mock('@/hooks/useModuleAccess', () => ({ useModuleAccess: (key: string) => ({ hasAccess: h.moduleOverrides[key] ?? true }) }));
 vi.mock('@/hooks/useTenantNavPrefs', () => ({ useTenantNavPrefs: () => h.hiddenRoutes }));
 vi.mock('@/hooks/useEffectivePreviewRole', () => ({ useEffectivePreviewRole: () => null }));
-vi.mock('@/hooks/useTenantDefaultTools', () => ({ useTenantDefaultTools: () => ({ defaultsByRole: { admin: [], student: [], member: [] }, loading: false, saveDefaults: vi.fn() }) }));
+vi.mock('@/hooks/useTenantDefaultTools', () => ({
+  useTenantDefaultTools: () => ({ defaultsByRole: h.defaultsByRole, loading: false, saveDefaults: h.saveDefaults }),
+}));
 // DashboardShell is a NAMED export everywhere else in the repo (see
 // HouseHome.tsx and every other /dashboard page) — there is no default
 // export on this module. Mocking only `default` would leave the named
@@ -49,6 +54,8 @@ beforeEach(() => {
   h.loading = false;
   h.moduleOverrides = {};
   h.hiddenRoutes = new Set<string>();
+  h.saveDefaults.mockReset().mockResolvedValue(true);
+  h.defaultsByRole = { admin: [], student: [], member: [] };
 });
 
 describe('MySpacePage', () => {
@@ -145,28 +152,97 @@ describe('MySpacePage — admin defaults mode', () => {
     }));
   });
 
-  it('offers a Defaults for members mode to an admin', async () => {
+  // Every admin-mode test needs a fresh module graph (vi.doMock only
+  // takes effect on the next import) and the same render boilerplate.
+  const renderAdminPage = async () => {
     vi.resetModules();
     const { default: AdminPage } = await import('./MySpacePage');
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(
+    return render(
       <QueryClientProvider client={qc}>
         <MemoryRouter><AdminPage /></MemoryRouter>
       </QueryClientProvider>,
     );
+  };
+
+  // Radix Tabs' TabsTrigger fires context.onValueChange from its
+  // onMouseDown handler, not onClick — fireEvent.click alone dispatches
+  // only the 'click' event (no preceding mousedown), so it never actually
+  // switches tabs here. fireEvent.mouseDown is what makes the segmented
+  // control activate under RTL without pulling in user-event (unused
+  // elsewhere in this repo).
+  const switchToDefaultsTab = () => {
+    fireEvent.mouseDown(screen.getByRole('tab', { name: /defaults for members/i }));
+  };
+
+  it('offers a Defaults for members mode to an admin', async () => {
+    await renderAdminPage();
     expect(screen.getByRole('tab', { name: /defaults for members/i })).toBeInTheDocument();
   });
 
   it('never offers Command Center in MORE TOOLS in defaults mode either', async () => {
-    vi.resetModules();
-    const { default: AdminPage } = await import('./MySpacePage');
-    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(
-      <QueryClientProvider client={qc}>
-        <MemoryRouter><AdminPage /></MemoryRouter>
-      </QueryClientProvider>,
-    );
-    fireEvent.click(screen.getByRole('tab', { name: /defaults for members/i }));
+    await renderAdminPage();
+    switchToDefaultsTab();
     expect(screen.queryByRole('button', { name: /^add command center$/i })).toBeNull();
+  });
+
+  // Important 1 (review round 1 on Task 5): the ⊕ pool in defaults mode
+  // must reflect the ROLE being configured, not the viewing admin. Reusing
+  // the admin's own gated list let an admin editing Students' defaults add
+  // an adminOnly entry (People, Finance, …) — which then lands in every
+  // new student's stored tools, permanently occupying one of their 8
+  // slots while their OWN adminOnly gate hides it from them forever:
+  // invisible and unremovable on their own My Space.
+  it('scopes the defaults ⊕ list to the role being configured, not the viewing admin', async () => {
+    await renderAdminPage();
+    switchToDefaultsTab();
+    // Default role picker starts on Students (Minor 4). People and Fees
+    // (fees-admin) both carry gate: { adminOnly: true } in the catalog —
+    // 'finance' itself is only module-gated, not admin-gated, so it isn't
+    // a valid probe here.
+    expect(screen.queryByRole('button', { name: /^add people$/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^add fees$/i })).toBeNull();
+    // Concierge carries no gate at all — it must still be offered.
+    expect(screen.getByRole('button', { name: /^add concierge$/i })).toBeInTheDocument();
+  });
+
+  // Important 2 (review round 1 on Task 5): nothing previously proved the
+  // defaults editor writes through saveDefaults(role, tools) rather than
+  // the personal saveMyTools — a miswiring here would silently overwrite
+  // the admin's own shelf with a tenant default, or vice versa, and every
+  // other test would still pass.
+  it('saves through saveDefaults(role, tools), never saveMyTools, when editing defaults', async () => {
+    await renderAdminPage();
+    switchToDefaultsTab();
+    // Unseeded — starts from the platform default for Students.
+    fireEvent.click(screen.getByRole('button', { name: /^remove calendar$/i }));
+    await waitFor(() => expect(h.saveDefaults).toHaveBeenCalledWith(
+      'student',
+      DEFAULT_TOOLS_STUDENT.filter((k) => k !== 'calendar'),
+    ));
+    expect(h.saveMyTools).not.toHaveBeenCalled();
+  });
+
+  it('never shows a widgets group in defaults mode', async () => {
+    await renderAdminPage();
+    switchToDefaultsTab();
+    expect(screen.queryByTestId('my-space-widgets')).toBeNull();
+  });
+
+  it('re-seeds the shown list when the role picker changes', async () => {
+    await renderAdminPage();
+    switchToDefaultsTab();
+    // Starts on Students, seeded from DEFAULT_TOOLS_STUDENT.
+    const chosen = () => screen.getByTestId('my-space-chosen');
+    expect(within(chosen()).getByText('Studio')).toBeInTheDocument();
+    expect(within(chosen()).queryByText('People')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /^tenant admins$/i }));
+    // Switched to admin, re-seeded from DEFAULT_TOOLS_FACULTY.
+    expect(within(chosen()).getByText('People')).toBeInTheDocument();
+    expect(within(chosen()).queryByText('Studio')).toBeNull();
+    // Sanity: the two platform defaults actually differ, or this test
+    // would pass by accident.
+    expect(DEFAULT_TOOLS_FACULTY).not.toEqual(DEFAULT_TOOLS_STUDENT);
   });
 });
