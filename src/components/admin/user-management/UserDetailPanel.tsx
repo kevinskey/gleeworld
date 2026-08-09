@@ -141,7 +141,8 @@ export const UserDetailPanel = ({
   const [twitter, setTwitter] = useState("");
   const [facebook, setFacebook] = useState("");
   const [youtube, setYoutube] = useState("");
-  
+  const [patreon, setPatreon] = useState("");
+
   const { toast } = useToast();
 
   // Load user data when user changes
@@ -206,6 +207,7 @@ export const UserDetailPanel = ({
         setTwitter(socialLinks.twitter || "");
         setFacebook(socialLinks.facebook || "");
         setYoutube(socialLinks.youtube || "");
+        setPatreon(socialLinks.patreon || "");
       }
     } catch (error) {
       console.error("Error loading user profile:", error);
@@ -279,6 +281,7 @@ export const UserDetailPanel = ({
         twitter,
         facebook,
         youtube,
+        patreon,
       };
 
       // Update gw_profiles table with comprehensive data
@@ -959,6 +962,16 @@ export const UserDetailPanel = ({
                             value={youtube}
                             onChange={(e) => setYoutube(e.target.value)}
                             placeholder="Channel URL"
+                            disabled={loading}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="editPatreon">Patreon</Label>
+                          <Input
+                            id="editPatreon"
+                            value={patreon}
+                            onChange={(e) => setPatreon(e.target.value)}
+                            placeholder="patreon.com/username"
                             disabled={loading}
                           />
                         </div>

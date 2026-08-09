@@ -27,6 +27,7 @@ export interface ProfileData {
     twitter?: string;
     facebook?: string;
     youtube?: string;
+    patreon?: string;
   };
   
   // Wardrobe & Identity fields

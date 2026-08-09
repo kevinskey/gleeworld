@@ -100,6 +100,7 @@ const profileSchema = z.object({
   twitter: z.string().optional(),
   facebook: z.string().optional(),
   youtube: z.string().optional(),
+  patreon: z.string().optional(),
   
   // Wardrobe measurements
   bust_measurement: z.string().optional(),
@@ -235,6 +236,7 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
       twitter: "",
       facebook: "",
       youtube: "",
+      patreon: "",
       bust_measurement: "",
       waist_measurement: "",
       hips_measurement: "",
@@ -280,6 +282,7 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
       setValue("twitter", (profile as any).twitter || "");
       setValue("facebook", (profile as any).facebook || "");
       setValue("youtube", (profile as any).youtube || "");
+      setValue("patreon", (profile as any).patreon || "");
       setValue("bust_measurement", profile.bust_measurement?.toString() || "");
       setValue("waist_measurement", profile.waist_measurement?.toString() || "");
       setValue("hips_measurement", profile.hips_measurement?.toString() || "");
@@ -364,6 +367,7 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
       twitter: data.twitter,
       facebook: data.facebook,
       youtube: data.youtube,
+      patreon: data.patreon,
       bust_measurement: parseOptionalNumber(data.bust_measurement),
       waist_measurement: parseOptionalNumber(data.waist_measurement),
       hips_measurement: parseOptionalNumber(data.hips_measurement),
@@ -960,6 +964,10 @@ const openRequestChange = (label: string, currentValue?: string | number | null)
                     <div>
                       <Label htmlFor="youtube" className="text-xs flex items-center gap-1"><Youtube className="h-3 w-3" />YouTube</Label>
                       <Input id="youtube" disabled={!isEditing} {...register("youtube")} className="h-9" />
+                    </div>
+                    <div>
+                      <Label htmlFor="patreon" className="text-xs flex items-center gap-1"><Heart className="h-3 w-3" />Patreon</Label>
+                      <Input id="patreon" disabled={!isEditing} {...register("patreon")} className="h-9" placeholder="patreon.com/username" />
                     </div>
                   </CardContent>
                 </Card>

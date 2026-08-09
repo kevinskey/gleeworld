@@ -15537,6 +15537,7 @@ export type Database = {
           notes: string | null
           org: string | null
           parent_guardian_contact: string | null
+          patreon: string | null
           pearl_status: string | null
           phone: string | null
           phone_number: string | null
@@ -15638,6 +15639,7 @@ export type Database = {
           notes?: string | null
           org?: string | null
           parent_guardian_contact?: string | null
+          patreon?: string | null
           pearl_status?: string | null
           phone?: string | null
           phone_number?: string | null
@@ -15739,6 +15741,7 @@ export type Database = {
           notes?: string | null
           org?: string | null
           parent_guardian_contact?: string | null
+          patreon?: string | null
           pearl_status?: string | null
           phone?: string | null
           phone_number?: string | null

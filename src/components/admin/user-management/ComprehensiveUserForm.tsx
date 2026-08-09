@@ -82,6 +82,7 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
   const [twitter, setTwitter] = useState("");
   const [facebook, setFacebook] = useState("");
   const [youtube, setYoutube] = useState("");
+  const [patreon, setPatreon] = useState("");
   
   const [isLoading, setIsLoading] = useState(false);
   const [tempPassword, setTempPassword] = useState("");
@@ -135,6 +136,7 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
     setTwitter("");
     setFacebook("");
     setYoutube("");
+    setPatreon("");
     setTempPassword("");
   };
 
@@ -201,7 +203,8 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
         instagram: instagram.trim(),
         twitter: twitter.trim(),
         facebook: facebook.trim(),
-        youtube: youtube.trim()
+        youtube: youtube.trim(),
+        patreon: patreon.trim()
       };
 
       const { data, error } = await supabase.functions.invoke('import-users', {
@@ -717,6 +720,16 @@ export const ComprehensiveUserForm = ({ user, mode, onSuccess, onCancel }: Compr
                   value={youtube}
                   onChange={(e) => setYoutube(e.target.value)}
                   placeholder="Channel URL or username"
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="patreon">Patreon</Label>
+                <Input
+                  id="patreon"
+                  value={patreon}
+                  onChange={(e) => setPatreon(e.target.value)}
+                  placeholder="patreon.com/username"
                   disabled={isLoading}
                 />
               </div>
