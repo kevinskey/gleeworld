@@ -1,13 +1,43 @@
 // Real-product tour script. Activates each step by calling react-router's
-// navigate(path) — purely client-side, no DB writes, no real button clicks.
-// The cursor + spotlight target the DashboardShell sidebar (which stays
-// mounted across navigations), so the animation never desyncs while the
-// inner panel loads asynchronously.
+// navigate(path) — purely client-side, no DB writes. The cursor + spotlight
+// target the DashboardShell sidebar (which stays mounted across
+// navigations), so the animation never desyncs while the inner panel loads
+// asynchronously.
+//
+// EVERY nav-* step carries ensureAllToolsOpen as its beforeMeasure. Which
+// rows live on the shelf and which live behind the All Tools disclosure is
+// per-member data (the My Tools set), not a fixed property of the script:
+// office-hours isn't in the faculty default at all, and a member who has
+// customized their shelf can push any of the others behind the disclosure.
+// Attaching it only to the steps that happened to need it on a default
+// admin shelf is what left step 4 silently no-opping. It IS a real click on
+// the disclosure toggle (not a business action; opens/closes local UI state,
+// no data mutation, no navigation, idempotent) — see TourEngine's header
+// comment for why that's the one DOM interaction a script step gets.
 
 import type { TourStep } from './types';
 
 interface ProductTourContext {
   navigate: (path: string) => void;
+}
+
+// The sidebar's All Tools disclosure unmounts everything it doesn't show,
+// so a step whose target lives inside it needs the click applied before
+// TourEngine measures the target. This does NOT force the resulting state
+// update synchronous — flushSync from inside beforeMeasure is a no-op
+// there (see TourEngine's step-transition effect comment for why) and an
+// earlier version of this file relied on it, which meant the click never
+// actually revealed anything. It doesn't need to: TourEngine retries the
+// measurement after a requestAnimationFrame if the first attempt comes up
+// empty, which is enough time for React to commit this click's state
+// update and mount the row. Idempotent — no-ops if already open, or if the
+// toggle isn't mounted (e.g. the tour runs against a role/tenant with an
+// empty All Tools section, or the mobile drawer isn't open).
+function ensureAllToolsOpen() {
+  const toggle = document.querySelector('[data-tour="nav-all-tools-toggle"]') as HTMLButtonElement | null;
+  if (toggle && toggle.getAttribute('aria-expanded') === 'false') {
+    toggle.click();
+  }
 }
 
 export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
@@ -19,6 +49,7 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       description:
         "Your admin home base — one screen, ten nav items, every part of your music program. The Command Center panel is your daily overview: four metric tiles over a six-card grid (schedule, announcements, what needs you, upcoming events, quick actions, activity feed).",
       dwellMs: 12000,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard'),
     },
     {
@@ -28,6 +59,7 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       description:
         "Every conversation across the program — directors, parents, sections, boosters. Class-scoped threads, delivery receipts, and SMS/email/push under one inbox.",
       dwellMs: 8500,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard/messenger'),
     },
     {
@@ -37,6 +69,7 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       description:
         "Every rehearsal, sectional, performance, and booster meeting. Recurring schedules with one-tap excuse approval. Syncs to Google Calendar both ways.",
       dwellMs: 8500,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard/calendar'),
     },
     {
@@ -46,6 +79,7 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       description:
         "Calendly-style bookings for voice lessons, section help, audition prep, and parent meetings. You set the availability; students self-book.",
       dwellMs: 8500,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard/office-hours'),
     },
     {
@@ -55,6 +89,7 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       description:
         "The LMS side — courses, syllabi, gradebooks, assignments, sight-singing assessments. Each course is its own classroom with its own enrollments.",
       dwellMs: 8500,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard/academy'),
     },
     {
@@ -64,6 +99,7 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       description:
         "Your whole repertoire — PDFs, recordings, part tracks, setlists. Tag by voicing, season, or programme; searchable in one click.",
       dwellMs: 8500,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard/music-library'),
     },
     {
@@ -73,6 +109,7 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       description:
         "Your full roster — students, parents, staff, alumni, donors. Filter by role, import via CSV, send a targeted email in two clicks.",
       dwellMs: 8500,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard/users'),
     },
     {
@@ -80,8 +117,9 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       targetSelector: '[data-tour="nav-analytics"]',
       title: 'Analytics',
       description:
-        "Program-wide numbers: attendance trends, engagement, dues collection, email open rates.",
+        "Program-wide numbers: attendance trends, engagement, dues collection, email open rates. It's not on your shelf by default — open All Tools in the sidebar any time to reach it.",
       dwellMs: 8500,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard/analytics'),
     },
     {
@@ -89,8 +127,9 @@ export function buildAdminProductTour(ctx: ProductTourContext): TourStep[] {
       targetSelector: '[data-tour="nav-settings"]',
       title: 'Settings',
       description:
-        "Workspace branding, billing, and integrations — Google Calendar, Stripe, Resend, Twilio.",
+        "Workspace branding, billing, and integrations — Google Calendar, Stripe, Resend, Twilio. Also under All Tools if it's not one of your shelf picks.",
       dwellMs: 7500,
+      beforeMeasure: ensureAllToolsOpen,
       onActivate: () => ctx.navigate('/dashboard/workspace'),
     },
     {

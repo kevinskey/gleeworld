@@ -14,7 +14,6 @@ import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { pickDestination } from "@/hooks/useRoleBasedRedirect";
 import { usePageTitle } from "@/hooks/usePageTitle";
-import { AppNavigation } from "@/components/navigation/AppNavigation";
 import { useTheme } from "@/contexts/ThemeContext";
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";

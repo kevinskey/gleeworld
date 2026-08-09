@@ -37,8 +37,8 @@ vi.mock('@/hooks/useEffectivePreviewRole', () => ({
 vi.mock('@/hooks/useTenantNavPrefs', () => ({
   useTenantNavPrefs: () => new Set<string>(),
 }));
-vi.mock('@/hooks/useHomeTileLayout', () => ({
-  useHomeTileLayout: () => ({ layout: null, layoutLoading: false, save: vi.fn() }),
+vi.mock('@/hooks/useMyTools', () => ({
+  useMyTools: () => ({ myTools: null, loading: false, saveTools: vi.fn() }),
 }));
 vi.mock('@/hooks/useBrandingSettings', () => ({
   useBrandingSettings: () => ({
@@ -67,6 +67,9 @@ vi.mock('@/hooks/useMyFees', () => ({
 
 vi.mock('@/hooks/use-mobile', () => ({
   useIsMobile: () => false,
+  // The grid asks whether the phone tab bar is on screen before deciding
+  // which stored tools it can represent as keycaps.
+  useIsCompactNav: () => false,
 }));
 
 vi.mock('@/components/home/date-card/DateCardSlot', () => ({

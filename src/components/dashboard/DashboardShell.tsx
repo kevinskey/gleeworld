@@ -29,7 +29,6 @@ import {
   BookOpen,
   Glasses,
   Boxes,
-  ChevronRight,
   ChevronDown,
   ShoppingCart,
   Settings,
@@ -49,12 +48,6 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { HIDEABLE_NAV_ROLES, applyPreviewRole, type NavRole } from '@/lib/navigation/navCatalog';
-import {
-  DndContext, PointerSensor, useDroppable, useSensor, useSensors, type DragEndEvent,
-} from '@dnd-kit/core';
-import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { useNavItemOrder } from '@/hooks/useNavItemOrder';
 import { setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -96,6 +89,10 @@ import {
   resolveNav, entrySurfaces, NAV_SECTION_LABELS,
   type CatalogEntry, type NavContext, type NavSectionKey,
 } from '@/lib/navigation/navCatalog';
+import { NavShelf } from './NavShelf';
+import { isFacultyProfile } from '@/lib/roles';
+import { useMyTools } from '@/hooks/useMyTools';
+import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS } from '@/lib/navigation/myTools';
 
 const SECTION_ORDER: NavSectionKey[] = ['today', 'church', 'music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
 
@@ -115,67 +112,17 @@ function platformLogoFor(brandingLogoUrl?: string | null): string | undefined {
 // columns use. Sections with zero visible entries drop out (unchanged
 // behavior). label:'Today' historically rendered with its section label
 // like every other section.
-function buildNavSections(
-  ctx: NavContext,
-  userOrder?: string[] | null,
-  sectionOverrides?: Record<string, string> | null,
-): Array<{ key: string; label: string; items: CatalogEntry[] }> {
-  const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
-  const sectionOf = (e: CatalogEntry): string => {
-    const override = sectionOverrides?.[e.key];
-    return override && (SECTION_ORDER as readonly string[]).includes(override) ? override : e.section;
-  };
-  const rank = new Map((userOrder ?? []).map((k, i) => [k, i]));
-  const sortItems = (items: CatalogEntry[]) =>
-    userOrder?.length
-      ? [...items].sort((a, b) => (rank.get(a.key) ?? Infinity) - (rank.get(b.key) ?? Infinity))
-      : items;
-  // Sections always render in catalog order. Users can reorder items
-  // (and move them between sections) but not the sections themselves;
-  // any sectionOrder still stored in user_preferences is ignored.
-  return SECTION_ORDER
-    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s as NavSectionKey], items: sortItems(resolved.filter((e) => sectionOf(e) === s)) }))
-    .filter((s) => s.items.length > 0);
-}
-
-// Droppable shell for a nav section, so an item can be dragged into a
-// section even when it's collapsed (drop on the header) or at its end.
-function DroppableSection({ sectionKey, className, children }: {
-  sectionKey: string; className?: string; children: ReactNode;
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id: `section:${sectionKey}` });
-  return (
-    <div ref={setNodeRef} className={`${className ?? ''} ${isOver ? 'ring-2 ring-primary/40' : ''}`}>
-      {children}
-    </div>
-  );
-}
-
-// Sortable wrapper for a sidebar nav row. The press-and-hold activation
-// constraint keeps plain clicks navigating; only a deliberate hold-then-
-// move reorders.
 //
-// - touch-none:   required so touch devices don't treat the pointer as
-//                 a scroll and steal it before dnd-kit sees enough movement.
-// - select-none:  avoids the browser starting a text selection during
-//                 the drag (which cancels the sortable).
-// - cursor-grab:  gives tenants a visual hint that the row is movable.
-//                 flips to grabbing during an active drag.
-function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id });
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`touch-none select-none ${
-        isDragging ? 'cursor-grabbing opacity-60' : 'cursor-grab'
-      }`}
-    >
-      {children}
-    </div>
-  );
+// No user ordering or per-item section overrides: the shelf carries the
+// member's arrangement now, and this list is only the All Tools disclosure
+// behind it — always catalog order, always the catalog's own sections. (The
+// userOrder/sectionOverrides parameters this used to take were passed by
+// nobody after the shelf landed.)
+function buildNavSections(ctx: NavContext): Array<{ key: string; label: string; items: CatalogEntry[] }> {
+  const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
+  return SECTION_ORDER
+    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s as NavSectionKey], items: resolved.filter((e) => e.section === s) }))
+    .filter((s) => s.items.length > 0);
 }
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
@@ -240,39 +187,17 @@ export function BrandLogo({
   );
 }
 
-// 2026 nav type scale — denser, slightly larger touch targets, no tinted
-// tile chrome. The colored `tone` value still drives the ICON glyph color
-// (a subtle category cue) but no longer paints a background pill behind it.
-// Density tier: dense on phones / portrait iPad so the full nav fits
-// without an internal scroll, then steps up to text-[14px] on tablets
-// and text-[15px] on desktops for comfortable reading. The previous
-// flat text-[13px] looked cramped on a 12.9" iPad.
-const NAV_BASE =
-  'flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] md:text-[14px] lg:text-[15px] leading-tight transition-colors w-full text-left';
-// Hover background is 5% brand-gold (--brand-gold is HSL 45 100% 55%).
-// arbitrary value syntax keeps the alpha channel without needing a
-// dedicated Tailwind color token.
-const NAV_INACTIVE = 'text-foreground/85 hover:bg-[hsl(var(--brand-gold)/0.05)] hover:text-foreground';
-const NAV_ACTIVE = 'bg-primary/10 text-primary font-semibold';
 // `tone` is now {color}-600/700 text-only — strip the legacy bg- portion.
 const iconTextOnly = (tone: string) =>
   tone.replace(/bg-\S+/g, '').replace(/\s+/g, ' ').trim() || 'text-foreground/70';
 
-// Every fresh app load lands in the prescribed state: Today + Admin
-// expanded, every other section collapsed to its header (Kevin,
-// 2026-07-31 — a uniform landing view for every user/role; non-admins
-// simply have no Admin card). Collapse toggles still work during the
-// session but are deliberately NOT persisted across loads — the old
-// localStorage restore (gw_sidebar_collapsed_v2) is what made landings
-// unpredictable per user. Auto-expand of the active route's section is
-// unaffected (see the render-time check below).
-const DEFAULT_COLLAPSED = ['Music', 'Teach', 'Make', 'Plan', 'Reach', 'Money', 'People'] as const;
-
-function loadCollapsed(): Set<string> {
-  return new Set(DEFAULT_COLLAPSED);
-}
-
-function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
+// Exported for its own test (I2 regression guard): asserting that a
+// missing/hidden Home entry degrades the shelf rather than blanking the
+// whole sidebar means rendering Sidebar with mocked hooks, same rationale
+// as BrandLogo's export above — standing up the full DashboardShell (auth,
+// routing, branding, tenant prefs, module access, ×2 for MobileNav) to
+// reach one `if (!homeEntry) return null` guard would be disproportionate.
+export function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const { settings: branding } = useBrandingSettings();
   // Prefer the short_name for sidebar chrome — most org_names overflow
   // the 256px column. Falls back to org_name then the platform/tenant
@@ -281,23 +206,13 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const fallbackName = getOrgName();
   const tenantName = branding?.short_name || branding?.org_name || fallbackName;
   const tenantLongName = branding?.org_name || branding?.short_name || fallbackName;
-  const { profile, canEditMusicLibrary } = useUserRole();
+  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
   // Defensive: tolerate older useUserRole shapes that don't export this fn
   // (avoids "canEditMusicLibrary is not a function" white-screening the shell).
   const userCanLibrarian = typeof canEditMusicLibrary === 'function'
     ? canEditMusicLibrary()
     : !!(profile?.is_admin || profile?.is_super_admin);
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState<Set<string>>(loadCollapsed);
-
-  const toggleSection = (label: string) => {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      return next;
-    });
-  };
   // Switch Site is a platform-owner action — only the super-admin on the
   // "main" tenant can provision/jump between tenants. Demo-admins and other
   // tenant super-admins should not see this control.
@@ -338,61 +253,51 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
     isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole);
-  const { navOrder, saveNavOrder } = useNavItemOrder();
-  // Section order is deliberately NOT passed — sections always render in
-  // catalog order; only items within them are user-orderable.
-  const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
-  // Press-and-hold to drag: the old 8px movement threshold made rows
-  // move on any slightly-sloppy click or scroll flick. With a delay
-  // constraint, a plain click navigates instantly, and a drag only
-  // starts after the pointer has been held still (within `tolerance`
-  // px) for `delay` ms — accidental reorders effectively disappear.
-  const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { delay: 250, tolerance: 6 } }));
-  // Id namespaces in onDragEnd:
-  //   'section:<key>' — the DroppableSection body (target when an item
-  //                     is dragged INTO a section)
-  //   '<item.key>'    — the bare item row (SortableContext)
-  // Sections themselves are NOT sortable — their order is fixed to the
-  // catalog SECTION_ORDER.
-  const onNavDragEnd = (e: DragEndEvent) => {
-    const activeId = String(e.active.id);
-    const overId = e.over ? String(e.over.id) : null;
-    if (!overId || activeId === overId) return;
-
-    const from = sections.find((s) => s.items.some((i) => i.key === activeId));
-    if (!from) return;
-    const overSectionKey = overId.startsWith('section:') ? overId.slice(8) : null;
-    const to = overSectionKey
-      ? sections.find((s) => s.key === overSectionKey)
-      : sections.find((s) => s.items.some((i) => i.key === overId));
-    if (!to) return;
-
-    const display = new Map(sections.map((s) => [s.key, s.items.map((i) => i.key)]));
-    const fromKeys = display.get(from.key)!.filter((k) => k !== activeId);
-    display.set(from.key, fromKeys);
-    if (to.key === from.key && !overSectionKey) {
-      display.set(from.key, arrayMove(
-        from.items.map((i) => i.key),
-        from.items.findIndex((i) => i.key === activeId),
-        from.items.findIndex((i) => i.key === overId),
-      ));
-    } else if (overSectionKey) {
-      display.set(to.key, [...display.get(to.key)!, activeId]);
-    } else {
-      const toKeys = [...display.get(to.key)!];
-      toKeys.splice(toKeys.indexOf(overId), 0, activeId);
-      display.set(to.key, toKeys);
-    }
-
-    const flat = sections.flatMap((s) => display.get(s.key)!);
-    const catalogSection = from.items.find((i) => i.key === activeId)?.section;
-    const overrides = { ...(navOrder?.sections ?? {}) };
-    if (to.key === catalogSection) delete overrides[activeId];
-    else if (to.key !== from.key) overrides[activeId] = to.key;
-    // sectionOrder is intentionally reset to [] — section order is fixed
-    // to the catalog and any previously-dragged order should not persist.
-    void saveNavOrder(flat, overrides, []);
-  };
+  // Sections are no longer the shelf — they populate the All Tools
+  // disclosure only. Passing no user order keeps them in catalog order.
+  const sections = buildNavSections(navCtx);
+  // isFacultyProfile is the single definition (src/lib/roles.ts) — an inline
+  // admin||super||instructor check here missed teacher/conductor/director, so a
+  // director got the faculty grid on HouseHome and the STUDENT shelf here.
+  const isFaculty = isFacultyProfile(profile);
+  const { myTools } = useMyTools(isFaculty ? 'faculty' : 'student');
+  // Shelf pool is the full gated set from resolveNav, NOT `sections` —
+  // buildNavSections filters to entries whose surfaces include 'sidebar',
+  // which drops grid-only catalog entries (merch, tickets, attendance). A
+  // member migrating from home_tile_layout can legitimately have those
+  // keys in their My Tools set, and deriving the shelf from `sections`
+  // would silently drop them from the shelf they were told they'd see.
+  const resolvedEntries = resolveNav(navCtx);
+  // 'home' has no gate, but hiddenRoutes could still remove it (Workspace
+  // Settings → Navigation). NavShelf's `home` prop is optional for exactly
+  // this case — a shelf with no Home row beats blanking the whole nav.
+  const homeEntry = resolvedEntries.find((e) => e.key === 'home');
+  // isFaculty is a guess (profile is still null) until roleLoading clears —
+  // useUserRole(null) reads as student, so a faculty member could flash
+  // DEFAULT_TOOLS_STUDENT before their real shelf swaps in. But
+  // DashboardShell mounts fresh on every route (111 usages in App.tsx,
+  // not a persistent layout), and useUserRole caches nothing — roleLoading
+  // is true on literally every navigation, not just first load. Blanking
+  // the shelf every time (`roleLoading ? [] : ...`) traded one bug for a
+  // worse one: a member whose tools were already known instantly would
+  // watch the shelf empty out and refill on every click.
+  //
+  // `role` only changes what myTools.tools resolves to in ONE branch of
+  // migrateToMyTools — the role-default fallback for a member with NO
+  // stored record at all (myTools.ts). Anyone with a real record
+  // (setupComplete: true) gets the SAME tools back regardless of which
+  // role guess fetched them, because the query reads by uid, not by role.
+  // So: once we have a confirmed record, show it immediately — roleLoading
+  // is irrelevant. Only while genuinely guessing (no confirmed record yet)
+  // do we hide the role-specific guess, and even then we don't blank: we
+  // show the tools both role defaults agree on (ROLE_INVARIANT_CORE_TOOLS),
+  // which can never be wrong for either role. This is the MobileBottomNav
+  // convention actually applied correctly — CORE_TAB_KEYS there is the
+  // role-invariant set, not an empty one.
+  const knownGood = myTools?.setupComplete === true;
+  const shelfTools = (roleLoading && !knownGood)
+    ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
+    : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
 
   // Studio session editor needs the full window for clips + mixer.
   // Hide the sidebar when an open session is loaded. The user can
@@ -461,103 +366,15 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
         )}
       </div>
 
-      {/* Nav — grouped by section. Sections with zero visible items are
-          skipped. Labeled sections (Add-ons, Admin) are collapsible; if
-          the user is on a route inside a collapsed section, that section
-          auto-expands so the active item stays visible. Extra top
-          padding (pt-4 sm:pt-5) gives the first item air below the
-          brand block instead of glueing flush against the divider. */}
-      <nav className="flex-1 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2 space-y-1.5">
-        <DndContext sensors={dragSensors} onDragEnd={onNavDragEnd}>
-        {sections.map((section, idx) => {
-          if (section.items.length === 0) return null;
-          const isCollapsible = !!section.label;
-          const isCollapsed = isCollapsible && collapsed.has(section.label!);
-          return (
-                <DroppableSection
-                  key={section.key ?? `section-${idx}`}
-                  sectionKey={section.key}
-                  className={section.label ? 'rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5' : 'space-y-0.5 px-1'}
-                >
-                  {section.label && (
-                    <div
-                      // Sections are fixed in place — the whole header
-                      // row is a plain expand/collapse toggle.
-                      className="flex items-center pb-1 pt-1.5 pl-1.5 pr-1 select-none text-[11px] font-black uppercase tracking-[0.08em] text-foreground"
-                    >
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => toggleSection(section.label!)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            toggleSection(section.label!);
-                          }
-                        }}
-                        className="flex-1 cursor-pointer hover:text-foreground transition-colors"
-                      >
-                        {section.label}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => toggleSection(section.label!)}
-                        aria-label={isCollapsed ? `Expand ${section.label}` : `Collapse ${section.label}`}
-                        className="px-1.5 py-0.5 rounded hover:bg-muted transition-colors cursor-pointer"
-                      >
-                        {isCollapsed ? (
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        ) : (
-                          <ChevronDown className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                    </div>
-                  )}
-              {!isCollapsed && (
-              <SortableContext items={section.items.map((i) => i.key)} strategy={verticalListSortingStrategy}>
-              {section.items.map((item) => (
-                <SortableNavRow key={item.key} id={item.key}>
-                <NavLink
-                  to={item.to}
-                  end={item.end}
-                  data-tour={item.tourId}
-                  // Browsers treat <a> elements as natively draggable —
-                  // the OS starts a URL-drag on pointerdown, which
-                  // steals the pointer stream before dnd-kit's 8px
-                  // activation threshold fires. Result: user tries to
-                  // reorder, gets a URL preview icon, nav doesn't move.
-                  // Disable the native drag and let SortableNavRow's
-                  // listeners own the pointer.
-                  draggable={false}
-                  onDragStart={(e) => e.preventDefault()}
-                  className={({ isActive }) => {
-                    if (item.hero) {
-                      return `${NAV_BASE} ${
-                        isActive
-                          ? 'bg-primary/15 text-primary font-semibold ring-1 ring-primary/30'
-                          : 'bg-primary/5 text-foreground font-semibold hover:bg-primary/10'
-                      }`;
-                    }
-                    return `${NAV_BASE} ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`;
-                  }}
-                >
-                  {/* Single tonal icon family — slate-500 default, the
-                   * tenant's primary tone only on the hero row.
-                   * Replaces the previous 10+ category hues (rose,
-                   * amber, violet, indigo, sky, pink…) which violated
-                   * the "hero accent only for the main brand identity"
-                   * discipline. */}
-                  <item.icon className={`w-[18px] h-[18px] shrink-0 ${item.hero ? 'text-primary' : 'text-slate-500'}`} />
-                  <span className="truncate">{item.label}</span>
-                </NavLink>
-                </SortableNavRow>
-              ))}
-              </SortableContext>
-              )}
-                </DroppableSection>
-          );
-        })}
-        </DndContext>
+      {/* Nav — Home + the member's My Tools shelf (My Space, Phase 1),
+          with every remaining destination tucked behind the All Tools
+          disclosure. No collapsible sections, no drag reorder here —
+          arranging the shelf is a deliberate action on /dashboard/my-space,
+          not a gesture performed on the live nav. Extra top padding
+          (pt-4 sm:pt-5) gives the first item air below the brand block
+          instead of glueing flush against the divider. */}
+      <nav className="flex-1 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2">
+        <NavShelf home={homeEntry} tools={shelfTools} sections={sections} variant="desktop" />
       </nav>
 
       {/* Tenant pill — compact one-row footer. The brand + name are
@@ -579,14 +396,15 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
 }
 
 // ── Mobile nav (drawer) ─────────────────────────────────────────────────────
-// Lighter clone of the desktop sidebar — same icon-tiled item style but
-// without the collapsible-section machinery (mobile users want one flat
-// list they can scan). Hides automatically when the user picks a link.
-
-function MobileNav({ onNavigate }: { onNavigate: () => void }) {
+// Same NavShelf as the desktop sidebar — Home + the member's My Tools set,
+// with everything else behind All Tools. Hides automatically when the user
+// picks a link (onNavigate closes the Sheet).
+//
+// Exported for its own test — same rationale as Sidebar above.
+export function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const { settings: branding } = useBrandingSettings();
   const tenantName = branding?.short_name || branding?.org_name || getOrgName();
-  const { profile, canEditMusicLibrary } = useUserRole();
+  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
   const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
   const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
@@ -616,27 +434,26 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
     isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole);
-  // same per-user ordering + section overrides as the desktop sidebar
-  // (read-only here; reordering by drag is a desktop affordance)
-  const { navOrder } = useNavItemOrder();
-  const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
-
-  // Collapsible sections — nine expanded groups made the drawer a long
-  // scroll to reach anything below Music. Headers toggle; the choice
-  // persists per device so a member who only uses Today + Music keeps
-  // a short drawer. Default expanded (current behavior) until tapped.
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
-    try { return JSON.parse(localStorage.getItem('gw_mobile_nav_collapsed') || '{}'); }
-    catch { return {}; }
-  });
-  const toggleSection = (label: string) => {
-    setCollapsedSections((prev) => {
-      const next = { ...prev, [label]: !prev[label] };
-      try { localStorage.setItem('gw_mobile_nav_collapsed', JSON.stringify(next)); }
-      catch { /* private mode — collapse just won't persist */ }
-      return next;
-    });
-  };
+  // Sections are no longer the shelf — they populate the All Tools
+  // disclosure only. Passing no user order keeps them in catalog order.
+  const sections = buildNavSections(navCtx);
+  // isFacultyProfile is the single definition (src/lib/roles.ts) — an inline
+  // admin||super||instructor check here missed teacher/conductor/director, so a
+  // director got the faculty grid on HouseHome and the STUDENT shelf here.
+  const isFaculty = isFacultyProfile(profile);
+  const { myTools } = useMyTools(isFaculty ? 'faculty' : 'student');
+  // Shelf pool is the full gated set from resolveNav, NOT `sections` — see
+  // the matching comment in Sidebar above for why.
+  const resolvedEntries = resolveNav(navCtx);
+  // 'home' has no gate, but hiddenRoutes could still remove it. NavShelf's
+  // `home` prop is optional for exactly this case — see Sidebar above.
+  const homeEntry = resolvedEntries.find((e) => e.key === 'home');
+  // Same knownGood/roleLoading gate as Sidebar — see the matching comment
+  // there for why this isn't `roleLoading ? [] : ...` anymore.
+  const knownGood = myTools?.setupComplete === true;
+  const shelfTools = (roleLoading && !knownGood)
+    ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
+    : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
 
   return (
     <div className="flex flex-col h-full">
@@ -651,45 +468,14 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
         />
         <span className="font-bold text-[22px] tracking-tight truncate">{tenantName}</span>
       </div>
-      <nav className="flex-1 overflow-y-auto pt-2 px-2 space-y-1.5 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
-        {sections.map((section) => (
-          section.items.length === 0 ? null : (
-            <div key={section.label} className="rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5">
-              <button
-                type="button"
-                onClick={() => toggleSection(section.label)}
-                aria-expanded={!collapsedSections[section.label]}
-                className="flex w-full min-h-[40px] items-center justify-between px-2.5 py-1"
-              >
-                <span className="text-[12px] font-black tracking-[0.08em] text-foreground uppercase">
-                  {section.label}
-                </span>
-                <ChevronDown
-                  className={`w-4 h-4 text-muted-foreground transition-transform ${collapsedSections[section.label] ? '-rotate-90' : ''}`}
-                  aria-hidden
-                />
-              </button>
-              {!collapsedSections[section.label] && section.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === '/dashboard'}
-                  onClick={onNavigate}
-                  // Mobile drawer text — comfortably bigger than the
-                  // desktop sidebar (text-[13px]) without overwhelming
-                  // the phone viewport. 17px ≈ iOS standard menu row.
-                  // py-2.5 keeps the tap target at 44px (Apple HIG).
-                  className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-2.5 py-2.5 rounded-md !text-[17px] leading-tight transition-colors w-full text-left ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`
-                  }
-                >
-                  <item.icon className="w-5 h-5 shrink-0 text-slate-500" />
-                  <span className="truncate">{item.label}</span>
-                </NavLink>
-              ))}
-            </div>
-          )
-        ))}
+      <nav className="flex-1 overflow-y-auto pt-2 px-2 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
+        <NavShelf
+          home={homeEntry}
+          tools={shelfTools}
+          sections={sections}
+          variant="mobile"
+          onNavigate={onNavigate}
+        />
       </nav>
     </div>
   );

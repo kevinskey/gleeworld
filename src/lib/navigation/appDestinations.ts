@@ -107,23 +107,54 @@ export function parseTileLayout(raw: unknown): TileLayout | null {
 // reviewable diff rather than an emergent side effect of catalog order.
 export const DEFAULT_GRID_ORDER = ['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch'];
 
-export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav: NavContext, layout?: TileLayout | null):
-  { primary: Destination[]; overflow: Destination[] } {
+export interface AppTilesOptions {
+  /**
+   * Is the phone tab bar actually on screen? The grid must not repeat a
+   * destination the tab bar already carries (Home / Messages / Calendar),
+   * but ABOVE the tab bar's breakpoint there is no tab bar to repeat — and
+   * suppressing those keys there is what made the keycap grid disagree with
+   * the sidebar shelf, whose first two default entries are exactly Calendar
+   * and Messages. Defaults to `true` (dedupe) so a caller that hasn't
+   * measured the viewport keeps the conservative, never-duplicate behavior.
+   * MobileBottomNav's own gate (useIsCompactNav, <768px) is the value to
+   * pass.
+   */
+  tabBarVisible?: boolean;
+}
+
+export function getAppTiles(
+  role: 'student' | 'faculty',
+  flags: ModuleFlags,
+  nav: NavContext,
+  tools?: string[] | null,
+  opts: AppTilesOptions = {},
+): { primary: Destination[]; overflow: Destination[] } {
   // Dedupe against tab ROUTES, not keys — two distinct keys (e.g. Roster
   // and Attendance) can point at the same route, and the grid must not
   // repeat a destination the tab bar already surfaces.
   const tabRoutes = new Set(getTabItems(role, flags).map((t) => t.to));
-  // Candidate pool = every resolved catalog entry with a grid surface whose
-  // route the tab bar hasn't claimed. Catalog order groups by section, which
-  // the grouped "More" UI relies on.
-  const enabled: Destination[] = resolveNav(nav)
-    .filter((e) => entrySurfaces(e).includes('grid') && !tabRoutes.has(e.to))
-    .map((e) => ({ key: e.key, to: e.to, label: e.gridLabel ?? e.label, icon: e.gridIcon ?? e.icon, section: e.section, tone: e.tone }));
 
-  if (!layout) {
-    // Default grid frozen: first 8 enabled keys of DEFAULT_GRID_ORDER in
-    // that order; EVERYTHING else (including all sidebar-parity additions)
-    // goes to overflow, in catalog order.
+  if (tools == null) {
+    // Candidate pool = every resolved catalog entry with a grid surface
+    // whose route the tab bar hasn't claimed. Catalog order groups by
+    // section, which the grouped "More" UI relies on.
+    const enabled: Destination[] = resolveNav(nav)
+      .filter((e) => entrySurfaces(e).includes('grid') && !tabRoutes.has(e.to))
+      .map((e) => ({ key: e.key, to: e.to, label: e.gridLabel ?? e.label, icon: e.gridIcon ?? e.icon, section: e.section, tone: e.tone }));
+
+    // No record at all — the hook is still loading, or the member has never
+    // saved a preference. Default grid frozen: first 8 enabled keys of
+    // DEFAULT_GRID_ORDER in that order; EVERYTHING else (including all
+    // sidebar-parity additions) goes to overflow, in catalog order.
+    //
+    // Deliberately NOT taken when `tools` is an empty array: that is a
+    // stored, deliberate "I cleared everything" — the member removed every
+    // keycap and tapped Done. Falling back to the default grid there would
+    // make the grid disagree with the sidebar shelf (which has no such
+    // fallback and correctly renders empty), and — because saveTools writes
+    // optimistically — the cleared grid would visibly snap back to 8 tiles
+    // the instant Done is tapped. Respect the empty set instead: Home and
+    // All Tools always render, so nobody is stranded.
     const byKey = new Map(enabled.map((d) => [d.key, d]));
     const primary = DEFAULT_GRID_ORDER
       .map((k) => byKey.get(k))
@@ -133,15 +164,39 @@ export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav
     return { primary, overflow: enabled.filter((d) => !pinned.has(d.key)) };
   }
 
-  // Custom layout: saved keys in saved order, filtered to what is still
-  // enabled and un-claimed by the tab bar (stale keys silently drop; the
-  // stored layout is never rewritten, so re-enabling a module restores
-  // its old spot). Everything else enabled falls to overflow — newly
-  // tenant-enabled modules land there, never inside a curated grid.
-  const byKey = new Map(enabled.map((d) => [d.key, d]));
-  const primary = layout.order
+  // My Tools path. The pool here is deliberately WIDER than `enabled`: it
+  // drops the `surfaces.includes('grid')` filter, so sidebar-only catalog
+  // entries become keycaps too. Kevin's ruling is that the keycap grid shows
+  // the SAME set as the sidebar shelf, and the shelf has no such filter —
+  // Calendar and Messages are `surfaces: ['sidebar']` yet are the first two
+  // entries of BOTH role defaults, so filtering by grid surface here made the
+  // grid silently render a shorter list than the shelf (and, because
+  // HomeTileGrid seeds its edit draft from `primary`, silently DELETED them
+  // on the next save — see mergeGridOrder in myTools.ts for the second half
+  // of that guard).
+  //
+  // 'home' stays out: it is implicit on every surface (sanitizeTools drops it
+  // too), and the grid lives ON the home page.
+  //
+  // The tab-route dedupe applies only where the tab bar actually renders
+  // (below md — see AppTilesOptions). Above it there is no tab bar carrying
+  // Calendar/Messages, so suppressing them here is what made the grid
+  // disagree with the shelf. The no-record branch above keeps the
+  // unconditional dedupe: DEFAULT_GRID_ORDER is a frozen, separately-signed-
+  // off list and this change is not licensed to alter it.
+  const claimed = opts.tabBarVisible === false ? new Set<string>() : tabRoutes;
+  const pool: Destination[] = resolveNav(nav)
+    .filter((e) => e.key !== 'home' && !claimed.has(e.to))
+    .map((e) => ({ key: e.key, to: e.to, label: e.gridLabel ?? e.label, icon: e.gridIcon ?? e.icon, section: e.section, tone: e.tone }));
+
+  // Stale keys drop silently; the stored record is never rewritten, so
+  // re-enabling a module restores its old spot. An empty array is a
+  // deliberate, respected choice: primary comes back empty and everything
+  // enabled lands in overflow, one tap away in More.
+  const byKey = new Map(pool.map((d) => [d.key, d]));
+  const primary = tools
     .map((k) => byKey.get(k))
     .filter((d): d is Destination => d !== undefined);
   const pinned = new Set(primary.map((d) => d.key));
-  return { primary, overflow: enabled.filter((d) => !pinned.has(d.key)) };
+  return { primary, overflow: pool.filter((d) => !pinned.has(d.key)) };
 }
