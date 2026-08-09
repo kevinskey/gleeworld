@@ -12,6 +12,12 @@ const h = vi.hoisted(() => ({
   saveMyTools: vi.fn(),
   myTools: { v: 4, tools: ['calendar', 'academy'], widgets: [], setupComplete: true } as unknown,
   loading: false,
+  // useMyTools' "the row genuinely came back" flag — distinct from
+  // `loading`/`myTools`: a failed load leaves loading false and myTools
+  // holding FABRICATED role defaults (never null), so `myTools != null`
+  // alone can't gate the editor. Defaults true here so the existing tests
+  // above (which never set it) keep exercising the ready path.
+  loaded: true,
   // Per-module override for useModuleAccess; unlisted keys default to true
   // so most tests don't have to enumerate the whole MODULE_KEYS list.
   moduleOverrides: {} as Record<string, boolean>,
@@ -21,7 +27,9 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('@/hooks/useMyTools', () => ({
-  useMyTools: () => ({ myTools: h.myTools, loading: h.loading, saveTools: vi.fn(), saveMyTools: h.saveMyTools }),
+  useMyTools: () => ({
+    myTools: h.myTools, loading: h.loading, loaded: h.loaded, saveTools: vi.fn(), saveMyTools: h.saveMyTools,
+  }),
   WIDGETS_CAP: 2,
 }));
 vi.mock('@/hooks/useUserRole', () => ({ useUserRole: () => ({ profile: { is_admin: false, role: 'student' }, loading: false, canEditMusicLibrary: () => false }) }));
@@ -52,6 +60,7 @@ beforeEach(() => {
   h.saveMyTools.mockReset().mockResolvedValue(true);
   h.myTools = { ...DEFAULT_MY_TOOLS, tools: [...DEFAULT_MY_TOOLS.tools] };
   h.loading = false;
+  h.loaded = true;
   h.moduleOverrides = {};
   h.hiddenRoutes = new Set<string>();
   h.saveDefaults.mockReset().mockResolvedValue(true);
@@ -114,6 +123,29 @@ describe('MySpacePage', () => {
       renderPage();
       expect(screen.queryByTestId('my-space-loading')).toBeNull();
       expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
+    });
+  });
+
+  // Reviewer-proven data-loss bug: useMyTools deliberately falls back to
+  // FABRICATED role defaults when the load fails, so the shelf never blanks
+  // — but `myTools != null` reads true for that fabricated record exactly
+  // like it does for a real one. Gating `ready` on `myTools != null` alone
+  // let the editor mount against the fabrication; any edit then called
+  // saveMyTools, which fills omitted fields from THAT record and persisted
+  // DEFAULT_TOOLS_STUDENT/FACULTY straight over the member's real curated
+  // set. `loaded` is the only signal that distinguishes the two cases.
+  describe('failed load', () => {
+    it('stays in the not-ready state and fires no save when the load failed, even though myTools holds fabricated defaults', () => {
+      h.loading = false;
+      h.loaded = false;
+      h.myTools = { v: 4, tools: [...DEFAULT_TOOLS_STUDENT], widgets: [], setupComplete: false };
+      renderPage();
+      expect(screen.getByTestId('my-space-loading')).toBeInTheDocument();
+      expect(screen.queryByTestId('my-space-count')).toBeNull();
+      expect(screen.queryByTestId('my-space-widgets')).toBeNull();
+      expect(screen.queryByRole('button', { name: /remove/i })).toBeNull();
+      expect(screen.queryByRole('button', { name: /add/i })).toBeNull();
+      expect(h.saveMyTools).not.toHaveBeenCalled();
     });
   });
 

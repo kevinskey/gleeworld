@@ -190,7 +190,15 @@ A sheet over the page, opened from the shelf or ⌘K, holding the full recut cat
 - The **YOU USE MOST** row needs `gw_nav_usage` and therefore arrives with Phase 4; until
   then the sheet opens straight to the sections and the row is absent, not empty.
 - **⊕ pins to My Tools in place** and updates the room and shelf at once. With 8 already
-  placed, ⊕ prompts to swap rather than failing silently.
+  placed, every ⊕ is disabled and the sheet says so — "Your space is full — remove one in
+  Setup to pin another." (Amended after Phase 3 shipped: this bullet used to read "⊕ prompts
+  to swap rather than failing silently". The plan ratified the substitution — a swap picker
+  is a second modal decision inside a sheet the member opened to do something else, where
+  Setup already exists for exactly that edit. What matters is the "rather than failing
+  silently" half, and it holds: the state is visible before the tap, not discovered after
+  it.) A ⊕ is likewise withheld — not shown disabled — before the member's stored record has
+  loaded, because the write path refuses in that state. Home carries the non-pinnable
+  "In your space" affordance instead of a ⊕: it is always on the shelf and is never stored.
 - Visual: `--card` rows on `--background`, 12px radius, hairline separators, tint on the
   ⊕ badge only. Blur is permitted here (fixed chrome, ≥85% opaque scrim) but not required.
 

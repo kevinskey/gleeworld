@@ -3,16 +3,19 @@
 //   Home                  always first, never consumes a slot
 //   <up to 8 tools>       the member's My Tools set, in their order
 //   ─────────
-//   All Tools             disclosure holding every other destination
+//   All Tools             opens the searchable AllToolsSheet
+//   Setup                 opens /dashboard/my-space
 //
 // No sections on the shelf, no accordions, no drag reorder: arranging is a
 // Phase 2 task performed on /dashboard/my-space, not a gesture performed on
-// the live nav. The `sections` disclosure is a Phase 1 bridge — Phase 3
-// replaces it with the searchable All Tools sheet.
-// Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.2
-import { useState } from 'react';
+// the live nav. Phase 1 shipped an in-shelf disclosure of every remaining
+// destination as a bridge; Phase 3 retires it — All Tools now opens the
+// searchable AllToolsSheet (owned by DashboardShell) instead of expanding
+// in place, so this component no longer takes a `sections` prop or renders
+// any disclosure of its own.
+// Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.2, §5.3
 import { NavLink } from 'react-router-dom';
-import { ChevronDown, LayoutGrid, Settings } from 'lucide-react';
+import { LayoutGrid, Settings } from 'lucide-react';
 import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 import type { CatalogEntry } from '@/lib/navigation/navCatalog';
 
@@ -40,7 +43,8 @@ export interface NavShelfProps {
    */
   home?: CatalogEntry;
   tools: CatalogEntry[];
-  sections: Array<{ key: string; label: string; items: CatalogEntry[] }>;
+  /** Opens the searchable AllToolsSheet (owned by DashboardShell). */
+  onOpenAllTools: () => void;
   variant: 'desktop' | 'mobile';
   onNavigate?: () => void;
 }
@@ -73,19 +77,11 @@ function Row({ entry, variant, onNavigate }: {
   );
 }
 
-export function NavShelf({ home, tools, sections, variant, onNavigate }: NavShelfProps) {
-  const [allOpen, setAllOpen] = useState(false);
-
+export function NavShelf({ home, tools, onOpenAllTools, variant, onNavigate }: NavShelfProps) {
   // Defensive cap. useMyTools already sanitizes, but the shelf's whole
   // promise is that it cannot grow into a list — enforce it at the render
   // boundary too, so a stale cache or a future caller can't break it.
   const shelf = tools.filter((t) => t.key !== home?.key).slice(0, MY_TOOLS_CAP);
-  const shelfKeys = new Set([...(home ? [home.key] : []), ...shelf.map((t) => t.key)]);
-
-  // Everything not already on the shelf, still grouped, for the disclosure.
-  const rest = sections
-    .map((s) => ({ ...s, items: s.items.filter((i) => !shelfKeys.has(i.key)) }))
-    .filter((s) => s.items.length > 0);
 
   return (
     <div className="space-y-1">
@@ -98,48 +94,23 @@ export function NavShelf({ home, tools, sections, variant, onNavigate }: NavShel
 
       <div className="h-px bg-border mx-2 my-2" />
 
-      {rest.length > 0 && (
-        <>
-          <button
-            type="button"
-            data-tour="nav-all-tools-toggle"
-            onClick={() => setAllOpen((o) => !o)}
-            aria-expanded={allOpen}
-            className={`${ROW_BASE} ${variant === 'desktop' ? ROW_DESKTOP : ROW_MOBILE} ${ROW_INACTIVE} justify-between`}
-          >
-            <span className="flex items-center gap-2.5">
-              <LayoutGrid className={`${variant === 'desktop' ? 'w-[18px] h-[18px]' : 'w-5 h-5'} shrink-0 text-slate-500`} aria-hidden />
-              All Tools
-            </span>
-            <ChevronDown
-              className={`w-4 h-4 text-muted-foreground transition-transform ${allOpen ? '' : '-rotate-90'}`}
-              aria-hidden
-            />
-          </button>
+      {/* Always present — opens the searchable AllToolsSheet rather than
+          expanding in place. Unlike the retired disclosure, this never
+          depends on whether anything is "left over": the sheet holds the
+          full catalog regardless of what's already on the shelf. */}
+      <button
+        type="button"
+        data-tour="nav-all-tools-toggle"
+        onClick={onOpenAllTools}
+        aria-haspopup="dialog"
+        className={`${ROW_BASE} ${variant === 'desktop' ? ROW_DESKTOP : ROW_MOBILE} ${ROW_INACTIVE}`}
+      >
+        <LayoutGrid className={`${variant === 'desktop' ? 'w-[18px] h-[18px]' : 'w-5 h-5'} shrink-0 text-slate-500`} aria-hidden />
+        All Tools
+      </button>
 
-          {allOpen && (
-            <div className="space-y-1.5 pt-1">
-              {rest.map((section) => (
-                <div key={section.key} className="rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5">
-                  <div className="px-2 pb-1 pt-0.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground">
-                    {section.label}
-                  </div>
-                  {section.items.map((item) => (
-                    <Row key={item.key} entry={item} variant={variant} onNavigate={onNavigate} />
-                  ))}
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Setup — always present, unlike All Tools above (which only
-          renders when there's something left to disclose). Placed after
-          the whole All Tools block (toggle + its disclosure), not wedged
-          between the toggle and what it discloses — aria-expanded should
-          stay adjacent to what it expands. Reaches the personal
-          /dashboard/my-space editor. */}
+      {/* Setup — always present, placed after the All Tools row. Reaches
+          the personal /dashboard/my-space editor. */}
       <Row entry={SETUP_ENTRY} variant={variant} onNavigate={onNavigate} />
     </div>
   );

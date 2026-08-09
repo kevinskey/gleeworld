@@ -66,10 +66,17 @@ function setup({
   hiddenRoutes = new Set<string>(),
   roleLoading = false,
   myTools = { v: 4, tools: ['calendar', 'messages', 'finance'], widgets: [], setupComplete: true } as MyTools,
+  // useMyTools' "the row genuinely came back" flag. Sidebar/MobileNav don't
+  // read it at all — they render whatever `myTools` holds regardless — so
+  // it defaults true here purely to match the hook's real shape; see the
+  // "failed load" describe block below for the case that actually exercises
+  // it being false.
+  loaded = true,
 }: {
   hiddenRoutes?: Set<string>;
   roleLoading?: boolean;
   myTools?: MyTools | null;
+  loaded?: boolean;
 } = {}) {
   useUserRoleMock.mockReturnValue({
     profile: adminProfile,
@@ -77,7 +84,7 @@ function setup({
     canEditMusicLibrary: () => true,
   });
   useTenantNavPrefsMock.mockReturnValue(hiddenRoutes);
-  useMyToolsMock.mockReturnValue({ myTools, loading: false, saveTools: vi.fn() });
+  useMyToolsMock.mockReturnValue({ myTools, loading: false, loaded, saveTools: vi.fn(), saveMyTools: vi.fn() });
 }
 
 afterEach(cleanup);
@@ -85,7 +92,7 @@ afterEach(cleanup);
 describe('Sidebar — I2: a hidden Home must not blank the whole nav', () => {
   it('still renders the rest of the shelf when hiddenRoutes removes Home', () => {
     setup({ hiddenRoutes: new Set(['/dashboard']) });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.queryByText('Command Center')).not.toBeInTheDocument();
     expect(screen.getByText('Calendar')).toBeInTheDocument();
     expect(screen.getByText('Finance')).toBeInTheDocument();
@@ -93,7 +100,7 @@ describe('Sidebar — I2: a hidden Home must not blank the whole nav', () => {
 
   it('renders Home normally when it is not hidden', () => {
     setup();
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Command Center')).toBeInTheDocument();
   });
 });
@@ -103,7 +110,7 @@ describe('MobileNav — I2: a hidden Home must not blank the whole drawer', () =
     setup({ hiddenRoutes: new Set(['/dashboard']) });
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
-        <MobileNav onNavigate={() => {}} />
+        <MobileNav onNavigate={() => {}} onOpenAllTools={vi.fn()} />
       </MemoryRouter>,
     );
     expect(screen.queryByText('Command Center')).not.toBeInTheDocument();
@@ -121,7 +128,7 @@ describe('Sidebar — shelf must not blank on every route change', () => {
       roleLoading: true,
       myTools: { v: 4, tools: ['finance', 'people'], widgets: [], setupComplete: true },
     });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Finance')).toBeInTheDocument();
     expect(screen.getByText('People')).toBeInTheDocument();
   });
@@ -135,7 +142,7 @@ describe('Sidebar — shelf must not blank on every route change', () => {
       roleLoading: true,
       myTools: { v: 4, tools: ['sight', 'studio', 'my-fees'], widgets: [], setupComplete: false },
     });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     // The unresolved guess's student-only tools must not leak through...
     expect(screen.queryByText('Reading Music')).not.toBeInTheDocument();
     expect(screen.queryByText('Studio')).not.toBeInTheDocument();
@@ -149,10 +156,28 @@ describe('Sidebar — shelf must not blank on every route change', () => {
 
   it('renders nothing role-specific when there is no data at all yet (myTools null) and role is loading', () => {
     setup({ roleLoading: true, myTools: null });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     // Home always renders; the core still renders even with zero data,
     // because it doesn't depend on myTools at all.
     expect(screen.getByText('Command Center')).toBeInTheDocument();
     expect(screen.getByText('Calendar')).toBeInTheDocument();
+  });
+});
+
+describe('Sidebar — failed load must still render the shelf', () => {
+  // useMyTools deliberately falls back to FABRICATED role defaults when the
+  // load fails rather than throwing (loaded: false, myTools: the fallback
+  // record, never null) — specifically so the shelf is never blank. The
+  // MySpacePage fix that gates its editor on `loaded` touches only that
+  // page's own write path; it must not change what Sidebar renders for the
+  // exact same failed-load record.
+  it('still renders the shelf from the fabricated fallback record when loaded is false', () => {
+    setup({
+      loaded: false,
+      myTools: { v: 4, tools: ['finance', 'people'], widgets: [], setupComplete: false },
+    });
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    expect(screen.getByText('Finance')).toBeInTheDocument();
+    expect(screen.getByText('People')).toBeInTheDocument();
   });
 });

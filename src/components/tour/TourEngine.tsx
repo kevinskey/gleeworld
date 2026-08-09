@@ -209,6 +209,13 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
 
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
+      // Step teardown — runs on advance, on restart, and on unmount. Undoes
+      // whatever beforeMeasure revealed (see TourStep.onStepEnd).
+      try {
+        currentStep.onStepEnd?.();
+      } catch (e) {
+        console.error('tour onStepEnd failed:', e);
+      }
     };
   }, [stepIndex, currentStep, measureTarget, onComplete]);
 

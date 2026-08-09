@@ -145,6 +145,147 @@ describe('useMyTools', () => {
   });
 });
 
+describe('pinTool', () => {
+  // The fifth instance of one class on this project: an append computed from
+  // a render-time snapshot of a record that had not loaded yet. `myTools` is
+  // null for the whole life of the query, and BOTH doors into the All Tools
+  // sheet (the shelf row and ⌘K) are live from first paint — so a pin during
+  // that window used to persist {tools:['academy']} and take the member's
+  // eight tools AND their widgets with it. pinTool reads the freshest record
+  // from the query cache at CALL time, and refuses outright unless the row
+  // was genuinely fetched.
+  it('persists nothing when the record has not loaded yet', async () => {
+    let release!: (v: unknown) => void;
+    maybeSingle.mockReturnValue(new Promise((resolve) => { release = resolve; }));
+    const { result } = renderHook(() => useMyTools('faculty'), { wrapper });
+
+    expect(result.current.myTools).toBeNull();
+    let ok = true;
+    await act(async () => { ok = await result.current.pinTool('academy'); });
+
+    expect(ok).toBe(false);
+    expect(rpc).not.toHaveBeenCalled();
+
+    // Let the in-flight query settle so it can't resolve into a torn-down
+    // test and trip an act() warning in the next one.
+    await act(async () => { release({ data: null, error: null }); });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+  });
+
+  it('persists nothing after a failed load — and the render fallback still stands', async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: { message: 'boom' } });
+    const { result } = renderHook(() => useMyTools('faculty'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // Phase 2 deliberately renders the role defaults after a failed load so
+    // the shelf is never blank. That must NOT regress...
+    expect(result.current.myTools?.tools).toEqual(DEFAULT_TOOLS_FACULTY);
+
+    // ...but those fabricated defaults must never become a WRITE: pinning
+    // here would overwrite the member's real curated record with
+    // role-defaults-plus-one and flip setupComplete to true.
+    let ok = true;
+    await act(async () => { ok = await result.current.pinTool('academy'); });
+    expect(ok).toBe(false);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('appends to the STORED record, preserving widgets and a stored-but-unrendered key', async () => {
+    maybeSingle.mockResolvedValue({
+      data: {
+        // 'tenants' is platform-admin-gated: a real member can hold it in
+        // the record while it never renders on the shelf. It must survive.
+        nav_item_order: { v: 4, tools: ['tenants', 'calendar'], widgets: ['today'], setupComplete: true },
+        home_tile_layout: null,
+      },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let ok = false;
+    await act(async () => { ok = await result.current.pinTool('academy'); });
+
+    expect(ok).toBe(true);
+    expect(rpc).toHaveBeenCalledWith('save_nav_item_order', {
+      p_nav_item_order: {
+        v: 4,
+        tools: ['tenants', 'calendar', 'academy'],
+        widgets: ['today'],
+        setupComplete: true,
+      },
+    });
+  });
+
+  it('keeps BOTH pins when two land in the same tick', async () => {
+    // The render-time-snapshot variant of the same bug: the optimistic
+    // setQueryData doesn't reach a closure captured last render, so the
+    // second pin used to be computed from the pre-first-pin list and the
+    // first key was lost. Reading the cache at call time fixes it.
+    maybeSingle.mockResolvedValue({
+      data: { nav_item_order: { v: 4, tools: ['calendar'], widgets: [], setupComplete: true }, home_tile_layout: null },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await Promise.all([result.current.pinTool('academy'), result.current.pinTool('finance')]);
+    });
+
+    expect(rpc).toHaveBeenCalledTimes(2);
+    const first = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[] };
+    const second = rpc.mock.calls[1][1].p_nav_item_order as { tools: string[] };
+    expect(first.tools).toEqual(['calendar', 'academy']);
+    expect(second.tools).toEqual(['calendar', 'academy', 'finance']);
+  });
+
+  it('refuses at the cap instead of burning a write that changes nothing', async () => {
+    const full = Array.from({ length: 8 }, (_, i) => `k${i}`);
+    maybeSingle.mockResolvedValue({
+      data: { nav_item_order: { v: 4, tools: full, widgets: [], setupComplete: true }, home_tile_layout: null },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let ok = true;
+    await act(async () => { ok = await result.current.pinTool('academy'); });
+
+    expect(ok).toBe(false);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it('refuses to store home — sanitizeTools would strip it and the write would be a no-op', async () => {
+    maybeSingle.mockResolvedValue({
+      data: { nav_item_order: { v: 4, tools: ['calendar'], widgets: [], setupComplete: true }, home_tile_layout: null },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let ok = true;
+    await act(async () => { ok = await result.current.pinTool('home'); });
+
+    expect(ok).toBe(false);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe('loaded', () => {
+  it('is false while loading and after a failed load, true once the row is fetched', async () => {
+    maybeSingle.mockResolvedValue({ data: null, error: { message: 'boom' } });
+    const { result: failed } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(failed.current.loading).toBe(false));
+    expect(failed.current.loaded).toBe(false);
+
+    maybeSingle.mockResolvedValue({ data: null, error: null });
+    const { result: ok } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(ok.current.loading).toBe(false));
+    expect(ok.current.loaded).toBe(true);
+  });
+});
+
 describe('saveMyTools', () => {
   it('patches widgets without disturbing tools', async () => {
     maybeSingle.mockResolvedValue({
