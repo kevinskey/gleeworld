@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +7,7 @@ import {
   type AidEntry, type AidSource, type WorshipAidSettings,
 } from '@/lib/liturgy/worshipAid';
 import { psalmLines } from '@/lib/liturgy/psalmComposer';
+import { PsalmEngraving } from '@/components/liturgy/PsalmEngraving';
 
 /**
  * The worship aid on a phone, opened by scanning the QR on the printed cover.
@@ -22,12 +23,34 @@ import { psalmLines } from '@/lib/liturgy/psalmComposer';
  * Mass actually goes.
  */
 
-type AidRow = AidSource & { psalm_full: string | null; worship_aid: unknown; mass_time: string | null };
+type AidRow = AidSource & {
+  psalm_full: string | null;
+  worship_aid: unknown;
+  mass_time: string | null;
+  /**
+   * The psalm setting's MusicXML, from the same curated projection as the
+   * rest of the page.
+   *
+   * Optional in the type on purpose: the frontend can ship before the
+   * migration that adds the column, and a row without it simply engraves
+   * nothing and falls back — rather than throwing on a page a congregation
+   * is holding a phone up to mid-Mass.
+   */
+  psalm_xml?: string | null;
+};
 
 export default function WorshipAidPublicPage() {
   const { token } = useParams<{ token: string }>();
   const [row, setRow] = useState<AidRow | null>(null);
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading');
+  /** The object URL PsalmEngraving hands back. Owned by that component. */
+  const [engraved, setEngraved] = useState<string | null>(null);
+  /** Whether the engraver has reported at all yet, as against having reported
+   *  nothing. The two have to be told apart: "still rasterising" must not
+   *  print the psalm as prose for a beat and then swap in a staff, while
+   *  "tried and failed" must not leave a congregation looking at a heading
+   *  with neither music nor words under it. */
+  const [engravingSettled, setEngravingSettled] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -44,8 +67,47 @@ export default function WorshipAidPublicPage() {
     () => ({ ...DEFAULT_SETTINGS, ...((row?.worship_aid as Partial<WorshipAidSettings>) ?? {}) }),
     [row],
   );
-  const aid = useMemo(() => (row ? buildWorshipAid(row, settings) : null), [row, settings]);
+  /**
+   * The psalm as MUSIC, engraved HERE rather than served as a picture made
+   * when the setting was saved.
+   *
+   * Same bug, same fix, same order as the printed aid — and the same reason
+   * it matters more here, not less: this is the copy the congregation
+   * actually looks at. Everything the printed card gained from re-engraving
+   * (staff height, card width, lyric size) was invisible on a phone for
+   * exactly as long as this page drew a stored raster.
+   *
+   * The MusicXML arrives through gw_worship_aid_by_token because it cannot
+   * arrive any other way: this page is anonymous, and gw_sheet_music admits
+   * anon only to `is_public = true` rows inside anon_tenant_id(), which no
+   * psalm setting is. See the migration for what that projection does and
+   * does not expose.
+   */
+  const psalmXml = row?.psalm_xml ?? null;
+  useEffect(() => { setEngravingSettled(false); }, [psalmXml]);
+  const onEngraved = useCallback((url: string | null) => {
+    setEngraved(url);
+    setEngravingSettled(true);
+  }, []);
+  // With a score in hand the stored picture is out of the running entirely —
+  // including while the engraving is still rasterising, and including when it
+  // failed. buildWorshipAid falls back to settings.psalmImageUrl on its own,
+  // so the only way to keep a stale raster off the page is to withhold it.
+  const aidSettings = useMemo(
+    () => (psalmXml ? { ...settings, psalmImageUrl: null } : settings),
+    [settings, psalmXml],
+  );
+  const aid = useMemo(
+    () => (row ? buildWorshipAid(row, aidSettings, psalmXml ? engraved : null) : null),
+    [row, aidSettings, psalmXml, engraved],
+  );
   const psalm = useMemo(() => psalmLines(row?.psalm_full ?? ''), [row?.psalm_full]);
+  /** Whether this Mass has a setting at all — the prose psalm is what shows
+   *  when it does not. A score still rasterising counts: the words must not
+   *  appear for a beat and then be replaced by a staff. */
+  const hasSetting = psalmXml
+    ? (!engravingSettled || Boolean(engraved))
+    : Boolean(settings.psalmImageUrl);
 
   if (state === 'loading') {
     return (
@@ -115,6 +177,9 @@ export default function WorshipAidPublicPage() {
 
   return (
     <div className="mx-auto min-h-screen max-w-md bg-background px-5 pb-16 pt-8">
+      {/* Off-screen: the staff is drawn to be rasterised, not to be read
+          here. What the page shows is the <img> it produces. */}
+      <PsalmEngraving xml={psalmXml} onImage={onEngraved} />
       <header className="mb-6 text-center">
         {aid.front.title && <h1 className="text-xl leading-tight">{aid.front.title}</h1>}
         {aid.sideBand.day && (
@@ -129,7 +194,7 @@ export default function WorshipAidPublicPage() {
           (Kevin: "should be on worship aid not text"). The words alone are a
           fallback for a Sunday nobody has set yet — and then the phone shows
           every verse, which the printed panel has no room for. */}
-      {psalm.length > 0 && !settings.psalmImageUrl && (
+      {psalm.length > 0 && !hasSetting && (
         <div className="my-5 border-t border-border pt-4">
           {psalm.map((line, i) => {
             const prev = psalm[i - 1];

@@ -136,3 +136,62 @@ describe('the lyric nudge is stored in the MusicXML itself', () => {
     expect(trip(withOffset(6)).elements).toEqual(reopened.elements);
   });
 });
+
+/**
+ * Bars per system, through the same round trip.
+ *
+ * This one only started mattering when the worship aid stopped printing the
+ * JPEG made at save time and began engraving the stored score afresh. Before
+ * that the choice could live in the composer dialog's own state, because the
+ * dialog was the only thing that ever engraved. Now two surfaces do, months
+ * apart — and if the request does not survive the save, the printed card
+ * re-breaks its systems to an estimate of the lyric load rather than to the
+ * layout its author chose and looked at.
+ */
+describe('the bars-per-system choice is stored in the MusicXML too', () => {
+  const withBars = (barsPerLine: number | undefined): EditorScore => ({ ...psalm, barsPerLine });
+  const trip = (s: EditorScore) => musicXmlToEditorScore(editorScoreToMusicXML(s));
+
+  it('survives a save and reopen', () => {
+    expect(trip(withBars(4)).barsPerLine).toBe(4);
+    expect(trip(withBars(2)).barsPerLine).toBe(2);
+  });
+
+  it('travels inside the document, beside the lyric nudge', () => {
+    const xml = editorScoreToMusicXML({ ...psalm, barsPerLine: 4, lyricOffset: 6 });
+    expect(xml).toContain('<miscellaneous-field name="gleeworld-bars-per-line">4</miscellaneous-field>');
+    expect(xml).toContain('<miscellaneous-field name="gleeworld-lyric-offset">6</miscellaneous-field>');
+    // One <identification>, one <miscellaneous> — not two of each, which is
+    // not valid MusicXML and would lose whichever the reader saw second.
+    expect(xml.match(/<identification>/g)).toHaveLength(1);
+    expect(xml.match(/<miscellaneous>/g)).toHaveLength(1);
+    const both = trip({ ...psalm, barsPerLine: 4, lyricOffset: 6 });
+    expect(both.barsPerLine).toBe(4);
+    expect(both.lyricOffset).toBe(6);
+  });
+
+  it('leaves a score with no preference alone', () => {
+    expect(trip(withBars(undefined)).barsPerLine).toBeUndefined();
+    expect(editorScoreToMusicXML(withBars(undefined))).not.toContain('miscellaneous');
+  });
+
+  it('ignores a count below one bar rather than starving the packer', () => {
+    // targetPerRow of 0 is not a smaller layout, it is no layout: the row
+    // packer would fit nothing and the card would engrave empty.
+    const broken = editorScoreToMusicXML(withBars(4))
+      .replace('>4</miscellaneous-field>', '>0</miscellaneous-field>');
+    expect(musicXmlToEditorScore(broken).barsPerLine).toBeUndefined();
+    const nonsense = editorScoreToMusicXML(withBars(4))
+      .replace('>4</miscellaneous-field>', '>as many as fit</miscellaneous-field>');
+    expect(musicXmlToEditorScore(nonsense).barsPerLine).toBeUndefined();
+  });
+
+  it('is stable across repeated saves', () => {
+    expect(trip(trip(withBars(4))).barsPerLine).toBe(4);
+  });
+
+  it('does not disturb the notes or the nudge it travels with', () => {
+    expect(trip(withBars(4)).elements).toEqual(reopened.elements);
+    expect(trip(withBars(4)).lyricOffset).toBeUndefined();
+  });
+});

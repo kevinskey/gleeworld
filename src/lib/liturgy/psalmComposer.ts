@@ -320,6 +320,28 @@ export function measuresPerLine(score: EditorScore): number {
   return Math.max(2, Math.min(ceiling, Math.max(2, fit)));
 }
 
+/**
+ * The bars-per-system the printed card should be engraved with.
+ *
+ * ONE answer, wherever the engraving happens. The composer dialog and the
+ * worship aid now both engrave the same stored score, and the aid is judged
+ * against what the composer showed — so the two must not each carry their own
+ * idea of how the systems break.
+ *
+ * A recorded choice wins outright, including one the packer will later refuse:
+ * the refusal is the engraver's business and it reports what it actually drew.
+ * With nothing recorded (every setting saved before the field existed) this
+ * falls back to the seed the dialog has always used — the lyric-load estimate,
+ * rounded to the two counts the toggle offers.
+ */
+export function psalmBarsPerLine(score: EditorScore): number {
+  const stored = score.barsPerLine;
+  if (typeof stored === 'number' && Number.isFinite(stored) && stored >= 1) {
+    return Math.round(stored);
+  }
+  return measuresPerLine(score) >= 3 ? 4 : 2;
+}
+
 /** Number of (possibly partial) measures the elements occupy. */
 export function measureCount(score: EditorScore): number {
   const perMeasure = score.timeSig.beats * (4 / score.timeSig.beatType);

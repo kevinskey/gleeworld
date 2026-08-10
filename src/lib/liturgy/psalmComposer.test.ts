@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  degreeToPitch, tonicOf, psalmSyllables, psalmLines, measuresPerLine, measureCount,
+  degreeToPitch, tonicOf, psalmSyllables, psalmLines, measuresPerLine, psalmBarsPerLine, measureCount,
   psalmScoreTitle, PSALM_WIDTH_PX, PSALM_WIDTH_IN,
 } from './psalmComposer';
 import { AID_CONTENT_WIDTH_IN } from './aidPage';
@@ -191,6 +191,36 @@ describe('measuresPerLine — the aid\'s column is the constraint, lyrics are th
 
   it('handles an empty score without dividing by zero', () => {
     expect(measuresPerLine(emptyScore())).toBe(2);
+  });
+});
+
+describe('psalmBarsPerLine — one answer for two surfaces engraving the same score', () => {
+  const withLyrics = (count: number, lyric: string): EditorScore => ({
+    ...emptyScore(),
+    elements: Array.from({ length: count }, () => ({ ...noteOf({ step: 'C', octave: 4, alter: 0 }, 'quarter'), lyric })),
+  });
+
+  it('returns what the author recorded, not what the lyric load suggests', () => {
+    // The whole reason the field exists. A dense setting estimates low; if
+    // the estimate could override the recorded choice, the printed card
+    // would re-break its systems behind its author's back the first time the
+    // worship aid engraved it.
+    const dense = withLyrics(32, 'incomprehensibilities');
+    expect(measuresPerLine(dense)).toBe(2);
+    expect(psalmBarsPerLine({ ...dense, barsPerLine: 4 })).toBe(4);
+  });
+
+  it('falls back to the estimate when nothing was recorded', () => {
+    const score = withLyrics(8, 'Lord');
+    expect(psalmBarsPerLine(score)).toBe(measuresPerLine(score) >= 3 ? 4 : 2);
+    expect(psalmBarsPerLine(emptyScore())).toBe(2);
+  });
+
+  it('ignores a count that would engrave nothing', () => {
+    // Zero bars per system is not a denser layout, it is no layout.
+    const score = withLyrics(8, 'Lord');
+    expect(psalmBarsPerLine({ ...score, barsPerLine: 0 })).toBe(psalmBarsPerLine(score));
+    expect(psalmBarsPerLine({ ...score, barsPerLine: Number.NaN })).toBe(psalmBarsPerLine(score));
   });
 });
 

@@ -1,6 +1,6 @@
 import { ticksToDur } from './duration';
 import { EditorScore, EditorElement, noteOf, restOf, Pitch } from './model';
-import { LYRIC_OFFSET_FIELD } from './musicxmlWrite';
+import { LYRIC_OFFSET_FIELD, BARS_PER_LINE_FIELD } from './musicxmlWrite';
 
 const SIGN_CLEF: Record<string, EditorScore['clef']> = { G: 'treble', F: 'bass', C: 'alto' };
 
@@ -17,12 +17,25 @@ const SIGN_CLEF: Record<string, EditorScore['clef']> = { G: 'treble', F: 'bass',
  * field should engrave a normal score, not one whose every lyric coordinate
  * is NaN and therefore never painted.
  */
-function lyricOffsetOf(doc: Document): number | undefined {
+function miscField(doc: Document, name: string): number | undefined {
   const fields = Array.from(doc.getElementsByTagName('miscellaneous-field'));
-  const field = fields.find((f) => f.getAttribute('name') === LYRIC_OFFSET_FIELD);
+  const field = fields.find((f) => f.getAttribute('name') === name);
   if (!field) return undefined;
   const value = Number.parseFloat(field.textContent ?? '');
   return Number.isFinite(value) ? value : undefined;
+}
+
+function lyricOffsetOf(doc: Document): number | undefined {
+  return miscField(doc, LYRIC_OFFSET_FIELD);
+}
+
+/** The author's bars-per-system request, if one was recorded. Anything below
+ *  one bar is nonsense rather than a preference and is dropped — a system
+ *  cannot hold half a measure, and a zero here would starve the packer. */
+function barsPerLineOf(doc: Document): number | undefined {
+  const value = miscField(doc, BARS_PER_LINE_FIELD);
+  if (value === undefined || value < 1) return undefined;
+  return Math.round(value);
 }
 
 function textOf(parent: Element | null, tag: string): string | null {
@@ -45,6 +58,7 @@ export function musicXmlToEditorScore(xml: string): EditorScore {
   const soundTempo = parseInt(doc.getElementsByTagName('sound')[0]?.getAttribute('tempo') ?? '', 10);
   const tempo = Number.isNaN(soundTempo) ? 120 : soundTempo;
   const lyricOffset = lyricOffsetOf(doc);
+  const barsPerLine = barsPerLineOf(doc);
 
   const elements: EditorElement[] = [];
   const noteEls = Array.from(doc.getElementsByTagName('note'));
@@ -80,5 +94,6 @@ export function musicXmlToEditorScore(xml: string): EditorScore {
     // comes back with no such key at all — `{...score, lyricOffset: undefined}`
     // would serialise differently and read differently to Object.keys.
     ...(lyricOffset != null ? { lyricOffset } : {}),
+    ...(barsPerLine != null ? { barsPerLine } : {}),
   };
 }

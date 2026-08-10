@@ -19,6 +19,7 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 import { WorshipAidSheets } from '@/components/liturgy/WorshipAidSheets';
+import { PsalmEngraving } from '@/components/liturgy/PsalmEngraving';
 import { AidStage } from '@/components/liturgy/aid-editor/AidStage';
 import { AidControlRail } from '@/components/liturgy/aid-editor/AidControlRail';
 import { withFullView, AID_VIEW_ATTR, PANEL_LABEL } from '@/components/liturgy/aid-editor/aidView';
@@ -56,7 +57,14 @@ export default function WorshipAidPage() {
   const [saving, setSaving] = useState(false);
   const [token, setToken] = useState<string | null>(null);
   const [qr, setQr] = useState<string | null>(null);
+  /** A stored picture — the save-time engraving, or a library thumbnail.
+   *  Only ever used when this Mass's psalm has no MusicXML behind it. */
   const [psalmImage, setPsalmImage] = useState<string | null>(null);
+  /** The psalm's MusicXML. Non-null means the card is engraved live below,
+   *  and no stored picture may be used for it. */
+  const [psalmXml, setPsalmXml] = useState<string | null>(null);
+  /** The object URL PsalmEngraving hands back. Owned by that component. */
+  const [engraved, setEngraved] = useState<string | null>(null);
   const [uploading, setUploading] = useState<PanelId | 'cover' | null>(null);
   const [filing, setFiling] = useState(false);
   /** How the content paginated, and whether any of it has nowhere to go. */
@@ -122,21 +130,53 @@ export default function WorshipAidPage() {
    *
    * psalm_title is the reliable link, because saving the setting writes it.
    * The citation is only a fallback for a score titled by hand.
+   *
+   * What changed is what the match is FOR. It used to be a hunt for a picture
+   * — the JPEG engraved and uploaded when the psalm was saved, which is why
+   * the printed card was frozen at whatever the engraver did that day and no
+   * amount of fixing the engraver could move it. What it looks for now is the
+   * SCORE: gw_sheet_music.xml_content, engraved again below by today's code.
+   * The stored picture is still read, but only as the fallback for a Mass
+   * whose setting has no MusicXML behind it.
    */
   useEffect(() => {
-    const stored = (row?.worship_aid as { psalmImageUrl?: string } | null)?.psalmImageUrl;
-    if (stored) { setPsalmImage(stored); return; }
     if (!row) return;
+    const stored = (row.worship_aid as { psalmImageUrl?: string } | null)?.psalmImageUrl ?? null;
+    // Written by the composer since the id link existed, and exact — no
+    // title matching can be wrong about it.
+    const scoreId = (row.worship_aid as { psalmScoreId?: string } | null)?.psalmScoreId ?? null;
+    let live = true;
+
     (async () => {
+      if (scoreId) {
+        const { data } = await supabase
+          .from('gw_sheet_music')
+          .select('xml_content, thumbnail_url')
+          .eq('id', scoreId)
+          .maybeSingle();
+        if (!live) return;
+        const xml = (data as { xml_content?: string | null } | null)?.xml_content ?? null;
+        if (xml) { setPsalmXml(xml); setPsalmImage(null); return; }
+        // The row is gone or has no music: fall through to the title match
+        // rather than printing nothing.
+      }
+
       const { data } = await supabase
         .from('gw_sheet_music')
-        .select('title, thumbnail_url, created_at')
+        .select('title, xml_content, thumbnail_url, created_at')
         .contains('tags', ['responsorial-psalm'])
-        .not('thumbnail_url', 'is', null)
         .order('created_at', { ascending: false })
         .limit(50);
-      const rows = (data ?? []) as Array<{ title: string; thumbnail_url: string }>;
-      if (rows.length === 0) return;
+      if (!live) return;
+      const all = (data ?? []) as Array<{
+        title: string; xml_content: string | null; thumbnail_url: string | null;
+      }>;
+      // A row with neither music nor a picture cannot print a psalm, and
+      // must not win the newest-in-tenant fallback below. (The old query
+      // spelled this as `.not('thumbnail_url','is',null)`, back when a
+      // picture was the only thing worth finding.)
+      const rows = all.filter((r) => r.xml_content || r.thumbnail_url);
+      if (rows.length === 0) { setPsalmImage(stored); return; }
 
       const norm = (v: string) => v.toLowerCase().replace(/\s+/g, ' ').trim();
       const wanted = [row.psalm_title, row.responsorial_psalm]
@@ -148,8 +188,13 @@ export default function WorshipAidPage() {
         // a better guess than printing no music at all, and the user can see
         // on the preview whether it is the right one.
         ?? rows[0];
-      if (match?.thumbnail_url) setPsalmImage(match.thumbnail_url);
+
+      if (match?.xml_content) { setPsalmXml(match.xml_content); setPsalmImage(null); return; }
+      setPsalmXml(null);
+      setPsalmImage(stored ?? match?.thumbnail_url ?? null);
     })();
+
+    return () => { live = false; };
   }, [row]);
 
   const publicUrl = useMemo(
@@ -166,9 +211,32 @@ export default function WorshipAidPage() {
       .catch(() => setQr(null));
   }, [publicUrl]);
 
+  /**
+   * The picture the psalm block prints, and the ONE place the fallback order
+   * is decided:
+   *
+   *   1. a stored score → the engraving this page just made from it,
+   *   2. no score      → the stored picture, exactly as before,
+   *   3. neither       → nothing, and the aid prints the psalm as prose.
+   *
+   * Rung 1 has to hold even while the engraving is still rasterising, which
+   * is why the settings handed to buildWorshipAid have psalmImageUrl cleared
+   * whenever a score exists. buildWorshipAid falls back to that field on its
+   * own (`psalmImageUrl ?? settings.psalmImageUrl`), so leaving it in place
+   * would put the stale save-time raster on the page for the fraction of a
+   * second before the fresh one arrives — and permanently, on any Mass whose
+   * engraving failed. The stored value itself is untouched; only what is
+   * DRAWN from it changes.
+   */
+  const aidSettings = useMemo(
+    () => (psalmXml ? { ...settings, psalmImageUrl: null } : settings),
+    [settings, psalmXml],
+  );
+  const psalmSrc = psalmXml ? engraved : psalmImage;
+
   const aid = useMemo(
-    () => (row ? buildWorshipAid(row, settings, psalmImage) : null),
-    [row, settings, psalmImage],
+    () => (row ? buildWorshipAid(row, aidSettings, psalmSrc) : null),
+    [row, aidSettings, psalmSrc],
   );
 
   const patch = (p: Partial<WorshipAidSettings>) => setSettings((s) => ({ ...s, ...p }));
@@ -402,7 +470,7 @@ export default function WorshipAidPage() {
         kind === 'spacer'
           ? { id: crypto.randomUUID(), kind, height: 0.25 }
           : kind === 'score'
-            ? { id: crypto.randomUUID(), kind, imageUrl: psalmImage ?? '' }
+            ? { id: crypto.randomUUID(), kind, imageUrl: psalmSrc ?? '' }
             : { id: crypto.randomUUID(), kind, text: 'New text' },
       ],
     }));
@@ -701,6 +769,12 @@ export default function WorshipAidPage() {
           e.currentTarget.value = '';
         }}
       />
+
+      {/* The psalm, engraved NOW from the stored score. Off-screen, and
+          mounted here rather than beside the panel that prints it: the panel
+          is re-laid-out by the flow engine and re-rendered as the user edits,
+          and the staff must be drawn once per score, not once per keystroke. */}
+      <PsalmEngraving xml={psalmXml} onImage={setEngraved} />
 
       <div className="flex flex-wrap items-end justify-between gap-3 px-4 py-2 print:hidden sm:px-6">
         <div>
