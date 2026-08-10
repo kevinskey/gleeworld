@@ -38,17 +38,37 @@ function noteXml(el: EditorElement): string {
  */
 export const LYRIC_OFFSET_FIELD = 'gleeworld-lyric-offset';
 
-/** The <identification> block, or '' when there is nothing to say. Written
- *  only for a real, non-zero nudge: a score at the automatic placement must
- *  serialise byte-for-byte as it always did, so nothing downstream sees a
- *  spurious change and no reader has to special-case a "0" that means
+/**
+ * And the bars-per-system choice, under the same mechanism and for the same
+ * reason.
+ *
+ * MusicXML CAN express a fixed system layout, but only by writing explicit
+ * <print new-system="yes"> breaks — which pins the breaks rather than the
+ * preference, and the engraver here is allowed to refuse a bar count that
+ * genuinely will not fit. What has to survive a save is the AUTHOR'S REQUEST,
+ * so that is what is stored.
+ */
+export const BARS_PER_LINE_FIELD = 'gleeworld-bars-per-line';
+
+/** The <identification> block, or '' when there is nothing to say. Each field
+ *  is written only for a real recorded preference: a score that made none
+ *  must serialise byte-for-byte as it always did, so nothing downstream sees
+ *  a spurious change and no reader has to special-case a value that means
  *  "unset". */
 function identificationXml(score: EditorScore): string {
+  const fields: string[] = [];
   const off = score.lyricOffset;
-  if (typeof off !== 'number' || !Number.isFinite(off) || off === 0) return '';
-  return '<identification><miscellaneous>'
-    + `<miscellaneous-field name="${LYRIC_OFFSET_FIELD}">${off}</miscellaneous-field>`
-    + '</miscellaneous></identification>';
+  if (typeof off === 'number' && Number.isFinite(off) && off !== 0) {
+    fields.push(`<miscellaneous-field name="${LYRIC_OFFSET_FIELD}">${off}</miscellaneous-field>`);
+  }
+  const bars = score.barsPerLine;
+  if (typeof bars === 'number' && Number.isFinite(bars) && bars >= 1) {
+    fields.push(
+      `<miscellaneous-field name="${BARS_PER_LINE_FIELD}">${Math.round(bars)}</miscellaneous-field>`,
+    );
+  }
+  if (fields.length === 0) return '';
+  return `<identification><miscellaneous>${fields.join('')}</miscellaneous></identification>`;
 }
 
 export function editorScoreToMusicXML(score: EditorScore): string {

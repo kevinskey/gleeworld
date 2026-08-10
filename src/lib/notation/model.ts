@@ -46,6 +46,19 @@ export interface EditorScore {
    *  a judgement the person engraving it makes, and it differs per psalm.
    *  Optional; unset scores engrave exactly as they always did. */
   lyricOffset?: number;
+  /** How many bars the author wants on one printed system.
+   *
+   *  Recorded on the SCORE for the same reason lyricOffset is: the worship
+   *  aid engraves the stored score afresh every time it is built, so anything
+   *  the engraving depends on has to survive being saved or the printed page
+   *  quietly re-lays-out into a shape its author never chose. This used to
+   *  live only in the composer dialog's own state, so it lasted exactly as
+   *  long as that dialog was open.
+   *
+   *  Optional. Absent means "no preference recorded" — every score written
+   *  before this existed — and callers derive an opening choice from the
+   *  lyric load instead (see psalmBarsPerLine). */
+  barsPerLine?: number;
 }
 
 export function emptyScore(): EditorScore {

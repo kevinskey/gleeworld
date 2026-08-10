@@ -16,7 +16,7 @@ import { playPitch } from '@/lib/notation/pitchAudio';
 import { useMidiInput, midiToPitch } from '@/lib/notation/useMidiInput';
 import { svgToJpegBlob, imageFileName, downloadBlob } from '@/lib/notation/exportImage';
 import {
-  measuresPerLine, psalmSyllables, psalmLines, psalmScoreTitle,
+  psalmBarsPerLine, psalmSyllables, psalmLines, psalmScoreTitle,
   PSALM_WIDTH_PX, PSALM_WIDTH_IN, PSALM_ENGRAVING_SCALE, PSALM_MIN_ENGRAVING_SCALE,
 } from '@/lib/liturgy/psalmComposer';
 import { savePsalmToLibrary } from '@/lib/liturgy/psalmScores';
@@ -318,7 +318,12 @@ export function PsalmComposerDialog({
         .maybeSingle();
       if (!alive || error || !data?.xml_content) return;
       try {
-        setScore(musicXmlToEditorScore(data.xml_content as string));
+        const loaded = musicXmlToEditorScore(data.xml_content as string);
+        setScore(loaded);
+        // Reopening has to come back to the systems it was engraved with, not
+        // to the estimate — the dialog opened before this fetch resolved, so
+        // its seed above ran against an empty staff.
+        setPerLine(psalmBarsPerLine(loaded) >= 3 ? 4 : 2);
         setSavedId(id);                       // so Save revises rather than duplicates
         if (data.title) setTitle(data.title as string);
         if (data.composer) setComposer(data.composer as string);
@@ -567,10 +572,19 @@ export function PsalmComposerDialog({
   // psalm card is a physical thing and how dense it should be is a taste
   // decision. measuresPerLine only seeds the opening choice from the lyric
   // load; from there the toggle wins.
+  //
+  // Seeded from the SCORE rather than from the lyric load alone, and written
+  // back onto it when the setting is saved (see `save`). The worship aid now
+  // re-engraves the stored score at print time, so a choice that lived only
+  // in this dialog lasted exactly as long as the dialog did — and the printed
+  // card re-broke its systems to the estimate instead of to what its author
+  // chose. psalmBarsPerLine is the single answer both surfaces read.
   const [perLine, setPerLine] = useState<2 | 4>(2);
+  // Through scoreRef, so opening the dialog seeds the toggle once from
+  // whatever score is in hand rather than re-seeding it — and overruling the
+  // user — every time a note is entered.
   useEffect(() => {
-    if (open) setPerLine(measuresPerLine(score) >= 3 ? 4 : 2);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (open) setPerLine(psalmBarsPerLine(scoreRef.current) >= 3 ? 4 : 2);
   }, [open]);
 
   // What the engraver ACTUALLY packed. targetPerRow is a request the fit
@@ -629,7 +643,12 @@ export function PsalmComposerDialog({
     try {
       const image = await renderJpeg();
       const { id, imageUrl } = await savePsalmToLibrary({
-        score, title: title.trim(), composer: composer.trim() || 'Unknown',
+        // Stamp the bars-per-line the staff above was actually drawn with.
+        // This is the moment the two can be guaranteed to agree, and it is
+        // what lets the worship aid re-engrave the same layout later instead
+        // of guessing at one.
+        score: { ...score, barsPerLine: perLine },
+        title: title.trim(), composer: composer.trim() || 'Unknown',
         image, existingId: savedId,
       });
       setSavedId(id);
@@ -640,7 +659,7 @@ export function PsalmComposerDialog({
     } finally {
       setSaving(false);
     }
-  }, [score, title, composer, savedId, renderJpeg, onSaved]);
+  }, [score, perLine, title, composer, savedId, renderJpeg, onSaved]);
 
   const remaining = syllables.length - syllableIndex;
 
