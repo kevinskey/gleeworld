@@ -235,19 +235,34 @@ applied**, which is why its shape is still free to change. It must become jsonb 
 tenant default, and callers fall back to `DEFAULT_TOOLS_FACULTY` / `DEFAULT_TOOLS_STUDENT`
 exactly as designed.
 
-> **Verify before editing the file.** The migration reads
-> `ADD COLUMN IF NOT EXISTS default_tools text[]`. If that column already exists in
-> production as `text[]`, rewriting the file to say `jsonb` **silently no-ops** — the
-> `IF NOT EXISTS` guard sees the column and skips, leaving production on `text[]` while
-> every reader expects `jsonb`. There is no error; the failure surfaces later as garbage
-> reads.
+> **RESOLVED 2026-08-10 — the trap is live, so Phase 2 must CONVERT, not add.**
 >
-> Step one of Phase 2 is therefore: query the live column type. If absent, edit the file
-> in place. If present as `text[]`, the migration must **convert** (`ALTER COLUMN … TYPE
-> jsonb USING …`) rather than add, and the `IF NOT EXISTS` form must be dropped.
+> This was written as an open question, because the DB query was blocked at the time.
+> It has since been checked directly against production:
 >
-> This could not be checked while writing the spec — the DB query was blocked by the
-> permission classifier. It is an unresolved fact, not an assumption.
+> ```
+> default_tools | ARRAY | NO | '{}'::text[]
+> ```
+>
+> The column **already exists as `text[]`** — migration `20260808320000` was applied,
+> contrary to the notes that said otherwise. That is precisely the dangerous case this
+> block anticipated: the migration reads `ADD COLUMN IF NOT EXISTS default_tools text[]`,
+> so editing that file to say `jsonb` would **silently no-op**. The guard sees the column,
+> skips, raises no error, and leaves production on `text[]` while every reader expects
+> `jsonb`. The failure would surface later as garbage reads, far from its cause.
+>
+> Phase 2 therefore writes a **new** migration that converts in place — the historical
+> one is never edited:
+>
+> ```sql
+> ALTER TABLE public.gw_tenant_nav_prefs
+>   ALTER COLUMN default_tools TYPE jsonb USING to_jsonb(default_tools);
+> ```
+>
+> then reshapes the value to `{tools, groups}` and sets the new default. An existing
+> `text[]` of catalog keys converts to a JSON array of the same keys, which the reader
+> should accept as the `tools` half with `groups: []` — so no tenant loses its seeded
+> list in the conversion.
 
 Apply with the deploy, then `NOTIFY pgrst, 'reload schema'`.
 
