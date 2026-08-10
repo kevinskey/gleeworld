@@ -401,14 +401,25 @@ describe('nudging the lyrics', () => {
     expect(screen.getByTestId('staff')).toHaveAttribute('data-lyric-offset', '0');
   });
 
+  // The two buttons are resolved ONCE, outside the loops, and the same nodes
+  // are clicked forty times each. React keeps the same DOM node across
+  // re-renders, so this clicks exactly what away()/closer() would have
+  // returned — but getByRole with a `name` computes an accessible name for
+  // every element in the tree, and at ~30ms a call in this dialog, eighty of
+  // them cost ~2.4s of the ~3.1s this test used to take. That put it at 62%
+  // of the 5s budget on an idle machine and over it under full-suite load,
+  // which is exactly how it failed in the suite while passing alone. The
+  // clicks themselves are ~70ms for all eighty.
   it('stops at the ends of the range rather than running away', () => {
     open();
-    for (let i = 0; i < 40; i++) fireEvent.click(away());
+    const down = away();
+    for (let i = 0; i < 40; i++) fireEvent.click(down);
     expect(readout()).toBe('+24');
-    expect(away()).toBeDisabled();
-    for (let i = 0; i < 40; i++) fireEvent.click(closer());
+    expect(down).toBeDisabled();
+    const up = closer();
+    for (let i = 0; i < 40; i++) fireEvent.click(up);
     expect(readout()).toBe('−12');
-    expect(closer()).toBeDisabled();
+    expect(up).toBeDisabled();
   });
 
   // The spacing is part of the setting, not part of the session: reopening a
