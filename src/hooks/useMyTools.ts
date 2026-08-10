@@ -12,8 +12,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  migrateToMyTools, sanitizeTools, resolveKey, resolveKeys, WIDGETS_CAP, type MyTools,
+  migrateToMyTools, sanitizeShelf, resolveKey, resolveKeys, WIDGETS_CAP,
+  type MyTools, type Shelf, type ToolGroup,
 } from '@/lib/navigation/myTools';
+import { flattenShelf } from '@/lib/navigation/toolGroups';
 
 /** The two user_preferences columns this hook reads, exactly as stored. */
 interface StoredNavPrefs {
@@ -121,7 +123,7 @@ export function useMyTools(role: 'student' | 'faculty') {
   // updated independently, defaulting to whatever is already on the
   // member's record when omitted from the patch.
   const saveMyTools = useCallback(async (patch: {
-    tools?: string[]; widgets?: string[]; setupComplete?: boolean;
+    tools?: string[]; groups?: ToolGroup[]; widgets?: string[]; setupComplete?: boolean;
   }): Promise<boolean> => {
     if (!uid) return false;
     // Defaults for OMITTED fields come from the cache-fresh record when one
@@ -129,13 +131,20 @@ export function useMyTools(role: 'student' | 'faculty') {
     // widgets-only patch after a failed load still behaves exactly as it did
     // before (role defaults, not a blanked list).
     const base = readLoadedRecord() ?? myTools;
+    // sanitizeShelf, not two independent sanitizeTools calls: the
+    // one-key-one-place invariant spans loose AND groups, so both lists have
+    // to be cleaned in ONE pass that shares its `seen` set and its
+    // MY_TOOLS_SANITY_MAX budget. Cleaning them separately would happily
+    // store the same key loose and in a group, and the keycap grid would
+    // render that tile twice.
+    const shelf = sanitizeShelf(
+      patch.tools !== undefined ? patch.tools : (base?.tools ?? []),
+      patch.groups !== undefined ? patch.groups : (base?.groups ?? []),
+    );
     const next: MyTools = {
       v: 5,
-      tools: patch.tools !== undefined ? sanitizeTools(patch.tools) : (base?.tools ?? []),
-      // This patch API is tools/widgets/setupComplete only (groups editing is
-      // a later task) — carry the member's existing groups through untouched
-      // so a tools- or widgets-only save can never silently wipe them.
-      groups: base?.groups ?? [],
+      tools: shelf.tools,
+      groups: shelf.groups,
       widgets: patch.widgets !== undefined
         ? patch.widgets.slice(0, WIDGETS_CAP)
         : (base?.widgets ?? []),
@@ -193,6 +202,12 @@ export function useMyTools(role: 'student' | 'faculty') {
     [saveMyTools],
   );
 
+  /** One-call save for the editor, which always edits both lists together. */
+  const saveShelf = useCallback(
+    (shelf: Shelf) => saveMyTools({ tools: shelf.tools, groups: shelf.groups }),
+    [saveMyTools],
+  );
+
   /**
    * Append ONE key to the stored set. The only supported way to pin: the
    * append happens here, over the cache-fresh record, so no caller can
@@ -216,22 +231,14 @@ export function useMyTools(role: 'student' | 'faculty') {
     if (!record) return false;
     const resolved = resolveKey(key);
     if (resolved === 'home') return false;
-    // resolveKeys(record.tools), not the raw record.tools — a bare
-    // `record.tools.includes(resolved)` compares the RESOLVED incoming key
-    // against the RAW stored array. If the record still holds a retired key
-    // (e.g. 'merch') and something calls pinTool('shop'), the raw array
-    // never contains the literal string 'shop', the check misses, and
-    // 'shop' gets appended: the record becomes ['merch', 'shop'] — two
-    // entries resolving to the same destination, so the same tool renders
-    // twice on the shelf. Unreachable through the shipped UI today
-    // (useAllToolsCatalog's `pinned` list already runs through
-    // resolvedTools, so Store Admin isn't offered as pinnable once 'merch'
-    // is stored) but a real latent duplicate, and exactly the kind of gap
-    // that becomes reachable the moment MERGED_KEYS gains a second entry or
-    // another caller appears. Round 2 review, 2026-08-09.
-    if (resolveKeys(record.tools).includes(resolved)) return true;
+    // flattenShelf, not record.tools — a key already filed INSIDE a group is
+    // still on the shelf, and appending it to loose would violate
+    // one-key-one-place and render the tool twice. Resolve first for the
+    // same reason the flat check does: a stored merged key ('merch') must
+    // match an incoming resolved one ('shop').
+    if (resolveKeys(flattenShelf(record)).includes(resolved)) return true;
     return saveMyTools({ tools: [...record.tools, resolved] });
   }, [readLoadedRecord, saveMyTools]);
 
-  return { myTools, loading: isLoading, loaded, saveTools, saveMyTools, pinTool };
+  return { myTools, loading: isLoading, loaded, saveTools, saveMyTools, saveShelf, pinTool };
 }

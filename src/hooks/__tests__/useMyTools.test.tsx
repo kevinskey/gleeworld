@@ -22,7 +22,7 @@ vi.mock('@/contexts/AuthContext', () => ({
 }));
 
 import { useMyTools } from '../useMyTools';
-import { DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY } from '@/lib/navigation/myTools';
+import { DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY, type ToolGroup } from '@/lib/navigation/myTools';
 
 const wrapper = ({ children }: { children: ReactNode }) => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -357,5 +357,115 @@ describe('saveMyTools', () => {
     const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[]; setupComplete: boolean };
     expect(sent.tools).toEqual(before);
     expect(sent.setupComplete).toBe(true);
+  });
+});
+
+describe('groups', () => {
+  it('a groups-only patch preserves the stored tools', async () => {
+    maybeSingle.mockResolvedValue({
+      data: {
+        nav_item_order: { v: 5, tools: ['calendar'], groups: [], widgets: [], setupComplete: true },
+        home_tile_layout: null,
+      },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.saveMyTools({
+        groups: [{ id: 'a', name: 'Sunday', tools: ['liturgy'], collapsed: false }],
+      });
+    });
+
+    const sent = rpc.mock.calls[0][1].p_nav_item_order as { v: number; tools: string[]; groups: ToolGroup[] };
+    expect(sent.tools).toEqual(['calendar']);
+    expect(sent.groups[0].name).toBe('Sunday');
+    expect(sent.v).toBe(5);
+  });
+
+  it('a tools-only patch preserves the stored groups', async () => {
+    maybeSingle.mockResolvedValue({
+      data: {
+        nav_item_order: {
+          v: 5, tools: ['calendar'], widgets: [], setupComplete: true,
+          groups: [{ id: 'a', name: 'Sunday', tools: ['liturgy'], collapsed: false }],
+        },
+        home_tile_layout: null,
+      },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => { await result.current.saveTools(['calendar', 'messages']); });
+
+    const sent = rpc.mock.calls[0][1].p_nav_item_order as { groups: ToolGroup[] };
+    expect(sent.groups).toHaveLength(1);
+  });
+
+  it('deduplicates a key that a patch puts in both loose and a group', async () => {
+    maybeSingle.mockResolvedValue({
+      data: {
+        nav_item_order: { v: 5, tools: [], groups: [], widgets: [], setupComplete: true },
+        home_tile_layout: null,
+      },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.saveShelf({
+        tools: ['liturgy'],
+        groups: [{ id: 'a', name: 'Sunday', tools: ['liturgy'], collapsed: false }],
+      });
+    });
+
+    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[]; groups: ToolGroup[] };
+    expect(sent.tools).toEqual(['liturgy']);
+    expect(sent.groups[0].tools).toEqual([]);
+  });
+
+  it('pinTool lands the new tool loose, above every group', async () => {
+    maybeSingle.mockResolvedValue({
+      data: {
+        nav_item_order: {
+          v: 5, tools: ['calendar'], widgets: [], setupComplete: true,
+          groups: [{ id: 'a', name: 'Sunday', tools: ['liturgy'], collapsed: false }],
+        },
+        home_tile_layout: null,
+      },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => { await result.current.pinTool('studio'); });
+
+    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[]; groups: ToolGroup[] };
+    expect(sent.tools).toEqual(['calendar', 'studio']);
+    expect(sent.groups[0].tools).toEqual(['liturgy']);
+  });
+
+  it('refuses to pin a key that already lives inside a group', async () => {
+    maybeSingle.mockResolvedValue({
+      data: {
+        nav_item_order: {
+          v: 5, tools: [], widgets: [], setupComplete: true,
+          groups: [{ id: 'a', name: 'Sunday', tools: ['liturgy'], collapsed: false }],
+        },
+        home_tile_layout: null,
+      },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let ok = false;
+    await act(async () => { ok = await result.current.pinTool('liturgy'); });
+
+    expect(ok).toBe(true);
+    expect(rpc).not.toHaveBeenCalled();
   });
 });
