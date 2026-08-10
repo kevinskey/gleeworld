@@ -4,6 +4,12 @@
 // handles + a plain count), then "More Tools" grouped by section
 // (⊕ badges), then an optional "Widgets" group (✓ toggles).
 //
+// The "In Your World" card lists LOOSE tools first, then each group's
+// header followed by its members — the same order the sidebar shelf and the
+// keycap grid render. Group UI is opt-in per call site (see the `groups`
+// prop below): pass no onGroupsChange and this is exactly the flat editor it
+// was before groups existed.
+//
 // There is no tool cap and no "full" state: 8 is what a member STARTS with,
 // not a ceiling (see MY_TOOLS_SANITY_MAX in myTools.ts for why the hard cap
 // was removed). Widgets DO still cap at WIDGETS_CAP — that one is a House
@@ -15,7 +21,7 @@
 // persistence (and the tenant/member identity) themselves.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md
 import type React from 'react';
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
 import {
   DndContext, PointerSensor, closestCenter, useSensor, useSensors,
   type DragEndEvent,
@@ -26,15 +32,37 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Minus, Plus, Check, CircleSlash } from 'lucide-react';
 import { NAV_SECTION_LABELS, type CatalogEntry, type NavSectionKey } from '@/lib/navigation/navCatalog';
-import { WIDGETS_CAP } from '@/lib/navigation/myTools';
+import { WIDGETS_CAP, type Shelf, type ToolGroup } from '@/lib/navigation/myTools';
+import {
+  createGroup, deleteGroup, flattenShelf, groupIdOf, moveGroup, moveTool,
+  renameGroup, setGroupCollapsed,
+} from '@/lib/navigation/toolGroups';
+import { MyWorldGroupRow } from './MyWorldGroupRow';
+import { ToolRowMenu } from './ToolRowMenu';
 import type { HomeWidget } from '@/lib/navigation/homeWidgets';
 
 export interface MyWorldEditorProps {
   /** Every entry the viewer may use, already gated. Order is catalog order. */
   available: CatalogEntry[];
-  /** Currently chosen tool keys, in the member's order. */
+  /** LOOSE tool keys — the ones in no group — in the member's order. */
   tools: string[];
   onToolsChange: (next: string[]) => void;
+  /**
+   * The member's groups, in their order. Empty groups ARE rendered here —
+   * the editor is the only surface that shows them, so it is the only place
+   * a member can fill or delete one.
+   *
+   * Both props are OPTIONAL as a pair, and `onGroupsChange` is the switch:
+   * omit it and the editor renders no group UI at all — no headers, no
+   * `New Group` row, no per-row Move to… menu — exactly as omitting
+   * `widgetOptions` suppresses the widgets section. That is how the admin
+   * "Defaults for members" tab stays flat in Phase 1, where the stored shape
+   * (gw_tenant_nav_prefs.default_tools, a text[]) cannot carry groups: a
+   * visible New Group button wired to a no-op is a dead control, which is
+   * worse than no control. With no handler, `groups` is ignored entirely.
+   */
+  groups?: ToolGroup[];
+  onGroupsChange?: (next: ToolGroup[]) => void;
   /** Omit the whole widgets group (tenant-defaults mode has no widgets). */
   widgetOptions?: HomeWidget[];
   widgets?: string[];
@@ -122,12 +150,20 @@ export function MyWorldEditor({
   available,
   tools,
   onToolsChange,
+  groups: groupsProp,
+  onGroupsChange,
   widgetOptions,
   widgets,
   onWidgetsChange,
   disabled,
 }: MyWorldEditorProps) {
   const byKey = useMemo(() => new Map(available.map((e) => [e.key, e])), [available]);
+  // One switch for the whole feature: no handler, no groups. Reading the
+  // groups through it (rather than off the prop) means a caller that passes
+  // `groups` without a handler cannot end up with tools filed into headers
+  // it will never render — they would be silently invisible and unreachable.
+  const groupsEnabled = !!onGroupsChange;
+  const groups = useMemo(() => (groupsEnabled ? groupsProp ?? [] : []), [groupsEnabled, groupsProp]);
   // EVERY stored key gets a row, including one whose catalog entry is no
   // longer in `available` (module switched off, role gate closed, key
   // retired). Spec §5.2 keeps such a key in the RECORD on purpose so a
@@ -141,11 +177,12 @@ export function MyWorldEditor({
   // (Before the cap was removed this was worse still: the stale key also ate
   // a slot, so the member saw "8 of 8 — your space is full" over five
   // visible rows with every ⊕ disabled and no ⊖ to press.)
-  const chosenRows = useMemo(
-    () => tools.map((k) => ({ key: k, entry: byKey.get(k) })),
-    [tools, byKey],
-  );
-  const chosenKeys = useMemo(() => new Set(tools), [tools]);
+  const shelf = useMemo<Shelf>(() => ({ tools, groups }), [tools, groups]);
+  // Loose AND grouped, in render order. `More Tools` must exclude a grouped
+  // key too, or a tool already filed away would be offered as addable and a
+  // member could end up with two copies of it.
+  const allChosen = useMemo(() => flattenShelf(shelf), [shelf]);
+  const chosenKeys = useMemo(() => new Set(allChosen), [allChosen]);
 
   const moreBySection = useMemo(() => {
     const bySection = new Map<NavSectionKey, CatalogEntry[]>();
@@ -162,25 +199,62 @@ export function MyWorldEditor({
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
+  // Both lists are handed up on every change. moveTool/deleteGroup can touch
+  // loose AND groups in a single operation, so emitting only one callback
+  // would let the parent persist half an edit.
+  const commit = (next: Shelf) => {
+    if (disabled) return;
+    onToolsChange(next.tools);
+    onGroupsChange?.(next.groups);
+  };
+
+  // Every draggable id, in render order. A collapsed group's members are not
+  // rendered, so they are not sortable either — listing them would give
+  // dnd-kit ids with no node behind them.
+  const sortableIds = useMemo(
+    () => [...tools, ...groups.flatMap((g) => (g.collapsed ? [] : g.tools))],
+    [tools, groups],
+  );
+
   const handleDragEnd = (event: DragEndEvent) => {
     if (disabled) return;
     const { active, over } = event;
     if (!over || active.id === over.id) return;
-    const oldIndex = tools.indexOf(String(active.id));
-    const newIndex = tools.indexOf(String(over.id));
-    if (oldIndex === -1 || newIndex === -1) return;
-    onToolsChange(arrayMove(tools, oldIndex, newIndex));
+    const activeKey = String(active.id);
+    const overKey = String(over.id);
+    // The band the tool was dropped INTO decides its new group; its index
+    // within that band decides its position. Dropping onto a row in another
+    // group is therefore a move, not just a reorder — which is what makes
+    // drag equivalent to the Move to… menu rather than a weaker sibling.
+    const targetGroupId = groupIdOf(shelf, overKey);
+    const moved = moveTool(shelf, activeKey, targetGroupId);
+    const band = targetGroupId === null
+      ? moved.tools
+      : moved.groups.find((g) => g.id === targetGroupId)?.tools ?? [];
+    const from = band.indexOf(activeKey);
+    const to = band.indexOf(overKey);
+    if (from === -1 || to === -1) return;
+    const reordered = arrayMove(band, from, to);
+    commit(targetGroupId === null
+      ? { ...moved, tools: reordered }
+      : { ...moved, groups: moved.groups.map((g) => (g.id === targetGroupId ? { ...g, tools: reordered } : g)) });
   };
 
-  const removeTool = (key: string) => {
-    if (disabled) return;
-    onToolsChange(tools.filter((k) => k !== key));
-  };
+  const removeTool = (key: string) => commit({
+    tools: shelf.tools.filter((k) => k !== key),
+    groups: shelf.groups.map((g) => ({ ...g, tools: g.tools.filter((k) => k !== key) })),
+  });
 
   const addTool = (key: string) => {
-    if (disabled || tools.includes(key)) return;
+    if (disabled || chosenKeys.has(key)) return;
+    // New tools land LOOSE, matching where a pin from All Tools lands. Only
+    // the loose list changes, so this deliberately does NOT go through
+    // commit() — firing onGroupsChange with an unchanged list would make the
+    // parent save groups it has no reason to touch.
     onToolsChange([...tools, key]);
   };
+
+  const handleNewGroup = () => commit(createGroup(shelf, 'New Group', crypto.randomUUID()));
 
   const widgetList = widgets ?? [];
   // Unchecking the LAST widget stores [], and resolveWidgets([]) re-expands
@@ -205,31 +279,96 @@ export function MyWorldEditor({
       <section>
         <h2 className={GROUP_HEADER}>In Your World</h2>
         <div data-testid="my-world-chosen" className={CARD}>
-          {chosenRows.length === 0 ? (
+          {allChosen.length === 0 && groups.length === 0 ? (
             <p className={`min-h-11 flex items-center px-4 ${CAPTION}`}>
               Nothing chosen yet — add tools below.
             </p>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-              <SortableContext items={tools} strategy={verticalListSortingStrategy}>
+              <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
                 <ul>
                   {/* Keyed by the tool key alone: a `${key}-${index}` key
                       changes on every reorder, remounting each row and
                       killing dnd-kit's move transition. */}
-                  {chosenRows.map(({ key, entry }) => (
-                    <ChosenRow key={key} entryKey={key} entry={entry} disabled={disabled} onRemove={removeTool} />
+                  {tools.map((key) => (
+                    <ChosenRow
+                      key={key}
+                      entryKey={key}
+                      entry={byKey.get(key)}
+                      disabled={disabled}
+                      onRemove={removeTool}
+                      menu={groupsEnabled ? (
+                        <ToolRowMenu
+                          toolLabel={byKey.get(key)?.label ?? key}
+                          currentGroupId={null}
+                          groups={groups}
+                          disabled={disabled}
+                          onMoveTo={(target) => commit(moveTool(shelf, key, target))}
+                          onNewGroup={handleNewGroup}
+                        />
+                      ) : undefined}
+                    />
+                  ))}
+                  {/* Groups render after every loose row, mirroring the shelf
+                      and the keycap grid. An EMPTY group still renders — see
+                      the `groups` prop comment. */}
+                  {groups.map((group, index) => (
+                    <Fragment key={group.id}>
+                      <MyWorldGroupRow
+                        group={group}
+                        count={group.tools.length}
+                        disabled={disabled}
+                        isFirst={index === 0}
+                        isLast={index === groups.length - 1}
+                        onRename={(id, name) => commit(renameGroup(shelf, id, name))}
+                        onToggle={(id, collapsed) => commit(setGroupCollapsed(shelf, id, collapsed))}
+                        onMove={(id, delta) => commit(moveGroup(shelf, id, delta))}
+                        onDelete={(id) => commit(deleteGroup(shelf, id))}
+                      />
+                      {!group.collapsed && group.tools.map((key) => (
+                        <ChosenRow
+                          key={key}
+                          entryKey={key}
+                          entry={byKey.get(key)}
+                          disabled={disabled}
+                          onRemove={removeTool}
+                          menu={
+                            <ToolRowMenu
+                              toolLabel={byKey.get(key)?.label ?? key}
+                              currentGroupId={group.id}
+                              groups={groups}
+                              disabled={disabled}
+                              onMoveTo={(target) => commit(moveTool(shelf, key, target))}
+                              onNewGroup={handleNewGroup}
+                            />
+                          }
+                        />
+                      ))}
+                    </Fragment>
                   ))}
                 </ul>
               </SortableContext>
             </DndContext>
           )}
         </div>
+        {groupsEnabled && (
+          <button
+            type="button"
+            onClick={handleNewGroup}
+            disabled={disabled}
+            className="w-full flex items-center gap-3 min-h-11 px-4 text-left text-primary disabled:opacity-40"
+          >
+            <Plus className="w-4 h-4" aria-hidden />
+            <span className="text-[17px]">New Group</span>
+          </button>
+        )}
         <div className="flex items-center justify-between px-4 pt-1.5">
           <span className={CAPTION}>Home is always here.</span>
           {/* A plain count, not "n of 8". There is no denominator to report
-              — see the header comment. */}
+              — see the header comment. Counts grouped tools too: they are
+              just as chosen as the loose ones. */}
           <span data-testid="my-world-count" className={CAPTION}>
-            {tools.length} {tools.length === 1 ? 'tool' : 'tools'}
+            {allChosen.length} {allChosen.length === 1 ? 'tool' : 'tools'}
           </span>
         </div>
       </section>
