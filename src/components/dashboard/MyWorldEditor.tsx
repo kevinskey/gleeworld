@@ -14,6 +14,7 @@
 // mode, and the first-run sheet all mount this same component and own
 // persistence (and the tenant/member identity) themselves.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md
+import type React from 'react';
 import { useMemo } from 'react';
 import {
   DndContext, PointerSensor, closestCenter, useSensor, useSensors,
@@ -58,11 +59,13 @@ const BADGE = 'w-6 h-6 rounded-full flex items-center justify-center';
 
 /** One row of IN YOUR SPACE. `entry` is undefined for a STORED key that is
  *  no longer in `available` — see the chosenRows comment below. */
-function ChosenRow({ entryKey, entry, disabled, onRemove }: {
+function ChosenRow({ entryKey, entry, disabled, onRemove, menu }: {
   entryKey: string;
   entry?: CatalogEntry;
   disabled?: boolean;
   onRemove: (key: string) => void;
+  /** Composed in by the editor — ChosenRow stays ignorant of groups. */
+  menu?: React.ReactNode;
 }) {
   // An unavailable row has no drag handle (there is nothing to arrange —
   // it renders nowhere else), so it must not be draggable either.
@@ -96,6 +99,7 @@ function ChosenRow({ entryKey, entry, disabled, onRemove }: {
           <span className={`block truncate ${CAPTION}`}>{entryKey}</span>
         </span>
       )}
+      {menu}
       {entry && (
         <button
           type="button"

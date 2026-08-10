@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MyWorldGroupRow } from './MyWorldGroupRow';
+import { ToolRowMenu } from './ToolRowMenu';
 import type { ToolGroup } from '@/lib/navigation/myTools';
 
 // Radix's DropdownMenuTrigger (@radix-ui/react-dropdown-menu 2.1.2, installed
@@ -86,5 +87,53 @@ describe('MyWorldGroupRow', () => {
     openMenu(/Options for Sunday/);
     fireEvent.click(await screen.findByRole('menuitem', { name: /Delete group/ }));
     expect(props.onDelete).toHaveBeenCalledWith('a');
+  });
+});
+
+const groups: ToolGroup[] = [
+  { id: 'a', name: 'Sunday', tools: ['liturgy'], collapsed: false },
+  { id: 'b', name: 'Teaching', tools: [], collapsed: false },
+];
+
+describe('ToolRowMenu', () => {
+  it('offers every group except the one the tool is already in', async () => {
+    render(<ToolRowMenu toolLabel="Liturgy Planner" currentGroupId="a" groups={groups}
+      onMoveTo={vi.fn()} onNewGroup={vi.fn()} />);
+    openMenu(/Move Liturgy Planner/);
+    expect(await screen.findByRole('menuitem', { name: 'Teaching' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Sunday' })).not.toBeInTheDocument();
+  });
+
+  it('offers "Move out of group" only for a grouped tool', async () => {
+    render(<ToolRowMenu toolLabel="Liturgy Planner" currentGroupId="a" groups={groups}
+      onMoveTo={vi.fn()} onNewGroup={vi.fn()} />);
+    openMenu(/Move Liturgy Planner/);
+    expect(await screen.findByRole('menuitem', { name: 'Move out of group' })).toBeInTheDocument();
+  });
+
+  it('omits "Move out of group" for a loose tool', async () => {
+    render(<ToolRowMenu toolLabel="Calendar" currentGroupId={null} groups={groups}
+      onMoveTo={vi.fn()} onNewGroup={vi.fn()} />);
+    openMenu(/Move Calendar/);
+    expect(await screen.findByRole('menuitem', { name: 'Sunday' })).toBeInTheDocument();
+    expect(screen.queryByRole('menuitem', { name: 'Move out of group' })).not.toBeInTheDocument();
+  });
+
+  it('reports the chosen target', async () => {
+    const onMoveTo = vi.fn();
+    render(<ToolRowMenu toolLabel="Calendar" currentGroupId={null} groups={groups}
+      onMoveTo={onMoveTo} onNewGroup={vi.fn()} />);
+    openMenu(/Move Calendar/);
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Sunday' }));
+    expect(onMoveTo).toHaveBeenCalledWith('a');
+  });
+
+  it('reports "move out" as a null target', async () => {
+    const onMoveTo = vi.fn();
+    render(<ToolRowMenu toolLabel="Liturgy Planner" currentGroupId="a" groups={groups}
+      onMoveTo={onMoveTo} onNewGroup={vi.fn()} />);
+    openMenu(/Move Liturgy Planner/);
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'Move out of group' }));
+    expect(onMoveTo).toHaveBeenCalledWith(null);
   });
 });
