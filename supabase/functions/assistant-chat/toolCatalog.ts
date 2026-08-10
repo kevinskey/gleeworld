@@ -97,6 +97,16 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'stop_playback',
+    // "Stop the music" during live voice (2026-08-10) got "I don't have a
+    // way to stop playback" — true at the time: the app owns the mini
+    // player but no tool touched it.
+    description:
+      "Stop the music or video currently playing in the assistant's player. Use for 'stop the music', 'stop playing', 'pause that', 'turn it off'. If nothing is playing it is harmless.",
+    parameters: { type: 'object', properties: {}, required: [] },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
     name: 'get_ride',
     description:
       "Prepare a rideshare deep link to a destination. The user speaks naturally ('take me home', 'ride to the Fox Theatre'); you resolve the destination and hand back a card the user taps to launch Uber or Lyft. 'home' resolves to the user's saved home address; if it's not set, ASK for the address instead of calling this tool blindly.",

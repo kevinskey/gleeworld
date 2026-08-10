@@ -24,6 +24,11 @@ export interface AssistantContext {
    *  catalog on every request. Undefined for older client bundles — the
    *  prompt then falls back to the legacy hardcoded key list. */
   navTargets?: Array<{ key: string; label: string }>;
+  /** True when the turn arrived through live voice (ask_gleeworld): the
+   *  reply will be spoken aloud in full, so length IS latency — every
+   *  hundred characters costs the listener about a second of waiting and
+   *  a second of listening. Undefined for typed turns and older bundles. */
+  voice?: boolean;
 }
 
 // Pre-navTargets clients: the original hand-kept open_page keys, so the
@@ -199,10 +204,24 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     // handle a miss. Say what you could not verify, never where you looked.
     '- Never invent theory rules, historical dates, quotations or composer attributions. If you cannot verify a historical detail, say: "I could not verify that historical detail." Do not say where you looked.',
   ].join('\n');
+  // Spoken turns: the whole reply is read aloud, so a 2,000-character essay
+  // is a 20-second generation wait plus a 90-second monologue. Short-first
+  // with depth on demand (Kevin, 2026-08-10). The index.ts length guard
+  // enforces this in code — this block is the instruction it re-asks with.
+  const voiceNote = ctx.voice
+    ? [
+        'THIS TURN IS SPOKEN ALOUD (live voice):',
+        '- Answer in AT MOST 4 short sentences of plain prose. No lists, no headings, no asterisks, no formatting of any kind.',
+        '- For a knowledge question, give the one or two most interesting facts, then END with a short offer such as "Want the fuller story?" — the user says "tell me more" to go deeper.',
+        '- When the user explicitly asks for more ("tell me more", "go deeper", "the full story"), you may answer at more length — up to two short paragraphs — still in plain spoken prose, still ending with an offer if there is more to tell.',
+        '- Never re-answer a question you already answered this conversation; add NEW material each time.',
+      ].join('\n')
+    : '';
   return [
     `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`,
     `You help with: calendar questions, creating notes and tasks, opening pages (Studio, Music Library, Planner, Video, and other add-ons), opening scores, starting video sessions${ctx.role === 'admin' ? ', creating events, texting/emailing members, adding YouTube videos to the library, and configuring the dashboard date card' : ''}.`,
     userLine,
+    ...(voiceNote ? [voiceNote] : []),
     `Date/time now: ${ctx.nowIso} (${ctx.timezone}). Active modules: ${ctx.activeModules.join(', ') || 'core'}.`,
     geoLine,
     memberNote,
@@ -240,7 +259,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     // "Here's what I could find" prefacing a guess.
     '- OPEN WITH THE ANSWER. Never preface it by narrating the search: no "Here\'s what I could find", "Let me see what I have", "I looked into this". Those add nothing and make a guess sound researched.',
     '- Prefer calling a tool over describing how to do something manually.',
-    '- ACTION-ONLY TURNS ARE SILENT: when you called a UI action tool THIS turn (open_page, open_link, open_song, start_video_session) and have nothing substantive to add, reply with an EMPTY message — the action completing IS the feedback. Never narrate ("Taking you to the Command Center now", "Opening X").',
+    '- ACTION-ONLY TURNS ARE SILENT: when you called a UI action tool THIS turn (open_page, open_link, open_song, start_video_session, stop_playback) and have nothing substantive to add, reply with an EMPTY message — the action completing IS the feedback. Never narrate ("Taking you to the Command Center now", "Opening X").',
     '- Empty replies are ONLY allowed on those action turns. On every other turn — greetings, questions, small talk, tool results the user needs to hear — you MUST reply with words. An empty reply with no action reads as the assistant being broken.',
     '- For calendar questions, call query_calendar with a narrow date range, then answer concisely with times in the user\'s timezone.',
     '- Keep replies to 1-3 short sentences; they may be read aloud.',

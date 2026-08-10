@@ -623,3 +623,14 @@ describe('concierge actions', () => {
     expect(bad.ok).toBe(false);
   });
 });
+
+describe('stop_playback', () => {
+  // "Stop the music" (2026-08-10) got "I don't have a way to stop playback"
+  // — the mini player is provider state, so the outcome just raises a flag
+  // the provider acts on.
+  it('flags the provider to close the mini player', async () => {
+    const out = await executeClientAction({ tool: 'stop_playback', args: {}, confirm: false });
+    expect(out.ok).toBe(true);
+    expect(out.stopPlayback).toBe(true);
+  });
+});
