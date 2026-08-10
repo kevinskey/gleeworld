@@ -1,5 +1,23 @@
 # My World Groups — Phase 1 Implementation Plan
 
+> **⚠️ SUPERSEDED IN ONE IMPORTANT RESPECT — read this before following anything below.**
+>
+> This plan specifies a `MyTools` **v5** record (`interface MyTools { v: 5 }`, a
+> `myToolsV5.test.ts`, and a writer emitting `v: 5`). **That was wrong and was corrected
+> during the final review.** The stored version deliberately stays at **`v: 4`**, with
+> `groups` as an additive field.
+>
+> The reader frozen inside every shipped iOS binary is `if (o.v !== 4) return null`, and
+> `capacitor.config.ts` sets no `server.url`, so each build runs its own copy against the
+> same row. A v5 record makes that reader return `null`, `migrateToMyTools` falls through
+> to role defaults with `setupComplete: false`, and — because the row itself fetched fine —
+> the next save persists that fabrication over the member's real shelf. It costs tools,
+> not just filing.
+>
+> **`docs/superpowers/specs/2026-08-10-my-world-groups-design.md` §4.1 is the authority.**
+> This file is kept as the historical record of how the work was executed; where the two
+> disagree about versioning, the spec wins.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Let a member of any GleeWorld tenant create named groups on their My World shelf, so a shelf that has grown past a handful of tools reads as a filing system instead of a long list.
