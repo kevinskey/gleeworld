@@ -12,7 +12,7 @@
 //   │  tenant)   │                                        │
 //   └────────────┴────────────────────────────────────────┘
 
-import { createContext, lazy, Suspense, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 // Idempotence guard. Some pages self-wrap in <DashboardShell> while their
 // route in App.tsx already wraps them — nested instances would render two
@@ -94,6 +94,7 @@ import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
 import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
 
 // The fixed module-gate key list a `module: 'x'` catalog gate checks
 // against. One definition shared by Sidebar, MobileNav, and the All Tools
@@ -166,7 +167,7 @@ function useGatedNav() {
   // admin||super||instructor check here missed teacher/conductor/director, so a
   // director got the faculty grid on HouseHome and the STUDENT shelf here.
   const isFaculty = isFacultyProfile(profile);
-  const { myTools, loaded: myToolsLoaded, pinTool } = useMyTools(isFaculty ? 'faculty' : 'student');
+  const { myTools, loaded: myToolsLoaded, pinTool, saveMyTools } = useMyTools(isFaculty ? 'faculty' : 'student');
   // The full gated set from resolveNav — not filtered to sidebar-surface
   // entries. The All Tools sheet is the full catalog now (Phase 3), and a
   // member migrating from home_tile_layout can legitimately have grid-only
@@ -178,7 +179,7 @@ function useGatedNav() {
   // row" rather than blanking the whole nav.
   const homeEntry = resolvedEntries.find((e) => e.key === 'home');
 
-  return { resolvedEntries, homeEntry, myTools, myToolsLoaded, pinTool, roleLoading, isPlatformAdmin };
+  return { resolvedEntries, homeEntry, myTools, myToolsLoaded, pinTool, saveMyTools, roleLoading, isPlatformAdmin };
 }
 
 // The stored My Tools record + gated catalog behind the All Tools sheet.
@@ -300,7 +301,7 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
   const tenantName = branding?.short_name || branding?.org_name || fallbackName;
   const tenantLongName = branding?.org_name || branding?.short_name || fallbackName;
   const location = useLocation();
-  const { resolvedEntries, homeEntry, myTools, roleLoading, isPlatformAdmin } = useGatedNav();
+  const { resolvedEntries, homeEntry, myTools, myToolsLoaded: toolsLoaded, saveMyTools, roleLoading, isPlatformAdmin } = useGatedNav();
   // isFaculty is a guess (profile is still null) until roleLoading clears —
   // useUserRole(null) reads as student, so a faculty member could flash
   // DEFAULT_TOOLS_STUDENT before their real shelf swaps in. But
@@ -327,6 +328,29 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
   const shelfTools = (roleLoading && !knownGood)
     ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
     : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
+  // Empty groups never reach a live surface. This single filter covers both
+  // the group a member made but hasn't filled and the group whose every tool
+  // is gated off for this viewer — a header over zero rows is noise in the
+  // sidebar and worse over a keycap band. The editor still shows them, which
+  // is where a member fills or deletes one.
+  const shelfGroups = (roleLoading && !knownGood)
+    ? []
+    : (myTools?.groups ?? [])
+        .map((g) => ({
+          id: g.id,
+          name: g.name,
+          entries: selectShelfEntries(resolvedEntries, g.tools),
+          collapsed: g.collapsed,
+        }))
+        .filter((g) => g.entries.length > 0);
+
+  const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
+    // Gated on `loaded`, like every other write: saveMyTools fills omitted
+    // fields from the current record, so a toggle fired before the record
+    // arrives would persist an empty shelf over the member's real one.
+    if (!toolsLoaded || !myTools) return;
+    void saveMyTools({ groups: setGroupCollapsed(myTools, id, collapsed).groups });
+  }, [toolsLoaded, myTools, saveMyTools]);
 
   // Studio session editor needs the full window for clips + mixer.
   // Hide the sidebar when an open session is loaded. The user can
@@ -419,6 +443,8 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
+          groups={shelfGroups}
+          onToggleGroup={handleToggleGroup}
           onOpenAllTools={onOpenAllTools}
           variant="desktop"
         />
@@ -452,13 +478,32 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
 export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => void; onOpenAllTools: () => void }) {
   const { settings: branding } = useBrandingSettings();
   const tenantName = branding?.short_name || branding?.org_name || getOrgName();
-  const { resolvedEntries, homeEntry, myTools, roleLoading } = useGatedNav();
+  const { resolvedEntries, homeEntry, myTools, myToolsLoaded: toolsLoaded, saveMyTools, roleLoading } = useGatedNav();
   // Same knownGood/roleLoading gate as Sidebar — see the matching comment
   // there for why this isn't `roleLoading ? [] : ...` anymore.
   const knownGood = myTools?.setupComplete === true;
   const shelfTools = (roleLoading && !knownGood)
     ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
     : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
+  // Empty groups never reach a live surface — see the matching comment on
+  // Sidebar's shelfGroups above; this is the same filter, not a second one.
+  const shelfGroups = (roleLoading && !knownGood)
+    ? []
+    : (myTools?.groups ?? [])
+        .map((g) => ({
+          id: g.id,
+          name: g.name,
+          entries: selectShelfEntries(resolvedEntries, g.tools),
+          collapsed: g.collapsed,
+        }))
+        .filter((g) => g.entries.length > 0);
+
+  const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
+    // Gated on `loaded` — see the matching comment on Sidebar's
+    // handleToggleGroup for why.
+    if (!toolsLoaded || !myTools) return;
+    void saveMyTools({ groups: setGroupCollapsed(myTools, id, collapsed).groups });
+  }, [toolsLoaded, myTools, saveMyTools]);
 
   return (
     <div className="flex flex-col h-full">
@@ -477,6 +522,8 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
+          groups={shelfGroups}
+          onToggleGroup={handleToggleGroup}
           // Close the drawer FIRST: the sheet is a modal dialog over the
           // page, and leaving the drawer mounted underneath it means that
           // picking the route you are already on (no shell remount, so no

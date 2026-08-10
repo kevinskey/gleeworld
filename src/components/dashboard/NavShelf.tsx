@@ -13,16 +13,20 @@
 // `flex-1 overflow-y-auto` <nav>, so a long shelf scrolls within the
 // sidebar/drawer rather than growing the page.
 //
-// No sections on the shelf, no accordions, no drag reorder: arranging is a
-// Phase 2 task performed on /dashboard/my-world, not a gesture performed on
-// the live nav. Phase 1 shipped an in-shelf disclosure of every remaining
-// destination as a bridge; Phase 3 retires it — All Tools now opens the
-// searchable AllToolsSheet (owned by DashboardShell) instead of expanding
-// in place, so this component no longer takes a `sections` prop or renders
-// any disclosure of its own.
+// The shelf now has member-named GROUPS. This is not the accordion sidebar
+// the recut deleted: that one held all 52 destinations under 10 pre-made
+// section headers, and this one holds only what this member pinned, under
+// headers they wrote themselves. Ten pre-made sections is an inventory; a
+// few member-made groups is a filing system. Keep that distinction — do not
+// seed groups from NAV_SECTION_LABELS, and do not offer unpinned tools here.
+// All Tools and Cmd-K are how a member reaches everything else.
+//
+// Arranging still happens on /dashboard/my-world, not by gesture on the live
+// nav. The one exception is collapse, which is a reading action, not an
+// arranging one, and persists so a member's chosen reading state survives.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.2, §5.3
 import { NavLink } from 'react-router-dom';
-import { LayoutGrid, Settings } from 'lucide-react';
+import { ChevronRight, LayoutGrid, Settings } from 'lucide-react';
 import type { CatalogEntry } from '@/lib/navigation/navCatalog';
 
 // Not a NAV_CATALOG entry — Setup is a row the shelf always offers on its
@@ -47,6 +51,13 @@ const SETUP_ENTRY: CatalogEntry = {
   tourId: 'nav-my-world-setup',
 };
 
+export interface NavShelfGroup {
+  id: string;
+  name: string;
+  entries: CatalogEntry[];
+  collapsed: boolean;
+}
+
 export interface NavShelfProps {
   /**
    * Optional: 'home' has no gate today, but a tenant's hiddenRoutes could
@@ -56,6 +67,14 @@ export interface NavShelfProps {
    */
   home?: CatalogEntry;
   tools: CatalogEntry[];
+  /**
+   * Member-named groups, already gated and filtered to non-empty by the
+   * caller (DashboardShell) — see that file for why the empty-group filter
+   * lives there and not here.
+   */
+  groups: NavShelfGroup[];
+  /** Persists a collapse/expand toggle — collapse is a reading action. */
+  onToggleGroup: (id: string, collapsed: boolean) => void;
   /** Opens the searchable AllToolsSheet (owned by DashboardShell). */
   onOpenAllTools: () => void;
   variant: 'desktop' | 'mobile';
@@ -90,7 +109,7 @@ function Row({ entry, variant, onNavigate }: {
   );
 }
 
-export function NavShelf({ home, tools, onOpenAllTools, variant, onNavigate }: NavShelfProps) {
+export function NavShelf({ home, tools, groups, onToggleGroup, onOpenAllTools, variant, onNavigate }: NavShelfProps) {
   // No .slice() here. This used to truncate at 8 (the retired MY_TOOLS_CAP,
   // now split into MY_TOOLS_SEED_SIZE + MY_TOOLS_SANITY_MAX) "so the shelf
   // cannot grow into a list" — but that promise is retired: a member may now
@@ -105,6 +124,40 @@ export function NavShelf({ home, tools, onOpenAllTools, variant, onNavigate }: N
         {home && <Row entry={home} variant={variant} onNavigate={onNavigate} />}
         {shelf.map((t) => (
           <Row key={t.key} entry={t} variant={variant} onNavigate={onNavigate} />
+        ))}
+
+        {/* Groups render after every loose tool, so a member with no groups
+            sees exactly the shelf they saw yesterday and a member with
+            groups always sees their loose picks first. */}
+        {groups.map((group) => (
+          <div key={group.id} data-testid={`nav-group-${group.id}`} className="space-y-0.5">
+            <button
+              type="button"
+              onClick={() => onToggleGroup(group.id, !group.collapsed)}
+              aria-expanded={!group.collapsed}
+              className={`${ROW_BASE} ${variant === 'desktop' ? ROW_DESKTOP : ROW_MOBILE} ${ROW_INACTIVE} text-muted-foreground`}
+            >
+              <ChevronRight
+                className={`w-4 h-4 shrink-0 transition-transform motion-reduce:transition-none ${group.collapsed ? '' : 'rotate-90'}`}
+                aria-hidden
+              />
+              <span className="truncate flex-1 text-left">{group.name}</span>
+              {/* Count only while collapsed: expanded, the rows below say the
+                  same thing, and a permanent badge reads as a quota. */}
+              {group.collapsed && (
+                <span data-testid={`nav-group-count-${group.id}`} className="text-xs tabular-nums opacity-70">
+                  {group.entries.length}
+                </span>
+              )}
+            </button>
+            {!group.collapsed && (
+              <div className="space-y-0.5 pl-3">
+                {group.entries.map((entry) => (
+                  <Row key={entry.key} entry={entry} variant={variant} onNavigate={onNavigate} />
+                ))}
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
