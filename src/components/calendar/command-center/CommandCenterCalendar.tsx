@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, lazy, Suspense } from "react";
+import { useState, useMemo, useEffect, useRef, lazy, Suspense } from "react";
 import { format, isSameDay, addMonths, subMonths, addDays, subDays, addYears, subYears, addWeeks, subWeeks } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { useGleeWorldEvents, GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
@@ -47,34 +47,19 @@ const isSameDayET = (date1: Date, date2: Date): boolean => {
 };
 
 export type ViewMode = 'day' | 'week' | 'month' | 'year' | 'agenda';
-export type CategoryFilter = 'glee' | 'courses' | 'liturgy' | 'performances' | 'leadership' | 'tour' | 'personal' | 'academic' | 'personal_google';
-
-export interface CategoryConfig {
-  id: CategoryFilter;
-  label: string;
-  color: string;
-  icon: string;
-}
-
-// Palette aligned with the Command Center dashboard tints:
-//   cyan / orange / amber / purple / rose / teal / emerald / slate (-600).
-// These stay as hex literals (not CSS vars) because consumers do hex math on
-// them — `${color}1F` alpha suffixes and getContrastTextColor() parsing.
-// Fallback for events whose category has no config (legacy/unknown slugs).
-export const CATEGORY_FALLBACK_COLOR = '#708090';
-export const CATEGORY_CONFIGS: CategoryConfig[] = [
-  { id: 'glee',         label: 'Glee Club',           color: '#0891b2', icon: 'music' },
-  { id: 'courses',      label: 'Courses',             color: '#ea580c', icon: 'book-open' },
-  { id: 'academic',     label: 'Assignments & Tests', color: '#d97706', icon: 'clipboard' },
-  { id: 'liturgy',      label: 'Liturgy',             color: '#9333ea', icon: 'church' },
-  { id: 'performances', label: 'Performances',        color: '#e11d48', icon: 'mic' },
-  { id: 'leadership',   label: 'Leadership',          color: '#0d9488', icon: 'users' },
-  { id: 'tour',         label: 'Tour',                color: '#059669', icon: 'plane' },
-  { id: 'personal',     label: 'Personal',            color: '#475569', icon: 'user' },
-  // Google-pulled personal events — slate, distinct from the tenant
-  // palette so they read as "from outside" at a glance.
-  { id: 'personal_google', label: 'My Google events',  color: '#64748b', icon: 'user' },
-];
+// Category model lives in categoryConfig.ts; the fallback color and types
+// are re-exported because the views in this folder import them from here.
+import {
+  buildLiveCategories,
+  mergeWithBuiltinConfigs,
+  syncActiveCategoryFilters,
+  resolveCategoryColor,
+  isCategoryVisible,
+  DEFAULT_CATEGORY_SLUGS,
+} from './categoryConfig';
+import type { CategoryFilter, CategoryConfig } from './categoryConfig';
+export { CATEGORY_FALLBACK_COLOR } from './categoryConfig';
+export type { CategoryFilter, CategoryConfig } from './categoryConfig';
 
 // Map event types and calendar names to categories. If the event has an
 // explicit `category` slug stored (from the picker in CreateEventDialog),
@@ -131,9 +116,12 @@ export const CommandCenterCalendar = () => {
   const [viewMode, setViewMode] = useState<ViewMode>(isMobile ? 'agenda' : 'month');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [activeCategoryFilters, setActiveCategoryFilters] = useState<CategoryFilter[]>([
-    'glee', 'courses', 'academic', 'liturgy', 'performances', 'leadership', 'tour', 'personal', 'personal_google'
-  ]);
+  const [activeCategoryFilters, setActiveCategoryFilters] = useState<CategoryFilter[]>(DEFAULT_CATEGORY_SLUGS);
+  // Slugs we've already offered as filters this session. Anything that shows
+  // up later (custom category created, overlay import landing) starts ON;
+  // slugs the user unchecked stay off. Without this, custom tenant
+  // categories began every session filtered out.
+  const knownCategorySlugs = useRef<string[]>(DEFAULT_CATEGORY_SLUGS);
   const [activeCalendarFilters, setActiveCalendarFilters] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [showCreateEvent, setShowCreateEvent] = useState(false);
@@ -248,23 +236,35 @@ export const CommandCenterCalendar = () => {
 
   // Filter rail reads from the tenant's actual category list. Deletes / adds
   // in the Settings dialog reflect here immediately via the shared query
-  // cache. CATEGORY_CONFIGS stays only as a color/icon fallback for legacy
-  // events whose slug isn't in the DB anymore.
-  const liveCategories: CategoryConfig[] = [
-    ...dbCategories.map((c) => ({
-      id: c.slug as CategoryFilter,
-      label: c.label,
-      color: c.color,
-      icon: c.icon,
-    })),
-    // Synthetic toggle so the user can hide their personal Google overlay.
-    // Only shown when they actually have Google events imported — other
-    // tenant members never see this entry because RLS gates the underlying
-    // data per-user.
-    ...(googleRows.length > 0
-      ? [{ id: 'personal_google' as CategoryFilter, label: 'My Google events', color: '#64748b', icon: 'user' }]
-      : []),
-  ];
+  // cache. Overlay toggles only appear when the merged stream actually
+  // contains overlay events — raw row counts lie (Google rows pushed from
+  // GleeWorld dedup away; iOS rows without start_at are dropped), and a chip
+  // that controls zero events reads as broken.
+  const liveCategories: CategoryConfig[] = useMemo(
+    () => buildLiveCategories(dbCategories, {
+      hasGoogle: events.some((e) => e.category === 'personal_google'),
+      hasIos: events.some((e) => e.category === 'personal_ios'),
+    }),
+    [dbCategories, events],
+  );
+
+  // Newly-appearing category slugs start toggled ON (see knownCategorySlugs).
+  // Functional update so the effect only runs when the category list itself
+  // changes, not on every user toggle; syncActiveCategoryFilters returns the
+  // same reference when nothing is new, so React bails out of the re-render.
+  useEffect(() => {
+    const liveSlugs = liveCategories.map((c) => c.id);
+    setActiveCategoryFilters((prev) => {
+      const next = syncActiveCategoryFilters(prev, knownCategorySlugs.current, liveSlugs);
+      knownCategorySlugs.current = next.known;
+      return next.active;
+    });
+  }, [liveCategories]);
+
+  // What the views paint from: live list first, then the built-ins it
+  // doesn't override — so colors exist on cold load (live list is empty
+  // until the query resolves) and for legacy slugs whose DB row is gone.
+  const viewCategoryConfigs = useMemo(() => mergeWithBuiltinConfigs(liveCategories), [liveCategories]);
   const calendarAccess = useUserCalendarAccess();
   const { user } = useAuth();
   const { isAdmin, isExecutiveBoard, isSuperAdmin, loading: roleLoading } = useUserRole();
@@ -296,7 +296,14 @@ export const CommandCenterCalendar = () => {
       }
 
       const category = getCategoryForEvent(event);
-      const matchesCategoryFilter = activeCategoryFilters.includes(category);
+      // Chip slugs come from the live list: a slug with no chip (category
+      // row deleted after events were tagged) stays visible rather than
+      // becoming unreachable.
+      const matchesCategoryFilter = isCategoryVisible(
+        category,
+        activeCategoryFilters,
+        liveCategories.map((c) => c.id),
+      );
       
       // For calendar filter, check if event's calendar_id is in active filters
       // Events without a calendar_id (like assignments) pass through if their category is active
@@ -309,7 +316,7 @@ export const CommandCenterCalendar = () => {
       
       return matchesCategoryFilter && matchesCalendarFilter && matchesSearch;
     });
-  }, [events, activeCategoryFilters, activeCalendarFilters, searchQuery, calendarAccess]);
+  }, [events, activeCategoryFilters, activeCalendarFilters, searchQuery, calendarAccess, liveCategories]);
 
   // Events for selected date
   const selectedDateEvents = useMemo(() => {
@@ -381,11 +388,8 @@ export const CommandCenterCalendar = () => {
 
   // Color resolver for the right sidebar's event dots — uses each event's
   // mapped category color so the rail matches what's painted on the grid.
-  const colorForEvent = (e: GleeWorldEvent) => {
-    const cat = getCategoryForEvent(e);
-    const cfg = CATEGORY_CONFIGS.find((c) => c.id === cat);
-    return cfg?.color || CATEGORY_FALLBACK_COLOR;
-  };
+  const colorForEvent = (e: GleeWorldEvent) =>
+    resolveCategoryColor(getCategoryForEvent(e), liveCategories);
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
@@ -450,7 +454,7 @@ export const CommandCenterCalendar = () => {
             onDateSelect={(d) => { setSelectedDate(d); setCurrentDate(d); }}
             onNavigateDay={navigateDay}
             getCategoryForEvent={getCategoryForEvent}
-            categoryConfigs={CATEGORY_CONFIGS}
+            categoryConfigs={viewCategoryConfigs}
             onEventDeleted={fetchEvents}
           />
         </div>
@@ -477,7 +481,7 @@ export const CommandCenterCalendar = () => {
                 selectedDate={selectedDate}
                 onDateSelect={(d) => { setSelectedDate(d); setCurrentDate(d); }}
                 getCategoryForEvent={getCategoryForEvent}
-                categoryConfigs={CATEGORY_CONFIGS}
+                categoryConfigs={viewCategoryConfigs}
                 onEventDeleted={fetchEvents}
               />
             ) : isMobile && viewMode === 'month' ? (
@@ -487,7 +491,7 @@ export const CommandCenterCalendar = () => {
                 selectedDate={selectedDate}
                 onDateSelect={setSelectedDate}
                 getCategoryForEvent={getCategoryForEvent}
-                categoryConfigs={CATEGORY_CONFIGS}
+                categoryConfigs={viewCategoryConfigs}
               />
             ) : viewMode === 'agenda' || viewMode === 'day' || isMobile ? (
               <>
@@ -497,7 +501,7 @@ export const CommandCenterCalendar = () => {
                   onDateSelect={setSelectedDate}
                   onNavigateDay={navigateDay}
                   getCategoryForEvent={getCategoryForEvent}
-                  categoryConfigs={CATEGORY_CONFIGS}
+                  categoryConfigs={viewCategoryConfigs}
                   onEventDeleted={fetchEvents}
                 />
                 {/* Mobile Super Admin Control Panel */}
@@ -514,7 +518,7 @@ export const CommandCenterCalendar = () => {
                 selectedDate={selectedDate}
                 onDateSelect={setSelectedDate}
                 getCategoryForEvent={getCategoryForEvent}
-                categoryConfigs={CATEGORY_CONFIGS}
+                categoryConfigs={viewCategoryConfigs}
                 onEventDeleted={fetchEvents}
               />
             ) : (
@@ -525,7 +529,7 @@ export const CommandCenterCalendar = () => {
                 onDateSelect={setSelectedDate}
                 viewMode={viewMode}
                 getCategoryForEvent={getCategoryForEvent}
-                categoryConfigs={CATEGORY_CONFIGS}
+                categoryConfigs={viewCategoryConfigs}
                 onEventDeleted={fetchEvents}
                 providerAvailability={isSA ? providerAvailability : []}
               />
