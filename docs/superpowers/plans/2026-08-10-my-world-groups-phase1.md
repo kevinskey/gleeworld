@@ -21,7 +21,13 @@
 - **Empty groups render in the editor only** — never on the shelf or the keycap grid. This covers both a never-filled group and one whose every tool is gated off for this viewer.
 - **Deleting a group never unpins its tools.** They move to the end of the loose list.
 - **A key appears at most once** across `tools` + every `groups[].tools`.
-- **Radix controls activate on `mouseDown`, not `click`.** Any test driving a `DropdownMenu` trigger must use `fireEvent.mouseDown` — `fireEvent.click` passes vacuously and has already silently killed 3+ tests on this feature.
+- **Radix menu triggers do not respond to `fireEvent.click`, and in this repo they do not respond to `mouseDown` either.** `fireEvent.click` on a Radix trigger passes vacuously — the assertion after it proves nothing, which has already silently killed 3+ tests on this feature. Corrected during Task 5 after reading the installed source: `@radix-ui/react-dropdown-menu@2.1.2` registers `onPointerDown` and **no** `onMouseDown`, and jsdom 20 has no global `PointerEvent`, so Testing Library falls back to a bare `Event` that drops `button`/`ctrlKey` and Radix ignores it. The working recipe, established in `MyWorldGroups.test.tsx`, is a suite-scoped `PointerEvent` polyfill extending `MouseEvent`, then:
+
+  ```ts
+  fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false });
+  ```
+
+  Menu *items* are still driven with `fireEvent.click`, and may need `await screen.findByRole('menuitem', …)` because Radix portals asynchronously. If a menu test fails to find its item, never "fix" it by reverting the trigger to `click` — that reintroduces the vacuous pass.
 - **Run `npm run test` and `npm run typecheck:guard` before every commit.** `typecheck:guard` is the real type gate; `tsconfig.app.json` sets `noCheck: true` so `tsc` alone proves nothing.
 - Worktrees need their own install: `npm ci --legacy-peer-deps` before the first test run.
 
