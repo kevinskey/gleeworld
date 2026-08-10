@@ -354,11 +354,20 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const showUnderlay = masterOn && config.showUnderlay !== false;
   const hasImage = !!bgImage;
 
+  // gw-hero-section establishes the container-query context (container-type:
+  // inline-size) that .gw-hero-overlay's @container (max-width: 639px) rule
+  // depends on; the `dragging` select-none is what stops a field drag from
+  // highlighting the words instead of moving them. Both were dropped by
+  // 816a69a96, which rewrote this className from a branch that predated the two
+  // commits that added them (3d9ee9723 and #514) — it kept its own
+  // gw-container-flush and silently reverted the rest. Neither loss shows up as
+  // a build or type error, so they are restored here, with heroDrag.test.tsx
+  // holding the select-none half in place.
   return (
     <section
       ref={sectionRef}
       id="top"
-      className={`relative overflow-hidden text-white gw-container-flush ${hasImage ? '' : 'min-h-[40vh]'}`}
+      className={`relative overflow-hidden text-white gw-container-flush gw-hero-section ${hasImage ? '' : 'min-h-[40vh]'} ${dragging ? 'select-none' : ''}`}
       style={hasImage ? undefined : { background: 'var(--site-primary)' }}
     >
       {/* Image (when present) always renders at its natural aspect — the
