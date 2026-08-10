@@ -11,7 +11,7 @@ const { Articulation, Tuplet, Curve } = VexFlowExt as any;
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { toVexKey, toVexDuration } from '@/lib/notation/toVexflow';
-import { packRows } from './packRows';
+import { packRows, fitScaleForRow } from './packRows';
 // Lyric metrics — sizes and the width a bar of syllables needs — live in their
 // own pure module so the budget can be tested against its invariant.
 import {
@@ -139,7 +139,8 @@ const LYRIC_DESCENT_PAD = 4;
 export function NotationView({
   score, width, onNoteClick, selectedIndex,
   editingLyric, lyricValue, onLyricChange, onLyricAdvance, onLyricExit,
-  onToggleSystemBreak, targetPerRow, scale = SCALE, onLayout, lyricOffset = 0,
+  onToggleSystemBreak, targetPerRow, scale = SCALE, fitScaleFloor,
+  onLayout, lyricOffset = 0,
 }: {
   score: EditorScore; width?: number; onNoteClick?: (index: number) => void; selectedIndex?: number | null;
   /** Nudge the lyric line, in engraving units, ADDED to the baseline computed
@@ -156,8 +157,26 @@ export function NotationView({
   targetPerRow?: number;
   /** Engraving size. Lower fits more bars in a narrow staff at the cost of
    *  note size — a 4-inch psalm card cannot hold two bars of lyrics at the
-   *  default reading size. Defaults to SCALE. */
+   *  default reading size. Defaults to SCALE.
+   *
+   *  With `fitScaleFloor` it is a CEILING rather than the size used. */
   scale?: number;
+  /** Shrink `scale` until `targetPerRow` measures genuinely fit one system —
+   *  but never below this floor.
+   *
+   *  Absent by default, which is every screen surface: on screen the score can
+   *  be as tall as it likes, so dropping a dense row to fewer bars is the
+   *  right answer and shrinking the notes is not. A card that PRINTS is the
+   *  other way round — the psalm's bars-per-line is a choice its author made
+   *  about a physical page, and quietly returning three bars and an orphan is
+   *  not a smaller version of that choice.
+   *
+   *  The floor is required rather than defaulted because there IS no safe
+   *  default: syllables long enough will shrink a system to illegibility, and
+   *  at that point refusing the bar count is the better failure. Below the
+   *  floor the packer takes over again and `onLayout` reports what it did.
+   *  Ignored unless `targetPerRow` is set. */
+  fitScaleFloor?: number;
   /** Reports what the packer ACTUALLY did. targetPerRow is a request: the
    *  fit check drops below it whenever the measures' minimum widths don't
    *  fit, so a caller that prints "N measures per line" needs the real
@@ -209,9 +228,6 @@ export function NotationView({
     const measures = layoutMeasures(score);
     const renderer = new Renderer(host, Renderer.Backends.SVG);
 
-    // The SVG is cssWidth CSS px wide; ctx.scale(scale) then draws everything
-    // scale× larger, so we lay out in a logical space of cssWidth / scale.
-    const logicalWidth = cssWidth / scale;
     // Content-aware line wrapping. Instead of a fixed 4-measures-per-row,
     // walk the measures accumulating each one's minimum content width;
     // start a new system when the next measure wouldn't fit. This means
@@ -229,7 +245,9 @@ export function NotationView({
     // white space between systems bigger than the staves themselves.
     const TOP = 20, SYSTEM_H = 96, BOTTOM = 16;
     const MOD_RESERVE = 70; // clef (+ key sig) + time sig on a system's first bar
-    const availableW = Math.max(1, logicalWidth - 16 - MOD_RESERVE);
+    // What a system spends before any measure gets any room: the 8px stave
+    // inset at each end, plus the opening clef/key/metre.
+    const SYSTEM_OVERHEAD = 16 + MOD_RESERVE;
 
     const keySpec = FIFTHS_KEY[score.keyFifths] ?? 'C';
 
@@ -346,6 +364,27 @@ export function NotationView({
       return { m, notes, voice, beams, tuplets, minW };
     });
 
+    // Every width above is in engraving units and so does not depend on
+    // `scale` at all — which is what lets the size be chosen HERE, after the
+    // measures have said how much room they need and before anything is laid
+    // out. See fitScaleForRow.
+    const engraveScale = fitScaleFloor != null && targetPerRow != null
+      ? fitScaleForRow({
+        widths: built.map((b) => b.minW),
+        perRow: maxPerRow,
+        cssWidth,
+        maxScale: scale,
+        minScale: fitScaleFloor,
+        overheadUnits: SYSTEM_OVERHEAD,
+      })
+      : scale;
+
+    // The SVG is cssWidth CSS px wide; ctx.scale(engraveScale) then draws
+    // everything that much larger, so we lay out in a logical space of
+    // cssWidth / engraveScale.
+    const logicalWidth = cssWidth / engraveScale;
+    const availableW = Math.max(1, logicalWidth - SYSTEM_OVERHEAD);
+
     // Row-packing pass — see packRows. With targetPerRow set, the per-measure
     // breathing room drops to 0 so rows fill to the target whenever the
     // measures' minimum widths genuinely fit.
@@ -359,14 +398,18 @@ export function NotationView({
     const rows = Math.max(1, rowsPacked.length);
     onLayoutRef.current?.({
       rows,
+      // `end` is exclusive, so the count is end − start. It used to be
+      // end − start + 1, which reported one bar more than any system held —
+      // so the psalm dialog answered a request for four bars per line with
+      // "(fits 5 here)", a number no layout could ever produce.
       perRow: rowsPacked.length
-        ? Math.max(...rowsPacked.map((r) => r.end - r.start + 1))
+        ? Math.max(...rowsPacked.map((r) => r.end - r.start))
         : 0,
     });
     const logicalHeight = TOP + rows * SYSTEM_H + BOTTOM;
-    renderer.resize(cssWidth, Math.ceil(logicalHeight * scale));
+    renderer.resize(cssWidth, Math.ceil(logicalHeight * engraveScale));
     const ctx = renderer.getContext();
-    ctx.scale(scale, scale);
+    ctx.scale(engraveScale, engraveScale);
 
     // Pass 2 — lay out each system with proportional bar widths, then draw.
     let globalIndex = 0;
@@ -431,7 +474,7 @@ export function NotationView({
             const idx = globalIndex + k;
             (sn as any).getSVGElement?.()?.addEventListener('click', () => onNoteClickRef.current?.(idx));
             if (idx === selectedIndex && b.m.elements[k].kind === 'note') {   // inline lyric cursor position
-              selPosXPending = (sn as any).getAbsoluteX() * scale;
+              selPosXPending = (sn as any).getAbsoluteX() * engraveScale;
               // Auto-scroll the current measure into view. Uses the note's
               // own SVG element and `block: 'nearest'` so we only scroll
               // when the note is actually off-screen — never fights the
@@ -475,9 +518,9 @@ export function NotationView({
         // end of a system that's already the last row (same reason).
         if (mi < measures.length - 1) {
           barTargetsBuf.push({
-            x: x * scale,
-            y: (rowY - 4) * scale,
-            h: 50 * scale,
+            x: x * engraveScale,
+            y: (rowY - 4) * engraveScale,
+            h: 50 * engraveScale,
             measureIndex: mi,
           });
         }
@@ -549,7 +592,7 @@ export function NotationView({
           });
         });
         ctx.restore();
-        if (selPosXPending != null) selPos = { x: selPosXPending, y: lyricY * scale };
+        if (selPosXPending != null) selPos = { x: selPosXPending, y: lyricY * engraveScale };
       }
     }
     // A low reciting tone can push a system's lyric baseline below what
@@ -557,7 +600,7 @@ export function NotationView({
     // — grow the SVG to fit rather than clip the words. Renderer.resize()
     // / ctx.scale() recompute the viewBox by MULTIPLYING the context's
     // cumulative scale state, so calling either a second time here
-    // (ctx.scale(scale, scale) already ran once, above) would square the
+    // (ctx.scale(engraveScale, …) already ran once, above) would square the
     // scale and corrupt every coordinate already drawn. Patching the
     // <svg> height/viewBox directly changes only how much of the same
     // logical space is shown — nothing already drawn moves.
@@ -565,7 +608,7 @@ export function NotationView({
       const grownHeight = maxContentBottom + BOTTOM;
       const svgCtx = ctx as unknown as { svg?: SVGSVGElement; setViewBox?: (x: number, y: number, w: number, h: number) => void };
       if (svgCtx.svg && typeof svgCtx.setViewBox === 'function') {
-        const physicalHeight = Math.ceil(grownHeight * scale);
+        const physicalHeight = Math.ceil(grownHeight * engraveScale);
         svgCtx.svg.setAttribute('height', String(physicalHeight));
         svgCtx.svg.style.height = String(physicalHeight);
         svgCtx.setViewBox(0, 0, logicalWidth, grownHeight);
@@ -573,7 +616,7 @@ export function NotationView({
     }
     setLyricPos(selPos);
     setBarTargets(barTargetsBuf);
-  }, [score, width, measuredW, selectedIndex, targetPerRow, scale, lyricOffset]);
+  }, [score, width, measuredW, selectedIndex, targetPerRow, scale, fitScaleFloor, lyricOffset]);
 
   const forcedBreakSet = new Set(score.systemBreaks ?? []);
   return (

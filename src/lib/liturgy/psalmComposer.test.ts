@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   degreeToPitch, tonicOf, psalmSyllables, psalmLines, measuresPerLine, measureCount,
-  psalmScoreTitle, PSALM_WIDTH_PX,
+  psalmScoreTitle, PSALM_WIDTH_PX, PSALM_WIDTH_IN,
 } from './psalmComposer';
+import { AID_CONTENT_WIDTH_IN } from './aidPage';
 import { emptyScore, noteOf, type EditorScore, type Pitch } from '@/lib/notation/model';
 
 const name = (p: Pitch) => `${p.step}${p.alter > 0 ? '#'.repeat(p.alter) : p.alter < 0 ? 'b'.repeat(-p.alter) : ''}${p.octave}`;
@@ -150,14 +151,18 @@ describe('measureCount', () => {
   });
 });
 
-describe('measuresPerLine — 4 inches is the constraint, lyrics are the load', () => {
+describe('measuresPerLine — the aid\'s column is the constraint, lyrics are the load', () => {
   const withLyrics = (count: number, lyric: string): EditorScore => ({
     ...emptyScore(),
     elements: Array.from({ length: count }, () => ({ ...noteOf({ step: 'C', octave: 4, alter: 0 }, 'quarter'), lyric })),
   });
 
-  it('is 4 inches wide at 96 dpi', () => {
-    expect(PSALM_WIDTH_PX).toBe(384);
+  it('is the aid\'s own column wide, at 96 dpi', () => {
+    // Not a number typed in twice. The card's width IS the narrowest text
+    // column the printed aid has; the point of the constant is that the
+    // engraving and the slot it drops into cannot disagree.
+    expect(PSALM_WIDTH_PX).toBe(AID_CONTENT_WIDTH_IN * 96);
+    expect(PSALM_WIDTH_IN).toBe(AID_CONTENT_WIDTH_IN);
   });
 
   it('fits more bars per line when the words are short', () => {
@@ -166,9 +171,9 @@ describe('measuresPerLine — 4 inches is the constraint, lyrics are the load', 
     expect(short).toBeGreaterThanOrEqual(long);
   });
 
-  // A single bar stretched across four inches is not a layout anyone would
+  // A single bar stretched across the whole card is not a layout anyone would
   // choose — two is the floor even when the bar is dense.
-  it('never puts one lone measure on a four-inch line', () => {
+  it('never puts one lone measure on a printed line', () => {
     for (const text of ['a', 'Lord', 'incomprehensibilities', 'supercalifragilistic']) {
       const n = measuresPerLine(withLyrics(32, text));
       expect(n).toBeGreaterThanOrEqual(2);

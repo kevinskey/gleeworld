@@ -1,5 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { applyPanelEdits, type AidEditsByPanel, type RenderedBlock } from '@/lib/liturgy/aidEdits';
+import {
+  PANEL_W_IN, SHEET_H_IN, PANEL_PAD_X_IN, PANEL_PAD_Y_IN,
+  SIDE_BAND_W_IN, SIDE_BAND_PAD_IN, SPINE_INDENT_IN,
+} from '@/lib/liturgy/aidPage';
 import { flowBlocks, type FlowResult } from '@/lib/liturgy/flow';
 import {
   coverImageScale, coverTitleSize, panelSpacing,
@@ -30,8 +34,12 @@ const BRAND = 'hsl(var(--primary))';
  * use the tenant's brand font, which can be anything up to a script face.
  */
 
-const PANEL_W = 5.5;
-const SHEET_H = 8.5;
+/** The page geometry lives in lib/liturgy/aidPage because the engraved psalm
+ *  has to be sized to the column these margins leave, and a second copy of
+ *  the numbers over there is a second copy that can drift. */
+const PANEL_W = PANEL_W_IN;
+const SHEET_H = SHEET_H_IN;
+const PANEL_PADDING = `${PANEL_PAD_Y_IN}in ${PANEL_PAD_X_IN}in`;
 
 function Notice({ text, spacing = 1, editable, onCommit }: {
   text: string; spacing?: number; editable?: boolean; onCommit?: (v: string) => void;
@@ -245,7 +253,7 @@ function Panel({ children, style, dataPanel }: {
 }) {
   return (
     <div data-panel={dataPanel} style={{
-      width: `${PANEL_W}in`, height: `${SHEET_H}in`, padding: '0.42in 0.40in',
+      width: `${PANEL_W}in`, height: `${SHEET_H}in`, padding: PANEL_PADDING,
       boxSizing: 'border-box', overflow: 'hidden', position: 'relative', ...style,
     }}>
       {children}
@@ -315,7 +323,7 @@ function BackPanel({ aid, qrDataUrl, children, dataPanel }: {
           </span>
         </div>
       )}
-      <div style={{ marginLeft: aid.spineText ? '0.22in' : 0 }}>
+      <div style={{ marginLeft: aid.spineText ? `${SPINE_INDENT_IN}in` : 0 }}>
         {children}
         {/* The phone code belongs on the BACK, not the cover: it is what you
             look for as you leave, and the cover is the parish's face. */}
@@ -334,7 +342,7 @@ function SideBand({ day, date }: { day: string; date: string }) {
   if (!day && !date) return null;
   return (
     <div className="worship-aid-band" style={{
-      position: 'absolute', right: 0, top: 0, bottom: 0, width: '0.62in',
+      position: 'absolute', right: 0, top: 0, bottom: 0, width: `${SIDE_BAND_W_IN}in`,
       background: BRAND, color: 'hsl(var(--primary-foreground))',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
     }}>
@@ -563,7 +571,7 @@ export function WorshipAidSheets({
         <Panel dataPanel="insideLeft">
           {renderPage('insideLeft')}
         </Panel>
-        <Panel style={{ paddingRight: '0.80in' }} dataPanel="insideRight">
+        <Panel style={{ paddingRight: `${SIDE_BAND_PAD_IN}in` }} dataPanel="insideRight">
           {renderPage('insideRight')}
           <SideBand day={aid.sideBand.day} date={aid.sideBand.date} />
         </Panel>

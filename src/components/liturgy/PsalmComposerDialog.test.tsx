@@ -18,9 +18,10 @@ vi.mock('@/contexts/AuthContext', () => ({
 // The engraver is exercised by the notation module's own tests; here it is
 // noise (VexFlow measures real DOM boxes, which jsdom reports as zero).
 vi.mock('@/pages/notation/NotationView', () => ({
-  NotationView: ({ score, targetPerRow, scale, onLayout, onNoteClick, lyricOffset }: {
+  NotationView: ({ score, targetPerRow, scale, fitScaleFloor, onLayout, onNoteClick, lyricOffset }: {
     score: { elements: unknown[] };
     targetPerRow?: number; scale?: number; lyricOffset?: number;
+    fitScaleFloor?: number;
     onLayout?: (i: { rows: number; perRow: number }) => void;
     onNoteClick?: (i: number) => void;
   }) => {
@@ -39,6 +40,7 @@ vi.mock('@/pages/notation/NotationView', () => ({
         data-notes={score.elements.length}
         data-per-row={targetPerRow}
         data-scale={scale}
+        data-fit-floor={fitScaleFloor}
         data-lyric-offset={lyricOffset}
       >
         {score.elements.map((_, i) => (
@@ -50,6 +52,9 @@ vi.mock('@/pages/notation/NotationView', () => ({
 }));
 
 import { PsalmComposerDialog } from './PsalmComposerDialog';
+import {
+  PSALM_WIDTH_IN, PSALM_ENGRAVING_SCALE, PSALM_MIN_ENGRAVING_SCALE,
+} from '@/lib/liturgy/psalmComposer';
 
 const PSALM = 'R. Taste and see the goodness of the Lord.\nI will bless the Lord at all times';
 
@@ -216,9 +221,12 @@ describe('PsalmComposerDialog', () => {
     expect(verse.querySelector('.bg-primary\\/15')).not.toBeNull();
   });
 
-  it('reports the fixed 4-inch width so the layout intent is visible', () => {
+  it('reports the printed width so the layout intent is visible', () => {
     open();
-    expect(screen.getByText(/4″ wide/)).toBeInTheDocument();
+    // Read from the constant, not typed in: the card's width is derived from
+    // the aid's own column, so a caption with the number spelled out here
+    // would keep claiming four inches after the column moved.
+    expect(screen.getByText(new RegExp(`${PSALM_WIDTH_IN}″ wide`))).toBeInTheDocument();
   });
 
   it('lets the user choose 2 or 4 measures per printed line', () => {
@@ -229,14 +237,21 @@ describe('PsalmComposerDialog', () => {
     expect(screen.getByTestId('staff')).toHaveAttribute('data-per-row', '4');
   });
 
-  // Four bars in four inches only fit at a smaller engraving size — the note
-  // size has to follow the density or the packer just refuses the request.
-  it('engraves smaller when more bars share a line', () => {
+  // The dialog asks for the printed staff height whatever the density, and
+  // asks the renderer to shrink it if the bars will not fit. It used to pass
+  // a smaller number for four bars itself — a multiplier tuned for a width
+  // the card no longer has, applied whether or not the score needed it.
+  it('asks for the printed staff size at either density, and lets the renderer fit it', () => {
     open();
-    const two = Number(screen.getByTestId('staff').getAttribute('data-scale'));
+    const staff = () => screen.getByTestId('staff');
+    expect(Number(staff().getAttribute('data-scale'))).toBe(PSALM_ENGRAVING_SCALE);
+    expect(Number(staff().getAttribute('data-fit-floor'))).toBe(PSALM_MIN_ENGRAVING_SCALE);
     fireEvent.click(screen.getByRole('button', { name: /4 per line/i }));
-    const four = Number(screen.getByTestId('staff').getAttribute('data-scale'));
-    expect(four).toBeLessThan(two);
+    expect(Number(staff().getAttribute('data-scale'))).toBe(PSALM_ENGRAVING_SCALE);
+    expect(Number(staff().getAttribute('data-fit-floor'))).toBe(PSALM_MIN_ENGRAVING_SCALE);
+    // The floor is a real reduction, not decoration: it is the size four bars
+    // used to print at unconditionally.
+    expect(PSALM_MIN_ENGRAVING_SCALE).toBeLessThan(PSALM_ENGRAVING_SCALE);
   });
 
   it('says so when the engraver cannot fit what was asked for', () => {
