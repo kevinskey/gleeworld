@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { applyPanelEdits, type AidEditsByPanel, type RenderedBlock } from '@/lib/liturgy/aidEdits';
 import {
   PANEL_W_IN, SHEET_H_IN, PANEL_PAD_X_IN, PANEL_PAD_Y_IN,
-  SIDE_BAND_W_IN, SIDE_BAND_PAD_IN, SPINE_INDENT_IN,
+  SIDE_BAND_W_IN, SIDE_BAND_PAD_IN, SPINE_INDENT_IN, AID_BODY_PT,
 } from '@/lib/liturgy/aidPage';
 import { flowBlocks, type FlowResult } from '@/lib/liturgy/flow';
 import {
@@ -189,7 +189,11 @@ function Entry({ entry, spacing = 1, editable, onEdit }: {
         </div>
       )}
       {entry.summary && (
-        <p style={{ fontStyle: 'italic', fontSize: '8pt', lineHeight: 1.35, margin: '0.04in 0 0' }}>
+        // The aid's body size lives in aidPage because the engraved psalm's
+        // lyrics are set to the same number — see AID_BODY_PT. Inline here it
+        // was one of two copies, and the copy that decided the psalm's print
+        // size was in another file.
+        <p style={{ fontStyle: 'italic', fontSize: `${AID_BODY_PT}pt`, lineHeight: 1.35, margin: '0.04in 0 0' }}>
           <Editable
             value={entry.summary}
             editable={editable}
