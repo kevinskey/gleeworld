@@ -173,9 +173,12 @@ export interface PsalmComposerDialogProps {
   observation: string | null;
   /** The psalm text, refrain first. Seeds the syllable queue. */
   psalmText: string | null;
-  /** Called with the saved row id, its title, and the engraved image — so the
-   *  planner can record the image on the Mass instead of trying to find it
-   *  again later by matching titles. */
+  /** Called with the saved row id, its title, and the engraved image — the id
+   *  is what the planner records on the Mass, so it can find this exact
+   *  setting again later instead of matching titles. The image is handed
+   *  back too (it is what got uploaded as the library thumbnail), but a
+   *  caller that also engraves from the score at render time — as the
+   *  worship aid now does — has no reason to store it a second time. */
   onSaved?: (id: string, title: string, imageUrl: string | null) => void;
   /** A setting already composed for this Mass. Reopening loads it back so it
    *  can be edited, rather than starting a blank staff and saving a duplicate. */
