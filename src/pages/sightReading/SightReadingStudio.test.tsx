@@ -43,10 +43,16 @@ describe('SightReadingStudio — the empty state IS the primary state', () => {
     expect(screen.queryByText('--%')).not.toBeInTheDocument();
   });
 
-  it('has exactly one navigation control, with three options', () => {
+  // Pitch Match joined the tab strip in 3dc29228c (2026-07-29) and is a real
+  // surface — <TabsContent value="pitch-match"> renders PitchMatchTab, its own
+  // 30KB component. This test was written 2026-07-10 and never learned about
+  // it. The point of the assertion is unchanged: ONE tab strip, and its exact
+  // membership pinned, so a tab cannot appear or vanish unnoticed.
+  // (A fifth, 'Class', is admin-only; useUserRole is stubbed non-admin above.)
+  it('has exactly one navigation control, with four options for a non-admin', () => {
     renderPage();
     const tabs = screen.getAllByRole('tab');
-    expect(tabs.map((t) => t.textContent)).toEqual(['Practice', 'Library', 'Progress']);
+    expect(tabs.map((t) => t.textContent)).toEqual(['Practice', 'Pitch Match', 'Library', 'Progress']);
   });
 
   it('does not offer Theory review — it belongs to Glee Academy', () => {

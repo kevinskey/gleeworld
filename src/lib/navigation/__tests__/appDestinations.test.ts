@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { getTabItems, getAppTiles, parseTileLayout, DEFAULT_GRID_ORDER, type ModuleFlags } from '../appDestinations';
 import type { NavContext } from '../navCatalog';
 
@@ -116,32 +118,39 @@ describe('getTabItems', () => {
   });
 });
 
-// Every route currently wired up in src/App.tsx for a grid destination.
-// Copied here (not imported) so this list only changes when someone
-// deliberately re-verifies it against App.tsx's <Route path="..."> entries.
-const KNOWN_ROUTES = new Set([
-  '/dashboard/concierge',
-  '/dashboard/viewer', '/studio',
-  '/dashboard/sight-reading', '/dashboard/reading-music', '/attendance', '/dashboard/academy',
-  '/box-office', '/dashboard/concert-planner', '/dashboard/finance',
-  '/store', '/store/products', '/dashboard/people',
-  '/partner', '/admin/partners',
-  '/dashboard/music-library', '/dashboard/part-tracks', '/dashboard/media-library', '/dashboard/librarian',
-  '/seating-charts', '/dashboard/workspace?tab=parents',
-  '/dashboard/office-hours', '/dashboard/practice-recordings', '/video',
-  '/dashboard/music-tools', '/dashboard/liturgy', '/dashboard/worship-aids', '/tour-manager',
-  '/dashboard/auditions', '/dashboard/pr-hub', '/admin/fan-page',
-  '/dashboard/feeds', '/dashboard/shop', '/dashboard/alumni',
-  // Verified against src/App.tsx: both <Route path="/dashboard/fees"> and
-  // <Route path="/dashboard/my-fees"> exist. Both were missed when the Student
-  // Fees ledger shipped — exactly the drift this test is here to catch.
-  '/dashboard/fees', '/dashboard/my-fees',
-  // Verified against src/App.tsx: both routes exist.
-  '/prayer', '/bible',
-  '/dashboard/box-office', '/dashboard/users', '/admin/public-page',
-  '/dashboard/analytics', '/dashboard/workspace', '/songwriting',
-  '/planner', '/dashboard/fundraising', '/qr-generator',
-]);
+// Every route currently wired up in src/App.tsx, READ FROM App.tsx rather than
+// hand-copied here.
+//
+// This list used to be maintained by hand, on the theory that it should only
+// change when someone deliberately re-verified it. In practice a hand-kept
+// mirror of a 378-route file drifts: `/all-state` shipped with a real
+// <Route path="/all-state"> and a real grid tile, and the list simply never
+// learned about it, so the suite failed for a route that was working fine.
+// That is the second time (see the Student Fees note this replaces).
+//
+// Deriving it is also STRICTLY STRONGER than the copy was. A hand-kept list can
+// only catch a tile pointing at a route nobody remembered to add; it can never
+// catch a tile pointing at a route that was DELETED from App.tsx, because the
+// stale entry keeps the dead tile green forever. Reading the real route table
+// catches both directions.
+//
+// Read as text, not imported: App.tsx is ~3000 lines wired to Auth/Tenant/Query
+// providers with import-time side effects, and nothing in this repo imports it
+// whole (see src/__tests__/legacyStoreRedirects.test.tsx, which reads it the
+// same way and for the same reason).
+const APP_SOURCE = readFileSync(join(__dirname, '..', '..', '..', 'App.tsx'), 'utf-8');
+const KNOWN_ROUTES = new Set(
+  [...APP_SOURCE.matchAll(/path="([^"]+)"/g)]
+    .map((m) => m[1])
+    // Absolute paths only. The handful of relative ones ("profile", "scores",
+    // "scores/new", "*") are children of a parent <Route> and are never a grid
+    // destination — tiles always carry a full path.
+    .filter((p) => p.startsWith('/')),
+);
+
+// A tile's `to` may carry a query string (e.g. '/dashboard/workspace?tab=parents').
+// React Router matches on the path alone, so compare on the path alone.
+const routeOf = (to: string) => to.split(/[?#]/)[0];
 
 describe('getAppTiles', () => {
   it('never returns more than 8 primary tiles', () => {
@@ -182,9 +191,9 @@ describe('getAppTiles', () => {
         // Name the offender: a bare `expected false to be true` gives no clue
         // which tile is dead, which is most of the cost of this test failing.
         expect(
-          KNOWN_ROUTES.has(dest.to),
-          `${role} grid tile "${dest.label}" points at ${dest.to}, which is not in KNOWN_ROUTES. ` +
-            `Check src/App.tsx: if the route exists, add it to KNOWN_ROUTES above; if it does not, the tile is dead.`,
+          KNOWN_ROUTES.has(routeOf(dest.to)),
+          `${role} grid tile "${dest.label}" points at ${dest.to}, which has no ` +
+            `<Route path="${routeOf(dest.to)}"> in src/App.tsx — the tile is dead.`,
         ).toBe(true);
       }
     }
