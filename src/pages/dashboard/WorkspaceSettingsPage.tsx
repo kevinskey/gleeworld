@@ -626,12 +626,12 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
   return (
     <div className="space-y-4">
       {/* Task 5: hiding is route-based (this panel, below) and orthogonal
-          to shelves — what tools a new member's My Space starts with is a
-          separate per-role record, edited on My Space itself so the same
+          to shelves — what tools a new member's My World starts with is a
+          separate per-role record, edited on My World itself so the same
           editor UI serves both the admin's own space and tenant defaults.
           Gated on canManage, same as every other control on this panel —
           no privilege leak either way (a non-manager who somehow reached
-          it would find no admin tab on My Space), but the convention here
+          it would find no admin tab on My World), but the convention here
           is every control gates. */}
       {canManage && (
         <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
@@ -639,16 +639,16 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
             <div>
               <h2 className="text-lg font-semibold mb-1">Default tools for each role</h2>
               <p className="text-sm text-muted-foreground">
-                Set what new members start with in My Space → Defaults for members.
+                Set what new members start with in My World → Defaults for members.
               </p>
             </div>
             <Button
               type="button"
               variant="outline"
               className="shrink-0"
-              onClick={() => navigate('/dashboard/my-space')}
+              onClick={() => navigate('/dashboard/my-world')}
             >
-              Go to My Space
+              Go to My World
               <ArrowRight className="w-4 h-4 ml-1.5" />
             </Button>
           </CardContent>

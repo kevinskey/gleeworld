@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/command';
 import { searchNav } from '@/lib/navigation/navSearch';
 import { NAV_SECTION_LABELS, type CatalogEntry, type NavSectionKey } from '@/lib/navigation/navCatalog';
-import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 import { useToast } from '@/hooks/use-toast';
 
 export interface AllToolsSheetProps {
@@ -45,7 +44,7 @@ const SECTION_ORDER = Object.keys(NAV_SECTION_LABELS) as NavSectionKey[];
 // Home is always on the shelf and is never stored in My Tools (sanitizeTools
 // strips it at write time). It stays in `available` — it must remain
 // navigable and findable by search, ⌘K → "command" included — but it gets
-// the non-pinnable "In your space" affordance rather than a ⊕ whose write
+// the non-pinnable "In your world" affordance rather than a ⊕ whose write
 // would succeed and change nothing. Spec §5.4: "Home is always here."
 const ALWAYS_PRESENT_KEY = 'home';
 
@@ -65,20 +64,18 @@ const GROUP_CARD =
   '[&_[cmdk-group-items]]:overflow-hidden [&_[cmdk-group-items]]:divide-y [&_[cmdk-group-items]]:divide-border';
 const ROW_LABEL = 'flex-1 text-[17px] truncate';
 const BADGE = 'w-6 h-6 rounded-full flex items-center justify-center shrink-0';
-// Same 44px-hit-target-around-a-24px-badge trick as MySpaceEditor, so the
+// Same 44px-hit-target-around-a-24px-badge trick as MyWorldEditor, so the
 // tap target meets the 44pt minimum without inflating the visible badge.
 const TAP_TARGET = 'shrink-0 p-2.5 -m-2.5 flex items-center justify-center disabled:opacity-40';
 
 function PinControl({
   entry,
   isPinned,
-  atCap,
   canPin,
   onPin,
 }: {
   entry: CatalogEntry;
   isPinned: boolean;
-  atCap: boolean;
   canPin: boolean;
   onPin: (key: string) => void;
 }) {
@@ -86,7 +83,7 @@ function PinControl({
     return (
       <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground shrink-0">
         <Check className="w-4 h-4" aria-hidden />
-        In your space
+        In your world
       </span>
     );
   }
@@ -107,11 +104,9 @@ function PinControl({
       onMouseDown={stop}
       onClick={(e) => {
         stop(e);
-        if (atCap) return;
         onPin(entry.key);
       }}
-      disabled={atCap}
-      aria-label={`Pin ${entry.label} to your space`}
+      aria-label={`Pin ${entry.label} to your world`}
       className={TAP_TARGET}
     >
       <span className={`${BADGE} bg-primary/10 text-primary`}>
@@ -124,14 +119,12 @@ function PinControl({
 function ToolRow({
   entry,
   isPinned,
-  atCap,
   canPin,
   onSelect,
   onPin,
 }: {
   entry: CatalogEntry;
   isPinned: boolean;
-  atCap: boolean;
   canPin: boolean;
   onSelect: (entry: CatalogEntry) => void;
   onPin: (key: string) => void;
@@ -158,7 +151,7 @@ function ToolRow({
     >
       <entry.icon className="w-5 h-5 shrink-0 text-muted-foreground" aria-hidden />
       <span className={ROW_LABEL}>{entry.label}</span>
-      <PinControl entry={entry} isPinned={isPinned} atCap={atCap} canPin={canPin} onPin={onPin} />
+      <PinControl entry={entry} isPinned={isPinned} canPin={canPin} onPin={onPin} />
     </CommandItem>
   );
 }
@@ -168,13 +161,10 @@ export function AllToolsSheet({ open, onOpenChange, available, pinned, canPin, o
   const { toast } = useToast();
   const [query, setQuery] = useState('');
   const pinnedSet = new Set(pinned);
-  // Gated on canPin too: after a failed load, `pinned` is the fabricated
-  // fallback record's 8 role-default tools (see useMyTools), so the raw
-  // length check alone reads "full" even though no ⊕ is offered anywhere
-  // (PinControl already withholds every one while !canPin). Without this,
-  // the banner below told the member to "remove one in Setup" with no ⊕
-  // for that advice to lead to.
-  const atCap = canPin && pinned.length >= MY_TOOLS_CAP;
+  // No "your world is full" state and no disabled ⊕: there is no tool cap
+  // anymore. See MY_TOOLS_SANITY_MAX in myTools.ts — this sheet is half the
+  // reason the cap could go, because everything in the catalog is reachable
+  // from here regardless of shelf length. Do not reinstate one.
 
   // Radix unmounts DialogContent (and everything inside it, including
   // cmdk's own search state) on close, but this component itself doesn't
@@ -316,11 +306,6 @@ export function AllToolsSheet({ open, onOpenChange, available, pinned, canPin, o
         autoFocus
         onValueChange={setQuery}
       />
-      {atCap && (
-        <p className="px-4 py-2 text-[13px] text-muted-foreground border-b">
-          Your space is full — remove one in Setup to pin another.
-        </p>
-      )}
       {/* data-all-tools-sheet marks the sheet's own subtree for the product
           tour: productTourScript closes the sheet when a step ends and needs
           to tell a row it can see INSIDE this sheet (about to unmount) from
@@ -334,10 +319,9 @@ export function AllToolsSheet({ open, onOpenChange, available, pinned, canPin, o
                 key={entry.key}
                 entry={entry}
                 // Home is never stored, so it can never be in `pinnedSet` —
-                // it is nonetheless always there. Folding it into the
-                // `pinned` PROP instead would make `atCap` fire a slot early.
+                // it is nonetheless always there, so it reads as pinned here
+                // rather than offering a ⊕ that would write nothing.
                 isPinned={pinnedSet.has(entry.key) || entry.key === ALWAYS_PRESENT_KEY}
-                atCap={atCap}
                 canPin={canPin}
                 onSelect={handleSelect}
                 onPin={handlePin}

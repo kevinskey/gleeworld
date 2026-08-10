@@ -24,7 +24,7 @@ import { applyPreviewRole, previewRoleIsFaculty, resolveNav, type NavContext } f
 import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useMyTools } from '@/hooks/useMyTools';
-import { mergeGridOrder, MY_TOOLS_CAP, resolvedTools } from '@/lib/navigation/myTools';
+import { mergeGridOrder, resolvedTools } from '@/lib/navigation/myTools';
 import { resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
 import { FirstRunSheet } from '@/components/dashboard/FirstRunSheet';
@@ -193,7 +193,7 @@ export default function HouseHome() {
   // before the save round-trips.
   const [firstRunDismissed, setFirstRunDismissed] = useState(false);
   const showFirstRun = !firstRunDismissed && !layoutLoading && !roleLoading && myTools?.setupComplete === false;
-  // The member's chosen home widgets (My Space, Phase 2) — falls back to
+  // The member's chosen home widgets (My World, Phase 2) — falls back to
   // the role default pair when unset, so the home never renders zero.
   const shownWidgets = useMemo(
     () => resolveWidgets(isFaculty ? 'faculty' : 'student', myTools?.widgets ?? []),
@@ -224,16 +224,17 @@ export default function HouseHome() {
   // (e.g. the retired 'merch') matches `representable` by its resolved name
   // ('shop') below — representable is built from getAppTiles/primary+overflow,
   // which resolves internally. Comparing a raw stored key against a resolved
-  // representable set undercounted gridCap and made mergeGridOrder treat the
-  // stored key as un-representable, carrying it through unresolved instead
-  // of recognizing it already had a keycap under its new name (Phase 5
-  // review, 2026-08-09).
+  // representable set made mergeGridOrder treat the stored key as
+  // un-representable, carrying it through unresolved instead of recognizing
+  // it already had a keycap under its new name (Phase 5 review, 2026-08-09).
   const storedTools = useMemo(() => resolvedTools(myTools), [myTools]);
-  // Room left for keycaps once the un-representable stored keys have taken
-  // their share of MY_TOOLS_CAP. Without this the merged record could exceed
-  // the cap and sanitizeTools would silently truncate the tail — the same
-  // class of silent drop this whole path exists to prevent.
-  const gridCap = Math.max(0, MY_TOOLS_CAP - storedTools.filter((k) => !representable.has(k)).length);
+  // No grid budget is computed anymore. This used to pass HomeTileGrid a
+  // `cap` of 8 (the retired MY_TOOLS_CAP) minus the stored keys with no
+  // keycap (on a phone
+  // the tab bar claims Home/Messages/Calendar), because a merged record over
+  // the cap would have been silently truncated by sanitizeTools on save.
+  // There is no cap to exceed now — see MY_TOOLS_SANITY_MAX in myTools.ts —
+  // so the grid is simply as long as the member makes it.
   const saveGridOrder = useCallback(
     (draft: string[]) => saveTools(mergeGridOrder(storedTools, draft, representable)),
     [saveTools, storedTools, representable],
@@ -282,7 +283,7 @@ export default function HouseHome() {
         </div>
 
         {/* Widget 1 — 'needs-attention' (faculty) or 'practice-ledger'
-            (student), only when the member chose it in My Space. Gated on
+            (student), only when the member chose it in My World. Gated on
             the same three loading flags as the keycap grid below: shownWidgets
             depends on isFaculty (roleLoading) and myTools (layoutLoading), so
             rendering before those resolve would show the guessed pair and
@@ -385,7 +386,7 @@ export default function HouseHome() {
 
         {/* Keycap app grid (editable — see HomeTileGrid) */}
         {!modulesLoading && !layoutLoading && !roleLoading && (
-          <HomeTileGrid primary={primary} overflow={overflow} cap={gridCap} onSave={saveGridOrder} />
+          <HomeTileGrid primary={primary} overflow={overflow} onSave={saveGridOrder} />
         )}
       </div>
 

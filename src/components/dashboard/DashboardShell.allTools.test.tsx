@@ -293,7 +293,7 @@ describe('All Tools — the shell delegates the append, it never computes one', 
     fireEvent.keyDown(window, { key: 'k', metaKey: true });
     await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole('button', { name: /pin academy to your space/i }));
+    fireEvent.click(screen.getByRole('button', { name: /pin academy to your world/i }));
 
     await waitFor(() => expect(pinToolMock).toHaveBeenCalledWith('academy'));
     expect(pinToolMock).toHaveBeenCalledTimes(1);
@@ -311,7 +311,7 @@ describe('All Tools — the shell delegates the append, it never computes one', 
     fireEvent.keyDown(window, { key: 'k', metaKey: true });
     await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
 
-    expect(screen.queryByRole('button', { name: /pin .* to your space/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /pin .* to your world/i })).toBeNull();
     // The rows are still there and still navigable — this withholds the pin,
     // not the catalog.
     expect(screen.getByText('Academy')).toBeInTheDocument();
@@ -322,13 +322,13 @@ describe('All Tools — the shell delegates the append, it never computes one', 
     renderShell();
     fireEvent.keyDown(window, { key: 'k', metaKey: true });
     await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: /pin academy to your space/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /pin academy to your world/i })).toBeInTheDocument();
   });
 });
 
 describe('All Tools — Command Center is never offered as a pin target', () => {
   // `available` is resolveNav's full output, which includes the 'home'
-  // entry. It used to render a working "Pin Command Center to your space"
+  // entry. It used to render a working "Pin Command Center to your world"
   // button whose write sanitizeTools stripped: the RPC succeeded, onPin
   // resolved true, no toast fired, the badge stayed ⊕, and nothing changed.
   it('renders Home with the non-pinnable affordance and never calls pinTool for it', async () => {
@@ -344,9 +344,9 @@ describe('All Tools — Command Center is never offered as a pin target', () => 
     const homeRow = sheet.getByText('Command Center').closest('[cmdk-item]') as HTMLElement;
     expect(homeRow).not.toBeNull();
     // The non-pinnable affordance, exactly as an already-placed tool reads.
-    expect(within(homeRow).getByText('In your space')).toBeInTheDocument();
+    expect(within(homeRow).getByText('In your world')).toBeInTheDocument();
     expect(within(homeRow).queryByRole('button')).toBeNull();
-    expect(screen.queryByRole('button', { name: /pin command center to your space/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /pin command center to your world/i })).toBeNull();
     expect(pinToolMock).not.toHaveBeenCalled();
   });
 
@@ -371,8 +371,8 @@ describe('All Tools — a stored merged key is recognized as already pinned unde
     const sheet = within(document.querySelector('[data-all-tools-sheet]') as HTMLElement);
     const storeAdminRow = sheet.getByText('Store Admin').closest('[cmdk-item]') as HTMLElement;
     expect(storeAdminRow).not.toBeNull();
-    expect(within(storeAdminRow).getByText('In your space')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /pin store admin to your space/i })).toBeNull();
+    expect(within(storeAdminRow).getByText('In your world')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /pin store admin to your world/i })).toBeNull();
   });
 });
 

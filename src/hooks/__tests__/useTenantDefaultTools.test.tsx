@@ -46,7 +46,7 @@ describe('useTenantDefaultTools', () => {
 
   // Phase 5 review, 2026-08-09: a tenant that saved 'merch' into a role's
   // defaults before it retired into 'shop' (MERGED_KEYS) must not hand
-  // MySpaceEditor a dead key — same bug class as the personal My Tools
+  // MyWorldEditor a dead key — same bug class as the personal My Tools
   // record (see resolvedTools in myTools.ts), different table.
   it('resolves a retired key in a stored default list to its successor', async () => {
     h.select.mockResolvedValue({
@@ -65,7 +65,10 @@ describe('useTenantDefaultTools', () => {
     expect(result.current.defaultsByRole).toEqual({ admin: [], student: [], member: [] });
   });
 
-  it('upserts on (tenant_id,role) and caps at 8', async () => {
+  // "caps at 8" until 2026-08-09. It no longer does: sanitizeTools stopped
+  // truncating at the seed size, so an admin may set a default shelf of any
+  // length and it is stored whole rather than silently shortened.
+  it('upserts on (tenant_id,role) and stores the whole list, uncapped', async () => {
     h.select.mockResolvedValue({ data: [], error: null });
     const { result } = renderHook(() => useTenantDefaultTools(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -76,11 +79,11 @@ describe('useTenantDefaultTools', () => {
     const [row, opts] = h.upsert.mock.calls[0];
     expect(row.role).toBe('student');
     expect(row.tenant_id).toBe('t1');
-    expect(row.default_tools).toHaveLength(8);
+    expect(row.default_tools).toEqual(many);
     expect(opts).toEqual({ onConflict: 'tenant_id,role' });
   });
 
-  // Final review, Important 3: MySpaceEditor is CONTROLLED by this query's
+  // Final review, Important 3: MyWorldEditor is CONTROLLED by this query's
   // value in defaults mode, so without an optimistic write the row snapped
   // back for the whole round-trip and a second tap inside that window
   // computed its next list from the stale one — silently discarding the

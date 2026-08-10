@@ -183,10 +183,9 @@ function useGatedNav() {
 
 // The stored My Tools record + gated catalog behind the All Tools sheet.
 //
-// `pinned` is the UNFILTERED, UNCAPPED stored set — never `resolveNav`'s
-// gated output and never NavShelf's MY_TOOLS_CAP-capped render of it — and
-// it is used for DISPLAY ONLY (which rows read "In your space", whether the
-// cap banner shows). It IS resolved through MERGED_KEYS (via resolvedTools):
+// `pinned` is the UNFILTERED stored set — never `resolveNav`'s gated output —
+// and it is used for DISPLAY ONLY (which rows read "In your world"). It IS
+// resolved through MERGED_KEYS (via resolvedTools):
 // without that, a stored retired key (e.g. 'merch') would fail to match its
 // living catalog entry's key ('shop') in AllToolsSheet's `pinnedSet.has(...)`
 // check, and the sheet would offer Store Admin as "not yet in your space"
@@ -396,15 +395,27 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
         )}
       </div>
 
-      {/* Nav — Home + the member's My Tools shelf (My Space, Phase 1), with
+      {/* Nav — Home + the member's My Tools shelf (My World, Phase 1), with
           every remaining destination reachable through the All Tools sheet
           (Phase 3) rather than an in-shelf disclosure. No collapsible
           sections, no drag reorder here — arranging the shelf is a
-          deliberate action on /dashboard/my-space, not a gesture performed
-          on the live nav. Extra top padding (pt-4 sm:pt-5) gives the first
-          item air below the brand block instead of glueing flush against
-          the divider. */}
-      <nav className="flex-1 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2">
+          deliberate action on /dashboard/my-world, not a gesture performed
+          on the live nav.
+
+          `flex-1 min-h-0 overflow-y-auto` is load-bearing now that the shelf
+          has no length cap. The `min-h-0` is NOT decorative: a flex item
+          defaults to `min-height: auto`, which refuses to shrink below its
+          content, so `flex-1 overflow-y-auto` alone does not scroll — the
+          nav would grow past the aside, and the `overflow-hidden` on the
+          shell's outer flex row would then CLIP the tenant pill and the tail
+          of the shelf, leaving those rows unreachable. That was invisible
+          while the shelf was capped at 8 (max 11 rows always fit); it is
+          reachable now that a member may keep as many tools as they like.
+          The main column beside this one already pairs the same three
+          classes for the same reason. Extra top padding (pt-4 sm:pt-5) gives
+          the first item air below the brand block instead of glueing flush
+          against the divider. */}
+      <nav className="flex-1 min-h-0 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2">
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
@@ -462,7 +473,7 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
         />
         <span className="font-bold text-[22px] tracking-tight truncate">{tenantName}</span>
       </div>
-      <nav className="flex-1 overflow-y-auto pt-2 px-2 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
+      <nav className="flex-1 min-h-0 overflow-y-auto pt-2 px-2 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         <NavShelf
           home={homeEntry}
           tools={shelfTools}

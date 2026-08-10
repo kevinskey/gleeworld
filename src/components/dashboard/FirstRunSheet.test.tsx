@@ -71,12 +71,12 @@ beforeEach(() => {
 describe('FirstRunSheet', () => {
   it('prefills from the tenant default for the role', () => {
     renderSheet('student');
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^2 tools$/);
   });
 
   it('falls back to the platform default when the tenant set none', () => {
     renderSheet('faculty');
-    expect(screen.getByTestId('my-space-count')).not.toHaveTextContent('0 of 8');
+    expect(screen.getByTestId('my-world-count')).not.toHaveTextContent(/^0 tools$/);
   });
 
   it('Looks good saves and marks setup complete', async () => {
@@ -150,11 +150,11 @@ describe('FirstRunSheet', () => {
 
     // Seeded from the platform default (8 tools) while the tenant query is
     // still in flight.
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('8 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^8 tools$/);
 
     // Member removes a tool before the tenant default arrives.
     fireEvent.click(screen.getByRole('button', { name: /remove calendar/i }));
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('7 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^7 tools$/);
 
     // Tenant default resolves late, to a DIFFERENT (2-tool) set.
     h.defaultsState.loading = false;
@@ -162,7 +162,7 @@ describe('FirstRunSheet', () => {
     rerender(sheetEl());
 
     // The member's edit must survive — not be replaced by the late default.
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('7 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^7 tools$/);
   });
 
   // Final review, Important 2: useUserRole caches nothing, so `role` is
@@ -183,13 +183,13 @@ describe('FirstRunSheet', () => {
 
     // Mounted before the profile lands: role falls back to 'student'.
     const { rerender } = render(sheetEl('student'));
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('1 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^1 tool$/);
 
     // Profile resolves: this member is actually faculty.
     rerender(sheetEl('faculty'));
 
     // Must now show the ADMIN default (3), not the frozen student guess (1).
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('3 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^3 tools$/);
     fireEvent.click(screen.getByRole('button', { name: /looks good/i }));
     await waitFor(() => expect(h.saveMyTools).toHaveBeenCalledWith({
       tools: ['calendar', 'academy', 'finance'], setupComplete: true,
@@ -204,8 +204,8 @@ describe('FirstRunSheet', () => {
     };
     const { rerender } = render(sheetEl('student'));
     fireEvent.click(screen.getByRole('button', { name: /^add academy$/i }));
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^2 tools$/);
     rerender(sheetEl('faculty'));
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^2 tools$/);
   });
 });

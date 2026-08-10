@@ -1,5 +1,5 @@
 // Per-role default shelves for this tenant. Read by the first-run sheet and
-// by My Space's "Defaults for members" mode; written only by tenant admins.
+// by My World's "Defaults for members" mode; written only by tenant admins.
 //
 // Writes go by direct upsert (NOT the save_nav_item_order RPC) because
 // gw_tenant_nav_prefs has its own BEFORE INSERT trigger filling tenant_id
@@ -42,7 +42,7 @@ export function useTenantDefaultTools() {
         for (const r of rows) {
           // sanitizeTools (resolve + dedupe), not the raw column: a tenant
           // that saved 'merch' into a role's defaults before it retired into
-          // 'shop' would otherwise hand MySpaceEditor a dead key — same bug
+          // 'shop' would otherwise hand MyWorldEditor a dead key — same bug
           // class as the personal My Tools record, different table
           // (Phase 5 review, 2026-08-09).
           if (r.role in out) out[r.role as NavRole] = sanitizeTools(r.default_tools ?? []);
@@ -72,7 +72,7 @@ export function useTenantDefaultTools() {
       const nextTools = sanitizeTools(tools);
       // Optimistic write BEFORE the round-trip, exactly as the personal
       // path does (useMyTools.saveMyTools). This editor is controlled by
-      // the query's value: without this, MySpaceEditor's `tools` prop stays
+      // the query's value: without this, MyWorldEditor's `tools` prop stays
       // at the pre-save list for the whole ~200-500ms upsert, so the row
       // visibly snaps back, and a second tap in that window computes its
       // next list from the STALE one — silently discarding the first edit.

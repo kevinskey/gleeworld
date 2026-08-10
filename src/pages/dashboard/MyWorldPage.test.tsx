@@ -45,13 +45,13 @@ vi.mock('@/hooks/useTenantDefaultTools', () => ({
 // `DashboardShell` import undefined and crash the render.
 vi.mock('@/components/dashboard/DashboardShell', () => ({ DashboardShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
 
-import MySpacePage from './MySpacePage';
+import MyWorldPage from './MyWorldPage';
 
 const renderPage = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter><MySpacePage /></MemoryRouter>
+      <MemoryRouter><MyWorldPage /></MemoryRouter>
     </QueryClientProvider>,
   );
 };
@@ -67,10 +67,10 @@ beforeEach(() => {
   h.defaultsByRole = { admin: [], student: [], member: [] };
 });
 
-describe('MySpacePage', () => {
+describe('MyWorldPage', () => {
   it('renders the editor seeded from the stored record', () => {
     renderPage();
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^2 tools$/);
   });
 
   it('saves tools when one is removed', async () => {
@@ -81,7 +81,7 @@ describe('MySpacePage', () => {
 
   it('offers a widgets group for the viewer role', () => {
     renderPage();
-    expect(screen.getByTestId('my-space-widgets')).toBeInTheDocument();
+    expect(screen.getByTestId('my-world-widgets')).toBeInTheDocument();
   });
 
   it('does not offer a "Defaults for members" mode to a non-admin', () => {
@@ -100,9 +100,9 @@ describe('MySpacePage', () => {
       h.loading = true;
       h.myTools = null;
       renderPage();
-      expect(screen.getByTestId('my-space-loading')).toBeInTheDocument();
-      expect(screen.queryByTestId('my-space-count')).toBeNull();
-      expect(screen.queryByTestId('my-space-widgets')).toBeNull();
+      expect(screen.getByTestId('my-world-loading')).toBeInTheDocument();
+      expect(screen.queryByTestId('my-world-count')).toBeNull();
+      expect(screen.queryByTestId('my-world-widgets')).toBeNull();
       expect(screen.queryByRole('button', { name: /remove/i })).toBeNull();
       expect(screen.queryByRole('button', { name: /add/i })).toBeNull();
       expect(h.saveMyTools).not.toHaveBeenCalled();
@@ -112,8 +112,8 @@ describe('MySpacePage', () => {
       h.loading = false;
       h.myTools = null;
       renderPage();
-      expect(screen.getByTestId('my-space-loading')).toBeInTheDocument();
-      expect(screen.queryByTestId('my-space-count')).toBeNull();
+      expect(screen.getByTestId('my-world-loading')).toBeInTheDocument();
+      expect(screen.queryByTestId('my-world-count')).toBeNull();
       expect(h.saveMyTools).not.toHaveBeenCalled();
     });
 
@@ -121,8 +121,8 @@ describe('MySpacePage', () => {
       h.loading = false;
       h.myTools = { ...DEFAULT_MY_TOOLS };
       renderPage();
-      expect(screen.queryByTestId('my-space-loading')).toBeNull();
-      expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
+      expect(screen.queryByTestId('my-world-loading')).toBeNull();
+      expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^2 tools$/);
     });
   });
 
@@ -140,9 +140,9 @@ describe('MySpacePage', () => {
       h.loaded = false;
       h.myTools = { v: 4, tools: [...DEFAULT_TOOLS_STUDENT], widgets: [], setupComplete: false };
       renderPage();
-      expect(screen.getByTestId('my-space-loading')).toBeInTheDocument();
-      expect(screen.queryByTestId('my-space-count')).toBeNull();
-      expect(screen.queryByTestId('my-space-widgets')).toBeNull();
+      expect(screen.getByTestId('my-world-loading')).toBeInTheDocument();
+      expect(screen.queryByTestId('my-world-count')).toBeNull();
+      expect(screen.queryByTestId('my-world-widgets')).toBeNull();
       expect(screen.queryByRole('button', { name: /remove/i })).toBeNull();
       expect(screen.queryByRole('button', { name: /add/i })).toBeNull();
       expect(h.saveMyTools).not.toHaveBeenCalled();
@@ -167,7 +167,7 @@ describe('MySpacePage', () => {
   });
 
   // Bug found by running the app: 'home' carries no gate, so resolveNav
-  // returns it like any other entry, and MySpaceEditor offered a ⊕
+  // returns it like any other entry, and MyWorldEditor offered a ⊕
   // "Command Center" row in MORE TOOLS — but sanitizeTools deliberately
   // drops the 'home' key, so tapping it did nothing. 'home' always
   // renders on the shelf first and is never a choosable tool.
@@ -177,7 +177,7 @@ describe('MySpacePage', () => {
   });
 });
 
-describe('MySpacePage — admin defaults mode', () => {
+describe('MyWorldPage — admin defaults mode', () => {
   beforeEach(() => {
     vi.doMock('@/hooks/useUserRole', () => ({
       useUserRole: () => ({ profile: { is_admin: true, role: 'instructor' }, loading: false, canEditMusicLibrary: () => true }),
@@ -188,7 +188,7 @@ describe('MySpacePage — admin defaults mode', () => {
   // takes effect on the next import) and the same render boilerplate.
   const renderAdminPage = async () => {
     vi.resetModules();
-    const { default: AdminPage } = await import('./MySpacePage');
+    const { default: AdminPage } = await import('./MyWorldPage');
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     return render(
       <QueryClientProvider client={qc}>
@@ -212,8 +212,8 @@ describe('MySpacePage — admin defaults mode', () => {
     expect(screen.getByRole('tab', { name: /defaults for members/i })).toBeInTheDocument();
   });
 
-  // Review round 1, Important 1: MySpacePage read `myTools?.tools` raw, not
-  // resolvedTools. MySpaceEditor renders any key absent from `available` as
+  // Review round 1, Important 1: MyWorldPage read `myTools?.tools` raw, not
+  // resolvedTools. MyWorldEditor renders any key absent from `available` as
   // an "Unavailable — <key>" row (deliberately, for a TRULY dead key — see
   // its own comment) — a stored 'merch' has no catalog entry anymore, so it
   // rendered that way even though it isn't dead, it merged into 'shop'.
@@ -224,12 +224,12 @@ describe('MySpacePage — admin defaults mode', () => {
   it('shows a stored "merch" as its live successor "Store Admin", not a dead row or a duplicate', async () => {
     h.myTools = { v: 4, tools: ['merch', 'calendar'], widgets: [], setupComplete: true };
     await renderAdminPage();
-    const chosen = screen.getByTestId('my-space-chosen');
+    const chosen = screen.getByTestId('my-world-chosen');
     expect(chosen).toHaveTextContent('Store Admin');
-    expect(screen.queryByTestId('my-space-unavailable')).toBeNull();
+    expect(screen.queryByTestId('my-world-unavailable')).toBeNull();
     // Not ALSO offered as addable in More Tools — that would mean the
     // resolved key never made it into chosenKeys.
-    expect(within(screen.getByTestId('my-space-more')).queryByText('Store Admin')).toBeNull();
+    expect(within(screen.getByTestId('my-world-more')).queryByText('Store Admin')).toBeNull();
   });
 
   it('never offers Command Center in MORE TOOLS in defaults mode either', async () => {
@@ -244,7 +244,7 @@ describe('MySpacePage — admin defaults mode', () => {
   // an adminOnly entry (People, Finance, …) — which then lands in every
   // new student's stored tools, permanently occupying one of their 8
   // slots while their OWN adminOnly gate hides it from them forever:
-  // invisible and unremovable on their own My Space.
+  // invisible and unremovable on their own My World.
   it('scopes the defaults ⊕ list to the role being configured, not the viewing admin', async () => {
     await renderAdminPage();
     switchToDefaultsTab();
@@ -278,14 +278,14 @@ describe('MySpacePage — admin defaults mode', () => {
   it('never shows a widgets group in defaults mode', async () => {
     await renderAdminPage();
     switchToDefaultsTab();
-    expect(screen.queryByTestId('my-space-widgets')).toBeNull();
+    expect(screen.queryByTestId('my-world-widgets')).toBeNull();
   });
 
   it('re-seeds the shown list when the role picker changes', async () => {
     await renderAdminPage();
     switchToDefaultsTab();
     // Starts on Students, seeded from DEFAULT_TOOLS_STUDENT.
-    const chosen = () => screen.getByTestId('my-space-chosen');
+    const chosen = () => screen.getByTestId('my-world-chosen');
     expect(within(chosen()).getByText('Studio')).toBeInTheDocument();
     expect(within(chosen()).queryByText('People')).toBeNull();
 

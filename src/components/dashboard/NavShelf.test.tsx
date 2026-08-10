@@ -52,11 +52,27 @@ describe('NavShelf', () => {
     expect(container.querySelectorAll('a, button').length).toBe(interactiveCountBefore);
   });
 
-  it('caps the shelf at Home + 8 tools even if handed more', () => {
+  // The shelf used to .slice(0, 8) here. 8 is now the size a member STARTS
+  // at, not a ceiling (product owner, 2026-08-09), so the shelf renders what
+  // it is handed — hiding the 9th onward would make the member's own choice
+  // invisible with nothing to explain it.
+  it('renders every tool it is handed, well past eight, and does not truncate', () => {
     const many = NAV_CATALOG.filter((e) => e.key !== 'home').slice(0, 20);
+    expect(many).toHaveLength(20); // guard: the fixture really is > 8
     renderShelf({ tools: many });
     const shelf = screen.getByTestId('nav-shelf-tools');
-    expect(within(shelf).getAllByRole('link')).toHaveLength(9);
+    // Home + all 20.
+    expect(within(shelf).getAllByRole('link')).toHaveLength(21);
+    // Named, not just counted: the 20th must actually be on screen.
+    expect(within(shelf).getByText(many[19].label)).toBeInTheDocument();
+  });
+
+  it('still drops a tool duplicating the Home row, however long the shelf is', () => {
+    const many = NAV_CATALOG.slice(0, 20); // includes 'home'
+    renderShelf({ tools: many });
+    const shelf = screen.getByTestId('nav-shelf-tools');
+    // 'home' appears once (the dedicated Home row), not twice.
+    expect(within(shelf).getAllByText('Command Center')).toHaveLength(1);
   });
 
   it('degrades to no Home row when home is absent, tools and All Tools still render', () => {
@@ -93,10 +109,10 @@ describe('NavShelf', () => {
     expect(grabCursorElements).toHaveLength(0);
   });
 
-  it('renders a Setup row linking to My Space', () => {
+  it('renders a Setup row linking to My World', () => {
     renderShelf();
     const link = screen.getByRole('link', { name: /setup/i });
-    expect(link).toHaveAttribute('href', '/dashboard/my-space');
+    expect(link).toHaveAttribute('href', '/dashboard/my-world');
   });
 
   it('marks the All Tools button as opening a dialog', () => {

@@ -1,5 +1,5 @@
-// MySpacePage — the personal /dashboard/my-space settings screen. Mounts
-// MySpaceEditor (Task 3) over the member's own My Tools record, wiring its
+// MyWorldPage — the personal /dashboard/my-world settings screen. Mounts
+// MyWorldEditor (Task 3) over the member's own My Tools record, wiring its
 // presentation-only callbacks to useMyTools' persistence.
 //
 // Persists on every change; there is no Save button. useMyTools writes
@@ -24,7 +24,7 @@ import { selectShelfEntries, DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, resol
 import { widgetsFor, resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
-import { MySpaceEditor } from '@/components/dashboard/MySpaceEditor';
+import { MyWorldEditor } from '@/components/dashboard/MyWorldEditor';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 
@@ -43,7 +43,7 @@ function platformDefaultFor(role: NavRole): string[] {
 // disable DashboardShell uses.
 const MODULE_KEYS = ['sight_reading', 'box_office', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner', 'all_state'] as const;
 
-export default function MySpacePage() {
+export default function MyWorldPage() {
   const { toast } = useToast();
   const { profile, canEditMusicLibrary } = useUserRole();
   const userCanLibrarian = typeof canEditMusicLibrary === 'function'
@@ -110,7 +110,7 @@ export default function MySpacePage() {
   // it too. The render fallback (shelf/home grid elsewhere) is untouched;
   // this only withholds the WRITE-capable editor on this page.
   const ready = !toolsLoading && toolsLoaded && myTools != null;
-  // resolvedTools, not the raw field: MySpaceEditor renders any key with no
+  // resolvedTools, not the raw field: MyWorldEditor renders any key with no
   // matching catalog entry as an "Unavailable — <key>" row (deliberately —
   // it's the one surface that can clear a truly dead key). A stored key
   // that MERGED into a live entry (e.g. retired 'merch' -> 'shop') is not
@@ -149,16 +149,16 @@ export default function MySpacePage() {
   // with, rather than editing the viewer's own. Same editor, different
   // record — widgets are personal and never part of a tenant default, so
   // no widgetOptions is passed in this mode.
-  const [spaceMode, setSpaceMode] = useState<'mine' | 'defaults'>('mine');
+  const [worldMode, setWorldMode] = useState<'mine' | 'defaults'>('mine');
   // Students are the far more common target for a default shelf — the
   // first thing an admin will want to set.
   const [defaultsRole, setDefaultsRole] = useState<NavRole>('student');
   const { defaultsByRole, saveDefaults } = useTenantDefaultTools();
-  const showDefaults = isTenantAdmin && spaceMode === 'defaults';
+  const showDefaults = isTenantAdmin && worldMode === 'defaults';
   // The ⊕ pool must reflect the ROLE being configured, not the viewing
   // admin — reusing `available` (built from the admin's own navCtx) let an
   // admin editing Students' or Members' defaults add an adminOnly entry
-  // (People, Finance, …). On a member's own My Space that key is filtered
+  // (People, Finance, …). On a member's own My World that key is filtered
   // out by their own adminOnly gate, so it silently occupies one of their
   // 8 slots forever, invisible and unremovable. applyPreviewRole already
   // exists for exactly this "edit as if this role" narrowing — the same
@@ -190,13 +190,13 @@ export default function MySpacePage() {
   return (
     <DashboardShell>
       <DashboardPageShell
-        title="My Space"
+        title="My World"
         subtitle="Choose the tools and widgets you want close at hand."
       >
         {isTenantAdmin && (
           <Tabs
-            value={spaceMode}
-            onValueChange={(v) => setSpaceMode(v as 'mine' | 'defaults')}
+            value={worldMode}
+            onValueChange={(v) => setWorldMode(v as 'mine' | 'defaults')}
             className="mb-4"
           >
             <TabsList>
@@ -226,9 +226,9 @@ export default function MySpacePage() {
               ))}
             </div>
             <p className="text-sm text-muted-foreground">
-              New members with this role start with these tools. They can change their own space any time.
+              New members with this role start with these tools. They can change their own world any time.
             </p>
-            <MySpaceEditor
+            <MyWorldEditor
               available={defaultsAvailable}
               tools={defaultsTools}
               onToolsChange={handleDefaultsChange}
@@ -237,9 +237,9 @@ export default function MySpacePage() {
         ) : !ready ? (
           // No editor mounted yet — a null record has nothing safe to save
           // over it, so no handler exists to (mis)fire while this shows.
-          <div data-testid="my-space-loading" className="space-y-6" aria-live="polite" aria-busy="true">
+          <div data-testid="my-world-loading" className="space-y-6" aria-live="polite" aria-busy="true">
             <div className="flex flex-wrap gap-2">
-              <span className="text-sm text-muted-foreground">Loading your space…</span>
+              <span className="text-sm text-muted-foreground">Loading your world…</span>
             </div>
             <div className="h-40 rounded-xl bg-muted animate-pulse" />
             <div className="h-24 rounded-xl bg-muted animate-pulse" />
@@ -247,10 +247,10 @@ export default function MySpacePage() {
         ) : (
           <>
             {/* Live preview strip — a small readout of what's currently in
-                the member's space, as keycap-sized glyphs, so the effect of
+                the member's world, as keycap-sized glyphs, so the effect of
                 an edit below is visible without navigating away to check
                 the shelf. */}
-            <div data-testid="my-space-preview" className="flex flex-wrap gap-2">
+            <div data-testid="my-world-preview" className="flex flex-wrap gap-2">
               {preview.length === 0 ? (
                 <span className="text-sm text-muted-foreground">Nothing chosen yet.</span>
               ) : (
@@ -266,7 +266,7 @@ export default function MySpacePage() {
               )}
             </div>
 
-            <MySpaceEditor
+            <MyWorldEditor
               available={available}
               tools={tools}
               onToolsChange={handleToolsChange}

@@ -1,4 +1,4 @@
-# My Space Phase 1 — My Tools + the flat shelf
+# My World Phase 1 — My Tools + the flat shelf
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -15,7 +15,7 @@
 - **No SQL migration in this phase.** The `v: 4` blob lives in the existing `user_preferences.nav_item_order` jsonb column. `home_tile_layout` is left in place, unread after Task 5, so a rollback loses nothing.
 - **`CatalogEntry.key` must never be renamed** (`src/lib/navigation/navCatalog.ts:5`) — stored layouts reference these keys.
 - **Every write to `user_preferences` goes through the `save_nav_item_order` SECURITY DEFINER RPC.** A direct `.upsert()` 403s whenever the caller's subdomain-derived `current_tenant_id()` disagrees with the row's stored `tenant_id`. Migration: `20260729180000_save_nav_item_order_rpc.sql`.
-- **`MY_TOOLS_CAP = 8`** — matches the shipped keycap cap so migration never truncates an existing tile set.
+- **`MY_TOOLS_SEED_SIZE = 8`** — matches the shipped keycap cap so migration never truncates an existing tile set.
 - **The shelf never reorders itself.** No usage, recency, or frequency input to shelf order in this phase or any later one.
 - **Visual tokens only, no new ones.** `--radius` 12px, `--card` on `--background`, hairline `--border`, tint on active row only. 44pt minimum targets.
 - **`gw-nav-group-state` / `gw_mobile_nav_collapsed`** localStorage keys stay valid — the All Tools disclosure reuses the mobile one.
@@ -57,7 +57,7 @@ Expected: both pass. If either fails on a file this plan does not touch, record 
 **Interfaces:**
 - Consumes: `parseTileLayout`, `TileLayout` from `./appDestinations`; `parseNavOrder` from `@/hooks/useNavItemOrder`; `CatalogEntry` from `./navCatalog`
 - Produces:
-  - `MY_TOOLS_CAP: 8`
+  - `MY_TOOLS_SEED_SIZE: 8`
   - `interface MyTools { v: 4; tools: string[]; widgets: string[]; setupComplete: boolean }`
   - `MERGED_KEYS: Record<string, string>`
   - `resolveKey(key: string, map?: Record<string, string>): string`
@@ -74,7 +74,7 @@ Create `src/lib/navigation/__tests__/myTools.test.ts`:
 ```ts
 import { describe, it, expect } from 'vitest';
 import {
-  MY_TOOLS_CAP, parseMyTools, migrateToMyTools, sanitizeTools, resolveKey,
+  MY_TOOLS_SEED_SIZE, parseMyTools, migrateToMyTools, sanitizeTools, resolveKey,
   selectShelfEntries, DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY,
 } from '../myTools';
 import { NAV_CATALOG } from '../navCatalog';
@@ -112,9 +112,9 @@ describe('resolveKey', () => {
 });
 
 describe('sanitizeTools', () => {
-  it('caps at MY_TOOLS_CAP', () => {
+  it('caps at MY_TOOLS_SEED_SIZE', () => {
     const many = Array.from({ length: 20 }, (_, i) => `k${i}`);
-    expect(sanitizeTools(many)).toHaveLength(MY_TOOLS_CAP);
+    expect(sanitizeTools(many)).toHaveLength(MY_TOOLS_SEED_SIZE);
   });
   it('drops home — it is implicit and never stored', () => {
     expect(sanitizeTools(['home', 'calendar'])).toEqual(['calendar']);
@@ -151,7 +151,7 @@ describe('migrateToMyTools', () => {
   });
   it('caps a long legacy nav order at 8', () => {
     const legacy = { v: 3, order: NAV_CATALOG.map((e) => e.key), sections: {}, sectionOrder: [] };
-    expect(migrateToMyTools(legacy, null, 'faculty').tools).toHaveLength(MY_TOOLS_CAP);
+    expect(migrateToMyTools(legacy, null, 'faculty').tools).toHaveLength(MY_TOOLS_SEED_SIZE);
   });
 });
 
@@ -163,8 +163,8 @@ describe('role defaults', () => {
     }
   });
   it('fit within the cap', () => {
-    expect(DEFAULT_TOOLS_STUDENT.length).toBeLessThanOrEqual(MY_TOOLS_CAP);
-    expect(DEFAULT_TOOLS_FACULTY.length).toBeLessThanOrEqual(MY_TOOLS_CAP);
+    expect(DEFAULT_TOOLS_STUDENT.length).toBeLessThanOrEqual(MY_TOOLS_SEED_SIZE);
+    expect(DEFAULT_TOOLS_FACULTY.length).toBeLessThanOrEqual(MY_TOOLS_SEED_SIZE);
   });
 });
 
@@ -208,11 +208,11 @@ import { parseNavOrder } from '@/hooks/useNavItemOrder';
 import type { CatalogEntry } from './navCatalog';
 
 /** Matches the shipped keycap cap, so migration never truncates a member's tiles. */
-export const MY_TOOLS_CAP = 8;
+export const MY_TOOLS_SEED_SIZE = 8;
 
 export interface MyTools {
   v: 4;
-  /** ordered catalog keys, max MY_TOOLS_CAP. 'home' is implicit and never stored. */
+  /** ordered catalog keys, max MY_TOOLS_SEED_SIZE. 'home' is implicit and never stored. */
   tools: string[];
   /** chosen role widgets; [] means "use the role default". Filled in Phase 2. */
   widgets: string[];
@@ -265,7 +265,7 @@ export function sanitizeTools(keys: string[], map: Record<string, string> = MERG
     if (k === 'home' || seen.has(k)) continue;
     seen.add(k);
     out.push(k);
-    if (out.length >= MY_TOOLS_CAP) break;
+    if (out.length >= MY_TOOLS_SEED_SIZE) break;
   }
   return out;
 }
@@ -681,14 +681,14 @@ Create `src/components/dashboard/NavShelf.tsx`:
 //   All Tools             disclosure holding every other destination
 //
 // No sections on the shelf, no accordions, no drag reorder: arranging is a
-// Phase 2 task performed on /dashboard/my-space, not a gesture performed on
+// Phase 2 task performed on /dashboard/my-world, not a gesture performed on
 // the live nav. The `sections` disclosure is a Phase 1 bridge — Phase 3
 // replaces it with the searchable All Tools sheet.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.2
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { ChevronDown, LayoutGrid } from 'lucide-react';
-import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
+import { MY_TOOLS_SEED_SIZE } from '@/lib/navigation/myTools';
 import type { CatalogEntry } from '@/lib/navigation/navCatalog';
 
 export interface NavShelfProps {
@@ -733,7 +733,7 @@ export function NavShelf({ home, tools, sections, variant, onNavigate }: NavShel
   // Defensive cap. useMyTools already sanitizes, but the shelf's whole
   // promise is that it cannot grow into a list — enforce it at the render
   // boundary too, so a stale cache or a future caller can't break it.
-  const shelf = tools.filter((t) => t.key !== home.key).slice(0, MY_TOOLS_CAP);
+  const shelf = tools.filter((t) => t.key !== home.key).slice(0, MY_TOOLS_SEED_SIZE);
   const shelfKeys = new Set([home.key, ...shelf.map((t) => t.key)]);
 
   // Everything not already on the shelf, still grouped, for the disclosure.
@@ -1148,7 +1148,7 @@ Phase 1 is complete when all of the following hold:
 
 ## Deliberately out of scope
 
-- `/dashboard/my-space` and the first-run sheet — **Phase 2**
+- `/dashboard/my-world` and the first-run sheet — **Phase 2**
 - The All Tools search sheet and ⌘K, which replace the disclosure added in Task 3 — **Phase 3**
 - `gw_nav_usage`, Suggestions, seeded tenant defaults, nudges — **Phase 4**
 - The §4 catalog recut and populating `MERGED_KEYS` — **Phase 5**

@@ -1,4 +1,4 @@
-// The two widgets a member may keep on the House home, as data so My Space
+// The two widgets a member may keep on the House home, as data so My World
 // can list them. House spec §5.1 caps the home at TWO role widgets — that
 // cap is the design, not a limitation: the home answers "what do I do next",
 // and a third widget turns it back into a status dashboard.
