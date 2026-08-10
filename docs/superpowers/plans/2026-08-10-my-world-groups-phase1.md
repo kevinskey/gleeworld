@@ -1387,7 +1387,12 @@ export interface ToolRowMenuProps {
   onNewGroup: () => void;
 }
 
-const TAP_TARGET = 'shrink-0 p-2.5 -m-2.5 flex items-center justify-center disabled:opacity-40';
+// p-3.5, NOT the p-2.5 used in MyWorldEditor. That constant pads a 24px
+// BADGE (w-6 h-6) to 24+10+10 = 44px. This row's control is a bare 16px
+// icon (w-4 h-4), so the same padding would yield only 36px and miss the
+// 44px minimum target. 16+14+14 = 44. The negative margin still pulls the
+// padding back, so the hit area grows without moving a pixel of layout.
+const TAP_TARGET = 'shrink-0 p-3.5 -m-3.5 flex items-center justify-center disabled:opacity-40';
 
 export function ToolRowMenu({
   toolLabel, currentGroupId, groups, disabled, onMoveTo, onNewGroup,
