@@ -38,6 +38,7 @@ import { isNativeCalendarAvailable } from "@/plugins/gwCalendar";
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { ControlCenterRedirect } from "@/components/routing/ControlCenterRedirect";
 import { ScrollToTop } from "@/components/routing/ScrollToTop";
+import { RedirectPreservingQuery } from "@/components/routing/RedirectPreservingQuery";
 
 // Heavy dashboard-only globals — gated behind useAuth() so public landing
 // visitors don't download their chunks. Each lazy() boundary splits the
@@ -1937,9 +1938,12 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        {/* Sidebar "Store" entry → the editable backend
+                        {/* Sidebar "Store Admin" entry → the editable backend
                             (Products, Categories, Inventory, Orders, etc).
-                            The public-facing /shop has its own route. */}
+                            The public-facing /shop has its own route.
+                            /product-management and /store/products
+                            (formerly the "Merch" catalog entry) redirect
+                            here — same component, one gated route. */}
                         <DashboardShell><ProductManagement /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
@@ -2941,22 +2945,15 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                               />
-                              <Route 
-                                path="/product-management" 
-                                element={
-                                  <ProtectedRoute>
-                                    <ProductManagement />
-                                  </ProtectedRoute>
-                                } 
-                               />
-                               <Route
-                                path="/store/products"
-                                element={
-                                  <ProtectedRoute>
-                                    <ProductManagement />
-                                  </ProtectedRoute>
-                                }
-                               />
+                              {/* /product-management and /store/products both used to render
+                                  ProductManagement directly — the same component /dashboard/shop
+                                  renders (see the 'shop' catalog entry). Consolidated 2026-08-09:
+                                  redirect so existing links/bookmarks still land on the admin
+                                  screen, now behind the catalog's single gated route.
+                                  RedirectPreservingQuery (not a bare <Navigate>) so a link like
+                                  /store/products?tab=orders keeps its query string. */}
+                              <Route path="/product-management" element={<RedirectPreservingQuery to="/dashboard/shop" />} />
+                              <Route path="/store/products" element={<RedirectPreservingQuery to="/dashboard/shop" />} />
                                <Route
                                  path="/store"
                                  element={

@@ -142,7 +142,10 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
             <Settings className="h-4 w-4 mr-2" />
             Site setup
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate('/store/products')}>
+          {/* /store/products redirects here now (Phase 5 nav consolidation,
+              2026-08-09) — point the link at the live route directly so this
+              button doesn't take an extra redirect hop. */}
+          <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/shop')}>
             <Store className="h-4 w-4 mr-2" />
             Store
           </Button>

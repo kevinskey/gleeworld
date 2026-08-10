@@ -350,6 +350,33 @@ describe('All Tools — Command Center is never offered as a pin target', () => 
     expect(pinToolMock).not.toHaveBeenCalled();
   });
 
+});
+
+// Review round 1, Important 1: useAllToolsCatalog's `pinned` prop came from
+// the raw `myTools?.tools`, not resolveKeys/resolvedTools — the same class
+// of bug HouseHome's keycap grid had. A stored 'merch' (the retired key
+// that merged into 'shop', 2026-08-09) never matched AllToolsSheet's
+// `pinnedSet.has(entry.key)` check (the catalog only has 'shop' now), so
+// the sheet offered "Store Admin" as pinnable even though the member
+// already effectively had it — and, per the test above proving pinTool
+// resolves what it's given, tapping ⊕ there would have appended a second,
+// redundant 'shop' onto the record.
+describe('All Tools — a stored merged key is recognized as already pinned under its live name', () => {
+  it('shows "Store Admin" as already-in-your-space when the record still says "merch"', async () => {
+    setup({ myTools: { v: 4, tools: ['calendar', 'merch'], widgets: [], setupComplete: true } });
+    renderShell();
+    fireEvent.keyDown(window, { key: 'k', metaKey: true });
+    await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
+
+    const sheet = within(document.querySelector('[data-all-tools-sheet]') as HTMLElement);
+    const storeAdminRow = sheet.getByText('Store Admin').closest('[cmdk-item]') as HTMLElement;
+    expect(storeAdminRow).not.toBeNull();
+    expect(within(storeAdminRow).getByText('In your space')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /pin store admin to your space/i })).toBeNull();
+  });
+});
+
+describe('All Tools — Command Center is never offered as a pin target (search)', () => {
   it('still reaches Home by search, so ⌘K → "command" is not a dead end', async () => {
     setup();
     renderShell();

@@ -20,7 +20,7 @@ import { isFacultyProfile } from '@/lib/roles';
 import {
   applyPreviewRole, resolveNav, HIDEABLE_NAV_ROLES, type NavContext, type NavRole,
 } from '@/lib/navigation/navCatalog';
-import { selectShelfEntries, DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT } from '@/lib/navigation/myTools';
+import { selectShelfEntries, DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, resolvedTools } from '@/lib/navigation/myTools';
 import { widgetsFor, resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
@@ -110,7 +110,14 @@ export default function MySpacePage() {
   // it too. The render fallback (shelf/home grid elsewhere) is untouched;
   // this only withholds the WRITE-capable editor on this page.
   const ready = !toolsLoading && toolsLoaded && myTools != null;
-  const tools = useMemo(() => myTools?.tools ?? [], [myTools]);
+  // resolvedTools, not the raw field: MySpaceEditor renders any key with no
+  // matching catalog entry as an "Unavailable — <key>" row (deliberately —
+  // it's the one surface that can clear a truly dead key). A stored key
+  // that MERGED into a live entry (e.g. retired 'merch' -> 'shop') is not
+  // dead, so it must resolve before reaching the editor — otherwise it
+  // showed as "Unavailable" AND its living successor showed a second time
+  // in "More Tools" as addable (Phase 5 review, 2026-08-09).
+  const tools = useMemo(() => resolvedTools(myTools), [myTools]);
   const widgetOptions = widgetsFor(role);
   const widgets = useMemo(() => resolveWidgets(role, myTools?.widgets ?? []), [role, myTools]);
 

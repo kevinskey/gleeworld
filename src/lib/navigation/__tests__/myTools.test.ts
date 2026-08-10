@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   MY_TOOLS_CAP, parseMyTools, migrateToMyTools, sanitizeTools, resolveKey,
   selectShelfEntries, mergeGridOrder, DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY,
+  MERGED_KEYS, resolvedTools,
 } from '../myTools';
 import { NAV_CATALOG } from '../navCatalog';
 
@@ -34,6 +35,46 @@ describe('resolveKey', () => {
   });
   it('returns the key unchanged when unmapped', () => {
     expect(resolveKey('calendar', {})).toBe('calendar');
+  });
+});
+
+describe('MERGED_KEYS — merch retired into shop (Phase 5, 2026-08-09)', () => {
+  it('resolveKey follows the real MERGED_KEYS default, not just a hand-built test map', () => {
+    expect(resolveKey('merch')).toBe('shop');
+  });
+  it('a stored layout containing merch resolves to shop', () => {
+    expect(sanitizeTools(['merch'])).toEqual(['shop']);
+  });
+  it('a stored layout with both merch and shop does not duplicate — merch resolves onto the same slot', () => {
+    expect(sanitizeTools(['merch', 'shop'])).toEqual(['shop']);
+    expect(sanitizeTools(['shop', 'merch'])).toEqual(['shop']);
+  });
+  it('merch has no live catalog entry of its own — it only exists via the merge map', () => {
+    expect(NAV_CATALOG.find((e) => e.key === 'merch')).toBeUndefined();
+    expect(MERGED_KEYS.merch).toBe('shop');
+  });
+});
+
+// Review round 1, Important 1: MERGED_KEYS resolution only reached
+// selectShelfEntries (the sidebar shelf) — getAppTiles's My Tools path
+// (the home keycap grid), DashboardShell's AllToolsSheet "already pinned"
+// check, and MySpacePage's editor all read `myTools.tools` raw, so a
+// stored 'merch' resolved on the shelf and nowhere else. resolvedTools is
+// the one helper all of those now go through instead of `myTools?.tools ??
+// []` directly.
+describe('resolvedTools', () => {
+  it('resolves a merged key', () => {
+    expect(resolvedTools({ tools: ['merch'] })).toEqual(['shop']);
+  });
+  it('dedupes a merged key against its own successor, wherever each appears', () => {
+    expect(resolvedTools({ tools: ['merch', 'calendar', 'shop'] })).toEqual(['shop', 'calendar']);
+  });
+  it('is null/undefined-safe — no stored record yet', () => {
+    expect(resolvedTools(null)).toEqual([]);
+    expect(resolvedTools(undefined)).toEqual([]);
+  });
+  it('leaves an already-resolved record unchanged', () => {
+    expect(resolvedTools({ tools: ['calendar', 'academy'] })).toEqual(['calendar', 'academy']);
   });
 });
 
@@ -170,5 +211,20 @@ describe('selectShelfEntries', () => {
   it('drops tools whose gate closed without disturbing the rest', () => {
     const got = selectShelfEntries(resolved, ['academy', 'box-office', 'calendar']);
     expect(got.map((e) => e.key)).toEqual(['academy', 'calendar']);
+  });
+
+  // Review round 1, Important 1: a stored record from before 'merch'
+  // merged into 'shop' (2026-08-09) can legitimately hold both — they were
+  // two separately pinnable entries until then. Resolve without a dedupe
+  // step would render the same catalog entry twice.
+  it('resolves a merged key to its live entry', () => {
+    const shopEntries = [byKey.get('shop')!];
+    const got = selectShelfEntries(shopEntries, ['merch']);
+    expect(got.map((e) => e.key)).toEqual(['shop']);
+  });
+  it('a merged key and its own successor in the same stored list render as ONE tile', () => {
+    const shopEntries = [byKey.get('calendar')!, byKey.get('shop')!];
+    const got = selectShelfEntries(shopEntries, ['merch', 'calendar', 'shop']);
+    expect(got.map((e) => e.key)).toEqual(['shop', 'calendar']);
   });
 });

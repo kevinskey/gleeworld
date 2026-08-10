@@ -256,6 +256,32 @@ describe('pinTool', () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
+  // Round 2 review: `record.tools.includes(resolved)` compared the RESOLVED
+  // incoming key against the RAW stored array. A record still holding a
+  // retired key ('merch', merged into 'shop' — see MERGED_KEYS in
+  // myTools.ts) never contains the literal string 'shop', so
+  // pinTool('shop') missed the "already there" check and appended a
+  // redundant second entry — ['merch', 'shop'], two keys resolving to the
+  // same destination, burning one of the member's eight slots. Unreachable
+  // through the shipped UI (useAllToolsCatalog's `pinned` list already runs
+  // through resolvedTools, so Store Admin isn't offered as pinnable once
+  // 'merch' is stored) but a real latent duplicate reachable the moment
+  // MERGED_KEYS gains a second entry or another caller appears.
+  it('reports already-pinned (and writes nothing) when the record holds a merged key and the resolved successor is pinned', async () => {
+    maybeSingle.mockResolvedValue({
+      data: { nav_item_order: { v: 4, tools: ['merch', 'calendar'], widgets: [], setupComplete: true }, home_tile_layout: null },
+      error: null,
+    });
+    const { result } = renderHook(() => useMyTools('student'), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    let ok = false;
+    await act(async () => { ok = await result.current.pinTool('shop'); });
+
+    expect(ok).toBe(true);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it('refuses to store home — sanitizeTools would strip it and the write would be a no-op', async () => {
     maybeSingle.mockResolvedValue({
       data: { nav_item_order: { v: 4, tools: ['calendar'], widgets: [], setupComplete: true }, home_tile_layout: null },
