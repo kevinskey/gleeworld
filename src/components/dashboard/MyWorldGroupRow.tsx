@@ -25,7 +25,11 @@ export interface MyWorldGroupRowProps {
   onDelete: (id: string) => void;
 }
 
-const TAP_TARGET = 'shrink-0 p-2.5 -m-2.5 flex items-center justify-center disabled:opacity-40';
+// 14px padding, not MyWorldEditor's 10px (p-2.5): this wraps a bare 16px
+// icon (w-4 h-4), not a 24px badge, so it needs more padding to reach the
+// same 44px tap target — 16 + 14 + 14 = 44. Do not "harmonize" this with
+// MyWorldEditor's TAP_TARGET; that would silently shrink this to 36px.
+const TAP_TARGET = 'shrink-0 p-3.5 -m-3.5 flex items-center justify-center disabled:opacity-40';
 
 export function MyWorldGroupRow({
   group, count, disabled, isFirst, isLast, onRename, onToggle, onMove, onDelete,
