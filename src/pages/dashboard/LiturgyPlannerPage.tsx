@@ -508,30 +508,42 @@ function LiturgyEditor({ massId }: { massId: string }) {
       // looked at. It rides along with the next Save, which already sends the
       // whole row.
       const loaded = data as MassRow;
-      setRow(loaded.mass_time ? loaded : { ...loaded, mass_time: DEFAULT_MASS_TIME });
+      setRow({
+        ...loaded,
+        mass_time: loaded.mass_time || DEFAULT_MASS_TIME,
+        // Name the day if the field has never been set. `liturgicalDayFor`
+        // titles every date now, so plans made before that shipped — an
+        // ordinary Sunday, any weekday — arrive here still untitled and get
+        // named on open.
+        //
+        // The gate is `=== null`, not falsiness. A Mass plan distinguishes
+        // "never set" (null, what INSERT leaves when nothing is supplied)
+        // from "the user emptied this field on purpose" (''), which the
+        // Observation input writes verbatim. Only null is auto-filled, so a
+        // parish that types "Parish Feast of the Dedication" keeps it, and a
+        // parish that clears the field keeps it clear.
+        observation: loaded.observation === null
+          ? liturgicalDayFor(parseISODate(loaded.mass_date)).observation
+          : loaded.observation,
+      });
       setLoading(false);
 
       // First-time auto-pull: if the row has no reading citations yet, fetch
       // them silently so the editor lands populated. Failure is non-blocking —
       // the user can still pull manually.
       //
-      // This also carries the day's title and cycle, which is how a plan
-      // opened by picking a date gets named. The local feast table only knows
-      // solemnities, so an ordinary Sunday would otherwise sit untitled.
+      // Readings only. The day's TITLE is pure date arithmetic above: asking
+      // the readings upstream for it left ~300 days a year unnamed, because
+      // the free Universalis site only serves a window of about a fortnight.
       const r = data as MassRow;
       const empty = !r.first_reading && !r.responsorial_psalm && !r.second_reading && !r.gospel_acclamation && !r.gospel;
       if (empty) {
         void fetchReadingsAndApply(r.mass_date, /*overwrite=*/false)
-          .then(({ liturgicalTitle, cycle }) => {
+          .then(({ cycle }) => {
             setRow((cur) => {
               if (!cur || cur.id !== r.id) return cur;  // navigated away mid-fetch
-              const next: Partial<MassRow> = {};
-              if (cycle && cycle !== cur.sunday_cycle) next.sunday_cycle = cycle;
-              // Never overwrite a title the user typed themselves.
-              if (liturgicalTitle && !(cur.observation && !isAutoObservation(cur.observation))) {
-                next.observation = liturgicalTitle;
-              }
-              return Object.keys(next).length ? { ...cur, ...next } : cur;
+              if (!cycle || cycle === cur.sunday_cycle) return cur;
+              return { ...cur, sunday_cycle: cycle };
             });
           });
       }
@@ -546,10 +558,9 @@ function LiturgyEditor({ massId }: { massId: string }) {
   // omit it to use the plan's stored choice, or the first set if it has none.
   async function fetchReadingsAndApply(
     iso: string, overwrite: boolean, variantLabel?: string | null,
-  ): Promise<{ liturgicalTitle: string | null; cycle: SundayCycle | null }> {
+  ): Promise<{ cycle: SundayCycle | null }> {
     setPullingReadings(true);
     try {
-      let liturgicalTitle: string | null = null;
       let cycle: SundayCycle | null = null;
       let blocks: Array<{ heading: string; citation: string | null; html: string }> = [];
 
@@ -562,7 +573,6 @@ function LiturgyEditor({ massId }: { massId: string }) {
         : await readingsFromCache(iso, row?.readings_variant ?? null);
 
       if (cached) {
-        liturgicalTitle = cached.liturgicalTitle;
         cycle = (cached.cycle as SundayCycle | null);
         blocks = cached.blocks;
       } else {
@@ -570,11 +580,10 @@ function LiturgyEditor({ massId }: { massId: string }) {
           body: { date: iso },
         });
         if (fnErr) throw new Error(fnErr.message);
-        liturgicalTitle = ((resp as any)?.liturgicalTitle as string | null) ?? null;
         blocks = ((resp as any)?.readings as Array<{ heading: string; citation: string | null; html: string }>) || [];
       }
 
-      if (!blocks.length) return { liturgicalTitle, cycle };
+      if (!blocks.length) return { cycle };
       setReadingBlocks(blocks);
       const mapped = mapReadingBlocksToFields(blocks);
       setRow((cur) => {
@@ -586,10 +595,10 @@ function LiturgyEditor({ massId }: { massId: string }) {
         }
         return Object.keys(next).length ? { ...cur, ...next } : cur;
       });
-      return { liturgicalTitle, cycle };
+      return { cycle };
     } catch (e: any) {
       if (overwrite) toast.error(`Couldn't fetch readings: ${e?.message || e}`);
-      return { liturgicalTitle: null, cycle: null };
+      return { cycle: null };
     } finally {
       setPullingReadings(false);
     }
@@ -714,7 +723,10 @@ function LiturgyEditor({ massId }: { massId: string }) {
             </Field>
           </div>
           <Field label="Observation (feast day / liturgical title)">
-            <Input value={row.observation ?? ''} onChange={(e) => update({ observation: e.target.value || null })} placeholder="e.g. Solemnity of the Most Holy Trinity" />
+            {/* Writes '' rather than null when emptied: null is reserved for
+                "never set", the only state the auto-fill on open will touch.
+                Clearing this field is therefore a decision that sticks. */}
+            <Input value={row.observation ?? ''} onChange={(e) => update({ observation: e.target.value })} placeholder="e.g. Solemnity of the Most Holy Trinity" />
           </Field>
 
           {/* Days that publish more than one set of readings. Christmas has
@@ -1479,18 +1491,13 @@ function formatTime(t: string): string {
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-function isAutoObservation(s: string | null): boolean {
-  if (!s) return true;
-  // Labels that match our local feast table OR Universalis's ordinary
-  // weekday/Sunday naming ("Saturday of week 13 in Ordinary Time",
-  // "14th Sunday in Ordinary Time") are auto-fills, not user text — so a
-  // later date change is free to replace them.
-  return (
-    /^(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Solemnity|Ash|Palm|Good|Easter|Pentecost|Christmas|All Saints|Assumption|Immaculate)/i.test(s) ||
-    /\b(in Ordinary Time|week \d+|\d+(st|nd|rd|th) (Sunday|Week))\b/i.test(s) ||
-    /^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) of\b/i.test(s)
-  );
-}
+// `isAutoObservation` lived here: a regex that guessed whether the stored
+// title looked like one of ours, so a date change could replace it. It is
+// gone. Guessing from the text could never tell "Fourth Sunday of Advent"
+// typed by a director from the same words auto-filled, and each date now
+// keeps its own plan row, so a date change never rewrites another day's
+// title in the first place. The null-vs-'' rule on the Observation input
+// carries the distinction instead.
 
 // ── PDF attachment for a song slot ────────────────────────────────────
 //

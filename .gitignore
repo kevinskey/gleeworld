@@ -37,3 +37,6 @@ deno.lock
 playwright-report/
 test-results/
 .firecrawl/
+
+# Superpowers scratch workspace (agent tooling, never repo content)
+.superpowers/
