@@ -218,7 +218,11 @@ export interface LiturgicalAnchors {
   christTheKing: Date;
   /** Dec 24. The Christmas season runs from here into the NEXT civil year. */
   christmasEve: Date;
-  /** Sunday on or after Jan 7 — closes the Christmas season. */
+  /** Epiphany as this province keeps it: the Sunday falling between Jan 2
+   * and Jan 8. (The feast table also carries the traditional Jan 6.) */
+  epiphany: Date;
+  /** The Sunday after Epiphany — or the MONDAY after it when Epiphany is
+   * itself kept on Jan 7 or Jan 8. Closes the Christmas season. */
   baptismOfTheLord: Date;
   /** Easter − 46 days. Opens Lent, closes the first block of Ordinary Time. */
   ashWednesday: Date;
@@ -233,12 +237,25 @@ export function liturgicalAnchors(year: number): LiturgicalAnchors {
   const advent1 = firstSundayOfAdvent(year);
   const easter = easterDate(year);
   const ashWednesday = addDays(easter, -46);
+  // Epiphany is transferred to the Sunday between Jan 2 and Jan 8 — exactly
+  // one Sunday falls in that seven-day span. The Baptism of the Lord is the
+  // Sunday after it, EXCEPT when Epiphany itself is kept on Jan 7 or Jan 8,
+  // when the Baptism moves to the Monday immediately following.
+  //
+  // The old rule here was `sundayOnOrAfter(Jan 7)`, which in the ~27% of
+  // years where the Epiphany Sunday is Jan 7 or Jan 8 returned that SAME
+  // Sunday: the day was labelled the Baptism, Epiphany vanished from the
+  // calendar entirely, and Ordinary Time opened a day early.
+  const epiphany = sundayOnOrAfter(new Date(year, 0, 2));
+  const baptismOfTheLord = epiphany.getDate() >= 7
+    ? addDays(epiphany, 1)
+    : addDays(epiphany, 7);
   return {
     advent1,
     christTheKing: addDays(advent1, -7),
     christmasEve: new Date(year, 11, 24),
-    // Baptism of the Lord = Sunday after Jan 6 (rough US rule).
-    baptismOfTheLord: sundayOnOrAfter(new Date(year, 0, 7)),
+    epiphany,
+    baptismOfTheLord,
     ashWednesday,
     firstSundayOfLent: addDays(ashWednesday, 4),
     easter,
@@ -307,8 +324,12 @@ export function ordinaryTimeWeek(input: Date): number | null {
  * blocks read their anchors from this date's own civil year. */
 function ordinaryTimeWeekUnchecked(d: Date, a: LiturgicalAnchors): number {
   const sunday = sundayOnOrBefore(d);
+  // Both ends of the subtraction have to be Sundays for the week count to
+  // come out whole. The Baptism is usually a Sunday but is a Monday in the
+  // years Epiphany is kept on Jan 7 or 8, so anchor on its own Sunday.
+  const week1Sunday = sundayOnOrBefore(a.baptismOfTheLord);
   return d < a.ashWednesday
-    ? 1 + weeksBetween(a.baptismOfTheLord, sunday)
+    ? 1 + weeksBetween(week1Sunday, sunday)
     : 34 - weeksBetween(sunday, a.christTheKing);
 }
 
@@ -375,12 +396,11 @@ function christmasTitle(d: Date): string {
   const a = liturgicalAnchors(d.getFullYear());
   if (sameYMD(d, a.baptismOfTheLord)) return 'The Baptism of the Lord';
   if (day === 1) return 'Solemnity of Mary, Mother of God';
-  const epiphany = new Date(d.getFullYear(), 0, 6);
-  if (d > epiphany) return `${WEEKDAY_NAMES[d.getDay()]} after Epiphany`;
-  // Jan 2–6. In this province Epiphany is kept on the Sunday between Jan 2
-  // and Jan 8, so a Sunday in here IS the Epiphany; the feast table keeps
-  // the traditional Jan 6 as well.
-  if (d.getDay() === 0 || sameYMD(d, epiphany)) return 'The Epiphany of the Lord';
+  // Epiphany is the anchor's — the transferred Sunday, not a fixed Jan 6.
+  // Comparing against Jan 6 read the days between a transferred Epiphany
+  // and Jan 6 as ordinary Christmas weekdays rather than "…after Epiphany".
+  if (sameYMD(d, a.epiphany)) return 'The Epiphany of the Lord';
+  if (d > a.epiphany) return `${WEEKDAY_NAMES[d.getDay()]} after Epiphany`;
   return `Christmas Weekday (${MONTH_NAMES[d.getMonth()]} ${day})`;
 }
 
@@ -418,11 +438,19 @@ function ordinaryTimeTitle(d: Date, a: LiturgicalAnchors): string {
 
 /**
  * The title a date carries by virtue of WHERE IT SITS in the year, with no
- * reference to the feast table. Total: every date gets one.
+ * reference to the feast table. Total: every date gets a string.
  *
- * `liturgicalDayFor` prefers a named feast when the date has one, so this
- * is what shows on the ~300 days a year that are not solemnities — the
- * ordinary Sundays and weekdays the Observation field used to leave blank.
+ * **Not a display title on its own — always go through `liturgicalDayFor`.**
+ * This function knows seasons and week numbers, not solemnities, so on the
+ * greatest days of the year it returns the day's ferial POSITION rather
+ * than its name: Easter Sunday reads "First Sunday of Easter", Palm Sunday
+ * "Sunday of Holy Week", Pentecost "Eighth Sunday of Easter", Good Friday
+ * "Friday of Holy Week". `liturgicalDayFor` overlays the feast table, which
+ * is where those names live, and is the only function the UI should call.
+ *
+ * What this is for is the ~300 days a year that have no entry in the feast
+ * table — the ordinary Sundays and weekdays the Observation field used to
+ * leave blank.
  */
 export function computedDayTitle(input: Date): string {
   const d = startOfDay(input);
@@ -441,6 +469,23 @@ export function computedDayTitle(input: Date): string {
 
 // ── Single API the UI uses ───────────────────────────────────────────
 
+/** Computed titles that outrank a same-day entry in the feast table.
+ *
+ * A Feast of the LORD takes precedence over a feast of a saint. The Holy
+ * Family is the Sunday inside the Christmas octave, so it lands on Dec 26,
+ * 27 or 28 in roughly half of all years — and those three dates carry
+ * St. Stephen, St. John and the Holy Innocents in the table, which is a
+ * flat list with no rank. Without this the parish saw a saint's day on the
+ * Sunday: 27 Dec 2026, 26 Dec 2027 and 28 Dec 2025 all read wrong.
+ *
+ * Deliberately just the one entry. The other two moveable feasts of the
+ * Lord in this season collide with nothing — the Baptism has no table
+ * entry at all, and Epiphany's only entry is on its traditional Jan 6,
+ * whose NAME must not be rewritten from here. */
+const COMPUTED_FEASTS_OF_THE_LORD = new Set([
+  'The Holy Family of Jesus, Mary and Joseph',
+]);
+
 export function liturgicalDayFor(input: Date): LiturgicalDay {
   const d = startOfDay(input);
   const cycle = sundayCycle(d);
@@ -453,14 +498,19 @@ export function liturgicalDayFor(input: Date): LiturgicalDay {
   const feasts = [...liturgicalFeasts(d.getFullYear()), ...liturgicalFeasts(d.getFullYear() - 1)];
   const match = feasts.find((f) => sameYMD(f.date, d));
 
+  // A named feast wins — it is why the solemnities read the way a parish
+  // expects, and the computed title fills the days without one. The single
+  // exception is a computed Feast of the Lord landing on a fixed saint's
+  // day, which outranks it (see COMPUTED_FEASTS_OF_THE_LORD).
+  const computed = computedDayTitle(d);
+  const computedOutranks = COMPUTED_FEASTS_OF_THE_LORD.has(computed);
+
   return {
     year: d.getFullYear(),
     liturgicalYear: lyear,
     cycle,
     season: match?.season ?? season,
-    // A named feast always wins — it is why the solemnities read the way a
-    // parish expects. The computed title only fills the days without one.
-    observation: match?.name ?? computedDayTitle(d),
+    observation: match && !computedOutranks ? match.name : computed,
   };
 }
 

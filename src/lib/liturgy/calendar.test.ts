@@ -149,9 +149,14 @@ describe('Ordinary Time week numbering', () => {
         days.push({ date: iso(d), dow: d.getDay(), week });
       }
 
-      // The count opens on the Monday after the Baptism of the Lord, which
-      // is week 1, and closes on the Saturday before Advent, which is 34.
-      expect(days[0].dow).toBe(1);
+      // The count opens on the day after the Baptism of the Lord, which is
+      // week 1, and closes on the Saturday before Advent, which is 34.
+      // Usually that first day is a Monday — but in the years Epiphany is
+      // kept on Jan 7 or 8 the Baptism is itself a Monday and Ordinary Time
+      // opens on the Tuesday, so this reads the anchor rather than the
+      // weekday.
+      const a = liturgicalAnchors(year);
+      expect(days[0].date).toBe(iso(addDays(a.baptismOfTheLord, 1)));
       expect(days[0].week).toBe(1);
       expect(days[days.length - 1].dow).toBe(6);
       expect(days[days.length - 1].week).toBe(34);
@@ -200,6 +205,26 @@ describe('Ordinary Time week numbering', () => {
       expect(gap, `${year}: block 1 ends at ${lastOfBlock1}, block 2 opens at ${firstOfBlock2}`)
         .toBeGreaterThanOrEqual(1);
       expect(gap, `${year}: more than one week omitted at the join`).toBeLessThanOrEqual(2);
+    }
+  });
+
+  it('holds the 2 → 34 Sunday invariant for every year 1990–2100', () => {
+    // The twelve stress years above are the readable cases; this is the
+    // sweep. Kept separate so a failure names the year rather than the
+    // whole range.
+    for (let year = 1990; year <= 2100; year++) {
+      const weeks: number[] = [];
+      for (const d of daysOf(year)) {
+        if (d.getDay() !== 0) continue;
+        const week = ordinaryTimeWeek(d);
+        if (week !== null) weeks.push(week);
+      }
+      expect(weeks[0], `${year} first OT Sunday`).toBe(2);
+      expect(weeks[weeks.length - 1], `${year} last OT Sunday`).toBe(34);
+      for (let i = 1; i < weeks.length; i++) {
+        expect(weeks[i], `${year}: ${weeks[i]} follows ${weeks[i - 1]}`)
+          .toBeGreaterThan(weeks[i - 1]);
+      }
     }
   });
 
@@ -295,12 +320,18 @@ describe('computedDayTitle', () => {
     expect(new Date(2026, 11, 27).getDay()).toBe(0);
     expect(computedDayTitle(new Date(2026, 11, 27)))
       .toBe('The Holy Family of Jesus, Mary and Joseph');
-    expect(computedDayTitle(new Date(2027, 0, 4))).toBe('Christmas Weekday (January 4)');
+    // Epiphany 2027 is transferred to Sunday 3 Jan, so 4 Jan is the day
+    // AFTER Epiphany — it used to read "Christmas Weekday (January 4)"
+    // because the comparison was against a fixed 6 January.
+    expect(computedDayTitle(new Date(2027, 0, 3))).toBe('The Epiphany of the Lord');
+    expect(computedDayTitle(new Date(2027, 0, 4))).toBe('Monday after Epiphany');
     expect(computedDayTitle(new Date(2027, 0, 7))).toBe('Thursday after Epiphany');
-    // Sunday on or after 7 Jan closes the season.
     expect(computedDayTitle(new Date(2027, 0, 10))).toBe('The Baptism of the Lord');
     expect(liturgicalSeasonOf(new Date(2027, 0, 10))).toBe('Christmas');
     expect(liturgicalSeasonOf(new Date(2027, 0, 11))).toBe('Ordinary Time');
+    // Epiphany 2026 is Sunday 4 Jan, so 2–3 Jan really are plain weekdays.
+    expect(computedDayTitle(new Date(2026, 0, 2))).toBe('Christmas Weekday (January 2)');
+    expect(computedDayTitle(new Date(2026, 0, 4))).toBe('The Epiphany of the Lord');
   });
 
   it('reads the same whatever time of day the Date carries', () => {
@@ -334,6 +365,108 @@ describe('liturgicalDayFor', () => {
     // …but the day after a solemnity falls back to the computed title.
     expect(liturgicalDayFor(new Date(2026, 10, 23)).observation)
       .toBe('Monday of the Thirty-Fourth Week in Ordinary Time');
+  });
+
+  it('gives the Holy Family the Sunday, over the octave saints', () => {
+    // A Feast of the Lord outranks a feast of a saint, and the Holy Family
+    // is the Sunday in the Christmas octave — so in about half of all years
+    // it lands on 26, 27 or 28 December, where the feast table (a flat list
+    // with no rank) carries St. Stephen, St. John and the Holy Innocents.
+    // These assertions run through liturgicalDayFor, the function the UI
+    // actually calls; computedDayTitle got this right all along while the
+    // shipped path did not.
+    for (const [y, m, day] of [[2026, 11, 27], [2027, 11, 26], [2025, 11, 28]] as const) {
+      const d = new Date(y, m, day);
+      expect(d.getDay(), `${iso(d)} must be a Sunday for this case to bite`).toBe(0);
+      expect(liturgicalDayFor(d).observation, iso(d))
+        .toBe('The Holy Family of Jesus, Mary and Joseph');
+    }
+    // The saints keep their days in every year the Sunday falls elsewhere.
+    expect(liturgicalDayFor(new Date(2026, 11, 26)).observation)
+      .toBe('St. Stephen, First Martyr');
+    expect(liturgicalDayFor(new Date(2026, 11, 28)).observation).toBe('Holy Innocents');
+    // Christmas Day and the Solemnity of Mary are never displaced.
+    expect(liturgicalDayFor(new Date(2026, 11, 25)).observation)
+      .toBe('The Nativity of the Lord (Christmas)');
+    expect(liturgicalDayFor(new Date(2027, 0, 1)).observation)
+      .toBe('Solemnity of Mary, Mother of God');
+  });
+
+  it('does not let a computed title rename a feast the table already names', () => {
+    // The override set is keyed on the COMPUTED title, so widening it is how
+    // a feast name would get quietly rewritten — which the brief forbids.
+    // 6 Jan 2030 is a Sunday, so the transferred Epiphany and the table's
+    // traditional entry land on the same date and the table must still win.
+    expect(new Date(2030, 0, 6).getDay()).toBe(0);
+    expect(iso(liturgicalAnchors(2030).epiphany)).toBe('2030-01-06');
+    expect(computedDayTitle(new Date(2030, 0, 6))).toBe('The Epiphany of the Lord');
+    expect(liturgicalDayFor(new Date(2030, 0, 6)).observation)
+      .toBe('Epiphany of the Lord (traditional)');
+  });
+
+  it('exists exactly once a year, 2020–2060, Holy Family included', () => {
+    for (let year = 2020; year <= 2060; year++) {
+      const titles = [...daysOf(year)].map((d) => liturgicalDayFor(d).observation);
+      const count = (name: string) => titles.filter((t) => t === name).length;
+      expect(count('The Holy Family of Jesus, Mary and Joseph'), `${year} Holy Family`).toBe(1);
+      expect(count('The Baptism of the Lord'), `${year} Baptism`).toBe(1);
+    }
+  });
+
+  it('never lets Epiphany vanish behind the Baptism of the Lord', () => {
+    // sundayOnOrAfter(Jan 7) returned the Epiphany Sunday itself whenever it
+    // fell on 7 or 8 January — the day was labelled the Baptism, Epiphany
+    // never appeared, and Ordinary Time opened a day early. 2024, 2029,
+    // 2034, 2035, 2040, 2045, 2046, 2051, 2052 and 2057 are the years.
+    for (let year = 2020; year <= 2060; year++) {
+      const a = liturgicalAnchors(year);
+      expect(a.epiphany.getDay(), `${year} Epiphany is a Sunday`).toBe(0);
+      expect(a.epiphany.getDate(), `${year} Epiphany is 2–8 Jan`).toBeGreaterThanOrEqual(2);
+      expect(a.epiphany.getDate(), `${year} Epiphany is 2–8 Jan`).toBeLessThanOrEqual(8);
+      expect(iso(a.baptismOfTheLord), `${year} Baptism is a different day`)
+        .not.toBe(iso(a.epiphany));
+      expect(a.baptismOfTheLord.getTime()).toBeGreaterThan(a.epiphany.getTime());
+      expect(computedDayTitle(a.epiphany), `${year} Epiphany`)
+        .toBe('The Epiphany of the Lord');
+      expect(computedDayTitle(a.baptismOfTheLord), `${year} Baptism`)
+        .toBe('The Baptism of the Lord');
+      // Both are inside the Christmas season; Ordinary Time opens after.
+      expect(liturgicalSeasonOf(a.baptismOfTheLord), `${year}`).toBe('Christmas');
+      expect(liturgicalSeasonOf(addDays(a.baptismOfTheLord, 1)), `${year}`)
+        .toBe('Ordinary Time');
+    }
+  });
+
+  it('moves the Baptism to the Monday when Epiphany takes the Sunday of 7/8 Jan', () => {
+    // 2024: Epiphany Sunday 7 Jan, Baptism Monday 8 Jan, Ordinary Time from
+    // Tuesday 9 Jan. Confirmed independently: 1 Jan 2024 was a Monday.
+    expect(new Date(2024, 0, 1).getDay()).toBe(1);
+    const a = liturgicalAnchors(2024);
+    expect(iso(a.epiphany)).toBe('2024-01-07');
+    expect(iso(a.baptismOfTheLord)).toBe('2024-01-08');
+    expect(a.baptismOfTheLord.getDay()).toBe(1);
+    expect(computedDayTitle(new Date(2024, 0, 9)))
+      .toBe('Tuesday of the First Week in Ordinary Time');
+    // 14 Jan 2024 was the Second Sunday in Ordinary Time.
+    expect(liturgicalDayFor(new Date(2024, 0, 14)).observation)
+      .toBe('Second Sunday in Ordinary Time');
+  });
+
+  it('names the greatest days, which computedDayTitle alone gets wrong', () => {
+    // computedDayTitle knows seasons, not solemnities, so on these days it
+    // returns the ferial POSITION. liturgicalDayFor is what the UI calls and
+    // is what has to be right. This pins the delegation contract.
+    const easter = easterDate(2026);
+    const cases: Array<[Date, string, string]> = [
+      [easter, 'First Sunday of Easter', 'Easter Sunday of the Resurrection of the Lord'],
+      [addDays(easter, -7), 'Sunday of Holy Week', 'Palm Sunday of the Passion of the Lord'],
+      [addDays(easter, -2), 'Friday of Holy Week', 'Good Friday of the Passion of the Lord'],
+      [addDays(easter, 49), 'Eighth Sunday of Easter', 'Pentecost Sunday'],
+    ];
+    for (const [d, ferial, name] of cases) {
+      expect(computedDayTitle(d), `computedDayTitle ${iso(d)}`).toBe(ferial);
+      expect(liturgicalDayFor(d).observation, `liturgicalDayFor ${iso(d)}`).toBe(name);
+    }
   });
 
   it('keeps cycle and season alongside the title', () => {
