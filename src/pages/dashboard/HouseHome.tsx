@@ -18,13 +18,14 @@ import { useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { isFacultyProfile } from '@/lib/roles';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
-import { getAppTiles, type ModuleFlags } from '@/lib/navigation/appDestinations';
+import { getAppTiles, bandDestinations, type ModuleFlags } from '@/lib/navigation/appDestinations';
 import { toModuleFlags, toModuleSet } from '@/lib/navigation/moduleFlags';
 import { applyPreviewRole, previewRoleIsFaculty, resolveNav, type NavContext } from '@/lib/navigation/navCatalog';
 import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useMyTools } from '@/hooks/useMyTools';
-import { mergeGridOrder, resolvedTools } from '@/lib/navigation/myTools';
+import { mergeGridOrder, sanitizeShelf, type Shelf } from '@/lib/navigation/myTools';
+import { flattenShelf, groupIdOf } from '@/lib/navigation/toolGroups';
 import { resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
 import { FirstRunSheet } from '@/components/dashboard/FirstRunSheet';
@@ -183,7 +184,23 @@ export default function HouseHome() {
   // the implicit 'home' entry) — the first-run sheet's ⊕ picker must never
   // offer an entry this member cannot actually open.
   const available = useMemo(() => resolveNav(nav).filter((e) => e.key !== 'home'), [nav]);
-  const { myTools, loading: layoutLoading, saveTools } = useMyTools(isFaculty ? 'faculty' : 'student');
+  const { myTools, loading: layoutLoading, saveShelf } = useMyTools(isFaculty ? 'faculty' : 'student');
+  // sanitizeShelf on READ, not a bare { tools, groups } literal, because
+  // every key below is compared against getAppTiles' output, which resolves
+  // merges internally. A tool filed in a group under a retired key ('merch')
+  // would otherwise render as its successor ('shop') in `primary`, match no
+  // group, band as LOOSE — and then the re-split in handleSave would move it
+  // out of the member's group for good. This is the same class of bug the
+  // resolvedTools fix closed for the flat list (Phase 5 review, 2026-08-09);
+  // groups reopened it, so read and write now agree on resolved keys.
+  const shelf = useMemo<Shelf>(
+    () => sanitizeShelf(myTools?.tools ?? [], myTools?.groups ?? []),
+    [myTools],
+  );
+  // Render order: loose tools, then each group's. The keycap pool must
+  // contain every chosen tool, grouped or not — and in this order, so
+  // bandDestinations only has to partition what it is handed.
+  const shelfOrder = useMemo(() => flattenShelf(shelf), [shelf]);
   // First-run sheet: shown once, on a brand-new member's very first load of
   // this page. `firstRunDismissed` is held locally (not derived solely from
   // myTools.setupComplete) so a Skip/Looks good tap closes the sheet
@@ -209,8 +226,17 @@ export default function HouseHome() {
     // student still renders the faculty grid.
     : getAppTiles(
         (previewRole ? previewRoleIsFaculty(previewRole) : isFaculty) ? 'faculty' : 'student',
-        flags, nav, myTools?.tools ?? null, { tabBarVisible },
+        // `null` still means "no record at all" (→ the frozen default grid);
+        // an empty shelfOrder is a deliberate "I cleared everything".
+        flags, nav, myTools ? shelfOrder : null, { tabBarVisible },
       );
+
+  // The grid shows the same SET as the sidebar shelf, and now the same
+  // STRUCTURE: loose keycaps under no heading, then a heading per group.
+  // Empty bands are dropped inside bandDestinations, so an unfilled group —
+  // or one whose every tool is gated off for this viewer — never renders a
+  // heading over nothing.
+  const bands = useMemo(() => bandDestinations(primary, shelf.groups), [primary, shelf.groups]);
 
   // Which stored keys this grid is able to show at all. A stored key outside
   // this set (route claimed by the tab bar, module switched off, key retired)
@@ -220,14 +246,6 @@ export default function HouseHome() {
     () => new Set([...primary, ...overflow].map((t) => t.key)),
     [primary, overflow],
   );
-  // resolvedTools (not the raw myTools?.tools ?? []) so a stored merged key
-  // (e.g. the retired 'merch') matches `representable` by its resolved name
-  // ('shop') below — representable is built from getAppTiles/primary+overflow,
-  // which resolves internally. Comparing a raw stored key against a resolved
-  // representable set made mergeGridOrder treat the stored key as
-  // un-representable, carrying it through unresolved instead of recognizing
-  // it already had a keycap under its new name (Phase 5 review, 2026-08-09).
-  const storedTools = useMemo(() => resolvedTools(myTools), [myTools]);
   // No grid budget is computed anymore. This used to pass HomeTileGrid a
   // `cap` of 8 (the retired MY_TOOLS_CAP) minus the stored keys with no
   // keycap (on a phone
@@ -235,9 +253,29 @@ export default function HouseHome() {
   // the cap would have been silently truncated by sanitizeTools on save.
   // There is no cap to exceed now — see MY_TOOLS_SANITY_MAX in myTools.ts —
   // so the grid is simply as long as the member makes it.
+  //
+  // mergeGridOrder still owns the lossy-projection problem: every stored key
+  // the grid could not represent survives at its stored index. What is NEW is
+  // that the merged flat order is then RE-SPLIT into loose + groups by
+  // membership, so a grid edit can never flatten a member's filing. Saving
+  // the flat draft here is exactly the lossy write that cost this feature a
+  // review round the first time; do not simplify this back to saveTools.
+  //
+  // Both lists are rebuilt from `merged` rather than filtered in place, so a
+  // reorder the member made INSIDE a band persists instead of snapping back
+  // to the stored order the next time the page renders.
   const saveGridOrder = useCallback(
-    (draft: string[]) => saveTools(mergeGridOrder(storedTools, draft, representable)),
-    [saveTools, storedTools, representable],
+    (draft: string[]) => {
+      const merged = mergeGridOrder(shelfOrder, draft, representable);
+      return saveShelf({
+        tools: merged.filter((k) => groupIdOf(shelf, k) === null),
+        groups: shelf.groups.map((g) => ({
+          ...g,
+          tools: merged.filter((k) => groupIdOf(shelf, k) === g.id),
+        })),
+      });
+    },
+    [saveShelf, shelfOrder, representable, shelf],
   );
 
   return (
@@ -386,7 +424,7 @@ export default function HouseHome() {
 
         {/* Keycap app grid (editable — see HomeTileGrid) */}
         {!modulesLoading && !layoutLoading && !roleLoading && (
-          <HomeTileGrid primary={primary} overflow={overflow} onSave={saveGridOrder} />
+          <HomeTileGrid bands={bands} overflow={overflow} onSave={saveGridOrder} />
         )}
       </div>
 

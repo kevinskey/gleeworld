@@ -1,8 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { getTabItems, getAppTiles, parseTileLayout, DEFAULT_GRID_ORDER, type ModuleFlags } from '../appDestinations';
+import { Music } from 'lucide-react';
+import {
+  getTabItems, getAppTiles, parseTileLayout, bandDestinations, DEFAULT_GRID_ORDER,
+  type ModuleFlags, type Destination,
+} from '../appDestinations';
 import type { NavContext } from '../navCatalog';
+import type { ToolGroup } from '../myTools';
 
 const allOn: ModuleFlags = {
   hasViewer: true, hasStudio: true, hasSightReading: true,
@@ -434,5 +439,72 @@ describe('getAppTiles with a My Tools key list', () => {
     // a My Tools set must not quietly re-cut the day-one default grid.
     expect(getAppTiles('faculty', flags, nav, null, { tabBarVisible: false }))
       .toEqual(getAppTiles('faculty', flags, nav, null, { tabBarVisible: true }));
+  });
+});
+
+// The keycap grid shows the same SET as the sidebar shelf (see the
+// "surfaces sidebar-only entries" test above); bandDestinations is what
+// makes it show the same STRUCTURE — loose tiles first under no heading,
+// then one band per member-named group.
+describe('bandDestinations', () => {
+  // One shared icon reference: `toEqual` compares functions by identity, so
+  // a fresh arrow per call would make two structurally-identical
+  // destinations unequal.
+  const dest = (key: string): Destination => ({ key, to: `/${key}`, label: key, icon: Music });
+
+  const groups: ToolGroup[] = [
+    { id: 'a', name: 'Sunday', tools: ['liturgy', 'worship-aids'], collapsed: false },
+    { id: 'b', name: 'Teaching', tools: ['academy'], collapsed: false },
+  ];
+
+  it('puts ungrouped tiles in a leading band with no name', () => {
+    const bands = bandDestinations([dest('calendar'), dest('liturgy')], groups);
+    expect(bands[0]).toEqual({ groupId: null, name: null, tiles: [dest('calendar')] });
+  });
+
+  it('bands grouped tiles under their group name, in group order', () => {
+    const bands = bandDestinations(
+      [dest('calendar'), dest('liturgy'), dest('worship-aids'), dest('academy')], groups);
+    expect(bands.map((b) => b.name)).toEqual([null, 'Sunday', 'Teaching']);
+    expect(bands[1].tiles.map((t) => t.key)).toEqual(['liturgy', 'worship-aids']);
+  });
+
+  it('drops a band whose every tile is gated off — no heading over nothing', () => {
+    const bands = bandDestinations([dest('calendar'), dest('liturgy')], groups);
+    expect(bands.map((b) => b.name)).toEqual([null, 'Sunday']);
+  });
+
+  it('omits the loose band entirely when nothing is loose', () => {
+    const bands = bandDestinations([dest('liturgy')], groups);
+    expect(bands.map((b) => b.name)).toEqual(['Sunday']);
+  });
+
+  it('returns one unnamed band when there are no groups', () => {
+    const bands = bandDestinations([dest('calendar'), dest('messages')], []);
+    expect(bands).toHaveLength(1);
+    expect(bands[0].groupId).toBeNull();
+    expect(bands[0].tiles).toHaveLength(2);
+  });
+
+  it('keeps a tile whose key is in no group in the loose band', () => {
+    const bands = bandDestinations([dest('studio')], groups);
+    expect(bands).toEqual([{ groupId: null, name: null, tiles: [dest('studio')] }]);
+  });
+
+  it('drops a band a member made but never filled', () => {
+    const unfilled: ToolGroup[] = [{ id: 'empty', name: 'Someday', tools: [], collapsed: false }];
+    expect(bandDestinations([dest('calendar')], unfilled).map((b) => b.name)).toEqual([null]);
+  });
+
+  it('partitions without reordering — the caller owns the order', () => {
+    // HouseHome hands getAppTiles flattenShelf(shelf), so `primary` already
+    // arrives loose-then-groups. Handing it a deliberately scrambled order
+    // must not be "corrected" here: re-sorting would silently override the
+    // member's own arrangement.
+    const bands = bandDestinations(
+      [dest('worship-aids'), dest('liturgy'), dest('calendar')], groups);
+    expect(bands.map((b) => b.tiles.map((t) => t.key))).toEqual([
+      ['calendar'], ['worship-aids', 'liturgy'],
+    ]);
   });
 });

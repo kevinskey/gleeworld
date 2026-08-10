@@ -8,6 +8,10 @@ import {
 } from 'lucide-react';
 import { resolveNav, entrySurfaces, type NavContext, type NavSectionKey } from './navCatalog';
 import { resolveKey, resolveKeys } from './mergedKeys';
+// TYPE-only, deliberately: myTools.ts imports parseTileLayout from this
+// module, so a value import here would close the runtime cycle mergedKeys.ts
+// exists to avoid (see its header). `import type` is erased at compile time.
+import type { ToolGroup } from './myTools';
 
 export interface ModuleFlags {
   hasViewer: boolean; hasStudio: boolean;
@@ -229,4 +233,51 @@ export function getAppTiles(
     .filter((d): d is Destination => d !== undefined);
   const pinned = new Set(primary.map((d) => d.key));
   return { primary, overflow: pool.filter((d) => !pinned.has(d.key)) };
+}
+
+/**
+ * A run of keycaps under one heading. `name` is null for the loose band,
+ * which renders with no heading at all.
+ */
+export interface TileBand {
+  groupId: string | null;
+  name: string | null;
+  tiles: Destination[];
+}
+
+/**
+ * Partition already-ordered grid tiles into bands: the loose tiles first
+ * under no heading, then one band per group.
+ *
+ * Empty bands are dropped, which is how "empty groups never reach a live
+ * surface" holds on the grid — a group can be empty because the member
+ * hasn't filled it or because every tool in it is gated off for this
+ * viewer, and a heading over zero tiles is noise either way. (The sidebar
+ * shelf drops them in DashboardShell for the same reason; the My World
+ * editor still shows them, which is where a member fills or deletes one.)
+ *
+ * Pure partitioning only: `primary` already arrives in loose-then-groups
+ * order (HouseHome passes flattenShelf as getAppTiles' `tools`), so this
+ * never reorders and never re-gates.
+ *
+ * `Pick`, not `ToolGroup`, because a band needs only identity, heading and
+ * membership — HomeTileGrid re-partitions its edit draft by handing back the
+ * bands it was given, which carry no collapse state.
+ */
+export function bandDestinations(
+  primary: Destination[],
+  groups: readonly Pick<ToolGroup, 'id' | 'name' | 'tools'>[],
+): TileBand[] {
+  const groupIdOfKey = new Map<string, string>();
+  for (const group of groups) {
+    for (const key of group.tools) groupIdOfKey.set(key, group.id);
+  }
+  const loose = primary.filter((tile) => !groupIdOfKey.has(tile.key));
+  const bands: TileBand[] = [];
+  if (loose.length > 0) bands.push({ groupId: null, name: null, tiles: loose });
+  for (const group of groups) {
+    const tiles = primary.filter((tile) => groupIdOfKey.get(tile.key) === group.id);
+    if (tiles.length > 0) bands.push({ groupId: group.id, name: group.name, tiles });
+  }
+  return bands;
 }

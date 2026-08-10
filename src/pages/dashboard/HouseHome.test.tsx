@@ -46,10 +46,14 @@ vi.mock('@/hooks/useTenantNavPrefs', () => ({
 }));
 const myToolsResult = vi.hoisted(() => ({
   current: {
-    myTools: null as { tools: string[]; widgets: string[]; setupComplete?: boolean } | null,
+    myTools: null as {
+      tools: string[]; widgets: string[]; setupComplete?: boolean;
+      groups?: Array<{ id: string; name: string; tools: string[]; collapsed: boolean }>;
+    } | null,
     loading: false,
     saveTools: vi.fn(),
     saveMyTools: vi.fn(),
+    saveShelf: vi.fn(),
   },
 }));
 vi.mock('@/hooks/useMyTools', () => ({
@@ -78,15 +82,22 @@ vi.mock('@/components/dashboard/HomeNewsRail', () => ({
 vi.mock('@/components/dashboard/DashboardShell', () => ({
   DashboardShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
-// Captures the exact props HouseHome hands the grid — primary/overflow
-// (getAppTiles' output) and cap (gridCap) — so the resolveKeys/resolvedTools
-// wiring fix (review round 1, Important 1) can be asserted on without
-// rendering dnd-kit's real drag machinery.
-const capturedGridProps = vi.hoisted(() => ({
-  current: null as { primary: Array<{ key: string }>; overflow: Array<{ key: string }>; cap: number } | null,
-}));
+// Captures the exact props HouseHome hands the grid — bands/overflow
+// (getAppTiles' output, partitioned by bandDestinations) and onSave — so the
+// resolveKeys/resolvedTools wiring fix (review round 1, Important 1) and the
+// grouped-band wiring can be asserted on without rendering dnd-kit's real
+// drag machinery. `onSave` is the seam the grid's Done button calls with the
+// order the member sees; HomeTileGrid.bands.test.tsx covers the other half
+// (real edit mode → that flat order), so calling it here is exercising the
+// same contract from the page side.
+interface CapturedGridProps {
+  bands: Array<{ groupId: string | null; name: string | null; tiles: Array<{ key: string }> }>;
+  overflow: Array<{ key: string }>;
+  onSave: (order: string[]) => Promise<boolean>;
+}
+const capturedGridProps = vi.hoisted(() => ({ current: null as CapturedGridProps | null }));
 vi.mock('@/components/dashboard/HomeTileGrid', () => ({
-  HomeTileGrid: (props: { primary: Array<{ key: string }>; overflow: Array<{ key: string }>; cap: number }) => {
+  HomeTileGrid: (props: CapturedGridProps) => {
     capturedGridProps.current = props;
     return null;
   },
@@ -136,7 +147,9 @@ afterEach(() => {
   brandingOrgName.current = null;
   capturedCtx.current = null;
   myFeesResult.current = { totalOwed: 0, unpaid: [], paid: [], plans: [], loading: false, refetch: vi.fn() };
-  myToolsResult.current = { myTools: null, loading: false, saveTools: vi.fn(), saveMyTools: vi.fn() };
+  myToolsResult.current = {
+    myTools: null, loading: false, saveTools: vi.fn(), saveMyTools: vi.fn(), saveShelf: vi.fn(),
+  };
   tenantDefaults.spy.mockClear();
   profileResult.current = { full_name: 'Kevin', user_id: 'u1', is_admin: false, is_super_admin: false };
   tenantModulesResult.current = [];
@@ -224,6 +237,7 @@ describe('HouseHome member-chosen widgets (My World, Phase 2)', () => {
       loading: false,
       saveTools: vi.fn(),
       saveMyTools: vi.fn(),
+      saveShelf: vi.fn(),
     };
     renderHouseHome();
     expect(screen.getByText('Practice this week')).toBeInTheDocument();
@@ -231,7 +245,9 @@ describe('HouseHome member-chosen widgets (My World, Phase 2)', () => {
   });
 
   it('falls back to both role-default widgets when nothing is stored', () => {
-    myToolsResult.current = { myTools: null, loading: false, saveTools: vi.fn(), saveMyTools: vi.fn() };
+    myToolsResult.current = {
+      myTools: null, loading: false, saveTools: vi.fn(), saveMyTools: vi.fn(), saveShelf: vi.fn(),
+    };
     renderHouseHome();
     expect(screen.getByText('Practice this week')).toBeInTheDocument();
     expect(screen.getByText('Today')).toBeInTheDocument();
@@ -243,6 +259,7 @@ describe('HouseHome member-chosen widgets (My World, Phase 2)', () => {
       loading: true,
       saveTools: vi.fn(),
       saveMyTools: vi.fn(),
+      saveShelf: vi.fn(),
     };
     renderHouseHome();
     expect(screen.queryByText('Practice this week')).not.toBeInTheDocument();
@@ -266,6 +283,7 @@ describe('HouseHome ↔ FirstRunSheet seam', () => {
       loading,
       saveTools: vi.fn(),
       saveMyTools: vi.fn(),
+      saveShelf: vi.fn(),
     };
   };
 
@@ -310,16 +328,120 @@ describe('HouseHome keycap grid — resolveKeys/resolvedTools wiring for a merge
       loading: false,
       saveTools: vi.fn(),
       saveMyTools: vi.fn(),
+      saveShelf: vi.fn(),
     };
     renderHouseHome();
     const grid = capturedGridProps.current;
     expect(grid).not.toBeNull();
-    expect([...grid!.primary, ...grid!.overflow].map((t) => t.key)).toContain('shop');
+    expect([...grid!.bands.flatMap((b) => b.tiles), ...grid!.overflow].map((t) => t.key)).toContain('shop');
     // HouseHome used to compute a `cap` here (8 minus the stored keys with
     // no keycap) and this asserted it came out as 8 rather than the buggy 7.
     // The 8-tool ceiling is gone (product owner, 2026-08-09), so HomeTileGrid
     // takes no `cap` prop at all — assert its ABSENCE, so reintroducing a
     // grid budget has to come back through this test.
     expect(grid).not.toHaveProperty('cap');
+  });
+});
+
+// The grid is a LOSSY view of the member's record, and it has already
+// destroyed data once: it seeded from a filtered `primary` and saved that
+// whole, permanently deleting every stored key the grid could not
+// represent. mergeGridOrder guards that half. Groups add a second thing the
+// grid can destroy — the member's FILING — because the grid speaks a flat
+// order. So a grid edit must merge AND re-split, and saving the flat draft
+// is exactly the lossy write that cost this feature a review round.
+describe('HouseHome keycap grid — a grid edit never flattens the member groups', () => {
+  const setShelf = () => {
+    const saveShelf = vi.fn().mockResolvedValue(true);
+    myToolsResult.current = {
+      myTools: {
+        tools: ['calendar', 'messages'],
+        groups: [{ id: 'a', name: 'Sunday', tools: ['academy'], collapsed: false }],
+        widgets: [],
+        setupComplete: true,
+      },
+      loading: false,
+      saveTools: vi.fn(),
+      saveMyTools: vi.fn(),
+      saveShelf,
+    };
+    return saveShelf;
+  };
+
+  it('hands the grid loose tiles first, then a band per group', () => {
+    setShelf();
+    renderHouseHome();
+    const bands = capturedGridProps.current!.bands;
+    expect(bands.map((b) => b.name)).toEqual([null, 'Sunday']);
+    expect(bands[0].tiles.map((t) => t.key)).toEqual(['calendar', 'messages']);
+    expect(bands[1].tiles.map((t) => t.key)).toEqual(['academy']);
+  });
+
+  it('re-splits a grid save back into loose + groups instead of saving the flat order', async () => {
+    const saveShelf = setShelf();
+    renderHouseHome();
+    // What the grid hands back after the member removes the Calendar keycap.
+    await capturedGridProps.current!.onSave(['messages', 'academy']);
+    const saved = saveShelf.mock.calls.at(-1)![0];
+    expect(saved.groups).toHaveLength(1);
+    expect(saved.groups[0].tools).toEqual(['academy']);
+    expect(saved.tools).toEqual(['messages']);
+  });
+
+  it('saves through saveShelf, never through the flat saveTools', async () => {
+    const saveShelf = setShelf();
+    renderHouseHome();
+    await capturedGridProps.current!.onSave(['calendar', 'messages', 'academy']);
+    expect(saveShelf).toHaveBeenCalledTimes(1);
+    expect(myToolsResult.current.saveTools).not.toHaveBeenCalled();
+  });
+
+  it('drops the band, but never the filing, when every tool in it is gated off', async () => {
+    // Finance's module is off for this viewer, so it has no keycap and the
+    // band is dropped — no heading over nothing. The grid cannot speak for
+    // that key either: mergeGridOrder carries it through, and the re-split
+    // must put it back in its group rather than stranding it in loose.
+    const saveShelf = vi.fn().mockResolvedValue(true);
+    tenantModulesResult.current = [];
+    myToolsResult.current = {
+      myTools: {
+        tools: ['calendar'],
+        groups: [{ id: 'a', name: 'Sunday', tools: ['finance'], collapsed: false }],
+        widgets: [],
+        setupComplete: true,
+      },
+      loading: false,
+      saveTools: vi.fn(),
+      saveMyTools: vi.fn(),
+      saveShelf,
+    };
+    renderHouseHome();
+    expect(capturedGridProps.current!.bands.map((b) => b.name)).toEqual([null]);
+    await capturedGridProps.current!.onSave(['calendar']);
+    const saved = saveShelf.mock.calls.at(-1)![0];
+    expect(saved.tools).toEqual(['calendar']);
+    expect(saved.groups[0].tools).toEqual(['finance']);
+  });
+
+  it('persists a reorder made inside a band', async () => {
+    const saveShelf = vi.fn().mockResolvedValue(true);
+    myToolsResult.current = {
+      myTools: {
+        tools: ['calendar'],
+        groups: [{ id: 'a', name: 'Sunday', tools: ['academy', 'part-tracks'], collapsed: false }],
+        widgets: [],
+        setupComplete: true,
+      },
+      loading: false,
+      saveTools: vi.fn(),
+      saveMyTools: vi.fn(),
+      saveShelf,
+    };
+    renderHouseHome();
+    // The two Sunday keycaps swapped; a filter-in-place save would drop this
+    // back to the stored order on the next render.
+    await capturedGridProps.current!.onSave(['calendar', 'part-tracks', 'academy']);
+    const saved = saveShelf.mock.calls.at(-1)![0];
+    expect(saved.groups[0].tools).toEqual(['part-tracks', 'academy']);
   });
 });

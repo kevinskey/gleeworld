@@ -1,8 +1,13 @@
 // Keycap app grid with iOS-style jiggle editing, extracted from HouseHome.
 // View mode: primary tiles as keycap links, rest behind a "More" expander.
+// The primary tiles arrive already partitioned into BANDS — the member's
+// loose keycaps first under no heading, then one heading per group they
+// named. Same set as the sidebar shelf, and now the same structure.
 // Edit mode (long-press a tile or tap Edit): tiles jiggle; tapping a
 // primary tile (or its – badge) demotes it to More, tapping a More tile
-// (or its + badge) appends it to primary, dragging reorders primary.
+// (or its + badge) appends it to primary, dragging reorders WITHIN a band.
+// Moving a tool between groups is the My World editor's job, not a gesture
+// here — see the per-band DndContext below.
 // Done persists once via onSave; Esc/Cancel reverts. Tiles never navigate
 // while editing. Whole-tile taps keep the ≥44px target; badges are the
 // visual affordance.
@@ -19,17 +24,20 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Minus, Plus, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import type { Destination } from '@/lib/navigation/appDestinations';
+import { bandDestinations, type Destination, type TileBand } from '@/lib/navigation/appDestinations';
 import { NAV_SECTION_LABELS, type NavSectionKey } from '@/lib/navigation/navCatalog';
 
 interface HomeTileGridProps {
-  primary: Destination[];
+  /** Loose tiles first (groupId null, no heading), then one band per group. */
+  bands: TileBand[];
   overflow: Destination[];
   onSave: (order: string[]) => Promise<boolean>;
 }
 
 const LONG_PRESS_MS = 500;
 const LONG_PRESS_SLOP_PX = 10;
+
+const GRID_CLASSES = 'grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2';
 
 // Sections rendered as their own "More" group, in display order. A tile
 // whose section isn't in this list (or has no section at all) falls
@@ -119,12 +127,40 @@ function AddTile({ tile, index, onAdd }: { tile: Destination; index: number; onA
   );
 }
 
-export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
+// One band: the member's heading (absent for the loose band, which renders
+// with no heading at all) above its run of keycaps. Shared by view and edit
+// mode so the two can never drift apart.
+function BandSection({ band, children }: { band: TileBand; children: React.ReactNode }) {
+  return (
+    <section className="space-y-2">
+      {band.name && (
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+          {band.name}
+        </h3>
+      )}
+      {children}
+    </section>
+  );
+}
+
+export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
   const { toast } = useToast();
   // draft === null → view mode; draft = ordered primary keys while editing.
   const [draft, setDraft] = useState<string[] | null>(null);
   const [saving, setSaving] = useState(false);
   const editing = draft !== null;
+
+  // The flat grid set, in render order — every seed, budget and save still
+  // speaks flat keys; the bands are how it is laid out, not what it is.
+  const primary = useMemo(() => bands.flatMap((b) => b.tiles), [bands]);
+  // Membership only, in band order — enough for bandDestinations to
+  // re-partition the edit draft. Collapse state is a sidebar concern.
+  const bandGroups = useMemo(
+    () => bands
+      .filter((b): b is TileBand & { groupId: string; name: string } => b.groupId !== null)
+      .map((b) => ({ id: b.groupId, name: b.name, tools: b.tiles.map((t) => t.key) })),
+    [bands],
+  );
 
   const byKey = useMemo(
     () => new Map([...primary, ...overflow].map((t) => [t.key, t])),
@@ -137,6 +173,11 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
   const draftOverflow = draft
     ? [...primary, ...overflow].filter((t) => !draft.includes(t.key))
     : overflow;
+  // Re-derived from the draft on every edit, never from the `bands` prop: a
+  // removed tile must take its now-empty heading with it, and a tile added
+  // from More must land in the LOOSE band rather than under whichever
+  // heading it happened to follow in the flat draft.
+  const draftBands = draft ? bandDestinations(draftPrimary, bandGroups) : bands;
 
   // Long-press any view-mode tile to enter edit mode; cancelled by
   // movement past the slop (i.e. a scroll) or release.
@@ -189,11 +230,38 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
     if (!draft || draft.includes(key)) return;
     setDraft((d) => (d && !d.includes(key) ? [...d, key] : d));
   };
+  const removeTile = (key: string) => setDraft((d) => (d ? d.filter((k) => k !== key) : d));
+
+  // View-mode keycap. Extracted verbatim from the old primary.map(...) body
+  // so banding changed the layout and nothing else — long-press, drag
+  // cession and tone handling are untouched.
+  const renderTile = (t: Destination) => (
+    <Link key={t.key} to={t.to}
+      // Browsers treat <a> as natively draggable, which
+      // hijacked pointerdown before the long-press timer
+      // could fire — tenants tried to rearrange tiles and
+      // got a URL preview icon instead. Cede the pointer
+      // stream so the long-press-to-edit + drag flow works.
+      draggable={false}
+      onDragStart={(e) => e.preventDefault()}
+      onPointerDown={onTilePointerDown}
+      onPointerMove={onTilePointerMove}
+      onPointerUp={clearPress}
+      onPointerCancel={clearPress}
+      onContextMenu={(e) => e.preventDefault()}
+      className={`flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground group min-h-[44px]`}>
+      <KeycapFace tile={t} editing={false} />
+    </Link>
+  );
 
   const done = async () => {
     if (!draft) return;
     setSaving(true);
-    const ok = await onSave(draft);
+    // The order the member SEES, not the raw draft. addTile appends to the
+    // flat draft, but an ungrouped tile RENDERS in the leading loose band —
+    // so the raw draft would hand the caller an order the grid never showed
+    // (that tile trailing the last group instead of leading the loose run).
+    const ok = await onSave(draftBands.flatMap((b) => b.tiles.map((t) => t.key)));
     setSaving(false);
     if (ok) {
       setDraft(null);
@@ -231,57 +299,69 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
 
       {editing ? (
         <div className={saving ? 'pointer-events-none opacity-60' : undefined}>
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-            <SortableContext items={draftPrimary.map((t) => t.key)} strategy={rectSortingStrategy}>
-              <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
-                {draftPrimary.map((t, i) => (
-                  <SortableTile key={t.key} tile={t} index={i}
-                    onRemove={(key) => setDraft((d) => (d ? d.filter((k) => k !== key) : d))} />
-                ))}
-              </div>
-            </SortableContext>
-            {draftPrimary.length === 0 && (
-              <p className="text-sm text-muted-foreground py-2">
-                Your grid is empty — add apps back from below.
-              </p>
-            )}
-            <div className="flex flex-wrap items-baseline gap-x-2 mt-4 mb-2">
-              <span className="text-xs uppercase tracking-widest text-muted-foreground">More</span>
-            </div>
-            {draftOverflow.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Everything is on your grid.</p>
-            ) : (
-              <>
-                {MORE_SECTIONS
-                  .map((s) => ({ s, tiles: draftOverflow.filter((t) => t.section === s) }))
-                  .filter(({ tiles }) => tiles.length > 0)
-                  .map(({ s, tiles }) => (
-                    <div key={s}>
-                      <div className="text-xs uppercase tracking-widest text-muted-foreground/70 mt-3 mb-2">
-                        {NAV_SECTION_LABELS[s]}
-                      </div>
-                      <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
-                        {tiles.map((t, i) => (
-                          <AddTile key={t.key} tile={t} index={i}
-                            onAdd={addTile} />
-                        ))}
-                      </div>
+          <div className="space-y-4">
+            {draftBands.map((band) => (
+              <BandSection key={band.groupId ?? '__loose'} band={band}>
+                {/* One DndContext PER BAND, not one wrapping the whole grid.
+                    Collision detection is DndContext-scoped, so this is what
+                    makes "a drag reorders WITHIN a band" structurally true
+                    rather than a runtime check someone has to remember.
+                    Re-filing a tool belongs to the My World editor's
+                    "Move to…" menu; a drag that did it here would be a
+                    second, less discoverable grouping UI competing with it. */}
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+                  <SortableContext items={band.tiles.map((t) => t.key)} strategy={rectSortingStrategy}>
+                    <div className={GRID_CLASSES}>
+                      {band.tiles.map((t, i) => (
+                        <SortableTile key={t.key} tile={t} index={i} onRemove={removeTile} />
+                      ))}
                     </div>
-                  ))}
-                {/* Catch-all: a tile whose section is unset OR not one of
-                    MORE_SECTIONS (e.g. a future grid-surface entry like
-                    'today') still lands here instead of being unpinnable. */}
-                {draftOverflow.filter((t) => !t.section || !MORE_SECTIONS.includes(t.section)).length > 0 && (
-                  <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
-                    {draftOverflow.filter((t) => !t.section || !MORE_SECTIONS.includes(t.section)).map((t, i) => (
-                      <AddTile key={t.key} tile={t} index={i}
-                        onAdd={addTile} />
-                    ))}
+                  </SortableContext>
+                </DndContext>
+              </BandSection>
+            ))}
+          </div>
+          {draftPrimary.length === 0 && (
+            <p className="text-sm text-muted-foreground py-2">
+              Your grid is empty — add apps back from below.
+            </p>
+          )}
+          <div className="flex flex-wrap items-baseline gap-x-2 mt-4 mb-2">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">More</span>
+          </div>
+          {draftOverflow.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Everything is on your grid.</p>
+          ) : (
+            <>
+              {MORE_SECTIONS
+                .map((s) => ({ s, tiles: draftOverflow.filter((t) => t.section === s) }))
+                .filter(({ tiles }) => tiles.length > 0)
+                .map(({ s, tiles }) => (
+                  <div key={s}>
+                    <div className="text-xs uppercase tracking-widest text-muted-foreground/70 mt-3 mb-2">
+                      {NAV_SECTION_LABELS[s]}
+                    </div>
+                    <div className={GRID_CLASSES}>
+                      {tiles.map((t, i) => (
+                        <AddTile key={t.key} tile={t} index={i}
+                          onAdd={addTile} />
+                      ))}
+                    </div>
                   </div>
-                )}
-              </>
-            )}
-          </DndContext>
+                ))}
+              {/* Catch-all: a tile whose section is unset OR not one of
+                  MORE_SECTIONS (e.g. a future grid-surface entry like
+                  'today') still lands here instead of being unpinnable. */}
+              {draftOverflow.filter((t) => !t.section || !MORE_SECTIONS.includes(t.section)).length > 0 && (
+                <div className={GRID_CLASSES}>
+                  {draftOverflow.filter((t) => !t.section || !MORE_SECTIONS.includes(t.section)).map((t, i) => (
+                    <AddTile key={t.key} tile={t} index={i}
+                      onAdd={addTile} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
         </div>
       ) : (
         <>
@@ -290,24 +370,13 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
               Your grid is empty — tap Edit to add apps.
             </p>
           ) : (
-            <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2">
-              {primary.map((t) => (
-                <Link key={t.key} to={t.to}
-                  // Browsers treat <a> as natively draggable, which
-                  // hijacked pointerdown before the long-press timer
-                  // could fire — tenants tried to rearrange tiles and
-                  // got a URL preview icon instead. Cede the pointer
-                  // stream so the long-press-to-edit + drag flow works.
-                  draggable={false}
-                  onDragStart={(e) => e.preventDefault()}
-                  onPointerDown={onTilePointerDown}
-                  onPointerMove={onTilePointerMove}
-                  onPointerUp={clearPress}
-                  onPointerCancel={clearPress}
-                  onContextMenu={(e) => e.preventDefault()}
-                  className={`flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground group min-h-[44px]`}>
-                  <KeycapFace tile={t} editing={false} />
-                </Link>
+            <div className="space-y-4">
+              {bands.map((band) => (
+                <BandSection key={band.groupId ?? '__loose'} band={band}>
+                  <div className={GRID_CLASSES}>
+                    {band.tiles.map(renderTile)}
+                  </div>
+                </BandSection>
               ))}
             </div>
           )}
@@ -316,7 +385,7 @@ export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
               <summary className="text-muted-foreground cursor-pointer py-2 min-h-[44px] flex items-center">
                 More ({overflow.length})
               </summary>
-              <div className="grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2 pt-2">
+              <div className={`${GRID_CLASSES} pt-2`}>
                 {overflow.map((t) => (
                   <Link key={t.key} to={t.to}
                     draggable={false}
