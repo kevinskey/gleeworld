@@ -23,6 +23,17 @@ export interface MyWorldGroupRowProps {
   onToggle: (id: string, collapsed: boolean) => void;
   onMove: (id: string, delta: -1 | 1) => void;
   onDelete: (id: string) => void;
+  /**
+   * Mount already in the inline name field, focused. Spec §5.4: creating a
+   * group focuses its name field, so the member names it in place instead of
+   * living with "New Group" until they find the ⋯ → Rename item.
+   *
+   * Read once, at mount — a newly created group is a newly mounted row (its
+   * id is fresh, so React never reuses another group's row for it), and
+   * re-deriving `editing` from a prop would yank a member back into the field
+   * on an unrelated re-render.
+   */
+  autoFocusName?: boolean;
 }
 
 // 14px padding, not MyWorldEditor's 10px (p-2.5): this wraps a bare 16px
@@ -32,14 +43,27 @@ export interface MyWorldGroupRowProps {
 const TAP_TARGET = 'shrink-0 p-3.5 -m-3.5 flex items-center justify-center disabled:opacity-40';
 
 export function MyWorldGroupRow({
-  group, count, disabled, isFirst, isLast, onRename, onToggle, onMove, onDelete,
+  group, count, disabled, isFirst, isLast, onRename, onToggle, onMove, onDelete, autoFocusName,
 }: MyWorldGroupRowProps) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(autoFocusName === true);
   const [draft, setDraft] = useState(group.name);
   const inputRef = useRef<HTMLInputElement>(null);
+  // True only for a field opened by group CREATION, never by ⋯ → Rename.
+  const openedByCreate = useRef(autoFocusName === true);
 
   useEffect(() => {
-    if (editing) inputRef.current?.select();
+    if (!editing) return;
+    // focus() only on the create path. On the ⋯ → Rename path the Radix menu
+    // is still mounted when this runs, and its FocusScope traps focus: our
+    // focus() is pulled straight back out, which fires this field's own
+    // onBlur → commit() → setEditing(false), closing the field the instant it
+    // opened. (Proven with a probe; see the fix report.) select() alone is
+    // what that path has always done, so it is left exactly as it was.
+    if (openedByCreate.current) {
+      openedByCreate.current = false;
+      inputRef.current?.focus();
+    }
+    inputRef.current?.select();
   }, [editing]);
 
   const commit = () => {

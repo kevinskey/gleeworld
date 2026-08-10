@@ -84,6 +84,28 @@ describe('MyWorldGroupRow', () => {
     expect(screen.queryByRole('menuitem', { name: 'Move up' })).not.toBeInTheDocument();
   });
 
+  // Spec §5.4: creating a group focuses an inline name field, so the member
+  // names it in place rather than living with "New Group" until they find
+  // the ⋯ → Rename item.
+  it('mounts already in the focused name field when autoFocusName is set', () => {
+    renderRow({ autoFocusName: true });
+    expect(screen.getByLabelText('Group name')).toHaveFocus();
+  });
+
+  it('does not open the name field without autoFocusName', () => {
+    renderRow();
+    expect(screen.queryByLabelText('Group name')).toBeNull();
+  });
+
+  // A member who creates a group and taps away without typing must keep the
+  // fallback name, not end up with a headerless group.
+  it('keeps the fallback name when an auto-opened field is blurred untouched', () => {
+    const props = renderRow({ autoFocusName: true });
+    fireEvent.blur(screen.getByLabelText('Group name'));
+    expect(props.onRename).toHaveBeenCalledWith('a', 'Sunday');
+    expect(screen.getByText('Sunday')).toBeInTheDocument();
+  });
+
   it('warns that delete keeps the tools', async () => {
     const props = renderRow();
     openMenu(/Options for Sunday/);
@@ -189,6 +211,92 @@ describe('MyWorldEditor — groups', () => {
     expect(next.at(-1)!.tools).toEqual([]);
     expect(next.at(-1)!.id).toEqual(expect.any(String));
     expect(next.at(-1)!.id).not.toEqual('a');
+  });
+
+  // "New group…" lives inside the row's "Move ‹Tool›" menu, as a peer of the
+  // move targets — so it has to MOVE the tool, not just make an empty group
+  // and leave it behind. Two taps from two rows would otherwise yield two
+  // groups both named "New Group" and neither holding anything.
+  it('files the tool into the group when Move → New group… is used', async () => {
+    const { onToolsChange, onGroupsChange } = renderEditor();
+    openMenu(/Move Calendar/);
+    fireEvent.click(await screen.findByRole('menuitem', { name: /New group/ }));
+    expect(onToolsChange).toHaveBeenCalledWith(['messages']);
+    const next = onGroupsChange.mock.calls.at(-1)![0];
+    expect(next).toHaveLength(2);
+    expect(next.at(-1)!.tools).toEqual(['calendar']);
+    // ...and taken out of the group it was in, when it was in one.
+    expect(next[0].tools).toEqual(['liturgy']);
+  });
+
+  it('takes a GROUPED tool out of its old group when Move → New group… is used', async () => {
+    const { onGroupsChange } = renderEditor();
+    openMenu(/Move Liturgy Planner/);
+    fireEvent.click(await screen.findByRole('menuitem', { name: /New group/ }));
+    const next = onGroupsChange.mock.calls.at(-1)![0];
+    expect(next[0].tools).toEqual([]);
+    expect(next.at(-1)!.tools).toEqual(['liturgy']);
+  });
+
+  // The editor is CONTROLLED: the new row only exists once the parent has
+  // persisted the group and re-rendered. The editor remembers the id it made
+  // so that row opens straight into its name field on that later render.
+  it('opens the new group\'s name field once the parent feeds the group back', () => {
+    const onToolsChange = vi.fn<(next: string[]) => void>();
+    const onGroupsChange = vi.fn<(next: ToolGroup[]) => void>();
+    const { rerender } = render(
+      <MyWorldEditor available={available} tools={['calendar']} groups={[]}
+        onToolsChange={onToolsChange} onGroupsChange={onGroupsChange} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'New Group' }));
+    const created = onGroupsChange.mock.calls.at(-1)![0];
+    rerender(
+      <MyWorldEditor available={available} tools={['calendar']} groups={created}
+        onToolsChange={onToolsChange} onGroupsChange={onGroupsChange} />,
+    );
+    expect(screen.getByLabelText('Group name')).toHaveFocus();
+  });
+
+  it('opens the name field for a group created from a row\'s Move menu too', async () => {
+    const onToolsChange = vi.fn<(next: string[]) => void>();
+    const onGroupsChange = vi.fn<(next: ToolGroup[]) => void>();
+    const { rerender } = render(
+      <MyWorldEditor available={available} tools={['calendar', 'messages']} groups={[]}
+        onToolsChange={onToolsChange} onGroupsChange={onGroupsChange} />,
+    );
+    openMenu(/Move Calendar/);
+    fireEvent.click(await screen.findByRole('menuitem', { name: /New group/ }));
+    rerender(
+      <MyWorldEditor
+        available={available}
+        tools={onToolsChange.mock.calls.at(-1)![0]}
+        groups={onGroupsChange.mock.calls.at(-1)![0]}
+        onToolsChange={onToolsChange}
+        onGroupsChange={onGroupsChange}
+      />,
+    );
+    expect(screen.getByLabelText('Group name')).toHaveFocus();
+  });
+
+  // Only the row the member just made opens its field — an existing group
+  // must not be yanked into rename by an unrelated re-render.
+  it('leaves existing groups alone when a new one is created', () => {
+    const onToolsChange = vi.fn<(next: string[]) => void>();
+    const onGroupsChange = vi.fn<(next: ToolGroup[]) => void>();
+    const existing: ToolGroup[] = [{ id: 'a', name: 'Sunday', tools: ['liturgy'], collapsed: false }];
+    const { rerender } = render(
+      <MyWorldEditor available={available} tools={['calendar']} groups={existing}
+        onToolsChange={onToolsChange} onGroupsChange={onGroupsChange} />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'New Group' }));
+    rerender(
+      <MyWorldEditor available={available} tools={['calendar']}
+        groups={onGroupsChange.mock.calls.at(-1)![0]}
+        onToolsChange={onToolsChange} onGroupsChange={onGroupsChange} />,
+    );
+    // Exactly one open field, and "Sunday" is still a plain header.
+    expect(screen.getAllByLabelText('Group name')).toHaveLength(1);
+    expect(screen.getByText('Sunday')).toBeInTheDocument();
   });
 
   it('counts every chosen tool, loose and grouped', () => {

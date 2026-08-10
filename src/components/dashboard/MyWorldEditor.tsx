@@ -21,7 +21,7 @@
 // persistence (and the tenant/member identity) themselves.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md
 import type React from 'react';
-import { Fragment, useMemo } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import {
   DndContext, PointerSensor, closestCenter, useSensor, useSensors,
   type DragEndEvent,
@@ -199,11 +199,20 @@ export function MyWorldEditor({
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
+  // The group the member just created, so its row can open straight into its
+  // inline name field (spec §5.4). This component is CONTROLLED, so the row
+  // does not exist until the parent persists the new group and feeds it back
+  // — remembering the id is what lets the field open on that later render.
+  const [newGroupId, setNewGroupId] = useState<string | null>(null);
+
   // Both lists are handed up on every change. moveTool/deleteGroup can touch
   // loose AND groups in a single operation, so emitting only one callback
   // would let the parent persist half an edit.
   const commit = (next: Shelf) => {
     if (disabled) return;
+    // Any subsequent edit closes the just-created window; the two creation
+    // handlers below re-open it for their own id after committing.
+    setNewGroupId(null);
     onToolsChange(next.tools);
     onGroupsChange?.(next.groups);
   };
@@ -254,7 +263,26 @@ export function MyWorldEditor({
     onToolsChange([...tools, key]);
   };
 
-  const handleNewGroup = () => commit(createGroup(shelf, 'New Group', crypto.randomUUID()));
+  /** The standalone ＋ New Group row: an empty group, named in place. */
+  const handleNewGroup = () => {
+    if (disabled) return;
+    const id = crypto.randomUUID();
+    commit(createGroup(shelf, 'New Group', id));
+    setNewGroupId(id);
+  };
+
+  // "New group…" sits INSIDE a row's "Move ‹Tool›" menu, listed beneath the
+  // other move targets and "Move out of group" — spec §5.4 makes it their
+  // peer, so it must file the tool into the group it makes. Creating an empty
+  // group and leaving the tool where it was is the same tap doing half its
+  // job, and doing it from two rows would strand the member with two groups
+  // both named "New Group", indistinguishable in every later Move menu.
+  const handleNewGroupWithTool = (key: string) => {
+    if (disabled) return;
+    const id = crypto.randomUUID();
+    commit(moveTool(createGroup(shelf, 'New Group', id), key, id));
+    setNewGroupId(id);
+  };
 
   const widgetList = widgets ?? [];
   // Unchecking the LAST widget stores [], and resolveWidgets([]) re-expands
@@ -304,7 +332,7 @@ export function MyWorldEditor({
                           groups={groups}
                           disabled={disabled}
                           onMoveTo={(target) => commit(moveTool(shelf, key, target))}
-                          onNewGroup={handleNewGroup}
+                          onNewGroup={() => handleNewGroupWithTool(key)}
                         />
                       ) : undefined}
                     />
@@ -320,6 +348,7 @@ export function MyWorldEditor({
                         disabled={disabled}
                         isFirst={index === 0}
                         isLast={index === groups.length - 1}
+                        autoFocusName={group.id === newGroupId}
                         onRename={(id, name) => commit(renameGroup(shelf, id, name))}
                         onToggle={(id, collapsed) => commit(setGroupCollapsed(shelf, id, collapsed))}
                         onMove={(id, delta) => commit(moveGroup(shelf, id, delta))}
@@ -339,7 +368,7 @@ export function MyWorldEditor({
                               groups={groups}
                               disabled={disabled}
                               onMoveTo={(target) => commit(moveTool(shelf, key, target))}
-                              onNewGroup={handleNewGroup}
+                              onNewGroup={() => handleNewGroupWithTool(key)}
                             />
                           }
                         />
