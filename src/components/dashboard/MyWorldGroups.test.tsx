@@ -54,7 +54,7 @@ const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 30
 // Open ⋯ → Rename and hand back the FOCUSED field.
 //
 // Radix steals focus twice on the way out of the menu and jsdom hides both by
-// default, which is why this helper is deliberate about each one:
+// default:
 //   (a) FocusScope registers a document `focusin` handler while the content is
 //       still mounted (Presence defers the unmount a render, FocusScope tears
 //       down in a passive cleanup), so a focus landing on our field snaps back
@@ -63,8 +63,19 @@ const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 30
 //       tests were watching a field that only survives in jsdom.
 //   (b) FocusScope's cleanup refocuses the trigger from a setTimeout(0).
 //       Nothing in this file flushed timers, so it never ran either.
-// Asserting focus after settle() is what makes these tests capable of failing
-// under either browser outcome.
+//
+// HOW MUCH OF THAT THIS FILE ACTUALLY PINS — measured, not assumed. Ablation
+// on 2026-08-10, one guard removed at a time:
+//   - open the field straight from onSelect (defeat NEITHER stealer) → 3 of
+//     33 fail. So (a) IS genuinely covered, and asserting focus after
+//     settle() is what covers it.
+//   - drop MyWorldGroupRow's requestAnimationFrame only → 33/33 still pass.
+//   - drop its onCloseAutoFocus preventDefault only    → 33/33 still pass.
+// jsdom's rAF is setInterval(1000/60) ≈ 16.7ms, so it lands after Radix's
+// setTimeout(0) with or without our deferral, and RTL's act() flushes
+// Presence's deferred unmount synchronously. Do NOT read a green run here as
+// permission to delete either of those two guards — see the notes at both
+// sites in MyWorldGroupRow.tsx. Reproducing (b) needs a real browser.
 const openRename = async () => {
   openMenu(/Options for Sunday/);
   fireEvent.click(await screen.findByRole('menuitem', { name: 'Rename' }));
@@ -105,7 +116,11 @@ describe('MyWorldGroupRow', () => {
   // focus back from, which fired the field's own onBlur → commit() →
   // setEditing(false). The member tapped Rename and the field vanished,
   // having silently committed the unchanged name.
-  it('keeps the rename field open and focused through both of Radix\'s focus steals', async () => {
+  //
+  // Named for what it pins: the TRAP, stealer (a). The trigger-refocus
+  // restore, (b), survives this assertion in jsdom — see the ablation note on
+  // openRename above.
+  it('keeps the rename field open and focused past Radix\'s focus trap', async () => {
     const props = renderRow();
     await openRename();
     // Give the close-autofocus restore a second chance to land after the

@@ -112,9 +112,7 @@ export function MyWorldGroupRow({
       </span>
 
       {/* Opening the rename field takes defeating TWO independent focus
-          stealers in @radix-ui/react-menu. Neither is visible in jsdom by
-          default, which is why the original tests passed over a broken
-          control — see this file's tests for how they now force both.
+          stealers in @radix-ui/react-menu.
 
           (a) THE TRAP, while the content is still mounted. FocusScope
               registers a document `focusin` handler when trapped (a modal
@@ -131,7 +129,18 @@ export function MyWorldGroupRow({
               onCloseAutoFocus does the same. preventDefault() skips both
               (composeEventHandlers checks for it). A bare setTimeout(0) of
               our own would NOT be enough — it queues before Radix's, so the
-              trigger refocus would still land on top of the open field. */}
+              trigger refocus would still land on top of the open field.
+
+          WHAT THE TESTS ACTUALLY PIN. Only (a) is covered. Ablation on
+          2026-08-10: rewiring Rename to open the field straight from
+          `onSelect` — defeating neither stealer — fails 3 of this file's 33
+          tests. But dropping the rAF alone leaves 33/33 GREEN, and dropping
+          `onCloseAutoFocus` alone leaves 33/33 GREEN. jsdom's rAF is a
+          setInterval(1000/60) ≈ 16.7ms, so it lands after Radix's
+          setTimeout(0) whether or not we ask it to, and RTL's act() flushes
+          Presence's deferred unmount synchronously. See the note at each
+          guard site below before deleting either one: a green suite is not
+          evidence that they are dead code. */}
       <DropdownMenu
         open={menuOpen}
         onOpenChange={(open) => {
@@ -139,6 +148,14 @@ export function MyWorldGroupRow({
           if (open || !wantRename.current) return;
           wantRename.current = false;
           setDraft(group.name);
+          // LOAD-BEARING IN A REAL BROWSER, NOT PINNED BY THIS SUITE.
+          // The rAF pushes setEditing past Presence's deferred unmount, so
+          // the field mounts after FocusScope's trap is torn down. Ablated
+          // 2026-08-10: replacing this with a bare setEditing(true) still
+          // passes all 33 tests, because jsdom's rAF is setInterval(1000/60)
+          // and RTL's act() flushes the deferred unmount synchronously —
+          // neither reproduces the real commit ordering. Green tests are NOT
+          // evidence this is superfluous. Verify in a browser before removing.
           requestAnimationFrame(() => setEditing(true));
         }}
       >
@@ -147,6 +164,12 @@ export function MyWorldGroupRow({
             <MoreHorizontal className="w-4 h-4" aria-hidden />
           </button>
         </DropdownMenuTrigger>
+        {/* onCloseAutoFocus preventDefault is LOAD-BEARING IN A REAL BROWSER
+            and NOT PINNED BY THIS SUITE — it is stealer (b) above. Ablated
+            2026-08-10: removing it still passes all 33 tests, because jsdom
+            never runs the trigger-refocus race that eats the field's focus.
+            Green tests are NOT evidence this is dead code. Verify in a
+            browser before removing. */}
         <DropdownMenuContent align="end" onCloseAutoFocus={(event) => event.preventDefault()}>
           <DropdownMenuItem onSelect={() => { wantRename.current = true; }}>
             Rename
