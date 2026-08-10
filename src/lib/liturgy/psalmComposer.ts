@@ -16,6 +16,51 @@ export const PSALM_WIDTH_IN = 4;
 export const CSS_DPI = 96;
 export const PSALM_WIDTH_PX = PSALM_WIDTH_IN * CSS_DPI; // 384
 
+/**
+ * One staff space in NotationView's engraving units — VexFlow's own
+ * STAVE_LINE_DISTANCE. Restated here rather than imported so this module
+ * stays free of React and VexFlow; psalmComposer.test.ts asserts it still
+ * matches NotationView's exported STAFF_SPACE, so the two cannot drift.
+ */
+const STAFF_SPACE_UNITS = 10;
+
+/**
+ * How tall the psalm's staff PRINTS, in inches.
+ *
+ * The spec fixed the psalm card's WIDTH at four inches and left its staff
+ * size to fall out of the renderer — and what fell out was VexFlow's screen
+ * default. One engraving unit was one CSS pixel, a staff space is ten units,
+ * so the staff printed 40/96 of an inch: 10.6mm, half again bigger than a
+ * hymnal's, on a 5.5×8.5 leaflet whose body text is 8pt. Nothing chose that
+ * number. Width in inches and height in screen pixels is not a print spec.
+ *
+ * So the height is now stated, in the same units as the width. A quarter of
+ * an inch — 6.35mm — is an ordinary small-score rastral: comfortably readable
+ * in a pew, and small enough that two systems of a psalm tone occupy about an
+ * inch and a half of a panel instead of a third of it.
+ */
+export const PSALM_STAFF_HEIGHT_IN = 0.25;
+
+/**
+ * Engraving scale per measures-per-line choice.
+ *
+ * `scale` is how many CSS pixels one engraving unit is worth, so it sets the
+ * staff's printed SIZE and, inversely, how much layout room four inches
+ * buys — the two are the same lever, which is why they have to be set from
+ * the size that matters and the other allowed to follow.
+ *
+ * Two per line is the psalm card's real case, and it is pinned to
+ * PSALM_STAFF_HEIGHT_IN exactly. Four per line keeps the reduction it always
+ * had relative to it (0.62×): four bars of lyrics in four inches genuinely
+ * cannot be set at reading size, and small print is the honest consequence of
+ * asking for them, not a regression. The renderer still drops below the
+ * requested count when even that will not fit.
+ */
+export const PSALM_ENGRAVING_SCALE: Record<2 | 4, number> = {
+  2: (PSALM_STAFF_HEIGHT_IN * CSS_DPI) / (4 * STAFF_SPACE_UNITS), // 0.6
+  4: ((PSALM_STAFF_HEIGHT_IN * CSS_DPI) / (4 * STAFF_SPACE_UNITS)) * 0.62,
+};
+
 const STEPS: Pitch['step'][] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 /** Semitones above the tonic for each major-scale degree. */
 const MAJOR_OFFSETS = [0, 2, 4, 5, 7, 9, 11];

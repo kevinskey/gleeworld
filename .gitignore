@@ -40,3 +40,10 @@ test-results/
 
 # Superpowers scratch workspace (agent tooling, never repo content)
 .superpowers/
+
+# Measurement scaffolding for the engraver — a second Vite entry point that
+# renders NotationView at the printed worship aid's real dimensions so the
+# staff size, lyric size and syllable gaps can be measured off the rendered
+# SVG. Diagnostic only; nothing in src/ imports it and the build never sees
+# it (Vite's only entry is index.html). Deliberately not shipped.
+harness/

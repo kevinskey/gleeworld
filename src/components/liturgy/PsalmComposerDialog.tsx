@@ -17,7 +17,7 @@ import { useMidiInput, midiToPitch } from '@/lib/notation/useMidiInput';
 import { svgToJpegBlob, imageFileName, downloadBlob } from '@/lib/notation/exportImage';
 import {
   measuresPerLine, psalmSyllables, psalmLines, psalmScoreTitle,
-  PSALM_WIDTH_PX, PSALM_WIDTH_IN,
+  PSALM_WIDTH_PX, PSALM_WIDTH_IN, PSALM_ENGRAVING_SCALE,
 } from '@/lib/liturgy/psalmComposer';
 import { savePsalmToLibrary } from '@/lib/liturgy/psalmScores';
 import { musicXmlToEditorScore } from '@/lib/notation/musicxmlRead';
@@ -96,23 +96,28 @@ const SELECT_CLS = 'h-9 border border-input bg-background px-1.5 text-xs lg:h-8'
 const FIELD_LABEL_CLS = 'shrink-0 text-xs text-muted-foreground';
 
 /**
- * Engraving size per layout choice.
+ * Engraving size per layout choice — see PSALM_ENGRAVING_SCALE.
  *
- * Four inches is narrow, so bars-per-line and note size trade directly
- * against each other: the layout space is 384/scale units and the clef and
- * time signature take ~70 of it before a note is drawn. At NotationView's
- * reading default of 1.35 that leaves ~198 units — which one bar of quarter
- * notes under lyrics consumes on its own, which is exactly why every line
- * came out one measure wide.
- *
- * So two-per-line is engraved near full size and four-per-line noticeably
- * smaller. Small print is the honest consequence of fitting four bars in
- * four inches, not a regression.
+ * It lives in psalmComposer rather than here because it is derived from the
+ * card's PRINTED staff height, which is part of the same print spec as its
+ * four-inch width and belongs beside it. The value used to be a bare 1.0 in
+ * this file, which read as "full size" and was in fact "whatever a staff
+ * space happens to be in screen pixels".
  */
-const ENGRAVING_SCALE: Record<2 | 4, number> = { 2: 1.0, 4: 0.62 };
+const ENGRAVING_SCALE = PSALM_ENGRAVING_SCALE;
 
-/** On-screen magnification. Presentation only — see the staff markup. */
-const SCREEN_ZOOM = 1.6;
+/**
+ * On-screen magnification. Presentation only — see the staff markup.
+ *
+ * Raised with the engraving scale, and for the same reason. The staff is now
+ * engraved at its true printed size (a quarter-inch tall, not the two-fifths
+ * of an inch VexFlow's screen default was giving it), so previewing it at the
+ * old zoom would show the composer a staff 40% smaller than the one it used
+ * to draw on. 1.85 is the ceiling: the dialog is max-w-3xl (768px) and the
+ * frame's padding leaves ~724px, so 384 × 1.85 = 710px is the largest preview
+ * that does not put a horizontal scrollbar under a desktop-width dialog.
+ */
+const SCREEN_ZOOM = 1.85;
 
 const PER_LINE_CHOICES = [2, 4] as const;
 
