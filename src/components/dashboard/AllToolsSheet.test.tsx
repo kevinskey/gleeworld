@@ -5,7 +5,6 @@ import '@testing-library/jest-dom/vitest';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { AllToolsSheet, type AllToolsSheetProps } from './AllToolsSheet';
 import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
-import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 import { closeAllTools } from '@/components/tour/productTourScript';
 
 // Same mocking shape as AddYouTubeVideoForm.test.tsx's toast coverage —
@@ -214,7 +213,7 @@ describe('AllToolsSheet — closing resets the search', () => {
 describe('AllToolsSheet — pinning', () => {
   it('pins without navigating or closing', async () => {
     const { onPin, onOpenChange } = renderSheet();
-    fireEvent.click(screen.getByRole('button', { name: /pin academy to your space/i }));
+    fireEvent.click(screen.getByRole('button', { name: /pin academy to your world/i }));
     await waitFor(() => expect(onPin).toHaveBeenCalledWith('academy'));
     expect(onOpenChange).not.toHaveBeenCalled();
     // Exact match, not toHaveTextContent('/dashboard') — jest-dom's
@@ -228,7 +227,7 @@ describe('AllToolsSheet — pinning', () => {
   it('surfaces a failed pin instead of discarding it silently', async () => {
     const onPin = vi.fn().mockResolvedValue(false);
     renderSheet({ onPin });
-    fireEvent.click(screen.getByRole('button', { name: /pin academy to your space/i }));
+    fireEvent.click(screen.getByRole('button', { name: /pin academy to your world/i }));
     await waitFor(() =>
       expect(toastMock).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -241,8 +240,8 @@ describe('AllToolsSheet — pinning', () => {
 
   it('marks already-pinned entries and offers no pin button for them', () => {
     renderSheet({ pinned: ['academy'] });
-    expect(screen.queryByRole('button', { name: /pin academy to your space/i })).toBeNull();
-    expect(screen.getByText(/in your space/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /pin academy to your world/i })).toBeNull();
+    expect(screen.getByText(/in your world/i)).toBeInTheDocument();
   });
 
   it('offers no ⊕ at all when the stored record has not loaded', () => {
@@ -250,7 +249,7 @@ describe('AllToolsSheet — pinning', () => {
     // ever fail, so the row is rendered without one. The catalog itself is
     // untouched: every entry is still listed and still navigable.
     renderSheet({ canPin: false });
-    expect(screen.queryByRole('button', { name: /to your space/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /to your world/i })).toBeNull();
     for (const e of available) expect(screen.getByText(e.label)).toBeInTheDocument();
   });
 
@@ -258,48 +257,41 @@ describe('AllToolsSheet — pinning', () => {
     // resolveNav's output includes 'home', and sanitizeTools strips it at
     // write time — so a ⊕ on this row produced a successful RPC, a `true`
     // return, no toast, and no change whatsoever. It gets the same
-    // "In your space" affordance an already-placed tool gets. The row stays
+    // "In your world" affordance an already-placed tool gets. The row stays
     // in `available` (navigable, searchable) rather than being filtered out.
     const home = byKey.get('home')!;
     const { onPin } = renderSheet({ available: [home, ...available] });
 
     expect(screen.getByText('Command Center')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /pin command center to your space/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /pin command center to your world/i })).toBeNull();
     const homeRow = screen.getByText('Command Center').closest('[cmdk-item]') as HTMLElement;
-    expect(within(homeRow).getByText('In your space')).toBeInTheDocument();
+    expect(within(homeRow).getByText('In your world')).toBeInTheDocument();
     expect(onPin).not.toHaveBeenCalled();
   });
 
-  it('does not let Home consume a cap slot', () => {
-    // Folding 'home' into the `pinned` PROP would have been the other way to
-    // mark it — and it would have made the cap banner fire one slot early.
-    const home = byKey.get('home')!;
-    // Exactly one slot short of the cap. If Home were counted, the banner
-    // would appear and every ⊕ would go dead one pin early.
-    renderSheet({
-      available: [home, ...available],
-      pinned: NAV_CATALOG.filter((e) => e.key !== 'home').slice(0, MY_TOOLS_CAP - 1).map((e) => e.key),
-    });
-    expect(screen.queryByText(/your space is full/i)).toBeNull();
-    expect(screen.getByRole('button', { name: /pin academy to your space/i })).toBeEnabled();
+  // The 8-tool cap is gone (product owner, 2026-08-09) and this sheet is
+  // half the reason it could go: everything in the catalog is reachable
+  // from here regardless of shelf length, so a long shelf costs a tap, not
+  // access. No "full" banner, no disabled ⊕, at any length.
+  it('still offers a live ⊕ when the member already has far more than eight pinned', () => {
+    const pinned = NAV_CATALOG.filter((e) => !['home', 'academy'].includes(e.key))
+      .slice(0, 20).map((e) => e.key);
+    expect(pinned.length).toBeGreaterThan(8); // guard: the fixture really is oversized
+    const { onPin } = renderSheet({ pinned });
+    const btn = screen.getByRole('button', { name: /pin academy to your world/i });
+    expect(btn).toBeEnabled();
+    fireEvent.click(btn);
+    expect(onPin).toHaveBeenCalledWith('academy');
   });
 
-  it('disables pinning at the cap and says why', () => {
-    renderSheet({ pinned: NAV_CATALOG.slice(0, MY_TOOLS_CAP).map((e) => e.key) });
-    expect(screen.getByText(/your space is full/i)).toBeInTheDocument();
-    const btn = screen.getByRole('button', { name: /pin finance to your space/i });
-    expect(btn).toBeDisabled();
-  });
-
-  // Reviewer-found cosmetic bug: after a failed load, `pinned` is 8
-  // FABRICATED role defaults (see useMyTools), so pinned.length >=
-  // MY_TOOLS_CAP reads true — but canPin is already false (the write would
-  // refuse), and every ⊕ is correctly withheld. Showing "Your space is
-  // full — remove one in Setup to pin another." here is misleading: there
-  // is no ⊕ anywhere for the banner's own advice to apply to.
-  it('does not show the cap banner when the record has not genuinely loaded, even though pinned looks full', () => {
-    renderSheet({ pinned: NAV_CATALOG.slice(0, MY_TOOLS_CAP).map((e) => e.key), canPin: false });
-    expect(screen.queryByText(/your space is full/i)).toBeNull();
+  it('shows no "full" banner at any length', () => {
+    renderSheet({ pinned: NAV_CATALOG.filter((e) => e.key !== 'home').map((e) => e.key) });
+    // The banner said "Your space is full — remove one in Setup to pin
+    // another." Matched on "is full", not a bare /full/i — the sheet's own
+    // dialog description legitimately contains "the full tool catalog", so
+    // /full/i would have failed here for the wrong reason.
+    expect(screen.queryByText(/is full/i)).toBeNull();
+    expect(screen.queryByText(/remove one in Setup/i)).toBeNull();
   });
 });
 

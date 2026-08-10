@@ -83,7 +83,11 @@ describe('useMyTools', () => {
     expect(upsert).not.toHaveBeenCalled();
   });
 
-  it('caps a save at 8 tools', async () => {
+  // The 8-tool cap was removed on 2026-08-09 (product owner). A save must
+  // persist the member's whole set — truncating at 8 is exactly the silent
+  // drop the removal ends. Only MY_TOOLS_SANITY_MAX (64, corruption
+  // protection) still bounds anything.
+  it('saves all 20 tools — 8 is a starting size, not a cap', async () => {
     maybeSingle.mockResolvedValue({ data: null, error: null });
     const { result } = renderHook(() => useMyTools('student'), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
@@ -92,7 +96,7 @@ describe('useMyTools', () => {
     await act(async () => { await result.current.saveTools(many); });
 
     const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[] };
-    expect(sent.tools).toHaveLength(8);
+    expect(sent.tools).toEqual(many);
   });
 
   it('serves both roles from ONE user_preferences read, with no cross-contamination', async () => {
@@ -240,20 +244,24 @@ describe('pinTool', () => {
     expect(second.tools).toEqual(['calendar', 'academy', 'finance']);
   });
 
-  it('refuses at the cap instead of burning a write that changes nothing', async () => {
-    const full = Array.from({ length: 8 }, (_, i) => `k${i}`);
+  // pinTool used to resolve false once the record held 8 keys. It no longer
+  // does: the cap is gone (2026-08-09), and refusing a pin because the shelf
+  // is "long enough" is the app overruling the member about their own nav.
+  it('pins a 9th tool rather than refusing at the old cap', async () => {
+    const eight = Array.from({ length: 8 }, (_, i) => `k${i}`);
     maybeSingle.mockResolvedValue({
-      data: { nav_item_order: { v: 4, tools: full, widgets: [], setupComplete: true }, home_tile_layout: null },
+      data: { nav_item_order: { v: 4, tools: eight, widgets: [], setupComplete: true }, home_tile_layout: null },
       error: null,
     });
     const { result } = renderHook(() => useMyTools('student'), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    let ok = true;
+    let ok = false;
     await act(async () => { ok = await result.current.pinTool('academy'); });
 
-    expect(ok).toBe(false);
-    expect(rpc).not.toHaveBeenCalled();
+    expect(ok).toBe(true);
+    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[] };
+    expect(sent.tools).toEqual([...eight, 'academy']);
   });
 
   // Round 2 review: `record.tools.includes(resolved)` compared the RESOLVED

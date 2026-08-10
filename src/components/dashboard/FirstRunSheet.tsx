@@ -1,7 +1,7 @@
 // FirstRunSheet — greets a brand-new member once, on first login
 // (myTools.setupComplete === false), prefilled with their role's tenant
 // default (falling back to the platform default) so nobody's first
-// impression of My Space is an empty box. `Skip`, `Looks good`, and every
+// impression of My World is an empty box. `Skip`, `Looks good`, and every
 // OTHER way to leave the sheet (Escape, overlay click, the built-in X) are
 // deliberately the SAME action: all persist whatever is currently shown and
 // flip setupComplete so the sheet never reopens. A dismiss that doesn't
@@ -17,7 +17,7 @@ import { useIsCompactNav } from '@/hooks/use-mobile';
 import { useMyTools } from '@/hooks/useMyTools';
 import { useTenantDefaultTools } from '@/hooks/useTenantDefaultTools';
 import { DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT } from '@/lib/navigation/myTools';
-import { MySpaceEditor } from '@/components/dashboard/MySpaceEditor';
+import { MyWorldEditor } from '@/components/dashboard/MyWorldEditor';
 import type { CatalogEntry, NavRole } from '@/lib/navigation/navCatalog';
 
 export interface FirstRunSheetProps {
@@ -35,7 +35,7 @@ export function FirstRunSheet({ open, onOpenChange, available, role }: FirstRunS
   const isCompact = useIsCompactNav();
 
   // This component owns its own read/write of the member's record — the
-  // same hook the personal My Space page uses — rather than taking it as a
+  // same hook the personal My World page uses — rather than taking it as a
   // prop, so it can be mounted anywhere with just a role.
   const { myTools, loading, saveMyTools } = useMyTools(role);
   const { defaultsByRole, loading: defaultsLoading } = useTenantDefaultTools();
@@ -132,7 +132,7 @@ export function FirstRunSheet({ open, onOpenChange, available, role }: FirstRunS
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto -mx-4 px-4 sm:-mx-6 sm:px-6">
-          <MySpaceEditor
+          <MyWorldEditor
             available={available}
             tools={tools}
             onToolsChange={setTools}

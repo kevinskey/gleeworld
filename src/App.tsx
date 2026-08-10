@@ -77,7 +77,7 @@ const QuizAttemptsPage = lazy(() => import("./pages/academy/QuizAttemptsPage"));
 const QuizAttemptDetailPage = lazy(() => import("./pages/academy/QuizAttemptDetailPage"));
 const WorkspaceUsersPage = lazy(() => import("./pages/dashboard/WorkspaceUsersPage"));
 const WorkspaceSettingsPage = lazy(() => import("./pages/dashboard/WorkspaceSettingsPage"));
-const MySpacePage = lazy(() => import("./pages/dashboard/MySpacePage"));
+const MyWorldPage = lazy(() => import("./pages/dashboard/MyWorldPage"));
 const WorkspaceAnalyticsPage = lazy(() => import("./pages/dashboard/WorkspaceAnalyticsPage"));
 const FundraisingPage = lazy(() => import("./pages/dashboard/FundraisingPage"));
 const DiscussionThreadPage = lazy(() => import("./pages/academy/DiscussionThreadPage"));
@@ -939,15 +939,22 @@ const App = () => {
                 }
               />
               <Route
-                path="/dashboard/my-space"
+                path="/dashboard/my-world"
                 element={
                   <ProtectedRoute>
                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                      <DashboardShell><MySpacePage /></DashboardShell>
+                      <DashboardShell><MyWorldPage /></DashboardShell>
                     </UniversalLayout>
                   </ProtectedRoute>
                 }
               />
+              {/* My Space was renamed My World on 2026-08-09. Bookmarks,
+                  in-app deep links and the product tour all still point at
+                  the old path, so it redirects rather than 404s — through
+                  RedirectPreservingQuery (not a bare <Navigate>), the same
+                  component the store consolidation uses, so a link like
+                  /dashboard/my-space?tab=defaults keeps its query and hash. */}
+              <Route path="/dashboard/my-space" element={<RedirectPreservingQuery to="/dashboard/my-world" />} />
               <Route
                 path="/dashboard/analytics"
                 element={

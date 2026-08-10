@@ -1,10 +1,10 @@
-# My Space Phase 2 — the setup screen
+# My World Phase 2 — the setup screen
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Give members a real screen at `/dashboard/my-space` where they arrange their tools and widgets, replace the first-login guess with a picker, and let tenant admins set the default shelf each role starts from.
+**Goal:** Give members a real screen at `/dashboard/my-world` where they arrange their tools and widgets, replace the first-login guess with a picker, and let tenant admins set the default shelf each role starts from.
 
-**Architecture:** One editor component, `MySpaceEditor`, renders the iOS Settings → Control Center shape (included list with ⊖ and drag handles, available list with ⊕, widgets group). It is presentation-only — it takes `tools`, `widgets`, and a catalog, and emits changes. Three callers mount it: the `/dashboard/my-space` page (personal), the same page's admin "Defaults for members" mode (tenant defaults per role), and a first-run sheet. Personal edits write the existing `MyTools` v4 record through the `save_nav_item_order` RPC; tenant defaults write a new `default_tools` column on `gw_tenant_nav_prefs`.
+**Architecture:** One editor component, `MyWorldEditor`, renders the iOS Settings → Control Center shape (included list with ⊖ and drag handles, available list with ⊕, widgets group). It is presentation-only — it takes `tools`, `widgets`, and a catalog, and emits changes. Three callers mount it: the `/dashboard/my-world` page (personal), the same page's admin "Defaults for members" mode (tenant defaults per role), and a first-run sheet. Personal edits write the existing `MyTools` v4 record through the `save_nav_item_order` RPC; tenant defaults write a new `default_tools` column on `gw_tenant_nav_prefs`.
 
 **Tech Stack:** React 18 + TypeScript, TanStack Query, Supabase JS, `@dnd-kit` (already a dependency), Radix Sheet/Tabs, Vitest, Tailwind with the Apple iOS token set.
 
@@ -13,7 +13,7 @@
 
 ## Global Constraints
 
-- **`MY_TOOLS_CAP` is 8. Widgets cap is 2** (House spec §5.1 caps role widgets at 2). Both enforced on write and at the render boundary.
+- **`MY_TOOLS_SEED_SIZE` is 8. Widgets cap is 2** (House spec §5.1 caps role widgets at 2). Both enforced on write and at the render boundary.
 - **Personal writes go through the `save_nav_item_order` SECURITY DEFINER RPC.** Never a direct upsert on `user_preferences` — it 403s when subdomain-derived `current_tenant_id()` disagrees with the stored row.
 - **Tenant-default writes go to `gw_tenant_nav_prefs` by direct upsert with `onConflict: 'tenant_id,role'`**, matching the existing `hidden_items` write path in `WorkspaceSettingsPage.tsx`. That table has its own BEFORE INSERT trigger and RESTRICTIVE tenant isolation; do not add an RPC for it.
 - **`CatalogEntry.key` must never be renamed** — stored records reference these keys.
@@ -59,7 +59,7 @@ Expected: 6 test files fail — `heroDrag`, `appDestinations` (one known-red cas
 - Test: `src/hooks/__tests__/useMyTools.test.tsx` (extend)
 
 **Interfaces:**
-- Consumes: `MyTools`, `sanitizeTools`, `MY_TOOLS_CAP` from `@/lib/navigation/myTools`; `NavRole` from `@/lib/navigation/navCatalog`
+- Consumes: `MyTools`, `sanitizeTools`, `MY_TOOLS_SEED_SIZE` from `@/lib/navigation/myTools`; `NavRole` from `@/lib/navigation/navCatalog`
 - Produces:
   - `useTenantDefaultTools(): { defaultsByRole: Record<NavRole, string[]>, loading: boolean, saveDefaults: (role: NavRole, tools: string[]) => Promise<boolean> }`
   - `useMyTools(role)` additionally returns `saveMyTools: (patch: { tools?: string[]; widgets?: string[]; setupComplete?: boolean }) => Promise<boolean>`
@@ -240,7 +240,7 @@ Create `src/hooks/useTenantDefaultTools.ts`:
 
 ```ts
 // Per-role default shelves for this tenant. Read by the first-run sheet and
-// by My Space's "Defaults for members" mode; written only by tenant admins.
+// by My World's "Defaults for members" mode; written only by tenant admins.
 //
 // Writes go by direct upsert (NOT the save_nav_item_order RPC) because
 // gw_tenant_nav_prefs has its own BEFORE INSERT trigger filling tenant_id
@@ -327,7 +327,7 @@ If `@/lib/jwt` does not export `decodeJwtClaims`, find the module `WorkspaceSett
 
 - [ ] **Step 6: Add `WIDGETS_CAP` to `myTools.ts`**
 
-The widget cap lives beside `MY_TOOLS_CAP` in `src/lib/navigation/myTools.ts`, so there is exactly one name for it and Task 2's catalog imports it rather than declaring a second:
+The widget cap lives beside `MY_TOOLS_SEED_SIZE` in `src/lib/navigation/myTools.ts`, so there is exactly one name for it and Task 2's catalog imports it rather than declaring a second:
 
 ```ts
 /** House spec §5.1 caps the home at two role widgets. */
@@ -418,7 +418,7 @@ git commit -m "feat(nav): tenant default shelves and a general My Tools patch sa
   - `widgetsFor(role: 'student' | 'faculty'): HomeWidget[]`
   - `resolveWidgets(role, chosen: string[]): string[]` — chosen keys filtered to what the role can have, capped at 2, falling back to that role's first two when `chosen` is empty
 
-**Why this exists.** `HouseHome` currently hardcodes two role widgets: a role-dependent first widget (faculty "Needs attention", student "Practice ledger") and a shared "Today". The My Space widgets group needs them as data so it can list and cap them. This task only creates the catalog — wiring `HouseHome` to honour a member's choice is Task 4.
+**Why this exists.** `HouseHome` currently hardcodes two role widgets: a role-dependent first widget (faculty "Needs attention", student "Practice ledger") and a shared "Today". The My World widgets group needs them as data so it can list and cap them. This task only creates the catalog — wiring `HouseHome` to honour a member's choice is Task 4.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -480,7 +480,7 @@ Expected: FAIL — `Failed to resolve import "../homeWidgets"`.
 Create `src/lib/navigation/homeWidgets.ts`:
 
 ```ts
-// The two widgets a member may keep on the House home, as data so My Space
+// The two widgets a member may keep on the House home, as data so My World
 // can list them. House spec §5.1 caps the home at TWO role widgets — that
 // cap is the design, not a limitation: the home answers "what do I do next",
 // and a third widget turns it back into a status dashboard.
@@ -548,17 +548,17 @@ git commit -m "feat(nav): home widget catalog"
 
 ---
 
-### Task 3: `MySpaceEditor` component
+### Task 3: `MyWorldEditor` component
 
 **Files:**
-- Create: `src/components/dashboard/MySpaceEditor.tsx`
-- Test: `src/components/dashboard/MySpaceEditor.test.tsx`
+- Create: `src/components/dashboard/MyWorldEditor.tsx`
+- Test: `src/components/dashboard/MyWorldEditor.test.tsx`
 
 **Interfaces:**
-- Consumes: `CatalogEntry`, `NAV_SECTION_LABELS` from `@/lib/navigation/navCatalog`; `MY_TOOLS_CAP` from `@/lib/navigation/myTools`; `HomeWidget` from `@/lib/navigation/homeWidgets`; `WIDGETS_CAP` from `@/lib/navigation/myTools`
+- Consumes: `CatalogEntry`, `NAV_SECTION_LABELS` from `@/lib/navigation/navCatalog`; `MY_TOOLS_SEED_SIZE` from `@/lib/navigation/myTools`; `HomeWidget` from `@/lib/navigation/homeWidgets`; `WIDGETS_CAP` from `@/lib/navigation/myTools`
 - Produces:
 ```ts
-export interface MySpaceEditorProps {
+export interface MyWorldEditorProps {
   /** Every entry the viewer may use, already gated. Order is catalog order. */
   available: CatalogEntry[];
   /** Currently chosen tool keys, in the member's order. */
@@ -571,21 +571,21 @@ export interface MySpaceEditorProps {
   /** Read-only render for a viewer without permission to edit. */
   disabled?: boolean;
 }
-export function MySpaceEditor(props: MySpaceEditorProps): JSX.Element
+export function MyWorldEditor(props: MyWorldEditorProps): JSX.Element
 ```
 
 **Shape.** iOS Settings → Control Center: an "IN YOUR SPACE" grouped inset card with ⊖ badges and drag handles and an `n of 8` counter, then "MORE TOOLS" grouped by section with ⊕ badges, then an optional "WIDGETS" group with ✓ toggles and an `n of 2` counter. Presentation only — it holds no query, no save, and no notion of whose record it is edited. Both the personal page and the tenant-defaults mode mount the same component.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `src/components/dashboard/MySpaceEditor.test.tsx`:
+Create `src/components/dashboard/MyWorldEditor.test.tsx`:
 
 ```tsx
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
-import { MySpaceEditor, type MySpaceEditorProps } from './MySpaceEditor';
+import { MyWorldEditor, type MyWorldEditorProps } from './MyWorldEditor';
 import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
 import { HOME_WIDGETS, widgetsFor } from '@/lib/navigation/homeWidgets';
 
@@ -593,10 +593,10 @@ const byKey = new Map(NAV_CATALOG.map((e) => [e.key, e]));
 const available = ['calendar', 'messages', 'music-library', 'academy', 'finance', 'studio']
   .map((k) => byKey.get(k)!);
 
-const renderEditor = (props: Partial<MySpaceEditorProps> = {}) => {
+const renderEditor = (props: Partial<MyWorldEditorProps> = {}) => {
   const onToolsChange = vi.fn();
   const utils = render(
-    <MySpaceEditor
+    <MyWorldEditor
       available={available}
       tools={['calendar', 'academy']}
       onToolsChange={onToolsChange}
@@ -606,10 +606,10 @@ const renderEditor = (props: Partial<MySpaceEditorProps> = {}) => {
   return { ...utils, onToolsChange };
 };
 
-describe('MySpaceEditor — chosen list', () => {
+describe('MyWorldEditor — chosen list', () => {
   it('lists chosen tools in stored order, not catalog order', () => {
     renderEditor({ tools: ['academy', 'calendar'] });
-    const group = screen.getByTestId('my-space-chosen');
+    const group = screen.getByTestId('my-world-chosen');
     expect(within(group).getAllByRole('listitem').map((li) => li.textContent))
       .toEqual(expect.arrayContaining([expect.stringContaining('Academy'), expect.stringContaining('Calendar')]));
     expect(within(group).getAllByRole('listitem')[0]).toHaveTextContent('Academy');
@@ -617,7 +617,7 @@ describe('MySpaceEditor — chosen list', () => {
 
   it('shows an n-of-8 counter', () => {
     renderEditor({ tools: ['calendar', 'academy'] });
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent('2 of 8');
   });
 
   it('removing emits the list without that key, order otherwise intact', () => {
@@ -627,10 +627,10 @@ describe('MySpaceEditor — chosen list', () => {
   });
 });
 
-describe('MySpaceEditor — available list', () => {
+describe('MyWorldEditor — available list', () => {
   it('offers only tools not already chosen', () => {
     renderEditor({ tools: ['calendar'] });
-    const more = screen.getByTestId('my-space-more');
+    const more = screen.getByTestId('my-world-more');
     expect(within(more).queryByText('Calendar')).toBeNull();
     expect(within(more).getByText('Academy')).toBeInTheDocument();
   });
@@ -644,28 +644,28 @@ describe('MySpaceEditor — available list', () => {
   it('disables adding at the cap and says why', () => {
     const eight = available.concat(available).slice(0, 8).map((e) => e.key);
     renderEditor({ tools: eight, available });
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('8 of 8');
-    expect(screen.getByTestId('my-space-full')).toBeInTheDocument();
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent('8 of 8');
+    expect(screen.getByTestId('my-world-full')).toBeInTheDocument();
   });
 
   it('groups available tools under their section label', () => {
     renderEditor({ tools: [] });
-    const more = screen.getByTestId('my-space-more');
+    const more = screen.getByTestId('my-world-more');
     expect(within(more).getByText('Money')).toBeInTheDocument();
   });
 });
 
-describe('MySpaceEditor — widgets', () => {
+describe('MyWorldEditor — widgets', () => {
   it('is absent when no widget options are given', () => {
     renderEditor();
-    expect(screen.queryByTestId('my-space-widgets')).toBeNull();
+    expect(screen.queryByTestId('my-world-widgets')).toBeNull();
   });
 
   it('toggles a widget on and caps the selection at two', () => {
     const onWidgetsChange = vi.fn();
     const opts = widgetsFor('faculty');
     render(
-      <MySpaceEditor
+      <MyWorldEditor
         available={available}
         tools={[]}
         onToolsChange={vi.fn()}
@@ -683,7 +683,7 @@ describe('MySpaceEditor — widgets', () => {
     const onWidgetsChange = vi.fn();
     const opts = widgetsFor('faculty');
     render(
-      <MySpaceEditor
+      <MyWorldEditor
         available={available}
         tools={[]}
         onToolsChange={vi.fn()}
@@ -697,7 +697,7 @@ describe('MySpaceEditor — widgets', () => {
   });
 });
 
-describe('MySpaceEditor — disabled', () => {
+describe('MyWorldEditor — disabled', () => {
   it('emits nothing when disabled', () => {
     const { onToolsChange } = renderEditor({ disabled: true, tools: ['calendar'] });
     const btn = screen.queryByRole('button', { name: /remove calendar/i });
@@ -706,7 +706,7 @@ describe('MySpaceEditor — disabled', () => {
   });
 });
 
-describe('MySpaceEditor — accessibility', () => {
+describe('MyWorldEditor — accessibility', () => {
   it('gives every action button an accessible name', () => {
     renderEditor();
     for (const b of screen.getAllByRole('button')) {
@@ -719,19 +719,19 @@ describe('MySpaceEditor — accessibility', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-npx vitest run src/components/dashboard/MySpaceEditor.test.tsx
+npx vitest run src/components/dashboard/MyWorldEditor.test.tsx
 ```
 
-Expected: FAIL — `Failed to resolve import "./MySpaceEditor"`.
+Expected: FAIL — `Failed to resolve import "./MyWorldEditor"`.
 
 - [ ] **Step 3: Write the implementation**
 
-Create `src/components/dashboard/MySpaceEditor.tsx`. Requirements the tests pin down, plus the visual contract:
+Create `src/components/dashboard/MyWorldEditor.tsx`. Requirements the tests pin down, plus the visual contract:
 
-- Root renders three `<section>`s: chosen (`data-testid="my-space-chosen"`), more (`data-testid="my-space-more"`), widgets (`data-testid="my-space-widgets"`, only when `widgetOptions` is passed).
+- Root renders three `<section>`s: chosen (`data-testid="my-world-chosen"`), more (`data-testid="my-world-more"`), widgets (`data-testid="my-world-widgets"`, only when `widgetOptions` is passed).
 - Chosen list is a `<ul>` of `<li>` rows, each with a ⊖ button named `Remove {label}`, the entry icon (`aria-hidden`), the label, and a drag handle. Use `@dnd-kit`'s `useSortable` + `verticalListSortingStrategy` for reordering, emitting the reordered key list through `onToolsChange`. This is the one screen where dragging is the task, so the press-delay activation constraint used elsewhere is not needed — a plain `distance: 8` `PointerSensor` is right.
-- Counter `data-testid="my-space-count"` reads `{n} of {MY_TOOLS_CAP}`.
-- At the cap, render `data-testid="my-space-full"` with the text `Your space is full — remove one to add another.` and disable every ⊕.
+- Counter `data-testid="my-world-count"` reads `{n} of {MY_TOOLS_SEED_SIZE}`.
+- At the cap, render `data-testid="my-world-full"` with the text `Your space is full — remove one to add another.` and disable every ⊕.
 - More list groups by `NAV_SECTION_LABELS[entry.section]`, section label as a small uppercase muted header, each row a ⊕ button named `Add {label}`.
 - Widgets group renders one toggle button per option, named by its label, with `aria-pressed`. Selecting a third when two are chosen replaces the oldest (emit `[kept, newKey]`), so the cap never blocks a tap silently. Counter `data-testid="my-space-widget-count"` reads `{n} of {WIDGETS_CAP}`.
 - `disabled` renders the same markup with every button `disabled` and no handlers firing.
@@ -740,7 +740,7 @@ Create `src/components/dashboard/MySpaceEditor.tsx`. Requirements the tests pin 
 - [ ] **Step 4: Run the test to verify it passes**
 
 ```bash
-npx vitest run src/components/dashboard/MySpaceEditor.test.tsx
+npx vitest run src/components/dashboard/MyWorldEditor.test.tsx
 ```
 
 Expected: PASS, all cases.
@@ -748,31 +748,31 @@ Expected: PASS, all cases.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/components/dashboard/MySpaceEditor.tsx src/components/dashboard/MySpaceEditor.test.tsx
-git commit -m "feat(nav): MySpaceEditor — Control-Center-shaped tool and widget editor"
+git add src/components/dashboard/MyWorldEditor.tsx src/components/dashboard/MyWorldEditor.test.tsx
+git commit -m "feat(nav): MyWorldEditor — Control-Center-shaped tool and widget editor"
 ```
 
 ---
 
-### Task 4: `/dashboard/my-space` page, route, Setup row, widget honouring
+### Task 4: `/dashboard/my-world` page, route, Setup row, widget honouring
 
 **Files:**
-- Create: `src/pages/dashboard/MySpacePage.tsx`
+- Create: `src/pages/dashboard/MyWorldPage.tsx`
 - Modify: `src/App.tsx` (route, beside `/dashboard/workspace`)
 - Modify: `src/components/dashboard/NavShelf.tsx` (Setup row)
 - Modify: `src/components/dashboard/NavShelf.test.tsx` (Setup row case)
 - Modify: `src/pages/dashboard/HouseHome.tsx` (honour chosen widgets)
-- Test: `src/pages/dashboard/MySpacePage.test.tsx`
+- Test: `src/pages/dashboard/MyWorldPage.test.tsx`
 
 **Interfaces:**
-- Consumes: `MySpaceEditor` (Task 3), `useMyTools` + `saveMyTools` (Task 1), `resolveWidgets` / `widgetsFor` (Task 2), `resolveNav`, `applyPreviewRole`, `useModuleAccess`, `useTenantNavPrefs`, `useEffectivePreviewRole`
-- Produces: default-exported `MySpacePage`; route `/dashboard/my-space`
+- Consumes: `MyWorldEditor` (Task 3), `useMyTools` + `saveMyTools` (Task 1), `resolveWidgets` / `widgetsFor` (Task 2), `resolveNav`, `applyPreviewRole`, `useModuleAccess`, `useTenantNavPrefs`, `useEffectivePreviewRole`
+- Produces: default-exported `MyWorldPage`; route `/dashboard/my-world`
 
-**Building the gated `available` list.** `DashboardShell` already assembles a `NavContext` from `useModuleAccess` over a fixed `MODULE_KEYS` array plus role flags, and narrows it with `applyPreviewRole`. `MySpacePage` needs the same context. Copy that derivation verbatim rather than inventing a second one — an entry the member cannot open must never be offered by ⊕. Pass `resolveNav(navCtx)` (not `buildNavSections`, which filters to sidebar surfaces and would hide grid-only entries like `merch`).
+**Building the gated `available` list.** `DashboardShell` already assembles a `NavContext` from `useModuleAccess` over a fixed `MODULE_KEYS` array plus role flags, and narrows it with `applyPreviewRole`. `MyWorldPage` needs the same context. Copy that derivation verbatim rather than inventing a second one — an entry the member cannot open must never be offered by ⊕. Pass `resolveNav(navCtx)` (not `buildNavSections`, which filters to sidebar surfaces and would hide grid-only entries like `merch`).
 
 - [ ] **Step 1: Write the failing test**
 
-Create `src/pages/dashboard/MySpacePage.test.tsx`:
+Create `src/pages/dashboard/MyWorldPage.test.tsx`:
 
 ```tsx
 // @vitest-environment jsdom
@@ -795,23 +795,23 @@ vi.mock('@/hooks/useEffectivePreviewRole', () => ({ useEffectivePreviewRole: () 
 vi.mock('@/hooks/useTenantDefaultTools', () => ({ useTenantDefaultTools: () => ({ defaultsByRole: { admin: [], student: [], member: [] }, loading: false, saveDefaults: vi.fn() }) }));
 vi.mock('@/components/dashboard/DashboardShell', () => ({ default: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
 
-import MySpacePage from './MySpacePage';
+import MyWorldPage from './MyWorldPage';
 
 const renderPage = () => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={qc}>
-      <MemoryRouter><MySpacePage /></MemoryRouter>
+      <MemoryRouter><MyWorldPage /></MemoryRouter>
     </QueryClientProvider>,
   );
 };
 
 beforeEach(() => { h.saveMyTools.mockReset().mockResolvedValue(true); });
 
-describe('MySpacePage', () => {
+describe('MyWorldPage', () => {
   it('renders the editor seeded from the stored record', () => {
     renderPage();
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent('2 of 8');
   });
 
   it('saves tools when one is removed', async () => {
@@ -822,7 +822,7 @@ describe('MySpacePage', () => {
 
   it('offers a widgets group for the viewer role', () => {
     renderPage();
-    expect(screen.getByTestId('my-space-widgets')).toBeInTheDocument();
+    expect(screen.getByTestId('my-world-widgets')).toBeInTheDocument();
   });
 
   it('does not offer a "Defaults for members" mode to a non-admin', () => {
@@ -835,39 +835,39 @@ describe('MySpacePage', () => {
 Add to `src/components/dashboard/NavShelf.test.tsx`:
 
 ```tsx
-it('renders a Setup row linking to My Space', () => {
+it('renders a Setup row linking to My World', () => {
   renderShelf();
   const link = screen.getByRole('link', { name: /setup/i });
-  expect(link).toHaveAttribute('href', '/dashboard/my-space');
+  expect(link).toHaveAttribute('href', '/dashboard/my-world');
 });
 ```
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
 ```bash
-npx vitest run src/pages/dashboard/MySpacePage.test.tsx src/components/dashboard/NavShelf.test.tsx
+npx vitest run src/pages/dashboard/MyWorldPage.test.tsx src/components/dashboard/NavShelf.test.tsx
 ```
 
-Expected: FAIL — missing module `./MySpacePage`; no Setup link in the shelf.
+Expected: FAIL — missing module `./MyWorldPage`; no Setup link in the shelf.
 
 - [ ] **Step 3: Add the Setup row to `NavShelf`**
 
-In `src/components/dashboard/NavShelf.tsx`, render a Setup row immediately after the All Tools toggle, always present (unlike All Tools, it does not depend on `rest.length`). Use the same `Row` styling, the `Settings` icon from lucide with `aria-hidden`, label `Setup`, `to="/dashboard/my-space"`. Spec §5.2 lists it as an always-present row.
+In `src/components/dashboard/NavShelf.tsx`, render a Setup row immediately after the All Tools toggle, always present (unlike All Tools, it does not depend on `rest.length`). Use the same `Row` styling, the `Settings` icon from lucide with `aria-hidden`, label `Setup`, `to="/dashboard/my-world"`. Spec §5.2 lists it as an always-present row.
 
-- [ ] **Step 4: Write `MySpacePage`**
+- [ ] **Step 4: Write `MyWorldPage`**
 
-Create `src/pages/dashboard/MySpacePage.tsx`. It:
-- wraps in `DashboardShell` + `DashboardPageShell` with `PageTitle` "My Space";
+Create `src/pages/dashboard/MyWorldPage.tsx`. It:
+- wraps in `DashboardShell` + `DashboardPageShell` with `PageTitle` "My World";
 - derives `navCtx` exactly as `DashboardShell` does and computes `available = resolveNav(navCtx)`;
 - reads `useMyTools(isFacultyProfile(profile) ? 'faculty' : 'student')`;
 - renders a live preview strip above the editor showing the current tools as keycap-sized glyphs, so the member sees what they are building (spec §5.4);
-- mounts `MySpaceEditor` with `available`, `myTools.tools`, `widgetOptions={widgetsFor(role)}`, `widgets={resolveWidgets(role, myTools.widgets)}`;
+- mounts `MyWorldEditor` with `available`, `myTools.tools`, `widgetOptions={widgetsFor(role)}`, `widgets={resolveWidgets(role, myTools.widgets)}`;
 - persists on every change via `saveMyTools({ tools })` / `saveMyTools({ widgets })` — no explicit Save button. The optimistic cache write in `useMyTools` already makes this feel instant, and an unsaved-changes state on a settings screen is a trap on mobile.
 - shows a toast on a `false` return so a failed save is never silent.
 
 - [ ] **Step 5: Register the route**
 
-In `src/App.tsx`, beside the `/dashboard/workspace` route, add `/dashboard/my-space` with the identical wrapper stack (`ProtectedRoute` → `UniversalLayout showHeader={false} showFooter={false} containerized={false}` → `DashboardShell` → page). Lazy-import the page the same way its neighbours are imported.
+In `src/App.tsx`, beside the `/dashboard/workspace` route, add `/dashboard/my-world` with the identical wrapper stack (`ProtectedRoute` → `UniversalLayout showHeader={false} showFooter={false} containerized={false}` → `DashboardShell` → page). Lazy-import the page the same way its neighbours are imported.
 
 - [ ] **Step 6: Honour chosen widgets in `HouseHome`**
 
@@ -876,7 +876,7 @@ In `src/pages/dashboard/HouseHome.tsx`, compute `const shownWidgets = resolveWid
 - [ ] **Step 7: Run the tests**
 
 ```bash
-npx vitest run src/pages/dashboard/MySpacePage.test.tsx src/components/dashboard/NavShelf.test.tsx src/pages/dashboard/HouseHome.test.tsx
+npx vitest run src/pages/dashboard/MyWorldPage.test.tsx src/components/dashboard/NavShelf.test.tsx src/pages/dashboard/HouseHome.test.tsx
 npm run test 2>&1 | tail -10
 npm run typecheck:guard 2>&1 | tail -3
 ```
@@ -886,8 +886,8 @@ Expected: PASS; full suite shows no new failures beyond the 6 baseline files.
 - [ ] **Step 8: Commit**
 
 ```bash
-git add src/pages/dashboard/MySpacePage.tsx src/pages/dashboard/MySpacePage.test.tsx src/App.tsx src/components/dashboard/NavShelf.tsx src/components/dashboard/NavShelf.test.tsx src/pages/dashboard/HouseHome.tsx
-git commit -m "feat(nav): My Space page, Setup row, and member-chosen home widgets"
+git add src/pages/dashboard/MyWorldPage.tsx src/pages/dashboard/MyWorldPage.test.tsx src/App.tsx src/components/dashboard/NavShelf.tsx src/components/dashboard/NavShelf.test.tsx src/pages/dashboard/HouseHome.tsx
+git commit -m "feat(nav): My World page, Setup row, and member-chosen home widgets"
 ```
 
 ---
@@ -895,19 +895,19 @@ git commit -m "feat(nav): My Space page, Setup row, and member-chosen home widge
 ### Task 5: Admin "Defaults for members" mode
 
 **Files:**
-- Modify: `src/pages/dashboard/MySpacePage.tsx`
-- Modify: `src/pages/dashboard/MySpacePage.test.tsx`
+- Modify: `src/pages/dashboard/MyWorldPage.tsx`
+- Modify: `src/pages/dashboard/MyWorldPage.test.tsx`
 - Modify: `src/pages/dashboard/WorkspaceSettingsPage.tsx` (Navigation tab → link)
 
 **Interfaces:**
-- Consumes: `useTenantDefaultTools` (Task 1), `MySpaceEditor` (Task 3), `HIDEABLE_NAV_ROLES` / `NavRole` from `@/lib/navigation/navCatalog`
+- Consumes: `useTenantDefaultTools` (Task 1), `MyWorldEditor` (Task 3), `HIDEABLE_NAV_ROLES` / `NavRole` from `@/lib/navigation/navCatalog`
 
 - [ ] **Step 1: Write the failing test**
 
-Add to `src/pages/dashboard/MySpacePage.test.tsx`:
+Add to `src/pages/dashboard/MyWorldPage.test.tsx`:
 
 ```tsx
-describe('MySpacePage — admin defaults mode', () => {
+describe('MyWorldPage — admin defaults mode', () => {
   beforeEach(() => {
     vi.doMock('@/hooks/useUserRole', () => ({
       useUserRole: () => ({ profile: { is_admin: true, role: 'instructor' }, loading: false, canEditMusicLibrary: () => true }),
@@ -916,7 +916,7 @@ describe('MySpacePage — admin defaults mode', () => {
 
   it('offers a Defaults for members mode to an admin', async () => {
     vi.resetModules();
-    const { default: AdminPage } = await import('./MySpacePage');
+    const { default: AdminPage } = await import('./MyWorldPage');
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
       <QueryClientProvider client={qc}>
@@ -931,27 +931,27 @@ describe('MySpacePage — admin defaults mode', () => {
 - [ ] **Step 2: Run the test to verify it fails**
 
 ```bash
-npx vitest run src/pages/dashboard/MySpacePage.test.tsx
+npx vitest run src/pages/dashboard/MyWorldPage.test.tsx
 ```
 
 Expected: FAIL — no `Defaults for members` tab exists.
 
 - [ ] **Step 3: Implement the mode**
 
-In `MySpacePage`, when `profile?.is_admin || profile?.is_super_admin`, render a two-option segmented control (Radix `Tabs`, styled as an iOS segmented control) above the preview: `Mine` and `Defaults for members`. In the second mode:
+In `MyWorldPage`, when `profile?.is_admin || profile?.is_super_admin`, render a two-option segmented control (Radix `Tabs`, styled as an iOS segmented control) above the preview: `Mine` and `Defaults for members`. In the second mode:
 - render a role picker from `HIDEABLE_NAV_ROLES` (Tenant admins / Students / Members);
-- mount the SAME `MySpaceEditor` with `tools={defaultsByRole[role]}` and `onToolsChange={(next) => saveDefaults(role, next)}`, and no `widgetOptions` (widgets are personal — the tenant does not set them);
+- mount the SAME `MyWorldEditor` with `tools={defaultsByRole[role]}` and `onToolsChange={(next) => saveDefaults(role, next)}`, and no `widgetOptions` (widgets are personal — the tenant does not set them);
 - above the editor, one line of copy: `New members with this role start with these tools. They can change their own space any time.`
 - when `defaultsByRole[role]` is empty, seed the editor's displayed list from the platform default for that role (`DEFAULT_TOOLS_FACULTY` for `admin`, `DEFAULT_TOOLS_STUDENT` for `student` and `member`) so an admin edits a real starting point rather than an empty box. Saving then persists it explicitly.
 
 - [ ] **Step 4: Point Workspace Settings at the new screen**
 
-In `src/pages/dashboard/WorkspaceSettingsPage.tsx`, keep the Navigation tab and its existing hide-list editor (hiding is route-based and orthogonal to shelves), but add a card at the top of that panel linking to `/dashboard/my-space`: heading `Default tools for each role`, body `Set what new members start with in My Space → Defaults for members.`, and a button navigating there. Do not delete the hide-list — Phase 1's spec folded it in conceptually, but removing a shipped admin control is out of this phase's scope.
+In `src/pages/dashboard/WorkspaceSettingsPage.tsx`, keep the Navigation tab and its existing hide-list editor (hiding is route-based and orthogonal to shelves), but add a card at the top of that panel linking to `/dashboard/my-world`: heading `Default tools for each role`, body `Set what new members start with in My World → Defaults for members.`, and a button navigating there. Do not delete the hide-list — Phase 1's spec folded it in conceptually, but removing a shipped admin control is out of this phase's scope.
 
 - [ ] **Step 5: Run the tests**
 
 ```bash
-npx vitest run src/pages/dashboard/MySpacePage.test.tsx
+npx vitest run src/pages/dashboard/MyWorldPage.test.tsx
 npm run test 2>&1 | tail -10
 ```
 
@@ -960,7 +960,7 @@ Expected: PASS; no new failures.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add src/pages/dashboard/MySpacePage.tsx src/pages/dashboard/MySpacePage.test.tsx src/pages/dashboard/WorkspaceSettingsPage.tsx
+git add src/pages/dashboard/MyWorldPage.tsx src/pages/dashboard/MyWorldPage.test.tsx src/pages/dashboard/WorkspaceSettingsPage.tsx
 git commit -m "feat(nav): tenant admins set the default shelf each role starts with"
 ```
 
@@ -974,7 +974,7 @@ git commit -m "feat(nav): tenant admins set the default shelf each role starts w
 - Test: `src/components/dashboard/FirstRunSheet.test.tsx`
 
 **Interfaces:**
-- Consumes: `MySpaceEditor` (Task 3), `useMyTools` + `saveMyTools` (Task 1), `useTenantDefaultTools` (Task 1)
+- Consumes: `MyWorldEditor` (Task 3), `useMyTools` + `saveMyTools` (Task 1), `useTenantDefaultTools` (Task 1)
 - Produces: `FirstRunSheet({ open, onOpenChange, available, role }): JSX.Element`
 
 **Behaviour.** On first login — `myTools.setupComplete === false` — a Radix `Sheet` opens over the home titled `Set up your space`, prefilled with the tenant default for the member's role (falling back to the platform default). Two actions: `Skip` accepts what is shown, `Looks good` saves. Both call `saveMyTools({ tools, setupComplete: true })` so the sheet never reappears. Never render an empty space.
@@ -1016,12 +1016,12 @@ beforeEach(() => { h.saveMyTools.mockReset().mockResolvedValue(true); });
 describe('FirstRunSheet', () => {
   it('prefills from the tenant default for the role', () => {
     renderSheet('student');
-    expect(screen.getByTestId('my-space-count')).toHaveTextContent('2 of 8');
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent('2 of 8');
   });
 
   it('falls back to the platform default when the tenant set none', () => {
     renderSheet('faculty');
-    expect(screen.getByTestId('my-space-count')).not.toHaveTextContent('0 of 8');
+    expect(screen.getByTestId('my-world-count')).not.toHaveTextContent('0 of 8');
   });
 
   it('Looks good saves and marks setup complete', async () => {
@@ -1050,7 +1050,7 @@ Expected: FAIL — `Failed to resolve import "./FirstRunSheet"`.
 
 - [ ] **Step 3: Write the sheet**
 
-Create `src/components/dashboard/FirstRunSheet.tsx`: a Radix `Sheet` (side `bottom` under `md`, `right` above it) titled `Set up your space` with the subtitle `Pick the tools you'll use. You can change this any time in Setup.`, containing `MySpaceEditor` in tools-only mode (no `widgetOptions`), and a footer with `Skip` (ghost) and `Looks good` (primary). Seed local state once from `defaultsByRole[roleKey]`, falling back to `DEFAULT_TOOLS_FACULTY` / `DEFAULT_TOOLS_STUDENT`. `roleKey` maps `faculty → 'admin'`, `student → 'student'`, since `NavRole` and the two-value profile role are different vocabularies — document that mapping in a comment.
+Create `src/components/dashboard/FirstRunSheet.tsx`: a Radix `Sheet` (side `bottom` under `md`, `right` above it) titled `Set up your space` with the subtitle `Pick the tools you'll use. You can change this any time in Setup.`, containing `MyWorldEditor` in tools-only mode (no `widgetOptions`), and a footer with `Skip` (ghost) and `Looks good` (primary). Seed local state once from `defaultsByRole[roleKey]`, falling back to `DEFAULT_TOOLS_FACULTY` / `DEFAULT_TOOLS_STUDENT`. `roleKey` maps `faculty → 'admin'`, `student → 'student'`, since `NavRole` and the two-value profile role are different vocabularies — document that mapping in a comment.
 
 - [ ] **Step 4: Mount it in `HouseHome`**
 
@@ -1080,7 +1080,7 @@ git commit -m "feat(nav): first-run sheet prefilled from the tenant default"
 ## Done criteria
 
 1. `npm run test`, `npm run typecheck:guard`, `npm run lint`, `npm run build` all pass with no new failures.
-2. `/dashboard/my-space` renders, and every change persists without an explicit Save.
+2. `/dashboard/my-world` renders, and every change persists without an explicit Save.
 3. The shelf's Setup row reaches it from every authenticated page.
 4. A tenant admin can set a per-role default shelf, and a brand-new member of that role is greeted by the first-run sheet prefilled with it.
 5. No entry the member cannot access is ever offered by ⊕ — verified against a student in a tenant with every module enabled.

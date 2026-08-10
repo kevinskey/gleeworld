@@ -1,4 +1,4 @@
-# My Space Phase 3 — All Tools and ⌘K
+# My World Phase 3 — All Tools and ⌘K
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -14,7 +14,7 @@
 ## Global Constraints
 
 - **The sheet's contents must be gated.** Every entry it offers comes from `resolveNav(navCtx)` — the same module/role/tenant-`hiddenRoutes` gating the shelf uses, narrowed by `applyPreviewRole`. Never `NAV_CATALOG` raw, never `UNIFIED_MODULES`. Offering a destination the member cannot open is a bug; in a multi-tenant app, offering one from another tenant's feature set is worse.
-- **`MY_TOOLS_CAP` is 8**, imported from `myTools.ts`. Pinning at the cap must prompt, never silently fail.
+- **`MY_TOOLS_SEED_SIZE` is 8**, imported from `myTools.ts`. Pinning at the cap must prompt, never silently fail.
 - Personal writes go through the `save_nav_item_order` SECURITY DEFINER RPC via `useMyTools`. There is exactly one RPC call site in the repo; do not add another.
 - **No Suggestions row in this phase.** Usage telemetry is Phase 4. The sheet opens straight to sections.
 - **The shelf never auto-reorders.** Pinning appends; it does not re-sort what is already placed.
@@ -252,7 +252,7 @@ git commit -m "feat(nav): search ranking for the All Tools sheet"
 - Test: `src/components/dashboard/AllToolsSheet.test.tsx`
 
 **Interfaces:**
-- Consumes: `searchNav` (Task 1); `CatalogEntry`, `NAV_SECTION_LABELS` from `@/lib/navigation/navCatalog`; `MY_TOOLS_CAP` from `@/lib/navigation/myTools`; `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem` from `@/components/ui/command`
+- Consumes: `searchNav` (Task 1); `CatalogEntry`, `NAV_SECTION_LABELS` from `@/lib/navigation/navCatalog`; `MY_TOOLS_SEED_SIZE` from `@/lib/navigation/myTools`; `CommandDialog`, `CommandInput`, `CommandList`, `CommandEmpty`, `CommandGroup`, `CommandItem` from `@/components/ui/command`
 - Produces:
 ```ts
 export interface AllToolsSheetProps {
@@ -274,7 +274,7 @@ export function AllToolsSheet(props: AllToolsSheetProps): JSX.Element
 - Selecting a row navigates to `entry.to` and closes the sheet.
 - Each unpinned row carries a ⊕ button named `Pin {label} to your space`. It pins **without** navigating or closing, so a member can pin several in one visit. Pinning must not trigger the row's select — stop propagation.
 - Rows already pinned show a non-interactive "In your space" marker instead of ⊕.
-- At `MY_TOOLS_CAP`, ⊕ buttons are disabled and the sheet shows `Your space is full — remove one in Setup to pin another.` Never let a tap silently do nothing.
+- At `MY_TOOLS_SEED_SIZE`, ⊕ buttons are disabled and the sheet shows `Your space is full — remove one in Setup to pin another.` Never let a tap silently do nothing.
 - `CommandEmpty` reads `No tools match that.`
 - Pass `searchNav` through cmdk's `filter` prop so cmdk handles keyboard/ARIA while ranking stays ours.
 
@@ -416,7 +416,7 @@ git commit -m "feat(nav): searchable All Tools sheet with pin-in-place"
 - A single global ⌘K / Ctrl+K handler opens it. Register it once, in `DashboardShell`, and remove it on unmount. It must not fire while focus is in an `input`, `textarea`, or `contenteditable` — otherwise it hijacks typing in the messenger and the score search.
 - `onPin` appends the key via `saveMyTools({ tools: [...current, key] })` and toasts on a `false` return.
 
-**Trap:** `NavShelf` currently caps its own render at `MY_TOOLS_CAP`, and `DashboardShell` derives `shelfTools` through `selectShelfEntries`. Pinning must append to the **stored** list, not the rendered one — appending to the rendered list would silently drop any stored-but-gate-closed key. Read how Phase 2's `MySpaceEditor` handles unavailable keys before writing this.
+**Trap:** `NavShelf` currently caps its own render at `MY_TOOLS_SEED_SIZE`, and `DashboardShell` derives `shelfTools` through `selectShelfEntries`. Pinning must append to the **stored** list, not the rendered one — appending to the rendered list would silently drop any stored-but-gate-closed key. Read how Phase 2's `MyWorldEditor` handles unavailable keys before writing this.
 
 - [ ] **Step 1: Write the failing tests**
 

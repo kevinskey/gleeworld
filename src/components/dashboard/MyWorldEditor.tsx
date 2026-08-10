@@ -1,11 +1,16 @@
-// MySpaceEditor — Control-Center-shaped editor for a member's My Tools shelf
+// MyWorldEditor — Control-Center-shaped editor for a member's My Tools shelf
 // and (optionally) their home widgets. Modeled on iOS Settings → Control
-// Center: an "In Your Space" inset card of what's included (⊖ badges + drag
-// handles + an n-of-cap counter), then "More Tools" grouped by section
+// Center: an "In Your World" inset card of what's included (⊖ badges + drag
+// handles + a plain count), then "More Tools" grouped by section
 // (⊕ badges), then an optional "Widgets" group (✓ toggles).
 //
+// There is no tool cap and no "full" state: 8 is what a member STARTS with,
+// not a ceiling (see MY_TOOLS_SANITY_MAX in myTools.ts for why the hard cap
+// was removed). Widgets DO still cap at WIDGETS_CAP — that one is a House
+// layout constraint, not a nav-length one, and it bumps rather than blocks.
+//
 // Presentation only: no query, no save, no notion of whose record this is.
-// The personal /dashboard/my-space page, its admin "Defaults for members"
+// The personal /dashboard/my-world page, its admin "Defaults for members"
 // mode, and the first-run sheet all mount this same component and own
 // persistence (and the tenant/member identity) themselves.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md
@@ -20,10 +25,10 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Minus, Plus, Check, CircleSlash } from 'lucide-react';
 import { NAV_SECTION_LABELS, type CatalogEntry, type NavSectionKey } from '@/lib/navigation/navCatalog';
-import { MY_TOOLS_CAP, WIDGETS_CAP } from '@/lib/navigation/myTools';
+import { WIDGETS_CAP } from '@/lib/navigation/myTools';
 import type { HomeWidget } from '@/lib/navigation/homeWidgets';
 
-export interface MySpaceEditorProps {
+export interface MyWorldEditorProps {
   /** Every entry the viewer may use, already gated. Order is catalog order. */
   available: CatalogEntry[];
   /** Currently chosen tool keys, in the member's order. */
@@ -67,7 +72,7 @@ function ChosenRow({ entryKey, entry, disabled, onRemove }: {
   return (
     <li
       ref={setNodeRef}
-      data-testid={entry ? undefined : 'my-space-unavailable'}
+      data-testid={entry ? undefined : 'my-world-unavailable'}
       style={{ transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 10 : undefined }}
       className="flex items-center gap-3 min-h-11 px-4 bg-card"
     >
@@ -109,7 +114,7 @@ function ChosenRow({ entryKey, entry, disabled, onRemove }: {
   );
 }
 
-export function MySpaceEditor({
+export function MyWorldEditor({
   available,
   tools,
   onToolsChange,
@@ -117,25 +122,26 @@ export function MySpaceEditor({
   widgets,
   onWidgetsChange,
   disabled,
-}: MySpaceEditorProps) {
+}: MyWorldEditorProps) {
   const byKey = useMemo(() => new Map(available.map((e) => [e.key, e])), [available]);
   // EVERY stored key gets a row, including one whose catalog entry is no
   // longer in `available` (module switched off, role gate closed, key
   // retired). Spec §5.2 keeps such a key in the RECORD on purpose so a
-  // re-enabled module restores it — but the cap and the n-of-8 counter are
-  // computed from that record, so filtering the row out left a member
-  // staring at "8 of 8 — your space is full" above five visible rows with
-  // every ⊕ disabled and no ⊖ to press. My Space is the only surface that
-  // can clear a stale key (HouseHome's mergeGridOrder deliberately carries
-  // it through untouched), so without a row there is no exit at all. The
-  // row is unlabelled-by-necessity — the catalog entry is gone, so the key
-  // is all we have — and carries no drag handle, only a live ⊖.
+  // re-enabled module restores it — but the counter is computed from that
+  // record, so filtering the row out left a member staring at a count that
+  // disagreed with the rows in front of them. My World is the only surface
+  // that can clear a stale key (HouseHome's mergeGridOrder deliberately
+  // carries it through untouched), so without a row there is no exit at all.
+  // The row is unlabelled-by-necessity — the catalog entry is gone, so the
+  // key is all we have — and carries no drag handle, only a live ⊖.
+  // (Before the cap was removed this was worse still: the stale key also ate
+  // a slot, so the member saw "8 of 8 — your space is full" over five
+  // visible rows with every ⊕ disabled and no ⊖ to press.)
   const chosenRows = useMemo(
     () => tools.map((k) => ({ key: k, entry: byKey.get(k) })),
     [tools, byKey],
   );
   const chosenKeys = useMemo(() => new Set(tools), [tools]);
-  const atCap = tools.length >= MY_TOOLS_CAP;
 
   const moreBySection = useMemo(() => {
     const bySection = new Map<NavSectionKey, CatalogEntry[]>();
@@ -168,7 +174,7 @@ export function MySpaceEditor({
   };
 
   const addTool = (key: string) => {
-    if (disabled || atCap || tools.includes(key)) return;
+    if (disabled || tools.includes(key)) return;
     onToolsChange([...tools, key]);
   };
 
@@ -193,8 +199,8 @@ export function MySpaceEditor({
   return (
     <div className="space-y-6 bg-background">
       <section>
-        <h2 className={GROUP_HEADER}>In Your Space</h2>
-        <div data-testid="my-space-chosen" className={CARD}>
+        <h2 className={GROUP_HEADER}>In Your World</h2>
+        <div data-testid="my-world-chosen" className={CARD}>
           {chosenRows.length === 0 ? (
             <p className={`min-h-11 flex items-center px-4 ${CAPTION}`}>
               Nothing chosen yet — add tools below.
@@ -216,20 +222,17 @@ export function MySpaceEditor({
         </div>
         <div className="flex items-center justify-between px-4 pt-1.5">
           <span className={CAPTION}>Home is always here.</span>
-          <span data-testid="my-space-count" className={CAPTION}>
-            {tools.length} of {MY_TOOLS_CAP}
+          {/* A plain count, not "n of 8". There is no denominator to report
+              — see the header comment. */}
+          <span data-testid="my-world-count" className={CAPTION}>
+            {tools.length} {tools.length === 1 ? 'tool' : 'tools'}
           </span>
         </div>
-        {atCap && (
-          <p data-testid="my-space-full" className={`${CAPTION} px-4 pt-1`}>
-            Your space is full — remove one to add another.
-          </p>
-        )}
       </section>
 
       <section>
         <h2 className={GROUP_HEADER}>More Tools</h2>
-        <div data-testid="my-space-more" className="space-y-4">
+        <div data-testid="my-world-more" className="space-y-4">
           {moreBySection.map(({ section, label, entries }) => (
             <div key={section}>
               <div className={GROUP_HEADER}>{label}</div>
@@ -241,7 +244,7 @@ export function MySpaceEditor({
                     <button
                       type="button"
                       onClick={() => addTool(entry.key)}
-                      disabled={disabled || atCap}
+                      disabled={disabled}
                       aria-label={`Add ${entry.label}`}
                       className={TAP_TARGET}
                     >
@@ -260,7 +263,7 @@ export function MySpaceEditor({
       {widgetOptions && (
         <section>
           <h2 className={GROUP_HEADER}>Widgets</h2>
-          <div data-testid="my-space-widgets" className={CARD}>
+          <div data-testid="my-world-widgets" className={CARD}>
             {widgetOptions.map((opt) => {
               const selected = widgetList.includes(opt.key);
               return (
@@ -289,7 +292,7 @@ export function MySpaceEditor({
             })}
           </div>
           <div className="px-4 pt-1.5">
-            <span data-testid="my-space-widget-count" className={CAPTION}>
+            <span data-testid="my-world-widget-count" className={CAPTION}>
               {widgetList.length} of {WIDGETS_CAP}
             </span>
           </div>

@@ -1,13 +1,20 @@
 // NavShelf — the flat member-chosen navigation shelf.
 //
 //   Home                  always first, never consumes a slot
-//   <up to 8 tools>       the member's My Tools set, in their order
+//   <the member's tools>  their My Tools set, in their order, however long
 //   ─────────
 //   All Tools             opens the searchable AllToolsSheet
-//   Setup                 opens /dashboard/my-space
+//   Setup                 opens /dashboard/my-world
+//
+// The shelf renders exactly what the member chose — it does NOT truncate.
+// 8 is the size they START at, not a ceiling; see MY_TOOLS_SANITY_MAX in
+// myTools.ts for why the hard cap went away. Both of this component's
+// callers (DashboardShell's Sidebar and MobileNav) put it inside a
+// `flex-1 overflow-y-auto` <nav>, so a long shelf scrolls within the
+// sidebar/drawer rather than growing the page.
 //
 // No sections on the shelf, no accordions, no drag reorder: arranging is a
-// Phase 2 task performed on /dashboard/my-space, not a gesture performed on
+// Phase 2 task performed on /dashboard/my-world, not a gesture performed on
 // the live nav. Phase 1 shipped an in-shelf disclosure of every remaining
 // destination as a bridge; Phase 3 retires it — All Tools now opens the
 // searchable AllToolsSheet (owned by DashboardShell) instead of expanding
@@ -16,7 +23,6 @@
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.2, §5.3
 import { NavLink } from 'react-router-dom';
 import { LayoutGrid, Settings } from 'lucide-react';
-import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 import type { CatalogEntry } from '@/lib/navigation/navCatalog';
 
 // Not a NAV_CATALOG entry — Setup is a row the shelf always offers on its
@@ -24,14 +30,21 @@ import type { CatalogEntry } from '@/lib/navigation/navCatalog';
 // icon/to/end/tourId/label off its `entry` prop, so a hand-built
 // CatalogEntry-shaped constant is enough; section/tone are unused here but
 // required by the type.
+// `key` is safe to rename: it is not a NAV_CATALOG key and cannot reach a
+// stored MyTools.tools list. SETUP_ENTRY is module-private (never exported),
+// is only ever passed to <Row> for rendering, and every write path takes its
+// keys from the gated catalog instead — MyWorldEditor's ⊕ reads `available`
+// (resolveNav output), AllToolsSheet's ⊕ reads `available` too, and
+// useMyTools.pinTool appends only what it is handed. Nothing here flows into
+// onToolsChange/pinTool/saveTools.
 const SETUP_ENTRY: CatalogEntry = {
-  key: 'my-space-setup',
-  to: '/dashboard/my-space',
+  key: 'my-world-setup',
+  to: '/dashboard/my-world',
   label: 'Setup',
   icon: Settings,
   section: 'today',
   tone: 'bg-muted text-muted-foreground',
-  tourId: 'nav-my-space-setup',
+  tourId: 'nav-my-world-setup',
 };
 
 export interface NavShelfProps {
@@ -78,10 +91,13 @@ function Row({ entry, variant, onNavigate }: {
 }
 
 export function NavShelf({ home, tools, onOpenAllTools, variant, onNavigate }: NavShelfProps) {
-  // Defensive cap. useMyTools already sanitizes, but the shelf's whole
-  // promise is that it cannot grow into a list — enforce it at the render
-  // boundary too, so a stale cache or a future caller can't break it.
-  const shelf = tools.filter((t) => t.key !== home?.key).slice(0, MY_TOOLS_CAP);
+  // No .slice() here. This used to truncate at 8 (the retired MY_TOOLS_CAP,
+  // now split into MY_TOOLS_SEED_SIZE + MY_TOOLS_SANITY_MAX) "so the shelf
+  // cannot grow into a list" — but that promise is retired: a member may now
+  // keep as many tools as they like, and silently hiding the ones past the
+  // eighth would make their own choice invisible with no error to explain it.
+  // The only filter left drops Home, which renders separately below.
+  const shelf = tools.filter((t) => t.key !== home?.key);
 
   return (
     <div className="space-y-1">
@@ -110,7 +126,7 @@ export function NavShelf({ home, tools, onOpenAllTools, variant, onNavigate }: N
       </button>
 
       {/* Setup — always present, placed after the All Tools row. Reaches
-          the personal /dashboard/my-space editor. */}
+          the personal /dashboard/my-world editor. */}
       <Row entry={SETUP_ENTRY} variant={variant} onNavigate={onNavigate} />
     </div>
   );

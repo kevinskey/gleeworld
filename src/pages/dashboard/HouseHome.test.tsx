@@ -215,7 +215,7 @@ describe('HouseHome YouOweCard integration', () => {
   });
 });
 
-describe('HouseHome member-chosen widgets (My Space, Phase 2)', () => {
+describe('HouseHome member-chosen widgets (My World, Phase 2)', () => {
   // Profile mocked above is a non-admin, non-faculty role ('student'
   // widgets: 'today' and 'practice-ledger').
   it('renders only the widget the member chose', () => {
@@ -302,7 +302,7 @@ describe('HouseHome ↔ FirstRunSheet seam', () => {
 // direct unit tests) — HomeTileGrid is mocked only enough to capture the
 // props HouseHome computes for it, not to fake the resolution itself.
 describe('HouseHome keycap grid — resolveKeys/resolvedTools wiring for a merged key', () => {
-  it('a stored merged key ("merch") both renders as its successor AND is counted as representable in gridCap', () => {
+  it('a stored merged key ("merch") renders as its successor, and no cap is passed to the grid', () => {
     profileResult.current = { full_name: 'Admin', user_id: 'u1', is_admin: true, is_super_admin: false };
     tenantModulesResult.current = [{ module_id: 'store' }];
     myToolsResult.current = {
@@ -315,11 +315,11 @@ describe('HouseHome keycap grid — resolveKeys/resolvedTools wiring for a merge
     const grid = capturedGridProps.current;
     expect(grid).not.toBeNull();
     expect([...grid!.primary, ...grid!.overflow].map((t) => t.key)).toContain('shop');
-    // MY_TOOLS_CAP (8) minus zero un-representable stored keys — 'merch'
-    // resolves to 'shop', which IS representable, so nothing is held back.
-    // The bug computed this as 7: raw 'merch' matched nothing in
-    // `representable` (which only ever holds resolved keys), so it was
-    // wrongly counted as un-representable.
-    expect(grid!.cap).toBe(8);
+    // HouseHome used to compute a `cap` here (8 minus the stored keys with
+    // no keycap) and this asserted it came out as 8 rather than the buggy 7.
+    // The 8-tool ceiling is gone (product owner, 2026-08-09), so HomeTileGrid
+    // takes no `cap` prop at all — assert its ABSENCE, so reintroducing a
+    // grid budget has to come back through this test.
+    expect(grid).not.toHaveProperty('cap');
   });
 });

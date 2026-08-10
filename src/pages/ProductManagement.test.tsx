@@ -29,7 +29,7 @@ vi.mock('@/hooks/useUserRole', () => ({
 vi.mock('@/hooks/useModuleAccess', () => ({
   useModuleAccess: () => ({ hasAccess: h.hasStore, isLoading: h.moduleLoading }),
 }));
-// Same rationale as MySpacePage.test.tsx: DashboardShell is a named export
+// Same rationale as MyWorldPage.test.tsx: DashboardShell is a named export
 // everywhere in the repo, so only the named export needs stubbing.
 vi.mock('@/components/dashboard/DashboardShell', () => ({
   DashboardShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,

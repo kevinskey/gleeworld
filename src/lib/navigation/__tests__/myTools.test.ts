@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  MY_TOOLS_CAP, parseMyTools, migrateToMyTools, sanitizeTools, resolveKey,
+  MY_TOOLS_SEED_SIZE, MY_TOOLS_SANITY_MAX, parseMyTools, migrateToMyTools, sanitizeTools, resolveKey,
   selectShelfEntries, mergeGridOrder, DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY,
   MERGED_KEYS, resolvedTools,
 } from '../myTools';
@@ -58,7 +58,7 @@ describe('MERGED_KEYS — merch retired into shop (Phase 5, 2026-08-09)', () => 
 // Review round 1, Important 1: MERGED_KEYS resolution only reached
 // selectShelfEntries (the sidebar shelf) — getAppTiles's My Tools path
 // (the home keycap grid), DashboardShell's AllToolsSheet "already pinned"
-// check, and MySpacePage's editor all read `myTools.tools` raw, so a
+// check, and MyWorldPage's editor all read `myTools.tools` raw, so a
 // stored 'merch' resolved on the shelf and nowhere else. resolvedTools is
 // the one helper all of those now go through instead of `myTools?.tools ??
 // []` directly.
@@ -79,9 +79,22 @@ describe('resolvedTools', () => {
 });
 
 describe('sanitizeTools', () => {
-  it('caps at MY_TOOLS_CAP', () => {
-    const many = Array.from({ length: 20 }, (_, i) => `k${i}`);
-    expect(sanitizeTools(many)).toHaveLength(MY_TOOLS_CAP);
+  // The hard 8-tool cap is gone (product owner, 2026-08-09). What is left is
+  // MY_TOOLS_SANITY_MAX, corruption protection only — a member's ordinary
+  // set must pass through untouched however long it is.
+  it('does NOT truncate an ordinary oversized set — 8 is not a ceiling', () => {
+    const twenty = Array.from({ length: 20 }, (_, i) => `k${i}`);
+    expect(sanitizeTools(twenty)).toEqual(twenty);
+  });
+
+  it('still bounds a corrupt blob at MY_TOOLS_SANITY_MAX', () => {
+    const absurd = Array.from({ length: MY_TOOLS_SANITY_MAX + 25 }, (_, i) => `k${i}`);
+    expect(sanitizeTools(absurd)).toHaveLength(MY_TOOLS_SANITY_MAX);
+  });
+
+  it('bounds at 64, matching parseTileLayout — not at the seed size', () => {
+    expect(MY_TOOLS_SANITY_MAX).toBe(64);
+    expect(MY_TOOLS_SEED_SIZE).toBe(8);
   });
   it('drops home — it is implicit and never stored', () => {
     expect(sanitizeTools(['home', 'calendar'])).toEqual(['calendar']);
@@ -132,11 +145,10 @@ describe('migrateToMyTools', () => {
     expect(cleared.tools).toEqual([]);
     expect(cleared.setupComplete).toBe(true);
   });
-  it('documents exactly which 8 of an oversized tile layout survive', () => {
-    // I2: HomeTileGrid's add path is capped now, but layouts written before
-    // that cap could hold every enabled destination, and sanitizeTools keeps
-    // only the first MY_TOOLS_CAP. Truncation is deliberate — pin WHICH keys
-    // survive so it is visible rather than accidental.
+  it('migrates an oversized tile layout WHOLE — no tail is dropped', () => {
+    // This used to keep only the first 8 and assert the other four were
+    // dropped. Truncating a member's own curated pick list is exactly the
+    // silent drop the cap removal ends, so all twelve now survive, in order.
     const twelve = {
       v: 1,
       order: [
@@ -147,13 +159,10 @@ describe('migrateToMyTools', () => {
     const migrated = migrateToMyTools(null, twelve, 'faculty');
     expect(migrated.tools).toEqual([
       'music-library', 'academy', 'planner', 'people', 'finance', 'part-tracks',
-      'studio', 'sight',
+      // 'merch' resolves to 'shop' through MERGED_KEYS.
+      'studio', 'sight', 'attendance', 'tickets', 'shop', 'video',
     ]);
-    expect(migrated.tools).toHaveLength(MY_TOOLS_CAP);
-    // The tail is dropped, not reordered or shuffled to the front.
-    for (const dropped of ['attendance', 'tickets', 'merch', 'video']) {
-      expect(migrated.tools).not.toContain(dropped);
-    }
+    expect(migrated.tools).toHaveLength(12);
   });
 });
 
@@ -194,9 +203,12 @@ describe('role defaults', () => {
       expect(keys.has(k), `${k} is not a catalog key`).toBe(true);
     }
   });
-  it('fit within the cap', () => {
-    expect(DEFAULT_TOOLS_STUDENT.length).toBeLessThanOrEqual(MY_TOOLS_CAP);
-    expect(DEFAULT_TOOLS_FACULTY.length).toBeLessThanOrEqual(MY_TOOLS_CAP);
+  // Not "fit within a cap" — there is no cap. These two lists ARE the seed:
+  // MY_TOOLS_SEED_SIZE is defined as how long they are, so an edit that
+  // lengthened one without a deliberate decision shows up here.
+  it('are exactly MY_TOOLS_SEED_SIZE long', () => {
+    expect(DEFAULT_TOOLS_STUDENT).toHaveLength(MY_TOOLS_SEED_SIZE);
+    expect(DEFAULT_TOOLS_FACULTY).toHaveLength(MY_TOOLS_SEED_SIZE);
   });
 });
 

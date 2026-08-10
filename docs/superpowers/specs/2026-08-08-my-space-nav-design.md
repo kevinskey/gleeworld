@@ -1,4 +1,10 @@
-# My Space — navigation recut & personal setup screen
+# My World — navigation recut & personal setup screen
+
+> **Renamed 2026-08-09.** "My World" became **My World** — the product owner's call. The
+> route moved from `/dashboard/my-world` to `/dashboard/my-world` (the old path redirects,
+> preserving query and hash). This file keeps its original dated filename because it is a
+> historical record; only its title and body copy were updated. The same date also retired
+> the 8-tool cap — see §2 and §5.2.
 
 **Date:** 2026-08-08 · **Status:** Approved design, pre-implementation
 **Builds on:** `2026-07-04-house-and-stage-design.md` (House = iOS light), `2026-07-06-apple-ios-design-system-design.md` (locked visual language), `2026-07-06-home-tile-customization-design.md` (keycap jiggle edit), `2026-07-06-nav-catalog-parity-design.md` (the catalog itself)
@@ -18,7 +24,7 @@ This spec does three things:
 2. **Merges the two personalization systems into one.** `home_tile_layout` and
    `nav_item_order` are two mental models for one idea. They become **My Tools**: a single
    ordered set, rendered as keycaps in the room and as rows in the sidebar.
-3. **Adds `/dashboard/my-space`** — an iOS-Settings-shaped screen where a member arranges
+3. **Adds `/dashboard/my-world`** — an iOS-Settings-shaped screen where a member arranges
    their tools and widgets, instead of drag-sorting the live sidebar. The same component,
    presented as a sheet, is the first-run picker.
 
@@ -32,7 +38,15 @@ because you chose them.
 
 **Goals**
 
-- A persistent nav that can never grow into a list, whatever the tenant enables.
+- A persistent nav that **starts short and is the member's to grow**. It is seeded with 8
+  tools and never imposes a limit after that. *(Revised 2026-08-09, the product owner's
+  decision. The original goal read "a persistent nav that can never grow into a list,
+  whatever the tenant enables." That was right while the shelf was the ONLY way to reach a
+  destination — an overfull shelf meant an unusable nav. All Tools and ⌘K changed the
+  premise: everything in the catalog is one tap away regardless of shelf length, so length
+  became a choice rather than a trap, and a hard cap became the app overruling the member
+  about their own nav for no remaining reason. The other original justification — never
+  truncate an existing tile set during migration — is spent; everyone has migrated.)*
 - One personal tool set, arranged once, rendered consistently on every surface.
 - A setup screen that reads like iOS Settings, not a configuration table.
 - First-run defaults earned from real usage rather than guessed.
@@ -164,7 +178,7 @@ Flat. No sections, no headers, no accordions, no drag targets.
 │  ▤  Calendar     │
 │  ♪  Music        │   your My Tools set,
 │  🎓 Academy      │   in your order,
-│  ✉  Messages     │   up to 8
+│  ✉  Messages     │   as many as you keep
 │  ▦  Programs     │
 │  💲 Finance      │
 │                  │
@@ -173,8 +187,19 @@ Flat. No sections, no headers, no accordions, no drag targets.
 └──────────────────┘
 ```
 
-Ceiling: 11 rows. **Cap is 8, not 6** — it matches the shipped keycap cap, so the migration
-never truncates a member's existing tile set.
+**No ceiling.** A member is *seeded* with 8 tools (which is also what the shipped keycap
+grid seeded, so migration never truncates an existing tile set) and may add or remove
+freely from there. The shelf renders exactly what they chose.
+
+*Revised 2026-08-09, the product owner's decision.* This section previously asserted
+"Ceiling: 11 rows. Cap is 8, not 6." The cap is gone: `sanitizeTools` no longer truncates
+at 8, `NavShelf` no longer slices its render, and the ⊕ affordances in the editor, the All
+Tools sheet and the keycap grid are never disabled. What survives is `MY_TOOLS_SANITY_MAX`
+(64, matching `parseTileLayout`) — corruption protection so a hand-edited or corrupt record
+cannot render unbounded rows, never reachable in normal use. Both role defaults stay
+exactly `MY_TOOLS_SEED_SIZE` (8) long. Both callers put the shelf inside a
+`flex-1 overflow-y-auto` `<nav>`, so a long shelf scrolls within the sidebar or drawer
+instead of growing the page.
 
 Gates still run on top of the shelf: an entry whose module or role gate closes simply does
 not render, and is dropped from the rendered set without being removed from the stored one
@@ -207,10 +232,12 @@ A sheet over the page, opened from the shelf or ⌘K, holding the full recut cat
   diacritic-insensitive.
 - The **YOU USE MOST** row needs `gw_nav_usage` and therefore arrives with Phase 4; until
   then the sheet opens straight to the sections and the row is absent, not empty.
-- **⊕ pins to My Tools in place** and updates the room and shelf at once. With 8 already
-  placed, every ⊕ is disabled and the sheet says so — "Your space is full — remove one in
-  Setup to pin another." (Amended after Phase 3 shipped: this bullet used to read "⊕ prompts
-  to swap rather than failing silently". The plan ratified the substitution — a swap picker
+- **⊕ pins to My Tools in place** and updates the room and shelf at once. It is never
+  disabled for length and there is no "full" banner — *revised 2026-08-09 with the cap
+  removal (§2, §5.2)*. (This bullet previously read: "With 8 already placed, every ⊕ is
+  disabled and the sheet says so — 'Your space is full — remove one in Setup to pin
+  another.'" Before that it read "⊕ prompts to swap rather than failing silently". The plan
+  ratified the substitution — a swap picker
   is a second modal decision inside a sheet the member opened to do something else, where
   Setup already exists for exactly that edit. What matters is the "rather than failing
   silently" half, and it holds: the state is visible before the tap, not discovered after
@@ -220,20 +247,20 @@ A sheet over the page, opened from the shelf or ⌘K, holding the full recut cat
 - Visual: `--card` rows on `--background`, 12px radius, hairline separators, tint on the
   ⊕ badge only. Blur is permitted here (fixed chrome, ≥85% opaque scrim) but not required.
 
-### 5.4 My Space — `/dashboard/my-space`
+### 5.4 My World — `/dashboard/my-world`
 
 The model is **iOS Settings → Control Center**: an included list with ⊖ badges and drag
 handles, an available list grouped in inset cards with ⊕ badges, over a live preview.
 
 ```
-‹ Settings              My Space                    Done
+‹ Settings              My World                   Done
 
      ┌───────────────────────────────────────┐
      │   ▤   ♪   🎓   ✉   ▦   💲             │  live preview
      │  Cal Mus  Acad Msgs Prog Fin          │
      └───────────────────────────────────────┘
 
-  IN YOUR SPACE                                  6 of 8
+  IN YOUR WORLD                                 6 tools
  ┌─────────────────────────────────────────────────────┐
  │  ⊖   ▤   Calendar                              ≡    │
  │  ⊖   ♪   Music                                 ≡    │
@@ -281,7 +308,7 @@ design folded it into this screen, but hiding is route-based and orthogonal to s
 and removing a shipped admin control is not something a nav redesign should do on the way
 past. What shipped instead (Phase 2): the hide list keeps its editor, and its panel gains a
 card above it linking here — heading *Default tools for each role*, body *Set what new
-members start with in My Space → Defaults for members.* The two controls compose: an item
+members start with in My World → Defaults for members.* The two controls compose: an item
 withheld from a role never reaches that role's ⊕ pool, because `hiddenRoutes` is part of the
 same `NavContext` this screen resolves.
 
@@ -291,8 +318,8 @@ Skipping accepts the default — never an empty space.
 
 ### 5.5 Naming
 
-`/admin/public-page` (**Site Setup**) configures the site strangers see. `/dashboard/my-space`
-(**My Space**) configures the space members live in. Parallel doors, parallel names.
+`/admin/public-page` (**Site Setup**) configures the site strangers see. `/dashboard/my-world`
+(**My World**) configures the space members live in. Parallel doors, parallel names.
 
 ## 6. Data model
 
@@ -303,7 +330,7 @@ Extend the existing `user_preferences.nav_item_order` JSON to `v: 4`:
 ```ts
 interface MyTools {
   v: 4;
-  /** ordered catalog keys, max 8. 'home' is implicit and never stored. */
+  /** ordered catalog keys, member-chosen length. 'home' is implicit and never stored. */
   tools: string[];
   /** chosen role widgets, max 2 (House §5.1 cap) */
   widgets: string[];
@@ -335,8 +362,10 @@ tenant admins, read by the first-run sheet and by any member with no personal re
 
 Per user, in order of preference:
 
-1. `home_tile_layout.order` exists → use it, first 8 after sanitizing (a curated pick
-   list, including a deliberately empty one). `setupComplete: true`.
+1. `home_tile_layout.order` exists → use it WHOLE after sanitizing (a curated pick list,
+   including a deliberately empty one). `setupComplete: true`. *(Revised 2026-08-09: this
+   read "first 8 after sanitizing". Truncating a member's own curated pick list is exactly
+   the silent drop the cap removal ends.)*
 2. Else → the tenant default for their role.
 3. Else → the platform default for their role, `setupComplete: false`.
 
@@ -409,22 +438,22 @@ House's `--radius: 0` / cream-canvas language is superseded and does not apply.
 | Removed | Lines / reason |
 |---|---|
 | `src/components/navigation/AppNavigation.tsx` | 293 lines, dead — imported at `UniversalHeader.tsx:17`, never rendered. Remove the import too. |
-| `SortableNavRow`, `DroppableSection`, sidebar dnd wiring | `DashboardShell.tsx` — sorting moves to My Space |
+| `SortableNavRow`, `DroppableSection`, sidebar dnd wiring | `DashboardShell.tsx` — sorting moves to My World |
 | 10 collapsible sidebar sections + `DEFAULT_COLLAPSED` + `loadCollapsed` | Nothing left to collapse |
 | `buildNavSections` section-grouping and `sectionOrder` handling | Shelf is flat |
 | `useHomeTileLayout` and the `home_tile_layout` column | Superseded by My Tools |
-| ~~Workspace Settings → Navigation panel body~~ | **Not deleted.** The hide-list editor stays; the panel gained a link card to `/dashboard/my-space` above it. See §5.4 — hiding is route-based and orthogonal to shelves. |
+| ~~Workspace Settings → Navigation panel body~~ | **Not deleted.** The hide-list editor stays; the panel gained a link card to `/dashboard/my-world` above it. See §5.4 — hiding is route-based and orthogonal to shelves. |
 | ~34 catalog entries | Merged, folded, or moved to Settings (§4) |
 
 **Kept deliberately:** the iOS jiggle-edit on the keycap grid. It is the Apple pattern, it is
 already shipped, and it now edits the same My Tools record the setup screen does. Long-press
-to nudge one tile; open My Space to actually arrange things.
+to nudge one tile; open My World to actually arrange things.
 
 ## 9. Phasing
 
 - **Phase 1 — My Tools + the shelf.** Data model, migration, flat sidebar, keycaps read My
   Tools, dead code deleted. The visible win: the sidebar stops being a list.
-- **Phase 2 — My Space + first run.** The setup screen, the admin defaults mode, the
+- **Phase 2 — My World + first run.** The setup screen, the admin defaults mode, the
   first-run sheet, and a link card from Workspace Settings → Navigation (not a redirect —
   see §5.4).
 - **Phase 3 — All Tools + search.** The launcher, ⌘K, in-place ⊕ pinning.
@@ -453,7 +482,7 @@ Phases 1–3 are independently shippable and each stands on its own.
    nor influence tenant B's seeded defaults. Verified against the live self-hosted DB.
 7. **One-handed at 390×844**, `prefers-reduced-motion` on, iOS accessibility text XL: My
    Space is fully operable, no clipped labels, drag reorder works by touch.
-8. **AA contrast** on My Space and All Tools under worst-case tenant palettes
+8. **AA contrast** on My World and All Tools under worst-case tenant palettes
    (`#FFFF00`, `#F8F8F8`, navy/gold + serif).
 
 ## 11. Open questions

@@ -168,7 +168,7 @@ describe('Sidebar — failed load must still render the shelf', () => {
   // useMyTools deliberately falls back to FABRICATED role defaults when the
   // load fails rather than throwing (loaded: false, myTools: the fallback
   // record, never null) — specifically so the shelf is never blank. The
-  // MySpacePage fix that gates its editor on `loaded` touches only that
+  // MyWorldPage fix that gates its editor on `loaded` touches only that
   // page's own write path; it must not change what Sidebar renders for the
   // exact same failed-load record.
   it('still renders the shelf from the fabricated fallback record when loaded is false', () => {

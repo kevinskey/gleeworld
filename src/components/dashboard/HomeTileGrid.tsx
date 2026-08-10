@@ -20,22 +20,11 @@ import { CSS } from '@dnd-kit/utilities';
 import { Minus, Plus, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import type { Destination } from '@/lib/navigation/appDestinations';
-import { MY_TOOLS_CAP } from '@/lib/navigation/myTools';
 import { NAV_SECTION_LABELS, type NavSectionKey } from '@/lib/navigation/navCatalog';
 
 interface HomeTileGridProps {
   primary: Destination[];
   overflow: Destination[];
-  /**
-   * How many keycaps this grid may hold. Defaults to MY_TOOLS_CAP — the
-   * shipped ceiling on a My Tools record. The caller lowers it when some of
-   * the member's stored tools cannot appear as keycaps (on a phone the tab
-   * bar claims Home/Messages/Calendar): those keys still occupy slots in the
-   * saved record, so the grid's own budget shrinks to match. Without a cap
-   * here the add path was unbounded, a grid could grow past 8, and
-   * sanitizeTools then dropped the tail on save with no warning.
-   */
-  cap?: number;
   onSave: (order: string[]) => Promise<boolean>;
 }
 
@@ -130,7 +119,7 @@ function AddTile({ tile, index, onAdd }: { tile: Destination; index: number; onA
   );
 }
 
-export function HomeTileGrid({ primary, overflow, cap = MY_TOOLS_CAP, onSave }: HomeTileGridProps) {
+export function HomeTileGrid({ primary, overflow, onSave }: HomeTileGridProps) {
   const { toast } = useToast();
   // draft === null → view mode; draft = ordered primary keys while editing.
   const [draft, setDraft] = useState<string[] | null>(null);
@@ -188,20 +177,16 @@ export function HomeTileGrid({ primary, overflow, cap = MY_TOOLS_CAP, onSave }: 
     });
   };
 
-  // The grid is a fixed-size shelf, not a list: a stored My Tools record
-  // holds at most MY_TOOLS_CAP keys and sanitizeTools truncates anything
-  // past it on save. Enforce the ceiling where the member can see it, and
-  // SAY so on a tap — silently ignoring the tap reads as a broken tile.
-  const gridFull = draft !== null && draft.length >= cap;
+  // No ceiling. This used to refuse a tap once the draft reached a `cap`
+  // prop (the retired MY_TOOLS_CAP, lowered by HouseHome for stored keys
+  // with no keycap),
+  // because sanitizeTools would otherwise silently drop the tail on save.
+  // sanitizeTools no longer truncates at 8 — see MY_TOOLS_SANITY_MAX in
+  // myTools.ts — so there is nothing left to protect the member from, and a
+  // refused tap on their own grid is now the worse outcome. A member may
+  // fill the grid with every app they have; it wraps onto more rows.
   const addTile = (key: string) => {
     if (!draft || draft.includes(key)) return;
-    if (draft.length >= cap) {
-      toast({
-        title: `Your grid holds ${cap} app${cap === 1 ? '' : 's'}`,
-        description: 'Remove one from the grid above, then add this.',
-      });
-      return;
-    }
     setDraft((d) => (d && !d.includes(key) ? [...d, key] : d));
   };
 
@@ -262,11 +247,6 @@ export function HomeTileGrid({ primary, overflow, cap = MY_TOOLS_CAP, onSave }: 
             )}
             <div className="flex flex-wrap items-baseline gap-x-2 mt-4 mb-2">
               <span className="text-xs uppercase tracking-widest text-muted-foreground">More</span>
-              {gridFull && (
-                <span className="text-xs text-muted-foreground">
-                  Grid is full ({cap}) — remove an app above to add another.
-                </span>
-              )}
             </div>
             {draftOverflow.length === 0 ? (
               <p className="text-sm text-muted-foreground">Everything is on your grid.</p>

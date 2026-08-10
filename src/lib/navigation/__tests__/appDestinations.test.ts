@@ -236,7 +236,7 @@ describe('getAppTiles with a custom tools list', () => {
   // here — an admin who had the Merch keycap lost it from their home grid
   // even though the shelf still showed "Store Admin". Verified before the
   // fix; see myTools.test.ts's resolvedTools tests for the same guard on
-  // the other consumers (AllToolsSheet's pinned check, MySpacePage editor).
+  // the other consumers (AllToolsSheet's pinned check, MyWorldPage editor).
   it('resolves a merged key on the My Tools (grid) path — the bug this fix closes', () => {
     const { primary } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }), ['merch']);
     expect(primary.map((t) => t.key)).toEqual(['shop']);

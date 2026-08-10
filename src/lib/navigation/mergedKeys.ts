@@ -43,7 +43,7 @@ export function resolveKey(key: string, map: Record<string, string> = MERGED_KEY
 /**
  * Resolve every key in `keys`, then dedupe on the RESOLVED value, keeping
  * first occurrence — the same "resolve, then dedupe" order `sanitizeTools`
- * (myTools.ts) uses, minus its MY_TOOLS_CAP cap: that cap governs what may
+ * (myTools.ts) uses, minus its MY_TOOLS_SANITY_MAX bound: that bound governs what may
  * be STORED, not how many already-stored entries a render path may show.
  *
  * Shared by selectShelfEntries (the sidebar shelf) and getAppTiles's My
