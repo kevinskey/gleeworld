@@ -1450,7 +1450,7 @@ and drag is the convenience."
 
 **Interfaces:**
 - Consumes: everything from Tasks 1, 2, 5, 6.
-- Produces: `MyWorldEditorProps` gains `groups: ToolGroup[]` and `onGroupsChange: (next: ToolGroup[]) => void`. `MyWorldEditor` stays presentation-only — it computes the next `Shelf` with the Task 2 helpers and hands both lists up; it never saves.
+- Produces: `MyWorldEditorProps` gains **optional** `groups?: ToolGroup[]` and `onGroupsChange?: (next: ToolGroup[]) => void`. When `onGroupsChange` is omitted the editor renders **no group UI at all** — no headers, no `New Group` row, no `ToolRowMenu` — exactly as omitting `widgetOptions` suppresses the widgets section today. That is how the admin defaults tab stays flat in Phase 1 without a dead control. `MyWorldEditor` stays presentation-only: it computes the next `Shelf` with the Task 2 helpers and hands both lists up; it never saves.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1715,7 +1715,22 @@ In `src/pages/dashboard/MyWorldPage.tsx`, take `groups` off the record beside `t
   };
 ```
 
-Mirror the same two props into the admin "Defaults for members" `<MyWorldEditor>` at `:231-234`, passing `groups={defaultsGroups}` and a matching handler. **Phase 1 keeps that tab's stored shape unchanged** — pass `groups={[]}` and a no-op `onGroupsChange` there with a comment pointing at Phase 2, so the admin tab is visibly unchanged until the migration question is answered.
+The admin "Defaults for members" `<MyWorldEditor>` at `:231-234` is **deliberately NOT wired to groups in Phase 1** — its stored shape (`gw_tenant_nav_prefs.default_tools`) cannot hold groups until the Phase 2 migration. Leave that call site's props exactly as they are today and add only a comment:
+
+```tsx
+            {/* Tenant defaults stay FLAT in Phase 1: default_tools is still
+                text[] and cannot carry groups, so the group props are omitted
+                and the editor renders no group UI here at all. Phase 2
+                migrates the column and turns this on — see the spec's §6.1
+                warning about ADD COLUMN IF NOT EXISTS. */}
+            <MyWorldEditor
+              available={defaultsAvailable}
+              tools={defaultsTools}
+              onToolsChange={handleDefaultsChange}
+            />
+```
+
+This works because the group props are **optional**, following the precedent `widgetOptions` already sets in this file ("Omit the whole widgets group — tenant-defaults mode has no widgets"). Omitting `onGroupsChange` must suppress the entire group UI: no headers, no `New Group` row, and no `ToolRowMenu` on any row. A visible New Group button wired to a no-op would be a dead control, which is worse than no control.
 
 - [ ] **Step 7: Run the tests**
 
