@@ -269,6 +269,64 @@ describe('MyWorldPage — admin defaults mode', () => {
     expect(within(screen.getByTestId('my-world-more')).queryByText('Store Admin')).toBeNull();
   });
 
+  // Final review, Important 2: the fix above was applied to the LOOSE list
+  // only — `tools` went through resolvedTools while `groups` was read raw off
+  // the record. So the very same bug survived one level down, inside a group.
+  //
+  // A member who filed the store into a group before 'merch' was retired into
+  // MERGED_KEYS stores groups[].tools = ['merch']. Read raw, that renders an
+  // "Unavailable — merch" row INSIDE their group while its live successor
+  // ('shop' / "Store Admin") is simultaneously offered as addable in More
+  // Tools. Adding it is the damage: the next sanitizeShelf on write resolves
+  // both to 'shop', keeps the loose copy (first occurrence wins), and the
+  // member's group is silently emptied.
+  //
+  // HouseHome was fixed for this by reading BOTH lists through one
+  // sanitizeShelf; the editor now does the same.
+  it('resolves a retired key stored INSIDE a group, instead of emptying the group', async () => {
+    h.myTools = {
+      v: 4,
+      tools: ['calendar'],
+      groups: [{ id: 'g1', name: 'Sunday', tools: ['merch'], collapsed: false }],
+      widgets: [],
+      setupComplete: true,
+    };
+    await renderAdminPage();
+    const chosen = screen.getByTestId('my-world-chosen');
+    // The group kept its tool, resolved to the live entry — not emptied,
+    // and not rendered as a dead "Unavailable — merch" row.
+    expect(chosen).toHaveTextContent('Store Admin');
+    expect(screen.queryByTestId('my-world-unavailable')).toBeNull();
+    expect(screen.getByTestId('my-world-group-count-g1')).toHaveTextContent('1');
+    // Not ALSO offered as addable — offering it is what leads to the write
+    // that empties the group.
+    expect(within(screen.getByTestId('my-world-more')).queryByText('Store Admin')).toBeNull();
+  });
+
+  // The other half of the same read split. Before 'merch' merged into 'shop'
+  // they were two separately pinnable catalog entries, so a record can
+  // legitimately hold one loose and the other in a group. Resolving only the
+  // loose list made BOTH render as 'shop': the same string twice in
+  // sortableIds and twice as a React key in one <ul> — duplicate dnd-kit ids
+  // and broken drag. One sanitizeShelf over both lists dedupes them.
+  it('never renders one key twice when loose and a group hold two sides of a merge', async () => {
+    const dupKeyWarning = vi.spyOn(console, 'error').mockImplementation(() => {});
+    h.myTools = {
+      v: 4,
+      tools: ['merch'],
+      groups: [{ id: 'g1', name: 'Sunday', tools: ['shop'], collapsed: false }],
+      widgets: [],
+      setupComplete: true,
+    };
+    await renderAdminPage();
+    // Exactly one row for the store, not two.
+    expect(screen.getAllByRole('button', { name: /^remove store admin$/i })).toHaveLength(1);
+    expect(
+      dupKeyWarning.mock.calls.filter((c) => String(c[0]).includes('same key')),
+    ).toHaveLength(0);
+    dupKeyWarning.mockRestore();
+  });
+
   it('never offers Command Center in MORE TOOLS in defaults mode either', async () => {
     await renderAdminPage();
     switchToDefaultsTab();

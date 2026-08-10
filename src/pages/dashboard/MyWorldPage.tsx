@@ -21,7 +21,7 @@ import {
   applyPreviewRole, resolveNav, HIDEABLE_NAV_ROLES, type NavContext, type NavRole,
 } from '@/lib/navigation/navCatalog';
 import {
-  selectShelfEntries, DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, resolvedTools,
+  selectShelfEntries, DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, sanitizeShelf,
   type Shelf, type ToolGroup,
 } from '@/lib/navigation/myTools';
 import { flattenShelf } from '@/lib/navigation/toolGroups';
@@ -114,15 +114,38 @@ export default function MyWorldPage() {
   // it too. The render fallback (shelf/home grid elsewhere) is untouched;
   // this only withholds the WRITE-capable editor on this page.
   const ready = !toolsLoading && toolsLoaded && myTools != null;
-  // resolvedTools, not the raw field: MyWorldEditor renders any key with no
-  // matching catalog entry as an "Unavailable — <key>" row (deliberately —
-  // it's the one surface that can clear a truly dead key). A stored key
-  // that MERGED into a live entry (e.g. retired 'merch' -> 'shop') is not
-  // dead, so it must resolve before reaching the editor — otherwise it
-  // showed as "Unavailable" AND its living successor showed a second time
-  // in "More Tools" as addable (Phase 5 review, 2026-08-09).
-  const tools = useMemo(() => resolvedTools(myTools), [myTools]);
-  const groups = useMemo(() => myTools?.groups ?? [], [myTools]);
+  // ONE sanitizeShelf over BOTH lists, exactly as HouseHome reads them —
+  // never resolvedTools on the loose list with the groups read raw.
+  //
+  // MyWorldEditor renders any key with no matching catalog entry as an
+  // "Unavailable — <key>" row (deliberately — it's the one surface that can
+  // clear a truly dead key). A stored key that MERGED into a live entry
+  // (e.g. retired 'merch' -> 'shop') is not dead, so it must resolve before
+  // reaching the editor — otherwise it shows as "Unavailable" AND its living
+  // successor shows a second time in "More Tools" as addable (Phase 5 review,
+  // 2026-08-09).
+  //
+  // Fixing only the loose list left that same bug alive one level down, and
+  // made it worse (final review, 2026-08-10). A key retired AFTER a member
+  // filed it into a group rendered dead inside the group while its successor
+  // was offered as addable; adding it meant the next sanitizeShelf on WRITE
+  // resolved both to 'shop', kept the loose copy, and silently emptied the
+  // group. And where the record legitimately holds two sides of a merge —
+  // 'merch' loose, 'shop' grouped, both separately pinnable until
+  // 2026-08-09 — resolving only one side rendered the same string twice, so
+  // sortableIds and the <ul>'s React keys carried a duplicate: broken drag.
+  //
+  // Reading both through one pass makes read and write agree on resolved
+  // keys, and shares the one-key-one-place `seen` set across them. For a
+  // member with NO groups this is exactly resolvedTools' old behaviour:
+  // sanitizeShelf's loose pass is sanitizeTools with the same resolve, drop
+  // 'home', dedupe, and MY_TOOLS_SANITY_MAX steps.
+  const shelf = useMemo(
+    () => sanitizeShelf(myTools?.tools ?? [], myTools?.groups ?? []),
+    [myTools],
+  );
+  const tools = shelf.tools;
+  const groups = shelf.groups;
   const widgetOptions = widgetsFor(role);
   const widgets = useMemo(() => resolveWidgets(role, myTools?.widgets ?? []), [role, myTools]);
 
