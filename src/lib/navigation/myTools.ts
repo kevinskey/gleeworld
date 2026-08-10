@@ -33,9 +33,9 @@ export const MY_TOOLS_SEED_SIZE = 8;
  * make the shelf render unbounded rows. Matches `parseTileLayout`'s own 64
  * (appDestinations.ts), which exists for exactly this reason — the whole
  * catalog is well under it, so a member cannot reach it by pinning every tool
- * that exists. Since v5, this budget is shared across LOOSE and GROUPED tools
- * combined (sanitizeShelf enforces the combined bound) — it was never a
- * per-list quota, it is corruption protection for the whole shelf.
+ * that exists. Since `groups` was added, this budget is shared across LOOSE
+ * and GROUPED tools combined (sanitizeShelf enforces the combined bound) — it
+ * was never a per-list quota, it is corruption protection for the whole shelf.
  *
  * WHY THERE IS NO HARD CAP ANYMORE (decided by the product owner, 2026-08-09):
  * an 8-tool ceiling was justified while the shelf was the ONLY way to reach a
