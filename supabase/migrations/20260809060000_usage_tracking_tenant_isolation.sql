@@ -1,3 +1,27 @@
+-- SUPERSEDED — DO NOT APPLY. This migration was never run anywhere.
+--
+-- It was written against this repo's migration history, on the premise that
+-- these tables had no tenant_id and no tenant scoping. Checked against
+-- production on 2026-08-10, that premise was FALSE: the tables already have
+-- tenant_id and already carry a RESTRICTIVE tenant_isolation_restrict policy
+-- (tenant_id = current_tenant_id()), plus anon_tenant_isolation and two
+-- demo_viewer_* guards. None of those appear in any migration here — they were
+-- applied directly on the droplet. There was no cross-tenant leak.
+--
+-- Applying this would DROP a working tenant_isolation_restrict in order to
+-- recreate an identical one, for no benefit and some risk.
+--
+-- The two things that DID need fixing — a tenant-blind UNIQUE (user_id, date)
+-- causing a live 23505 loop, and instructor/is_exec_board over-grants on the
+-- admin read policies — are in:
+--
+--   20260810120000_usage_tracking_corrections.sql
+--
+-- Kept rather than deleted so the reasoning, and the correction, stay legible.
+-- The original body follows, neutralised.
+
+/* ORIGINAL BODY — INERT, RETAINED FOR THE RECORD
+
 -- Tenant-isolate the usage-tracking tables.
 --
 -- ════════════════════════════════════════════════════════════════════════════
@@ -556,3 +580,6 @@ NOTIFY pgrst, 'reload schema';
 --      is partial by construction; do not follow it with
 --      ALTER COLUMN tenant_id SET NOT NULL without checking what is left.
 -- ────────────────────────────────────────────────────────────────────────────
+
+
+*/
