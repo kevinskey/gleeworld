@@ -78,7 +78,7 @@ describe('useMyTools', () => {
     await act(async () => { await result.current.saveTools(['studio', 'academy']); });
 
     expect(rpc).toHaveBeenCalledWith('save_nav_item_order', {
-      p_nav_item_order: { v: 5, tools: ['studio', 'academy'], groups: [], widgets: [], setupComplete: true },
+      p_nav_item_order: { v: 4, tools: ['studio', 'academy'], groups: [], widgets: [], setupComplete: true },
     });
     expect(upsert).not.toHaveBeenCalled();
   });
@@ -213,7 +213,7 @@ describe('pinTool', () => {
     expect(ok).toBe(true);
     expect(rpc).toHaveBeenCalledWith('save_nav_item_order', {
       p_nav_item_order: {
-        v: 5,
+        v: 4,
         tools: ['tenants', 'calendar', 'academy'],
         groups: [],
         widgets: ['today'],
@@ -361,7 +361,11 @@ describe('saveMyTools', () => {
 });
 
 describe('groups', () => {
-  it('a groups-only patch preserves the stored tools', async () => {
+  // The stored fixture here is v: 5 ON PURPOSE — earlier commits on this
+  // branch wrote v5 records into dev/test databases before the version was
+  // kept at 4. They must still READ, and the save below must heal them back
+  // to v: 4 so an older iOS bundle can read the row again.
+  it('a groups-only patch preserves the stored tools and rewrites v5 back to v4', async () => {
     maybeSingle.mockResolvedValue({
       data: {
         nav_item_order: { v: 5, tools: ['calendar'], groups: [], widgets: [], setupComplete: true },
@@ -381,14 +385,18 @@ describe('groups', () => {
     const sent = rpc.mock.calls[0][1].p_nav_item_order as { v: number; tools: string[]; groups: ToolGroup[] };
     expect(sent.tools).toEqual(['calendar']);
     expect(sent.groups[0].name).toBe('Sunday');
-    expect(sent.v).toBe(5);
+    // v STAYS 4 with `groups` alongside it — see parseMyTools' comment in
+    // myTools.ts. Bumping it strands every already-shipped iOS bundle, whose
+    // reader hard-rejects anything that is not v4 and then overwrites the
+    // member's real shelf with fabricated role defaults.
+    expect(sent.v).toBe(4);
   });
 
   it('a tools-only patch preserves the stored groups', async () => {
     maybeSingle.mockResolvedValue({
       data: {
         nav_item_order: {
-          v: 5, tools: ['calendar'], widgets: [], setupComplete: true,
+          v: 4, tools: ['calendar'], widgets: [], setupComplete: true,
           groups: [{ id: 'a', name: 'Sunday', tools: ['liturgy'], collapsed: false }],
         },
         home_tile_layout: null,
@@ -407,7 +415,7 @@ describe('groups', () => {
   it('deduplicates a key that a patch puts in both loose and a group', async () => {
     maybeSingle.mockResolvedValue({
       data: {
-        nav_item_order: { v: 5, tools: [], groups: [], widgets: [], setupComplete: true },
+        nav_item_order: { v: 4, tools: [], groups: [], widgets: [], setupComplete: true },
         home_tile_layout: null,
       },
       error: null,
@@ -431,7 +439,7 @@ describe('groups', () => {
     maybeSingle.mockResolvedValue({
       data: {
         nav_item_order: {
-          v: 5, tools: ['calendar'], widgets: [], setupComplete: true,
+          v: 4, tools: ['calendar'], widgets: [], setupComplete: true,
           groups: [{ id: 'a', name: 'Sunday', tools: ['liturgy'], collapsed: false }],
         },
         home_tile_layout: null,
@@ -452,7 +460,7 @@ describe('groups', () => {
     maybeSingle.mockResolvedValue({
       data: {
         nav_item_order: {
-          v: 5, tools: [], widgets: [], setupComplete: true,
+          v: 4, tools: [], widgets: [], setupComplete: true,
           groups: [{ id: 'a', name: 'Sunday', tools: ['liturgy'], collapsed: false }],
         },
         home_tile_layout: null,

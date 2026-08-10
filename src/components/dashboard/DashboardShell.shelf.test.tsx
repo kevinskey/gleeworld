@@ -65,7 +65,7 @@ const adminProfile = { is_admin: true, is_super_admin: false, role: 'admin' };
 function setup({
   hiddenRoutes = new Set<string>(),
   roleLoading = false,
-  myTools = { v: 5, tools: ['calendar', 'messages', 'finance'], groups: [], widgets: [], setupComplete: true } as MyTools,
+  myTools = { v: 4, tools: ['calendar', 'messages', 'finance'], groups: [], widgets: [], setupComplete: true } as MyTools,
   // useMyTools' "the row genuinely came back" flag. Sidebar/MobileNav don't
   // read it at all — they render whatever `myTools` holds regardless — so
   // it defaults true here purely to match the hook's real shape; see the
@@ -126,7 +126,7 @@ describe('Sidebar — shelf must not blank on every route change', () => {
     // uid, unaffected by the role guess resetting.
     setup({
       roleLoading: true,
-      myTools: { v: 5, tools: ['finance', 'people'], groups: [], widgets: [], setupComplete: true },
+      myTools: { v: 4, tools: ['finance', 'people'], groups: [], widgets: [], setupComplete: true },
     });
     render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Finance')).toBeInTheDocument();
@@ -140,7 +140,7 @@ describe('Sidebar — shelf must not blank on every route change', () => {
     // blank either.
     setup({
       roleLoading: true,
-      myTools: { v: 5, tools: ['sight', 'studio', 'my-fees'], groups: [], widgets: [], setupComplete: false },
+      myTools: { v: 4, tools: ['sight', 'studio', 'my-fees'], groups: [], widgets: [], setupComplete: false },
     });
     render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     // The unresolved guess's student-only tools must not leak through...
@@ -174,7 +174,7 @@ describe('Sidebar — failed load must still render the shelf', () => {
   it('still renders the shelf from the fabricated fallback record when loaded is false', () => {
     setup({
       loaded: false,
-      myTools: { v: 5, tools: ['finance', 'people'], groups: [], widgets: [], setupComplete: false },
+      myTools: { v: 4, tools: ['finance', 'people'], groups: [], widgets: [], setupComplete: false },
     });
     render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Finance')).toBeInTheDocument();

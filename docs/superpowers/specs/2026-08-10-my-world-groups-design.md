@@ -50,10 +50,11 @@ All Tools and ⌘K are for.
 - **Groups are not a permission surface.** Hiding a tool is Workspace Settings →
   Navigation, and gating is `NavGate`. A group is presentation.
 
-## 4. Data model — `MyTools` v5
+## 4. Data model — `groups`, added to `MyTools` v4
 
 Stored where v4 is stored: the `user_preferences.nav_item_order` jsonb column. **No DDL
-for Phase 1.**
+for Phase 1, and no version bump** — `groups` is an additive field on v4. §4.1 is the
+reasoning, and it is not optional reading.
 
 ```ts
 interface ToolGroup {
@@ -67,7 +68,8 @@ interface ToolGroup {
 }
 
 interface MyTools {
-  v: 5;
+  /** stays 4 — see §4.1. `groups` is an added field, not a new version. */
+  v: 4;
   /** LOOSE tools, rendered above every group. v4's field, unchanged meaning. */
   tools: string[];
   groups: ToolGroup[];
@@ -76,14 +78,52 @@ interface MyTools {
 }
 ```
 
-### 4.1 v4 → v5 is a pure widening
+### 4.1 `groups` is an additive field on v4, and the version does NOT bump
 
-Because unfiled tools stay loose at the top, `tools` keeps its exact v4 meaning. A v4
-record read as v5 is that record with `groups: []`. There is no backfill, no migration
-script, and no shape reconciliation: an existing member's shelf renders byte-identical
-to today until they create their first group. v5 rolls back to v4 as cleanly as v4
-rolled back to v3 — a v4 reader encountering a v5 record reads `tools` and ignores
-`groups`, losing the filing but never a tool.
+Because unfiled tools stay loose at the top, `tools` keeps its exact meaning. Adding
+`groups` therefore needs no backfill, no migration script, and no shape reconciliation:
+an existing member's shelf renders byte-identical to today until they create their
+first group.
+
+**The version deliberately stays at 4.** The obvious move — call this v5 — was rejected,
+because the reader that ships in every already-released bundle is a hard reject, not a
+tolerant one:
+
+```ts
+if (o.v !== 4) return null;   // src/lib/navigation/myTools.ts, as shipped
+```
+
+Handed a v5 record it returns `null`. `migrateToMyTools` then falls through to
+`home_tile_layout` or the **role defaults** with `setupComplete: false`, the first-run
+sheet reopens, and — because the row itself fetched fine, so `loaded` is `true` and
+nothing refuses the next write — that fabricated default shelf gets persisted straight
+over the member's real one. A version bump costs **tools**, not filing.
+
+This is not theoretical. `capacitor.config.ts` sets no `server.url`, so every iOS build
+ships its own frozen copy of that reader inside the binary and runs it against the same
+`user_preferences` row the web app writes. A web deploy cannot upgrade a member sitting
+on last month's TestFlight or App Store build. Group on the web, open the older iOS
+build, shelf gone.
+
+Keeping `v: 4` and adding a key makes the compatibility story true rather than merely
+claimed. An old reader accepts the record, reads `tools` exactly as before, and never
+looks at `groups`. What it loses is only the **filing**, and only if the member then
+edits from that old client — it rewrites the record with no `groups` key, so the groups
+are dropped while every tool survives. Losing an edit's worth of organization is
+recoverable; losing the tools is not. That asymmetry is the whole justification.
+
+Correspondingly, `parseMyTools` calls `parseGroups` for **every** accepted version, not
+only for a version discriminator — `parseGroups` is defensive, so a genuine legacy v4
+record with no `groups` key simply yields `[]`. v5 is still accepted on read because
+this branch's own dev and test runs wrote v5 records before the decision was corrected;
+they normalize to 4 in memory and heal on the next save.
+
+**Before bumping `v` in some later phase:** audit what the oldest iOS bundle still in
+the field does with the new version *first*. It is not enough for the web reader to be
+forward-compatible — the reader that matters is the one frozen inside a binary that
+cannot be redeployed. A safe bump requires the tolerant reader ("unknown version → read
+what you can, never `null`") to have shipped **and been adopted** well before the first
+record carrying the new version is ever written.
 
 ### 4.2 Invariants
 
@@ -191,7 +231,7 @@ point, then edits their own copy. Nothing pushes changes to existing members.
 
 `supabase/migrations/20260808320000_tenant_default_tools.sql` is **written but not
 applied**, which is why its shape is still free to change. It must become jsonb holding
-`{tools, groups}` — the v5 shape minus `widgets`/`setupComplete`. Empty (`'{}'`) means no
+`{tools, groups}` — the shelf shape minus `widgets`/`setupComplete`. Empty (`'{}'`) means no
 tenant default, and callers fall back to `DEFAULT_TOOLS_FACULTY` / `DEFAULT_TOOLS_STUDENT`
 exactly as designed.
 
@@ -237,7 +277,7 @@ would burn an invisible slot in every member of that role.
 
 ## 8. Acceptance tests
 
-1. A v4 record loads as v5 with `groups: []` and renders a shelf identical to v4.
+1. A legacy v4 record with no `groups` key loads with `groups: []` and renders a shelf identical to v4; the writer emits `v: 4` with `groups` alongside it.
 2. A key present in two groups survives once, first occurrence winning.
 3. Deleting a group moves its tools to loose — count before equals count after.
 4. Renaming a group preserves its collapse state and its tools (id-keyed, not name-keyed).
@@ -256,7 +296,7 @@ would burn an invisible slot in every member of that role.
 
 ## 9. Phasing
 
-**Phase 1 — personal groups.** v5 model and `sanitizeTools`, shelf rendering, keycap
+**Phase 1 — personal groups.** the `groups` field and `sanitizeTools`, shelf rendering, keycap
 bands, editor (headers, `＋ New Group`, both menus, multi-container drag). No DDL. Ships
 and is useful alone.
 

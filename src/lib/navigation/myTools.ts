@@ -4,7 +4,9 @@
 //   user_preferences.nav_item_order  (v1-v3, sidebar order + section moves)
 //     — superseded, and NOT migrated from: see migrateToMyTools's comment.
 //   user_preferences.home_tile_layout (v1, keycap order)
-// Stored back into the nav_item_order column as v5 — no DDL required.
+// Stored back into the nav_item_order column as v4 — no DDL required. Groups
+// were added as an ADDITIVE FIELD on v4 rather than as a v5; see
+// parseMyTools' comment before changing `v`.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §6
 import { parseTileLayout } from './appDestinations';
 import type { CatalogEntry } from './navCatalog';
@@ -87,7 +89,14 @@ export interface Shelf {
 }
 
 export interface MyTools extends Shelf {
-  v: 5;
+  /**
+   * The ONE on-disk schema version this app writes, and a literal on purpose:
+   * `groups` was added to v4 as an extra field instead of minting a v5, so
+   * there is nothing here for a version discriminator to discriminate. Every
+   * record — legacy, grouped, or a stray v5 from this branch's own dev runs —
+   * normalizes to 4 in memory. Read parseMyTools' comment before touching it.
+   */
+  v: 4;
   /** chosen role widgets; [] means "use the role default". Filled in Phase 2. */
   widgets: string[];
   /** true once the member has a deliberate layout (or has seen first-run) */
@@ -209,14 +218,47 @@ function parseGroups(raw: unknown): ToolGroup[] {
 }
 
 /**
- * Reads v4 AND v5, always returning v5. Anything else — including v1-v3 —
- * returns null.
+ * Reads v4 and v5, always returning a v4-shaped record. Anything else —
+ * including v1-v3 — returns null.
  *
- * v4 → v5 is a pure widening, and that is the whole migration: because
- * unfiled tools stay LOOSE at the top of the shelf, v4's `tools` keeps its
- * exact meaning and a v4 record is simply a v5 record with no groups. There
- * is no backfill and no DDL. A v4 reader meeting a v5 record reads `tools`
- * and ignores `groups` — it loses the filing, never a tool.
+ * WHY GROUPS DID NOT BUMP THE VERSION. `groups` is an ADDITIVE FIELD on v4,
+ * deliberately, and this is the load-bearing compatibility decision of the
+ * whole feature. The reader that ships in every ALREADY-RELEASED bundle is:
+ *
+ *     if (o.v !== 4) return null;
+ *
+ * — a hard reject, not a "read what I understand and ignore the rest". Handed
+ * a v5 record it returns null, migrateToMyTools falls through to
+ * home_tile_layout or the ROLE DEFAULTS with setupComplete: false, and because
+ * the row itself fetched fine (`loaded === true`) nothing refuses the next
+ * write. The fabricated default shelf is then persisted straight over the
+ * member's real one. A version bump therefore costs TOOLS, not filing.
+ *
+ * That is not hypothetical: capacitor.config.ts sets no `server.url`, so every
+ * iOS build ships its own frozen copy of this file in its bundle and runs it
+ * against the same user_preferences row the web app writes. Members on an
+ * older TestFlight/App Store build cannot be upgraded by a web deploy. Group
+ * on the web, open last month's iOS build, shelf gone.
+ *
+ * Keeping `v: 4` and adding a key makes the compatibility story actually true:
+ * an old reader accepts the record, reads `tools` exactly as before, and never
+ * looks at `groups`. What it loses is only the FILING — and only if it then
+ * saves, since it rewrites the record without a `groups` key and the member's
+ * groups are dropped. Losing an edit's worth of organization is recoverable;
+ * losing the tools is not. That asymmetry is the entire justification.
+ *
+ * BEFORE YOU BUMP `v` LATER: audit what the oldest iOS bundle still in the
+ * field does with the new version FIRST. It is not enough for the web reader
+ * to be forward-compatible — the reader that matters is the one frozen inside
+ * a binary you cannot redeploy. A safe bump needs the tolerant reader
+ * ("unknown version → read what you can, never null") to have shipped, and
+ * been adopted, well before the first record carrying the new version is
+ * written.
+ *
+ * v5 is still accepted on read because this branch's own dev/test runs wrote
+ * v5 records before this was corrected; they normalize to 4 and heal on the
+ * next save. `parseGroups` runs for BOTH versions — it is defensive, so a
+ * genuine legacy v4 record with no `groups` key simply yields [].
  */
 export function parseMyTools(raw: unknown): MyTools | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
@@ -224,9 +266,9 @@ export function parseMyTools(raw: unknown): MyTools | null {
   if (o.v !== 4 && o.v !== 5) return null;
   if (!Array.isArray(o.tools) || !Array.isArray(o.widgets)) return null;
   return {
-    v: 5,
+    v: 4,
     tools: o.tools.filter((k): k is string => typeof k === 'string'),
-    groups: o.v === 5 ? parseGroups(o.groups) : [],
+    groups: parseGroups(o.groups),
     widgets: o.widgets.filter((k): k is string => typeof k === 'string'),
     setupComplete: o.setupComplete === true,
   };
@@ -235,7 +277,7 @@ export function parseMyTools(raw: unknown): MyTools | null {
 /**
  * Produce a MyTools record from whatever the member already had, in
  * preference order (spec §6.3):
- *   1. an existing v4 or v5 record      → widened to v5, otherwise untouched
+ *   1. an existing v4 or v5 record      → normalized to v4, otherwise untouched
  *   2. home_tile_layout (any v1 blob)   → a curated pick list, kept WHOLE
  *   3. the role default (MY_TOOLS_SEED_SIZE keys), setupComplete: false
  *
@@ -268,11 +310,11 @@ export function migrateToMyTools(
 
   const tiles = parseTileLayout(tileLayoutRaw);
   if (tiles) {
-    return { v: 5, tools: sanitizeTools(tiles.order), groups: [], widgets: [], setupComplete: true };
+    return { v: 4, tools: sanitizeTools(tiles.order), groups: [], widgets: [], setupComplete: true };
   }
 
   const defaults = role === 'faculty' ? DEFAULT_TOOLS_FACULTY : DEFAULT_TOOLS_STUDENT;
-  return { v: 5, tools: sanitizeTools(defaults), groups: [], widgets: [], setupComplete: false };
+  return { v: 4, tools: sanitizeTools(defaults), groups: [], widgets: [], setupComplete: false };
 }
 
 /**

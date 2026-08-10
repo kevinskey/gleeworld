@@ -138,7 +138,7 @@ beforeEach(() => {
 });
 
 function setup({
-  myTools = { v: 5, tools: ['calendar', 'messages', 'finance'], groups: [], widgets: [], setupComplete: true } as MyTools,
+  myTools = { v: 4, tools: ['calendar', 'messages', 'finance'], groups: [], widgets: [], setupComplete: true } as MyTools,
   // `loaded` is useMyTools' "the row genuinely came back" flag, distinct
   // from `loading`: it is false while loading AND after a failed load, and
   // it is what gates every ⊕ in the sheet.
@@ -287,7 +287,7 @@ describe('All Tools — the shell delegates the append, it never computes one', 
       // 'tenants' is platformAdminOnly and adminProfile is not a platform
       // admin, so this key is stored but never renders — an append computed
       // from the rendered shelf would silently drop it.
-      myTools: { v: 5, tools: ['tenants', 'calendar'], groups: [], widgets: [], setupComplete: true },
+      myTools: { v: 4, tools: ['tenants', 'calendar'], groups: [], widgets: [], setupComplete: true },
     });
     renderShell();
     fireEvent.keyDown(window, { key: 'k', metaKey: true });
@@ -363,7 +363,7 @@ describe('All Tools — Command Center is never offered as a pin target', () => 
 // redundant 'shop' onto the record.
 describe('All Tools — a stored merged key is recognized as already pinned under its live name', () => {
   it('shows "Store Admin" as already-in-your-space when the record still says "merch"', async () => {
-    setup({ myTools: { v: 5, tools: ['calendar', 'merch'], groups: [], widgets: [], setupComplete: true } });
+    setup({ myTools: { v: 4, tools: ['calendar', 'merch'], groups: [], widgets: [], setupComplete: true } });
     renderShell();
     fireEvent.keyDown(window, { key: 'k', metaKey: true });
     await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());

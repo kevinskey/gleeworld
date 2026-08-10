@@ -142,7 +142,14 @@ export function useMyTools(role: 'student' | 'faculty') {
       patch.groups !== undefined ? patch.groups : (base?.groups ?? []),
     );
     const next: MyTools = {
-      v: 5,
+      // v STAYS 4 while carrying `groups`. This is not an oversight and it is
+      // not a stale constant: every already-shipped bundle's reader is
+      // `if (o.v !== 4) return null`, and an iOS build carries its own frozen
+      // copy of that reader (no server.url in capacitor.config.ts), so writing
+      // a v5 here makes those clients discard the record, fabricate role
+      // defaults, and persist them over the member's real shelf. Read
+      // parseMyTools' comment in myTools.ts in full before changing this.
+      v: 4,
       tools: shelf.tools,
       groups: shelf.groups,
       widgets: patch.widgets !== undefined

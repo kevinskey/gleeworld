@@ -9,13 +9,13 @@ import { DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, type MyTools } from '@/li
 // v5, the only shape parseMyTools/migrateToMyTools emit since Task 1 — and
 // TYPED, so a future field change fails here instead of being cast away.
 const DEFAULT_MY_TOOLS: MyTools = {
-  v: 5, tools: ['calendar', 'academy'], groups: [], widgets: [], setupComplete: true,
+  v: 4, tools: ['calendar', 'academy'], groups: [], widgets: [], setupComplete: true,
 };
 
 const h = vi.hoisted(() => ({
   saveMyTools: vi.fn(),
   myTools: {
-    v: 5, tools: ['calendar', 'academy'], groups: [], widgets: [], setupComplete: true,
+    v: 4, tools: ['calendar', 'academy'], groups: [], widgets: [], setupComplete: true,
   } as MyTools | null,
   loading: false,
   // useMyTools' "the row genuinely came back" flag — distinct from
@@ -90,7 +90,7 @@ describe('MyWorldPage', () => {
   // carrying a half-applied shelf — see the pendingShelf comment on the
   // page. One edit must be one record write.
   it('writes one record patch per edit, not one per list', async () => {
-    h.myTools = { v: 5, tools: ['calendar', 'academy'], groups: [], widgets: [], setupComplete: true };
+    h.myTools = { v: 4, tools: ['calendar', 'academy'], groups: [], widgets: [], setupComplete: true };
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: 'New Group' }));
     await waitFor(() => expect(h.saveMyTools).toHaveBeenCalledTimes(1));
@@ -102,7 +102,7 @@ describe('MyWorldPage', () => {
 
   it('renders the member\'s stored groups and counts their tools', () => {
     h.myTools = {
-      v: 5,
+      v: 4,
       tools: ['calendar'],
       groups: [{ id: 'g1', name: 'Sunday', tools: ['academy'], collapsed: false }],
       widgets: [],
@@ -175,7 +175,7 @@ describe('MyWorldPage', () => {
     it('stays in the not-ready state and fires no save when the load failed, even though myTools holds fabricated defaults', () => {
       h.loading = false;
       h.loaded = false;
-      h.myTools = { v: 5, tools: [...DEFAULT_TOOLS_STUDENT], groups: [], widgets: [], setupComplete: false };
+      h.myTools = { v: 4, tools: [...DEFAULT_TOOLS_STUDENT], groups: [], widgets: [], setupComplete: false };
       renderPage();
       expect(screen.getByTestId('my-world-loading')).toBeInTheDocument();
       expect(screen.queryByTestId('my-world-count')).toBeNull();
@@ -259,7 +259,7 @@ describe('MyWorldPage — admin defaults mode', () => {
   // addable — the same tool offered as both unavailable-remove-only and
   // freely-addable at once.
   it('shows a stored "merch" as its live successor "Store Admin", not a dead row or a duplicate', async () => {
-    h.myTools = { v: 5, tools: ['merch', 'calendar'], groups: [], widgets: [], setupComplete: true };
+    h.myTools = { v: 4, tools: ['merch', 'calendar'], groups: [], widgets: [], setupComplete: true };
     await renderAdminPage();
     const chosen = screen.getByTestId('my-world-chosen');
     expect(chosen).toHaveTextContent('Store Admin');
