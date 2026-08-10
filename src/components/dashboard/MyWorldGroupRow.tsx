@@ -16,6 +16,14 @@ export interface MyWorldGroupRowProps {
   group: ToolGroup;
   /** Rendered tool count — may differ from group.tools.length when a tool is gated off. */
   count: number;
+  /**
+   * Read-only render for a viewer without permission to edit. Gates the ⋯
+   * menu (rename / reorder / delete are edits) but DELIBERATELY not the
+   * collapse caret: collapsing is a reading action, not an arranging one, so
+   * someone who may only look at a shelf can still fold a group they are not
+   * interested in. Same distinction the live sidebar draws, where collapse is
+   * the one thing a member can do to the nav in place.
+   */
   disabled?: boolean;
   isFirst: boolean;
   isLast: boolean;

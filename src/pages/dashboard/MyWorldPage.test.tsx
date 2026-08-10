@@ -6,7 +6,10 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, type MyTools } from '@/lib/navigation/myTools';
 
-// v5, the only shape parseMyTools/migrateToMyTools emit since Task 1 — and
+// v4 — the ONLY shape parseMyTools/migrateToMyTools emit. The stored version
+// deliberately never bumped: `groups` is an additive field, because the reader
+// frozen inside every shipped iOS binary is `if (o.v !== 4) return null` and a
+// rejected record costs the member their tools. See myTools.ts and spec §4.1.
 // TYPED, so a future field change fails here instead of being cast away.
 const DEFAULT_MY_TOOLS: MyTools = {
   v: 4, tools: ['calendar', 'academy'], groups: [], widgets: [], setupComplete: true,

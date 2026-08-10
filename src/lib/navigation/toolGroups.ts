@@ -1,8 +1,16 @@
 // Pure operations on a member's Shelf (loose tools + named groups).
 //
-// Every function returns a NEW Shelf and never mutates its input, so callers
-// can hand the result straight to a save without worrying about the
-// optimistic cache entry sharing structure with the record it replaced.
+// Every function returns a NEW Shelf and never mutates its input.
+//
+// What that does NOT mean: a returned Shelf is not deeply independent of the
+// one it came from. These use STRUCTURAL SHARING — createGroup, renameGroup,
+// setGroupCollapsed, moveGroup and deleteGroup all carry untouched ToolGroup
+// objects, and their nested `tools` arrays, through by reference. Only
+// moveTool rebuilds the whole graph, because only it has to strip a key from
+// every group. That is safe under this codebase's no-in-place-mutation
+// convention and is why these functions are cheap, but do not read "returns a
+// new Shelf" as a licence to mutate a returned array — you would be editing
+// the previous record too, including the optimistic cache entry.
 //
 // `id` is a parameter rather than generated here on purpose: these stay
 // deterministic and unit-testable, and the one place randomness enters
