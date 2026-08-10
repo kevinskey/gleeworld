@@ -4,7 +4,16 @@ import { migrateSession } from '../index';
 import { requiredSchemaVersion, MASTER_BUS_ID, type Session } from '../../session';
 import { newSession, newAudioTrack, newMidiTrack } from '../../defaults';
 
-/** v1.0.0 session as it would appear on disk — no output/sends/buses. */
+/** v1.0.0 session as it would appear on disk — no output/sends/buses.
+ *
+ * schema_version is stamped EXPLICITLY. newSession() stamps
+ * STUDIO_SCHEMA_VERSION — the current WRITE target — which was '1.0.0' when
+ * this fixture was written (ff482b98b) and has since moved to '2.1.0'. Left
+ * implicit, this helper stopped producing a v1 session the moment that
+ * constant advanced, and the version-preservation test below silently started
+ * asserting against a session that was never v1 in the first place. Pinning it
+ * here is what actually makes this a v1 fixture, and keeps it one across every
+ * future bump. */
 function v1Session(): Session {
   const s = newSession({ tenantId: 't', ownerUserId: 'u' });
   const track = newAudioTrack('Vocals');
@@ -12,7 +21,7 @@ function v1Session(): Session {
   delete (track as { output?: unknown }).output;
   delete (track as { sends?: unknown }).sends;
   delete (track as { input_monitor?: unknown }).input_monitor;
-  return { ...s, tracks: [track] };
+  return { ...s, schema_version: '1.0.0', tracks: [track] };
 }
 
 describe('migrateV1ToV2', () => {
