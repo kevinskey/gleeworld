@@ -1031,16 +1031,26 @@ function LiturgyEditor({ massId }: { massId: string }) {
         // it matters: the composer titles a score from the citation at the
         // moment it is saved, and a plan whose responsorial is a canticle
         // (Jeremiah 31) while the citation field still reads "Psalm 84(85)"
-        // has two different strings for one piece of music. Writing the URL
+        // has two different strings for one piece of music. Writing the id
         // here removes the guessing.
-        onSaved={(id, title, imageUrl) => update({
+        //
+        // The picture the composer hands back is NOT written here anymore.
+        // The aid now engraves from psalmScoreId's stored MusicXML at build
+        // time (WorshipAidPage / WorshipAidPublicPage), so every Mass saved
+        // through this dialog has a score id and the render path never looks
+        // at worship_aid.psalmImageUrl again — writing it would only be data
+        // nothing reads. A Mass saved BEFORE this change keeps whatever
+        // psalmImageUrl it already has; that field is still the fallback
+        // picture for an aid whose psalm was never saved to the library at
+        // all (no scoreId, matched-by-title row with no MusicXML, or no
+        // match whatsoever) — see WorshipAidPage's fallback chain.
+        onSaved={(id, title) => update({
           psalm_title: title,
           worship_aid: {
             ...(row.worship_aid ?? {}),
             // The id is what lets the composer reopen this setting for
             // editing instead of starting blank and filing a second copy.
             psalmScoreId: id,
-            ...(imageUrl ? { psalmImageUrl: imageUrl } : {}),
           },
         })}
         existingScoreId={(row.worship_aid as { psalmScoreId?: string } | null)?.psalmScoreId ?? null}
