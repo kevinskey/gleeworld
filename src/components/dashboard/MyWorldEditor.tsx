@@ -32,7 +32,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Minus, Plus, Check, CircleSlash } from 'lucide-react';
 import { NAV_SECTION_LABELS, type CatalogEntry, type NavSectionKey } from '@/lib/navigation/navCatalog';
-import { WIDGETS_CAP, type Shelf, type ToolGroup } from '@/lib/navigation/myTools';
+import { GROUPS_SANITY_MAX, WIDGETS_CAP, type Shelf, type ToolGroup } from '@/lib/navigation/myTools';
 import {
   createGroup, deleteGroup, flattenShelf, groupIdOf, moveGroup, moveTool,
   renameGroup, setGroupCollapsed,
@@ -280,7 +280,16 @@ export function MyWorldEditor({
   const handleNewGroupWithTool = (key: string) => {
     if (disabled) return;
     const id = crypto.randomUUID();
-    commit(moveTool(createGroup(shelf, 'New Group', id), key, id));
+    const created = createGroup(shelf, 'New Group', id);
+    // saveMyTools → sanitizeShelf truncates groups at GROUPS_SANITY_MAX, so a
+    // group past that bound never reaches the record. Filing the tool into one
+    // would strip it from loose and then drop it along with the group — the
+    // member loses the pin. Leave the tool exactly where it is instead. This
+    // is NOT a product cap and must never surface as one (GROUPS_SANITY_MAX is
+    // corruption protection — see myTools.ts); it is unreachable in ordinary
+    // use, and the alternative at the bound is silent data loss.
+    if (created.groups.length > GROUPS_SANITY_MAX) return;
+    commit(moveTool(created, key, id));
     setNewGroupId(id);
   };
 

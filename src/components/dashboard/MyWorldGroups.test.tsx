@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MyWorldGroupRow } from './MyWorldGroupRow';
 import { ToolRowMenu } from './ToolRowMenu';
 import { MyWorldEditor } from './MyWorldEditor';
 import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
-import type { ToolGroup } from '@/lib/navigation/myTools';
+import { GROUPS_SANITY_MAX, type ToolGroup } from '@/lib/navigation/myTools';
 
 // Radix's DropdownMenuTrigger (@radix-ui/react-dropdown-menu 2.1.2, installed
 // here) opens on native `pointerdown`, not `click` or `mousedown` — verified
@@ -46,6 +46,33 @@ const renderRow = (over: Partial<React.ComponentProps<typeof MyWorldGroupRow>> =
 const openMenu = (name: RegExp) =>
   fireEvent.pointerDown(screen.getByRole('button', { name }), { button: 0, ctrlKey: false });
 
+// Let every deferred focus effect run for real: our own rAF-deferred open and
+// Radix's setTimeout(0) close-autofocus restore. Wrapped in act so the state
+// updates those callbacks make are flushed, not warned about.
+const settle = () => act(async () => { await new Promise((r) => setTimeout(r, 30)); });
+
+// Open ⋯ → Rename and hand back the FOCUSED field.
+//
+// Radix steals focus twice on the way out of the menu and jsdom hides both by
+// default, which is why this helper is deliberate about each one:
+//   (a) FocusScope registers a document `focusin` handler while the content is
+//       still mounted (Presence defers the unmount a render, FocusScope tears
+//       down in a passive cleanup), so a focus landing on our field snaps back
+//       to the menu item. jsdom's select() sets selection offsets WITHOUT
+//       focusing, so focusin never fired and this never triggered — the old
+//       tests were watching a field that only survives in jsdom.
+//   (b) FocusScope's cleanup refocuses the trigger from a setTimeout(0).
+//       Nothing in this file flushed timers, so it never ran either.
+// Asserting focus after settle() is what makes these tests capable of failing
+// under either browser outcome.
+const openRename = async () => {
+  openMenu(/Options for Sunday/);
+  fireEvent.click(await screen.findByRole('menuitem', { name: 'Rename' }));
+  await settle();
+  await waitFor(() => expect(screen.getByLabelText('Group name')).toHaveFocus());
+  return screen.getByLabelText('Group name');
+};
+
 describe('MyWorldGroupRow', () => {
   it('shows the group name and its count', () => {
     renderRow();
@@ -61,9 +88,7 @@ describe('MyWorldGroupRow', () => {
 
   it('renames through an inline field committed on Enter', async () => {
     const props = renderRow();
-    openMenu(/Options for Sunday/);
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Rename' }));
-    const input = screen.getByLabelText('Group name');
+    const input = await openRename();
     fireEvent.change(input, { target: { value: 'Liturgy' } });
     fireEvent.keyDown(input, { key: 'Enter' });
     expect(props.onRename).toHaveBeenCalledWith('a', 'Liturgy');
@@ -71,9 +96,23 @@ describe('MyWorldGroupRow', () => {
 
   it('abandons a rename on Escape', async () => {
     const props = renderRow();
-    openMenu(/Options for Sunday/);
-    fireEvent.click(await screen.findByRole('menuitem', { name: 'Rename' }));
-    fireEvent.keyDown(screen.getByLabelText('Group name'), { key: 'Escape' });
+    const input = await openRename();
+    fireEvent.keyDown(input, { key: 'Escape' });
+    expect(props.onRename).not.toHaveBeenCalled();
+  });
+
+  // The Critical bug: ⋯ → Rename opened a field that Radix immediately stole
+  // focus back from, which fired the field's own onBlur → commit() →
+  // setEditing(false). The member tapped Rename and the field vanished,
+  // having silently committed the unchanged name.
+  it('keeps the rename field open and focused through both of Radix\'s focus steals', async () => {
+    const props = renderRow();
+    await openRename();
+    // Give the close-autofocus restore a second chance to land after the
+    // field is already open.
+    await settle();
+    expect(screen.getByLabelText('Group name')).toHaveFocus();
+    // A steal would have blurred the field, and blur commits.
     expect(props.onRename).not.toHaveBeenCalled();
   });
 
@@ -227,6 +266,36 @@ describe('MyWorldEditor — groups', () => {
     expect(next.at(-1)!.tools).toEqual(['calendar']);
     // ...and taken out of the group it was in, when it was in one.
     expect(next[0].tools).toEqual(['liturgy']);
+  });
+
+  // saveMyTools → sanitizeShelf truncates groups at GROUPS_SANITY_MAX, so a
+  // group past that bound never reaches the record. Filing a tool into one
+  // would strip it from loose and then drop it along with the group — the pin
+  // is gone. (Harmless before "New group…" moved the tool; the move is what
+  // made it reachable.) No cap and no "full" state: GROUPS_SANITY_MAX is
+  // corruption protection, not a product limit.
+  it('does not strip the tool when the new group would be dropped at save time', async () => {
+    const full: ToolGroup[] = Array.from({ length: GROUPS_SANITY_MAX }, (_, i) => ({
+      id: `g${i}`, name: `Folder ${i}`, tools: [], collapsed: false,
+    }));
+    const { onToolsChange, onGroupsChange } = renderEditor({ groups: full });
+    openMenu(/Move Calendar/);
+    fireEvent.click(await screen.findByRole('menuitem', { name: /New group/ }));
+    expect(onToolsChange).not.toHaveBeenCalled();
+    expect(onGroupsChange).not.toHaveBeenCalled();
+  });
+
+  it('still files the tool at one group below the bound', async () => {
+    const nearlyFull: ToolGroup[] = Array.from({ length: GROUPS_SANITY_MAX - 1 }, (_, i) => ({
+      id: `g${i}`, name: `Folder ${i}`, tools: [], collapsed: false,
+    }));
+    const { onToolsChange, onGroupsChange } = renderEditor({ groups: nearlyFull });
+    openMenu(/Move Calendar/);
+    fireEvent.click(await screen.findByRole('menuitem', { name: /New group/ }));
+    expect(onToolsChange).toHaveBeenCalledWith(['messages']);
+    const next = onGroupsChange.mock.calls.at(-1)![0];
+    expect(next).toHaveLength(GROUPS_SANITY_MAX);
+    expect(next.at(-1)!.tools).toEqual(['calendar']);
   });
 
   it('takes a GROUPED tool out of its old group when Move → New group… is used', async () => {

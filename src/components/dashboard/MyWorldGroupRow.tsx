@@ -48,21 +48,16 @@ export function MyWorldGroupRow({
   const [editing, setEditing] = useState(autoFocusName === true);
   const [draft, setDraft] = useState(group.name);
   const inputRef = useRef<HTMLInputElement>(null);
-  // True only for a field opened by group CREATION, never by ⋯ → Rename.
-  const openedByCreate = useRef(autoFocusName === true);
+  // The menu is CONTROLLED so the rename field can be opened from the close
+  // transition rather than from onSelect — see the two focus stealers below.
+  const [menuOpen, setMenuOpen] = useState(false);
+  const wantRename = useRef(false);
 
+  // One mechanism for both ways in (creation and ⋯ → Rename): the field is
+  // focused whenever it opens.
   useEffect(() => {
     if (!editing) return;
-    // focus() only on the create path. On the ⋯ → Rename path the Radix menu
-    // is still mounted when this runs, and its FocusScope traps focus: our
-    // focus() is pulled straight back out, which fires this field's own
-    // onBlur → commit() → setEditing(false), closing the field the instant it
-    // opened. (Proven with a probe; see the fix report.) select() alone is
-    // what that path has always done, so it is left exactly as it was.
-    if (openedByCreate.current) {
-      openedByCreate.current = false;
-      inputRef.current?.focus();
-    }
+    inputRef.current?.focus();
     inputRef.current?.select();
   }, [editing]);
 
@@ -116,14 +111,44 @@ export function MyWorldGroupRow({
         {count}
       </span>
 
-      <DropdownMenu>
+      {/* Opening the rename field takes defeating TWO independent focus
+          stealers in @radix-ui/react-menu. Neither is visible in jsdom by
+          default, which is why the original tests passed over a broken
+          control — see this file's tests for how they now force both.
+
+          (a) THE TRAP, while the content is still mounted. FocusScope
+              registers a document `focusin` handler when trapped (a modal
+              dropdown is), and snaps any focus landing outside the menu back
+              to the last focused element — the menu item. MenuContent sits
+              inside Presence, which defers unmount by a render, while
+              FocusScope tears down in a passive cleanup: there is a commit
+              where our field is mounted and the trap is still armed. So the
+              field must not open from onSelect at all. It opens from the
+              CLOSE transition instead, deferred one frame past the unmount —
+              hence the controlled `open` and the rAF.
+          (b) THE RESTORE, after the content unmounts. FocusScope's cleanup
+              refocuses the trigger from a setTimeout(0), and this menu's
+              onCloseAutoFocus does the same. preventDefault() skips both
+              (composeEventHandlers checks for it). A bare setTimeout(0) of
+              our own would NOT be enough — it queues before Radix's, so the
+              trigger refocus would still land on top of the open field. */}
+      <DropdownMenu
+        open={menuOpen}
+        onOpenChange={(open) => {
+          setMenuOpen(open);
+          if (open || !wantRename.current) return;
+          wantRename.current = false;
+          setDraft(group.name);
+          requestAnimationFrame(() => setEditing(true));
+        }}
+      >
         <DropdownMenuTrigger asChild>
           <button type="button" disabled={disabled} aria-label={`Options for ${group.name}`} className={TAP_TARGET}>
             <MoreHorizontal className="w-4 h-4" aria-hidden />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => { setDraft(group.name); setEditing(true); }}>
+        <DropdownMenuContent align="end" onCloseAutoFocus={(event) => event.preventDefault()}>
+          <DropdownMenuItem onSelect={() => { wantRename.current = true; }}>
             Rename
           </DropdownMenuItem>
           {!isFirst && <DropdownMenuItem onSelect={() => onMove(group.id, -1)}>Move up</DropdownMenuItem>}
