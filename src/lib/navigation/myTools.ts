@@ -4,7 +4,7 @@
 //   user_preferences.nav_item_order  (v1-v3, sidebar order + section moves)
 //     — superseded, and NOT migrated from: see migrateToMyTools's comment.
 //   user_preferences.home_tile_layout (v1, keycap order)
-// Stored back into the nav_item_order column as v4 — no DDL required.
+// Stored back into the nav_item_order column as v5 — no DDL required.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §6
 import { parseTileLayout } from './appDestinations';
 import type { CatalogEntry } from './navCatalog';
@@ -26,11 +26,14 @@ export { MERGED_KEYS, resolveKey, resolveKeys };
 export const MY_TOOLS_SEED_SIZE = 8;
 
 /**
- * Corruption bound, NOT a product limit. Only `sanitizeTools` applies it, and
- * only so a hand-edited or corrupt `nav_item_order` blob cannot make the shelf
- * render unbounded rows. Matches `parseTileLayout`'s own 64 (appDestinations.ts),
- * which exists for exactly this reason — the whole catalog is well under it, so
- * a member cannot reach it by pinning every tool that exists.
+ * Corruption bound, NOT a product limit. Only `sanitizeTools`/`sanitizeShelf`
+ * apply it, and only so a hand-edited or corrupt `nav_item_order` blob cannot
+ * make the shelf render unbounded rows. Matches `parseTileLayout`'s own 64
+ * (appDestinations.ts), which exists for exactly this reason — the whole
+ * catalog is well under it, so a member cannot reach it by pinning every tool
+ * that exists. Since v5, this budget is shared across LOOSE and GROUPED tools
+ * combined (sanitizeShelf enforces the combined bound) — it was never a
+ * per-list quota, it is corruption protection for the whole shelf.
  *
  * WHY THERE IS NO HARD CAP ANYMORE (decided by the product owner, 2026-08-09):
  * an 8-tool ceiling was justified while the shelf was the ONLY way to reach a
@@ -44,13 +47,47 @@ export const MY_TOOLS_SEED_SIZE = 8;
  */
 export const MY_TOOLS_SANITY_MAX = 64;
 
+/**
+ * Corruption bound on group COUNT, not a product limit — the same
+ * distinction MY_TOOLS_SANITY_MAX draws above, for the same reason. A
+ * member may make as many groups as they find useful. Do NOT surface this
+ * as a "you have too many groups" state anywhere in the UI.
+ */
+export const GROUPS_SANITY_MAX = 32;
+
+/**
+ * The one genuine product constraint in this feature: a name longer than
+ * this cannot render in a sidebar group header or a keycap band heading.
+ * Enforced by CLAMPING the value (on parse and on save), never by
+ * rejecting a save — a member must not lose an edit to a length rule.
+ */
+export const GROUP_NAME_MAX = 32;
+
 /** House spec §5.1 caps the home at two role widgets. */
 export const WIDGETS_CAP = 2;
 
-export interface MyTools {
-  v: 4;
-  /** ordered catalog keys, member-chosen length. 'home' is implicit and never stored. */
+/**
+ * A member-named group of tools. `id` is generated and never derived from
+ * `name`, so a rename preserves collapse state, React identity, and the
+ * editor's "Move to…" targets.
+ */
+export interface ToolGroup {
+  id: string;
+  /** member-authored, clamped to GROUP_NAME_MAX on read and on write */
+  name: string;
   tools: string[];
+  collapsed: boolean;
+}
+
+/** The orderable part of a member's shelf: loose tools, then groups. */
+export interface Shelf {
+  /** LOOSE tools, rendered above every group. v4's `tools`, meaning unchanged. */
+  tools: string[];
+  groups: ToolGroup[];
+}
+
+export interface MyTools extends Shelf {
+  v: 5;
   /** chosen role widgets; [] means "use the role default". Filled in Phase 2. */
   widgets: string[];
   /** true once the member has a deliberate layout (or has seen first-run) */
@@ -109,15 +146,87 @@ export function sanitizeTools(keys: string[], map: Record<string, string> = MERG
   return out;
 }
 
-/** Strict v4 reader. Anything else — including v1-v3 — returns null. */
+/**
+ * Resolve merges, drop 'home', and enforce the one-key-one-place invariant
+ * across loose AND every group, keeping the FIRST occurrence in render
+ * order (loose first, then groups in array order). Without this the grouped
+ * keycap grid would render the same tile twice.
+ *
+ * The MY_TOOLS_SANITY_MAX budget is shared across loose and grouped rows —
+ * it is corruption protection for the whole shelf, not a per-list quota.
+ * Empty groups survive: the editor renders them so a member can fill the
+ * group they just made.
+ */
+export function sanitizeShelf(
+  tools: string[],
+  groups: ToolGroup[],
+  map: Record<string, string> = MERGED_KEYS,
+): Shelf {
+  const seen = new Set<string>();
+  let budget = MY_TOOLS_SANITY_MAX;
+  const take = (keys: string[]): string[] => {
+    const out: string[] = [];
+    for (const raw of keys) {
+      if (budget <= 0) break;
+      if (typeof raw !== 'string') continue;
+      const k = resolveKey(raw, map);
+      if (k === 'home' || seen.has(k)) continue;
+      seen.add(k);
+      out.push(k);
+      budget -= 1;
+    }
+    return out;
+  };
+  const nextTools = take(tools);
+  const nextGroups = groups.slice(0, GROUPS_SANITY_MAX).map((group) => ({
+    ...group,
+    name: group.name.slice(0, GROUP_NAME_MAX),
+    tools: take(group.tools),
+  }));
+  return { tools: nextTools, groups: nextGroups };
+}
+
+/** Defensive group reader. Anything malformed degrades to [] or is skipped:
+ *  a hand-edited or future-version blob must yield a flat shelf, never a
+ *  white screen. */
+function parseGroups(raw: unknown): ToolGroup[] {
+  if (!Array.isArray(raw)) return [];
+  const out: ToolGroup[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue;
+    const o = item as Record<string, unknown>;
+    if (typeof o.id !== 'string' || typeof o.name !== 'string') continue;
+    if (!Array.isArray(o.tools)) continue;
+    out.push({
+      id: o.id,
+      name: o.name.slice(0, GROUP_NAME_MAX),
+      tools: o.tools.filter((k): k is string => typeof k === 'string'),
+      collapsed: o.collapsed === true,
+    });
+    if (out.length >= GROUPS_SANITY_MAX) break;
+  }
+  return out;
+}
+
+/**
+ * Reads v4 AND v5, always returning v5. Anything else — including v1-v3 —
+ * returns null.
+ *
+ * v4 → v5 is a pure widening, and that is the whole migration: because
+ * unfiled tools stay LOOSE at the top of the shelf, v4's `tools` keeps its
+ * exact meaning and a v4 record is simply a v5 record with no groups. There
+ * is no backfill and no DDL. A v4 reader meeting a v5 record reads `tools`
+ * and ignores `groups` — it loses the filing, never a tool.
+ */
 export function parseMyTools(raw: unknown): MyTools | null {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const o = raw as Record<string, unknown>;
-  if (o.v !== 4) return null;
+  if (o.v !== 4 && o.v !== 5) return null;
   if (!Array.isArray(o.tools) || !Array.isArray(o.widgets)) return null;
   return {
-    v: 4,
+    v: 5,
     tools: o.tools.filter((k): k is string => typeof k === 'string'),
+    groups: o.v === 5 ? parseGroups(o.groups) : [],
     widgets: o.widgets.filter((k): k is string => typeof k === 'string'),
     setupComplete: o.setupComplete === true,
   };
@@ -126,7 +235,7 @@ export function parseMyTools(raw: unknown): MyTools | null {
 /**
  * Produce a MyTools record from whatever the member already had, in
  * preference order (spec §6.3):
- *   1. an existing v4 record            → returned untouched
+ *   1. an existing v4 or v5 record      → widened to v5, otherwise untouched
  *   2. home_tile_layout (any v1 blob)   → a curated pick list, kept WHOLE
  *   3. the role default (MY_TOOLS_SEED_SIZE keys), setupComplete: false
  *
@@ -159,11 +268,11 @@ export function migrateToMyTools(
 
   const tiles = parseTileLayout(tileLayoutRaw);
   if (tiles) {
-    return { v: 4, tools: sanitizeTools(tiles.order), widgets: [], setupComplete: true };
+    return { v: 5, tools: sanitizeTools(tiles.order), groups: [], widgets: [], setupComplete: true };
   }
 
   const defaults = role === 'faculty' ? DEFAULT_TOOLS_FACULTY : DEFAULT_TOOLS_STUDENT;
-  return { v: 4, tools: sanitizeTools(defaults), widgets: [], setupComplete: false };
+  return { v: 5, tools: sanitizeTools(defaults), groups: [], widgets: [], setupComplete: false };
 }
 
 /**

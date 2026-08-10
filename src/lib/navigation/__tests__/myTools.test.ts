@@ -7,9 +7,11 @@ import {
 import { NAV_CATALOG } from '../navCatalog';
 
 describe('parseMyTools', () => {
-  it('accepts a v4 record', () => {
+  it('accepts a v4 record, widened to v5 with no groups', () => {
     const raw = { v: 4, tools: ['calendar'], widgets: [], setupComplete: true };
-    expect(parseMyTools(raw)).toEqual(raw);
+    expect(parseMyTools(raw)).toEqual({
+      v: 5, tools: ['calendar'], groups: [], widgets: [], setupComplete: true,
+    });
   });
   it('rejects legacy versions and junk', () => {
     expect(parseMyTools({ v: 3, order: ['calendar'] })).toBeNull();
@@ -108,9 +110,11 @@ describe('sanitizeTools', () => {
 });
 
 describe('migrateToMyTools', () => {
-  it('returns an existing v4 record untouched', () => {
+  it('returns an existing v4 record widened to v5, not replaced by role defaults', () => {
     const existing = { v: 4, tools: ['studio'], widgets: ['today'], setupComplete: true };
-    expect(migrateToMyTools(existing, null, 'student')).toEqual(existing);
+    expect(migrateToMyTools(existing, null, 'student')).toEqual({
+      v: 5, tools: ['studio'], groups: [], widgets: ['today'], setupComplete: true,
+    });
   });
   it('prefers home_tile_layout over a legacy nav order', () => {
     const tiles = { v: 1, order: ['studio', 'academy'] };

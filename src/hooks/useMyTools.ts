@@ -130,8 +130,12 @@ export function useMyTools(role: 'student' | 'faculty') {
     // before (role defaults, not a blanked list).
     const base = readLoadedRecord() ?? myTools;
     const next: MyTools = {
-      v: 4,
+      v: 5,
       tools: patch.tools !== undefined ? sanitizeTools(patch.tools) : (base?.tools ?? []),
+      // This patch API is tools/widgets/setupComplete only (groups editing is
+      // a later task) — carry the member's existing groups through untouched
+      // so a tools- or widgets-only save can never silently wipe them.
+      groups: base?.groups ?? [],
       widgets: patch.widgets !== undefined
         ? patch.widgets.slice(0, WIDGETS_CAP)
         : (base?.widgets ?? []),

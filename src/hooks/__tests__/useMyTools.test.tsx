@@ -78,7 +78,7 @@ describe('useMyTools', () => {
     await act(async () => { await result.current.saveTools(['studio', 'academy']); });
 
     expect(rpc).toHaveBeenCalledWith('save_nav_item_order', {
-      p_nav_item_order: { v: 4, tools: ['studio', 'academy'], widgets: [], setupComplete: true },
+      p_nav_item_order: { v: 5, tools: ['studio', 'academy'], groups: [], widgets: [], setupComplete: true },
     });
     expect(upsert).not.toHaveBeenCalled();
   });
@@ -213,8 +213,9 @@ describe('pinTool', () => {
     expect(ok).toBe(true);
     expect(rpc).toHaveBeenCalledWith('save_nav_item_order', {
       p_nav_item_order: {
-        v: 4,
+        v: 5,
         tools: ['tenants', 'calendar', 'academy'],
+        groups: [],
         widgets: ['today'],
         setupComplete: true,
       },
