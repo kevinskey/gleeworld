@@ -237,11 +237,11 @@ describe('PsalmComposerDialog', () => {
     expect(screen.getByTestId('staff')).toHaveAttribute('data-per-row', '4');
   });
 
-  // The dialog asks for the printed staff height whatever the density, and
-  // asks the renderer to shrink it if the bars will not fit. It used to pass
-  // a smaller number for four bars itself — a multiplier tuned for a width
-  // the card no longer has, applied whether or not the score needed it.
-  it('asks for the printed staff size at either density, and lets the renderer fit it', () => {
+  // The dialog asks for the same printed size whatever the density, and hands
+  // the renderer a floor equal to it. It used to pass a smaller number for
+  // four bars itself — a multiplier tuned for a width the card no longer has,
+  // applied whether or not the score needed it.
+  it('asks for the printed lyric size at either density, and forbids shrinking it', () => {
     open();
     const staff = () => screen.getByTestId('staff');
     expect(Number(staff().getAttribute('data-scale'))).toBe(PSALM_ENGRAVING_SCALE);
@@ -249,9 +249,11 @@ describe('PsalmComposerDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: /4 per line/i }));
     expect(Number(staff().getAttribute('data-scale'))).toBe(PSALM_ENGRAVING_SCALE);
     expect(Number(staff().getAttribute('data-fit-floor'))).toBe(PSALM_MIN_ENGRAVING_SCALE);
-    // The floor is a real reduction, not decoration: it is the size four bars
-    // used to print at unconditionally.
-    expect(PSALM_MIN_ENGRAVING_SCALE).toBeLessThan(PSALM_ENGRAVING_SCALE);
+    // The floor is not decoration and not a reduction either: it is the size
+    // itself. Shrinking the engraving shrinks the lyrics with it, and the
+    // lyrics are pinned to the aid's body type — so what gives way when four
+    // bars will not fit is the bar count, which the caption below reports.
+    expect(PSALM_MIN_ENGRAVING_SCALE).toBe(PSALM_ENGRAVING_SCALE);
   });
 
   it('says so when the engraver cannot fit what was asked for', () => {

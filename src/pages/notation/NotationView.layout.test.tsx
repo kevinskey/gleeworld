@@ -79,22 +79,26 @@ describe('fitScaleFloor keeps the requested bars on one line', () => {
   });
 
   it('reduces the size, and only the size, when the bars will not fit', () => {
-    // A staff far too narrow for four bars at this size. Fitting must keep
-    // all four on one system and pay for it in scale.
+    // A staff far too narrow for four bars at this size, with a floor well
+    // below it. Fitting must keep all four on one system and pay for it in
+    // scale. Explicit numbers rather than the psalm's constants: the psalm now
+    // sets its floor equal to its ceiling (its lyrics may not print below the
+    // aid's body size), so it is no longer an example of this behaviour — but
+    // the behaviour is a documented prop of a shared component and has to stay
+    // covered by something.
     const narrow = 200;
     const info = layoutOf({
-      score: bars(4), width: narrow, targetPerRow: 4,
-      scale: PSALM_ENGRAVING_SCALE, fitScaleFloor: PSALM_MIN_ENGRAVING_SCALE,
+      score: bars(4), width: narrow, targetPerRow: 4, scale: 0.6, fitScaleFloor: 0.3,
     });
     expect(info).toEqual({ rows: 1, perRow: 4 });
 
     const { container } = render(
       <NotationView score={bars(4)} width={narrow} targetPerRow={4}
-        scale={PSALM_ENGRAVING_SCALE} fitScaleFloor={PSALM_MIN_ENGRAVING_SCALE} />,
+        scale={0.6} fitScaleFloor={0.3} />,
     );
     const fitted = engravedScale(container);
-    expect(fitted).toBeLessThan(PSALM_ENGRAVING_SCALE);
-    expect(fitted).toBeGreaterThanOrEqual(PSALM_MIN_ENGRAVING_SCALE);
+    expect(fitted).toBeLessThan(0.6);
+    expect(fitted).toBeGreaterThanOrEqual(0.3);
   });
 
   it('stops at the floor and lets the packer refuse, rather than shrinking to nothing', () => {
@@ -104,15 +108,34 @@ describe('fitScaleFloor keeps the requested bars on one line', () => {
     // that takes, which is what onLayout then reports.
     const { container } = render(
       <NotationView score={bars(4)} width={40} targetPerRow={4}
-        scale={PSALM_ENGRAVING_SCALE} fitScaleFloor={PSALM_MIN_ENGRAVING_SCALE} />,
+        scale={0.6} fitScaleFloor={0.3} />,
     );
-    expect(engravedScale(container)).toBeCloseTo(PSALM_MIN_ENGRAVING_SCALE, 10);
+    expect(engravedScale(container)).toBeCloseTo(0.3, 10);
 
     const info = layoutOf({
-      score: bars(4), width: 40, targetPerRow: 4,
-      scale: PSALM_ENGRAVING_SCALE, fitScaleFloor: PSALM_MIN_ENGRAVING_SCALE,
+      score: bars(4), width: 40, targetPerRow: 4, scale: 0.6, fitScaleFloor: 0.3,
     });
     expect(info!.rows).toBeGreaterThan(1);
     expect(info!.perRow).toBeLessThan(4);
+  });
+
+  it('engraves the psalm at its full size and drops the line instead', () => {
+    // The psalm's own constants, which is the case that ships. Its floor IS
+    // its ceiling, so a system that cannot hold the requested bars at reading
+    // size gives up the bars, not the size — and onLayout reports the count
+    // that was actually drawn so the composer can say so.
+    const narrow = 200;
+    const { container } = render(
+      <NotationView score={bars(4)} width={narrow} targetPerRow={4}
+        scale={PSALM_ENGRAVING_SCALE} fitScaleFloor={PSALM_MIN_ENGRAVING_SCALE} />,
+    );
+    expect(engravedScale(container)).toBeCloseTo(PSALM_ENGRAVING_SCALE, 10);
+
+    const info = layoutOf({
+      score: bars(4), width: narrow, targetPerRow: 4,
+      scale: PSALM_ENGRAVING_SCALE, fitScaleFloor: PSALM_MIN_ENGRAVING_SCALE,
+    });
+    expect(info!.perRow).toBeLessThan(4);
+    expect(info!.rows).toBeGreaterThan(1);
   });
 });

@@ -1,5 +1,5 @@
 /**
- * The printed worship aid's PHYSICAL page geometry.
+ * The printed worship aid's PHYSICAL page geometry and type sizes.
  *
  * Its own module because two things need these numbers and neither can import
  * the other: WorshipAidSheets lays the panels out from them, and psalmComposer
@@ -7,8 +7,9 @@
  * imports psalmComposer, so putting the geometry there would close an import
  * cycle around a set of module-level consts.
  *
- * Inches throughout, for the reason WorshipAidSheets gives: this is a physical
- * object, and inches are the only units that survive a print dialog unchanged.
+ * Inches for the page, points for the type — for the reason WorshipAidSheets
+ * gives: this is a physical object, and physical units are the only ones that
+ * survive a print dialog unchanged.
  */
 
 /** 11×8.5 landscape, folded once — so each panel is half the sheet. */
@@ -54,3 +55,23 @@ const CONTENT_COLUMNS_IN = [
  * never actually has to fire.
  */
 export const AID_CONTENT_WIDTH_IN = Math.min(...CONTENT_COLUMNS_IN);
+
+/**
+ * The aid's BODY text size, in points — the paragraph type a congregation
+ * reads the words of the liturgy off.
+ *
+ * Here rather than inline in WorshipAidSheets because it is no longer only a
+ * style: the engraved psalm's lyrics are set to this exact size, so a
+ * congregation reads the sung words at the same size as the printed ones.
+ * Kevin: "the psalm text size should match the other paragraph text on the
+ * worship aid." Two numbers that merely agreed today would drift the first
+ * time someone adjusted the page's type, and the drift would be invisible
+ * until a print run — the psalm is a rasterised image by then, so nothing on
+ * the page can reflow to reveal it.
+ *
+ * psalmComposer derives the engraving scale from this; the derivation is a
+ * division, so this is the only number that has to be right. Changing it
+ * resizes the aid's paragraphs AND the psalm's lyrics together, which is the
+ * whole point — a large-print aid is one edit, not two that must match.
+ */
+export const AID_BODY_PT = 8;

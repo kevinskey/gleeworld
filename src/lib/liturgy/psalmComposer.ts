@@ -1,5 +1,9 @@
 import type { EditorScore, Pitch } from '@/lib/notation/model';
-import { AID_CONTENT_WIDTH_IN } from './aidPage';
+// lyricSpacing is pure arithmetic — no React, no VexFlow, no imports of its
+// own — so taking the lyric's size FROM it costs this module nothing and
+// removes the one number that would otherwise have to be copied here.
+import { LYRIC_POINT_SIZE } from '@/pages/notation/lyricSpacing';
+import { AID_CONTENT_WIDTH_IN, AID_BODY_PT } from './aidPage';
 
 /**
  * Pure logic behind the responsorial-psalm composer.
@@ -39,63 +43,83 @@ export const PSALM_WIDTH_PX = PSALM_WIDTH_IN * CSS_DPI;
 const STAFF_SPACE_UNITS = 10;
 
 /**
- * How tall the psalm's staff PRINTS, in inches.
+ * How big the psalm's LYRICS print, in points.
  *
- * The spec fixed the psalm card's WIDTH at four inches and left its staff
- * size to fall out of the renderer — and what fell out was VexFlow's screen
- * default. One engraving unit was one CSS pixel, a staff space is ten units,
- * so the staff printed 40/96 of an inch: 10.6mm, half again bigger than a
- * hymnal's, on a 5.5×8.5 leaflet whose body text is 8pt. Nothing chose that
- * number. Width in inches and height in screen pixels is not a print spec.
+ * This is the number the whole card is now sized from, and it is not ours to
+ * pick: it is the aid's own body type. A congregation reads the psalm off the
+ * page the same way it reads the readings' summaries beside it, so the sung
+ * words belong at the same reading size as the printed ones. Kevin: "the
+ * psalm text size should match the other paragraph text on the worship aid."
  *
- * So the height is now stated, in the same units as the width. A quarter of
- * an inch — 6.35mm — is an ordinary small-score rastral: comfortably readable
- * in a pew, and small enough that two systems of a psalm tone occupy about an
- * inch and a half of a panel instead of a third of it.
+ * Taken FROM aidPage rather than restated, so the two cannot drift: the
+ * paragraph and the engraving are set by one number, and a large-print aid is
+ * a single edit. It replaces a chain that ran the other way — a staff height
+ * was chosen, the lyric fell out of it as a ratio, and what the words actually
+ * printed at (6.11pt beside 8pt body type) was nobody's decision.
  */
-export const PSALM_STAFF_HEIGHT_IN = 0.25;
+export const PSALM_LYRIC_PT = AID_BODY_PT;
 
 /**
- * The engraving scale the psalm ASKS for — CSS pixels per engraving unit.
+ * The engraving scale the psalm prints at — CSS pixels per engraving unit.
  *
- * One number, not a table per measures-per-line choice. `scale` sets the
- * staff's printed size and, inversely, how much layout room the card's width
- * buys: they are the same lever. So the size that matters is stated once,
- * from the printed staff height, and the layout is what follows.
+ * Derived BACKWARDS from the printed point size, which is the only way this
+ * can be got right. `scale` multiplies everything the renderer draws, so the
+ * size the lyrics land at on paper is exactly the point size VexFlow's setFont
+ * is given times this scale — LYRIC_POINT_SIZE × PSALM_ENGRAVING_SCALE. Solve
+ * that for the scale and there is no constant left to tune by eye, and no
+ * second place for engraving units and CSS pixels to be confused: the two unit
+ * bugs behind the 10.6mm staff and the colliding lyrics were both a number
+ * written in one unit and read in another, and a derivation cannot make that
+ * mistake in silence — LYRIC_POINT_SIZE is in points, PSALM_LYRIC_PT is in
+ * points, and the quotient is dimensionless by construction.
  *
  * What this replaces was a two-entry table whose four-per-line row was the
- * two-per-line row times 0.62 — a multiplier tuned so four bars of lyrics
- * would fit inside four inches. It did fit them, at 3.9mm staves and 4.5pt
- * words: smaller than the 8pt body type they printed beside. The cap it was
- * compensating for is gone, so the penalty goes with it.
- *
- * It is a CEILING, not a promise. Four bars of these lyrics at this size need
- * about twelve inches of system, which no panel of a 5.5in leaflet has, so
- * the renderer reduces the size to fit the bars the user asked for — see
- * NotationView's `fitScaleToTarget`. Reducing the SIZE is the right lever
- * because the bar count is a taste decision the user made; before, the packer
- * would silently drop a four-bar line to three bars and an orphan.
+ * two-per-line row times 0.62 (#585), then a single scale taken from a chosen
+ * quarter-inch staff height (#588). Both set the WORDS by accident.
  */
-export const PSALM_ENGRAVING_SCALE =
-  (PSALM_STAFF_HEIGHT_IN * CSS_DPI) / (4 * STAFF_SPACE_UNITS); // 0.6
+export const PSALM_ENGRAVING_SCALE = PSALM_LYRIC_PT / LYRIC_POINT_SIZE; // 8 / 12 = 0.667
 
 /**
- * How far that size may be reduced to fit the bars per line, and no further.
+ * How tall the psalm's staff PRINTS, in inches — now a CONSEQUENCE, not a
+ * choice.
  *
- * A floor is not optional. Reducing the size instead of the bar count is the
- * right trade until it isn't: syllables long enough will shrink a system to
- * arithmetic nobody can read, and four unreadable bars on one line are worse
- * than three readable ones and an orphan. Below this the renderer stops
- * shrinking, the packer refuses the count the ordinary way, and the composer
- * says "(fits N here)" rather than printing something illegible in silence.
+ * It used to be the input: a quarter of an inch, an ordinary small-score
+ * rastral, with the lyric size falling out of it. That ordering is what put
+ * 6.11pt words under 8pt headings. The staff and the words are one lever —
+ * lyric size is a fixed multiple of staff space, the way engraving states it —
+ * so only one of them can be chosen, and legibility of the WORDS is the
+ * requirement a congregation actually has.
  *
- * 0.62× is exactly the reduction the four-per-line setting used to apply to
- * EVERY score, whatever it held. It is now the worst case rather than the
- * standing case, which is the point of the change — but as a floor it is the
- * last size that actually went to print, so nothing here can come out smaller
- * than something already has.
+ * At the house ratio (LYRIC_EM_PER_STAFF_SPACE = 1.6) 8pt words put the staff
+ * at 0.278in / 7.06mm. That is the top of the hymnal range rather than the
+ * middle of it — 6–7mm is the norm — and it is the honest price of the spec:
+ * the only way to 8pt words on a smaller staff is a looser lyric-to-staff
+ * ratio, which is a house-style change affecting every engraved score in the
+ * app, not a psalm decision.
  */
-export const PSALM_MIN_ENGRAVING_SCALE = PSALM_ENGRAVING_SCALE * 0.62;
+export const PSALM_STAFF_HEIGHT_IN =
+  (4 * STAFF_SPACE_UNITS * PSALM_ENGRAVING_SCALE) / CSS_DPI; // 0.278in ≈ 7.06mm
+
+/**
+ * The smallest size the psalm may print at — which is the size it asks for.
+ *
+ * #588 made this a real reduction: the renderer was allowed to shrink the
+ * engraving, as far as 0.62×, so that the bars-per-line the user chose stayed
+ * on one line. That trade is off the table now, and the reason is the spec.
+ * Shrinking the engraving shrinks the words with it — that is what a scale
+ * does — so any shrink at all prints the psalm below the aid's body size, and
+ * the requirement that started this is precisely that it must not.
+ *
+ * So the floor and the ceiling coincide, and the LAYOUT gives way instead: the
+ * packer drops a line that will not hold four bars to three and an orphan, or
+ * to two lines, and `onLayout` tells the composer, which says "(fits N here)".
+ * That is a visible, corrigible answer; words a third under reading size are
+ * not. The floor is still passed to NotationView rather than dropped, because
+ * it states the constraint at the point where the renderer would otherwise be
+ * free to ignore it — raise the ceiling above it one day and the fitting comes
+ * back to life correctly.
+ */
+export const PSALM_MIN_ENGRAVING_SCALE = PSALM_ENGRAVING_SCALE;
 
 const STEPS: Pitch['step'][] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 /** Semitones above the tonic for each major-scale degree. */

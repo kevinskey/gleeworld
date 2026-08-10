@@ -16,6 +16,7 @@ import { render, screen, cleanup } from '@testing-library/react';
 import { WorshipAidSheets } from './WorshipAidSheets';
 import { buildWorshipAid, DEFAULT_SETTINGS, type AidSource } from '@/lib/liturgy/worshipAid';
 import { PSALM_WIDTH_IN } from '@/lib/liturgy/psalmComposer';
+import { AID_BODY_PT } from '@/lib/liturgy/aidPage';
 
 afterEach(cleanup);
 
@@ -58,6 +59,24 @@ describe('the engraved psalm on the printed page', () => {
       .find((el) => el.getAttribute('src') === PSALM_JPEG) as HTMLImageElement;
     expect(img.style.maxWidth).toBe('100%');
     expect(img.style.maxHeight).toBe('2.6in');
+  });
+
+  it('sets its own paragraphs at the size the psalm\'s lyrics are engraved to', () => {
+    // The other end of the same constant. psalmComposer divides by AID_BODY_PT
+    // to get the engraving scale, so if this page stopped using it the psalm
+    // would go on printing at a size the page no longer sets — and, being a
+    // rasterised image by then, nothing on the page would reveal it.
+    const settings = { ...DEFAULT_SETTINGS, psalmImageUrl: PSALM_JPEG };
+    render(
+      <WorshipAidSheets
+        aid={buildWorshipAid(source, settings)}
+        settings={settings}
+        edits={{ insideLeft: { inserts: [{ id: 'note-1', kind: 'text', text: 'Please silence your phone.' }] } }}
+      />,
+    );
+    const summary = screen.getByText('Please silence your phone.').closest('p');
+    expect(summary).toBeTruthy();
+    expect(summary!.style.fontSize).toBe(`${AID_BODY_PT}pt`);
   });
 
   it('leaves a user\'s artwork sized by the panel, not by the psalm', () => {

@@ -43,8 +43,10 @@ import { cn } from '@/lib/utils';
  *
  * The staff is PSALM_WIDTH_PX wide — the narrowest text column the printed
  * aid has, so the card prints at 1:1 whichever page it flows onto. The staff
- * SIZE then follows from the bars per line the user asked for: NotationView
- * shrinks it until they fit, rather than dropping the line to fewer bars.
+ * SIZE follows from the aid's body type: the lyrics print at the size the
+ * page's paragraphs do, and the staff is whatever that implies. Bars per line
+ * is therefore what gives way when a line will not hold what was asked for,
+ * and `onLayout` reports the count that was actually drawn.
  */
 
 // Words, not glyphs. The whole/half note characters live in the Unicode
@@ -100,15 +102,16 @@ const FIELD_LABEL_CLS = 'shrink-0 text-xs text-muted-foreground';
  * Engraving size — see PSALM_ENGRAVING_SCALE.
  *
  * It lives in psalmComposer rather than here because it is derived from the
- * card's PRINTED staff height, which is part of the same print spec as its
+ * aid's own body type, which is part of the same print spec as the card's
  * width and belongs beside it. The value used to be a bare 1.0 in this file,
  * which read as "full size" and was in fact "whatever a staff space happens
  * to be in screen pixels".
  *
- * One number for both layout choices now. It is what the card ASKS for; the
- * renderer reduces it, as far as PSALM_MIN_ENGRAVING_SCALE and no further,
- * when the requested bars per line will not fit at that size — which is the
- * case four bars of lyrics hit. See fitScaleForRow.
+ * One number for both layout choices, and it is not a request the renderer may
+ * negotiate down: PSALM_MIN_ENGRAVING_SCALE equals it, because shrinking the
+ * engraving shrinks the lyrics below the size the page prints its paragraphs
+ * at. When the requested bars per line do not fit, the packer drops the count
+ * and `onLayout` says so below. See fitScaleForRow.
  */
 const ENGRAVING_SCALE = PSALM_ENGRAVING_SCALE;
 
@@ -116,10 +119,10 @@ const ENGRAVING_SCALE = PSALM_ENGRAVING_SCALE;
  * On-screen magnification. Presentation only — see the staff markup.
  *
  * Raised with the engraving scale, and for the same reason. The staff is
- * engraved at its true printed size (a quarter-inch tall, not the two-fifths
- * of an inch VexFlow's screen default was giving it), so previewing it at the
- * old zoom would show the composer a staff 40% smaller than the one it used
- * to draw on. The ceiling is set by the frame, not by taste: the dialog is
+ * engraved at its true printed size (the height 8pt lyrics imply, not the
+ * two-fifths of an inch VexFlow's screen default was giving it), so previewing
+ * it at the old zoom would show the composer a staff 40% smaller than the one
+ * it used to draw on. The ceiling is set by the frame, not by taste: the dialog is
  * max-w-3xl (768px) and its padding leaves ~710px, so the zoom is whatever
  * fits the card's printed width into that without putting a horizontal
  * scrollbar under a desktop-width dialog. Derived rather than typed, because
