@@ -1,4 +1,5 @@
 import type { EditorScore, Pitch } from '@/lib/notation/model';
+import { AID_CONTENT_WIDTH_IN } from './aidPage';
 
 /**
  * Pure logic behind the responsorial-psalm composer.
@@ -9,12 +10,25 @@ import type { EditorScore, Pitch } from '@/lib/notation/model';
  * testable without mounting VexFlow.
  */
 
-/** 4 inches at the CSS reference resolution of 96 dpi. Kevin's spec: psalm
- *  cards print at a fixed 4-inch width, and everything else (measures per
- *  line, overall height) follows from that. */
-export const PSALM_WIDTH_IN = 4;
+/**
+ * How wide the psalm card PRINTS.
+ *
+ * It used to be a flat four inches, and everything else was made to follow
+ * from that. Nothing in the document was four inches: the aid's narrowest
+ * text column is 4.30in, so a four-inch engraving sat in a band with a fifth
+ * of an inch of dead margin down each side while its own notes were squeezed
+ * to fit — small print bought to leave white space. Kevin: "the psalm is
+ * rendered too small — it can be wider so the 4 measure clips can be bigger."
+ *
+ * So the card takes the column instead of a number. AID_CONTENT_WIDTH_IN is
+ * derived from the panel width and margins in aidPage, which WorshipAidSheets
+ * lays the page out from — so the engraved width and the slot it prints into
+ * are the same measurement, not two that agree today.
+ */
+export const PSALM_WIDTH_IN = AID_CONTENT_WIDTH_IN;
 export const CSS_DPI = 96;
-export const PSALM_WIDTH_PX = PSALM_WIDTH_IN * CSS_DPI; // 384
+/** The same width in CSS pixels, at the reference resolution of 96 dpi. */
+export const PSALM_WIDTH_PX = PSALM_WIDTH_IN * CSS_DPI;
 
 /**
  * One staff space in NotationView's engraving units — VexFlow's own
@@ -42,24 +56,46 @@ const STAFF_SPACE_UNITS = 10;
 export const PSALM_STAFF_HEIGHT_IN = 0.25;
 
 /**
- * Engraving scale per measures-per-line choice.
+ * The engraving scale the psalm ASKS for — CSS pixels per engraving unit.
  *
- * `scale` is how many CSS pixels one engraving unit is worth, so it sets the
- * staff's printed SIZE and, inversely, how much layout room four inches
- * buys — the two are the same lever, which is why they have to be set from
- * the size that matters and the other allowed to follow.
+ * One number, not a table per measures-per-line choice. `scale` sets the
+ * staff's printed size and, inversely, how much layout room the card's width
+ * buys: they are the same lever. So the size that matters is stated once,
+ * from the printed staff height, and the layout is what follows.
  *
- * Two per line is the psalm card's real case, and it is pinned to
- * PSALM_STAFF_HEIGHT_IN exactly. Four per line keeps the reduction it always
- * had relative to it (0.62×): four bars of lyrics in four inches genuinely
- * cannot be set at reading size, and small print is the honest consequence of
- * asking for them, not a regression. The renderer still drops below the
- * requested count when even that will not fit.
+ * What this replaces was a two-entry table whose four-per-line row was the
+ * two-per-line row times 0.62 — a multiplier tuned so four bars of lyrics
+ * would fit inside four inches. It did fit them, at 3.9mm staves and 4.5pt
+ * words: smaller than the 8pt body type they printed beside. The cap it was
+ * compensating for is gone, so the penalty goes with it.
+ *
+ * It is a CEILING, not a promise. Four bars of these lyrics at this size need
+ * about twelve inches of system, which no panel of a 5.5in leaflet has, so
+ * the renderer reduces the size to fit the bars the user asked for — see
+ * NotationView's `fitScaleToTarget`. Reducing the SIZE is the right lever
+ * because the bar count is a taste decision the user made; before, the packer
+ * would silently drop a four-bar line to three bars and an orphan.
  */
-export const PSALM_ENGRAVING_SCALE: Record<2 | 4, number> = {
-  2: (PSALM_STAFF_HEIGHT_IN * CSS_DPI) / (4 * STAFF_SPACE_UNITS), // 0.6
-  4: ((PSALM_STAFF_HEIGHT_IN * CSS_DPI) / (4 * STAFF_SPACE_UNITS)) * 0.62,
-};
+export const PSALM_ENGRAVING_SCALE =
+  (PSALM_STAFF_HEIGHT_IN * CSS_DPI) / (4 * STAFF_SPACE_UNITS); // 0.6
+
+/**
+ * How far that size may be reduced to fit the bars per line, and no further.
+ *
+ * A floor is not optional. Reducing the size instead of the bar count is the
+ * right trade until it isn't: syllables long enough will shrink a system to
+ * arithmetic nobody can read, and four unreadable bars on one line are worse
+ * than three readable ones and an orphan. Below this the renderer stops
+ * shrinking, the packer refuses the count the ordinary way, and the composer
+ * says "(fits N here)" rather than printing something illegible in silence.
+ *
+ * 0.62× is exactly the reduction the four-per-line setting used to apply to
+ * EVERY score, whatever it held. It is now the worst case rather than the
+ * standing case, which is the point of the change — but as a floor it is the
+ * last size that actually went to print, so nothing here can come out smaller
+ * than something already has.
+ */
+export const PSALM_MIN_ENGRAVING_SCALE = PSALM_ENGRAVING_SCALE * 0.62;
 
 const STEPS: Pitch['step'][] = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 /** Semitones above the tonic for each major-scale degree. */
@@ -230,12 +266,12 @@ export function psalmSyllables(text: string): string[] {
 /**
  * How many measures to put on a line.
  *
- * The staff is a fixed 4 inches, so measures per line is the only lever for
- * legibility, and lyrics are what actually consume horizontal space — a bar
- * of melismatic eighth notes under long words needs far more room than a bar
- * of half notes on "Lord". Rather than a constant, this scales the count to
- * the widest lyric load in the piece, then lets the caller's renderer fall
- * back further if a bar genuinely cannot fit.
+ * This only SEEDS the dialog's opening choice; the toggle then wins, and the
+ * renderer sizes the staff to whatever count it is given. Lyrics are what
+ * actually consume horizontal space — a bar of melismatic eighth notes under
+ * long words needs far more room than a bar of half notes on "Lord". Rather
+ * than a constant, this scales the count to the widest lyric load in the
+ * piece.
  */
 export function measuresPerLine(score: EditorScore): number {
   const notes = score.elements.filter((e) => e.kind === 'note');
@@ -251,8 +287,8 @@ export function measuresPerLine(score: EditorScore): number {
   const perMeasurePx = notesPerMeasure * (26 + avgLyric * 7);
   const fit = Math.floor((PSALM_WIDTH_PX - 40) / Math.max(1, perMeasurePx));
 
-  // TWO is the floor, not one. A single bar stretched across four inches is
-  // not a layout anyone would choose (Kevin: "i will never use one measure
+  // TWO is the floor, not one. A single bar stretched across the whole card
+  // is not a layout anyone would choose (Kevin: "i will never use one measure
   // wide on a four inch wide space") — engravers would rather cramp a busy
   // bar than leave that much air. Four is the ceiling: past that the lyrics
   // collide at this width.

@@ -5,9 +5,13 @@ import { describe, it, expect } from 'vitest';
 // members used here, so this file adds none of its own.
 import * as VexFlowNs from 'vexflow';
 import { STAFF_SPACE, LYRIC_EM, LYRIC_POINT_SIZE } from './lyricSpacing';
+import { fitScaleForRow } from './packRows';
 import {
   PSALM_ENGRAVING_SCALE, PSALM_STAFF_HEIGHT_IN, PSALM_WIDTH_IN, CSS_DPI,
 } from '@/lib/liturgy/psalmComposer';
+import {
+  AID_CONTENT_WIDTH_IN, PANEL_W_IN, PANEL_PAD_X_IN, SIDE_BAND_PAD_IN,
+} from '@/lib/liturgy/aidPage';
 
 const { Stave, Annotation, Font } = VexFlowNs as unknown as {
   Stave: new (x: number, y: number, width: number) => { getSpacingBetweenLines(): number };
@@ -46,7 +50,7 @@ describe('engraving units', () => {
 describe('the psalm card prints at the size it says it does', () => {
   it('engraves a staff exactly PSALM_STAFF_HEIGHT_IN tall', () => {
     // scale is CSS pixels per engraving unit; a staff is four spaces tall.
-    const staffHeightIn = (PSALM_ENGRAVING_SCALE[2] * STAFF_SPACE * 4) / CSS_DPI;
+    const staffHeightIn = (PSALM_ENGRAVING_SCALE * STAFF_SPACE * 4) / CSS_DPI;
     expect(staffHeightIn).toBeCloseTo(PSALM_STAFF_HEIGHT_IN, 10);
   });
 
@@ -54,21 +58,51 @@ describe('the psalm card prints at the size it says it does', () => {
     // The reported complaint, as a number: the words came out at 10.2pt beside
     // 8.6pt section headings. WorshipAidSheets sets headings at 8.6pt and body
     // text at 8pt; sung text belongs under both.
-    const printedLyricPt = PSALM_ENGRAVING_SCALE[2] * LYRIC_EM * 0.75;
+    const printedLyricPt = PSALM_ENGRAVING_SCALE * LYRIC_EM * 0.75;
     expect(printedLyricPt).toBeLessThan(8);
     expect(printedLyricPt).toBeGreaterThan(6);   // and still readable in a pew
   });
 
-  it('gives four bars per line less room each, never more', () => {
-    // Four bars of lyrics in four inches costs note size. What it must not do
-    // is come out LARGER than the two-bar setting, which is what a per-choice
-    // table of unrelated magic numbers is free to drift into.
-    expect(PSALM_ENGRAVING_SCALE[4]).toBeLessThan(PSALM_ENGRAVING_SCALE[2]);
+  it('takes the aid\'s narrowest column, so no page rescales it', () => {
+    // The engraving's width and the slot's width are set in different files;
+    // if they ever disagree the score is silently rescaled on the page. And
+    // the narrowest column is the one that has to be met — content flows, so
+    // the psalm can land on the panel whose margin clears the day/date band.
+    expect(PSALM_WIDTH_IN).toBe(AID_CONTENT_WIDTH_IN);
+    expect(PSALM_WIDTH_IN).toBeLessThanOrEqual(PANEL_W_IN - PANEL_PAD_X_IN - SIDE_BAND_PAD_IN);
   });
 
-  it('still engraves at the four-inch width the aid prints it at', () => {
-    // The engraving's width and the slot's width are set in different files;
-    // if they ever disagree the score is silently rescaled on the page.
-    expect(PSALM_WIDTH_IN).toBe(4);
+  it('never asks four bars to print SMALLER than the fit needs', () => {
+    // What the old per-density table did: four bars were engraved at 0.62× the
+    // two-bar size whatever the score, a multiplier tuned for a four-inch card
+    // that no longer exists. Now the reduction is computed from the bars'
+    // own widths, and a score that fits keeps the full size.
+    const roomy = fitScaleForRow({
+      widths: [80, 80, 80, 80], perRow: 4,
+      cssWidth: PSALM_WIDTH_IN * CSS_DPI, maxScale: PSALM_ENGRAVING_SCALE,
+      overheadUnits: 86,
+    });
+    expect(roomy).toBe(PSALM_ENGRAVING_SCALE);
+  });
+
+  it('shrinks rather than dropping a bar when four bars of lyrics will not fit', () => {
+    // The reported psalm: four bars whose syllables need ~700 engraving units
+    // between them. At the printed staff height that is about twelve inches of
+    // system, which no panel of a 5.5in leaflet has — so the size gives way.
+    const tight = fitScaleForRow({
+      widths: [166.6, 177.3, 163.1, 194.2], perRow: 4,
+      cssWidth: PSALM_WIDTH_IN * CSS_DPI, maxScale: PSALM_ENGRAVING_SCALE,
+      overheadUnits: 86,
+    });
+    expect(tight).toBeLessThan(PSALM_ENGRAVING_SCALE);
+    // …but still visibly bigger than the flat 0.62 penalty it replaces, which
+    // is the whole complaint: "it can be wider so the 4 measure clips can be
+    // bigger."
+    expect(tight).toBeGreaterThan(PSALM_ENGRAVING_SCALE * 0.62);
+    // And the staff it prints stays a small-score rastral, not the 10.6mm
+    // that started this.
+    const mm = (tight * STAFF_SPACE * 4 / CSS_DPI) * 25.4;
+    expect(mm).toBeGreaterThan(5);
+    expect(mm).toBeLessThan(7);
   });
 });

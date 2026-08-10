@@ -17,7 +17,7 @@ import { useMidiInput, midiToPitch } from '@/lib/notation/useMidiInput';
 import { svgToJpegBlob, imageFileName, downloadBlob } from '@/lib/notation/exportImage';
 import {
   measuresPerLine, psalmSyllables, psalmLines, psalmScoreTitle,
-  PSALM_WIDTH_PX, PSALM_WIDTH_IN, PSALM_ENGRAVING_SCALE,
+  PSALM_WIDTH_PX, PSALM_WIDTH_IN, PSALM_ENGRAVING_SCALE, PSALM_MIN_ENGRAVING_SCALE,
 } from '@/lib/liturgy/psalmComposer';
 import { savePsalmToLibrary } from '@/lib/liturgy/psalmScores';
 import { musicXmlToEditorScore } from '@/lib/notation/musicxmlRead';
@@ -41,9 +41,10 @@ import { cn } from '@/lib/utils';
  *  - Lyrics lead. The psalm text is already known, so syllables queue up and
  *    attach as notes are entered, instead of being typed note by note.
  *
- * The staff is a fixed 4 inches (PSALM_WIDTH_PX at 96dpi). Everything else —
- * measures per line, overall height — follows from that width and the lyric
- * load, per measuresPerLine().
+ * The staff is PSALM_WIDTH_PX wide — the narrowest text column the printed
+ * aid has, so the card prints at 1:1 whichever page it flows onto. The staff
+ * SIZE then follows from the bars per line the user asked for: NotationView
+ * shrinks it until they fit, rather than dropping the line to fewer bars.
  */
 
 // Words, not glyphs. The whole/half note characters live in the Unicode
@@ -96,28 +97,37 @@ const SELECT_CLS = 'h-9 border border-input bg-background px-1.5 text-xs lg:h-8'
 const FIELD_LABEL_CLS = 'shrink-0 text-xs text-muted-foreground';
 
 /**
- * Engraving size per layout choice — see PSALM_ENGRAVING_SCALE.
+ * Engraving size — see PSALM_ENGRAVING_SCALE.
  *
  * It lives in psalmComposer rather than here because it is derived from the
  * card's PRINTED staff height, which is part of the same print spec as its
- * four-inch width and belongs beside it. The value used to be a bare 1.0 in
- * this file, which read as "full size" and was in fact "whatever a staff
- * space happens to be in screen pixels".
+ * width and belongs beside it. The value used to be a bare 1.0 in this file,
+ * which read as "full size" and was in fact "whatever a staff space happens
+ * to be in screen pixels".
+ *
+ * One number for both layout choices now. It is what the card ASKS for; the
+ * renderer reduces it, as far as PSALM_MIN_ENGRAVING_SCALE and no further,
+ * when the requested bars per line will not fit at that size — which is the
+ * case four bars of lyrics hit. See fitScaleForRow.
  */
 const ENGRAVING_SCALE = PSALM_ENGRAVING_SCALE;
 
 /**
  * On-screen magnification. Presentation only — see the staff markup.
  *
- * Raised with the engraving scale, and for the same reason. The staff is now
+ * Raised with the engraving scale, and for the same reason. The staff is
  * engraved at its true printed size (a quarter-inch tall, not the two-fifths
  * of an inch VexFlow's screen default was giving it), so previewing it at the
  * old zoom would show the composer a staff 40% smaller than the one it used
- * to draw on. 1.85 is the ceiling: the dialog is max-w-3xl (768px) and the
- * frame's padding leaves ~724px, so 384 × 1.85 = 710px is the largest preview
- * that does not put a horizontal scrollbar under a desktop-width dialog.
+ * to draw on. The ceiling is set by the frame, not by taste: the dialog is
+ * max-w-3xl (768px) and its padding leaves ~710px, so the zoom is whatever
+ * fits the card's printed width into that without putting a horizontal
+ * scrollbar under a desktop-width dialog. Derived rather than typed, because
+ * the card's width is no longer a fixed 4 inches — it follows the aid's
+ * column, and a hardcoded 1.85 would have overflowed the moment it did.
  */
-const SCREEN_ZOOM = 1.85;
+const PREVIEW_MAX_PX = 710;
+const SCREEN_ZOOM = Math.round((PREVIEW_MAX_PX / PSALM_WIDTH_PX) * 100) / 100;
 
 const PER_LINE_CHOICES = [2, 4] as const;
 
@@ -869,12 +879,12 @@ export function PsalmComposerDialog({
             </div>
           </div>
 
-          {/* The staff is laid out at its true 4-inch print size and then
+          {/* The staff is laid out at its true print size and then
               CSS-zoomed for the screen. Laying it out larger and shrinking
               the export would change which measures share a line — the
               layout has to be decided at the size it will be printed. The
               zoom is presentation only; the SVG's own coordinates, and so
-              the JPEG, stay at 4 inches.
+              the JPEG, stay at the printed width.
 
               The zoom wrapper is sized EXPLICITLY, in both axes, because
               transform: scale() paints bigger without laying out bigger.
@@ -897,7 +907,8 @@ export function PsalmComposerDialog({
                   score={score}
                   width={PSALM_WIDTH_PX}
                   targetPerRow={perLine}
-                  scale={ENGRAVING_SCALE[perLine]}
+                  scale={ENGRAVING_SCALE}
+                  fitScaleFloor={PSALM_MIN_ENGRAVING_SCALE}
                   onLayout={setLayout}
                   lyricOffset={lyricOffset}
                   selectedIndex={selected}
