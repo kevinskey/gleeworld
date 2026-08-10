@@ -195,10 +195,22 @@ function Entry({ entry, spacing = 1, editable, onEdit }: {
         // text: centred, with clear air above and below so it never reads as
         // part of the entry above it or collides with the one below.
         //
-        // maxWidth rather than width, and a height cap, so it REDUCES to fit
-        // (Kevin) — a wide engraving shrinks to the panel instead of running
-        // over the fold, and a tall one cannot push the rest of the panel off
-        // the page. Aspect ratio is preserved either way.
+        // An entry that states the width it was DESIGNED for prints at that
+        // width. Engraved music has to: the score's layout — bars per system,
+        // room per syllable, staff size — was decided at that width, and
+        // printing it at any other silently re-scales all of it. Without this
+        // the psalm was sized like a photograph, by whichever of
+        // `max-width:100%` and the height cap bound first, so its printed
+        // staff depended on how many systems it happened to have: two systems
+        // hit the height cap and printed at 4.09in, one system hit the width
+        // and printed at 4.7in, three systems came out at 2.94in. Three
+        // different staff sizes for one engraving.
+        //
+        // The caps stay as the safety they were meant to be (Kevin: it must
+        // REDUCE to fit) — a wide engraving still shrinks to the panel rather
+        // than running over the fold, and a tall one still cannot push the
+        // rest of the panel off the page. Artwork, which has no design width,
+        // is unaffected and still just fits the panel.
         <div style={{
           margin: `${(0.16 * spacing).toFixed(3)}in 0`,
           textAlign: 'center',
@@ -208,8 +220,9 @@ function Entry({ entry, spacing = 1, editable, onEdit }: {
             alt=""
             style={{
               display: 'inline-block',
+              width: entry.imageWidthIn ? `${entry.imageWidthIn}in` : 'auto',
               maxWidth: '100%', maxHeight: '2.6in',
-              width: 'auto', height: 'auto',
+              height: 'auto',
               objectFit: 'contain',
             }}
           />

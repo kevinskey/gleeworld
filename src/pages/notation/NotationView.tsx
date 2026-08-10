@@ -12,6 +12,11 @@ import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { toVexKey, toVexDuration } from '@/lib/notation/toVexflow';
 import { packRows } from './packRows';
+// Lyric metrics — sizes and the width a bar of syllables needs — live in their
+// own pure module so the budget can be tested against its invariant.
+import {
+  LYRIC_EM, LYRIC_POINT_SIZE as LYRIC_SIZE, lyricMeasureWidth,
+} from './lyricSpacing';
 
 const VEX_CLEF = { treble: 'treble', bass: 'bass', alto: 'alto' } as const;
 
@@ -42,10 +47,12 @@ const PHONE_MAX_WIDTH = 768;
 const SELECTED_COLOR = '#ea580c'; // orange-600
 
 /** Width of a syllable at the engraved size. Falls back to a per-character
- *  estimate where no canvas is available (jsdom, older WebViews). */
+ *  estimate where no canvas is available (jsdom, older WebViews). Times New
+ *  Roman averages a shade under half an em per character across ordinary
+ *  lower-case text, which is the only case this fallback ever sees. */
 function measureLyric(ctx: CanvasRenderingContext2D | null, text: string): number {
   const w = ctx?.measureText(text).width;
-  return typeof w === 'number' && w > 0 ? w : text.length * (LYRIC_SIZE * 0.5);
+  return typeof w === 'number' && w > 0 ? w : text.length * (LYRIC_EM * 0.5);
 }
 
 /** How far down (SVG y — larger is lower on the page) a note's own drawn
@@ -103,10 +110,7 @@ function noteInkBottomY(sn: StaveNote, stave: Stave): number {
 // Which text line below the stave the lyrics sit on, and their size. One
 // value for the whole system is the entire point — see the draw loop.
 const LYRIC_LINE = 1;
-const LYRIC_SIZE = 10;
-/** Minimum clear space between one syllable and the next. Below about this
- *  the words read as a single run even when they technically do not touch. */
-const LYRIC_GUTTER = 6;
+
 /** Visible daylight between the lowest ink in a system — a notehead or a
  *  stem tip, whichever descends further — and the TOP of the tallest letter
  *  below it. getYForBottomText(LYRIC_LINE) alone assumes notes sit on or
@@ -116,16 +120,17 @@ const LYRIC_GUTTER = 6;
  *
  *  This is a gap between two INK edges, with the face's own ascent measured
  *  and added separately — not a baseline offset with the ascent guessed into
- *  it. The guess is what went wrong before: LYRIC_SIZE is a POINT size to
- *  VexFlow, so a "10px" face is really drawn at 13.3px and its capitals rise
- *  ~9.4px, not the ~7px a px reading suggests. Three units is about a third
+ *  it. The guess is what went wrong before: the ascent was estimated from a
+ *  number that turned out to be points, not units, so it under-reserved by a
+ *  third and the words landed on the noteheads. Three units is about a third
  *  of a staff space — unmistakable daylight at reading size without spending
  *  vertical room the 4-inch psalm card cannot spare. */
 const LYRIC_INK_GAP = 3;
 /** Ascent to assume when the renderer cannot measure text at all (jsdom,
  *  very old WebViews). Deliberately generous: over-reserving pushes the
- *  words a little low, under-reserving puts them back on the noteheads. */
-const LYRIC_ASCENT_FALLBACK = LYRIC_SIZE * 1.0;
+ *  words a little low, under-reserving puts them back on the noteheads.
+ *  In ENGRAVING UNITS, so it tracks LYRIC_EM rather than the point size. */
+const LYRIC_ASCENT_FALLBACK = LYRIC_EM * 1.0;
 /** Below-baseline allowance for descenders (g, j, p, q, y) when deciding
  *  whether the engraved system fits inside the SVG's own height — the
  *  baseline is text's anchor point, not a line's true visual bottom. */
@@ -233,8 +238,13 @@ export function NotationView({
     // A canvas 2D context used only to MEASURE lyric widths during pass 1.
     // The renderer's own context is not usable yet — it is created and scaled
     // after the row packing, which is precisely what these widths decide.
+    //
+    // LYRIC_EM, not LYRIC_SIZE: this canvas has to be set to the size the
+    // words are DRAWN at (engraving units), not the point size VexFlow's
+    // setFont is given. Measuring at the point number is the old bug — every
+    // width came out a third short and the budget below was short with it.
     const ctxProbe = document.createElement('canvas').getContext('2d');
-    if (ctxProbe) ctxProbe.font = `${LYRIC_SIZE}px "Times New Roman", Times, serif`;
+    if (ctxProbe) ctxProbe.font = `${LYRIC_EM}px "Times New Roman", Times, serif`;
 
     // Pass 1 — build each measure's tickables + its minimum content width, so a system can
     // size bars PROPORTIONALLY to their content (a busy bar gets more width than a sparse one)
@@ -322,13 +332,16 @@ export function NotationView({
         //
         // Measured at the real lyric size rather than estimated per
         // character, because "O" and "shepherd" differ by a factor of six and
-        // an average would over-space one and collide the other.
-        const lyricW = m.elements.reduce((sum, el) => (
-          el.kind === 'note' && el.lyric
-            ? sum + measureLyric(ctxProbe, el.lyric) + LYRIC_GUTTER
-            : sum
-        ), 0);
-        minW = Math.max(minW, lyricW);
+        // an average would over-space one and collide the other. What the
+        // measured widths then buy is lyricMeasureWidth's business — see
+        // there for why the widest PAIR decides it and a sum cannot.
+        const lyricWidths = m.elements
+          .filter((el) => el.kind === 'note')
+          .map((el) => {
+            const lyric = (el as { lyric?: string }).lyric;
+            return lyric ? measureLyric(ctxProbe, lyric) : 0;
+          });
+        minW = Math.max(minW, lyricMeasureWidth(lyricWidths));
       }
       return { m, notes, voice, beams, tuplets, minW };
     });

@@ -20,6 +20,8 @@
  * and the section ordering can be tested without rendering.
  */
 
+import { PSALM_WIDTH_IN } from './psalmComposer';
+
 /** Panels in READING order, which is not printing order. */
 export type PanelId = 'front' | 'insideLeft' | 'insideRight' | 'back';
 
@@ -40,6 +42,19 @@ export interface AidEntry {
   notice?: string | null;
   /** An image printed at this point (music example, artwork). */
   imageUrl?: string | null;
+  /**
+   * The width, in inches, this image was DESIGNED to print at.
+   *
+   * Engraved music is not a picture: it is laid out at the size it will be
+   * printed, because that is what decides how many bars share a line and how
+   * much room a syllable gets. Without this the panel sized it like any other
+   * photo — `max-width:100%` against a `max-height` cap — so the printed
+   * staff came out at whatever the taller of the two constraints happened to
+   * give it, and a psalm that ran to three systems printed SMALLER than the
+   * same psalm in two. Artwork has no such contract and leaves this unset, so
+   * it still just fits the panel.
+   */
+  imageWidthIn?: number | null;
 }
 
 export interface WorshipAidSettings {
@@ -237,6 +252,7 @@ export function buildWorshipAid(
           title: splitCredit(row.psalm_title).title,
           credit: splitCredit(row.psalm_title).credit,
           imageUrl: psalmImage,
+          imageWidthIn: PSALM_WIDTH_IN,
         }
       : null,
     // The Liturgy of the Word stays WHOLE on one panel (Kevin). It used to

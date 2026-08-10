@@ -6,6 +6,7 @@ import {
   COVER_IMAGE_MIN, COVER_IMAGE_MAX, COVER_TITLE_DEFAULT, COVER_IMAGE_DEFAULT,
   type AidSource, type WorshipAidSettings,
 } from './worshipAid';
+import { PSALM_WIDTH_IN } from './psalmComposer';
 
 const source: AidSource = {
   mass_date: '2013-12-22',
@@ -204,6 +205,28 @@ describe('the composed psalm travels with the aid', () => {
     const psalm = a.insideLeft.find((e) => e.label === 'RESPONSORIAL PSALM');
     expect(psalm?.citation).toBe('Psalm 24');
     expect(psalm?.imageUrl).toBeNull();
+  });
+
+  it('carries the width the engraving was laid out at', () => {
+    // Engraved music is not a picture: bars per system, room per syllable and
+    // staff size were all decided at this width, so the panel has to print it
+    // at this width rather than at whatever its aspect ratio and the height
+    // cap happen to agree on.
+    const a = buildWorshipAid(source, { ...settings, psalmImageUrl: 'https://example.org/psalm.jpg' });
+    expect(a.insideLeft.find((e) => e.label === 'RESPONSORIAL PSALM')?.imageWidthIn)
+      .toBe(PSALM_WIDTH_IN);
+  });
+
+  it('leaves artwork free to fit the panel', () => {
+    // A photograph has no design width. Pinning one would shrink every image
+    // a user drops into a panel to the psalm's four inches.
+    const a = buildWorshipAid(source, {
+      ...settings,
+      images: { ...settings.images, insideRight: 'https://example.org/art.jpg' },
+    });
+    const art = a.insideRight.find((e) => e.imageUrl === 'https://example.org/art.jpg');
+    expect(art).toBeTruthy();
+    expect(art?.imageWidthIn).toBeUndefined();
   });
 });
 
