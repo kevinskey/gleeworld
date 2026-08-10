@@ -129,6 +129,27 @@ async function renderPage() {
   await screen.findByText('Worship Aid');
 }
 
+/**
+ * Find a button by its visible label, WITHOUT going through *ByRole.
+ *
+ * Not a style preference — a 6x on this file. AidStage renders an inline
+ * <style> whose focus rules are written with `:has()`, and jsdom's selector
+ * engine re-evaluates those for every getComputedStyle call. *ByRole with a
+ * `name` calls getComputedStyle once per candidate (both for the visibility
+ * filter and for the accessible-name walk), so a single
+ * getByRole('button', { name: 'Cover' }) over this page's ~100 buttons cost
+ * ~1.3s. Five of them, times four renders, is why this file ran 12-16s alone
+ * and timed out under full-suite load — it failed 2 runs in 5.
+ *
+ * getByText does no computed-style work at all: ~0ms. Measured equivalent, not
+ * assumed — for every label this file looks up ('Cover', 'Inside left',
+ * 'Inside right', 'Back', /add image/i, /cover image/i) the two queries
+ * returned the identical set of nodes. `selector: 'button'` keeps the tag
+ * pinned, so a matching <span> or <label> cannot answer in a button's place.
+ */
+const buttons = (label: string | RegExp) => screen.getAllByText(label, { selector: 'button' });
+const button = (label: string | RegExp) => screen.getByText(label, { selector: 'button' });
+
 describe('WorshipAidPage — file input singleton (Critical 1 & 2)', () => {
   it('mounts exactly one file input, and it still fires on an interior panel', async () => {
     await renderPage();
@@ -140,7 +161,7 @@ describe('WorshipAidPage — file input singleton (Critical 1 & 2)', () => {
     const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
 
     // "Add image" belongs to blockList, rendered for insideLeft/insideRight/back.
-    const addImageButtons = screen.getAllByRole('button', { name: /add image/i });
+    const addImageButtons = buttons(/add image/i);
     expect(addImageButtons.length).toBeGreaterThan(0);
     fireEvent.click(addImageButtons[0]);
 
@@ -157,21 +178,22 @@ describe('WorshipAidPage — file input singleton (Critical 1 & 2)', () => {
       await renderPage();
 
       for (const label of ['Cover', 'Inside left', 'Inside right', 'Back']) {
-        fireEvent.click(screen.getByRole('button', { name: label }));
+        fireEvent.click(button(label));
         expect(document.querySelectorAll('input[type="file"]')).toHaveLength(1);
       }
     },
-    // Test cycles through all four panels with full re-renders, which is slow.
-    // Needs 7+ seconds; default timeout is 5s.
+    // Raised when this test cycled all four panels through *ByRole lookups and
+    // needed 7+ seconds. It is ~0.3s now (see `button` above); the headroom is
+    // kept only so full-suite contention cannot put it back over the default.
     20000,
   );
 
   it('fires the shared input from the Cover panel’s own trigger too', async () => {
     await renderPage();
-    fireEvent.click(screen.getByRole('button', { name: 'Cover' }));
+    fireEvent.click(button('Cover'));
 
     const clickSpy = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
-    fireEvent.click(screen.getByRole('button', { name: /cover image/i }));
+    fireEvent.click(button(/cover image/i));
     expect(clickSpy).toHaveBeenCalledTimes(1);
     clickSpy.mockRestore();
   });
@@ -201,7 +223,7 @@ describe('WorshipAidPage — archive capture runs on the full spread (Critical)'
         return { blob: new Blob(['%PDF-'], { type: 'application/pdf' }), pages: 4 };
       });
 
-      fireEvent.click(screen.getByRole('button', { name: /save pdf to library/i }));
+      fireEvent.click(button(/save pdf to library/i));
       await waitFor(() => expect(toPdfMock).toHaveBeenCalled());
 
       expect(viewDuringCapture).toBe('full');
