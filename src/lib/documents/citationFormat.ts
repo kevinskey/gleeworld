@@ -136,8 +136,8 @@ function formatReferenceAPA(source: DocSource): RefSegment[] {
     segs.push({ text: ' ' });
     if (source.container) segs.push({ text: source.container, italic: true });
     if (source.volume) {
-      const issue = source.issue ? `(${source.issue})` : '';
-      segs.push({ text: `, ${source.volume}${issue}`, italic: true });
+      segs.push({ text: `, ${source.volume}`, italic: true });
+      if (source.issue) segs.push({ text: `(${source.issue})` });
     }
     if (source.pages) segs.push({ text: `, ${source.pages}` });
     segs.push({ text: '.' });

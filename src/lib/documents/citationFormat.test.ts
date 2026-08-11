@@ -57,6 +57,11 @@ describe('APA 7', () => {
     const two = { ...southern, authors: [{ family: 'A', given: 'Xa' }, { family: 'B', given: 'Yb' }] };
     expect(formatInText(two, 'apa7')).toBe('(A & B, 1997)');
   });
+  it('journal reference italicizes only the volume, not the issue', () => {
+    const segs = formatReference(journal, 'apa7');
+    expect(segs.filter(s => s.italic).map(s => s.text)).toEqual(['Western Journal of Black Studies', ', 9']);
+    expect(segs.find(s => s.text === '(2)')?.italic).toBeFalsy();
+  });
 });
 
 describe('buildWorksCited', () => {
