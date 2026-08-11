@@ -25,6 +25,9 @@ export interface NowPlaying {
   artworkUrl?: string | null;
   title?: string;
   channel?: string;
+  /** True when restored after a page refresh: render paused with a
+   *  tap-to-resume — browsers forbid un-gestured audio after reload. */
+  resumePaused?: boolean;
 }
 
 export interface AssistantContextValue {
@@ -162,7 +165,26 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
    * question: the reply is "Playing Ave Verum" while Ave Verum is already
    * playing over it. Anything spoken is cut the moment a video appears.
    */
-  const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
+  // The popout survives a page refresh (Kevin, 2026-08-11): what was
+  // playing is mirrored to sessionStorage and restored on mount. Browsers
+  // forbid audio resuming without a gesture after a reload, so the popout
+  // comes back PAUSED with resumePaused set — its play button is the tap.
+  const NOW_PLAYING_KEY = 'gw-assistant-now-playing';
+  const [nowPlaying, setNowPlayingState] = useState<NowPlaying | null>(() => {
+    try {
+      const raw = sessionStorage.getItem(NOW_PLAYING_KEY);
+      if (!raw) return null;
+      const v = JSON.parse(raw) as NowPlaying;
+      return v && (v.videoId || v.appleId) ? { ...v, resumePaused: true } : null;
+    } catch { return null; }
+  });
+  const setNowPlaying = useCallback((v: NowPlaying | null) => {
+    setNowPlayingState(v);
+    try {
+      if (v) sessionStorage.setItem(NOW_PLAYING_KEY, JSON.stringify(v));
+      else sessionStorage.removeItem(NOW_PLAYING_KEY);
+    } catch { /* private mode — playback just won't survive refresh */ }
+  }, []);
   /** Event-scheduled playlist offer. Polls once a minute for events that
    *  started in the last 20 minutes carrying assistant_playlist. Only the
    *  two playback tools may run from DB data — anything else is ignored. */
