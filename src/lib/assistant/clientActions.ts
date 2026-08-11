@@ -67,9 +67,6 @@ export interface ActionOutcome {
   /** Start Apple Music playback in the floating popout (same window the
    *  YouTube player uses). The provider owns the MusicKit hand-off. */
   appleMusic?: { id: string; kind: 'song' | 'album' | 'playlist'; title?: string; artist?: string; artworkUrl?: string | null };
-  /** Spotify playback already started by the action (the SDK owns audio);
-   *  this is the popout's now-playing card. */
-  spotify?: { title: string; artist?: string; artworkUrl?: string | null };
   message: string;
 }
 
@@ -110,7 +107,6 @@ export async function executeClientAction(
     'open_page', 'open_link', 'open_song', 'open_bible', 'open_note',
     'start_video_session', 'book_ride', 'order_food', 'stop_playback',
     'close_viewer', 'play_apple_music', 'create_apple_playlist', 'play_my_playlist',
-    'connect_spotify', 'play_spotify',
   ].includes(action.tool);
   const deps = { ...(needsDeps && !depsOverride ? await defaultDeps() : {}), ...depsOverride } as ActionDeps;
   const a = action.args;
@@ -248,31 +244,6 @@ export async function executeClientAction(
           return { ok: true, appleMusic: { id: hit.id, kind: 'playlist', title: hit.name }, message: `Playing ${hit.name}.` };
         } catch {
           return { ok: false, message: "Couldn't reach your Apple Music library." };
-        }
-      }
-      case 'connect_spotify': {
-        const sp = await import('@/lib/spotify');
-        if (sp.isSpotifyConnected()) return { ok: true, message: 'Spotify is already connected.' };
-        await sp.connectSpotify(); // navigates away to accounts.spotify.com
-        return { ok: true, message: 'Sending you to Spotify to sign in.' };
-      }
-      case 'play_spotify': {
-        const query = String(a.query ?? '').trim();
-        if (!query) return { ok: false, message: 'What should I play on Spotify?' };
-        const sp = await import('@/lib/spotify');
-        if (!sp.isSpotifyConnected()) {
-          return { ok: false, message: 'Spotify is not connected yet — say "connect Spotify" and I\'ll set it up.' };
-        }
-        try {
-          const hit = await sp.searchSpotify(query, a.kind === 'album' ? 'album' : 'track');
-          if (!hit) return { ok: false, message: `Spotify has no match for "${query}".` };
-          await sp.playOnSpotify(hit);
-          return { ok: true, spotify: { title: hit.title, artist: hit.artist, artworkUrl: hit.artworkUrl }, message: `Playing ${hit.title} on Spotify.` };
-        } catch (e) {
-          const msg = e instanceof Error ? e.message : '';
-          if (msg === 'premium_required') return { ok: false, message: 'Spotify playback needs a Premium account on the connected login.' };
-          if (msg === 'not_connected') return { ok: false, message: 'Spotify is not connected yet — say "connect Spotify".' };
-          return { ok: false, message: "Couldn't start Spotify playback." };
         }
       }
       case 'start_video_session': {

@@ -16,7 +16,7 @@ import type { ConciergeResult } from './conciergeTypes';
 
 export interface NowPlaying {
   /** Which engine the popout drives. Absent = 'youtube' (older callers). */
-  source?: 'youtube' | 'apple' | 'spotify';
+  source?: 'youtube' | 'apple';
   /** YouTube video id — required when source is youtube. */
   videoId?: string;
   /** Apple Music catalog id + kind — required when source is apple. */
@@ -335,10 +335,6 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         channel: outcome.appleMusic.artist,
         artworkUrl: outcome.appleMusic.artworkUrl,
       });
-    }
-    if (outcome.spotify) {
-      stopSpeakingNow();
-      setNowPlaying({ source: 'spotify', title: outcome.spotify.title, channel: outcome.spotify.artist, artworkUrl: outcome.spotify.artworkUrl });
     }
     if (outcome.navigateTo) { setSheetOpen(false); navigate(outcome.navigateTo); }
     if (!outcome.ok) speakNow(outcome.message);
