@@ -43,12 +43,16 @@ describe('toolCatalog', () => {
       'get_assignments',
       'get_attendance',
       'get_balance',
+      'get_course_deadlines',
+      'get_course_info',
       'get_date_card',
+      'get_enrollments',
       'get_grade_trend',
       'get_grades',
       'get_preference',
       'get_ride',
       'get_roster_flags',
+      'list_courses',
       'liturgical_day',
       'lookup_all_state',
       'lookup_bible',
@@ -106,6 +110,26 @@ describe('stop_playback', () => {
   it('is a member-level client action with no confirm gate', () => {
     const tool = toolsForRole('member').find((t) => t.name === 'stop_playback');
     expect(tool).toBeDefined();
+    expect(tool?.execution).toBe('client');
+    expect(tool?.confirm).toBe(false);
+  });
+});
+
+describe('academy course tools', () => {
+  it('are member-level server tools', () => {
+    const names = toolsForRole('member').map((t) => t.name);
+    for (const n of ['list_courses', 'get_course_info', 'get_course_deadlines', 'get_enrollments']) {
+      expect(names).toContain(n);
+      const tool = TOOL_CATALOG.find((t) => t.name === n);
+      expect(tool?.execution).toBe('server');
+      expect(tool?.confirm).toBe(false);
+    }
+  });
+});
+
+describe('close_viewer', () => {
+  it('is a member-level client action', () => {
+    const tool = toolsForRole('member').find((t) => t.name === 'close_viewer');
     expect(tool?.execution).toBe('client');
     expect(tool?.confirm).toBe(false);
   });

@@ -17,6 +17,10 @@ type SupabaseLike = {
 
 export interface Deps {
   supabase: SupabaseLike;
+  /** Caller's auth-level role. RLS already decides what rows come back;
+   *  this only shapes the HONESTY of the reply — a member's empty roster
+   *  means "you can't see it", an admin's means "nobody is enrolled". */
+  role?: 'admin' | 'member';
   youtubeApiKey?: string;
   googleMapsApiKey?: string;
   homeAddress?: string;
@@ -76,6 +80,10 @@ export async function executeServerTool(
       case 'liturgical_day': return { replyJson: await liturgicalDay(args, deps) };
       case 'web_search': return await webSearch(args, deps);
       case 'research_repertoire': return await researchRepertoire(args, deps);
+      case 'list_courses': return { replyJson: await listCourses(args, deps) };
+      case 'get_course_info': return { replyJson: await getCourseInfo(args, deps) };
+      case 'get_course_deadlines': return { replyJson: await getCourseDeadlines(args, deps) };
+      case 'get_enrollments': return { replyJson: await getEnrollments(args, deps) };
       case 'get_assignments':
       case 'get_grades':
       case 'get_grade_trend':
@@ -1034,4 +1042,250 @@ async function liturgicalDay(args: Record<string, unknown>, deps: Deps): Promise
   }
 
   return JSON.stringify(result);
+}
+
+// ===================== Academy course catalog =====================
+// The advising tools (sp_* RPCs) answer "how is THIS STUDENT doing".
+// These answer questions about the COURSES themselves — what exists, who
+// teaches it, when it meets, what's due — which the assistant previously
+// could not see at all ("I don't have a direct course-listing tool",
+// Kevin, 2026-08-11). All queries run under the caller's JWT: members
+// see published active courses and their own enrollments; instructors
+// and admins see everything. There is no prerequisites column anywhere
+// in the schema — prerequisites, materials and policies live in the
+// course description and syllabus, so those travel with every answer.
+
+const COURSE_FIELDS =
+  'id, title, code, course_code, description, term, semester, instructor_name, instructor_email, instructor_office, instructor_hours, syllabus_url, start_date, end_date, timezone, meeting_patterns, default_location, max_enrollment, is_active, status';
+
+type CourseRow = {
+  id: string; title?: string; code?: string; course_code?: string;
+  description?: string; term?: string; semester?: string;
+  instructor_name?: string; instructor_email?: string; instructor_office?: string;
+  instructor_hours?: string; syllabus_url?: string; start_date?: string;
+  end_date?: string; timezone?: string; meeting_patterns?: unknown;
+  default_location?: string; max_enrollment?: number; is_active?: boolean; status?: string;
+};
+
+/** Case-insensitive match of a spoken course name against title and both
+ *  code columns ("sight reading", "GW102", "the choir class"). Filtering in
+ *  JS instead of .ilike keeps quoting/regex edge cases out of PostgREST. */
+function courseMatches(c: CourseRow, q: string): boolean {
+  const needle = q.toLowerCase();
+  return [c.title, c.code, c.course_code]
+    .some((v) => typeof v === 'string' && v.toLowerCase().includes(needle));
+}
+
+async function fetchCourses({ supabase }: Deps): Promise<CourseRow[] | { error: string }> {
+  const { data, error } = await supabase
+    .from('gw_courses')
+    .select(COURSE_FIELDS)
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) return { error: error.message };
+  return (data ?? []) as CourseRow[];
+}
+
+function courseSummary(c: CourseRow) {
+  return {
+    id: c.id,
+    title: c.title,
+    code: c.course_code || c.code || null,
+    term: c.semester || c.term || null,
+    instructor: c.instructor_name || null,
+    starts: c.start_date || null,
+    ends: c.end_date || null,
+    location: c.default_location || null,
+    active: c.is_active !== false,
+  };
+}
+
+async function listCourses(args: Record<string, unknown>, deps: Deps): Promise<string> {
+  const q = String(args.query ?? '').trim();
+  const courses = await fetchCourses(deps);
+  if ('error' in courses) return JSON.stringify({ error: courses.error });
+  const matched = q ? courses.filter((c) => courseMatches(c, q)) : courses;
+  // Which of these is the caller enrolled in? Members only see their own
+  // enrollment rows, so this is cheap and correct for everyone.
+  const { data: mine } = await deps.supabase
+    .from('gw_course_enrollments')
+    .select('course_id, user_id')
+    .limit(200);
+  const enrolledIn = new Set(((mine ?? []) as Array<{ course_id: string }>).map((r) => r.course_id));
+  return JSON.stringify({
+    has_data: matched.length > 0,
+    count: matched.length,
+    courses: matched.slice(0, 40).map((c) => ({
+      ...courseSummary(c),
+      caller_enrolled: enrolledIn.has(c.id) || undefined,
+    })),
+  });
+}
+
+async function resolveCourse(deps: Deps, name: string): Promise<CourseRow | { error: string } | null> {
+  const courses = await fetchCourses(deps);
+  if ('error' in courses) return courses;
+  const q = name.trim();
+  if (!q) return null;
+  const exact = courses.find((c) =>
+    [c.title, c.code, c.course_code].some((v) => typeof v === 'string' && v.toLowerCase() === q.toLowerCase()));
+  return exact ?? courses.find((c) => courseMatches(c, q)) ?? null;
+}
+
+async function getCourseInfo(args: Record<string, unknown>, deps: Deps): Promise<string> {
+  const name = String(args.course ?? '').trim();
+  if (!name) return JSON.stringify({ error: 'Pass the course name or code.' });
+  const course = await resolveCourse(deps, name);
+  if (course && 'error' in course) return JSON.stringify({ error: course.error });
+  if (!course) return JSON.stringify({ has_data: false, note: `No course matching "${name}" is visible to this user.` });
+  // Upcoming scheduled class sessions, when the course keeps them.
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: sessions } = await deps.supabase
+    .from('gw_course_class_sessions')
+    .select('title, session_date, start_time, end_time, location, session_type')
+    .eq('course_id', course.id)
+    .gte('session_date', today)
+    .order('session_date', { ascending: true })
+    .limit(6);
+  const { data: enrolled } = await deps.supabase
+    .from('gw_course_enrollments')
+    .select('id, user_id')
+    .eq('course_id', course.id)
+    .limit(500);
+  const enrolledCount = (enrolled ?? []).length;
+  return JSON.stringify({
+    has_data: true,
+    course: {
+      ...courseSummary(course),
+      description: course.description || null,
+      instructor_email: course.instructor_email || null,
+      instructor_office: course.instructor_office || null,
+      instructor_office_hours: course.instructor_hours || null,
+      syllabus_url: course.syllabus_url || null,
+      meeting_patterns: course.meeting_patterns ?? null,
+      max_enrollment: course.max_enrollment ?? null,
+      upcoming_sessions: sessions ?? [],
+    },
+    // Members only see their own enrollment row, so a member's count is
+    // "am I in it", not the class size — say so rather than misreport.
+    enrolled_count: deps.role === 'admin' ? enrolledCount : undefined,
+    caller_enrolled: deps.role === 'admin' ? undefined : enrolledCount > 0,
+    note: 'Prerequisites, materials and policies are not separate fields — when the user asks for them, read the description and point at the syllabus if one exists.',
+  });
+}
+
+async function getCourseDeadlines(args: Record<string, unknown>, deps: Deps): Promise<string> {
+  const name = String(args.course ?? '').trim();
+  let courseId: string | null = null;
+  let courseLabel: string | null = null;
+  if (name) {
+    const course = await resolveCourse(deps, name);
+    if (course && 'error' in course) return JSON.stringify({ error: course.error });
+    if (!course) return JSON.stringify({ has_data: false, note: `No course matching "${name}" is visible to this user.` });
+    courseId = course.id;
+    courseLabel = course.title ?? name;
+  }
+  const courses = await fetchCourses(deps);
+  const titleById = new Map<string, string>(
+    'error' in courses ? [] : courses.map((c) => [c.id, c.title ?? 'Untitled course']));
+
+  // The builder is untyped (SupabaseLike.from returns the chainable stub),
+  // so this helper's parameter inherits that looseness without an annotation.
+  const applyCourse = (q: ReturnType<SupabaseLike['from']>) => (courseId ? q.eq('course_id', courseId) : q);
+  const [assignA, assignB, tests] = await Promise.all([
+    applyCourse(deps.supabase.from('gw_course_assignments')
+      .select('course_id, title, assignment_type, points, due_date, available_from, available_until, is_published')).limit(100),
+    applyCourse(deps.supabase.from('gw_assignments')
+      .select('course_id, title, assignment_type, points, due_at, is_active, student_id')).limit(100),
+    applyCourse(deps.supabase.from('gw_course_tests')
+      .select('course_id, title, test_type, total_points, available_from, available_until, duration_minutes, is_published')).limit(100),
+  ]);
+  const err = assignA.error ?? assignB.error ?? tests.error;
+  if (err) return JSON.stringify({ error: err.message });
+
+  type Deadline = { course: string; kind: string; title: string; due?: string | null; opens?: string | null; closes?: string | null; points?: number | null };
+  // One loose shape covers all three sources; each loop reads only the
+  // columns its table actually selected.
+  type DeadlineSourceRow = {
+    course_id: string; title: string; assignment_type?: string | null; test_type?: string | null;
+    points?: number | null; total_points?: number | null; due_date?: string | null; due_at?: string | null;
+    available_from?: string | null; available_until?: string | null;
+    is_published?: boolean | null; is_active?: boolean | null;
+  };
+  const items: Deadline[] = [];
+  for (const a of (assignA.data ?? []) as DeadlineSourceRow[]) {
+    if (a.is_published === false) continue;
+    items.push({ course: titleById.get(a.course_id) ?? 'Unknown course', kind: a.assignment_type || 'assignment', title: a.title, due: a.due_date ?? null, opens: a.available_from ?? null, closes: a.available_until ?? null, points: a.points ?? null });
+  }
+  for (const a of (assignB.data ?? []) as DeadlineSourceRow[]) {
+    if (a.is_active === false) continue;
+    items.push({ course: titleById.get(a.course_id) ?? 'Unknown course', kind: a.assignment_type || 'assignment', title: a.title, due: a.due_at ?? null, points: a.points ?? null });
+  }
+  for (const t of (tests.data ?? []) as DeadlineSourceRow[]) {
+    if (t.is_published === false) continue;
+    items.push({ course: titleById.get(t.course_id) ?? 'Unknown course', kind: t.test_type || 'test', title: t.title, opens: t.available_from ?? null, closes: t.available_until ?? null, due: t.available_until ?? null, points: t.total_points ?? null });
+  }
+  items.sort((x, y) => String(x.due ?? x.closes ?? '9999').localeCompare(String(y.due ?? y.closes ?? '9999')));
+  return JSON.stringify({
+    has_data: items.length > 0,
+    scope: courseLabel ?? 'all visible courses',
+    deadlines: items.slice(0, 60),
+  });
+}
+
+async function getEnrollments(args: Record<string, unknown>, deps: Deps): Promise<string> {
+  const courseName = String(args.course ?? '').trim();
+  const personName = String(args.user_name ?? '').trim();
+  let courseId: string | null = null;
+  let courseLabel: string | null = null;
+  if (courseName) {
+    const course = await resolveCourse(deps, courseName);
+    if (course && 'error' in course) return JSON.stringify({ error: course.error });
+    if (!course) return JSON.stringify({ has_data: false, note: `No course matching "${courseName}" is visible to this user.` });
+    courseId = course.id;
+    courseLabel = course.title ?? courseName;
+  }
+  let q = deps.supabase.from('gw_course_enrollments')
+    .select('course_id, user_id, role, enrollment_status, enrolled_at')
+    .order('enrolled_at', { ascending: false })
+    .limit(300);
+  if (courseId) q = q.eq('course_id', courseId);
+  const { data: rows, error } = await q;
+  if (error) return JSON.stringify({ error: error.message });
+
+  const courses = await fetchCourses(deps);
+  const titleById = new Map<string, string>(
+    'error' in courses ? [] : courses.map((c) => [c.id, c.title ?? 'Untitled course']));
+  const userIds = [...new Set(((rows ?? []) as Array<{ user_id: string }>).map((r) => r.user_id))];
+  const nameById = new Map<string, string>();
+  if (userIds.length > 0) {
+    const { data: profiles } = await deps.supabase
+      .from('gw_profiles')
+      .select('user_id, full_name')
+      .in('user_id', userIds.slice(0, 300));
+    for (const p of (profiles ?? []) as Array<{ user_id: string; full_name?: string }>) {
+      if (p.full_name) nameById.set(p.user_id, p.full_name);
+    }
+  }
+  type EnrollmentRow = { course_id: string; user_id: string; role?: string | null; enrollment_status?: string | null; enrolled_at?: string | null };
+  let list = ((rows ?? []) as EnrollmentRow[]).map((r) => ({
+    course: titleById.get(r.course_id) ?? 'Unknown course',
+    student: nameById.get(r.user_id) ?? 'Unknown member',
+    role: r.role ?? 'student',
+    status: r.enrollment_status ?? null,
+    enrolled_at: r.enrolled_at ?? null,
+  }));
+  if (personName) {
+    const needle = personName.toLowerCase();
+    list = list.filter((r) => r.student.toLowerCase().includes(needle));
+  }
+  return JSON.stringify({
+    has_data: list.length > 0,
+    scope: deps.role === 'admin' ? 'all enrollments you administer' : 'only your own enrollments',
+    course: courseLabel ?? undefined,
+    enrollments: list.slice(0, 100),
+    // RLS scopes members to their own rows. An empty member result means
+    // "you are not enrolled" / "you cannot see that", never "the course is
+    // empty" — only an admin's empty result supports that claim.
+  });
 }

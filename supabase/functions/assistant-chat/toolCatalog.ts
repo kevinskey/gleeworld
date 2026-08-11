@@ -97,6 +97,49 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'list_courses',
+    description: "List the Academy courses this workspace offers — titles, codes, terms, instructors, dates. Use for 'what classes are available', 'is there a class called X', 'who teaches Y'. Optional `query` filters by title or code.",
+    parameters: {
+      type: 'object',
+      properties: { query: str("Filter text matched against course title and code, e.g. 'sight reading' or 'GW102' (optional)") },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_course_info',
+    description: "Full detail for ONE Academy course: description (where prerequisites and materials live), instructor with email/office/office-hours, term dates, meeting patterns, upcoming class sessions, location, syllabus link, enrollment. Use for 'when does X meet', 'who teaches X', 'what are the prerequisites for X', 'tell me about the X class'.",
+    parameters: {
+      type: 'object',
+      properties: { course: str("Course title or code as the user said it, e.g. 'Sight Reading' or 'GW102'") },
+      required: ['course'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_course_deadlines',
+    description: "Assignment due dates and test windows across Academy courses — 'what's due in X', 'when is the next test', 'any assignments this week'. Omit `course` to sweep every visible course. Returns each item's course, kind (assignment/test), title, due/open/close dates and points. For how a SPECIFIC STUDENT is doing on them, use get_assignments instead.",
+    parameters: {
+      type: 'object',
+      properties: { course: str('Course title or code to narrow to (optional)') },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_enrollments',
+    description: "Who is enrolled in Academy courses. 'Am I enrolled in anything?' → call with no args. 'Who is in Sight Reading?' → pass course. 'What is Maria taking?' → pass user_name. Members can only see their OWN enrollments — an empty result for a member means they are not enrolled, never that the course is empty. Admins and instructors see everyone.",
+    parameters: {
+      type: 'object',
+      properties: {
+        course: str('Course title or code (optional)'),
+        user_name: str("Member's name to filter by — admins/instructors only see results for others (optional)"),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'stop_playback',
     // "Stop the music" during live voice (2026-08-10) got "I don't have a
     // way to stop playback" — true at the time: the app owns the mini
@@ -196,12 +239,25 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'open_song',
-    description: 'Open a score from the music library in the PDF viewer. Get score_id from search_music first.',
+    description: "Open a score in the Viewer (the app's full-screen score reader) — the DEFAULT for every 'open/show/pull up <piece>' request. Get score_id from search_music first. Pass in_library=true ONLY when the user explicitly says to open it in the Music Library.",
     parameters: {
       type: 'object',
-      properties: { score_id: str('gw_sheet_music id'), title: str('Score title, for the reply') },
+      properties: {
+        score_id: str('gw_sheet_music id'),
+        title: str('Score title, for the reply'),
+        in_library: { type: 'boolean', description: 'true ONLY if the user explicitly asked for the Music Library instead of the Viewer' },
+      },
       required: ['score_id'],
     },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'close_viewer',
+    // "Close the music viewer, please" (2026-08-11) produced dead silence:
+    // the model had no tool for it and replied empty. Closing returns the
+    // user to the Music Library list.
+    description: "Close the score Viewer / music viewer and return to the Music Library. Use for 'close the viewer', 'close the score', 'get me out of this music'.",
+    parameters: { type: 'object', properties: {}, required: [] },
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
