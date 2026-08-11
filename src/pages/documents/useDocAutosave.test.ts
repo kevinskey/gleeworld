@@ -158,6 +158,52 @@ it('hasPending() is false once a drained flush() has fully settled', async () =>
   vi.useRealTimers();
 });
 
+// --- Added on second coordinator re-review: the drain fix above introduced
+// a new Critical — `pending !== null` can't tell "a genuinely new edit
+// arrived" apart from "runAttempt's catch just re-queued the failed
+// patch", so a drain chain engaged during an in-flight save that then
+// FAILS was recursing into attempt() immediately, firing a 0ms retry that
+// skipped the 4s/8s/16s backoff entirely. attempt()'s drain now recurses
+// only when the settled attempt succeeded; on failure it resolves and
+// leaves the backoff timer armed by runAttempt's catch as the sole retry.
+
+it('flush() drain does not bypass backoff when the in-flight save fails', async () => {
+  vi.useFakeTimers();
+  const attempts: Array<{ resolve: () => void; reject: (e: Error) => void }> = [];
+  const save = vi.fn(() => new Promise<void>((resolve, reject) => { attempts.push({ resolve, reject }); }));
+  const a = createAutosaver(save, 2000);
+
+  a.schedule({ title: 'A' });
+  await vi.advanceTimersByTimeAsync(2100); // debounce fires; save() #1 (A) in flight
+  expect(save).toHaveBeenCalledTimes(1);
+
+  const flushed = a.flush(); // chains onto the in-flight save via the drain path
+
+  attempts[0].reject(new Error('net')); // A fails while flush()'s chain is waiting on it
+  await flushed; // the drain resolves flush() on failure too — it does not wait for the retry
+  await vi.advanceTimersByTimeAsync(0); // let the rejection's synchronous work (re-queue, arm backoff) settle
+
+  // The failed patch is back in `pending` now (runAttempt's catch
+  // re-queues it) — the OLD, buggy drain treated any non-null `pending`
+  // as "more to send" and recursed straight into attempt() here, an
+  // immediate 0ms retry. It must not have:
+  expect(save).toHaveBeenCalledTimes(1); // still just the one attempt so far
+  expect(a.hasPending()).toBe(true); // guard stays armed — A is still unsaved
+
+  await vi.advanceTimersByTimeAsync(3900); // short of the 4s backoff
+  expect(save).toHaveBeenCalledTimes(1);
+
+  await vi.advanceTimersByTimeAsync(200); // crosses the 4s backoff mark
+  expect(save).toHaveBeenCalledTimes(2); // backoff retry fires, right on schedule
+  expect(save).toHaveBeenNthCalledWith(2, { title: 'A' }); // with the merged (re-queued) patch
+
+  attempts[1].resolve();
+  await vi.advanceTimersByTimeAsync(0);
+  expect(a.hasPending()).toBe(false);
+
+  vi.useRealTimers();
+});
+
 describe('countWords consistency (Task 5 helper, re-asserted for this task)', () => {
   it('trims and collapses whitespace', () => {
     expect(countWords('  two  words ')).toBe(2);

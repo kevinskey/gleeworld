@@ -11,6 +11,17 @@ export type AutosaveStatus = 'saving' | 'saved' | 'error';
 
 export interface Autosaver<T> {
   schedule: (patch: Partial<T>) => void;
+  /**
+   * Drains every patch scheduled up to the moment a currently-running save
+   * settles: on the SUCCESS path it recurses until nothing is pending, so
+   * a newer edit scheduled mid-save is never stranded. Contract: flush()
+   * guarantees "attempted, or the unsavedWork guard is still armed" — NOT
+   * "persisted". If a save fails, its patch is re-queued and a backoff
+   * retry is armed (never an immediate one — see `attempt()`), and flush()
+   * simply resolves once that failed attempt settles; `hasPending()` stays
+   * `true` until the backoff retry (which flush() does not wait for)
+   * eventually succeeds.
+   */
   flush: () => Promise<void>;
   /** True while there's unsaved work: a patch queued, or a save in flight. */
   hasPending: () => boolean;
@@ -36,8 +47,12 @@ export function createAutosaver<T extends object>(
   // fires while a save is already underway) awaits/reuses that SAME
   // promise instead of firing a second, overlapping `save()` call — two
   // concurrent saves could resolve out of order and let a stale write land
-  // last. `attempt()` is the only writer of this variable.
-  let inFlight: Promise<void> | null = null;
+  // last. `attempt()` is the only writer of this variable. Resolves to
+  // whether THAT attempt succeeded — the drain chain in `attempt()` needs
+  // that boolean to tell "a newer edit arrived" apart from "the catch
+  // branch just re-queued the failed patch" (both look identical as
+  // `pending !== null`).
+  let inFlight: Promise<boolean> | null = null;
 
   function clearTimer(): void {
     if (timer !== null) {
@@ -50,17 +65,19 @@ export function createAutosaver<T extends object>(
     return pending !== null || inFlight !== null;
   }
 
-  // Runs the actual save for `patch`. `inFlight` is cleared BEFORE emitting
-  // the terminal status ('saved'/'error') so a status listener that checks
-  // `hasPending()` synchronously from inside that callback sees the correct
-  // in-flight state (not "still in flight" because we haven't gotten
-  // around to clearing it yet).
-  async function runAttempt(patch: Partial<T>): Promise<void> {
+  // Runs the actual save for `patch`, resolving `true` on success / `false`
+  // on failure (never rejects — the catch handles everything). `inFlight`
+  // is cleared BEFORE emitting the terminal status ('saved'/'error') so a
+  // status listener that checks `hasPending()` synchronously from inside
+  // that callback sees the correct in-flight state (not "still in flight"
+  // because we haven't gotten around to clearing it yet).
+  async function runAttempt(patch: Partial<T>): Promise<boolean> {
     try {
       await save(patch as T);
       inFlight = null;
       backoffMs = 0;
       onStatus?.('saved');
+      return true;
     } catch {
       // Newer edits (scheduled while the failed save was in flight) win
       // over the stale failed patch for any overlapping keys.
@@ -70,6 +87,7 @@ export function createAutosaver<T extends object>(
       backoffMs = backoffMs === 0 ? BACKOFF_START_MS : Math.min(backoffMs * 2, BACKOFF_MAX_MS);
       clearTimer();
       timer = setTimeout(() => { void attempt(); }, backoffMs);
+      return false;
     }
   }
 
@@ -85,14 +103,28 @@ export function createAutosaver<T extends object>(
       // arrives up to the moment the chain finally has nothing left to
       // send, instead of returning after only the save that happened to
       // already be in flight and stranding whatever came in after it.
-      return inFlight.then(() => (pending !== null ? attempt() : undefined));
+      //
+      // Recursing must be conditioned on the settled attempt having
+      // SUCCEEDED, not just on `pending !== null` — runAttempt's catch
+      // branch re-queues the failed patch into `pending` too, so
+      // `pending !== null` is true both when a genuinely new edit arrived
+      // AND right after a failure. Recursing unconditionally would fire an
+      // immediate 0ms retry that skips straight past the 4s/8s/16s backoff
+      // `runAttempt`'s catch just armed — exactly when the backend is
+      // struggling and least able to take it. On failure this chain just
+      // resolves instead: the drain here guarantees "attempted, and
+      // hasPending() stays true so the unsavedWork guard stays armed", NOT
+      // "persisted" — the backoff timer already scheduled by the catch is
+      // the sole retry trigger from here.
+      return inFlight.then((succeeded) => (succeeded && pending !== null ? attempt() : undefined));
     }
     if (pending === null) return Promise.resolve();
     const patch = pending;
     pending = null;
     onStatus?.('saving');
-    inFlight = runAttempt(patch);
-    return inFlight;
+    const running = runAttempt(patch);
+    inFlight = running;
+    return running.then(() => undefined);
   }
 
   function schedule(patch: Partial<T>): void {
@@ -186,19 +218,23 @@ export function useDocAutosave<T extends object>(
     // hasPending() is false.
     //
     // But a *persistently failing* save is a different case: runAttempt's
-    // catch re-queues the patch and arms a backoff retry, then lets its
-    // promise resolve anyway (it never rejects) — so flush() can settle
-    // with hasPending() still true. Releasing unconditionally here would
-    // let the page close (or navigate away without warning) with real
-    // unsaved work still sitting in `pending`. So: release only if
-    // `!hasPending()`. If it's still true, deliberately LEAVE the guard
-    // armed rather than force a release — the backoff timer keeps running
-    // on its own after unmount (a setTimeout doesn't care that the
-    // component is gone), and if/when it eventually succeeds, the
-    // onStatus('saved') callback above fires again (its release logic is
-    // NOT gated on mountedRef, on purpose) and releases the guard then.
-    // Until that happens, the beforeunload warning staying armed is
-    // correct, not a leak: there genuinely is unsaved work.
+    // catch re-queues the patch and arms a BACKOFF retry (never an
+    // immediate one, even if a drain chain was mid-flight when it failed —
+    // see attempt()'s comment), then lets its promise resolve anyway (it
+    // never rejects) — so flush() can settle with hasPending() still true.
+    // This is the flush() contract documented on Autosaver.flush: it
+    // guarantees "attempted, or the guard stays armed", not "persisted".
+    // Releasing unconditionally here would let the page close (or navigate
+    // away without warning) with real unsaved work still sitting in
+    // `pending`, waiting on a backoff timer nobody's watching anymore. So:
+    // release only if `!hasPending()`. If it's still true, deliberately
+    // LEAVE the guard armed rather than force a release — the backoff
+    // timer keeps running on its own after unmount (a setTimeout doesn't
+    // care that the component is gone), and if/when it eventually
+    // succeeds, the onStatus('saved') callback above fires again (its
+    // release logic is NOT gated on mountedRef, on purpose) and releases
+    // the guard then. Until that happens, the beforeunload warning staying
+    // armed is correct, not a leak: there genuinely is unsaved work.
     void flushRef.current().finally(() => {
       if (!autosaverRef.current?.hasPending()) {
         releaseRef.current?.();
