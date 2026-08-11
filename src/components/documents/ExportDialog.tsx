@@ -85,6 +85,15 @@ export function ExportDialog({
     try {
       await flush();
       const content = getContent();
+      // `getContent()` falls back to `initialContent`, which can still be
+      // `null` in the (practically unreachable, but not impossible) case
+      // the editor ref hasn't mounted yet — opening the overlay with no
+      // content would silently render an empty paper instead of failing
+      // loudly, so bail out with a toast instead of calling `onPrint`.
+      if (content === null || content === undefined) {
+        toast.error('Could not open the print view — the document is not ready yet. Please try again.');
+        return;
+      }
       onPrint(content);
       onOpenChange(false);
     } catch (err) {

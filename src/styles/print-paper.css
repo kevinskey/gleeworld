@@ -1,6 +1,14 @@
 /* Print/PDF paper styling for the Documents word processor's PrintPaperView
- * overlay. Scoped entirely under `.print-paper*` classes so it can never
- * leak onto the rest of the app; imported by PrintPaperView.tsx ONLY.
+ * overlay. This stylesheet itself ships in DocumentEditorPage's static
+ * bundle (imported for the whole session, not just while the overlay is
+ * mounted) — it is NOT scoped to only-while-printing. Every rule here is
+ * therefore written to be inert outside `.print-paper*`/`.no-print`
+ * elements, which only exist in the DOM while PrintPaperView is mounted.
+ * The one rule that genuinely can't be class-scoped — `@page { margin: 1in
+ * }`, a document-level at-rule — is deliberately NOT here: it's injected
+ * into its own <style> element by PrintPaperView on mount and removed on
+ * unmount (see PrintPaperView.tsx), so it never leaks page margins onto
+ * unrelated print jobs for the rest of the session.
  *
  * Mirrors the same MLA9/APA7 conventions docxExport.ts encodes for the
  * .docx export (double-spacing, 0.5in first-line indent on body
@@ -8,10 +16,6 @@
  * on heading-block/title-page lines or headings) so the printed PDF and the
  * downloaded .docx read as the same paper.
  */
-
-@page {
-  margin: 1in;
-}
 
 .print-paper {
   font-family: 'Times New Roman', Times, serif;
@@ -112,6 +116,15 @@
     display: none !important;
   }
 
+  /* The overlay portals to a direct `document.body` child (see
+   * PrintPaperView.tsx), a sibling of `#root` — hiding `#root` here is what
+   * keeps the dashboard shell (sidebar, toolbar, title field, editor,
+   * sources panel) out of the printed/PDF output. `printing-paper` is
+   * added to `document.body` only while the overlay is mounted. */
+  body.printing-paper #root {
+    display: none;
+  }
+
   .print-paper-overlay {
     position: static;
     background: #fff;
@@ -119,5 +132,15 @@
 
   .print-paper {
     max-width: none;
+    /* Tailwind's px-8/py-10 utilities (applied inline on the element) would
+     * otherwise add ~1.33in of extra margin on top of the @page margin. */
+    padding: 0 !important;
+  }
+
+  /* index.css's global `a[href]::after` print rule (appends " (url)" after
+   * every link, for accessible printing of ordinary pages) would otherwise
+   * inject raw URLs into the middle of the paper's running text/citations. */
+  .print-paper-body a[href]::after {
+    content: none !important;
   }
 }

@@ -3,12 +3,26 @@
 // document (that's the whole doc-loading page's job; this just renders a
 // content snapshot the caller already has in memory).
 //
+// Rendered via `createPortal` directly into `document.body`, NOT as a plain
+// sibling inside DocumentEditorPage's own tree. DocumentEditorPage renders
+// inside DashboardShell (sidebar, toolbar, title field, editor, sources
+// panel); a same-tree overlay would still print all of that chrome — a
+// `position: fixed` div only clips it from the SCREEN, not from the print
+// engine's page flow, which walks the whole document regardless of layout.
+// Portaling to `document.body` makes the overlay a sibling of `#root`
+// (index.html's app-mount div — verify before changing if that id ever
+// moves), so `body.printing-paper #root { display: none }` (print-paper.css)
+// can hide the entire app and print only the paper. `printing-paper` is
+// added to `document.body` on mount and removed on unmount/cleanup, so a
+// crash or fast unmount can't strand the app hidden.
+//
 // Body HTML comes from TipTap's `generateHTML`, reusing the exact same
 // `documentExtensions` factory the live editor uses (DocumentEditor.tsx) —
 // citation chips and footnote-ref markers render through the same
 // getText/getIndex options as on-screen, so there's no second formatting
 // path to drift out of sync with the editor or the .docx export.
 import { useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { generateHTML, type JSONContent } from '@tiptap/core';
 import { Button } from '@/components/ui/button';
 import { formatInText, buildWorksCited } from '@/lib/documents/citationFormat';
@@ -35,12 +49,38 @@ function nonEmptyLines(...values: (string | undefined)[]): string[] {
 }
 
 export function PrintPaperView({ onClose, title, style, meta, content, sources, footnotes }: PrintPaperViewProps) {
-  // Esc closes, matching the ExportDialog it was opened from.
+  // Esc closes, matching the ExportDialog it was opened from. Attached to
+  // `window` rather than the portaled subtree, so it works regardless of
+  // where in the DOM the overlay actually lives.
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [onClose]);
+
+  // `body.printing-paper` is the hook print-paper.css's
+  // `body.printing-paper #root { display: none }` rule needs to hide the
+  // whole app during print — see the file-header comment on why a
+  // same-tree `position: fixed` overlay isn't enough. Class added/removed
+  // here (not left permanently in print-paper.css) so the app is only ever
+  // hidden while this overlay is actually mounted.
+  useEffect(() => {
+    document.body.classList.add('printing-paper');
+    return () => document.body.classList.remove('printing-paper');
+  }, []);
+
+  // `@page` is a document-level at-rule — it cannot be scoped under a class
+  // selector, so it can't live in print-paper.css without leaking 1in page
+  // margins onto every OTHER print job for the rest of the session (e.g.
+  // printing a roster or an invoice from elsewhere in the app). Instead,
+  // inject it as its own <style> element only while this overlay is
+  // mounted, and remove it on unmount/cleanup.
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = '@page { margin: 1in; }';
+    document.head.appendChild(style);
+    return () => { style.remove(); };
+  }, []);
 
   const orderedIds = useMemo(() => orderedFootnoteIds(content), [content]);
 
@@ -88,7 +128,7 @@ export function PrintPaperView({ onClose, title, style, meta, content, sources, 
   const mlaLines = style === 'mla9' ? nonEmptyLines(meta.studentName, meta.instructor, meta.course, meta.date) : [];
   const apaLines = style === 'apa7' ? nonEmptyLines(meta.studentName, meta.course, meta.instructor, meta.date) : [];
 
-  return (
+  return createPortal(
     <div className="print-paper-overlay fixed inset-0 z-50 overflow-y-auto bg-background">
       <div className="no-print sticky top-0 z-10 flex items-center justify-between border-b border-border bg-card px-4 py-2">
         <span className="text-sm font-semibold text-foreground">Print preview</span>
@@ -135,7 +175,8 @@ export function PrintPaperView({ onClose, title, style, meta, content, sources, 
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
