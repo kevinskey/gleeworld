@@ -48,11 +48,31 @@ CREATE INDEX IF NOT EXISTS gw_personal_docs_user_idx
 -- policy added alongside those grants nothing — any authenticated user
 -- could still read/write any object in 'user-files' via the pre-existing
 -- rules. Fixed by giving Documents its OWN private bucket instead, mirroring
--- 'personal-scores' (20260712120000_personal_music_library.sql): a bucket
--- rejects unauthenticated reads by default, and unlike 'user-files' it has
--- no other feature's policies to collide with. Path (bucket already scopes
--- to Documents, so no 'personal-docs/' prefix is needed on top):
+-- 'personal-scores' (20260712120000_personal_music_library.sql). Path (bucket
+-- already scopes to Documents, so no 'personal-docs/' prefix is needed on
+-- top):
 --   <user_id>/<doc_id>/<uuid>.<ext>
+--
+-- IMPORTANT — a private bucket is NOT self-isolating here, and the four
+-- policies below do not stand on their own. Two follow-up migrations are
+-- required for this to behave as written:
+--
+--   20260811233000_personal_docs_storage_exempt.sql
+--     storage.objects carries a RESTRICTIVE tenant_isolation_restrict policy
+--     that ANDs with everything below. 'personal-docs' is not on its exempt
+--     list, so every read and write would have to satisfy
+--     tenant_id = current_tenant_id() — a column the storage API stamps
+--     without the caller's tenant context, and which is meaningless for a
+--     user-scoped bucket. Without that migration, the feature does not work
+--     at all (the same failure personal-scores hit, see 20260718180000).
+--
+--   20260811233500_storage_drop_select_all_and_sensitive_personal_docs.sql
+--     'user-files' is not the only bucket "storage_select_all" applies to —
+--     that policy is `FOR SELECT TO authenticated USING (true)` over EVERY
+--     bucket, so a dedicated bucket does not escape it. It also predates and
+--     survived the 20260610200000 lockdown. That migration drops it and adds
+--     'personal-docs' to is_sensitive_bucket() so storage_auth_select
+--     requires ownership.
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('personal-docs', 'personal-docs', false)
 ON CONFLICT (id) DO NOTHING;
