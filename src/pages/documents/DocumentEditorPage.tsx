@@ -23,7 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { getDoc, saveDoc, type PersonalDoc } from '@/lib/documents/personalDocsApi';
 import { formatInText } from '@/lib/documents/citationFormat';
 import type { CitationStyle, DocFootnote, DocSource, PaperMeta } from '@/lib/documents/types';
-import { DocumentEditor, countWords } from '@/components/documents/DocumentEditor';
+import { DocumentEditor } from '@/components/documents/DocumentEditor';
 import { removeCitationsFor } from '@/components/documents/extensions/CitationChip';
 import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRef';
 import { SourcesPanel } from '@/components/documents/SourcesPanel';
@@ -46,11 +46,14 @@ type SavePatch = Partial<
 >;
 
 // Dedicated private bucket (migration: 20260811230000_personal_docs.sql) —
-// NOT the shared 'user-files' bucket, which carries pre-existing PERMISSIVE
-// policies ("storage_select_all" USING (true), blanket bucket-only
-// insert/update/delete) that would silently swallow any owner-scoped policy
-// added alongside them. Path: <user_id>/<doc_id>/<uuid>.<ext> — the bucket
-// itself is the isolation boundary, so no extra folder prefix is needed.
+// NOT the shared 'user-files' bucket, whose blanket bucket-only
+// insert/update/delete policies would silently swallow any owner-scoped
+// policy added alongside them. Isolation for this bucket comes from its own
+// owner-scoped policies plus two follow-ups: 20260811233000 (exempts it from
+// the RESTRICTIVE tenant policy, which is user-scoped-hostile) and
+// 20260811233500 (drops the platform-wide "storage_select_all"
+// `USING (true)` SELECT policy and marks this bucket sensitive).
+// Path: <user_id>/<doc_id>/<uuid>.<ext> — no extra folder prefix is needed.
 const IMAGE_UPLOAD_BUCKET = 'personal-docs';
 const IMAGE_UPLOAD_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp';
 
@@ -86,9 +89,40 @@ async function resignDocumentImages(docJson: unknown): Promise<unknown> {
   return docJson;
 }
 
+/**
+ * Route component. Deliberately does nothing but read the `:id` param and
+ * remount `DocumentEditorContent` under it.
+ *
+ * Every piece of state below — the loaded content, sources, footnotes, the
+ * open footnote panel, and crucially the autosaver's pending debounced patch
+ * — belongs to ONE document. React Router reuses the same component instance
+ * when only the param changes (/documents/a → /documents/b), so without this
+ * key the previous document's pending autosave would fire after the new
+ * document had loaded and write A's content over B. Keying by id makes that
+ * structurally impossible: the whole subtree unmounts (flushing A's pending
+ * save against A's own id, since `doSave` closed over it) and a fresh one
+ * mounts for B.
+ */
+/** Drops footnote entries whose `[n]` marker no longer appears anywhere in
+ * the document. Called only from the load path (see the comment there):
+ * doing it on every edit destroys undo. */
+function pruneOrphanFootnotes(footnotes: DocFootnote[], content: unknown): DocFootnote[] {
+  const activeIds = new Set(orderedFootnoteIds(content));
+  return footnotes.filter((f) => activeIds.has(f.id));
+}
+
+/** `1,234 words` / `1 word`, matching the count persisted to `word_count`
+ * (both come from DocumentEditor's `countWords`). */
+function wordCountLabel(count: number): string {
+  return `${count.toLocaleString()} ${count === 1 ? 'word' : 'words'}`;
+}
+
 export default function DocumentEditorPage() {
   const { id } = useParams<{ id: string }>();
+  return <DocumentEditorContent key={id ?? 'no-id'} id={id} />;
+}
 
+function DocumentEditorContent({ id }: { id: string | undefined }) {
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -98,6 +132,7 @@ export default function DocumentEditorPage() {
   const [footnotes, setFootnotes] = useState<DocFootnote[]>([]);
   const [paperMeta, setPaperMeta] = useState<PaperMeta>({});
   const [initialContent, setInitialContent] = useState<unknown>(null);
+  const [wordCount, setWordCount] = useState(0);
 
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -135,9 +170,17 @@ export default function DocumentEditorPage() {
       setTitle(doc.title);
       setStyle(doc.citation_style);
       setSources(doc.sources);
-      setFootnotes(doc.footnotes);
+      // Orphan hygiene happens HERE and nowhere else. Pruning a footnote's
+      // text the moment its marker leaves the document (i.e. in the editor's
+      // onUpdate) destroys undo: deleting the marker is one undoable step,
+      // but the text it pointed at is gone from React state by the time the
+      // user presses Ctrl-Z, so the marker comes back empty. At load time
+      // there is no undo history to break, and an orphan that survives until
+      // the next open costs a few hundred bytes in one jsonb column.
+      setFootnotes(pruneOrphanFootnotes(doc.footnotes, resolvedContent));
       setPaperMeta(doc.paper_meta ?? {});
       setInitialContent(resolvedContent);
+      setWordCount(doc.word_count ?? 0);
       setLoadState('ready');
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Failed to load this document.');
@@ -192,17 +235,18 @@ export default function DocumentEditorPage() {
     return orderedFootnoteIds(ed.getJSON()).indexOf(noteId);
   }, []);
 
-  // onUpdate: recompute footnote numbering source-of-truth (the live doc),
-  // prune any footnotes[] entry whose ref was deleted from the text, and
-  // schedule the autosave. Only actually calls setFootnotes when pruning
-  // changed something, so a plain keystroke doesn't re-identity the
-  // `footnotes` array — which would otherwise re-trigger the chip-rerender
-  // effect above on every keystroke for no reason.
-  const pruneAndSchedule = useCallback((json: unknown, wordCount: number) => {
-    const activeIds = new Set(orderedFootnoteIds(json));
-    const pruned = footnotesRef.current.filter((f) => activeIds.has(f.id));
-    if (pruned.length !== footnotesRef.current.length) setFootnotes(pruned);
-    autosaver.schedule({ content: json, word_count: wordCount, footnotes: pruned });
+  // onUpdate: keep the live word count current and schedule the autosave.
+  //
+  // It deliberately does NOT prune footnotes[] entries whose marker was just
+  // deleted. That used to happen here, and it silently destroyed undo: the
+  // marker deletion is one undoable transaction, but the note's text had
+  // already been dropped from React state (and written to the row on the next
+  // save), so Ctrl-Z restored an empty footnote. Orphans are pruned once, at
+  // load, where there is no undo history to break — see `load` above. A
+  // footnote whose text is missing still renders as `[?]`.
+  const handleEditorUpdate = useCallback((json: unknown, count: number) => {
+    setWordCount(count);
+    autosaver.schedule({ content: json, word_count: count });
   }, [autosaver]);
 
   const handleTitleChange = useCallback((next: string) => {
@@ -393,8 +437,6 @@ export default function DocumentEditorPage() {
           <ToggleGroupItem value="apa7" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">APA</ToggleGroupItem>
         </ToggleGroup>
 
-        <span className="text-xs text-muted-foreground" role="status">{statusLabel}</span>
-
         <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setExportOpen(true)}>
           Export
         </Button>
@@ -414,7 +456,7 @@ export default function DocumentEditorPage() {
         <div className="min-w-0 flex-1" ref={editorContainerRef}>
           <DocumentEditor
             content={initialContent}
-            onUpdate={pruneAndSchedule}
+            onUpdate={handleEditorUpdate}
             citationChipText={citationChipText}
             footnoteIndex={footnoteIndex}
             onCiteClick={() => setSourcesSheetOpen(true)}
@@ -422,6 +464,14 @@ export default function DocumentEditorPage() {
             onImageClick={handleImageButtonClick}
             editorRef={(editor) => { editorInstanceRef.current = editor; }}
           />
+
+          {/* Footer: live word count + save status (spec §"Editor page"). The
+              count comes straight from the editor's onUpdate, so it tracks
+              typing rather than the last persisted value. */}
+          <div className="mx-auto mt-2 flex max-w-[700px] items-center justify-between px-6">
+            <span className="text-xs text-muted-foreground">{wordCountLabel(wordCount)}</span>
+            <span className="text-xs text-muted-foreground" role="status">{statusLabel}</span>
+          </div>
 
           {openFootnoteId && (
             <div className="mx-auto mt-2 max-w-[700px]">
