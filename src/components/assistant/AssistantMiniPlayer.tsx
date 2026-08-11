@@ -41,18 +41,20 @@ function AppleMusicBody({ id, kind, artworkUrl, startPaused }: { id: string; kin
         // Restored after refresh: queue nothing yet — the play button's tap
         // re-queues and starts (the browser's required gesture).
         if (startPaused) return;
+        // Remounted mid-song (route change): the kit is already playing —
+        // adopt its state instead of re-queuing from the top.
+        const { getMusicKit } = await import('@/lib/musicKit');
+        const kit = await getMusicKit();
+        if (kit.isPlaying || kit.playbackState === 2) { setPlaying(true); return; }
         await startPlayback();
       } catch {
         if (!cancelled) setError("Couldn't start Apple Music playback.");
       }
     })();
-    return () => {
-      cancelled = true;
-      import('@/lib/musicKit')
-        .then(({ getMusicKit }) => getMusicKit())
-        .then((kit) => kit.stop())
-        .catch(() => { /* never played */ });
-    };
+    // No kit.stop() here: unmount happens on ROUTE CHANGES too (the shell
+    // remounts), and navigation must not kill the music. The provider stops
+    // MusicKit when nowPlaying is explicitly cleared.
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, kind]);
 
