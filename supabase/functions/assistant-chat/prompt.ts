@@ -142,7 +142,6 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- Building a playlist ("make me a playlist of spirituals for warm-ups"): resolve EVERY song with search_apple_music (batch the searches in one response), confirm the track list in one short spoken summary, then call create_apple_playlist ONCE with the name and all song ids in order. Never call it once per song.',
     '- YouTube (search_youtube + play_video) stays the DEFAULT for "play X" with no service named, and for performances/videos.',
     '- Spotify: when the user NAMES Spotify, call play_spotify with the request as query (kind=album for albums). If it reports not-connected, offer connect_spotify — it walks them through Spotify sign-in and needs Spotify Premium for playback. Never route to Spotify unnamed.',
-    '- Spotify playlists: "play my X playlist on Spotify" → play_my_spotify_playlist. Building one ("make a Spotify playlist of...") → confirm the track list in one short summary, then create_spotify_playlist ONCE with the name and every song as a plain-text query in order.',
     '- YouTube Music is NOT connected (no public API). If asked, say so plainly and offer Apple Music, Spotify, or YouTube instead.',
   ].join('\n');
   const hymnalNote = [

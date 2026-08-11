@@ -236,30 +236,6 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
-    name: 'create_spotify_playlist',
-    description: "Create a PRIVATE playlist on the user's connected Spotify account. Pass the song requests as plain-text `queries` (title + artist each, in order) — the client resolves and adds them, reporting any misses. One call with every song; never once per song.",
-    parameters: {
-      type: 'object',
-      properties: {
-        name: str('Playlist name the user chose'),
-        description: str('One-line description (optional)'),
-        queries: { type: 'array', items: { type: 'string' }, description: "Songs as text, e.g. 'Total Praise Richard Smallwood', in order" },
-      },
-      required: ['name'],
-    },
-    minRole: 'member', execution: 'client', confirm: false,
-  },
-  {
-    name: 'play_my_spotify_playlist',
-    description: "Play a playlist FROM THE USER'S OWN Spotify account by name — 'play my running playlist on Spotify'. Closest name match wins; plays in the floating player. Only when the user names Spotify; their Apple Music library is play_my_playlist.",
-    parameters: {
-      type: 'object',
-      properties: { name: str('The playlist name as the user said it') },
-      required: ['name'],
-    },
-    minRole: 'member', execution: 'client', confirm: false,
-  },
-  {
     name: 'stop_playback',
     // "Stop the music" during live voice (2026-08-10) got "I don't have a
     // way to stop playback" — true at the time: the app owns the mini

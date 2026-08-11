@@ -77,16 +77,12 @@ const spotifyMock = {
   connectSpotify: vi.fn(),
   searchSpotify: vi.fn(),
   playOnSpotify: vi.fn(),
-  listMyPlaylists: vi.fn(),
-  createSpotifyPlaylist: vi.fn(),
 };
 vi.mock('@/lib/spotify', () => ({
   isSpotifyConnected: (...a: unknown[]) => spotifyMock.isSpotifyConnected(...a),
   connectSpotify: (...a: unknown[]) => spotifyMock.connectSpotify(...a),
   searchSpotify: (...a: unknown[]) => spotifyMock.searchSpotify(...a),
   playOnSpotify: (...a: unknown[]) => spotifyMock.playOnSpotify(...a),
-  listMyPlaylists: (...a: unknown[]) => spotifyMock.listMyPlaylists(...a),
-  createSpotifyPlaylist: (...a: unknown[]) => spotifyMock.createSpotifyPlaylist(...a),
 }));
 
 describe('play_spotify', () => {
@@ -115,37 +111,5 @@ describe('play_spotify', () => {
     const out = await executeClientAction({ tool: 'play_spotify', args: { query: 'x' }, confirm: false });
     expect(out.ok).toBe(false);
     expect(out.message).toContain('Premium');
-  });
-});
-
-describe('spotify playlists', () => {
-  beforeEach(() => {
-    spotifyMock.isSpotifyConnected.mockReset().mockReturnValue(true);
-    spotifyMock.searchSpotify.mockReset()
-      .mockResolvedValueOnce({ uri: 'spotify:track:1', title: 'A', artist: '', artworkUrl: null })
-      .mockResolvedValueOnce(null);
-    spotifyMock.createSpotifyPlaylist.mockReset().mockResolvedValue(undefined);
-    spotifyMock.listMyPlaylists.mockReset().mockResolvedValue([
-      { id: 'x', name: 'Running Mix', uri: 'spotify:playlist:x' },
-    ]);
-    spotifyMock.playOnSpotify.mockReset().mockResolvedValue(undefined);
-  });
-
-  it('create resolves queries, reports misses honestly', async () => {
-    const out = await executeClientAction({
-      tool: 'create_spotify_playlist',
-      args: { name: 'Warm-Ups', queries: ['Total Praise', 'Unfindable Song'] },
-      confirm: false,
-    });
-    expect(out.ok).toBe(true);
-    expect(spotifyMock.createSpotifyPlaylist).toHaveBeenCalledWith('Warm-Ups', undefined, ['spotify:track:1']);
-    expect(out.message).toContain("1 couldn't be found");
-  });
-
-  it('play_my_spotify_playlist matches and plays by context uri', async () => {
-    const out = await executeClientAction({ tool: 'play_my_spotify_playlist', args: { name: 'running' }, confirm: false });
-    expect(out.ok).toBe(true);
-    expect(spotifyMock.playOnSpotify).toHaveBeenCalledWith(expect.objectContaining({ contextUri: 'spotify:playlist:x' }));
-    expect(out.spotify?.title).toBe('Running Mix');
   });
 });
