@@ -58,8 +58,16 @@ export interface DocumentExtensionOptions {
  */
 export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExtension[] {
   return [
+    // StarterKit 3.26 already bundles Link and Underline. Re-adding them
+    // alongside it registers each extension twice ("[tiptap warn] Duplicate
+    // extension names found"), and which configuration survives — including
+    // Link's href protocol validation — depends on resolution order rather
+    // than on anything written here. Turn StarterKit's copies off so the
+    // explicitly configured ones below are unambiguously the ones in effect.
     StarterKit.configure({
       heading: { levels: [1, 2, 3] },
+      link: false,
+      underline: false,
     }),
     Underline,
     Link.configure({
