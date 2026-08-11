@@ -12,7 +12,7 @@ import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
  * a subscription MusicKit falls back to previews, which is Apple's rule,
  * not ours.
  */
-function AppleMusicBody({ id, kind, artworkUrl }: { id: string; kind: 'song' | 'album' | 'playlist'; artworkUrl?: string | null }) {
+function AppleMusicBody({ id, kind, artworkUrl, startPaused }: { id: string; kind: 'song' | 'album' | 'playlist'; artworkUrl?: string | null; startPaused?: boolean }) {
   const [playing, setPlaying] = useState(false);
   const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +38,9 @@ function AppleMusicBody({ id, kind, artworkUrl }: { id: string; kind: 'song' | '
         const authed = await isAppleMusicAuthorized().catch(() => false);
         if (cancelled) return;
         if (!authed) { setNeedsAuth(true); return; }
+        // Restored after refresh: queue nothing yet — the play button's tap
+        // re-queues and starts (the browser's required gesture).
+        if (startPaused) return;
         await startPlayback();
       } catch {
         if (!cancelled) setError("Couldn't start Apple Music playback.");
@@ -71,7 +74,14 @@ function AppleMusicBody({ id, kind, artworkUrl }: { id: string; kind: 'song' | '
       const { getMusicKit } = await import('@/lib/musicKit');
       const kit = await getMusicKit();
       if (playing) { kit.pause(); setPlaying(false); }
-      else { await kit.play(); setPlaying(true); }
+      else {
+        // After a refresh the queue is empty — set it before playing.
+        const q = await kit.queue;
+        if (!q || (q.items ?? q._queueItems ?? []).length === 0) {
+          await kit.setQueue(kind === 'album' ? { album: id } : kind === 'playlist' ? { playlist: id } : { song: id });
+        }
+        await kit.play(); setPlaying(true);
+      }
     } catch { /* keep the button state honest by not flipping it */ }
   };
 
@@ -152,7 +162,7 @@ export function AssistantMiniPlayer() {
   ) : null;
 
   if (!assistant?.nowPlaying) return chip;
-  const { videoId, title, channel, source, appleId, appleKind, artworkUrl } = assistant.nowPlaying;
+  const { videoId, title, channel, source, appleId, appleKind, artworkUrl, resumePaused } = assistant.nowPlaying;
   const isApple = source === 'apple' && !!appleId;
   // Older callers set only videoId; a malformed apple entry with no id
   // renders nothing rather than an empty shell.
@@ -220,13 +230,13 @@ export function AssistantMiniPlayer() {
         </button>
       </div>
       {isApple ? (
-        <AppleMusicBody id={appleId!} kind={appleKind ?? 'song'} artworkUrl={artworkUrl} />
+        <AppleMusicBody id={appleId!} kind={appleKind ?? 'song'} artworkUrl={artworkUrl} startPaused={resumePaused} />
       ) : (
         <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
           <iframe
             // youtube-nocookie so a rehearsal does not quietly build an ad
             // profile. autoplay because the user asked for it to play.
-            src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId!)}?autoplay=1&rel=0`}
+            src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId!)}?autoplay=${resumePaused ? 0 : 1}&rel=0`}
             title={title || 'Video'}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
