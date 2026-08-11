@@ -14,21 +14,23 @@ import { Superscript } from '@tiptap/extension-superscript';
 import { Highlight } from '@tiptap/extension-highlight';
 import { CharacterCount } from '@tiptap/extensions';
 import { DocToolbar } from './DocToolbar';
+import { CitationChip } from './extensions/CitationChip';
 
 /**
- * Options for `documentExtensions`. Empty for now — Task 6 (CitationChip) and
- * Task 7 (FootnoteRef) will extend this with the data those marks/nodes need
- * (e.g. a source lookup) without changing this factory's call sites.
+ * Options for `documentExtensions`. Task 7 (FootnoteRef) will extend this
+ * further with the data that node needs, without changing this factory's
+ * call sites.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export interface DocumentExtensionOptions {}
+export interface DocumentExtensionOptions {
+  getCitationText?: (sourceId: string, locator?: string) => string;
+}
 
 /**
  * Builds the shared TipTap extension array for the Documents editor. Kept as
  * a factory (rather than inlined in `useEditor`) so later tasks can append
  * `CitationChip` / `FootnoteRef` here instead of touching DocumentEditor.
  */
-export function documentExtensions(_opts: DocumentExtensionOptions = {}): AnyExtension[] {
+export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExtension[] {
   return [
     StarterKit.configure({
       heading: { levels: [1, 2, 3] },
@@ -48,7 +50,8 @@ export function documentExtensions(_opts: DocumentExtensionOptions = {}): AnyExt
     Superscript,
     Highlight,
     CharacterCount,
-    // Tasks 6-7 append CitationChip and FootnoteRef here.
+    CitationChip.configure({ getText: opts.getCitationText ?? (() => '[citation]') }),
+    // Task 7 appends FootnoteRef here.
   ];
 }
 
@@ -61,8 +64,7 @@ export function countWords(text: string): number {
 export interface DocumentEditorProps {
   content: unknown; // TipTap JSON
   onUpdate: (json: unknown, wordCount: number) => void;
-  // Task 6 wires this into CitationChip's node view to render "(Author, Year)"-
-  // style chip labels; unused until then.
+  // Renders "(Author, Year)"-style chip labels inside CitationChip nodes.
   citationChipText: (sourceId: string, locator?: string) => string;
   onCiteClick: () => void;
   onFootnoteClick: () => void;
@@ -72,12 +74,13 @@ export interface DocumentEditorProps {
 export function DocumentEditor({
   content,
   onUpdate,
+  citationChipText,
   onCiteClick,
   onFootnoteClick,
   editorRef,
 }: DocumentEditorProps) {
   const editor = useEditor({
-    extensions: documentExtensions(),
+    extensions: documentExtensions({ getCitationText: citationChipText }),
     // `content` is typed `unknown` on the public props so callers don't need
     // to import TipTap's JSON type; TipTap's own Content union is what
     // useEditor actually wants.
