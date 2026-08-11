@@ -36,3 +36,43 @@ CREATE POLICY gw_personal_docs_delete ON public.gw_personal_docs
 
 CREATE INDEX IF NOT EXISTS gw_personal_docs_user_idx
   ON public.gw_personal_docs (user_id, updated_at DESC);
+
+-- Task 9: in-document image uploads. Reuses the existing 'user-files' bucket
+-- (already public=true, per src/utils/storage.ts PRIVATE_BUCKETS this app
+-- still signs URLs for it) rather than minting a new bucket, following the
+-- 'dashboard-backgrounds' / 'radio-uploads' convention of scoping by a
+-- literal first folder segment. Path: personal-docs/<user_id>/<doc_id>/<uuid>.<ext>.
+--
+-- Deliberately owner-scoped (folder[2] = auth.uid()) for every verb, NOT the
+-- broad "authenticated can view all" pattern those other folders use —
+-- that pattern is the known cross-tenant storage read hole (see
+-- reference_storage_auth_select_cross_tenant memory note). Anyone signed in
+-- who isn't the doc's owner gets no access to these objects at all.
+DROP POLICY IF EXISTS personal_docs_images_select ON storage.objects;
+CREATE POLICY personal_docs_images_select ON storage.objects
+  FOR SELECT USING (
+    bucket_id = 'user-files'
+    AND (storage.foldername(name))[1] = 'personal-docs'
+    AND (storage.foldername(name))[2] = auth.uid()::text
+  );
+DROP POLICY IF EXISTS personal_docs_images_insert ON storage.objects;
+CREATE POLICY personal_docs_images_insert ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'user-files'
+    AND (storage.foldername(name))[1] = 'personal-docs'
+    AND (storage.foldername(name))[2] = auth.uid()::text
+  );
+DROP POLICY IF EXISTS personal_docs_images_update ON storage.objects;
+CREATE POLICY personal_docs_images_update ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'user-files'
+    AND (storage.foldername(name))[1] = 'personal-docs'
+    AND (storage.foldername(name))[2] = auth.uid()::text
+  );
+DROP POLICY IF EXISTS personal_docs_images_delete ON storage.objects;
+CREATE POLICY personal_docs_images_delete ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'user-files'
+    AND (storage.foldername(name))[1] = 'personal-docs'
+    AND (storage.foldername(name))[2] = auth.uid()::text
+  );

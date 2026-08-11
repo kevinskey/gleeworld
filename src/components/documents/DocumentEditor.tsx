@@ -73,6 +73,7 @@ export interface DocumentEditorProps {
   footnoteIndex?: (noteId: string) => number;
   onCiteClick: () => void;
   onFootnoteClick: () => void;
+  onImageClick: () => void;
   editorRef?: (editor: Editor | null) => void;
 }
 
@@ -83,6 +84,7 @@ export function DocumentEditor({
   footnoteIndex,
   onCiteClick,
   onFootnoteClick,
+  onImageClick,
   editorRef,
 }: DocumentEditorProps) {
   const editor = useEditor({
@@ -110,7 +112,7 @@ export function DocumentEditor({
 
   return (
     <div className="flex flex-col">
-      <DocToolbar editor={editor} onCiteClick={onCiteClick} onFootnoteClick={onFootnoteClick} />
+      <DocToolbar editor={editor} onCiteClick={onCiteClick} onFootnoteClick={onFootnoteClick} onImageClick={onImageClick} />
       <div className="mx-auto max-w-[700px] px-6 py-10 bg-card rounded-xl">
         <EditorContent editor={editor} />
       </div>

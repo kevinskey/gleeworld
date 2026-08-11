@@ -46,9 +46,10 @@ interface DocToolbarProps {
   editor: Editor;
   onCiteClick: () => void;
   onFootnoteClick: () => void;
+  onImageClick: () => void;
 }
 
-export function DocToolbar({ editor, onCiteClick, onFootnoteClick }: DocToolbarProps) {
+export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick }: DocToolbarProps) {
   const addLink = () => {
     const url = window.prompt('Link URL (https://…)', editor.getAttributes('link').href || '');
     if (url === null) return;
@@ -103,7 +104,7 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick }: DocToolbarP
       >
         <TableIcon className="w-4 h-4" />
       </ToolbarButton>
-      <ToolbarButton title="Insert image (coming soon)" disabled onClick={() => {}}>
+      <ToolbarButton title="Insert image" onClick={onImageClick}>
         <ImageIcon className="w-4 h-4" />
       </ToolbarButton>
       <div className="w-px h-5 bg-border mx-1" />
