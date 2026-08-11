@@ -123,6 +123,8 @@ const VOICE_RESOLVE_TIMEOUT_MS = 2500;
  */
 const CAPTION_FALLBACK_MS = 8000;
 
+let liveNowPlaying: NowPlaying | null = null;
+
 export const AssistantProvider = ({ children, initialSheetOpen = false }: { children: ReactNode; initialSheetOpen?: boolean }) => {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -170,7 +172,11 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   // forbid audio resuming without a gesture after a reload, so the popout
   // comes back PAUSED with resumePaused set — its play button is the tap.
   const NOW_PLAYING_KEY = 'gw-assistant-now-playing';
+  // Module-scope survivor: remounts of this provider (route changes swap
+  // DashboardShell instances) keep the SAME page-load state — only a real
+  // refresh goes to sessionStorage and comes back paused.
   const [nowPlaying, setNowPlayingState] = useState<NowPlaying | null>(() => {
+    if (liveNowPlaying) return liveNowPlaying;
     try {
       const raw = sessionStorage.getItem(NOW_PLAYING_KEY);
       if (!raw) return null;
@@ -180,6 +186,13 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   });
   const setNowPlaying = useCallback((v: NowPlaying | null) => {
     setNowPlayingState(v);
+    liveNowPlaying = v;
+    // Explicitly cleared (X button / stop_playback): silence MusicKit here,
+    // in the provider — the popout's unmount is NOT a stop signal, because
+    // route changes remount it while the music should keep going.
+    if (v === null) {
+      import('@/lib/musicKit').then(({ getMusicKit }) => getMusicKit()).then((kit) => kit.stop()).catch(() => { /* never loaded */ });
+    }
     try {
       if (v) sessionStorage.setItem(NOW_PLAYING_KEY, JSON.stringify(v));
       else sessionStorage.removeItem(NOW_PLAYING_KEY);
