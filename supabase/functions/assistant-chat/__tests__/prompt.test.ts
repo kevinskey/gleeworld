@@ -214,3 +214,15 @@ describe('apple music playlists briefing', () => {
     expect(p).toMatch(/ONCE with the name and all song ids/);
   });
 });
+
+describe('scheduled playlists briefing', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'admin' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-11T17:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('routes event music through schedule_event_playlist and sets the one-tap expectation', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('schedule_event_playlist');
+    expect(p).toMatch(/one tap/);
+  });
+});

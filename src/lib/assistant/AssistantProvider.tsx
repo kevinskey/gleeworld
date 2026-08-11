@@ -55,6 +55,12 @@ export interface AssistantContextValue {
   /** Tenant-configured assistant voice from Workspace Settings → Branding.
    *  Null while loading, or if the tenant hasn't picked one (app default). */
   voiceId: string | null;
+  /** A playlist scheduled on a calendar event that just started: the
+   *  one-tap offer. Browsers cannot start audio unattended, so the tap IS
+   *  the schedule firing. */
+  scheduledPlay: { eventTitle: string; label: string } | null;
+  acceptScheduledPlay: () => void;
+  dismissScheduledPlay: () => void;
   /** The user's personal name for the assistant (gw_profiles.assistant_name,
    *  per USER across tenants). Null = default "GleeWorld Assistant". Set by
    *  telling the assistant "I'll call you Ruby" (set_assistant_name tool);
@@ -157,6 +163,49 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
    * playing over it. Anything spoken is cut the moment a video appears.
    */
   const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
+  /** Event-scheduled playlist offer. Polls once a minute for events that
+   *  started in the last 20 minutes carrying assistant_playlist. Only the
+   *  two playback tools may run from DB data — anything else is ignored. */
+  const [scheduledPlay, setScheduledPlay] = useState<{ eventId: string; eventTitle: string; label: string; action: AssistantAction } | null>(null);
+  useEffect(() => {
+    let stopped = false;
+    const SEEN_KEY = 'gw-assistant-sched-seen';
+    const ALLOWED = ['play_my_playlist', 'play_apple_music'];
+    const check = async () => {
+      try {
+        const since = new Date(Date.now() - 20 * 60000).toISOString();
+        const until = new Date(Date.now() + 60000).toISOString();
+        const { data } = await supabase
+          .from('gw_events')
+          .select('id, title, start_date, assistant_playlist')
+          .gte('start_date', since)
+          .lte('start_date', until)
+          .not('assistant_playlist', 'is', null)
+          .limit(5);
+        if (stopped || !data?.length) return;
+        let seen: string[] = [];
+        try { seen = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '[]'); } catch { /* fresh */ }
+        const ev = (data as Array<{ id: string; title?: string; assistant_playlist?: { tool?: string; args?: Record<string, unknown>; label?: string } }>)
+          .find((e) => !seen.includes(e.id) && e.assistant_playlist?.tool && ALLOWED.includes(e.assistant_playlist.tool));
+        if (!ev) return;
+        setScheduledPlay({
+          eventId: ev.id,
+          eventTitle: ev.title ?? 'your event',
+          label: ev.assistant_playlist!.label ?? 'Music',
+          action: { tool: ev.assistant_playlist!.tool!, args: ev.assistant_playlist!.args ?? {}, confirm: false },
+        });
+      } catch { /* offline — try again next tick */ }
+    };
+    check();
+    const timer = setInterval(check, 60000);
+    return () => { stopped = true; clearInterval(timer); };
+  }, []);
+  const markScheduledSeen = useCallback((eventId: string) => {
+    try {
+      const seen: string[] = JSON.parse(localStorage.getItem('gw-assistant-sched-seen') ?? '[]');
+      localStorage.setItem('gw-assistant-sched-seen', JSON.stringify([...seen.slice(-40), eventId]));
+    } catch { /* best effort */ }
+  }, []);
 
 
   /** Thread used by spoken questions, so a follow-up keeps its context.
@@ -826,6 +875,19 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     if (m) stopSpeakingNow();
   }, [muted, stopSpeakingNow]);
 
+  const acceptScheduledPlay = useCallback(() => {
+    if (!scheduledPlay) return;
+    markScheduledSeen(scheduledPlay.eventId);
+    const action = scheduledPlay.action;
+    setScheduledPlay(null);
+    void runAction(crypto.randomUUID(), action);
+  }, [scheduledPlay, markScheduledSeen, runAction]);
+  const dismissScheduledPlay = useCallback(() => {
+    if (!scheduledPlay) return;
+    markScheduledSeen(scheduledPlay.eventId);
+    setScheduledPlay(null);
+  }, [scheduledPlay, markScheduledSeen]);
+
   return (
     <AssistantContext.Provider value={{
       state, send, runAction, cancelAction,
@@ -837,6 +899,8 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       videoRoom, setVideoRoom,
       resultsPanel, setResultsPanel,
       nowPlaying, setNowPlaying,
+      scheduledPlay: scheduledPlay ? { eventTitle: scheduledPlay.eventTitle, label: scheduledPlay.label } : null,
+      acceptScheduledPlay, dismissScheduledPlay,
       captionReply,
       voiceId,
       assistantName: profile?.assistant_name?.trim() || null,
