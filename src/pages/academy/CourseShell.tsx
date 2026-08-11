@@ -312,8 +312,8 @@ export default function CourseShell() {
                   onClick={() => switchTab(key)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors border-l-2 ${
                     active
-                      ? "bg-slate-50 text-slate-900 font-semibold border-l-sky-600"
-                      : "text-slate-700 hover:bg-slate-50 border-l-transparent"
+                      ? "bg-muted text-[var(--tint)] font-semibold border-l-[var(--tint)]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted border-l-transparent"
                   }`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
@@ -332,8 +332,8 @@ export default function CourseShell() {
                   onClick={() => switchTab(key)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors border-l-2 ${
                     active
-                      ? "bg-slate-50 text-slate-900 font-semibold border-l-sky-600"
-                      : "text-slate-700 hover:bg-slate-50 border-l-transparent"
+                      ? "bg-muted text-[var(--tint)] font-semibold border-l-[var(--tint)]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted border-l-transparent"
                   }`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
@@ -346,7 +346,7 @@ export default function CourseShell() {
           {/* Quick action — Rehearsal tonight */}
           <button
             onClick={() => navigate(`/academy/${code}/rehearsal-today`)}
-            className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-card hover:bg-accent hover:text-accent-foreground text-foreground border border-border text-sm font-semibold transition-colors"
+            className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-[var(--tint)] text-[var(--tint-contrast)] hover:opacity-90 text-sm font-semibold transition-opacity"
           >
             <Zap className="w-4 h-4" />
             Rehearsal tonight
@@ -356,7 +356,7 @@ export default function CourseShell() {
             <>
               <button
                 onClick={() => navigate('/academy/grading')}
-                className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-card hover:bg-accent hover:text-accent-foreground text-foreground border border-border text-sm font-semibold transition-colors"
+                className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-card text-[var(--tint)] border border-[var(--tint)] hover:bg-[var(--tint)] hover:text-[var(--tint-contrast)] text-sm font-semibold transition-colors"
               >
                 <FileText className="w-4 h-4" />
                 Grading queue
@@ -1949,15 +1949,15 @@ function PeopleTab({ course, canEdit }: TabProps) {
         title="People"
         icon={<Users className="w-4 h-4" />}
         action={canEdit ? (
-          <Button size="sm" variant="outline" onClick={() => setInviteOpen((v) => !v)}>
+          <Button size="sm" onClick={() => setInviteOpen((v) => !v)}>
             <Plus className="w-4 h-4 mr-1.5" />
             Enroll students
           </Button>
         ) : null}
       >
         {inviteOpen && (
-          <div className="mb-5 border border-slate-200 rounded-lg p-4 bg-slate-50">
-            <p className="text-xs text-slate-600 mb-2">
+          <div className="mb-5 border border-border rounded-lg p-4 bg-muted">
+            <p className="text-xs text-muted-foreground mb-2">
               Paste student emails — one per line or comma-separated. New emails get an account + sign-in link emailed to them automatically.
             </p>
             <Textarea
@@ -1968,8 +1968,8 @@ function PeopleTab({ course, canEdit }: TabProps) {
               className="text-sm bg-white"
             />
             <div className="mt-3 flex gap-2 justify-end">
-              <Button size="sm" variant="ghost" onClick={() => setInviteOpen(false)} className="text-slate-700">Cancel</Button>
-              <Button size="sm" onClick={inviteByEmail} disabled={inviting} className="bg-sky-600 hover:bg-sky-500 text-white">
+              <Button size="sm" variant="ghost" onClick={() => setInviteOpen(false)}>Cancel</Button>
+              <Button size="sm" onClick={inviteByEmail} disabled={inviting}>
                 {inviting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Send className="w-4 h-4 mr-1.5" />}
                 Send invites
               </Button>
@@ -2084,7 +2084,7 @@ function PeopleList({ rows, canDrillIn, onSelect, cohortBadges, courseId, canRes
                 ))}
               </div>
             </div>
-            <Badge variant="outline" className="text-xs">{r.role}</Badge>
+            <Badge variant="outline" className="text-xs border-[var(--tint)] text-[var(--tint)]">{r.role}</Badge>
             {canResend && r.email && courseId && (
               <ResendInviteButton email={r.email} courseId={courseId} />
             )}
@@ -2161,7 +2161,7 @@ function RemoveStudentButton({
         }
       }}
       disabled={busy}
-      className="h-7 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 shrink-0"
+      className="h-7 px-2 text-xs text-destructive hover:text-destructive shrink-0"
       title={`Remove ${fullName || email || 'student'} from this class`}
     >
       {busy
@@ -2197,7 +2197,7 @@ function ResendInviteButton({ email, courseId }: { email: string; courseId: stri
         }
       }}
       disabled={busy}
-      className="h-7 px-2 text-xs text-slate-600 hover:text-slate-900 shrink-0"
+      className="h-7 px-2 text-xs shrink-0"
       title={`Resend invite to ${email}`}
     >
       {busy
@@ -2239,7 +2239,6 @@ function AttendanceTab({ course, canEdit }: TabProps) {
         </div>
         <Button
           size="sm"
-          className="bg-amber-600 hover:bg-amber-500 text-white"
           onClick={() => navigate(`/academy/${course.course_code.toLowerCase().replace(/\s+/g, "-")}/rehearsal-today`)}
         >
           <Zap className="w-4 h-4 mr-1.5" />
