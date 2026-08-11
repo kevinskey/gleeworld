@@ -165,3 +165,22 @@ describe('hymnal numbers briefing', () => {
     expect(buildSystemPrompt(ctx)).toMatch(/NEVER state a hymn number from memory/);
   });
 });
+
+describe('personal assistant name', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-11T13:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('identifies as the user-chosen name when one is set', () => {
+    const p = buildSystemPrompt({ ...ctx, assistantName: 'Ruby' });
+    expect(p).toContain('You are Ruby');
+    expect(p).not.toMatch(/^You are the GleeWorld Assistant/);
+  });
+  it('defaults to the GleeWorld Assistant identity', () => {
+    expect(buildSystemPrompt(ctx)).toContain('You are the GleeWorld Assistant');
+  });
+  it('routes renames through set_assistant_name in both modes', () => {
+    expect(buildSystemPrompt(ctx)).toContain('set_assistant_name');
+    expect(buildSystemPrompt({ ...ctx, assistantName: 'Ruby' })).toContain('set_assistant_name');
+  });
+});

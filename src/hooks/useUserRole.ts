@@ -14,6 +14,8 @@ interface UserProfile {
   is_exec_board?: boolean | null;
   is_partner?: boolean | null;
   verified?: boolean;
+  /** The user's personal name for the assistant — per user, not per tenant. */
+  assistant_name?: string | null;
 }
 
 // gw_tenant_members.role for the CURRENT tenant (x-tenant-slug aware). A
@@ -48,7 +50,7 @@ export const useUserRole = () => {
         const [profileResult, appRolesResult, memberRoleResult] = await Promise.all([
           supabase
             .from('gw_profiles')
-            .select('id, user_id, email, role, full_name, is_admin, is_super_admin, is_exec_board, verified')
+            .select('id, user_id, email, role, full_name, is_admin, is_super_admin, is_exec_board, verified, assistant_name')
             .eq('user_id', user.id)
             .maybeSingle(),
           supabase

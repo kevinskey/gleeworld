@@ -97,6 +97,19 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'set_assistant_name',
+    description: "Rename the assistant for THIS user (personal, follows them across workspaces). Use when the user names you — 'I'll call you Ruby', 'change your name to Ada', 'go back to your normal name' (pass clear=true). Takes effect immediately.",
+    parameters: {
+      type: 'object',
+      properties: {
+        name: str('The new name the user chose, e.g. "Ruby"'),
+        clear: { type: 'boolean', description: 'true to remove the custom name and return to the default' },
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'lookup_hymn',
     description: "Hymnal number lookup across the loaded hymnal indexes (Lead Me Guide Me 2nd ed. 'LMGM II', Gather Comprehensive 'Gather', Baptist Hymnal 2008). Use for 'what number is <hymn>', picking hymns while planning a liturgy, or reverse lookup ('what is 457 in LMGM'). Pass `query` (title, first line, or tune name), and/or `number` for reverse lookup; `hymnal` narrows to one book. NEVER state a hymn number from memory — only from this tool.",
     parameters: {

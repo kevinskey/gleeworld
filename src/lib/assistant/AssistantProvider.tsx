@@ -48,6 +48,11 @@ export interface AssistantContextValue {
   /** Tenant-configured assistant voice from Workspace Settings → Branding.
    *  Null while loading, or if the tenant hasn't picked one (app default). */
   voiceId: string | null;
+  /** The user's personal name for the assistant (gw_profiles.assistant_name,
+   *  per USER across tenants). Null = default "GleeWorld Assistant". Set by
+   *  telling the assistant "I'll call you Ruby" (set_assistant_name tool);
+   *  surfaces in the sheet header and the live-voice agent identity. */
+  assistantName: string | null;
   /** Live conversation mode (ElevenLabs WebRTC agent): full-duplex voice
    *  with real barge-in — the user's VOICE interrupts the assistant, no
    *  tapping required. 'connecting' while the session is being set up. */
@@ -482,7 +487,12 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         // and ElevenLabs substitutes this before speaking, so the greeting is
         // personal without a round trip. A blank name would leave a dangling
         // "Hi," so it falls back to "there".
-        dynamicVariables: { user_first_name: firstName || 'there' },
+        dynamicVariables: {
+          user_first_name: firstName || 'there',
+          // The user's personal name for her. The agent prompt reads
+          // {{assistant_name}}; the platform default covers old bundles.
+          assistant_name: profile?.assistant_name?.trim() || 'the GleeWorld Assistant',
+        },
         clientTools: {
           /**
            * Everything the typed assistant can do, spoken.
@@ -667,7 +677,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     } finally {
       liveConnectingRef.current = false;
     }
-  }, [navigate, stopSpeakingNow, showResult, failVisibly, profile?.full_name, getFreshGeo, runAction, setSheetOpen]);
+  }, [navigate, stopSpeakingNow, showResult, failVisibly, profile?.full_name, profile?.assistant_name, getFreshGeo, runAction, setSheetOpen]);
 
   // End the live session if the provider ever unmounts (sign-out, tenant
   // switch) — a dangling WebRTC session would keep the mic open.
@@ -809,6 +819,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       nowPlaying, setNowPlaying,
       captionReply,
       voiceId,
+      assistantName: profile?.assistant_name?.trim() || null,
     }}>
       {children}
     </AssistantContext.Provider>

@@ -196,3 +196,46 @@ describe('lookup_hymn', () => {
     expect(JSON.parse(out.replyJson).error).toBeTruthy();
   });
 });
+
+describe('set_assistant_name', () => {
+  function profileUpdateStub(updated: Array<Record<string, unknown>>) {
+    const calls: Record<string, unknown>[] = [];
+    return {
+      calls,
+      supabase: {
+        from: () => {
+          const builder: any = {};
+          builder.update = (patch: Record<string, unknown>) => { calls.push(patch); return builder; };
+          builder.eq = () => builder;
+          builder.select = () => builder;
+          builder.then = (resolve: (v: unknown) => void) => resolve({ data: updated, error: null });
+          return builder;
+        },
+      } as any,
+    };
+  }
+
+  it('saves the trimmed name on the caller row and tells her to greet it', async () => {
+    const stub = profileUpdateStub([{ assistant_name: 'Ruby' }]);
+    const out = await executeServerTool('set_assistant_name', { name: '  Ruby  ' },
+      { supabase: stub.supabase, userId: 'u1' });
+    const parsed = JSON.parse(out.replyJson);
+    expect(parsed.ok).toBe(true);
+    expect(parsed.assistant_name).toBe('Ruby');
+    expect(stub.calls[0]).toEqual({ assistant_name: 'Ruby' });
+  });
+
+  it('clear=true (and "default") resets to null', async () => {
+    const stub = profileUpdateStub([{ assistant_name: null }]);
+    await executeServerTool('set_assistant_name', { clear: true }, { supabase: stub.supabase, userId: 'u1' });
+    await executeServerTool('set_assistant_name', { name: 'default' }, { supabase: stub.supabase, userId: 'u1' });
+    expect(stub.calls).toEqual([{ assistant_name: null }, { assistant_name: null }]);
+  });
+
+  it('a write that matched no row reports failure, not success', async () => {
+    const stub = profileUpdateStub([]);
+    const out = await executeServerTool('set_assistant_name', { name: 'Ruby' },
+      { supabase: stub.supabase, userId: 'u1' });
+    expect(JSON.parse(out.replyJson).error).toBeTruthy();
+  });
+});

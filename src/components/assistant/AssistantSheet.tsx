@@ -30,7 +30,11 @@ export const AssistantSheet = () => {
     speaking, stopSpeaking,
     videoRoom, setVideoRoom,
     resultsPanel, setResultsPanel,
+    assistantName,
   } = useAssistant();
+  // The user's own name for her, everywhere the header identifies the
+  // assistant. Per user, not per tenant.
+  const displayName = assistantName || 'GleeWorld Assistant';
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -69,7 +73,7 @@ export const AssistantSheet = () => {
             />
           )}
           <SheetHeader className="px-4 py-2.5 border-b flex-row items-center justify-between space-y-0">
-            <SheetTitle className="text-sm font-semibold">GleeWorld Assistant</SheetTitle>
+            <SheetTitle className="text-sm font-semibold">{displayName}</SheetTitle>
             <SheetDescription className="sr-only">{ASSISTANT_DESCRIPTION}</SheetDescription>
             {/* Muted gets a persistent destructive tint so the state reads at
                 a glance. Unmuted hover pairs bg-accent WITH accent-foreground —
@@ -159,13 +163,13 @@ export const AssistantSheet = () => {
             resultsPanel ? 'w-full max-w-4xl' : 'w-full max-w-2xl',
           )}
         >
-          <DialogTitle className="sr-only">GleeWorld Assistant</DialogTitle>
+          <DialogTitle className="sr-only">{displayName}</DialogTitle>
           <DialogDescription className="sr-only">{ASSISTANT_DESCRIPTION}</DialogDescription>
 
           {/* Compact header — mute + minimize live here so the input row
               stays clean and centered on the mic/text/send trio. */}
           <div className="flex items-center justify-between px-3 py-2 border-b">
-            <span className="text-xs font-medium text-muted-foreground px-1">GleeWorld Assistant</span>
+            <span className="text-xs font-medium text-muted-foreground px-1">{displayName}</span>
             <div className="flex items-center gap-1">
               {/* Same muted-state treatment as the sheet header above. */}
               <button
