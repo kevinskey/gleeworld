@@ -100,6 +100,64 @@ it('flush() awaits an in-flight attempt instead of starting a second overlapping
   vi.useRealTimers();
 });
 
+// --- Added on coordinator re-review: the fix above (flush() reusing an
+// in-flight promise) had a data-loss gap — it returned the IN-FLIGHT
+// promise as-is even when a newer edit had been scheduled while that save
+// was running, so flush() (title blur, unmount) could resolve without ever
+// sending that newer edit. attempt() now drains: when it reuses an
+// in-flight promise, it chains a check of `pending` once that promise
+// settles and recurses if there's more to send.
+
+it('flush() drains a newer edit scheduled while a save is in flight — both patches persisted', async () => {
+  vi.useFakeTimers();
+  const resolvers: Array<() => void> = [];
+  const save = vi.fn(() => new Promise<void>((resolve) => { resolvers.push(resolve); }));
+  const a = createAutosaver(save, 2000);
+
+  a.schedule({ title: 'A' });
+  await vi.advanceTimersByTimeAsync(2100); // debounce fires; save() #1 (A) in flight
+  expect(save).toHaveBeenCalledTimes(1);
+  expect(save).toHaveBeenNthCalledWith(1, { title: 'A' });
+
+  a.schedule({ title: 'B' }); // edit lands mid-save — the bug stranded this
+
+  const flushed = a.flush(); // must not resolve until B is ALSO saved
+
+  resolvers[0](); // let save #1 (A) resolve
+  await vi.advanceTimersByTimeAsync(0); // drain notices pending=B, starts save #2 with B
+
+  expect(save).toHaveBeenCalledTimes(2); // both A and B were sent, not just A
+  expect(save).toHaveBeenNthCalledWith(2, { title: 'B' });
+
+  resolvers[1](); // let save #2 (B) resolve — only now can flush() settle
+  await flushed;
+
+  expect(save).toHaveBeenCalledTimes(2); // no stray extra save beyond A then B
+
+  vi.useRealTimers();
+});
+
+it('hasPending() is false once a drained flush() has fully settled', async () => {
+  vi.useFakeTimers();
+  const resolvers: Array<() => void> = [];
+  const save = vi.fn(() => new Promise<void>((resolve) => { resolvers.push(resolve); }));
+  const a = createAutosaver(save, 2000);
+
+  a.schedule({ title: 'A' });
+  await vi.advanceTimersByTimeAsync(2100); // save #1 (A) in flight
+  a.schedule({ title: 'B' }); // edit lands mid-save
+
+  const flushed = a.flush();
+  resolvers[0](); // A resolves
+  await vi.advanceTimersByTimeAsync(0); // drain starts save #2 with B
+  resolvers[1](); // B resolves
+  await flushed;
+
+  expect(a.hasPending()).toBe(false);
+
+  vi.useRealTimers();
+});
+
 describe('countWords consistency (Task 5 helper, re-asserted for this task)', () => {
   it('trims and collapses whitespace', () => {
     expect(countWords('  two  words ')).toBe(2);

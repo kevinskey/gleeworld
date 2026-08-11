@@ -74,7 +74,19 @@ export function createAutosaver<T extends object>(
   }
 
   function attempt(): Promise<void> {
-    if (inFlight) return inFlight; // already running — reuse, don't overlap
+    if (inFlight) {
+      // A save is already running — don't fire a second, overlapping one.
+      // But don't just hand back that promise as-is either: if a newer
+      // edit lands (schedule() sets `pending`) while it's running, the
+      // caller (flush(), typically from blur/unmount) needs THAT saved
+      // too, not just whatever was in flight when they called. Chain: once
+      // the running save settles, check `pending` again and recurse —
+      // this "drains" the queue so flush()/unmount await every edit that
+      // arrives up to the moment the chain finally has nothing left to
+      // send, instead of returning after only the save that happened to
+      // already be in flight and stranding whatever came in after it.
+      return inFlight.then(() => (pending !== null ? attempt() : undefined));
+    }
     if (pending === null) return Promise.resolve();
     const patch = pending;
     pending = null;
@@ -114,7 +126,16 @@ export function useDocAutosave<T extends object>(
   saveRef.current = save;
   // Guards setStatus after unmount: React 18 doesn't error on this, but the
   // final flush() kicked off from the unmount cleanup can still be pending
-  // when it settles well after the component is gone.
+  // when it settles well after the component is gone. Deliberately gates
+  // ONLY the setStatus call, not the release-on-clean logic below it: a
+  // save that's still retrying via backoff (see runAttempt) when the
+  // component unmounts keeps running on its own timer regardless of React
+  // — if it eventually succeeds, THIS SAME callback fires again with
+  // 'saved', post-unmount, and that's exactly when the retained
+  // unsavedWork guard needs to be released. Gating the whole callback on
+  // mountedRef would silently swallow that release forever, leaving the
+  // beforeunload warning armed even after the save it was protecting
+  // actually landed.
   const mountedRef = useRef(true);
 
   const autosaverRef = useRef<Autosaver<T> | null>(null);
@@ -123,8 +144,7 @@ export function useDocAutosave<T extends object>(
       (patch) => saveRef.current(patch),
       delayMs,
       (s) => {
-        if (!mountedRef.current) return;
-        setStatus(s);
+        if (mountedRef.current) setStatus(s);
         if (s === 'saved' && !autosaverRef.current?.hasPending()) {
           releaseRef.current?.();
           releaseRef.current = null;
@@ -159,10 +179,31 @@ export function useDocAutosave<T extends object>(
   useEffect(() => () => {
     mountedRef.current = false;
     // Release only after the final flush settles — releasing first would
-    // let a reload race the in-flight save and lose it.
+    // let a reload race the in-flight save and lose it. flush() now drains
+    // (see attempt()'s comment in createAutosaver): on the happy path it
+    // recurses through every edit scheduled while a save was in flight, so
+    // by the time this promise settles there's nothing left to send and
+    // hasPending() is false.
+    //
+    // But a *persistently failing* save is a different case: runAttempt's
+    // catch re-queues the patch and arms a backoff retry, then lets its
+    // promise resolve anyway (it never rejects) — so flush() can settle
+    // with hasPending() still true. Releasing unconditionally here would
+    // let the page close (or navigate away without warning) with real
+    // unsaved work still sitting in `pending`. So: release only if
+    // `!hasPending()`. If it's still true, deliberately LEAVE the guard
+    // armed rather than force a release — the backoff timer keeps running
+    // on its own after unmount (a setTimeout doesn't care that the
+    // component is gone), and if/when it eventually succeeds, the
+    // onStatus('saved') callback above fires again (its release logic is
+    // NOT gated on mountedRef, on purpose) and releases the guard then.
+    // Until that happens, the beforeunload warning staying armed is
+    // correct, not a leak: there genuinely is unsaved work.
     void flushRef.current().finally(() => {
-      releaseRef.current?.();
-      releaseRef.current = null;
+      if (!autosaverRef.current?.hasPending()) {
+        releaseRef.current?.();
+        releaseRef.current = null;
+      }
     });
   }, []);
 
