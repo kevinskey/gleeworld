@@ -53,6 +53,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'messages', to: '/dashboard/messenger', label: 'Messages',       icon: MessageSquare, section: 'today', tone: 'bg-cyan-50 text-cyan-600',   tourId: 'nav-messenger',      surfaces: ['sidebar'] },
   { key: 'calendar', to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      section: 'today', tone: 'bg-purple-50 text-purple-600', tourId: 'nav-calendar',     surfaces: ['sidebar'] },
   { key: 'notes',    to: '/planner',             label: 'Notes',          icon: NotebookPen,   section: 'today', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-notes', gate: { module: 'planner' } },
+  { key: 'documents', to: '/dashboard/documents', label: 'Documents', icon: FileText, section: 'today', tone: 'bg-blue-50 text-blue-600', tourId: 'nav-documents' },
   // The Bible — full text, highlights, Apple Pencil underlines, notes.
   // Formerly "Prayer App"; the prayers and daily readings still live at
   // /prayer and are reachable from inside the Bible page.
