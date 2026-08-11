@@ -202,6 +202,8 @@ const ParentRegistration = lazy(() => import("./pages/ParentRegistration"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const MusicLibraryPage = lazy(() => import("./pages/member/MusicLibraryPage"));
 const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPage"));
+const DocumentsLibrary = lazy(() => import("./pages/documents/DocumentsLibrary"));
+const DocumentEditorPage = lazy(() => import("./pages/documents/DocumentEditorPage"));
 const PartTracksPage = lazy(() => import("./pages/dashboard/PartTracksPage"));
 const SeatingChartsDashboardPage = lazy(() => import("./pages/seating-charts/DashboardPage"));
 const AllStateDirectoryPage = lazy(() => import("./pages/all-state/AllStateDirectoryPage"));
@@ -1810,6 +1812,30 @@ const App = () => {
                         <DashboardShell>
                           <ModuleGate moduleId="planner"><PlannerPage /></ModuleGate>
                         </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Documents — personal word processor (gw_personal_docs). Not a
+                    tenant add-on module, so no ModuleGate: every signed-in user
+                    gets it, same as Notes/Planner's own personal-storage model
+                    but without the module gate planner carries. */}
+                <Route
+                  path="/dashboard/documents"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><DocumentsLibrary /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/documents/:id"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><DocumentEditorPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
