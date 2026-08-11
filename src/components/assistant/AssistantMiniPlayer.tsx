@@ -69,6 +69,39 @@ function AppleMusicBody({ id, kind, artworkUrl }: { id: string; kind: 'song' | '
   );
 }
 
+
+/** Spotify body: the Web Playback SDK singleton owns the audio; the popout
+ *  is its face. Closing the window pauses playback — same contract. */
+function SpotifyBody({ artworkUrl }: { artworkUrl?: string | null }) {
+  const [playing, setPlaying] = useState(true);
+  useEffect(() => {
+    return () => { import('@/lib/spotify').then((sp) => sp.stopSpotify()).catch(() => { /* gone */ }); };
+  }, []);
+  const toggle = async () => {
+    try {
+      const sp = await import('@/lib/spotify');
+      await sp.togglePlayback();
+      setPlaying((p) => !p);
+    } catch { /* leave the button state alone */ }
+  };
+  return (
+    <div className="flex items-center gap-3 p-3">
+      {artworkUrl
+        ? <img src={artworkUrl} alt="" className="h-16 w-16 flex-none rounded-md object-cover" />
+        : <div className="flex h-16 w-16 flex-none items-center justify-center rounded-md bg-muted"><Music className="h-6 w-6 text-muted-foreground" aria-hidden /></div>}
+      <div className="min-w-0 flex-1"><p className="text-xs text-muted-foreground">Spotify</p></div>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={playing ? 'Pause' : 'Play'}
+        className="rounded-full border border-border p-2 text-foreground hover:bg-muted"
+      >
+        {playing ? <Pause className="h-4 w-4" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />}
+      </button>
+    </div>
+  );
+}
+
 /**
  * A small video window that keeps playing while you carry on.
  *
@@ -98,9 +131,10 @@ export function AssistantMiniPlayer() {
   if (!assistant?.nowPlaying) return null;
   const { videoId, title, channel, source, appleId, appleKind, artworkUrl } = assistant.nowPlaying;
   const isApple = source === 'apple' && !!appleId;
+  const isSpotify = source === 'spotify';
   // Older callers set only videoId; a malformed apple entry with no id
   // renders nothing rather than an empty shell.
-  if (!isApple && !videoId) return null;
+  if (!isApple && !isSpotify && !videoId) return null;
 
   const onPointerDown = (e: React.PointerEvent) => {
     const el = (e.currentTarget as HTMLElement).closest('[data-mini-player]') as HTMLElement | null;
@@ -161,7 +195,9 @@ export function AssistantMiniPlayer() {
           <X className="h-4 w-4" />
         </button>
       </div>
-      {isApple ? (
+      {isSpotify ? (
+        <SpotifyBody artworkUrl={artworkUrl} />
+      ) : isApple ? (
         <AppleMusicBody id={appleId!} kind={appleKind ?? 'song'} artworkUrl={artworkUrl} />
       ) : (
         <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>

@@ -70,3 +70,46 @@ describe('play_my_playlist', () => {
     expect(out.message).toContain('Nonexistent');
   });
 });
+
+// Spotify actions share this file's mocked-module pattern.
+const spotifyMock = {
+  isSpotifyConnected: vi.fn(),
+  connectSpotify: vi.fn(),
+  searchSpotify: vi.fn(),
+  playOnSpotify: vi.fn(),
+};
+vi.mock('@/lib/spotify', () => ({
+  isSpotifyConnected: (...a: unknown[]) => spotifyMock.isSpotifyConnected(...a),
+  connectSpotify: (...a: unknown[]) => spotifyMock.connectSpotify(...a),
+  searchSpotify: (...a: unknown[]) => spotifyMock.searchSpotify(...a),
+  playOnSpotify: (...a: unknown[]) => spotifyMock.playOnSpotify(...a),
+}));
+
+describe('play_spotify', () => {
+  beforeEach(() => {
+    spotifyMock.isSpotifyConnected.mockReset().mockReturnValue(true);
+    spotifyMock.searchSpotify.mockReset().mockResolvedValue({ uri: 'spotify:track:1', title: 'Total Praise', artist: 'Richard Smallwood', artworkUrl: 'https://i/x.jpg' });
+    spotifyMock.playOnSpotify.mockReset().mockResolvedValue(undefined);
+    spotifyMock.connectSpotify.mockReset().mockResolvedValue(undefined);
+  });
+
+  it('searches, plays, and hands the popout a card', async () => {
+    const out = await executeClientAction({ tool: 'play_spotify', args: { query: 'Total Praise' }, confirm: false });
+    expect(out.ok).toBe(true);
+    expect(out.spotify).toEqual({ title: 'Total Praise', artist: 'Richard Smallwood', artworkUrl: 'https://i/x.jpg' });
+  });
+
+  it('points at connect_spotify when not connected', async () => {
+    spotifyMock.isSpotifyConnected.mockReturnValue(false);
+    const out = await executeClientAction({ tool: 'play_spotify', args: { query: 'x' }, confirm: false });
+    expect(out.ok).toBe(false);
+    expect(out.message).toContain('connect Spotify');
+  });
+
+  it('translates the premium requirement into words', async () => {
+    spotifyMock.playOnSpotify.mockRejectedValue(new Error('premium_required'));
+    const out = await executeClientAction({ tool: 'play_spotify', args: { query: 'x' }, confirm: false });
+    expect(out.ok).toBe(false);
+    expect(out.message).toContain('Premium');
+  });
+});

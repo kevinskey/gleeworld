@@ -211,6 +211,7 @@ const MyAllStatePage = lazy(() => import("./pages/all-state/MyAllStatePage"));
 const SeatingChartEditorPage = lazy(() => import("./pages/seating-charts/EditorPage"));
 const SeatingChartViewPage = lazy(() => import("./pages/seating-charts/ViewPage"));
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
+const SpotifyCallback = lazy(() => import("./pages/SpotifyCallback"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
 const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
@@ -1747,6 +1748,10 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+                {/* Spotify OAuth return — the ONE registered redirect URI (apex).
+                    Not ProtectedRoute: the OAuth hop must never bounce through
+                    a login redirect and lose the code. */}
+                <Route path="/spotify/callback" element={<SpotifyCallback />} />
                 {/* The Bible — full text, highlights, Apple Pencil underlines, notes. */}
                 <Route
                   path="/bible"

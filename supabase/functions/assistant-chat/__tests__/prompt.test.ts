@@ -195,10 +195,10 @@ describe('streaming services briefing', () => {
     expect(p).toContain('search_apple_music');
     expect(p).toContain('play_apple_music');
   });
-  it('keeps YouTube the default and is honest about Spotify', () => {
+  it('keeps YouTube the default and is honest about YouTube Music', () => {
     const p = buildSystemPrompt(ctx);
     expect(p).toMatch(/YouTube .* stays the DEFAULT/);
-    expect(p).toMatch(/Spotify and YouTube Music are NOT connected/);
+    expect(p).toMatch(/YouTube Music is NOT connected/);
   });
 });
 
@@ -212,5 +212,18 @@ describe('apple music playlists briefing', () => {
     expect(p).toContain('play_my_playlist');
     expect(p).toContain('create_apple_playlist');
     expect(p).toMatch(/ONCE with the name and all song ids/);
+  });
+});
+
+describe('spotify briefing', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-11T16:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('routes named-Spotify requests and the connect flow', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('play_spotify');
+    expect(p).toContain('connect_spotify');
+    expect(p).toMatch(/Never route to Spotify unnamed/);
   });
 });
