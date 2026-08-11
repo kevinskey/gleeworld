@@ -185,6 +185,7 @@ const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation").then(m 
 const Payments = lazy(() => import("./pages/Payments"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
+const WelcomeRegistration = lazy(() => import("./pages/WelcomeRegistration"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 import { CalendarViews } from "./components/calendar/CalendarViews";
 // Note: Messenger is imported once at line 43 from pages/admin/Messenger (the merged
@@ -639,13 +640,23 @@ const App = () => {
               <Route path="/tour-sandbox" element={<TourSandbox />} />
               {/* One-click prospect demo entry — mints a read-only Director session. */}
               <Route path="/try" element={<TryDemo />} />
-              <Route 
-                path="/onboarding" 
+              <Route
+                path="/onboarding"
                 element={
                   <PublicRoute>
                     <Onboarding />
                   </PublicRoute>
-                } 
+                }
+              />
+              {/* Minimal invited-student registration (name + phone), then on
+                  to the class page. Invite emails point next= here. */}
+              <Route
+                path="/welcome"
+                element={
+                  <ProtectedRoute skipProfileCheck>
+                    <WelcomeRegistration />
+                  </ProtectedRoute>
+                }
               />
               <Route 
                 path="/registration-thank-you" 

@@ -126,12 +126,11 @@ serve(async (req) => {
       }
       if (c?.title) courseTitle = String(c.title);
     }
-    // Invited students arrive signed in via the magic link. Because the invite
-    // pre-creates their gw_profiles row, AuthCallback would treat them as an
-    // existing user and drop them straight on the class/landing page, skipping
-    // the profile form. Route them through /onboarding first to fill out their
-    // profile, then on to their course/academy (Onboarding honors ?next=).
-    const next = `/onboarding?next=${encodeURIComponent(dest)}`;
+    // Invited students arrive signed in via the magic link. Route them through
+    // /welcome — a minimal name + phone registration (the full profile comes
+    // later as a class assignment) — then on to their course/academy.
+    // /welcome honors ?next= and skips itself once a phone is on file.
+    const next = `/welcome?next=${encodeURIComponent(dest)}`;
     const redirectTo = origin ? `${origin}/auth/callback?next=${encodeURIComponent(next)}` : undefined;
 
     // Call GoTrue's admin endpoint directly. The supabase-js SDK nests
