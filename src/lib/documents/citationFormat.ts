@@ -75,22 +75,45 @@ export function formatInText(source: DocSource, style: CitationStyle, locator?: 
   return `(${subject}${yearPart}${pagePart})`;
 }
 
+/** The hosting platform for a video source. SourceForm's "Channel/Platform"
+ * field writes `publisher`; `container` is read as a fallback because older
+ * rows (and the auto-fill lookup) put it there. */
+function videoPlatform(source: DocSource): string | undefined {
+  return source.publisher ?? source.container;
+}
+
 function formatReferenceMLA(source: DocSource): RefSegment[] {
   const segs: RefSegment[] = [];
   const authorStr = authorListMLA(source.authors);
   if (authorStr) segs.push({ text: `${authorStr} ` });
 
-  const italicTitle = source.type === 'book' || source.type === 'video';
+  // MLA 9 italicizes the container, not the work, for anything published
+  // inside something else — so a video's TITLE is quoted and the PLATFORM is
+  // italic, exactly like a web page. Only a standalone book is italic.
+  const italicTitle = source.type === 'book';
   if (italicTitle) {
     segs.push({ text: source.title, italic: true });
   } else {
     segs.push({ text: `"${source.title}."` });
   }
 
-  if (source.type === 'book' || source.type === 'video') {
+  if (source.type === 'book') {
     segs.push({ text: '.' });
     const tail = [source.publisher, source.year].filter(Boolean).join(', ');
     if (tail) segs.push({ text: ` ${tail}.` });
+  } else if (source.type === 'video') {
+    // "Last, First. "Title." Platform, Year, URL."
+    const platform = videoPlatform(source);
+    const rest: string[] = [];
+    if (source.year) rest.push(source.year);
+    if (source.url) rest.push(source.url);
+    if (platform) {
+      segs.push({ text: ' ' });
+      segs.push({ text: platform, italic: true });
+      segs.push({ text: rest.length ? `, ${rest.join(', ')}.` : '.' });
+    } else if (rest.length) {
+      segs.push({ text: ` ${rest.join(', ')}.` });
+    }
   } else if (source.type === 'journal') {
     segs.push({ text: ' ' });
     if (source.container) segs.push({ text: source.container, italic: true });
@@ -127,10 +150,17 @@ function formatReferenceAPA(source: DocSource): RefSegment[] {
     segs.push({ text: source.title });
   }
 
-  if (source.type === 'book' || source.type === 'video') {
+  if (source.type === 'book') {
     segs.push({ text: '.' });
-    const publisher = source.publisher ?? (source.type === 'video' ? source.container : undefined);
-    if (publisher) segs.push({ text: ` ${publisher}.` });
+    if (source.publisher) segs.push({ text: ` ${source.publisher}.` });
+  } else if (source.type === 'video') {
+    // "Last, F. (Year). Title [Video]. Platform. URL"
+    // APA 7 §10.12: the italic title is followed by a ROMAN bracketed
+    // description of the medium, then the site/platform, then the URL.
+    segs.push({ text: ' [Video].' });
+    const platform = videoPlatform(source);
+    if (platform) segs.push({ text: ` ${platform}.` });
+    if (source.url) segs.push({ text: ` ${source.url}` });
   } else if (source.type === 'journal') {
     segs.push({ text: '.' });
     segs.push({ text: ' ' });
