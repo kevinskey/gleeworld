@@ -75,10 +75,27 @@ export type TextParaStyle =
   | 'body' | 'cellBody' | 'heading1' | 'heading2' | 'heading3'
   | 'bullet' | 'ordered' | 'blockquote';
 
+/** The four values TipTap's TextAlign extension can put on a paragraph or
+ * heading node (`attrs.textAlign`). Anything else — including its `null`
+ * default — means "no explicit alignment", and no `<w:jc>` is emitted. */
+export type ParaAlign = 'left' | 'center' | 'right' | 'justify';
+
+const PARA_ALIGNS: readonly string[] = ['left', 'center', 'right', 'justify'];
+
+/** Normalizes a node's `attrs.textAlign` into a `ParaAlign`, or undefined. */
+function alignFromAttrs(attrs: Record<string, unknown> | undefined): ParaAlign | undefined {
+  const value = attrs?.textAlign;
+  return typeof value === 'string' && PARA_ALIGNS.includes(value) ? (value as ParaAlign) : undefined;
+}
+
 export interface TextParaModel {
   kind: 'text';
   style: TextParaStyle;
   runs: RunModel[];
+  /** Explicit paragraph alignment from the editor's TextAlign extension.
+   * The print/PDF view preserves it (it renders the editor's own HTML), so
+   * a .docx that silently dropped it disagreed with what the student saw. */
+  align?: ParaAlign;
   /** Which physical `orderedList` node this paragraph belongs to (1-based,
    * unique per list in the whole export). Each distinct list gets its own
    * docx numbering "instance" sharing the `gw-ordered-list` abstract
@@ -195,7 +212,11 @@ function paragraphsFromBlockContent(
   for (const node of nodes ?? []) {
     if (!isNode(node)) continue;
     if (node.type === 'paragraph') {
-      out.push({ kind: 'text', style, listInstance, runs: textRunsFromInline(node.content, ctx) });
+      out.push({
+        kind: 'text', style, listInstance,
+        align: alignFromAttrs(node.attrs),
+        runs: textRunsFromInline(node.content, ctx),
+      });
     } else if (node.type === 'bulletList' || node.type === 'orderedList') {
       out.push(...flattenList(node, ctx, state));
     }
@@ -241,6 +262,7 @@ export function tiptapToRuns(content: unknown, ctx: ConverterCtx, state: WalkSta
         models.push({
           kind: 'text',
           style: state.inTable ? 'cellBody' : 'body',
+          align: alignFromAttrs(node.attrs),
           runs: textRunsFromInline(node.content, ctx),
         });
         break;
@@ -248,7 +270,11 @@ export function tiptapToRuns(content: unknown, ctx: ConverterCtx, state: WalkSta
       case 'heading': {
         const level = node.attrs?.level;
         const style: TextParaStyle = level === 2 ? 'heading2' : level === 3 ? 'heading3' : 'heading1';
-        models.push({ kind: 'text', style, runs: textRunsFromInline(node.content, ctx) });
+        models.push({
+          kind: 'text', style,
+          align: alignFromAttrs(node.attrs),
+          runs: textRunsFromInline(node.content, ctx),
+        });
         break;
       }
 
@@ -418,6 +444,15 @@ function docxRunFor(run: RunModel, overrides?: RunOverrides): TextRun | Footnote
   return new TextRun(runOptionsFor(run, overrides));
 }
 
+/** TipTap's `textAlign` values → docx `AlignmentType` (`<w:jc w:val=...>`).
+ * `justify` is docx's `BOTH`/`JUSTIFIED` ("both"). */
+const DOCX_ALIGNMENT: Record<ParaAlign, (typeof AlignmentType)[keyof typeof AlignmentType]> = {
+  left: AlignmentType.LEFT,
+  center: AlignmentType.CENTER,
+  right: AlignmentType.RIGHT,
+  justify: AlignmentType.JUSTIFIED,
+};
+
 function paragraphPropsFor(model: TextParaModel) {
   const base = (() => {
     switch (model.style) {
@@ -444,7 +479,8 @@ function paragraphPropsFor(model: TextParaModel) {
         return { spacing: DOUBLE_SPACING, indent: FIRST_LINE_INDENT };
     }
   })();
-  return model.pageBreakBefore ? { ...base, pageBreakBefore: true } : base;
+  const withAlign = model.align ? { ...base, alignment: DOCX_ALIGNMENT[model.align] } : base;
+  return model.pageBreakBefore ? { ...withAlign, pageBreakBefore: true } : withAlign;
 }
 
 function textParaToDocx(model: TextParaModel): Paragraph {

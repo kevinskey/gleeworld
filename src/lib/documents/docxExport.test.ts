@@ -466,6 +466,22 @@ describe('generated OOXML — paper formatting (real docx output, unzipped)', ()
     expect(paragraphContaining(document, 'cell text')).not.toContain('w:firstLine');
   });
 
+  it('carries paragraph/heading text alignment into <w:jc>, matching the print view', async () => {
+    const alignedInput: ExportInput = {
+      ...mlaInput,
+      content: { type: 'doc', content: [
+        { type: 'paragraph', attrs: { textAlign: 'center' }, content: [{ type: 'text', text: 'centered para' }] },
+        { type: 'heading', attrs: { level: 2, textAlign: 'right' }, content: [{ type: 'text', text: 'right heading' }] },
+        { type: 'paragraph', content: [{ type: 'text', text: 'plain para' }] },
+      ]},
+    };
+    const { document } = await packedXmlParts(alignedInput);
+    expect(paragraphContaining(document, 'centered para')).toContain('<w:jc w:val="center"/>');
+    expect(paragraphContaining(document, 'right heading')).toContain('<w:jc w:val="right"/>');
+    // A paragraph with no textAlign attr must not gain an alignment.
+    expect(paragraphContaining(document, 'plain para')).not.toContain('<w:jc');
+  });
+
   const apaInput: ExportInput = {
     title: 'APA Paper',
     style: 'apa7',
