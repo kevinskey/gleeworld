@@ -1,6 +1,73 @@
-import { useRef, useState } from 'react';
-import { GripVertical, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { GripVertical, Music, Pause, Play, X } from 'lucide-react';
 import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
+
+/**
+ * Apple Music body for the popout: drives the MusicKit singleton directly.
+ * (The AudioCompanion player would have been free, but its UI only renders
+ * inside the score-viewer surfaces — audio started from the assistant on any
+ * other page would have been invisible and unstoppable.)
+ *
+ * Unauthorized listeners get the Apple sign-in sheet on first play; without
+ * a subscription MusicKit falls back to previews, which is Apple's rule,
+ * not ours.
+ */
+function AppleMusicBody({ id, kind, artworkUrl }: { id: string; kind: 'song' | 'album'; artworkUrl?: string | null }) {
+  const [playing, setPlaying] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getMusicKit, authorizeAppleMusic } = await import('@/lib/musicKit');
+        await authorizeAppleMusic().catch(() => null);
+        const kit = await getMusicKit();
+        await kit.setQueue(kind === 'album' ? { album: id } : { song: id });
+        if (!cancelled) await kit.play();
+      } catch {
+        if (!cancelled) setError("Couldn't start Apple Music — it may need a sign-in.");
+      }
+    })();
+    return () => {
+      cancelled = true;
+      // Closing the window stops the music — same contract as the video.
+      import('@/lib/musicKit')
+        .then(({ getMusicKit }) => getMusicKit())
+        .then((kit) => kit.stop())
+        .catch(() => { /* never played */ });
+    };
+  }, [id, kind]);
+
+  const toggle = async () => {
+    try {
+      const { getMusicKit } = await import('@/lib/musicKit');
+      const kit = await getMusicKit();
+      if (playing) { kit.pause(); setPlaying(false); }
+      else { await kit.play(); setPlaying(true); }
+    } catch { /* keep the button state honest by not flipping it */ }
+  };
+
+  return (
+    <div className="flex items-center gap-3 p-3">
+      {artworkUrl
+        ? <img src={artworkUrl} alt="" className="h-16 w-16 flex-none rounded-md object-cover" />
+        : <div className="flex h-16 w-16 flex-none items-center justify-center rounded-md bg-muted"><Music className="h-6 w-6 text-muted-foreground" aria-hidden /></div>}
+      <div className="min-w-0 flex-1">
+        {error
+          ? <p className="text-xs text-muted-foreground">{error}</p>
+          : <p className="text-xs text-muted-foreground">Apple Music</p>}
+      </div>
+      <button
+        type="button"
+        onClick={toggle}
+        aria-label={playing ? 'Pause' : 'Play'}
+        className="rounded-full border border-border p-2 text-foreground hover:bg-muted"
+      >
+        {playing ? <Pause className="h-4 w-4" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />}
+      </button>
+    </div>
+  );
+}
 
 /**
  * A small video window that keeps playing while you carry on.
@@ -29,7 +96,11 @@ export function AssistantMiniPlayer() {
   const drag = useRef<{ dx: number; dy: number } | null>(null);
 
   if (!assistant?.nowPlaying) return null;
-  const { videoId, title, channel } = assistant.nowPlaying;
+  const { videoId, title, channel, source, appleId, appleKind, artworkUrl } = assistant.nowPlaying;
+  const isApple = source === 'apple' && !!appleId;
+  // Older callers set only videoId; a malformed apple entry with no id
+  // renders nothing rather than an empty shell.
+  if (!isApple && !videoId) return null;
 
   const onPointerDown = (e: React.PointerEvent) => {
     const el = (e.currentTarget as HTMLElement).closest('[data-mini-player]') as HTMLElement | null;
@@ -90,17 +161,21 @@ export function AssistantMiniPlayer() {
           <X className="h-4 w-4" />
         </button>
       </div>
-      <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
-        <iframe
-          // youtube-nocookie so a rehearsal does not quietly build an ad
-          // profile. autoplay because the user asked for it to play.
-          src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0`}
-          title={title || 'Video'}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className="absolute inset-0 h-full w-full"
-        />
-      </div>
+      {isApple ? (
+        <AppleMusicBody id={appleId!} kind={appleKind === 'album' ? 'album' : 'song'} artworkUrl={artworkUrl} />
+      ) : (
+        <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
+          <iframe
+            // youtube-nocookie so a rehearsal does not quietly build an ad
+            // profile. autoplay because the user asked for it to play.
+            src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId!)}?autoplay=1&rel=0`}
+            title={title || 'Video'}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full"
+          />
+        </div>
+      )}
     </div>
   );
 }

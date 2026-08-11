@@ -656,3 +656,23 @@ describe('close_viewer', () => {
     expect(out.navigateTo).toBe('/dashboard/music-library');
   });
 });
+
+describe('play_apple_music', () => {
+  it('hands the provider a validated popout request', async () => {
+    const out = await executeClientAction({
+      tool: 'play_apple_music',
+      args: { id: '1440806041', kind: 'album', title: 'Deep River', artist: 'Fisk Jubilee Singers', artwork_url: 'https://x/art.jpg' },
+      confirm: false,
+    });
+    expect(out.ok).toBe(true);
+    expect(out.appleMusic).toEqual({ id: '1440806041', kind: 'album', title: 'Deep River', artist: 'Fisk Jubilee Singers', artworkUrl: 'https://x/art.jpg' });
+  });
+  it('rejects malformed ids instead of passing them to MusicKit', async () => {
+    const out = await executeClientAction({ tool: 'play_apple_music', args: { id: 'javascript:alert(1)' }, confirm: false });
+    expect(out.ok).toBe(false);
+  });
+  it('defaults kind to song', async () => {
+    const out = await executeClientAction({ tool: 'play_apple_music', args: { id: '99999' }, confirm: false });
+    expect(out.appleMusic?.kind).toBe('song');
+  });
+});

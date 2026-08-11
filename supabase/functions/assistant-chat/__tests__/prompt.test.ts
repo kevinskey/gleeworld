@@ -184,3 +184,20 @@ describe('personal assistant name', () => {
     expect(buildSystemPrompt({ ...ctx, assistantName: 'Ruby' })).toContain('set_assistant_name');
   });
 });
+
+describe('streaming services briefing', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-11T14:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('routes Apple Music requests through search-then-play', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('search_apple_music');
+    expect(p).toContain('play_apple_music');
+  });
+  it('keeps YouTube the default and is honest about Spotify', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toMatch(/YouTube .* stays the DEFAULT/);
+    expect(p).toMatch(/Spotify and YouTube Music are NOT connected/);
+  });
+});

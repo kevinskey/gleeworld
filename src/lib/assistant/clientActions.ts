@@ -64,6 +64,9 @@ export interface ActionOutcome {
   /** Close the assistant's floating mini player ("stop the music"). The
    *  player is provider state, so the provider acts on this flag. */
   stopPlayback?: boolean;
+  /** Start Apple Music playback in the floating popout (same window the
+   *  YouTube player uses). The provider owns the MusicKit hand-off. */
+  appleMusic?: { id: string; kind: 'song' | 'album'; title?: string; artist?: string; artworkUrl?: string | null };
   message: string;
 }
 
@@ -103,7 +106,7 @@ export async function executeClientAction(
   const needsDeps = ![
     'open_page', 'open_link', 'open_song', 'open_bible', 'open_note',
     'start_video_session', 'book_ride', 'order_food', 'stop_playback',
-    'close_viewer',
+    'close_viewer', 'play_apple_music',
   ].includes(action.tool);
   const deps = { ...(needsDeps && !depsOverride ? await defaultDeps() : {}), ...depsOverride } as ActionDeps;
   const a = action.args;
@@ -185,6 +188,23 @@ export async function executeClientAction(
       }
       case 'stop_playback': {
         return { ok: true, stopPlayback: true, message: 'Stopped.' };
+      }
+      case 'play_apple_music': {
+        const id = String(a.id ?? '').trim();
+        // Apple catalog ids are numeric (songs/albums) or prefixed
+        // (playlists 'pl.'). Model-supplied, so shape-checked.
+        if (!/^[A-Za-z0-9.\-]{4,40}$/.test(id)) return { ok: false, message: 'That Apple Music id looks invalid.' };
+        const kind = a.kind === 'album' ? 'album' as const : 'song' as const;
+        return {
+          ok: true,
+          appleMusic: {
+            id, kind,
+            title: typeof a.title === 'string' ? a.title : undefined,
+            artist: typeof a.artist === 'string' ? a.artist : undefined,
+            artworkUrl: typeof a.artwork_url === 'string' ? a.artwork_url : null,
+          },
+          message: `Playing ${a.title ?? 'it'} on Apple Music.`,
+        };
       }
       case 'start_video_session': {
         const slug = String(a.room_name ?? 'gleeworld-room').replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 60) || 'gleeworld-room';
