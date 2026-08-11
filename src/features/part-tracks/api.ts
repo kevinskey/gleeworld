@@ -91,6 +91,40 @@ export async function createScoreFromAttachedPdf(
   return createScore(sheetMusicId, file, 'pdf_omr', userId);
 }
 
+export async function replaceSource(
+  scoreId: string,
+  file: File,
+  sourceType: import('./scoreFile').ReplaceSourceType,
+): Promise<void> {
+  // Fresh path — never overwrite the old source while a claimed job might
+  // still be reading it.
+  const path = `uploads/${scoreId}/source-${crypto.randomUUID().slice(0, 8)}.${EXT[sourceType]}`;
+  const up = await supabase.storage.from('parttrack').upload(path, file, { upsert: true });
+  if (up.error) throw up.error;
+  // normalized_mxl_path = NULL is what makes the worker re-parse the new file
+  // instead of short-circuiting to the stale OMR output. Must land before the
+  // job row exists (the worker reads the scores row at claim time).
+  const upd = await supabase
+    .from('gw_parttrack_scores')
+    .update({
+      source_path: path,
+      source_type: sourceType,
+      normalized_mxl_path: null,
+      status: 'queued',
+      error_message: null,
+    })
+    .eq('id', scoreId)
+    .select()
+    .single();
+  if (upd.error || !upd.data) throw upd.error ?? new Error('Score reset did not persist');
+  const job = await supabase
+    .from('gw_parttrack_jobs')
+    .insert({ score_id: scoreId, kind: 'analyze' })
+    .select()
+    .single();
+  if (job.error || !job.data) throw job.error ?? new Error('Analyze job was not created');
+}
+
 export async function retryAnalyze(scoreId: string): Promise<void> {
   const upd = await supabase
     .from('gw_parttrack_scores')
