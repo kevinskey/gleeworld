@@ -3,7 +3,7 @@
 // pull most fields from Crossref (DOI) or Open Library (ISBN) via
 // lookupDOI/lookupISBN, but never blocks manual entry — a null lookup just
 // shows a caption and the user fills the fields in themselves.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Plus, X, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,15 +61,24 @@ export function SourceForm({ initial, onSave, onCancel }: SourceFormProps) {
 
   const autoFillKind = classifyAutoFillInput(autoFillValue);
 
-  // Website `accessed` defaults to today, but only for a brand-new source
-  // (never overwrite what an editor already saved) and only while the field
-  // is still blank (never fight a value the user already typed or cleared
-  // via the Today button).
+  // Website `accessed` defaults to today, but only once per entry into
+  // `type === 'website'` on a brand-new source (never overwrite what an
+  // editor already saved). One-shot via a ref, not `accessed` in the deps
+  // array: if that were reactive, clearing the field would re-trigger the
+  // effect and snap it right back to today, making the field impossible to
+  // clear. The ref resets when the user picks a different type, so leaving
+  // and returning to "Website" re-defaults (acceptable — it only fires on
+  // brand-new sources with a still-blank field at that moment).
+  const accessedDefaultedRef = useRef(false);
   useEffect(() => {
-    if (!initial && type === 'website' && !accessed) {
-      setAccessed(new Date().toISOString().slice(0, 10));
+    if (type !== 'website') {
+      accessedDefaultedRef.current = false;
+      return;
     }
-  }, [type, initial, accessed]);
+    if (initial || accessedDefaultedRef.current) return;
+    accessedDefaultedRef.current = true;
+    setAccessed((current) => current || new Date().toISOString().slice(0, 10));
+  }, [type, initial]);
 
   async function handleAutoFill() {
     if (!autoFillKind) return;
