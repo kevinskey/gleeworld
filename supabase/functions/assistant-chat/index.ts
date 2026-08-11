@@ -81,40 +81,9 @@ serve(async (req) => {
   //   3. Client passed nothing (or new_thread: true) → create a new thread.
   // If the client also passed `messages`, we take only the LAST user message
   // as the current turn — the DB is now the source of truth for history.
-  let threadId: string | null = null;
-  let dbHistory: Array<{ role: 'user' | 'assistant'; content: string }> = [];
-  if (!body.new_thread && typeof body.thread_id === 'string' && body.thread_id.length > 0) {
-    const { data: existing } = await userClient
-      .from('gw_assistant_threads')
-      .select('id')
-      .eq('id', body.thread_id)
-      .maybeSingle();
-    if (existing) {
-      threadId = existing.id;
-      const { data: msgs } = await userClient
-        .from('gw_assistant_messages')
-        .select('role, content, created_at')
-        .eq('thread_id', threadId)
-        .in('role', ['user', 'assistant'])
-        .order('created_at', { ascending: true })
-        .limit(30);
-      dbHistory = (msgs ?? [])
-        .filter((m) => typeof m.content === 'string' && m.content.length > 0)
-        .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content as string }));
-    }
-  }
-  if (!threadId) {
-    const { data: created } = await userClient
-      .from('gw_assistant_threads')
-      .insert({ user_id: caller.userId })
-      .select('id')
-      .single();
-    threadId = created?.id ?? null;
-    // If insert failed (RLS mis-config, etc.), we still serve the turn —
-    // just without persistence. Better than 500ing on a chat.
-  }
-
   // Latest user message from the client (they always send at least this).
+  // Validated FIRST — no reason to touch the database for a request that
+  // is going to 400.
   const clientHistory = (body.messages ?? []).filter(
     (m) => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string',
   );
@@ -123,10 +92,42 @@ serve(async (req) => {
     return json({ error: 'messages must end with a user message' }, 400);
   }
 
-  // Server-side truth: prior DB history + latest client user turn.
-  // Capped at 20 to bound prompt size; DB stores everything, we only feed
-  // the tail to the model.
-  const history = [...dbHistory, { role: 'user' as const, content: latestUser.content }].slice(-20);
+  type HistoryRow = { role: 'user' | 'assistant'; content: string };
+  const resolveThread = async (): Promise<{ threadId: string | null; dbHistory: HistoryRow[] }> => {
+    if (!body.new_thread && typeof body.thread_id === 'string' && body.thread_id.length > 0) {
+      const { data: existing } = await userClient
+        .from('gw_assistant_threads')
+        .select('id')
+        .eq('id', body.thread_id)
+        .maybeSingle();
+      if (existing) {
+        // The LAST 20 messages, not the first: descending + reverse. The old
+        // ascending LIMIT loaded the OLDEST rows, so any thread longer than
+        // the cap fed the model stale history and dropped the recent turns —
+        // exactly the context the user is following up on.
+        const { data: msgs } = await userClient
+          .from('gw_assistant_messages')
+          .select('role, content, created_at')
+          .eq('thread_id', existing.id)
+          .in('role', ['user', 'assistant'])
+          .order('created_at', { ascending: false })
+          .limit(20);
+        const dbHistory = (msgs ?? [])
+          .filter((m) => typeof m.content === 'string' && m.content.length > 0)
+          .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content as string }))
+          .reverse();
+        return { threadId: existing.id, dbHistory };
+      }
+    }
+    const { data: created } = await userClient
+      .from('gw_assistant_threads')
+      .insert({ user_id: caller.userId })
+      .select('id')
+      .single();
+    // If insert failed (RLS mis-config, etc.), we still serve the turn —
+    // just without persistence. Better than 500ing on a chat.
+    return { threadId: created?.id ?? null, dbHistory: [] };
+  };
 
   // Pull the caller's profile server-side so the model has stable, fresh
   // facts about them on every turn — the client only sends firstName + tz
@@ -134,22 +135,33 @@ serve(async (req) => {
   // someone by their first initial or forgets they're a bass. RLS scopes
   // this to their own row; a missing row (fresh signup, no gw_profiles
   // yet) just falls back to whatever the client passed.
-  let profile: {
+  type ProfileRow = {
     full_name?: string | null;
     role?: string | null;
     voice_part?: string | null;
     class_year?: string | null;
     home_address?: string | null;
     assistant_name?: string | null;
-  } | null = null;
-  try {
-    const { data } = await userClient
-      .from('gw_profiles')
-      .select('full_name, role, voice_part, class_year, home_address, assistant_name')
-      .eq('user_id', caller.userId)
-      .maybeSingle();
-    profile = (data as typeof profile) ?? null;
-  } catch { /* ignore — the assistant still works with fallback context */ }
+  } | null;
+  const fetchProfile = async (): Promise<ProfileRow> => {
+    try {
+      const { data } = await userClient
+        .from('gw_profiles')
+        .select('full_name, role, voice_part, class_year, home_address, assistant_name')
+        .eq('user_id', caller.userId)
+        .maybeSingle();
+      return (data as ProfileRow) ?? null;
+    } catch { return null; /* the assistant still works with fallback context */ }
+  };
+
+  // Thread/history and profile are independent single-row lookups; running
+  // them serially just stacked round-trips in front of the first model call.
+  const [{ threadId, dbHistory }, profile] = await Promise.all([resolveThread(), fetchProfile()]);
+
+  // Server-side truth: prior DB history + latest client user turn.
+  // Capped at 20 to bound prompt size; DB stores everything, we only feed
+  // the tail to the model.
+  const history = [...dbHistory, { role: 'user' as const, content: latestUser.content }].slice(-20);
   /**
    * Profile fields are coerced with String() before trimming.
    *
@@ -207,9 +219,19 @@ serve(async (req) => {
 
   const tools = toolsForRole(role);
   const openAiTools = toOpenAiTools(tools);
+  // Prior turns are context, not the answer: a 2,600-char reply replayed in
+  // full on every subsequent turn inflates the prompt (and the model's
+  // time-to-first-token) for the rest of the thread. The tail keeps the
+  // thread coherent; the DB keeps the full text. The CURRENT user message
+  // is never truncated.
+  const HISTORY_MSG_CAP = 1500;
+  const trimmed = (m: { role: 'user' | 'assistant'; content: string }, isLast: boolean) =>
+    !isLast && m.content.length > HISTORY_MSG_CAP
+      ? `${m.content.slice(0, HISTORY_MSG_CAP)} […]`
+      : m.content;
   const messages: ChatMessage[] = [
     { role: 'system', content: buildSystemPrompt(ctx) },
-    ...history.map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+    ...history.map((m, i) => ({ role: m.role as 'user' | 'assistant', content: trimmed(m, i === history.length - 1) })),
   ];
   const actions: Array<{ tool: string; args: Record<string, unknown>; confirm: boolean }> = [];
   let resultsPanel: ConciergeResult | undefined = undefined;
@@ -243,7 +265,11 @@ serve(async (req) => {
       content: reply,
     });
   };
-  await persistUserTurn();
+  // Persisting the user's turn does not need to finish before the model is
+  // called — start it now, settle it before any response leaves. Awaiting
+  // it inline used to stack two more round-trips (insert + maybe the thread
+  // title update) in front of every first token.
+  const persistUserPromise = persistUserTurn().catch(() => { /* persistence is best-effort */ });
 
   // Tool names used this turn. Liturgy is the one domain allowed to name its
   // source, so the source-leak guard has to know whether it ran.
@@ -309,6 +335,8 @@ serve(async (req) => {
           });
           continue;
         }
+        // User turn first (created_at order), then the reply.
+        await persistUserPromise;
         await persistAssistantReply(reply);
         return json({ reply, actions, resultsPanel, thread_id: threadId });
       }
@@ -371,10 +399,13 @@ serve(async (req) => {
       const { message } = await callModel(buildChatRequest(messages, [], model), apiKey, apiUrl);
       if (message.content?.trim()) timeoutReply = message.content;
     } catch { /* keep the static fallback */ }
+    await persistUserPromise;
     await persistAssistantReply(timeoutReply);
     return json({ reply: timeoutReply, actions, resultsPanel, thread_id: threadId });
   } catch (e) {
     console.error('assistant-chat error:', e);
+    // The user's turn still lands in the thread even when the model died.
+    await persistUserPromise;
     // Intentionally no resultsPanel here — the model crashed mid-turn; the
     // client keeps whatever panel it last showed and moves on with the next
     // successful turn.

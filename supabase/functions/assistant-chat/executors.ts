@@ -105,21 +105,24 @@ export async function executeServerTool(
 async function queryCalendar(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
   const from = String(args.from ?? '');
   const to = String(args.to ?? '');
-  const { data: events, error } = await supabase
-    .from('gw_events')
-    .select('id, title, start_date, end_date, location, category')
-    .gte('start_date', `${from}T00:00:00`)
-    .lte('start_date', `${to}T23:59:59`)
-    .order('start_date')
-    .limit(50);
+  // Two independent tables — query them together, not back to back.
+  const [{ data: events, error }, { data: gcal }] = await Promise.all([
+    supabase
+      .from('gw_events')
+      .select('id, title, start_date, end_date, location, category')
+      .gte('start_date', `${from}T00:00:00`)
+      .lte('start_date', `${to}T23:59:59`)
+      .order('start_date')
+      .limit(50),
+    supabase
+      .from('gw_google_events')
+      .select('id, title, start_at, end_at, location')
+      .gte('start_at', `${from}T00:00:00`)
+      .lte('start_at', `${to}T23:59:59`)
+      .order('start_at')
+      .limit(50),
+  ]);
   if (error) return JSON.stringify({ error: error.message });
-  const { data: gcal } = await supabase
-    .from('gw_google_events')
-    .select('id, title, start_at, end_at, location')
-    .gte('start_at', `${from}T00:00:00`)
-    .lte('start_at', `${to}T23:59:59`)
-    .order('start_at')
-    .limit(50);
   return JSON.stringify({
     events: events ?? [],
     google_calendar_events: (gcal ?? []).map((g: any) => ({ ...g, read_only: true })),
@@ -1126,9 +1129,10 @@ async function listCourses(args: Record<string, unknown>, deps: Deps): Promise<s
   });
 }
 
-async function resolveCourse(deps: Deps, name: string): Promise<CourseRow | { error: string } | null> {
-  const courses = await fetchCourses(deps);
-  if ('error' in courses) return courses;
+// Pure resolver over an already-fetched list: getCourseDeadlines and
+// getEnrollments need BOTH the resolved course and the full list (for the
+// title map), and the old shape fetched the entire catalog twice per call.
+function resolveCourseFrom(courses: CourseRow[], name: string): CourseRow | null {
   const q = name.trim();
   if (!q) return null;
   const exact = courses.find((c) =>
@@ -1139,23 +1143,26 @@ async function resolveCourse(deps: Deps, name: string): Promise<CourseRow | { er
 async function getCourseInfo(args: Record<string, unknown>, deps: Deps): Promise<string> {
   const name = String(args.course ?? '').trim();
   if (!name) return JSON.stringify({ error: 'Pass the course name or code.' });
-  const course = await resolveCourse(deps, name);
-  if (course && 'error' in course) return JSON.stringify({ error: course.error });
+  const courses = await fetchCourses(deps);
+  if ('error' in courses) return JSON.stringify({ error: courses.error });
+  const course = resolveCourseFrom(courses, name);
   if (!course) return JSON.stringify({ has_data: false, note: `No course matching "${name}" is visible to this user.` });
-  // Upcoming scheduled class sessions, when the course keeps them.
+  // Sessions and enrollment are independent — one round-trip, not two.
   const today = new Date().toISOString().slice(0, 10);
-  const { data: sessions } = await deps.supabase
-    .from('gw_course_class_sessions')
-    .select('title, session_date, start_time, end_time, location, session_type')
-    .eq('course_id', course.id)
-    .gte('session_date', today)
-    .order('session_date', { ascending: true })
-    .limit(6);
-  const { data: enrolled } = await deps.supabase
-    .from('gw_course_enrollments')
-    .select('id, user_id')
-    .eq('course_id', course.id)
-    .limit(500);
+  const [{ data: sessions }, { data: enrolled }] = await Promise.all([
+    deps.supabase
+      .from('gw_course_class_sessions')
+      .select('title, session_date, start_time, end_time, location, session_type')
+      .eq('course_id', course.id)
+      .gte('session_date', today)
+      .order('session_date', { ascending: true })
+      .limit(6),
+    deps.supabase
+      .from('gw_course_enrollments')
+      .select('id, user_id')
+      .eq('course_id', course.id)
+      .limit(500),
+  ]);
   const enrolledCount = (enrolled ?? []).length;
   return JSON.stringify({
     has_data: true,
@@ -1182,18 +1189,18 @@ async function getCourseInfo(args: Record<string, unknown>, deps: Deps): Promise
 
 async function getCourseDeadlines(args: Record<string, unknown>, deps: Deps): Promise<string> {
   const name = String(args.course ?? '').trim();
+  // One catalog fetch serves both the name resolution and the title map.
+  const courses = await fetchCourses(deps);
+  if ('error' in courses) return JSON.stringify({ error: courses.error });
   let courseId: string | null = null;
   let courseLabel: string | null = null;
   if (name) {
-    const course = await resolveCourse(deps, name);
-    if (course && 'error' in course) return JSON.stringify({ error: course.error });
+    const course = resolveCourseFrom(courses, name);
     if (!course) return JSON.stringify({ has_data: false, note: `No course matching "${name}" is visible to this user.` });
     courseId = course.id;
     courseLabel = course.title ?? name;
   }
-  const courses = await fetchCourses(deps);
-  const titleById = new Map<string, string>(
-    'error' in courses ? [] : courses.map((c) => [c.id, c.title ?? 'Untitled course']));
+  const titleById = new Map<string, string>(courses.map((c) => [c.id, c.title ?? 'Untitled course']));
 
   // The builder is untyped (SupabaseLike.from returns the chainable stub),
   // so this helper's parameter inherits that looseness without an annotation.
@@ -1242,11 +1249,13 @@ async function getCourseDeadlines(args: Record<string, unknown>, deps: Deps): Pr
 async function getEnrollments(args: Record<string, unknown>, deps: Deps): Promise<string> {
   const courseName = String(args.course ?? '').trim();
   const personName = String(args.user_name ?? '').trim();
+  // One catalog fetch: resolves the course filter AND labels the results.
+  const courses = await fetchCourses(deps);
+  if ('error' in courses) return JSON.stringify({ error: courses.error });
   let courseId: string | null = null;
   let courseLabel: string | null = null;
   if (courseName) {
-    const course = await resolveCourse(deps, courseName);
-    if (course && 'error' in course) return JSON.stringify({ error: course.error });
+    const course = resolveCourseFrom(courses, courseName);
     if (!course) return JSON.stringify({ has_data: false, note: `No course matching "${courseName}" is visible to this user.` });
     courseId = course.id;
     courseLabel = course.title ?? courseName;
@@ -1259,9 +1268,7 @@ async function getEnrollments(args: Record<string, unknown>, deps: Deps): Promis
   const { data: rows, error } = await q;
   if (error) return JSON.stringify({ error: error.message });
 
-  const courses = await fetchCourses(deps);
-  const titleById = new Map<string, string>(
-    'error' in courses ? [] : courses.map((c) => [c.id, c.title ?? 'Untitled course']));
+  const titleById = new Map<string, string>(courses.map((c) => [c.id, c.title ?? 'Untitled course']));
   const userIds = [...new Set(((rows ?? []) as Array<{ user_id: string }>).map((r) => r.user_id))];
   const nameById = new Map<string, string>();
   if (userIds.length > 0) {
@@ -1311,17 +1318,30 @@ async function getEnrollments(args: Record<string, unknown>, deps: Deps): Promis
 // Numbers are exact facts: the tool answers or the assistant says it
 // cannot verify — never a guessed number.
 
+// The hymnal LIST (four rows, tenant-blind reference data, changes only
+// when a new book is ingested) is cached per container so every lookup is
+// one query instead of two. The hymn INDEX itself is always queried live.
+type HymnalRow = { id: string; title?: string; short_name?: string };
+let hymnalListCache: { rows: HymnalRow[]; ts: number } | null = null;
+const HYMNAL_CACHE_TTL_MS = 10 * 60 * 1000;
+
 async function lookupHymn(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
   const q = String(args.query ?? '').trim();
   const hymnalArg = String(args.hymnal ?? '').trim().toLowerCase();
   const numberArg = String(args.number ?? '').trim();
   if (!q && !numberArg) return JSON.stringify({ error: 'Pass a hymn title/first line, or a number to reverse-look-up.' });
 
-  const { data: hymnals, error: hErr } = await supabase
-    .from('gw_hymnals')
-    .select('id, title, short_name');
-  if (hErr) return JSON.stringify({ error: hErr.message });
-  const hymnalRows = (hymnals ?? []) as Array<{ id: string; title?: string; short_name?: string }>;
+  let hymnalRows: HymnalRow[];
+  if (hymnalListCache && Date.now() - hymnalListCache.ts < HYMNAL_CACHE_TTL_MS) {
+    hymnalRows = hymnalListCache.rows;
+  } else {
+    const { data: hymnals, error: hErr } = await supabase
+      .from('gw_hymnals')
+      .select('id, title, short_name');
+    if (hErr) return JSON.stringify({ error: hErr.message });
+    hymnalRows = (hymnals ?? []) as HymnalRow[];
+    if (hymnalRows.length > 0) hymnalListCache = { rows: hymnalRows, ts: Date.now() };
+  }
   const nameById = new Map(hymnalRows.map((h) => [h.id, h.short_name || h.title || h.id]));
 
   let hymnalIds: string[] | null = null;
