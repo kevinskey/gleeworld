@@ -3,7 +3,7 @@
 // pull most fields from Crossref (DOI) or Open Library (ISBN) via
 // lookupDOI/lookupISBN, but never blocks manual entry — a null lookup just
 // shows a caption and the user fills the fields in themselves.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, X, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -61,6 +61,16 @@ export function SourceForm({ initial, onSave, onCancel }: SourceFormProps) {
 
   const autoFillKind = classifyAutoFillInput(autoFillValue);
 
+  // Website `accessed` defaults to today, but only for a brand-new source
+  // (never overwrite what an editor already saved) and only while the field
+  // is still blank (never fight a value the user already typed or cleared
+  // via the Today button).
+  useEffect(() => {
+    if (!initial && type === 'website' && !accessed) {
+      setAccessed(new Date().toISOString().slice(0, 10));
+    }
+  }, [type, initial, accessed]);
+
   async function handleAutoFill() {
     if (!autoFillKind) return;
     setAutoFillLoading(true);
@@ -76,17 +86,23 @@ export function SourceForm({ initial, onSave, onCancel }: SourceFormProps) {
       return;
     }
 
+    // Merge fill-if-empty: a lookup should fill in blanks, never clobber
+    // fields the user already typed. `type` drives which fields even render
+    // and has no "blank" state of its own, so it's always safe to set.
     if (result.type) setType(result.type);
-    if (result.title) setTitle(result.title);
-    if (result.authors && result.authors.length > 0) setAuthors(result.authors);
-    if (result.container) setContainer(result.container);
-    if (result.publisher) setPublisher(result.publisher);
-    if (result.year) setYear(result.year);
-    if (result.volume) setVolume(result.volume);
-    if (result.issue) setIssue(result.issue);
-    if (result.pages) setPages(result.pages);
-    if (result.doi) setDoi(result.doi);
-    if (result.isbn) setIsbn(result.isbn);
+    if (result.title && !title.trim()) setTitle(result.title);
+    if (result.authors && result.authors.length > 0) {
+      const authorsAreBlank = authors.length === 0 || authors.every((a) => !a.given.trim() && !a.family.trim());
+      if (authorsAreBlank) setAuthors(result.authors);
+    }
+    if (result.container && !container.trim()) setContainer(result.container);
+    if (result.publisher && !publisher.trim()) setPublisher(result.publisher);
+    if (result.year && !year.trim()) setYear(result.year);
+    if (result.volume && !volume.trim()) setVolume(result.volume);
+    if (result.issue && !issue.trim()) setIssue(result.issue);
+    if (result.pages && !pages.trim()) setPages(result.pages);
+    if (result.doi && !doi.trim()) setDoi(result.doi);
+    if (result.isbn && !isbn.trim()) setIsbn(result.isbn);
   }
 
   function updateAuthor(index: number, field: keyof SourceAuthor, value: string) {
@@ -307,8 +323,14 @@ export function SourceForm({ initial, onSave, onCancel }: SourceFormProps) {
       {type === 'video' && (
         <>
           <div className="space-y-1">
-            <Label htmlFor="src-container" className="text-xs">Channel/Platform</Label>
-            <Input id="src-container" value={container} onChange={(e) => setContainer(e.target.value)} className="h-9 text-sm" />
+            {/* Bound to `publisher`, not `container` — formatReference's MLA
+                video branch only reads `source.publisher` for its tail
+                ("Title. Publisher, Year."), so a value stored in `container`
+                would silently drop out of the MLA Works Cited entry. APA's
+                video branch reads publisher first and falls back to
+                container, so publisher is the safe field for both styles. */}
+            <Label htmlFor="src-publisher-video" className="text-xs">Channel/Platform</Label>
+            <Input id="src-publisher-video" value={publisher} onChange={(e) => setPublisher(e.target.value)} className="h-9 text-sm" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
