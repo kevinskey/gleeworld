@@ -217,6 +217,24 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
+    name: 'schedule_event_playlist',
+    description: "Attach music to a CALENDAR EVENT so a one-tap play button appears when the event starts — 'play my warm-ups at Sunday's rehearsal', 'schedule In Bright Mansions for the retreat'. Pass `event` (title words), plus EITHER playlist_name (their Apple Music library playlist) OR apple_id/apple_kind/label from search_apple_music. clear=true detaches. Browsers can't start audio unattended — always tell the user it plays on one tap when the event begins.",
+    parameters: {
+      type: 'object',
+      properties: {
+        event: str('Words from the event title, e.g. "Sunday rehearsal"'),
+        playlist_name: str("Their library playlist name (optional)"),
+        apple_id: str('Apple Music catalog id from search_apple_music (optional)'),
+        apple_kind: str("'song' or 'album' (with apple_id)"),
+        label: str('Human name shown on the play chip'),
+        artwork_url: str('Artwork URL (optional)'),
+        clear: { type: 'boolean', description: 'true to remove the scheduled music from the event' },
+      },
+      required: ['event'],
+    },
+    minRole: 'admin', execution: 'server', confirm: false,
+  },
+  {
     name: 'stop_playback',
     // "Stop the music" during live voice (2026-08-10) got "I don't have a
     // way to stop playback" — true at the time: the app owns the mini

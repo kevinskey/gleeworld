@@ -95,7 +95,31 @@ export function AssistantMiniPlayer() {
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const drag = useRef<{ dx: number; dy: number } | null>(null);
 
-  if (!assistant?.nowPlaying) return null;
+  // The scheduled-playlist chip shares this floating layer: an event with
+  // attached music just started, and this tap is the browser's required
+  // user gesture. It renders whether or not something is already playing.
+  const chip = assistant?.scheduledPlay ? (
+    <div className="fixed bottom-24 right-4 z-50 flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 shadow-xl print:hidden">
+      <button
+        type="button"
+        onClick={() => assistant.acceptScheduledPlay()}
+        className="flex items-center gap-2 text-sm font-medium"
+      >
+        <Play className="h-4 w-4" aria-hidden />
+        <span className="max-w-[220px] truncate">{assistant.scheduledPlay.label} — {assistant.scheduledPlay.eventTitle}</span>
+      </button>
+      <button
+        type="button"
+        aria-label="Dismiss"
+        onClick={() => assistant.dismissScheduledPlay()}
+        className="rounded-full p-1 text-muted-foreground hover:bg-muted"
+      >
+        <X className="h-3.5 w-3.5" aria-hidden />
+      </button>
+    </div>
+  ) : null;
+
+  if (!assistant?.nowPlaying) return chip;
   const { videoId, title, channel, source, appleId, appleKind, artworkUrl } = assistant.nowPlaying;
   const isApple = source === 'apple' && !!appleId;
   // Older callers set only videoId; a malformed apple entry with no id
@@ -128,6 +152,8 @@ export function AssistantMiniPlayer() {
   };
 
   return (
+    <>
+    {chip}
     <div
       data-mini-player
       className="fixed z-50 overflow-hidden rounded-lg border border-border bg-card shadow-xl print:hidden"
@@ -177,5 +203,6 @@ export function AssistantMiniPlayer() {
         </div>
       )}
     </div>
+    </>
   );
 }

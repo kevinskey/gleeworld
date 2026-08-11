@@ -83,6 +83,7 @@ export async function executeServerTool(
       case 'web_search': return await webSearch(args, deps);
       case 'research_repertoire': return await researchRepertoire(args, deps);
       case 'lookup_hymn': return { replyJson: await lookupHymn(args, deps) };
+      case 'schedule_event_playlist': return { replyJson: await scheduleEventPlaylist(args, deps) };
       case 'search_apple_music': return { replyJson: await searchAppleMusicTool(args) };
       case 'set_assistant_name': return { replyJson: await setAssistantName(args, deps) };
       case 'list_courses': return { replyJson: await listCourses(args, deps) };
@@ -1480,5 +1481,57 @@ async function searchAppleMusicTool(args: Record<string, unknown>): Promise<stri
     has_data: songs.length + albums.length + artists.length > 0,
     songs, albums, artists,
     note: 'To play a song or album, call play_apple_music with its id + kind + title + artist + artwork_url. Artists are information-only.',
+  });
+}
+
+// ===================== Scheduled playlists =====================
+// "Play my warm-ups at Sunday's rehearsal": store a ready-to-run client
+// action on the event; the app offers a one-tap play chip when the event
+// starts (browsers cannot start audio unattended). Admin-gated in the
+// catalog because events are the shared tenant calendar.
+
+async function scheduleEventPlaylist(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
+  const eventQuery = String(args.event ?? '').trim();
+  if (!eventQuery) return JSON.stringify({ error: 'Pass the event title to attach to.' });
+  const { data: events, error } = await supabase
+    .from('gw_events')
+    .select('id, title, start_date')
+    .gte('start_date', new Date().toISOString())
+    .order('start_date', { ascending: true })
+    .limit(200);
+  if (error) return JSON.stringify({ error: error.message });
+  const needle = eventQuery.toLowerCase();
+  const hit = ((events ?? []) as Array<{ id: string; title?: string; start_date?: string }>)
+    .find((e) => (e.title ?? '').toLowerCase().includes(needle));
+  if (!hit) return JSON.stringify({ has_data: false, note: `No upcoming event matching "${eventQuery}".` });
+
+  let payload: Record<string, unknown> | null = null;
+  if (args.clear === true) {
+    payload = null;
+  } else if (typeof args.playlist_name === 'string' && args.playlist_name.trim()) {
+    payload = { tool: 'play_my_playlist', args: { name: args.playlist_name.trim() }, label: args.playlist_name.trim() };
+  } else if (typeof args.apple_id === 'string' && args.apple_id.trim()) {
+    payload = {
+      tool: 'play_apple_music',
+      args: { id: args.apple_id.trim(), kind: args.apple_kind === 'album' ? 'album' : 'song', title: args.label ?? '', artwork_url: args.artwork_url ?? undefined },
+      label: args.label ?? 'Music',
+    };
+  } else {
+    return JSON.stringify({ error: 'Pass playlist_name (their library playlist) OR apple_id from search_apple_music, or clear=true.' });
+  }
+  const { data: updated, error: upErr } = await supabase
+    .from('gw_events')
+    .update({ assistant_playlist: payload })
+    .eq('id', hit.id)
+    .select('id');
+  if (upErr) return JSON.stringify({ error: upErr.message });
+  if (!updated || updated.length === 0) return JSON.stringify({ error: 'The event did not accept the change (permissions).' });
+  return JSON.stringify({
+    ok: true,
+    event: hit.title, starts: hit.start_date,
+    scheduled: payload ? (payload as { label: string }).label : null,
+    note: payload
+      ? 'Tell the user: when the event starts, a play button for it appears next to the assistant — one tap starts the music.'
+      : 'Cleared.',
   });
 }

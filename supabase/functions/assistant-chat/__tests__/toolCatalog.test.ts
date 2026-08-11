@@ -37,7 +37,7 @@ describe('toolCatalog', () => {
   // server-side so the prompt (built server-side from that row) sees the
   // new name on the very next turn. Both exceptions are named rather than
   // quietly widening "read-only".
-  it('server tools are the read-only set, plus remember_preference and set_assistant_name', () => {
+  it('server tools are the read-only set, plus the named write exceptions', () => {
     const server = TOOL_CATALOG.filter((t) => t.execution === 'server').map((t) => t.name).sort();
     expect(server).toEqual([
       'find_nearby_place',
@@ -65,6 +65,7 @@ describe('toolCatalog', () => {
       'read_news_feeds',
       'remember_preference',
       'research_repertoire',
+      'schedule_event_playlist',
       'search_academy',
       'search_apple_music',
       'search_liturgy',
