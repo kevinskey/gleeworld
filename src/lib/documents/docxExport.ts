@@ -72,10 +72,24 @@ export interface RunModel {
 }
 
 export type TextParaStyle =
-  | 'body' | 'heading1' | 'heading2' | 'heading3'
+  | 'body' | 'cellBody' | 'heading1' | 'heading2' | 'heading3'
   | 'bullet' | 'ordered' | 'blockquote';
 
-export interface TextParaModel { kind: 'text'; style: TextParaStyle; runs: RunModel[] }
+export interface TextParaModel {
+  kind: 'text';
+  style: TextParaStyle;
+  runs: RunModel[];
+  /** Which physical `orderedList` node this paragraph belongs to (1-based,
+   * unique per list in the whole export). Each distinct list gets its own
+   * docx numbering "instance" sharing the `gw-ordered-list` abstract
+   * definition, so a second `<ol>` restarts at 1 instead of continuing the
+   * first list's count. Only set for `style: 'ordered'`. */
+  listInstance?: number;
+  /** Forces a page break immediately before this paragraph (used to open
+   * the APA body on its own page without a separate empty filler
+   * paragraph). */
+  pageBreakBefore?: boolean;
+}
 export interface ImageParaModel { kind: 'image'; src: string }
 export interface RuleParaModel { kind: 'rule' }
 export interface TableCellModel { paras: ParaModel[]; header: boolean }
@@ -154,45 +168,68 @@ function textRunsFromInline(nodes: JNode[] | undefined, ctx: ConverterCtx): RunM
   return runs;
 }
 
+/** Shared mutable state threaded through one `tiptapToRuns` call tree
+ * (including recursion into table cells), so every distinct `orderedList`
+ * node in the whole export — no matter how deeply nested or which table
+ * cell it's in — gets its own `listInstance`, and so table-cell paragraphs
+ * know not to take the body's first-line indent (finding 7). */
+export interface WalkState { counter: { next: number }; inTable: boolean }
+
+function freshWalkState(): WalkState {
+  return { counter: { next: 1 }, inTable: false };
+}
+
 /** Converts the block content of a listItem or blockquote — normally one or
  * more `paragraph` nodes, occasionally a nested list — into flat text
- * paragraph models carrying `style`. */
+ * paragraph models carrying `style` (and `listInstance` for direct
+ * paragraph children of an ordered list item; nested lists get their own
+ * instance via their own `flattenList` call, untouched here). */
 function paragraphsFromBlockContent(
   nodes: JNode[] | undefined,
   style: TextParaStyle,
+  listInstance: number | undefined,
   ctx: ConverterCtx,
+  state: WalkState,
 ): TextParaModel[] {
   const out: TextParaModel[] = [];
   for (const node of nodes ?? []) {
     if (!isNode(node)) continue;
     if (node.type === 'paragraph') {
-      out.push({ kind: 'text', style, runs: textRunsFromInline(node.content, ctx) });
+      out.push({ kind: 'text', style, listInstance, runs: textRunsFromInline(node.content, ctx) });
     } else if (node.type === 'bulletList' || node.type === 'orderedList') {
-      out.push(...flattenList(node, ctx));
+      out.push(...flattenList(node, ctx, state));
     }
     // other nested block types inside a list item/blockquote: skip gracefully
   }
   return out;
 }
 
-function flattenList(listNode: JNode, ctx: ConverterCtx): TextParaModel[] {
-  const style: TextParaStyle = listNode.type === 'orderedList' ? 'ordered' : 'bullet';
+function flattenList(listNode: JNode, ctx: ConverterCtx, state: WalkState): TextParaModel[] {
+  const isOrdered = listNode.type === 'orderedList';
+  const style: TextParaStyle = isOrdered ? 'ordered' : 'bullet';
+  // Allocate this list's own numbering instance *once*, before walking its
+  // items — every item in *this* list shares it; the next orderedList node
+  // (sibling or otherwise) gets the next instance, so it restarts at 1.
+  const listInstance = isOrdered ? state.counter.next++ : undefined;
   const out: TextParaModel[] = [];
   for (const item of listNode.content ?? []) {
     if (isNode(item) && item.type === 'listItem') {
-      out.push(...paragraphsFromBlockContent(item.content, style, ctx));
+      out.push(...paragraphsFromBlockContent(item.content, style, listInstance, ctx, state));
     }
   }
   return out;
 }
 
-function tableCellModel(cellNode: JNode, ctx: ConverterCtx, header: boolean): TableCellModel {
-  return { paras: tiptapToRuns({ type: 'doc', content: cellNode.content ?? [] }, ctx), header };
+function tableCellModel(cellNode: JNode, ctx: ConverterCtx, header: boolean, state: WalkState): TableCellModel {
+  const cellState: WalkState = { counter: state.counter, inTable: true };
+  return { paras: tiptapToRuns({ type: 'doc', content: cellNode.content ?? [] }, ctx, cellState), header };
 }
 
 /** Pure conversion: TipTap document JSON → an array of paragraph/image/rule/
- * table models. Never throws — unrecognized node types are skipped. */
-export function tiptapToRuns(content: unknown, ctx: ConverterCtx): ParaModel[] {
+ * table models. Never throws — unrecognized node types are skipped. The
+ * `state` param is internal (threads the ordered-list instance counter and
+ * "inside a table cell" flag through recursion); callers normally omit it. */
+export function tiptapToRuns(content: unknown, ctx: ConverterCtx, state: WalkState = freshWalkState()): ParaModel[] {
   const doc = isNode(content) ? content : undefined;
   const models: ParaModel[] = [];
 
@@ -201,7 +238,11 @@ export function tiptapToRuns(content: unknown, ctx: ConverterCtx): ParaModel[] {
 
     switch (node.type) {
       case 'paragraph':
-        models.push({ kind: 'text', style: 'body', runs: textRunsFromInline(node.content, ctx) });
+        models.push({
+          kind: 'text',
+          style: state.inTable ? 'cellBody' : 'body',
+          runs: textRunsFromInline(node.content, ctx),
+        });
         break;
 
       case 'heading': {
@@ -213,11 +254,11 @@ export function tiptapToRuns(content: unknown, ctx: ConverterCtx): ParaModel[] {
 
       case 'bulletList':
       case 'orderedList':
-        models.push(...flattenList(node, ctx));
+        models.push(...flattenList(node, ctx, state));
         break;
 
       case 'blockquote':
-        models.push(...paragraphsFromBlockContent(node.content, 'blockquote', ctx));
+        models.push(...paragraphsFromBlockContent(node.content, 'blockquote', undefined, ctx, state));
         break;
 
       case 'table': {
@@ -228,7 +269,7 @@ export function tiptapToRuns(content: unknown, ctx: ConverterCtx): ParaModel[] {
           for (const cellNode of rowNode.content ?? []) {
             if (!isNode(cellNode)) continue;
             if (cellNode.type === 'tableCell' || cellNode.type === 'tableHeader') {
-              cells.push(tableCellModel(cellNode, ctx, cellNode.type === 'tableHeader'));
+              cells.push(tableCellModel(cellNode, ctx, cellNode.type === 'tableHeader', state));
             }
           }
           rows.push({ cells });
@@ -342,60 +383,80 @@ async function fetchImageRun(src: string): Promise<ImageRun | null> {
   }
 }
 
-function runOptionsFor(run: RunModel) {
+interface RunOverrides { bold?: boolean; size?: number }
+
+function runOptionsFor(run: RunModel, overrides?: RunOverrides) {
   return {
     text: run.text,
-    bold: run.bold,
+    bold: overrides?.bold ?? run.bold,
     italics: run.italic,
     underline: run.underline ? { type: UnderlineType.SINGLE } : undefined,
     highlight: run.highlight ? HighlightColor.YELLOW : undefined,
     subScript: run.subscript,
     superScript: run.superscript,
     font: BODY_FONT,
-    size: BODY_SIZE,
+    size: overrides?.size ?? BODY_SIZE,
   };
 }
 
-function docxRunFor(run: RunModel): TextRun | FootnoteReferenceRun | ExternalHyperlink {
+/** Maps one run model to a real docx run. `overrides` (bold/size) let
+ * callers like the heading mapper apply their own presentation without
+ * re-deriving the run's kind — a footnote-marker run still becomes a real
+ * `FootnoteReferenceRun` and a link still becomes a real
+ * `ExternalHyperlink` even inside a heading, instead of being silently
+ * flattened to plain bold text. */
+function docxRunFor(run: RunModel, overrides?: RunOverrides): TextRun | FootnoteReferenceRun | ExternalHyperlink {
   if (run.footnoteRefId !== undefined) return new FootnoteReferenceRun(run.footnoteRefId);
   if (run.link) {
     return new ExternalHyperlink({
       link: run.link,
-      children: [new TextRun({ ...runOptionsFor(run), underline: { type: UnderlineType.SINGLE }, color: '0563C1' })],
+      children: [new TextRun({
+        ...runOptionsFor(run, overrides), underline: { type: UnderlineType.SINGLE }, color: '0563C1',
+      })],
     });
   }
-  return new TextRun(runOptionsFor(run));
+  return new TextRun(runOptionsFor(run, overrides));
 }
 
-function paragraphPropsFor(style: TextParaStyle) {
-  switch (style) {
-    case 'heading1':
-    case 'heading2':
-    case 'heading3':
-      return { spacing: DOUBLE_SPACING };
-    case 'bullet':
-      return { spacing: DOUBLE_SPACING, bullet: { level: 0 } };
-    case 'ordered':
-      return { spacing: DOUBLE_SPACING, numbering: { reference: 'gw-ordered-list', level: 0 } };
-    case 'blockquote':
-      return { spacing: DOUBLE_SPACING, indent: { left: 720 } };
-    case 'body':
-    default:
-      return { spacing: DOUBLE_SPACING, indent: FIRST_LINE_INDENT };
-  }
+function paragraphPropsFor(model: TextParaModel) {
+  const base = (() => {
+    switch (model.style) {
+      case 'heading1':
+      case 'heading2':
+      case 'heading3':
+        return { spacing: DOUBLE_SPACING };
+      case 'bullet':
+        return { spacing: DOUBLE_SPACING, bullet: { level: 0 } };
+      case 'ordered':
+        return {
+          spacing: DOUBLE_SPACING,
+          numbering: { reference: 'gw-ordered-list', level: 0, instance: model.listInstance ?? 1 },
+        };
+      case 'blockquote':
+        return { spacing: DOUBLE_SPACING, indent: { left: 720 } };
+      case 'cellBody':
+        // Table-cell body paragraphs: double-spaced like the rest of the
+        // paper, but never first-line-indented (that's a body-paragraph-only
+        // MLA/APA convention, not a table convention).
+        return { spacing: DOUBLE_SPACING };
+      case 'body':
+      default:
+        return { spacing: DOUBLE_SPACING, indent: FIRST_LINE_INDENT };
+    }
+  })();
+  return model.pageBreakBefore ? { ...base, pageBreakBefore: true } : base;
 }
 
 function textParaToDocx(model: TextParaModel): Paragraph {
   const isHeading = model.style === 'heading1' || model.style === 'heading2' || model.style === 'heading3';
-  const runs = model.runs.map(docxRunFor);
   if (isHeading) {
     const size = HEADING_SIZES[model.style as 'heading1' | 'heading2' | 'heading3'];
     return new Paragraph({
-      ...paragraphPropsFor(model.style),
-      children: model.runs.map(r => new TextRun({ ...runOptionsFor(r), bold: true, size })),
+      ...paragraphPropsFor(model),
+      children: model.runs.map(r => docxRunFor(r, { bold: true, size })),
     });
   }
-  return new Paragraph({ ...paragraphPropsFor(model.style), children: runs });
+  return new Paragraph({ ...paragraphPropsFor(model), children: model.runs.map(r => docxRunFor(r)) });
 }
 
 async function tableParaToDocx(model: TableParaModel): Promise<Table> {
@@ -529,8 +590,25 @@ function apaTitlePageParagraphs(meta: PaperMeta, title: string): Paragraph[] {
       spacing: DOUBLE_SPACING,
       children: [new TextRun({ text: line, font: BODY_FONT, size: BODY_SIZE })],
     })),
-    new Paragraph({ pageBreakBefore: true, children: [] }),
   ];
+}
+
+/** APA opens the body on its own page after the title page. Rather than a
+ * separate empty `pageBreakBefore` filler paragraph (which leaves a stray
+ * blank paragraph mark at the top of the body page), stamp `pageBreakBefore`
+ * directly onto the first body paragraph. Falls back to a single filler
+ * paragraph only in the edge case where the body's first block isn't plain
+ * text (e.g. it opens with an image or table, which can't carry the flag
+ * themselves). */
+function applyApaFirstPageBreak(models: ParaModel[]): ParaModel[] {
+  if (models.length === 0) {
+    return [{ kind: 'text', style: 'body', runs: [], pageBreakBefore: true }];
+  }
+  const [first, ...rest] = models;
+  if (first.kind === 'text') {
+    return [{ ...first, pageBreakBefore: true }, ...rest];
+  }
+  return [{ kind: 'text', style: 'body', runs: [], pageBreakBefore: true }, ...models];
 }
 
 function worksCitedParagraphs(model: WorksCitedModel): Paragraph[] {
@@ -544,7 +622,7 @@ function worksCitedParagraphs(model: WorksCitedModel): Paragraph[] {
     ...model.entries.map(runs => new Paragraph({
       spacing: DOUBLE_SPACING,
       indent: HANGING_INDENT,
-      children: runs.map(docxRunFor),
+      children: runs.map(r => docxRunFor(r)),
     })),
   ];
 }
@@ -553,7 +631,7 @@ function footnotesRecord(models: FootnoteModel[]): Record<string, { children: Pa
   const record: Record<string, { children: Paragraph[] }> = {};
   for (const model of models) {
     record[String(model.n)] = {
-      children: [new Paragraph({ children: model.runs.map(docxRunFor) })],
+      children: [new Paragraph({ children: model.runs.map(r => docxRunFor(r)) })],
     };
   }
   return record;
@@ -573,7 +651,8 @@ export async function buildDocxModel(input: ExportInput): Promise<BuildDocxModel
   const { content, title, style, sources, footnotes, meta } = input;
   const ctx: ConverterCtx = { style, sources, footnotes, footnoteIndex: makeFootnoteIndexer(content) };
 
-  const bodyModels = tiptapToRuns(content, ctx);
+  let bodyModels = tiptapToRuns(content, ctx);
+  if (style === 'apa7') bodyModels = applyApaFirstPageBreak(bodyModels);
   const bodyBlocks = await paraModelsToDocx(bodyModels);
 
   const footnoteModels = buildFootnoteModels(content, footnotes);
@@ -587,6 +666,19 @@ export async function buildDocxModel(input: ExportInput): Promise<BuildDocxModel
   const tailBlocks = worksCited ? worksCitedParagraphs(worksCited) : [];
 
   const doc = new Document({
+    // Without an explicit docDefaults, Word's built-in fallback is Calibri
+    // 11pt single-spaced — so anything a student types into the exported
+    // file after opening it (or any paragraph we forget to stamp fonts on,
+    // e.g. spacer paragraphs) silently reverts to the wrong font/spacing
+    // instead of inheriting the paper's Times New Roman 12pt double-spacing.
+    styles: {
+      default: {
+        document: {
+          run: { font: BODY_FONT, size: BODY_SIZE },
+          paragraph: { spacing: DOUBLE_SPACING },
+        },
+      },
+    },
     numbering: {
       config: [{
         reference: 'gw-ordered-list',
@@ -595,7 +687,10 @@ export async function buildDocxModel(input: ExportInput): Promise<BuildDocxModel
     },
     footnotes: footnoteModels.length > 0 ? footnotesRecord(footnoteModels) : undefined,
     sections: [{
-      properties: { page: { margin: MARGINS } },
+      // 12240x15840 twips = 8.5"x11" US Letter. docx defaults to A4
+      // (11906x16838) when `size` is omitted, which is wrong for MLA/APA
+      // student papers.
+      properties: { page: { size: { width: 12240, height: 15840 }, margin: MARGINS } },
       headers: { default: header },
       children: [...openingBlocks, ...bodyBlocks, ...tailBlocks],
     }],

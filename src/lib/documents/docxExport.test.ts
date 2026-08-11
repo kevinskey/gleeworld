@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { Document } from 'docx';
+import { Document, Packer } from 'docx';
+import JSZip from 'jszip';
 import {
   buildDocxModel,
   buildFootnoteModels,
@@ -10,6 +11,7 @@ import {
   tiptapToDocxParagraphs,
   tiptapToRuns,
   type ConverterCtx,
+  type ExportInput,
 } from './docxExport';
 import type { CitationStyle, DocFootnote, DocSource } from './types';
 
@@ -325,6 +327,166 @@ describe('tiptapToDocxParagraphs (thin docx mapping)', () => {
       { type: 'paragraph', content: [{ type: 'text', text: 'hello' }] },
     ]}, testCtx());
     expect(paras).toHaveLength(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Real-OOXML formatting checks (fix for review finding 5: "zero tests cover
+// the formatting layer"). `Packer.toString` returns the raw *zipped* archive
+// bytes (JSZip's `generateAsync({type:'string'})` output), not readable XML
+// — verified empirically; asserting substrings against it directly would
+// silently pass/fail on binary noise. So these unzip with `jszip` (already a
+// transitive dependency of `docx`, resolvable without adding anything to
+// package.json) to read the real `word/document.xml` / `styles.xml` /
+// `header1.xml` / `numbering.xml` parts docx actually produces — the same
+// thing the task review itself did by hand to find these defects.
+// ---------------------------------------------------------------------------
+
+async function packedXmlParts(input: ExportInput) {
+  const { doc } = await buildDocxModel(input);
+  const buf = await Packer.toBuffer(doc);
+  const zip = await JSZip.loadAsync(buf);
+  const read = async (path: string) => {
+    const file = zip.file(path);
+    return file ? file.async('string') : '';
+  };
+  return {
+    document: await read('word/document.xml'),
+    styles: await read('word/styles.xml'),
+    header: await read('word/header1.xml'),
+    numbering: await read('word/numbering.xml'),
+  };
+}
+
+/** Slices out the single `<w:p>...</w:p>` block containing `needle`, so
+ * assertions about one paragraph's properties (e.g. "this paragraph has no
+ * first-line indent") can't accidentally match a sibling paragraph's XML. */
+function paragraphContaining(xml: string, needle: string): string {
+  const needleIdx = xml.indexOf(needle);
+  if (needleIdx < 0) throw new Error(`paragraphContaining: "${needle}" not found in XML`);
+  const openShort = xml.lastIndexOf('<w:p>', needleIdx);
+  const openLong = xml.lastIndexOf('<w:p ', needleIdx);
+  const start = Math.max(openShort, openLong);
+  const end = xml.indexOf('</w:p>', needleIdx) + '</w:p>'.length;
+  return xml.slice(start, end);
+}
+
+describe('generated OOXML — paper formatting (real docx output, unzipped)', () => {
+  const mlaInput: ExportInput = {
+    title: 'Spirituals',
+    style: 'mla9',
+    sources: [southern],
+    footnotes: [{ id: 'n1', text: 'Note text' }],
+    meta: { studentName: 'Jane Doe', instructor: 'Dr. Smith', course: 'MUS 101', date: '11 August 2026' },
+    content: { type: 'doc', content: [
+      { type: 'heading', attrs: { level: 1 }, content: [
+        { type: 'text', text: 'Intro ' },
+        { type: 'footnoteRef', attrs: { noteId: 'n1' } },
+      ]},
+      { type: 'paragraph', content: [
+        { type: 'text', text: 'body ' },
+        { type: 'citationChip', attrs: { sourceId: 's1', locator: '12' } },
+      ]},
+      { type: 'orderedList', content: [
+        { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'one' }] }] },
+        { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'two' }] }] },
+      ]},
+      { type: 'orderedList', content: [
+        { type: 'listItem', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'three' }] }] },
+      ]},
+    ]},
+  };
+
+  it('uses US Letter page size, not the docx default of A4 (finding 1)', async () => {
+    const { document } = await packedXmlParts(mlaInput);
+    expect(document).toContain('<w:pgSz w:w="12240"');
+  });
+
+  it('sets docDefaults so untouched/typed-in text inherits the paper font instead of Calibri 11 (finding 2)', async () => {
+    const { styles } = await packedXmlParts(mlaInput);
+    const docDefaults = /<w:docDefaults>[\s\S]*?<\/w:docDefaults>/.exec(styles)?.[0] ?? '';
+    expect(docDefaults).toContain('Times New Roman');
+    expect(docDefaults).toContain('w:sz w:val="24"');
+  });
+
+  it('double-spaces the paper (line spacing 480)', async () => {
+    const { styles } = await packedXmlParts(mlaInput);
+    expect(styles).toContain('w:line="480"');
+  });
+
+  it('MLA running header carries the last name and a PAGE field', async () => {
+    const { header } = await packedXmlParts(mlaInput);
+    expect(header).toContain('Doe');
+    expect(header).toContain('PAGE');
+  });
+
+  it('Works Cited entries use a hanging indent', async () => {
+    const { document } = await packedXmlParts(mlaInput);
+    expect(document).toContain('<w:ind w:left="720" w:hanging="720"');
+  });
+
+  it('Works Cited starts on a new page', async () => {
+    const { document } = await packedXmlParts(mlaInput);
+    expect(document).toContain('<w:pageBreakBefore/>');
+  });
+
+  it('a footnoteRef inside a heading survives as a real footnote reference, not silently dropped (finding 3)', async () => {
+    const { document } = await packedXmlParts(mlaInput);
+    expect(document).toContain('<w:footnoteReference');
+  });
+
+  it('two ordered lists get two distinct numbering instances sharing one abstract definition, so the second restarts at 1 (finding 4)', async () => {
+    const { document, numbering } = await packedXmlParts(mlaInput);
+    const numIdsUsed = [...document.matchAll(/<w:numId w:val="(\d+)"\/>/g)].map(m => m[1]);
+    const uniqueNumIds = [...new Set(numIdsUsed)];
+    expect(uniqueNumIds).toHaveLength(2); // one instance per orderedList node
+
+    const abstractIdFor = (numId: string) =>
+      new RegExp(`<w:num w:numId="${numId}"><w:abstractNumId w:val="(\\d+)"`).exec(numbering)?.[1];
+    const abstractIds = uniqueNumIds.map(abstractIdFor);
+    expect(abstractIds.every(id => id !== undefined)).toBe(true);
+    // same list style (one abstract definition)...
+    expect(new Set(abstractIds).size).toBe(1);
+    // ...but concretely distinct instances, i.e. actually two separate lists.
+    expect(uniqueNumIds[0]).not.toBe(uniqueNumIds[1]);
+  });
+
+  it('table-cell body paragraphs do not get the body 720 first-line indent (minor finding 7)', async () => {
+    const tableInput: ExportInput = {
+      ...mlaInput,
+      content: { type: 'doc', content: [
+        { type: 'table', content: [
+          { type: 'tableRow', content: [
+            { type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'cell text' }] }] },
+          ]},
+        ]},
+      ]},
+    };
+    const { document } = await packedXmlParts(tableInput);
+    expect(paragraphContaining(document, 'cell text')).not.toContain('w:firstLine');
+  });
+
+  const apaInput: ExportInput = {
+    title: 'APA Paper',
+    style: 'apa7',
+    sources: [southern],
+    footnotes: [],
+    meta: { studentName: 'Jane Doe', instructor: 'Dr. Smith', course: 'MUS 101', date: '2026' },
+    content: { type: 'doc', content: [
+      { type: 'paragraph', content: [{ type: 'text', text: 'first body paragraph' }] },
+    ]},
+  };
+
+  it('APA emits "References" and a page-number-only header (no student name)', async () => {
+    const { document, header } = await packedXmlParts(apaInput);
+    expect(document).toContain('References');
+    expect(header).toContain('PAGE');
+    expect(header).not.toContain('Doe');
+  });
+
+  it('APA opens the body with pageBreakBefore on the first body paragraph, not a stray empty filler paragraph (minor finding 8)', async () => {
+    const { document } = await packedXmlParts(apaInput);
+    expect(paragraphContaining(document, 'first body paragraph')).toContain('<w:pageBreakBefore/>');
   });
 });
 
