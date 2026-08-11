@@ -127,7 +127,9 @@ export function DocumentEditor({
     content: (content ?? '') as Content,
     editorProps: {
       attributes: {
-        class: 'font-serif text-[17px] leading-relaxed text-foreground focus:outline-none min-h-[60vh]',
+        // focus-visible ring-0: index.css applies a global tenant-tinted
+        // :focus-visible ring; outline-none alone doesn't suppress it.
+        class: 'font-serif text-[17px] leading-relaxed text-foreground focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 min-h-[60vh]',
       },
     },
     onUpdate: ({ editor }) => {
@@ -145,7 +147,10 @@ export function DocumentEditor({
   return (
     <div className="flex flex-col">
       <DocToolbar editor={editor} onCiteClick={onCiteClick} onFootnoteClick={onFootnoteClick} onImageClick={onImageClick} />
-      <div className="mx-auto max-w-[700px] px-6 py-10 bg-card rounded-xl">
+      {/* w-full is load-bearing: in a flex-col parent, mx-auto overrides the
+          default cross-axis stretch and the card shrink-wraps its content
+          (an empty doc collapsed to ~90px). */}
+      <div className="w-full mx-auto max-w-[700px] px-6 py-10 bg-card rounded-xl">
         <EditorContent editor={editor} />
       </div>
     </div>
