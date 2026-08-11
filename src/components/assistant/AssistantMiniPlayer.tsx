@@ -13,30 +13,58 @@ import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
  * not ours.
  */
 function AppleMusicBody({ id, kind, artworkUrl }: { id: string; kind: 'song' | 'album' | 'playlist'; artworkUrl?: string | null }) {
-  const [playing, setPlaying] = useState(true);
+  const [playing, setPlaying] = useState(false);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const startPlayback = async () => {
+    const { getMusicKit } = await import('@/lib/musicKit');
+    const kit = await getMusicKit();
+    await kit.setQueue(kind === 'album' ? { album: id } : kind === 'playlist' ? { playlist: id } : { song: id });
+    await kit.play();
+    setPlaying(true);
+  };
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const { getMusicKit, authorizeAppleMusic } = await import('@/lib/musicKit');
-        await authorizeAppleMusic().catch(() => null);
-        const kit = await getMusicKit();
-        await kit.setQueue(kind === 'album' ? { album: id } : kind === 'playlist' ? { playlist: id } : { song: id });
-        if (!cancelled) await kit.play();
+        // Apple's sign-in popup is blocked outside a user click, and this
+        // effect runs from an assistant action, not a click. So: already
+        // authorized → play; otherwise show the sign-in BUTTON and let the
+        // tap be the gesture. (This was "assistant can't access Apple
+        // Music", 2026-08-11 — authorize() silently failing on mount.)
+        const { isAppleMusicAuthorized } = await import('@/lib/musicKit');
+        const authed = await isAppleMusicAuthorized().catch(() => false);
+        if (cancelled) return;
+        if (!authed) { setNeedsAuth(true); return; }
+        await startPlayback();
       } catch {
-        if (!cancelled) setError("Couldn't start Apple Music — it may need a sign-in.");
+        if (!cancelled) setError("Couldn't start Apple Music playback.");
       }
     })();
     return () => {
       cancelled = true;
-      // Closing the window stops the music — same contract as the video.
       import('@/lib/musicKit')
         .then(({ getMusicKit }) => getMusicKit())
         .then((kit) => kit.stop())
         .catch(() => { /* never played */ });
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, kind]);
+
+  const signInAndPlay = async () => {
+    try {
+      const { authorizeAppleMusic } = await import('@/lib/musicKit');
+      const res = await authorizeAppleMusic();
+      if (!res.ok) { setError(res.message ?? 'Apple sign-in failed.'); return; }
+      setNeedsAuth(false);
+      setError(null);
+      await startPlayback();
+    } catch {
+      setError("Couldn't start Apple Music playback.");
+    }
+  };
 
   const toggle = async () => {
     try {
@@ -55,16 +83,20 @@ function AppleMusicBody({ id, kind, artworkUrl }: { id: string; kind: 'song' | '
       <div className="min-w-0 flex-1">
         {error
           ? <p className="text-xs text-muted-foreground">{error}</p>
-          : <p className="text-xs text-muted-foreground">Apple Music</p>}
+          : needsAuth
+            ? <button type="button" onClick={signInAndPlay} className="rounded-md border border-border px-2 py-1 text-xs font-medium hover:bg-muted">Sign in to Apple Music</button>
+            : <p className="text-xs text-muted-foreground">Apple Music</p>}
       </div>
-      <button
-        type="button"
-        onClick={toggle}
-        aria-label={playing ? 'Pause' : 'Play'}
-        className="rounded-full border border-border p-2 text-foreground hover:bg-muted"
-      >
-        {playing ? <Pause className="h-4 w-4" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />}
-      </button>
+      {!needsAuth && !error && (
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={playing ? 'Pause' : 'Play'}
+          className="rounded-full border border-border p-2 text-foreground hover:bg-muted"
+        >
+          {playing ? <Pause className="h-4 w-4" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />}
+        </button>
+      )}
     </div>
   );
 }
