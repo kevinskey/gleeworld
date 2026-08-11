@@ -10,7 +10,7 @@ import { namesItsSources, SOURCE_LEAK_NUDGE } from './sourceLeak.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-tenant-slug, x-tenant-db',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 const json = (body: unknown, status = 200) =>
@@ -54,10 +54,22 @@ serve(async (req) => {
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
   // Client constructed WITH the caller's JWT: every query below runs under RLS.
+  // The x-tenant-slug header travels too: current_tenant_id() is
+  // subdomain-aware (member-of-slug wins over home tenant), and the browser
+  // sends this header on every request — but this client used to drop it, so
+  // every tool read resolved to the caller's HOME tenant. A user standing on
+  // another workspace they belong to asked about courses and got their home
+  // workspace's catalog instead (Kevin, 2026-08-11). Non-members are
+  // unaffected: the DB function ignores the slug unless the caller is a
+  // member of that tenant.
+  const tenantSlugHeader = req.headers.get('x-tenant-slug');
   const userClient = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } },
+    { global: { headers: {
+      Authorization: req.headers.get('Authorization') ?? '',
+      ...(tenantSlugHeader ? { 'x-tenant-slug': tenantSlugHeader } : {}),
+    } } },
   );
 
   // === Thread resolution (Layer 2: persistent chat) ==================

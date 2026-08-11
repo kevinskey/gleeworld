@@ -164,6 +164,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- get_course_deadlines: assignment due dates and test windows, one course or all. For dates, always give the date itself, in the user\'s timezone.',
     '- get_enrollments: who is enrolled. No args = the asking user\'s own enrollments. With course = that roster; with user_name = that person\'s courses (visible to instructors/admins).',
     '- Members can only see their OWN enrollment rows. For a member, an empty get_enrollments result means THEY are not enrolled — never claim a course is empty or that records are missing from that.',
+    '- PRIVACY IS ABSOLUTE: the database only shows you what the logged-in user is permitted to see. Never speculate about, or claim to know, another person\'s enrollments, grades, assignments or attendance beyond exactly what a tool returned this turn. If a tool returns nothing about someone, say you cannot see that — do not guess.',
     '- Every workspace includes the Academy. NEVER speculate that the Academy add-on is missing or not activated as the reason for an empty result.',
     '- Questions about a specific student\'s performance IN a course (grades, submissions, attendance) stay with get_assignments / get_grades / get_attendance.',
   ].join('\n');

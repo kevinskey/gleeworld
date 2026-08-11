@@ -1167,8 +1167,10 @@ async function getCourseInfo(args: Record<string, unknown>, deps: Deps): Promise
       upcoming_sessions: sessions ?? [],
     },
     // Members only see their own enrollment row, so a member's count is
-    // "am I in it", not the class size — say so rather than misreport.
-    enrolled_count: deps.role === 'admin' ? enrolledCount : undefined,
+    // "am I in it", not the class size. Even for admins the count is only
+    // "rows RLS let you see" — named accordingly so the model cannot
+    // present a partial view as the class size.
+    visible_enrollment_count: deps.role === 'admin' ? enrolledCount : undefined,
     caller_enrolled: deps.role === 'admin' ? undefined : enrolledCount > 0,
     note: 'Prerequisites, materials and policies are not separate fields — when the user asks for them, read the description and point at the syllabus if one exists.',
   });
@@ -1281,11 +1283,18 @@ async function getEnrollments(args: Record<string, unknown>, deps: Deps): Promis
   }
   return JSON.stringify({
     has_data: list.length > 0,
-    scope: deps.role === 'admin' ? 'all enrollments you administer' : 'only your own enrollments',
+    // The database is the authority on visibility (she must stay blind to
+    // other people's data — Kevin, 2026-08-11), and the admin flag here is
+    // tenant-blind, so never CLAIM a wider view than RLS actually granted:
+    // "administer" overstated it for an admin standing in a workspace where
+    // their admin role does not apply.
+    scope: deps.role === 'admin'
+      ? 'the enrollments your permissions expose in this workspace'
+      : 'only your own enrollments',
     course: courseLabel ?? undefined,
     enrollments: list.slice(0, 100),
-    // RLS scopes members to their own rows. An empty member result means
-    // "you are not enrolled" / "you cannot see that", never "the course is
-    // empty" — only an admin's empty result supports that claim.
+    // RLS scopes members to their own rows. An empty result means "nothing
+    // is visible to you here" — only claim a course is empty when the
+    // caller's roster view plainly covers it (they see other courses).
   });
 }
