@@ -190,3 +190,48 @@ export async function stopSpotify(): Promise<void> {
   if (!playerPromise) return;
   try { const { player } = await playerPromise; await player.pause(); } catch { /* already gone */ }
 }
+
+// ---------------- User playlists ----------------
+// The connect scopes included playlist-read-private and
+// playlist-modify-private from day one, so tokens minted before this
+// shipped already carry them — no reconnect needed.
+
+export async function listMyPlaylists(): Promise<Array<{ id: string; name: string; uri: string }>> {
+  const token = await getAccessToken();
+  if (!token) throw new Error('not_connected');
+  const res = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`playlists ${res.status}`);
+  const data = await res.json();
+  return ((data?.items ?? []) as Array<{ id: string; name?: string; uri: string }>)
+    .map((p) => ({ id: p.id, name: p.name ?? 'Untitled', uri: p.uri }));
+}
+
+/** Create a PRIVATE playlist on the connected account and fill it. */
+export async function createSpotifyPlaylist(
+  name: string,
+  description: string | undefined,
+  trackUris: string[],
+): Promise<void> {
+  const token = await getAccessToken();
+  if (!token) throw new Error('not_connected');
+  const meRes = await fetch('https://api.spotify.com/v1/me', { headers: { Authorization: `Bearer ${token}` } });
+  if (!meRes.ok) throw new Error(`me ${meRes.status}`);
+  const me = await meRes.json();
+  const createRes = await fetch(`https://api.spotify.com/v1/users/${encodeURIComponent(me.id)}/playlists`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, description: description ?? '', public: false }),
+  });
+  if (!createRes.ok) throw new Error(`create ${createRes.status}`);
+  const playlist = await createRes.json();
+  if (trackUris.length) {
+    const addRes = await fetch(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uris: trackUris.slice(0, 100) }),
+    });
+    if (!addRes.ok) throw new Error(`add-tracks ${addRes.status}`);
+  }
+}
