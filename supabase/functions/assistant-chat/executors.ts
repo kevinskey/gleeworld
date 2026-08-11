@@ -21,6 +21,8 @@ export interface Deps {
    *  this only shapes the HONESTY of the reply — a member's empty roster
    *  means "you can't see it", an admin's means "nobody is enrolled". */
   role?: 'admin' | 'member';
+  /** Caller's auth.users id, for tools that write the caller's own row. */
+  userId?: string;
   youtubeApiKey?: string;
   googleMapsApiKey?: string;
   homeAddress?: string;
@@ -81,6 +83,7 @@ export async function executeServerTool(
       case 'web_search': return await webSearch(args, deps);
       case 'research_repertoire': return await researchRepertoire(args, deps);
       case 'lookup_hymn': return { replyJson: await lookupHymn(args, deps) };
+      case 'set_assistant_name': return { replyJson: await setAssistantName(args, deps) };
       case 'list_courses': return { replyJson: await listCourses(args, deps) };
       case 'get_course_info': return { replyJson: await getCourseInfo(args, deps) };
       case 'get_course_deadlines': return { replyJson: await getCourseDeadlines(args, deps) };
@@ -1363,5 +1366,34 @@ async function lookupHymn(args: Record<string, unknown>, { supabase }: Deps): Pr
     note: hymns.length === 0
       ? 'No entry found. Do not guess a number — say it could not be verified, and offer to try another spelling or hymnal.'
       : undefined,
+  });
+}
+
+// ===================== Assistant naming =====================
+// Per-USER, not per-tenant (Kevin, 2026-08-11): the name lives on
+// gw_profiles (UNIQUE(user_id) — one row per user across all tenants).
+// RLS lets a user update only their own row; the .eq is belt-and-braces
+// and the .select() is required — a silently-rejected write otherwise
+// reports success (the demo-tenant lesson).
+
+async function setAssistantName(args: Record<string, unknown>, { supabase, userId }: Deps): Promise<string> {
+  if (!userId) return JSON.stringify({ error: 'No caller id available.' });
+  const raw = String(args.name ?? '').trim();
+  const clear = args.clear === true || /^(default|none|nothing|clear)$/i.test(raw);
+  const name = clear ? null : raw.slice(0, 40);
+  if (!clear && !name) return JSON.stringify({ error: 'Pass the new name.' });
+  const { data, error } = await supabase
+    .from('gw_profiles')
+    .update({ assistant_name: name })
+    .eq('user_id', userId)
+    .select('assistant_name');
+  if (error) return JSON.stringify({ error: error.message });
+  if (!data || data.length === 0) return JSON.stringify({ error: 'The name did not save.' });
+  return JSON.stringify({
+    ok: true,
+    assistant_name: name,
+    note: name
+      ? `You are now named ${name} for this user everywhere they use the assistant. Greet the name once, warmly and briefly.`
+      : 'Name cleared — you are the GleeWorld Assistant again.',
   });
 }

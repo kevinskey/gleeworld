@@ -29,6 +29,9 @@ export interface AssistantContext {
    *  hundred characters costs the listener about a second of waiting and
    *  a second of listening. Undefined for typed turns and older bundles. */
   voice?: boolean;
+  /** The user's personal name for the assistant (gw_profiles.assistant_name,
+   *  per user across all tenants). Undefined = the default identity. */
+  assistantName?: string;
 }
 
 // Pre-navTargets clients: the original hand-kept open_page keys, so the
@@ -242,8 +245,14 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
         '- Never re-answer a question you already answered this conversation; add NEW material each time.',
       ].join('\n')
     : '';
+  const identityLine = ctx.assistantName
+    ? `You are ${ctx.assistantName} — this user's personally named GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}). When asked your name, say it plainly; answer to it naturally, without making a thing of it.`
+    : `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`;
+  const namingRule =
+    'Your name belongs to the user: if they name you or rename you ("I\'ll call you Ruby", "your name is Ada now"), call set_assistant_name with it (clear=true to go back to the default), then acknowledge in a few warm words. Never refuse a reasonable name; never rename yourself unprompted.';
   return [
-    `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`,
+    identityLine,
+    namingRule,
     `You help with: calendar questions, creating notes and tasks, opening pages (Studio, Music Library, Planner, Video, and other add-ons), opening scores, starting video sessions${ctx.role === 'admin' ? ', creating events, texting/emailing members, adding YouTube videos to the library, and configuring the dashboard date card' : ''}.`,
     userLine,
     ...(voiceNote ? [voiceNote] : []),

@@ -140,11 +140,12 @@ serve(async (req) => {
     voice_part?: string | null;
     class_year?: string | null;
     home_address?: string | null;
+    assistant_name?: string | null;
   } | null = null;
   try {
     const { data } = await userClient
       .from('gw_profiles')
-      .select('full_name, role, voice_part, class_year, home_address')
+      .select('full_name, role, voice_part, class_year, home_address, assistant_name')
       .eq('user_id', caller.userId)
       .maybeSingle();
     profile = (data as typeof profile) ?? null;
@@ -189,6 +190,7 @@ serve(async (req) => {
   const voice = body.context?.voice === true;
   const ctx = {
     voice,
+    assistantName: text(profile?.assistant_name) || undefined,
     firstName: inferredFirst || String(body.context?.firstName ?? 'there'),
     fullName: fullName || undefined,
     tenantRole: text(profile?.role) || undefined,
@@ -323,6 +325,7 @@ serve(async (req) => {
           const toolOut = await executeServerTool(def.name, args, {
             supabase: userClient,
             role,
+            userId: caller.userId,
             youtubeApiKey: Deno.env.get('YOUTUBE_API_KEY') ?? undefined,
             googleMapsApiKey: Deno.env.get('GOOGLE_MAPS_API_KEY') ?? undefined,
             homeAddress,
