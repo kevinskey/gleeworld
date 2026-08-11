@@ -1,9 +1,15 @@
 import type { DocSource, SourceAuthor, SourceType } from './types';
 
 function crossrefTypeToSourceType(type: string | undefined, containerTitle: string | undefined): SourceType {
-  const t = `${type || ''} ${containerTitle || ''}`.toLowerCase();
-  if (t.includes('journal')) return 'journal';
-  if (t.includes('book') || t.includes('monograph')) return 'book';
+  const rawType = (type || '').toLowerCase();
+  if (rawType) {
+    if (rawType.includes('journal')) return 'journal';
+    if (rawType.includes('book') || rawType.includes('monograph')) return 'book';
+    return 'website';
+  }
+  const fallback = (containerTitle || '').toLowerCase();
+  if (fallback.includes('journal')) return 'journal';
+  if (fallback.includes('book') || fallback.includes('monograph')) return 'book';
   return 'website';
 }
 

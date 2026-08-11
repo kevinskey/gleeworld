@@ -15,6 +15,18 @@ it('maps a Crossref work to DocSource fields', async () => {
     authors: [{ family: 'Jones', given: 'Arthur' }] });
 });
 
+it('prefers the authoritative Crossref type over container-title text', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, json: async () => ({ message: {
+    type: 'book-chapter',
+    title: ['Ring Shouts and Work Songs'],
+    'container-title': ['Journal of the American Musicological Society'],
+    author: [{ family: 'Smith', given: 'Pat' }],
+    issued: { 'date-parts': [[2001]] },
+  }})}));
+  const r = await lookupDOI('10.2/book-chapter-in-journal-named-container');
+  expect(r).toMatchObject({ type: 'book' });
+});
+
 it('returns null on non-ok response', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false }));
   expect(await lookupDOI('nope')).toBeNull();
