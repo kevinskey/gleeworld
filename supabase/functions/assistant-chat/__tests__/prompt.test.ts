@@ -134,3 +134,17 @@ describe('academy courses briefing', () => {
     expect(buildSystemPrompt(ctx)).toContain('close_viewer');
   });
 });
+
+describe('research notes capture', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-11T11:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('tells her to compose the note herself from the conversation', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('Saving research to Notes');
+    expect(p).toMatch(/compose the note YOURSELF/);
+    expect(p).toMatch(/Not a transcript/);
+    expect(p).toContain('create_note');
+  });
+});

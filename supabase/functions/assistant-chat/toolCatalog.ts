@@ -272,7 +272,7 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'create_note',
-    description: "Create a note in the user's private Planner. Optionally include body text.",
+    description: "Create a note in the user's private Planner. Optionally include body text. Also the tool for CAPTURING THIS CONVERSATION — 'save this as a note', 'put our research in my notes', 'write that down' — with a distilled summary of what was discussed as the body.",
     parameters: {
       type: 'object',
       properties: { title: str('Note title'), body: str('Plain-text body (optional)') },
