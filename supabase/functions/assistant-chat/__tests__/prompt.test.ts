@@ -226,3 +226,16 @@ describe('scheduled playlists briefing', () => {
     expect(p).toMatch(/one tap/);
   });
 });
+
+describe('remembering choices', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-11T19:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('saves lasting choices unprompted and consults them before deciding', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toMatch(/SAVE it with remember_preference right then/);
+    expect(p).toMatch(/BEFORE choosing on their behalf/);
+    expect(p).toMatch(/One-off requests are not preferences/);
+  });
+});
