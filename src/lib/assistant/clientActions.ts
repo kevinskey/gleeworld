@@ -103,6 +103,7 @@ export async function executeClientAction(
   const needsDeps = ![
     'open_page', 'open_link', 'open_song', 'open_bible', 'open_note',
     'start_video_session', 'book_ride', 'order_food', 'stop_playback',
+    'close_viewer',
   ].includes(action.tool);
   const deps = { ...(needsDeps && !depsOverride ? await defaultDeps() : {}), ...depsOverride } as ActionDeps;
   const a = action.args;
@@ -136,7 +137,16 @@ export async function executeClientAction(
       case 'open_song': {
         const id = String(a.score_id ?? '');
         if (!/^[0-9a-f-]{3,64}$/i.test(id)) return { ok: false, message: 'That score id looks invalid.' };
-        return { ok: true, navigateTo: `/dashboard/music-library?view=${id}`, message: `Opening ${a.title ?? 'the score'}.` };
+        // Default surface is the Viewer — the immersive full-bleed reader —
+        // not the Music Library (Kevin, 2026-08-11). The library variant
+        // stays reachable, but only when the user names it.
+        const route = a.in_library === true
+          ? `/dashboard/music-library?view=${id}`
+          : `/dashboard/viewer/${id}`;
+        return { ok: true, navigateTo: route, message: `Opening ${a.title ?? 'the score'}.` };
+      }
+      case 'close_viewer': {
+        return { ok: true, navigateTo: '/dashboard/music-library', message: 'Closed the viewer.' };
       }
       case 'open_note': {
         const id = String(a.note_id ?? '');

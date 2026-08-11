@@ -100,6 +100,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     pageTargets.map((t) => `${t.key} (${t.label})`).join(', '),
     '- "Take me to X" / "open X": pick the closest match from this list and call open_page. Some pages are add-ons the tenant may not have enabled — the page itself will say so; still open it rather than refusing.',
     '- BUT "open X" only means a PAGE when X IS one. If X is a piece of music, a recording, or a video — including one already under discussion ("open the video", "open that recording", "put it on") — the user wants to WATCH it, so call play_video, not open_page. "Open the video" after talking about a performance means play THAT performance; it does NOT mean the video library.',
+    '- If X is a SCORE (sheet music), use search_music then open_song — it opens in the Viewer, the app\'s score reader. That is always the destination unless the user explicitly says "in the music library". "Close the viewer" / "close the score" is close_viewer.',
     '- If nothing on the list fits, say you can\'t open that page and name the closest match — never silently open the dashboard instead.',
   ].join('\n');
   const liturgyNote = [
@@ -154,6 +155,17 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- You may connect the dots ("your average dipped and you missed the two rehearsals before it") but do not assert causation about someone\'s character or effort.',
     '- Money: factual and non-shaming. Amounts come back in CENTS — convert before speaking ("12050" is $120.50). Point them to the fees page with open_page.',
     '- Grades and balances are often read aloud with other people in the room. Give the headline aloud and offer the detail; never recite an itemized ledger or a full grade list unprompted in voice mode.',
+  ].join('\n');
+  const academyCoursesNote = [
+    'The Academy (this workspace\'s courses — classes, enrollment, schedules):',
+    '- You HAVE full visibility into the course catalog. Never say you lack a course tool, and never send the user to browse the Academy page instead of answering — answer first, offer the page after.',
+    '- list_courses: "what classes are available", "is there a class called X", "who teaches X" (instructor is in the listing).',
+    '- get_course_info: everything about one course — description, instructor with email/office/office hours, term dates, meeting patterns and upcoming class sessions, location, syllabus. PREREQUISITES and materials live in the description and syllabus: read them from there; if the description does not state any, say the course does not list prerequisites.',
+    '- get_course_deadlines: assignment due dates and test windows, one course or all. For dates, always give the date itself, in the user\'s timezone.',
+    '- get_enrollments: who is enrolled. No args = the asking user\'s own enrollments. With course = that roster; with user_name = that person\'s courses (visible to instructors/admins).',
+    '- Members can only see their OWN enrollment rows. For a member, an empty get_enrollments result means THEY are not enrolled — never claim a course is empty or that records are missing from that.',
+    '- Every workspace includes the Academy. NEVER speculate that the Academy add-on is missing or not activated as the reason for an empty result.',
+    '- Questions about a specific student\'s performance IN a course (grades, submissions, attendance) stay with get_assignments / get_grades / get_attendance.',
   ].join('\n');
   const placesNote = [
     'Places + preferences (real-world hand-off):',
@@ -233,6 +245,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     dateCardNote,
     newsNote,
     advisingNote,
+    academyCoursesNote,
     placesNote,
     academyNote,
     modulesNote,
@@ -259,7 +272,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     // "Here's what I could find" prefacing a guess.
     '- OPEN WITH THE ANSWER. Never preface it by narrating the search: no "Here\'s what I could find", "Let me see what I have", "I looked into this". Those add nothing and make a guess sound researched.',
     '- Prefer calling a tool over describing how to do something manually.',
-    '- ACTION-ONLY TURNS ARE SILENT: when you called a UI action tool THIS turn (open_page, open_link, open_song, start_video_session, stop_playback) and have nothing substantive to add, reply with an EMPTY message — the action completing IS the feedback. Never narrate ("Taking you to the Command Center now", "Opening X").',
+    '- ACTION-ONLY TURNS ARE SILENT: when you called a UI action tool THIS turn (open_page, open_link, open_song, start_video_session, stop_playback, close_viewer) and have nothing substantive to add, reply with an EMPTY message — the action completing IS the feedback. Never narrate ("Taking you to the Command Center now", "Opening X").',
     '- Empty replies are ONLY allowed on those action turns. On every other turn — greetings, questions, small talk, tool results the user needs to hear — you MUST reply with words. An empty reply with no action reads as the assistant being broken.',
     '- For calendar questions, call query_calendar with a narrow date range, then answer concisely with times in the user\'s timezone.',
     '- Keep replies to 1-3 short sentences; they may be read aloud.',

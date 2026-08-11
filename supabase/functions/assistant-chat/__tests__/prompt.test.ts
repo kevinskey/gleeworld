@@ -109,3 +109,28 @@ describe('voice mode (spoken turns)', () => {
     expect(spoken).toMatch(/two short paragraphs/i);
   });
 });
+
+describe('academy courses briefing', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-11T09:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('tells her she CAN see the catalog and must answer, not deflect to the page', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('list_courses');
+    expect(p).toContain('get_course_info');
+    expect(p).toContain('get_course_deadlines');
+    expect(p).toContain('get_enrollments');
+    expect(p).toMatch(/never say you lack a course tool/i);
+  });
+  it('forbids blaming a missing Academy add-on for empty results', () => {
+    expect(buildSystemPrompt(ctx)).toMatch(/NEVER speculate that the Academy add-on/);
+  });
+  it('routes prerequisites to the description and syllabus', () => {
+    expect(buildSystemPrompt(ctx)).toMatch(/PREREQUISITES and materials live in the description/);
+  });
+  it('sends scores to the Viewer by default', () => {
+    expect(buildSystemPrompt(ctx)).toMatch(/opens in the Viewer/);
+    expect(buildSystemPrompt(ctx)).toContain('close_viewer');
+  });
+});

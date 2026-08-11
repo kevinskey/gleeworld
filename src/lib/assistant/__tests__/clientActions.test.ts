@@ -74,7 +74,7 @@ describe('executeClientAction', () => {
 
   it('open_song builds the viewer deep link', async () => {
     const out = await executeClientAction({ tool: 'open_song', args: { score_id: 'abc-123' }, confirm: false });
-    expect(out.navigateTo).toBe('/dashboard/music-library?view=abc-123');
+    expect(out.navigateTo).toBe('/dashboard/viewer/abc-123');
   });
 
   it('open_note navigates to the note deep link and rejects invalid ids', async () => {
@@ -632,5 +632,27 @@ describe('stop_playback', () => {
     const out = await executeClientAction({ tool: 'stop_playback', args: {}, confirm: false });
     expect(out.ok).toBe(true);
     expect(out.stopPlayback).toBe(true);
+  });
+});
+
+describe('open_song viewer default', () => {
+  // Scores open in the Viewer — the immersive reader — unless the user
+  // explicitly names the Music Library (Kevin, 2026-08-11).
+  it('opens in the Viewer by default', async () => {
+    const out = await executeClientAction({ tool: 'open_song', args: { score_id: 'abc-123', title: 'Requiem' }, confirm: false });
+    expect(out.ok).toBe(true);
+    expect(out.navigateTo).toBe('/dashboard/viewer/abc-123');
+  });
+  it('opens in the Music Library only when explicitly asked', async () => {
+    const out = await executeClientAction({ tool: 'open_song', args: { score_id: 'abc-123', in_library: true }, confirm: false });
+    expect(out.navigateTo).toBe('/dashboard/music-library?view=abc-123');
+  });
+});
+
+describe('close_viewer', () => {
+  it('returns to the Music Library', async () => {
+    const out = await executeClientAction({ tool: 'close_viewer', args: {}, confirm: false });
+    expect(out.ok).toBe(true);
+    expect(out.navigateTo).toBe('/dashboard/music-library');
   });
 });

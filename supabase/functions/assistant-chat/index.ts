@@ -310,6 +310,7 @@ serve(async (req) => {
         } else if (def.execution === 'server') {
           const toolOut = await executeServerTool(def.name, args, {
             supabase: userClient,
+            role,
             youtubeApiKey: Deno.env.get('YOUTUBE_API_KEY') ?? undefined,
             googleMapsApiKey: Deno.env.get('GOOGLE_MAPS_API_KEY') ?? undefined,
             homeAddress,
