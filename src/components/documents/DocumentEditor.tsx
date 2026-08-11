@@ -3,6 +3,7 @@
 // but persists TipTap JSON (not HTML) and renders as a serif "page" surface.
 import { useEffect } from 'react';
 import { useEditor, EditorContent, type Editor, type AnyExtension, type Content } from '@tiptap/react';
+import { LinkBubble } from './LinkBubble';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
@@ -152,6 +153,7 @@ export function DocumentEditor({
           (an empty doc collapsed to ~90px). */}
       <div className="w-full mx-auto max-w-[700px] px-6 py-10 bg-card rounded-xl">
         <EditorContent editor={editor} />
+        <LinkBubble editor={editor} />
       </div>
     </div>
   );
