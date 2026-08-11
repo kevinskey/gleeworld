@@ -99,6 +99,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
+    "docx": "9.7.1",
     "dompurify": "^3.2.6",
     "embla-carousel-react": "^8.3.0",
     "emoji-mart": "^5.6.0",
