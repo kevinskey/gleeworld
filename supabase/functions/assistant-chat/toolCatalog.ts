@@ -217,6 +217,25 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
+    name: 'connect_spotify',
+    description: "Start the Spotify sign-in so the user can play from their own Spotify account. Use when they say 'connect Spotify' / 'link my Spotify', or when play_spotify reported it is not connected. Sends them to Spotify and back; playback needs Spotify Premium.",
+    parameters: { type: 'object', properties: {}, required: [] },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'play_spotify',
+    description: "Play a song or album on the user's connected SPOTIFY account, in the floating player. Only when the user names Spotify. Pass the request as `query` ('Total Praise Richard Smallwood'); kind='album' for albums. If it fails as not-connected, offer connect_spotify.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str('What to play, artist included when known'),
+        kind: str("'track' (default) or 'album'"),
+      },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
     name: 'stop_playback',
     // "Stop the music" during live voice (2026-08-10) got "I don't have a
     // way to stop playback" — true at the time: the app owns the mini
