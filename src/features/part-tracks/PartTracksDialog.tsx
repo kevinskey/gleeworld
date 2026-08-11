@@ -1,7 +1,7 @@
 // Director flow: upload source -> confirm parts -> attest rights -> generate.
 // Content switches on the score's pipeline status; active states poll.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Loader2, UploadCloud } from 'lucide-react';
+import { AlertTriangle, Download, FileUp, Loader2, UploadCloud } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,6 +24,7 @@ import { PartTrackPlayer } from './player/PartTrackPlayer';
 import { useMyVoicePart } from './player/useMyVoicePart';
 import { RendersList } from './RendersList';
 import { RightsAttestation } from './RightsAttestation';
+import { editableScorePath, replaceSourceTypeFromName } from './scoreFile';
 import { parseTempoBpm, TEMPO_BPM_MAX, TEMPO_BPM_MIN } from './tempoOverride';
 import type { PartTrackPart, PartTrackSourceType } from './types';
 import { usePartTrackScore } from './usePartTrackScore';
@@ -92,6 +93,7 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
   const [tempoBpm, setTempoBpm] = useState('');
   const [busy, setBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const correctedInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setDraftParts(parts);
@@ -158,6 +160,78 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
       setBusy(false);
     }
   };
+
+  const downloadScoreFile = async () => {
+    if (!score) return;
+    const { getSignedUrl } = await import('@/utils/storage');
+    const url = await getSignedUrl('parttrack', editableScorePath(score), 3600);
+    if (!url) {
+      toast({
+        title: 'Could not prepare the download',
+        description: 'Please try again in a moment.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '';
+    a.click();
+  };
+
+  const replaceCorrected = async (file: File) => {
+    if (!score) return;
+    const sourceType = replaceSourceTypeFromName(file.name);
+    if (!sourceType) {
+      toast({
+        title: 'MusicXML only',
+        description: 'Corrected files must be .xml, .musicxml, or .mxl.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    setBusy(true);
+    try {
+      await api.replaceSource(score.id, file, sourceType);
+      await refresh();
+    } catch (e) {
+      toast({
+        title: 'Could not replace the score file',
+        description: e instanceof Error ? e.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const scoreFileRow = score && isAdmin() && (
+    <div className="space-y-1">
+      <input
+        ref={correctedInput}
+        type="file"
+        accept=".xml,.musicxml,.mxl"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = '';
+          if (f) void replaceCorrected(f);
+        }}
+      />
+      <div className="flex items-center gap-2">
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => void downloadScoreFile()}>
+          <Download className="w-4 h-4 mr-1" /> Download MusicXML
+        </Button>
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => correctedInput.current?.click()}>
+          <FileUp className="w-4 h-4 mr-1" /> Replace with corrected file
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Fix wrong notes in MuseScore or Finale, then upload the corrected MusicXML — parts re-analyze,
+        and your rights attestation and tempo carry over.
+      </p>
+    </div>
+  );
 
   const retry = async () => {
     if (!score) return;
@@ -243,6 +317,8 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
                 <PartMappingTable parts={draftParts} onChange={setDraftParts} />
               </div>
 
+              {scoreFileRow}
+
               {score.validation_report.length > 0 && (
                 <div className="space-y-2">
                   {score.validation_report.map((w) => (
@@ -325,6 +401,7 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
                     <RendersList renders={renders.filter((r) => r.kind === 'mix')} onDownload={handleDownload} />
                   </div>
                 </details>
+                {scoreFileRow}
               </TabsContent>
               {isAdmin() && (
                 <TabsContent value="assignments">
