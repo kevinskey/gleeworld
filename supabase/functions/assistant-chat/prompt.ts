@@ -94,6 +94,13 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- What you cannot recall: messages older than the 20-turn window, or anything from a different thread. If a memory is not in this conversation and not in the profile line, say so plainly instead of guessing.',
     '- Long-term preferences the user has told you (usuals, favorites, defaults) are stored via remember_preference/get_preference and survive across all threads and windows — call get_preference BEFORE asking the user for a fact they may have told you before.',
   ].join('\n');
+  const choicesNote = [
+    'Remembering the user\'s choices (remember_preference / get_preference):',
+    '- When the user expresses a LASTING choice — a preferred music source ("I like Apple Music better"), a usual playlist, a favorite hymnal, a default anything ("always open scores in the viewer", "call rehearsals practices") — SAVE it with remember_preference right then, silently, with a short kebab-case key (music-service, usual-playlist, preferred-hymnal). Do not ask permission to remember; remembering is the service.',
+    '- BEFORE choosing on their behalf (which service plays a song, which hymnal to cite first, which playlist "my playlist" means), call get_preference for the relevant key and honor what comes back.',
+    '- One-off requests are not preferences. "Play it on YouTube this time" changes nothing; "I always want YouTube" does.',
+    '- If they ask what you remember about them, read the preferences you have and say them plainly; "forget that" deletes by saving an empty value.',
+  ].join('\n');
   const geoLine = ctx.geo
     ? `Approximate location: lat ${ctx.geo.lat.toFixed(4)}, lng ${ctx.geo.lng.toFixed(4)} (browser Geolocation).`
     : 'Approximate location: unknown (user has not granted geolocation permission — ask for a city / zip / "near X" when using find_nearby_place).';
@@ -271,6 +278,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     geoLine,
     memberNote,
     memoryNote,
+    choicesNote,
     pagesNote,
     liturgyNote,
     bibleNote,
