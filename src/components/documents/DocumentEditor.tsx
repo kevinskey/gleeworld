@@ -15,6 +15,7 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { CharacterCount } from '@tiptap/extensions';
 import { DocToolbar } from './DocToolbar';
 import { CitationChip } from './extensions/CitationChip';
+import { FootnoteRef } from './extensions/FootnoteRef';
 
 /**
  * Options for `documentExtensions`. Task 7 (FootnoteRef) will extend this
@@ -23,6 +24,7 @@ import { CitationChip } from './extensions/CitationChip';
  */
 export interface DocumentExtensionOptions {
   getCitationText?: (sourceId: string, locator?: string) => string;
+  getFootnoteIndex?: (noteId: string) => number;
 }
 
 /**
@@ -51,7 +53,7 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
     Highlight,
     CharacterCount,
     CitationChip.configure({ getText: opts.getCitationText ?? (() => '[citation]') }),
-    // Task 7 appends FootnoteRef here.
+    FootnoteRef.configure({ getIndex: opts.getFootnoteIndex ?? (() => -1) }),
   ];
 }
 
@@ -66,6 +68,9 @@ export interface DocumentEditorProps {
   onUpdate: (json: unknown, wordCount: number) => void;
   // Renders "(Author, Year)"-style chip labels inside CitationChip nodes.
   citationChipText: (sourceId: string, locator?: string) => string;
+  // Looks up a footnoteRef's display number (position in orderedFootnoteIds);
+  // returning -1 or omitting this renders the marker as `[?]`.
+  footnoteIndex?: (noteId: string) => number;
   onCiteClick: () => void;
   onFootnoteClick: () => void;
   editorRef?: (editor: Editor | null) => void;
@@ -75,12 +80,13 @@ export function DocumentEditor({
   content,
   onUpdate,
   citationChipText,
+  footnoteIndex,
   onCiteClick,
   onFootnoteClick,
   editorRef,
 }: DocumentEditorProps) {
   const editor = useEditor({
-    extensions: documentExtensions({ getCitationText: citationChipText }),
+    extensions: documentExtensions({ getCitationText: citationChipText, getFootnoteIndex: footnoteIndex }),
     // `content` is typed `unknown` on the public props so callers don't need
     // to import TipTap's JSON type; TipTap's own Content union is what
     // useEditor actually wants.
