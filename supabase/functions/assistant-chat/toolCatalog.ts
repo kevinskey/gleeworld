@@ -97,6 +97,20 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'lookup_hymn',
+    description: "Hymnal number lookup across the loaded hymnal indexes (Lead Me Guide Me 2nd ed. 'LMGM II', Gather Comprehensive 'Gather', Baptist Hymnal 2008). Use for 'what number is <hymn>', picking hymns while planning a liturgy, or reverse lookup ('what is 457 in LMGM'). Pass `query` (title, first line, or tune name), and/or `number` for reverse lookup; `hymnal` narrows to one book. NEVER state a hymn number from memory — only from this tool.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str("Hymn title, first line, or tune name, e.g. 'Total Praise'"),
+        hymnal: str("Hymnal name or abbreviation to narrow to, e.g. 'LMGM', 'Gather', 'Baptist' (optional)"),
+        number: str("Hymn number for reverse lookup, e.g. '457' (optional)"),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'list_courses',
     description: "List the Academy courses this workspace offers — titles, codes, terms, instructors, dates. Use for 'what classes are available', 'is there a class called X', 'who teaches Y'. Optional `query` filters by title or code.",
     parameters: {

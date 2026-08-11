@@ -56,6 +56,7 @@ describe('toolCatalog', () => {
       'liturgical_day',
       'lookup_all_state',
       'lookup_bible',
+      'lookup_hymn',
       'order_food',
       'play_video',
       'query_calendar',

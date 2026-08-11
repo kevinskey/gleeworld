@@ -80,6 +80,7 @@ export async function executeServerTool(
       case 'liturgical_day': return { replyJson: await liturgicalDay(args, deps) };
       case 'web_search': return await webSearch(args, deps);
       case 'research_repertoire': return await researchRepertoire(args, deps);
+      case 'lookup_hymn': return { replyJson: await lookupHymn(args, deps) };
       case 'list_courses': return { replyJson: await listCourses(args, deps) };
       case 'get_course_info': return { replyJson: await getCourseInfo(args, deps) };
       case 'get_course_deadlines': return { replyJson: await getCourseDeadlines(args, deps) };
@@ -1296,5 +1297,71 @@ async function getEnrollments(args: Record<string, unknown>, deps: Deps): Promis
     // RLS scopes members to their own rows. An empty result means "nothing
     // is visible to you here" — only claim a course is empty when the
     // caller's roster view plainly covers it (they see other courses).
+  });
+}
+
+// ===================== Hymnal number lookup =====================
+// gw_hymn_index carries number/title/first-line/tune per hymnal (LMGM II,
+// Gather, Baptist Hymnal — 2,300+ entries, authenticated-readable). The
+// liturgy planner keys on hymn_number, and Kevin plans Masses by "what
+// number is it in the hymnal", so the assistant needs the index directly.
+// Numbers are exact facts: the tool answers or the assistant says it
+// cannot verify — never a guessed number.
+
+async function lookupHymn(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
+  const q = String(args.query ?? '').trim();
+  const hymnalArg = String(args.hymnal ?? '').trim().toLowerCase();
+  const numberArg = String(args.number ?? '').trim();
+  if (!q && !numberArg) return JSON.stringify({ error: 'Pass a hymn title/first line, or a number to reverse-look-up.' });
+
+  const { data: hymnals, error: hErr } = await supabase
+    .from('gw_hymnals')
+    .select('id, title, short_name');
+  if (hErr) return JSON.stringify({ error: hErr.message });
+  const hymnalRows = (hymnals ?? []) as Array<{ id: string; title?: string; short_name?: string }>;
+  const nameById = new Map(hymnalRows.map((h) => [h.id, h.short_name || h.title || h.id]));
+
+  let hymnalIds: string[] | null = null;
+  if (hymnalArg) {
+    hymnalIds = hymnalRows
+      .filter((h) => [h.short_name, h.title, h.id].some((v) => typeof v === 'string' && v.toLowerCase().includes(hymnalArg)))
+      .map((h) => h.id);
+    if (hymnalIds.length === 0) {
+      return JSON.stringify({
+        has_data: false,
+        note: `No loaded hymnal matches "${args.hymnal}".`,
+        available_hymnals: hymnalRows.map((h) => `${h.title} (${h.short_name})`),
+      });
+    }
+  }
+
+  let query = supabase
+    .from('gw_hymn_index')
+    .select('hymnal_id, number, title, first_line, tune_title, authors, composers')
+    .limit(25);
+  if (numberArg) query = query.eq('number', numberArg);
+  if (hymnalIds) query = query.in('hymnal_id', hymnalIds);
+  if (q) {
+    // PostgREST .or() treats commas/parens as syntax, so strip them from
+    // the user's words rather than trying to escape.
+    const safe = q.replace(/[,%()]/g, ' ').trim();
+    query = query.or(`title.ilike.%${safe}%,first_line.ilike.%${safe}%,tune_title.ilike.%${safe}%`);
+  }
+  const { data: rows, error } = await query;
+  if (error) return JSON.stringify({ error: error.message });
+  const hymns = ((rows ?? []) as Array<Record<string, unknown>>).map((r) => ({
+    hymnal: nameById.get(r.hymnal_id as string) ?? 'Unknown hymnal',
+    number: r.number,
+    title: r.title,
+    first_line: r.first_line || undefined,
+    tune: r.tune_title || undefined,
+    composers: r.composers || undefined,
+  }));
+  return JSON.stringify({
+    has_data: hymns.length > 0,
+    hymns,
+    note: hymns.length === 0
+      ? 'No entry found. Do not guess a number — say it could not be verified, and offer to try another spelling or hymnal.'
+      : undefined,
   });
 }

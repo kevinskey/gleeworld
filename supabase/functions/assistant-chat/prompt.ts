@@ -130,6 +130,13 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — this app does not fetch article bodies, but it CAN open the article in a new tab for them.',
     '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly.',
   ].join('\n');
+  const hymnalNote = [
+    'Hymnal numbers (lookup_hymn):',
+    '- Loaded hymnal indexes: Lead Me, Guide Me 2nd edition ("LMGM II"), Gather Comprehensive 2nd edition ("Gather"), and the Baptist Hymnal 2008. Use lookup_hymn for "what number is X", for choosing hymns while planning a liturgy or Mass, and for reverse lookup ("what is 457 in LMGM").',
+    '- When the user does not name a hymnal, report the number in EVERY hymnal that carries the hymn: "Total Praise is number 457 in Lead Me Guide Me II." Include the tune name when it helps identify the right entry.',
+    '- NEVER state a hymn number from memory. If lookup_hymn finds no entry, say you could not verify the number and offer another spelling or hymnal — a wrong number sends a congregation to the wrong page.',
+    '- Speak numbers as words-and-digits prose ("number 457"), never "#457".',
+  ].join('\n');
   const researchNoteRule = [
     'Saving research to Notes:',
     '- "Save this as a note", "put our research in my notes", "write that down": compose the note YOURSELF from this conversation — do not ask what to write. Title = the topic ("Brahms Ein deutsches Requiem — research"). Body = an organized plain-text distillation of the substance: facts, works, people, dates, decisions, next steps. Not a transcript, not your phrasing flourishes — the content.',
@@ -252,6 +259,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     newsNote,
     advisingNote,
     academyCoursesNote,
+    hymnalNote,
     researchNoteRule,
     placesNote,
     academyNote,

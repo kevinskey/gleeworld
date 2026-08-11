@@ -148,3 +148,20 @@ describe('research notes capture', () => {
     expect(p).toContain('create_note');
   });
 });
+
+describe('hymnal numbers briefing', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-11T12:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('names the loaded hymnals and the lookup tool', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('lookup_hymn');
+    expect(p).toContain('LMGM II');
+    expect(p).toContain('Gather');
+    expect(p).toContain('Baptist Hymnal');
+  });
+  it('bans hymn numbers from memory', () => {
+    expect(buildSystemPrompt(ctx)).toMatch(/NEVER state a hymn number from memory/);
+  });
+});
