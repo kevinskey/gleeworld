@@ -83,6 +83,7 @@ export async function executeServerTool(
       case 'web_search': return await webSearch(args, deps);
       case 'research_repertoire': return await researchRepertoire(args, deps);
       case 'lookup_hymn': return { replyJson: await lookupHymn(args, deps) };
+      case 'search_apple_music': return { replyJson: await searchAppleMusicTool(args) };
       case 'set_assistant_name': return { replyJson: await setAssistantName(args, deps) };
       case 'list_courses': return { replyJson: await listCourses(args, deps) };
       case 'get_course_info': return { replyJson: await getCourseInfo(args, deps) };
@@ -1415,5 +1416,69 @@ async function setAssistantName(args: Record<string, unknown>, { supabase, userI
     note: name
       ? `You are now named ${name} for this user everywhere they use the assistant. Greet the name once, warmly and briefly.`
       : 'Name cleared — you are the GleeWorld Assistant again.',
+  });
+}
+
+// ===================== Apple Music catalog =====================
+// The developer token authenticates GleeWorld to Apple's catalog (public
+// endpoint the web app already uses); it grants METADATA only. Playback
+// happens client-side in the assistant popout via MusicKit with the
+// listener's own Apple ID — this tool never touches user accounts.
+
+let appleDevTokenCache: { token: string; ts: number } | null = null;
+const APPLE_TOKEN_TTL_MS = 30 * 60 * 1000;
+
+async function fetchAppleDevToken(): Promise<string | null> {
+  if (appleDevTokenCache && Date.now() - appleDevTokenCache.ts < APPLE_TOKEN_TTL_MS) {
+    return appleDevTokenCache.token;
+  }
+  try {
+    const res = await fetch('https://demo.gleeworld.org/apple-music/developer-token');
+    if (!res.ok) return null;
+    const { token } = await res.json();
+    if (typeof token === 'string' && token) {
+      appleDevTokenCache = { token, ts: Date.now() };
+      return token;
+    }
+    return null;
+  } catch { return null; }
+}
+
+function appleArtwork(art: { url?: string } | undefined): string | null {
+  return typeof art?.url === 'string' ? art.url.replace('{w}', '300').replace('{h}', '300') : null;
+}
+
+async function searchAppleMusicTool(args: Record<string, unknown>): Promise<string> {
+  const term = String(args.query ?? '').trim();
+  if (!term) return JSON.stringify({ error: 'Pass what to search for.' });
+  const token = await fetchAppleDevToken();
+  if (!token) return JSON.stringify({ error: 'Apple Music is not reachable right now.' });
+  const url = `https://api.music.apple.com/v1/catalog/us/search?term=${encodeURIComponent(term)}&types=songs,albums,artists&limit=5`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) return JSON.stringify({ error: `Apple Music search failed (${res.status}).` });
+  const data = await res.json();
+  const r = data?.results ?? {};
+  type AppleItem = { id: string; attributes?: Record<string, unknown> };
+  const songs = ((r.songs?.data ?? []) as AppleItem[]).map((s) => ({
+    id: s.id, kind: 'song',
+    title: s.attributes?.name, artist: s.attributes?.artistName, album: s.attributes?.albumName,
+    year: typeof s.attributes?.releaseDate === 'string' ? (s.attributes.releaseDate as string).slice(0, 4) : undefined,
+    artwork_url: appleArtwork(s.attributes?.artwork as { url?: string } | undefined),
+  }));
+  const albums = ((r.albums?.data ?? []) as AppleItem[]).map((a) => ({
+    id: a.id, kind: 'album',
+    title: a.attributes?.name, artist: a.attributes?.artistName,
+    tracks: a.attributes?.trackCount, year: typeof a.attributes?.releaseDate === 'string' ? (a.attributes.releaseDate as string).slice(0, 4) : undefined,
+    genres: a.attributes?.genreNames,
+    notes: (a.attributes?.editorialNotes as { standard?: string } | undefined)?.standard?.slice(0, 400),
+    artwork_url: appleArtwork(a.attributes?.artwork as { url?: string } | undefined),
+  }));
+  const artists = ((r.artists?.data ?? []) as AppleItem[]).map((a) => ({
+    id: a.id, kind: 'artist', name: a.attributes?.name, genres: a.attributes?.genreNames,
+  }));
+  return JSON.stringify({
+    has_data: songs.length + albums.length + artists.length > 0,
+    songs, albums, artists,
+    note: 'To play a song or album, call play_apple_music with its id + kind + title + artist + artwork_url. Artists are information-only.',
   });
 }

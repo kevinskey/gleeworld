@@ -133,6 +133,14 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — this app does not fetch article bodies, but it CAN open the article in a new tab for them.',
     '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly.',
   ].join('\n');
+  const streamingNote = [
+    'Apple Music (search_apple_music + play_apple_music):',
+    '- "Play X on Apple Music", "play the album Y", or any request to hear a full ALBUM: search_apple_music first, then play_apple_music with the chosen id, kind, title, artist and artwork_url. Playback opens in the floating player window; stop_playback stops it.',
+    '- Album and artist questions (release year, track count, genre) can be answered from search_apple_music results when the choral reference has nothing.',
+    '- Full tracks need the listener\'s own Apple Music subscription — they may see an Apple sign-in the first time; without one Apple plays previews. Say so only if they ask why playback is short.',
+    '- YouTube (search_youtube + play_video) stays the DEFAULT for "play X" with no service named, and for performances/videos.',
+    '- Spotify and YouTube Music are NOT connected. If asked, say so plainly and offer Apple Music or YouTube instead.',
+  ].join('\n');
   const hymnalNote = [
     'Hymnal numbers (lookup_hymn):',
     '- Loaded hymnal indexes: Lead Me, Guide Me 2nd edition ("LMGM II"), Gather Comprehensive 2nd edition ("Gather"), and the Baptist Hymnal 2008. Use lookup_hymn for "what number is X", for choosing hymns while planning a liturgy or Mass, and for reverse lookup ("what is 457 in LMGM").',
@@ -268,6 +276,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     newsNote,
     advisingNote,
     academyCoursesNote,
+    streamingNote,
     hymnalNote,
     researchNoteRule,
     placesNote,

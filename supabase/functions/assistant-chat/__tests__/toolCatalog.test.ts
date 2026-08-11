@@ -66,6 +66,7 @@ describe('toolCatalog', () => {
       'remember_preference',
       'research_repertoire',
       'search_academy',
+      'search_apple_music',
       'search_liturgy',
       'search_music',
       'search_music_facts',

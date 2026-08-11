@@ -15,7 +15,14 @@ import type { AssistantAction, ThreadState } from './types';
 import type { ConciergeResult } from './conciergeTypes';
 
 export interface NowPlaying {
-  videoId: string;
+  /** Which engine the popout drives. Absent = 'youtube' (older callers). */
+  source?: 'youtube' | 'apple';
+  /** YouTube video id — required when source is youtube. */
+  videoId?: string;
+  /** Apple Music catalog id + kind — required when source is apple. */
+  appleId?: string;
+  appleKind?: 'song' | 'album';
+  artworkUrl?: string | null;
   title?: string;
   channel?: string;
 }
@@ -316,6 +323,19 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // builders, never from model output.
     if (outcome.openExternalUrl) window.open(outcome.openExternalUrl, '_blank', 'noopener,noreferrer');
     if (outcome.stopPlayback) setNowPlaying(null);
+    if (outcome.appleMusic) {
+      // Same rule as the YouTube popout: two audio sources on one speaker
+      // means the reply gets read out over the music it announced.
+      stopSpeakingNow();
+      setNowPlaying({
+        source: 'apple',
+        appleId: outcome.appleMusic.id,
+        appleKind: outcome.appleMusic.kind,
+        title: outcome.appleMusic.title,
+        channel: outcome.appleMusic.artist,
+        artworkUrl: outcome.appleMusic.artworkUrl,
+      });
+    }
     if (outcome.navigateTo) { setSheetOpen(false); navigate(outcome.navigateTo); }
     if (!outcome.ok) speakNow(outcome.message);
     // Only a confirm-gated action can have a queued follow-up waiting on it.
@@ -343,7 +363,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           break;
       }
     }
-  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc, setNowPlaying]);
+  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc, setNowPlaying, stopSpeakingNow]);
 
   const cancelAction = useCallback((msgId: string) => {
     dispatch({ type: 'action-state', id: msgId, state: 'cancelled' });

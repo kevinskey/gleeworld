@@ -167,6 +167,32 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'search_apple_music',
+    description: "Search the Apple Music catalog for songs, albums, and artists. Use when the user names Apple Music ('play X on Apple Music'), asks to play an ALBUM, or asks about an album or artist's catalog info (year, tracks, genre). Returns ids for play_apple_music. For videos/performances, search_youtube + play_video remain the default.",
+    parameters: {
+      type: 'object',
+      properties: { query: str("What to search, e.g. 'Ezekiel Saw de Wheel Fisk Jubilee Singers' or 'Lift Every Voice album'") },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'play_apple_music',
+    description: "Play a song or album from Apple Music in the floating player window. Get id/kind/title/artist/artwork_url from search_apple_music first — never guess ids. Full tracks need the listener's Apple Music subscription (they may see a sign-in); otherwise Apple plays previews.",
+    parameters: {
+      type: 'object',
+      properties: {
+        id: str('Apple Music catalog id from search_apple_music'),
+        kind: str("'song' or 'album'"),
+        title: str('Title, for the player window'),
+        artist: str('Artist name, for the player window'),
+        artwork_url: str('Artwork URL from the search result (optional)'),
+      },
+      required: ['id'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
     name: 'stop_playback',
     // "Stop the music" during live voice (2026-08-10) got "I don't have a
     // way to stop playback" — true at the time: the app owns the mini
