@@ -12,7 +12,7 @@ import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
  * a subscription MusicKit falls back to previews, which is Apple's rule,
  * not ours.
  */
-function AppleMusicBody({ id, kind, artworkUrl }: { id: string; kind: 'song' | 'album'; artworkUrl?: string | null }) {
+function AppleMusicBody({ id, kind, artworkUrl }: { id: string; kind: 'song' | 'album' | 'playlist'; artworkUrl?: string | null }) {
   const [playing, setPlaying] = useState(true);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
@@ -22,7 +22,7 @@ function AppleMusicBody({ id, kind, artworkUrl }: { id: string; kind: 'song' | '
         const { getMusicKit, authorizeAppleMusic } = await import('@/lib/musicKit');
         await authorizeAppleMusic().catch(() => null);
         const kit = await getMusicKit();
-        await kit.setQueue(kind === 'album' ? { album: id } : { song: id });
+        await kit.setQueue(kind === 'album' ? { album: id } : kind === 'playlist' ? { playlist: id } : { song: id });
         if (!cancelled) await kit.play();
       } catch {
         if (!cancelled) setError("Couldn't start Apple Music — it may need a sign-in.");
@@ -162,7 +162,7 @@ export function AssistantMiniPlayer() {
         </button>
       </div>
       {isApple ? (
-        <AppleMusicBody id={appleId!} kind={appleKind === 'album' ? 'album' : 'song'} artworkUrl={artworkUrl} />
+        <AppleMusicBody id={appleId!} kind={appleKind ?? 'song'} artworkUrl={artworkUrl} />
       ) : (
         <div className="relative w-full" style={{ aspectRatio: '16 / 9' }}>
           <iframe

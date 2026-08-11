@@ -138,6 +138,8 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- "Play X on Apple Music", "play the album Y", or any request to hear a full ALBUM: search_apple_music first, then play_apple_music with the chosen id, kind, title, artist and artwork_url. Playback opens in the floating player window; stop_playback stops it.',
     '- Album and artist questions (release year, track count, genre) can be answered from search_apple_music results when the choral reference has nothing.',
     '- Full tracks need the listener\'s own Apple Music subscription — they may see an Apple sign-in the first time; without one Apple plays previews. Say so only if they ask why playback is short.',
+    '- "Play my X playlist": call play_my_playlist with the name — it plays THEIR library playlist. If the client reports it was not found, say so and offer to list what they might have meant differently, not to guess.',
+    '- Building a playlist ("make me a playlist of spirituals for warm-ups"): resolve EVERY song with search_apple_music (batch the searches in one response), confirm the track list in one short spoken summary, then call create_apple_playlist ONCE with the name and all song ids in order. Never call it once per song.',
     '- YouTube (search_youtube + play_video) stays the DEFAULT for "play X" with no service named, and for performances/videos.',
     '- Spotify and YouTube Music are NOT connected. If asked, say so plainly and offer Apple Music or YouTube instead.',
   ].join('\n');
