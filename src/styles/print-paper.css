@@ -1,0 +1,123 @@
+/* Print/PDF paper styling for the Documents word processor's PrintPaperView
+ * overlay. Scoped entirely under `.print-paper*` classes so it can never
+ * leak onto the rest of the app; imported by PrintPaperView.tsx ONLY.
+ *
+ * Mirrors the same MLA9/APA7 conventions docxExport.ts encodes for the
+ * .docx export (double-spacing, 0.5in first-line indent on body
+ * paragraphs, 0.5in hanging indent on Works Cited/Notes entries, no indent
+ * on heading-block/title-page lines or headings) so the printed PDF and the
+ * downloaded .docx read as the same paper.
+ */
+
+@page {
+  margin: 1in;
+}
+
+.print-paper {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 2;
+  max-width: 8.5in;
+  color: #000;
+}
+
+.print-paper p {
+  text-indent: 0.5in;
+  margin: 0;
+}
+
+/* Heading-block lines (MLA), title-page lines (APA), section headings, and
+ * hanging-indent entries are never first-line-indented — only ordinary body
+ * paragraphs get the 0.5in first-line indent. */
+.print-paper-meta-line,
+.print-paper-title,
+.print-paper-center,
+.print-paper-section-heading,
+.print-paper-hanging {
+  text-indent: 0;
+}
+
+.print-paper-meta-line {
+  text-align: left;
+}
+
+.print-paper-title {
+  text-align: center;
+}
+
+.print-paper-titlepage .print-paper-title {
+  font-weight: bold;
+}
+
+.print-paper-center {
+  text-align: center;
+}
+
+.print-paper-titlepage {
+  page-break-after: always;
+  break-after: page;
+  padding-top: 2in;
+}
+
+/* Body content coming out of `generateHTML` (paragraphs, headings, lists,
+ * blockquotes, tables) — same first-line-indent exception the .docx export
+ * applies to non-'body' paragraph kinds (headings, list items, blockquote
+ * paragraphs, table cells never get FIRST_LINE_INDENT). */
+.print-paper-body h1,
+.print-paper-body h2,
+.print-paper-body h3,
+.print-paper-body li p,
+.print-paper-body blockquote p,
+.print-paper-body td p,
+.print-paper-body th p {
+  text-indent: 0;
+}
+
+.print-paper-body ul,
+.print-paper-body ol {
+  margin: 0 0 0 0.5in;
+}
+
+.print-paper-body blockquote {
+  margin: 0 0 0 0.5in;
+}
+
+.print-paper-body table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.print-paper-body td,
+.print-paper-body th {
+  border: 1px solid #999;
+  padding: 0.05in 0.1in;
+}
+
+.print-paper-section-heading {
+  text-align: center;
+  page-break-before: always;
+  break-before: page;
+  margin-top: 0;
+}
+
+/* Hanging indent (Works Cited / References entries, Notes entries) —
+ * matches docxExport's HANGING_INDENT (0.5in left, 0.5in hanging). */
+.print-paper-hanging {
+  padding-left: 0.5in;
+  text-indent: -0.5in;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-paper-overlay {
+    position: static;
+    background: #fff;
+  }
+
+  .print-paper {
+    max-width: none;
+  }
+}

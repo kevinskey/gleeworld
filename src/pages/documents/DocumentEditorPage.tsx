@@ -3,7 +3,7 @@
 // (Task 7) + sources (Task 8) together, autosaves via useDocAutosave, and
 // handles in-document image upload. Route registration is Task 10's job
 // (this file renders its own content only — the dashboard shell wraps it).
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { Editor } from '@tiptap/react';
 import { AlertCircle, Loader2 } from 'lucide-react';
@@ -22,19 +22,27 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { getDoc, saveDoc, type PersonalDoc } from '@/lib/documents/personalDocsApi';
 import { formatInText } from '@/lib/documents/citationFormat';
-import type { CitationStyle, DocFootnote, DocSource } from '@/lib/documents/types';
+import type { CitationStyle, DocFootnote, DocSource, PaperMeta } from '@/lib/documents/types';
 import { DocumentEditor, countWords } from '@/components/documents/DocumentEditor';
 import { removeCitationsFor } from '@/components/documents/extensions/CitationChip';
 import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRef';
 import { SourcesPanel } from '@/components/documents/SourcesPanel';
 import { WorksCitedPreview } from '@/components/documents/WorksCitedPreview';
+import { PrintPaperView } from '@/components/documents/PrintPaperView';
 import { useDocAutosave } from './useDocAutosave';
 import { uploadFileAndGetUrl, getSignedUrl } from '@/utils/storage';
+
+// Lazy: ExportDialog pulls in docxExport.ts, which imports the `docx`
+// package (~500KB, split into its own vite chunk — see `manualChunks` in
+// vite.config.ts). Loading it eagerly would put `docx` in every editor
+// page load even for the vast majority of sessions that never export.
+const ExportDialog = lazy(() =>
+  import('@/components/documents/ExportDialog').then((m) => ({ default: m.ExportDialog })));
 
 type LoadState = 'loading' | 'ready' | 'error';
 
 type SavePatch = Partial<
-  Pick<PersonalDoc, 'title' | 'content' | 'citation_style' | 'sources' | 'footnotes' | 'word_count'>
+  Pick<PersonalDoc, 'title' | 'content' | 'citation_style' | 'sources' | 'footnotes' | 'paper_meta' | 'word_count'>
 >;
 
 // Dedicated private bucket (migration: 20260811230000_personal_docs.sql) —
@@ -88,6 +96,7 @@ export default function DocumentEditorPage() {
   const [style, setStyle] = useState<CitationStyle>('mla9');
   const [sources, setSources] = useState<DocSource[]>([]);
   const [footnotes, setFootnotes] = useState<DocFootnote[]>([]);
+  const [paperMeta, setPaperMeta] = useState<PaperMeta>({});
   const [initialContent, setInitialContent] = useState<unknown>(null);
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -96,6 +105,8 @@ export default function DocumentEditorPage() {
   const [deletingSourceId, setDeletingSourceId] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [sourcesSheetOpen, setSourcesSheetOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [printContent, setPrintContent] = useState<unknown>(null);
 
   // Live refs so citationChipText/footnoteIndex — stable callbacks handed
   // once to DocumentEditor/its TipTap extensions — always read the latest
@@ -125,6 +136,7 @@ export default function DocumentEditorPage() {
       setStyle(doc.citation_style);
       setSources(doc.sources);
       setFootnotes(doc.footnotes);
+      setPaperMeta(doc.paper_meta ?? {});
       setInitialContent(resolvedContent);
       setLoadState('ready');
     } catch (err) {
@@ -207,6 +219,25 @@ export default function DocumentEditorPage() {
     setSources(next);
     autosaver.schedule({ sources: next });
   }, [autosaver]);
+
+  const handleMetaChange = useCallback((next: PaperMeta) => {
+    setPaperMeta(next);
+    autosaver.schedule({ paper_meta: next });
+  }, [autosaver]);
+
+  // Export must read FRESH editor state, never `initialContent` (which is
+  // only correct as of page load) — the editor's image `src` attributes
+  // were re-signed once at load (`resignDocumentImages`), and a doc open
+  // long enough for those signed URLs to expire would otherwise export
+  // broken image links. `editor.getJSON()` is the live source of truth;
+  // `initialContent` is only a fallback for the (practically unreachable,
+  // since Export is only rendered once loadState === 'ready') case where
+  // the editor instance ref hasn't mounted yet.
+  const getExportContent = useCallback(() => editorInstanceRef.current?.getJSON() ?? initialContent, [initialContent]);
+
+  const handleOpenPrintView = useCallback((content: unknown) => {
+    setPrintContent(content);
+  }, []);
 
   const handleCite = useCallback((sourceId: string, locator?: string) => {
     editorInstanceRef.current?.chain().focus().insertCitation({ sourceId, locator: locator ?? null }).run();
@@ -364,6 +395,10 @@ export default function DocumentEditorPage() {
 
         <span className="text-xs text-muted-foreground" role="status">{statusLabel}</span>
 
+        <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setExportOpen(true)}>
+          Export
+        </Button>
+
         <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
           <SheetTrigger asChild>
             <Button type="button" variant="outline" size="sm" className="text-xs lg:hidden">Sources</Button>
@@ -439,6 +474,36 @@ export default function DocumentEditorPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {exportOpen && (
+        <Suspense fallback={null}>
+          <ExportDialog
+            open={exportOpen}
+            onOpenChange={setExportOpen}
+            docTitle={title}
+            style={style}
+            sources={sources}
+            footnotes={footnotes}
+            meta={paperMeta}
+            onMetaChange={handleMetaChange}
+            getContent={getExportContent}
+            flush={autosaver.flush}
+            onPrint={handleOpenPrintView}
+          />
+        </Suspense>
+      )}
+
+      {printContent !== null && (
+        <PrintPaperView
+          onClose={() => setPrintContent(null)}
+          title={title}
+          style={style}
+          meta={paperMeta}
+          content={printContent}
+          sources={sources}
+          footnotes={footnotes}
+        />
+      )}
     </div>
   );
 }
