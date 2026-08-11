@@ -10,7 +10,7 @@
 //     No Authorization header (or an anon one).
 //     → Resolve course by join_code.
 //     → Create the user via GoTrue admin (if new) + magic-link email
-//       via Resend so they land signed-in on /onboarding?next=<class>.
+//       via Resend so they land signed-in on /welcome?next=<class>.
 //     → Enroll them in the course.
 //     → Response: { invitationSent: true, courseSlug, alreadyEnrolled }.
 //
@@ -108,12 +108,12 @@ serve(async (req) => {
     const seatCheck = await enforcePlanCapByEmail(admin, tenantId, body.email);
     if (seatCheck.blocked) return seatCheck.response;
 
-    // Generate a magic link that lands on /auth/callback → /onboarding
+    // Generate a magic link that lands on /auth/callback → /welcome
     // → the course slug. Same routing as gw-invite-student so returning
     // students see a consistent flow no matter which endpoint invited them.
     const origin = (body.appOrigin || "").replace(/\/+$/, "");
     const dest = courseSlug ? `/academy/c/${courseSlug}` : "/academy";
-    const next = `/onboarding?next=${encodeURIComponent(dest)}`;
+    const next = `/welcome?next=${encodeURIComponent(dest)}`;
     const redirectTo = origin ? `${origin}/auth/callback?next=${encodeURIComponent(next)}` : undefined;
 
     // Direct GoTrue admin call — the supabase-js SDK nests redirect_to
