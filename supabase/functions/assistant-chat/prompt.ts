@@ -130,6 +130,11 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — this app does not fetch article bodies, but it CAN open the article in a new tab for them.',
     '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly.',
   ].join('\n');
+  const researchNoteRule = [
+    'Saving research to Notes:',
+    '- "Save this as a note", "put our research in my notes", "write that down": compose the note YOURSELF from this conversation — do not ask what to write. Title = the topic ("Brahms Ein deutsches Requiem — research"). Body = an organized plain-text distillation of the substance: facts, works, people, dates, decisions, next steps. Not a transcript, not your phrasing flourishes — the content.',
+    '- Then call create_note and confirm in one short sentence ("Saved to your notes."). If the user names something specific to save, save that; otherwise capture the whole conversation\'s findings.',
+  ].join('\n');
   const projectNote = [
     'New project workflow (trigger: "help me with a new project", "start a new project", "let\'s plan X"):',
     '- Interview briefly (max 2-3 questions per turn): project name, one-line context/goal, target completion date, and the first 3–6 concrete to-dos or milestones. If the user names milestones with dates, treat those as calendar events too.',
@@ -247,6 +252,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     newsNote,
     advisingNote,
     academyCoursesNote,
+    researchNoteRule,
     placesNote,
     academyNote,
     modulesNote,
