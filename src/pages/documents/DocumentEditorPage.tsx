@@ -29,7 +29,7 @@ import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRe
 import { SourcesPanel } from '@/components/documents/SourcesPanel';
 import { WorksCitedPreview } from '@/components/documents/WorksCitedPreview';
 import { useDocAutosave } from './useDocAutosave';
-import { uploadFileAndGetUrl } from '@/utils/storage';
+import { uploadFileAndGetUrl, getSignedUrl } from '@/utils/storage';
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -37,8 +37,46 @@ type SavePatch = Partial<
   Pick<PersonalDoc, 'title' | 'content' | 'citation_style' | 'sources' | 'footnotes' | 'word_count'>
 >;
 
-const IMAGE_UPLOAD_BUCKET = 'user-files';
+// Dedicated private bucket (migration: 20260811230000_personal_docs.sql) —
+// NOT the shared 'user-files' bucket, which carries pre-existing PERMISSIVE
+// policies ("storage_select_all" USING (true), blanket bucket-only
+// insert/update/delete) that would silently swallow any owner-scoped policy
+// added alongside them. Path: <user_id>/<doc_id>/<uuid>.<ext> — the bucket
+// itself is the isolation boundary, so no extra folder prefix is needed.
+const IMAGE_UPLOAD_BUCKET = 'personal-docs';
 const IMAGE_UPLOAD_ACCEPT = 'image/png,image/jpeg,image/gif,image/webp';
+
+/**
+ * `uploadFileAndGetUrl` hands back a 1-hour signed URL — persisting that
+ * directly as an image node's `src` means the image silently breaks an
+ * hour after it's inserted. Every inserted/loaded image node also carries a
+ * `path` attribute (the stable storage path, via DocImage in
+ * DocumentEditor.tsx) so it can be re-signed. Called once per load, before
+ * the editor mounts (the load gate already guarantees that ordering), so
+ * every open of the document gets a fresh hour instead of persisting a URL
+ * that dies.
+ */
+async function resignDocumentImages(docJson: unknown): Promise<unknown> {
+  const imageAttrNodes: Record<string, unknown>[] = [];
+  const walk = (node: unknown): void => {
+    if (!node || typeof node !== 'object') return;
+    const obj = node as { type?: string; attrs?: Record<string, unknown>; content?: unknown[] };
+    if (obj.type === 'image' && obj.attrs && typeof obj.attrs.path === 'string') {
+      imageAttrNodes.push(obj.attrs);
+    }
+    if (Array.isArray(obj.content)) obj.content.forEach(walk);
+  };
+  walk(docJson);
+
+  if (imageAttrNodes.length === 0) return docJson;
+
+  await Promise.all(imageAttrNodes.map(async (attrs) => {
+    const fresh = await getSignedUrl(IMAGE_UPLOAD_BUCKET, attrs.path as string);
+    if (fresh) attrs.src = fresh; // mutated in place; stale src is harmless to overwrite
+  }));
+
+  return docJson;
+}
 
 export default function DocumentEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -82,11 +120,12 @@ export default function DocumentEditorPage() {
     setLoadError(null);
     try {
       const doc = await getDoc(id);
+      const resolvedContent = await resignDocumentImages(doc.content);
       setTitle(doc.title);
       setStyle(doc.citation_style);
       setSources(doc.sources);
       setFootnotes(doc.footnotes);
-      setInitialContent(doc.content);
+      setInitialContent(resolvedContent);
       setLoadState('ready');
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : 'Failed to load this document.');
@@ -101,17 +140,34 @@ export default function DocumentEditorPage() {
     await saveDoc(id, patch);
   }, [id]);
 
+  // Flushing on unmount (so in-app navigation doesn't strand the last few
+  // keystrokes in the debounce window — unsavedWork's beforeunload guard
+  // separately covers hard reloads/closes) lives INSIDE useDocAutosave
+  // itself now, registered with `[]` deps against a ref. It used to live
+  // here as `useEffect(() => () => flush(), [autosaver])`, but
+  // useDocAutosave returned a fresh object every render, so that effect's
+  // cleanup fired (and flushed) on every render — i.e. every keystroke.
   const autosaver = useDocAutosave<SavePatch>(doSave, 2000);
-
-  // Flush any pending edit immediately when the page goes away, so a
-  // navigation doesn't leave the last few keystrokes stranded in the
-  // debounce window (unsavedWork's beforeunload guard covers hard
-  // reloads/closes; this covers in-app navigation).
-  useEffect(() => () => { void autosaver.flush(); }, [autosaver]);
 
   const forceChipRerender = useCallback(() => {
     editorInstanceRef.current?.view.dispatch(editorInstanceRef.current.state.tr);
   }, []);
+
+  // Citation-chip labels and footnote numbers are computed from `sources`/
+  // `style`/live-doc-state at TipTap render (toDOM) time, which only
+  // re-runs on an actual transaction — hence the forced empty-transaction
+  // dispatch below. It must run in an effect (post-commit), not inline in
+  // the event handlers that call setSources/setStyle/setFootnotes: TipTap's
+  // renderHTML reads `sourcesRef.current`/`styleRef.current`, and those
+  // refs are only updated in THIS render's body (further down). Dispatching
+  // synchronously right after `setSources(next)` — before React has
+  // re-rendered and re-assigned the refs — would force a re-render of the
+  // chips against the OLD, stale ref values, leaving them wrong until
+  // whatever the next unrelated edit happened to be.
+  useEffect(() => {
+    if (loadState !== 'ready') return;
+    forceChipRerender();
+  }, [style, sources, footnotes, loadState, forceChipRerender]);
 
   const citationChipText = useCallback((sourceId: string, locator?: string) => {
     const s = sourcesRef.current.find((x) => x.id === sourceId);
@@ -126,15 +182,16 @@ export default function DocumentEditorPage() {
 
   // onUpdate: recompute footnote numbering source-of-truth (the live doc),
   // prune any footnotes[] entry whose ref was deleted from the text, and
-  // schedule the autosave. Also forces a re-render so footnote markers
-  // renumber immediately (see FootnoteRef.ts's "Numbering refresh" note).
+  // schedule the autosave. Only actually calls setFootnotes when pruning
+  // changed something, so a plain keystroke doesn't re-identity the
+  // `footnotes` array — which would otherwise re-trigger the chip-rerender
+  // effect above on every keystroke for no reason.
   const pruneAndSchedule = useCallback((json: unknown, wordCount: number) => {
     const activeIds = new Set(orderedFootnoteIds(json));
     const pruned = footnotesRef.current.filter((f) => activeIds.has(f.id));
     if (pruned.length !== footnotesRef.current.length) setFootnotes(pruned);
     autosaver.schedule({ content: json, word_count: wordCount, footnotes: pruned });
-    forceChipRerender();
-  }, [autosaver, forceChipRerender]);
+  }, [autosaver]);
 
   const handleTitleChange = useCallback((next: string) => {
     setTitle(next);
@@ -144,14 +201,12 @@ export default function DocumentEditorPage() {
   const handleStyleChange = useCallback((next: CitationStyle) => {
     setStyle(next);
     autosaver.schedule({ citation_style: next });
-    forceChipRerender();
-  }, [autosaver, forceChipRerender]);
+  }, [autosaver]);
 
   const handleSourcesChange = useCallback((next: DocSource[]) => {
     setSources(next);
     autosaver.schedule({ sources: next });
-    forceChipRerender();
-  }, [autosaver, forceChipRerender]);
+  }, [autosaver]);
 
   const handleCite = useCallback((sourceId: string, locator?: string) => {
     editorInstanceRef.current?.chain().focus().insertCitation({ sourceId, locator: locator ?? null }).run();
@@ -206,9 +261,8 @@ export default function DocumentEditorPage() {
     const next = sourcesRef.current.filter((s) => s.id !== deletingSourceId);
     setSources(next);
     autosaver.schedule({ sources: next });
-    forceChipRerender();
     setDeletingSourceId(null);
-  }, [deletingSourceId, autosaver, forceChipRerender]);
+  }, [deletingSourceId, autosaver]);
 
   const deletingSource = deletingSourceId ? sources.find((s) => s.id === deletingSourceId) : undefined;
   const citedCount = deletingSourceId && editorInstanceRef.current
@@ -226,14 +280,24 @@ export default function DocumentEditorPage() {
     setUploadingImage(true);
     try {
       const ext = (file.name.match(/\.([a-z0-9]+)$/i)?.[1] ?? 'png').toLowerCase();
-      const folder = `personal-docs/${userId}/${id}`;
+      // Bucket is 'personal-docs' itself, so the path doesn't repeat the
+      // bucket name as a folder prefix — just <user_id>/<doc_id>/<uuid>.ext.
+      const folder = `${userId}/${id}`;
       const fileName = `${crypto.randomUUID()}.${ext}`;
       const result = await uploadFileAndGetUrl(file, IMAGE_UPLOAD_BUCKET, folder, fileName);
       if (!result) {
         toast.error('Image upload failed. Please try again.');
         return;
       }
-      editorInstanceRef.current?.chain().focus().setImage({ src: result.url }).run();
+      // `setImage`'s TS type (from @tiptap/extension-image) doesn't know
+      // about the `path` attribute DocImage adds, so insert via the
+      // generic `insertContent` instead of the narrower `setImage` command
+      // — both `src` (fresh signed URL, used now) and `path` (stable
+      // storage path, used to re-sign on next load) land on the node.
+      editorInstanceRef.current?.chain().focus().insertContent({
+        type: 'image',
+        attrs: { src: result.url, path: result.path },
+      }).run();
     } catch {
       toast.error('Image upload failed. Please try again.');
     } finally {

@@ -18,6 +18,30 @@ import { CitationChip } from './extensions/CitationChip';
 import { FootnoteRef } from './extensions/FootnoteRef';
 
 /**
+ * Image, extended with a `path` attribute (rendered as `data-path`) that
+ * carries the Supabase Storage path alongside the (short-lived, 1hr signed)
+ * `src`. `src` alone would go stale after the signed URL expires; storing
+ * `path` too lets the page's load path (DocumentEditorPage) re-sign a fresh
+ * `src` every time the doc is opened, instead of persisting a URL that dies
+ * in an hour. `path` isn't part of @tiptap/extension-image's `setImage`
+ * command type, so insert via `editor.commands.insertContent({ type:
+ * 'image', attrs: { src, path } })` instead (see DocumentEditorPage).
+ */
+const DocImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      path: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-path'),
+        renderHTML: (attributes: { path?: string | null }) =>
+          attributes.path ? { 'data-path': attributes.path } : {},
+      },
+    };
+  },
+});
+
+/**
  * Options for `documentExtensions`. Task 7 (FootnoteRef) will extend this
  * further with the data that node needs, without changing this factory's
  * call sites.
@@ -42,7 +66,7 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
       openOnClick: false,
       HTMLAttributes: { rel: 'noopener noreferrer', target: '_blank', class: 'text-primary underline' },
     }),
-    Image,
+    DocImage,
     Table.configure({ resizable: false }),
     TableRow,
     TableHeader,

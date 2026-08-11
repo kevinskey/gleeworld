@@ -99,6 +99,7 @@ const PRIVATE_BUCKETS = new Set([
   'media-docs',
   'music-fundamentals',
   'performer-documents',
+  'personal-docs',
   'personal-scores',
   'read-music-progress',
   'receipts',
