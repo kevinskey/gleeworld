@@ -66,7 +66,7 @@ export interface ActionOutcome {
   stopPlayback?: boolean;
   /** Start Apple Music playback in the floating popout (same window the
    *  YouTube player uses). The provider owns the MusicKit hand-off. */
-  appleMusic?: { id: string; kind: 'song' | 'album'; title?: string; artist?: string; artworkUrl?: string | null };
+  appleMusic?: { id: string; kind: 'song' | 'album' | 'playlist'; title?: string; artist?: string; artworkUrl?: string | null };
   message: string;
 }
 
@@ -106,7 +106,7 @@ export async function executeClientAction(
   const needsDeps = ![
     'open_page', 'open_link', 'open_song', 'open_bible', 'open_note',
     'start_video_session', 'book_ride', 'order_food', 'stop_playback',
-    'close_viewer', 'play_apple_music',
+    'close_viewer', 'play_apple_music', 'create_apple_playlist', 'play_my_playlist',
   ].includes(action.tool);
   const deps = { ...(needsDeps && !depsOverride ? await defaultDeps() : {}), ...depsOverride } as ActionDeps;
   const a = action.args;
@@ -205,6 +205,46 @@ export async function executeClientAction(
           },
           message: `Playing ${a.title ?? 'it'} on Apple Music.`,
         };
+      }
+      case 'create_apple_playlist': {
+        const playlistName = String(a.name ?? '').trim().slice(0, 80);
+        if (!playlistName) return { ok: false, message: 'The playlist needs a name.' };
+        const ids = Array.isArray(a.song_ids)
+          ? a.song_ids.map(String).filter((s) => /^[A-Za-z0-9.\-]{4,40}$/.test(s)).slice(0, 100)
+          : [];
+        try {
+          const mk = await import('@/lib/musicKit');
+          const auth = await mk.authorizeAppleMusic();
+          if (!auth.ok) return { ok: false, message: auth.message ?? 'Apple Music sign-in is required to create playlists.' };
+          await mk.createLibraryPlaylist(
+            playlistName,
+            typeof a.description === 'string' ? a.description.slice(0, 200) : undefined,
+            ids,
+          );
+          return {
+            ok: true,
+            message: `Created "${playlistName}" in your Apple Music library${ids.length ? ` with ${ids.length} song${ids.length === 1 ? '' : 's'}` : ''}. It can take a moment to appear on your devices.`,
+          };
+        } catch {
+          return { ok: false, message: "Couldn't create the playlist in Apple Music." };
+        }
+      }
+      case 'play_my_playlist': {
+        const wanted = String(a.name ?? '').trim();
+        if (!wanted) return { ok: false, message: 'Which playlist?' };
+        try {
+          const mk = await import('@/lib/musicKit');
+          const auth = await mk.authorizeAppleMusic();
+          if (!auth.ok) return { ok: false, message: auth.message ?? 'Apple Music sign-in is required to reach your playlists.' };
+          const lists = await mk.listLibraryPlaylists();
+          const needle = wanted.toLowerCase();
+          const hit = lists.find((p) => p.name.toLowerCase() === needle)
+            ?? lists.find((p) => p.name.toLowerCase().includes(needle));
+          if (!hit) return { ok: false, message: `I couldn't find a playlist named "${wanted}" in your Apple Music library.` };
+          return { ok: true, appleMusic: { id: hit.id, kind: 'playlist', title: hit.name }, message: `Playing ${hit.name}.` };
+        } catch {
+          return { ok: false, message: "Couldn't reach your Apple Music library." };
+        }
       }
       case 'start_video_session': {
         const slug = String(a.room_name ?? 'gleeworld-room').replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 60) || 'gleeworld-room';

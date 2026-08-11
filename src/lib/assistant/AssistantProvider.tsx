@@ -21,7 +21,7 @@ export interface NowPlaying {
   videoId?: string;
   /** Apple Music catalog id + kind — required when source is apple. */
   appleId?: string;
-  appleKind?: 'song' | 'album';
+  appleKind?: 'song' | 'album' | 'playlist';
   artworkUrl?: string | null;
   title?: string;
   channel?: string;

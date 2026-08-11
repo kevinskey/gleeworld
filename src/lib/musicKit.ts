@@ -266,3 +266,49 @@ export async function isAppleMusicAuthorized(): Promise<boolean> {
     return false;
   }
 }
+
+// ---------------- User library: playlists ----------------
+// Both calls need the listener's music-user-token, so callers run
+// authorizeAppleMusic() first (already-signed-in users resolve silently;
+// first-timers get Apple's popup). MusicKit v3 exposes the two tokens the
+// Apple Music API wants as plain properties on the kit instance.
+
+export interface LibraryPlaylist { id: string; name: string }
+
+export async function listLibraryPlaylists(): Promise<LibraryPlaylist[]> {
+  const kit = await getMusicKit();
+  if (!kit.musicUserToken) throw new Error('not_authorized');
+  const res = await fetch('https://api.music.apple.com/v1/me/library/playlists?limit=100', {
+    headers: { Authorization: `Bearer ${kit.developerToken}`, 'Music-User-Token': kit.musicUserToken },
+  });
+  if (!res.ok) throw new Error(`library-playlists ${res.status}`);
+  const data = await res.json();
+  return ((data?.data ?? []) as Array<{ id: string; attributes?: { name?: string } }>)
+    .map((p) => ({ id: p.id, name: p.attributes?.name ?? 'Untitled playlist' }));
+}
+
+export async function createLibraryPlaylist(
+  name: string,
+  description: string | undefined,
+  songIds: string[],
+): Promise<{ id: string | null }> {
+  const kit = await getMusicKit();
+  if (!kit.musicUserToken) throw new Error('not_authorized');
+  const res = await fetch('https://api.music.apple.com/v1/me/library/playlists', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${kit.developerToken}`,
+      'Music-User-Token': kit.musicUserToken,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      attributes: { name, ...(description ? { description } : {}) },
+      ...(songIds.length
+        ? { relationships: { tracks: { data: songIds.map((id) => ({ id, type: 'songs' })) } } }
+        : {}),
+    }),
+  });
+  if (!res.ok) throw new Error(`create-playlist ${res.status}`);
+  const data = await res.json().catch(() => null);
+  return { id: data?.data?.[0]?.id ?? null };
+}

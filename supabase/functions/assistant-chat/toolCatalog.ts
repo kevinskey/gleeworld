@@ -193,6 +193,30 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
+    name: 'create_apple_playlist',
+    description: "Create a playlist in the USER'S OWN Apple Music library. Resolve every song with search_apple_music first, then call this ONCE with all song ids together. Needs the listener's Apple Music sign-in; the client reports failure if they decline.",
+    parameters: {
+      type: 'object',
+      properties: {
+        name: str('Playlist name the user chose'),
+        description: str('One-line description (optional)'),
+        song_ids: { type: 'array', items: { type: 'string' }, description: 'Apple Music song ids from search_apple_music, in order' },
+      },
+      required: ['name'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'play_my_playlist',
+    description: "Play a playlist FROM THE USER'S OWN Apple Music library by name — 'play my warm-up playlist'. The client finds the closest name match and plays it in the floating player. For catalog albums/songs use play_apple_music instead.",
+    parameters: {
+      type: 'object',
+      properties: { name: str("The playlist name as the user said it, e.g. 'warm-ups'") },
+      required: ['name'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
     name: 'stop_playback',
     // "Stop the music" during live voice (2026-08-10) got "I don't have a
     // way to stop playback" — true at the time: the app owns the mini

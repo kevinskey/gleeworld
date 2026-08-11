@@ -201,3 +201,16 @@ describe('streaming services briefing', () => {
     expect(p).toMatch(/Spotify and YouTube Music are NOT connected/);
   });
 });
+
+describe('apple music playlists briefing', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-11T15:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('routes library playlists and one-shot creation', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('play_my_playlist');
+    expect(p).toContain('create_apple_playlist');
+    expect(p).toMatch(/ONCE with the name and all song ids/);
+  });
+});
