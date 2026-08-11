@@ -73,10 +73,10 @@ describe('get_course_info', () => {
     };
     const admin = JSON.parse((await executeServerTool('get_course_info', { course: 'Sight Reading' },
       { supabase: tableStub(tables), role: 'admin' })).replyJson);
-    expect(admin.enrolled_count).toBe(2);
+    expect(admin.visible_enrollment_count).toBe(2);
     const member = JSON.parse((await executeServerTool('get_course_info', { course: 'Sight Reading' },
       { supabase: tableStub(tables), role: 'member' })).replyJson);
-    expect(member.enrolled_count).toBeUndefined();
+    expect(member.visible_enrollment_count).toBeUndefined();
     expect(member.caller_enrolled).toBe(true);
   });
 
@@ -138,7 +138,8 @@ describe('get_enrollments', () => {
     const parsed = JSON.parse(out.replyJson);
     expect(parsed.has_data).toBe(true);
     expect(parsed.enrollments).toContainEqual(expect.objectContaining({ student: 'Maria Alto', course: 'Sight Reading' }));
-    expect(parsed.scope).toContain('administer');
+    // Never overstates: even the admin wording claims only what RLS exposed.
+    expect(parsed.scope).toContain('your permissions expose');
   });
 
   it('filters by person name', async () => {
