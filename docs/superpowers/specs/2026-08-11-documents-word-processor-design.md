@@ -42,6 +42,7 @@ One table, `gw_personal_docs`, mirroring `gw_personal_scores` (migration `202607
   - `content jsonb not null` — TipTap document JSON. Single source of truth; HTML preview, .docx, and PDF are all derived from it.
   - `citation_style text not null default 'mla9' check (citation_style in ('mla9','apa7'))`
   - `sources jsonb not null default '[]'` — array of structured sources (see below). Doc-scoped, not a shared library: a join table is YAGNI for v1.
+  - `footnotes jsonb not null default '[]'` — array of `{ id, text }`; footnote text lives beside the doc JSON (markers in the content reference it by id). Plan-time addition.
   - `paper_meta jsonb not null default '{}'` — heading block: student name, instructor, course, date. Collected on first export, persisted for re-export.
   - `word_count int not null default 0` — denormalized for the library list.
   - `created_at` / `updated_at timestamptz not null default now()`
@@ -73,9 +74,9 @@ Built on installed TipTap 3 extensions plus new free ones:
 
 - Already installed: StarterKit, Link, Underline, Image, List, TextStyle.
 - Add: `@tiptap/extension-table` (+ row/cell/header), `@tiptap/extension-text-align`, `@tiptap/extension-subscript`, `@tiptap/extension-superscript`, `@tiptap/extension-highlight`, `@tiptap/extension-character-count`.
-- Footnotes: community extension (e.g. `tiptap-footnotes`); vet it against TipTap 3 before committing — fallback is a small in-house footnote node pair (marker mark + notes section) if the community one is v2-only.
+- Footnotes: **in-house** (resolved at plan time — no TipTap-3-compatible community extension exists): atomic inline `footnoteRef` node carrying a `noteId`; note text is plain text in the `footnotes` column, edited via a small popover; numbering derived from document order. Export renders real .docx footnotes; the PDF view renders an endnotes "Notes" section (MLA-sanctioned).
 - Citations: custom **atomic inline node** `citationChip` with attrs `{ sourceId, locator }` (locator = page number etc.). Renders formatted text per the doc's style; re-renders on style switch; deletes as one unit.
-- Works Cited: custom node `worksCited` pinned at document end, content generated from `sources` + style; not hand-editable.
+- Works Cited: read-only React block (`WorksCitedPreview`) rendered below the editor, generated from `sources` + style (simplified at plan time from a pinned TipTap node — derived, non-editable content needs no editor node; export composes it independently).
 
 **Layout:** pageless writing surface — centered column ~700px max, serif body type, white card on cream (light-theme tokens; never hardcode colors). Sticky toolbar: undo/redo, block style dropdown (P/H1–H3), bold/italic/underline, alignment, lists, blockquote, table, image, footnote, link, **Cite**, export menu. Inline-editable title above the doc. Footer: live word count (character-count extension) + save status. Studio sizing rules: `text-sm` toolbar, `w-4 h-4` icons.
 
