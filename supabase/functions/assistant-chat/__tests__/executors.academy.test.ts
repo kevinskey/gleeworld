@@ -154,3 +154,45 @@ describe('get_enrollments', () => {
     expect(JSON.parse(out.replyJson).scope).toContain('your own');
   });
 });
+
+describe('lookup_hymn', () => {
+  const HYMNALS = [
+    { id: 'LMGM2012', title: 'Lead Me, Guide Me (2nd ed.)', short_name: 'LMGM II' },
+    { id: 'GC2', title: 'Gather Comprehensive, Second Edition', short_name: 'Gather' },
+  ];
+  const INDEX = [
+    { hymnal_id: 'LMGM2012', number: '457', title: 'Total Praise', tune_title: null },
+    { hymnal_id: 'GC2', number: '520', title: 'Total Praise', tune_title: null },
+  ];
+
+  it('returns the number in every hymnal that carries the hymn', async () => {
+    const out = await executeServerTool('lookup_hymn', { query: 'Total Praise' },
+      { supabase: tableStub({ gw_hymnals: HYMNALS, gw_hymn_index: INDEX }) });
+    const parsed = JSON.parse(out.replyJson);
+    expect(parsed.has_data).toBe(true);
+    expect(parsed.hymns).toContainEqual(expect.objectContaining({ hymnal: 'LMGM II', number: '457' }));
+    expect(parsed.hymns).toContainEqual(expect.objectContaining({ hymnal: 'Gather', number: '520' }));
+  });
+
+  it('lists the loaded hymnals when the named one is unknown', async () => {
+    const out = await executeServerTool('lookup_hymn', { query: 'Total Praise', hymnal: 'OCP Breaking Bread' },
+      { supabase: tableStub({ gw_hymnals: HYMNALS, gw_hymn_index: INDEX }) });
+    const parsed = JSON.parse(out.replyJson);
+    expect(parsed.has_data).toBe(false);
+    expect(parsed.available_hymnals.join(' ')).toContain('LMGM II');
+  });
+
+  it('forbids guessing on a miss', async () => {
+    const out = await executeServerTool('lookup_hymn', { query: 'Nonexistent Hymn Title' },
+      { supabase: tableStub({ gw_hymnals: HYMNALS, gw_hymn_index: [] }) });
+    const parsed = JSON.parse(out.replyJson);
+    expect(parsed.has_data).toBe(false);
+    expect(parsed.note).toMatch(/Do not guess/);
+  });
+
+  it('requires a query or a number', async () => {
+    const out = await executeServerTool('lookup_hymn', {},
+      { supabase: tableStub({ gw_hymnals: HYMNALS, gw_hymn_index: INDEX }) });
+    expect(JSON.parse(out.replyJson).error).toBeTruthy();
+  });
+});
