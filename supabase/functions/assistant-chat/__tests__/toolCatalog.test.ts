@@ -101,3 +101,12 @@ describe('search_academy', () => {
     expect((tool.parameters as any).required).toEqual(['query']);
   });
 });
+
+describe('stop_playback', () => {
+  it('is a member-level client action with no confirm gate', () => {
+    const tool = toolsForRole('member').find((t) => t.name === 'stop_playback');
+    expect(tool).toBeDefined();
+    expect(tool?.execution).toBe('client');
+    expect(tool?.confirm).toBe(false);
+  });
+});

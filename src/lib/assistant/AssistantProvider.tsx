@@ -7,7 +7,7 @@ import { fetchPassage, searchScripture } from '@/lib/bible/fetchPassage';
 import { assistantNavTargets } from '@/lib/navigation/navCatalog';
 import { threadReducer, INITIAL_THREAD } from './threadReducer';
 import { executeClientAction, resolvePageRoute } from './clientActions';
-import { getSpeechInput, isMuted, setMuted, speak, stopSpeaking } from './speech';
+import { getSpeechInput, isMuted, setMuted, sanitizeForSpeech, speak, stopSpeaking } from './speech';
 import { ConfirmActionQueue } from './confirmQueue';
 import { loadThread, saveThread } from './threadStorage';
 import { useAssistantVoice, BROWSER_VOICE_ID } from './voices';
@@ -57,6 +57,22 @@ export interface AssistantContextValue {
 }
 
 const AssistantContext = createContext<AssistantContextValue | null>(null);
+
+// One conversation across both brains. Typed sends and live-voice
+// ask_gleeworld calls used to keep separate thread ids (localStorage vs an
+// in-memory ref), so switching to live voice silently started a fresh thread
+// — on 2026-08-10 the assistant answered "we're just getting started here"
+// twenty seconds after the user's first question. Both paths now read and
+// write this one stored id.
+const THREAD_ID_KEY = 'gw-assistant-thread-id';
+function readStoredThreadId(): string | undefined {
+  try { return localStorage.getItem(THREAD_ID_KEY) ?? undefined; }
+  catch { return undefined; }
+}
+function writeStoredThreadId(id: string): void {
+  try { localStorage.setItem(THREAD_ID_KEY, id); }
+  catch { /* private mode / quota — persistence just doesn't survive refresh */ }
+}
 
 export function useAssistant(): AssistantContextValue {
   const ctx = useContext(AssistantContext);
@@ -131,8 +147,16 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   const [nowPlaying, setNowPlaying] = useState<NowPlaying | null>(null);
 
 
-  /** Thread used by spoken questions, so a follow-up keeps its context. */
+  /** Thread used by spoken questions, so a follow-up keeps its context.
+   *  Seeded from the same stored id the typed path uses — see THREAD_ID_KEY. */
   const liveThreadRef = useRef<string | null>(null);
+  /** In-flight ask_gleeworld call. The live agent (or an impatient human
+   *  re-asking into 15s of silence) can fire the same question twice —
+   *  on 2026-08-10 both ran to completion and two answers were spoken over
+   *  each other. Identical question → share the one in-flight result;
+   *  different question → wait for the current one to settle first, so
+   *  answers can never interleave. */
+  const liveAskRef = useRef<{ question: string; promise: Promise<string> } | null>(null);
   useEffect(() => {
     if (voiceLoading) return;
     voiceReadyRef.current.ready = true;
@@ -286,6 +310,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // isn't popup-blocked. The URL always comes from our own deep-link
     // builders, never from model output.
     if (outcome.openExternalUrl) window.open(outcome.openExternalUrl, '_blank', 'noopener,noreferrer');
+    if (outcome.stopPlayback) setNowPlaying(null);
     if (outcome.navigateTo) { setSheetOpen(false); navigate(outcome.navigateTo); }
     if (!outcome.ok) speakNow(outcome.message);
     // Only a confirm-gated action can have a queued follow-up waiting on it.
@@ -313,7 +338,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           break;
       }
     }
-  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc]);
+  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc, setNowPlaying]);
 
   const cancelAction = useCallback((msgId: string) => {
     dispatch({ type: 'action-state', id: msgId, state: 'cancelled' });
@@ -480,6 +505,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           ask_gleeworld: async (params: { question?: string }) => {
             const question = String(params?.question ?? '').trim();
             if (!question) return 'Ask the user what they would like to know.';
+            const pending = liveAskRef.current;
+            if (pending && pending.question === question.toLowerCase()) return pending.promise;
+            if (pending) await pending.promise.catch(() => { /* settled is all we need */ });
+            const run = (async (): Promise<string> => {
             try {
               // The SAME context the typed path sends. Without it the
               // delegated brain is half-blind: no geo means "find me a
@@ -490,11 +519,14 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
               const { data, error } = await supabase.functions.invoke('assistant-chat', {
                 body: {
                   messages: [{ role: 'user', content: question }],
-                  thread_id: liveThreadRef.current ?? undefined,
+                  thread_id: liveThreadRef.current ?? readStoredThreadId(),
                   context: {
                     firstName: profile?.full_name?.split(' ')[0] ?? 'there',
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                     navTargets: assistantNavTargets(),
+                    // Tells the server this reply is read aloud in full, so
+                    // it answers short-first (prompt + length guard there).
+                    voice: true,
                     ...(geo ? { geo } : {}),
                   },
                 },
@@ -506,7 +538,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
                 actions?: AssistantAction[];
                 resultsPanel?: unknown;
               } | null);
-              if (res?.thread_id) liveThreadRef.current = res.thread_id;
+              if (res?.thread_id) {
+                liveThreadRef.current = res.thread_id;
+                writeStoredThreadId(res.thread_id);
+              }
 
               // Its ACTIONS matter as much as its words. A spoken "find me a
               // coffee" should still raise the card with the tap-to-open-maps
@@ -525,10 +560,23 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
               for (const action of autoRun) await runAction(spokenId, action);
               if (needsConfirm) setSheetOpen(true);
 
-              return res?.reply || "I couldn't find anything on that.";
+              // The agent speaks this verbatim, so markdown scaffolding
+              // ("***Ein deutsches Requiem***", bullet asterisks) must go.
+              const spoken = sanitizeForSpeech(res?.reply || '');
+              if (spoken) return spoken;
+              // Empty reply + an action = a silent action turn (stopping
+              // playback, opening a page). Telling the agent "nothing found"
+              // here would have it apologize for a success.
+              return actions.length > 0
+                ? 'The action is done and visible on screen. Acknowledge in at most three words.'
+                : "I couldn't find anything on that.";
             } catch (err) {
               return `I couldn't look that up: ${err instanceof Error ? err.message : 'unknown error'}`;
             }
+            })();
+            liveAskRef.current = { question: question.toLowerCase(), promise: run };
+            try { return await run; }
+            finally { if (liveAskRef.current?.promise === run) liveAskRef.current = null; }
           },
           open_page: async (params: { name?: string }) => {
             const resolved = resolvePageRoute(String(params?.name ?? ''));
@@ -634,10 +682,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // clients that sent full history still work; the server takes the
     // last user message.
     const history = [{ role: 'user' as const, content: text }];
-    const storedThreadId = (() => {
-      try { return localStorage.getItem('gw-assistant-thread-id') ?? undefined; }
-      catch { return undefined; }
-    })();
+    const storedThreadId = liveThreadRef.current ?? readStoredThreadId();
     // Try for a fresh coordinate before the request so the assistant can
     // answer "find me a starbucks nearby" without a permission prompt
     // mid-conversation. Silently no-op when the user has denied or the
@@ -658,10 +703,8 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           },
         },
       });
-      if (data?.thread_id && data.thread_id !== storedThreadId) {
-        try { localStorage.setItem('gw-assistant-thread-id', data.thread_id); }
-        catch { /* private mode / quota — persistence just doesn't survive refresh */ }
-      }
+      if (data?.thread_id && data.thread_id !== storedThreadId) writeStoredThreadId(data.thread_id);
+      if (data?.thread_id) liveThreadRef.current = data.thread_id;
       if (error || data?.error) {
         failVisibly(data?.error ?? "I couldn't reach the assistant right now.");
         return;

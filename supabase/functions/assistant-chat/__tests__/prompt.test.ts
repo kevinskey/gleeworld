@@ -85,3 +85,27 @@ describe('academy guidance', () => {
     expect(buildSystemPrompt({ ...ctx, role: 'admin' as const })).toContain('search_academy');
   });
 });
+
+/**
+ * Voice turns are read aloud in full, so length is latency twice over —
+ * once while DeepSeek generates (~110 chars/sec observed 2026-08-10) and
+ * again while the agent speaks. The contract: short-first, depth on demand.
+ */
+describe('voice mode (spoken turns)', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-10T19:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('adds the spoken-length contract only when the turn is voice', () => {
+    const spoken = buildSystemPrompt({ ...ctx, voice: true });
+    expect(spoken).toContain('SPOKEN ALOUD');
+    expect(spoken).toMatch(/at most 4 short sentences/i);
+    const typed = buildSystemPrompt(ctx);
+    expect(typed).not.toContain('SPOKEN ALOUD');
+  });
+  it('keeps depth reachable on request rather than capping it away', () => {
+    const spoken = buildSystemPrompt({ ...ctx, voice: true });
+    expect(spoken).toMatch(/tell me more/i);
+    expect(spoken).toMatch(/two short paragraphs/i);
+  });
+});

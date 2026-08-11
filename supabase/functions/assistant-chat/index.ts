@@ -174,7 +174,9 @@ serve(async (req) => {
         .filter((t) => /^[a-z0-9-]+$/.test(t.key) && t.label.length > 0)
         .slice(0, 100)
     : undefined;
+  const voice = body.context?.voice === true;
   const ctx = {
+    voice,
     firstName: inferredFirst || String(body.context?.firstName ?? 'there'),
     fullName: fullName || undefined,
     tenantRole: text(profile?.role) || undefined,
@@ -234,6 +236,18 @@ serve(async (req) => {
   const calledTools = new Set<string>();
   let sourceLeakNudged = false;
 
+  // Voice length guard. The prompt's "at most 4 sentences" rule alone does
+  // not hold — this model paraphrases around prohibitions (the source-leak
+  // lesson) — and on 2026-08-10 spoken Brahms answers ran to 2,600
+  // characters: a ~25s generation wait that invited duplicate re-asks, then
+  // minutes of TTS. Same enforcement shape as the other guards: one
+  // corrective re-ask, then accept. Depth stays available on demand — a turn
+  // that explicitly asks for more is exempt.
+  const wantsDepth = /\b(more|deeper|depth|detail|details|full|fuller|everything|elaborate|expand|longer|keep going|go on)\b/i
+    .test(latestUser.content);
+  const VOICE_REPLY_MAX = 700;
+  let voiceLengthNudged = false;
+
   try {
     for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
       const { message } = await callModel(buildChatRequest(messages, openAiTools, model), apiKey, apiUrl);
@@ -270,6 +284,15 @@ serve(async (req) => {
           sourceLeakNudged = true;
           messages.push({ role: 'assistant', content: reply });
           messages.push({ role: 'user', content: SOURCE_LEAK_NUDGE });
+          continue;
+        }
+        if (voice && !wantsDepth && !voiceLengthNudged && reply.length > VOICE_REPLY_MAX) {
+          voiceLengthNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({
+            role: 'user',
+            content: 'That reply is being read aloud and is far too long. Restate it in AT MOST 4 short plain-prose sentences — keep the most interesting facts, drop all formatting, and end with a brief offer to tell more.',
+          });
           continue;
         }
         await persistAssistantReply(reply);

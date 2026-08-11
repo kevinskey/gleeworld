@@ -61,6 +61,9 @@ export interface ActionOutcome {
   /** External URL to open in a new tab. Only ever set from our own whitelisted
    *  deep-link builders (deepLinks.ts) — never from a model-supplied URL. */
   openExternalUrl?: string;
+  /** Close the assistant's floating mini player ("stop the music"). The
+   *  player is provider state, so the provider acts on this flag. */
+  stopPlayback?: boolean;
   message: string;
 }
 
@@ -99,7 +102,7 @@ export async function executeClientAction(
 ): Promise<ActionOutcome> {
   const needsDeps = ![
     'open_page', 'open_link', 'open_song', 'open_bible', 'open_note',
-    'start_video_session', 'book_ride', 'order_food',
+    'start_video_session', 'book_ride', 'order_food', 'stop_playback',
   ].includes(action.tool);
   const deps = { ...(needsDeps && !depsOverride ? await defaultDeps() : {}), ...depsOverride } as ActionDeps;
   const a = action.args;
@@ -169,6 +172,9 @@ export async function executeClientAction(
         );
         if (!link) return { ok: false, message: 'The food service has to be DoorDash, Uber Eats, or Grubhub.' };
         return { ok: true, openExternalUrl: link.url, message: `Opening ${link.label} — finish your order there.` };
+      }
+      case 'stop_playback': {
+        return { ok: true, stopPlayback: true, message: 'Stopped.' };
       }
       case 'start_video_session': {
         const slug = String(a.room_name ?? 'gleeworld-room').replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 60) || 'gleeworld-room';
