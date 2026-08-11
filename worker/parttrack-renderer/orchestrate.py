@@ -24,7 +24,7 @@ def run_render(conn, job):
             ORDER BY source_part_index, source_voice NULLS FIRST
         """, (job["score_id"],))
         parts = cur.fetchall()
-        cur.execute("SELECT timbre, tenant_id FROM gw_parttrack_scores WHERE id = %s",
+        cur.execute("SELECT timbre, tenant_id, tempo_override_bpm FROM gw_parttrack_scores WHERE id = %s",
                     (job["score_id"],))
         row = cur.fetchone()
     if not parts:
@@ -32,9 +32,10 @@ def run_render(conn, job):
 
     workdir = Path(tempfile.mkdtemp())
     prefix = f"{row['tenant_id']}/{job['score_id']}"
-    stems = render_stems(score, parts, row["timbre"], workdir)
+    stems = render_stems(score, parts, row["timbre"], workdir,
+                         tempo_override_bpm=row["tempo_override_bpm"])
     mixes = build_mixes(stems, workdir)
-    manifest = build_manifest(score)
+    manifest = build_manifest(score, tempo_override_bpm=row["tempo_override_bpm"])
 
     with conn.cursor() as cur:
         cur.execute("DELETE FROM gw_parttrack_renders WHERE score_id = %s", (job["score_id"],))

@@ -171,7 +171,16 @@ export async function getLatestLicenseNumber(basis: PartTrackRightsBasis): Promi
   return (data as { license_number: string | null } | null)?.license_number ?? null;
 }
 
-export async function enqueueRender(scoreId: string): Promise<void> {
+export async function enqueueRender(scoreId: string, tempoOverrideBpm: number | null): Promise<void> {
+  // The worker reads the scores row when it claims the job, so the tempo
+  // must land before the job row exists.
+  const tempoUpd = await supabase
+    .from('gw_parttrack_scores')
+    .update({ tempo_override_bpm: tempoOverrideBpm })
+    .eq('id', scoreId)
+    .select()
+    .single();
+  if (tempoUpd.error || !tempoUpd.data) throw tempoUpd.error ?? new Error('Tempo update did not persist');
   const { data, error } = await supabase
     .from('gw_parttrack_jobs')
     .insert({ score_id: scoreId, kind: 'render' })

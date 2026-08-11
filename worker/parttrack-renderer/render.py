@@ -15,9 +15,17 @@ MIX_MATRIX = {          # (voices_gain, piano_gain, featured_gain)
 FULL_VOICES, FULL_PIANO = 0.75, 0.6
 
 
-def _prepared(score):
+def _prepared(score, override_bpm=None):
     s = copy.deepcopy(score)
-    if not s.recurse().getElementsByClass("MetronomeMark"):
+    if override_bpm:
+        # Director-set tempo replaces whatever the score (or OMR) carried;
+        # stems and the manifest both derive from this single mark.
+        for mm in list(s.recurse().getElementsByClass("MetronomeMark")):
+            site = mm.activeSite
+            if site is not None:
+                site.remove(mm)
+        s.insert(0, tempo.MetronomeMark(number=override_bpm))
+    elif not s.recurse().getElementsByClass("MetronomeMark"):
         s.insert(0, tempo.MetronomeMark(number=100))
     try:
         s = s.expandRepeats()
@@ -43,9 +51,9 @@ def _is_piano_role(role: str) -> bool:
     return role.startswith("piano")
 
 
-def render_stems(score, parts, timbre, workdir) -> dict:
+def render_stems(score, parts, timbre, workdir, tempo_override_bpm=None) -> dict:
     workdir = Path(workdir)
-    prepared = _prepared(score)
+    prepared = _prepared(score, override_bpm=tempo_override_bpm)
     stems = {}
     for row in parts:
         if not row["include"]:
@@ -121,11 +129,11 @@ def encode_mp3(wav: Path) -> Path:
     return out
 
 
-def build_manifest(score) -> dict:
+def build_manifest(score, tempo_override_bpm=None) -> dict:
     # Timing is computed arithmetically from the first tempo mark (the
     # manifest carries a single tempo entry by design — see the plan's
     # self-review notes). Multi-tempo pieces refine in Plan 2.
-    prepared = _prepared(score)
+    prepared = _prepared(score, override_bpm=tempo_override_bpm)
     ref = prepared.parts[0]
     measure_list = list(ref.getElementsByClass("Measure"))
     tempo_map = [{"measure": 1, "bpm": float(mm.number)}

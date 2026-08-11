@@ -53,6 +53,23 @@ def test_manifest_defaults_missing_tempo_to_100():
     assert build_manifest(no_tempo())["tempo_map"][0]["bpm"] == 100
 
 
+def test_prepared_override_replaces_existing_marks():
+    from render import _prepared
+    s = _prepared(satb_piano(), override_bpm=120)
+    marks = list(s.recurse().getElementsByClass("MetronomeMark"))
+    assert [m.number for m in marks] == [120]
+
+
+def test_manifest_override_wins_over_score_tempo():
+    m = build_manifest(satb_piano(), tempo_override_bpm=60)
+    assert m["tempo_map"] == [{"measure": 1, "bpm": 60.0}]
+    assert m["measures"][1]["seconds"] == pytest.approx(4.0, abs=0.01)  # 4 beats at 60
+
+
+def test_manifest_override_replaces_100_fallback():
+    assert build_manifest(no_tempo(), tempo_override_bpm=80)["tempo_map"][0]["bpm"] == 80
+
+
 @needs_tools
 def test_duplicate_roles_produce_distinct_stems(tmp_path):
     # Six parts all confirmed "piano" must NOT collapse into one stem

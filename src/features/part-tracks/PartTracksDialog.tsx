@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -23,6 +24,7 @@ import { PartTrackPlayer } from './player/PartTrackPlayer';
 import { useMyVoicePart } from './player/useMyVoicePart';
 import { RendersList } from './RendersList';
 import { RightsAttestation } from './RightsAttestation';
+import { parseTempoBpm, TEMPO_BPM_MAX, TEMPO_BPM_MIN } from './tempoOverride';
 import type { PartTrackPart, PartTrackSourceType } from './types';
 import { usePartTrackScore } from './usePartTrackScore';
 
@@ -87,12 +89,18 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
   }, [user, scoreId]);
   const [draftParts, setDraftParts] = useState<PartTrackPart[]>([]);
   const [warningsAcked, setWarningsAcked] = useState(false);
+  const [tempoBpm, setTempoBpm] = useState('');
   const [busy, setBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setDraftParts(parts);
   }, [parts]);
+
+  const scoreTempoOverride = score?.tempo_override_bpm;
+  useEffect(() => {
+    setTempoBpm(scoreTempoOverride == null ? '' : String(scoreTempoOverride));
+  }, [scoreId, scoreTempoOverride]);
 
   const upload = async (file: File) => {
     if (!user) return;
@@ -130,10 +138,15 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
 
   const generate = async () => {
     if (!score) return;
+    const tempoParse = parseTempoBpm(tempoBpm);
+    if (!tempoParse.ok) {
+      toast({ title: 'Check the tempo', description: tempoParse.message, variant: 'destructive' });
+      return;
+    }
     setBusy(true);
     try {
       await api.updateParts(draftParts.map(({ id, role, label, include }) => ({ id, role, label, include })));
-      await api.enqueueRender(score.id);
+      await api.enqueueRender(score.id, tempoParse.value);
       await refresh();
     } catch (e) {
       toast({
@@ -252,6 +265,26 @@ export function PartTracksDialog({ sheetMusicId, sheetMusicTitle, open, onOpenCh
               )}
 
               <RightsAttestation scoreId={score.id} rights={rights} onAttested={() => void refresh()} />
+
+              <div className="space-y-1">
+                <Label htmlFor="pt-tempo-bpm" className="text-xs">Tempo (BPM)</Label>
+                <Input
+                  id="pt-tempo-bpm"
+                  type="number"
+                  inputMode="numeric"
+                  min={TEMPO_BPM_MIN}
+                  max={TEMPO_BPM_MAX}
+                  placeholder="100"
+                  className="w-24 h-8 text-sm"
+                  value={tempoBpm}
+                  onChange={(e) => setTempoBpm(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {score.validation_report.some((w) => w.code === 'no_tempo')
+                    ? 'No tempo was found in the score — tracks will render at this speed (default 100 BPM).'
+                    : 'Optional — leave blank to use the score’s own tempo.'}
+                </p>
+              </div>
 
               <div className="space-y-1">
                 <Button size="sm" disabled={!gate.ok || busy} onClick={() => void generate()}>

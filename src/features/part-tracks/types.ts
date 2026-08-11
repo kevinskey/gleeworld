@@ -52,6 +52,7 @@ export interface PartTrackScore {
   validation_report: ValidationWarning[];
   manifest: PartTrackManifest | null;
   timbre: PartTrackTimbre;
+  tempo_override_bpm: number | null;
   error_message: string | null;
   created_by: string | null;
   created_at: string;
