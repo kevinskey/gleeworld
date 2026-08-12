@@ -197,19 +197,24 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
                 onError={(e) => { (e.currentTarget.style.display = 'none'); }}
               />
             )}
-            <EditableText
-              as="span"
-              editable
-              value={config.siteName}
-              onChange={(v) => onConfigChange?.({ siteName: v } as Partial<Config>)}
-              placeholder={ctx.orgName}
-              ariaLabel="Site name"
-              className="font-bold text-base cq-sm:text-lg truncate"
-              // Inline like the nav links: the global .bg-card/.bg-muted span
-              // contrast guards match this span directly and beat the color
-              // inherited from <header>.
-              style={{ color: linkColor }}
-            />
+            {/* Toggle respected here too — "I turned off site name but it's
+                still there" (Kevin, 2026-08-12) was this branch ignoring it.
+                Re-enable from the settings sheet, not the canvas. */}
+            {config.showSiteName !== false && (
+              <EditableText
+                as="span"
+                editable
+                value={config.siteName}
+                onChange={(v) => onConfigChange?.({ siteName: v } as Partial<Config>)}
+                placeholder={ctx.orgName}
+                ariaLabel="Site name"
+                className="font-bold text-base cq-sm:text-lg truncate"
+                // Inline like the nav links: the global .bg-card/.bg-muted span
+                // contrast guards match this span directly and beat the color
+                // inherited from <header>.
+                style={{ color: linkColor }}
+              />
+            )}
           </div>
         ) : (
           <a href="#top" className="flex items-center gap-3 min-w-0">
