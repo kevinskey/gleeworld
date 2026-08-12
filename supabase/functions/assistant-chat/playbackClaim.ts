@@ -27,5 +27,20 @@ export function claimsPlayback(reply: string): boolean {
   return CLAIMS.some((re) => re.test(reply));
 }
 
+// Play-intent floor (Kevin, 2026-08-12: playback is a top-importance
+// action alongside score-opens). When the user's message asks to hear
+// something and the turn ends with no play action, index.ts forces one
+// corrective re-ask — regardless of what the reply claims.
+const PLAY_VERB = String.raw`(?:play|hear|listen\s+to|put\s+on|queue(?:\s+up)?)`;
+const PLAY_TARGET = String.raw`(?:youtube|apple\s+music|video|song|music|recording|playlist|album)`;
+const PLAY_INTENT = new RegExp(String.raw`\b${PLAY_VERB}\b[\s\S]{0,90}?\b${PLAY_TARGET}\b`, 'i');
+
+export function isPlayIntent(userMessage: string): boolean {
+  return PLAY_INTENT.test(userMessage);
+}
+
+export const PLAY_INTENT_NUDGE =
+  'The user asked to HEAR something and you started no player this turn. Do it NOW: call play_video for YouTube (search_youtube first if you need the video), or play_apple_music / play_my_playlist for Apple Music. Only ask which version when the choices are genuinely different recordings they would care about. If nothing matches, say so plainly.';
+
 export const PLAYBACK_CLAIM_NUDGE =
   'You told the user something is playing, but you started no player this turn — nothing is actually playing, no matter what earlier turns in this conversation say. Either call play_video (or play_apple_music / play_my_playlist) RIGHT NOW with the piece they asked for, or answer honestly without claiming playback.';

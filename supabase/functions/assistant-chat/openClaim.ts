@@ -33,5 +33,21 @@ export function claimsOpen(reply: string): boolean {
   return CLAIMS.some((re) => re.test(reply));
 }
 
+// Open-intent detector — the other half of making score-opens rock solid
+// (Kevin, 2026-08-12: "one of if not the most important thing"). When the
+// user's message matches an open-a-score shape and the turn is about to end
+// with NO open action, index.ts forces one corrective re-ask. The prompt
+// carries the same phrasing catalog; this is the code floor under it.
+const OPEN_VERB = String.raw`(?:open|show(?:\s+me)?|pull\s+up|bring\s+up|put(?:\s+up)?|display|view|let\s+me\s+see|see)`;
+const OPEN_TARGET = String.raw`(?:viewer|score|sheet\s+music|music\s+library|pdf|version|on\s+(?:the\s+)?screen)`;
+const OPEN_INTENT = new RegExp(String.raw`\b${OPEN_VERB}\b[\s\S]{0,90}?\b${OPEN_TARGET}\b`, 'i');
+
+export function isOpenScoreIntent(userMessage: string): boolean {
+  return OPEN_INTENT.test(userMessage);
+}
+
+export const OPEN_INTENT_NUDGE =
+  'The user asked you to OPEN a score and you have not called an open tool this turn. Do it NOW: call search_music for the piece if you need the id (retry with composer or original-language title on a miss), then call open_song with the best match. Only ask which one when the results are genuinely different works — different arrangements of the same piece are not a reason to stop. If the library truly does not have it, say so plainly.';
+
 export const OPEN_CLAIM_NUDGE =
   'You told the user something opened, but you called no open tool this turn — nothing opened on their screen, no matter what earlier turns in this conversation say. Either call open_song (for a score; search_music first if you need the id), open_page, or open_note RIGHT NOW for what they asked, or answer honestly without claiming anything opened.';
