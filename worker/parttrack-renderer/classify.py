@@ -58,6 +58,23 @@ def _role_from_pitch(mid: float | None, has_lyrics: bool) -> tuple[str, float]:
     return "bass", 0.6
 
 
+def voice_notes(part, voice_position):
+    """Notes of the voice at 1-based voice_position, in the stable ordering
+    used to number split voices (sorted voice ids, key=str)."""
+    voice_ids = []
+    for m in part.getElementsByClass("Measure"):
+        for v in m.voices:
+            if v.id not in voice_ids:
+                voice_ids.append(v.id)
+    ordered = sorted(voice_ids, key=str)
+    if voice_position > len(ordered):
+        return []
+    vid = ordered[voice_position - 1]
+    return [n for m in part.getElementsByClass("Measure")
+            for v in m.voices if str(v.id) == str(vid)
+            for n in v.notes]
+
+
 def _voice_split_candidates(part, idx):
     out = []
     voice_ids = []
@@ -66,9 +83,7 @@ def _voice_split_candidates(part, idx):
             if v.id not in voice_ids:
                 voice_ids.append(v.id)
     for vpos, vid in enumerate(sorted(voice_ids, key=str), start=1):
-        notes = [n for m in part.getElementsByClass("Measure")
-                 for v in m.voices if str(v.id) == str(vid)
-                 for n in v.notes]
+        notes = voice_notes(part, vpos)
         has_lyrics = any(n.lyric for n in notes)
         role, conf = _role_from_pitch(_median_midi(notes), has_lyrics)
         out.append(PartCandidate(idx, idx, int(vpos), role,

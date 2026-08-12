@@ -9,7 +9,7 @@ from music21 import converter, key as m21key, meter as m21meter, tempo as m21tem
 import config
 import db
 import storage
-from classify import inventory_parts
+from classify import inventory_parts, voice_notes
 from sanitize import sanitize_mxl
 from validate import validate_score
 
@@ -105,23 +105,11 @@ def run_analyze(conn, job):
 # Spec: docs/superpowers/specs/2026-08-11-assistant-score-analysis-design.md
 
 def _candidate_notes(score, cand):
-    """Mirror classify._voice_split_candidates' note selection so ranges
-    line up 1:1 with the inventoried parts."""
+    """Get notes for a candidate part, using the shared voice-selection logic."""
     part = score.parts[cand.source_part_index]
     if cand.source_voice is None:
         return list(part.recurse().notes)
-    voice_ids = []
-    for m in part.getElementsByClass("Measure"):
-        for v in m.voices:
-            if v.id not in voice_ids:
-                voice_ids.append(v.id)
-    ordered = sorted(voice_ids, key=str)
-    if cand.source_voice > len(ordered):
-        return []
-    vid = ordered[cand.source_voice - 1]
-    return [n for m in part.getElementsByClass("Measure")
-            for v in m.voices if str(v.id) == str(vid)
-            for n in v.notes]
+    return voice_notes(part, cand.source_voice)
 
 
 def _pitch_range(notes):
