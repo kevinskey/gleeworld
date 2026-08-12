@@ -314,7 +314,7 @@ export const TourRosterSection = () => {
           <span className="text-sm font-bold text-foreground">{statusCounts.pending}</span>
         </div>
         <div className="flex items-center gap-1.5 bg-card border border-border rounded-md px-3 py-1.5">
-          <AlertCircle className="h-3.5 w-3.5 text-slate-500" />
+          <AlertCircle className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-xs text-muted-foreground">Waitlist</span>
           <span className="text-sm font-bold text-foreground">{statusCounts.waitlist}</span>
         </div>
