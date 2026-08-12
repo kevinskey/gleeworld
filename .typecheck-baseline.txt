@@ -19,42 +19,28 @@ src/components/grading/student/StudentCourseView.tsx(L,C): error TS2339: Propert
 src/components/grading/student/StudentCourseView.tsx(L,C): error TS2339: Property 'check_in_time' does not exist on type 'unknown'.
 src/components/grading/student/StudentGradeSpreadsheet.tsx(L,C): error TS2339: Property 'grade' does not exist on type 'unknown'.
 src/components/grading/student/StudentGradeSpreadsheet.tsx(L,C): error TS2339: Property 'status' does not exist on type 'unknown'.
-src/components/grading/student/UnifiedGradeView.tsx(L,C): error TS2339: Property 'points' does not exist on type 'unknown'.
-src/components/grading/student/UnifiedGradeView.tsx(L,C): error TS2339: Property 'title' does not exist on type 'unknown'.
 src/components/graduates/GraduatesEmailManager.tsx(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
 src/components/graduates/GraduatesEmailManager.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
 src/components/instructor/DiscussionGradingPanel.tsx(L,C): error TS2339: Property 'id' does not exist on type 'unknown'.
 src/components/instructor/DiscussionGradingPanel.tsx(L,C): error TS2339: Property 'instructor_feedback' does not exist on type 'unknown'.
 src/components/instructor/DiscussionGradingPanel.tsx(L,C): error TS2339: Property 'total_score' does not exist on type 'unknown'.
-src/components/member-view/dashboards/AdminDashboard.tsx(L,C): error TS2307: Cannot find module '@/pages/StudentConductorDashboard' or its corresponding type declarations.
 src/components/modules/ConcertTicketAnalytics.tsx(L,C): error TS2339: Property 'class_year' does not exist on type 'unknown'.
 src/components/modules/ConcertTicketAnalytics.tsx(L,C): error TS2339: Property 'role' does not exist on type 'unknown'.
 src/components/modules/UsageAnalyticsModule.tsx(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
 src/components/modules/UsageAnalyticsModule.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
-src/components/mus240/admin/MidtermSubmissionAnalytics.tsx(L,C): error TS2322: Type 'Map<unknown, unknown>' is not assignable to type 'Map<string, any>'.
-src/components/mus240/admin/MidtermSubmissionAnalytics.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
-src/components/mus240/grades/Mus240GradeGrid.tsx(L,C): error TS2339: Property 'grade' does not exist on type 'unknown'.
-src/components/mus240/grades/Mus240GradeGrid.tsx(L,C): error TS2339: Property 'status' does not exist on type 'unknown'.
-src/components/mus240/instructor/SimpleGradeSpreadsheet.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
-src/components/mus240/instructor/StudentGradesRoster.tsx(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
-src/components/mus240/instructor/StudentGradesRoster.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
 src/components/music-library/DockablePiano.tsx(L,C): error TS2367: This comparison appears to be unintentional because the types 'number' and 'string' have no overlap.
 src/components/music-library/MobilePDFViewer.tsx(L,C): error TS2322: Type 'MutableRefObject<{ promptToSaveIfDirty: () => Promise<boolean>; toggleToolbar: () => void; }>' is not assignable to type 'LegacyRef<PDFViewerHandle>'.
 src/components/music-library/SheetMusicViewDialog.tsx(L,C): error TS2339: Property 'exec_board_role' does not exist on type 'UserProfile'.
 src/components/public-site/blocks/columns.tsx(L,C): error TS2741: Property 'ctx' is missing in type '{ config: any; onConfigChange: (patch: Record<string, unknown>) => void; }' but required in type 'BlockRenderProps<any>'.
-src/components/public-site/blocks/contact.tsx(L,C): error TS2322: Type '{ key: string; href: string; Icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; }[]' is not assignable to type '{ key: "youtube" | "facebook" | "instagram" | "twitter" | "spotify"; href: string; Icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>; label: string; }[]'.
 src/components/public-site/blocks/media-gallery.tsx(L,C): error TS2322: Type '{ caption?: string; url?: string; }[]' is not assignable to type '{ url: string; caption: string; }[]'.
 src/components/public-site/blocks/video-gallery.tsx(L,C): error TS2578: Unused '@ts-expect-error' directive.
 src/components/qr/QRScanHistory.tsx(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
 src/components/qr/QRScanHistory.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
 src/components/qr/QRScanHistory.tsx(L,C): error TS2339: Property 'title' does not exist on type 'unknown'.
-src/components/repertoire/ImportUrlDialog.tsx(L,C): error TS2347: Untyped function calls may not accept type arguments.
-src/components/shared/MetalHeaderDashboard.tsx(L,C): error TS2307: Cannot find module '@/components/dashboard/ExecBoardModulesCard' or its corresponding type declarations.
 src/components/sight-singing/AssignmentCreator.tsx(L,C): error TS2322: Type 'unknown[]' is not assignable to type 'number[]'.
 src/components/sight-singing/AssignmentCreator.tsx(L,C): error TS2322: Type 'unknown[]' is not assignable to type 'string[]'.
 src/components/sight-singing/AssignmentCreator.tsx(L,C): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
 src/components/sight-singing/AssignmentCreator.tsx(L,C): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
-src/components/sight-singing/utils/audioPlayback.ts(L,C): error TS2307: Cannot find module './musicXMLParser' or its corresponding type declarations.
 src/components/tour-manager/TourManagerLanding.tsx(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
 src/components/tour-manager/TourManagerLanding.tsx(L,C): error TS2339: Property 'voice_part' does not exist on type 'unknown'.
 src/components/tour/CreateTourGroupButton.tsx(L,C): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string'.
@@ -100,8 +86,6 @@ src/features/read-music/curriculum/engine/StaffPlacement.tsx(L,C): error TS2305:
 src/features/read-music/curriculum/engine/StaffPlacement.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Voice'.
 src/hooks/useAdminFinancialOverview.ts(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
 src/hooks/useAdminFinancialOverview.ts(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
-src/hooks/useAdminStipends.ts(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
-src/hooks/useAdminStipends.ts(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
 src/hooks/useBrandingSettings.ts(L,C): error TS2352: Conversion of type 'BrandingSettings' to type 'Record<string, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
 src/hooks/useBucketsOfLove.ts(L,C): error TS2339: Property 'display_name' does not exist on type 'unknown'.
 src/hooks/useBucketsOfLove.ts(L,C): error TS2339: Property 'first_name' does not exist on type 'unknown'.
@@ -115,8 +99,6 @@ src/hooks/useMultiChannelNotifications.ts(L,C): error TS2339: Property 'email_en
 src/hooks/useMultiChannelNotifications.ts(L,C): error TS2339: Property 'push_enabled' does not exist on type 'unknown'.
 src/hooks/useSheetMusicAudio.ts(L,C): error TS2345: Argument of type '{ audio_url: string; audio_title: string; }' is not assignable to parameter of type 'SetStateAction<SheetMusicAudio>'.
 src/hooks/useStudio.ts(L,C): error TS2339: Property 'error' does not exist on type '{ ok: true; } | { ok: false; error: "unknown_bus" | "unknown_target"; }'.
-src/hooks/useUnifiedAssignments.ts(L,C): error TS2339: Property 'email' does not exist on type 'unknown'.
-src/hooks/useUnifiedAssignments.ts(L,C): error TS2339: Property 'full_name' does not exist on type 'unknown'.
 src/hooks/useVideoLibrary.ts(L,C): error TS2339: Property 'duration' does not exist on type 'unknown'.
 src/hooks/useVideoLibrary.ts(L,C): error TS2339: Property 'id' does not exist on type 'unknown'.
 src/hooks/useVideoLibrary.ts(L,C): error TS2339: Property 'published_at' does not exist on type 'unknown'.
@@ -147,7 +129,6 @@ src/pages/admin/CourseStatistics.tsx(L,C): error TS2322: Type '{ name: string; c
 src/pages/admin/CourseStatistics.tsx(L,C): error TS2322: Type '{ name: string; value: unknown; }[]' is not assignable to type '{ name: string; value: number; }[]'.
 src/pages/admin/CourseStatistics.tsx(L,C): error TS2362: The left-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
 src/pages/admin/CourseStatistics.tsx(L,C): error TS2363: The right-hand side of an arithmetic operation must be of type 'any', 'number', 'bigint' or an enum type.
-src/pages/admin/PublicPageEditor.tsx(L,C): error TS2339: Property 'tenant_id' does not exist on type 'SiteRow'.
 src/pages/admin/StudentOnboarding.tsx(L,C): error TS2339: Property 'organization_name' does not exist on type 'BrandingSettings'.
 src/pages/dashboard/ConcertPlannerEditorPage.tsx(L,C): error TS2345: Argument of type 'import("src/hooks/useConcertPrograms").ConcertProgram' is not assignable to parameter of type 'import("src/lib/concertPlanner/types").ConcertProgram'.
 src/pages/member/AttendancePage.tsx(L,C): error TS2339: Property 'is_exec_board' does not exist on type 'UserProfile'.
@@ -163,7 +144,6 @@ src/pages/notation/NotationView.tsx(L,C): error TS2305: Module '"vexflow"' has n
 src/pages/notation/NotationView.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'StaveTie'.
 src/pages/notation/NotationView.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'Voice'.
 src/pages/notation/NotationView.tsx(L,C): error TS2305: Module '"vexflow"' has no exported member 'VoiceMode'.
-src/pages/notation/NoteEditor.test.tsx(L,C): error TS2322: Type 'EditorScore' is not assignable to type '{ elements: EditorNote[]; title: string; keyFifths: number; mode: "major" | "minor"; timeSig: { beats: number; beatType: number; }; clef: "treble" | "bass" | "alto"; tempo: number; systemBreaks?: number[]; }'.
 src/pages/partner/PartnerInviteRedeem.tsx(L,C): error TS2347: Untyped function calls may not accept type arguments.
 src/pages/studio/AutomationPanel.tsx(L,C): error TS2322: Type '{ time_seconds: number; value: number; curve: string; }[]' is not assignable to type 'AutomationPoint[]'.
 src/pages/studio/MixerView.tsx(L,C): error TS2339: Property 'cycle' does not exist on type 'CycleResult'.
