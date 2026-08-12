@@ -31,6 +31,10 @@ const schema = z.object({
   // above still applies when on. Kevin, 2026-08-12: a page must be able to
   // drop the site name from its header entirely.
   showSiteName: z.boolean().default(true),
+  // Nav link presence. Default matches the historical look; 'lg' +
+  // 'semibold' is the bigger-and-bolder treatment (Kevin, 2026-08-12).
+  navSize: z.enum(['sm', 'base', 'lg']).default('sm'),
+  navWeight: z.enum(['normal', 'semibold']).default('normal'),
   logoUrl: z.string().default('').optional(),
   navLinks: z.array(z.object({ label: z.string(), url: z.string() })).default([]),
   navLinkColor: z.string().default('#ffffff'),
@@ -88,6 +92,8 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   }, [menuOpen]);
 
   const hasLinks = config.navLinks.length > 0 || ctx.memberSignIn;
+  const navSizeClass = config.navSize === 'lg' ? 'text-lg' : config.navSize === 'base' ? 'text-base' : 'text-sm';
+  const navWeightClass = config.navWeight === 'semibold' ? 'font-semibold' : '';
   const navInline = (
     <>
       {config.navLinks.map((l, i) => (
@@ -177,7 +183,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
           </a>
         )}
         {/* Desktop: inline links. Mobile: a hamburger that toggles the dropdown below. */}
-        <nav className="hidden cq-sm:flex items-center gap-4 text-sm">{navInline}</nav>
+        <nav className={`hidden cq-sm:flex items-center gap-4 ${navSizeClass} ${navWeightClass}`}>{navInline}</nav>
         {hasLinks && (
           <button
             type="button"
@@ -205,7 +211,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
                 key={i}
                 href={l.url}
                 onClick={() => setMenuOpen(false)}
-                className="py-2 px-2 rounded text-base text-slate-900 hover:bg-slate-100 transition-colors"
+                className={`py-2 px-2 rounded text-base text-slate-900 hover:bg-slate-100 transition-colors ${navWeightClass}`}
               >
                 {l.label}
               </a>
@@ -258,6 +264,31 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
           placeholder="Your organization"
           disabled={config.showSiteName === false}
         />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-sm">Nav size</Label>
+          <select
+            className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            value={config.navSize}
+            onChange={(e) => set({ navSize: e.target.value as Config['navSize'] })}
+          >
+            <option value="sm">Small</option>
+            <option value="base">Medium</option>
+            <option value="lg">Large</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-sm">Nav weight</Label>
+          <select
+            className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            value={config.navWeight}
+            onChange={(e) => set({ navWeight: e.target.value as Config['navWeight'] })}
+          >
+            <option value="normal">Normal</option>
+            <option value="semibold">Bold</option>
+          </select>
+        </div>
       </div>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-3">
