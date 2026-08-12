@@ -9,6 +9,7 @@ import config
 import db
 import storage
 from classify import inventory_parts
+from sanitize import sanitize_mxl
 from validate import validate_score
 
 
@@ -25,25 +26,39 @@ def _load_score(conn, job, settings):
     if normalized_mxl_path:
         tmp = workdir / "normalized.mxl"
         storage.download(settings, "parttrack", normalized_mxl_path, tmp)
-        return converter.parse(str(tmp))
+        return converter.parse(str(tmp)), []
 
     if source_type == "pdf_omr":
         from omr import pdf_to_mxl
         pdf = workdir / "source.pdf"
         storage.download(settings, "parttrack", source_path, pdf)
         mxl = pdf_to_mxl(pdf, workdir / "omr", settings.audiveris_cmd)
+        fixes = sanitize_mxl(mxl)
+        # Re-serialize through music21: raw Audiveris MusicXML (even after
+        # structural sanitizing) still crashes Sibelius' importer, while
+        # music21's writer emits conventional structures that open cleanly.
+        # Inventory later parses the same uploaded bytes, keeping part
+        # indices stable, so the rewrite must happen before analysis.
+        try:
+            rewritten = workdir / "normalized.mxl"
+            converter.parse(str(mxl)).write("mxl", fp=str(rewritten))
+            converter.parse(str(rewritten))  # refuse an unreadable rewrite
+            mxl = rewritten
+            fixes.append("rewritten_by_music21")
+        except Exception:
+            pass  # fall back to the sanitized Audiveris file
         normalized = f"{tenant_id}/{job['score_id']}/normalized.mxl"
         storage.upload(settings, "parttrack", normalized, mxl, "application/vnd.recordare.musicxml")
         with conn.cursor() as cur:
             cur.execute("UPDATE gw_parttrack_scores SET normalized_mxl_path = %s WHERE id = %s",
                         (normalized, job["score_id"]))
         conn.commit()
-        return converter.parse(str(mxl))
+        return converter.parse(str(mxl)), fixes
 
     ext = {"musicxml": ".musicxml", "mxl": ".mxl", "midi": ".mid"}[source_type]
     tmp = workdir / f"source{ext}"
     storage.download(settings, "parttrack", source_path, tmp)
-    return converter.parse(str(tmp))
+    return converter.parse(str(tmp)), []
 
 
 def run_analyze(conn, job):
@@ -52,9 +67,15 @@ def run_analyze(conn, job):
     with conn.cursor() as cur:
         cur.execute("SELECT source_type FROM gw_parttrack_scores WHERE id = %s", (job["score_id"],))
         (source_type,) = cur.fetchone()
-    score = _load_score(conn, job, settings)
+    score, sanitize_fixes = _load_score(conn, job, settings)
     cands = inventory_parts(score)
     warnings = validate_score(score)
+    if "injected_time_signature" in sanitize_fixes:
+        warnings.append({
+            "code": "time_signature_inferred", "severity": "warning",
+            "message": "The scan had no readable time signature, so one was inferred "
+                       "from the measure lengths. Check the meter before generating.",
+        })
     if source_type == "pdf_omr":
         warnings.append({
             "code": "omr_beta", "severity": "warning",
