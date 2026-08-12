@@ -73,7 +73,7 @@ export const Mus070StudentRoster: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg">MUS 070 Detailed Roster - Spring 2026</CardTitle>
+            <CardTitle className="text-lg">GW 070 Detailed Roster - Spring 2026</CardTitle>
             <Badge variant="secondary">{students.length} students</Badge>
           </div>
           <div className="flex items-center gap-2">

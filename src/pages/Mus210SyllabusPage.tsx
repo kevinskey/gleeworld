@@ -56,7 +56,7 @@ const Mus210SyllabusPage: React.FC = () => {
             </div>
             <p className="text-sm font-medium text-primary mb-2">GleeWorld Academy</p>
             <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
-              MUS 210: Choral Conducting
+              GW 210: Choral Conducting
             </h1>
             <p className="text-lg text-foreground/80">Spring 2026</p>
             <div className="flex flex-wrap justify-center gap-2 mt-4">
@@ -102,7 +102,7 @@ const Mus210SyllabusPage: React.FC = () => {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <p><span className="font-medium text-foreground/70">Course Code:</span> MUS 210</p>
+                <p><span className="font-medium text-foreground/70">Course Code:</span> GW 210</p>
                 <p><span className="font-medium text-foreground/70">Term:</span> Spring 2026 (Jan 14 – Apr 29)</p>
                 <p><span className="font-medium text-foreground/70">Class Time:</span> Monday & Wednesday, 75 min</p>
               </div>

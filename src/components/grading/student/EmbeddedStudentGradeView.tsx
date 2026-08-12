@@ -153,7 +153,7 @@ export const EmbeddedStudentGradeView: React.FC<EmbeddedStudentGradeViewProps> =
   return (
     <div className="space-y-6">
       {isAttendanceOnly ? (
-        /* ═══ MUS 070 Attendance-Only Grade Card ═══ */
+        /* ═══ GW 070 Attendance-Only Grade Card ═══ */
         <div className="space-y-4">
           <div className="rounded-2xl overflow-hidden shadow-lg" style={{ background: 'linear-gradient(135deg, #003366 0%, #004d99 60%, #7cb9e8 100%)' }}>
             <div className="p-6">

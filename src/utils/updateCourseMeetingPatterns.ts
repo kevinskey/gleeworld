@@ -17,15 +17,15 @@ type MeetingPatterns = MeetingPattern | DualMeetingPattern;
 
 // Confirmed Spring 2026 schedules
 export const CONFIRMED_SCHEDULES: Record<string, { id: string; pattern: MeetingPatterns }> = {
-  'MUS 240': {
+  'GW 240': {
     id: '23c4ee3c-7bbb-4534-8c0a-eecd88298d37',
     pattern: { days: [1, 3, 5], startTime: '13:00', endTime: '13:50' }, // MWF 1:00-1:50 PM (50 min)
   },
-  'MUS 070': {
+  'GW 070': {
     id: 'a0000000-0000-0000-0000-000000000070',
     pattern: { days: [1, 3, 5], startTime: '17:00', endTime: '18:15' }, // MWF 5-6:15 PM
   },
-  'MUS 210': {
+  'GW 210': {
     id: '2026c613-bda7-487a-a5d9-91e57c26a741',
     pattern: { days: [1, 3], startTime: '14:00', endTime: '14:50' }, // MW 2-2:50 PM
   },
@@ -41,7 +41,7 @@ export const CONFIRMED_SCHEDULES: Record<string, { id: string; pattern: MeetingP
 };
 
 // Courses with no fixed schedule (by appointment)
-export const BY_APPOINTMENT_COURSES = ['MUS 001', 'GLEE 101'];
+export const BY_APPOINTMENT_COURSES = ['GW 001', 'GLEE 101'];
 
 /**
  * Updates meeting_patterns for all confirmed courses

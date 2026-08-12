@@ -142,7 +142,7 @@ export default function DocsArchitecture() {
 {`-- Course template (reusable across semesters)
 CREATE TABLE courses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  code TEXT NOT NULL UNIQUE,              -- MUS070, MUS240, etc.
+  code TEXT NOT NULL UNIQUE,              -- GW070, GW240, etc.
   title TEXT NOT NULL,
   description TEXT,
   is_glee_club BOOLEAN DEFAULT false,

@@ -19,7 +19,7 @@ interface AttendanceRecord {
   is_dropped: boolean;
 }
 
-const MUS070_COURSE_ID = 'a0000000-0000-0000-0000-000000000070';
+const GW070_COURSE_ID = 'a0000000-0000-0000-0000-000000000070';
 
 // Calculate effective absences per handbook rules
 const calculateEffectiveAbsences = (data: AttendanceRecord) => {
@@ -68,7 +68,7 @@ export const Mus070AttendanceView: React.FC = () => {
         const { data, error } = await supabase
           .from('gw_course_attendance_summary')
           .select('*')
-          .eq('course_id', MUS070_COURSE_ID)
+          .eq('course_id', GW070_COURSE_ID)
           .eq('semester', 'FALL 2025')
           .order('student_name');
 

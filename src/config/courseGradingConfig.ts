@@ -16,7 +16,7 @@ export interface CourseGradingConfig {
   components: GradingComponent[];
   usesDeductiveModel: boolean;
   attendanceDeductionPerAbsence?: number;
-  /** MUS 070 attendance-only grading model */
+  /** GW 070 attendance-only grading model */
   attendanceOnlyModel?: {
     allowedAbsences: number;       // Free passes before grade drops
     absencesPerLetterDrop: number;  // Each N additional absences = 1 letter grade drop
@@ -28,11 +28,11 @@ export interface CourseGradingConfig {
  * Based on official syllabi from academySyllabusDefaults.ts
  */
 export const COURSE_GRADING_CONFIGS: Record<string, CourseGradingConfig> = {
-  // MUS 070 - Glee Club
-  // MUS 070 - Glee Club (per official syllabus)
+  // GW 070 - Glee Club
+  // GW 070 - Glee Club (per official syllabus)
   'a0000000-0000-0000-0000-000000000070': {
     courseId: 'a0000000-0000-0000-0000-000000000070',
-    courseCode: 'MUS 070',
+    courseCode: 'GW 070',
     components: [
       { component: 'Attendance', weight: 100, description: 'Required attendance at all scheduled rehearsals and performances. 2 unexcused absences allowed; 3rd absence drops grade from A to B.' },
     ],
@@ -43,10 +43,10 @@ export const COURSE_GRADING_CONFIGS: Record<string, CourseGradingConfig> = {
     },
   },
 
-  // MUS 210 - Choral Conducting and Literature
+  // GW 210 - Choral Conducting and Literature
   '2026c613-bda7-487a-a5d9-91e57c26a741': {
     courseId: '2026c613-bda7-487a-a5d9-91e57c26a741',
-    courseCode: 'MUS 210',
+    courseCode: 'GW 210',
     components: [
       { component: 'Technique Juries (2)', weight: 20, description: 'Two technique juries demonstrating conducting skills' },
       { component: 'Non-Touring Choir Practicum', weight: 30, description: 'Leading rehearsals with the non-touring choir' },
@@ -57,10 +57,10 @@ export const COURSE_GRADING_CONFIGS: Record<string, CourseGradingConfig> = {
     attendanceDeductionPerAbsence: 2
   },
 
-  // MUS 240 - Survey of African American Music
+  // GW 240 - Survey of African American Music
   '23c4ee3c-7bbb-4534-8c0a-eecd88298d37': {
     courseId: '23c4ee3c-7bbb-4534-8c0a-eecd88298d37',
-    courseCode: 'MUS 240',
+    courseCode: 'GW 240',
     components: [
       { component: 'Listening Journals', weight: 30, description: '10 × 20 pts = 200 pts: Weekly 250–300 word essays connecting listening examples to cultural context' },
       { component: 'Research Project', weight: 23, description: '150 pts: Includes proposal, annotated bibliography, and final online presentation' },
@@ -73,10 +73,10 @@ export const COURSE_GRADING_CONFIGS: Record<string, CourseGradingConfig> = {
     attendanceDeductionPerAbsence: 2
   },
 
-  // MUS 101 - Music Fundamentals Theory
+  // GW 101 - Music Fundamentals Theory
   'a0000000-0000-0000-0000-000000000101': {
     courseId: 'a0000000-0000-0000-0000-000000000101',
-    courseCode: 'MUS 101',
+    courseCode: 'GW 101',
     components: [
       { component: 'Weekly Assignments', weight: 30 },
       { component: 'Quizzes', weight: 20 },
@@ -88,10 +88,10 @@ export const COURSE_GRADING_CONFIGS: Record<string, CourseGradingConfig> = {
     attendanceDeductionPerAbsence: 2
   },
 
-  // MUS 001 - Private Applied Lessons
+  // GW 001 - Private Applied Lessons
   'a0000000-0000-0000-0000-000000000001': {
     courseId: 'a0000000-0000-0000-0000-000000000001',
-    courseCode: 'MUS 001',
+    courseCode: 'GW 001',
     components: [
       { component: 'Lesson Attendance & Preparation', weight: 40 },
       { component: 'Practice Hours (logged)', weight: 20 },

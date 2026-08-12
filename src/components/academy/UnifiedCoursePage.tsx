@@ -191,7 +191,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
       setIsAdmin(adminLikeAccess);
       setIsExecutiveBoard(profile?.is_admin || profile?.is_super_admin || false);
 
-      // For MUS 070 (Glee Club), members and admins are auto-enrolled
+      // For GW 070 (Glee Club), members and admins are auto-enrolled
       if (course.id === 'a0000000-0000-0000-0000-000000000070') {
         if (profile?.role === 'member' || profile?.is_admin || profile?.is_super_admin) {
           setIsEnrolled(true);
@@ -286,7 +286,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
   }
 
   // Per-course visual identity. Every course gets its own palette,
-  // orbs, and hero-chip gradient via getCourseTheme(). MUS 070's
+  // orbs, and hero-chip gradient via getCourseTheme(). GW 070's
   // deep-sea look is preserved verbatim in the theme registry — no
   // more one-off special-casing here.
   // The Lyke House courses are stored as LH100 / LH101 (no separator), but
@@ -472,7 +472,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             </div>
 
             {/* Content Sections */}
-            {activeTab === 'home' && ((course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || isLH100)
+            {activeTab === 'home' && ((course.courseCode === 'GW 070' || course.courseCode === 'GW 210' || isLH100)
                 ? <div className="space-y-6">
                     {isLH100 && (
                       <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading Planner...</CardContent></Card>}>
@@ -532,7 +532,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
 
 
             {/* Resources Tab - Available for all courses */}
-            {activeTab === 'resources' && (course.courseCode === 'MUS 210' ? <Card>
+            {activeTab === 'resources' && (course.courseCode === 'GW 210' ? <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Library className="h-5 w-5 text-primary" />
@@ -602,10 +602,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
                 </CardContent>
               </Card>}
 
-            {activeTab === 'calendar' && (course.courseCode === 'MUS 070' || course.courseCode === 'MUS 210' || isLH100 ? <CalendarWithAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} /> : <CourseCalendarView courseId={course.id} />)}
+            {activeTab === 'calendar' && (course.courseCode === 'GW 070' || course.courseCode === 'GW 210' || isLH100 ? <CalendarWithAttendance courseId={course.id} isEnrolled={isEnrolled} isAdmin={isAdmin} /> : <CourseCalendarView courseId={course.id} />)}
 
-            {/* Music Library Tab - Only for MUS 070 */}
-            {activeTab === 'music-library' && course.courseCode === 'MUS 070' && <Card>
+            {/* Music Library Tab - Only for GW 070 */}
+            {activeTab === 'music-library' && course.courseCode === 'GW 070' && <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Music className="h-5 w-5 text-primary" />
@@ -626,25 +626,25 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({
             {/* Video Library Tab - Course-specific videos managed by instructor */}
             {activeTab === 'video-library' && <CourseVideoLibrary courseId={course.id} isInstructor={false} />}
 
-            {activeTab === 'handbook' && course.courseCode === 'MUS 070' && <CourseHandbook courseCode={course.courseCode} />}
+            {activeTab === 'handbook' && course.courseCode === 'GW 070' && <CourseHandbook courseCode={course.courseCode} />}
 
-            {/* Tour Tab - Only for MUS 070 */}
-            {activeTab === 'tour' && course.courseCode === 'MUS 070' && (
+            {/* Tour Tab - Only for GW 070 */}
+            {activeTab === 'tour' && course.courseCode === 'GW 070' && (
               <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading tour info...</CardContent></Card>}>
                 <StudentTourView />
               </React.Suspense>
             )}
 
 
-            {/* Textbook Tab - MUS 210 Conducting Reference */}
-            {activeTab === 'textbook' && course.courseCode === 'MUS 210' && (
+            {/* Textbook Tab - GW 210 Conducting Reference */}
+            {activeTab === 'textbook' && course.courseCode === 'GW 210' && (
               <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading textbook...</CardContent></Card>}>
                 <ConductingTextbook />
               </React.Suspense>
             )}
 
-            {/* ReadMusic Tab - MUS 210 Sight Reading Trainer */}
-            {activeTab === 'readmusic' && course.courseCode === 'MUS 210' && (
+            {/* ReadMusic Tab - GW 210 Sight Reading Trainer */}
+            {activeTab === 'readmusic' && course.courseCode === 'GW 210' && (
               <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading ReadMusic...</CardContent></Card>}>
                 <ReadMusicTrainer />
               </React.Suspense>

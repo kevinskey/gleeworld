@@ -86,7 +86,7 @@ const termToSemesterLabel = (term: string | null | undefined): string => {
   return 'Spring 2026';
 };
 
-// Convert URL slug to course code (e.g., mus-240 -> MUS 240)
+// Convert URL slug to course code (e.g., mus-240 -> GW 240)
 const slugToCourseCode = (slug: string): string => {
   const parts = slug.split('-');
   const prefix = parts[0].toUpperCase();

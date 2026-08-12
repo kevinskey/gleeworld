@@ -5,7 +5,7 @@ import { ACADEMY_COURSES } from '@/config/academyCourses';
 
 // Helper to convert URL slug to course code
 const slugToCourseCode = (slug: string): string => {
-  // Convert mus-070 to MUS 070, glee-101 to GLEE 101, lh-100 to LH 100
+  // Convert mus-070 to GW 070, glee-101 to GLEE 101, lh-100 to LH 100
   const parts = slug.split('-');
   const prefix = parts[0].toUpperCase();
   const number = parts.slice(1).join('-');
@@ -28,7 +28,7 @@ const AcademyCoursePage = () => {
     return <Navigate to="/glee-academy" replace />;
   }
   
-  // Find course by slug (e.g., mus-070, lh-100) or course code (MUS 070, LH 100)
+  // Find course by slug (e.g., mus-070, lh-100) or course code (GW 070, LH 100)
   const course = ACADEMY_COURSES.find(c => {
     const slug = c.courseCode.toLowerCase().replace(' ', '-');
     return slug === effectiveSlug.toLowerCase() || c.courseCode === slugToCourseCode(effectiveSlug);

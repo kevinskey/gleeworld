@@ -40,7 +40,7 @@ const CourseOnboarding = () => {
     return <Navigate to="/glee-academy" replace />;
   }
   
-  // Find course by slug (e.g., mus-070) or course code (MUS 070)
+  // Find course by slug (e.g., mus-070) or course code (GW 070)
   const course = ACADEMY_COURSES.find(c => {
     const slug = c.courseCode.toLowerCase().replace(' ', '-');
     return slug === courseCode.toLowerCase() || c.courseCode === slugToCourseCode(courseCode);

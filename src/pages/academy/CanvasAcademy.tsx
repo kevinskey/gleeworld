@@ -215,7 +215,7 @@ function CreateCourseDialog({
             <Input
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="e.g. MUS101"
+              placeholder="e.g. GW101"
               className="font-mono"
             />
           </div>

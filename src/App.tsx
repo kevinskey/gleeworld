@@ -325,6 +325,7 @@ const OfficeHoursPage = lazy(() => import("./pages/dashboard/OfficeHoursPage"));
 const DashboardShell = lazy(() => import("./components/dashboard/DashboardShell").then(m => ({ default: m.DashboardShell })));
 import { TenantThemeRoot } from "@/components/theme/TenantThemeRoot";
 const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
+const TenantSitePage = lazy(() => import("./pages/TenantSitePage"));
 const TrialExpiredPage = lazy(() => import("./pages/TrialExpiredPage"));
 import { TrialGuard } from "@/components/routes/TrialGuard";
 const MobileScoring = lazy(() => import("./pages/MobileScoring"));
@@ -792,7 +793,7 @@ const App = () => {
                 path="/glee-cam/:categorySlug" 
                 element={<GleeCamGallery />} 
               />
-              {/* MUS 100 - Music Theory Fundamentals */}
+              {/* GW 100 - Music Theory Fundamentals */}
               <Route 
                 path="/mus-100" 
                 element={
@@ -804,7 +805,7 @@ const App = () => {
               {/* Legacy redirect */}
               <Route path="/music-theory-fundamentals" element={<Navigate to="/mus-100" replace />} />
               
-              {/* MUS 210 - Legacy redirects to academy */}
+              {/* GW 210 - Legacy redirects to academy */}
               <Route path="/mus-210" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/choral-conducting-literature" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/classes/mus210" element={<Navigate to="/academy/mus-210" replace />} />
@@ -1181,6 +1182,7 @@ const App = () => {
               />
               {/* Published tenant public sites — no auth */}
               <Route path="/sites/:slug" element={<PublicSitePage />} />
+              <Route path="/sites/:slug/:page" element={<PublicSitePage />} />
               <Route
                 path="/admin/ai-rehearsal"
                 element={
@@ -1349,7 +1351,7 @@ const App = () => {
                    </PublicRoute>
                  } 
                />
-               {/* MUS100 Sight Singing Practice - retired, redirects to canonical sight-reading studio */}
+               {/* GW100 Sight Singing Practice - retired, redirects to canonical sight-reading studio */}
                <Route
                  path="/mus100-sight-singing"
                  element={<Navigate to="/dashboard/sight-reading" replace />}
@@ -3455,6 +3457,9 @@ const App = () => {
                                      path="/parent/permission-slip"
                                      element={<ParentPermissionSlip />}
                                    />
+                                   {/* Extra public-site pages on tenant hosts (yo-doc.com/retirement).
+                                       Static routes above always outrank this dynamic segment. */}
+                                   <Route path="/:page" element={<TenantSitePage />} />
                                    {/* Catch-all route for 404 */}
                                    <Route path="*" element={<NotFound />} />
                                </Routes>

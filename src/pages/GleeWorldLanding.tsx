@@ -995,7 +995,7 @@ function GradebookMockup() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="font-bold text-slate-900">Gradebook</div>
-          <div className="text-xs sm:text-xs text-slate-500">MUS 240 · Fall 2026</div>
+          <div className="text-xs sm:text-xs text-slate-500">GW 240 · Fall 2026</div>
         </div>
         <div className="text-xs sm:text-xs px-2 py-1 rounded bg-emerald-50 text-emerald-700 font-semibold">Class avg 92%</div>
       </div>

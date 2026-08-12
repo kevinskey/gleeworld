@@ -38,10 +38,10 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
   const qc = useQueryClient();
   const { toast } = useToast();
 
-  const isMus070 = course.courseCode === 'MUS 070';
+  const isMus070 = course.courseCode === 'GW 070';
   const isAdmin = profile?.is_admin || profile?.is_super_admin || profile?.role === 'instructor';
 
-  // Glass styling helpers for MUS 070
+  // Glass styling helpers for GW 070
   const glass = isMus070 ? 'bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl shadow-none' : '';
   const glassText = isMus070 ? 'text-white' : 'text-foreground';
   const glassMuted = isMus070 ? 'text-slate-400' : 'text-muted-foreground';
@@ -105,7 +105,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
 
   const TOUR_CONTRACT_ID = '99ad60d3-0e94-41b2-b4f9-1b03146c62c9';
 
-  // Check if student already signed the tour contract (MUS 070 only)
+  // Check if student already signed the tour contract (GW 070 only)
   const { data: hasSigned } = useQuery({
     queryKey: ['tour-contract-signature', user?.id, TOUR_CONTRACT_ID],
     queryFn: async () => {
@@ -120,7 +120,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
     enabled: !!user && isMus070,
   });
 
-  // Fetch active tour (MUS 070 only)
+  // Fetch active tour (GW 070 only)
   const { data: activeTour } = useQuery({
     queryKey: ['student-tour-active'],
     queryFn: async () => {
@@ -421,7 +421,7 @@ export const MobileCourseLanding: React.FC<MobileCourseLandingProps> = ({ course
             </div>
           </Card>
 
-          {course.courseCode === 'MUS 070' && (
+          {course.courseCode === 'GW 070' && (
             <Collapsible open={scheduleOpen} onOpenChange={setScheduleOpen}>
               <Card variant="outline" className={isMus070 ? `${glass} border-2 border-red-500/50` : 'border-2 border-red-500'}>
                 <CollapsibleTrigger className="w-full">

@@ -340,7 +340,7 @@ export default function AcademyCoursesAdmin() {
                     <Input
                       value={selectedCourse.course_code}
                       onChange={e => setSelectedCourse({ ...selectedCourse, course_code: e.target.value })}
-                      placeholder="e.g., MUS 210"
+                      placeholder="e.g., GW 210"
                     />
                   </div>
                   <div className="space-y-2">
