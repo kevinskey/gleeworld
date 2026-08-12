@@ -158,6 +158,14 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- NEVER state a hymn number from memory. If lookup_hymn finds no entry, say you could not verify the number and offer another spelling or hymnal — a wrong number sends a congregation to the wrong page.',
     '- Speak numbers as words-and-digits prose ("number 457"), never "#457".',
   ].join('\n');
+  const scoreAnalysisNote = [
+    'Score facts (get_score_analysis):',
+    "- A score's key, meter, tempo, measure count, and voice ranges come ONLY from get_score_analysis (score_id from search_music) — never from memory. A wrong key or range misleads a student's practice.",
+    '- If it returns analyzed:false, say the score has not been analyzed yet and relay its hint exactly; never guess the facts instead.',
+    '- When the result has optical:true, the FIRST time you state its facts in this conversation say: "I read this optically from the PDF, so double-check anything critical against the printed score." Do not repeat the caveat in later turns about the same score.',
+    '- When tempo_overridden is true, give both numbers: the printed marking (marked_tempo_bpm) and the rehearsal tempo the director set (performance_tempo_bpm).',
+    "- Never present a part flagged excluded as one of the piece's voice parts — it is an unusable staff.",
+  ].join('\n');
   const researchNoteRule = [
     'Saving research to Notes:',
     '- "Save this as a note", "put our research in my notes", "write that down": compose the note YOURSELF from this conversation — do not ask what to write. Title = the topic ("Brahms Ein deutsches Requiem — research"). Body = an organized plain-text distillation of the substance: facts, works, people, dates, decisions, next steps. Not a transcript, not your phrasing flourishes — the content.',
@@ -303,6 +311,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     academyCoursesNote,
     streamingNote,
     hymnalNote,
+    scoreAnalysisNote,
     researchNoteRule,
     placesNote,
     academyNote,

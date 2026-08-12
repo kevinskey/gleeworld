@@ -40,6 +40,8 @@ describe('namesItsSources', () => {
       'I saved it to your personal library.',
       'Play the reference recording first, then sing it back.',
       'Tune to the reference pitch before the downbeat.',
+      'From the Part Tracks analysis: F major, 84 measures in 4/4, about three and a half minutes. I read this optically from the PDF, so double-check anything critical against the printed score.',
+      "The alto range is E4 up to A4. The score hasn't been analyzed yet for ranges beyond that — ask your director to run it through Part Tracks.",
     ]) {
       expect(namesItsSources(reply), reply.slice(0, 50)).toBe(false);
     }

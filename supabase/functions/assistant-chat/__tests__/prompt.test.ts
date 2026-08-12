@@ -269,3 +269,16 @@ describe('remembering choices', () => {
     expect(p).toMatch(/One-off requests are not preferences/);
   });
 });
+
+describe('score analysis honesty', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-11T19:00:00-04:00', timezone: 'America/New_York',
+  };
+  it('teaches score-analysis honesty rules', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('get_score_analysis');
+    expect(p).toContain('never from memory');
+    expect(p).toContain('double-check anything critical against the printed score');
+  });
+});
