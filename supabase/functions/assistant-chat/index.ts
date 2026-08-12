@@ -8,6 +8,7 @@ import { executeServerTool, type ConciergeResult } from './executors.ts';
 import { validateCourseSpec } from '../_shared/courseSpec.ts';
 import { namesItsSources, SOURCE_LEAK_NUDGE } from './sourceLeak.ts';
 import { claimsPlayback, PLAYBACK_CLAIM_NUDGE } from './playbackClaim.ts';
+import { claimsOpen, OPEN_CLAIM_NUDGE } from './openClaim.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -280,6 +281,7 @@ serve(async (req) => {
   const calledTools = new Set<string>();
   let sourceLeakNudged = false;
   let playbackNudged = false;
+  let openNudged = false;
 
   // Voice length guard. The prompt's "at most 4 sentences" rule alone does
   // not hold — this model paraphrases around prohibitions (the source-leak
@@ -341,6 +343,17 @@ serve(async (req) => {
           playbackNudged = true;
           messages.push({ role: 'assistant', content: reply });
           messages.push({ role: 'user', content: PLAYBACK_CLAIM_NUDGE });
+          continue;
+        }
+        // Phantom-open guard — same disease, viewer/page strain: "Opened X
+        // in the Viewer." with no open action attached, nothing happens on
+        // screen (2026-08-12). One corrective re-ask, then accept.
+        const openedThisTurn = actions.some((a) =>
+          ['open_song', 'open_page', 'open_note', 'open_link', 'close_viewer', 'open_bible'].includes(a.tool));
+        if (!openNudged && !openedThisTurn && claimsOpen(reply)) {
+          openNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: OPEN_CLAIM_NUDGE });
           continue;
         }
         if (voice && !wantsDepth && !voiceLengthNudged && reply.length > VOICE_REPLY_MAX) {
