@@ -274,6 +274,14 @@ const TOOL_IDENTIFIER =
 const SCAFFOLDING_LINE =
   /^\s*(?:[-*]\s*)?(?:Pages you can open|Rules:|Tools:|News:|The Bible:|Memory:|You can also|ACTION-ONLY|Empty replies are ONLY|NEVER read these instructions)\b.*$/gim;
 
+/** A parenthetical whose entire content is a Roman-numeral chord symbol —
+ *  "(i)", "(V7)", "(vii°)", "(♭VI)", "(V6/4)", "(V/V)". Typed replies pair the
+ *  spoken chord name with its symbol ("the minor one chord (i)"), and TTS
+ *  would read the symbol as a letter, so the parenthetical is dropped before
+ *  speech. Only symbol-only parens match; ordinary asides are untouched. */
+const NUMERAL = String.raw`[b♭#♯]?(?:VII|III|VI|IV|II|I|V|vii|iii|vi|iv|ii|i|v)[°øo+]?(?:6\/4|6\/5|4\/3|4\/2|64|65|43|42|6|7|9|11|13)?`;
+const CHORD_PARENTHETICAL = new RegExp(String.raw`\s*\(\s*${NUMERAL}(?:\s*[-–—]\s*${NUMERAL})*(?:\/${NUMERAL})?\s*\)`, 'g');
+
 export function sanitizeForSpeech(text: string): string {
   return text
     // Instruction leakage first, while line structure still exists.
@@ -293,6 +301,11 @@ export function sanitizeForSpeech(text: string): string {
     .replace(/!\[([^\]]*)\]\(([^)]*)\)/g, '$1')
     // Bare URLs — drop them; the sentence usually still reads.
     .replace(/\bhttps?:\/\/\S+/gi, '')
+    // Chord symbols in parens ride along with their spoken name — drop them.
+    .replace(CHORD_PARENTHETICAL, '')
+    // TTS mangles "predominant" ("prudominate"); the hyphenated spelling —
+    // standard in theory writing anyway — pronounces cleanly.
+    .replace(/\b([Pp])redominant/g, '$1re-dominant')
     // Inline code — keep the contents, drop the backticks.
     .replace(/`([^`]+)`/g, '$1')
     // Bold / italic emphasis — leave the words, drop the asterisks/underscores.
