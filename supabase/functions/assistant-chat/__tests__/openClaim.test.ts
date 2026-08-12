@@ -1,5 +1,43 @@
 import { describe, it, expect } from 'vitest';
-import { claimsOpen } from '../openClaim';
+import { claimsOpen, isOpenScoreIntent } from '../openClaim';
+
+describe('isOpenScoreIntent', () => {
+  // Kevin 2026-08-12: "one of if not the most important thing the assistant
+  // should be able to do" — every phrasing that means open-a-score must be
+  // recognized so the server can enforce that an open actually happens.
+  it('recognizes the request variations', () => {
+    for (const ask of [
+      'Open "A Choice to Change the World" in the viewer.',
+      'open Ave Maria in the music viewer',
+      'Open the score in the viewer',
+      'open the sheet music for Total Praise',
+      'Show me the score for Wade in the Water',
+      'Pull up the Bach Magnificat in the viewer',
+      'put the Gounod Ave Maria on the screen',
+      'Let me see the score of Lift Every Voice',
+      'View "Ein deutsches Requiem" in the viewer',
+      'bring up the pdf of A Choice to Change the World',
+      'open that Toys to Change the World in viewer', // live-voice misrecognition, still an open ask
+      'Open an SSAA version of "A Choice to Change the World" and show it.',
+    ]) {
+      expect(isOpenScoreIntent(ask), ask).toBe(true);
+    }
+  });
+
+  it('stays quiet on requests that are not score-opens', () => {
+    for (const ask of [
+      'What key is A Choice to Change the World in?',
+      'Is the German Requiem in the music library?',
+      'Play Total Praise on YouTube',
+      'Close the viewer',
+      'Tell me about the composer of Ave Maria',
+      'What time is rehearsal tomorrow?',
+      'Give me a brief history on the German Requiem.',
+    ]) {
+      expect(isOpenScoreIntent(ask), ask).toBe(false);
+    }
+  });
+});
 
 describe('claimsOpen', () => {
   // Real replies from Kevin's failing session (gw_assistant_messages,

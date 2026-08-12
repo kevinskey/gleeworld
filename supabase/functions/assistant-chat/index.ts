@@ -7,8 +7,9 @@ import { buildChatRequest, callModel, type ChatMessage } from './provider.ts';
 import { executeServerTool, type ConciergeResult } from './executors.ts';
 import { validateCourseSpec } from '../_shared/courseSpec.ts';
 import { namesItsSources, SOURCE_LEAK_NUDGE } from './sourceLeak.ts';
-import { claimsPlayback, PLAYBACK_CLAIM_NUDGE } from './playbackClaim.ts';
-import { claimsOpen, OPEN_CLAIM_NUDGE } from './openClaim.ts';
+import { claimsPlayback, PLAYBACK_CLAIM_NUDGE, isPlayIntent, PLAY_INTENT_NUDGE } from './playbackClaim.ts';
+import { claimsNoteSaved, isSaveNoteIntent, NOTE_CLAIM_NUDGE, NOTE_INTENT_NUDGE } from './noteClaim.ts';
+import { claimsOpen, OPEN_CLAIM_NUDGE, isOpenScoreIntent, OPEN_INTENT_NUDGE } from './openClaim.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -282,6 +283,10 @@ serve(async (req) => {
   let sourceLeakNudged = false;
   let playbackNudged = false;
   let openNudged = false;
+  let openIntentNudged = false;
+  let playIntentNudged = false;
+  let noteNudged = false;
+  let noteIntentNudged = false;
 
   // Voice length guard. The prompt's "at most 4 sentences" rule alone does
   // not hold — this model paraphrases around prohibitions (the source-leak
@@ -354,6 +359,39 @@ serve(async (req) => {
           openNudged = true;
           messages.push({ role: 'assistant', content: reply });
           messages.push({ role: 'user', content: OPEN_CLAIM_NUDGE });
+          continue;
+        }
+        // Open-intent floor: the user's message asked to open a score and
+        // the turn is ending without any open action — regardless of what
+        // the reply claims. One corrective re-ask (Kevin, 2026-08-12:
+        // score-opens are the assistant's most important action).
+        if (!openIntentNudged && !openedThisTurn && isOpenScoreIntent(latestUser.content)) {
+          openIntentNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: OPEN_INTENT_NUDGE });
+          continue;
+        }
+        // Play-intent floor — the playback twin of the open-intent floor.
+        if (!playIntentNudged && !playedThisTurn && isPlayIntent(latestUser.content)) {
+          playIntentNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: PLAY_INTENT_NUDGE });
+          continue;
+        }
+        // Phantom-note guard + save-intent floor (Kevin's real 17:32
+        // phantom: "I've saved a note … It's in your Planner notes now"
+        // with no create_note action).
+        const notedThisTurn = actions.some((a) => a.tool === 'create_note');
+        if (!noteNudged && !notedThisTurn && claimsNoteSaved(reply)) {
+          noteNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: NOTE_CLAIM_NUDGE });
+          continue;
+        }
+        if (!noteIntentNudged && !notedThisTurn && isSaveNoteIntent(latestUser.content)) {
+          noteIntentNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: NOTE_INTENT_NUDGE });
           continue;
         }
         if (voice && !wantsDepth && !voiceLengthNudged && reply.length > VOICE_REPLY_MAX) {
