@@ -87,6 +87,7 @@ export async function executeServerTool(
       case 'schedule_event_playlist': return { replyJson: await scheduleEventPlaylist(args, deps) };
       case 'search_apple_music': return { replyJson: await searchAppleMusicTool(args) };
       case 'set_assistant_name': return { replyJson: await setAssistantName(args, deps) };
+      case 'set_preferred_name': return { replyJson: await setPreferredName(args, deps) };
       case 'list_courses': return { replyJson: await listCourses(args, deps) };
       case 'get_course_info': return { replyJson: await getCourseInfo(args, deps) };
       case 'get_course_deadlines': return { replyJson: await getCourseDeadlines(args, deps) };
@@ -1527,6 +1528,28 @@ async function lookupHymn(args: Record<string, unknown>, { supabase }: Deps): Pr
 // RLS lets a user update only their own row; the .eq is belt-and-braces
 // and the .select() is required — a silently-rejected write otherwise
 // reports success (the demo-tenant lesson).
+
+async function setPreferredName(args: Record<string, unknown>, { supabase, userId }: Deps): Promise<string> {
+  if (!userId) return JSON.stringify({ error: 'No caller id available.' });
+  const raw = String(args.name ?? '').trim();
+  const clear = args.clear === true || /^(default|none|nothing|clear)$/i.test(raw);
+  const name = clear ? null : raw.slice(0, 40);
+  if (!clear && !name) return JSON.stringify({ error: 'Pass what the user wants to be called.' });
+  const { data, error } = await supabase
+    .from('gw_profiles')
+    .update({ preferred_name: name })
+    .eq('user_id', userId)
+    .select('preferred_name');
+  if (error) return JSON.stringify({ error: error.message });
+  if (!data || data.length === 0) return JSON.stringify({ error: 'The name did not save.' });
+  return JSON.stringify({
+    ok: true,
+    preferred_name: name,
+    note: name
+      ? `The user is now addressed as ${name} everywhere they use the assistant. Use it naturally from your NEXT sentence on.`
+      : 'Cleared — address the user by their first name again.',
+  });
+}
 
 async function setAssistantName(args: Record<string, unknown>, { supabase, userId }: Deps): Promise<string> {
   if (!userId) return JSON.stringify({ error: 'No caller id available.' });

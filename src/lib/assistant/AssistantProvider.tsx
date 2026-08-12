@@ -582,7 +582,9 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         liveVoiceId && liveVoiceId !== BROWSER_VOICE_ID
           ? { overrides: { tts: { voiceId: liveVoiceId } } }
           : {};
-      const firstName = profile?.full_name?.trim().split(/\s+/)[0] || '';
+      // Preferred form of address ("call me Doc") outranks the real first name.
+      const firstName = profile?.preferred_name?.trim()
+        || profile?.full_name?.trim().split(/\s+/)[0] || '';
       const session = await Conversation.startSession({
         conversationToken: token,
         connectionType: 'webrtc',
@@ -635,7 +637,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
                   messages: [{ role: 'user', content: question }],
                   thread_id: liveThreadRef.current ?? readStoredThreadId(),
                   context: {
-                    firstName: profile?.full_name?.split(' ')[0] ?? 'there',
+                    firstName: profile?.preferred_name?.trim() || profile?.full_name?.split(' ')[0] || 'there',
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                     navTargets: assistantNavTargets(),
                     // Tells the server this reply is read aloud in full, so
@@ -781,7 +783,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     } finally {
       liveConnectingRef.current = false;
     }
-  }, [navigate, stopSpeakingNow, showResult, failVisibly, profile?.full_name, profile?.assistant_name, getFreshGeo, runAction, setSheetOpen]);
+  }, [navigate, stopSpeakingNow, showResult, failVisibly, profile?.full_name, profile?.assistant_name, profile?.preferred_name, getFreshGeo, runAction, setSheetOpen]);
 
   // End the live session if the provider ever unmounts (sign-out, tenant
   // switch) — a dangling WebRTC session would keep the mic open.
@@ -808,7 +810,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           messages: history,
           thread_id: storedThreadId,
           context: {
-            firstName: profile?.full_name?.split(' ')[0] ?? 'there',
+            firstName: profile?.preferred_name?.trim() || profile?.full_name?.split(' ')[0] || 'there',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             // Live page list from the nav catalog, so open_page keeps up
             // with new add-ons without touching the edge function.

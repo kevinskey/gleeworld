@@ -142,12 +142,13 @@ serve(async (req) => {
     class_year?: string | null;
     home_address?: string | null;
     assistant_name?: string | null;
+    preferred_name?: string | null;
   } | null;
   const fetchProfile = async (): Promise<ProfileRow> => {
     try {
       const { data } = await userClient
         .from('gw_profiles')
-        .select('full_name, role, voice_part, class_year, home_address, assistant_name')
+        .select('full_name, role, voice_part, class_year, home_address, assistant_name, preferred_name')
         .eq('user_id', caller.userId)
         .maybeSingle();
       return (data as ProfileRow) ?? null;
@@ -203,7 +204,9 @@ serve(async (req) => {
   const ctx = {
     voice,
     assistantName: text(profile?.assistant_name) || undefined,
-    firstName: inferredFirst || String(body.context?.firstName ?? 'there'),
+    // Preferred form of address ("call me Doc") outranks the inferred first
+    // name; the prompt's userLine addresses whatever lands here.
+    firstName: text(profile?.preferred_name) || inferredFirst || String(body.context?.firstName ?? 'there'),
     fullName: fullName || undefined,
     tenantRole: text(profile?.role) || undefined,
     voicePart: text(profile?.voice_part) || undefined,

@@ -282,3 +282,16 @@ describe('score analysis honesty', () => {
     expect(p).toContain('double-check anything critical against the printed score');
   });
 });
+
+describe('preferred-name rule', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: ['studio', 'planner'], nowIso: '2026-07-12T20:00:00-04:00',
+    timezone: 'America/New_York',
+  };
+  it('teaches the set_preferred_name tool', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('set_preferred_name');
+    expect(p).toContain('call me Doc');
+  });
+});

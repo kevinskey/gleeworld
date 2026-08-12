@@ -82,6 +82,7 @@ describe('toolCatalog', () => {
       'search_music_facts',
       'search_youtube',
       'set_assistant_name',
+      'set_preferred_name',
       'web_search',
     ]);
   });
@@ -147,5 +148,18 @@ describe('close_viewer', () => {
     const tool = toolsForRole('member').find((t) => t.name === 'close_viewer');
     expect(tool?.execution).toBe('client');
     expect(tool?.confirm).toBe(false);
+  });
+});
+
+describe('set_preferred_name catalog entry', () => {
+  it('is a member-level server tool without confirm', () => {
+    const t = TOOL_CATALOG.find((x) => x.name === 'set_preferred_name')!;
+    expect(t).toBeTruthy();
+    expect(t.minRole).toBe('member');
+    expect(t.execution).toBe('server');
+    expect(t.confirm).toBe(false);
+  });
+  it('members can call it', () => {
+    expect(toolsForRole('member').map((t) => t.name)).toContain('set_preferred_name');
   });
 });
