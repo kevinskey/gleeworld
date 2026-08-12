@@ -1,14 +1,15 @@
 # Analyze handler: parse source, classify parts, store inventory + warnings.
 import json
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
-from music21 import converter
+from music21 import converter, key as m21key, meter as m21meter, tempo as m21tempo
 
 import config
 import db
 import storage
-from classify import inventory_parts
+from classify import inventory_parts, voice_notes
 from sanitize import sanitize_mxl
 from validate import validate_score
 
@@ -82,6 +83,7 @@ def run_analyze(conn, job):
             "message": "This score was read from a PDF by optical music recognition (beta). "
                        "Check parts, notes, and rhythms before generating.",
         })
+    analysis = extract_analysis(score, cands)
     with conn.cursor() as cur:
         cur.execute("DELETE FROM gw_parttrack_parts WHERE score_id = %s", (job["score_id"],))
         for c in cands:
@@ -94,7 +96,85 @@ def run_analyze(conn, job):
                   c.source_voice, c.role, c.label, c.confidence))
         cur.execute("""
             UPDATE gw_parttrack_scores
-            SET validation_report = %s, status = 'awaiting_confirmation', error_message = NULL
+            SET validation_report = %s, analysis = %s,
+                status = 'awaiting_confirmation', error_message = NULL
             WHERE id = %s
-        """, (json.dumps(warnings), job["score_id"]))
+        """, (json.dumps(warnings), json.dumps(analysis), job["score_id"]))
     conn.commit()
+
+
+# ---- Musical-facts extraction (assistant get_score_analysis bridge). ----
+# Spec: docs/superpowers/specs/2026-08-11-assistant-score-analysis-design.md
+
+def _candidate_notes(score, cand):
+    """Get notes for a candidate part, using the shared voice-selection logic."""
+    part = score.parts[cand.source_part_index]
+    if cand.source_voice is None:
+        return list(part.recurse().notes)
+    return voice_notes(part, cand.source_voice)
+
+
+def _pitch_range(notes):
+    pitches = [p for n in notes for p in getattr(n, "pitches", [])]
+    if not pitches:
+        return None
+    lo = min(pitches, key=lambda p: p.midi)
+    hi = max(pitches, key=lambda p: p.midi)
+    # music21 spells flats as "B-4"; humans read "Bb4".
+    return {"low": lo.nameWithOctave.replace("-", "b"),
+            "high": hi.nameWithOctave.replace("-", "b")}
+
+
+def _key_facts(score):
+    try:
+        k = score.analyze("key")
+        initial = f"{k.tonic.name.replace('-', 'b')} {k.mode}"
+    except Exception:
+        initial = None
+    sigs = []
+    parts = list(score.parts)
+    src = parts[0] if parts else score
+    for ks in src.recurse().getElementsByClass(m21key.KeySignature):
+        if not sigs or sigs[-1] != ks.sharps:
+            sigs.append(ks.sharps)
+    return {"initial": initial, "changes": max(0, len(sigs) - 1)}
+
+
+def _time_signatures(score):
+    out = []
+    parts = list(score.parts)
+    src = parts[0] if parts else score
+    for ts in src.recurse().getElementsByClass(m21meter.TimeSignature):
+        if not out or out[-1] != ts.ratioString:
+            out.append(ts.ratioString)
+    return out
+
+
+def _tempo_bpm(score):
+    for mm in score.recurse().getElementsByClass(m21tempo.MetronomeMark):
+        bpm = mm.getQuarterBPM()
+        if bpm:
+            return round(bpm)
+    return None
+
+
+def extract_analysis(score, cands):
+    """Versioned musical-facts blob for gw_parttrack_scores.analysis (v1)."""
+    return {
+        "v": 1,
+        "computed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "key": _key_facts(score),
+        "time_signatures": _time_signatures(score),
+        "tempo_bpm": _tempo_bpm(score),
+        "measures": max((len(p.getElementsByClass("Measure")) for p in score.parts),
+                        default=0),
+        "parts": [
+            {"source_part_index": c.source_part_index,
+             "source_staff": c.source_staff,
+             "source_voice": c.source_voice,
+             "role": c.role,
+             "label": c.label,
+             "range": _pitch_range(_candidate_notes(score, c))}
+            for c in cands
+        ],
+    }

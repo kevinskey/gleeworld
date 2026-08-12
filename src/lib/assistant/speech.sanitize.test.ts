@@ -108,3 +108,25 @@ describe('sanitizeForSpeech — music theory', () => {
       .toBe('Pre-dominant harmony comes first.');
   });
 });
+
+describe('pitch names and ranges', () => {
+  it('respells pitch names for speech', () => {
+    expect(sanitizeForSpeech('The soprano tops out at G5.'))
+      .toBe('The soprano tops out at G five.');
+    expect(sanitizeForSpeech('It sits low, around Bb3 for the basses.'))
+      .toBe('It sits low, around B flat three for the basses.');
+    expect(sanitizeForSpeech('The tenor entrance is on F#4.'))
+      .toBe('The tenor entrance is on F sharp four.');
+  });
+
+  it('speaks dash-joined ranges as "to"', () => {
+    expect(sanitizeForSpeech('The alto range is E4–A4.'))
+      .toBe('The alto range is E four to A four.');
+  });
+
+  it('does not break chord handling (regression)', () => {
+    // Symbol-only parentheticals still stripped; progressions still worded.
+    expect(sanitizeForSpeech('the minor one chord (i)')).toBe('the minor one chord');
+    expect(sanitizeForSpeech('a iv–V–i cadence')).toBe('a four to five to one cadence');
+  });
+});

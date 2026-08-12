@@ -82,6 +82,7 @@ export async function executeServerTool(
       case 'liturgical_day': return { replyJson: await liturgicalDay(args, deps) };
       case 'web_search': return await webSearch(args, deps);
       case 'research_repertoire': return await researchRepertoire(args, deps);
+      case 'get_score_analysis': return { replyJson: await getScoreAnalysis(args, deps) };
       case 'lookup_hymn': return { replyJson: await lookupHymn(args, deps) };
       case 'schedule_event_playlist': return { replyJson: await scheduleEventPlaylist(args, deps) };
       case 'search_apple_music': return { replyJson: await searchAppleMusicTool(args) };
@@ -1309,6 +1310,86 @@ async function getEnrollments(args: Record<string, unknown>, deps: Deps): Promis
     // RLS scopes members to their own rows. An empty result means "nothing
     // is visible to you here" — only claim a course is empty when the
     // caller's roster view plainly covers it (they see other courses).
+  });
+}
+
+async function getScoreAnalysis(args: Record<string, unknown>, { supabase, role }: Deps): Promise<string> {
+  const scoreId = String(args.score_id ?? '').trim();
+  if (!scoreId) return JSON.stringify({ error: 'Pass score_id from search_music first.' });
+
+  const { data: row, error } = await supabase
+    .from('gw_parttrack_scores')
+    .select('id, analysis, source_type, status, validation_report, tempo_override_bpm, manifest, error_message')
+    .eq('sheet_music_id', scoreId)
+    .maybeSingle();
+  if (error) return JSON.stringify({ error: error.message });
+
+  // Honesty split (Deps.role): admins can run the analysis themselves;
+  // students need their director to do it.
+  const hint = role === 'admin'
+    ? "Not analyzed yet — open this score's ⋯ menu in the Music Library, run Part Tracks, and ask again once it finishes."
+    : 'Not analyzed yet — ask your director to run this score through Part Tracks, then I can answer.';
+  // A row's analysis blob can be stale from a previous source file — source
+  // replacement never clears it. Only serve facts once status confirms the
+  // CURRENT source has actually finished analyzing; 'failed'/'queued'/
+  // 'analyzing' always short-circuit, even if an old analysis is present.
+  if (row?.status === 'failed') {
+    return JSON.stringify({
+      analyzed: false, failed: true,
+      error_message: row.error_message ?? 'analysis failed', hint,
+    });
+  }
+  if (row?.status === 'queued' || row?.status === 'analyzing') {
+    return JSON.stringify({
+      analyzed: false, in_progress: true,
+      hint: 'This score is being analyzed right now — ask again in a couple of minutes.',
+    });
+  }
+  if (!row || !row.analysis) {
+    return JSON.stringify({ analyzed: false, hint });
+  }
+
+  const { data: partRows, error: pErr } = await supabase
+    .from('gw_parttrack_parts')
+    .select('source_part_index, source_staff, source_voice, role, label, include')
+    .eq('score_id', row.id);
+  if (pErr) return JSON.stringify({ error: pErr.message });
+
+  const analysis = row.analysis as Record<string, unknown>;
+  const aParts = (analysis.parts ?? []) as Array<Record<string, unknown>>;
+  const joinKey = (p: Record<string, unknown>) =>
+    `${p.source_part_index}|${p.source_staff ?? ''}|${p.source_voice ?? ''}`;
+  const dbByKey = new Map(
+    ((partRows ?? []) as Array<Record<string, unknown>>).map((p) => [joinKey(p), p]));
+  // The DB parts rows are the source of truth for role/label/include — the
+  // director may have re-labeled parts at confirm, after analysis was stored.
+  const parts = aParts.map((p) => {
+    const db = dbByKey.get(joinKey(p));
+    return {
+      role: (db?.role ?? p.role) as string,
+      label: (db?.label ?? p.label) as string,
+      range: p.range ?? null,
+      ...(db && db.include === false ? { excluded: true } : {}),
+    };
+  });
+
+  const optical = row.source_type === 'pdf_omr';
+  const markedTempo = (analysis.tempo_bpm ?? null) as number | null;
+  return JSON.stringify({
+    analyzed: true,
+    optical,
+    ...(optical ? {
+      optical_note: 'These facts were read optically from the PDF (beta) and can contain errors. The FIRST time you state them in this conversation, add: "I read this optically from the PDF, so double-check anything critical against the printed score."',
+    } : {}),
+    key: analysis.key ?? null,
+    time_signatures: analysis.time_signatures ?? [],
+    marked_tempo_bpm: markedTempo,
+    performance_tempo_bpm: (row.tempo_override_bpm ?? markedTempo) as number | null,
+    tempo_overridden: row.tempo_override_bpm != null,
+    measures: analysis.measures ?? null,
+    duration_ms: (row.manifest as Record<string, unknown> | null)?.duration_ms ?? null,
+    parts,
+    warnings: ((row.validation_report ?? []) as Array<{ code: string }>).map((w) => w.code),
   });
 }
 
