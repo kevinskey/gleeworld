@@ -15,14 +15,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
+import { SignInDialog } from '@/components/auth/SignInDialog';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
-
-const VOICE_PARTS = ['Soprano 1', 'Soprano 2', 'Alto 1', 'Alto 2', 'Tenor', 'Bass'] as const;
 
 const schema = z.object({
   heading: z.string().default('Audition to Sing'),
   intro: z.string().default('Graduates and friends: join the choir for this concert. Tell us your voice part and when you sang, and we will be in touch.'),
   buttonLabel: z.string().default('Sign me up'),
+  // Which parts the form offers — a treble choir lists S1/S2/A1/A2, a
+  // mixed one adds Tenor/Bass. Editable per block instance.
+  voiceParts: z.array(z.string()).default(['Soprano 1', 'Soprano 2', 'Alto 1', 'Alto 2', 'Tenor', 'Bass']),
 });
 type Config = z.infer<typeof schema>;
 
@@ -38,6 +40,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   const [era, setEra] = useState('');
   const [phone, setPhone] = useState('');
   const [note, setNote] = useState('');
+  const [signInOpen, setSignInOpen] = useState(false);
 
   // Pre-fill from an existing signup so re-opening the page shows what was
   // submitted (and makes the upsert semantics visible to the user).
@@ -91,7 +94,8 @@ function Render({ config }: BlockRenderProps<Config>) {
 
       {!userId ? (
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          <a href="/login" className="underline font-medium">Sign in</a> to sign up to audition.
+          <button type="button" className="underline font-medium" onClick={() => setSignInOpen(true)}>Sign in</button> to sign up to audition.
+          <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
         </div>
       ) : submit.isSuccess ? (
         <div className="rounded-xl border border-border bg-white p-6 text-center">
@@ -107,7 +111,7 @@ function Render({ config }: BlockRenderProps<Config>) {
           <div className="space-y-1.5">
             <Label>Voice part</Label>
             <div className="flex flex-wrap gap-2">
-              {VOICE_PARTS.map((p) => (
+              {config.voiceParts.map((p) => (
                 <Button
                   key={p}
                   type="button"
@@ -158,6 +162,13 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
       <div className="space-y-1.5">
         <Label>Intro</Label>
         <Textarea value={config.intro} onChange={(e) => set({ intro: e.target.value })} rows={3} />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Voice parts (comma-separated)</Label>
+        <Input
+          value={config.voiceParts.join(', ')}
+          onChange={(e) => set({ voiceParts: e.target.value.split(',').map((p) => p.trim()).filter(Boolean) })}
+        />
       </div>
       <div className="space-y-1.5">
         <Label>Button label</Label>

@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
+import { SignInDialog } from '@/components/auth/SignInDialog';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const schema = z.object({
@@ -53,6 +54,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   const queryClient = useQueryClient();
   const [message, setMessage] = useState('');
   const [classYear, setClassYear] = useState('');
+  const [signInOpen, setSignInOpen] = useState(false);
 
   // Everyone sees visible posts; admins additionally get hidden ones back
   // from RLS and can unhide. The tenant filter is the site slug — the wall
@@ -175,7 +177,8 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
         </form>
       ) : (
         <div className="mb-10 rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-          <a href="/login" className="underline font-medium">Sign in</a> to add your message to the wall.
+          <button type="button" className="underline font-medium" onClick={() => setSignInOpen(true)}>Sign in</button> to add your message to the wall.
+          <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
         </div>
       )}
 
