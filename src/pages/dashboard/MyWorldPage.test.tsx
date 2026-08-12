@@ -4,13 +4,22 @@ import { render, screen, within, fireEvent, waitFor } from '@testing-library/rea
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT } from '@/lib/navigation/myTools';
+import { DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, type MyTools } from '@/lib/navigation/myTools';
 
-const DEFAULT_MY_TOOLS = { v: 4, tools: ['calendar', 'academy'], widgets: [], setupComplete: true };
+// v4 — the ONLY shape parseMyTools/migrateToMyTools emit. The stored version
+// deliberately never bumped: `groups` is an additive field, because the reader
+// frozen inside every shipped iOS binary is `if (o.v !== 4) return null` and a
+// rejected record costs the member their tools. See myTools.ts and spec §4.1.
+// TYPED, so a future field change fails here instead of being cast away.
+const DEFAULT_MY_TOOLS: MyTools = {
+  v: 4, tools: ['calendar', 'academy'], groups: [], widgets: [], setupComplete: true,
+};
 
 const h = vi.hoisted(() => ({
   saveMyTools: vi.fn(),
-  myTools: { v: 4, tools: ['calendar', 'academy'], widgets: [], setupComplete: true } as unknown,
+  myTools: {
+    v: 4, tools: ['calendar', 'academy'], groups: [], widgets: [], setupComplete: true,
+  } as MyTools | null,
   loading: false,
   // useMyTools' "the row genuinely came back" flag — distinct from
   // `loading`/`myTools`: a failed load leaves loading false and myTools
@@ -76,7 +85,38 @@ describe('MyWorldPage', () => {
   it('saves tools when one is removed', async () => {
     renderPage();
     fireEvent.click(screen.getByRole('button', { name: /remove academy/i }));
-    await waitFor(() => expect(h.saveMyTools).toHaveBeenCalledWith({ tools: ['calendar'] }));
+    await waitFor(() => expect(h.saveMyTools).toHaveBeenCalledWith({ tools: ['calendar'], groups: [] }));
+  });
+
+  // MyWorldEditor hands both lists up for one edit. Writing them as two
+  // patches would put two RPCs in flight against the same row, the first
+  // carrying a half-applied shelf — see the pendingShelf comment on the
+  // page. One edit must be one record write.
+  it('writes one record patch per edit, not one per list', async () => {
+    h.myTools = { v: 4, tools: ['calendar', 'academy'], groups: [], widgets: [], setupComplete: true };
+    renderPage();
+    fireEvent.click(screen.getByRole('button', { name: 'New Group' }));
+    await waitFor(() => expect(h.saveMyTools).toHaveBeenCalledTimes(1));
+    const patch = h.saveMyTools.mock.calls[0][0];
+    expect(patch.tools).toEqual(['calendar', 'academy']);
+    expect(patch.groups).toHaveLength(1);
+    expect(patch.groups[0]).toMatchObject({ name: 'New Group', tools: [], collapsed: false });
+  });
+
+  it('renders the member\'s stored groups and counts their tools', () => {
+    h.myTools = {
+      v: 4,
+      tools: ['calendar'],
+      groups: [{ id: 'g1', name: 'Sunday', tools: ['academy'], collapsed: false }],
+      widgets: [],
+      setupComplete: true,
+    };
+    renderPage();
+    expect(screen.getByTestId('my-world-group-g1')).toBeInTheDocument();
+    expect(screen.getByTestId('my-world-count')).toHaveTextContent(/^2 tools$/);
+    // Filing a tool into a group must not drop it from the preview strip —
+    // the strip reads out the whole world, not just the loose part.
+    expect(within(screen.getByTestId('my-world-preview')).getByText('Academy')).toBeInTheDocument();
   });
 
   it('offers a widgets group for the viewer role', () => {
@@ -138,7 +178,7 @@ describe('MyWorldPage', () => {
     it('stays in the not-ready state and fires no save when the load failed, even though myTools holds fabricated defaults', () => {
       h.loading = false;
       h.loaded = false;
-      h.myTools = { v: 4, tools: [...DEFAULT_TOOLS_STUDENT], widgets: [], setupComplete: false };
+      h.myTools = { v: 4, tools: [...DEFAULT_TOOLS_STUDENT], groups: [], widgets: [], setupComplete: false };
       renderPage();
       expect(screen.getByTestId('my-world-loading')).toBeInTheDocument();
       expect(screen.queryByTestId('my-world-count')).toBeNull();
@@ -222,7 +262,7 @@ describe('MyWorldPage — admin defaults mode', () => {
   // addable — the same tool offered as both unavailable-remove-only and
   // freely-addable at once.
   it('shows a stored "merch" as its live successor "Store Admin", not a dead row or a duplicate', async () => {
-    h.myTools = { v: 4, tools: ['merch', 'calendar'], widgets: [], setupComplete: true };
+    h.myTools = { v: 4, tools: ['merch', 'calendar'], groups: [], widgets: [], setupComplete: true };
     await renderAdminPage();
     const chosen = screen.getByTestId('my-world-chosen');
     expect(chosen).toHaveTextContent('Store Admin');
@@ -230,6 +270,64 @@ describe('MyWorldPage — admin defaults mode', () => {
     // Not ALSO offered as addable in More Tools — that would mean the
     // resolved key never made it into chosenKeys.
     expect(within(screen.getByTestId('my-world-more')).queryByText('Store Admin')).toBeNull();
+  });
+
+  // Final review, Important 2: the fix above was applied to the LOOSE list
+  // only — `tools` went through resolvedTools while `groups` was read raw off
+  // the record. So the very same bug survived one level down, inside a group.
+  //
+  // A member who filed the store into a group before 'merch' was retired into
+  // MERGED_KEYS stores groups[].tools = ['merch']. Read raw, that renders an
+  // "Unavailable — merch" row INSIDE their group while its live successor
+  // ('shop' / "Store Admin") is simultaneously offered as addable in More
+  // Tools. Adding it is the damage: the next sanitizeShelf on write resolves
+  // both to 'shop', keeps the loose copy (first occurrence wins), and the
+  // member's group is silently emptied.
+  //
+  // HouseHome was fixed for this by reading BOTH lists through one
+  // sanitizeShelf; the editor now does the same.
+  it('resolves a retired key stored INSIDE a group, instead of emptying the group', async () => {
+    h.myTools = {
+      v: 4,
+      tools: ['calendar'],
+      groups: [{ id: 'g1', name: 'Sunday', tools: ['merch'], collapsed: false }],
+      widgets: [],
+      setupComplete: true,
+    };
+    await renderAdminPage();
+    const chosen = screen.getByTestId('my-world-chosen');
+    // The group kept its tool, resolved to the live entry — not emptied,
+    // and not rendered as a dead "Unavailable — merch" row.
+    expect(chosen).toHaveTextContent('Store Admin');
+    expect(screen.queryByTestId('my-world-unavailable')).toBeNull();
+    expect(screen.getByTestId('my-world-group-count-g1')).toHaveTextContent('1');
+    // Not ALSO offered as addable — offering it is what leads to the write
+    // that empties the group.
+    expect(within(screen.getByTestId('my-world-more')).queryByText('Store Admin')).toBeNull();
+  });
+
+  // The other half of the same read split. Before 'merch' merged into 'shop'
+  // they were two separately pinnable catalog entries, so a record can
+  // legitimately hold one loose and the other in a group. Resolving only the
+  // loose list made BOTH render as 'shop': the same string twice in
+  // sortableIds and twice as a React key in one <ul> — duplicate dnd-kit ids
+  // and broken drag. One sanitizeShelf over both lists dedupes them.
+  it('never renders one key twice when loose and a group hold two sides of a merge', async () => {
+    const dupKeyWarning = vi.spyOn(console, 'error').mockImplementation(() => {});
+    h.myTools = {
+      v: 4,
+      tools: ['merch'],
+      groups: [{ id: 'g1', name: 'Sunday', tools: ['shop'], collapsed: false }],
+      widgets: [],
+      setupComplete: true,
+    };
+    await renderAdminPage();
+    // Exactly one row for the store, not two.
+    expect(screen.getAllByRole('button', { name: /^remove store admin$/i })).toHaveLength(1);
+    expect(
+      dupKeyWarning.mock.calls.filter((c) => String(c[0]).includes('same key')),
+    ).toHaveLength(0);
+    dupKeyWarning.mockRestore();
   });
 
   it('never offers Command Center in MORE TOOLS in defaults mode either', async () => {
@@ -279,6 +377,17 @@ describe('MyWorldPage — admin defaults mode', () => {
     await renderAdminPage();
     switchToDefaultsTab();
     expect(screen.queryByTestId('my-world-widgets')).toBeNull();
+  });
+
+  // Phase 1's gw_tenant_nav_prefs.default_tools is still a text[] and cannot
+  // carry groups, so the defaults tab omits the group props entirely. A New
+  // Group button here would be a dead control: it would arrange something
+  // saveDefaults(role, string[]) silently drops.
+  it('offers no group UI in defaults mode — the stored shape cannot hold groups', async () => {
+    await renderAdminPage();
+    switchToDefaultsTab();
+    expect(screen.queryByRole('button', { name: 'New Group' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Move / })).toBeNull();
   });
 
   it('re-seeds the shown list when the role picker changes', async () => {

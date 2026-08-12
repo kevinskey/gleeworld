@@ -13,8 +13,15 @@
 // `calendar` and `messages` are the first TWO entries of both role defaults,
 // so this hit every member who had never customized anything. This file
 // exercises the real pipeline (getAppTiles → draft → mergeGridOrder →
-// sanitizeTools, exactly what HouseHome + useMyTools do) rather than
-// asserting on the merge helper alone, because the bug lived in the seam.
+// sanitizeTools) rather than asserting on the merge helper alone, because the
+// bug lived in the seam.
+//
+// SCOPE, since groups landed: this file pins the GROUPLESS projection only.
+// The real path for a member who has made groups is
+// mergeGridOrder → re-split by membership → saveShelf → sanitizeShelf, and
+// the grouped half of that seam is covered by HouseHome.test.tsx's "a grid
+// edit never flattens the member's groups" block. Both halves matter — this
+// one guards the keys the grid cannot represent, that one guards the filing.
 import { describe, it, expect } from 'vitest';
 import { getAppTiles, getTabItems, type ModuleFlags } from '../appDestinations';
 import {

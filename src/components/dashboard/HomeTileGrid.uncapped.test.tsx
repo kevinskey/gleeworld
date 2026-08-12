@@ -31,7 +31,11 @@ function renderGrid(props: Partial<React.ComponentProps<typeof HomeTileGrid>> = 
   const onSave = vi.fn().mockResolvedValue(true);
   render(
     <MemoryRouter>
-      <HomeTileGrid primary={eight} overflow={spare} onSave={onSave} {...props} />
+      {/* One loose band = a member with no groups, i.e. the shape every
+          record had before groups existed. Banding must not have changed
+          anything for them. */}
+      <HomeTileGrid bands={[{ groupId: null, name: null, tiles: eight }]}
+        overflow={spare} onSave={onSave} {...props} />
     </MemoryRouter>,
   );
   fireEvent.click(screen.getByRole('button', { name: /edit apps/i }));

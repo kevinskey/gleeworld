@@ -8,7 +8,7 @@
 // (leave the page mid-edit and the change is gone). A toast fires only when
 // a save returns false, so a failure is never silent.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.4
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
@@ -20,7 +20,11 @@ import { isFacultyProfile } from '@/lib/roles';
 import {
   applyPreviewRole, resolveNav, HIDEABLE_NAV_ROLES, type NavContext, type NavRole,
 } from '@/lib/navigation/navCatalog';
-import { selectShelfEntries, DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, resolvedTools } from '@/lib/navigation/myTools';
+import {
+  selectShelfEntries, DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, sanitizeShelf,
+  type Shelf, type ToolGroup,
+} from '@/lib/navigation/myTools';
+import { flattenShelf } from '@/lib/navigation/toolGroups';
 import { widgetsFor, resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
@@ -110,21 +114,65 @@ export default function MyWorldPage() {
   // it too. The render fallback (shelf/home grid elsewhere) is untouched;
   // this only withholds the WRITE-capable editor on this page.
   const ready = !toolsLoading && toolsLoaded && myTools != null;
-  // resolvedTools, not the raw field: MyWorldEditor renders any key with no
-  // matching catalog entry as an "Unavailable — <key>" row (deliberately —
-  // it's the one surface that can clear a truly dead key). A stored key
-  // that MERGED into a live entry (e.g. retired 'merch' -> 'shop') is not
-  // dead, so it must resolve before reaching the editor — otherwise it
-  // showed as "Unavailable" AND its living successor showed a second time
-  // in "More Tools" as addable (Phase 5 review, 2026-08-09).
-  const tools = useMemo(() => resolvedTools(myTools), [myTools]);
+  // ONE sanitizeShelf over BOTH lists, exactly as HouseHome reads them —
+  // never resolvedTools on the loose list with the groups read raw.
+  //
+  // MyWorldEditor renders any key with no matching catalog entry as an
+  // "Unavailable — <key>" row (deliberately — it's the one surface that can
+  // clear a truly dead key). A stored key that MERGED into a live entry
+  // (e.g. retired 'merch' -> 'shop') is not dead, so it must resolve before
+  // reaching the editor — otherwise it shows as "Unavailable" AND its living
+  // successor shows a second time in "More Tools" as addable (Phase 5 review,
+  // 2026-08-09).
+  //
+  // Fixing only the loose list left that same bug alive one level down, and
+  // made it worse (final review, 2026-08-10). A key retired AFTER a member
+  // filed it into a group rendered dead inside the group while its successor
+  // was offered as addable; adding it meant the next sanitizeShelf on WRITE
+  // resolved both to 'shop', kept the loose copy, and silently emptied the
+  // group. And where the record legitimately holds two sides of a merge —
+  // 'merch' loose, 'shop' grouped, both separately pinnable until
+  // 2026-08-09 — resolving only one side rendered the same string twice, so
+  // sortableIds and the <ul>'s React keys carried a duplicate: broken drag.
+  //
+  // Reading both through one pass makes read and write agree on resolved
+  // keys, and shares the one-key-one-place `seen` set across them. For a
+  // member with NO groups this is exactly resolvedTools' old behaviour:
+  // sanitizeShelf's loose pass is sanitizeTools with the same resolve, drop
+  // 'home', dedupe, and MY_TOOLS_SANITY_MAX steps.
+  const shelf = useMemo(
+    () => sanitizeShelf(myTools?.tools ?? [], myTools?.groups ?? []),
+    [myTools],
+  );
+  const tools = shelf.tools;
+  const groups = shelf.groups;
   const widgetOptions = widgetsFor(role);
   const widgets = useMemo(() => resolveWidgets(role, myTools?.widgets ?? []), [role, myTools]);
 
-  const preview = useMemo(() => selectShelfEntries(available, tools), [available, tools]);
+  // Loose AND grouped: the strip reads out everything in the member's world,
+  // so filing a tool into a group must not make it vanish from the readout.
+  const preview = useMemo(
+    () => selectShelfEntries(available, flattenShelf({ tools, groups })),
+    [available, tools, groups],
+  );
 
-  const handleToolsChange = async (next: string[]) => {
-    const ok = await saveMyTools({ tools: next });
+  // MyWorldEditor hands BOTH lists up on every group edit — its two
+  // callbacks are one edit, not two (moveTool and deleteGroup each touch
+  // loose AND groups). Saving each half on its own would put two RPCs in
+  // flight against the same row with no ordering guarantee, and the FIRST
+  // one carries a half-applied shelf: moveTool's removal without its
+  // insertion. If that one landed last the moved tool would be gone from the
+  // stored record entirely; and if the second one failed, saveMyTools would
+  // roll the cache back to that half-applied state and two toasts would fire
+  // for one edit. So both halves merge into one patch, written once on the
+  // microtask after the edit — one RPC, one optimistic write, one toast.
+  const pendingShelf = useRef<Partial<Shelf> | null>(null);
+
+  const flushShelf = async () => {
+    const patch = pendingShelf.current;
+    pendingShelf.current = null;
+    if (!patch) return;
+    const ok = await saveMyTools(patch);
     if (!ok) {
       toast({
         title: 'Could not save your tools',
@@ -133,6 +181,22 @@ export default function MyWorldPage() {
       });
     }
   };
+
+  // The editor only mounts once `ready`, so this gate is belt-and-braces —
+  // but it is the write path, and saveMyTools fills every omitted field from
+  // the current record, so an edit committed before the record landed would
+  // persist emptiness over the member's real shelf. Not `!toolsLoading`:
+  // that is also true after a FAILED load, where the in-memory record holds
+  // fabricated role defaults rather than the member's data.
+  const queueShelf = (patch: Partial<Shelf>) => {
+    if (!ready) return;
+    const isFirstOfTick = pendingShelf.current === null;
+    pendingShelf.current = { ...pendingShelf.current, ...patch };
+    if (isFirstOfTick) queueMicrotask(() => { void flushShelf(); });
+  };
+
+  const handleToolsChange = (next: string[]) => queueShelf({ tools: next });
+  const handleGroupsChange = (next: ToolGroup[]) => queueShelf({ groups: next });
 
   const handleWidgetsChange = async (next: string[]) => {
     const ok = await saveMyTools({ widgets: next });
@@ -228,6 +292,11 @@ export default function MyWorldPage() {
             <p className="text-sm text-muted-foreground">
               New members with this role start with these tools. They can change their own world any time.
             </p>
+            {/* Tenant defaults stay FLAT in Phase 1: default_tools is still
+                text[] and cannot carry groups, so the group props are omitted
+                and the editor renders no group UI here at all. Phase 2
+                migrates the column and turns this on — see the spec's §6.1
+                warning about ADD COLUMN IF NOT EXISTS. */}
             <MyWorldEditor
               available={defaultsAvailable}
               tools={defaultsTools}
@@ -270,6 +339,8 @@ export default function MyWorldPage() {
               available={available}
               tools={tools}
               onToolsChange={handleToolsChange}
+              groups={groups}
+              onGroupsChange={handleGroupsChange}
               widgetOptions={widgetOptions}
               widgets={widgets}
               onWidgetsChange={handleWidgetsChange}

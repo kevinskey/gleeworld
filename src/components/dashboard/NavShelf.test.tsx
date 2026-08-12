@@ -4,16 +4,25 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { NavShelf, type NavShelfProps } from './NavShelf';
-import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
+import { NAV_CATALOG, type CatalogEntry } from '@/lib/navigation/navCatalog';
 
 const byKey = new Map(NAV_CATALOG.map((e) => [e.key, e]));
 const home = byKey.get('home')!;
+const entry = (key: string) => byKey.get(key)!;
 const tools = ['calendar', 'music-library', 'academy'].map((k) => byKey.get(k)!);
 
 const renderShelf = (props: Partial<NavShelfProps> = {}) =>
   render(
     <MemoryRouter>
-      <NavShelf home={home} tools={tools} onOpenAllTools={vi.fn()} variant="desktop" {...props} />
+      <NavShelf
+        home={home}
+        tools={tools}
+        onOpenAllTools={vi.fn()}
+        variant="desktop"
+        groups={[]}
+        onToggleGroup={vi.fn()}
+        {...props}
+      />
     </MemoryRouter>,
   );
 
@@ -127,5 +136,50 @@ describe('NavShelf', () => {
     const setupIdx = order.indexOf('Setup');
     expect(allToolsIdx).toBeGreaterThan(-1);
     expect(setupIdx).toBeGreaterThan(allToolsIdx);
+  });
+});
+
+const groupOf = (name: string, entries: CatalogEntry[], collapsed = false) =>
+  ({ id: name.toLowerCase(), name, entries, collapsed });
+
+describe('NavShelf — groups', () => {
+  it('renders loose tools above every group header', () => {
+    renderShelf({
+      tools: [entry('calendar'), entry('messages')],
+      groups: [groupOf('Sunday', [entry('liturgy')])],
+    });
+    const rows = screen.getByTestId('nav-shelf-tools').textContent ?? '';
+    expect(rows.indexOf('Calendar')).toBeLessThan(rows.indexOf('Sunday'));
+  });
+
+  it('renders a group header and its members when expanded', () => {
+    renderShelf({ tools: [], groups: [groupOf('Sunday', [entry('liturgy')])] });
+    expect(screen.getByText('Sunday')).toBeInTheDocument();
+    expect(screen.getByText('Liturgy Planner')).toBeInTheDocument();
+  });
+
+  it('hides members and shows a count when collapsed', () => {
+    renderShelf({ tools: [], groups: [groupOf('Sunday', [entry('liturgy')], true)] });
+    expect(screen.getByText('Sunday')).toBeInTheDocument();
+    expect(screen.queryByText('Liturgy Planner')).not.toBeInTheDocument();
+    expect(screen.getByTestId('nav-group-count-sunday')).toHaveTextContent('1');
+  });
+
+  it('shows no count when expanded — the rows speak for themselves', () => {
+    renderShelf({ tools: [], groups: [groupOf('Sunday', [entry('liturgy')])] });
+    expect(screen.queryByTestId('nav-group-count-sunday')).not.toBeInTheDocument();
+  });
+
+  it('reports a collapse toggle to its caller', () => {
+    const onToggleGroup = vi.fn();
+    renderShelf({ tools: [], groups: [groupOf('Sunday', [entry('liturgy')])], onToggleGroup });
+    fireEvent.click(screen.getByRole('button', { name: /Sunday/ }));
+    expect(onToggleGroup).toHaveBeenCalledWith('sunday', true);
+  });
+
+  it('renders exactly the flat shelf when there are no groups', () => {
+    renderShelf({ tools: [entry('calendar')], groups: [] });
+    expect(screen.queryByTestId(/nav-group-/)).not.toBeInTheDocument();
+    expect(screen.getByText('Calendar')).toBeInTheDocument();
   });
 });
