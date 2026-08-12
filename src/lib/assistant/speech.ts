@@ -316,6 +316,12 @@ function chordRunToWords(_run: string, first: string, rest: string): string {
   return tokens.map(chordTokenToWords).join(' to ');
 }
 
+const OCTAVE_WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+// A pitch-with-octave like C4, F#3, Bb5. Written accidentals only — a bare
+// letter ("the key of A") is not a pitch name and stays untouched.
+const PITCH_NAME = /\b([A-G])([#♯b♭])?([0-8])\b/g;
+const PITCH_RANGE = /\b([A-G][#♯b♭]?[0-8])\s*[–—-]\s*([A-G][#♯b♭]?[0-8])\b/g;
+
 export function sanitizeForSpeech(text: string): string {
   return text
     // Instruction leakage first, while line structure still exists.
@@ -335,6 +341,12 @@ export function sanitizeForSpeech(text: string): string {
     .replace(/!\[([^\]]*)\]\(([^)]*)\)/g, '$1')
     // Bare URLs — drop them; the sentence usually still reads.
     .replace(/\bhttps?:\/\/\S+/gi, '')
+    // Vocal ranges: "E4–A4" reads as "E four to A four", not a dash.
+    .replace(PITCH_RANGE, '$1 to $2')
+    // Pitch names with octaves become words BEFORE chord handling so the
+    // chord machinery never mistakes "C4" for a chord symbol.
+    .replace(PITCH_NAME, (_, letter, acc, oct) =>
+      `${letter}${acc === '#' || acc === '♯' ? ' sharp' : acc ? ' flat' : ''} ${OCTAVE_WORDS[Number(oct)]}`)
     // Chord symbols in parens ride along with their spoken name — drop them.
     .replace(CHORD_PARENTHETICAL, '')
     // Dash-joined progressions outside parens become spoken words.
