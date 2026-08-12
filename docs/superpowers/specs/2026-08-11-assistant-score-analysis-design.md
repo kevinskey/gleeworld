@@ -125,13 +125,7 @@ Applying the 2026-08-06 lesson — prescribe sentences; enforce hard rules in co
 
 ## Backfill (existing scores)
 
-Tracked script `worker/parttrack-renderer/backfill_analysis.py`: for rows where
-`analysis IS NULL AND normalized_mxl_path IS NOT NULL`, download the .mxl, run the same
-extraction used by `run_analyze` (one shared function `extract_analysis(score)` in
-`analyze.py`), and UPDATE **only the `analysis` column**. Parts, status, and confirmations
-untouched — re-running full analyze resets confirmed scores to `awaiting_confirmation`
-(the Hip Hop Mass trap). Handful of rows today; runs once on the droplet under the worker
-env. Kevin runs it (harness blocks prod writes).
+Tracked script `worker/parttrack-renderer/backfill_analysis.py`: for rows where `analysis IS NULL`, download normalized_mxl_path when set (pdf_omr) or source_path otherwise — only pdf_omr rows ever have a normalized_mxl_path, run the same extraction used by `run_analyze` (one shared function `extract_analysis(score)` in `analyze.py`), and UPDATE **only the `analysis` column**. Parts, status, and confirmations untouched — re-running full analyze resets confirmed scores to `awaiting_confirmation` (the Hip Hop Mass trap). Handful of rows today; runs once on the droplet under the worker env. Kevin runs it (harness blocks prod writes).
 
 ## Deploy order (matters)
 
