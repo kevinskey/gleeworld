@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBrandingSettings } from "@/hooks/useBrandingSettings";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, getTenantSlug } from "@/integrations/supabase/client";
 import { claimPartnerByEmailWithTimeout } from "@/lib/partner/api";
 
 /**
@@ -160,4 +160,19 @@ export function pickDestination(profile: {
   if (profile.role === 'auditioner') return '/auditioner';
   if (profile.role === 'fan' || profile.role === 'vip') return '/fan';
   return null;
+}
+
+/** Destination for SignInDialog's immediate post-login navigate. Includes the
+ *  operating tenant slug — omitting it made the platform-super-admin branch
+ *  unreachable, so a super-admin who also owns a partner record landed on
+ *  /partner instead of the command center. */
+export function signInDestination(
+  prof: { role?: string | null; is_admin?: boolean | null; is_super_admin?: boolean | null } | null,
+  partnerId: string | null,
+): string | null {
+  if (!prof) return null;
+  return pickDestination({
+    role: prof.role, is_admin: prof.is_admin, is_super_admin: prof.is_super_admin,
+    tenant_slug: getTenantSlug(), partner_id: partnerId,
+  });
 }
