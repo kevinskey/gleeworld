@@ -89,10 +89,10 @@ const DEFAULT_FEATURES: CourseTemplateConfig['features'] = {
 
 // Course-specific configurations
 export const COURSE_TEMPLATE_CONFIGS: Record<string, CourseTemplateConfig> = {
-  // MUS 070 - Glee Club
+  // GW 070 - Glee Club
   'a0000000-0000-0000-0000-000000000070': {
     courseId: 'a0000000-0000-0000-0000-000000000070',
-    courseCode: 'MUS 070',
+    courseCode: 'GW 070',
     primaryNav: DEFAULT_PRIMARY_NAV,
     courseCore: DEFAULT_COURSE_CORE,
     extensions: [
@@ -107,10 +107,10 @@ export const COURSE_TEMPLATE_CONFIGS: Record<string, CourseTemplateConfig> = {
     },
   },
 
-  // MUS 240 - Survey of African American Music
+  // GW 240 - Survey of African American Music
   '23c4ee3c-7bbb-4534-8c0a-eecd88298d37': {
     courseId: '23c4ee3c-7bbb-4534-8c0a-eecd88298d37',
-    courseCode: 'MUS 240',
+    courseCode: 'GW 240',
     primaryNav: DEFAULT_PRIMARY_NAV,
     courseCore: DEFAULT_COURSE_CORE,
     features: {
@@ -124,10 +124,10 @@ export const COURSE_TEMPLATE_CONFIGS: Record<string, CourseTemplateConfig> = {
     },
   },
 
-  // MUS 210 - Choral Conducting and Literature
+  // GW 210 - Choral Conducting and Literature
   'a0000000-0000-0000-0000-000000000210': {
     courseId: 'a0000000-0000-0000-0000-000000000210',
-    courseCode: 'MUS 210',
+    courseCode: 'GW 210',
     primaryNav: DEFAULT_PRIMARY_NAV,
     courseCore: DEFAULT_COURSE_CORE,
     extensions: [
@@ -140,10 +140,10 @@ export const COURSE_TEMPLATE_CONFIGS: Record<string, CourseTemplateConfig> = {
     },
   },
 
-  // MUS 001 - Private Applied Lessons
+  // GW 001 - Private Applied Lessons
   'a0000000-0000-0000-0000-000000000001': {
     courseId: 'a0000000-0000-0000-0000-000000000001',
-    courseCode: 'MUS 001',
+    courseCode: 'GW 001',
     primaryNav: DEFAULT_PRIMARY_NAV.filter(item => 
       ['home', 'syllabus', 'assignments', 'grades'].includes(item.tab)
     ),
@@ -189,10 +189,10 @@ export const COURSE_TEMPLATE_CONFIGS: Record<string, CourseTemplateConfig> = {
     },
   },
 
-  // MUS 101 - Music Fundamentals Theory
+  // GW 101 - Music Fundamentals Theory
   'a0000000-0000-0000-0000-000000000101': {
     courseId: 'a0000000-0000-0000-0000-000000000101',
-    courseCode: 'MUS 101',
+    courseCode: 'GW 101',
     primaryNav: DEFAULT_PRIMARY_NAV,
     courseCore: DEFAULT_COURSE_CORE,
     features: {

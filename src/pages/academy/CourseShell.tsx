@@ -154,7 +154,7 @@ export default function CourseShell() {
     const reqId = ++loadReqId.current;
     setLoading(true);
     // Two encoding conventions exist in the wild:
-    //   legacy: "MUS 101" stored, URL is "mus-101" (hyphen→space)
+    //   legacy: "GW 101" stored, URL is "mus-101" (hyphen→space)
     //   templates / new: "TPL-CHOIR101" stored, URL is "tpl-choir101" (hyphen kept)
     // Try both — exact match on the as-is uppercase first, then the
     // hyphen-as-space variant. Don't use .or() with raw user input

@@ -51,7 +51,7 @@ export default function Mus210() {
     await enroll();
   };
   const courseData = {
-    courseCode: 'MUS 210',
+    courseCode: 'GW 210',
     title: 'Conducting for the Complete Musician',
     credits: 2,
     meetingTimes: 'MW — 2× per week (50 min)',

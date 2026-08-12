@@ -43,7 +43,7 @@ const Mus070SyllabusPage: React.FC = () => {
 
         {/* Syllabus Content */}
         <SyllabusTemplate 
-          courseCode="MUS 070"
+          courseCode="GW 070"
           courseTitle="Glee Club"
           term="Spring 2026"
           credits={1}

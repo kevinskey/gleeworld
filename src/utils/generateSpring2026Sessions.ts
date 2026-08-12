@@ -1,5 +1,5 @@
 // Spring 2026 Course Session Generator
-// Generates class sessions for MUS 070, MUS 240, MUS 210
+// Generates class sessions for GW 070, GW 240, GW 210
 
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,7 +28,7 @@ interface CourseConfig {
 
 const COURSES: CourseConfig[] = [
   {
-    code: 'MUS 240',
+    code: 'GW 240',
     title: 'Survey of African American Music',
     days: [1, 3, 5], // Mon, Wed, Fri
     startTime: '13:00',
@@ -44,7 +44,7 @@ const COURSES: CourseConfig[] = [
     ],
   },
   {
-    code: 'MUS 210',
+    code: 'GW 210',
     title: 'Conducting',
     days: [1, 3], // Mon, Wed
     startTime: '14:00',
@@ -59,7 +59,7 @@ const COURSES: CourseConfig[] = [
     ],
   },
   {
-    code: 'MUS 070',
+    code: 'GW 070',
     title: 'Glee Club',
     days: [1, 3, 5], // Mon, Wed, Fri
     startTime: '17:00',

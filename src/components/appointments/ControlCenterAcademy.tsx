@@ -5,24 +5,24 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const courseGradients: Record<string, string> = {
-  'MUS 070': 'from-cyan-500/30 to-blue-600/30',
-  'MUS 240': 'from-amber-500/30 to-orange-600/30',
-  'MUS 210': 'from-violet-500/30 to-purple-600/30',
-  'MUS 001': 'from-rose-500/30 to-pink-600/30',
+  'GW 070': 'from-cyan-500/30 to-blue-600/30',
+  'GW 240': 'from-amber-500/30 to-orange-600/30',
+  'GW 210': 'from-violet-500/30 to-purple-600/30',
+  'GW 001': 'from-rose-500/30 to-pink-600/30',
   'GLEE 101': 'from-emerald-500/30 to-green-600/30',
   'GLEE 000': 'from-sky-500/30 to-indigo-600/30',
-  'MUS 101': 'from-teal-500/30 to-cyan-600/30',
+  'GW 101': 'from-teal-500/30 to-cyan-600/30',
   'LH 100': 'from-yellow-500/30 to-amber-600/30',
 };
 
 const courseAccents: Record<string, string> = {
-  'MUS 070': 'text-cyan-300',
-  'MUS 240': 'text-amber-300',
-  'MUS 210': 'text-violet-300',
-  'MUS 001': 'text-rose-300',
+  'GW 070': 'text-cyan-300',
+  'GW 240': 'text-amber-300',
+  'GW 210': 'text-violet-300',
+  'GW 001': 'text-rose-300',
   'GLEE 101': 'text-emerald-300',
   'GLEE 000': 'text-sky-300',
-  'MUS 101': 'text-teal-300',
+  'GW 101': 'text-teal-300',
   'LH 100': 'text-yellow-300',
 };
 

@@ -22,7 +22,7 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
   semester = 'Spring 2026'
 }) => {
   // Detect specific courses for specialized components
-  const isMus070 = courseCode === 'MUS 070' || courseCode === 'MUS070';
+  const isMus070 = courseCode === 'GW 070' || courseCode === 'GW070';
   
   // Check if this course has performance-based grading components
   const gradingConfig = getCourseGradingConfig(courseId);

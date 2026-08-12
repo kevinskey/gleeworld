@@ -160,6 +160,20 @@ export interface SiteBlock {
   position: number;
   config: Record<string, unknown>;
   is_visible: boolean;
+  /** Page slug this block belongs to. Absent (legacy snapshots) = 'home'. */
+  page?: string;
+}
+
+/** Page slug of a block; legacy blocks (pre-pages snapshots) are home. */
+export function blockPage(b: Pick<SiteBlock, 'page'>): string {
+  return b.page || 'home';
+}
+
+/** Distinct page slugs present in a block list, home first. */
+export function sitePages(blocks: Array<Pick<SiteBlock, 'page'>>): string[] {
+  const pages = new Set<string>(['home']);
+  for (const b of blocks) pages.add(blockPage(b));
+  return ['home', ...[...pages].filter((p) => p !== 'home').sort()];
 }
 
 // Context handed to every block render. isPreview = editor preview (admin

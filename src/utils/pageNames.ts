@@ -37,8 +37,8 @@ export const PAGE_NAMES: Record<string, string> = {
   '/tour-planner': 'Tour Planner',
   
   // Course Routes
-  '/mus-100': 'MUS 100 - Music Theory Fundamentals',
-  '/mus-210': 'MUS 210 - Choral Conducting',
+  '/mus-100': 'GW 100 - Music Theory Fundamentals',
+  '/mus-210': 'GW 210 - Choral Conducting',
 };
 
 export const getPageName = (pathname: string): string => {

@@ -167,7 +167,7 @@ export const useCourseAccess = (options: UseCourseAccessOptions): CourseAccessSt
         return;
       }
       
-      // Special case: MUS 070 (Glee Club) - members are auto-enrolled
+      // Special case: GW 070 (Glee Club) - members are auto-enrolled
       if (course.id === 'a0000000-0000-0000-0000-000000000070') {
         if (profile?.role === 'member') {
           setIsEnrolled(true);

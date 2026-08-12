@@ -377,7 +377,7 @@ describe('generated OOXML — paper formatting (real docx output, unzipped)', ()
     style: 'mla9',
     sources: [southern],
     footnotes: [{ id: 'n1', text: 'Note text' }],
-    meta: { studentName: 'Jane Doe', instructor: 'Dr. Smith', course: 'MUS 101', date: '11 August 2026' },
+    meta: { studentName: 'Jane Doe', instructor: 'Dr. Smith', course: 'GW 101', date: '11 August 2026' },
     content: { type: 'doc', content: [
       { type: 'heading', attrs: { level: 1 }, content: [
         { type: 'text', text: 'Intro ' },
@@ -487,7 +487,7 @@ describe('generated OOXML — paper formatting (real docx output, unzipped)', ()
     style: 'apa7',
     sources: [southern],
     footnotes: [],
-    meta: { studentName: 'Jane Doe', instructor: 'Dr. Smith', course: 'MUS 101', date: '2026' },
+    meta: { studentName: 'Jane Doe', instructor: 'Dr. Smith', course: 'GW 101', date: '2026' },
     content: { type: 'doc', content: [
       { type: 'paragraph', content: [{ type: 'text', text: 'first body paragraph' }] },
     ]},

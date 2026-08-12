@@ -57,7 +57,7 @@ const STATUS_OPTIONS = [
   { value: null, label: '-', icon: Minus, color: 'text-muted-foreground bg-muted/30' },
 ];
 
-const MUS070_COURSE_ID = 'a0000000-0000-0000-0000-000000000070';
+const GW070_COURSE_ID = 'a0000000-0000-0000-0000-000000000070';
 
 export const SecretaryEventAttendanceGrid: React.FC<SecretaryEventAttendanceGridProps> = ({ 
   courseId, 

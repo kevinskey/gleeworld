@@ -72,41 +72,41 @@ const HERO_CONTEXTS: HeroContext[] = [
   // Course-specific sliders
   {
     id: 'mus070-slider',
-    label: 'MUS 070 Slider',
+    label: 'GW 070 Slider',
     description: 'Topic photos for Glee Club course',
     table: 'gw_universal_sliders',
     icon: <Users className="h-4 w-4" />,
-    courseCode: 'MUS 070',
+    courseCode: 'GW 070',
     courseTitle: 'Glee Club',
     coursePath: '/academy/mus-070'
   },
   {
     id: 'mus240-slider',
-    label: 'MUS 240 Slider',
+    label: 'GW 240 Slider',
     description: 'Topic photos for Survey of African American Music',
     table: 'gw_universal_sliders',
     icon: <BookOpen className="h-4 w-4" />,
-    courseCode: 'MUS 240',
+    courseCode: 'GW 240',
     courseTitle: 'Survey of African American Music',
     coursePath: '/academy/mus-240'
   },
   {
     id: 'mus210-slider',
-    label: 'MUS 210 Slider',
+    label: 'GW 210 Slider',
     description: 'Topic photos for Choral Conducting and Literature',
     table: 'gw_universal_sliders',
     icon: <Music className="h-4 w-4" />,
-    courseCode: 'MUS 210',
+    courseCode: 'GW 210',
     courseTitle: 'Choral Conducting and Literature',
     coursePath: '/academy/mus-210'
   },
   {
     id: 'mus001-slider',
-    label: 'MUS 001 Slider',
+    label: 'GW 001 Slider',
     description: 'Topic photos for Private Applied Lessons',
     table: 'gw_universal_sliders',
     icon: <Mic className="h-4 w-4" />,
-    courseCode: 'MUS 001',
+    courseCode: 'GW 001',
     courseTitle: 'Private Applied Lessons',
     coursePath: '/academy/mus-001'
   },
@@ -132,11 +132,11 @@ const HERO_CONTEXTS: HeroContext[] = [
   },
   {
     id: 'mus101-slider',
-    label: 'MUS 101 Slider',
+    label: 'GW 101 Slider',
     description: 'Topic photos for Music Fundamentals Theory',
     table: 'gw_universal_sliders',
     icon: <BookOpen className="h-4 w-4" />,
-    courseCode: 'MUS 101',
+    courseCode: 'GW 101',
     courseTitle: 'Music Fundamentals Theory',
     coursePath: '/academy/mus-101'
   },

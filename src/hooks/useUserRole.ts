@@ -174,7 +174,7 @@ export const useUserRole = () => {
     return hasSecretaryAppRole;
   };
 
-  const isCourseTA = (_courseCode: string = 'MUS240'): boolean => {
+  const isCourseTA = (_courseCode: string = 'GW240'): boolean => {
     if (!profile) return false;
     return isAdmin() || isInstructor();
   };

@@ -529,7 +529,7 @@ export const TourLogisticsSection = () => {
     setPublishing(true);
     try {
       const result = await publishTourToCalendar();
-      toast.success(`Published ${result?.length || 0} tour events to MUS 070 calendar`);
+      toast.success(`Published ${result?.length || 0} tour events to GW 070 calendar`);
     } catch (err: any) {
       toast.error('Failed to publish: ' + (err.message || 'Unknown error'));
     } finally {

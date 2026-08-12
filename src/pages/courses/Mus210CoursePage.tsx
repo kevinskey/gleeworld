@@ -3,7 +3,7 @@ import { UnifiedCoursePage } from '@/components/academy/UnifiedCoursePage';
 import { getCourseByCode } from '@/config/academyCourses';
 
 const Mus210CoursePage = () => {
-  const course = getCourseByCode('MUS 210');
+  const course = getCourseByCode('GW 210');
   
   if (!course) {
     return <div>Course not found</div>;

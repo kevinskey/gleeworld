@@ -27,6 +27,10 @@ const CUSTOM_URL = '__custom__';
 // `logoUrl` field on prior configs is accepted but ignored on render.
 const schema = z.object({
   siteName: z.string().default(''),
+  // Off = no name text in the bar at all (logo + nav only). The override
+  // above still applies when on. Kevin, 2026-08-12: a page must be able to
+  // drop the site name from its header entirely.
+  showSiteName: z.boolean().default(true),
   logoUrl: z.string().default('').optional(),
   navLinks: z.array(z.object({ label: z.string(), url: z.string() })).default([]),
   navLinkColor: z.string().default('#ffffff'),
@@ -58,7 +62,7 @@ function readableForeground(hex: string): string {
 
 function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   const editable = !!onConfigChange;
-  const name = config.siteName || ctx.orgName;
+  const name = config.showSiteName === false ? '' : (config.siteName || ctx.orgName);
   const logo = ctx.logoUrl;
   // Auto-picks black or white for contrast against the primary; user can
   // override via config.siteNameColor if they want a specific brand shade.
@@ -167,7 +171,9 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
                 onError={(e) => { (e.currentTarget.style.display = 'none'); }}
               />
             )}
-            <span className="font-bold text-base cq-sm:text-lg truncate" style={{ color: linkColor }}>{name}</span>
+            {name && (
+              <span className="font-bold text-base cq-sm:text-lg truncate" style={{ color: linkColor }}>{name}</span>
+            )}
           </a>
         )}
         {/* Desktop: inline links. Mobile: a hamburger that toggles the dropdown below. */}
@@ -235,8 +241,23 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <Label>Site name</Label>
-        <Input value={config.siteName} onChange={(e) => set({ siteName: e.target.value })} placeholder="Your organization" />
+        <div className="flex items-center justify-between gap-3">
+          <Label>Site name</Label>
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={config.showSiteName !== false}
+              onChange={(e) => set({ showSiteName: e.target.checked })}
+            />
+            Show in header
+          </label>
+        </div>
+        <Input
+          value={config.siteName}
+          onChange={(e) => set({ siteName: e.target.value })}
+          placeholder="Your organization"
+          disabled={config.showSiteName === false}
+        />
       </div>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-3">

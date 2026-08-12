@@ -1,6 +1,6 @@
 // Per-course visual identity. Every AcademyCourse maps to a `CourseTheme`
 // that drives the atmospheric background, hero header, and accent chips
-// on that course page. The MUS 070 deep-sea look is the reference — every
+// on that course page. The GW 070 deep-sea look is the reference — every
 // other course gets its own palette + motif so the class pages stop
 // feeling like carbon copies of each other.
 
@@ -95,13 +95,13 @@ const PALETTES = {
 // should have a distinct entry. Unknown codes fall back to `indigoGold`
 // so a newly-added course still looks intentional out of the box.
 const THEME_BY_COURSE: Record<string, CourseTheme> = {
-  'MUS 070': PALETTES.deepSea,        // Glee Club — preserved from prior special-case
-  'MUS 240': PALETTES.sunsetAmber,    // African American Music
-  'MUS 210': PALETTES.forestConcert,  // Choral Conducting & Literature
-  'MUS 001': PALETTES.violetIntimate, // Private Applied Lessons
+  'GW 070': PALETTES.deepSea,        // Glee Club — preserved from prior special-case
+  'GW 240': PALETTES.sunsetAmber,    // African American Music
+  'GW 210': PALETTES.forestConcert,  // Choral Conducting & Literature
+  'GW 001': PALETTES.violetIntimate, // Private Applied Lessons
   'GLEE 101': PALETTES.indigoGold,    // Leadership Development
   'GLEE 000': PALETTES.tealCoral,     // Sight Singing Institute
-  'MUS 101': PALETTES.slateCopper,    // Music Fundamentals Theory
+  'GW 101': PALETTES.slateCopper,    // Music Fundamentals Theory
   'LH 100': PALETTES.burgundySacred,  // Bowman Scholars
 };
 

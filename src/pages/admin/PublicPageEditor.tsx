@@ -192,6 +192,11 @@ export default function PublicPageEditor() {
   const [blocks, setBlocks] = useState<SiteBlock[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  // Multi-page: which page's blocks the editor shows. A page exists when a
+  // block carries its slug; `draftPages` keeps a freshly created page's tab
+  // alive until its first block lands.
+  const [activePage, setActivePage] = useState('home');
+  const [draftPages, setDraftPages] = useState<string[]>([]);
   // When set, opens the right-side settings Sheet for that block. Kept
   // separate from selectedId so the canvas can stay in a "block selected"
   // state without the sheet being open.
@@ -249,7 +254,7 @@ export default function PublicPageEditor() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_site_blocks')
-        .select('id, block_type, position, config, is_visible')
+        .select('id, block_type, position, config, is_visible, page')
         .order('position');
       if (error) throw error;
       return data as SiteBlock[];
@@ -535,8 +540,8 @@ export default function PublicPageEditor() {
     const position = blocks.length === 0 ? 0 : Math.max(...blocks.map((b) => b.position)) + 1;
     const { data, error } = await supabase
       .from('gw_site_blocks')
-      .insert({ block_type: type, position, config: mod.defaultConfig, is_visible: true })
-      .select('id, block_type, position, config, is_visible')
+      .insert({ block_type: type, position, config: mod.defaultConfig, is_visible: true, page: activePage })
+      .select('id, block_type, position, config, is_visible, page')
       .single();
     if (error) {
       toast({ title: 'Could not add block', description: error.message, variant: 'destructive' });
@@ -733,6 +738,42 @@ export default function PublicPageEditor() {
   };
 
   const existingBlockTypes = useMemo(() => new Set(blocks.map((b) => b.block_type)), [blocks]);
+
+  // ---- pages ----
+  const pages = useMemo(() => {
+    const set = new Set<string>(['home']);
+    for (const b of blocks) set.add(b.page || 'home');
+    for (const p of draftPages) set.add(p);
+    return ['home', ...[...set].filter((p) => p !== 'home').sort()];
+  }, [blocks, draftPages]);
+
+  /** Blocks on the page the editor is showing, in stored order. */
+  const pageBlocks = useMemo(
+    () => blocks.filter((b) => (b.page || 'home') === activePage),
+    [blocks, activePage],
+  );
+
+  const createPage = () => {
+    const raw = window.prompt('New page address (letters, numbers, dashes — e.g. "retirement"):');
+    if (!raw) return;
+    const clean = raw.trim().toLowerCase().replace(/\s+/g, '-');
+    if (!/^[a-z0-9-]{2,40}$/.test(clean) || clean === 'home') {
+      toast({ title: 'Invalid page name', description: 'Use 2-40 lowercase letters, numbers, or dashes.', variant: 'destructive' });
+      return;
+    }
+    if (!pages.includes(clean)) setDraftPages((prev) => [...prev, clean]);
+    setActivePage(clean);
+    setSelectedId(null);
+  };
+
+  const moveBlockToPage = async (block: SiteBlock, targetPage: string) => {
+    if ((block.page || 'home') === targetPage) return;
+    const position = Math.max(-1, ...blocks.filter((b) => (b.page || 'home') === targetPage).map((b) => b.position)) + 1;
+    setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, page: targetPage, position } : b)));
+    const { error } = await supabase.from('gw_site_blocks').update({ page: targetPage, position }).eq('id', block.id);
+    if (error) toast({ title: 'Move failed', description: error.message, variant: 'destructive' });
+    else toast({ title: 'Block moved', description: `Now on the ${targetPage === 'home' ? 'home page' : `/${targetPage}`} page.` });
+  };
 
   if (siteLoading) {
     return (
@@ -1077,9 +1118,28 @@ export default function PublicPageEditor() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-1.5">
+              {/* Page tabs: home + any extra pages. Blocks below belong to
+                  the active tab; "+ Page" starts a new one (it goes live on
+                  publish once it has blocks). */}
+              <div className="flex flex-wrap gap-1 pb-2">
+                {pages.map((p) => (
+                  <Button
+                    key={p}
+                    size="sm"
+                    variant={p === activePage ? 'default' : 'outline'}
+                    className="h-7 px-2.5 text-xs"
+                    onClick={() => { setActivePage(p); setSelectedId(null); }}
+                  >
+                    {p === 'home' ? 'Home' : `/${p}`}
+                  </Button>
+                ))}
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={createPage}>
+                  <Plus className="w-3 h-3 mr-1" /> Page
+                </Button>
+              </div>
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-                <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-                  {blocks.map((block) => {
+                <SortableContext items={pageBlocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+                  {pageBlocks.map((block) => {
                     const isSelected = block.id === selectedId;
                     return (
                       <SortableBlockRow
@@ -1458,7 +1518,7 @@ export default function PublicPageEditor() {
                 // canvas gets hover/select outlines and a floating toolbar.
                 // Hidden blocks still show (dimmed) so tenants can toggle
                 // them back — the public site skips them entirely.
-                const renderable = blocks.filter((b) => {
+                const renderable = pageBlocks.filter((b) => {
                   const mod = getBlockModule(b.block_type);
                   return mod && isBlockAvailable(mod, activeAddons);
                 });
@@ -1580,6 +1640,20 @@ export default function PublicPageEditor() {
                   </SheetTitle>
                   <SheetDescription>{mod.description}</SheetDescription>
                 </SheetHeader>
+                {pages.length > 1 && !mod.locked && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground shrink-0">On page</span>
+                    <select
+                      className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                      value={b.page || 'home'}
+                      onChange={(e) => void moveBlockToPage(b, e.target.value)}
+                    >
+                      {pages.map((p) => (
+                        <option key={p} value={p}>{p === 'home' ? 'Home' : `/${p}`}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="mt-6">
                   {mod.EditorForm ? (
                     <mod.EditorForm

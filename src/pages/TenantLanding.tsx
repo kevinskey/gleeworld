@@ -167,7 +167,12 @@ export default function TenantLanding() {
     return (
       <>
         <DemoBackToGleeWorldBanner />
-        <PublicSiteView data={publicSite} slug={publicSite.slug} memberSignIn />
+        <PublicSiteView
+          data={publicSite}
+          slug={publicSite.slug}
+          memberSignIn
+          pageHref={(p) => (p === 'home' ? '/' : `/${p}`)}
+        />
       </>
     );
   }
