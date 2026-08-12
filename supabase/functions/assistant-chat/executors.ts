@@ -476,18 +476,21 @@ async function playVideo(args: Record<string, unknown>, deps: Deps): Promise<Too
   if (!q) return { replyJson: JSON.stringify({ error: 'Ask which song or video they want.' }) };
 
   const raw = await searchYoutube({ q }, deps);
-  let first: { id?: string; title?: string; channel?: string } | undefined;
-  try { first = JSON.parse(raw)?.videos?.[0]; } catch { /* fall through */ }
-  if (!first?.id) {
+  // searchYoutube returns { hits: [{ video_id, title, channel, ... }] } —
+  // this read { videos: [{ id }] } for months, so the q path NEVER matched
+  // and every direct "play X" call failed honest-but-wrong (2026-08-12).
+  let first: { video_id?: string; title?: string; channel?: string } | undefined;
+  try { first = JSON.parse(raw)?.hits?.[0]; } catch { /* fall through */ }
+  if (!first?.video_id) {
     return { replyJson: JSON.stringify({ error: `Nothing on YouTube matched "${q}".` }) };
   }
   return {
     replyJson: JSON.stringify({
-      playing: first.id, title: first.title, channel: first.channel,
+      playing: first.video_id, title: first.title, channel: first.channel,
       note: 'The video is now on screen. Say what is playing; never read the URL or the id aloud.',
     }),
     resultsPanel: {
-      kind: 'video', query: q, videoId: first.id,
+      kind: 'video', query: q, videoId: first.video_id,
       title: first.title ?? q, channel: first.channel,
     },
   };
