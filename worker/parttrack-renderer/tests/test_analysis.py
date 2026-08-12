@@ -1,6 +1,6 @@
 from classify import inventory_parts
 from fixtures import condensed_satb, no_tempo, satb_piano
-from analyze import extract_analysis
+from analyze import extract_analysis, _candidate_notes
 
 
 def _analysis(score):
@@ -44,3 +44,44 @@ def test_voice_split_ranges_differ():
 
 def test_no_tempo_is_null_not_default():
     assert _analysis(no_tempo())["tempo_bpm"] is None
+
+
+def test_candidate_notes_drift_guard():
+    """Verify _candidate_notes mirrors classify._voice_split_candidates' voice selection.
+
+    Both implementations must independently reconstruct the voice-id ordering
+    (collect, sort by str, enumerate) and select the same notes. This test catches
+    divergence between the two copies if either is accidentally modified.
+    """
+    score = condensed_satb()
+    cands = inventory_parts(score)
+    voice_split_cands = [c for c in cands if c.source_voice is not None]
+    assert len(voice_split_cands) == 4, "condensed_satb must have 4 voice-split candidates"
+
+    for cand in voice_split_cands:
+        # Get the notes via _candidate_notes (the implementation being tested).
+        notes_from_analyze = _candidate_notes(score, cand)
+        assert len(notes_from_analyze) > 0, \
+            f"_candidate_notes must return non-empty list for {cand.label}"
+
+        # Independently reconstruct what _voice_split_candidates would select.
+        part = score.parts[cand.source_part_index]
+        voice_ids = []
+        for m in part.getElementsByClass("Measure"):
+            for v in m.voices:
+                if v.id not in voice_ids:
+                    voice_ids.append(v.id)
+        ordered = sorted(voice_ids, key=str)
+        vid = ordered[cand.source_voice - 1]
+        notes_from_classify = [n for m in part.getElementsByClass("Measure")
+                               for v in m.voices if str(v.id) == str(vid)
+                               for n in v.notes]
+
+        # Both should select the same notes (same count, same MIDI values).
+        assert len(notes_from_analyze) == len(notes_from_classify), \
+            f"Note count mismatch for {cand.label}: {len(notes_from_analyze)} != {len(notes_from_classify)}"
+
+        midi_from_analyze = sorted([p.midi for n in notes_from_analyze for p in n.pitches])
+        midi_from_classify = sorted([p.midi for n in notes_from_classify for p in n.pitches])
+        assert midi_from_analyze == midi_from_classify, \
+            f"MIDI pitch mismatch for {cand.label}: {midi_from_analyze} != {midi_from_classify}"
