@@ -67,6 +67,9 @@ export interface NavShelfProps {
    */
   home?: CatalogEntry;
   tools: CatalogEntry[];
+  /** Rows pinned at the bottom, above All Tools — Site Setup + Settings
+   *  by default (Kevin, 2026-08-12). Already gated by the caller. */
+  pinned?: CatalogEntry[];
   /**
    * Member-named groups, already gated and filtered to non-empty by the
    * caller (DashboardShell) — see that file for why the empty-group filter
@@ -109,14 +112,17 @@ function Row({ entry, variant, onNavigate }: {
   );
 }
 
-export function NavShelf({ home, tools, groups, onToggleGroup, onOpenAllTools, variant, onNavigate }: NavShelfProps) {
+export function NavShelf({ home, tools, groups, onToggleGroup, onOpenAllTools, variant, onNavigate, pinned = [] }: NavShelfProps) {
   // No .slice() here. This used to truncate at 8 (the retired MY_TOOLS_CAP,
   // now split into MY_TOOLS_SEED_SIZE + MY_TOOLS_SANITY_MAX) "so the shelf
   // cannot grow into a list" — but that promise is retired: a member may now
   // keep as many tools as they like, and silently hiding the ones past the
   // eighth would make their own choice invisible with no error to explain it.
   // The only filter left drops Home, which renders separately below.
-  const shelf = tools.filter((t) => t.key !== home?.key);
+  // Pinned keys render in the bottom band; keep them off the shelf so a
+  // member who also picked Settings does not see it twice.
+  const pinnedKeys = new Set(pinned.map((p) => p.key));
+  const shelf = tools.filter((t) => t.key !== home?.key && !pinnedKeys.has(t.key));
 
   return (
     <div className="space-y-1">
@@ -162,6 +168,13 @@ export function NavShelf({ home, tools, groups, onToggleGroup, onOpenAllTools, v
       </div>
 
       <div className="h-px bg-border mx-2 my-2" />
+
+      {/* Pinned bottom band — Site Setup + Settings stay here, above the
+          All Tools row, as the default (Kevin, 2026-08-12). Gated upstream:
+          a member without admin simply gets fewer rows. */}
+      {pinned.map((e) => (
+        <Row key={e.key} entry={e} variant={variant} onNavigate={onNavigate} />
+      ))}
 
       {/* Always present — opens the searchable AllToolsSheet rather than
           expanding in place. Unlike the retired disclosure, this never

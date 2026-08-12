@@ -287,6 +287,11 @@ const iconTextOnly = (tone: string) =>
 // as BrandLogo's export above — standing up the full DashboardShell (auth,
 // routing, branding, tenant prefs, module access, ×2 for MobileNav) to
 // reach one `if (!homeEntry) return null` guard would be disproportionate.
+const PINNED_BOTTOM = (entries: CatalogEntry[]): CatalogEntry[] =>
+  ['site-setup', 'settings']
+    .map((k) => entries.find((e) => e.key === k))
+    .filter((e): e is CatalogEntry => !!e);
+
 // onOpenAllTools is required — NavShelf's own prop is required, and this
 // task deliberately doesn't weaken that at the Sidebar boundary. The six
 // call sites in DashboardShell.shelf.test.tsx that used to render
@@ -443,6 +448,7 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
+          pinned={PINNED_BOTTOM(resolvedEntries)}
           groups={shelfGroups}
           onToggleGroup={handleToggleGroup}
           onOpenAllTools={onOpenAllTools}
@@ -522,6 +528,7 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
+          pinned={PINNED_BOTTOM(resolvedEntries)}
           groups={shelfGroups}
           onToggleGroup={handleToggleGroup}
           // Close the drawer FIRST: the sheet is a modal dialog over the

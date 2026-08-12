@@ -36,6 +36,9 @@ const schema = z.object({
   // 'semibold' is the bigger-and-bolder treatment (Kevin, 2026-08-12).
   navSize: z.enum(['sm', 'base', 'lg']).default('sm'),
   navWeight: z.enum(['normal', 'semibold']).default('normal'),
+  // 'wide' opens up the gaps + adds tracking — pairs with small/semibold
+  // for the compact-but-confident look (Kevin, 2026-08-12).
+  navSpacing: z.enum(['normal', 'wide']).default('normal'),
   // Live countdown chip ("The Concert · 66d 12h 04m 09s"). Empty = off.
   // Hidden automatically once the moment passes.
   countdownTo: z.string().default(''),
@@ -135,6 +138,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   const countdownActive = !!config.countdownTo && !Number.isNaN(Date.parse(config.countdownTo));
   const navSizeClass = config.navSize === 'lg' ? 'text-lg' : config.navSize === 'base' ? 'text-base' : 'text-sm';
   const navWeightClass = config.navWeight === 'semibold' ? 'font-semibold' : '';
+  const navSpacingClass = config.navSpacing === 'wide' ? 'gap-8 tracking-wide' : 'gap-4';
   const navInline = (
     <>
       {config.navLinks.map((l, i) => (
@@ -229,7 +233,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
             <CountdownChip to={config.countdownTo} label={config.countdownLabel} url={config.countdownUrl} color={linkColor} />
           </span>
         )}
-        <nav className={`hidden cq-sm:flex items-center gap-4 ${navSizeClass} ${navWeightClass}`}>{navInline}</nav>
+        <nav className={`hidden cq-sm:flex items-center ${navSpacingClass} ${navSizeClass} ${navWeightClass}`}>{navInline}</nav>
         {hasLinks && (
           <button
             type="button"
@@ -345,7 +349,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
         />
         <p className="text-xs text-muted-foreground">Shows a live countdown in the header until the moment arrives, then disappears.</p>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1.5">
           <Label className="text-sm">Nav size</Label>
           <select
@@ -367,6 +371,17 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
           >
             <option value="normal">Normal</option>
             <option value="semibold">Bold</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-sm">Nav spacing</Label>
+          <select
+            className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+            value={config.navSpacing}
+            onChange={(e) => set({ navSpacing: e.target.value as Config['navSpacing'] })}
+          >
+            <option value="normal">Normal</option>
+            <option value="wide">Wide</option>
           </select>
         </div>
       </div>
