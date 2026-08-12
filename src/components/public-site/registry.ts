@@ -25,6 +25,7 @@ import { supportBlock } from './blocks/support';
 import { fanSignupBlock } from './blocks/fan-signup';
 import { wishesWallBlock } from './blocks/wishes-wall';
 import { auditionSignupBlock } from './blocks/audition-signup';
+import { eventSpotlightBlock } from './blocks/event-spotlight';
 import { liturgicalCalendarBlock } from './blocks/liturgical-calendar';
 import { columnsBlock } from './blocks/columns';
 
@@ -44,6 +45,7 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [fanSignupBlock.type]: fanSignupBlock,
   [wishesWallBlock.type]: wishesWallBlock,
   [auditionSignupBlock.type]: auditionSignupBlock,
+  [eventSpotlightBlock.type]: eventSpotlightBlock,
   [liturgicalCalendarBlock.type]: liturgicalCalendarBlock,
   [contactBlock.type]: contactBlock,
   [donationsBlock.type]: donationsBlock,
