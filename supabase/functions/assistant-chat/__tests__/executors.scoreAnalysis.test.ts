@@ -121,6 +121,31 @@ describe('get_score_analysis executor', () => {
     expect(out.tempo_overridden).toBe(true);
   });
 
+  it('stale analysis from a prior source is ignored when status is failed', async () => {
+    const { replyJson } = await executeServerTool('get_score_analysis', { score_id: 's1' },
+      { supabase: stubTables({ gw_parttrack_scores: [scoreRow({ status: 'failed', error_message: 'boom' })] }) });
+    const out = JSON.parse(replyJson);
+    expect(out.analyzed).toBe(false);
+    expect(out.failed).toBe(true);
+  });
+
+  it('stale analysis is ignored while a re-analyze is in progress (analyzing)', async () => {
+    const { replyJson } = await executeServerTool('get_score_analysis', { score_id: 's1' },
+      { supabase: stubTables({ gw_parttrack_scores: [scoreRow({ status: 'analyzing' })] }) });
+    const out = JSON.parse(replyJson);
+    expect(out.analyzed).toBe(false);
+    expect(out.in_progress).toBe(true);
+    expect(out.hint).toBe('This score is being analyzed right now — ask again in a couple of minutes.');
+  });
+
+  it('stale analysis is ignored while queued for re-analysis', async () => {
+    const { replyJson } = await executeServerTool('get_score_analysis', { score_id: 's1' },
+      { supabase: stubTables({ gw_parttrack_scores: [scoreRow({ status: 'queued' })] }) });
+    const out = JSON.parse(replyJson);
+    expect(out.analyzed).toBe(false);
+    expect(out.in_progress).toBe(true);
+  });
+
   it('db errors surface as an error field', async () => {
     const { replyJson } = await executeServerTool('get_score_analysis', { score_id: 's1' },
       { supabase: stubTables({ gw_parttrack_scores: [] }, { message: 'permission denied' }) });

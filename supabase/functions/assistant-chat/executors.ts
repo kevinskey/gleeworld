@@ -1329,13 +1329,23 @@ async function getScoreAnalysis(args: Record<string, unknown>, { supabase, role 
   const hint = role === 'admin'
     ? "Not analyzed yet — open this score's ⋯ menu in the Music Library, run Part Tracks, and ask again once it finishes."
     : 'Not analyzed yet — ask your director to run this score through Part Tracks, then I can answer.';
+  // A row's analysis blob can be stale from a previous source file — source
+  // replacement never clears it. Only serve facts once status confirms the
+  // CURRENT source has actually finished analyzing; 'failed'/'queued'/
+  // 'analyzing' always short-circuit, even if an old analysis is present.
+  if (row?.status === 'failed') {
+    return JSON.stringify({
+      analyzed: false, failed: true,
+      error_message: row.error_message ?? 'analysis failed', hint,
+    });
+  }
+  if (row?.status === 'queued' || row?.status === 'analyzing') {
+    return JSON.stringify({
+      analyzed: false, in_progress: true,
+      hint: 'This score is being analyzed right now — ask again in a couple of minutes.',
+    });
+  }
   if (!row || !row.analysis) {
-    if (row?.status === 'failed') {
-      return JSON.stringify({
-        analyzed: false, failed: true,
-        error_message: row.error_message ?? 'analysis failed', hint,
-      });
-    }
     return JSON.stringify({ analyzed: false, hint });
   }
 
