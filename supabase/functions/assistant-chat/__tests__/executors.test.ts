@@ -72,3 +72,35 @@ describe('search_academy executor', () => {
     expect(JSON.parse(replyJson).passages).toEqual([]);
   });
 });
+
+describe('set_preferred_name executor', () => {
+  function updateStub(returned: unknown[]) {
+    const builder: any = {};
+    for (const m of ['update', 'eq', 'select']) builder[m] = () => builder;
+    builder.then = (resolve: (v: unknown) => void) => resolve({ data: returned, error: null });
+    return { from: () => builder } as any;
+  }
+
+  it('saves the preferred name for the caller', async () => {
+    const { replyJson } = await executeServerTool('set_preferred_name', { name: 'Doc' },
+      { supabase: updateStub([{ preferred_name: 'Doc' }]), userId: 'u1' } as any);
+    const out = JSON.parse(replyJson);
+    expect(out.ok).toBe(true);
+    expect(out.preferred_name).toBe('Doc');
+    expect(out.note).toContain('Doc');
+  });
+
+  it('clear=true resets to the first name', async () => {
+    const { replyJson } = await executeServerTool('set_preferred_name', { clear: true },
+      { supabase: updateStub([{ preferred_name: null }]), userId: 'u1' } as any);
+    const out = JSON.parse(replyJson);
+    expect(out.ok).toBe(true);
+    expect(out.preferred_name).toBeNull();
+  });
+
+  it('refuses without a caller id', async () => {
+    const { replyJson } = await executeServerTool('set_preferred_name', { name: 'Doc' },
+      { supabase: updateStub([]) } as any);
+    expect(JSON.parse(replyJson).error).toContain('caller');
+  });
+});

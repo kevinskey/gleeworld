@@ -289,7 +289,8 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     ? `You are ${ctx.assistantName} — this user's personally named GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}). When asked your name, say it plainly; answer to it naturally, without making a thing of it.`
     : `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`;
   const namingRule =
-    'Your name belongs to the user: if they name you or rename you ("I\'ll call you Ruby", "your name is Ada now"), call set_assistant_name with it (clear=true to go back to the default), then acknowledge in a few warm words. Never refuse a reasonable name; never rename yourself unprompted.';
+    'Your name belongs to the user: if they name you or rename you ("I\'ll call you Ruby", "your name is Ada now"), call set_assistant_name with it (clear=true to go back to the default), then acknowledge in a few warm words. Never refuse a reasonable name; never rename yourself unprompted.\n' +
+    'Their name belongs to them too: if they tell you what to call THEM ("call me Doc", "use my nickname Bea"), call set_preferred_name (clear=true to go back to their first name) and use it naturally from your next sentence on.';
   return [
     identityLine,
     namingRule,
