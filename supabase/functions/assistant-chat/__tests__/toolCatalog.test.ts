@@ -6,7 +6,7 @@ describe('toolCatalog', () => {
     const names = toolsForRole('member').map((t) => t.name);
     expect(names).toEqual(
       expect.arrayContaining(['query_calendar', 'search_music', 'open_page', 'open_song',
-        'create_note', 'create_task', 'start_video_session']),
+        'create_note', 'create_task', 'start_video_session', 'get_score_analysis']),
     );
     expect(names).not.toContain('send_sms');
     expect(names).not.toContain('send_email');
@@ -18,6 +18,14 @@ describe('toolCatalog', () => {
     expect(names).not.toContain('add_video');
     expect(names).toContain('search_youtube');
     expect(names).toContain('play_video');
+  });
+
+  it('get_score_analysis is a read-only member server tool', () => {
+    const t = TOOL_CATALOG.find((x) => x.name === 'get_score_analysis')!;
+    expect(t.minRole).toBe('member');
+    expect(t.execution).toBe('server');
+    expect(t.confirm).toBe(false);
+    expect(t.parameters.required).toEqual(['score_id']);
   });
 
   it('admins get every tool', () => {
@@ -54,6 +62,7 @@ describe('toolCatalog', () => {
       'get_preference',
       'get_ride',
       'get_roster_flags',
+      'get_score_analysis',
       'list_courses',
       'liturgical_day',
       'lookup_all_state',

@@ -124,6 +124,18 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'get_score_analysis',
+    description: "Musical facts about a score in the library, from its Part Tracks analysis: key, meter, tempo, measure count, voice parts with their ranges, and duration. Use for 'what key is X in', 'how many measures', 'what's the alto range', 'how fast does it go'. Get score_id from search_music first — never guess ids. NEVER state a score's key, meter, measure count, or ranges from memory — only from this tool. If it returns analyzed:false, tell the user the score hasn't been analyzed yet and relay the hint honestly.",
+    parameters: {
+      type: 'object',
+      properties: {
+        score_id: str('The score id from search_music'),
+      },
+      required: ['score_id'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'list_courses',
     description: "List the Academy courses this workspace offers — titles, codes, terms, instructors, dates. Use for 'what classes are available', 'is there a class called X', 'who teaches Y'. Optional `query` filters by title or code.",
     parameters: {
