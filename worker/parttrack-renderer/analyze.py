@@ -83,6 +83,7 @@ def run_analyze(conn, job):
             "message": "This score was read from a PDF by optical music recognition (beta). "
                        "Check parts, notes, and rhythms before generating.",
         })
+    analysis = extract_analysis(score, cands)
     with conn.cursor() as cur:
         cur.execute("DELETE FROM gw_parttrack_parts WHERE score_id = %s", (job["score_id"],))
         for c in cands:
@@ -95,9 +96,10 @@ def run_analyze(conn, job):
                   c.source_voice, c.role, c.label, c.confidence))
         cur.execute("""
             UPDATE gw_parttrack_scores
-            SET validation_report = %s, status = 'awaiting_confirmation', error_message = NULL
+            SET validation_report = %s, analysis = %s,
+                status = 'awaiting_confirmation', error_message = NULL
             WHERE id = %s
-        """, (json.dumps(warnings), job["score_id"]))
+        """, (json.dumps(warnings), json.dumps(analysis), job["score_id"]))
     conn.commit()
 
 
