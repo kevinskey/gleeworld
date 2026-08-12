@@ -435,6 +435,10 @@ describe('All Tools — preview role narrowing is actually applied', () => {
     renderShell();
     fireEvent.keyDown(window, { key: 'k', metaKey: true });
     await waitFor(() => expect(screen.getByPlaceholderText(/search all tools/i)).toBeInTheDocument());
-    expect(screen.getByText('Site Setup')).toBeInTheDocument();
+    // getAllByText: 'Site Setup' legitimately renders twice for an admin —
+    // the sidebar's pinned bottom band (above All Tools; Kevin 2026-08-12)
+    // AND the sheet. Both are gated by the same resolveNav, so the preview
+    // test above proves narrowing hides every copy.
+    expect(screen.getAllByText('Site Setup').length).toBeGreaterThan(0);
   });
 });
