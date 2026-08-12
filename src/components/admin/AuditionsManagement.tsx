@@ -47,14 +47,17 @@ import {
   Shield,
   UserCheck,
   Trash2,
-  CalendarDays
+  CalendarDays,
+  Mic2,
 } from "lucide-react";
+import { AuditionSignupsList } from '@/components/admin/AuditionSignupsList';
 
 // Tab strip config. Analytics uses TrendingUp rather than a second BarChart3 —
 // Overview already owns that glyph, and two identical icons in one strip is a
 // coin flip for the reader.
 const AUDITION_TABS = [
   { value: 'overview', label: 'Overview', icon: BarChart3 },
+  { value: 'signups', label: 'Concert Signups', icon: Mic2 },
   { value: 'roster', label: 'Roster', icon: Users },
   { value: 'evaluations', label: 'Evaluations', icon: Star },
   { value: 'sessions', label: 'Sessions', icon: Calendar },
@@ -843,6 +846,10 @@ export const AuditionsManagement = () => {
             ))}
           </TabsList>
         </div>
+
+        <TabsContent value="signups" className="pt-6">
+          <AuditionSignupsList />
+        </TabsContent>
 
         <TabsContent value="overview" className="space-y-6 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
