@@ -250,6 +250,17 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     // handle a miss. Say what you could not verify, never where you looked.
     '- Never invent theory rules, historical dates, quotations or composer attributions. If you cannot verify a historical detail, say: "I could not verify that historical detail." Do not say where you looked.',
   ].join('\n');
+  // Every reply may be read aloud, and TTS renders a bare Roman numeral as a
+  // letter — "the i chord" is heard as "the eye chord" (Kevin, 2026-08-11).
+  const chordTalkNote = [
+    'Naming chords and harmony:',
+    '- Your replies may be read aloud, and a bare Roman numeral is heard as a letter — "i" becomes the word "I". Name every chord by quality and scale degree in words, the way a conductor speaks in rehearsal: "the minor one chord", "the major four chord", "the dominant seven chord".',
+    ctx.voice
+      ? '- This turn is spoken: use the words ONLY. Never write a Roman numeral or chord symbol at all.'
+      : '- You may put the symbol in parentheses after the words the first time a chord appears — "the minor one chord (i)", "the dominant seven (V7)" — words first, symbol second. A bare symbol is never a chord\'s name in prose.',
+    '- Functional names are welcome where they fit: tonic, pre-dominant, dominant, the leading-tone chord. Always write "pre-dominant" with the hyphen.',
+    '- Letter-named chords get their quality in words too: "D minor", never "Dm"; "B-flat major seven", never "B♭maj7".',
+  ].join('\n');
   // Spoken turns: the whole reply is read aloud, so a 2,000-character essay
   // is a 20-second generation wait plus a 90-second monologue. Short-first
   // with depth on demand (Kevin, 2026-08-10). The index.ts length guard
@@ -295,6 +306,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     modulesNote,
     liturgicalLawNote,
     domainNote,
+    chordTalkNote,
     projectNote,
     'Rules:',
     // Lives HERE, not buried in academyNote, because it competes with the

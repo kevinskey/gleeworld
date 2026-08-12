@@ -43,6 +43,26 @@ describe('buildSystemPrompt', () => {
     expect(p.toLowerCase()).toContain('cannot send');
   });
 
+  /**
+   * TTS reads a bare Roman numeral as a letter — "the i chord" is heard as
+   * "the eye chord" (Kevin, 2026-08-11). Chords are named by quality and
+   * scale degree in words; typed replies may carry the symbol in parentheses,
+   * spoken turns must not carry a symbol at all.
+   */
+  it('names chords in words, symbol in parens on typed turns', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('the minor one chord (i)');
+    expect(p).toContain('the dominant seven (V7)');
+    expect(p).toContain('"D minor", never "Dm"');
+    expect(p).toContain('pre-dominant');
+  });
+
+  it('bans chord symbols outright on spoken turns', () => {
+    const p = buildSystemPrompt({ ...ctx, voice: true });
+    expect(p).toContain('Never write a Roman numeral or chord symbol at all');
+    expect(p).not.toContain('the minor one chord (i)');
+  });
+
   it('admins get the course-builder interview section; members do not', () => {
     const base = {
       firstName: 'Kevin', tenantName: 'GleeWorld', activeModules: [],

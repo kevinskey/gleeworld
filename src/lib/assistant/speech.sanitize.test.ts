@@ -51,3 +51,42 @@ describe('sanitizeForSpeech — instruction leakage', () => {
       .toBe('See this and that.');
   });
 });
+
+describe('sanitizeForSpeech — music theory', () => {
+  // Typed replies pair the spoken chord name with its symbol ("the minor one
+  // chord (i)"). TTS reads the symbol as a letter — "the eye chord" — so the
+  // parenthetical is dropped before speech (Kevin, 2026-08-11).
+  it('drops parenthetical Roman-numeral chord symbols', () => {
+    expect(
+      sanitizeForSpeech('The minor one chord (i) moves to the dominant seven (V7).'),
+    ).toBe('The minor one chord moves to the dominant seven.');
+    expect(
+      sanitizeForSpeech('Resolve the leading-tone chord (vii°) to the tonic (I).'),
+    ).toBe('Resolve the leading-tone chord to the tonic.');
+    expect(
+      sanitizeForSpeech('Try the flat six (♭VI), then a cadential six-four (V6/4).'),
+    ).toBe('Try the flat six, then a cadential six-four.');
+    expect(
+      sanitizeForSpeech('That is a one, six, four, five progression (I–vi–IV–V).'),
+    ).toBe('That is a one, six, four, five progression.');
+    expect(
+      sanitizeForSpeech('Tonicize the dominant with five of five (V/V).'),
+    ).toBe('Tonicize the dominant with five of five.');
+  });
+
+  it('leaves ordinary parentheticals alone', () => {
+    const prose = 'Rehearsal (the early one) starts at six.';
+    expect(sanitizeForSpeech(prose)).toBe(prose);
+    const initials = 'Ask the director (Dr. Johnson) first.';
+    expect(sanitizeForSpeech(initials)).toBe(initials);
+  });
+
+  // ElevenLabs says "prudominate"; the hyphenated spelling — standard in
+  // theory writing anyway — pronounces cleanly.
+  it('respells predominant so TTS pronounces it', () => {
+    expect(sanitizeForSpeech('The predominant chord leads to the dominant.'))
+      .toBe('The pre-dominant chord leads to the dominant.');
+    expect(sanitizeForSpeech('Predominant harmony comes first.'))
+      .toBe('Pre-dominant harmony comes first.');
+  });
+});
