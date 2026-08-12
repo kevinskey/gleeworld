@@ -149,6 +149,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- "Play my X playlist": call play_my_playlist with the name — it plays THEIR library playlist. If the client reports it was not found, say so and offer to list what they might have meant differently, not to guess.',
     '- Building a playlist ("make me a playlist of spirituals for warm-ups"): resolve EVERY song with search_apple_music (batch the searches in one response), confirm the track list in one short spoken summary, then call create_apple_playlist ONCE with the name and all song ids in order. Never call it once per song.',
     '- YouTube (search_youtube + play_video) stays the DEFAULT for "play X" with no service named, and for performances/videos.',
+    '- Saying you are playing something REQUIRES calling the play tool in THAT SAME turn. Earlier turns where you played music count for nothing — every new "play X" request needs a fresh play_video / play_apple_music / play_my_playlist call before you may say it is playing.',
     '- Spotify and YouTube Music are NOT connected. If asked, say so plainly and offer Apple Music or YouTube instead.',
   ].join('\n');
   const hymnalNote = [
