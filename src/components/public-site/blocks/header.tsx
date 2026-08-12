@@ -24,7 +24,8 @@ const CUSTOM_URL = '__custom__';
 
 // Site name, logo size, and menu links. Logo image + theme colors/font moved
 // to Workspace Settings → Branding (single source of truth); a stale
-// `logoUrl` field on prior configs is accepted but ignored on render.
+// `logoUrl` is a per-header override for the branding logo (a dark header
+// may need a white version); empty falls back to branding.
 const schema = z.object({
   siteName: z.string().default(''),
   // Off = no name text in the bar at all (logo + nav only). The override
@@ -35,6 +36,11 @@ const schema = z.object({
   // 'semibold' is the bigger-and-bolder treatment (Kevin, 2026-08-12).
   navSize: z.enum(['sm', 'base', 'lg']).default('sm'),
   navWeight: z.enum(['normal', 'semibold']).default('normal'),
+  // Live countdown chip ("The Concert · 66d 12h 04m 09s"). Empty = off.
+  // Hidden automatically once the moment passes.
+  countdownTo: z.string().default(''),
+  countdownLabel: z.string().default(''),
+  countdownUrl: z.string().default(''),
   logoUrl: z.string().default('').optional(),
   navLinks: z.array(z.object({ label: z.string(), url: z.string() })).default([]),
   navLinkColor: z.string().default('#ffffff'),
@@ -64,10 +70,44 @@ function readableForeground(hex: string): string {
   return yiq >= 150 ? '#0f172a' : '#ffffff';
 }
 
+/** Live countdown chip. Ticks every second; renders nothing once passed. */
+function CountdownChip({ to, label, url, color }: { to: string; label: string; url: string; color: string }) {
+  const target = Date.parse(to);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const diff = target - now;
+  if (!Number.isFinite(target) || diff <= 0) return null;
+  const d = Math.floor(diff / 86_400_000);
+  const h = Math.floor((diff % 86_400_000) / 3_600_000);
+  const m = Math.floor((diff % 3_600_000) / 60_000);
+  const s = Math.floor((diff % 60_000) / 1000);
+  const two = (n: number) => String(n).padStart(2, '0');
+  const body = (
+    <>
+      {label && <span className="font-semibold">{label}</span>}
+      <span className="tabular-nums font-medium" aria-label={`${d} days ${h} hours ${m} minutes ${s} seconds`}>
+        {d}d {two(h)}h {two(m)}m {two(s)}s
+      </span>
+    </>
+  );
+  const cls = 'inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs whitespace-nowrap';
+  const style = { color, borderColor: 'currentcolor', opacity: 0.95 } as React.CSSProperties;
+  return url
+    ? <a href={url} className={`${cls} hover:opacity-100`} style={style}>{body}</a>
+    : <span className={cls} style={style}>{body}</span>;
+}
+
 function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   const editable = !!onConfigChange;
   const name = config.showSiteName === false ? '' : (config.siteName || ctx.orgName);
-  const logo = ctx.logoUrl;
+  // Per-header logo override — branding stays the canonical mark (internal
+  // chrome, favicon), but a dark public header may need e.g. a white
+  // version (Kevin, 2026-08-12: the white logo set in Branding vanished on
+  // the light internal header). Empty = branding logo, as before.
+  const logo = config.logoUrl || ctx.logoUrl;
   // Auto-picks black or white for contrast against the primary; user can
   // override via config.siteNameColor if they want a specific brand shade.
   const linkColor = (config.siteNameColor && /^#[0-9a-fA-F]{6}$/.test(config.siteNameColor))
@@ -92,6 +132,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   }, [menuOpen]);
 
   const hasLinks = config.navLinks.length > 0 || ctx.memberSignIn;
+  const countdownActive = !!config.countdownTo && !Number.isNaN(Date.parse(config.countdownTo));
   const navSizeClass = config.navSize === 'lg' ? 'text-lg' : config.navSize === 'base' ? 'text-base' : 'text-sm';
   const navWeightClass = config.navWeight === 'semibold' ? 'font-semibold' : '';
   const navInline = (
@@ -183,6 +224,11 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
           </a>
         )}
         {/* Desktop: inline links. Mobile: a hamburger that toggles the dropdown below. */}
+        {countdownActive && (
+          <span className="hidden cq-sm:flex flex-1 justify-center px-3">
+            <CountdownChip to={config.countdownTo} label={config.countdownLabel} url={config.countdownUrl} color={linkColor} />
+          </span>
+        )}
         <nav className={`hidden cq-sm:flex items-center gap-4 ${navSizeClass} ${navWeightClass}`}>{navInline}</nav>
         {hasLinks && (
           <button
@@ -200,6 +246,12 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
       {/* Mobile dropdown: floats over the hero (no content pushed down) on a
           plain white background. Link color always dark-on-white here, since
           the dropdown's background is fixed regardless of the theme primary. */}
+      {/* Phones: the bar has no room, so the chip gets its own strip. */}
+      {countdownActive && (
+        <div className="cq-sm:hidden flex justify-center pb-2">
+          <CountdownChip to={config.countdownTo} label={config.countdownLabel} url={config.countdownUrl} color={linkColor} />
+        </div>
+      )}
       {hasLinks && menuOpen && (
         <div
           className="cq-sm:hidden absolute left-0 right-0 top-full bg-white shadow-lg border-t border-slate-200"
@@ -264,6 +316,34 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
           placeholder="Your organization"
           disabled={config.showSiteName === false}
         />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Logo override (optional)</Label>
+        <Input
+          value={config.logoUrl ?? ''}
+          onChange={(e) => set({ logoUrl: e.target.value })}
+          placeholder="Image URL — e.g. a white logo for a dark header"
+        />
+        <p className="text-xs text-muted-foreground">Empty uses your Branding logo. This only changes this header.</p>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Countdown (optional)</Label>
+        <Input
+          type="datetime-local"
+          value={config.countdownTo ? config.countdownTo.slice(0, 16) : ''}
+          onChange={(e) => set({ countdownTo: e.target.value ? new Date(e.target.value).toISOString() : '' })}
+        />
+        <Input
+          value={config.countdownLabel}
+          onChange={(e) => set({ countdownLabel: e.target.value })}
+          placeholder="Label, e.g. The Concert"
+        />
+        <Input
+          value={config.countdownUrl}
+          onChange={(e) => set({ countdownUrl: e.target.value })}
+          placeholder="Link, e.g. /retirement (optional)"
+        />
+        <p className="text-xs text-muted-foreground">Shows a live countdown in the header until the moment arrives, then disappears.</p>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
