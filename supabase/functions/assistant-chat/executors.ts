@@ -1313,16 +1313,58 @@ async function getEnrollments(args: Record<string, unknown>, deps: Deps): Promis
   });
 }
 
+// Libraries hold duplicate copies of the same title ("A Choice to Change the
+// World" ×7), and the model can only pass ONE score_id — usually not the copy
+// that went through Part Tracks. When the asked copy has no analysis, fall
+// back to an analyzed same-tenant copy whose title matches (RLS scopes the
+// candidate list, so this never crosses tenants).
+const normTitle = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
+async function findAnalyzedCopy(
+  supabase: SupabaseLike, scoreId: string,
+): Promise<{ row: Record<string, unknown>; title: string } | null> {
+  const { data: me } = await supabase
+    .from('gw_sheet_music').select('title').eq('id', scoreId).maybeSingle();
+  const askedTitle = typeof me?.title === 'string' ? me.title : '';
+  if (!askedTitle) return null;
+  const { data: cands } = await supabase
+    .from('gw_parttrack_scores')
+    .select('id, sheet_music_id, analysis, source_type, status, validation_report, tempo_override_bpm, manifest, error_message')
+    .not('analysis', 'is', null)
+    .in('status', ['awaiting_confirmation', 'rendering', 'ready'])
+    .limit(25);
+  const rows = (cands ?? []) as Array<Record<string, unknown>>;
+  if (rows.length === 0) return null;
+  const { data: sheets } = await supabase
+    .from('gw_sheet_music').select('id, title')
+    .in('id', rows.map((r) => r.sheet_music_id));
+  const mine = normTitle(askedTitle);
+  const candIds = new Set(rows.map((r) => String(r.sheet_music_id)));
+  // Prefix match either way so "…World" and "…World SSAA" pair up. Only
+  // sheets that actually own an analyzed candidate row count (defensive
+  // even though the .in() filter already restricts the query).
+  const sheet = ((sheets ?? []) as Array<{ id: string; title?: string }>).find((s) => {
+    if (!candIds.has(s.id)) return false;
+    const other = normTitle(s.title ?? '');
+    return other.length > 0 && (other === mine || other.startsWith(mine) || mine.startsWith(other));
+  });
+  if (!sheet) return null;
+  const row = rows.find((r) => r.sheet_music_id === sheet.id);
+  return row ? { row, title: sheet.title ?? '' } : null;
+}
+
 async function getScoreAnalysis(args: Record<string, unknown>, { supabase, role }: Deps): Promise<string> {
   const scoreId = String(args.score_id ?? '').trim();
   if (!scoreId) return JSON.stringify({ error: 'Pass score_id from search_music first.' });
 
-  const { data: row, error } = await supabase
+  const { data: rowData, error } = await supabase
     .from('gw_parttrack_scores')
     .select('id, analysis, source_type, status, validation_report, tempo_override_bpm, manifest, error_message')
     .eq('sheet_music_id', scoreId)
     .maybeSingle();
   if (error) return JSON.stringify({ error: error.message });
+  let row = rowData as Record<string, unknown> | null;
+  let matchedCopy: string | null = null;
 
   // Honesty split (Deps.role): admins can run the analysis themselves;
   // students need their director to do it.
@@ -1346,7 +1388,10 @@ async function getScoreAnalysis(args: Record<string, unknown>, { supabase, role 
     });
   }
   if (!row || !row.analysis) {
-    return JSON.stringify({ analyzed: false, hint });
+    const alt = await findAnalyzedCopy(supabase, scoreId);
+    if (!alt) return JSON.stringify({ analyzed: false, hint });
+    row = alt.row;
+    matchedCopy = alt.title;
   }
 
   const { data: partRows, error: pErr } = await supabase
@@ -1378,6 +1423,10 @@ async function getScoreAnalysis(args: Record<string, unknown>, { supabase, role 
   return JSON.stringify({
     analyzed: true,
     optical,
+    ...(matchedCopy ? {
+      matched_copy: matchedCopy,
+      matched_copy_note: 'The analyzed Part Tracks project lives on a different library copy of this title (matched_copy). Answer with these facts and mention which copy they come from.',
+    } : {}),
     ...(optical ? {
       optical_note: 'These facts were read optically from the PDF (beta) and can contain errors. The FIRST time you state them in this conversation, add: "I read this optically from the PDF, so double-check anything critical against the printed score."',
     } : {}),
