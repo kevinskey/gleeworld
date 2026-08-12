@@ -1,9 +1,10 @@
 # Analyze handler: parse source, classify parts, store inventory + warnings.
 import json
 import tempfile
+from datetime import datetime, timezone
 from pathlib import Path
 
-from music21 import converter
+from music21 import converter, key as m21key, meter as m21meter, tempo as m21tempo
 
 import config
 import db
@@ -98,3 +99,92 @@ def run_analyze(conn, job):
             WHERE id = %s
         """, (json.dumps(warnings), job["score_id"]))
     conn.commit()
+
+
+# ---- Musical-facts extraction (assistant get_score_analysis bridge). ----
+# Spec: docs/superpowers/specs/2026-08-11-assistant-score-analysis-design.md
+
+def _candidate_notes(score, cand):
+    """Mirror classify._voice_split_candidates' note selection so ranges
+    line up 1:1 with the inventoried parts."""
+    part = score.parts[cand.source_part_index]
+    if cand.source_voice is None:
+        return list(part.recurse().notes)
+    voice_ids = []
+    for m in part.getElementsByClass("Measure"):
+        for v in m.voices:
+            if v.id not in voice_ids:
+                voice_ids.append(v.id)
+    ordered = sorted(voice_ids, key=str)
+    if cand.source_voice > len(ordered):
+        return []
+    vid = ordered[cand.source_voice - 1]
+    return [n for m in part.getElementsByClass("Measure")
+            for v in m.voices if str(v.id) == str(vid)
+            for n in v.notes]
+
+
+def _pitch_range(notes):
+    pitches = [p for n in notes for p in getattr(n, "pitches", [])]
+    if not pitches:
+        return None
+    lo = min(pitches, key=lambda p: p.midi)
+    hi = max(pitches, key=lambda p: p.midi)
+    # music21 spells flats as "B-4"; humans read "Bb4".
+    return {"low": lo.nameWithOctave.replace("-", "b"),
+            "high": hi.nameWithOctave.replace("-", "b")}
+
+
+def _key_facts(score):
+    try:
+        k = score.analyze("key")
+        initial = f"{k.tonic.name.replace('-', 'b')} {k.mode}"
+    except Exception:
+        initial = None
+    sigs = []
+    parts = list(score.parts)
+    src = parts[0] if parts else score
+    for ks in src.recurse().getElementsByClass(m21key.KeySignature):
+        if not sigs or sigs[-1] != ks.sharps:
+            sigs.append(ks.sharps)
+    return {"initial": initial, "changes": max(0, len(sigs) - 1)}
+
+
+def _time_signatures(score):
+    out = []
+    parts = list(score.parts)
+    src = parts[0] if parts else score
+    for ts in src.recurse().getElementsByClass(m21meter.TimeSignature):
+        if not out or out[-1] != ts.ratioString:
+            out.append(ts.ratioString)
+    return out
+
+
+def _tempo_bpm(score):
+    for mm in score.recurse().getElementsByClass(m21tempo.MetronomeMark):
+        bpm = mm.getQuarterBPM()
+        if bpm:
+            return round(bpm)
+    return None
+
+
+def extract_analysis(score, cands):
+    """Versioned musical-facts blob for gw_parttrack_scores.analysis (v1)."""
+    return {
+        "v": 1,
+        "computed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "key": _key_facts(score),
+        "time_signatures": _time_signatures(score),
+        "tempo_bpm": _tempo_bpm(score),
+        "measures": max((len(p.getElementsByClass("Measure")) for p in score.parts),
+                        default=0),
+        "parts": [
+            {"source_part_index": c.source_part_index,
+             "source_staff": c.source_staff,
+             "source_voice": c.source_voice,
+             "role": c.role,
+             "label": c.label,
+             "range": _pitch_range(_candidate_notes(score, c))}
+            for c in cands
+        ],
+    }
