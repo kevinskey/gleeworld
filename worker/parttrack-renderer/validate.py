@@ -7,6 +7,10 @@ def validate_score(score) -> list[dict]:
     if not score.recurse().getElementsByClass("MetronomeMark"):
         warnings.append({"code": "no_tempo", "severity": "warning",
                          "message": "No tempo marking found — rendering will assume 100 bpm."})
+    if not score.recurse().getElementsByClass("TimeSignature"):
+        warnings.append({"code": "no_time_signature", "severity": "warning",
+                         "message": "No readable time signature — check barlines and "
+                                    "rhythms carefully before generating."})
     try:
         score.expandRepeats()
     except Exception as e:
