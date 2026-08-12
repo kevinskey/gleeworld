@@ -26,6 +26,8 @@ import { TourRollCallSection } from './TourRollCallSection';
 import { TourWeatherSection } from './TourWeatherSection';
 import { BusDriverTipReceiptSection } from '@/components/tour/BusDriverTipReceiptSection';
 import { PermissionSlipsTab } from '@/components/travel-manager/PermissionSlipsTab';
+import { TenantSlipSearch } from '@/components/travel-manager/TenantSlipSearch';
+import { K12SlipNotice } from '@/components/travel-manager/K12SlipNotice';
 import { TripFeesTab } from './TripFeesTab';
 import { supabase } from '@/integrations/supabase/client';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
@@ -362,7 +364,18 @@ const TourManagerDashboardInner = ({
       case 'weather':
         return <TourWeatherSection showHeading={false} />;
       case 'permission-slips':
-        return <PermissionSlipsTab />;
+        return (
+          <div className="space-y-8">
+            <K12SlipNotice />
+            <PermissionSlipsTab />
+            <section>
+              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                All slips in this workspace
+              </h2>
+              <TenantSlipSearch />
+            </section>
+          </div>
+        );
       case 'fees':
         return <TripFeesTab />;
       default:
