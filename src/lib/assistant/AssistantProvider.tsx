@@ -598,6 +598,13 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           // The user's personal name for her. The agent prompt reads
           // {{assistant_name}}; the platform default covers old bundles.
           assistant_name: profile?.assistant_name?.trim() || 'the GleeWorld Assistant',
+          // The live agent has no clock of its own; hand it the local time at
+          // session start so "what time is it" never comes back empty.
+          user_local_time: new Date().toLocaleString(undefined, {
+            weekday: 'long', month: 'long', day: 'numeric',
+            hour: 'numeric', minute: '2-digit',
+          }),
+          user_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
         clientTools: {
           /**
