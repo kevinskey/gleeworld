@@ -292,6 +292,26 @@ async function searchMusic(args: Record<string, unknown>, { supabase }: Deps): P
       return JSON.stringify({ scores: data, ...(relaxed ? { matchedOn: tokens.slice(0, n).join(' ') } : {}) });
     }
   }
+
+  // Any-token fallback. Prefix relaxation assumes the informative word comes
+  // first, but "German Requiem" stores as "Ein deutsches Requiem" — the only
+  // matching token is the LAST one, and dropping from the end never tries it.
+  // One query ORs every token; rows matching more tokens rank first, and
+  // matchedOn always flags the looseness so the model names what it found
+  // instead of claiming an exact hit.
+  const safeTokens = tokens.map((t) => t.replace(/[%_,()]/g, '')).filter(Boolean);
+  if (safeTokens.length > 1) {
+    const orExpr = safeTokens.map((t) => `title.ilike.%${t}%,composer.ilike.%${t}%`).join(',');
+    const { data, error } = await supabase
+      .from('gw_sheet_music').select('id, title, composer, voicing').or(orExpr).limit(25);
+    if (error) return JSON.stringify({ error: error.message });
+    if (data && data.length > 0) {
+      const hits = (row: { title?: string; composer?: string }) => safeTokens.filter((t) =>
+        `${row.title ?? ''} ${row.composer ?? ''}`.toLowerCase().includes(t.toLowerCase()));
+      const ranked = [...data].sort((a, b) => hits(b).length - hits(a).length).slice(0, 10);
+      return JSON.stringify({ scores: ranked, matchedOn: hits(ranked[0]).join(' ') });
+    }
+  }
   return JSON.stringify({ scores: [] });
 }
 
