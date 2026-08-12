@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""One-off backfill: fill gw_parttrack_scores.analysis for rows analyzed
-before the column existed.
+"""One-off backfill: fill gw_parttrack_scores.analysis for successfully
+analyzed rows (awaiting_confirmation/rendering/ready) processed before the
+column existed.
 
 Touches ONLY the analysis column — parts, status, and confirmations are
 never modified (re-running a full analyze would reset confirmed scores).
@@ -35,6 +36,7 @@ def main() -> int:
                 SELECT id, source_type, source_path, normalized_mxl_path
                 FROM gw_parttrack_scores
                 WHERE analysis IS NULL
+                AND status IN ('awaiting_confirmation','rendering','ready')
                 ORDER BY created_at
             """)
             rows = cur.fetchall()
