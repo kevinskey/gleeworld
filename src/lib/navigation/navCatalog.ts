@@ -7,6 +7,7 @@
 // icon) where the sidebar historically differs.
 // Spec: docs/superpowers/specs/2026-07-06-nav-catalog-parity-design.md
 import {
+  Globe,
   Home, MessageSquare, Calendar, Music, ScanEye, Eye, Mic, Images, LibraryBig,
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
@@ -50,6 +51,9 @@ export interface CatalogEntry {
 export const NAV_CATALOG: CatalogEntry[] = [
   // Today — tab-bar territory; sidebar-only, never grid tiles.
   { key: 'home',     to: '/dashboard',           label: 'Command Center', icon: Home,          section: 'today', tone: 'bg-primary/10 text-primary', tourId: 'nav-command-center', end: true, surfaces: ['sidebar'] },
+  // The way BACK OUT: the tenant's public site lives at the host root. No
+  // gate — every member may want the page they share with the world.
+  { key: 'public-site', to: '/', label: 'Public Site', icon: Globe, section: 'today', tone: 'bg-sky-50 text-sky-600', tourId: 'nav-public-site', end: true },
   { key: 'messages', to: '/dashboard/messenger', label: 'Messages',       icon: MessageSquare, section: 'today', tone: 'bg-cyan-50 text-cyan-600',   tourId: 'nav-messenger',      surfaces: ['sidebar'] },
   { key: 'calendar', to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      section: 'today', tone: 'bg-purple-50 text-purple-600', tourId: 'nav-calendar',     surfaces: ['sidebar'] },
   { key: 'notes',    to: '/planner',             label: 'Notes',          icon: NotebookPen,   section: 'today', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-notes', gate: { module: 'planner' } },
