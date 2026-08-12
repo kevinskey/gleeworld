@@ -7,6 +7,7 @@ import { buildChatRequest, callModel, type ChatMessage } from './provider.ts';
 import { executeServerTool, type ConciergeResult } from './executors.ts';
 import { validateCourseSpec } from '../_shared/courseSpec.ts';
 import { namesItsSources, SOURCE_LEAK_NUDGE } from './sourceLeak.ts';
+import { claimsPlayback, PLAYBACK_CLAIM_NUDGE } from './playbackClaim.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -278,6 +279,7 @@ serve(async (req) => {
   // source, so the source-leak guard has to know whether it ran.
   const calledTools = new Set<string>();
   let sourceLeakNudged = false;
+  let playbackNudged = false;
 
   // Voice length guard. The prompt's "at most 4 sentences" rule alone does
   // not hold — this model paraphrases around prohibitions (the source-leak
@@ -327,6 +329,18 @@ serve(async (req) => {
           sourceLeakNudged = true;
           messages.push({ role: 'assistant', content: reply });
           messages.push({ role: 'user', content: SOURCE_LEAK_NUDGE });
+          continue;
+        }
+        // Phantom playback: on long threads the model copies its own prior
+        // "Playing X now." turns instead of calling the play tool — the
+        // reply claims playback while no player opens (2026-08-12). Guard
+        // shape as above: one corrective re-ask, then accept.
+        const playedThisTurn = resultsPanel?.kind === 'video'
+          || actions.some((a) => a.tool.startsWith('play_'));
+        if (!playbackNudged && !playedThisTurn && claimsPlayback(reply)) {
+          playbackNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: PLAYBACK_CLAIM_NUDGE });
           continue;
         }
         if (voice && !wantsDepth && !voiceLengthNudged && reply.length > VOICE_REPLY_MAX) {
