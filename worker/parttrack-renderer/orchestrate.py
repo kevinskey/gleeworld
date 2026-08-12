@@ -15,7 +15,7 @@ from render import build_manifest, build_mixes, encode_mp3, render_stems
 def run_render(conn, job):
     settings = config.load()
     db.set_score_status(conn, job["score_id"], "rendering")
-    score = _load_score(conn, job, settings)
+    score, _fixes = _load_score(conn, job, settings)
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute("""
             SELECT role, label, source_part_index, source_voice, include
