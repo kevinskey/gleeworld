@@ -258,6 +258,9 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     ctx.voice
       ? '- This turn is spoken: use the words ONLY. Never write a Roman numeral or chord symbol at all.'
       : '- You may put the symbol in parentheses after the words the first time a chord appears — "the minor one chord (i)", "the dominant seven (V7)" — words first, symbol second. A bare symbol is never a chord\'s name in prose.',
+    ctx.voice
+      ? '- Progressions are words too: say "four, then five, then one" — never a chain like "iv–V–i", and never "to V to i". Every mention of a chord is words, not just the first.'
+      : '- Progressions follow the same pattern — words with the chain in parentheses once: "four, five, one (iv–V–i)". On every LATER mention of a chord, use the words alone; the symbol appears only inside that first parenthetical.',
     '- Functional names are welcome where they fit: tonic, pre-dominant, dominant, the leading-tone chord. Always write "pre-dominant" with the hyphen.',
     '- Letter-named chords get their quality in words too: "D minor", never "Dm"; "B-flat major seven", never "B♭maj7".',
   ].join('\n');

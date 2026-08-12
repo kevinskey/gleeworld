@@ -61,6 +61,16 @@ describe('buildSystemPrompt', () => {
     const p = buildSystemPrompt({ ...ctx, voice: true });
     expect(p).toContain('Never write a Roman numeral or chord symbol at all');
     expect(p).not.toContain('the minor one chord (i)');
+    // First live voice test slipped "a iv–V–i or ... to V to i" past the
+    // general ban — progressions get their own prescribed wording.
+    expect(p).toContain('"four, then five, then one"');
+    expect(p).toContain('Every mention of a chord is words');
+  });
+
+  it('typed turns put progression chains in the one parenthetical', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('"four, five, one (iv–V–i)"');
+    expect(p).toContain('use the words alone');
   });
 
   it('admins get the course-builder interview section; members do not', () => {

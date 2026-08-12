@@ -81,6 +81,24 @@ describe('sanitizeForSpeech — music theory', () => {
     expect(sanitizeForSpeech(initials)).toBe(initials);
   });
 
+  // The prompt bans bare progression chains, but the model paraphrases around
+  // prohibitions (2026-08-06 lesson): a live voice turn produced "giving you a
+  // iv–V–i or ... to V to i" on the first test. Dash-joined runs are the
+  // unambiguous, safe-to-rewrite shape, so they become spoken words.
+  it('converts dash-joined progressions to spoken words', () => {
+    expect(sanitizeForSpeech('That gives you a iv–V–i at the close.'))
+      .toBe('That gives you a four to five to one at the close.');
+    expect(sanitizeForSpeech('Jazz turnarounds lean on ii–V–I.'))
+      .toBe('Jazz turnarounds lean on two to five to one.');
+    expect(sanitizeForSpeech('Try vii°–i, or a iiø7–V7–i.'))
+      .toBe('Try seven diminished to one, or a two half-diminished seven to five seven to one.');
+  });
+
+  it('leaves single bare numerals alone — pronoun-I territory', () => {
+    const prose = 'I think Volume V covers it.';
+    expect(sanitizeForSpeech(prose)).toBe(prose);
+  });
+
   // ElevenLabs says "prudominate"; the hyphenated spelling — standard in
   // theory writing anyway — pronounces cleanly.
   it('respells predominant so TTS pronounces it', () => {

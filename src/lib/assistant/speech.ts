@@ -282,6 +282,40 @@ const SCAFFOLDING_LINE =
 const NUMERAL = String.raw`[b♭#♯]?(?:VII|III|VI|IV|II|I|V|vii|iii|vi|iv|ii|i|v)[°øo+]?(?:6\/4|6\/5|4\/3|4\/2|64|65|43|42|6|7|9|11|13)?`;
 const CHORD_PARENTHETICAL = new RegExp(String.raw`\s*\(\s*${NUMERAL}(?:\s*[-–—]\s*${NUMERAL})*(?:\/${NUMERAL})?\s*\)`, 'g');
 
+/** A run of two or more Roman-numeral chord tokens joined by dashes —
+ *  "iv–V–i", "ii–V–I" — outside parentheses. The prompt bans these, but the
+ *  model paraphrases around prohibitions (the 2026-08-06 lesson), and TTS
+ *  reads the chain as letters. Two-plus dash-joined tokens are unambiguously
+ *  a progression, so they convert to spoken words: "four to five to one".
+ *  Single bare numerals are left alone — "I" the pronoun and "V" in "Vol. V"
+ *  are exactly the false positives a single-token rule would hit. */
+const CHORD_RUN = new RegExp(
+  String.raw`\b(${NUMERAL})((?:\s*[-–—]\s*(?:${NUMERAL})){1,})\b`, 'g');
+const DEGREE_WORD: Record<string, string> = {
+  i: 'one', ii: 'two', iii: 'three', iv: 'four', v: 'five', vi: 'six', vii: 'seven',
+};
+function chordTokenToWords(token: string): string {
+  const m = token.match(/^([b♭#♯]?)(VII|III|VI|IV|II|I|V|vii|iii|vi|iv|ii|i|v)([°øo+]?)([0-9/]*)$/);
+  if (!m) return token;
+  const [, accidental, numeral, quality, figure] = m;
+  const parts: string[] = [];
+  if (accidental) parts.push(accidental === '#' || accidental === '♯' ? 'sharp' : 'flat');
+  parts.push(DEGREE_WORD[numeral.toLowerCase()]);
+  if (quality === '°' || quality === 'o') parts.push('diminished');
+  else if (quality === 'ø') parts.push('half-diminished');
+  else if (quality === '+') parts.push('augmented');
+  if (figure === '7') parts.push('seven');
+  else if (figure === '6/4' || figure === '64') parts.push('six-four');
+  else if (figure === '6/5' || figure === '65') parts.push('six-five');
+  else if (figure === '6') parts.push('six');
+  else if (figure === '9') parts.push('nine');
+  return parts.join(' ');
+}
+function chordRunToWords(_run: string, first: string, rest: string): string {
+  const tokens = [first, ...rest.split(/\s*[-–—]\s*/).filter(Boolean)];
+  return tokens.map(chordTokenToWords).join(' to ');
+}
+
 export function sanitizeForSpeech(text: string): string {
   return text
     // Instruction leakage first, while line structure still exists.
@@ -303,6 +337,8 @@ export function sanitizeForSpeech(text: string): string {
     .replace(/\bhttps?:\/\/\S+/gi, '')
     // Chord symbols in parens ride along with their spoken name — drop them.
     .replace(CHORD_PARENTHETICAL, '')
+    // Dash-joined progressions outside parens become spoken words.
+    .replace(CHORD_RUN, chordRunToWords)
     // TTS mangles "predominant" ("prudominate"); the hyphenated spelling —
     // standard in theory writing anyway — pronounces cleanly.
     .replace(/\b([Pp])redominant/g, '$1re-dominant')
