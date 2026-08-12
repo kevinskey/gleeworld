@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { GripVertical, Music, Pause, Play, X } from 'lucide-react';
 import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
+import { youtubeEmbedSrc } from '@/lib/youtubeEmbed';
 
 /**
  * Apple Music body for the popout: drives the MusicKit singleton directly.
@@ -238,7 +239,8 @@ export function AssistantMiniPlayer() {
           <iframe
             // youtube-nocookie so a rehearsal does not quietly build an ad
             // profile. autoplay because the user asked for it to play.
-            src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId!)}?autoplay=${resumePaused ? 0 : 1}&rel=0`}
+            // Native routes through the https wrapper (YouTube error 153).
+            src={youtubeEmbedSrc(videoId!, { autoplay: !resumePaused })}
             title={title || 'Video'}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

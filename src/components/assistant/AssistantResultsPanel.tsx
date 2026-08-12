@@ -1,5 +1,6 @@
 import { X, Car, Utensils, Globe, Sparkles, MapPin, Star, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { youtubeEmbedSrc } from '@/lib/youtubeEmbed';
 import type { ConciergeResult } from '@/lib/assistant/conciergeTypes';
 
 interface Props {
@@ -164,7 +165,7 @@ function VideoCard({ result }: { result: Extract<ConciergeResult, { kind: 'video
     <div className="space-y-2">
       <div className="relative w-full overflow-hidden border border-border" style={{ aspectRatio: '16 / 9' }}>
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(result.videoId)}?autoplay=1&rel=0`}
+          src={youtubeEmbedSrc(result.videoId)}
           title={result.title || 'Video'}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
