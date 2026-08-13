@@ -27,6 +27,7 @@ import { wishesWallBlock } from './blocks/wishes-wall';
 import { auditionSignupBlock } from './blocks/audition-signup';
 import { eventSpotlightBlock } from './blocks/event-spotlight';
 import { imageBlock } from './blocks/image';
+import { footerBlock } from './blocks/footer';
 import { liturgicalCalendarBlock } from './blocks/liturgical-calendar';
 import { columnsBlock } from './blocks/columns';
 
@@ -48,6 +49,7 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [auditionSignupBlock.type]: auditionSignupBlock,
   [eventSpotlightBlock.type]: eventSpotlightBlock,
   [imageBlock.type]: imageBlock,
+  [footerBlock.type]: footerBlock,
   [liturgicalCalendarBlock.type]: liturgicalCalendarBlock,
   [contactBlock.type]: contactBlock,
   [donationsBlock.type]: donationsBlock,
