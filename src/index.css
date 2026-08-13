@@ -55,6 +55,15 @@
    of the content column: the header's colored bar and the hero's image both
    pad from the inside, so an outer gutter would inset the fill and break
    alignment with the padded blocks below. */
+/* Blocks nested in a Columns section must not re-apply the container —
+   the column already owns width + gutter. Universal descendant override
+   so EVERY block behaves, not just the ones taught individually
+   (Kevin, 2026-08-13: 'will this fix all blocks?'). */
+.gw-columns-section .gw-container {
+  max-width: 100%;
+  padding-inline: 0;
+}
+
 .gw-container-flush {
   width: 100%;
   max-width: var(--site-content-max, 72rem);
