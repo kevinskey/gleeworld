@@ -105,6 +105,41 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     ? `Approximate location: lat ${ctx.geo.lat.toFixed(4)}, lng ${ctx.geo.lng.toFixed(4)} (browser Geolocation).`
     : 'Approximate location: unknown (user has not granted geolocation permission — ask for a city / zip / "near X" when using find_nearby_place).';
   const pageTargets = ctx.navTargets?.length ? ctx.navTargets : LEGACY_PAGE_KEYS;
+  // What GleeWorld is, and every feature by its canonical name WITH the
+  // words members actually use for it (Kevin, 2026-08-13: "recording
+  // studio" must resolve to Studio, "Library" to Music Library, "the
+  // Viewer" to Viewer). Alias recognition feeds open_page/open_song
+  // resolution as much as Q&A. Tenant-neutral always — never name a
+  // specific school or program as if it were the platform.
+  const platformNote = [
+    'What GleeWorld is: an all-in-one platform for school and community music programs — each organization gets its own branded workspace with a shared music library, rehearsal tools, classes, calendars, events, and this assistant. When asked "what is GleeWorld" or "what can this do", answer conversationally from the feature list below, matched to what this workspace has enabled.',
+    'FEATURES — "Canonical name (what people also call it): what it is". Treat any alias as the canonical feature when opening pages, searching, or answering:',
+    '- Music Library (the Library, scores, sheet music): the shared score collection — browse, share, and open pieces.',
+    '- Viewer (the Viewer, music viewer, score viewer, score reader): the full-screen score reader open_song opens into; annotations, setlists, face-gesture page turns.',
+    '- Part Tracks (practice tracks, rehearsal tracks, part recordings): per-voice-part practice audio generated from a score, with a practice player (tempo, looping) and optical score analysis.',
+    '- Studio (recording studio, the DAW, multitrack): record, arrange, and mix — audio clips, MIDI editor, metronome, instruments.',
+    '- Glee Academy (Academy, classes, courses): courses with assignments, quizzes, attendance, grades, and syllabi.',
+    '- Sight Reading Studio (sight singing, sight reading practice): daily melodic/rhythmic reading drills with pitch + rhythm scoring.',
+    '- Reading Music (music literacy course): guided fundamentals with placement.',
+    '- Notation Editor (score editor, engraving): write and edit music notation in the browser.',
+    '- Songwriting (chord charts, songwriter tools): lyric + chord chart writing.',
+    '- Calendar (schedule, events): the organization calendar; classes, rehearsals, performances; Google Calendar overlay; QR attendance check-in.',
+    '- Planner (notes, tasks, to-dos): private notes and tasks — where create_note saves.',
+    '- Messages (messenger, chat, DMs): member-to-member and group messaging.',
+    '- Box Office (tickets, ticketing): event tickets — tiers, reservations, QR check-in, comps.',
+    '- Store (shop, merch, merchandise): the organization storefront.',
+    '- Travel Manager (trips, tours, permission slips): trip planning, itineraries, permission slips.',
+    '- Wardrobe (costumes, attire): wardrobe inventory and appointments.',
+    '- Finance (student fees, dues, invoices, payments): fee ledgers, invoices, stipends.',
+    '- Attendance (roll call, check-in): session attendance across classes and events.',
+    '- Seating Charts (seating, risers): drag-and-drop ensemble seating.',
+    '- Media Library (media, photos, videos gallery): uploaded media collections.',
+    '- Public Site (website, landing page, site builder, Site Setup): the organization\'s public website — pages, RSVP, auditions, wishes wall.',
+    '- My World (my space, my tools, nav setup): each member\'s personal navigation shelf and home layout.',
+    '- Command Center (dashboard, home, admin): the signed-in home surface.',
+    '- The Assistant (me): voice/text help across all of it — finding and opening scores, playing music, answering schedule and repertoire questions, saving notes.',
+    'Some features are add-ons a workspace may not have enabled — if a page says so, tell the user honestly rather than pretending it is missing from the platform.',
+  ].join('\n');
   const pagesNote = [
     'Pages you can open (open_page — pass `key` exactly as listed):',
     pageTargets.map((t) => `${t.key} (${t.label})`).join(', '),
@@ -307,6 +342,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     memberNote,
     memoryNote,
     choicesNote,
+    platformNote,
     pagesNote,
     liturgyNote,
     bibleNote,

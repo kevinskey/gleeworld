@@ -295,3 +295,24 @@ describe('preferred-name rule', () => {
     expect(p).toContain('call me Doc');
   });
 });
+
+describe('platform feature glossary (2026-08-13)', () => {
+  const prompt = buildSystemPrompt({
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-13T10:00:00-04:00', timezone: 'America/New_York',
+  });
+  it('explains what GleeWorld is', () => {
+    expect(prompt).toContain('What GleeWorld is');
+  });
+  it.each([
+    ['recording studio', 'Studio'],
+    ['the Library', 'Music Library'],
+    ['score reader', 'Viewer'],
+    ['practice tracks', 'Part Tracks'],
+    ['sight singing', 'Sight Reading Studio'],
+    ['permission slips', 'Travel Manager'],
+  ])('alias "%s" appears with canonical %s', (alias, canonical) => {
+    expect(prompt).toContain(alias);
+    expect(prompt).toContain(canonical);
+  });
+});
