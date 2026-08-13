@@ -16,12 +16,24 @@ const schema = z.object({
   /** Optional link the image points at (e.g. #rsvp). */
   linkUrl: z.string().default(''),
   rounded: z.boolean().default(true),
+  // Fill the parent column's height (object-cover crop) — for a tall
+  // poster beside a card that should match heights (Kevin, 2026-08-13).
+  cover: z.boolean().default(false),
 });
 type Config = z.infer<typeof schema>;
 
 function Render({ config }: BlockRenderProps<Config>) {
   if (!config.url) return null;
-  const img = (
+  const img = config.cover ? (
+    <span className="block relative h-full min-h-[380px]">
+      <img
+        src={config.url}
+        alt={config.alt}
+        className={`absolute inset-0 w-full h-full object-cover ${config.rounded ? 'rounded-xl' : ''}`}
+        loading="lazy"
+      />
+    </span>
+  ) : (
     <img
       src={config.url}
       alt={config.alt}
@@ -30,9 +42,9 @@ function Render({ config }: BlockRenderProps<Config>) {
     />
   );
   return (
-    <section className="max-w-6xl mx-auto w-full">
-      <figure>
-        {config.linkUrl ? <a href={config.linkUrl}>{img}</a> : img}
+    <section className={`max-w-6xl mx-auto w-full ${config.cover ? 'h-full' : ''}`}>
+      <figure className={config.cover ? 'h-full' : ''}>
+        {config.linkUrl ? <a href={config.linkUrl} className={config.cover ? 'block h-full' : ''}>{img}</a> : img}
         {config.caption && (
           <figcaption className="text-sm text-muted-foreground mt-2 text-center">{config.caption}</figcaption>
         )}

@@ -282,14 +282,14 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                 <Button
                   size="lg"
                   onClick={() => handleOpenChange(true)}
-                  className="mt-8 w-full font-semibold h-auto min-h-12 py-3 text-base whitespace-normal"
+                  className="mt-8 w-full font-bold h-auto min-h-20 py-6 text-2xl whitespace-normal"
                   style={{
                     background: 'var(--site-accent)',
                     color: 'var(--site-accent-foreground, #fff)',
                     borderRadius: 'var(--site-radius)',
                   }}
                 >
-                  <Ticket className="w-4 h-4 mr-2" />
+                  <Ticket className="w-7 h-7 mr-3" />
                   {config.buttonLabel}
                 </Button>
 
