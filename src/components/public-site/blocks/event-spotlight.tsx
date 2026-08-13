@@ -39,7 +39,7 @@ function Fermata({ color }: { color: string }) {
 function Render({ config }: BlockRenderProps<Config>) {
   const gold = config.accentColor || '#C9A227';
   return (
-    <section className="max-w-6xl mx-auto w-full h-full flex items-center">
+    <section className="gw-container h-full flex items-center">
       <div
         className="w-full rounded-sm border px-8 py-14 text-center"
         style={{ background: '#FDFBF6', borderColor: gold, color: '#131722' }}

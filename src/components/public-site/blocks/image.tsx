@@ -42,7 +42,7 @@ function Render({ config }: BlockRenderProps<Config>) {
     />
   );
   return (
-    <section className={`max-w-6xl mx-auto w-full ${config.cover ? 'h-full' : ''}`}>
+    <section className={`gw-container ${config.cover ? 'h-full' : ''}`}>
       <figure className={config.cover ? 'h-full' : ''}>
         {config.linkUrl ? <a href={config.linkUrl} className={config.cover ? 'block h-full' : ''}>{img}</a> : img}
         {config.caption && (
