@@ -19,20 +19,58 @@ import { SignInDialog } from '@/components/auth/SignInDialog';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const schema = z.object({
+  eyebrow: z.string().default('Auditions'),
   heading: z.string().default('Audition to Sing'),
   intro: z.string().default('Graduates and friends: join the choir for this concert. Tell us your voice part and when you sang, and we will be in touch.'),
   buttonLabel: z.string().default('Sign me up'),
   // Which parts the form offers — a treble choir lists S1/S2/A1/A2, a
   // mixed one adds Tenor/Bass. Editable per block instance.
   voiceParts: z.array(z.string()).default(['Soprano 1', 'Soprano 2', 'Alto 1', 'Alto 2', 'Tenor', 'Bass']),
+  // Show the live audition session (dates/times/location/requirements)
+  // beside the form — live data only, never placeholders.
+  showSessionInfo: z.boolean().default(true),
 });
 type Config = z.infer<typeof schema>;
 
 const DEFAULT_PARTS = ['Soprano 1', 'Soprano 2', 'Alto 1', 'Alto 2', 'Tenor', 'Bass'];
 
+interface LiveSessionInfo {
+  name: string | null; description: string | null; start_date: string | null;
+  audition_slots: Array<{ date: string; time?: string; location?: string }> | null;
+  location: string | null; requirements: string | null;
+  application_deadline: string | null;
+}
+
+function fmtDay(iso: string): string {
+  const d = new Date(`${iso}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function parseReqLines(text: string): Array<{ title: string; detail: string }> {
+  return text.split('\n').map((l) => l.trim()).filter(Boolean).map((line) => {
+    const m = line.match(/^(.{2,80}?)\s*(?:—|–|: |\s-\s)\s*(.+)$/);
+    return m ? { title: m[1], detail: m[2] } : { title: line, detail: '' };
+  });
+}
+
 function Render({ config, ctx }: BlockRenderProps<Config>) {
   // An emptied editor list must not brick the form (review 2026-08-13).
   const voiceParts = config.voiceParts.length ? config.voiceParts : DEFAULT_PARTS;
+  const { data: live } = useQuery<LiveSessionInfo | null>({
+    queryKey: ['public-audition-session', ctx.slug],
+    enabled: config.showSessionInfo,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc('get_public_audition_session', { p_slug: ctx.slug });
+      if (error) return null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return (row as LiveSessionInfo) ?? null;
+    },
+  });
+  const slots = (config.showSessionInfo && live?.audition_slots?.filter((s) => s.date)) || [];
+  const reqs = (config.showSessionInfo && live?.requirements?.trim()) ? parseReqLines(live.requirements) : [];
+  const hasInfo = !!(slots.length || reqs.length || live?.location || live?.start_date);
   const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null));
@@ -91,13 +129,56 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
   return (
     <section id="audition-signup" className="max-w-6xl mx-auto w-full px-4">
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold mb-2">{config.heading}</h2>
-        {config.intro && <p className="text-muted-foreground">{config.intro}</p>}
+      <div className="mb-6">
+        {config.eyebrow && (
+          <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--site-accent)', letterSpacing: '0.24em' }}>
+            {config.eyebrow}
+          </p>
+        )}
+        <h2 className="text-3xl cq-sm:text-4xl font-bold leading-tight">{config.heading}</h2>
+        {config.intro && <p className="text-muted-foreground mt-2 max-w-2xl">{config.intro}</p>}
       </div>
 
+      <div className={hasInfo ? 'grid gap-5 cq-lg:grid-cols-[2fr_3fr] items-start' : ''}>
+      {hasInfo && (
+        <div className="rounded-xl border border-border bg-white/60 p-4 space-y-4 text-left">
+          {live?.start_date && (
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Performance</p>
+              <p className="font-semibold text-sm mt-0.5">{fmtDay(live.start_date)}{live?.location ? ` · ${live.location}` : ''}</p>
+            </div>
+          )}
+          {slots.length > 0 && (
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Audition dates</p>
+              <ul className="mt-1 space-y-1">
+                {slots.map((s, i) => (
+                  <li key={i} className="text-sm">
+                    <span className="font-medium">{fmtDay(s.date)}</span>
+                    <span className="text-muted-foreground">{[s.time, s.location].filter(Boolean).map((x) => ` · ${x}`).join('')}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {reqs.length > 0 && (
+            <div>
+              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">What to prepare</p>
+              <ol className="mt-1 space-y-1 list-decimal list-inside">
+                {reqs.map((r, i) => (
+                  <li key={i} className="text-sm">
+                    <span className="font-medium">{r.title}</span>
+                    {r.detail && <span className="text-muted-foreground"> — {r.detail}</span>}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </div>
+      )}
+      <div>
       {!userId ? (
-        <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
           <button type="button" className="underline font-medium" onClick={() => setSignInOpen(true)}>Sign in</button> to sign up to audition.
           <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
         </div>
@@ -151,6 +232,8 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           </div>
         </form>
       )}
+      </div>
+      </div>
     </section>
   );
 }
