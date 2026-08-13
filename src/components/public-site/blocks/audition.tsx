@@ -155,7 +155,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   if (noContent) return null;
 
   return (
-    <section id="auditions" className="max-w-6xl mx-auto w-full">
+    <section id="auditions" className="gw-container">
       <div className="px-4 cq-sm:px-6 py-10 cq-sm:py-14">
         {/* `cq-*` (container queries against `.gw-site`), not `sm:`/`lg:`, so
             the builder's phone preview stacks like a phone instead of laying

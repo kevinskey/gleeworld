@@ -129,14 +129,14 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
   return (
     <section id="audition-signup" className="w-full border-y" style={{ background: 'color-mix(in oklab, var(--site-accent) 6%, transparent)', borderColor: 'color-mix(in oklab, var(--site-accent) 22%, transparent)' }}>
-      <div className="max-w-6xl mx-auto w-full px-4">
+      <div className="gw-container">
       <div className="mb-6">
         {config.eyebrow && (
           <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--site-accent)', letterSpacing: '0.24em' }}>
             {config.eyebrow}
           </p>
         )}
-        <h2 className="text-3xl cq-sm:text-4xl font-bold leading-tight">{config.heading}</h2>
+        <h2 className="text-3xl cq-sm:text-4xl font-bold leading-tight" style={{ fontFamily: 'var(--site-heading-font)' }}>{config.heading}</h2>
         {config.intro && <p className="text-muted-foreground mt-2 max-w-2xl">{config.intro}</p>}
       </div>
 
@@ -180,7 +180,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
       <div>
       {!userId ? (
         <div className="rounded-xl border border-dashed border-border p-6 text-center text-lg text-foreground">
-          <button type="button" className="underline font-bold" style={{ color: 'var(--site-accent)' }} onClick={() => setSignInOpen(true)}>Sign in</button> to sign up to audition.
+          <button type="button" className="underline font-bold" style={{ color: 'var(--site-accent)' }} onClick={() => setSignInOpen(true)}>Create an account or sign in</button> to audition.
           <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
         </div>
       ) : submit.isSuccess ? (

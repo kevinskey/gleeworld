@@ -139,125 +139,165 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   });
 
   return (
-    <section id="wishes" className="w-full border-y" style={{ background: 'color-mix(in oklab, var(--site-heading, #131722) 3%, transparent)', borderColor: 'color-mix(in oklab, var(--site-heading, #131722) 12%, transparent)' }}>
-      <div className="max-w-6xl mx-auto w-full px-4">
-      <div className="mb-6">
-        {config.eyebrow && (
-          <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--site-accent)', letterSpacing: '0.24em' }}>
-            {config.eyebrow}
-          </p>
-        )}
-        <h2 className="text-3xl cq-sm:text-4xl font-bold leading-tight">{config.heading}</h2>
-        {config.intro && <p className="text-muted-foreground mt-2 max-w-2xl">{config.intro}</p>}
-        <div className="mt-5 flex flex-wrap gap-3">
-          {config.postCtaLabel && (
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 px-7 py-3.5 text-base font-semibold text-white"
-              style={{ background: '#131722', borderRadius: 'var(--site-radius)' }}
-              onClick={() => {
-                if (!userId) { setSignInOpen(true); return; }
-                composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                composerRef.current?.focus();
-              }}
-            >
-              <Heart className="w-4 h-4" style={{ color: 'var(--site-accent)' }} />
-              {config.postCtaLabel}
-            </button>
+    <section
+      id="wishes"
+      className="w-full border-y"
+      style={{
+        background: '#FDFBF6',
+        borderColor: 'color-mix(in oklab, var(--site-accent) 25%, transparent)',
+      }}
+    >
+      <div className="gw-container">
+        {/* Ceremonial centered header — the guest book is a page of the same
+            program as the Event Card (UI audit, 2026-08-13). */}
+        <div className="text-center mb-8">
+          {config.eyebrow && (
+            <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--site-accent)', letterSpacing: '0.24em' }}>
+              {config.eyebrow}
+            </p>
           )}
-          {config.giftLabel && config.giftUrl && (
-            <a
-              href={config.giftUrl}
-              className="inline-flex items-center gap-2 px-7 py-3.5 text-base font-semibold border-2"
-              style={{ color: 'var(--site-accent)', borderColor: 'var(--site-accent)', borderRadius: 'var(--site-radius)' }}
-            >
-              {config.giftLabel}
-            </a>
-          )}
-        </div>
-      </div>
-
-      {userId ? (
-        <form
-          className="mb-10 rounded-xl border border-border bg-white p-4 space-y-3"
-          onSubmit={(e) => { e.preventDefault(); post.mutate(); }}
-        >
-          <Label className="font-medium">{config.composerLabel}</Label>
-          <Textarea
-            ref={composerRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            maxLength={1000}
-            rows={3}
-            placeholder="Your message…"
-            required
-          />
-          <div className="flex flex-wrap items-center gap-3">
-            <Input
-              value={classYear}
-              onChange={(e) => setClassYear(e.target.value)}
-              placeholder={config.classYearLabel}
-              className="max-w-[180px]"
-              maxLength={20}
-            />
-            <Button type="submit" disabled={post.isPending || !message.trim()}>
-              {post.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Heart className="w-4 h-4 mr-2" />}
-              Post to the wall
-            </Button>
-            {post.isError && (
-              <span className="text-sm text-destructive">{(post.error as Error).message}</span>
-            )}
+          <h2 className="text-4xl cq-sm:text-5xl font-bold leading-tight" style={{ fontFamily: 'var(--site-heading-font)' }}>
+            {config.heading}
+          </h2>
+          {config.intro && <p className="text-muted-foreground mt-3 max-w-2xl mx-auto text-base">{config.intro}</p>}
+          <div className="mt-6 mx-auto max-w-sm flex items-center gap-4" aria-hidden="true">
+            <span className="h-px flex-1" style={{ background: 'var(--site-accent)', opacity: 0.4 }} />
+            <span className="h-px w-10" style={{ background: 'var(--site-accent)' }} />
+            <span className="h-px flex-1" style={{ background: 'var(--site-accent)', opacity: 0.4 }} />
           </div>
-        </form>
-      ) : (
-        <div className="mb-10 rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-          <button type="button" className="underline font-medium" onClick={() => setSignInOpen(true)}>Sign in</button> to add your message to the wall.
-          <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
         </div>
-      )}
 
-      {isLoading ? (
-        <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
-      ) : posts.length === 0 ? (
-        <p className="text-center text-sm text-muted-foreground py-6">Be the first to leave a message.</p>
-      ) : (
-        <div className="columns-1 cq-sm:columns-2 gap-4 [&>*]:break-inside-avoid">
-          {posts.map((p) => (
-            <div
-              key={p.id}
-              className={`mb-4 rounded-xl border border-border bg-white p-4 shadow-sm ${p.hidden ? 'opacity-40' : ''}`}
-            >
-              <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{p.message}</p>
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <p className="text-sm font-medium">
-                  {p.display_name}
-                  {p.class_year && <span className="text-muted-foreground font-normal"> · {p.class_year}</span>}
-                </p>
-                <div className="flex gap-1">
-                  {isAdmin && (
-                    <button
-                      type="button"
-                      className="text-xs text-muted-foreground underline"
-                      onClick={() => setHidden.mutate({ id: p.id, hidden: !p.hidden })}
-                    >
-                      {p.hidden ? 'Unhide' : 'Hide'}
-                    </button>
-                  )}
-                  {userId === p.user_id && (
-                    <button
-                      type="button"
-                      className="text-xs text-muted-foreground underline"
-                      onClick={() => removeOwn.mutate(p.id)}
-                    >
-                      Delete
-                    </button>
-                  )}
+        {/* One card, one CTA slot — content swaps by session state, the
+            structure never does. */}
+        <div
+          className="mx-auto max-w-2xl bg-white border p-6 cq-sm:p-8"
+          style={{
+            borderColor: 'color-mix(in oklab, var(--site-accent) 35%, transparent)',
+            borderRadius: 'var(--site-radius)',
+          }}
+        >
+          {!userId ? (
+            <div className="text-center space-y-4">
+              <Heart className="w-7 h-7 mx-auto" style={{ color: 'var(--site-accent)' }} />
+              <p className="text-base">
+                {posts.length === 0
+                  ? 'Be the first to sign the wall — create an account or sign in to leave a word.'
+                  : 'Create an account or sign in to add your message to the wall.'}
+              </p>
+              <div className="flex flex-wrap justify-center gap-3">
+                <Button
+                  className="px-7 py-6 text-base font-semibold text-white"
+                  style={{ background: '#131722', borderRadius: 'var(--site-radius)' }}
+                  onClick={() => setSignInOpen(true)}
+                >
+                  <Heart className="w-4 h-4 mr-2" style={{ color: 'var(--site-accent)' }} />
+                  {config.postCtaLabel || 'Post a statement'}
+                </Button>
+                {config.giftLabel && config.giftUrl && (
+                  <a
+                    href={config.giftUrl}
+                    className="inline-flex items-center px-7 py-3.5 text-base font-semibold border-2"
+                    style={{ color: 'var(--site-accent)', borderColor: 'var(--site-accent)', borderRadius: 'var(--site-radius)' }}
+                  >
+                    {config.giftLabel}
+                  </a>
+                )}
+              </div>
+              <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
+            </div>
+          ) : (
+            <form className="space-y-3" onSubmit={(e) => { e.preventDefault(); post.mutate(); }}>
+              {posts.length === 0 && (
+                <p className="text-center text-base font-medium">Be the first to sign the wall.</p>
+              )}
+              <Label className="font-medium">{config.composerLabel}</Label>
+              <Textarea
+                ref={composerRef}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                maxLength={1000}
+                rows={3}
+                placeholder="Your message…"
+                required
+              />
+              <div className="flex flex-wrap items-center gap-3">
+                <Input
+                  value={classYear}
+                  onChange={(e) => setClassYear(e.target.value)}
+                  placeholder={config.classYearLabel}
+                  className="max-w-[180px]"
+                  maxLength={20}
+                />
+                <Button
+                  type="submit"
+                  disabled={post.isPending || !message.trim()}
+                  className="font-semibold text-white"
+                  style={{ background: '#131722', borderRadius: 'var(--site-radius)' }}
+                >
+                  {post.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Heart className="w-4 h-4 mr-2" style={{ color: 'var(--site-accent)' }} />}
+                  Post to the wall
+                </Button>
+                {config.giftLabel && config.giftUrl && (
+                  <a
+                    href={config.giftUrl}
+                    className="inline-flex items-center px-5 py-2.5 text-sm font-semibold border-2"
+                    style={{ color: 'var(--site-accent)', borderColor: 'var(--site-accent)', borderRadius: 'var(--site-radius)' }}
+                  >
+                    {config.giftLabel}
+                  </a>
+                )}
+                {post.isError && (
+                  <span className="text-sm text-destructive">{(post.error as Error).message}</span>
+                )}
+              </div>
+            </form>
+          )}
+        </div>
+
+        {isLoading ? (
+          <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+        ) : posts.length > 0 && (
+          <div className="mt-8 columns-1 cq-sm:columns-2 gap-4 [&>*]:break-inside-avoid">
+            {posts.map((p) => (
+              <div
+                key={p.id}
+                className={`mb-4 bg-white border p-5 ${p.hidden ? 'opacity-40' : ''}`}
+                style={{
+                  borderColor: 'color-mix(in oklab, var(--site-accent) 25%, transparent)',
+                  borderRadius: 'var(--site-radius)',
+                }}
+              >
+                <p className="whitespace-pre-wrap text-base leading-relaxed">{p.message}</p>
+                <div className="mt-4 flex items-center justify-between gap-2">
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+                    {p.display_name}
+                    {p.class_year && <span> · {p.class_year}</span>}
+                  </p>
+                  <div className="flex gap-2">
+                    {isAdmin && (
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground underline"
+                        onClick={() => setHidden.mutate({ id: p.id, hidden: !p.hidden })}
+                      >
+                        {p.hidden ? 'Unhide' : 'Hide'}
+                      </button>
+                    )}
+                    {userId === p.user_id && (
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground underline"
+                        onClick={() => removeOwn.mutate(p.id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
