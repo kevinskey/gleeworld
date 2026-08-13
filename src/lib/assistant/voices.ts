@@ -109,15 +109,15 @@ export function useMyAssistantVoice() {
     queryFn: async (): Promise<string | null> => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from('user_preferences')
-        .select('assistant_voice_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      // A missing column or row is "no personal choice", not an error worth
-      // surfacing — the tenant voice still applies.
+      // Tenant-blind read (get_nav_prefs, SECURITY DEFINER): the row is
+      // UNIQUE(user_id) and tenant-stamped by saves, so a direct select
+      // went blind from any other tenant — the voice looked unsaved
+      // (2026-08-13, same disease as the nav-prefs first-run loop).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc('get_nav_prefs');
       if (error) return null;
-      return (data as { assistant_voice_id?: string | null } | null)?.assistant_voice_id ?? null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return (row as { assistant_voice_id?: string | null } | null)?.assistant_voice_id ?? null;
     },
   });
 
@@ -127,14 +127,11 @@ export function useMyAssistantVoice() {
       if (!user?.id) throw new Error('Not signed in.');
       // .select() and check the error: silent write failures have bitten this
       // codebase before on demo tenants.
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert(
-          { user_id: user.id, assistant_voice_id: voiceId },
-          { onConflict: 'user_id' },
-        )
-        .select('user_id')
-        .single();
+      // SECURITY DEFINER save: a direct upsert 403s on the RESTRICTIVE
+      // tenant policy whenever the row is stamped to another tenant —
+      // "voices won't change and save" (2026-08-13).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).rpc('save_assistant_voice', { p_voice_id: voiceId });
       if (error) throw error;
     },
     onSuccess: () => {
