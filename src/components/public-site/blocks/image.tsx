@@ -22,7 +22,7 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, ctx }: BlockRenderProps<Config>) {
   if (!config.url) return null;
   const img = config.cover ? (
     <span className="block relative h-full min-h-[380px]">
@@ -42,7 +42,7 @@ function Render({ config }: BlockRenderProps<Config>) {
     />
   );
   return (
-    <section className={`gw-container ${config.cover ? 'h-full' : ''}`}>
+    <section className={`${ctx.inColumn ? 'w-full' : 'gw-container'} ${config.cover ? 'h-full' : ''}`}>
       <figure className={config.cover ? 'h-full' : ''}>
         {config.linkUrl ? <a href={config.linkUrl} className={config.cover ? 'block h-full' : ''}>{img}</a> : img}
         {config.caption && (

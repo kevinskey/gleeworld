@@ -179,8 +179,8 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
       style={{ paddingTop: 'env(safe-area-inset-top)', color: linkColor, background: 'var(--site-primary)' }}
     >
       <div
-        className="flex items-center justify-between gap-4 px-4 cq-sm:px-6"
-        style={{ height: barHeight }}
+        className="flex items-center justify-between gap-4"
+        style={{ height: barHeight, paddingInline: 'var(--site-gutter, clamp(1rem, 4vw, 1.5rem))' }}
       >
         {/* In the editor, unwrap the <a href="#top"> so clicking the site
             name places a caret instead of jump-scrolling. The placeholder is
