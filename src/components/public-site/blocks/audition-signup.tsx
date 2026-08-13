@@ -141,20 +141,20 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
       <div className={hasInfo ? 'grid gap-5 cq-lg:grid-cols-[2fr_3fr] items-start' : ''}>
       {hasInfo && (
-        <div className="rounded-xl border border-border bg-white/60 p-4 space-y-4 text-left">
+        <div className="rounded-xl border border-border bg-white/60 p-5 space-y-5 text-left">
           {live?.start_date && (
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Performance</p>
-              <p className="font-semibold text-sm mt-0.5">{fmtDay(live.start_date)}{live?.location ? ` · ${live.location}` : ''}</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Performance</p>
+              <p className="font-semibold text-lg mt-0.5">{fmtDay(live.start_date)}{live?.location ? ` · ${live.location}` : ''}</p>
             </div>
           )}
           {slots.length > 0 && (
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">Audition dates</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Audition dates</p>
               <ul className="mt-1 space-y-1">
                 {slots.map((s, i) => (
-                  <li key={i} className="text-sm">
-                    <span className="font-medium">{fmtDay(s.date)}</span>
+                  <li key={i} className="text-base">
+                    <span className="font-semibold">{fmtDay(s.date)}</span>
                     <span className="text-muted-foreground">{[s.time, s.location].filter(Boolean).map((x) => ` · ${x}`).join('')}</span>
                   </li>
                 ))}
@@ -163,11 +163,11 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           )}
           {reqs.length > 0 && (
             <div>
-              <p className="text-[11px] uppercase tracking-widest text-muted-foreground">What to prepare</p>
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">What to prepare</p>
               <ol className="mt-1 space-y-1 list-decimal list-inside">
                 {reqs.map((r, i) => (
-                  <li key={i} className="text-sm">
-                    <span className="font-medium">{r.title}</span>
+                  <li key={i} className="text-base">
+                    <span className="font-semibold">{r.title}</span>
                     {r.detail && <span className="text-muted-foreground"> — {r.detail}</span>}
                   </li>
                 ))}
@@ -178,7 +178,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
       )}
       <div>
       {!userId ? (
-        <div className="rounded-xl border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border border-dashed border-border p-5 text-center text-base text-muted-foreground">
           <button type="button" className="underline font-medium" onClick={() => setSignInOpen(true)}>Sign in</button> to sign up to audition.
           <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
         </div>
