@@ -219,7 +219,9 @@ export const AuditionsManagement = () => {
     application_deadline: "",
     audition_dates: [""],
     max_applicants: "",
-    requirements: ""
+    requirements: "",
+    location: "",
+    time_label: ""
   });
 
   // State for collapsible sections
@@ -519,7 +521,9 @@ export const AuditionsManagement = () => {
         application_deadline: "",
         audition_dates: [""],
         max_applicants: "",
-        requirements: ""
+        requirements: "",
+        location: "",
+        time_label: ""
       });
 
       fetchData();
@@ -1320,6 +1324,24 @@ export const AuditionsManagement = () => {
                     onChange={(e) => setNewSession({...newSession, end_date: e.target.value})}
                   />
                 </div>
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={newSession.location}
+                    onChange={(e) => setNewSession({...newSession, location: e.target.value})}
+                    placeholder="Music Building, Rm 210"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="time_label">Time</Label>
+                  <Input
+                    id="time_label"
+                    value={newSession.time_label}
+                    onChange={(e) => setNewSession({...newSession, time_label: e.target.value})}
+                    placeholder="10am – 2pm"
+                  />
+                </div>
                 <div className="md:col-span-2">
                   <Label htmlFor="application_deadline">Application Deadline</Label>
                   <Input
@@ -1347,7 +1369,7 @@ export const AuditionsManagement = () => {
                   id="requirements"
                   value={newSession.requirements}
                   onChange={(e) => setNewSession({...newSession, requirements: e.target.value})}
-                  placeholder="List audition requirements..."
+                  placeholder={"One per line, shown on your public site as numbered cards:\nOne prepared piece — any style, three minutes or fewer\nSight-singing — a brief passage in a major or minor key"}
                 />
               </div>
 

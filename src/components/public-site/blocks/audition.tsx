@@ -28,6 +28,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const schema = z.object({
@@ -55,6 +57,10 @@ const schema = z.object({
     )
     .default([]),
   parts: z.array(z.string()).default([]),
+  // True = the block reads the ACTIVE session from the Auditions module
+  // (Sessions tab) — the director's scheduling backend — and the manual
+  // fields above become fallbacks. (Kevin, 2026-08-13.)
+  useSession: z.boolean().default(false),
 });
 type Config = z.infer<typeof schema>;
 
@@ -62,7 +68,60 @@ type Config = z.infer<typeof schema>;
 // intentional. Cycles through four music-education glyphs.
 const REQUIREMENT_ICONS = [Book, Mic, ListChecks, Sparkles] as const;
 
-function Render({ config }: BlockRenderProps<Config>) {
+interface LiveSession {
+  name: string | null; description: string | null; start_date: string | null;
+  audition_dates: string[] | null; application_deadline: string | null;
+  location: string | null; time_label: string | null; requirements: string | null;
+}
+
+/** "One prepared piece — any style, three minutes" → {title, detail}.
+ *  Accepts —, –, -, or : as the separator; a bare line is title-only. */
+function parseRequirementLines(text: string): Array<{ title: string; detail: string }> {
+  return text.split('\n').map((l) => l.trim()).filter(Boolean).map((line) => {
+    const m = line.match(/^(.{2,80}?)\s*(?:—|–|:|\s-\s)\s*(.+)$/);
+    return m ? { title: m[1], detail: m[2] } : { title: line, detail: '' };
+  });
+}
+
+function fmtSessionDate(s: LiveSession): string {
+  const dates = (s.audition_dates ?? []).filter(Boolean);
+  if (dates.length) return dates.join(' · ');
+  if (!s.start_date) return '';
+  const d = new Date(`${s.start_date}T12:00:00`);
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function Render({ config, ctx }: BlockRenderProps<Config>) {
+  // Live mode: the active session from the Auditions module wins over the
+  // manual fields; each field falls back independently so a half-filled
+  // session still renders a complete block.
+  const { data: live } = useQuery<LiveSession | null>({
+    queryKey: ['public-audition-session', ctx.slug],
+    enabled: config.useSession,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc('get_public_audition_session', { p_slug: ctx.slug });
+      if (error) return null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return (row as LiveSession) ?? null;
+    },
+  });
+  if (config.useSession && live) {
+    config = {
+      ...config,
+      heading: live.name || config.heading,
+      intro: live.description || config.intro,
+      session: {
+        dateLabel: fmtSessionDate(live) || config.session.dateLabel,
+        timeLabel: live.time_label || config.session.timeLabel,
+        location: live.location || config.session.location,
+      },
+      requirements: live.requirements?.trim()
+        ? parseRequirementLines(live.requirements)
+        : config.requirements,
+    };
+  }
   const hasSession = !!(
     config.session.dateLabel ||
     config.session.timeLabel ||
@@ -310,6 +369,21 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
 
   return (
     <div className="space-y-4">
+      <label className="flex items-start gap-2 rounded-md border border-border p-3 text-sm">
+        <input
+          type="checkbox"
+          className="mt-0.5"
+          checked={config.useSession}
+          onChange={(e) => set({ useSession: e.target.checked })}
+        />
+        <span>
+          <span className="font-medium">Use the live audition session</span>
+          <span className="block text-xs text-muted-foreground">
+            Pulls the active session from Auditions → Sessions (name, dates, time, location, requirements).
+            Schedule there; this page updates itself. Fields below fill any gaps.
+          </span>
+        </span>
+      </label>
       <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-2">
         <div className="space-y-1.5">
           <Label>Eyebrow</Label>
