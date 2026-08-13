@@ -79,7 +79,9 @@ interface LiveSession {
  *  Accepts —, –, -, or : as the separator; a bare line is title-only. */
 function parseRequirementLines(text: string): Array<{ title: string; detail: string }> {
   return text.split('\n').map((l) => l.trim()).filter(Boolean).map((line) => {
-    const m = line.match(/^(.{2,80}?)\s*(?:—|–|:|\s-\s)\s*(.+)$/);
+    // ': ' needs the space — bare colons appear in clock times and URLs
+    // ('Doors open 7:30'), which must not split (review 2026-08-13).
+    const m = line.match(/^(.{2,80}?)\s*(?:—|–|: |\s-\s)\s*(.+)$/);
     return m ? { title: m[1], detail: m[2] } : { title: line, detail: '' };
   });
 }

@@ -28,7 +28,11 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+const DEFAULT_PARTS = ['Soprano 1', 'Soprano 2', 'Alto 1', 'Alto 2', 'Tenor', 'Bass'];
+
+function Render({ config, ctx }: BlockRenderProps<Config>) {
+  // An emptied editor list must not brick the form (review 2026-08-13).
+  const voiceParts = config.voiceParts.length ? config.voiceParts : DEFAULT_PARTS;
   const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null));
@@ -45,15 +49,15 @@ function Render({ config }: BlockRenderProps<Config>) {
   // Pre-fill from an existing signup so re-opening the page shows what was
   // submitted (and makes the upsert semantics visible to the user).
   const { data: existing } = useQuery({
-    queryKey: ['audition-signup', userId],
+    queryKey: ['audition-signup', ctx.slug, userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('gw_audition_signups' as never)
-        .select('voice_part, era, phone, note')
-        .eq('user_id', userId!)
-        .maybeSingle();
-      return data as { voice_part: string; era: string | null; phone: string | null; note: string | null } | null;
+      // Slug-resolved RPC: a direct select is tenant-walled and misses the
+      // signup for members homed on another tenant (review 2026-08-13).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any).rpc('get_my_audition_signup', { p_slug: ctx.slug });
+      const row = Array.isArray(data) ? data[0] : data;
+      return (row as { voice_part: string; era: string | null; phone: string | null; note: string | null } | null) ?? null;
     },
   });
   useEffect(() => {
@@ -70,17 +74,17 @@ function Render({ config }: BlockRenderProps<Config>) {
       const { data: session } = await supabase.auth.getSession();
       const user = session.session?.user;
       if (!user) throw new Error('Sign in to audition.');
-      const { error } = await supabase.from('gw_audition_signups' as never).upsert(
-        {
-          user_id: user.id,
-          voice_part: voicePart,
-          era: era.trim() || null,
-          phone: phone.trim() || null,
-          note: note.trim() || null,
-          updated_at: new Date().toISOString(),
-        } as never,
-        { onConflict: 'tenant_id,user_id' } as never,
-      );
+      // Tenant comes from the PAGE slug, server-side — a signed-in visitor
+      // homed on another tenant must not file into their own (review
+      // 2026-08-13, finding 1).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).rpc('submit_audition_signup', {
+        p_slug: ctx.slug,
+        p_voice_part: voicePart,
+        p_era: era.trim() || null,
+        p_phone: phone.trim() || null,
+        p_note: note.trim() || null,
+      });
       if (error) throw error;
     },
   });
@@ -111,7 +115,7 @@ function Render({ config }: BlockRenderProps<Config>) {
           <div className="space-y-1.5">
             <Label>Voice part</Label>
             <div className="flex flex-wrap gap-2">
-              {config.voiceParts.map((p) => (
+              {voiceParts.map((p) => (
                 <Button
                   key={p}
                   type="button"
