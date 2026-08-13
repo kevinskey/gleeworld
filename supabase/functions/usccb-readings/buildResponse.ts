@@ -10,12 +10,16 @@
 // Vitest with a stubbed Supabase client, matching the
 // supabase/functions/event-share/runShare.ts pattern.
 //
-// Citation parsing lives in exactly one place — src/lib/prayer/citation.ts —
-// per the Phase 1 plan. scripts/import-litcal.mjs and import-webce.mjs
-// already reach from outside supabase/ into src/lib/prayer the same way;
-// this is the same cross-directory import applied to an edge function.
+// Citation parsing lives in exactly one place conceptually (the parser logic
+// itself), but is DUPLICATED on disk into supabase/functions/_shared/prayer/
+// rather than imported across the supabase/ boundary from src/lib/prayer/ —
+// Deno's edge runtime requires explicit .ts extensions on relative imports,
+// which the Vite-built frontend copy doesn't use, and there's no verified
+// precedent in this repo for a deployed edge function reaching into src/lib.
+// citation.driftguard.test.ts guards the two copies against silently
+// disagreeing.
 
-import { parseCitation } from '../../../src/lib/prayer/citation.ts';
+import { parseCitation } from '../_shared/prayer/citation.ts';
 
 export interface ReadingBlock {
   heading: string;

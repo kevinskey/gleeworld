@@ -1,0 +1,248 @@
+// Deno-runtime mirror of src/lib/prayer/books.ts.
+//
+// Edge functions cannot import from src/lib/: Deno's module resolution
+// requires every relative specifier to carry an explicit extension, which
+// the frontend copy (consumed by Vite) intentionally omits, and this
+// codebase has no established pattern for crossing the supabase/functions
+// boundary into src/ for a deployed edge function (scripts/import-litcal.mjs
+// is a Node import script, not something Supabase deploys). Duplicating a
+// ~230-line, dependency-free file is a smaller risk than an unverified
+// cross-boundary import in a runtime this repo's tooling cannot exercise
+// locally.
+//
+// Kept byte-identical to the frontend copy on purpose. A drift guard —
+// supabase/functions/_shared/prayer/citation.driftguard.test.ts — runs both
+// copies against the same corpus and fails if they disagree. If you change
+// src/lib/prayer/books.ts, change this file the same way.
+
+export interface BookRef {
+  usfmCode: string;
+  singleChapter: boolean;
+}
+
+const SINGLE_CHAPTER_CODES = new Set(['OBA', 'PHM', '2JN', '3JN', 'JUD']);
+
+// Canonical name -> USFM code, covering all 73 WEBCE books (46 OT incl.
+// deuterocanon, 27 NT). Numbered books are keyed under their digit form
+// ("1 kings"); word-form aliases ("first kings") are added below.
+const CANONICAL: Record<string, string> = {
+  // Pentateuch
+  genesis: 'GEN',
+  exodus: 'EXO',
+  leviticus: 'LEV',
+  numbers: 'NUM',
+  deuteronomy: 'DEU',
+  // Historical
+  joshua: 'JOS',
+  judges: 'JDG',
+  ruth: 'RUT',
+  '1 samuel': '1SA',
+  '2 samuel': '2SA',
+  '1 kings': '1KI',
+  '2 kings': '2KI',
+  '1 chronicles': '1CH',
+  '2 chronicles': '2CH',
+  ezra: 'EZR',
+  nehemiah: 'NEH',
+  tobit: 'TOB',
+  judith: 'JDT',
+  esther: 'EST',
+  '1 maccabees': '1MA',
+  '2 maccabees': '2MA',
+  // Wisdom
+  job: 'JOB',
+  psalm: 'PSA',
+  psalms: 'PSA',
+  proverbs: 'PRO',
+  ecclesiastes: 'ECC',
+  'song of songs': 'SNG',
+  'song of solomon': 'SNG',
+  canticle: 'SNG',
+  'canticle of canticles': 'SNG',
+  wisdom: 'WIS',
+  sirach: 'SIR',
+  ecclesiasticus: 'SIR',
+  // Prophets
+  isaiah: 'ISA',
+  jeremiah: 'JER',
+  lamentations: 'LAM',
+  baruch: 'BAR',
+  ezekiel: 'EZK',
+  daniel: 'DAN',
+  hosea: 'HOS',
+  joel: 'JOL',
+  amos: 'AMO',
+  obadiah: 'OBA',
+  jonah: 'JON',
+  micah: 'MIC',
+  nahum: 'NAM',
+  habakkuk: 'HAB',
+  zephaniah: 'ZEP',
+  haggai: 'HAG',
+  zechariah: 'ZEC',
+  malachi: 'MAL',
+  // Gospels / Acts
+  matthew: 'MAT',
+  mark: 'MRK',
+  luke: 'LUK',
+  john: 'JHN',
+  acts: 'ACT',
+  // Pauline + General epistles
+  romans: 'ROM',
+  '1 corinthians': '1CO',
+  '2 corinthians': '2CO',
+  galatians: 'GAL',
+  ephesians: 'EPH',
+  philippians: 'PHP',
+  colossians: 'COL',
+  '1 thessalonians': '1TH',
+  '2 thessalonians': '2TH',
+  '1 timothy': '1TI',
+  '2 timothy': '2TI',
+  titus: 'TIT',
+  philemon: 'PHM',
+  hebrews: 'HEB',
+  james: 'JAS',
+  '1 peter': '1PE',
+  '2 peter': '2PE',
+  '1 john': '1JN',
+  '2 john': '2JN',
+  '3 john': '3JN',
+  jude: 'JUD',
+  revelation: 'REV',
+  apocalypse: 'REV',
+};
+
+// Common abbreviations seen in lectionary citations. Maps to the same
+// canonical keys above so single-chapter/USFM lookup stays in one place.
+const ABBREVIATIONS: Record<string, string> = {
+  gen: 'genesis',
+  gn: 'genesis',
+  ex: 'exodus',
+  exod: 'exodus',
+  lev: 'leviticus',
+  lv: 'leviticus',
+  num: 'numbers',
+  nm: 'numbers',
+  deut: 'deuteronomy',
+  dt: 'deuteronomy',
+  josh: 'joshua',
+  jos: 'joshua',
+  judg: 'judges',
+  jdg: 'judges',
+  rut: 'ruth',
+  '1 sam': '1 samuel',
+  '2 sam': '2 samuel',
+  '1 kgs': '1 kings',
+  '2 kgs': '2 kings',
+  '1 chr': '1 chronicles',
+  '2 chr': '2 chronicles',
+  '1 chron': '1 chronicles',
+  '2 chron': '2 chronicles',
+  ezr: 'ezra',
+  neh: 'nehemiah',
+  tob: 'tobit',
+  jdt: 'judith',
+  jth: 'judith',
+  est: 'esther',
+  '1 mac': '1 maccabees',
+  '2 mac': '2 maccabees',
+  '1 macc': '1 maccabees',
+  '2 macc': '2 maccabees',
+  jb: 'job',
+  ps: 'psalm',
+  psa: 'psalm',
+  pss: 'psalms',
+  prov: 'proverbs',
+  prv: 'proverbs',
+  eccl: 'ecclesiastes',
+  eccles: 'ecclesiastes',
+  qoh: 'ecclesiastes',
+  sg: 'song of songs',
+  wis: 'wisdom',
+  sir: 'sirach',
+  ecclus: 'sirach',
+  isa: 'isaiah',
+  is: 'isaiah',
+  jer: 'jeremiah',
+  lam: 'lamentations',
+  bar: 'baruch',
+  ezek: 'ezekiel',
+  ez: 'ezekiel',
+  dan: 'daniel',
+  dn: 'daniel',
+  hos: 'hosea',
+  jl: 'joel',
+  am: 'amos',
+  obad: 'obadiah',
+  ob: 'obadiah',
+  jon: 'jonah',
+  mic: 'micah',
+  nah: 'nahum',
+  hab: 'habakkuk',
+  zeph: 'zephaniah',
+  zep: 'zephaniah',
+  hag: 'haggai',
+  zech: 'zechariah',
+  zec: 'zechariah',
+  mal: 'malachi',
+  matt: 'matthew',
+  mt: 'matthew',
+  mk: 'mark',
+  mrk: 'mark',
+  lk: 'luke',
+  luk: 'luke',
+  jn: 'john',
+  jhn: 'john',
+  ac: 'acts',
+  rom: 'romans',
+  rm: 'romans',
+  '1 cor': '1 corinthians',
+  '2 cor': '2 corinthians',
+  gal: 'galatians',
+  eph: 'ephesians',
+  phil: 'philippians',
+  php: 'philippians',
+  col: 'colossians',
+  '1 thess': '1 thessalonians',
+  '2 thess': '2 thessalonians',
+  '1 thes': '1 thessalonians',
+  '2 thes': '2 thessalonians',
+  '1 tim': '1 timothy',
+  '2 tim': '2 timothy',
+  tit: 'titus',
+  phlm: 'philemon',
+  phm: 'philemon',
+  heb: 'hebrews',
+  jas: 'james',
+  jm: 'james',
+  '1 pet': '1 peter',
+  '2 pet': '2 peter',
+  '1 pt': '1 peter',
+  '2 pt': '2 peter',
+  '1 jn': '1 john',
+  '2 jn': '2 john',
+  '3 jn': '3 john',
+  jud: 'jude',
+  rev: 'revelation',
+  apoc: 'revelation',
+};
+
+function normalize(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/\.$/, '')
+    .replace(/\s+/g, ' ');
+}
+
+export function resolveBook(name: string): BookRef | null {
+  const key = normalize(name);
+  if (!key) return null;
+
+  const canonicalKey = ABBREVIATIONS[key] ?? key;
+  const usfmCode = CANONICAL[canonicalKey];
+  if (!usfmCode) return null;
+
+  return { usfmCode, singleChapter: SINGLE_CHAPTER_CODES.has(usfmCode) };
+}
