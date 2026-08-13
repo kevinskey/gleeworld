@@ -440,9 +440,12 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           <Loader2 className="w-4 h-4 animate-spin" /> Loading availability…
         </div>
       ) : (
-        <div className="max-w-2xl">
+        <div className="max-w-3xl">
           <Step n={1} label="Choose a service">
-            <ul className="grid gap-2">
+            {/* Compact 2-up grid (Kevin, 2026-08-13: full-width cards ate
+                too much vertical space). cq- so the editor preview obeys
+                the container, not the window. */}
+            <ul className="grid gap-2 cq-sm:grid-cols-2">
               {services.map((s) => {
                 const active = s.idx === serviceIdx;
                 return (
@@ -451,26 +454,26 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                       type="button"
                       onClick={() => { setServiceIdx(s.idx); setDate(null); setSlot(null); setError(null); }}
                       aria-pressed={active}
-                      className="w-full text-left p-4 border bg-card transition-colors hover:border-foreground/30"
+                      className="w-full h-full text-left px-3 py-2.5 border bg-card transition-colors hover:border-foreground/30"
                       style={{
                         borderRadius: 'var(--site-radius)',
                         borderColor: active ? 'var(--site-accent)' : undefined,
                         boxShadow: active ? '0 0 0 1px var(--site-accent)' : undefined,
                       }}
                     >
-                      <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="font-semibold normal-case">{s.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {s.duration || `${s.durationMinutes} min`}
-                        </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold normal-case text-[15px] truncate">{s.name}</span>
                         {s.price && (
-                          <span className="text-sm font-medium ml-auto" style={{ color: 'var(--site-accent)' }}>
+                          <span className="text-sm font-medium ml-auto shrink-0" style={{ color: 'var(--site-accent)' }}>
                             {s.price}
                           </span>
                         )}
                       </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {s.duration || `${s.durationMinutes} min`}
+                      </div>
                       {s.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{s.description}</p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.description}</p>
                       )}
                     </button>
                   </li>
