@@ -31,6 +31,7 @@ export interface EditableSession {
   requirements?: string | null;
   location?: string | null;
   time_label?: string | null;
+  audition_slots?: Array<{ date: string; time: string; location?: string }> | null;
 }
 
 export function AuditionSessionEditDialog({
@@ -47,16 +48,14 @@ export function AuditionSessionEditDialog({
     name: session.name ?? '',
     description: session.description ?? '',
     start_date: session.start_date ?? '',
-    end_date: session.end_date ?? '',
     // datetime-local wants "YYYY-MM-DDTHH:mm" in local time; slice the ISO.
     application_deadline: session.application_deadline
       ? session.application_deadline.slice(0, 16)
       : '',
-    audition_dates: (session.audition_dates ?? []).join(', '),
+    slots: (session.audition_slots ?? []).map((s) => ({ date: s.date ?? '', time: s.time ?? '', location: s.location ?? '' })),
     max_applicants: session.max_applicants != null ? String(session.max_applicants) : '',
     requirements: session.requirements ?? '',
     location: session.location ?? '',
-    time_label: session.time_label ?? '',
     is_active: session.is_active,
   }));
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
@@ -73,16 +72,17 @@ export function AuditionSessionEditDialog({
         name: form.name.trim(),
         description: form.description || null,
         start_date: form.start_date || null,
-        end_date: form.end_date || null,
         application_deadline: form.application_deadline
           ? new Date(form.application_deadline).toISOString()
           : null,
-        audition_dates: form.audition_dates
-          .split(',').map((d) => d.trim()).filter(Boolean),
+        audition_slots: form.slots.filter((s) => s.date),
+        // Legacy label list stays in sync for anything still reading it.
+        audition_dates: form.slots
+          .filter((s) => s.date)
+          .map((s) => new Date(`${s.date}T12:00:00`).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })),
         max_applicants: form.max_applicants ? parseInt(form.max_applicants, 10) : null,
         requirements: form.requirements || null,
         location: form.location || null,
-        time_label: form.time_label || null,
         is_active: form.is_active,
         updated_at: new Date().toISOString(),
       } as never)
@@ -126,29 +126,57 @@ export function AuditionSessionEditDialog({
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Start date</Label>
+              <Label>Performance date</Label>
               <Input type="date" value={form.start_date} onChange={(e) => set({ start_date: e.target.value })} />
+              <p className="text-xs text-muted-foreground">The concert or event they are auditioning for.</p>
             </div>
             <div className="space-y-1.5">
-              <Label>End date</Label>
-              <Input type="date" value={form.end_date} onChange={(e) => set({ end_date: e.target.value })} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Location</Label>
+              <Label>Audition location</Label>
               <Input value={form.location} onChange={(e) => set({ location: e.target.value })} placeholder="Music Building, Rm 210" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Time</Label>
-              <Input value={form.time_label} onChange={(e) => set({ time_label: e.target.value })} placeholder="10am – 2pm" />
+              <p className="text-xs text-muted-foreground">Used for any audition date without its own location.</p>
             </div>
           </div>
-          <div className="space-y-1.5">
-            <Label>Audition dates (comma-separated, as shown publicly)</Label>
-            <Input
-              value={form.audition_dates}
-              onChange={(e) => set({ audition_dates: e.target.value })}
-              placeholder="Sat, Sep 6, Sun, Sep 7"
-            />
+          <div className="space-y-2">
+            <Label>Audition dates</Label>
+            {form.slots.length === 0 && (
+              <p className="text-xs text-muted-foreground">No audition dates yet — add the days and times singers can come.</p>
+            )}
+            {form.slots.map((slot, i) => (
+              <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center">
+                <Input
+                  type="date"
+                  value={slot.date}
+                  onChange={(e) => set({ slots: form.slots.map((s, j) => (j === i ? { ...s, date: e.target.value } : s)) })}
+                />
+                <Input
+                  value={slot.time}
+                  placeholder="6:00 – 8:00 PM"
+                  onChange={(e) => set({ slots: form.slots.map((s, j) => (j === i ? { ...s, time: e.target.value } : s)) })}
+                />
+                <Input
+                  value={slot.location}
+                  placeholder="(default location)"
+                  onChange={(e) => set({ slots: form.slots.map((s, j) => (j === i ? { ...s, location: e.target.value } : s)) })}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground"
+                  onClick={() => set({ slots: form.slots.filter((_, j) => j !== i) })}
+                >
+                  ✕
+                </Button>
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => set({ slots: [...form.slots, { date: '', time: '', location: '' }] })}
+            >
+              + Add audition date
+            </Button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

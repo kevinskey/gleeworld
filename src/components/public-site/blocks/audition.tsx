@@ -72,6 +72,7 @@ interface LiveSession {
   name: string | null; description: string | null; start_date: string | null;
   audition_dates: string[] | null; application_deadline: string | null;
   location: string | null; time_label: string | null; requirements: string | null;
+  audition_slots: Array<{ date: string; time?: string; location?: string }> | null;
 }
 
 /** "One prepared piece — any style, three minutes" → {title, detail}.
@@ -81,6 +82,11 @@ function parseRequirementLines(text: string): Array<{ title: string; detail: str
     const m = line.match(/^(.{2,80}?)\s*(?:—|–|:|\s-\s)\s*(.+)$/);
     return m ? { title: m[1], detail: m[2] } : { title: line, detail: '' };
   });
+}
+
+function fmtDay(iso: string): string {
+  const d = new Date(`${iso}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 function fmtSessionDate(s: LiveSession): string {
@@ -107,14 +113,18 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
       return (row as LiveSession) ?? null;
     },
   });
+  const liveSlots = (config.useSession && live?.audition_slots?.filter((s) => s.date)) || [];
   if (config.useSession && live) {
+    // With structured slots, the banner's Date chip carries the PERFORMANCE
+    // date (what they audition for) and the slots render as their own list.
+    const performance = live.start_date ? fmtDay(live.start_date) : '';
     config = {
       ...config,
       heading: live.name || config.heading,
       intro: live.description || config.intro,
       session: {
-        dateLabel: fmtSessionDate(live) || config.session.dateLabel,
-        timeLabel: live.time_label || config.session.timeLabel,
+        dateLabel: (liveSlots.length ? performance : fmtSessionDate(live)) || config.session.dateLabel,
+        timeLabel: liveSlots.length ? '' : (live.time_label || config.session.timeLabel),
         location: live.location || config.session.location,
       },
       requirements: live.requirements?.trim()
@@ -226,7 +236,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                     </div>
                     <div className="min-w-0">
                       <div className="text-xs uppercase tracking-widest text-muted-foreground">
-                        Date
+                        {liveSlots.length ? 'Performance' : 'Date'}
                       </div>
                       <div className="font-semibold text-sm">{config.session.dateLabel}</div>
                     </div>
@@ -274,6 +284,29 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                 )}
               </div>
             )}
+
+            {liveSlots.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs uppercase tracking-widest text-muted-foreground">
+                  Audition dates
+                </div>
+                <ul className="grid gap-2 cq-sm:grid-cols-2">
+                  {liveSlots.map((s, i) => (
+                    <li
+                      key={i}
+                      className="rounded-xl border px-3 py-2.5 text-sm"
+                      style={{ borderColor: 'color-mix(in oklab, var(--site-accent) 24%, transparent)' }}
+                    >
+                      <div className="font-semibold">{fmtDay(s.date)}</div>
+                      <div className="text-muted-foreground text-xs mt-0.5">
+                        {[s.time, s.location || config.session.location].filter(Boolean).join(' · ')}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
 
             {requirements.length > 0 && (
               <div>
