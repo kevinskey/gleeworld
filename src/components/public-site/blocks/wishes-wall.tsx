@@ -20,6 +20,7 @@ import { SignInDialog } from '@/components/auth/SignInDialog';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const schema = z.object({
+  eyebrow: z.string().default('Best wishes'),
   heading: z.string().default('Best Wishes'),
   intro: z.string().default('Share a memory or a word of thanks. Sign in to add yours to the wall.'),
   composerLabel: z.string().default('Add your message'),
@@ -134,9 +135,14 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
   return (
     <section id="wishes" className="max-w-6xl mx-auto w-full px-4">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-2">{config.heading}</h2>
-        {config.intro && <p className="text-muted-foreground max-w-xl mx-auto">{config.intro}</p>}
+      <div className="mb-6">
+        {config.eyebrow && (
+          <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--site-accent)', letterSpacing: '0.24em' }}>
+            {config.eyebrow}
+          </p>
+        )}
+        <h2 className="text-3xl cq-sm:text-4xl font-bold leading-tight">{config.heading}</h2>
+        {config.intro && <p className="text-muted-foreground mt-2 max-w-2xl">{config.intro}</p>}
       </div>
 
       {userId ? (

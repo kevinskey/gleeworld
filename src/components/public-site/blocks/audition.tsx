@@ -120,18 +120,23 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
     // With structured slots, the banner's Date chip carries the PERFORMANCE
     // date (what they audition for) and the slots render as their own list.
     const performance = live.start_date ? fmtDay(live.start_date) : '';
+    // LIVE MODE IS LIVE ONLY: a field the session does not define renders
+    // as NOTHING, never as the manual/mock fallback — placeholder rooms
+    // and times read as real directions (Kevin, 2026-08-13 "this is still
+    // mock"). Manual config applies solely when live mode is off or the
+    // session fetch returns nothing.
     config = {
       ...config,
       heading: live.name || config.heading,
-      intro: live.description || config.intro,
+      intro: live.description || '',
       session: {
-        dateLabel: (liveSlots.length ? performance : fmtSessionDate(live)) || config.session.dateLabel,
-        timeLabel: liveSlots.length ? '' : (live.time_label || config.session.timeLabel),
-        location: live.location || config.session.location,
+        dateLabel: liveSlots.length ? performance : fmtSessionDate(live),
+        timeLabel: liveSlots.length ? '' : (live.time_label || ''),
+        location: live.location || '',
       },
       requirements: live.requirements?.trim()
         ? parseRequirementLines(live.requirements)
-        : config.requirements,
+        : [],
     };
   }
   const hasSession = !!(
