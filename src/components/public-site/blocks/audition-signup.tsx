@@ -128,7 +128,8 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   });
 
   return (
-    <section id="audition-signup" className="max-w-6xl mx-auto w-full px-4">
+    <section id="audition-signup" className="w-full border-y" style={{ background: 'color-mix(in oklab, var(--site-accent) 6%, transparent)', borderColor: 'color-mix(in oklab, var(--site-accent) 22%, transparent)' }}>
+      <div className="max-w-6xl mx-auto w-full px-4">
       <div className="mb-6">
         {config.eyebrow && (
           <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--site-accent)', letterSpacing: '0.24em' }}>
@@ -141,7 +142,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
       <div className={hasInfo ? 'grid gap-5 cq-lg:grid-cols-[2fr_3fr] items-start' : ''}>
       {hasInfo && (
-        <div className="rounded-xl border border-border bg-white/60 p-5 space-y-5 text-left">
+        <div className="rounded-xl border border-border bg-white p-5 space-y-5 text-left">
           {live?.start_date && (
             <div>
               <p className="text-sm uppercase tracking-widest text-muted-foreground">Performance</p>
@@ -190,7 +191,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
         </div>
       ) : (
         <form
-          className="rounded-xl border border-border bg-white/70 p-5 space-y-4"
+          className="rounded-xl border border-border bg-white p-5 space-y-4"
           onSubmit={(e) => { e.preventDefault(); submit.mutate(); }}
         >
           <div className="space-y-1.5">
@@ -232,6 +233,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           </div>
         </form>
       )}
+      </div>
       </div>
       </div>
     </section>
