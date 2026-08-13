@@ -134,7 +134,8 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   });
 
   return (
-    <section id="wishes" className="max-w-6xl mx-auto w-full px-4">
+    <section id="wishes" className="w-full border-y" style={{ background: 'color-mix(in oklab, var(--site-heading, #131722) 3%, transparent)', borderColor: 'color-mix(in oklab, var(--site-heading, #131722) 12%, transparent)' }}>
+      <div className="max-w-6xl mx-auto w-full px-4">
       <div className="mb-6">
         {config.eyebrow && (
           <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--site-accent)', letterSpacing: '0.24em' }}>
@@ -147,7 +148,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
       {userId ? (
         <form
-          className="mb-10 rounded-xl border border-border bg-white/70 p-4 space-y-3"
+          className="mb-10 rounded-xl border border-border bg-white p-4 space-y-3"
           onSubmit={(e) => { e.preventDefault(); post.mutate(); }}
         >
           <Label className="font-medium">{config.composerLabel}</Label>
@@ -225,6 +226,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           ))}
         </div>
       )}
+      </div>
     </section>
   );
 }
