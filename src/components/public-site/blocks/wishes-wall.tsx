@@ -190,7 +190,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
               </p>
               <div className="flex flex-wrap justify-center gap-3">
                 <Button
-                  className="px-7 py-6 text-base font-semibold text-white"
+                  className="px-7 h-14 text-base font-semibold text-white"
                   style={{ background: '#131722', borderRadius: 'var(--site-radius)' }}
                   onClick={() => setSignInOpen(true)}
                 >
@@ -200,7 +200,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                 {config.giftLabel && config.giftUrl && (
                   <a
                     href={config.giftUrl}
-                    className="inline-flex items-center px-7 py-3.5 text-base font-semibold border-2"
+                    className="inline-flex items-center px-7 h-14 text-base font-semibold border-4"
                     style={{ color: 'var(--site-accent)', borderColor: 'var(--site-accent)', borderRadius: 'var(--site-radius)' }}
                   >
                     {config.giftLabel}
@@ -244,7 +244,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                 {config.giftLabel && config.giftUrl && (
                   <a
                     href={config.giftUrl}
-                    className="inline-flex items-center px-5 py-2.5 text-sm font-semibold border-2"
+                    className="inline-flex items-center px-5 h-10 text-sm font-semibold border-4"
                     style={{ color: 'var(--site-accent)', borderColor: 'var(--site-accent)', borderRadius: 'var(--site-radius)' }}
                   >
                     {config.giftLabel}
