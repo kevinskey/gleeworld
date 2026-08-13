@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AutoForm } from '../AutoForm';
 import { getBlockModule, BLOCK_LIST } from '../registry';
 import { safeConfig } from '../types';
-import type { BlockModule, BlockRenderProps, BlockEditorFormProps } from '../types';
+import type { BlockModule, BlockRenderProps, BlockEditorFormProps, SiteRenderContext } from '../types';
 
 const childSchema = z.object({
   id: z.string(),
@@ -48,12 +48,13 @@ function allowedChildModules(): BlockModule[] {
 // ── Render ───────────────────────────────────────────────────────────
 
 function ColumnChildren({
-  items, side, editable, onPatchChild,
+  items, side, editable, onPatchChild, ctx,
 }: {
   items: Child[];
   side: 'left' | 'right';
   editable: boolean;
   onPatchChild?: (side: 'left' | 'right', id: string, patch: Record<string, unknown>) => void;
+  ctx: SiteRenderContext;
 }) {
   if (items.length === 0) {
     return editable ? (
@@ -70,8 +71,7 @@ function ColumnChildren({
         const cfg = safeConfig(mod, child.config);
         return (
           <div key={child.id} className="gw-columns-child min-w-0">
-            <mod.Render
-              config={cfg}
+            <mod.Render config={cfg} ctx={ctx}
               onConfigChange={
                 onPatchChild
                   ? (patch: Record<string, unknown>) => onPatchChild(side, child.id, patch)
@@ -85,7 +85,7 @@ function ColumnChildren({
   );
 }
 
-function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange, ctx }: BlockRenderProps<Config>) {
   const editable = !!onConfigChange;
   const patchChild = editable
     ? (side: 'left' | 'right', id: string, patch: Record<string, unknown>) => {
@@ -100,10 +100,14 @@ function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
     <section className="gw-columns-section max-w-6xl mx-auto w-full px-4 cq-sm:px-6" style={{ paddingBlock: 'var(--site-section-py, 3rem)' }}>
       <div className={`gw-columns-grid ${config.stackOrder === 'right-first' ? 'gw-columns-right-first' : ''}`}>
         <div className="gw-columns-col min-w-0 space-y-6">
-          <ColumnChildren items={config.left} side="left" editable={editable} onPatchChild={patchChild} />
+          <ColumnChildren
+          ctx={ctx}
+          items={config.left} side="left" editable={editable} onPatchChild={patchChild} />
         </div>
         <div className="gw-columns-col min-w-0 space-y-6">
-          <ColumnChildren items={config.right} side="right" editable={editable} onPatchChild={patchChild} />
+          <ColumnChildren
+          ctx={ctx}
+          items={config.right} side="right" editable={editable} onPatchChild={patchChild} />
         </div>
       </div>
     </section>

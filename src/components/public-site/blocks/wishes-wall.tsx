@@ -80,12 +80,11 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
     queryKey: ['wish-wall-admin', ctx.slug, userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('gw_profiles')
-        .select('is_admin, is_super_admin')
-        .eq('user_id', userId!)
-        .maybeSingle();
-      return !!(data?.is_admin || data?.is_super_admin);
+      // Tenant-scoped staff check (review 2026-08-13: profile flags are
+      // global; membership admins have none).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any).rpc('am_i_staff', { p_slug: ctx.slug });
+      return data === true;
     },
   });
 
@@ -96,19 +95,15 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
       const { data: session } = await supabase.auth.getSession();
       const user = session.session?.user;
       if (!user) throw new Error('Sign in to post.');
-      const { data: profile } = await supabase
-        .from('gw_profiles')
-        .select('preferred_name, full_name')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      const display =
-        profile?.preferred_name?.trim() || profile?.full_name?.trim() || user.email || 'A graduate';
-      const { error } = await supabase.from('gw_wish_wall_posts' as never).insert({
-        user_id: user.id,
-        display_name: display,
-        class_year: classYear.trim() || null,
-        message: text,
-      } as never);
+      // Slug-resolved, server-named post (review 2026-08-13: the direct
+      // insert filed non-members' posts into their HOME tenant, and the
+      // display name was client-forgeable).
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).rpc('post_wish', {
+        p_slug: ctx.slug,
+        p_class_year: classYear.trim() || null,
+        p_message: text,
+      });
       if (error) throw error;
     },
     onSuccess: () => {

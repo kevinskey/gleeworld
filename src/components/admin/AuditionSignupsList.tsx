@@ -77,15 +77,17 @@ export function AuditionSignupsList() {
     },
   });
 
-  const { data: profiles = [] } = useQuery<ProfileRow[]>({
-    queryKey: ['audition-signups-profiles', signups.length],
+  // Staff roster RPC — a direct gw_profiles select is tenant-walled and
+  // returned nothing for members homed elsewhere, so promote wrote
+  // 'Unknown'/'' into applications. Keyed on the id SET, not its length
+  // (same-length roster changes served stale rows). (Review 2026-08-13.)
+  const idsKey = useMemo(() => [...new Set(signups.map((s) => s.user_id))].sort().join(','), [signups]);
+  const { data: profiles = [], isSuccess: profilesLoaded } = useQuery<ProfileRow[]>({
+    queryKey: ['audition-signups-profiles', idsKey],
     enabled: signups.length > 0,
     queryFn: async () => {
-      const ids = [...new Set(signups.map((s) => s.user_id))];
-      const { data, error } = await supabase
-        .from('gw_profiles')
-        .select('user_id, full_name, email')
-        .in('user_id', ids);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc('get_audition_signup_profiles');
       if (error) throw error;
       return (data as ProfileRow[]) ?? [];
     },
@@ -99,22 +101,28 @@ export function AuditionSignupsList() {
       list.push(s);
       parts.set(s.voice_part, list);
     }
-    return [...parts.entries()].sort(
-      (a, b) => (PART_ORDER.indexOf(a[0]) + 99) - (PART_ORDER.indexOf(b[0]) + 99),
-    );
+    const rank = (p: string) => { const i = PART_ORDER.indexOf(p); return i === -1 ? 99 : i; };
+    return [...parts.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
   }, [signups]);
 
+  // audition_applications' normalize trigger collapses long names
+  // ('Alto 2' → 'A1'); send the strict code it stores verbatim.
+  const VOICE_CODE: Record<string, string> = {
+    'Soprano 1': 'S1', 'Soprano 2': 'S2', 'Alto 1': 'A1', 'Alto 2': 'A2',
+    'Tenor': 'T1', 'Tenor 1': 'T1', 'Tenor 2': 'T2', 'Bass': 'B1', 'Bass 1': 'B1', 'Bass 2': 'B2',
+  };
   const promote = useMutation({
     mutationFn: async (s: SignupRow) => {
       if (!targetSession) throw new Error('Create an audition session first (Sessions tab).');
       const p = byUser.get(s.user_id);
+      if (!p) throw new Error("This singer's profile has not loaded yet — try again in a moment.");
       const { error } = await supabase.from('audition_applications').insert({
         session_id: targetSession,
         user_id: s.user_id,
         full_name: p?.full_name ?? 'Unknown',
         email: p?.email ?? '',
         phone_number: s.phone,
-        voice_part_preference: s.voice_part,
+        voice_part_preference: VOICE_CODE[s.voice_part] ?? s.voice_part,
         previous_choir_experience: s.era,
         why_glee_club: s.note,
         status: 'submitted',
@@ -218,7 +226,7 @@ export function AuditionSignupsList() {
                                   size="sm"
                                   variant="outline"
                                   className="h-7 text-xs"
-                                  disabled={promote.isPending || !targetSession}
+                                  disabled={promote.isPending || !targetSession || !profilesLoaded}
                                   onClick={() => promote.mutate(s)}
                                 >
                                   <UserPlus className="h-3.5 w-3.5 mr-1" /> Add to auditions
