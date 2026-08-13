@@ -144,16 +144,16 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
         <div className="rounded-xl border border-border bg-white/60 p-5 space-y-5 text-left">
           {live?.start_date && (
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Performance</p>
-              <p className="font-semibold text-lg mt-0.5">{fmtDay(live.start_date)}{live?.location ? ` · ${live.location}` : ''}</p>
+              <p className="text-sm uppercase tracking-widest text-muted-foreground">Performance</p>
+              <p className="font-bold text-2xl mt-1">{fmtDay(live.start_date)}{live?.location ? ` · ${live.location}` : ''}</p>
             </div>
           )}
           {slots.length > 0 && (
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Audition dates</p>
+              <p className="text-sm uppercase tracking-widest text-muted-foreground">Audition dates</p>
               <ul className="mt-1 space-y-1">
                 {slots.map((s, i) => (
-                  <li key={i} className="text-base">
+                  <li key={i} className="text-lg">
                     <span className="font-semibold">{fmtDay(s.date)}</span>
                     <span className="text-muted-foreground">{[s.time, s.location].filter(Boolean).map((x) => ` · ${x}`).join('')}</span>
                   </li>
@@ -163,10 +163,10 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           )}
           {reqs.length > 0 && (
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">What to prepare</p>
+              <p className="text-sm uppercase tracking-widest text-muted-foreground">What to prepare</p>
               <ol className="mt-1 space-y-1 list-decimal list-inside">
                 {reqs.map((r, i) => (
-                  <li key={i} className="text-base">
+                  <li key={i} className="text-lg">
                     <span className="font-semibold">{r.title}</span>
                     {r.detail && <span className="text-muted-foreground"> — {r.detail}</span>}
                   </li>
@@ -178,8 +178,8 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
       )}
       <div>
       {!userId ? (
-        <div className="rounded-xl border border-dashed border-border p-5 text-center text-base text-muted-foreground">
-          <button type="button" className="underline font-medium" onClick={() => setSignInOpen(true)}>Sign in</button> to sign up to audition.
+        <div className="rounded-xl border border-dashed border-border p-6 text-center text-lg text-foreground">
+          <button type="button" className="underline font-bold" style={{ color: 'var(--site-accent)' }} onClick={() => setSignInOpen(true)}>Sign in</button> to sign up to audition.
           <SignInDialog open={signInOpen} onOpenChange={setSignInOpen} />
         </div>
       ) : submit.isSuccess ? (
