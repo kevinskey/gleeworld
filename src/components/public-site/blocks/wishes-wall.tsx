@@ -29,6 +29,9 @@ const schema = z.object({
   // Optional second CTA (e.g. a giving link). Hidden until both are set.
   giftLabel: z.string().default(''),
   giftUrl: z.string().default(''),
+  // Band background: ivory matches the invitation cards; ink turns the
+  // guest book into its own dark room (distinct from the band above).
+  tone: z.enum(['ivory', 'ink']).default('ivory'),
 });
 type Config = z.infer<typeof schema>;
 
@@ -143,8 +146,9 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
       id="wishes"
       className="w-full border-y"
       style={{
-        background: '#FDFBF6',
-        borderColor: 'color-mix(in oklab, var(--site-accent) 25%, transparent)',
+        background: config.tone === 'ink' ? '#131722' : '#FDFBF6',
+        color: config.tone === 'ink' ? '#fff' : undefined,
+        borderColor: `color-mix(in oklab, var(--site-accent) ${config.tone === 'ink' ? '45%' : '25%'}, transparent)`,
       }}
     >
       <div className="gw-container">
@@ -159,7 +163,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           <h2 className="text-4xl cq-sm:text-5xl font-bold leading-tight" style={{ fontFamily: 'var(--site-heading-font)' }}>
             {config.heading}
           </h2>
-          {config.intro && <p className="text-muted-foreground mt-3 max-w-2xl mx-auto text-base">{config.intro}</p>}
+          {config.intro && <p className={`mt-3 max-w-2xl mx-auto text-base ${config.tone === 'ink' ? 'text-white/70' : 'text-muted-foreground'}`}>{config.intro}</p>}
           <div className="mt-6 mx-auto max-w-sm flex items-center gap-4" aria-hidden="true">
             <span className="h-px flex-1" style={{ background: 'var(--site-accent)', opacity: 0.4 }} />
             <span className="h-px w-10" style={{ background: 'var(--site-accent)' }} />
@@ -170,7 +174,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
         {/* One card, one CTA slot — content swaps by session state, the
             structure never does. */}
         <div
-          className="mx-auto max-w-2xl bg-white border p-6 cq-sm:p-8"
+          className="mx-auto max-w-2xl bg-white text-slate-900 border p-6 cq-sm:p-8"
           style={{
             borderColor: 'color-mix(in oklab, var(--site-accent) 35%, transparent)',
             borderRadius: 'var(--site-radius)',
@@ -261,7 +265,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
             {posts.map((p) => (
               <div
                 key={p.id}
-                className={`mb-4 bg-white border p-5 ${p.hidden ? 'opacity-40' : ''}`}
+                className={`mb-4 bg-white text-slate-900 border p-5 ${p.hidden ? 'opacity-40' : ''}`}
                 style={{
                   borderColor: 'color-mix(in oklab, var(--site-accent) 25%, transparent)',
                   borderRadius: 'var(--site-radius)',

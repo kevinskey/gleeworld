@@ -175,12 +175,16 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
       // hero, and sections all hit the viewport edges together — consistent
       // widths from mobile through desktop, per the sizing rule. Width comes
       // from --site-content-max (Site design panel), not a fixed 1152.
-      className="sticky top-0 z-40 gw-container-flush"
+      // Full-bleed bar, contained content — the bar's background spans the
+      // viewport like the section bands do, while logo/nav sit on the same
+      // .gw-container column as every section (Kevin, 2026-08-13: a
+      // content-width bar floated as a box aligned with nothing).
+      className="sticky top-0 z-40 w-full"
       style={{ paddingTop: 'env(safe-area-inset-top)', color: linkColor, background: 'var(--site-primary)' }}
     >
       <div
-        className="flex items-center justify-between gap-4"
-        style={{ height: barHeight, paddingInline: 'var(--site-gutter, clamp(1rem, 4vw, 1.5rem))' }}
+        className="gw-container flex items-center justify-between gap-4"
+        style={{ height: barHeight }}
       >
         {/* In the editor, unwrap the <a href="#top"> so clicking the site
             name places a caret instead of jump-scrolling. The placeholder is
