@@ -41,53 +41,60 @@ function Render({ config }: BlockRenderProps<Config>) {
   return (
     <section className="max-w-6xl mx-auto w-full h-full flex items-center">
       <div
-        className="w-full rounded-sm border px-7 py-10 text-center"
+        className="w-full rounded-sm border px-8 py-14 text-center"
         style={{ background: '#FDFBF6', borderColor: gold, color: '#131722' }}
       >
         {config.overline && (
           <p
-            className="text-[11px] font-semibold uppercase mb-5"
+            className="text-xs font-semibold uppercase mb-6"
             style={{ color: gold, letterSpacing: '0.28em' }}
           >
             {config.overline}
           </p>
         )}
         <h2
-          className="text-3xl leading-tight font-bold"
+          className="text-4xl cq-sm:text-5xl leading-tight font-bold"
           style={{ fontFamily: 'var(--site-heading-font)' }}
         >
-          {config.title}
+          {/* "X & Friends" breaks before the ampersand — the companion line
+              reads as its own gesture (Kevin, 2026-08-13). */}
+          {config.title.includes(' & ') ? (
+            <>
+              {config.title.slice(0, config.title.indexOf(' & '))}
+              <span className="block">&amp;{config.title.slice(config.title.indexOf(' & ') + 2)}</span>
+            </>
+          ) : config.title}
         </h2>
         {config.accentLine && (
-          <p className="mt-1 text-xl italic" style={{ fontFamily: 'var(--site-heading-font)', color: gold }}>
+          <p className="mt-2 text-2xl italic" style={{ fontFamily: 'var(--site-heading-font)', color: gold }}>
             {config.accentLine}
           </p>
         )}
 
-        <div className="my-7 flex items-center gap-4" aria-hidden="true">
+        <div className="my-9 flex items-center gap-4" aria-hidden="true">
           <span className="h-px flex-1" style={{ background: gold, opacity: 0.5 }} />
           <span className="h-px w-10" style={{ background: gold }} />
           <span className="h-px flex-1" style={{ background: gold, opacity: 0.5 }} />
         </div>
 
         <Fermata color={gold} />
-        <p className="mt-3 text-[13px] font-semibold uppercase" style={{ letterSpacing: '0.22em' }}>
+        <p className="mt-4 text-sm font-semibold uppercase" style={{ letterSpacing: '0.22em' }}>
           {config.dayLine}
         </p>
-        <p className="text-2xl font-bold mt-0.5" style={{ fontFamily: 'var(--site-heading-font)' }}>
+        <p className="text-3xl font-bold mt-1" style={{ fontFamily: 'var(--site-heading-font)' }}>
           {config.dateLine}
         </p>
         {config.venue && (
-          <p className="mt-2 text-[15px] text-[#5d5a52]">{config.venue}</p>
+          <p className="mt-2 text-lg text-[#5d5a52]">{config.venue}</p>
         )}
 
         {config.note && (
-          <p className="mt-7 text-sm text-[#5d5a52]">{config.note}</p>
+          <p className="mt-8 text-base text-[#5d5a52]">{config.note}</p>
         )}
         {config.ctaLabel && (
           <a
             href={config.ctaUrl || '#rsvp'}
-            className="mt-4 inline-flex items-center gap-2 px-8 py-3 text-[15px] font-semibold text-white transition-transform hover:scale-[1.02]"
+            className="mt-5 inline-flex items-center gap-2.5 px-10 py-4 text-lg font-semibold text-white transition-transform hover:scale-[1.02]"
             style={{ background: '#131722' }}
           >
             <CalendarPlus className="w-4 h-4" style={{ color: gold }} />

@@ -7,7 +7,7 @@
 // a Hide/Unhide control on every card (hidden posts render dimmed for
 // admins only). RLS enforces all of it server-side; this component is just
 // the polite face.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Heart, Loader2 } from 'lucide-react';
@@ -25,6 +25,10 @@ const schema = z.object({
   intro: z.string().default('Share a memory or a word of thanks. Sign in to add yours to the wall.'),
   composerLabel: z.string().default('Add your message'),
   classYearLabel: z.string().default('Class year (optional)'),
+  postCtaLabel: z.string().default('Post a statement'),
+  // Optional second CTA (e.g. a giving link). Hidden until both are set.
+  giftLabel: z.string().default(''),
+  giftUrl: z.string().default(''),
 });
 type Config = z.infer<typeof schema>;
 
@@ -56,6 +60,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   const [message, setMessage] = useState('');
   const [classYear, setClassYear] = useState('');
   const [signInOpen, setSignInOpen] = useState(false);
+  const composerRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Everyone sees visible posts; admins additionally get hidden ones back
   // from RLS and can unhide. The tenant filter is the site slug — the wall
@@ -144,6 +149,32 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
         )}
         <h2 className="text-3xl cq-sm:text-4xl font-bold leading-tight">{config.heading}</h2>
         {config.intro && <p className="text-muted-foreground mt-2 max-w-2xl">{config.intro}</p>}
+        <div className="mt-5 flex flex-wrap gap-3">
+          {config.postCtaLabel && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 px-7 py-3.5 text-base font-semibold text-white"
+              style={{ background: '#131722', borderRadius: 'var(--site-radius)' }}
+              onClick={() => {
+                if (!userId) { setSignInOpen(true); return; }
+                composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                composerRef.current?.focus();
+              }}
+            >
+              <Heart className="w-4 h-4" style={{ color: 'var(--site-accent)' }} />
+              {config.postCtaLabel}
+            </button>
+          )}
+          {config.giftLabel && config.giftUrl && (
+            <a
+              href={config.giftUrl}
+              className="inline-flex items-center gap-2 px-7 py-3.5 text-base font-semibold border-2"
+              style={{ color: 'var(--site-accent)', borderColor: 'var(--site-accent)', borderRadius: 'var(--site-radius)' }}
+            >
+              {config.giftLabel}
+            </a>
+          )}
+        </div>
       </div>
 
       {userId ? (
@@ -153,6 +184,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
         >
           <Label className="font-medium">{config.composerLabel}</Label>
           <Textarea
+            ref={composerRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             maxLength={1000}
