@@ -8,6 +8,9 @@ import { Label } from '@/components/ui/label';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const schema = z.object({
+  // Per-footer logo override — the branding logo is dark for internal
+  // chrome, and disappears on this ink band (same trap as the header).
+  logoUrl: z.string().default('').optional(),
   email: z.string().default(''),
   phone: z.string().default(''),
   instagram: z.string().default(''),
@@ -30,16 +33,28 @@ const SOCIALS: Array<{ key: keyof Config; label: string; Icon: typeof Instagram 
 function Render({ config, ctx }: BlockRenderProps<Config>) {
   const socials = SOCIALS.filter((s) => config[s.key]);
   const year = new Date().getFullYear();
+  const logo = config.logoUrl || ctx.logoUrl;
   return (
     <footer className="w-full" style={{ background: 'var(--site-primary, #131722)', color: '#fff' }}>
-      <div className="gw-container py-10">
-        <div className="flex flex-col cq-sm:flex-row cq-sm:items-center cq-sm:justify-between gap-6">
+      <div className="gw-container py-6">
+        {/* Everything on one line: identity + contact left, socials right. */}
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
           <div className="flex items-center gap-3">
-            {ctx.logoUrl && <img src={ctx.logoUrl} alt="" className="h-9 w-auto object-contain" />}
-            <span className="font-bold text-lg">{ctx.orgName}</span>
+            {logo && <img src={logo} alt="" className="h-8 w-auto object-contain" />}
+            <span className="font-bold text-base">{ctx.orgName}</span>
           </div>
+          {config.email && (
+            <a href={`mailto:${config.email}`} className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white">
+              <Mail className="w-4 h-4" style={{ color: 'var(--site-accent)' }} /> {config.email}
+            </a>
+          )}
+          {config.phone && (
+            <a href={`tel:${config.phone.replace(/[^+\d]/g, '')}`} className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white">
+              <Phone className="w-4 h-4" style={{ color: 'var(--site-accent)' }} /> {config.phone}
+            </a>
+          )}
           {socials.length > 0 && (
-            <div className="flex items-center gap-4">
+            <div className="ml-auto flex items-center gap-4">
               {socials.map(({ key, label, Icon }) => (
                 <a
                   key={key}
@@ -50,28 +65,14 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                   className="opacity-80 hover:opacity-100 transition-opacity"
                   style={{ color: 'var(--site-accent)' }}
                 >
-                  <Icon className="w-6 h-6" />
+                  <Icon className="w-5 h-5" />
                 </a>
               ))}
             </div>
           )}
         </div>
-        {(config.email || config.phone) && (
-          <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-base text-white/80">
-            {config.email && (
-              <a href={`mailto:${config.email}`} className="inline-flex items-center gap-2 hover:text-white">
-                <Mail className="w-4 h-4" style={{ color: 'var(--site-accent)' }} /> {config.email}
-              </a>
-            )}
-            {config.phone && (
-              <a href={`tel:${config.phone.replace(/[^+\d]/g, '')}`} className="inline-flex items-center gap-2 hover:text-white">
-                <Phone className="w-4 h-4" style={{ color: 'var(--site-accent)' }} /> {config.phone}
-              </a>
-            )}
-          </div>
-        )}
         <div
-          className="mt-8 pt-5 text-sm text-white/60 border-t"
+          className="mt-5 pt-4 text-sm text-white/60 border-t text-center"
           style={{ borderColor: 'color-mix(in oklab, var(--site-accent) 30%, transparent)' }}
         >
           {config.smallPrint || `© ${year} ${ctx.orgName}. All rights reserved.`}
@@ -91,6 +92,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
   );
   return (
     <div className="space-y-4">
+      {field('Logo URL (empty = branding logo; use a light version on dark bands)', 'logoUrl')}
       {field('Email', 'email', 'you@example.org')}
       {field('Phone', 'phone', '(555) 555-5555')}
       {field('Instagram URL', 'instagram')}
