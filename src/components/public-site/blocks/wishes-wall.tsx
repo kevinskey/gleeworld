@@ -30,8 +30,9 @@ const schema = z.object({
   giftLabel: z.string().default(''),
   giftUrl: z.string().default(''),
   // Band background: ivory matches the invitation cards; ink turns the
-  // guest book into its own dark room (distinct from the band above).
-  tone: z.enum(['ivory', 'ink']).default('ivory'),
+  // guest book into its own dark room; gold sets it on the accent itself
+  // (accent-colored details switch to ink so they stay visible).
+  tone: z.enum(['ivory', 'ink', 'gold']).default('ivory'),
 });
 type Config = z.infer<typeof schema>;
 
@@ -141,14 +142,21 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['wish-wall', ctx.slug] }),
   });
 
+  // On the gold band every accent-colored detail would vanish into the
+  // background, so those details switch to ink.
+  const tone = config.tone;
+  const detail = tone === 'gold' ? '#131722' : 'var(--site-accent)';
   return (
     <section
       id="wishes"
       className="w-full border-y"
       style={{
-        background: config.tone === 'ink' ? '#131722' : '#FDFBF6',
-        color: config.tone === 'ink' ? '#fff' : undefined,
-        borderColor: `color-mix(in oklab, var(--site-accent) ${config.tone === 'ink' ? '45%' : '25%'}, transparent)`,
+        background: tone === 'ink' ? '#131722' : tone === 'gold' ? 'var(--site-accent, #D4A937)' : '#FDFBF6',
+        color: tone === 'ink' ? '#fff' : tone === 'gold' ? '#131722' : undefined,
+        borderColor:
+          tone === 'gold'
+            ? 'color-mix(in oklab, #131722 30%, transparent)'
+            : `color-mix(in oklab, var(--site-accent) ${tone === 'ink' ? '45%' : '25%'}, transparent)`,
       }}
     >
       <div className="gw-container">
@@ -156,27 +164,36 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
             program as the Event Card (UI audit, 2026-08-13). */}
         <div className="text-center mb-8">
           {config.eyebrow && (
-            <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--site-accent)', letterSpacing: '0.24em' }}>
+            <p className="text-xs font-semibold uppercase mb-2" style={{ color: detail, letterSpacing: '0.24em' }}>
               {config.eyebrow}
             </p>
           )}
           <h2 className="text-4xl cq-sm:text-5xl font-bold leading-tight" style={{ fontFamily: 'var(--site-heading-font)' }}>
             {config.heading}
           </h2>
-          {config.intro && <p className={`mt-3 max-w-2xl mx-auto text-base ${config.tone === 'ink' ? 'text-white/70' : 'text-muted-foreground'}`}>{config.intro}</p>}
+          {config.intro && (
+            <p className={`mt-3 max-w-2xl mx-auto text-base ${tone === 'ink' ? 'text-white/70' : tone === 'gold' ? 'opacity-80' : 'text-muted-foreground'}`}>
+              {config.intro}
+            </p>
+          )}
           <div className="mt-6 mx-auto max-w-sm flex items-center gap-4" aria-hidden="true">
-            <span className="h-px flex-1" style={{ background: 'var(--site-accent)', opacity: 0.4 }} />
-            <span className="h-px w-10" style={{ background: 'var(--site-accent)' }} />
-            <span className="h-px flex-1" style={{ background: 'var(--site-accent)', opacity: 0.4 }} />
+            <span className="h-px flex-1" style={{ background: detail, opacity: 0.4 }} />
+            <span className="h-px w-10" style={{ background: detail }} />
+            <span className="h-px flex-1" style={{ background: detail, opacity: 0.4 }} />
           </div>
         </div>
 
         {/* One card, one CTA slot — content swaps by session state, the
-            structure never does. */}
+            structure never does. Full container width so this section sits
+            on the same grid as its neighbors (Kevin, 2026-08-13: "the width
+            match is a problem"). */}
         <div
-          className="mx-auto max-w-2xl bg-white text-slate-900 border p-6 cq-sm:p-8"
+          className="w-full bg-white text-slate-900 border p-6 cq-sm:p-8"
           style={{
-            borderColor: 'color-mix(in oklab, var(--site-accent) 35%, transparent)',
+            borderColor:
+              tone === 'gold'
+                ? 'color-mix(in oklab, #131722 35%, transparent)'
+                : 'color-mix(in oklab, var(--site-accent) 35%, transparent)',
             borderRadius: 'var(--site-radius)',
           }}
         >
@@ -318,6 +335,16 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
       <div className="space-y-1.5">
         <Label>Intro</Label>
         <Textarea value={config.intro} onChange={(e) => set({ intro: e.target.value })} rows={2} />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Band background</Label>
+        <div className="flex gap-2">
+          {(['ivory', 'ink', 'gold'] as const).map((t) => (
+            <Button key={t} type="button" size="sm" variant={config.tone === t ? 'default' : 'outline'} onClick={() => set({ tone: t })}>
+              {t}
+            </Button>
+          ))}
+        </div>
       </div>
       <div className="space-y-1.5">
         <Label>Composer label</Label>
