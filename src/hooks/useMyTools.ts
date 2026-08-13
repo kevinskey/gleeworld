@@ -69,20 +69,24 @@ export function useMyTools(role: 'student' | 'faculty') {
     staleTime: 60 * 1000,
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
-          .from('user_preferences')
-          .select('nav_item_order, home_tile_layout')
-          .eq('user_id', uid!)
-          .maybeSingle();
+        // get_nav_prefs is SECURITY DEFINER and tenant-blind ON PURPOSE:
+        // the row is UNIQUE(user_id) and save_nav_item_order re-tenants it
+        // on every save, so a tenant-walled read made a two-tenant member
+        // ping-pong through the first-run sheet forever (2026-08-13). The
+        // record is personal — one shelf that follows you — and per-tenant
+        // gating still happens at render via resolveNav.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('get_nav_prefs');
         if (error) {
           console.warn('[useMyTools] load failed:', error.message);
           return { ok: false };
         }
+        const row = Array.isArray(data) ? data[0] : data;
         return {
           ok: true,
           row: {
-            nav_item_order: data?.nav_item_order ?? null,
-            home_tile_layout: data?.home_tile_layout ?? null,
+            nav_item_order: row?.nav_item_order ?? null,
+            home_tile_layout: row?.home_tile_layout ?? null,
           },
         };
       } catch (err) {
