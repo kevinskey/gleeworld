@@ -71,7 +71,7 @@ function ColumnChildren({
         const cfg = safeConfig(mod, child.config);
         return (
           <div key={child.id} className="gw-columns-child min-w-0">
-            <mod.Render config={cfg} ctx={ctx}
+            <mod.Render config={cfg} ctx={{ ...ctx, inColumn: true }}
               onConfigChange={
                 onPatchChild
                   ? (patch: Record<string, unknown>) => onPatchChild(side, child.id, patch)

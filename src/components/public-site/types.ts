@@ -180,6 +180,10 @@ export function sitePages(blocks: Array<Pick<SiteBlock, 'page'>>): string[] {
 // session, draft data, tenant-scoped queries); otherwise the public /sites/:slug
 // page (anon, published snapshot + RPCs only).
 export interface SiteRenderContext {
+  /** True when this block renders as a Columns child — the column already
+   *  provides the container/gutter, so the block must not add its own
+   *  (double-gutter misalignment, Kevin 2026-08-13). */
+  inColumn?: boolean;
   slug: string;
   theme: SiteTheme;
   orgName: string;
