@@ -51,6 +51,7 @@ import {
   Mic2,
 } from "lucide-react";
 import { AuditionSignupsList } from '@/components/admin/AuditionSignupsList';
+import { AuditionSessionEditDialog, type EditableSession } from '@/components/admin/AuditionSessionEditDialog';
 
 // Tab strip config. Analytics uses TrendingUp rather than a second BarChart3 —
 // Overview already owns that glyph, and two identical icons in one strip is a
@@ -223,6 +224,8 @@ export const AuditionsManagement = () => {
     location: "",
     time_label: ""
   });
+
+  const [editingSession, setEditingSession] = useState<EditableSession | null>(null);
 
   // State for collapsible sections
   const [isCreateSessionExpanded, setIsCreateSessionExpanded] = useState(false);
@@ -983,9 +986,14 @@ export const AuditionsManagement = () => {
                       <CardTitle className="text-lg font-semibold text-foreground">{session.name}</CardTitle>
                       <CardDescription className="text-muted-foreground">{session.description}</CardDescription>
                     </div>
-                    <Badge variant="outline" className={session.is_active ? 'bg-status-confirmed text-status-confirmed-fg' : 'bg-muted text-muted-foreground'}>
-                      {session.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={session.is_active ? 'bg-status-confirmed text-status-confirmed-fg' : 'bg-muted text-muted-foreground'}>
+                        {session.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                      <Button size="sm" variant="outline" onClick={() => setEditingSession(session as unknown as EditableSession)}>
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -1011,6 +1019,15 @@ export const AuditionsManagement = () => {
               </Card>
             ))}
           </div>
+          {editingSession && (
+            <AuditionSessionEditDialog
+              key={editingSession.id}
+              session={editingSession}
+              open
+              onOpenChange={(o) => { if (!o) setEditingSession(null); }}
+              onSaved={fetchData}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="roster" className="space-y-6 mt-8">
