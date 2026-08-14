@@ -90,7 +90,9 @@ const handler = async (req: Request): Promise<Response> => {
     // go out in BCC chunks (to: = our own from address); a single recipient
     // keeps the normal To: header. Explicit cc/bcc passthrough only applies
     // to single-recipient sends.
-    const BATCH = 50;
+    // 49, not 50: BCC chunks also carry our own address in To:, and Resend's
+    // 50-recipient cap counts to + cc + bcc together (learned from a live 422).
+    const BATCH = 49;
     const recipients: string[] = emailPayload.to;
     const chunks: string[][] = [];
     if (recipients.length > 1) {
