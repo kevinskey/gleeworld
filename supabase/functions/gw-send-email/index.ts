@@ -60,9 +60,32 @@ const handler = async (req: Request): Promise<Response> => {
     // Only allow senders on our verified domain; otherwise spoofed From
     // addresses would relay through Resend under our account.
     const requestedFrom = emailData.from ?? "";
-    const fromAddress = /(@|<[^>]*@)gleeworld\.org>?\s*$/i.test(requestedFrom)
-      ? requestedFrom
-      : "GleeWorld <noreply@gleeworld.org>";
+    let fromAddress: string;
+    if (/(@|<[^>]*@)gleeworld\.org>?\s*$/i.test(requestedFrom)) {
+      fromAddress = requestedFrom;
+    } else {
+      // Default From carries the tenant's display name (the address must stay
+      // on the verified domain). Every app client sends x-tenant-slug as a
+      // global supabase-js header, so it rides along on functions.invoke too.
+      let senderName = "GleeWorld";
+      const tenantSlug = req.headers.get("x-tenant-slug");
+      if (tenantSlug && tenantSlug !== "main") {
+        const admin = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        );
+        const { data: tenant } = await admin
+          .from("gw_tenants")
+          .select("name")
+          .eq("slug", tenantSlug)
+          .maybeSingle();
+        // Display-name only — strip characters that could smuggle in a
+        // different address or break the header.
+        const clean = (tenant?.name ?? "").replace(/[<>@\r\n"]/g, "").trim();
+        if (clean) senderName = clean;
+      }
+      fromAddress = `${senderName} <noreply@gleeworld.org>`;
+    }
 
     const emailPayload: any = {
       from: fromAddress,
