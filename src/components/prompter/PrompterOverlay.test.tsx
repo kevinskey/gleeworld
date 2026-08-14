@@ -12,7 +12,55 @@ vi.mock('@/lib/assistant/speech', () => ({
   getSpeechInput: () => (speechMock.impl ? speechMock.impl() : { available: false, start: () => {}, stop: () => {} }),
 }));
 
-import { PrompterOverlay } from './PrompterOverlay';
+import { PrompterOverlay, followStep } from './PrompterOverlay';
+
+describe('followStep (word matcher)', () => {
+  // "the" appears again 8 words ahead — a classic false-jump bait.
+  const norms = 'children go where i send thee how shall the send the one by one'.split(' ');
+
+  it('advances in step through consecutive words', () => {
+    let s = { ptr: 0, pendingJump: null as number | null };
+    for (const w of ['children', 'go', 'where']) {
+      const r = followStep(norms, s.ptr, s.pendingJump, w);
+      expect(r.moved).toBe(true);
+      s = r;
+    }
+    expect(s.ptr).toBe(3);
+  });
+
+  it('does NOT jump on a lone far match — it waits for confirmation', () => {
+    const r = followStep(norms, 0, null, 'send'); // matches at idx 4, far from ptr 0
+    expect(r.moved).toBe(false);
+    expect(r.ptr).toBe(0);
+    expect(r.pendingJump).toBe(5);
+  });
+
+  it('commits a jump when the next word confirms it', () => {
+    const first = followStep(norms, 0, null, 'send');
+    const second = followStep(norms, first.ptr, first.pendingJump, 'thee'); // idx 5 = confirmation
+    expect(second.moved).toBe(true);
+    expect(second.ptr).toBe(6);
+  });
+
+  it('never starts a jump candidate from a short function word', () => {
+    const r = followStep(norms, 0, null, 'the'); // matches idx 8, far, len < 3... 'the' is 3
+    // 'the' is exactly 3 chars so it can seed; use a truly short word:
+    const r2 = followStep(norms, 0, null, 'by'); // idx 11, far, len 2
+    expect(r2.pendingJump).toBeNull();
+    expect(r2.moved).toBe(false);
+    void r;
+  });
+
+  it('holds through off-script speech', () => {
+    let s = { ptr: 2, pendingJump: null as number | null };
+    for (const w of ['completely', 'unrelated', 'adlib']) {
+      const r = followStep(norms, s.ptr, s.pendingJump, w);
+      expect(r.moved).toBe(false);
+      s = r;
+    }
+    expect(s.ptr).toBe(2);
+  });
+});
 
 describe('PrompterOverlay', () => {
   it('renders nothing when closed', () => {
