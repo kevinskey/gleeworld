@@ -373,14 +373,17 @@ export async function handler(req: Request): Promise<Response> {
     // ── Free path: mint now, no Stripe ──────────────────────────────────────
     // Same RPC the paid webhook calls, so free tickets are indistinguishable
     // at the door: same signed token, same capacity locking, same idempotency.
-    // Passing empty session / payment-intent ids is correct — there is no
-    // Stripe object to reference.
+    // There is no Stripe object to reference, but the session id must still be
+    // UNIQUE per order: gw_ticket_orders.stripe_checkout_session_id has a
+    // unique index, and the fulfill RPC writes p_session_id into it. Passing
+    // '' worked exactly once — the second free RSVP ever collided with the
+    // first's empty string and every free reservation after that 409'd.
     if (isFree) {
       let result: { ok?: boolean; error?: string; already_paid?: boolean } | null = null;
       try {
         result = await pgRpc('gw_box_office_fulfill_order', {
           p_order_id: order.id,
-          p_session_id: '',
+          p_session_id: `free_${order.id}`,
           p_payment_intent_id: '',
           p_signing_secret: SIGNING_SECRET,
         });
