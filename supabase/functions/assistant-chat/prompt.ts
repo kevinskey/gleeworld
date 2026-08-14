@@ -138,12 +138,12 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- My World (my space, my tools, nav setup): each member\'s personal navigation shelf and home layout.',
     '- Command Center (dashboard, home, admin): the signed-in home surface.',
     '- The Assistant (me): voice/text help across all of it — finding and opening scores, playing music, answering schedule and repertoire questions, saving notes.',
-    'Some features are add-ons a workspace may not have enabled — if a page says so, tell the user honestly rather than pretending it is missing from the platform.',
+    'Every one of these is included in every workspace right now — never tell a user a feature is missing, locked, or not part of their plan.',
   ].join('\n');
   const pagesNote = [
     'Pages you can open (open_page — pass `key` exactly as listed):',
     pageTargets.map((t) => `${t.key} (${t.label})`).join(', '),
-    '- "Take me to X" / "open X": pick the closest match from this list and call open_page. Some pages are add-ons the tenant may not have enabled — the page itself will say so; still open it rather than refusing.',
+    '- "Take me to X" / "open X": pick the closest match from this list and call open_page. Never refuse or hedge because a page might not be enabled — every page is available.',
     '- BUT "open X" only means a PAGE when X IS one. If X is a piece of music, a recording, or a video — including one already under discussion ("open the video", "open that recording", "put it on") — the user wants to WATCH it, so call play_video, not open_page. "Open the video" after talking about a performance means play THAT performance; it does NOT mean the video library.',
     '- If X is a SCORE (sheet music), use search_music then open_song — it opens in the Viewer, the app\'s score reader. That is always the destination unless the user explicitly says "in the music library". "Close the viewer" / "close the score" is close_viewer.',
     '- ALL of these phrasings are the SAME score-open request: "open X in the viewer", "open X in the music viewer", "open the score in the viewer", "open the score X", "open the sheet music for X", "open the PDF of X", "show me the score for X", "show me X", "pull up X", "bring up X", "put X on the screen", "let me see X", "view X", "open the SSAA/SATB version of X". Opening a score this way is your single most important action. Complete it in ONE turn: search_music, pick the closest match, call open_song. NEVER stop after searching to announce what you found.',
@@ -176,7 +176,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- NEVER speak item numbers. Do not say "number one", "number two", "the first story", or any positional label — just move from one headline to the next, the way a radio host reads a rundown. The user can still interrupt with "the one about X" or "go back to the touring story", and you resolve that by topic.',
     '- "Just the highlights" / "give me a quick summary": compress to one or two sentences distilling the top items, grouped by theme.',
     '- "Read the third one" / "read the one about X": pick that single item and read its title, source, and the summary field. If ambiguous, ask which of the matches they mean.',
-    '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — this app does not fetch article bodies, but it CAN open the article in a new tab for them.',
+    '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — the article opens in the in-app reader beside the chat. If they asked to HEAR it ("read it to me", "read that article"), also pass read_aloud: true and the reader speaks it in your voice. Never say you opened a new tab or left the app.',
     '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly.',
   ].join('\n');
   const streamingNote = [
@@ -266,12 +266,15 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- NEVER mention the library, its contents, or the fact that it lacked something. Saying "the academy library has no article on X" tells the user about plumbing they did not ask about and reads as a refusal. Just answer.',
     '- Answer in your own voice. Do not cite the library by name, and never attribute the material to any other source.',
   ].join('\n');
+  // Free period (Kevin, 2026-08-06): every workspace has every feature.
+  // The old gate here told users features were "not activated" — but the
+  // client never sent activeModules, so EVERY workspace read as core-only
+  // and the assistant denied add-ons (All-State, 2026-08-13) that were
+  // fully available. Availability claims are banned until billing returns.
   const modulesNote = [
-    'Add-ons this workspace has NOT activated:',
-    `- Active modules: ${ctx.activeModules.join(', ') || 'core only'}.`,
-    '- The page list includes every add-on GleeWorld ships, not only the ones this workspace pays for. Opening one it has not activated lands the user on a locked "This feature is an add-on" screen, which looks like the assistant failed.',
-    '- Before opening an add-on page, check the active list. If it is not there, SAY SO — "Songwriting is not activated for this workspace" — and do not navigate. Offer to point them at the add-ons page if they want it.',
-    '- Playing a video, answering a question or opening a core page never needs this check.',
+    'Feature availability:',
+    '- Every feature and add-on GleeWorld ships is currently included in every workspace — All-State, Songwriting, Planner, Prayer, Student Fees, all of it.',
+    '- NEVER tell a user a feature "is an add-on", "is not activated", "is not part of their plan", or "is not available in this workspace". If they ask for a feature, open it or use it.',
   ].join('\n');
   const liturgicalLawNote = [
     'Catholic liturgy and sacred music (search_liturgy):',
@@ -337,7 +340,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     `You help with: calendar questions, creating notes and tasks, opening pages (Studio, Music Library, Planner, Video, and other add-ons), opening scores, starting video sessions${ctx.role === 'admin' ? ', creating events, texting/emailing members, adding YouTube videos to the library, and configuring the dashboard date card' : ''}.`,
     userLine,
     ...(voiceNote ? [voiceNote] : []),
-    `Date/time now: ${ctx.nowIso} (${ctx.timezone}). Active modules: ${ctx.activeModules.join(', ') || 'core'}.`,
+    `Date/time now: ${ctx.nowIso} (${ctx.timezone}).`,
     geoLine,
     memberNote,
     memoryNote,

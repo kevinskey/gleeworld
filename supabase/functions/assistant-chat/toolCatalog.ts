@@ -349,10 +349,14 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'open_link',
-    description: 'Open an external http(s) link in a new browser tab — e.g. the full article behind a news headline from read_news_feeds. Use the exact link from the tool result; never fabricate URLs.',
+    description: 'Open an external http(s) link in the in-app article reader — e.g. the full article behind a news headline from read_news_feeds. The reader shows the article text beside the chat (with a Read-aloud button) without leaving the app. Use the exact link from the tool result; never fabricate URLs.',
     parameters: {
       type: 'object',
-      properties: { url: str('The http(s) URL to open'), title: str('Short human name for the link, for the spoken confirmation (optional)') },
+      properties: {
+        url: str('The http(s) URL to open'),
+        title: str('Short human name for the link, for the spoken confirmation (optional)'),
+        read_aloud: { type: 'boolean', description: 'true ONLY if the user asked to HEAR the article ("read it to me") — the reader starts speaking it as soon as it loads' },
+      },
       required: ['url'],
     },
     minRole: 'member', execution: 'client', confirm: false,
