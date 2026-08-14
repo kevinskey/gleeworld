@@ -100,9 +100,14 @@ export default function AuthPage() {
     if (returnTo) return returnTo;
     if (hasTimeSlot) return '/audition-application';
 
-    // Regular auth: go to root and let useRoleBasedRedirect pick the
-    // role-appropriate destination (super-admin → /control-center, etc.)
-    return '/';
+    // Regular auth lands in the Command Center, directly. It used to
+    // return '/' and let useRoleBasedRedirect route from the root — but
+    // tenant roots stopped redirecting signed-in users (PR #670, so the
+    // public site is viewable while logged in), which left a fresh
+    // password login stranded on the public page (Kevin, 2026-08-14:
+    // "when admin or students user logs in with a password they should
+    // land on command center").
+    return '/dashboard';
   };
   useEffect(() => {
     // If user is already authenticated, redirect them
