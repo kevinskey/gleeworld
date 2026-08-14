@@ -55,18 +55,21 @@ describe('executeClientAction', () => {
     expect(seating.ok).toBe(true);
   });
 
-  it('open_link opens http(s) URLs in a new tab and rejects other schemes', async () => {
+  it('open_link surfaces the in-app article reader and rejects other schemes', async () => {
+    // In-app reader, NOT window.open — a new tab abandons the Command
+    // Center (Kevin, 2026-08-13).
     const opened: string[] = [];
     vi.stubGlobal('open', (url: string) => { opened.push(url); return null; });
     try {
-      const ok = await executeClientAction({ tool: 'open_link', args: { url: 'https://example.com/story' }, confirm: false });
-      expect(ok.ok).toBe(true);
-      expect(opened).toEqual(['https://example.com/story']);
+      const ok = await executeClientAction({ tool: 'open_link', args: { url: 'https://example.com/story', title: 'Story' }, confirm: false });
+      expect(ok).toMatchObject({ ok: true, article: { url: 'https://example.com/story', title: 'Story' } });
+      const heard = await executeClientAction({ tool: 'open_link', args: { url: 'https://example.com/story', read_aloud: true }, confirm: false });
+      expect(heard.article?.readAloud).toBe(true);
       const js = await executeClientAction({ tool: 'open_link', args: { url: 'javascript:alert(1)' }, confirm: false });
       expect(js.ok).toBe(false);
       const data = await executeClientAction({ tool: 'open_link', args: { url: 'data:text/html,x' }, confirm: false });
       expect(data.ok).toBe(false);
-      expect(opened).toHaveLength(1);
+      expect(opened).toHaveLength(0);
     } finally {
       vi.unstubAllGlobals();
     }

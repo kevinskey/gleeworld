@@ -67,6 +67,9 @@ export interface ActionOutcome {
   /** Start Apple Music playback in the floating popout (same window the
    *  YouTube player uses). The provider owns the MusicKit hand-off. */
   appleMusic?: { id: string; kind: 'song' | 'album' | 'playlist'; title?: string; artist?: string; artworkUrl?: string | null };
+  /** Show an article in the in-app reader panel (extract-article) instead of
+   *  leaving the Command Center for a new tab. readAloud auto-starts speech. */
+  article?: { url: string; title?: string; readAloud?: boolean };
   message: string;
 }
 
@@ -129,13 +132,20 @@ export async function executeClientAction(
         return { ok: true, navigateTo: `/bible?${qs.toString()}`, message: `Opening ${ref}.` };
       }
       case 'open_link': {
-        // External article/link hand-off (e.g. "open the full article" on a
-        // news item). http(s) only — the URL is model-supplied and may echo
-        // feed content, so never allow javascript:/data:/custom schemes.
+        // External article/link (e.g. "open the full article" on a news
+        // item). Shown in the in-app reader panel — never a new tab; leaving
+        // the Command Center for a headline reads as the app dumping the
+        // user (Kevin, 2026-08-13). http(s) only — the URL is model-supplied
+        // and may echo feed content, so never allow javascript:/data:/custom
+        // schemes.
         const url = String(a.url ?? '');
         if (!/^https?:\/\/\S+$/i.test(url)) return { ok: false, message: 'That link looks invalid.' };
-        (globalThis as unknown as Window).open(url, '_blank', 'noopener,noreferrer');
-        return { ok: true, message: `Opening ${String(a.title ?? 'the article').slice(0, 120)} in a new tab.` };
+        const title = typeof a.title === 'string' && a.title.trim() ? a.title.trim().slice(0, 160) : undefined;
+        return {
+          ok: true,
+          article: { url, ...(title ? { title } : {}), ...(a.read_aloud === true ? { readAloud: true } : {}) },
+          message: `Opening ${title ?? 'the article'}.`,
+        };
       }
       case 'open_song': {
         const id = String(a.score_id ?? '');

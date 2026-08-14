@@ -406,6 +406,9 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // isn't popup-blocked. The URL always comes from our own deep-link
     // builders, never from model output.
     if (outcome.openExternalUrl) window.open(outcome.openExternalUrl, '_blank', 'noopener,noreferrer');
+    // Articles open in the in-app reader panel, keeping the Command Center
+    // in place (Kevin, 2026-08-13).
+    if (outcome.article) showResult({ kind: 'article', ...outcome.article });
     if (outcome.stopPlayback) setNowPlaying(null);
     if (outcome.appleMusic) {
       // Same rule as the YouTube popout: two audio sources on one speaker
@@ -447,7 +450,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           break;
       }
     }
-  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc, setNowPlaying, stopSpeakingNow]);
+  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc, setNowPlaying, stopSpeakingNow, showResult]);
 
   const cancelAction = useCallback((msgId: string) => {
     dispatch({ type: 'action-state', id: msgId, state: 'cancelled' });
