@@ -85,13 +85,66 @@ const handler = async (req: Request): Promise<Response> => {
     if (emailData.bcc?.length) emailPayload.bcc = emailData.bcc;
     if (emailData.attachments?.length) emailPayload.attachments = emailData.attachments;
 
-    const emailResponse = await resend.emails.send(emailPayload);
+    // Resend hard-caps `to` at 50 addresses, and a big broadcast must not
+    // expose every address to every recipient anyway. Multi-recipient sends
+    // go out in BCC chunks (to: = our own from address); a single recipient
+    // keeps the normal To: header. Explicit cc/bcc passthrough only applies
+    // to single-recipient sends.
+    const BATCH = 50;
+    const recipients: string[] = emailPayload.to;
+    const chunks: string[][] = [];
+    if (recipients.length > 1) {
+      for (let i = 0; i < recipients.length; i += BATCH) {
+        chunks.push(recipients.slice(i, i + BATCH));
+      }
+    } else {
+      chunks.push(recipients);
+    }
 
-    console.log("Email sent successfully:", emailResponse);
+    let sentCount = 0;
+    const errors: string[] = [];
+    const ids: string[] = [];
+    for (const [i, chunk] of chunks.entries()) {
+      const payload = { ...emailPayload };
+      if (recipients.length > 1) {
+        payload.to = [fromAddress.replace(/^.*<|>$/g, "") || "noreply@gleeworld.org"];
+        payload.bcc = chunk;
+        delete payload.cc;
+      }
+      // resend-js does NOT throw on API errors — it returns { data, error }.
+      // The old code ignored `error` and reported success on rejected sends.
+      const { data, error } = await resend.emails.send(payload);
+      if (error) {
+        console.error(`Batch ${i + 1}/${chunks.length} failed:`, error);
+        errors.push(`batch ${i + 1}: ${error.message ?? JSON.stringify(error)}`);
+      } else {
+        sentCount += chunk.length;
+        if (data?.id) ids.push(data.id);
+      }
+      // Stay under Resend's request rate limit between chunks.
+      if (i < chunks.length - 1) await new Promise((r) => setTimeout(r, 600));
+    }
+
+    if (errors.length > 0) {
+      console.error(`Send finished with failures: ${sentCount}/${recipients.length} delivered`, errors);
+      return new Response(JSON.stringify({
+        success: false,
+        error: `Sent ${sentCount} of ${recipients.length} recipients; failures: ${errors.join("; ")}`,
+        sentCount,
+        totalCount: recipients.length,
+      }), {
+        status: 502,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    console.log(`Email sent successfully to ${sentCount} recipient(s) in ${chunks.length} batch(es)`, ids);
 
     return new Response(JSON.stringify({
       success: true,
-      id: emailResponse.data?.id,
+      id: ids[0],
+      ids,
+      sentCount,
       message: "Email sent successfully"
     }), {
       status: 200,
