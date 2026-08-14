@@ -31,7 +31,13 @@ const SIZES = [1.5, 1.875, 2.25, 3, 3.75, 4.5];
 const EYE_LINE = 0.12;
 /** How far ahead of the pointer a spoken word may land and still count —
  *  covers skipped lines, recognizer drops, and mid-paragraph jumps. */
-const MATCH_LOOKAHEAD = 30;
+const MATCH_LOOKAHEAD = 20;
+/** Matches at most this far past the pointer advance instantly; anything
+ *  further is a JUMP and needs the next word to land right after it
+ *  before the prompter moves — one stray "the" matching a copy of itself
+ *  three lines down must not drag the script there (Kevin, 2026-08-14:
+ *  "moving past me 3 lines at a time jumping up"). */
+const NEAR_MATCH = 3;
 
 function readStored(key: string, fallback: number): number {
   try {
@@ -56,6 +62,29 @@ function wordsMatch(a: string, b: string): boolean {
   return false;
 }
 
+/** One spoken word against the script pointer. Pure so the jump rules are
+ *  testable: near matches advance instantly; a far match is only a
+ *  candidate until the following word lands right after it. */
+export function followStep(
+  norms: string[],
+  ptr: number,
+  pendingJump: number | null,
+  spoken: string,
+): { ptr: number; pendingJump: number | null; moved: boolean } {
+  const end = Math.min(norms.length, ptr + MATCH_LOOKAHEAD);
+  let found = -1;
+  for (let i = ptr; i < end; i++) {
+    if (wordsMatch(norms[i], spoken)) { found = i; break; }
+  }
+  if (found === -1) return { ptr, pendingJump, moved: false };
+  if (found - ptr <= NEAR_MATCH) return { ptr: found + 1, pendingJump: null, moved: true };
+  if (pendingJump != null && found >= pendingJump && found <= pendingJump + 2) {
+    return { ptr: found + 1, pendingJump: null, moved: true };
+  }
+  if (spoken.length >= 3) return { ptr, pendingJump: found + 1, moved: false };
+  return { ptr, pendingJump, moved: false };
+}
+
 export interface PrompterOverlayProps {
   open: boolean;
   onClose: () => void;
@@ -70,6 +99,9 @@ interface FollowState {
   consumed: number;
   /** pointer into matchWords — the next script word we expect to hear */
   ptr: number;
+  /** unconfirmed far-match candidate: the matchWords index the NEXT spoken
+   *  word must land at (±2) to commit the jump */
+  pendingJump: number | null;
   raf: number;
   /** scrollTop the smooth loop is easing toward; null = hold */
   target: number | null;
@@ -168,7 +200,7 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
         if (span && span.offsetTop >= eye - 8) { startPtr = i; break; }
       }
     }
-    const state: FollowState = { active: true, input, consumed: 0, ptr: startPtr, raf: 0, target: null };
+    const state: FollowState = { active: true, input, consumed: 0, ptr: startPtr, pendingJump: null, raf: 0, target: null };
     followRef.current = state;
 
     const onTranscript = (transcript: string) => {
@@ -177,17 +209,14 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
       const fresh = words.slice(state.consumed);
       state.consumed = words.length;
       let moved = false;
+      // Off-script words match nothing and move nothing — the prompter
+      // holds while the reader ad-libs, exactly as asked.
+      const norms = matchWords.map((m) => m.norm);
       for (const spoken of fresh) {
-        const end = Math.min(matchWords.length, state.ptr + MATCH_LOOKAHEAD);
-        for (let i = state.ptr; i < end; i++) {
-          if (wordsMatch(matchWords[i].norm, spoken)) {
-            state.ptr = i + 1;
-            moved = true;
-            break;
-          }
-        }
-        // Off-script words match nothing and move nothing — the prompter
-        // holds while the reader ad-libs, exactly as asked.
+        const r = followStep(norms, state.ptr, state.pendingJump, spoken);
+        state.ptr = r.ptr;
+        state.pendingJump = r.pendingJump;
+        moved = moved || r.moved;
       }
       if (moved && state.ptr > 0) {
         const t = targetForWord(matchWords[state.ptr - 1].domIdx);
