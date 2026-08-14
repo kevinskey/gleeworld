@@ -32,6 +32,17 @@ export function resolvePageRoute(rawKey: string): { route: string; label: string
   return undefined;
 }
 
+/** Same catalog lookup, but yields the catalog KEY — what the My World
+ *  shelf stores — rather than a route. */
+export function resolveNavKey(rawKey: string): { key: string; label: string } | undefined {
+  const key = normalize(rawKey);
+  const byKey = NAV_CATALOG.find((e) => e.key === key);
+  if (byKey) return { key: byKey.key, label: byKey.label };
+  const byLabel = NAV_CATALOG.find((e) => normalize(e.label) === key);
+  if (byLabel) return { key: byLabel.key, label: byLabel.label };
+  return undefined;
+}
+
 // Legacy route whitelist for open_page — superseded by resolvePageRoute's
 // nav-catalog lookup; kept only as an alias fallback for old key spellings.
 export const PAGE_ROUTES: Record<string, string> = {
@@ -146,6 +157,36 @@ export async function executeClientAction(
           article: { url, ...(title ? { title } : {}), ...(a.read_aloud === true ? { readAloud: true } : {}) },
           message: `Opening ${title ?? 'the article'}.`,
         };
+      }
+      case 'add_to_nav': {
+        // "Add the Studio to my nav": append a catalog key to the member's
+        // My World shelf. Headless mirror of useMyTools.pinTool — reads via
+        // get_nav_prefs and writes via the SECURITY DEFINER save RPC
+        // (user_preferences standing rule: never direct select/upsert).
+        const target = resolveNavKey(String(a.key));
+        if (!target) return { ok: false, message: `I don't know a feature called "${a.key}".` };
+        const [{ resolveKey, resolveKeys, parseMyTools }, { flattenShelf }] = await Promise.all([
+          import('@/lib/navigation/myTools'),
+          import('@/lib/navigation/toolGroups'),
+        ]);
+        const toolKey = resolveKey(target.key);
+        if (toolKey === 'home') return { ok: true, message: 'Home is always on your shelf.' };
+        const { data, error } = await deps.supabase.rpc('get_nav_prefs', {});
+        if (error) return { ok: false, message: "I couldn't read your world settings just now." };
+        const row = Array.isArray(data) ? data[0] : data;
+        const record = parseMyTools(row?.nav_item_order ?? null);
+        if (!record) {
+          // No parseable stored shelf: seeding one here would bake in the
+          // wrong role's defaults. My World's first save migrates it.
+          return { ok: false, message: "Your world hasn't been set up yet — open My World once, then I can add tools for you." };
+        }
+        if (resolveKeys(flattenShelf(record)).includes(toolKey)) {
+          return { ok: true, message: `${target.label} is already in your world.` };
+        }
+        const next = { ...record, tools: [...record.tools, toolKey] };
+        const { error: saveErr } = await deps.supabase.rpc('save_nav_item_order', { p_nav_item_order: next });
+        if (saveErr) return { ok: false, message: "I couldn't save that — try again in a moment." };
+        return { ok: true, message: `Added ${target.label} to your world.` };
       }
       case 'open_song': {
         const id = String(a.score_id ?? '');

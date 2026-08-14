@@ -151,7 +151,10 @@ export function DocumentEditor({
       {/* w-full is load-bearing: in a flex-col parent, mx-auto overrides the
           default cross-axis stretch and the card shrink-wraps its content
           (an empty doc collapsed to ~90px). */}
-      <div className="w-full mx-auto max-w-[700px] px-6 py-10 bg-card rounded-xl">
+      {/* 816px ≈ a US-letter page at 96dpi — the sources rail is gone
+          (Kevin, 2026-08-13: "let doc have width"), so the paper can be
+          paper-sized. */}
+      <div className="w-full mx-auto max-w-[816px] px-6 py-10 bg-card rounded-xl">
         <EditorContent editor={editor} />
         <LinkBubble editor={editor} />
       </div>

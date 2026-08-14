@@ -348,6 +348,16 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'add_to_nav',
+    description: 'Add a feature to the user\'s personal navigation (their My World shelf) — "add the Studio to my nav", "put Part Tracks in my tools". key is the same page key open_page uses. Adding never opens the page; confirm what was added in a few words.',
+    parameters: {
+      type: 'object',
+      properties: { key: str('The page key of the feature to add (same catalog as open_page)') },
+      required: ['key'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
     name: 'open_link',
     description: 'Open an external http(s) link in the in-app article reader — e.g. the full article behind a news headline from read_news_feeds. The reader shows the article text beside the chat (with a Read-aloud button) without leaving the app. Use the exact link from the tool result; never fabricate URLs.',
     parameters: {
