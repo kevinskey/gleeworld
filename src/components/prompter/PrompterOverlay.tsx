@@ -218,21 +218,46 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
 
       {/* Tap anywhere on the text = play/pause, the one control a reader
           mid-sentence can find without looking. */}
-      <div
-        ref={scrollRef}
-        data-testid="prompter-scroll"
-        onClick={togglePlay}
-        className="min-h-0 flex-1 cursor-pointer overflow-y-auto"
-      >
+      <div className="relative min-h-0 flex-1">
         <div
-          className="mx-auto max-w-4xl px-6 font-semibold"
-          style={{ fontSize: `${SIZES[sizeIdx]}rem`, lineHeight: 1.5, paddingTop: '45vh', paddingBottom: '55vh' }}
+          ref={scrollRef}
+          data-testid="prompter-scroll"
+          onClick={togglePlay}
+          className="h-full cursor-pointer overflow-y-auto"
         >
-          {paragraphs.length === 0 ? (
-            <p className="text-white/50">Nothing to read — this document is empty.</p>
-          ) : (
-            paragraphs.map((p, i) => <p key={i} className="mb-[1em]">{p}</p>)
-          )}
+          {/* Eye line lives at ~12vh: the line being read sits near the TOP
+              and everything already read leaves the screen at once (Kevin,
+              2026-08-13: "has to be sure that the read text is off the
+              screen"). The big bottom padding lets the final line climb all
+              the way up to the eye line. */}
+          <div
+            className="mx-auto max-w-4xl px-6 font-semibold"
+            style={{ fontSize: `${SIZES[sizeIdx]}rem`, lineHeight: 1.5, paddingTop: '12vh', paddingBottom: '85vh' }}
+          >
+            {paragraphs.length === 0 ? (
+              <p className="text-white/50">Nothing to read — this document is empty.</p>
+            ) : (
+              paragraphs.map((p, i) => <p key={i} className="mb-[1em]">{p}</p>)
+            )}
+          </div>
+        </div>
+        {/* Departing lines fade INTO the top edge instead of lingering. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0"
+          style={{ height: '10vh', background: 'linear-gradient(to bottom, rgba(0,0,0,0.96), transparent)' }}
+        />
+        {/* The eye-line marker: read the line at the arrow. */}
+        <div aria-hidden className="pointer-events-none absolute left-1" style={{ top: '12vh' }}>
+          <div
+            className="h-0 w-0"
+            style={{
+              borderTop: '10px solid transparent',
+              borderBottom: '10px solid transparent',
+              borderLeft: '14px solid rgba(212,169,55,0.9)',
+              transform: 'translateY(0.35em)',
+            }}
+          />
         </div>
       </div>
 
