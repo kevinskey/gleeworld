@@ -448,6 +448,12 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         case 'set_date_card':
           qc.invalidateQueries({ queryKey: ['date-card-setting'] });
           break;
+        case 'add_to_nav':
+          // useMyTools caches the raw prefs row under ['my-tools', uid];
+          // base-key invalidation matches every user variant so the shelf
+          // shows the new tool without a refresh.
+          qc.invalidateQueries({ queryKey: ['my-tools'] });
+          break;
       }
     }
   }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc, setNowPlaying, stopSpeakingNow, showResult]);

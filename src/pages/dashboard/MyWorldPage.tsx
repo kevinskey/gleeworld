@@ -9,6 +9,7 @@
 // a save returns false, so a failure is never silent.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.4
 import { useMemo, useRef, useState } from 'react';
+import { Check } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
@@ -21,7 +22,7 @@ import {
   applyPreviewRole, resolveNav, HIDEABLE_NAV_ROLES, type NavContext, type NavRole,
 } from '@/lib/navigation/navCatalog';
 import {
-  selectShelfEntries, DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, sanitizeShelf,
+  DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, sanitizeShelf,
   type Shelf, type ToolGroup,
 } from '@/lib/navigation/myTools';
 import { flattenShelf } from '@/lib/navigation/toolGroups';
@@ -149,11 +150,11 @@ export default function MyWorldPage() {
   const widgetOptions = widgetsFor(role);
   const widgets = useMemo(() => resolveWidgets(role, myTools?.widgets ?? []), [role, myTools]);
 
-  // Loose AND grouped: the strip reads out everything in the member's world,
-  // so filing a tool into a group must not make it vanish from the readout.
-  const preview = useMemo(
-    () => selectShelfEntries(available, flattenShelf({ tools, groups })),
-    [available, tools, groups],
+  // Loose AND grouped: the strip covers everything in the member's world,
+  // so filing a tool into a group must not make it read as unchosen.
+  const chosenKeys = useMemo(
+    () => new Set(flattenShelf({ tools, groups })),
+    [tools, groups],
   );
 
   // MyWorldEditor hands BOTH lists up on every group edit — its two
@@ -197,6 +198,21 @@ export default function MyWorldPage() {
 
   const handleToolsChange = (next: string[]) => queueShelf({ tools: next });
   const handleGroupsChange = (next: ToolGroup[]) => queueShelf({ groups: next });
+
+  // The chip strip's tap handler. Adding lands in the loose list (same as
+  // the editor's ⊕); removing has to sweep loose AND groups in ONE patch —
+  // two queueShelf calls would still merge same-tick, but one call keeps
+  // the remove atomic on its face.
+  const toggleToolChip = (key: string) => {
+    if (!chosenKeys.has(key)) {
+      handleToolsChange([...tools, key]);
+      return;
+    }
+    queueShelf({
+      tools: tools.filter((k) => k !== key),
+      groups: groups.map((g) => ({ ...g, tools: g.tools.filter((k) => k !== key) })),
+    });
+  };
 
   const handleWidgetsChange = async (next: string[]) => {
     const ok = await saveMyTools({ widgets: next });
@@ -315,24 +331,33 @@ export default function MyWorldPage() {
           </div>
         ) : (
           <>
-            {/* Live preview strip — a small readout of what's currently in
-                the member's world, as keycap-sized glyphs, so the effect of
-                an edit below is visible without navigating away to check
-                the shelf. */}
+            {/* Tool chip strip — every available tool, tappable. Chosen ones
+                are filled with a check; the identical-pill readout it
+                replaced was unreadable as state (Kevin, 2026-08-13: "I
+                can't tell when an item is selected"). */}
             <div data-testid="my-world-preview" className="flex flex-wrap gap-2">
-              {preview.length === 0 ? (
-                <span className="text-sm text-muted-foreground">Nothing chosen yet.</span>
-              ) : (
-                preview.map((entry) => (
-                  <span
+              {available.map((entry) => {
+                const chosen = chosenKeys.has(entry.key);
+                return (
+                  <button
                     key={entry.key}
-                    className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full bg-muted text-xs font-medium"
+                    type="button"
+                    aria-pressed={chosen}
+                    onClick={() => toggleToolChip(entry.key)}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-xs font-medium transition-colors',
+                      chosen
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                        : 'border border-border bg-background text-muted-foreground hover:bg-muted',
+                    )}
                   >
-                    <entry.icon className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                    {chosen
+                      ? <Check className="w-3.5 h-3.5 shrink-0" aria-hidden />
+                      : <entry.icon className="w-3.5 h-3.5 shrink-0" aria-hidden />}
                     {entry.label}
-                  </span>
-                ))
-              )}
+                  </button>
+                );
+              })}
             </div>
 
             <MyWorldEditor

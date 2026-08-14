@@ -441,19 +441,22 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
           Export
         </Button>
 
+        {/* Sources live up here now, at every size — the docked right rail
+            squeezed the page (Kevin, 2026-08-13: "move sources up and let
+            doc have width"). The sheet slides OVER the doc instead. */}
         <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
           <SheetTrigger asChild>
-            <Button type="button" variant="outline" size="sm" className="text-xs lg:hidden">Sources</Button>
+            <Button type="button" variant="outline" size="sm" className="text-xs">Sources</Button>
           </SheetTrigger>
-          <SheetContent side="bottom">
+          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
             <SheetHeader><SheetTitle>Sources</SheetTitle></SheetHeader>
             <div className="mt-3">{sourcesPanel}</div>
           </SheetContent>
         </Sheet>
       </div>
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        <div className="min-w-0 flex-1" ref={editorContainerRef}>
+      <div className="flex flex-col gap-4">
+        <div className="min-w-0" ref={editorContainerRef}>
           <DocumentEditor
             content={initialContent}
             onUpdate={handleEditorUpdate}
@@ -468,13 +471,13 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
           {/* Footer: live word count + save status (spec §"Editor page"). The
               count comes straight from the editor's onUpdate, so it tracks
               typing rather than the last persisted value. */}
-          <div className="mx-auto mt-2 flex max-w-[700px] items-center justify-between px-6">
+          <div className="mx-auto mt-2 flex max-w-[816px] items-center justify-between px-6">
             <span className="text-xs text-muted-foreground">{wordCountLabel(wordCount)}</span>
             <span className="text-xs text-muted-foreground" role="status">{statusLabel}</span>
           </div>
 
           {openFootnoteId && (
-            <div className="mx-auto mt-2 max-w-[700px]">
+            <div className="mx-auto mt-2 max-w-[816px]">
               <Card className="flex flex-col gap-2 p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-foreground">Footnote</span>
@@ -491,12 +494,10 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             </div>
           )}
 
-          <div className="mx-auto mt-8 max-w-[700px]">
+          <div className="mx-auto mt-8 max-w-[816px]">
             <WorksCitedPreview sources={sources} style={style} />
           </div>
         </div>
-
-        <div className="hidden lg:flex">{sourcesPanel}</div>
       </div>
 
       <input

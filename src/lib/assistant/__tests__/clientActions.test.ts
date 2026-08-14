@@ -75,6 +75,31 @@ describe('executeClientAction', () => {
     }
   });
 
+  it('add_to_nav appends a catalog key to the stored shelf via the definer RPCs', async () => {
+    const record = { v: 4, tools: ['calendar'], groups: [], widgets: [], setupComplete: true };
+    const rpc = vi.fn(async (fn: string, _args?: Record<string, unknown>) => {
+      if (fn === 'get_nav_prefs') return { data: [{ nav_item_order: record, home_tile_layout: null }], error: null };
+      return { data: null, error: null };
+    });
+    const out = await executeClientAction({ tool: 'add_to_nav', args: { key: 'studio' }, confirm: false }, makeDeps({ rpc }));
+    expect(out.ok).toBe(true);
+    const saveCall = rpc.mock.calls.find((c) => c[0] === 'save_nav_item_order');
+    expect((saveCall?.[1] as { p_nav_item_order: { tools: string[] } }).p_nav_item_order.tools).toEqual(['calendar', 'studio']);
+  });
+
+  it('add_to_nav is idempotent and honest about unknown features', async () => {
+    const record = { v: 4, tools: ['studio'], groups: [], widgets: [], setupComplete: true };
+    const rpc = vi.fn(async (fn: string) => {
+      if (fn === 'get_nav_prefs') return { data: [{ nav_item_order: record, home_tile_layout: null }], error: null };
+      return { data: null, error: null };
+    });
+    const dup = await executeClientAction({ tool: 'add_to_nav', args: { key: 'studio' }, confirm: false }, makeDeps({ rpc }));
+    expect(dup.ok).toBe(true);
+    expect(rpc.mock.calls.some((c) => c[0] === 'save_nav_item_order')).toBe(false);
+    const unknown = await executeClientAction({ tool: 'add_to_nav', args: { key: 'flux-capacitor' }, confirm: false }, makeDeps({ rpc }));
+    expect(unknown.ok).toBe(false);
+  });
+
   it('open_song builds the viewer deep link', async () => {
     const out = await executeClientAction({ tool: 'open_song', args: { score_id: 'abc-123' }, confirm: false });
     expect(out.navigateTo).toBe('/dashboard/viewer/abc-123');
