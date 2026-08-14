@@ -39,4 +39,14 @@ describe('PrompterOverlay', () => {
     render(<PrompterOverlay open onClose={() => {}} text="   " />);
     expect(screen.getByText(/Nothing to read/)).toBeInTheDocument();
   });
+
+  it('offers voice control and reports a blocked mic honestly', async () => {
+    const getUserMedia = vi.fn().mockRejectedValue(new Error('denied'));
+    Object.defineProperty(navigator, 'mediaDevices', { value: { getUserMedia }, configurable: true });
+    render(<PrompterOverlay open onClose={() => {}} text="Read me" />);
+    const voice = screen.getByRole('button', { name: /Voice control/ });
+    fireEvent.click(voice);
+    await screen.findByTitle(/Microphone blocked/);
+    expect(getUserMedia).toHaveBeenCalled();
+  });
 });

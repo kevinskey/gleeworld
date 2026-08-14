@@ -9,7 +9,7 @@
 // the voice is comfortable.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Minus, Pause, Play, Plus, X } from 'lucide-react';
+import { Mic, MicOff, Minus, Pause, Play, Plus, X } from 'lucide-react';
 
 const SPEED_KEY = 'gw-prompter-speed';
 const SIZE_KEY = 'gw-prompter-size';
@@ -38,6 +38,70 @@ export interface PrompterOverlayProps {
 export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [playing, setPlaying] = useState(false);
+  // Voice mode (Kevin, 2026-08-13: "hear the voice read the text — start
+  // off, stop on"): the mic gates the scroll. Speech = roll, silence =
+  // hold. Voice ACTIVITY, deliberately not speech RECOGNITION — matching
+  // spoken words to script position mis-tracks on names/ad-libs, while an
+  // energy gate with a hangover feels identical at the lectern.
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [micDenied, setMicDenied] = useState(false);
+  const voiceRef = useRef<{ stream: MediaStream; ctx: AudioContext; raf: number } | null>(null);
+
+  const stopVoice = useCallback(() => {
+    const v = voiceRef.current;
+    voiceRef.current = null;
+    if (v) {
+      cancelAnimationFrame(v.raf);
+      v.stream.getTracks().forEach((t) => t.stop());
+      void v.ctx.close().catch(() => { /* already closed */ });
+    }
+    setVoiceMode(false);
+    setPlaying(false);
+  }, []);
+
+  const startVoice = useCallback(async () => {
+    if (voiceRef.current) return;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true },
+      });
+      const ctx = new AudioContext();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 1024;
+      ctx.createMediaStreamSource(stream).connect(analyser);
+      const buf = new Float32Array(analyser.fftSize);
+      // Adaptive floor: quiet-room hum on a hot mic beats any fixed
+      // threshold. Tracks slowly so speech itself doesn't raise it.
+      let floor = 0.008;
+      let lastVoice = 0; // never spoken yet → holds until the first word
+      const HANGOVER_MS = 900; // inter-phrase breaths must not stutter the roll
+      const loop = () => {
+        analyser.getFloatTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+        const rms = Math.sqrt(sum / buf.length);
+        floor = Math.min(0.02, floor * 0.995 + rms * 0.005);
+        const speaking = rms > Math.max(0.015, floor * 3.5);
+        const now = performance.now();
+        if (speaking) lastVoice = now;
+        setPlaying(lastVoice > 0 && now - lastVoice < HANGOVER_MS);
+        const v = voiceRef.current;
+        if (v) v.raf = requestAnimationFrame(loop);
+      };
+      voiceRef.current = { stream, ctx, raf: requestAnimationFrame(loop) };
+      setMicDenied(false);
+      setVoiceMode(true);
+    } catch {
+      setMicDenied(true);
+      setVoiceMode(false);
+    }
+  }, []);
+
+  // Leaving the prompter releases the mic, always.
+  useEffect(() => {
+    if (!open) stopVoice();
+    return stopVoice;
+  }, [open, stopVoice]);
   const [speed, setSpeed] = useState(() => Math.min(SPEED_MAX, Math.max(SPEED_MIN, readStored(SPEED_KEY, 40))));
   const [sizeIdx, setSizeIdx] = useState(() => {
     const idx = readStored(SIZE_KEY, 3);
@@ -101,19 +165,26 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
     return () => cancelAnimationFrame(raf);
   }, [open, playing, speed]);
 
+  // In voice mode a manual play/pause is an exit: the reader grabbing for
+  // control mid-service must win over the mic instantly.
+  const togglePlay = useCallback(() => {
+    if (voiceRef.current) { stopVoice(); return; }
+    setPlaying((p) => !p);
+  }, [stopVoice]);
+
   // Space = play/pause, arrows = speed, Escape = leave. Capture-phase so
   // the page under the overlay never sees them.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === ' ') { e.preventDefault(); setPlaying((p) => !p); }
+      if (e.key === ' ') { e.preventDefault(); togglePlay(); }
       else if (e.key === 'ArrowUp') { e.preventDefault(); changeSpeed(SPEED_STEP); }
       else if (e.key === 'ArrowDown') { e.preventDefault(); changeSpeed(-SPEED_STEP); }
       else if (e.key === 'Escape') { e.preventDefault(); onClose(); }
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [open, changeSpeed, onClose]);
+  }, [open, changeSpeed, onClose, togglePlay]);
 
   // Keep the screen awake mid-reading (best-effort; Safari < 16.4 lacks it).
   useEffect(() => {
@@ -150,7 +221,7 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
       <div
         ref={scrollRef}
         data-testid="prompter-scroll"
-        onClick={() => setPlaying((p) => !p)}
+        onClick={togglePlay}
         className="min-h-0 flex-1 cursor-pointer overflow-y-auto"
       >
         <div
@@ -171,11 +242,24 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
       >
         <button
           type="button"
-          onClick={() => setPlaying((p) => !p)}
+          onClick={togglePlay}
           aria-label={playing ? 'Pause' : 'Play'}
           className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-black hover:bg-white/90 transition-colors"
         >
           {playing ? <Pause className="h-5 w-5" /> : <Play className="ml-0.5 h-5 w-5" />}
+        </button>
+        <button
+          type="button"
+          onClick={() => (voiceMode ? stopVoice() : void startVoice())}
+          aria-label={voiceMode ? 'Turn off voice control' : 'Voice control — scrolls while you speak'}
+          aria-pressed={voiceMode}
+          title={micDenied ? 'Microphone blocked — allow mic access and try again' : 'Scrolls while you speak, holds when you stop'}
+          className={`flex h-12 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors ${
+            voiceMode ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-white/10 hover:bg-white/20'
+          }`}
+        >
+          {micDenied ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+          Voice
         </button>
         <div className="flex items-center gap-1 rounded-full bg-white/10 px-2 py-1">
           <button type="button" onClick={() => changeSpeed(-SPEED_STEP)} aria-label="Slower" className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-white/15">
