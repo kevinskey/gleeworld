@@ -433,6 +433,35 @@ export default function PublicPageEditor() {
           description: 'That block could not be saved — it may have been deleted, or you may not have permission.',
           variant: 'destructive',
         });
+      } else {
+        // Header edits (nav links, logo, countdown) go live IMMEDIATELY on a
+        // published site — no Republish step. Site chrome isn't page content:
+        // "there is no way to know [nav is stuck in a draft] … nav should
+        // save instantly" (Kevin, 2026-08-14). Content blocks keep the
+        // draft → Republish flow. Fresh read of published_blocks rather than
+        // the mounted `site` row so a Republish from another tab between
+        // mount and now isn't clobbered with stale blocks.
+        const isHeader = blocks.find((b) => b.id === id)?.block_type === 'header';
+        if (isHeader) {
+          const { data: fresh } = await supabase
+            .from('gw_public_sites')
+            .select('id, is_published, published_blocks')
+            .maybeSingle();
+          if (fresh?.is_published && Array.isArray(fresh.published_blocks)) {
+            const patched = (fresh.published_blocks as Array<Record<string, unknown>>).map(
+              (e) => (e.id === id ? { ...e, config } : e),
+            );
+            const { error: pubErr } = await supabase
+              .from('gw_public_sites')
+              .update({ published_blocks: patched, published_at: new Date().toISOString() })
+              .eq('id', fresh.id);
+            if (pubErr) {
+              toast({ title: 'Saved, but not published', description: pubErr.message, variant: 'destructive' });
+            } else {
+              queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+            }
+          }
+        }
       }
     }, 600);
   };
