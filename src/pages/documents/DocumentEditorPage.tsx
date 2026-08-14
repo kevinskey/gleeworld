@@ -6,7 +6,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { Editor } from '@tiptap/react';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, MonitorPlay } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -27,6 +27,7 @@ import { DocumentEditor } from '@/components/documents/DocumentEditor';
 import { removeCitationsFor } from '@/components/documents/extensions/CitationChip';
 import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRef';
 import { SourcesPanel } from '@/components/documents/SourcesPanel';
+import { PrompterOverlay } from '@/components/prompter/PrompterOverlay';
 import { WorksCitedPreview } from '@/components/documents/WorksCitedPreview';
 import { PrintPaperView } from '@/components/documents/PrintPaperView';
 import { useDocAutosave } from './useDocAutosave';
@@ -141,6 +142,10 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [sourcesSheetOpen, setSourcesSheetOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  // Prompter text is snapshotted at open — reading live editor state during
+  // the overlay would re-render the whole prompter on every keystroke from
+  // a second window.
+  const [prompterText, setPrompterText] = useState<string | null>(null);
   const [printContent, setPrintContent] = useState<unknown>(null);
 
   // Live refs so citationChipText/footnoteIndex — stable callbacks handed
@@ -437,6 +442,16 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
           <ToggleGroupItem value="apa7" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">APA</ToggleGroupItem>
         </ToggleGroup>
 
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="text-xs"
+          onClick={() => setPrompterText(editorInstanceRef.current?.getText() ?? '')}
+        >
+          <MonitorPlay className="mr-1 h-3.5 w-3.5" /> Prompter
+        </Button>
+
         <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setExportOpen(true)}>
           Export
         </Button>
@@ -508,6 +523,13 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
         onChange={(e) => void handleImageFileChange(e)}
         disabled={uploadingImage}
         aria-label="Upload image"
+      />
+
+      <PrompterOverlay
+        open={prompterText != null}
+        onClose={() => setPrompterText(null)}
+        text={prompterText ?? ''}
+        title={title || 'Untitled'}
       />
 
       <AlertDialog open={!!deletingSourceId} onOpenChange={(open) => { if (!open) setDeletingSourceId(null); }}>

@@ -12,7 +12,7 @@ import Image from '@tiptap/extension-image';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, List, ListOrdered,
   ListChecks, Quote, Code, Undo2, Redo2, Heading1, Heading2, Heading3,
-  Link2, FileText, Loader2, AlertTriangle, Check,
+  Link2, FileText, Loader2, AlertTriangle, Check, MonitorPlay,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from '@/components/ui/command';
 import { saveNote, listLinkTargets, NoteConflictError } from '@/lib/planner/notesApi';
+import { PrompterOverlay } from '@/components/prompter/PrompterOverlay';
 import type { DocNode, PlannerNote } from '@/lib/planner/types';
 import './noteEditor.css';
 
@@ -68,6 +69,8 @@ export interface NoteEditorProps {
 
 export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps) {
   const [saveState, setSaveState] = useState<SaveState>('saved');
+  // Snapshotted at open (see DocumentEditorPage's prompter for why).
+  const [prompterText, setPrompterText] = useState<string | null>(null);
   // The title input is deliberately UNCONTROLLED (ref + DOM value): a
   // controlled value tied to React state could be reset by save-cycle
   // re-renders, eating typed characters (the launch-day "can't type a
@@ -219,8 +222,14 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
         </div>
       )}
 
-      <EditorToolbar editor={editor} onDirty={markDirty} />
+      <EditorToolbar editor={editor} onDirty={markDirty} onPrompter={() => setPrompterText(editor.getText())} />
       <EditorContent editor={editor} />
+      <PrompterOverlay
+        open={prompterText != null}
+        onClose={() => setPrompterText(null)}
+        text={prompterText ?? ''}
+        title={titleRef.current || note.title || 'Untitled note'}
+      />
     </div>
   );
 }
@@ -262,7 +271,7 @@ function ToolbarButton({ onClick, active, label, children }: {
   );
 }
 
-function EditorToolbar({ editor, onDirty }: { editor: Editor; onDirty: () => void }) {
+function EditorToolbar({ editor, onDirty, onPrompter }: { editor: Editor; onDirty: () => void; onPrompter?: () => void }) {
   const run = (fn: () => boolean) => () => {
     fn();
     onDirty();
@@ -294,6 +303,9 @@ function EditorToolbar({ editor, onDirty }: { editor: Editor; onDirty: () => voi
       <span className="mx-1 h-5 w-px bg-border" aria-hidden />
       <ToolbarButton label="Undo" onClick={run(() => c().undo().run())}><Undo2 className="h-4 w-4" /></ToolbarButton>
       <ToolbarButton label="Redo" onClick={run(() => c().redo().run())}><Redo2 className="h-4 w-4" /></ToolbarButton>
+      {onPrompter && (
+        <ToolbarButton label="Prompter" onClick={onPrompter}><MonitorPlay className="h-4 w-4" /></ToolbarButton>
+      )}
     </div>
   );
 }
