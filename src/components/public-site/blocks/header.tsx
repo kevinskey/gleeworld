@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 import { LayoutPanelTop, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -124,6 +125,15 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
     : Math.max(72, logoHeight + 32);
   const [menuOpen, setMenuOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
+  // Since tenant roots stopped bouncing signed-in members to the app
+  // (PR #670), this pill is their only door back in — a signed-in member
+  // staring at "Sign in" reads as locked out (Kevin, 2026-08-14).
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session?.user));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setSignedIn(!!session?.user));
+    return () => sub.subscription.unsubscribe();
+  }, []);
   // Auto-close the mobile menu if the viewport grows past the sm breakpoint so
   // a re-resize doesn't leave a stale open panel.
   useEffect(() => {
@@ -154,12 +164,12 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
       ))}
       {ctx.memberSignIn && (
         <a
-          href="/auth"
+          href={signedIn ? '/dashboard' : '/auth'}
           onClick={() => setMenuOpen(false)}
           className="rounded-full px-3 py-1 whitespace-nowrap border opacity-90 hover:opacity-100 hover:bg-white/10 transition-opacity text-sm inline-flex items-center"
           style={{ color: linkColor, borderColor: linkColor + '4d' }}
         >
-          Sign in
+          {signedIn ? 'Command Center' : 'Sign in'}
         </a>
       )}
     </>
@@ -283,11 +293,11 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
             ))}
             {ctx.memberSignIn && (
               <a
-                href="/auth"
+                href={signedIn ? '/dashboard' : '/auth'}
                 onClick={() => setMenuOpen(false)}
                 className="py-2 px-2 rounded text-base text-slate-900 hover:bg-slate-100 transition-colors border-t border-slate-200 mt-1 pt-3 text-left"
               >
-                Sign in
+                {signedIn ? 'Command Center' : 'Sign in'}
               </a>
             )}
           </nav>
