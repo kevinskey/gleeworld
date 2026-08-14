@@ -16,8 +16,13 @@ import type { AuditionFormData } from './AuditionFormProvider';
 export type AuditionPageId =
   | 'basic' | 'background' | 'skills' | 'personal' | 'scheduling' | 'account';
 
+// Trimmed to the essentials for the retirement-concert "Sing with Doc"
+// campaign (Kevin, 2026-08-14): the Musical Background, Music Skills, and
+// Personal Info interview pages are gone. Their ids stay in AuditionPageId
+// and canLeavePage so the components and tests keep compiling — they are
+// simply never scheduled.
 const INTERVIEW_PAGES: AuditionPageId[] = [
-  'basic', 'background', 'skills', 'personal', 'scheduling',
+  'basic', 'scheduling',
 ];
 
 export function buildAuditionPages(isSignedIn: boolean): AuditionPageId[] {

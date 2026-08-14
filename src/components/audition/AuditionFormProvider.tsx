@@ -21,9 +21,10 @@ const auditionSchema = z.object({
   
   // Audition section — what they're auditioning for. Drives downstream
   // conditional fields (instrument-years only matters for instrumental).
-  sectionType: z.enum(['vocal', 'instrumental'], {
-    required_error: 'Please choose vocal or instrumental',
-  }),
+  // Optional since the Musical Background page left the interview
+  // (auditionPages.ts) — a required field no page renders would deadlock
+  // submit with an invisible error.
+  sectionType: z.enum(['vocal', 'instrumental']).nullable().optional(),
 
   // Musical background
   playsInstrument: z.boolean().nullable().default(null),
