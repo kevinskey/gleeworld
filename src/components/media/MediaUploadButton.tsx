@@ -75,7 +75,7 @@ export const MediaUploadButton = ({
     if (!files || files.length === 0) return;
 
     const acceptedExtensions = ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.mp4', '.mov', '.avi', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.pdf'];
-    const maxSize = 50 * 1024 * 1024; // 50MB
+    const maxSize = 500 * 1024 * 1024; // 500MB — matches the storage API's FILE_SIZE_LIMIT
 
     const newFiles: FileWithPath[] = [];
     const rejected: string[] = [];
@@ -151,12 +151,12 @@ export const MediaUploadButton = ({
       'application/pdf': ['.pdf']
     },
     multiple: true,
-    maxSize: 50 * 1024 * 1024,
+    maxSize: 500 * 1024 * 1024,
     onDrop: async (acceptedFiles, rejectedFiles) => {
       if (rejectedFiles.length > 0) {
         toast({
           title: "Some files were rejected",
-          description: "Please ensure files are under 50MB and in supported formats",
+          description: "Please ensure files are under 500MB and in supported formats",
           variant: "destructive"
         });
       }
@@ -429,7 +429,7 @@ export const MediaUploadButton = ({
                 <div>
                   <p className="mb-1">Drag and drop files here, or click to select</p>
                   <p className="text-sm text-muted-foreground">
-                    Supports: Images, Videos, Audio, PDFs (max 50MB each)
+                    Supports: Images, Videos, Audio, PDFs (max 500MB each)
                   </p>
                 </div>
               )}
