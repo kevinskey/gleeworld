@@ -1,15 +1,24 @@
 // Teleprompter mode (Kevin, 2026-08-13: "get the text to scroll up while
 // I'm talking like a prompter"). Full-screen black, big serifless text,
-// auto-scrolls at an adjustable speed while the reader speaks — sermons,
-// announcements, scripts read straight off the screen.
+// the reading line at a gold arrow near the top so read text leaves the
+// screen at once.
 //
-// Deliberately dumb: it takes plain TEXT (the caller extracts it from
-// whatever rich document it lives in) and owns nothing but scrolling.
-// Speed and size persist in localStorage so the next reading starts where
-// the voice is comfortable.
-import { useCallback, useEffect, useRef, useState } from 'react';
+// Deliberately dumb about content: it takes plain TEXT (the caller
+// extracts it from whatever rich document it lives in) and owns nothing
+// but scrolling. Speed and size persist in localStorage so the next
+// reading starts where the voice is comfortable.
+//
+// Voice has two engines, best available wins:
+//  - FOLLOW (speech recognition via getSpeechInput): matches the words
+//    you actually say against the script and keeps YOUR word at the
+//    arrow — the fixed px/s could not keep up with a natural reading
+//    pace (Kevin, 2026-08-13: "its definately not keeping up").
+//  - VAD fallback (no recognizer available): mic energy gates the
+//    fixed-speed roll — talk = roll, silence = hold.
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Mic, MicOff, Minus, Pause, Play, Plus, X } from 'lucide-react';
+import { getSpeechInput, type SpeechInputSource } from '@/lib/assistant/speech';
 
 const SPEED_KEY = 'gw-prompter-speed';
 const SIZE_KEY = 'gw-prompter-size';
@@ -18,6 +27,11 @@ const SPEED_MAX = 200;
 const SPEED_STEP = 10;
 /** rem — index into this list is what persists, so the steps can change. */
 const SIZES = [1.5, 1.875, 2.25, 3, 3.75, 4.5];
+/** The eye line: fraction of the scroll viewport where the current line sits. */
+const EYE_LINE = 0.12;
+/** How far ahead of the pointer a spoken word may land and still count —
+ *  covers skipped lines, recognizer drops, and mid-paragraph jumps. */
+const MATCH_LOOKAHEAD = 30;
 
 function readStored(key: string, fallback: number): number {
   try {
@@ -28,6 +42,20 @@ function readStored(key: string, fallback: number): number {
   }
 }
 
+/** Lowercased, stripped to letters/digits/apostrophes — what both the
+ *  script and the recognizer's output reduce to before comparing. */
+function normWord(raw: string): string {
+  return raw.toLowerCase().replace(/[^a-z0-9']/g, '');
+}
+
+/** Loose equality for recognizer quirks: exact, or a long-word prefix
+ *  ("singin" ≈ "singing", "hallelu" ≈ "hallelujah"). */
+function wordsMatch(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (a.length >= 5 && b.length >= 5) return a.startsWith(b) || b.startsWith(a);
+  return false;
+}
+
 export interface PrompterOverlayProps {
   open: boolean;
   onClose: () => void;
@@ -35,32 +63,175 @@ export interface PrompterOverlayProps {
   title?: string;
 }
 
+interface FollowState {
+  active: boolean;
+  input: SpeechInputSource;
+  /** words consumed from the CURRENT recognizer session's transcript */
+  consumed: number;
+  /** pointer into matchWords — the next script word we expect to hear */
+  ptr: number;
+  raf: number;
+  /** scrollTop the smooth loop is easing toward; null = hold */
+  target: number | null;
+}
+
 export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [playing, setPlaying] = useState(false);
-  // Voice mode (Kevin, 2026-08-13: "hear the voice read the text — start
-  // off, stop on"): the mic gates the scroll. Speech = roll, silence =
-  // hold. Voice ACTIVITY, deliberately not speech RECOGNITION — matching
-  // spoken words to script position mis-tracks on names/ad-libs, while an
-  // energy gate with a hangover feels identical at the lectern.
-  const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceKind, setVoiceKind] = useState<null | 'follow' | 'vad'>(null);
   const [micDenied, setMicDenied] = useState(false);
-  const voiceRef = useRef<{ stream: MediaStream; ctx: AudioContext; raf: number } | null>(null);
+  const vadRef = useRef<{ stream: MediaStream; ctx: AudioContext; raf: number } | null>(null);
+  const followRef = useRef<FollowState | null>(null);
+
+  const [speed, setSpeed] = useState(() => Math.min(SPEED_MAX, Math.max(SPEED_MIN, readStored(SPEED_KEY, 40))));
+  const [sizeIdx, setSizeIdx] = useState(() => {
+    const idx = readStored(SIZE_KEY, 3);
+    return Math.min(SIZES.length - 1, Math.max(0, Math.round(idx)));
+  });
+
+  // Paragraphs → words, each with a stable global index that the rendered
+  // <span data-w> carries, so a matched word can be measured in the DOM.
+  const paragraphs = useMemo(
+    () => text.split(/\n+/).map((p) => p.trim()).filter(Boolean).map((p) => p.split(/\s+/)),
+    [text],
+  );
+  const matchWords = useMemo(() => {
+    const out: Array<{ norm: string; domIdx: number }> = [];
+    let g = 0;
+    for (const words of paragraphs) {
+      for (const w of words) {
+        const n = normWord(w);
+        if (n) out.push({ norm: n, domIdx: g });
+        g++;
+      }
+    }
+    return out;
+  }, [paragraphs]);
+
+  const persist = (key: string, value: number) => {
+    try { localStorage.setItem(key, String(value)); } catch { /* private mode */ }
+  };
+
+  const changeSpeed = useCallback((delta: number) => {
+    setSpeed((s) => {
+      const next = Math.min(SPEED_MAX, Math.max(SPEED_MIN, s + delta));
+      persist(SPEED_KEY, next);
+      return next;
+    });
+  }, []);
+
+  const changeSize = useCallback((delta: number) => {
+    setSizeIdx((i) => {
+      const next = Math.min(SIZES.length - 1, Math.max(0, i + delta));
+      persist(SIZE_KEY, next);
+      return next;
+    });
+  }, []);
 
   const stopVoice = useCallback(() => {
-    const v = voiceRef.current;
-    voiceRef.current = null;
+    const v = vadRef.current;
+    vadRef.current = null;
     if (v) {
       cancelAnimationFrame(v.raf);
       v.stream.getTracks().forEach((t) => t.stop());
       void v.ctx.close().catch(() => { /* already closed */ });
     }
-    setVoiceMode(false);
+    const f = followRef.current;
+    followRef.current = null;
+    if (f) {
+      f.active = false;
+      cancelAnimationFrame(f.raf);
+      f.input.stop();
+    }
+    setVoiceKind(null);
     setPlaying(false);
   }, []);
 
-  const startVoice = useCallback(async () => {
-    if (voiceRef.current) return;
+  /** scrollTop that puts the word's line on the eye line. */
+  const targetForWord = useCallback((domIdx: number): number | null => {
+    const el = scrollRef.current;
+    if (!el) return null;
+    const span = el.querySelector<HTMLElement>(`[data-w="${domIdx}"]`);
+    if (!span) return null;
+    return Math.max(0, span.offsetTop - el.clientHeight * EYE_LINE);
+  }, []);
+
+  const startFollow = useCallback((input: SpeechInputSource) => {
+    const el = scrollRef.current;
+    // Resume where the eye line currently sits, not at word zero — the
+    // reader may have scrolled or be re-entering after a manual pause.
+    let startPtr = 0;
+    if (el) {
+      const eye = el.scrollTop + el.clientHeight * EYE_LINE;
+      for (let i = 0; i < matchWords.length; i++) {
+        const span = el.querySelector<HTMLElement>(`[data-w="${matchWords[i].domIdx}"]`);
+        if (span && span.offsetTop >= eye - 8) { startPtr = i; break; }
+      }
+    }
+    const state: FollowState = { active: true, input, consumed: 0, ptr: startPtr, raf: 0, target: null };
+    followRef.current = state;
+
+    const onTranscript = (transcript: string) => {
+      if (!state.active) return;
+      const words = transcript.split(/\s+/).map(normWord).filter(Boolean);
+      const fresh = words.slice(state.consumed);
+      state.consumed = words.length;
+      let moved = false;
+      for (const spoken of fresh) {
+        const end = Math.min(matchWords.length, state.ptr + MATCH_LOOKAHEAD);
+        for (let i = state.ptr; i < end; i++) {
+          if (wordsMatch(matchWords[i].norm, spoken)) {
+            state.ptr = i + 1;
+            moved = true;
+            break;
+          }
+        }
+        // Off-script words match nothing and move nothing — the prompter
+        // holds while the reader ad-libs, exactly as asked.
+      }
+      if (moved && state.ptr > 0) {
+        const t = targetForWord(matchWords[state.ptr - 1].domIdx);
+        if (t != null) state.target = t;
+      }
+    };
+
+    // Recognizer sessions end on their own silence timers; while follow is
+    // active each end just starts the next session. `consumed` resets
+    // because every session's transcript starts from scratch.
+    const session = () => {
+      if (!state.active) return;
+      state.consumed = 0;
+      input.start(onTranscript, () => {
+        if (state.active) setTimeout(session, 150);
+      });
+    };
+    session();
+
+    // Smooth pursuit: ease toward the target so a matched word glides to
+    // the arrow instead of jumping — time-constant ~250ms, framerate-safe.
+    let last = performance.now();
+    const loop = (now: number) => {
+      if (!state.active) return;
+      const dt = now - last;
+      last = now;
+      const sc = scrollRef.current;
+      if (sc && state.target != null) {
+        const diff = state.target - sc.scrollTop;
+        if (Math.abs(diff) < 1) {
+          sc.scrollTop = state.target;
+          state.target = null;
+        } else {
+          sc.scrollTop += diff * Math.min(1, dt / 250);
+        }
+      }
+      state.raf = requestAnimationFrame(loop);
+    };
+    state.raf = requestAnimationFrame(loop);
+    setMicDenied(false);
+    setVoiceKind('follow');
+  }, [matchWords, targetForWord]);
+
+  const startVad = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true },
@@ -85,48 +256,30 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
         const now = performance.now();
         if (speaking) lastVoice = now;
         setPlaying(lastVoice > 0 && now - lastVoice < HANGOVER_MS);
-        const v = voiceRef.current;
+        const v = vadRef.current;
         if (v) v.raf = requestAnimationFrame(loop);
       };
-      voiceRef.current = { stream, ctx, raf: requestAnimationFrame(loop) };
+      vadRef.current = { stream, ctx, raf: requestAnimationFrame(loop) };
       setMicDenied(false);
-      setVoiceMode(true);
+      setVoiceKind('vad');
     } catch {
       setMicDenied(true);
-      setVoiceMode(false);
+      setVoiceKind(null);
     }
   }, []);
+
+  const startVoice = useCallback(async () => {
+    if (vadRef.current || followRef.current) return;
+    const input = getSpeechInput();
+    if (input.available) startFollow(input);
+    else await startVad();
+  }, [startFollow, startVad]);
 
   // Leaving the prompter releases the mic, always.
   useEffect(() => {
     if (!open) stopVoice();
     return stopVoice;
   }, [open, stopVoice]);
-  const [speed, setSpeed] = useState(() => Math.min(SPEED_MAX, Math.max(SPEED_MIN, readStored(SPEED_KEY, 40))));
-  const [sizeIdx, setSizeIdx] = useState(() => {
-    const idx = readStored(SIZE_KEY, 3);
-    return Math.min(SIZES.length - 1, Math.max(0, Math.round(idx)));
-  });
-
-  const persist = (key: string, value: number) => {
-    try { localStorage.setItem(key, String(value)); } catch { /* private mode */ }
-  };
-
-  const changeSpeed = useCallback((delta: number) => {
-    setSpeed((s) => {
-      const next = Math.min(SPEED_MAX, Math.max(SPEED_MIN, s + delta));
-      persist(SPEED_KEY, next);
-      return next;
-    });
-  }, []);
-
-  const changeSize = useCallback((delta: number) => {
-    setSizeIdx((i) => {
-      const next = Math.min(SIZES.length - 1, Math.max(0, i + delta));
-      persist(SIZE_KEY, next);
-      return next;
-    });
-  }, []);
 
   // Fresh open starts at the top, paused — the reader hits play when ready.
   useEffect(() => {
@@ -135,12 +288,10 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }, [open]);
 
-  // The scroll engine. Speed is px/second against a rAF clock, so it reads
-  // the same on 60Hz and 120Hz screens. Fractional remainders accumulate —
-  // flooring each frame at slow speeds would round every step to 0 and the
-  // prompter would sit still.
+  // The fixed-speed engine (manual play and the VAD gate). Follow mode
+  // drives the scroll itself, so this stays out of its way.
   useEffect(() => {
-    if (!open || !playing) return;
+    if (!open || !playing || voiceKind === 'follow') return;
     let raf = 0;
     let last = performance.now();
     let carry = 0;
@@ -163,12 +314,12 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [open, playing, speed]);
+  }, [open, playing, speed, voiceKind]);
 
   // In voice mode a manual play/pause is an exit: the reader grabbing for
   // control mid-service must win over the mic instantly.
   const togglePlay = useCallback(() => {
-    if (voiceRef.current) { stopVoice(); return; }
+    if (vadRef.current || followRef.current) { stopVoice(); return; }
     setPlaying((p) => !p);
   }, [stopVoice]);
 
@@ -197,7 +348,7 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
 
   if (!open) return null;
 
-  const paragraphs = text.split(/\n+/).map((p) => p.trim()).filter(Boolean);
+  let globalIdx = -1;
 
   return createPortal(
     <div
@@ -237,7 +388,18 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
             {paragraphs.length === 0 ? (
               <p className="text-white/50">Nothing to read — this document is empty.</p>
             ) : (
-              paragraphs.map((p, i) => <p key={i} className="mb-[1em]">{p}</p>)
+              paragraphs.map((words, pi) => (
+                <p key={pi} className="mb-[1em]">
+                  {words.map((w, wi) => {
+                    globalIdx++;
+                    return (
+                      <span key={wi} data-w={globalIdx}>
+                        {w}{wi < words.length - 1 ? ' ' : ''}
+                      </span>
+                    );
+                  })}
+                </p>
+              ))
             )}
           </div>
         </div>
@@ -275,12 +437,18 @@ export function PrompterOverlay({ open, onClose, text, title }: PrompterOverlayP
         </button>
         <button
           type="button"
-          onClick={() => (voiceMode ? stopVoice() : void startVoice())}
-          aria-label={voiceMode ? 'Turn off voice control' : 'Voice control — scrolls while you speak'}
-          aria-pressed={voiceMode}
-          title={micDenied ? 'Microphone blocked — allow mic access and try again' : 'Scrolls while you speak, holds when you stop'}
+          onClick={() => (voiceKind ? stopVoice() : void startVoice())}
+          aria-label={voiceKind ? 'Turn off voice control' : 'Voice control — follows your reading'}
+          aria-pressed={voiceKind != null}
+          title={
+            micDenied
+              ? 'Microphone blocked — allow mic access and try again'
+              : voiceKind === 'vad'
+                ? 'Scrolls while you speak, holds when you stop'
+                : 'Follows the words you read and keeps your line at the arrow'
+          }
           className={`flex h-12 items-center gap-2 rounded-full px-4 text-sm font-medium transition-colors ${
-            voiceMode ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-white/10 hover:bg-white/20'
+            voiceKind ? 'bg-emerald-500 text-black hover:bg-emerald-400' : 'bg-white/10 hover:bg-white/20'
           }`}
         >
           {micDenied ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
