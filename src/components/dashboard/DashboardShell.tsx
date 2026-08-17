@@ -234,7 +234,7 @@ export function BrandLogo({
   logoUrl: string | null | undefined;
   fallbackInitial: string;
   alt: string;
-  size?: 'md' | 'lg' | 'xl' | 'banner';
+  size?: 'md' | 'lg' | 'xl' | 'banner' | 'wide';
 }) {
   // No global fallback to the GleeWorld marketing globe — that bled
   // platform branding into every tenant that hadn't uploaded a logo
@@ -254,22 +254,28 @@ export function BrandLogo({
   // (a device plus two lines of type), and forcing one into a 67px box
   // letterboxes it down to an illegible stamp. Height is capped so a tall
   // or square logo cannot push the nav's first item off the screen.
+  // `wide` is the collapsed-nav TOPBAR brand: same insight as `banner` —
+  // most tenant marks are horizontal lockups, and a square box letterboxes
+  // them to a stamp (Kevin's screenshot, 2026-08-17: the xl box rendered
+  // the Lyke House lockup ~17px tall beside 22px type). Height-driven
+  // instead: the mark fills most of the 80px bar and the width follows.
   const dim = size === 'banner'
     ? 'w-full h-auto max-h-[76px]'
+    : size === 'wide' ? 'h-14 w-auto max-w-[240px]'
     : size === 'xl' ? 'w-[67px] h-[67px]' : size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
   if (src) {
     return (
       <img
         src={src}
         alt={alt}
-        className={`${dim} object-contain ${size === 'banner' ? 'object-left' : 'shrink-0'}`}
+        className={`${dim} object-contain ${size === 'banner' || size === 'wide' ? 'object-left shrink-0' : 'shrink-0'}`}
         onError={() => setSrc(null)}
       />
     );
   }
   return (
     <span
-      className={`${size === 'banner' ? 'w-[67px] h-[67px]' : dim} rounded-lg bg-primary text-primary-foreground inline-flex items-center justify-center text-lg font-bold shrink-0`}
+      className={`${size === 'banner' || size === 'wide' ? 'w-[67px] h-[67px]' : dim} rounded-lg bg-primary text-primary-foreground inline-flex items-center justify-center text-lg font-bold shrink-0`}
       aria-hidden
     >
       {fallbackInitial}
@@ -735,7 +741,7 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
             logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={compactBrandName.charAt(0).toUpperCase()}
             alt={compactBrandName}
-            size="xl"
+            size="wide"
           />
           <span className="font-bold text-[22px] tracking-tight truncate max-w-[260px]">
             {compactBrandName}
