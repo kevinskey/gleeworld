@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Loader2, Music2, Plus, Trash2, Mic, Sliders, AudioLines } from 'lucide-react';
 import {
   useMySessions, useCreateStudioSession, useDeleteStudioSession, useStudioOwner,
@@ -24,6 +25,19 @@ export default function StudioHome() {
   const delMut = useDeleteStudioSession();
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<(ConfirmPillRequest & { sessionId: string }) | null>(null);
+
+  const onDeleteConfirmed = async () => {
+    if (!confirmDelete) return;
+    try {
+      await delMut.mutateAsync(confirmDelete.sessionId);
+      toast.success('Deleted');
+    } catch (e) {
+      toast.error('Could not delete', { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setConfirmDelete(null);
+    }
+  };
 
   const onCreated = async (title: string) => {
     if (!owner.data) return;
@@ -97,11 +111,11 @@ export default function StudioHome() {
                   <Button
                     size="sm" variant="ghost"
                     className="h-7 w-7 p-0 shrink-0"
-                    onClick={async () => {
-                      if (!confirm(`Delete "${s.title}"? This can't be undone.`)) return;
-                      try { await delMut.mutateAsync(s.id); toast.success('Deleted'); }
-                      catch (e) { toast.error('Could not delete', { description: e instanceof Error ? e.message : String(e) }); }
-                    }}
+                    onClick={(e) => setConfirmDelete({
+                      x: e.clientX, y: e.clientY,
+                      message: `Delete "${s.title}"?`,
+                      sessionId: s.id,
+                    })}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
@@ -112,6 +126,13 @@ export default function StudioHome() {
         </ul>
       )}
       </div>
+
+      <ConfirmPill
+        request={confirmDelete}
+        busy={delMut.isPending}
+        onConfirm={onDeleteConfirmed}
+        onCancel={() => setConfirmDelete(null)}
+      />
     </div>
   );
 }
