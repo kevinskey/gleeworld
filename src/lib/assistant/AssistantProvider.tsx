@@ -825,10 +825,31 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
             return `Opened ${ref}.`;
           },
           open_link: async (params: { url?: string; title?: string }) => {
+            // In-app reader, never a new tab — the rule everywhere else, and
+            // live voice was the last window.open holdout. The agent gets the
+            // EXTRACTED TEXT back to read in its own voice: the WebRTC channel
+            // is echo-cancelled, while our ArticleCard TTS is not — a second
+            // audio source here would be heard by the live mic as speech.
+            // Before this, the agent only ever held read_news summaries, so
+            // "read it in full" got a repeated summary and "I can only
+            // summarize" (Kevin, 2026-08-17).
             const url = String(params?.url ?? '');
             if (!/^https?:\/\/\S+$/i.test(url)) return 'That link is invalid — do not retry it.';
-            (globalThis as unknown as Window).open(url, '_blank', 'noopener,noreferrer');
-            return `Opened ${String(params?.title ?? 'the article').slice(0, 120)}.`;
+            const title = String(params?.title ?? 'the article').slice(0, 120);
+            // No readAloud flag: the on-screen card must not start its own TTS.
+            showResult({ kind: 'article', url, ...(params?.title ? { title } : {}) });
+            setSheetOpen(true);
+            try {
+              const { data } = await supabase.functions.invoke('extract-article', { body: { url } });
+              const paragraphs: string[] = data?.success && Array.isArray(data.paragraphs) ? data.paragraphs : [];
+              if (paragraphs.length) {
+                // Capped so the tool result stays within the agent's limits;
+                // the full text is on screen regardless.
+                const text = paragraphs.join('\n\n').slice(0, 5000);
+                return `The article "${title}" is open on screen. Read the following article text aloud to the user IN FULL, verbatim — do not summarize:\n\n${text}`;
+              }
+            } catch { /* fall through to the honest miss below */ }
+            return `Opened ${title} on screen, but the full text could not be extracted from the source — offer to read the summary instead, and say the full story is on screen.`;
           },
         },
         onDisconnect: () => {

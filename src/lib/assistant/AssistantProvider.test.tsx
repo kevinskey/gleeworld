@@ -243,6 +243,46 @@ describe('AssistantProvider', () => {
     );
   });
 
+  it('live open_link opens the in-app reader and hands the agent the full text to read', async () => {
+    // Live failure (Kevin, 2026-08-17): in live voice, "read the article in
+    // full" → the agent had only read_news summaries and its open_link
+    // window.open'd a new tab — so it repeated the summary and said it could
+    // only summarize. The handler must open the IN-APP reader and return the
+    // extracted article text for the agent to read verbatim in its own
+    // (echo-cancelled) voice.
+    const opened: string[] = [];
+    vi.stubGlobal('open', (url: string) => { opened.push(url); return null; });
+    vi.mocked(supabase.functions.invoke).mockImplementation(async (name: string) => {
+      if (name === 'extract-article') {
+        return { data: { success: true, paragraphs: ['Full para one.', 'Full para two.'], byline: null, siteName: 'Example', truncated: false }, error: null } as never;
+      }
+      return { data: { token: 'tok' }, error: null } as never;
+    });
+    renderProbe();
+    await act(async () => { screen.getByText('live').click(); });
+    const tools = ((startSession.mock.calls[0] as unknown[])[0] as { clientTools: Record<string, (p: unknown) => Promise<string>> }).clientTools;
+    const out = await act(async () => tools.open_link({ url: 'https://example.com/story', title: 'Story' }));
+    expect(opened).toHaveLength(0); // never a new tab
+    expect(out).toContain('Full para one.');
+    expect(out).toContain('Full para two.');
+    expect(out.toLowerCase()).toContain('read');
+    expect(screen.getByTestId('sheet')).toHaveTextContent('true'); // reader visible
+    vi.unstubAllGlobals();
+  });
+
+  it('live open_link degrades honestly when extraction fails', async () => {
+    vi.mocked(supabase.functions.invoke).mockImplementation(async (name: string) => {
+      if (name === 'extract-article') return { data: { success: false, error: 'paywall' }, error: null } as never;
+      return { data: { token: 'tok' }, error: null } as never;
+    });
+    renderProbe();
+    await act(async () => { screen.getByText('live').click(); });
+    const tools = ((startSession.mock.calls[0] as unknown[])[0] as { clientTools: Record<string, (p: unknown) => Promise<string>> }).clientTools;
+    const out = await act(async () => tools.open_link({ url: 'https://example.com/pay', title: 'Walled' }));
+    expect(out.toLowerCase()).toContain('could not');
+    expect(screen.getByTestId('sheet')).toHaveTextContent('true'); // panel still shows what we have
+  });
+
   it('live mode sends NO voice override when the tenant has not picked one', async () => {
     // null → the agent's configured default; 'browser' is meaningless to a
     // WebRTC agent (there is no browser-synth path in live mode).
