@@ -22,6 +22,11 @@ export function arrayLit(values: string[]): string {
   return `ARRAY[${values.map((v) => lit(v)).join(',')}]::text[]`;
 }
 
+/** Quotes a JS value as a SQL jsonb literal. */
+export function jsonLit(value: unknown): string {
+  return `${lit(JSON.stringify(value))}::jsonb`;
+}
+
 /** Header every generated file carries, so an unlabelled file is never a mystery. */
 export function header(title: string, source: string, rows: number): string {
   return [

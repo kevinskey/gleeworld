@@ -18,7 +18,8 @@
 import { writeFileSync } from 'node:fs';
 import { normalizeLitCalYear } from '../src/lib/prayer/litcal';
 import { normalizeReadingsDay } from '../src/lib/prayer/readings';
-import { lit, arrayLit, header, FOOTER } from './prayer-sql';
+import { parseCitation } from '../src/lib/prayer/citation';
+import { lit, arrayLit, jsonLit, header, FOOTER } from './prayer-sql';
 
 const LITCAL = 'https://litcal.johnromanodorazio.com/api/dev/calendar/nation/US';
 const READINGS = 'https://cpbjr.github.io/catholic-readings-api/readings';
@@ -59,6 +60,8 @@ async function fetchJson(url: string, attempt = 1): Promise<unknown | null> {
 const statements: string[] = [];
 let calendarRows = 0;
 let readingRows = 0;
+let readingRowsResolved = 0;
+let readingRowsWithMalformedSegment = 0;
 
 for (let year = from; year <= to; year++) {
   // ---- calendar ----------------------------------------------------------
@@ -109,16 +112,23 @@ ON CONFLICT (rite, day_date, event_key) DO UPDATE SET
     // picks the solemnity/feast over a concurrent optional memorial.
     for (const r of day.readings) {
       readingRows++;
+      // Parsed once here rather than at query time, so prayer_day_full() can
+      // join straight to gw_bible_verses in pure SQL — see
+      // src/lib/prayer/citation.ts for why parsing lives in exactly one place.
+      const parsed = parseCitation(r.citation);
+      if (parsed.usfmCode) readingRowsResolved++;
+      if (parsed.unparsed.length) readingRowsWithMalformedSegment++;
+
       statements.push(
-        `INSERT INTO public.gw_prayer_readings (calendar_day_id, slot, citation, schema_label, sort_order, source)
-SELECT d.id, ${lit(r.slot)}, ${lit(r.citation)}, ${lit(r.schemaLabel)}, ${lit(r.sortOrder)}, ${lit(r.source)}
+        `INSERT INTO public.gw_prayer_readings (calendar_day_id, slot, citation, schema_label, sort_order, source, parsed_citation)
+SELECT d.id, ${lit(r.slot)}, ${lit(r.citation)}, ${lit(r.schemaLabel)}, ${lit(r.sortOrder)}, ${lit(r.source)}, ${jsonLit(parsed)}
 FROM public.gw_prayer_calendar_days d
 WHERE d.rite = 'roman_catholic' AND d.day_date = ${lit(day.dayDate)}
 ORDER BY d.rank_grade DESC NULLS LAST, d.event_key
 LIMIT 1
 ON CONFLICT (calendar_day_id, slot, schema_label) DO UPDATE SET
   citation = EXCLUDED.citation, sort_order = EXCLUDED.sort_order,
-  source = EXCLUDED.source;`,
+  source = EXCLUDED.source, parsed_citation = EXCLUDED.parsed_citation;`,
       );
     }
     await new Promise((r) => setTimeout(r, 40)); // be polite; parallel gets throttled
@@ -143,3 +153,7 @@ writeFileSync(
 );
 
 console.log(`\nwrote ${out}: ${calendarRows} calendar rows, ${readingRows} reading rows`);
+console.log(
+  `citation parsing: ${readingRowsResolved}/${readingRows} resolved a book, ` +
+    `${readingRowsWithMalformedSegment} had at least one malformed segment`,
+);

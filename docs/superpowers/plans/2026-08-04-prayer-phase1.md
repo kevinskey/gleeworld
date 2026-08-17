@@ -181,7 +181,7 @@ git commit -m "feat(prayer): book-name resolver for lectionary citations"
   `VerseRange = { startChapter: number | null; startVerse: number; endChapter: number | null; endVerse: number; chapterLabel?: string }`.
   `unparsed` collects segments that could not be read, so a malformed fragment degrades one segment instead of the whole citation.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 import { describe, it, expect } from 'vitest';
@@ -284,12 +284,12 @@ describe('parseCitation', () => {
 });
 ```
 
-- [ ] **Step 2: Run it and confirm it fails**
+- [x] **Step 2: Run it and confirm it fails**
 
 Run: `npx vitest run src/lib/prayer/citation.test.ts`
 Expected: FAIL, cannot resolve `./citation`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 Suggested order inside `parseCitation`:
 1. Take the substring before the first `|`.
@@ -299,9 +299,9 @@ Suggested order inside `parseCitation`:
 5. For each segment: strip letter suffixes with `/([0-9]+)[a-d]\b/ → $1`, then match `N:M—P:Q`, `N:M-Q`, `N:M`, or bare `M`/`M-Q` (verses, using the current chapter; chapter 1 for single-chapter books).
 6. Anything left unmatched goes to `unparsed`.
 
-- [ ] **Step 4: Confirm green**
+- [x] **Step 4: Confirm green**
 
-Run: `npx vitest run src/lib/prayer/citation.test.ts`
+Run: `npx vitest run src/lib/prayer/citation.test.ts` — 12 passing.
 
 - [ ] **Step 5: Sweep the entire real corpus**
 
@@ -310,7 +310,14 @@ npx tsx scripts/check-citation-coverage.ts
 ```
 Expected: **≥ 99% of the 1,165 citations fully parsed, 0 unresolved book names.** Print every unparsed segment. Investigate each before proceeding — do not raise the threshold to make it pass.
 
-- [ ] **Step 6: Commit**
+> **Not run as of 2026-08-17.** This run's execution environment blocks
+> outbound network access to `cpbjr.github.io` (confirmed via the egress
+> proxy's own status endpoint — `EGRESS_BLOCKED` on every attempt), the same
+> constraint recorded against Task 1 Step 5 above. Someone with network
+> access must run this before the corpus coverage claim is verified rather
+> than merely plausible.
+
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/lib/prayer/citation.ts src/lib/prayer/citation.test.ts scripts/check-citation-coverage.ts
@@ -332,7 +339,18 @@ git commit -m "feat(prayer): lectionary citation parser"
   - `public.prayer_day_full(p_date date, p_rite text, p_translation text) RETURNS jsonb` — `prayer_day()` plus a `verses` array per reading.
 - Ranges are passed as JSON from the TypeScript parser, so citation parsing lives in exactly one place.
 
-- [ ] **Step 1: Write the failing SQL test**
+> **Note (2026-08-17):** `prayer_reading_text` landed as
+> `20260806120000_prayer_reading_text.sql` (one day later than this plan's
+> filename, no functional difference). `prayer_day_full` needed one more
+> piece than this plan spelled out: a pure-SQL RPC can't parse a citation
+> string itself without duplicating `citation.ts` in SQL, which the
+> architecture note above explicitly rules out. So a `parsed_citation jsonb`
+> column was added to `gw_prayer_readings` (`20260817120000_prayer_reading_ranges.sql`),
+> populated by `parseCitation()` at import time, and `prayer_day_full`
+> (`20260817130000_prayer_day_full.sql`) reads it via a `LATERAL` join to
+> `prayer_reading_text()` — no second parser, pure SQL at request time.
+
+- [x] **Step 1: Write the failing SQL test**
 
 ```sql
 BEGIN;
@@ -363,15 +381,31 @@ ROLLBACK;
 `psql "$PRAYER_DB_URL" -v ON_ERROR_STOP=1 -f supabase/migrations/tests/prayer_reading_text_test.sql`
 Expected: `function public.prayer_reading_text(...) does not exist`.
 
-- [ ] **Step 3: Implement the migration**
+> Not run against a live DB — this and every execution environment this plan
+> has run in lacks `$PRAYER_DB_URL` access; Kevin applies Prayer migrations
+> himself per the project's hard rule. Reviewed by inspection instead.
+
+- [x] **Step 3: Implement the migration**
 
 `prayer_reading_text` joins `gw_bible_verses` → `gw_bible_books` → `gw_bible_translations`, expands `p_ranges` with `jsonb_to_recordset`, and selects verses where the `(chapter, verse)` tuple falls inside any range — using tuple comparison `(v.chapter, v.verse) BETWEEN (r.start_chapter, r.start_verse) AND (r.end_chapter, r.end_verse)` so cross-chapter ranges work. Returns `{ translation, attribution, verses: [{ chapter, verse, text }] }` ordered by chapter then verse. `SECURITY INVOKER`, `STABLE`, `GRANT EXECUTE TO authenticated`, and `NOTIFY pgrst, 'reload schema';`.
+
+Landed as `20260806120000_prayer_reading_text.sql`. `prayer_day_full` — the
+second RPC this task's Interfaces section calls for — needed a supporting
+`parsed_citation` column that this plan didn't originally spell out; see the
+note above Step 1 of this task for why, and
+`20260817120000_prayer_reading_ranges.sql` /
+`20260817130000_prayer_day_full.sql` for the two migrations that complete it.
 
 - [ ] **Step 4: Confirm green**
 
 Re-run the migration and the test.
 
-- [ ] **Step 5: Commit**
+> Not run against a live DB, same reason as Step 2. `npx vitest run
+> src/lib/prayer` passes (46 tests) and `npm run typecheck:guard` /
+> `eslint` are clean on everything this task touches, but the SQL itself is
+> unverified until someone with `$PRAYER_DB_URL` runs it.
+
+- [x] **Step 5: Commit**
 
 ```bash
 git add supabase/migrations/20260805120000_prayer_reading_text.sql \
