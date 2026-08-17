@@ -27,7 +27,7 @@ serve(async (req) => {
   const { data: order } = await supa
     .from("gw_partner_orders").select("id, buyer_user_id").eq("id", item.order_id).single();
   const { data: score } = await supa
-    .from("gw_partner_scores").select("master_storage_path, title").eq("id", item.partner_score_id).single();
+    .from("gw_partner_scores").select("master_storage_path, title, composer, voicing").eq("id", item.partner_score_id).single();
   if (!order || !score) return new Response(JSON.stringify({ error: "order or score missing" }), { status: 404, headers: { ...corsHeaders, "content-type": "application/json" } });
 
   const { data: profile } = await supa
@@ -68,14 +68,22 @@ serve(async (req) => {
 
   await supa.from("gw_partner_order_items").update({ watermarked_storage_path: path }).eq("id", item.id);
 
-  // Insert personal library row now that the file exists.
-  await supa.from("gw_personal_scores").insert({
+  // Insert personal library row now that the file exists. 23505 = the
+  // purchase-idempotency index (re-invocation after a partial failure) —
+  // the row is already there, which is success, not an error.
+  const { error: libErr } = await supa.from("gw_personal_scores").insert({
     user_id: order.buyer_user_id,
     title: score.title,
+    composer: score.composer ?? null,
+    voicing: score.voicing ?? null,
     source: "purchase",
     entitlement_id: null,
     storage_path: path,
   });
+  if (libErr && libErr.code !== "23505") {
+    return new Response(JSON.stringify({ error: `library insert failed: ${libErr.message}` }),
+      { status: 500, headers: { ...corsHeaders, "content-type": "application/json" } });
+  }
 
   return new Response(JSON.stringify({ watermarked_storage_path: path }), {
     headers: { ...corsHeaders, "content-type": "application/json" },
