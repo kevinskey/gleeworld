@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { annotationTarget, isPersonalScoreId } from '@/lib/viewerScoreId';
 
 export interface Annotation {
   id: string;
@@ -31,10 +32,12 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
     
     setLoading(true);
     try {
-      let query = supabase
-        .from('gw_sheet_music_annotations')
+      const t = annotationTarget(musicId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (supabase as any)
+        .from(t.table)
         .select('*')
-        .eq('sheet_music_id', musicId)
+        .eq(t.idColumn, t.rowId)
         .order('created_at', { ascending: true });
 
       if (pageNumber !== undefined) {
@@ -44,7 +47,13 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setAnnotations((data || []) as Annotation[]);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rows = (data || []).map((r: any) => ({
+        ...r,
+        sheet_music_id: musicId,                       // prefixed id round-trips
+        annotation_layer_id: r.annotation_layer_id ?? null, // personal table has no layers
+      }));
+      setAnnotations(rows as Annotation[]);
     } catch (error) {
       console.error('Error fetching annotations:', error);
       toast.error('Failed to load annotations');
@@ -64,28 +73,34 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
     if (!user?.id || !musicId) return null;
 
     try {
-      const { error } = await supabase
-        .from('gw_sheet_music_annotations')
+      const t = annotationTarget(musicId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from(t.table)
         .insert({
-          sheet_music_id: musicId,
+          [t.idColumn]: t.rowId,
           user_id: user.id,
           page_number: pageNumber,
           annotation_type: type,
           annotation_data: annotationData,
           position_data: positionData,
-          annotation_layer_id: annotationLayerId ?? null,
+          ...(t.table === 'gw_sheet_music_annotations'
+            ? { annotation_layer_id: annotationLayerId ?? null }
+            : {}),
         });
 
       if (error) throw error;
 
-      // Log analytics
-      await supabase.rpc('log_sheet_music_analytics', {
-        sheet_music_id_param: musicId,
-        user_id_param: user.id,
-        action_type_param: 'annotate',
-        page_number_param: pageNumber,
-        device_type_param: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
-      });
+      // Log analytics (skip for personal scores — RPC FKs gw_sheet_music)
+      if (!isPersonalScoreId(musicId)) {
+        await supabase.rpc('log_sheet_music_analytics', {
+          sheet_music_id_param: musicId,
+          user_id_param: user.id,
+          action_type_param: 'annotate',
+          page_number_param: pageNumber,
+          device_type_param: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
+        });
+      }
 
       // Success (we'll refetch annotations after save)
       return true;
@@ -109,8 +124,10 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
         updateData.position_data = positionData;
       }
 
-      const { data, error } = await supabase
-        .from('gw_sheet_music_annotations')
+      const t = annotationTarget(sheetMusicId ?? '');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from(t.table)
         .update(updateData)
         .eq('id', annotationId)
         .eq('user_id', user.id)
@@ -119,8 +136,8 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
 
       if (error) throw error;
 
-      setAnnotations(prev => 
-        prev.map(annotation => 
+      setAnnotations(prev =>
+        prev.map(annotation =>
           annotation.id === annotationId ? { ...annotation, ...(data as Annotation) } : annotation
         )
       );
@@ -131,14 +148,16 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
       toast.error('Failed to update annotation');
       return false;
     }
-  }, [user?.id]);
+  }, [user?.id, sheetMusicId]);
 
   const deleteAnnotation = useCallback(async (annotationId: string) => {
     if (!user?.id) return false;
 
     try {
-      const { error } = await supabase
-        .from('gw_sheet_music_annotations')
+      const t = annotationTarget(sheetMusicId ?? '');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from(t.table)
         .delete()
         .eq('id', annotationId)
         .eq('user_id', user.id);
@@ -153,16 +172,18 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
       toast.error('Failed to delete annotation');
       return false;
     }
-  }, [user?.id]);
+  }, [user?.id, sheetMusicId]);
 
   const clearPageAnnotations = useCallback(async (musicId: string, pageNumber: number) => {
     if (!user?.id) return false;
 
     try {
-      const { error } = await supabase
-        .from('gw_sheet_music_annotations')
+      const t = annotationTarget(musicId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from(t.table)
         .delete()
-        .eq('sheet_music_id', musicId)
+        .eq(t.idColumn, t.rowId)
         .eq('page_number', pageNumber)
         .eq('user_id', user.id);
 
