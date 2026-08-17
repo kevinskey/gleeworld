@@ -1,7 +1,9 @@
 // Shared visual shell for every date card. One place owns the plate styling
 // so all five types stay visually identical apart from their content.
+import { useContext } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { ChevronRight } from 'lucide-react';
+import { DateCardSwitcherContext } from '../switcherContext';
 
 interface Props {
   icon: LucideIcon;
@@ -12,15 +14,23 @@ interface Props {
 }
 
 export function CardFrame({ icon: Icon, eyebrow, title, subtitle, onClick }: Props) {
+  // Admin type-switcher, threaded in by DateCardSlot. Lives at the end of
+  // the eyebrow row so it never crowds the '›' action chevron on the right.
+  const switcher = useContext(DateCardSwitcherContext);
   const body = (
     <>
       <div className="w-11 h-11 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
         <Icon className="w-5 h-5" />
       </div>
       <div className="min-w-0 flex-1">
-        {eyebrow && (
-          <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground truncate">
-            {eyebrow}
+        {(eyebrow || switcher) && (
+          <div className="flex items-center gap-1.5 min-w-0">
+            {eyebrow && (
+              <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground truncate">
+                {eyebrow}
+              </span>
+            )}
+            {switcher}
           </div>
         )}
         <div className="font-serif text-lg font-semibold leading-tight truncate">{title}</div>

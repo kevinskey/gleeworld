@@ -2,7 +2,8 @@
 // unknown type, revoked add-on, malformed config — degrades to the plain card
 // rather than leaving an empty slot.
 //
-// With `canManage`, a corner dropdown switches the card type in place
+// With `canManage`, a dropdown at the end of the eyebrow row (threaded to
+// the card frame via DateCardSwitcherContext) switches the card type in place
 // (tenant-wide — the same gw_branding_settings.date_card the Workspace
 // Settings panel writes). The stored config is deliberately carried over
 // unchanged on a switch: each card safeParses it and falls back to its own
@@ -27,12 +28,13 @@ import {
   safeDateCardConfig,
   DEFAULT_DATE_CARD_TYPE,
 } from './registry';
+import { DateCardSwitcherContext } from './switcherContext';
 import type { DateCardContext } from './types';
 
 interface Props {
   ctx: DateCardContext;
   activeAddons: string[];
-  /** Admins only: show the corner dropdown that switches the card type. */
+  /** Admins only: show the eyebrow-row dropdown that switches the card type. */
   canManage?: boolean;
 }
 
@@ -64,20 +66,27 @@ export function DateCardSlot({ ctx, activeAddons, canManage = false }: Props) {
     }
   };
 
-  return (
-    <div className="relative">
-      {card}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            type="button"
-            aria-label="Change date card"
-            title="Change date card"
-            className="absolute top-2 right-2 w-7 h-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          >
-            <ChevronDown className="w-4 h-4" />
-          </button>
-        </DropdownMenuTrigger>
+  // The trigger renders INSIDE the card frames (via DateCardSwitcherContext),
+  // some of which are themselves <button>s (liturgical, any CardFrame with
+  // onClick) — so it must be a span[role=button], never a nested <button>,
+  // and it stops pointerdown/click propagation so opening the menu doesn't
+  // also fire the card's own tap action. No preventDefault on pointerdown:
+  // Radix's composed open handler bails on defaultPrevented events.
+  const switcher = (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label="Change date card"
+          title="Change date card"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          className="inline-flex w-5 h-5 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+        >
+          <ChevronDown className="w-3.5 h-3.5" />
+        </span>
+      </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuRadioGroup value={setting.type} onValueChange={(v) => void onPickType(v)}>
             {DATE_CARD_LIST.map((m) => {
@@ -100,6 +109,11 @@ export function DateCardSlot({ ctx, activeAddons, canManage = false }: Props) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </div>
+  );
+
+  return (
+    <DateCardSwitcherContext.Provider value={switcher}>
+      {card}
+    </DateCardSwitcherContext.Provider>
   );
 }
