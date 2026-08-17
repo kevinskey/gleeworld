@@ -1,0 +1,96 @@
+/* Concert program print designs. Everything visual about the paper lives
+   here, scoped under .cp-page + a design class. Type in points, geometry
+   in inches (spec). Screen-only affordances live in the editor, not here. */
+
+.cp-page { background: #fff; color: #000; box-sizing: border-box; position: relative; }
+.cp-page * { box-sizing: border-box; }
+.cp-page p { margin: 0; }
+
+.cp-piece-line { display: flex; align-items: baseline; gap: 6pt; }
+.cp-piece-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72%; }
+.cp-leader { flex: 1 1 auto; border-bottom: 1px dotted currentColor; transform: translateY(-0.3em); min-width: 18pt; }
+.cp-piece-composer { white-space: nowrap; }
+.cp-piece-voicing { font-size: 8pt; padding-left: 18pt; }
+.cp-piece-soloists { font-style: italic; font-size: 9pt; padding-left: 18pt; }
+.cp-group-header { text-align: center; letter-spacing: 0.12em; text-transform: uppercase; margin: 10pt 0 6pt; }
+.cp-group-credit { text-align: center; font-size: 9.5pt; margin: 4pt 0 8pt; }
+.cp-divider { text-align: center; letter-spacing: 0.35em; margin: 8pt 0; }
+.cp-text { white-space: pre-wrap; font-size: 10pt; line-height: 1.45; margin: 6pt 0; }
+.cp-text-center { text-align: center; }
+.cp-text-left { text-align: left; }
+.cp-title-block { text-align: center; margin-bottom: 14pt; }
+.cp-title-org { font-size: 10pt; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 6pt; }
+.cp-title-logo { max-height: 0.6in; max-width: 2.2in; margin: 0 auto 6pt; display: block; }
+.cp-title-name { margin: 0 0 2pt; }
+.cp-title-program-word { letter-spacing: 0.3em; text-transform: uppercase; margin: 8pt 0 2pt; }
+.cp-title-subtitle { font-size: 11pt; margin: 2pt 0; }
+.cp-title-credit { font-size: 10.5pt; margin: 2pt 0; }
+.cp-footer-block { text-align: center; margin-top: 14pt; font-size: 9.5pt; }
+.cp-footer-rights { font-size: 7.5pt; line-height: 1.4; margin-top: 2pt; }
+.cp-footer-rights:first-of-type { margin-top: 8pt; }
+.cp-footer-qr { width: 0.7in; height: 0.7in; margin: 6pt auto 0; display: block; }
+.cp-roster-section { break-inside: avoid; margin: 6pt 0; }
+.cp-roster-heading { text-align: center; font-size: 10pt; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3pt; }
+.cp-roster-names { column-count: 2; column-gap: 18pt; font-size: 9.5pt; line-height: 1.5; }
+.cp-format-half-fold .cp-roster-names { column-count: 1; }
+
+/* ── classic-1943 (default): Libre Baskerville / Playfair Display ── */
+.cp-design-classic-1943 { font-family: 'Libre Baskerville', Georgia, serif; font-size: 10.5pt; line-height: 1.55; }
+.cp-design-classic-1943 .cp-title-name { font-family: 'Playfair Display', Georgia, serif; font-size: 22pt; font-weight: 700; }
+.cp-design-classic-1943 .cp-title-program-word { font-size: 13pt; }
+.cp-design-classic-1943 .cp-group-header { font-size: 10.5pt; }
+
+/* ── modern-clean: Montserrat, left pieces, thin rules ── */
+.cp-design-modern-clean { font-family: 'Montserrat', system-ui, sans-serif; font-size: 10pt; line-height: 1.5; }
+.cp-design-modern-clean .cp-title-name { font-size: 20pt; font-weight: 700; letter-spacing: 0.02em; }
+.cp-design-modern-clean .cp-title-program-word { font-size: 11pt; letter-spacing: 0.4em; }
+.cp-design-modern-clean .cp-leader { border-bottom-style: solid; border-bottom-width: 0.5pt; transform: translateY(-0.42em); }
+.cp-design-modern-clean .cp-group-header { text-align: left; letter-spacing: 0.2em; font-size: 9pt; }
+.cp-design-modern-clean .cp-group-credit { text-align: left; }
+
+/* ── formal: Cormorant Garamond / Cinzel ── */
+.cp-design-formal { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 11.5pt; line-height: 1.7; }
+.cp-design-formal .cp-title-name { font-family: 'Cinzel', Georgia, serif; font-size: 21pt; font-weight: 600; }
+.cp-design-formal .cp-title-program-word { font-family: 'Cinzel', Georgia, serif; font-size: 12pt; }
+.cp-design-formal .cp-group-header { font-size: 11pt; letter-spacing: 0.18em; }
+
+/* ── Screen-only editing affordances (Task 9) ──────────────────────────
+   Everything here is scoped inside @media screen so a real print (and the
+   Task 13 print stylesheet, which also strips these classes) never shows
+   a dashed outline, a ghost chip, or a "+ piece" row. */
+@media screen {
+  .cp-screen-editable { outline: none; cursor: text; border-radius: 2px; }
+  .cp-screen-editable:hover { outline: 1px dashed rgba(0, 0, 0, 0.3); outline-offset: 2px; }
+  .cp-screen-editable:focus { outline: 1px solid rgba(37, 99, 235, 0.55); outline-offset: 2px; }
+  .cp-screen-editable:empty:before {
+    content: attr(data-placeholder);
+    color: rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+  }
+
+  .cp-screen-chips { display: flex; flex-wrap: wrap; gap: 4pt; margin: 2pt 0 6pt 18pt; }
+  .cp-chip {
+    display: inline-flex; align-items: center; font-family: system-ui, sans-serif; font-size: 8pt;
+    border: 1px dashed rgba(0, 0, 0, 0.35); border-radius: 999px; padding: 1pt 6pt;
+    color: rgba(0, 0, 0, 0.55); background: rgba(0, 0, 0, 0.02); cursor: pointer;
+  }
+  .cp-chip:hover { background: rgba(0, 0, 0, 0.06); }
+  .cp-chip-rights-unknown { border-color: #b45309; color: #b45309; background: rgba(217, 119, 6, 0.08); }
+
+  .cp-add-piece-row-wrap { margin: 2pt 0 6pt; }
+  .cp-add-piece-row {
+    display: inline-block; font-family: system-ui, sans-serif; font-size: 8.5pt; color: rgba(0, 0, 0, 0.4);
+    border: 1px dashed rgba(0, 0, 0, 0.25); border-radius: 4px; padding: 1pt 6pt; cursor: pointer;
+  }
+  .cp-add-piece-row:hover { color: rgba(0, 0, 0, 0.65); border-color: rgba(0, 0, 0, 0.4); }
+
+  /* Task 10: roster click-to-open (RosterPanel) */
+  .cp-roster-section-editable { cursor: pointer; border-radius: 4px; }
+  .cp-roster-section-editable:hover { outline: 1px dashed rgba(0, 0, 0, 0.3); outline-offset: 3px; }
+  .cp-roster-empty {
+    text-align: center; font-style: italic; font-family: system-ui, sans-serif; font-size: 9pt;
+    color: rgba(0, 0, 0, 0.4); border: 1px dashed rgba(0, 0, 0, 0.25); border-radius: 4px;
+    padding: 6pt; cursor: pointer;
+  }
+  .cp-roster-empty:hover { color: rgba(0, 0, 0, 0.65); border-color: rgba(0, 0, 0, 0.4); }
+}

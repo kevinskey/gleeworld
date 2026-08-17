@@ -1,13 +1,14 @@
-// Canonical types for the Concert Planner card builder.
+// Canonical types for the Concert Planner.
 //
-// Source-of-truth shapes that the DB rows get mapped into. The
-// transform + validate libraries operate on these; the UI does too.
+// Source-of-truth shapes that the DB rows get mapped into. validate.ts
+// operates on these, as does RosterEditor and the publish-panel test.
 
 export type RightsStatus = 'public_domain' | 'licensed' | 'unknown';
 
-// 8 hand-curated themes — each a typography + palette + hero backdrop
-// bundle. Look + feel defined in themeClasses() in the editor + public
-// renderer.
+// Legacy card-editor theme axis. The block-model rewrite renders off
+// print_design (@/lib/concertProgram/types.PrintDesign) instead; this type
+// and the `theme` column survive only because useConcertPrograms.ts still
+// types the DB column — no renderer reads it anymore.
 export type VisualTheme =
   | 'classic-concert'
   | 'modern-show'
@@ -81,25 +82,6 @@ export interface RosterMember {
 export interface ProgramCardLayout {
   hidden?: string[];      // card ids that are hidden in audience view
   order?: string[];       // explicit order of card ids; missing ids fall back to default
-}
-
-// One card in the stack. The transform layer derives these from the
-// program + pieces + roster; the editor renders them in order.
-export type CardKind =
-  | 'hero-cover'
-  | 'timeline-program'
-  | 'piece-detail'   // formerly "split-media" in the prototype
-  | 'grid-roster'
-  | 'rights-footer'
-  | 'qr-access';
-
-export interface ProgramCard {
-  id: string;                  // deterministic so layout overrides survive reorders of pieces
-  kind: CardKind;
-  title: string;
-  visible: boolean;            // derived from default + card_layout.hidden
-  /** When the card is bound to a specific piece (kind = 'piece-detail') */
-  pieceId?: string;
 }
 
 export type ValidationLevel = 'ready' | 'warning' | 'required';
