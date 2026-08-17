@@ -44,8 +44,10 @@ serve(async (req) => {
     // async-only, so the sync call throws "SubtleCryptoProvider cannot be
     // used in a synchronous context" and EVERY delivery to this endpoint
     // 400s before any handler logic runs. Observed live on 2026-08-08.
-    // stripe-webhook, partner-webhook and _shared/payments/stripe.ts all
-    // already use the async form; this function was the only outlier.
+    // partner-webhook and _shared/payments/stripe.ts already use the async
+    // form; this function was the only outlier. (stripe-webhook, the third
+    // example here, was removed 2026-08-17 — it never had a Stripe endpoint;
+    // plan/personal fulfillment lives in the droplet's :3030 service.)
     event = await stripe.webhooks.constructEventAsync(raw, sig, webhookSecret);
   } catch (e) {
     console.error("Webhook signature verification failed:", (e as Error).message);
