@@ -14,6 +14,12 @@ vi.mock('@/hooks/useDateCardConfig', () => ({
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { functions: { invoke: vi.fn(async () => ({ data: {} })) } },
 }));
+// ReadingsModal (mounted closed inside the liturgical card) pulls the
+// assistant-voice hook chain, which needs branding queries this test never
+// exercises.
+vi.mock('@/lib/assistant/voices', () => ({
+  useAssistantVoice: () => ({ voiceId: null, loading: false }),
+}));
 
 import { DateCardSlot } from './DateCardSlot';
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Loader2, ExternalLink, Volume2, Square, CalendarClock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useSpokenText } from '@/hooks/useChapterAudio';
+import { useSpokenText, type SpokenChunk } from '@/hooks/useChapterAudio';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { readingsFromCache } from '@/lib/liturgy/cachedReadings';
@@ -40,11 +40,20 @@ function formatDate(iso: string): string {
  *  stop part-way. Split on sentence ends, then regrouped so no chunk is
  *  absurdly short. The heading and citation are spoken first so a listener
  *  knows what is being read.
+ *
+ *  Lector pacing: every reading after the first opens with a 5-second
+ *  quiet hold before its announcement — she must never plow straight from
+ *  one reading into the next (Kevin, 2026-08-17). The pause rides on the
+ *  announcement chunk so silence falls BETWEEN readings, never mid-reading.
  */
-function readingsToSpeech(readings: ReadingBlock[]): string[] {
-  const out: string[] = [];
+const READING_GAP_MS = 5000;
+export function readingsToSpeech(readings: ReadingBlock[]): SpokenChunk[] {
+  const out: SpokenChunk[] = [];
   for (const r of readings) {
-    out.push(r.citation ? `${r.heading}. ${r.citation}.` : `${r.heading}.`);
+    out.push({
+      text: r.citation ? `${r.heading}. ${r.citation}.` : `${r.heading}.`,
+      ...(out.length ? { pauseBeforeMs: READING_GAP_MS } : {}),
+    });
     const text = r.html
       .replace(/<[^>]+>/g, ' ')
       .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
@@ -56,9 +65,9 @@ function readingsToSpeech(readings: ReadingBlock[]): string[] {
     let buf = '';
     for (const piece of text.split(/(?<=[.!?])\s+/)) {
       buf = buf ? `${buf} ${piece}` : piece;
-      if (buf.length >= 180) { out.push(buf); buf = ''; }
+      if (buf.length >= 180) { out.push({ text: buf }); buf = ''; }
     }
-    if (buf.trim()) out.push(buf.trim());
+    if (buf.trim()) out.push({ text: buf.trim() });
   }
   return out;
 }
