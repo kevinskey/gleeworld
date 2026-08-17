@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import type {
   RightsStatus, VisualTheme, PrintFormat, ProgramCardLayout, RosterSection,
 } from '@/lib/concertPlanner/types';
+import type { PrintDesign, ProgramBlock } from '@/lib/concertProgram/types';
 
 // Legacy "template" axis. The new UI replaces this with theme + print_format;
 // the column stays in the DB to avoid losing the test program's value.
@@ -31,6 +32,8 @@ export interface ConcertProgram {
   theme: VisualTheme;
   print_format: PrintFormat;
   card_layout: ProgramCardLayout;
+  print_design: PrintDesign;
+  blocks: ProgramBlock[];
   design_state: Record<string, any>;
   canva_design_id: string | null;
   setlist_id: string | null;
