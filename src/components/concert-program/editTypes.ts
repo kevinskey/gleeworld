@@ -28,6 +28,9 @@ export interface ProgramEditCtx {
   onComposerEnter(pieceId: string): void;
   onOpenPieceEditor(pieceId: string, focusField?: string): void;
   onAddPieceAtEnd(groupId: string): void;
+  /** Opens the roster panel (RosterPanel). Optional — only the editor page
+   *  supplies it; print/public never do since ctx.edit itself is absent there. */
+  onOpenRoster?(): void;
   /** Registers the DOM node for a piece's title editor (key: pieceId) or
    *  composer editor (key: `${pieceId}:composer`) so the page can drive
    *  focus for fast entry and Tab routing. Call with `null` to unregister. */

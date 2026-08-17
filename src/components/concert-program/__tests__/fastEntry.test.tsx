@@ -176,7 +176,10 @@ describe('Concert Planner fast entry + piece popover', () => {
     fireEvent.click(titleEl);
     fireEvent.click(screen.getByText('Unknown rights'));
 
-    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+    // Exact match: Task 10's block rail also has "Delete <block label>"
+    // buttons (e.g. "Delete Pieces" for this same group), which a loose
+    // /delete/i regex would ambiguously match too.
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
     expect(mocks.deletePieceWithUndo).toHaveBeenCalledWith('pc1');
   });
 

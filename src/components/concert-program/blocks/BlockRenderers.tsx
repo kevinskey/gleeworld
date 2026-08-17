@@ -116,6 +116,28 @@ function DividerView() {
   return <div className="cp-divider">—o—</div>;
 }
 
+/** Screen-only, edit-mode-only placeholder for a roster block with no
+ *  sections that have members yet. Print/public render nothing for this
+ *  case (see the pagination fallback in paginate.ts) — `ctx.edit` is only
+ *  ever supplied by the editor page, so the `!edit` branch here is dead
+ *  code on print/public and this function always returns null there. */
+function RosterEmptyPlaceholder({ ctx }: { ctx: RenderCtx }) {
+  const edit = ctx.edit;
+  if (!edit) return null;
+  const open = () => edit.onOpenRoster?.();
+  return (
+    <div
+      className="cp-roster-empty"
+      role="button"
+      tabIndex={0}
+      onClick={open}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }}
+    >
+      Roster — click to add sections and names
+    </div>
+  );
+}
+
 function TextView({ block, ctx }: { block: Extract<ProgramBlock, { kind: 'text' }>; ctx: RenderCtx }) {
   const alignClass = block.align === 'left' ? 'cp-text-left' : 'cp-text-center';
   const edit = ctx.edit?.inlineEditable ? ctx.edit : undefined;
@@ -212,6 +234,7 @@ export function PageItemView({ item, ctx }: { item: PageItem; ctx: RenderCtx }) 
         case 'divider': return <DividerView />;
         case 'text': return <TextView block={block} ctx={ctx} />;
         case 'footer': return <FooterView block={block} ctx={ctx} />;
+        case 'roster': return <RosterEmptyPlaceholder ctx={ctx} />;
         default: return null;
       }
     }
@@ -270,14 +293,30 @@ export function PageItemView({ item, ctx }: { item: PageItem; ctx: RenderCtx }) 
     case 'roster-section': {
       const section = ctx.roster.find((s) => s.id === unit.sectionId);
       if (!section) return null;
-      return (
-        <div className="cp-roster-section">
+      const names = (
+        <>
           <div className="cp-roster-heading">{section.section_name}</div>
           <div className="cp-roster-names">
             {section.members.map((m) => (
               <div key={m.id}>{m.member_name}</div>
             ))}
           </div>
+        </>
+      );
+      // Print/public: unchanged. Editor (either breakpoint): click-to-open
+      // the roster panel — a roster section has no inline field editing of
+      // its own, so there's nothing else for a click on it to do.
+      if (!ctx.edit) return <div className="cp-roster-section">{names}</div>;
+      const openRoster = () => ctx.edit!.onOpenRoster?.();
+      return (
+        <div
+          className="cp-roster-section cp-roster-section-editable"
+          role="button"
+          tabIndex={0}
+          onClick={openRoster}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openRoster(); } }}
+        >
+          {names}
         </div>
       );
     }

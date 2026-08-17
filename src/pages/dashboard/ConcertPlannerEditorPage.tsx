@@ -26,11 +26,14 @@ import {
   useCallback, useEffect, useMemo, useRef, useState,
 } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Plus, Type, Minus, Users, Library, ListMusic, AlertTriangle } from 'lucide-react';
+import {
+  ArrowLeft, Loader2, Plus, Type, Minus, Users, Library, ListMusic, AlertTriangle, ChevronDown,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 // Not called yet — wired for Publish in Task 12/13.
 import { supabase } from '@/integrations/supabase/client';
 import { useConcertProgramDoc } from '@/hooks/useConcertProgramDoc';
@@ -46,6 +49,8 @@ import { paddedPanelCount } from '@/lib/concertProgram/impose';
 import { useBlockMeasurements } from '@/components/concert-program/useBlockMeasurements';
 import { ProgramSheetView } from '@/components/concert-program/ProgramSheetView';
 import { PieceEditPopover } from '@/components/concert-program/PieceEditPopover';
+import { BlockRail } from '@/components/concert-program/BlockRail';
+import { RosterPanel } from '@/components/concert-program/RosterPanel';
 import { PIECE_FIELD_DEBOUNCE_MS } from '@/components/concert-program/editDebounce';
 import type { RenderCtx } from '@/components/concert-program/blocks/BlockRenderers';
 import type { ProgramEditCtx } from '@/components/concert-program/editTypes';
@@ -257,8 +262,8 @@ function focusWithRetry(getEl: () => HTMLElement | null | undefined, attemptsLef
 export default function ConcertPlannerEditorPage() {
   const { id } = useParams<{ id: string }>();
   const {
-    program, pieces, roster, isLoading, blocks, setBlocks, addPieceToGroup, updatePiece,
-    deletePieceWithUndo, updateProgram,
+    program, pieces, roster, isLoading, blocks, setBlocks, persistBlocksNow, addPieceToGroup, updatePiece,
+    deletePieceWithUndo, deleteBlockWithUndo, updateProgram, legacyConcert,
   } = useConcertProgramDoc(id);
   const { settings } = useBrandingSettings();
   const isMobile = useIsMobile();
@@ -600,6 +605,47 @@ export default function ConcertPlannerEditorPage() {
   const handleAddDivider = () => insertBeforeFooter({ id: newBlockId(), kind: 'divider' });
   const handleAddRoster = () => insertBeforeFooter({ id: newBlockId(), kind: 'roster' });
 
+  // ── Block rail: whole-block reorder/delete/insert ───────────────────────
+  // Title always stays first, footer always stays last (contract enforced
+  // by construction here, not by clamping an arbitrary index): every one of
+  // these handlers only ever touches the middle slice.
+  const [rosterPanelOpen, setRosterPanelOpen] = useState(false);
+
+  // Drag drop is a discrete gesture — persist immediately, never the
+  // debounced setBlocks.
+  const handleReorderMiddle = useCallback((nextMiddle: ProgramBlock[]) => {
+    if (!blocks || blocks.length < 2) return;
+    const titleBlock = blocks[0];
+    const footerBlock = blocks[blocks.length - 1];
+    void persistBlocksNow([titleBlock, ...nextMiddle, footerBlock]);
+  }, [blocks, persistBlocksNow]);
+
+  // ▲▼ buttons: also a discrete gesture, also immediate.
+  const handleMoveBlock = useCallback((blockId: string, direction: 'up' | 'down') => {
+    if (!blocks) return;
+    const idx = blocks.findIndex((b) => b.id === blockId);
+    if (idx <= 0 || idx >= blocks.length - 1) return; // not found, or title/footer
+    const swapWith = direction === 'up' ? idx - 1 : idx + 1;
+    if (swapWith <= 0 || swapWith >= blocks.length - 1) return; // would land on title/footer
+    const next = blocks.slice();
+    [next[idx], next[swapWith]] = [next[swapWith], next[idx]];
+    void persistBlocksNow(next);
+  }, [blocks, persistBlocksNow]);
+
+  const handleDeleteBlock = useCallback((blockId: string) => {
+    void deleteBlockWithUndo(blockId);
+  }, [deleteBlockWithUndo]);
+
+  // Hover-revealed "+" between rail rows: typed text, so the debounced
+  // setBlocks (not persistBlocksNow) — same path insertBeforeFooter uses.
+  const handleInsertTextAt = useCallback((indexInMiddle: number) => {
+    if (!blocks) return;
+    const footerIdx = blocks.length - 1;
+    const insertAt = Math.min(Math.max(indexInMiddle + 1, 1), footerIdx);
+    const block: ProgramBlock = { id: newBlockId(), kind: 'text', text: '', align: 'center' };
+    setBlocks([...blocks.slice(0, insertAt), block, ...blocks.slice(insertAt)]);
+  }, [blocks, setBlocks]);
+
   const paddedPanels = paddedPanelCount(pages.length);
   const panelLine = format === 'half-fold'
     ? `${pages.length} panels → ${paddedPanels / 4} sheets (${paddedPanels - pages.length} blank panels)`
@@ -654,6 +700,7 @@ export default function ConcertPlannerEditorPage() {
     onAddPieceAtEnd,
     registerPieceEl,
     inlineEditable: !isMobile,
+    onOpenRoster: () => setRosterPanelOpen(true),
   }), [
     selectedPieceId, onSelectPiece, onCommitPieceField, onCommitBlockField, onCommitHeaderField,
     onCommitEventDate, onFastEnter, onTabToComposer, onComposerEnter, openPieceEditor, onAddPieceAtEnd,
@@ -700,7 +747,24 @@ export default function ConcertPlannerEditorPage() {
           </SheetTrigger>
           <SheetContent side="right" className="w-[85vw] sm:max-w-sm overflow-y-auto">
             <SheetHeader><SheetTitle>Program tools</SheetTitle></SheetHeader>
-            <div className="mt-4">
+            <div className="mt-4 space-y-4">
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="w-full justify-between px-2 -mx-2">
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Blocks</span>
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-2">
+                  <BlockRail
+                    blocks={blocks ?? []}
+                    onReorderMiddle={handleReorderMiddle}
+                    onMoveBlock={handleMoveBlock}
+                    onDeleteBlock={handleDeleteBlock}
+                    onInsertTextAt={handleInsertTextAt}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
               <EditorRail {...railProps} />
             </div>
           </SheetContent>
@@ -709,7 +773,16 @@ export default function ConcertPlannerEditorPage() {
         <Button size="sm" disabled>Publish</Button>
       </header>
 
-      <main className="flex-1 lg:grid lg:grid-cols-[1fr_280px] gap-4 p-3 lg:p-4 min-h-0">
+      <main className="flex-1 lg:grid lg:grid-cols-[10rem_1fr_280px] gap-4 p-3 lg:p-4 min-h-0">
+        <aside className="hidden lg:block lg:sticky lg:top-4 self-start">
+          <BlockRail
+            blocks={blocks ?? []}
+            onReorderMiddle={handleReorderMiddle}
+            onMoveBlock={handleMoveBlock}
+            onDeleteBlock={handleDeleteBlock}
+            onInsertTextAt={handleInsertTextAt}
+          />
+        </aside>
         <div className="min-w-0">
           {oversized.length > 0 ? (
             <div className="mb-3 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 text-amber-800 text-xs px-3 py-2">
@@ -743,6 +816,8 @@ export default function ConcertPlannerEditorPage() {
         canMoveUp={canMoveUp}
         canMoveDown={canMoveDown}
       />
+
+      <RosterPanel open={rosterPanelOpen} onOpenChange={setRosterPanelOpen} concert={legacyConcert} />
     </div>
   );
 }

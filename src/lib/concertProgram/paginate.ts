@@ -25,7 +25,15 @@ export function blocksToUnits(blocks: ProgramBlock[], rosterSectionIds: string[]
       for (const pieceId of b.pieceIds) units.push({ type: 'piece-line', blockId: b.id, pieceId });
       if (b.creditLine !== null) units.push({ type: 'group-credit', blockId: b.id });
     } else if (b.kind === 'roster') {
-      for (const sectionId of rosterSectionIds) units.push({ type: 'roster-section', blockId: b.id, sectionId });
+      if (rosterSectionIds.length > 0) {
+        for (const sectionId of rosterSectionIds) units.push({ type: 'roster-section', blockId: b.id, sectionId });
+      } else {
+        // No sections with members yet — fall back to a single 'block' unit so
+        // the editor has something to render (a click-to-add placeholder).
+        // Print/public render nothing for it (see BlockRenderers' 'roster' case),
+        // so this is a no-op for print/public output.
+        units.push({ type: 'block', blockId: b.id });
+      }
     } else {
       units.push({ type: 'block', blockId: b.id });
     }
@@ -93,7 +101,7 @@ export function paginateProgram(
       continue;
     }
 
-    const units: FlowUnit[] = b.kind === 'roster'
+    const units: FlowUnit[] = b.kind === 'roster' && rosterSectionIds.length > 0
       ? rosterSectionIds.map((sectionId) => ({ type: 'roster-section', blockId: b.id, sectionId }))
       : [{ type: 'block', blockId: b.id }];
     for (const u of units) {
