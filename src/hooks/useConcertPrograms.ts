@@ -7,7 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type {
-  RightsStatus, VisualTheme, PrintFormat, ProgramCardLayout, RosterSection,
+  RightsStatus, VisualTheme, PrintFormat, ProgramCardLayout, RosterSection, RosterMember,
 } from '@/lib/concertPlanner/types';
 import type { PrintDesign, ProgramBlock } from '@/lib/concertProgram/types';
 
@@ -34,7 +34,7 @@ export interface ConcertProgram {
   card_layout: ProgramCardLayout;
   print_design: PrintDesign;
   blocks: ProgramBlock[];
-  design_state: Record<string, any>;
+  design_state: Record<string, unknown>;
   canva_design_id: string | null;
   setlist_id: string | null;
   published_at: string | null;
@@ -185,12 +185,12 @@ export function useConcertProgram(id: string | undefined) {
       ]);
       if (sErr) throw sErr;
       if (mErr) throw mErr;
-      const bySection = new Map<string, any[]>();
-      (members ?? []).forEach((m: any) => {
+      const bySection = new Map<string, RosterMember[]>();
+      (members ?? []).forEach((m: RosterMember) => {
         if (!bySection.has(m.section_id)) bySection.set(m.section_id, []);
         bySection.get(m.section_id)!.push(m);
       });
-      return (sections ?? []).map((s: any) => ({
+      return (sections ?? []).map((s: Omit<RosterSection, 'members'>) => ({
         ...s,
         members: bySection.get(s.id) ?? [],
       })) as RosterSection[];
