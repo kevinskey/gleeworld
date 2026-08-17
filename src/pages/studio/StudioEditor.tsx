@@ -34,8 +34,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
-import { GW_INSTRUMENTS, toGwPresetId } from '@/lib/studio/gwInstruments';
+import { InstrumentPicker } from './InstrumentPicker';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { trackEqSig } from '@/lib/studio/engine/trackEq';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
@@ -5580,12 +5579,11 @@ function MidiInstrumentDropdown({
   const inst = track.instrument;
   return (
     <div className="flex items-center gap-1 text-xs">
-      <select
+      <InstrumentPicker
         value={`${inst.type}:${inst.preset_id ?? ''}`}
-        onChange={(e) => {
+        onChange={(v) => {
           // Split on the FIRST colon only: a GM preset id is itself 'gm:<name>',
           // so 'sampler:gm:violin' must yield type='sampler', preset='gm:violin'.
-          const v = e.target.value;
           const i = v.indexOf(':');
           const type = v.slice(0, i);
           const preset = v.slice(i + 1);
@@ -5593,26 +5591,7 @@ function MidiInstrumentDropdown({
             ? { ...t, instrument: { ...t.instrument, type: type as 'synth_basic' | 'sampler', preset_id: preset || undefined } } as Track
             : t);
         }}
-        className="h-5 bg-zinc-950 border border-zinc-800 rounded text-zinc-300 px-1 flex-1 min-w-0"
-      >
-        <optgroup label="Studio">
-          {GW_INSTRUMENTS.map((g) => (
-            <option key={g.name} value={`sampler:${toGwPresetId(g.name)}`}>{g.label}</option>
-          ))}
-        </optgroup>
-        <option value="synth_basic:sine">Synth · Sine</option>
-        <option value="synth_basic:triangle">Synth · Triangle</option>
-        <option value="synth_basic:square">Synth · Square</option>
-        <option value="synth_basic:sawtooth">Synth · Sawtooth</option>
-        <option value="sampler:kit_basic">Sampler · Kit</option>
-        {GM_GROUPED.map((group) => (
-          <optgroup key={group.family} label={group.family}>
-            {group.instruments.map((g) => (
-              <option key={g.name} value={`sampler:${toGmPresetId(g.name)}`}>{g.label}</option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
+      />
       <button onClick={onOpenPianoRoll} className="px-1.5 h-5 bg-zinc-800 border border-zinc-700 rounded hover:bg-zinc-700">Roll</button>
     </div>
   );
