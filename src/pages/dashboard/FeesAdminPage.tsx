@@ -15,6 +15,7 @@ import { filterFees, buildFeesCsv, type FeeStatusFilter } from '@/lib/fees/feeLi
 import { FeeNoteActionDialog } from '@/components/fees/FeeNoteActionDialog';
 import { NewIndividualFeeDialog } from '@/components/fees/NewIndividualFeeDialog';
 import { useToast } from '@/components/ui/use-toast';
+import { FeeSettingsCard } from '@/components/fees/FeeSettingsCard';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -154,6 +155,9 @@ export default function FeesAdminPage() {
       }
     >
       <StoreConnectPrompt returnPath="/dashboard/fees" moneyLabel="Student fee payments" />
+      <div className="mb-4">
+        <FeeSettingsCard />
+      </div>
       <Tabs value={tab} onValueChange={v => setTab(v as Cat)}>
         <TabsList>
           {CATS.map(c => (
