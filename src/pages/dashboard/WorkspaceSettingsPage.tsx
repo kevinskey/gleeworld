@@ -454,7 +454,9 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
   const checkout = useMutation({
     mutationFn: async (moduleId: string) => {
       const { data, error } = await supabase.functions.invoke('create-module-checkout', {
-        body: { module_id: moduleId },
+        // tenant_slug: the JWT's tenant claim is the caller's HOME tenant,
+        // not the workspace on screen — same reasoning as the plan checkout.
+        body: { module_id: moduleId, tenant_slug: getTenantSlug() },
       });
       if (error) throw error;
       if ((data as any)?.url) window.location.href = (data as any).url;
