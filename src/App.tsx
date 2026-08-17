@@ -408,6 +408,7 @@ const StorePage = lazy(() => import("./pages/store/StorePage"));
 const StoreScoreDetail = lazy(() => import("./pages/store/StoreScoreDetail"));
 const StorePartnerPage = lazy(() => import("./pages/store/StorePartnerPage"));
 const StoreThanksPage = lazy(() => import("./pages/store/StoreThanksPage"));
+const MyMusicOfflinePage = lazy(() => import("./pages/MyMusicOfflinePage"));
 
 
 // /dashboard/part-tracks briefly redirected to /studio after the old
@@ -600,6 +601,7 @@ const App = () => {
               <Route path="/dpa" element={<PublicRoute><DataProcessingAddendum /></PublicRoute>} />
               <Route path="/data-processing-addendum" element={<PublicRoute><DataProcessingAddendum /></PublicRoute>} />
               <Route path="/thank-you" element={<PublicRoute><ThankYou /></PublicRoute>} />
+              <Route path="/my-music" element={<PublicRoute><MyMusicOfflinePage /></PublicRoute>} />
               <Route
                 path="/academy/:courseCode/rehearsal-today"
                 element={

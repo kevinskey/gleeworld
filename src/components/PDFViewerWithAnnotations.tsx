@@ -49,6 +49,7 @@ import { cn } from '@/lib/utils';
 import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
 import { BookmarksMenu } from '@/components/music-library/BookmarksMenu';
 import { STAMP_CATEGORIES } from '@/lib/smuflStamps';
+import { isPersonalScoreId } from '@/lib/viewerScoreId';
 import * as pdfjsLib from 'pdfjs-dist';
 // Value-import (not side-effect) so Vite cannot tree-shake the worker setup.
 import { PDF_WORKER_READY } from '@/lib/pdfWorker';
@@ -127,6 +128,10 @@ export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWit
   onPageChange,
 }: PDFViewerWithAnnotationsProps, ref) => {
   const { user } = useAuth();
+  const isPersonal = isPersonalScoreId(musicId);
+  // Layers, audio, tracks and bookmarks all FK gw_sheet_music — feed them
+  // undefined for personal scores so their queries never fire.
+  const tenantMusicId = isPersonal ? undefined : musicId;
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
   const {
     annotations,
@@ -136,15 +141,16 @@ export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWit
   } = useSheetMusicAnnotations(musicId);
   // Annotation layers: each annotation can belong to a layer (Fingerings,
   // Bowing, Conductor notes…). Hidden layers don't render. New strokes
-  // are saved under `currentLayerId` if set.
-  const { layers: annotationLayers, addLayer, toggleLayerVisible, deleteLayer } = useAnnotationLayers(musicId);
+  // are saved under `currentLayerId` if set. Personal scores never offer
+  // layers (tenant-only), so `tenantMusicId` keeps the query from firing.
+  const { layers: annotationLayers, addLayer, toggleLayerVisible, deleteLayer } = useAnnotationLayers(tenantMusicId);
   const [currentLayerId, setCurrentLayerId] = useState<string | null>(null);
   const visibleLayerIds = useMemo(
     () => new Set(annotationLayers.filter((l) => l.is_visible).map((l) => l.id)),
     [annotationLayers],
   );
-  const { audioData } = useSheetMusicAudio(musicId);
-  const { tracks: audioTracks, defaultTrack: defaultAudioTrack } = useSheetMusicTracks(musicId);
+  const { audioData } = useSheetMusicAudio(tenantMusicId);
+  const { tracks: audioTracks, defaultTrack: defaultAudioTrack } = useSheetMusicTracks(tenantMusicId);
   const { loadUrl, loadYouTube, loadAppleMusic, audioSource, stop: stopAudio, closeYouTube } = useAudioCompanion();
   
   // Initialize the default layout plugin
@@ -1110,7 +1116,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         'drawing',
         annotationData,
         positionData,
-        currentLayerId,
+        // Personal scores have no layers table row to point at — never
+        // let a stale currentLayerId from a previously-viewed tenant
+        // score leak into a personal save.
+        isPersonal ? null : currentLayerId,
       );
       
       if (!savedAnnotation) {
@@ -1827,7 +1836,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             {/* Audio Companion in annotation mode - hidden on mobile */}
             <div className="hidden sm:flex items-center border-l pl-1.5 sm:pl-2 ml-1">
               {showAudioCompanion ? (
-                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={tenantMusicId} />
               ) : (
                 <Button
                   variant="outline"
@@ -1862,8 +1871,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               >
                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
-              {annotations.length > 0 && musicTitle && (
-                <AnnotationShareButton 
+              {!isPersonal && annotations.length > 0 && musicTitle && (
+                <AnnotationShareButton
                   annotationIds={annotations.map(a => a.id)}
                   musicTitle={musicTitle}
                 />
@@ -1952,7 +1961,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 
                 {/* Audio Companion */}
                 {showAudioCompanion ? (
-                  <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
+                  <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={tenantMusicId} />
                 ) : (
                   <Button
                     size="sm"
@@ -2292,7 +2301,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             {/* Right: Tools */}
             <div className="flex items-center gap-1">
               {showAudioCompanion ? (
-                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={tenantMusicId} />
               ) : (
                 <Button
                   size="sm"
@@ -2325,9 +2334,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               >
                 <Palette className="h-4 w-4" />
               </Button>
-              {musicId && (
+              {tenantMusicId && (
                 <BookmarksMenu
-                  sheetMusicId={musicId}
+                  sheetMusicId={tenantMusicId}
                   currentPage={currentPage}
                   onJumpToPage={goToPage}
                 />

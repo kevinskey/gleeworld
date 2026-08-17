@@ -11,11 +11,14 @@
 // the way out. Keeping that in one place stops the landing and the reader from
 // disagreeing about what a bare uuid means.
 //
-// A personal score cannot carry annotations or linked audio: those tables have
-// a foreign key to gw_sheet_music, so there is no row for them to point at.
-// Callers use isPersonalScoreId() to hide those affordances rather than
-// offering markup that silently fails to save. Sharing a score to the library
-// creates a real gw_sheet_music row and gets full annotation support.
+// Annotations now route to gw_personal_score_annotations for personal ids
+// (see useSheetMusicAnnotations), so drawing/saving works everywhere a score
+// opens. Audio, bookmarks, jumps, page-order and layers stay tenant-only —
+// those tables FK gw_sheet_music, so there is no row for a personal score to
+// point at. Callers use isPersonalScoreId() to hide those affordances rather
+// than offering markup that silently fails to save. Sharing a score to the
+// library creates a real gw_sheet_music row and gets full support for all of
+// the above.
 
 const PERSONAL_PREFIX = 'personal:';
 
