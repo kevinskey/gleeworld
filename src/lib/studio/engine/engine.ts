@@ -28,6 +28,7 @@ import { buildTrack, type EngineTrack } from './tracks';
 import { buildBus, type EngineBus } from './buses';
 import { buildSend, type EngineSend } from './sends';
 import { scheduleAutomation, type AutomatableParam } from './automation';
+import { registerStudioAudio } from '../audioLeakGuard';
 import { setAssetUrl } from './assetUrlCache';
 import { shouldLoopWrap } from '../transport';
 import { buildMasterChain, type MasterChainHandle } from './masterChain';
@@ -235,7 +236,12 @@ export class StudioEngine {
   private rafId: number | null = null;
   private state: EngineState;
 
+  private unregisterLeakGuard: () => void;
+
   constructor(opts: StudioEngineOptions = {}) {
+    // Leak guard: the route-level disposeAllStudioAudio() reaches this
+    // engine even when the owning hook's unmount cleanup never ran.
+    this.unregisterLeakGuard = registerStudioAudio(this);
     this.onMasteringDegraded = opts.onMasteringDegraded;
     this.masterIn = new Tone.Gain(1);
     this.masterPan = new Tone.Panner(0);
@@ -517,6 +523,7 @@ export class StudioEngine {
   }
 
   dispose(): void {
+    this.unregisterLeakGuard();
     this.stopPositionLoop();
     this.stopMetronomeInterval();
     this.stopLoopInterval();
