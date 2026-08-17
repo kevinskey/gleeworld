@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import 'fake-indexeddb/auto';
+import '../../vitest.fake-idb';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { saveToVault, removeFromVault, listVault, getVaultBlob, vaultUsage, isVaultSupported } from './offlineVault';
 import type { PersonalScore } from '@/hooks/usePersonalScores';

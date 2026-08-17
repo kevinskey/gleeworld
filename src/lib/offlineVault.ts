@@ -49,11 +49,10 @@ function openVaultDb(): Promise<IDBDatabase> {
 function tx<T>(storeNames: string[], mode: IDBTransactionMode, run: (t: IDBTransaction) => IDBRequest<T> | void): Promise<T> {
   return openVaultDb().then((db) => new Promise<T>((resolve, reject) => {
     const t = db.transaction(storeNames, mode);
-    let out: IDBRequest<T> | void;
+    const out = run(t);
     t.oncomplete = () => resolve(out ? (out as IDBRequest<T>).result : (undefined as T));
     t.onerror = () => reject(t.error);
     t.onabort = () => reject(t.error);
-    out = run(t);
   }));
 }
 
