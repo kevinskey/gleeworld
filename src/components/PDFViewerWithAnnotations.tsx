@@ -1836,7 +1836,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             {/* Audio Companion in annotation mode - hidden on mobile */}
             <div className="hidden sm:flex items-center border-l pl-1.5 sm:pl-2 ml-1">
               {showAudioCompanion ? (
-                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={tenantMusicId} />
               ) : (
                 <Button
                   variant="outline"
@@ -1961,7 +1961,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 
                 {/* Audio Companion */}
                 {showAudioCompanion ? (
-                  <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
+                  <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={tenantMusicId} />
                 ) : (
                   <Button
                     size="sm"
@@ -2301,7 +2301,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             {/* Right: Tools */}
             <div className="flex items-center gap-1">
               {showAudioCompanion ? (
-                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={tenantMusicId} />
               ) : (
                 <Button
                   size="sm"
