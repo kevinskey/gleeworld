@@ -1331,7 +1331,12 @@ export class StudioEngine {
 
   subscribe(fn: Listener): () => void {
     this.listeners.add(fn);
-    fn(this.state);
+    // COPY, matching emit() below. Handing out the live object let React
+    // keep a reference that this engine mutates in place — so every later
+    // emit compared equal against it ("nothing changed") and discrete
+    // state flips (metronome on/off was the visible one) never re-rendered
+    // on web. The engine's own behavior was fine; the UI just never heard.
+    fn({ ...this.state });
     return () => this.listeners.delete(fn);
   }
   getState(): EngineState { return { ...this.state }; }
