@@ -18,6 +18,7 @@ import { concertRsvpBlock } from './blocks/concert-rsvp';
 import { alumniSpotlightBlock } from './blocks/alumni-spotlight';
 import { spotlightBlock } from './blocks/spotlight';
 import { scholarshipBlock } from './blocks/scholarship';
+import { scholarApplicationBlock } from './blocks/scholar-application';
 import { appointmentBookingBlock } from './blocks/appointment-booking';
 import { auditionBlock } from './blocks/audition';
 import { pressBlock } from './blocks/press';
@@ -59,6 +60,7 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [alumniSpotlightBlock.type]: alumniSpotlightBlock,
   [spotlightBlock.type]: spotlightBlock,
   [scholarshipBlock.type]: scholarshipBlock,
+  [scholarApplicationBlock.type]: scholarApplicationBlock,
   [appointmentBookingBlock.type]: appointmentBookingBlock,
   [auditionBlock.type]: auditionBlock,
   // Back-compat: `video-gallery` was the original key for the Videos block.
