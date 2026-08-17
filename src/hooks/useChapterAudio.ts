@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { speak, stopSpeaking } from '@/lib/assistant/speech';
+import { useAssistantVoice } from '@/lib/assistant/voices';
 import type { BibleVerse } from '@/hooks/useBible';
+
+/** A chunk of speech, optionally preceded by deliberate silence — how the
+ *  daily readings hold a lector's pause between one reading and the next.
+ *  Plain strings remain valid chunks with no pause. */
+export interface SpokenChunk { text: string; pauseBeforeMs?: number }
 
 /**
  * Speaks an ordered list of text chunks, one after another.
@@ -10,13 +16,22 @@ import type { BibleVerse } from '@/hooks/useBible';
  * comfortable TTS payload, and one long request means a long silence before
  * anything plays. Chunked, playback starts almost immediately and can be
  * stopped part-way.
+ *
+ * A chunk's `pauseBeforeMs` inserts real client-side silence before it is
+ * spoken (Kevin, 2026-08-17: the readings must not be plowed through — 5s
+ * between them, like a lector). SSML breaks are not an option: the TTS
+ * model caps them around 3s and sanitizeForSpeech would mangle the tags.
  */
-export function useSpokenText(chunks: string[]) {
+export function useSpokenText(chunks: Array<string | SpokenChunk>) {
   const [playing, setPlaying] = useState(false);
   const [index, setIndex] = useState<number | null>(null);
   // Bumped on every stop so a late chunk from a cancelled run can tell that it
   // no longer belongs to the current playback.
   const runRef = useRef(0);
+  // The user's own assistant voice (falls back to tenant/app default inside
+  // speak() while still loading). Without this, readings always came out in
+  // the app-default voice regardless of the chosen one.
+  const { voiceId } = useAssistantVoice();
 
   const stop = useCallback(() => {
     runRef.current += 1;
@@ -29,7 +44,9 @@ export function useSpokenText(chunks: string[]) {
   useEffect(() => stop, [stop]);
 
   const play = useCallback(async () => {
-    const parts = chunks.map((c) => c.trim()).filter(Boolean);
+    const parts = chunks
+      .map((c) => (typeof c === 'string' ? { text: c.trim() } : { ...c, text: c.text.trim() }))
+      .filter((c) => c.text);
     if (!parts.length) return;
     runRef.current += 1;
     const run = runRef.current;
@@ -40,9 +57,16 @@ export function useSpokenText(chunks: string[]) {
 
     for (let i = 0; i < parts.length; i++) {
       if (runRef.current !== run) return;
+      if (i > 0 && parts[i].pauseBeforeMs) {
+        // `playing` stays true through the gap — silence here is deliberate,
+        // not finished. Stop must win DURING the gap too, hence the re-check
+        // after the sleep.
+        await new Promise((resolve) => setTimeout(resolve, parts[i].pauseBeforeMs));
+        if (runRef.current !== run) return;
+      }
       setIndex(i);
       await new Promise<void>((resolve) => {
-        speak(parts[i], { accessToken, supabaseUrl: SUPABASE_URL, onEnd: () => resolve() });
+        speak(parts[i].text, { accessToken, supabaseUrl: SUPABASE_URL, voiceId, onEnd: () => resolve() });
       });
     }
 
@@ -50,7 +74,7 @@ export function useSpokenText(chunks: string[]) {
       setPlaying(false);
       setIndex(null);
     }
-  }, [chunks]);
+  }, [chunks, voiceId]);
 
   return { playing, index, play, stop };
 }
