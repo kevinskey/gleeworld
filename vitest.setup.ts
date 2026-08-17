@@ -48,6 +48,20 @@ if (typeof HTMLCanvasElement !== 'undefined' && !(HTMLCanvasElement.prototype as
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+// jsdom's Blob (this project is pinned to jsdom 20) is not the same
+// constructor Node's native structuredClone() special-cases, so cloning a
+// jsdom Blob through IndexedDB (fake-indexeddb uses structuredClone under
+// the hood) silently degrades it to a plain object — the clone loses
+// .text()/.arrayBuffer()/etc, with no error. Swapping in Node's own Blob
+// for jsdom-environment tests makes Blob round-trip correctly through
+// fake-indexeddb, matching real-browser IndexedDB behavior. See
+// https://github.com/jsdom/jsdom/issues/3363 and the fake-indexeddb README
+// "jsdom" section. No-op under the default node test environment, where
+// globalThis.Blob already is Node's Blob.
+if (typeof window !== 'undefined') {
+  (globalThis as unknown as { Blob: typeof Blob }).Blob = require('node:buffer').Blob;
+}
+
 // A global ResizeObserver/scrollIntoView polyfill was tried here and
 // reverted (see AllToolsSheet.test.tsx, which stubs both locally instead).
 // jsdom genuinely lacks both, and cmdk needs them at mount — but several
