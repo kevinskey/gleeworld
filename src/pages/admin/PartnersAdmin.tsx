@@ -48,7 +48,7 @@ export default function PartnersAdmin() {
   const [scoreSearch, setScoreSearch] = useState('');
 
   const setStatus = useSetPartnerStatus();
-  const orders = useAdminPartnerOrders();
+  const orders = useAdminPartnerOrders(canCurate);
   const refundItem = useAdminRefundItem();
 
   const toggleSuspend = (p: { id: string; display_name: string; status: string }) => {

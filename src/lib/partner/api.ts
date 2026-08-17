@@ -418,9 +418,10 @@ export interface AdminOrder {
   items: AdminOrderItem[];
 }
 
-export function useAdminPartnerOrders(): UseQueryResult<AdminOrder[]> {
+export function useAdminPartnerOrders(enabled = true): UseQueryResult<AdminOrder[]> {
   return useQuery({
     queryKey: ['partner-orders-admin'],
+    enabled,
     queryFn: async () => {
       const { data: orders, error } = await supabase
         .from('gw_partner_orders')
