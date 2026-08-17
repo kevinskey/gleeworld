@@ -195,6 +195,22 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
     onError: (e: any) => toast.error(e?.message || 'Plan checkout failed.'),
   });
 
+  // A live subscription is managed in the Stripe Customer Portal — switching
+  // tiers there UPDATES the existing subscription with proration. Starting a
+  // second checkout instead would double-bill (the fn 409s on that now).
+  const hasLiveSub = current?.status === 'active' || current?.status === 'past_due';
+  const portal = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('create-billing-portal', {
+        body: { kind: 'tenant', tenant_slug: getTenantSlug() },
+      });
+      if (error) throw error;
+      // deno-lint-ignore no-explicit-any
+      if ((data as any)?.url) window.location.href = (data as any).url;
+    },
+    onError: (e: any) => toast.error(e?.message || 'Could not open billing portal.'),
+  });
+
   const currentTierLabel = current
     ? (PLAN_TIERS.find((t) => t.id === current.plan_id)?.label ?? current.plan_id)
     : null;
@@ -212,6 +228,19 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                   <span className="text-base font-bold">{currentTierLabel}</span>
                   <Badge variant="outline" className="text-xs">{current.status}</Badge>
                   <Badge variant="outline" className="text-xs">{current.billing_cycle}</Badge>
+                  {hasLiveSub && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={portal.isPending}
+                      onClick={() => portal.mutate()}
+                    >
+                      {portal.isPending
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <><CreditCard className="w-4 h-4 mr-1.5" /> Manage billing</>}
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground mt-1">No paid plan yet — running on free tier.</p>
@@ -331,8 +360,11 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                 ) : (
                 <button
                   type="button"
-                  disabled={checkout.isPending}
-                  onClick={() => checkout.mutate(tier.id)}
+                  disabled={checkout.isPending || portal.isPending}
+                  // With a live subscription, tier changes go through the
+                  // Customer Portal (updates the existing sub, prorated) —
+                  // a fresh checkout would create a second subscription.
+                  onClick={() => (hasLiveSub ? portal.mutate() : checkout.mutate(tier.id))}
                   className={cn(
                     'inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed',
                   )}
@@ -340,9 +372,9 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                     ? { background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }
                     : { backgroundColor: '#0f172a' }}
                 >
-                  {checkout.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                  {(checkout.isPending || portal.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                     <>
-                      Choose Plan
+                      {hasLiveSub ? 'Switch Plan' : 'Choose Plan'}
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}

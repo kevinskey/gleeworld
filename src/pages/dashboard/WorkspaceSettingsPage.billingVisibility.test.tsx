@@ -190,6 +190,51 @@ describe('PlanTabPanel checkout actions (admin)', () => {
     ));
     render(<WorkspaceSettingsPage />, { wrapper });
     await waitFor(() => expect(screen.getByText('CURRENT')).toBeInTheDocument());
-    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(2);
+    // Personal keeps its checkout button; the other tenant tier switches
+    // through the portal (asserted separately), so only 1 "Choose Plan".
+    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(1);
+  });
+});
+
+describe('Customer Portal entry points (admin, live subscription)', () => {
+  const activeSetup = () => {
+    role.admin = true;
+    fromMock.mockImplementation((table: string) => pgChain(
+      table === 'gw_tenant_plans'
+        ? { data: { plan_id: 'director_60', billing_cycle: 'monthly', status: 'active' }, error: null }
+        : { data: null, error: null },
+    ));
+    render(<WorkspaceSettingsPage />, { wrapper });
+  };
+
+  it('shows Manage billing on an active subscription and opens the portal', async () => {
+    activeSetup();
+    const manage = await screen.findByRole('button', { name: /manage billing/i });
+    fireEvent.click(manage);
+    await waitFor(() => expect(invokeMock).toHaveBeenCalledWith('create-billing-portal', {
+      body: { kind: 'tenant', tenant_slug: 'demo' },
+    }));
+  });
+
+  it('the other tenant tier reads Switch Plan and goes through the portal, not checkout', async () => {
+    activeSetup();
+    const switchBtn = await screen.findByRole('button', { name: /switch plan/i });
+    fireEvent.click(switchBtn);
+    await waitFor(() => expect(invokeMock).toHaveBeenCalledWith('create-billing-portal', {
+      body: { kind: 'tenant', tenant_slug: 'demo' },
+    }));
+    expect(invokeMock).not.toHaveBeenCalledWith('create-plan-checkout', expect.anything());
+  });
+
+  it('a trial row shows no Manage billing (nothing in Stripe to manage yet)', async () => {
+    role.admin = true;
+    fromMock.mockImplementation((table: string) => pgChain(
+      table === 'gw_tenant_plans'
+        ? { data: { plan_id: 'director_60', billing_cycle: 'monthly', status: 'trial' }, error: null }
+        : { data: null, error: null },
+    ));
+    render(<WorkspaceSettingsPage />, { wrapper });
+    await waitFor(() => expect(screen.getByText('trial')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /manage billing/i })).not.toBeInTheDocument();
   });
 });
