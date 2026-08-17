@@ -293,7 +293,12 @@ describe('FeesAdminPage — deleting a fee', () => {
 
   const openConfirm = async () => {
     render(<FeesAdminPage />);
-    fireEvent.click(await screen.findByRole('button', { name: /delete choir fee/i }));
+    // Delete now lives behind the row's actions menu. Radix triggers open on
+    // pointerdown/keyboard, not click — jsdom has no PointerEvent, so open
+    // via keyboard.
+    const trigger = await screen.findByRole('button', { name: /actions for choir fee/i });
+    fireEvent.keyDown(trigger, { key: 'Enter' });
+    fireEvent.click(await screen.findByRole('menuitem', { name: /delete/i }));
     return screen.findByRole('alertdialog');
   };
 

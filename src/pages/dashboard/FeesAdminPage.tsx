@@ -7,8 +7,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Trash2, Download } from 'lucide-react';
+import { Trash2, Download, MoreVertical } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { filterFees, buildFeesCsv, type FeeStatusFilter } from '@/lib/fees/feeListUtils';
+import { FeeNoteActionDialog } from '@/components/fees/FeeNoteActionDialog';
+import { NewIndividualFeeDialog } from '@/components/fees/NewIndividualFeeDialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -51,7 +56,11 @@ export default function FeesAdminPage() {
   const [deleteTarget, setDeleteTarget] = useState<
     { id: string; name: string; who: string; paid: number } | null
   >(null);
-  const { studentFees, refetch, deleteFee } = useFeesManagement();
+  const { studentFees, refetch, deleteFee, waiveFee, refundFee } = useFeesManagement();
+  const [noteAction, setNoteAction] = useState<
+    { type: 'waive' | 'refund'; feeId: string; name: string } | null
+  >(null);
+  const [newFeeOpen, setNewFeeOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<FeeStatusFilter>('all');
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -120,7 +129,12 @@ export default function FeesAdminPage() {
       title="Fees"
       subtitle="Manage fee templates, assignments, and payments across all categories."
       actions={
-        <Button onClick={() => setCreateOpen(true)}>+ New template</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setNewFeeOpen(true)}>
+            + Individual fee
+          </Button>
+          <Button onClick={() => setCreateOpen(true)}>+ New template</Button>
+        </div>
       }
     >
       <StoreConnectPrompt returnPath="/dashboard/fees" moneyLabel="Student fee payments" />
@@ -253,22 +267,51 @@ export default function FeesAdminPage() {
                               Mark paid
                             </Button>
                           )}
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="shrink-0 h-11 w-11 text-muted-foreground hover:text-destructive"
-                          aria-label={`Delete ${f.name} for ${f.user_profile?.full_name ?? 'member'}`}
-                          onClick={() =>
-                            setDeleteTarget({
-                              id: f.id,
-                              name: f.name,
-                              who: f.user_profile?.full_name ?? '—',
-                              paid: Number(f.paid_amount ?? 0),
-                            })
-                          }
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="shrink-0 h-11 w-11 text-muted-foreground"
+                              aria-label={`Actions for ${f.name} for ${f.user_profile?.full_name ?? 'member'}`}
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {f.status !== 'waived' && f.status !== 'refunded' && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setNoteAction({ type: 'waive', feeId: f.id, name: f.name })
+                                }
+                              >
+                                Waive…
+                              </DropdownMenuItem>
+                            )}
+                            {Number(f.paid_amount ?? 0) > 0 && f.status !== 'refunded' && (
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  setNoteAction({ type: 'refund', feeId: f.id, name: f.name })
+                                }
+                              >
+                                Refund…
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() =>
+                                setDeleteTarget({
+                                  id: f.id,
+                                  name: f.name,
+                                  who: f.user_profile?.full_name ?? '—',
+                                  paid: Number(f.paid_amount ?? 0),
+                                })
+                              }
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     );
                   })}
@@ -322,6 +365,31 @@ export default function FeesAdminPage() {
           bulkFees={bulkFees}
         />
       )}
+
+      {noteAction && (
+        <FeeNoteActionDialog
+          open={!!noteAction}
+          onClose={() => setNoteAction(null)}
+          title={noteAction.type === 'waive' ? 'Waive this fee?' : 'Refund this fee?'}
+          description={
+            noteAction.type === 'waive'
+              ? `${noteAction.name} will be marked waived — the student owes nothing and the record is kept.`
+              : `${noteAction.name} will be refunded. Stripe payments are refunded to the card; cash/check refunds are recorded only.`
+          }
+          actionLabel={noteAction.type === 'waive' ? 'Waive fee' : 'Refund fee'}
+          onSubmit={async note => {
+            if (noteAction.type === 'waive') await waiveFee(noteAction.feeId, note);
+            else await refundFee(noteAction.feeId, note);
+            await refetch();
+          }}
+        />
+      )}
+
+      <NewIndividualFeeDialog
+        open={newFeeOpen}
+        onClose={() => setNewFeeOpen(false)}
+        onCreated={() => refetch()}
+      />
 
       <AlertDialog
         open={!!deleteTarget}
