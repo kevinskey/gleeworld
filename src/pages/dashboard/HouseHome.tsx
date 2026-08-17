@@ -42,7 +42,7 @@ interface FeedRow {
 }
 
 export default function HouseHome() {
-  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
+  const { profile, loading: roleLoading, canEditMusicLibrary, isAdmin } = useUserRole();
   const isFaculty = isFacultyProfile(profile);
   const firstName = preferredFirstName(profile);
   const { settings: brandingSettings } = useBrandingSettings();
@@ -290,7 +290,7 @@ export default function HouseHome() {
           </div>
         </div>
 
-        <DateCardSlot ctx={dateCardCtx} activeAddons={Array.from(moduleSet)} />
+        <DateCardSlot ctx={dateCardCtx} activeAddons={Array.from(moduleSet)} canManage={isAdmin()} />
 
         {/* Status cards on the left, News rail on the right. Below lg they
             stack. On lg+ they render inside a horizontal resizable pair —
