@@ -145,7 +145,11 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
         <SheetHeader className="px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-2 border-b border-border shrink-0">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <SheetTitle className="font-extrabold tracking-tight text-lg sm:text-xl text-left">
+              {/* Phones: liturgical titles run long ("Monday of week 20 in
+                  Ordinary Time") and the header also holds Listen + close —
+                  base size keeps it to one calm line instead of dwarfing the
+                  row (Kevin, 2026-08-17). */}
+              <SheetTitle className="font-extrabold tracking-tight text-base leading-snug sm:text-xl text-left break-words">
                 {data?.liturgicalTitle || 'Daily Readings'}
               </SheetTitle>
               <p className="text-xs text-muted-foreground text-left">
