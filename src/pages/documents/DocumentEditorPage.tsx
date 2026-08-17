@@ -422,52 +422,59 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <div className="flex flex-wrap items-center gap-3">
+      {/* flex-1 alone let the pills claim the whole line and crush the
+          title to a couple of characters on phones (the row's flex-wrap
+          never fired because flex-1's basis is 0). The title takes a full
+          line of its own below sm; the actions are their own wrapping
+          cluster so nothing ever clips off-screen. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <input
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           onBlur={() => void autosaver.flush()}
           placeholder="Untitled"
           aria-label="Document title"
-          className="min-w-0 flex-1 bg-transparent text-2xl font-semibold text-foreground focus:outline-none"
+          className="basis-full min-w-0 bg-transparent text-2xl font-semibold text-foreground focus:outline-none sm:basis-auto sm:flex-1"
         />
 
-        <ToggleGroup
-          type="single"
-          value={style}
-          onValueChange={(v) => { if (v === 'mla9' || v === 'apa7') handleStyleChange(v); }}
-          className="rounded-lg border border-border p-0.5"
-        >
-          <ToggleGroupItem value="mla9" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">MLA</ToggleGroupItem>
-          <ToggleGroupItem value="apa7" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">APA</ToggleGroupItem>
-        </ToggleGroup>
+        <div className="flex flex-wrap items-center gap-2">
+          <ToggleGroup
+            type="single"
+            value={style}
+            onValueChange={(v) => { if (v === 'mla9' || v === 'apa7') handleStyleChange(v); }}
+            className="rounded-lg border border-border p-0.5"
+          >
+            <ToggleGroupItem value="mla9" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">MLA</ToggleGroupItem>
+            <ToggleGroupItem value="apa7" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">APA</ToggleGroupItem>
+          </ToggleGroup>
 
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="text-xs"
-          onClick={() => setPrompterText(editorInstanceRef.current?.getText() ?? '')}
-        >
-          <MonitorPlay className="mr-1 h-3.5 w-3.5" /> Prompter
-        </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={() => setPrompterText(editorInstanceRef.current?.getText() ?? '')}
+          >
+            <MonitorPlay className="mr-1 h-3.5 w-3.5" /> Prompter
+          </Button>
 
-        <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setExportOpen(true)}>
-          Export
-        </Button>
+          <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setExportOpen(true)}>
+            Export
+          </Button>
 
-        {/* Sources live up here now, at every size — the docked right rail
-            squeezed the page (Kevin, 2026-08-13: "move sources up and let
-            doc have width"). The sheet slides OVER the doc instead. */}
-        <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
-          <SheetTrigger asChild>
-            <Button type="button" variant="outline" size="sm" className="text-xs">Sources</Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-            <SheetHeader><SheetTitle>Sources</SheetTitle></SheetHeader>
-            <div className="mt-3">{sourcesPanel}</div>
-          </SheetContent>
-        </Sheet>
+          {/* Sources live up here now, at every size — the docked right rail
+              squeezed the page (Kevin, 2026-08-13: "move sources up and let
+              doc have width"). The sheet slides OVER the doc instead. */}
+          <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
+            <SheetTrigger asChild>
+              <Button type="button" variant="outline" size="sm" className="text-xs">Sources</Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader><SheetTitle>Sources</SheetTitle></SheetHeader>
+              <div className="mt-3">{sourcesPanel}</div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       <div className="flex flex-col gap-4">
