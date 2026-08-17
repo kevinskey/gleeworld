@@ -59,6 +59,7 @@ import { RosterPanel } from '@/components/concert-program/RosterPanel';
 import { LibraryPickerDialog, type LibraryPickFields } from '@/components/concert-program/LibraryPickerDialog';
 import { SetlistImportDialog, type SetlistImportResult } from '@/components/concert-program/SetlistImportDialog';
 import { PublishPanel } from '@/components/concert-program/PublishPanel';
+import { ConcertProgramPrintView } from '@/components/concert-program/ConcertProgramPrintView';
 import { PIECE_FIELD_DEBOUNCE_MS } from '@/components/concert-program/editDebounce';
 import type { RenderCtx } from '@/components/concert-program/blocks/BlockRenderers';
 import type { ProgramEditCtx } from '@/components/concert-program/editTypes';
@@ -381,6 +382,22 @@ export default function ConcertPlannerEditorPage() {
     setEditorAnchorEl(pieceRefs.current.get(pieceId) ?? null);
     setEditorOpen(true);
   }, []);
+
+  // ── Print / Save-PDF overlay (Task 13) ──────────────────────────────────
+  const [printOpen, setPrintOpen] = useState(false);
+
+  // Print overlay renders READ-ONLY: it must never get `viewCtx` (which
+  // carries `edit` for on-page editing) — always the plain measurement
+  // `ctx`, defensively copied so a future edit to `ctx` can't leak an
+  // `edit` key into it by accident.
+  const printCtx: RenderCtx = useMemo(() => ({ ...ctx }), [ctx]);
+
+  const handlePrintClick = useCallback(() => {
+    if (flattenPieceOrder(blocks ?? []).length === 0) {
+      if (!window.confirm('This program has no pieces — print anyway?')) return;
+    }
+    setPrintOpen(true);
+  }, [blocks]);
 
   // ── Publish panel (Task 12) ─────────────────────────────────────────────
   const [publishOpen, setPublishOpen] = useState(false);
@@ -944,7 +961,9 @@ export default function ConcertPlannerEditorPage() {
             </div>
           </SheetContent>
         </Sheet>
-        <Button variant="outline" size="sm" disabled>Print / Save PDF</Button>
+        <Button variant="outline" size="sm" disabled={!program || !blocks} onClick={handlePrintClick}>
+          Print / Save PDF
+        </Button>
         <Button size="sm" disabled={!program} onClick={() => setPublishOpen(true)}>
           {isPublished ? 'Published' : 'Publish'}
         </Button>
@@ -1011,6 +1030,16 @@ export default function ConcertPlannerEditorPage() {
         footerShowQr={footerShowQr}
         onToggleFooterQr={onToggleFooterQr}
       />
+
+      {printOpen ? (
+        <ConcertProgramPrintView
+          pages={pages}
+          ctx={printCtx}
+          design={design}
+          format={format}
+          onClose={() => setPrintOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }
