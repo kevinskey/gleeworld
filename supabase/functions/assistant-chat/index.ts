@@ -204,6 +204,24 @@ serve(async (req) => {
         .slice(0, 100)
     : undefined;
   const voice = body.context?.voice === true;
+  // Situational client state for "next"/skip resolution. Model-visible
+  // strings from the request body, so length-capped and shape-checked hard.
+  const rawHeard = body.context?.heardUpTo;
+  const heardUpTo = typeof rawHeard === 'string' && rawHeard.trim()
+    ? rawHeard.trim().slice(-160)
+    : undefined;
+  const rawPanel = body.context?.panel as { kind?: unknown; url?: unknown; title?: unknown; readAloud?: unknown } | undefined;
+  const panel = rawPanel
+      && rawPanel.kind === 'article'
+      && typeof rawPanel.url === 'string'
+      && /^https?:\/\/\S+$/i.test(rawPanel.url)
+    ? {
+        kind: 'article',
+        url: rawPanel.url.slice(0, 500),
+        title: typeof rawPanel.title === 'string' && rawPanel.title.trim() ? rawPanel.title.trim().slice(0, 200) : undefined,
+        readAloud: rawPanel.readAloud === true,
+      }
+    : undefined;
   const ctx = {
     voice,
     assistantName: text(profile?.assistant_name) || undefined,
@@ -221,6 +239,8 @@ serve(async (req) => {
     timezone: String(body.context?.timezone ?? 'America/New_York'),
     geo,
     navTargets,
+    heardUpTo,
+    panel,
   };
 
   const tools = toolsForRole(role);

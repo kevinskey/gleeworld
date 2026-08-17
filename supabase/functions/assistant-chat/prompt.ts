@@ -32,6 +32,14 @@ export interface AssistantContext {
   /** The user's personal name for the assistant (gw_profiles.assistant_name,
    *  per user across all tenants). Undefined = the default identity. */
   assistantName?: string;
+  /** Tail of the spoken portion of the PREVIOUS reply when the user
+   *  interrupted it mid-playback (client measures audio progress and sends
+   *  the last ~char window heard). Undefined when the reply finished. */
+  heardUpTo?: string;
+  /** What the client's results panel is showing right now — lets "next",
+   *  "save that article", "close it" resolve without the model guessing
+   *  from its own prior wording. Only kind 'article' is sent today. */
+  panel?: { kind: string; url: string; title?: string; readAloud?: boolean };
 }
 
 // Pre-navTargets clients: the original hand-kept open_page keys, so the
@@ -104,6 +112,16 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
   const geoLine = ctx.geo
     ? `Approximate location: lat ${ctx.geo.lat.toFixed(4)}, lng ${ctx.geo.lng.toFixed(4)} (browser Geolocation).`
     : 'Approximate location: unknown (user has not granted geolocation permission — ask for a city / zip / "near X" when using find_nearby_place).';
+  // Situational state from the client, present only when it applies. The
+  // interruption line is what makes a bare "next" resolvable: TTS pace is
+  // near-uniform, so the tail of the heard portion pins which item of your
+  // own previous reply the user was on.
+  const interruptLine = ctx.heardUpTo
+    ? `Your previous spoken reply was interrupted mid-playback. The last words the user heard were: "…${ctx.heardUpTo}". Anything after that point in your previous reply was NOT heard.`
+    : '';
+  const panelLine = ctx.panel?.kind === 'article' && ctx.panel.url
+    ? `The in-app reader panel is currently showing the article ${ctx.panel.title ? `"${ctx.panel.title}" ` : ''}(${ctx.panel.url})${ctx.panel.readAloud ? ', and it is being read aloud to the user' : ''}.`
+    : '';
   const pageTargets = ctx.navTargets?.length ? ctx.navTargets : LEGACY_PAGE_KEYS;
   // What GleeWorld is, and every feature by its canonical name WITH the
   // words members actually use for it (Kevin, 2026-08-13: "recording
@@ -179,7 +197,9 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- "Read the third one" / "read the one about X": pick that single item and read its title, source, and the summary field. If ambiguous, ask which of the matches they mean.',
     '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — the article opens in the in-app reader beside the chat. If they asked to HEAR it ("read it to me", "read that article"), also pass read_aloud: true and the reader speaks it in your voice. Never say you opened a new tab or left the app.',
     '- If the user says an article MATTERS to them — "save that one", "this is important, keep it", "put that story in my notes" — call save_article_note with the item\'s exact link, title, source, and summary. The full article text is extracted and saved into their private Planner notes with the link. Confirm in a few words; never claim it is saved without the call.',
-    '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly.',
+    '- "Next" / "next article" / "skip" while an article is open in the reader panel (see the panel line above): call read_news_feeds, locate the current article in the returned list by its link or title, and call open_link with the item AFTER it — passing read_aloud: true if the current article was being read aloud. If it was the last item, say so briefly instead of looping.',
+    '- "Next" / "skip" while you were speaking the headline rundown: use the interrupted-reply line above (the last words the user heard) to find which headline they were on, and continue the rundown from the item after it — never restart from the top, never re-read the one they skipped.',
+    '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly. (EXCEPT "next" / "next article" / "skip": those advance within what you were reading — see the two rules above.)',
   ].join('\n');
   const streamingNote = [
     'Apple Music (search_apple_music + play_apple_music):',
@@ -344,6 +364,8 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     ...(voiceNote ? [voiceNote] : []),
     `Date/time now: ${ctx.nowIso} (${ctx.timezone}).`,
     geoLine,
+    ...(interruptLine ? [interruptLine] : []),
+    ...(panelLine ? [panelLine] : []),
     memberNote,
     memoryNote,
     choicesNote,
