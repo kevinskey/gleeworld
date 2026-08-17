@@ -14,6 +14,7 @@ import {
 import { filterFees, buildFeesCsv, type FeeStatusFilter } from '@/lib/fees/feeListUtils';
 import { FeeNoteActionDialog } from '@/components/fees/FeeNoteActionDialog';
 import { NewIndividualFeeDialog } from '@/components/fees/NewIndividualFeeDialog';
+import { useToast } from '@/components/ui/use-toast';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -57,6 +58,21 @@ export default function FeesAdminPage() {
     { id: string; name: string; who: string; paid: number } | null
   >(null);
   const { studentFees, refetch, deleteFee, waiveFee, refundFee } = useFeesManagement();
+  const { toast } = useToast();
+
+  const copyPayLink = async (feeId: string, token: string | undefined) => {
+    if (!token) {
+      toast({ title: 'No pay link on this fee yet', description: 'Reload the page and try again.' });
+      return;
+    }
+    await navigator.clipboard.writeText(
+      `${window.location.origin}/pay/fee/${feeId}?token=${token}`,
+    );
+    toast({
+      title: 'Pay link copied',
+      description: 'Share it with the family — no login needed to pay.',
+    });
+  };
   const [noteAction, setNoteAction] = useState<
     { type: 'waive' | 'refund'; feeId: string; name: string } | null
   >(null);
@@ -279,6 +295,11 @@ export default function FeesAdminPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => copyPayLink(f.id, f.guest_pay_token)}
+                            >
+                              Copy pay link
+                            </DropdownMenuItem>
                             {f.status !== 'waived' && f.status !== 'refunded' && (
                               <DropdownMenuItem
                                 onClick={() =>

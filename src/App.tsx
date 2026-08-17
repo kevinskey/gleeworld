@@ -327,6 +327,7 @@ import { TenantThemeRoot } from "@/components/theme/TenantThemeRoot";
 const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
 const TenantSitePage = lazy(() => import("./pages/TenantSitePage"));
 const TrialExpiredPage = lazy(() => import("./pages/TrialExpiredPage"));
+const PayFeePage = lazy(() => import("./pages/PayFeePage"));
 import { TrialGuard } from "@/components/routes/TrialGuard";
 const MobileScoring = lazy(() => import("./pages/MobileScoring"));
 const MemberDirectory = lazy(() => import("./pages/MemberDirectory"));
@@ -638,6 +639,9 @@ const App = () => {
                   link, and bounces back home if the trial is not actually
                   expired (stale link, superadmin fixed it, etc). */}
               <Route path="/paywall" element={<TrialExpiredPage />} />
+              {/* Parent-payable fee link — public on purpose: the URL token is
+                  the capability and the payer usually has no account. */}
+              <Route path="/pay/fee/:feeId" element={<PayFeePage />} />
               {/* Sandbox: animated cursor + spotlight tour over a mock Command Center.
                   Gated by ?key=preview inside the component itself. */}
               <Route path="/tour-sandbox" element={<TourSandbox />} />
