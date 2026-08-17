@@ -46,6 +46,7 @@ import { paddedPanelCount } from '@/lib/concertProgram/impose';
 import { useBlockMeasurements } from '@/components/concert-program/useBlockMeasurements';
 import { ProgramSheetView } from '@/components/concert-program/ProgramSheetView';
 import { PieceEditPopover } from '@/components/concert-program/PieceEditPopover';
+import { PIECE_FIELD_DEBOUNCE_MS } from '@/components/concert-program/editDebounce';
 import type { RenderCtx } from '@/components/concert-program/blocks/BlockRenderers';
 import type { ProgramEditCtx } from '@/components/concert-program/editTypes';
 import type { ConcertProgramPiece } from '@/hooks/useConcertPrograms';
@@ -334,16 +335,29 @@ export default function ConcertPlannerEditorPage() {
   }, []);
 
   // ── Debounced piece-field commits for inline (non-popover) edits ───────
-  // Same 700ms buffer-then-diff semantics the popover uses, kept separate
-  // per pieceId so editing two different rows in quick succession doesn't
-  // cross-contaminate a single shared buffer.
+  // Same buffer-then-diff semantics the popover uses (shared DEBOUNCE_MS),
+  // kept separate per pieceId so editing two different rows in quick
+  // succession doesn't cross-contaminate a single shared buffer.
   const pieceCommitRef = useRef(new Map<string, { patch: Partial<ConcertProgramPiece>; timer: ReturnType<typeof setTimeout> }>());
+  // Ref mirror so the unmount-only flush effect (empty deps) always calls
+  // the LATEST updatePiece rather than whatever was current at mount.
+  const updatePieceRef = useRef(updatePiece);
+  updatePieceRef.current = updatePiece;
+
+  // Navigating away mid-debounce must not silently drop a just-typed edit —
+  // flush every still-pending entry instead of only cancelling its timer.
+  // Entries whose timer already fired have already been deleted from the
+  // map (see the setTimeout callback below), so this can't double-commit.
   useEffect(() => () => {
-    pieceCommitRef.current.forEach((entry) => clearTimeout(entry.timer));
+    pieceCommitRef.current.forEach((entry, pieceId) => {
+      clearTimeout(entry.timer);
+      updatePieceRef.current(pieceId, entry.patch);
+    });
+    pieceCommitRef.current.clear();
   }, []);
 
-  const onCommitPieceField = useCallback((pieceId: string, field: 'title' | 'composer', value: string) => {
-    if (field === 'title' && value.trim() === '') return; // never send a blank title
+  const onCommitPieceField = useCallback((pieceId: string, field: 'title' | 'composer', value: string): boolean => {
+    if (field === 'title' && value.trim() === '') return false; // never send a blank title
     const existing = pieceCommitRef.current.get(pieceId);
     if (existing) clearTimeout(existing.timer);
     const patch: Partial<ConcertProgramPiece> = { ...(existing?.patch ?? {}) };
@@ -352,8 +366,9 @@ export default function ConcertPlannerEditorPage() {
     const timer = setTimeout(() => {
       pieceCommitRef.current.delete(pieceId);
       updatePiece(pieceId, patch);
-    }, 700);
+    }, PIECE_FIELD_DEBOUNCE_MS);
     pieceCommitRef.current.set(pieceId, { patch, timer });
+    return true;
   }, [updatePiece]);
 
   // ── Fast entry: Enter/Tab routing between piece title + composer fields ─
@@ -443,34 +458,68 @@ export default function ConcertPlannerEditorPage() {
     });
   }, [program?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Ref mirrors so `computeHeaderDirty` (called from both the per-keystroke
+  // debounce timer and the true-unmount flush effect below) always reads
+  // the latest program/draft without needing them in a dependency array.
+  const programRef = useRef(program);
+  programRef.current = program;
+  const headerDraftRef = useRef(headerDraft);
+  headerDraftRef.current = headerDraft;
+  const updateProgramRef = useRef(updateProgram);
+  updateProgramRef.current = updateProgram;
+
+  const computeHeaderDirty = useCallback((): Record<string, unknown> => {
+    const p = programRef.current;
+    const draft = headerDraftRef.current;
+    const dirty: Record<string, unknown> = {};
+    if (!p) return dirty;
+    (['title', 'subtitle', 'conductor', 'accompanist', 'venue', 'performer_group'] as const).forEach((field) => {
+      const draftVal = draft[field];
+      const current = (p[field] ?? '') as string;
+      if (draftVal === current) return;
+      if (field === 'title' && draftVal.trim() === '') return; // never blank the program title
+      dirty[field] = draftVal === '' ? null : draftVal;
+    });
+    if ((p.call_time || '') !== draft.call_time) {
+      dirty.call_time = draft.call_time || null;
+    }
+    const tlmRaw = draft.target_length_minutes.trim();
+    const tlm = tlmRaw === '' ? null : Number(tlmRaw);
+    if ((p.target_length_minutes ?? null) !== tlm && !Number.isNaN(tlm)) {
+      dirty.target_length_minutes = tlm;
+    }
+    return dirty;
+  }, []);
+
   useEffect(() => {
     if (!program) return;
     const h = window.setTimeout(() => {
-      const dirty: Record<string, unknown> = {};
-      (['title', 'subtitle', 'conductor', 'accompanist', 'venue', 'performer_group'] as const).forEach((field) => {
-        const draftVal = headerDraft[field];
-        const current = (program[field] ?? '') as string;
-        if (draftVal === current) return;
-        if (field === 'title' && draftVal.trim() === '') return; // never blank the program title
-        dirty[field] = draftVal === '' ? null : draftVal;
-      });
-      if ((program.call_time || '') !== headerDraft.call_time) {
-        dirty.call_time = headerDraft.call_time || null;
-      }
-      const tlmRaw = headerDraft.target_length_minutes.trim();
-      const tlm = tlmRaw === '' ? null : Number(tlmRaw);
-      if ((program.target_length_minutes ?? null) !== tlm && !Number.isNaN(tlm)) {
-        dirty.target_length_minutes = tlm;
-      }
-      if (Object.keys(dirty).length > 0) updateProgram.mutate(dirty);
+      const dirty = computeHeaderDirty();
+      if (Object.keys(dirty).length > 0) updateProgramRef.current.mutate(dirty);
     }, 800);
     return () => window.clearTimeout(h);
-  }, [headerDraft]); // eslint-disable-line react-hooks/exhaustive-deps
+    // Deliberately keyed ONLY on headerDraft: program/updateProgram are read
+    // via refs at flush time so a background refetch (e.g. from our own
+    // optimistic mutate) never cancels-and-reschedules the pending timer.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [headerDraft]);
+
+  // True-unmount-only flush: this effect's cleanup runs exactly once (empty
+  // deps), unlike the per-keystroke debounce effect above whose cleanup
+  // fires on every headerDraft change just to cancel-and-reschedule. Without
+  // this, navigating away inside the 800ms window drops the pending edit.
+  useEffect(() => () => {
+    const dirty = computeHeaderDirty();
+    if (Object.keys(dirty).length > 0) updateProgramRef.current.mutate(dirty);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onCommitHeaderField = useCallback((
     field: 'title' | 'subtitle' | 'conductor' | 'accompanist' | 'venue' | 'performer_group', value: string,
-  ) => {
+  ): boolean => {
+    if (field === 'title' && value.trim() === '') return false; // never blank the program title
     setHeaderDraft((d) => ({ ...d, [field]: value }));
+    return true;
   }, []);
 
   const onCommitEventDate = useCallback((value: string | null) => {

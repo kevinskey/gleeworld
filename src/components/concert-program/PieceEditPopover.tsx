@@ -24,8 +24,7 @@ import {
 } from '@/components/ui/select';
 import type { ConcertProgramPiece } from '@/hooks/useConcertPrograms';
 import type { RightsStatus } from '@/lib/concertPlanner/types';
-
-const DEBOUNCE_MS = 700;
+import { PIECE_FIELD_DEBOUNCE_MS as DEBOUNCE_MS } from './editDebounce';
 
 function formatDuration(seconds: number | null): string {
   if (seconds == null) return '';
@@ -135,7 +134,20 @@ export function PieceEditPopover({
     if (Object.keys(patch).length > 0) updatePiece(current.id, patch);
   };
 
-  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+  // Mirrors `flush` itself so the unmount effect below (registered once, at
+  // mount, with an empty dep array) always calls the LATEST closure rather
+  // than the one captured on the first render.
+  const flushRef = useRef(flush);
+  flushRef.current = flush;
+
+  // Navigating away (or the piece row disappearing) mid-debounce must not
+  // silently drop a just-typed edit — flush whatever's pending instead of
+  // just cancelling the timer. `flush` itself no-ops when dirtyRef is
+  // already empty, so this is safe even if the timer already fired.
+  useEffect(() => () => {
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    flushRef.current();
+  }, []);
 
   // A fast open → edit → close (e.g. Delete right after typing) must not
   // drop the pending edit.

@@ -10,12 +10,16 @@
 export interface ProgramEditCtx {
   selectedPieceId: string | null;
   onSelectPiece(id: string): void;
-  onCommitPieceField(pieceId: string, field: 'title' | 'composer', value: string): void;
+  /** Returns `false` when the commit is rejected (e.g. a blank title) —
+   *  EditableText uses that to snap its DOM back to the last-good value. */
+  onCommitPieceField(pieceId: string, field: 'title' | 'composer', value: string): boolean;
   onCommitBlockField(blockId: string, field: 'sectionHeading' | 'creditLine' | 'text', value: string): void;
+  /** Returns `false` when the commit is rejected (title only — a blank
+   *  program title is never accepted). */
   onCommitHeaderField(
     field: 'title' | 'subtitle' | 'conductor' | 'accompanist' | 'venue' | 'performer_group',
     value: string,
-  ): void;
+  ): boolean;
   /** event_date commits immediately (no debounce) — it's a date picker, not typed text. */
   onCommitEventDate(value: string | null): void;
   onFastEnter(pieceId: string): void;

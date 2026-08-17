@@ -24,7 +24,10 @@ function readText(el: HTMLElement): string {
 export interface EditableTextProps {
   value: string;
   placeholder?: string;
-  onCommit: (v: string) => void;
+  /** Return `false` to reject the commit (e.g. a blank title) — EditableText
+   *  then snaps the DOM back to `value`, mirroring the Escape path, so the
+   *  on-page text never goes visually stale relative to the rejected edit. */
+  onCommit: (v: string) => void | boolean;
   className?: string;
   /** Takes line breaks (Enter inserts one); a single-line field commits on Enter instead. */
   multiline?: boolean;
@@ -50,7 +53,10 @@ export function EditableText({
       onKeyDownCapture={onKeyDownCapture}
       onBlur={(e) => {
         const next = readText(e.currentTarget);
-        if (next !== value) onCommit(next);
+        if (next !== value) {
+          const accepted = onCommit(next);
+          if (accepted === false) e.currentTarget.textContent = value;
+        }
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {

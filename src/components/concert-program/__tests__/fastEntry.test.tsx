@@ -179,4 +179,32 @@ describe('Concert Planner fast entry + piece popover', () => {
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
     expect(mocks.deletePieceWithUndo).toHaveBeenCalledWith('pc1');
   });
+
+  it('reverts a piece title to its last value when cleared, and never sends a blank commit', () => {
+    mount();
+    const titleEl = getEditableTitle('Ave Maria');
+    titleEl.textContent = '';
+    fireEvent.blur(titleEl);
+
+    expect(titleEl.textContent).toBe('Ave Maria');
+    expect(mocks.updatePiece).not.toHaveBeenCalled();
+  });
+
+  it('flushes a pending inline title edit on unmount instead of dropping it', () => {
+    vi.useFakeTimers();
+    try {
+      const { unmount } = mount();
+      const titleEl = getEditableTitle('Ave Maria');
+      titleEl.textContent = 'Ave Maria (typed)';
+      fireEvent.blur(titleEl);
+
+      // Still within the debounce window — nothing written yet.
+      expect(mocks.updatePiece).not.toHaveBeenCalled();
+
+      unmount();
+      expect(mocks.updatePiece).toHaveBeenCalledWith('pc1', { title: 'Ave Maria (typed)' });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });
