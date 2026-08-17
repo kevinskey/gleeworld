@@ -15,12 +15,14 @@ import { FeeTemplateRollup } from '@/components/fees/FeeTemplateRollup';
 import { MarkPaidDialog } from '@/components/fees/MarkPaidDialog';
 import { StoreConnectPrompt } from '@/components/products/StoreConnectPrompt';
 
-const CATS = ['all', 'dues', 'wardrobe', 'trip', 'travel', 'other'] as const;
+const CATS = ['all', 'dues', 'participation', 'fundraiser', 'wardrobe', 'trip', 'travel', 'other'] as const;
 type Cat = (typeof CATS)[number];
 
 const CAT_LABELS: Record<Cat, string> = {
   all: 'All',
   dues: 'Dues',
+  participation: 'Participation',
+  fundraiser: 'Fundraisers',
   wardrobe: 'Wardrobe',
   trip: 'Trips',
   travel: 'Travel',

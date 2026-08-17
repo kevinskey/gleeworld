@@ -117,6 +117,8 @@ describe('FeesAdminPage smoke test', () => {
     const tabNames = Array.from(tabs).map(t => t.textContent);
     expect(tabNames).toContain('All');
     expect(tabNames).toContain('Dues');
+    expect(tabNames).toContain('Participation');
+    expect(tabNames).toContain('Fundraisers');
     expect(tabNames).toContain('Wardrobe');
     expect(tabNames).toContain('Trips');
     expect(tabNames).toContain('Travel');
