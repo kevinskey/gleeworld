@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { preferredFirstName } from '@/lib/home/upNext';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
@@ -37,7 +38,7 @@ export default function StudentAcademyDashboard() {
     queryFn: async () => {
       const { data } = await supabase
         .from('gw_profiles')
-        .select('full_name')
+        .select('full_name, preferred_name')
         .eq('user_id', user!.id)
         .maybeSingle();
       return data;
@@ -89,7 +90,7 @@ export default function StudentAcademyDashboard() {
     },
   });
 
-  const firstName = profile?.full_name?.split(' ')[0] || 'there';
+  const firstName = preferredFirstName(profile);
   const greeting = greetingFor(new Date());
 
   return (
