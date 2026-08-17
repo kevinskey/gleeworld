@@ -34,6 +34,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { toast } from 'sonner';
 // Not called yet — wired for Publish in Task 12/13.
 import { supabase } from '@/integrations/supabase/client';
 import { useConcertProgramDoc } from '@/hooks/useConcertProgramDoc';
@@ -43,6 +44,7 @@ import {
   PRINT_DESIGNS, newBlockId, type PrintDesign, type ProgramBlock, type ProgramFormat,
   type PieceGroupBlock,
 } from '@/lib/concertProgram/types';
+import { flattenPieceOrder } from '@/lib/concertProgram/blocks';
 import { contentHeightIn } from '@/lib/concertProgram/geometry';
 import { paginateProgram } from '@/lib/concertProgram/paginate';
 import { paddedPanelCount } from '@/lib/concertProgram/impose';
@@ -51,6 +53,8 @@ import { ProgramSheetView } from '@/components/concert-program/ProgramSheetView'
 import { PieceEditPopover } from '@/components/concert-program/PieceEditPopover';
 import { BlockRail } from '@/components/concert-program/BlockRail';
 import { RosterPanel } from '@/components/concert-program/RosterPanel';
+import { LibraryPickerDialog, type LibraryPickFields } from '@/components/concert-program/LibraryPickerDialog';
+import { SetlistImportDialog, type SetlistImportResult } from '@/components/concert-program/SetlistImportDialog';
 import { PIECE_FIELD_DEBOUNCE_MS } from '@/components/concert-program/editDebounce';
 import type { RenderCtx } from '@/components/concert-program/blocks/BlockRenderers';
 import type { ProgramEditCtx } from '@/components/concert-program/editTypes';
@@ -71,6 +75,8 @@ interface EditorRailProps {
   panelLine: string | null;
   canAddPiece: boolean;
   onAddPiece: () => void;
+  onAddFromLibrary: () => void;
+  onImportSetlist: () => void;
   onAddText: () => void;
   onAddDivider: () => void;
   canAddRoster: boolean;
@@ -98,7 +104,7 @@ interface EditorRailProps {
 
 function EditorRail({
   design, format, onDesignChange, onFormatChange, panelLine,
-  canAddPiece, onAddPiece, onAddText, onAddDivider, canAddRoster, onAddRoster,
+  canAddPiece, onAddPiece, onAddFromLibrary, onImportSetlist, onAddText, onAddDivider, canAddRoster, onAddRoster,
   callTime, onCallTimeChange, targetLengthMinutes, onTargetLengthChange, totalMinutesLabel,
   title, onTitleChange, subtitle, onSubtitleChange, conductor, onConductorChange,
   accompanist, onAccompanistChange, venue, onVenueChange, performerGroup, onPerformerGroupChange,
@@ -112,10 +118,10 @@ function EditorRail({
           <Button variant="outline" size="sm" onClick={onAddPiece} disabled={!canAddPiece} className="justify-start">
             <Plus className="w-3.5 h-3.5 mr-1.5" /> Piece
           </Button>
-          <Button variant="outline" size="sm" disabled className="justify-start">
+          <Button variant="outline" size="sm" onClick={onAddFromLibrary} disabled={!canAddPiece} className="justify-start">
             <Library className="w-3.5 h-3.5 mr-1.5" /> From Library
           </Button>
-          <Button variant="outline" size="sm" disabled className="justify-start col-span-2">
+          <Button variant="outline" size="sm" onClick={onImportSetlist} className="justify-start col-span-2">
             <ListMusic className="w-3.5 h-3.5 mr-1.5" /> Import setlist
           </Button>
           <Button variant="outline" size="sm" onClick={onAddText} className="justify-start">
@@ -605,6 +611,63 @@ export default function ConcertPlannerEditorPage() {
   const handleAddDivider = () => insertBeforeFooter({ id: newBlockId(), kind: 'divider' });
   const handleAddRoster = () => insertBeforeFooter({ id: newBlockId(), kind: 'roster' });
 
+  // ── Library picker + Setlist import (Task 11) ───────────────────────────
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [setlistOpen, setSetlistOpen] = useState(false);
+
+  // Single pick: reuse the normal add-piece path (same insert-then-splice
+  // atomicity addPieceToGroup already gives every other "Add" action).
+  const handleLibraryPick = useCallback((fields: LibraryPickFields) => {
+    if (!lastGroupId) return;
+    void (async () => {
+      const newId = await addPieceToGroup(lastGroupId, 'end', fields);
+      if (newId) toast.success(`Added "${fields.title}"`);
+    })();
+  }, [lastGroupId, addPieceToGroup]);
+
+  // Batch import: never a half-imported group. Insert all rows first; only
+  // on a full match do we append a new piece-group and persist. Any
+  // mismatch (write error, or the persisted-block write itself failing)
+  // rolls the inserted rows back and reports the same failure — the user
+  // never sees a partially-imported setlist.
+  const handleSetlistImport = useCallback(async ({ pieces: rows, setlistId }: SetlistImportResult) => {
+    if (!blocks || !id) return;
+    const base = flattenPieceOrder(blocks).length;
+    const { data, error } = await supabase
+      .from('gw_concert_program_pieces')
+      .insert(rows.map((r, i) => ({
+        program_id: id,
+        sort_order: base + i,
+        title: r.title ?? 'Untitled',
+        composer: r.composer ?? null,
+        voicing: r.voicing ?? null,
+        sheet_music_id: r.sheet_music_id ?? null,
+      })))
+      .select('id');
+    if (error || !data || data.length !== rows.length) {
+      toast.error('Import failed — nothing was added');
+      return;
+    }
+    const group: PieceGroupBlock = {
+      id: newBlockId(),
+      kind: 'piece-group',
+      sectionHeading: null,
+      pieceIds: data.map((d: { id: string }) => d.id),
+      creditLine: null,
+    };
+    const footerIdx = blocks.findIndex((b) => b.kind === 'footer');
+    const next = blocks.slice();
+    next.splice(footerIdx === -1 ? next.length : footerIdx, 0, group);
+    const ok = await persistBlocksNow(next);
+    if (ok) {
+      updateProgram.mutate({ setlist_id: setlistId });
+      toast.success(`Imported ${rows.length} piece${rows.length === 1 ? '' : 's'}`);
+    } else {
+      await supabase.from('gw_concert_program_pieces').delete().in('id', data.map((d: { id: string }) => d.id)).select('id');
+      toast.error('Import failed — nothing was added');
+    }
+  }, [blocks, id, persistBlocksNow, updateProgram]);
+
   // ── Block rail: whole-block reorder/delete/insert ───────────────────────
   // Title always stays first, footer always stays last (contract enforced
   // by construction here, not by clamping an arbitrary index): every one of
@@ -659,6 +722,8 @@ export default function ConcertPlannerEditorPage() {
     panelLine,
     canAddPiece: !!lastGroupId,
     onAddPiece: handleAddPiece,
+    onAddFromLibrary: () => setLibraryOpen(true),
+    onImportSetlist: () => setSetlistOpen(true),
     onAddText: handleAddText,
     onAddDivider: handleAddDivider,
     canAddRoster: !hasRosterBlock,
@@ -818,6 +883,9 @@ export default function ConcertPlannerEditorPage() {
       />
 
       <RosterPanel open={rosterPanelOpen} onOpenChange={setRosterPanelOpen} concert={legacyConcert} />
+
+      <LibraryPickerDialog open={libraryOpen} onOpenChange={setLibraryOpen} onPick={handleLibraryPick} />
+      <SetlistImportDialog open={setlistOpen} onOpenChange={setSetlistOpen} onImport={handleSetlistImport} />
     </div>
   );
 }
