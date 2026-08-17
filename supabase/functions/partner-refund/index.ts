@@ -2,12 +2,15 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-// Admin-only refund of ONE partner-store order item (item = the refund
-// unit; one item = one score = one My Music entitlement). Flow:
-//   Stripe refund (destination charge: reverse the partner transfer and
-//   the platform fee proportionally) → stamp refunded_at/stripe_refund_id
-//   → revoke the buyer's entitlement (My Music row + stamped file + seat
-//   shares) → derive order status (refunded / partial_refund).
+// Super-admin-only refund of ONE partner-store order item (item = the
+// refund unit; one item = one score = one My Music entitlement). Flow:
+//   atomically claim the item (refunded_at stamp; loser of a race gets 409)
+//   → Stripe refund with an item-keyed Idempotency-Key (a retry returns the
+//     ORIGINAL refund instead of double-refunding a multi-item charge)
+//   → best-effort revocation (My Music row, stamped file, seat shares,
+//     dead tenant-library pointers) — failures are returned as warnings,
+//     never a 500, because the money has already moved
+//   → derive order status (refunded / partial_refund).
 // Refund math mirrors src/lib/partner/refunds.ts — keep in sync.
 
 const corsHeaders = {
@@ -34,15 +37,15 @@ serve(async (req) => {
   const { data: userData } = await supa.auth.getUser(jwt);
   if (!userData.user) return j({ error: "unauthorized" }, 401);
 
-  // Same admin gate as partner-invite-send.
+  // Deliberately TIGHTER than the invite fn's is_admin gate: refunds move
+  // real money platform-wide, so they follow the store-curation precedent
+  // (super-admin only), not the tenant-admin one.
   const { data: prof } = await supa
     .from("gw_profiles")
-    .select("is_admin,is_super_admin")
+    .select("is_super_admin")
     .eq("user_id", userData.user.id)
     .single();
-  if (!prof || (!prof.is_admin && !prof.is_super_admin)) {
-    return j({ error: "admin only" }, 403);
-  }
+  if (!prof?.is_super_admin) return j({ error: "super admin only" }, 403);
 
   const { order_item_id } = await req.json().catch(() => ({}));
   if (!order_item_id) return j({ error: "order_item_id required" }, 400);
@@ -69,17 +72,30 @@ serve(async (req) => {
     return j({ error: "order has no Stripe payment intent" }, 400);
   }
 
+  // Atomic claim: only one request may stamp a null refunded_at. The loser
+  // of a concurrent race matches 0 rows and stops before touching Stripe.
+  const nowIso = new Date().toISOString();
+  const { data: claimed } = await supa
+    .from("gw_partner_order_items")
+    .update({ refunded_at: nowIso })
+    .eq("id", item.id)
+    .is("refunded_at", null)
+    .select("id");
+  if (!claimed?.length) return j({ error: "item already refunded" }, 409);
+
   // Mirrors itemRefundAmountCents: unit price × seats.
   const amountCents = item.price_cents * Math.max(1, Number(item.quantity ?? 1));
 
   // Destination charge: reverse_transfer claws the partner's share back;
   // refund_application_fee returns the platform's cut. Both prorate for
-  // partial (per-item) refunds of a multi-item order.
+  // partial (per-item) refunds of a multi-item order. The Idempotency-Key
+  // makes any retry return the ORIGINAL refund object.
   const stripeRes = await fetch("https://api.stripe.com/v1/refunds", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${Deno.env.get("STRIPE_SECRET_KEY")}`,
       "content-type": "application/x-www-form-urlencoded",
+      "Idempotency-Key": `partner-refund-${item.id}`,
     },
     body: new URLSearchParams({
       payment_intent: order.stripe_payment_intent_id,
@@ -91,38 +107,53 @@ serve(async (req) => {
   });
   const refund = await stripeRes.json().catch(() => null);
   if (!stripeRes.ok || !refund?.id) {
+    // No refund happened — release the claim so the admin can retry.
+    await supa
+      .from("gw_partner_order_items")
+      .update({ refunded_at: null })
+      .eq("id", item.id);
     console.error("[partner-refund] stripe refund failed", stripeRes.status, refund?.error?.message);
     return j({ error: refund?.error?.message ?? "Stripe refund failed" }, 502);
   }
 
-  const nowIso = new Date().toISOString();
-  const { error: itemErr } = await supa
+  const warnings: string[] = [];
+  const { error: idErr } = await supa
     .from("gw_partner_order_items")
-    .update({ refunded_at: nowIso, stripe_refund_id: refund.id })
+    .update({ stripe_refund_id: refund.id })
     .eq("id", item.id);
-  if (itemErr) {
-    // Money already moved — surface loudly; the admin can re-run (Stripe
-    // would then 400 on the already-refunded intent, but the DB stamp is
-    // what re-running is for).
-    console.error("[partner-refund] refund succeeded but item update failed", itemErr.message);
-    return j({ error: `refunded in Stripe (${refund.id}) but DB update failed: ${itemErr.message}` }, 500);
-  }
+  if (idErr) warnings.push(`stripe_refund_id not recorded (${refund.id}): ${idErr.message}`);
 
-  // Revoke the entitlement: seat shares die, the buyer's My Music row and
-  // stamped file go away. Device copies saved via the offline vault are out
-  // of reach — accepted (spec decision).
-  await supa.from("gw_partner_score_shares").delete().eq("order_item_id", item.id);
+  // Revocation — best-effort: the money has moved, so report failures
+  // instead of pretending the refund didn't happen.
+  const { error: shareErr } = await supa
+    .from("gw_partner_score_shares")
+    .delete()
+    .eq("order_item_id", item.id);
+  if (shareErr) warnings.push(`seat shares not removed: ${shareErr.message}`);
+
   if (item.watermarked_storage_path) {
-    await supa
+    const { error: psErr } = await supa
       .from("gw_personal_scores")
       .delete()
       .eq("user_id", order.buyer_user_id)
       .eq("storage_path", item.watermarked_storage_path)
       .eq("source", "purchase");
+    if (psErr) warnings.push(`My Music row not removed: ${psErr.message}`);
+
+    // A librarian buyer may have published the stamped file to the tenant
+    // library (gw_sheet_music keys on the personal-scores storage path) —
+    // remove those rows too, or they'd point at a deleted file.
+    const { error: smErr } = await supa
+      .from("gw_sheet_music")
+      .delete()
+      .eq("storage_bucket", "personal-scores")
+      .eq("storage_path", item.watermarked_storage_path);
+    if (smErr) warnings.push(`published tenant-library copy not removed: ${smErr.message}`);
+
     const { error: rmErr } = await supa.storage
       .from("personal-scores")
       .remove([item.watermarked_storage_path]);
-    if (rmErr) console.error("[partner-refund] stamped file removal failed", rmErr.message);
+    if (rmErr) warnings.push(`stamped file not removed: ${rmErr.message}`);
   }
 
   // Derive order status from item states (mirrors deriveOrderStatus).
@@ -134,17 +165,20 @@ serve(async (req) => {
   const refundedCount = all.filter((s) => s.refunded_at != null).length;
   const orderStatus =
     all.length > 0 && refundedCount === all.length ? "refunded" : "partial_refund";
-  await supa
+  const { error: ordErr } = await supa
     .from("gw_partner_orders")
     .update({
       status: orderStatus,
       ...(orderStatus === "refunded" ? { refunded_at: nowIso } : {}),
     })
     .eq("id", order.id);
+  if (ordErr) warnings.push(`order status not updated: ${ordErr.message}`);
 
+  if (warnings.length) console.error("[partner-refund] completed with warnings", warnings);
   return j({
     refund_id: refund.id,
     amount_cents: amountCents,
     order_status: orderStatus,
+    ...(warnings.length ? { warnings } : {}),
   });
 });

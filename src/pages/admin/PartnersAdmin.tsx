@@ -243,7 +243,7 @@ export default function PartnersAdmin() {
                 </span>
                 <div className="flex items-center gap-2">
                   <Badge variant={p.status === 'active' ? 'default' : 'outline'} className="text-xs">{p.status}</Badge>
-                  {(p.status === 'active' || p.status === 'suspended') && (
+                  {canCurate && (p.status === 'active' || p.status === 'suspended') && (
                     <Button
                       size="sm"
                       variant="ghost"
@@ -282,6 +282,10 @@ export default function PartnersAdmin() {
         </CardContent>
       </Card>
 
+      {/* Orders + refunds are super-admin only, like store curation:
+          refunds move real money platform-wide (partner-refund enforces
+          the same gate server-side). */}
+      {canCurate && (
       <Card className="mt-6">
         <CardHeader><CardTitle className="text-sm">Orders</CardTitle></CardHeader>
         <CardContent>
@@ -341,6 +345,7 @@ export default function PartnersAdmin() {
           </ul>
         </CardContent>
       </Card>
+      )}
 
       <Card className="mt-6">
         <CardHeader><CardTitle className="text-sm">GW featured pieces</CardTitle></CardHeader>

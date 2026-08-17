@@ -432,7 +432,7 @@ export function useAdminPartnerOrders(): UseQueryResult<AdminOrder[]> {
       // No FK path from orders to gw_profiles, so PostgREST can't embed the
       // buyer — batch-resolve emails in one query instead.
       const buyerIds = [...new Set(rows.map((o) => o.buyer_user_id))];
-      const emailById = new Map<string, string>();
+      const emailById = new Map<string, string | null>();
       if (buyerIds.length > 0) {
         const { data: profiles } = await supabase
           .from('gw_profiles')
