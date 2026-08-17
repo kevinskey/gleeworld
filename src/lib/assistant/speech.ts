@@ -558,6 +558,21 @@ export function speak(
   })();
 }
 
+/** Freeze the current utterance in place (readings Pause button). The
+ *  audio element keeps its position; resumeSpeaking() picks up mid-word.
+ *  No session bump — a paused utterance still belongs to its run. */
+export function pauseSpeaking(synth?: SpeechSynthesis): void {
+  const s = synth ?? (typeof speechSynthesis !== 'undefined' ? speechSynthesis : undefined);
+  try { s?.pause(); } catch { /* nothing playing */ }
+  try { elevenAudio?.pause(); } catch { /* already torn down */ }
+}
+
+export function resumeSpeaking(synth?: SpeechSynthesis): void {
+  const s = synth ?? (typeof speechSynthesis !== 'undefined' ? speechSynthesis : undefined);
+  try { s?.resume(); } catch { /* nothing paused */ }
+  try { void elevenAudio?.play(); } catch { /* already torn down */ }
+}
+
 // Immediately silence any in-flight reply (barge-in / explicit Stop).
 export function stopSpeaking(synth?: SpeechSynthesis): void {
   const s = synth ?? (typeof speechSynthesis !== 'undefined' ? speechSynthesis : undefined);

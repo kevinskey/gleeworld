@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
-import { speak, stopSpeaking } from '@/lib/assistant/speech';
+import { pauseSpeaking, resumeSpeaking, speak, stopSpeaking } from '@/lib/assistant/speech';
 import { useAssistantVoice } from '@/lib/assistant/voices';
 import type { BibleVerse } from '@/hooks/useBible';
 
@@ -24,10 +24,14 @@ export interface SpokenChunk { text: string; pauseBeforeMs?: number }
  */
 export function useSpokenText(chunks: Array<string | SpokenChunk>) {
   const [playing, setPlaying] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [index, setIndex] = useState<number | null>(null);
   // Bumped on every stop so a late chunk from a cancelled run can tell that it
   // no longer belongs to the current playback.
   const runRef = useRef(0);
+  // Imperative mirror of `paused` — the play loop reads it inside awaits,
+  // where render-synced state would be stale.
+  const pausedRef = useRef(false);
   // The user's own assistant voice (falls back to tenant/app default inside
   // speak() while still loading). Without this, readings always came out in
   // the app-default voice regardless of the chosen one.
@@ -35,9 +39,25 @@ export function useSpokenText(chunks: Array<string | SpokenChunk>) {
 
   const stop = useCallback(() => {
     runRef.current += 1;
+    pausedRef.current = false;
     stopSpeaking();
     setPlaying(false);
+    setPaused(false);
     setIndex(null);
+  }, []);
+
+  // Freeze in place: the current utterance holds its position (audio element
+  // pause) and the loop below refuses to advance — including through a
+  // between-readings gap — until resume().
+  const pause = useCallback(() => {
+    pausedRef.current = true;
+    setPaused(true);
+    pauseSpeaking();
+  }, []);
+  const resume = useCallback(() => {
+    pausedRef.current = false;
+    setPaused(false);
+    resumeSpeaking();
   }, []);
 
   // Never let audio outlive what it was reading.
@@ -50,10 +70,19 @@ export function useSpokenText(chunks: Array<string | SpokenChunk>) {
     if (!parts.length) return;
     runRef.current += 1;
     const run = runRef.current;
+    pausedRef.current = false;
     setPlaying(true);
+    setPaused(false);
 
     const { data } = await supabase.auth.getSession();
     const accessToken = data?.session?.access_token;
+
+    // Poll-wait while paused; a Stop during the hold wins immediately.
+    const holdWhilePaused = async () => {
+      while (pausedRef.current && runRef.current === run) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+    };
 
     for (let i = 0; i < parts.length; i++) {
       if (runRef.current !== run) return;
@@ -64,6 +93,8 @@ export function useSpokenText(chunks: Array<string | SpokenChunk>) {
         await new Promise((resolve) => setTimeout(resolve, parts[i].pauseBeforeMs));
         if (runRef.current !== run) return;
       }
+      await holdWhilePaused();
+      if (runRef.current !== run) return;
       setIndex(i);
       await new Promise<void>((resolve) => {
         speak(parts[i].text, { accessToken, supabaseUrl: SUPABASE_URL, voiceId, onEnd: () => resolve() });
@@ -72,11 +103,12 @@ export function useSpokenText(chunks: Array<string | SpokenChunk>) {
 
     if (runRef.current === run) {
       setPlaying(false);
+      setPaused(false);
       setIndex(null);
     }
   }, [chunks, voiceId]);
 
-  return { playing, index, play, stop };
+  return { playing, paused, index, play, pause, resume, stop };
 }
 
 /**

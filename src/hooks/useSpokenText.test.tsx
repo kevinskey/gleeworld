@@ -4,6 +4,8 @@ import { renderHook, act } from '@testing-library/react';
 
 const spoken: string[] = [];
 const speakOpts: Array<Record<string, unknown>> = [];
+const pauseSpeaking = vi.fn();
+const resumeSpeaking = vi.fn();
 vi.mock('@/lib/assistant/speech', () => ({
   speak: vi.fn((text: string, opts?: { onEnd?: () => void; voiceId?: string | null }) => {
     spoken.push(text);
@@ -11,6 +13,8 @@ vi.mock('@/lib/assistant/speech', () => ({
     opts?.onEnd?.();
   }),
   stopSpeaking: vi.fn(),
+  pauseSpeaking: (...a: unknown[]) => pauseSpeaking(...a),
+  resumeSpeaking: (...a: unknown[]) => resumeSpeaking(...a),
 }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { auth: { getSession: async () => ({ data: { session: { access_token: 't' } } }) }, functions: { invoke: vi.fn() } },
@@ -53,6 +57,35 @@ describe('useSpokenText — pauses between readings', () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(10_000); });
     expect(spoken).toHaveLength(2); // nothing after the stop
     expect(result.current.playing).toBe(false);
+  });
+
+  it('pause holds playback — even through a reading gap — until resume', async () => {
+    const { result } = renderHook(() => useSpokenText(CHUNKS));
+    await act(async () => { void result.current.play(); await vi.advanceTimersByTimeAsync(0); });
+    expect(spoken).toHaveLength(2); // in the 5s gap now
+    act(() => { result.current.pause(); });
+    expect(result.current.paused).toBe(true);
+    expect(pauseSpeaking).toHaveBeenCalled();
+    // The gap elapses and then some — nothing more may speak while paused.
+    await act(async () => { await vi.advanceTimersByTimeAsync(20_000); });
+    expect(spoken).toHaveLength(2);
+    expect(result.current.playing).toBe(true); // paused ≠ stopped
+    act(() => { result.current.resume(); });
+    expect(resumeSpeaking).toHaveBeenCalled();
+    await act(async () => { await vi.advanceTimersByTimeAsync(6_000); });
+    expect(spoken).toHaveLength(4); // finished after resume
+    expect(result.current.paused).toBe(false);
+  });
+
+  it('stop while paused cancels cleanly', async () => {
+    const { result } = renderHook(() => useSpokenText(CHUNKS));
+    await act(async () => { void result.current.play(); await vi.advanceTimersByTimeAsync(0); });
+    act(() => { result.current.pause(); });
+    act(() => { result.current.stop(); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(20_000); });
+    expect(spoken).toHaveLength(2);
+    expect(result.current.playing).toBe(false);
+    expect(result.current.paused).toBe(false);
   });
 
   it('speaks in the chosen assistant voice and accepts plain-string chunks', async () => {

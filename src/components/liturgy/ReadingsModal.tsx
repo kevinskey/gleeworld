@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Loader2, ExternalLink, Volume2, Square, CalendarClock } from 'lucide-react';
+import { Loader2, ExternalLink, Volume2, Square, CalendarClock, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpokenText, type SpokenChunk } from '@/hooks/useChapterAudio';
 import { supabase } from '@/integrations/supabase/client';
 import { sanitizeHtml } from '@/lib/sanitizeHtml';
 import { readingsFromCache } from '@/lib/liturgy/cachedReadings';
+import { expandScriptureAbbrevs } from '@/lib/liturgy/scriptureAbbrev';
 
 // Daily Catholic readings viewer. Reads the local USCCB table first and falls
 // back to proxying Universalis via the `usccb-readings` edge function, then
@@ -50,8 +51,10 @@ const READING_GAP_MS = 5000;
 export function readingsToSpeech(readings: ReadingBlock[]): SpokenChunk[] {
   const out: SpokenChunk[] = [];
   for (const r of readings) {
+    // Citations are spoken with full book names ("Deuteronomy 4:32-40",
+    // never "Dt") — the on-screen citation keeps the compact form.
     out.push({
-      text: r.citation ? `${r.heading}. ${r.citation}.` : `${r.heading}.`,
+      text: r.citation ? `${r.heading}. ${expandScriptureAbbrevs(r.citation)}.` : `${r.heading}.`,
       ...(out.length ? { pauseBeforeMs: READING_GAP_MS } : {}),
     });
     const text = r.html
@@ -146,7 +149,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
       <SheetContent
         side="right"
         hideOverlay
-        className="w-full sm:w-1/2 sm:max-w-[560px] h-[100dvh] flex flex-col p-0 shadow-2xl"
+        className="w-full sm:w-2/5 sm:max-w-[448px] h-[100dvh] flex flex-col p-0 shadow-2xl"
         // Clicking the page behind should NOT dismiss the readings — the whole
         // point is consulting them while you work. Close via X or Esc.
         onInteractOutside={(e) => e.preventDefault()}
@@ -170,19 +173,36 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
                 scrolling back up through a long Gospel. Placed left of the
                 sheet's own close button, which occupies the top-right. */}
             {speech.length > 0 && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="shrink-0 mr-8"
-                onClick={() => (audio.playing ? audio.stop() : audio.play())}
-                aria-label={audio.playing ? 'Stop reading' : 'Read these aloud'}
-              >
-                {audio.playing
-                  ? <Square className="w-4 h-4 sm:mr-1.5" aria-hidden />
-                  : <Volume2 className="w-4 h-4 sm:mr-1.5" aria-hidden />}
-                <span className="hidden sm:inline">{audio.playing ? 'Stop' : 'Listen'}</span>
-              </Button>
+              <div className="flex shrink-0 items-center gap-1.5 mr-8">
+                {audio.playing && (
+                  // Pause freezes mid-word and Resume picks up in place —
+                  // distinct from Stop, which abandons the reading entirely.
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => (audio.paused ? audio.resume() : audio.pause())}
+                    aria-label={audio.paused ? 'Resume reading' : 'Pause reading'}
+                  >
+                    {audio.paused
+                      ? <Play className="w-4 h-4 sm:mr-1.5" aria-hidden />
+                      : <Pause className="w-4 h-4 sm:mr-1.5" aria-hidden />}
+                    <span className="hidden sm:inline">{audio.paused ? 'Resume' : 'Pause'}</span>
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => (audio.playing ? audio.stop() : audio.play())}
+                  aria-label={audio.playing ? 'Stop reading' : 'Read these aloud'}
+                >
+                  {audio.playing
+                    ? <Square className="w-4 h-4 sm:mr-1.5" aria-hidden />
+                    : <Volume2 className="w-4 h-4 sm:mr-1.5" aria-hidden />}
+                  <span className="hidden sm:inline">{audio.playing ? 'Stop' : 'Listen'}</span>
+                </Button>
+              </div>
             )}
           </div>
         </SheetHeader>
