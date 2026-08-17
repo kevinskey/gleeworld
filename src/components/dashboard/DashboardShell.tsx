@@ -727,12 +727,17 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
           className="hidden md:inline-flex items-center gap-2 shrink-0 pl-1 pr-2 py-1 rounded-md hover:bg-muted transition"
           title={`Back to ${compactBrandName} dashboard`}
         >
+          {/* xl glyph + 22px name (Kevin, 2026-08-17): this block replaces
+              the whole sidebar brand while the nav is collapsed, and at the
+              old lg/text-base it read as an afterthought next to the 80px
+              topbar chrome. Matches the open sidebar's brand type size. */}
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={compactBrandName.charAt(0).toUpperCase()}
             alt={compactBrandName}
+            size="xl"
           />
-          <span className="font-bold text-base tracking-tight truncate max-w-[180px]">
+          <span className="font-bold text-[22px] tracking-tight truncate max-w-[260px]">
             {compactBrandName}
           </span>
         </Link>
