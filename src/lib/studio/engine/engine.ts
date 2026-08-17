@@ -1397,6 +1397,14 @@ export class StudioEngine {
   transportSecondsNow(): number {
     return Tone.getTransport().seconds;
   }
+
+  /** Raw AudioContext time, seconds — the clock triggerMetronomeClick's
+   * `time` argument lives in. The latency-calibration wizard schedules
+   * its click run against this and correlates it with performance.now()
+   * to compare hardware tap timestamps against click output times. */
+  contextSecondsNow(): number {
+    return Tone.getContext().currentTime;
+  }
 }
 
 export function dbToGain(db: number): number {
