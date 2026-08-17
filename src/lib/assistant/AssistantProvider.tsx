@@ -421,6 +421,11 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       setNowPlaying({ videoId: result.videoId, title: result.title, channel: result.channel });
       return;
     }
+    // Imperative ref update too: the conversation-mode re-arm decision runs
+    // in the same async continuation, before React re-renders — the render-
+    // synced ref alone would still be stale there and re-arm the mic over a
+    // read-aloud article.
+    resultsPanelRef.current = result;
     setResultsPanel(result);
   }, [stopSpeakingNow]);
 
@@ -443,8 +448,16 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // builders, never from model output.
     if (outcome.openExternalUrl) window.open(outcome.openExternalUrl, '_blank', 'noopener,noreferrer');
     // Articles open in the in-app reader panel, keeping the Command Center
-    // in place (Kevin, 2026-08-13).
-    if (outcome.article) showResult({ kind: 'article', ...outcome.article });
+    // in place (Kevin, 2026-08-13). The panel renders ONLY inside the open
+    // sheet, so a closed sheet must open — same rule as confirm cards. By
+    // voice with the sheet closed, "read it to me" used to set panel state
+    // that nothing rendered: the ArticleCard that extracts and speaks never
+    // mounted, and she announced an article and went silent (Kevin,
+    // 2026-08-17: "keeps saying it's going to read an article but doesn't").
+    if (outcome.article) {
+      showResult({ kind: 'article', ...outcome.article });
+      if (!sheetOpenRef.current) setSheetOpen(true);
+    }
     if (outcome.stopPlayback) setNowPlaying(null);
     if (outcome.appleMusic) {
       // Same rule as the YouTube popout: two audio sources on one speaker
@@ -1038,6 +1051,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   maybeRearmRef.current = () => {
     if (!conversationRef.current) return;
     if (liveSessionRef.current || videoRoomRef.current || nowPlayingRef.current) { endConversation(); return; }
+    // A read-aloud article owns the speaker for the next several minutes —
+    // like music, a hot mic over it would hear her own voice and barge her
+    // in mid-story. (No echo cancellation on the push-to-talk path.)
+    if (resultsPanelRef.current?.kind === 'article' && resultsPanelRef.current.readAloud) { endConversation(); return; }
     if (micActiveRef.current) return; // barge-in already owns the mic
     if (!beginListening()) { endConversation(); return; }
     startIdleTimer();
