@@ -208,13 +208,34 @@ async function ensurePrice(tier, productId, interval) {
   if (existing) {
     // Stripe prices are immutable. A lookup_key resolving to a different
     // amount means the catalog predates a price change in TIERS — that needs
-    // a deliberate migration (new price + transfer_lookup_key), not a silent
-    // "found it". Fail loudly so nobody checks out at a stale price.
+    // a deliberate migration, not a silent "found it". With MIGRATE_PRICES=yes
+    // this creates the replacement price (transfer_lookup_key moves the key)
+    // and deactivates the stale one; otherwise it fails loudly so nobody
+    // checks out at a stale price. Deactivating is safe for the 2026-08-17
+    // drift specifically because no plan subscription ever succeeded on the
+    // old prices (checkout was broken until PR #708); a price that backs live
+    // subscriptions should be left active even after the key transfers.
     if (existing.unit_amount !== unitAmount) {
-      throw new Error(
-        `price [${lookupKey}] exists as ${existing.id} at ${existing.unit_amount}¢ but TIERS says ${unitAmount}¢ — ` +
-        `create a replacement price with transfer_lookup_key manually, then re-run.`,
-      );
+      if (process.env.MIGRATE_PRICES !== 'yes') {
+        throw new Error(
+          `price [${lookupKey}] exists as ${existing.id} at ${existing.unit_amount}¢ but TIERS says ${unitAmount}¢ — ` +
+          `re-run with MIGRATE_PRICES=yes to create the replacement (transfer_lookup_key) and deactivate the stale price.`,
+        );
+      }
+      const replacement = await stripeFetch('POST', 'prices', {
+        params: {
+          product: productId,
+          unit_amount: String(unitAmount),
+          currency: 'usd',
+          'recurring[interval]': interval,
+          lookup_key: lookupKey,
+          transfer_lookup_key: 'true',
+        },
+        idempotencyKey: `gw-migrate-price-${lookupKey}-${unitAmount}`,
+      });
+      await stripeFetch('POST', `prices/${existing.id}`, { params: { active: 'false' } });
+      console.log(`  price (${interval}): MIGRATED ${lookupKey} — created ${replacement.id} at ${unitAmount}¢, deactivated ${existing.id} (was ${existing.unit_amount}¢)`);
+      return replacement;
     }
     console.log(`  price (${interval}): found ${existing.id} [${lookupKey}]`);
     return existing;
