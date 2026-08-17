@@ -3789,10 +3789,15 @@ function DraggableClip({
       onChange({ start: newStart });
     };
     const up = (ev: PointerEvent) => {
-      el.releasePointerCapture(ev.pointerId);
-      el.style.cursor = prevCursor;
+      // Listeners FIRST, capture-release inside try: if the element was
+      // unmounted mid-gesture (a handler deleted the clip), releasing
+      // capture on the detached node throws — and with the old ordering
+      // that throw skipped removeEventListener, leaving `move` attached
+      // forever, mutating a clip that no longer exists on every mouse move.
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      try { el.releasePointerCapture(ev.pointerId); } catch { /* node detached */ }
+      el.style.cursor = prevCursor;
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -3906,7 +3911,15 @@ function DraggableClip({
         touchAction: 'none',
       }}
       onPointerDown={onDragBody}
-      onDoubleClick={onRemove}
+      // Double-click SELECTS (which, for a MIDI clip, surfaces the piano
+      // roll) — it must never remove. It used to be onRemove: the second
+      // click's pointerdown had already started a drag with pointer
+      // capture, then the dblclick handler deleted the element out from
+      // under that live gesture mid-dispatch — Kevin double-clicked a MIDI
+      // clip expecting the roll (every DAW's gesture), lost the clip, and
+      // the renderer hard-froze (2026-08-17). Deletion stays on the
+      // Delete key, the clip toolbar, and the strip trash.
+      onDoubleClick={(e) => { e.stopPropagation(); onSelect(); }}
       title={title ?? `${label} — click to select · drag body to move · ⌥-drag to copy · L/R edges to trim · corners to fade · Delete to remove`}
     >
       {peaks && peaks.length > 0 && (() => {
