@@ -674,14 +674,15 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
   // min-height INCLUDES the safe-area inset: with border-box, a fixed
   // h-14 + padding-top collapses the content region and the icons spill
   // 40+px below the bar (the header/toolbar overlap on notched iPhones).
-  // Visible bar stays 56px (md: 80px, matching the sidebar's h-[80px]
-  // brand block); the inset grows the box above it. bg-background/80 +
+  // Visible bar stays 56px (md: 92px, matching the sidebar's h-[92px]
+  // brand block so the two bottom borders align); the inset grows the
+  // box above it. bg-background/80 +
   // blur instead of opaque bg-card so the bar reads as the page surface
   // continuing under the iOS clock rather than a white strip over the
   // gray page.
   return (
     <header
-      className="border-b border-border/60 bg-card flex items-center gap-3 px-4 sm:px-6 sticky z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:min-h-[calc(5rem+env(safe-area-inset-top,0px))]"
+      className="border-b border-border/60 bg-card flex items-center gap-3 px-4 sm:px-6 sticky z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:min-h-[calc(92px+env(safe-area-inset-top,0px))]"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         top: 'var(--gw-demo-bar-h, 0px)',
