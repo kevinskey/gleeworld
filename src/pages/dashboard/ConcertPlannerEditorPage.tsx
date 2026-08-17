@@ -795,6 +795,50 @@ export default function ConcertPlannerEditorPage() {
     }
   }, [blocks, id, persistBlocksNow, updateProgram]);
 
+  // ── Setlist-aware create: auto-import once, first open only (Task 14) ──
+  // "Start from a setlist" on the create dialog only stores setlist_id —
+  // the actual import happens here, so the dialog stays a single step. Runs
+  // once per program id (ref guard). Waits for a piece-group to exist in
+  // `blocks` before firing: useConcertProgramDoc's own first-open effect
+  // (above, in the hook) derives + persists the base [title, piece-group,
+  // footer] skeleton the moment the program/pieces queries settle, and that
+  // skeleton always contains a piece-group even with zero pieces (see
+  // deriveDefaultBlocks). Without this wait, both effects could race —
+  // this one reading `blocks` from the same stale render as the doc hook's
+  // pending persist — and handleSetlistImport would append its new group
+  // onto an empty `[]`, dropping the title/footer blocks the other effect
+  // was about to write.
+  const handleSetlistImportRef = useRef(handleSetlistImport);
+  handleSetlistImportRef.current = handleSetlistImport;
+  const autoImportRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!program || isLoading || !blocks) return;
+    if (!program.setlist_id || pieces.length !== 0) return;
+    if (!blocks.some((b) => b.kind === 'piece-group')) return; // wait for default blocks
+    if (autoImportRef.current === program.id) return;
+    autoImportRef.current = program.id;
+    const setlistId = program.setlist_id;
+    void (async () => {
+      const { data, error } = await supabase
+        .from('gw_setlist_items')
+        .select('music_id, order_index, score:gw_sheet_music(title, composer, voicing)')
+        .eq('setlist_id', setlistId)
+        .order('order_index');
+      if (error || !data || data.length === 0) return;
+      const mapped: Array<Partial<ConcertProgramPiece>> = (data as Array<{
+        music_id: string;
+        order_index: number;
+        score: { title: string; composer: string | null; voicing: string | null } | null;
+      }>).map((item) => ({
+        title: item.score?.title ?? 'Untitled',
+        composer: item.score?.composer ?? null,
+        voicing: item.score?.voicing ?? null,
+        sheet_music_id: item.music_id,
+      }));
+      await handleSetlistImportRef.current({ pieces: mapped, setlistId });
+    })();
+  }, [program, pieces.length, blocks, isLoading]);
+
   // ── Block rail: whole-block reorder/delete/insert ───────────────────────
   // Title always stays first, footer always stays last (contract enforced
   // by construction here, not by clamping an arbitrary index): every one of
