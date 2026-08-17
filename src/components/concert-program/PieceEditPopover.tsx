@@ -12,7 +12,7 @@
 // a write per keystroke, and a blank title is never sent.
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { ArrowDown, ArrowUp, Trash2 } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile, useCoarsePointer } from '@/hooks/use-mobile';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
@@ -84,6 +84,11 @@ export function PieceEditPopover({
   updatePiece, onDelete, onMoveUp, onMoveDown, canMoveUp = true, canMoveDown = true,
 }: PieceEditPopoverProps) {
   const isMobile = useIsMobile();
+  // A coarse pointer (touch) at ≥1024px — iPad landscape, mostly — must
+  // still get the Dialog: this same gate is what closes the on-page caret
+  // risk on iPad (see ConcertPlannerEditorPage's inlineEditable comment).
+  const coarsePointer = useCoarsePointer();
+  const useDialog = isMobile || coarsePointer;
   const [draft, setDraft] = useState<Draft | null>(piece ? draftFromPiece(piece) : null);
   const dirtyRef = useRef<Set<keyof Draft>>(new Set());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -270,7 +275,7 @@ export function PieceEditPopover({
     </div>
   );
 
-  if (isMobile) {
+  if (useDialog) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-sm">
