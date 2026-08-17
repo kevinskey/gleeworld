@@ -103,6 +103,21 @@ serve(async (req) => {
       }
     }
 
+    // Resolve the tenant's slug for the new-user metadata below. The
+    // on_auth_user_created_profile trigger fires DURING generate_link and
+    // homes the profile on raw_user_meta_data->>'tenant_slug' (default
+    // 'main') with ->>'role' (default 'fan') — so without metadata every
+    // brand-new invitee was profiled as fan-on-main and this function's own
+    // profile insert never ran (a row already existed). Passing the slug and
+    // role lets the trigger file the profile + membership correctly at
+    // creation. GoTrue only applies `data` when it creates the user, so
+    // re-invites of existing accounts are untouched.
+    let tenantSlug: string | undefined;
+    if (preflightTenantId) {
+      const { data: t } = await supabase.from("gw_tenants").select("slug").eq("id", preflightTenantId).maybeSingle();
+      if (t?.slug) tenantSlug = String(t.slug);
+    }
+
     // 1. Generate a magic link (creates user if doesn't exist).
     // The link lands on /auth/callback which handles "new user → onboarding,
     // existing user → ?next" routing.
@@ -152,6 +167,12 @@ serve(async (req) => {
         type: "magiclink",
         email: body.email,
         ...(redirectTo ? { redirect_to: redirectTo } : {}),
+        // User metadata for the profile trigger — only applied on creation.
+        data: {
+          ...(tenantSlug ? { tenant_slug: tenantSlug } : {}),
+          role,
+          ...(fullName ? { full_name: fullName } : {}),
+        },
       }),
     });
     if (!linkRes.ok) {
@@ -266,19 +287,25 @@ serve(async (req) => {
       if (emailErr) throw new Error(`Email send failed: ${emailErr.message ?? "unknown"}`);
     }
 
-    // 5. Log the invite/add (best-effort — the table may reject unknown
-    //    statuses; that must never fail the request).
+    // 5. Log the invite/add (best-effort — must never fail the request).
+    //    tenant_id must be the RESOLVED tenant: the column is NOT NULL with
+    //    a current_tenant_id() default that is null under service role, so
+    //    passing the (usually absent) caller tenantId made every insert
+    //    fail silently.
     try {
-      await supabase.from("gw_student_invites").insert({
+      const { error: logErr } = await supabase.from("gw_student_invites").insert({
         email: body.email,
         full_name: fullName,
         course_id: body.courseId || null,
         invited_by: body.invitedBy || null,
-        tenant_id: body.tenantId || undefined,
+        tenant_id: tenantId ?? undefined,
         status: sendEmail ? "sent" : "added",
         sent_at: new Date().toISOString(),
       });
-    } catch {}
+      if (logErr) console.error("gw_student_invites log failed:", logErr.message);
+    } catch (logEx) {
+      console.error("gw_student_invites log failed:", logEx);
+    }
 
     return new Response(JSON.stringify({ success: true, userId, email: body.email, emailSent: sendEmail }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
