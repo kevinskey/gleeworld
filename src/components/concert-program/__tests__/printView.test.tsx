@@ -7,9 +7,9 @@
 // class, and that imposition order lands on the DOM exactly as
 // imposeHalfFold computes it (front/back panel indexes, including blanks
 // for a non-multiple-of-4 panel count).
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, fireEvent } from '@testing-library/react';
 import { ConcertProgramPrintView } from '../ConcertProgramPrintView';
 import type { RenderCtx } from '../blocks/BlockRenderers';
 import type { PageItem } from '@/lib/concertProgram/paginate';
@@ -64,6 +64,50 @@ describe('ConcertProgramPrintView — letter', () => {
     expect(document.body.classList.contains('printing-program')).toBe(true);
     unmount();
     expect(document.body.classList.contains('printing-program')).toBe(false);
+  });
+
+  it('Escape key calls onClose', () => {
+    const onClose = vi.fn();
+    render(
+      <ConcertProgramPrintView pages={makePages(1)} ctx={makeCtx()} design="modern-clean" format="letter-portrait" onClose={onClose} />,
+    );
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Regression coverage for the review finding: labels + sheets must be FLAT
+// siblings of one container, never wrapped one-per-page/one-per-sheet —
+// concert-program-print.css's `.cp-sheet:last-child` / `.cp-print-sheet:last-child`
+// rule (which cancels the forced page-break-after on the true final sheet
+// only) resolves per DOM parent. A per-page/per-sheet wrapper div would make
+// every sheet :last-child of its OWN wrapper, silently killing every forced
+// break between physical sheets.
+describe('ConcertProgramPrintView — flat DOM so :last-child page-break resolves correctly', () => {
+  it('letter: all .cp-sheet nodes share one parent, and it is the LAST child of that parent', () => {
+    render(
+      <ConcertProgramPrintView pages={makePages(3)} ctx={makeCtx()} design="modern-clean" format="letter-portrait" onClose={() => {}} />,
+    );
+    const sheets = Array.from(document.querySelectorAll('.cp-sheet'));
+    expect(sheets).toHaveLength(3);
+    const parent = sheets[0].parentElement;
+    expect(parent).toBeTruthy();
+    sheets.forEach((s) => expect(s.parentElement).toBe(parent));
+    expect(parent!.lastElementChild).toBe(sheets[2]);
+  });
+
+  it('half-fold: all 4 .cp-print-sheet nodes (2 sheets) share one parent, and the last is sheet 2\'s back', () => {
+    render(
+      <ConcertProgramPrintView pages={makePages(8)} ctx={makeCtx()} design="modern-clean" format="half-fold" onClose={() => {}} />,
+    );
+    const sheets = Array.from(document.querySelectorAll('.cp-print-sheet'));
+    expect(sheets).toHaveLength(4); // 2 physical sheets x (front + back)
+    const parent = sheets[0].parentElement;
+    expect(parent).toBeTruthy();
+    sheets.forEach((s) => expect(s.parentElement).toBe(parent));
+    // Rendered order is front0, back0, front1, back1 — the very last
+    // element must be sheet 2's back.
+    expect(parent!.lastElementChild).toBe(sheets[3]);
   });
 });
 

@@ -19,7 +19,7 @@
 // an index >= pages.length is a padding blank (booklets impose in
 // multiples of 4). Each physical sheet renders as TWO `.cp-print-sheet`s
 // (front, then back) so duplex printing (flip on short edge) folds correctly.
-import { useEffect, useMemo } from 'react';
+import { Fragment, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { unitKey, type PageItem } from '@/lib/concertProgram/paginate';
@@ -36,8 +36,18 @@ export interface ConcertProgramPrintViewProps {
   onClose: () => void;
 }
 
-const LETTER_SHEET_STYLE = { width: '8.5in', height: '11in', padding: '0.75in', background: '#fff' } as const;
-const HALF_FOLD_SHEET_STYLE = { width: '11in', height: '8.5in', display: 'flex', position: 'relative', background: '#fff' } as const;
+// `boxSizing: 'border-box'` is explicit on every sheet/panel dimension
+// below (not just the half-fold panel) — Tailwind's preflight reset
+// happens to set border-box globally today, but a *physical* 8.5x11in (or
+// 5.5x8.5in) page size must not silently depend on that global staying in
+// place; padding must be carved OUT of the stated width/height, never
+// added on top of it.
+const LETTER_SHEET_STYLE = {
+  width: '8.5in', height: '11in', padding: '0.75in', background: '#fff', boxSizing: 'border-box',
+} as const;
+const HALF_FOLD_SHEET_STYLE = {
+  width: '11in', height: '8.5in', display: 'flex', position: 'relative', background: '#fff', boxSizing: 'border-box',
+} as const;
 const HALF_FOLD_PANEL_STYLE = {
   width: '5.5in', height: '8.5in', padding: '0.5in', overflow: 'hidden', boxSizing: 'border-box',
 } as const;
@@ -133,27 +143,35 @@ export function ConcertProgramPrintView({ pages, ctx, design, format, onClose }:
       </div>
 
       {halfFold ? (
+        // Every label + `.cp-print-sheet` is a FLAT sibling inside this one
+        // container (Fragment, not a per-sheet wrapper div) — CSS's
+        // `.cp-print-sheet:last-child { page-break-after: auto }` (see
+        // concert-program-print.css) only exempts the true final sheet from
+        // a forced break this way. A per-sheet wrapper div would make every
+        // sheet :last-child OF ITS OWN wrapper, silencing every forced break.
         <div className="cp-print-body">
           {sheets!.map((sheet, sheetIdx) => (
-            <div key={sheetIdx}>
+            <Fragment key={sheetIdx}>
               <p className="no-print text-center text-xs text-muted-foreground pt-3 pb-1">Sheet {sheetIdx + 1} — front</p>
               <HalfFoldPrintSheet panelIdxs={sheet.front} pages={pages} ctx={ctx} design={design} />
               <p className="no-print text-center text-xs text-muted-foreground pt-3 pb-1">Sheet {sheetIdx + 1} — back</p>
               <HalfFoldPrintSheet panelIdxs={sheet.back} pages={pages} ctx={ctx} design={design} />
-            </div>
+            </Fragment>
           ))}
         </div>
       ) : (
+        // Same flat-siblings requirement as the half-fold branch above —
+        // see that comment.
         <div className="cp-print-body">
           {pages.map((pageItems, pageIndex) => (
-            <div key={pageIndex}>
+            <Fragment key={pageIndex}>
               <p className="no-print text-center text-xs text-muted-foreground pt-3 pb-1">Page {pageIndex + 1}</p>
               <div className={`cp-sheet cp-page ${designClass(design)}`} style={LETTER_SHEET_STYLE}>
                 {pageItems.map((item) => (
                   <PageItemView key={unitKey(item.unit)} item={item} ctx={ctx} />
                 ))}
               </div>
-            </div>
+            </Fragment>
           ))}
         </div>
       )}

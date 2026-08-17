@@ -9,7 +9,7 @@
 // integration check of the pipeline wiring, not just a mock echo.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
 // jsdom does not implement matchMedia; Task 9 added on-page editing, which
@@ -137,5 +137,31 @@ describe('ConcertPlannerEditorPage scaffold', () => {
     mount();
     expect(screen.getAllByText('Letter').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Half-fold').length).toBeGreaterThan(0);
+  });
+});
+
+// Task 13 (Print / Save PDF) review fix: the zero-pieces confirm guard is
+// page-level wiring (ConcertPlannerEditorPage's Print button handler), not
+// something the overlay component itself can cover — exercised here against
+// the real handler with a piece-group whose pieceIds is empty (the shape
+// flattenPieceOrder actually reads).
+describe('ConcertPlannerEditorPage — Print button zero-pieces guard', () => {
+  it('confirms before printing an empty program, and does not open the overlay when declined', () => {
+    const originalBlocks = mocks.program.blocks;
+    mocks.program.blocks = [
+      { id: 'b-title', kind: 'title', showLogo: true, showOrgName: true },
+      { id: 'b-group', kind: 'piece-group', sectionHeading: null, pieceIds: [], creditLine: null },
+      { id: 'b-footer', kind: 'footer', showQr: false },
+    ];
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    try {
+      mount();
+      fireEvent.click(screen.getByRole('button', { name: 'Print / Save PDF' }));
+      expect(confirmSpy).toHaveBeenCalledWith('This program has no pieces — print anyway?');
+      expect(document.querySelector('.cp-print-overlay')).toBeNull();
+    } finally {
+      confirmSpy.mockRestore();
+      mocks.program.blocks = originalBlocks;
+    }
   });
 });
