@@ -24,14 +24,24 @@ export function formatTime(seconds: number): string {
   return `${m}:${String(r).padStart(2, '0')}`;
 }
 
-/** BBB.beat.tick at 960 PPQN, 1-based like Logic / Pro Tools. */
-export function formatBarBeat(seconds: number, tempoBpm: number, numerator: number): string {
+/** Bar/beat/tick at 960 PPQN, 1-based — the LCD renders these as
+ * separate Logic-style digit groups with labels beneath. */
+export function barBeatParts(
+  seconds: number, tempoBpm: number, numerator: number,
+): { bar: number; beat: number; tick: number } {
   const secondsPerBeat = 60 / tempoBpm;
   const totalBeats = Math.max(0, seconds) / secondsPerBeat;
-  const bar = Math.floor(totalBeats / numerator) + 1;
-  const beat = Math.floor(totalBeats % numerator) + 1;
-  const ticks = Math.floor((totalBeats % 1) * 960);
-  return `${String(bar).padStart(3, '0')}.${beat}.${String(ticks).padStart(3, '0')}`;
+  return {
+    bar: Math.floor(totalBeats / numerator) + 1,
+    beat: Math.floor(totalBeats % numerator) + 1,
+    tick: Math.floor((totalBeats % 1) * 960),
+  };
+}
+
+/** BBB.beat.tick at 960 PPQN, 1-based like Logic / Pro Tools. */
+export function formatBarBeat(seconds: number, tempoBpm: number, numerator: number): string {
+  const { bar, beat, tick } = barBeatParts(seconds, tempoBpm, numerator);
+  return `${String(bar).padStart(3, '0')}.${beat}.${String(tick).padStart(3, '0')}`;
 }
 
 /** Absolute sample count at the given rate, grouped for readability. */
