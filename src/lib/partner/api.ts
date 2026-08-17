@@ -371,3 +371,95 @@ export function useCreatePartnerByEmail(): UseMutationResult<{ id: string }, Err
     onSuccess: () => qc.invalidateQueries({ queryKey: ['partners-admin'] }),
   });
 }
+
+// ---------------------------------------------------------------------------
+// Admin: suspend/reactivate + orders/refunds (sub-plan 3)
+
+export function useSetPartnerStatus(): UseMutationResult<{ id: string }, Error, { id: string; status: 'active' | 'suspended' }> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }) => {
+      // Admin RLS (gw_partners_admin_all). The public-read policy on
+      // gw_partner_scores keys on partner status, so suspending here hides
+      // the catalog everywhere at the DB layer.
+      const { data, error } = await supabase
+        .from('gw_partners')
+        .update({ status })
+        .eq('id', id)
+        .select('id')
+        .single();
+      if (error) throw error;
+      return data as { id: string };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['partners-admin'] }),
+  });
+}
+
+export interface AdminOrderItem {
+  id: string;
+  partner_score_id: string;
+  price_cents: number;
+  quantity: number | null;
+  refunded_at: string | null;
+  stripe_refund_id: string | null;
+  watermarked_storage_path: string | null;
+  score: { title: string; composer: string | null } | null;
+}
+
+export interface AdminOrder {
+  id: string;
+  buyer_user_id: string;
+  buyer_email: string | null;
+  subtotal_cents: number;
+  status: 'pending' | 'paid' | 'failed' | 'refunded' | 'partial_refund';
+  paid_at: string | null;
+  created_at: string;
+  stripe_payment_intent_id: string | null;
+  items: AdminOrderItem[];
+}
+
+export function useAdminPartnerOrders(enabled = true): UseQueryResult<AdminOrder[]> {
+  return useQuery({
+    queryKey: ['partner-orders-admin'],
+    enabled,
+    queryFn: async () => {
+      const { data: orders, error } = await supabase
+        .from('gw_partner_orders')
+        .select('id, buyer_user_id, subtotal_cents, status, paid_at, created_at, stripe_payment_intent_id, items:gw_partner_order_items(id, partner_score_id, price_cents, quantity, refunded_at, stripe_refund_id, watermarked_storage_path, score:gw_partner_scores(title, composer))')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      const rows = (orders ?? []) as unknown as Array<Omit<AdminOrder, 'buyer_email'>>;
+      // No FK path from orders to gw_profiles, so PostgREST can't embed the
+      // buyer — batch-resolve emails in one query instead.
+      const buyerIds = [...new Set(rows.map((o) => o.buyer_user_id))];
+      const emailById = new Map<string, string | null>();
+      if (buyerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('gw_profiles')
+          .select('user_id, email')
+          .in('user_id', buyerIds);
+        for (const p of profiles ?? []) emailById.set(p.user_id, p.email);
+      }
+      return rows.map((o) => ({ ...o, buyer_email: emailById.get(o.buyer_user_id) ?? null }));
+    },
+  });
+}
+
+export function useAdminRefundItem(): UseMutationResult<{ refund_id: string; amount_cents: number; order_status: string }, Error, { order_item_id: string }> {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ order_item_id }) => {
+      const { data, error } = await supabase.functions.invoke(
+        'partner-refund',
+        { body: { order_item_id } },
+      );
+      if (error || data?.error) {
+        const { edgeFunctionErrorMessage } = await import('@/lib/edgeFunctionError');
+        throw new Error(await edgeFunctionErrorMessage(error, data) ?? 'refund failed');
+      }
+      return data as { refund_id: string; amount_cents: number; order_status: string };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['partner-orders-admin'] }),
+  });
+}

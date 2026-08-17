@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 
 const calls: Array<{ table: string; op: string; args: unknown }> = [];
-const rpcMock = vi.fn(async () => ({ data: null, error: null }));
+const rpcMock = vi.fn(async (..._args: unknown[]) => ({ data: null, error: null }));
 
 function chain(table: string) {
   const self: any = {

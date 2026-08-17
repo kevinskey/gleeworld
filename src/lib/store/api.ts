@@ -42,6 +42,7 @@ export interface OrderStatusRow {
     id: string;
     partner_score_id: string;
     watermarked_storage_path: string | null;
+    refunded_at?: string | null;
     title?: string | null;
     composer?: string | null;
     thumbnail_storage_path?: string | null;
@@ -126,6 +127,9 @@ export function useOrderStatus(orderId: string | undefined): UseQueryResult<Orde
     refetchInterval: (query: Query<OrderStatusRow | null, Error>) => {
       const d = query.state.data as OrderStatusRow | null | undefined;
       if (!d) return 3000;
+      // Terminal states: fulfilled, failed, or (fully/partially) refunded —
+      // a bookmarked thanks page must not poll a refunded order forever.
+      if (d.status === 'failed' || d.status === 'refunded' || d.status === 'partial_refund') return false;
       const allReady = d.status === 'paid' && d.items.every((i) => !!i.watermarked_storage_path);
       return allReady ? false : 3000;
     },
@@ -142,7 +146,7 @@ export function useOrderStatus(orderId: string | undefined): UseQueryResult<Orde
       // lists them), so joining title/composer/cover here is a pure query change.
       const { data: items, error: itemsError } = await supabase
         .from('gw_partner_order_items')
-        .select('id, partner_score_id, watermarked_storage_path, score:gw_partner_scores(title, composer, thumbnail_storage_path, price_cents)')
+        .select('id, partner_score_id, watermarked_storage_path, refunded_at, score:gw_partner_scores(title, composer, thumbnail_storage_path, price_cents)')
         .eq('order_id', orderId);
       if (itemsError) throw itemsError;
       type JoinedScore = { title: string | null; composer: string | null; thumbnail_storage_path: string | null; price_cents: number | null } | null;

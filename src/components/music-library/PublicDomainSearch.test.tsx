@@ -5,7 +5,7 @@ import { render as rtlRender, screen, cleanup, fireEvent, waitFor } from '@testi
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 
-const invokeMock = vi.fn(async () => ({ data: { ok: true, already_in_my_music: false, personal_score_id: 'ps-1', title: 'Sicut Cervus', cached: true }, error: null }));
+const invokeMock = vi.fn(async (..._args: unknown[]) => ({ data: { ok: true, already_in_my_music: false, personal_score_id: 'ps-1', title: 'Sicut Cervus', cached: true }, error: null }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     rpc: vi.fn(async () => ({
