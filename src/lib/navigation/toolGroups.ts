@@ -16,7 +16,7 @@
 // deterministic and unit-testable, and the one place randomness enters
 // (crypto.randomUUID) is the component that creates a group.
 // Spec: docs/superpowers/specs/2026-08-10-my-world-groups-design.md §4
-import { GROUP_NAME_MAX, type Shelf, type ToolGroup } from './myTools';
+import { GROUP_NAME_MAX, GROUPS_SANITY_MAX, type Shelf, type ToolGroup } from './myTools';
 
 const clampName = (name: string): string => name.slice(0, GROUP_NAME_MAX);
 
@@ -101,4 +101,65 @@ export function moveTool(shelf: Shelf, key: string, targetGroupId: string | null
 /** Render order: loose tools, then each group's tools, groups in array order. */
 export function flattenShelf(shelf: Shelf): string[] {
   return [...shelf.tools, ...shelf.groups.flatMap((g) => g.tools)];
+}
+
+/**
+ * File `key` into the group named `categoryName`, creating that group when it
+ * doesn't exist yet. This is how a freshly-picked tool lands categorized
+ * instead of loose, so a member who has selected many apps gets collapsible
+ * category headers in the nav without arranging anything by hand.
+ *
+ * Matching is by exact name: a member who renamed "Music" to "Choir stuff"
+ * gets a NEW "Music" group beside it rather than having their own group
+ * silently repurposed. At GROUPS_SANITY_MAX the tool lands loose instead —
+ * same never-lose-a-pin reasoning as handleNewGroupWithTool in MyWorldEditor
+ * (sanitizeShelf would drop a group past the bound, and the pin with it).
+ *
+ * The caller guarantees `key` is not already on the shelf, same contract as
+ * createGroup's `id` parameter: determinism stays here, uniqueness checks and
+ * randomness stay with the component/hook.
+ */
+export function fileToolByCategory(shelf: Shelf, key: string, categoryName: string, id: string): Shelf {
+  const name = clampName(categoryName);
+  const existing = shelf.groups.find((g) => g.name === name);
+  if (existing) {
+    return {
+      ...shelf,
+      groups: shelf.groups.map((g) => (g.id === existing.id ? { ...g, tools: [...g.tools, key] } : g)),
+    };
+  }
+  if (shelf.groups.length >= GROUPS_SANITY_MAX) {
+    return { ...shelf, tools: [...shelf.tools, key] };
+  }
+  const group: ToolGroup = { id, name, tools: [key], collapsed: false };
+  return { ...shelf, groups: [...shelf.groups, group] };
+}
+
+/**
+ * File every LOOSE tool into a group named after its category — the one-tap
+ * "Group by category" action for a shelf that grew flat before pins started
+ * landing categorized. Member-made groups are left exactly as they are:
+ * a member who already filed a tool somewhere has organized, and this must
+ * never undo that. A key `categoryOf` can't place (retired catalog entry)
+ * stays loose, keeping the spec's stored-but-gated keys visible in the
+ * editor rather than vanishing into a mystery group.
+ */
+export function categorizeShelf(
+  shelf: Shelf,
+  categoryOf: (key: string) => string | null,
+  makeId: () => string,
+): Shelf {
+  let next: Shelf = { tools: [], groups: shelf.groups };
+  const stayLoose: string[] = [];
+  for (const key of shelf.tools) {
+    const category = categoryOf(key);
+    if (!category) {
+      stayLoose.push(key);
+      continue;
+    }
+    next = fileToolByCategory(next, key, category, makeId());
+  }
+  // fileToolByCategory's GROUPS_SANITY_MAX fallback appends to next.tools —
+  // keep those after the unplaceable keys, preserving relative order.
+  return { ...next, tools: [...stayLoose, ...next.tools] };
 }

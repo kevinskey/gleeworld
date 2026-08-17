@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
-  createGroup, renameGroup, setGroupCollapsed, moveGroup, deleteGroup,
-  moveTool, flattenShelf, groupIdOf,
+  categorizeShelf, createGroup, deleteGroup, fileToolByCategory, flattenShelf,
+  groupIdOf, moveGroup, moveTool, renameGroup, setGroupCollapsed,
 } from './toolGroups';
-import { GROUP_NAME_MAX, type Shelf } from './myTools';
+import { GROUP_NAME_MAX, GROUPS_SANITY_MAX, type Shelf } from './myTools';
 
 const shelf = (): Shelf => ({
   tools: ['calendar', 'messages'],
@@ -104,5 +104,61 @@ describe('flattenShelf / groupIdOf', () => {
     expect(groupIdOf(shelf(), 'liturgy')).toBe('a');
     expect(groupIdOf(shelf(), 'calendar')).toBeNull();
     expect(groupIdOf(shelf(), 'nope')).toBeNull();
+  });
+});
+
+describe('fileToolByCategory', () => {
+  it('creates the category group on first use', () => {
+    const out = fileToolByCategory(shelf(), 'finance', 'Money', 'c');
+    expect(out.groups.at(-1)).toEqual({ id: 'c', name: 'Money', tools: ['finance'], collapsed: false });
+    expect(out.tools).toEqual(['calendar', 'messages']);
+  });
+  it('appends into an existing group with that exact name', () => {
+    const out = fileToolByCategory(shelf(), 'readings', 'Sunday', 'unused');
+    expect(out.groups[0].tools).toEqual(['liturgy', 'worship-aids', 'readings']);
+    expect(out.groups).toHaveLength(2);
+  });
+  it('does not repurpose a member-renamed group — name must match exactly', () => {
+    const out = fileToolByCategory(shelf(), 'academy', 'Teach', 'c');
+    // 'Teaching' (member's group) is not 'Teach' — a new group appears.
+    expect(out.groups.map((g) => g.name)).toEqual(['Sunday', 'Teaching', 'Teach']);
+  });
+  it('lands the tool loose at GROUPS_SANITY_MAX rather than losing the pin', () => {
+    const full: Shelf = {
+      tools: [],
+      groups: Array.from({ length: GROUPS_SANITY_MAX }, (_, i) => ({
+        id: `g${i}`, name: `G${i}`, tools: [], collapsed: false,
+      })),
+    };
+    const out = fileToolByCategory(full, 'finance', 'Money', 'c');
+    expect(out.groups).toHaveLength(GROUPS_SANITY_MAX);
+    expect(out.tools).toEqual(['finance']);
+  });
+});
+
+describe('categorizeShelf', () => {
+  const category = (key: string): string | null =>
+    ({ calendar: 'Today', messages: 'Today', finance: 'Money' } as Record<string, string>)[key] ?? null;
+  let n = 0;
+  const makeId = () => `id${n++}`;
+
+  it('files every loose tool into its category group, leaving member groups intact', () => {
+    const out = categorizeShelf(shelf(), category, makeId);
+    expect(out.tools).toEqual([]);
+    expect(out.groups.map((g) => [g.name, ...g.tools])).toEqual([
+      ['Sunday', 'liturgy', 'worship-aids'],
+      ['Teaching', 'academy'],
+      ['Today', 'calendar', 'messages'],
+    ]);
+  });
+  it('keeps a key with no category loose', () => {
+    const out = categorizeShelf({ tools: ['ghost', 'finance'], groups: [] }, category, makeId);
+    expect(out.tools).toEqual(['ghost']);
+    expect(out.groups.map((g) => [g.name, ...g.tools])).toEqual([['Money', 'finance']]);
+  });
+  it('never duplicates or drops a key', () => {
+    const before = shelf();
+    const out = categorizeShelf(before, category, makeId);
+    expect([...flattenShelf(out)].sort()).toEqual([...flattenShelf(before)].sort());
   });
 });

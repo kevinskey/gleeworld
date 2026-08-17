@@ -30,12 +30,12 @@ import {
   SortableContext, arrayMove, verticalListSortingStrategy, useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Minus, Plus, Check, CircleSlash } from 'lucide-react';
+import { GripVertical, Minus, Plus, Check, CircleSlash, Boxes } from 'lucide-react';
 import { NAV_SECTION_LABELS, type CatalogEntry, type NavSectionKey } from '@/lib/navigation/navCatalog';
 import { GROUPS_SANITY_MAX, WIDGETS_CAP, type Shelf, type ToolGroup } from '@/lib/navigation/myTools';
 import {
-  createGroup, deleteGroup, flattenShelf, groupIdOf, moveGroup, moveTool,
-  renameGroup, setGroupCollapsed,
+  categorizeShelf, createGroup, deleteGroup, fileToolByCategory, flattenShelf,
+  groupIdOf, moveGroup, moveTool, renameGroup, setGroupCollapsed,
 } from '@/lib/navigation/toolGroups';
 import { MyWorldGroupRow } from './MyWorldGroupRow';
 import { ToolRowMenu } from './ToolRowMenu';
@@ -256,11 +256,33 @@ export function MyWorldEditor({
 
   const addTool = (key: string) => {
     if (disabled || chosenKeys.has(key)) return;
-    // New tools land LOOSE, matching where a pin from All Tools lands. Only
-    // the loose list changes, so this deliberately does NOT go through
-    // commit() — firing onGroupsChange with an unchanged list would make the
-    // parent save groups it has no reason to touch.
-    onToolsChange([...tools, key]);
+    // New tools land in their CATEGORY group, matching where a pin from All
+    // Tools lands (useMyTools.pinTool) — selected apps arrive categorized so
+    // the nav can collapse to a short list. Where groups aren't enabled
+    // (admin "Defaults for members" — flat storage) or the entry has no
+    // catalog row to name a category from, the tool lands loose as before,
+    // and only the loose list changes so groups aren't saved needlessly.
+    const entry = groupsEnabled ? byKey.get(key) : undefined;
+    if (!entry) {
+      onToolsChange([...tools, key]);
+      return;
+    }
+    commit(fileToolByCategory(shelf, key, NAV_SECTION_LABELS[entry.section], crypto.randomUUID()));
+  };
+
+  // One-tap cleanup for a shelf that grew flat before pins landed
+  // categorized: file every loose tool into a group named after its
+  // category. Member-made groups keep their contents (see categorizeShelf).
+  const handleGroupByCategory = () => {
+    if (disabled) return;
+    commit(categorizeShelf(
+      shelf,
+      (key) => {
+        const entry = byKey.get(key);
+        return entry ? NAV_SECTION_LABELS[entry.section] : null;
+      },
+      () => crypto.randomUUID(),
+    ));
   };
 
   /** The standalone ＋ New Group row: an empty group, named in place. */
@@ -398,6 +420,20 @@ export function MyWorldEditor({
           >
             <Plus className="w-4 h-4" aria-hidden />
             <span className="text-[17px]">New Group</span>
+          </button>
+        )}
+        {/* Only offered while there are loose tools to file — on a fully
+            grouped shelf it could do nothing, and a control that can only
+            no-op is the shape this editor avoids (see canPin). */}
+        {groupsEnabled && tools.length > 0 && (
+          <button
+            type="button"
+            onClick={handleGroupByCategory}
+            disabled={disabled}
+            className="w-full flex items-center gap-3 min-h-11 px-4 text-left text-primary disabled:opacity-40"
+          >
+            <Boxes className="w-4 h-4" aria-hidden />
+            <span className="text-[17px]">Group by category</span>
           </button>
         )}
         <div className="flex items-center justify-between px-4 pt-1.5">

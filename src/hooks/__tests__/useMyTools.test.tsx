@@ -210,7 +210,7 @@ describe('pinTool', () => {
     expect(saveCalls()).toHaveLength(0);
   });
 
-  it('appends to the STORED record, preserving widgets and a stored-but-unrendered key', async () => {
+  it('files the pin into its category group, preserving widgets and a stored-but-unrendered key', async () => {
     maybeSingle.mockResolvedValue({
       data: {
         // 'tenants' is platform-admin-gated: a real member can hold it in
@@ -227,11 +227,15 @@ describe('pinTool', () => {
     await act(async () => { ok = await result.current.pinTool('academy'); });
 
     expect(ok).toBe(true);
+    // A fresh pin lands in a group named for its catalog section ('academy'
+    // → Teach), not loose — the group id is generated, so match its shape.
     expect(rpc).toHaveBeenCalledWith('save_nav_item_order', {
       p_nav_item_order: {
         v: 4,
-        tools: ['tenants', 'calendar', 'academy'],
-        groups: [],
+        tools: ['tenants', 'calendar'],
+        groups: [
+          { id: expect.any(String), name: 'Teach', tools: ['academy'], collapsed: false },
+        ],
         widgets: ['today'],
         setupComplete: true,
       },
@@ -255,10 +259,19 @@ describe('pinTool', () => {
     });
 
     expect(saveCalls()).toHaveLength(2);
-    const first = saveCalls()[0][1].p_nav_item_order as { tools: string[] };
-    const second = saveCalls()[1][1].p_nav_item_order as { tools: string[] };
-    expect(first.tools).toEqual(['calendar', 'academy']);
-    expect(second.tools).toEqual(['calendar', 'academy', 'finance']);
+    // Pins land in category groups now; the loose list stays put. The
+    // property under test is unchanged: the SECOND save must still carry the
+    // first pin (read from the cache at call time, not a stale closure).
+    type Sent = { tools: string[]; groups: Array<{ name: string; tools: string[] }> };
+    const first = saveCalls()[0][1].p_nav_item_order as Sent;
+    const second = saveCalls()[1][1].p_nav_item_order as Sent;
+    expect(first.tools).toEqual(['calendar']);
+    expect(first.groups.map((g) => [g.name, ...g.tools])).toEqual([['Teach', 'academy']]);
+    expect(second.tools).toEqual(['calendar']);
+    expect(second.groups.map((g) => [g.name, ...g.tools])).toEqual([
+      ['Teach', 'academy'],
+      ['Money', 'finance'],
+    ]);
   });
 
   // pinTool used to resolve false once the record held 8 keys. It no longer
@@ -277,8 +290,13 @@ describe('pinTool', () => {
     await act(async () => { ok = await result.current.pinTool('academy'); });
 
     expect(ok).toBe(true);
-    const sent = saveCalls()[0][1].p_nav_item_order as { tools: string[] };
-    expect(sent.tools).toEqual([...eight, 'academy']);
+    const sent = saveCalls()[0][1].p_nav_item_order as {
+      tools: string[]; groups: Array<{ name: string; tools: string[] }>;
+    };
+    // The eight stay loose (k0…k7 aren't catalog keys); the 9th pin is not
+    // refused — it lands in its category group.
+    expect(sent.tools).toEqual(eight);
+    expect(sent.groups.map((g) => [g.name, ...g.tools])).toEqual([['Teach', 'academy']]);
   });
 
   // Round 2 review: `record.tools.includes(resolved)` compared the RESOLVED
@@ -451,7 +469,7 @@ describe('groups', () => {
     expect(sent.groups[0].tools).toEqual([]);
   });
 
-  it('pinTool lands the new tool loose, above every group', async () => {
+  it('pinTool files the new tool into a category group, leaving member groups alone', async () => {
     maybeSingle.mockResolvedValue({
       data: {
         nav_item_order: {
@@ -467,9 +485,14 @@ describe('groups', () => {
 
     await act(async () => { await result.current.pinTool('studio'); });
 
+    // 'studio' is a Make tool: it lands in a fresh "Make" group after the
+    // member's own "Sunday" group, which keeps its contents untouched.
     const sent = saveCalls()[0][1].p_nav_item_order as { tools: string[]; groups: ToolGroup[] };
-    expect(sent.tools).toEqual(['calendar', 'studio']);
-    expect(sent.groups[0].tools).toEqual(['liturgy']);
+    expect(sent.tools).toEqual(['calendar']);
+    expect(sent.groups.map((g) => [g.name, ...g.tools])).toEqual([
+      ['Sunday', 'liturgy'],
+      ['Make', 'studio'],
+    ]);
   });
 
   it('refuses to pin a key that already lives inside a group', async () => {

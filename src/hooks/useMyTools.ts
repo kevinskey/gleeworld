@@ -15,7 +15,15 @@ import {
   migrateToMyTools, sanitizeShelf, resolveKey, resolveKeys, WIDGETS_CAP,
   type MyTools, type Shelf, type ToolGroup,
 } from '@/lib/navigation/myTools';
-import { flattenShelf } from '@/lib/navigation/toolGroups';
+import { fileToolByCategory, flattenShelf } from '@/lib/navigation/toolGroups';
+import { NAV_CATALOG, NAV_SECTION_LABELS } from '@/lib/navigation/navCatalog';
+
+// Category (section label) per catalog key, for filing a fresh pin into its
+// category group. Module-level: the catalog is static, so building this once
+// beats rebuilding a Map inside every pin. A resolved key with no catalog
+// entry (retired key kept alive by a stored record) maps to undefined and
+// the pin lands loose, exactly as before categories existed.
+const CATEGORY_OF = new Map(NAV_CATALOG.map((e) => [e.key, NAV_SECTION_LABELS[e.section]]));
 
 /** The two user_preferences columns this hook reads, exactly as stored. */
 interface StoredNavPrefs {
@@ -248,7 +256,17 @@ export function useMyTools(role: 'student' | 'faculty') {
     // same reason the flat check does: a stored merged key ('merch') must
     // match an incoming resolved one ('shop').
     if (resolveKeys(flattenShelf(record)).includes(resolved)) return true;
-    return saveMyTools({ tools: [...record.tools, resolved] });
+    // A fresh pin lands in its CATEGORY group (created on first use), not
+    // loose — a member who picks a dozen apps from All Tools gets a nav they
+    // can collapse by category, not a wall of rows. Keys the catalog no
+    // longer carries have no category and land loose, as they always did.
+    const category = CATEGORY_OF.get(resolved);
+    if (!category) return saveMyTools({ tools: [...record.tools, resolved] });
+    const next = fileToolByCategory(
+      { tools: record.tools, groups: record.groups },
+      resolved, category, crypto.randomUUID(),
+    );
+    return saveMyTools({ tools: next.tools, groups: next.groups });
   }, [readLoadedRecord, saveMyTools]);
 
   return { myTools, loading: isLoading, loaded, saveTools, saveMyTools, saveShelf, pinTool };
