@@ -10,11 +10,16 @@
 //   3. target:'tenant' (default): Insert into gw_sheet_music for the
 //      caller's tenant. ON CONFLICT (tenant_id, pd_work_id) DO NOTHING
 //      so re-clicks are idempotent.
-//      target:'personal': copy the cached pd-cache object into the
-//      caller's private personal-scores/{user_id}/cpdl/{work_id}.pdf
-//      folder and upsert a row in gw_personal_scores (owner-only RLS,
-//      unique on (user_id, pd_work_id)). Requires an authenticated
-//      caller and a cached PDF (no on-demand fetch for personal saves).
+//      target:'personal': reuses the SAME shared pd-cache ensure step
+//      above (including the on-demand fetch and its source_fetch_failed/
+//      source_too_large failure modes — a first-time personal save can
+//      still trigger and pay for the global cache fill), then copies the
+//      now-cached object into the caller's private
+//      personal-scores/{user_id}/cpdl/{work_id}.pdf folder and upserts a
+//      row in gw_personal_scores (owner-only RLS, unique on
+//      (user_id, pd_work_id)). Requires an authenticated caller.
+//      `no_cached_pdf` (502) fires only in the rare case where the work
+//      has neither a storage_key NOR an original_score_url to fetch.
 //   4. Return the inserted (or pre-existing) score row so the UI can
 //      update the library list.
 //
@@ -116,18 +121,26 @@ serve(async (req) => {
   }
   const target: "tenant" | "personal" = body.target === "personal" ? "personal" : "tenant";
 
-  // target:'personal' writes are owner-scoped (gw_personal_scores RLS is
-  // auth.uid() = user_id) and the storage copy is keyed by user id, so we
-  // need the caller's resolved user id up front — not just a present JWT.
-  const { data: userData, error: userErr } = await supabase.auth.getUser(jwt);
-  const userId = userData?.user?.id ?? null;
-  if (target === "personal" && (!userId || userErr)) {
-    return new Response(JSON.stringify({ error: "unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
   try {
+    // target:'personal' writes are owner-scoped (gw_personal_scores RLS is
+    // auth.uid() = user_id) and the storage copy is keyed by user id, so we
+    // need the caller's resolved user id up front — not just a present
+    // JWT. Only pay for this extra auth round-trip on the personal path;
+    // the tenant path (all existing traffic) never touches it, and any
+    // transient auth-service failure here is still caught by this try
+    // block so it returns the standard corsHeaders/JSON error shape
+    // instead of an unhandled exception.
+    let userId: string | null = null;
+    if (target === "personal") {
+      const { data: userData, error: userErr } = await supabase.auth.getUser(jwt);
+      userId = userData?.user?.id ?? null;
+      if (!userId || userErr) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // 2. Read the pd_works row (RLS allows authenticated users to read).
     const { data: work, error: readErr } = await supabase
       .from("pd_works")
@@ -233,7 +246,7 @@ serve(async (req) => {
         if (updErr || !upd) throw new Error(`personal upgrade: ${updErr?.message ?? "no row updated"}`);
         return new Response(JSON.stringify({
           ok: true, already_in_my_music: true, personal_score_id: mine.id,
-          title: work.title, cached: Boolean(work.storage_key),
+          title: work.title, cached: Boolean(storageKey),
         }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
@@ -263,7 +276,7 @@ serve(async (req) => {
 
       return new Response(JSON.stringify({
         ok: true, already_in_my_music: false, personal_score_id: insertedPersonal.id,
-        title: work.title, cached: Boolean(work.storage_key),
+        title: work.title, cached: Boolean(storageKey),
       }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
