@@ -34,6 +34,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import QRCode from 'qrcode';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,8 +79,13 @@ interface EditorRailProps {
   onDesignChange: (v: PrintDesign) => void;
   onFormatChange: (v: ProgramFormat) => void;
   panelLine: string | null;
+  titleShowLogo: boolean | null;
+  titleShowOrgName: boolean | null;
+  onToggleTitleShowLogo: (v: boolean) => void;
+  onToggleTitleShowOrgName: (v: boolean) => void;
   canAddPiece: boolean;
   onAddPiece: () => void;
+  canAddFromLibrary: boolean;
   onAddFromLibrary: () => void;
   onImportSetlist: () => void;
   onAddText: () => void;
@@ -109,7 +115,8 @@ interface EditorRailProps {
 
 function EditorRail({
   design, format, onDesignChange, onFormatChange, panelLine,
-  canAddPiece, onAddPiece, onAddFromLibrary, onImportSetlist, onAddText, onAddDivider, canAddRoster, onAddRoster,
+  titleShowLogo, titleShowOrgName, onToggleTitleShowLogo, onToggleTitleShowOrgName,
+  canAddPiece, onAddPiece, canAddFromLibrary, onAddFromLibrary, onImportSetlist, onAddText, onAddDivider, canAddRoster, onAddRoster,
   callTime, onCallTimeChange, targetLengthMinutes, onTargetLengthChange, totalMinutesLabel,
   title, onTitleChange, subtitle, onSubtitleChange, conductor, onConductorChange,
   accompanist, onAccompanistChange, venue, onVenueChange, performerGroup, onPerformerGroupChange,
@@ -123,7 +130,7 @@ function EditorRail({
           <Button variant="outline" size="sm" onClick={onAddPiece} disabled={!canAddPiece} className="justify-start">
             <Plus className="w-3.5 h-3.5 mr-1.5" /> Piece
           </Button>
-          <Button variant="outline" size="sm" onClick={onAddFromLibrary} disabled={!canAddPiece} className="justify-start">
+          <Button variant="outline" size="sm" onClick={onAddFromLibrary} disabled={!canAddFromLibrary} className="justify-start">
             <Library className="w-3.5 h-3.5 mr-1.5" /> From Library
           </Button>
           <Button variant="outline" size="sm" onClick={onImportSetlist} className="justify-start col-span-2">
@@ -159,6 +166,18 @@ function EditorRail({
             </button>
           ))}
         </div>
+        {titleShowLogo !== null && titleShowOrgName !== null ? (
+          <div className="mt-3 space-y-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="cp-show-logo" className="text-xs font-normal">Show logo</Label>
+              <Switch id="cp-show-logo" checked={titleShowLogo} onCheckedChange={onToggleTitleShowLogo} />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <Label htmlFor="cp-show-org-name" className="text-xs font-normal">Show organization name</Label>
+              <Switch id="cp-show-org-name" checked={titleShowOrgName} onCheckedChange={onToggleTitleShowOrgName} />
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <section>
@@ -455,6 +474,17 @@ export default function ConcertPlannerEditorPage() {
     setBlocks(blocks.map((b) => (b.kind === 'footer' ? { ...b, showQr: v } : b)));
   }, [blocks, setBlocks]);
 
+  // ── Title block logo/org-name toggles (Design rail) ─────────────────────
+  const titleBlock = useMemo(() => (blocks ?? []).find((b) => b.kind === 'title'), [blocks]);
+  const onToggleTitleShowLogo = useCallback((v: boolean) => {
+    if (!blocks) return;
+    setBlocks(blocks.map((b) => (b.kind === 'title' ? { ...b, showLogo: v } : b)));
+  }, [blocks, setBlocks]);
+  const onToggleTitleShowOrgName = useCallback((v: boolean) => {
+    if (!blocks) return;
+    setBlocks(blocks.map((b) => (b.kind === 'title' ? { ...b, showOrgName: v } : b)));
+  }, [blocks, setBlocks]);
+
   // ── Debounced piece-field commits for inline (non-popover) edits ───────
   // Same buffer-then-diff semantics the popover uses (shared DEBOUNCE_MS),
   // kept separate per pieceId so editing two different rows in quick
@@ -725,15 +755,41 @@ export default function ConcertPlannerEditorPage() {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [setlistOpen, setSetlistOpen] = useState(false);
 
+  // Ref mirror: addPieceToGroup's own closure reads `blocks` from
+  // useConcertProgramDoc's state, which only picks up the piece-group we
+  // create+persist below once the doc hook re-renders with it. Reading
+  // through a ref (reassigned every render, same pattern as
+  // updatePieceRef/updateProgramRef above) guarantees the call after our
+  // `await persistBlocksNow` sees that fresh closure instead of a stale one
+  // that still can't find the new group.
+  const addPieceToGroupRef = useRef(addPieceToGroup);
+  addPieceToGroupRef.current = addPieceToGroup;
+
   // Single pick: reuse the normal add-piece path (same insert-then-splice
-  // atomicity addPieceToGroup already gives every other "Add" action).
+  // atomicity addPieceToGroup already gives every other "Add" action). When
+  // no piece-group exists yet (e.g. a program whose only middle block is a
+  // divider/text), build one, persist it spliced before the footer, THEN
+  // add the piece into it — "From Library" must never be a no-op just
+  // because there's nowhere obvious to land the piece.
   const handleLibraryPick = useCallback((fields: LibraryPickFields) => {
-    if (!lastGroupId) return;
     void (async () => {
-      const newId = await addPieceToGroup(lastGroupId, 'end', fields);
+      let groupId = lastGroupId;
+      if (!groupId) {
+        if (!blocks) return;
+        const group: PieceGroupBlock = {
+          id: newBlockId(), kind: 'piece-group', sectionHeading: null, pieceIds: [], creditLine: null,
+        };
+        const footerIdx = blocks.findIndex((b) => b.kind === 'footer');
+        const insertAt = footerIdx === -1 ? blocks.length : footerIdx;
+        const next = [...blocks.slice(0, insertAt), group, ...blocks.slice(insertAt)];
+        const ok = await persistBlocksNow(next);
+        if (!ok) return;
+        groupId = group.id;
+      }
+      const newId = await addPieceToGroupRef.current(groupId, 'end', fields);
       if (newId) toast.success(`Added "${fields.title}"`);
     })();
-  }, [lastGroupId, addPieceToGroup]);
+  }, [lastGroupId, blocks, persistBlocksNow]);
 
   // Batch import: never a half-imported group. Insert all rows first; only
   // on a full match do we append a new piece-group and persist. Any
@@ -897,8 +953,13 @@ export default function ConcertPlannerEditorPage() {
     onDesignChange: (v) => updateProgram.mutate({ print_design: v }),
     onFormatChange: (v) => updateProgram.mutate({ print_format: v }),
     panelLine,
+    titleShowLogo: titleBlock && titleBlock.kind === 'title' ? titleBlock.showLogo : null,
+    titleShowOrgName: titleBlock && titleBlock.kind === 'title' ? titleBlock.showOrgName : null,
+    onToggleTitleShowLogo,
+    onToggleTitleShowOrgName,
     canAddPiece: !!lastGroupId,
     onAddPiece: handleAddPiece,
+    canAddFromLibrary: !!blocks,
     onAddFromLibrary: () => setLibraryOpen(true),
     onImportSetlist: () => setSetlistOpen(true),
     onAddText: handleAddText,
@@ -1038,7 +1099,7 @@ export default function ConcertPlannerEditorPage() {
           ) : null}
           <div className="bg-muted/40 rounded-lg overflow-auto p-4 lg:p-8">
             {measureHost}
-            <ProgramSheetView pages={pages} ctx={viewCtx} design={design} format={format} scaleToFit />
+            <ProgramSheetView pages={pages} ctx={viewCtx} design={design} format={format} scaleToFit={isMobile} />
           </div>
         </div>
         <aside className="hidden lg:block lg:sticky lg:top-4 self-start">

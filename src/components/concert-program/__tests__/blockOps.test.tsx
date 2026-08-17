@@ -232,6 +232,35 @@ describe('Block rail', () => {
   });
 });
 
+// Final fix wave, Fix 1: Design-section Switches for the title block's
+// showLogo/showOrgName flags. groupBlocks()'s title block starts with both
+// off (matches classic-1943's spec default), so toggling flips false → true.
+describe('EditorRail Design section — logo/org-name toggles', () => {
+  it("toggling 'Show organization name' calls setBlocks with the title block's showOrgName flipped", () => {
+    mount();
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Show organization name' }));
+
+    expect(mocks.setBlocks).toHaveBeenCalledTimes(1);
+    const next = mocks.setBlocks.mock.calls[0][0] as Array<{ id: string; kind: string; showOrgName?: boolean; showLogo?: boolean }>;
+    const title = next.find((b) => b.kind === 'title')!;
+    expect(title.showOrgName).toBe(true);
+    expect(title.showLogo).toBe(false); // untouched
+  });
+
+  it("toggling 'Show logo' calls setBlocks with the title block's showLogo flipped", () => {
+    mount();
+
+    fireEvent.click(screen.getByRole('switch', { name: 'Show logo' }));
+
+    expect(mocks.setBlocks).toHaveBeenCalledTimes(1);
+    const next = mocks.setBlocks.mock.calls[0][0] as Array<{ id: string; kind: string; showOrgName?: boolean; showLogo?: boolean }>;
+    const title = next.find((b) => b.kind === 'title')!;
+    expect(title.showLogo).toBe(true);
+    expect(title.showOrgName).toBe(false); // untouched
+  });
+});
+
 describe('reorderMiddleIds (pure drag-end transformation)', () => {
   const ids = ['a', 'b', 'c'];
 

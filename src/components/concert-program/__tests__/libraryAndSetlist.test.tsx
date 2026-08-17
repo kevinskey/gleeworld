@@ -294,6 +294,7 @@ const pageMocks = vi.hoisted(() => ({
   ],
   persistBlocksNow: vi.fn(async (_next: unknown) => true),
   updateProgramMutate: vi.fn(),
+  addPieceToGroup: vi.fn(async (..._args: unknown[]) => 'new-id'),
 }));
 
 vi.mock('@/hooks/useConcertProgramDoc', () => ({
@@ -305,7 +306,7 @@ vi.mock('@/hooks/useConcertProgramDoc', () => ({
     blocks: pageMocks.program.blocks,
     setBlocks: vi.fn(),
     persistBlocksNow: pageMocks.persistBlocksNow,
-    addPieceToGroup: vi.fn(async () => 'new-id'),
+    addPieceToGroup: pageMocks.addPieceToGroup,
     updatePiece: vi.fn(),
     deletePieceWithUndo: vi.fn(async () => {}),
     deleteBlockWithUndo: vi.fn(async () => {}),
@@ -403,5 +404,49 @@ describe('Page-level handleSetlistImport', () => {
     );
 
     warnSpy.mockRestore();
+  });
+});
+
+// ── Final fix wave, Fix 6: "From Library" with no piece-group in the doc ──
+// yet (e.g. only [title, footer]) must create one rather than being a
+// disabled no-op. handleLibraryPick builds + persists the group, THEN adds
+// the picked piece into it.
+describe('Page-level handleLibraryPick — no piece-group exists', () => {
+  beforeEach(() => {
+    pageMocks.program.blocks = [
+      { id: 'b-title', kind: 'title', showLogo: false, showOrgName: false },
+      { id: 'b-footer', kind: 'footer', showQr: false },
+    ];
+    pageMocks.persistBlocksNow.mockClear();
+    pageMocks.persistBlocksNow.mockResolvedValue(true);
+    pageMocks.addPieceToGroup.mockClear();
+    sheetMusicBrowseFetch.mockResolvedValue({
+      data: [{ id: 'score-1', title: 'Ave Maria', composer: 'Biebl', voicing: 'SATB' }],
+      error: null,
+    });
+    personalScoresFetch.mockResolvedValue({ data: [], error: null });
+  });
+
+  it("'From Library' is enabled with no piece-group present", () => {
+    mountPage();
+    expect(screen.getByRole('button', { name: /From Library/ })).toBeEnabled();
+  });
+
+  it('picking a score creates a piece-group before the footer, then adds the piece into it', async () => {
+    mountPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /From Library/ }));
+    await screen.findByText('Ave Maria');
+    fireEvent.click(screen.getByText('Ave Maria'));
+
+    await waitFor(() => expect(pageMocks.persistBlocksNow).toHaveBeenCalledTimes(1));
+    const next = pageMocks.persistBlocksNow.mock.calls[0][0] as Array<{ id: string; kind: string }>;
+    expect(next.map((b) => b.kind)).toEqual(['title', 'piece-group', 'footer']);
+    const newGroup = next[1];
+
+    await waitFor(() => expect(pageMocks.addPieceToGroup).toHaveBeenCalledTimes(1));
+    expect(pageMocks.addPieceToGroup).toHaveBeenCalledWith(newGroup.id, 'end', {
+      title: 'Ave Maria', composer: 'Biebl', voicing: 'SATB', sheet_music_id: 'score-1',
+    });
   });
 });

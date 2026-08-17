@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useConcertProgram, type ConcertProgram, type ConcertProgramPiece } from '@/hooks/useConcertPrograms';
 import type { RosterSection } from '@/lib/concertPlanner/types';
 import { newBlockId, type PieceGroupBlock, type ProgramBlock } from '@/lib/concertProgram/types';
-import { deriveDefaultBlocks, flattenPieceOrder, reconcileBlocks } from '@/lib/concertProgram/blocks';
+import { defaultNewProgramBlocks, deriveDefaultBlocks, flattenPieceOrder, reconcileBlocks } from '@/lib/concertProgram/blocks';
 
 export interface ProgramDoc {
   program: ConcertProgram | null;
@@ -175,7 +175,17 @@ export function useConcertProgramDoc(id: string | undefined): ProgramDoc {
     if ((program.blocks ?? []).length > 0) return;
     if (firstOpenIdRef.current === id) return;
     firstOpenIdRef.current = id;
-    void persistBlocksNow(deriveDefaultBlocks(program, pieces, roster));
+    // Spec: a genuinely fresh program (no pieces, no notes, no roster
+    // members yet) gets the plain new-program skeleton — title, empty
+    // group, divider, footer — rather than deriveDefaultBlocks' inference,
+    // which only has meaningful signal once there's real content to derive
+    // from. Anything with existing pieces/notes/roster still derives.
+    const isEmptyProgram = pieces.length === 0
+      && !(program.notes && program.notes.trim())
+      && !roster.some((s) => s.members.length > 0);
+    void persistBlocksNow(
+      isEmptyProgram ? defaultNewProgramBlocks() : deriveDefaultBlocks(program, pieces, roster),
+    );
   }, [id, program, pieces, roster, isLoading, persistBlocksNow]);
 
   const addPieceToGroup = useCallback(async (

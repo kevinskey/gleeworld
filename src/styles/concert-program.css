@@ -26,6 +26,8 @@
 .cp-title-subtitle { font-size: 11pt; margin: 2pt 0; }
 .cp-title-credit { font-size: 10.5pt; margin: 2pt 0; }
 .cp-footer-block { text-align: center; margin-top: 14pt; font-size: 9.5pt; }
+.cp-footer-rights { font-size: 7.5pt; line-height: 1.4; margin-top: 2pt; }
+.cp-footer-rights:first-of-type { margin-top: 8pt; }
 .cp-footer-qr { width: 0.7in; height: 0.7in; margin: 6pt auto 0; display: block; }
 .cp-roster-section { break-inside: avoid; margin: 6pt 0; }
 .cp-roster-heading { text-align: center; font-size: 10pt; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 3pt; }

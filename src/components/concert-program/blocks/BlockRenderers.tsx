@@ -187,6 +187,30 @@ function EventDateEditor({ dateStr, edit }: { dateStr: string; edit: ProgramEdit
   );
 }
 
+// Copyright/rights credits that must PRINT (spec: licensed pieces carry
+// their copyright_info to the footer). Walks every piece-group's pieceIds
+// in block order, flattening to the pieces actually referenced by ctx.blocks
+// (not all of ctx.piecesById — that map may hold pieces belonging to other
+// groups/blocks). Only rights_status === 'licensed' with non-empty
+// copyright_info renders a line; public_domain/unknown/null pieces (or a
+// licensed piece with blank copyright_info) contribute nothing.
+function RightsCredits({ ctx }: { ctx: RenderCtx }) {
+  const pieceIds = ctx.blocks.flatMap((b) => (b.kind === 'piece-group' ? b.pieceIds : []));
+  const lines = pieceIds
+    .map((pieceId) => ctx.piecesById.get(pieceId))
+    .filter((p): p is ConcertProgramPiece => (
+      !!p && p.rights_status === 'licensed' && !!p.copyright_info && p.copyright_info.trim() !== ''
+    ));
+  if (lines.length === 0) return null;
+  return (
+    <>
+      {lines.map((p) => (
+        <div key={p.id} className="cp-footer-rights">{p.title} — {p.copyright_info}</div>
+      ))}
+    </>
+  );
+}
+
 function FooterView({ block, ctx }: { block: Extract<ProgramBlock, { kind: 'footer' }>; ctx: RenderCtx }) {
   const { program } = ctx;
   const dateStr = formatEventDate(program.event_date);
@@ -206,6 +230,7 @@ function FooterView({ block, ctx }: { block: Extract<ProgramBlock, { kind: 'foot
             onCommit={(v) => edit.onCommitHeaderField('venue', v)}
           />
         </div>
+        <RightsCredits ctx={ctx} />
         {showQr ? <img className="cp-footer-qr" src={ctx.qrDataUrl!} alt="" /> : null}
       </div>
     );
@@ -217,6 +242,7 @@ function FooterView({ block, ctx }: { block: Extract<ProgramBlock, { kind: 'foot
       {dateStr || program.venue ? (
         <div>{[dateStr, program.venue].filter(Boolean).join(' — ')}</div>
       ) : null}
+      <RightsCredits ctx={ctx} />
       {showQr ? <img className="cp-footer-qr" src={ctx.qrDataUrl!} alt="" /> : null}
     </div>
   );

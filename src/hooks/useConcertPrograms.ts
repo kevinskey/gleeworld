@@ -5,6 +5,7 @@
 // the editor wires up directly.
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type {
   RightsStatus, VisualTheme, PrintFormat, ProgramCardLayout, RosterSection, RosterMember,
@@ -110,13 +111,15 @@ export function useConcertProgram(id: string | undefined) {
   const updateProgram = useMutation({
     mutationFn: async (patch: Partial<ConcertProgram>) => {
       if (!id) throw new Error('Missing program id');
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('gw_concert_programs')
         .update({ ...patch, updated_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) throw error;
+        .eq('id', id)
+        .select('id');
+      if (error || !data?.length) throw error ?? new Error('Save was rejected');
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['concert-program', id] }),
+    onError: () => toast.error('Could not save changes'),
   });
 
   const addPiece = useMutation({
@@ -133,13 +136,15 @@ export function useConcertProgram(id: string | undefined) {
 
   const updatePiece = useMutation({
     mutationFn: async ({ pieceId, patch }: { pieceId: string; patch: Partial<ConcertProgramPiece> }) => {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('gw_concert_program_pieces')
         .update(patch)
-        .eq('id', pieceId);
-      if (error) throw error;
+        .eq('id', pieceId)
+        .select('id');
+      if (error || !data?.length) throw error ?? new Error('Save was rejected');
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] }),
+    onError: () => toast.error('Could not save changes'),
   });
 
   const deletePiece = useMutation({

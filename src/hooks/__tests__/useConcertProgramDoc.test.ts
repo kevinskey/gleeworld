@@ -477,4 +477,80 @@ describe('useConcertProgramDoc', () => {
       programsUpdateMock.mock.invocationCallOrder[1],
     );
   });
+
+  // Final fix wave, Fix 5: a genuinely fresh program (zero pieces, no notes,
+  // no roster members) gets the spec's new-program skeleton — title, empty
+  // group, divider, footer — instead of deriveDefaultBlocks' inference.
+  describe('first-open default blocks', () => {
+    it('persists the 4-block new-program skeleton (including a divider) for an empty program', async () => {
+      legacyMock.mockReturnValue(legacyReturn({
+        program: makeProgram([]), // no notes
+        pieces: [],
+        roster: [],
+      }));
+
+      const { result } = renderDoc();
+
+      await waitFor(() => {
+        expect(result.current.blocks).not.toBeNull();
+        expect(result.current.blocks!.length).toBeGreaterThan(0);
+      });
+
+      expect(result.current.blocks!.map((b) => b.kind)).toEqual(['title', 'piece-group', 'divider', 'footer']);
+      expect(programsUpdateMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('still uses deriveDefaultBlocks (no divider) when the program has notes but zero pieces/roster', async () => {
+      legacyMock.mockReturnValue(legacyReturn({
+        program: makeProgram([], 'Thanks to our patrons.'),
+        pieces: [],
+        roster: [],
+      }));
+
+      const { result } = renderDoc();
+
+      await waitFor(() => {
+        expect(result.current.blocks).not.toBeNull();
+        expect(result.current.blocks!.length).toBeGreaterThan(0);
+      });
+
+      expect(result.current.blocks!.map((b) => b.kind)).toEqual(['title', 'piece-group', 'text', 'footer']);
+    });
+
+    it('still uses deriveDefaultBlocks (roster block, no divider) when a roster section has members but zero pieces', async () => {
+      legacyMock.mockReturnValue(legacyReturn({
+        program: makeProgram([]),
+        pieces: [],
+        roster: [{ id: 'sec-1', program_id: 'prog-1', section_name: 'Soprano', sort_order: 0, members: [{ id: 'm1' }] }],
+      }));
+
+      const { result } = renderDoc();
+
+      await waitFor(() => {
+        expect(result.current.blocks).not.toBeNull();
+        expect(result.current.blocks!.length).toBeGreaterThan(0);
+      });
+
+      expect(result.current.blocks!.map((b) => b.kind)).toEqual(['title', 'piece-group', 'roster', 'footer']);
+    });
+
+    it('derives from real pieces (no divider) when the program already has pieces', async () => {
+      legacyMock.mockReturnValue(legacyReturn({
+        program: makeProgram([]),
+        pieces: [pieceA],
+        roster: [],
+      }));
+
+      const { result } = renderDoc();
+
+      await waitFor(() => {
+        expect(result.current.blocks).not.toBeNull();
+        expect(result.current.blocks!.length).toBeGreaterThan(0);
+      });
+
+      expect(result.current.blocks!.map((b) => b.kind)).toEqual(['title', 'piece-group', 'footer']);
+      const group = result.current.blocks!.find((b) => b.kind === 'piece-group') as Extract<ProgramBlock, { kind: 'piece-group' }>;
+      expect(group.pieceIds).toEqual(['piece-a']);
+    });
+  });
 });
