@@ -101,7 +101,10 @@ const IS_COARSE_POINTER =
 // header (name + M/S/R + volume) always has breathing room above the
 // divider — at 88 the buttons sat flush and read as clipped by the next
 // track (2026-07-07).
-const TRACK_HEIGHT_DEFAULT = IS_COARSE_POINTER ? 100 : 72;
+// Defaults raised again 72 → 88 / 100 → 112 (Kevin, 2026-08-17): a MIDI
+// strip carries THREE rows (name, M/S/R + fader, instrument + Roll) and
+// at 72 they filled the row edge-to-edge with no top/bottom inset.
+const TRACK_HEIGHT_DEFAULT = IS_COARSE_POINTER ? 112 : 88;
 const TRACK_HEIGHT_MIN = IS_COARSE_POINTER ? 100 : 48;
 const TRACK_HEIGHT_MAX = 240;
 
@@ -1101,6 +1104,12 @@ function Editor({
   // of any row to resize them all.
   const [trackHeight, setTrackHeight] = useState<number>(() => {
     const v = Number(localStorage.getItem('studio.trackHeight') || 0);
+    // The persist-on-mount effect below stores the DEFAULT on first visit,
+    // so nearly every returning user "has" the old default (72/100) saved
+    // without ever having dragged the handle. Treat those exact values as
+    // unset so the raised default actually reaches them; a deliberate
+    // custom height (any other value) is kept.
+    if (v === 72 || v === 100) return TRACK_HEIGHT_DEFAULT;
     return v >= TRACK_HEIGHT_MIN && v <= TRACK_HEIGHT_MAX ? v : TRACK_HEIGHT_DEFAULT;
   });
   useEffect(() => { localStorage.setItem('studio.trackHeight', String(trackHeight)); }, [trackHeight]);
@@ -5415,7 +5424,7 @@ function DarkTrackRow({
             against (and reads as clipped by) the divider to the next
             track, and clip cleanly at the strip edge rather than bleeding
             under the row below. */}
-        <div className="flex-1 min-w-0 px-2 py-1.5 flex flex-col justify-center gap-1 overflow-hidden">
+        <div className="flex-1 min-w-0 px-2 py-2.5 flex flex-col justify-center gap-1.5 overflow-hidden">
           {/* Row 1: number + name + remove */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground tabular-nums w-5 font-mono">{index}</span>
