@@ -98,6 +98,14 @@ describe('WorkspaceSettingsPage billing visibility', () => {
     expect(screen.getByRole('tab', { name: /general/i })).toHaveAttribute('aria-selected', 'true');
   });
 
+  it('renders no tabs while the role is resolving (no admin flash-to-General on ?tab=plan)', () => {
+    role.loading = true;
+    role.admin = true;
+    (globalThis as any).__TEST_SEARCH__ = 'tab=plan';
+    setup();
+    expect(screen.queryByRole('tab')).not.toBeInTheDocument();
+  });
+
   it('a ?tab=plan deep link falls back to General for non-admins', () => {
     role.admin = false;
     (globalThis as any).__TEST_SEARCH__ = 'tab=plan';

@@ -19,15 +19,16 @@ import { PublicLayout } from '@/components/layout/PublicLayout';
 
 export default function TrialExpiredPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { loading: roleLoading, isAdmin } = useUserRole();
   const state = useTrialStatus();
 
   // Billing UI is admin-only: signed-in non-admins get a neutral lockout with
   // no tiers or prices. Signed-out visitors keep the marketing view (pricing
-  // is public on the landing page anyway). While a signed-in user's role is
+  // is public on the landing page anyway). While auth is bootstrapping (user
+  // is momentarily null during session restore) or a signed-in user's role is
   // resolving, neither variant renders — no pricing flash for students.
-  const showPricing = !user || (!roleLoading && isAdmin());
+  const showPricing = (!authLoading && !user) || (!!user && !roleLoading && isAdmin());
   const showMemberLockout = !!user && !roleLoading && !isAdmin();
 
   // If a user lands here but their trial isn't actually expired (e.g. clicked
@@ -61,7 +62,9 @@ export default function TrialExpiredPage() {
                 Pick a plan to keep going.
               </h1>
               <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
-                Your 30-day free trial has ended. Choose a plan to restore full access — everything you built stays exactly as you left it.
+                {/* No trial-length claim here: the free window varies (30-day
+                    signups vs. the extended fall 2026 period). */}
+                Your free trial has ended. Choose a plan to restore full access — everything you built stays exactly as you left it.
               </p>
             </>
           ) : null}

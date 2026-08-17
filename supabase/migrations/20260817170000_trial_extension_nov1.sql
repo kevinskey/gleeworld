@@ -30,4 +30,8 @@ WHERE slug IN (
 ON CONFLICT (tenant_id) DO UPDATE
 SET plan_id = EXCLUDED.plan_id,
     status = EXCLUDED.status,
-    trial_ends_at = EXCLUDED.trial_ends_at;
+    trial_ends_at = EXCLUDED.trial_ends_at
+-- Only rows still on a trial move. A tenant that converted to a paid plan
+-- (status='active', stripe-webhook-written) must never be silently
+-- downgraded back to a trial by a re-run of this migration.
+WHERE gw_tenant_plans.status = 'trial';

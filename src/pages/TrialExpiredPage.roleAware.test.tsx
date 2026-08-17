@@ -11,11 +11,11 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen } from '@testing-library/react';
 
-const auth = vi.hoisted(() => ({ user: null as null | { id: string } }));
+const auth = vi.hoisted(() => ({ user: null as null | { id: string }, loading: false }));
 const role = vi.hoisted(() => ({ loading: false, admin: false }));
 
 vi.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({ user: auth.user }),
+  useAuth: () => ({ user: auth.user, loading: auth.loading }),
 }));
 vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: () => ({ loading: role.loading, isAdmin: () => role.admin }),
@@ -40,6 +40,7 @@ import TrialExpiredPage from './TrialExpiredPage';
 
 afterEach(() => {
   auth.user = null;
+  auth.loading = false;
   role.loading = false;
   role.admin = false;
 });
@@ -65,6 +66,13 @@ describe('TrialExpiredPage role-aware content', () => {
     expect(screen.getByText(/ask your workspace admin/i)).toBeInTheDocument();
     expect(screen.queryByText('Choose Plan')).not.toBeInTheDocument();
     expect(screen.queryByText(/\/mo/)).not.toBeInTheDocument();
+  });
+
+  it('shows neither variant while auth is still bootstrapping (user momentarily null)', () => {
+    auth.loading = true;
+    render(<TrialExpiredPage />);
+    expect(screen.queryByText('Choose Plan')).not.toBeInTheDocument();
+    expect(screen.queryByText(/ask your workspace admin/i)).not.toBeInTheDocument();
   });
 
   it('shows neither variant while a signed-in user\'s role is resolving', () => {

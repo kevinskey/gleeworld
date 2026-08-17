@@ -105,14 +105,18 @@ export const ModulesDirectory: React.FC = () => {
       subtitle="Explore all functional modules in GleeWorld. Open any module or propose cleanup of redundant modules. No deletions will occur without your approval."
       actions={
         // Activation lives in Workspace Settings, not here. Deep-link
-        // so the admin doesn't have to hunt for it.
-        <Button
-          variant="outline"
-          onClick={() => navigate('/dashboard/workspace?tab=modules')}
-          className="shrink-0"
-        >
-          Manage subscriptions →
-        </Button>
+        // so the admin doesn't have to hunt for it. Admin-only: the target
+        // (Plan tab) is billing UI, hidden from everyone else — for a
+        // non-admin this button would dead-end on the General tab.
+        isAdmin ? (
+          <Button
+            variant="outline"
+            onClick={() => navigate('/dashboard/workspace?tab=modules')}
+            className="shrink-0"
+          >
+            Manage subscriptions →
+          </Button>
+        ) : undefined
       }
     >
       <div className="max-w-md">

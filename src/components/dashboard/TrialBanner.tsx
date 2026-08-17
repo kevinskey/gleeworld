@@ -1,21 +1,21 @@
 // Countdown banner shown across the top of DashboardShell while a tenant is
 // on the free trial. Billing UI is admin-only (2026-08-17): the banner renders
-// solely for tenant admins (membership-aware via useUserRole) and never while
-// the role is still resolving, so non-admins get no flash. Three tiers:
-// calm accent bar at 15+ days, amber warning at 2–14, red urgent on the last
-// day. Hides entirely for grandfathered / paid / no-tenant / loading states.
+// solely for tenant admins and never while the role is still resolving, so
+// non-admins get no flash. Role comes as props from DashboardShell's existing
+// useUserRole call — the hook is uncached and the shell remounts per route,
+// so a second call here would cost three Supabase requests per navigation.
+// Three tiers: calm accent bar at 15+ days, amber warning at 2–14, red urgent
+// on the last day. Hides for grandfathered / paid / no-tenant / loading.
 
 import { Link } from 'react-router-dom';
 import { AlertTriangle, Clock } from 'lucide-react';
 import { useTrialStatus } from '@/hooks/useTrialStatus';
-import { useUserRole } from '@/hooks/useUserRole';
 import { cn } from '@/lib/utils';
 
-export function TrialBanner() {
+export function TrialBanner({ roleLoading, isAdmin }: { roleLoading: boolean; isAdmin: boolean }) {
   const state = useTrialStatus();
-  const { loading: roleLoading, isAdmin } = useUserRole();
   if (state.kind !== 'trial') return null;
-  if (roleLoading || !isAdmin()) return null;
+  if (roleLoading || !isAdmin) return null;
   const { daysLeft, endsAt } = state;
 
   const urgent = daysLeft <= 1;
@@ -28,9 +28,13 @@ export function TrialBanner() {
 
   const Icon = urgent || warning ? AlertTriangle : Clock;
 
-  // endsAt marks the paywall moment (e.g. Nov 1 midnight ET stored as UTC),
-  // so the last full day of access is the local date it resolves to.
-  const endsLabel = new Date(endsAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  // endsAt marks the paywall moment (e.g. Nov 1 midnight ET stored as UTC).
+  // Pin the formatter to ET: the paywall fires on an ET wall-clock boundary,
+  // and a viewer's local zone (or a UTC CI runner) would otherwise label the
+  // wrong last free day.
+  const endsLabel = new Date(endsAt).toLocaleDateString('en-US', {
+    month: 'short', day: 'numeric', timeZone: 'America/New_York',
+  });
 
   const label = urgent
     ? `Your free trial ends today — pick a plan to keep access.`

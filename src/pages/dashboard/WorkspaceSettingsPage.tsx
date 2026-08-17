@@ -51,7 +51,7 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
 const TAB_VALUES = new Set(['plan', 'navigation', 'branding', 'datecard', 'parents', 'billing', 'general']);
 
 export default function WorkspaceSettingsPage() {
-  const { isSuperAdmin, isAdmin } = useUserRole();
+  const { isSuperAdmin, isAdmin, loading: roleLoading } = useUserRole();
   const canManage = isSuperAdmin() || isAdmin();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab');
@@ -77,6 +77,16 @@ export default function WorkspaceSettingsPage() {
       title="Workspace Settings"
       subtitle="Configure your workspace — branding, modules, billing, integrations."
     >
+      {/* Tab visibility depends on the resolved role — don't paint the
+          non-admin layout (no Plan/Billing, read-only badge, General
+          selected) at an admin who just followed the banner's ?tab=plan
+          link. Nothing renders until the role settles. */}
+      {roleLoading ? (
+        <div className="flex justify-center py-16">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+      <>
       {!canManage && (
         <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
           <Lock className="w-4 h-4 mr-1" /> Read-only — only workspace admins can change settings
@@ -89,7 +99,9 @@ export default function WorkspaceSettingsPage() {
             The Add-ons tab was removed 2026-07-28 — features are now bundled
             by plan tier, not toggled à la carte. A legacy ?tab=modules query
             param transparently redirects to `plan` below. */}
-        <TabsList className="flex md:grid md:grid-cols-7 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto touch-pan-x overscroll-x-contain md:overflow-visible scrollbar-hide">
+        {/* Column count tracks the rendered tab set — non-admins get 5 tabs
+            (no Plan/Billing), and a 7-col grid would leave two dead columns. */}
+        <TabsList className={`flex md:grid ${canManage ? 'md:grid-cols-7' : 'md:grid-cols-5'} h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto touch-pan-x overscroll-x-contain md:overflow-visible scrollbar-hide`}>
           {canManage && (
             <TabsTrigger value="plan" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
           )}
@@ -111,6 +123,8 @@ export default function WorkspaceSettingsPage() {
         {canManage && <TabsContent value="billing"><BillingTabPanel /></TabsContent>}
         <TabsContent value="general"><GeneralTabPanel canManage={canManage} /></TabsContent>
       </Tabs>
+      </>
+      )}
     </DashboardPageShell>
     </DashboardShell>
     </UniversalLayout>
