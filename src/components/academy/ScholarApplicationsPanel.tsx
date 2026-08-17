@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export interface ScholarApplicationRow {
   id: string;
+  course_id: string | null;
   full_name: string;
   email: string;
   phone: string | null;
@@ -40,21 +41,46 @@ function csvEscape(v: string | null): string {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-export function ScholarApplicationsPanel({ courseId, onAccepted }: { courseId: string; onAccepted?: () => void }) {
+// courseId scopes the panel to one class (the course People tab). Without
+// it (the workspace People page) every application the caller's staff RLS
+// exposes is listed, with a per-row course badge.
+export function ScholarApplicationsPanel({ courseId, onAccepted }: { courseId?: string; onAccepted?: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [openId, setOpenId] = useState<string | null>(null);
 
   const { data: apps = [], isLoading } = useQuery<ScholarApplicationRow[]>({
-    queryKey: ['scholar-applications', courseId],
+    queryKey: ['scholar-applications', courseId ?? 'all'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('gw_scholar_applications' as never)
-        .select('id, full_name, email, phone, alt_phone, address, city_state_zip, classification, age, school, major_minor, instrument_voice, emergency_name, emergency_relationship, emergency_phone, signature_name, agreed_at, academic_year, status, created_at')
-        .eq('course_id', courseId)
+        .select('id, course_id, full_name, email, phone, alt_phone, address, city_state_zip, classification, age, school, major_minor, instrument_voice, emergency_name, emergency_relationship, emergency_phone, signature_name, agreed_at, academic_year, status, created_at')
         .order('created_at', { ascending: true });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (courseId) q = (q as any).eq('course_id', courseId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data as unknown as ScholarApplicationRow[]) ?? [];
+    },
+  });
+
+  // Course code badges for the unscoped (workspace) listing.
+  const courseIds = useMemo(
+    () => (courseId ? [] : [...new Set(apps.map((a) => a.course_id).filter(Boolean))] as string[]),
+    [apps, courseId],
+  );
+  const { data: courseNames = {} } = useQuery<Record<string, string>>({
+    queryKey: ['scholar-application-courses', courseIds.join(',')],
+    enabled: courseIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('gw_courses')
+        .select('id, course_code, title')
+        .in('id', courseIds);
+      const map: Record<string, string> = {};
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (data ?? []).forEach((c: any) => { map[c.id] = c.course_code || c.title || ''; });
+      return map;
     },
   });
 
@@ -65,9 +91,10 @@ export function ScholarApplicationsPanel({ courseId, onAccepted }: { courseId: s
     mutationFn: async ({ app, accept }: { app: ScholarApplicationRow; accept: boolean }) => {
       if (accept) {
         // Same call the People tab's "Enroll students" uses: creates the
-        // account if needed, enrolls in this course, emails a sign-in link.
+        // account if needed, enrolls in the application's course, emails a
+        // sign-in link.
         const { data, error } = await supabase.functions.invoke('gw-invite-student', {
-          body: { email: app.email, fullName: app.full_name, courseId, appOrigin: window.location.origin },
+          body: { email: app.email, fullName: app.full_name, courseId: app.course_id ?? courseId, appOrigin: window.location.origin },
         });
         if (error) throw new Error(error.message || 'Invite failed');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -92,7 +119,7 @@ export function ScholarApplicationsPanel({ courseId, onAccepted }: { courseId: s
       }
     },
     onSuccess: (_d, { accept, app }) => {
-      queryClient.invalidateQueries({ queryKey: ['scholar-applications', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['scholar-applications'] });
       toast({
         title: accept ? 'Scholar accepted' : 'Application declined',
         description: accept
@@ -145,6 +172,9 @@ export function ScholarApplicationsPanel({ courseId, onAccepted }: { courseId: s
           <span className="text-xs text-muted-foreground truncate">{a.email}</span>
           {a.classification && <span className="text-xs text-muted-foreground hidden sm:inline">· {a.classification}</span>}
           {a.instrument_voice && <span className="text-xs text-muted-foreground hidden sm:inline">· {a.instrument_voice}</span>}
+          {!courseId && a.course_id && courseNames[a.course_id] && (
+            <span className="text-xs rounded bg-muted px-1.5 py-0.5 shrink-0">{courseNames[a.course_id]}</span>
+          )}
         </button>
         {a.status === 'submitted' ? (
           <div className="flex gap-1.5 shrink-0">
