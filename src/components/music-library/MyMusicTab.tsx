@@ -14,6 +14,7 @@ import { Music, Plus, LayoutGrid, List as ListIcon, Search, Star } from 'lucide-
 import { toast } from 'sonner';
 import { usePersonalScores, type PersonalScore } from '@/hooks/usePersonalScores';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useOfflineVault } from '@/hooks/useOfflineVault';
 import { getSignedUrl } from '@/utils/storage';
 import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
 import { SOFT_CARD } from '@/components/music-library/scores/types';
@@ -124,6 +125,7 @@ export function MyMusicTab() {
   // for MY paths to badge published scores and drive unpublish.
   const { canEditMusicLibrary } = useUserRole();
   const canPublish = canEditMusicLibrary();
+  const vault = useOfflineVault();
   const qc = useQueryClient();
   const [publishing, setPublishing] = useState<PersonalScore | null>(null);
   const myPaths = useMemo(
@@ -345,6 +347,12 @@ export function MyMusicTab() {
                 onToggleFavorite={() => toggleFavorite(s)}
                 published={!!(s.storage_path && publishedByPath.get(s.storage_path))}
                 onTogglePublish={canPublish && isPublishableSource(s) ? () => togglePublish(s) : undefined}
+                savedOnDevice={vault.savedIds.has(s.id)}
+                onToggleDevice={
+                  vault.supported && s.storage_path
+                    ? () => (vault.savedIds.has(s.id) ? vault.removeScore(s.id) : vault.saveScore(s))
+                    : undefined
+                }
               />
             </li>
           ))}
@@ -363,6 +371,12 @@ export function MyMusicTab() {
                 onToggleFavorite={() => toggleFavorite(s)}
                 published={!!(s.storage_path && publishedByPath.get(s.storage_path))}
                 onTogglePublish={canPublish && isPublishableSource(s) ? () => togglePublish(s) : undefined}
+                savedOnDevice={vault.savedIds.has(s.id)}
+                onToggleDevice={
+                  vault.supported && s.storage_path
+                    ? () => (vault.savedIds.has(s.id) ? vault.removeScore(s.id) : vault.saveScore(s))
+                    : undefined
+                }
               />
             ))}
           </div>
