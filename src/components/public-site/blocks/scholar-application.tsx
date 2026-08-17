@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
+import { AddressAutocomplete } from '@/components/calendar/AddressAutocomplete';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const DEFAULT_TERMS = `1. Scholarship — the program provides a music and liturgy scholarship for the academic year. The Scholar demonstrates musical and liturgical scholarship by attending music seminars/rehearsals and liturgical celebrations, and by providing leadership during program events.
@@ -128,7 +129,26 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                 {field('phone', 'Phone', { type: 'tel', maxLength: 30 })}
                 {field('alt_phone', 'Alternate phone (optional)', { type: 'tel', maxLength: 30 })}
               </div>
-              {field('address', 'Permanent mailing address', { maxLength: 200 })}
+              {/* Google Places autocomplete (via the google-places-lookup
+                  edge fn — server-side proxy, no client API key). Picking a
+                  suggestion also fills City/State/Zip from the formatted
+                  address. Plain typing still works if the lookup is down. */}
+              <div className="space-y-1.5">
+                <Label>Permanent mailing address</Label>
+                <AddressAutocomplete
+                  value={form.address}
+                  onChange={(v) => set({ address: v })}
+                  onSelect={(description) => {
+                    const parts = description.split(', ').filter((p) => p !== 'USA');
+                    if (parts.length >= 3) {
+                      set({ address: parts.slice(0, -2).join(', '), city_state_zip: parts.slice(-2).join(', ') });
+                    } else {
+                      set({ address: description });
+                    }
+                  }}
+                  placeholder="Street address"
+                />
+              </div>
               {field('city_state_zip', 'City, State, Zip')}
             </div>
 

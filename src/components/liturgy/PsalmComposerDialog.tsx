@@ -239,6 +239,27 @@ export function PsalmComposerDialog({
   }, []);
 
   /**
+   * Width of the preview frame, so the zoom can shrink to fit it. SCREEN_ZOOM
+   * is a ceiling derived from the desktop dialog; on a phone the dialog is
+   * ~350px and previewing at the desktop zoom means horizontal scrolling.
+   * Presentation only, same as SCREEN_ZOOM — the SVG is still engraved at
+   * PSALM_WIDTH_PX, so layout and export are unaffected.
+   */
+  const [previewFrameW, setPreviewFrameW] = useState(PREVIEW_MAX_PX);
+  const previewObsRef = useRef<ResizeObserver | null>(null);
+  const attachPreviewFrame = useCallback((el: HTMLDivElement | null) => {
+    previewObsRef.current?.disconnect();
+    previewObsRef.current = null;
+    if (!el) return;
+    setPreviewFrameW(el.clientWidth);
+    if (typeof ResizeObserver === 'undefined') return;   // jsdom / SSR safety
+    const ro = new ResizeObserver(() => setPreviewFrameW(el.clientWidth));
+    ro.observe(el);
+    previewObsRef.current = ro;
+  }, []);
+  const screenZoom = Math.min(SCREEN_ZOOM, Math.max(120, previewFrameW - 12) / PSALM_WIDTH_PX);
+
+  /**
    * The words still to be placed, as STATE rather than a derived list.
    *
    * Derived, it could only ever hand out whole words — so "shepherd" went on
@@ -688,7 +709,12 @@ export function PsalmComposerDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-1.5">
+        {/* min-w-0: DialogContent is a grid, and without it this item's
+            min-content width (set by the fixed-width staff preview below)
+            blows the grid track out past the dialog on phones — every row
+            then lays out at ~710px inside a ~350px dialog and the whole
+            thing clips off the right edge of the screen. */}
+        <div className="min-w-0 space-y-1.5">
           {/* Title and composer, labels beside rather than above: one 32px
               row instead of two 58px ones, and the field is still labelled. */}
           <div className="grid gap-2 sm:grid-cols-2">
@@ -918,13 +944,13 @@ export function PsalmComposerDialog({
               whole second system into a nested scrollbox. That is half of
               "I can't see all the measures without scrolling" and no amount
               of shrinking the controls above would have fixed it. */}
-          <div className="flex justify-center overflow-x-auto border border-border bg-card p-1.5">
-            <div style={{ width: PSALM_WIDTH_PX * SCREEN_ZOOM, height: staffH ? staffH * SCREEN_ZOOM : undefined }}>
+          <div ref={attachPreviewFrame} className="flex justify-center overflow-x-auto border border-border bg-card p-1.5">
+            <div style={{ width: PSALM_WIDTH_PX * screenZoom, height: staffH ? staffH * screenZoom : undefined }}>
               <div
                 ref={attachStaff}
                 style={{
                   width: PSALM_WIDTH_PX,
-                  transform: `scale(${SCREEN_ZOOM})`,
+                  transform: `scale(${screenZoom})`,
                   transformOrigin: 'top left',
                 }}
               >
