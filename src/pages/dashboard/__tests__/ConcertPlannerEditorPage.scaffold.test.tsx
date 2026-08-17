@@ -12,6 +12,25 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
+// jsdom does not implement matchMedia; Task 9 added on-page editing, which
+// checks the viewport via useIsMobile() (src/hooks/use-mobile.tsx) — its
+// effect calls matchMedia to stay in sync with resizes. The initial render
+// value comes from window.innerWidth instead (jsdom defaults to 1024, i.e.
+// "not mobile"), so this stub only needs to satisfy the effect's
+// subscribe/unsubscribe calls.
+if (!window.matchMedia) {
+  window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })) as unknown as typeof window.matchMedia;
+}
+
 const mocks = vi.hoisted(() => ({
   program: {
     id: 'p1',

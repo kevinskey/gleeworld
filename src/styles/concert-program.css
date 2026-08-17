@@ -51,3 +51,34 @@
 .cp-design-formal .cp-title-name { font-family: 'Cinzel', Georgia, serif; font-size: 21pt; font-weight: 600; }
 .cp-design-formal .cp-title-program-word { font-family: 'Cinzel', Georgia, serif; font-size: 12pt; }
 .cp-design-formal .cp-group-header { font-size: 11pt; letter-spacing: 0.18em; }
+
+/* ── Screen-only editing affordances (Task 9) ──────────────────────────
+   Everything here is scoped inside @media screen so a real print (and the
+   Task 13 print stylesheet, which also strips these classes) never shows
+   a dashed outline, a ghost chip, or a "+ piece" row. */
+@media screen {
+  .cp-screen-editable { outline: none; cursor: text; border-radius: 2px; }
+  .cp-screen-editable:hover { outline: 1px dashed rgba(0, 0, 0, 0.3); outline-offset: 2px; }
+  .cp-screen-editable:focus { outline: 1px solid rgba(37, 99, 235, 0.55); outline-offset: 2px; }
+  .cp-screen-editable:empty:before {
+    content: attr(data-placeholder);
+    color: rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+  }
+
+  .cp-screen-chips { display: flex; flex-wrap: wrap; gap: 4pt; margin: 2pt 0 6pt 18pt; }
+  .cp-chip {
+    display: inline-flex; align-items: center; font-family: system-ui, sans-serif; font-size: 8pt;
+    border: 1px dashed rgba(0, 0, 0, 0.35); border-radius: 999px; padding: 1pt 6pt;
+    color: rgba(0, 0, 0, 0.55); background: rgba(0, 0, 0, 0.02); cursor: pointer;
+  }
+  .cp-chip:hover { background: rgba(0, 0, 0, 0.06); }
+  .cp-chip-rights-unknown { border-color: #b45309; color: #b45309; background: rgba(217, 119, 6, 0.08); }
+
+  .cp-add-piece-row-wrap { margin: 2pt 0 6pt; }
+  .cp-add-piece-row {
+    display: inline-block; font-family: system-ui, sans-serif; font-size: 8.5pt; color: rgba(0, 0, 0, 0.4);
+    border: 1px dashed rgba(0, 0, 0, 0.25); border-radius: 4px; padding: 1pt 6pt; cursor: pointer;
+  }
+  .cp-add-piece-row:hover { color: rgba(0, 0, 0, 0.65); border-color: rgba(0, 0, 0, 0.4); }
+}
