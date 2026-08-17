@@ -40,4 +40,21 @@ BEGIN
       AND indexname = 'gw_personal_score_annotations_score_page_idx'
   )), 'score+page index missing';
 END $$;
+
+-- 20260817150000_purchase_idempotency_hardening.sql
+DO $$
+BEGIN
+  ASSERT (SELECT EXISTS (
+    SELECT 1 FROM pg_indexes
+    WHERE schemaname = 'public' AND tablename = 'gw_personal_scores'
+      AND indexname = 'gw_personal_scores_purchase_uq'
+  )), 'purchase idempotency index missing';
+
+  -- UPDATE policy must carry the same ownership re-check as INSERT.
+  ASSERT (SELECT with_check LIKE '%gw_personal_scores%' FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'gw_personal_score_annotations'
+      AND policyname = 'gw_personal_score_annotations_update'),
+    'update policy missing ownership re-check';
+END $$;
 ROLLBACK;
