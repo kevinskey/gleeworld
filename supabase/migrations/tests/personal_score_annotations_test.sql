@@ -24,12 +24,14 @@ BEGIN
       AND policyname LIKE 'gw_personal_score_annotations_%') = 4,
     'expected exactly 4 owner policies';
 
+  -- pg_constraint, not information_schema: constraint_column_usage only
+  -- returns rows to the table OWNER (supabase_admin here), so the assert
+  -- false-failed when run as postgres even though the CHECK exists.
   ASSERT (SELECT EXISTS (
-    SELECT 1 FROM information_schema.check_constraints cc
-    JOIN information_schema.constraint_column_usage ccu
-      ON ccu.constraint_name = cc.constraint_name
-    WHERE ccu.table_name = 'gw_personal_score_annotations'
-      AND ccu.column_name = 'annotation_type'
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'public.gw_personal_score_annotations'::regclass
+      AND contype = 'c'
+      AND pg_get_constraintdef(oid) LIKE '%annotation_type%'
   )), 'annotation_type CHECK missing';
 
   ASSERT (SELECT EXISTS (
