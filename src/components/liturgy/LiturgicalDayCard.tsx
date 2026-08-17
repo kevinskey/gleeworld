@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Church, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { usccbReadingsUrl } from '@/lib/liturgy/calendar';
+import { DateCardSwitcherContext } from '@/components/home/date-card/switcherContext';
 import { ReadingsModal } from './ReadingsModal';
 
 // Top-of-Command-Center card for Catholic tenants: shows today's liturgical day
@@ -11,6 +12,10 @@ import { ReadingsModal } from './ReadingsModal';
 // HouseHome, so only tenants with the Liturgy add-on see it.
 export function LiturgicalDayCard() {
   const today = useMemo(() => new Date(), []);
+  // Admin type-switcher when rendered inside DateCardSlot — sits at the end
+  // of the eyebrow row, same slot CardFrame gives it, so it stays clear of
+  // the '›' readings chevron on the right edge. Null everywhere else.
+  const switcher = useContext(DateCardSwitcherContext);
   const iso = format(today, 'yyyy-MM-dd');
   const [title, setTitle] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -39,8 +44,11 @@ export function LiturgicalDayCard() {
           <Church className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-            Today&apos;s Liturgy
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground truncate">
+              Today&apos;s Liturgy
+            </span>
+            {switcher}
           </div>
           <div className="font-serif text-lg font-semibold leading-tight truncate">
             {title || format(today, 'EEEE')}

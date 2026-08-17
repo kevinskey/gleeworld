@@ -10,6 +10,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, ArrowRight, LogOut } from 'lucide-react';
 import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor } from '@/lib/planTiers';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { useTrialStatus } from '@/hooks/useTrialStatus';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -18,8 +19,17 @@ import { PublicLayout } from '@/components/layout/PublicLayout';
 
 export default function TrialExpiredPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { loading: roleLoading, isAdmin } = useUserRole();
   const state = useTrialStatus();
+
+  // Billing UI is admin-only: signed-in non-admins get a neutral lockout with
+  // no tiers or prices. Signed-out visitors keep the marketing view (pricing
+  // is public on the landing page anyway). While auth is bootstrapping (user
+  // is momentarily null during session restore) or a signed-in user's role is
+  // resolving, neither variant renders — no pricing flash for students.
+  const showPricing = (!authLoading && !user) || (!!user && !roleLoading && isAdmin());
+  const showMemberLockout = !!user && !roleLoading && !isAdmin();
 
   // If a user lands here but their trial isn't actually expired (e.g. clicked
   // an old link, or the guard fired stale) bounce them home so they don't get
@@ -36,14 +46,31 @@ export default function TrialExpiredPage() {
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-10 sm:mb-14">
           <p className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Trial ended</p>
-          <h1 className="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4">
-            Pick a plan to keep going.
-          </h1>
-          <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
-            Your 30-day free trial has ended. Choose a plan to restore full access — everything you built stays exactly as you left it.
-          </p>
+          {showMemberLockout ? (
+            <>
+              <h1 className="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+                This workspace is paused.
+              </h1>
+              <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
+                This workspace&apos;s free period has ended. Please ask your workspace admin to
+                choose a plan to restore access — everything is saved and waiting.
+              </p>
+            </>
+          ) : showPricing ? (
+            <>
+              <h1 className="text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+                Pick a plan to keep going.
+              </h1>
+              <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto">
+                {/* No trial-length claim here: the free window varies (30-day
+                    signups vs. the extended fall 2026 period). */}
+                Your free trial has ended. Choose a plan to restore full access — everything you built stays exactly as you left it.
+              </p>
+            </>
+          ) : null}
         </div>
 
+        {showPricing && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
           {PLAN_TIERS.map((tier) => {
             const featured = tier.id === 'director_60';
@@ -102,6 +129,7 @@ export default function TrialExpiredPage() {
             );
           })}
         </div>
+        )}
 
         <div className="text-center mt-10 text-sm text-slate-500">
           Have a question? <a href="mailto:kevin@gleeworld.org" className="text-primary underline">Email us</a>.

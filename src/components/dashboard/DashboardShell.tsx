@@ -977,6 +977,12 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const alreadyInsideShell = useContext(DashboardShellNestedContext);
+  // Role for the trial banner (billing UI is admin-only). The shell owns the
+  // hook call and hands the banner plain props — keeps the banner pure and
+  // gives later sharers one place to consolidate useUserRole instances.
+  // Defensive form, same as useGatedNav above.
+  const { loading: roleLoading, isAdmin } = useUserRole();
+  const userIsAdmin = typeof isAdmin === 'function' ? isAdmin() : false;
   // Calendar keeps its compact header spacing but shows the nav like every
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
@@ -1051,8 +1057,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} onOpenAllTools={openAllTools} />}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Trial countdown — self-gates on trial state so it renders null
-              for grandfathered / paid / loading / no-tenant. */}
-          <TrialBanner />
+              for grandfathered / paid / loading / no-tenant, and is admin-only
+              (billing UI never shows to students/parents/fans). */}
+          <TrialBanner roleLoading={roleLoading} isAdmin={userIsAdmin} />
           <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} onOpenAllTools={openAllTools} />
           {/* pt-3 gives every page a small breath of space below the
               sticky topbar — pages that want more (CommandCenter, Viewer

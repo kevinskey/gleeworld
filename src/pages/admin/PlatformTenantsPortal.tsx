@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { preferredFirstName } from '@/lib/home/upNext';
 
 interface TenantRow {
   id: string;
@@ -249,7 +250,7 @@ export default function PlatformTenantsPortal() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-sans normal-case tracking-tight text-2xl font-bold">
-            {userProfile?.full_name ? `Welcome back, ${userProfile.full_name.split(' ')[0]}` : 'Platform Home'}
+            {userProfile?.full_name ? `Welcome back, ${preferredFirstName(userProfile)}` : 'Platform Home'}
           </h1>
           <p className="text-sm text-muted-foreground">
             gleeworld.org is the mother site. Pick a world below to enter it and help out — everything

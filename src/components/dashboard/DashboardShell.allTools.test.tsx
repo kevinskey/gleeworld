@@ -148,6 +148,7 @@ function setup({
   useUserRoleMock.mockReturnValue({
     profile: adminProfile,
     loading: false,
+    isAdmin: () => true,
     canEditMusicLibrary: () => true,
   });
   useTenantNavPrefsMock.mockReturnValue(new Set<string>());

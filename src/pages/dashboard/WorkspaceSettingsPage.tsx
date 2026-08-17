@@ -51,15 +51,19 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
 const TAB_VALUES = new Set(['plan', 'navigation', 'branding', 'datecard', 'parents', 'billing', 'general']);
 
 export default function WorkspaceSettingsPage() {
-  const { isSuperAdmin, isAdmin } = useUserRole();
+  const { isSuperAdmin, isAdmin, loading: roleLoading } = useUserRole();
   const canManage = isSuperAdmin() || isAdmin();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab');
   // `modules` is the retired Add-ons tab — bounce old bookmarks to Plan
   // (the tier's included feature list) instead of a dead 404 tab state.
-  const activeTab = tab === 'modules'
-    ? 'plan'
-    : (tab && TAB_VALUES.has(tab) ? tab : 'plan');
+  // Billing UI is admin-only (2026-08-17): non-admins never see the Plan or
+  // Billing tabs, and a deep link to either falls back to General.
+  const requestedTab = tab === 'modules' ? 'plan' : (tab && TAB_VALUES.has(tab) ? tab : null);
+  const billingTab = requestedTab === 'plan' || requestedTab === 'billing';
+  const activeTab = requestedTab && (canManage || !billingTab)
+    ? requestedTab
+    : (canManage ? 'plan' : 'general');
   const setActiveTab = (value: string) => {
     const sp = new URLSearchParams(searchParams);
     sp.set('tab', value);
@@ -73,6 +77,16 @@ export default function WorkspaceSettingsPage() {
       title="Workspace Settings"
       subtitle="Configure your workspace — branding, modules, billing, integrations."
     >
+      {/* Tab visibility depends on the resolved role — don't paint the
+          non-admin layout (no Plan/Billing, read-only badge, General
+          selected) at an admin who just followed the banner's ?tab=plan
+          link. Nothing renders until the role settles. */}
+      {roleLoading ? (
+        <div className="flex justify-center py-16">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+      <>
       {!canManage && (
         <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
           <Lock className="w-4 h-4 mr-1" /> Read-only — only workspace admins can change settings
@@ -85,24 +99,32 @@ export default function WorkspaceSettingsPage() {
             The Add-ons tab was removed 2026-07-28 — features are now bundled
             by plan tier, not toggled à la carte. A legacy ?tab=modules query
             param transparently redirects to `plan` below. */}
-        <TabsList className="flex md:grid md:grid-cols-7 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto touch-pan-x overscroll-x-contain md:overflow-visible scrollbar-hide">
-          <TabsTrigger value="plan" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
+        {/* Column count tracks the rendered tab set — non-admins get 5 tabs
+            (no Plan/Billing), and a 7-col grid would leave two dead columns. */}
+        <TabsList className={`flex md:grid ${canManage ? 'md:grid-cols-7' : 'md:grid-cols-5'} h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto touch-pan-x overscroll-x-contain md:overflow-visible scrollbar-hide`}>
+          {canManage && (
+            <TabsTrigger value="plan" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
+          )}
           <TabsTrigger value="navigation" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>
           <TabsTrigger value="branding" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Palette className="w-3.5 h-3.5 mr-1.5" />Branding</TabsTrigger>
           <TabsTrigger value="datecard" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><CalendarDays className="w-3.5 h-3.5 mr-1.5" />Date card</TabsTrigger>
           <TabsTrigger value="parents" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Users className="w-3.5 h-3.5 mr-1.5" />Parents</TabsTrigger>
-          <TabsTrigger value="billing" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Billing</TabsTrigger>
+          {canManage && (
+            <TabsTrigger value="billing" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Billing</TabsTrigger>
+          )}
           <TabsTrigger value="general" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Building2 className="w-3.5 h-3.5 mr-1.5" />General</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="plan"><PlanTabPanel canManage={canManage} /></TabsContent>
+        {canManage && <TabsContent value="plan"><PlanTabPanel canManage={canManage} /></TabsContent>}
         <TabsContent value="navigation"><NavigationTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="branding"><BrandingTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="datecard"><DateCardTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="parents"><ParentsTabPanel canManage={canManage} /></TabsContent>
-        <TabsContent value="billing"><BillingTabPanel /></TabsContent>
+        {canManage && <TabsContent value="billing"><BillingTabPanel /></TabsContent>}
         <TabsContent value="general"><GeneralTabPanel canManage={canManage} /></TabsContent>
       </Tabs>
+      </>
+      )}
     </DashboardPageShell>
     </DashboardShell>
     </UniversalLayout>
