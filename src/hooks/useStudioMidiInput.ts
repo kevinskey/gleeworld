@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { parseMidiMessage } from '@/lib/studio/midiMessage';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
+import { registerStudioAudio } from '@/lib/studio/audioLeakGuard';
 
 /**
  * Subscribe to hardware MIDI note input (Web MIDI on desktop browsers,
@@ -68,6 +69,12 @@ export function useStudioMidiInput({
         // while this (async) subscribe was in flight.
         sub.setDevice(deviceIdRef.current);
         subRef.current = sub;
+        // Leak guard: a subscription whose unmount cleanup is skipped
+        // (aborted cleanup batch) keeps delivering keystrokes to dead
+        // closures — the route-level disposeAllStudioAudio() closes it.
+        const unregister = registerStudioAudio({ dispose: () => { sub.close(); if (subRef.current === sub) subRef.current = null; } });
+        const prevClose = sub.close.bind(sub);
+        sub.close = () => { unregister(); prevClose(); };
         setStatus('connected');
         refreshInputs();
       })

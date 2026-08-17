@@ -95,6 +95,7 @@ import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
 import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
 import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
+import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 
 // The fixed module-gate key list a `module: 'x'` catalog gate checks
 // against. One definition shared by Sidebar, MobileNav, and the All Tools
@@ -997,6 +998,19 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   // Calendar keeps its compact header spacing but shows the nav like every
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
+  // Studio audio kill switch. Leaving a Studio session is supposed to tear
+  // down the engine, live-monitor voices, and MIDI subscription via the
+  // Studio's own effect cleanups — and that provably failed in prod once
+  // (2026-08-17: the USB keyboard kept playing piano on Command Center; one
+  // aborted cleanup batch is enough, React skips the rest of the commit's
+  // cleanups). This shell mounts on every dashboard-side route and does not
+  // share the Studio's lifecycle, so it can always finish the job. Happy
+  // path: the registry is already empty and this is a no-op.
+  // audioLeakGuard is dependency-free — importing it here does NOT pull
+  // Tone.js into the shell chunk.
+  useEffect(() => {
+    if (!/^\/studio\/sessions\//.test(pathname)) disposeAllStudioAudio();
+  }, [pathname]);
   const isCalendar = pathname.startsWith('/dashboard/calendar');
   // User-controlled nav collapse (persisted). Collapsing frees the full
   // window width for work surfaces like Calendar and Studio; the topbar
