@@ -84,25 +84,34 @@ serve(async (req) => {
   };
   try { body = await req.json(); } catch { return err(400, "bad_json"); }
 
-  // Tenant + role resolution. JWT tenant claims would be ideal, but in
-  // production 1 of ~1100 auth.users carries them (raw_app_meta_data has no
-  // tenant_id — verified 2026-08-17), so the claims-only version of this fn
-  // returned no_tenant_in_jwt for essentially every real caller. Honor the
-  // claims when present, otherwise fall back to what the rest of the app
-  // does (current_tenant_id model): the frontend names the tenant by slug
-  // and we check the caller's gw_tenant_members role in THAT tenant.
+  // Tenant + role resolution. The frontend names the TARGET workspace by
+  // slug. The JWT's tenant_id/tenant_role claims (stamped by the GoTrue
+  // hook for every user) describe the caller's HOME tenant — the wrong
+  // tenant whenever an admin manages a workspace they aren't homed on,
+  // which is the common case (profiles are homed on 'main' while the
+  // admin membership lives on the customer tenant). The claims-first
+  // version of this fn therefore 403'd legitimate tenant admins AND would
+  // have checked out a super-admin's HOME tenant instead of the workspace
+  // on screen (found 2026-08-17, Lyke House plan tab). The slug decides
+  // the tenant; claims count only when they refer to that same tenant.
+  const slugParam = String(body.tenant_slug ?? req.headers.get("x-tenant-slug") ?? "").trim();
   // deno-lint-ignore no-explicit-any
-  let tenantId = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
-  // deno-lint-ignore no-explicit-any
-  let tenantRole = (payload as any)?.tenant_role || (payload as any)?.app_metadata?.tenant_role;
-
-  if (!tenantId) {
-    const slug = String(body.tenant_slug ?? req.headers.get("x-tenant-slug") ?? "").trim();
-    if (!slug) return err(400, "no_tenant", "Pass tenant_slug (or x-tenant-slug header)");
-    const { data: t } = await admin.from("gw_tenants").select("id").eq("slug", slug).maybeSingle();
-    if (!t?.id) return err(404, "tenant_not_found", slug);
+  const claimTenant = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
+  let tenantId: string;
+  if (slugParam) {
+    const { data: t } = await admin.from("gw_tenants").select("id").eq("slug", slugParam).maybeSingle();
+    if (!t?.id) return err(404, "tenant_not_found", slugParam);
     tenantId = t.id;
+  } else if (claimTenant) {
+    tenantId = claimTenant;
+  } else {
+    return err(400, "no_tenant", "Pass tenant_slug (or x-tenant-slug header)");
   }
+
+  let tenantRole = claimTenant === tenantId
+    // deno-lint-ignore no-explicit-any
+    ? ((payload as any)?.tenant_role || (payload as any)?.app_metadata?.tenant_role || "")
+    : "";
   if (!tenantRole) {
     // deno-lint-ignore no-explicit-any
     const userId = (payload as any)?.sub;
