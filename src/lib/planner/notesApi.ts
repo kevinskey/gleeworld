@@ -122,6 +122,9 @@ export async function createNote(partial: {
   content?: DocNode;
   entity_type?: PlannerNote['entity_type'];
   entity_id?: string | null;
+  /** Free-form metadata (e.g. saved-article source_url); saveNote never
+   *  touches this column, so it survives later edits. */
+  properties?: Record<string, unknown>;
 } = {}): Promise<PlannerNote> {
   const userId = await uid();
   const content = partial.content ?? EMPTY_DOC;
@@ -137,6 +140,7 @@ export async function createNote(partial: {
       tags: extractTags(docToText(content)),
       entity_type: partial.entity_type ?? null,
       entity_id: partial.entity_id ?? null,
+      ...(partial.properties ? { properties: partial.properties } : {}),
     })
     .select('*')
     .single();

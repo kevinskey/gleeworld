@@ -454,6 +454,13 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           // shows the new tool without a refresh.
           qc.invalidateQueries({ queryKey: ['my-tools'] });
           break;
+        case 'create_note':
+        case 'save_article_note':
+          // The Planner caches every list/search under ['planner', ...];
+          // base-key invalidation makes the new note visible without a
+          // refresh if the Planner is already open.
+          qc.invalidateQueries({ queryKey: ['planner'] });
+          break;
       }
     }
   }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc, setNowPlaying, stopSpeakingNow, showResult]);

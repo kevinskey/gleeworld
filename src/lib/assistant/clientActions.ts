@@ -90,7 +90,7 @@ export interface ActionDeps {
     functions: { invoke: (name: string, opts: { body: unknown }) => Promise<{ data: any; error: any }> };
     rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: any; error: any }>;
   };
-  createNote: (partial: { title: string; content?: unknown }) => Promise<{ id: string; title: string }>;
+  createNote: (partial: { title: string; content?: unknown; properties?: Record<string, unknown> }) => Promise<{ id: string; title: string }>;
   createTask: (input: { title: string; due_at?: string | null; scheduled_date?: string | null; priority?: string }) => Promise<unknown>;
   textToDoc: (text: string) => unknown;
   pushEventToGoogle: (eventId: string, op: 'create' | 'update' | 'delete') => Promise<unknown>;
@@ -308,6 +308,40 @@ export async function executeClientAction(
           ...(body && deps.textToDoc ? { content: deps.textToDoc(body) } : {}),
         });
         return { ok: true, navigateTo: '/planner', message: `Created the note "${note.title}".` };
+      }
+      case 'save_article_note': {
+        // "That article's important — save it." Full text is pulled through
+        // extract-article (same hardened function the reader uses) so the
+        // note stands alone even after the link dies. Extraction is
+        // best-effort: a paywall must not turn the save into a failure, so
+        // the note falls back to the feed summary + link. URL is
+        // model-supplied → http(s) only, same rule as open_link.
+        const url = String(a.url ?? '');
+        if (!/^https?:\/\/\S+$/i.test(url)) return { ok: false, message: 'That article link looks invalid.' };
+        const title = String(a.title ?? '').trim().slice(0, 300) || 'Untitled article';
+        let extracted: { paragraphs?: string[]; byline?: string | null } = {};
+        try {
+          const { data } = await deps.supabase.functions.invoke('extract-article', { body: { url } });
+          if (data?.success) extracted = data;
+        } catch { /* fall through to summary fallback */ }
+        const { buildArticleNote } = await import('@/lib/news/articleNote');
+        const built = buildArticleNote({
+          title,
+          url,
+          source: typeof a.source === 'string' && a.source.trim() ? a.source.trim() : undefined,
+          published: typeof a.published === 'string' && a.published.trim() ? a.published.trim() : undefined,
+          byline: extracted.byline ?? undefined,
+          paragraphs: extracted.paragraphs,
+          summary: typeof a.summary === 'string' && a.summary.trim() ? a.summary.trim() : undefined,
+        });
+        const note = await deps.createNote({
+          title: built.title,
+          content: deps.textToDoc(built.body),
+          properties: built.properties,
+        });
+        // No navigateTo: the user is usually mid-article — saving must not
+        // yank them to the Planner. The note is confirmed by name instead.
+        return { ok: true, message: `Saved "${note.title}" to your notes.` };
       }
       case 'create_task': {
         await deps.createTask({
