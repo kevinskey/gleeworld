@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL, getTenantSlug } from '@/integrations/supabase/client';
 import { decodeJwtClaims } from '@/lib/demoSession';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
@@ -25,7 +25,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FONT_OPTIONS } from '@/components/public-site/types';
 import { ImageUploadField } from '@/components/public-site/ImageUploadField';
-import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor, type PlanTier } from '@/lib/planTiers';
+import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor, tierIsSelfServe, type PlanTier } from '@/lib/planTiers';
 import { ArrowRight } from 'lucide-react';
 import {
   Loader2, CheckCircle2, ExternalLink, CreditCard, Palette,
@@ -136,6 +136,18 @@ export default function WorkspaceSettingsPage() {
 function PlanTabPanel({ canManage }: { canManage: boolean }) {
   const [cycle, setCycle] = useState<'monthly' | 'annual'>('monthly');
 
+  // Back from Stripe: the success_url lands on ?tab=plan&activated=<planId>.
+  // Activation itself is webhook-driven (may lag the redirect by a moment),
+  // so acknowledge rather than assert.
+  const [checkoutParams] = useSearchParams();
+  const activatedPlan = checkoutParams.get('activated');
+  useEffect(() => {
+    if (activatedPlan) {
+      const label = PLAN_TIERS.find((t) => t.id === activatedPlan)?.label ?? activatedPlan;
+      toast.success(`Payment received — your ${label} plan is activating.`);
+    }
+  }, [activatedPlan]);
+
   // Plan catalog comes from PLAN_TIERS (single source of truth, shared with
   // the marketing landing) rather than gw_billing_plans, so the two surfaces
   // can never drift on labels/prices/features. gw_billing_plans is still the
@@ -165,7 +177,9 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
   const checkout = useMutation({
     mutationFn: async (planId: string) => {
       const { data, error } = await supabase.functions.invoke('create-plan-checkout', {
-        body: { plan_id: planId, billing_cycle: cycle },
+        // tenant_slug because production JWTs carry no tenant claim — the fn
+        // resolves the tenant by slug and checks the caller's membership role.
+        body: { plan_id: planId, billing_cycle: cycle, tenant_slug: getTenantSlug() },
       });
       if (error) throw error;
       // deno-lint-ignore no-explicit-any
@@ -274,11 +288,22 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                 ))}
               </ul>
               {canManage && !isCurrent && (
-                // create-plan-checkout doesn't yet support the new tier ids
-                // + lookup-key resolution — clicking today surfaces the fn
-                // error via the mutation's onError toast. Button label stays
-                // "Choose Plan" per Kevin; wiring self-serve checkout is a
-                // separate billing workstream.
+                tier.scope !== 'tenant' ? (
+                  <p className="text-xs text-slate-500">
+                    Individual plan — sign up from your personal account, not the workspace.
+                  </p>
+                ) : !tierIsSelfServe(tier) ? (
+                  // Quote-priced tier ("From $X/mo") — sized per school, so
+                  // it goes to email rather than a fixed-price checkout.
+                  <a
+                    href={`mailto:kevin@gleeworld.org?subject=${encodeURIComponent(`${tier.label} plan quote`)}`}
+                    className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+                    style={{ backgroundColor: '#0f172a' }}
+                  >
+                    Contact us
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                ) : (
                 <button
                   type="button"
                   disabled={checkout.isPending}
@@ -297,6 +322,7 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                     </>
                   )}
                 </button>
+                )
               )}
             </div>
           );

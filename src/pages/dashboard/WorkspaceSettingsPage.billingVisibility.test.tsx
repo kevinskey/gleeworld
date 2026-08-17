@@ -11,14 +11,16 @@
 // must be cut (pdfjs import chain hangs collection otherwise).
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const role = vi.hoisted(() => ({ loading: false, admin: false }));
 const fromMock = vi.hoisted(() => vi.fn());
+const invokeMock = vi.hoisted(() => vi.fn(async () => ({ data: { url: null }, error: null })));
+const rpcMock = vi.hoisted(() => vi.fn(async () => ({ data: null, error: null })));
 
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { from: fromMock },
+  supabase: { from: fromMock, rpc: rpcMock, functions: { invoke: invokeMock } },
   SUPABASE_URL: 'https://supabase.test',
   getTenantSlug: () => 'demo',
 }));
@@ -68,6 +70,7 @@ afterEach(() => {
   role.loading = false;
   role.admin = false;
   fromMock.mockReset();
+  invokeMock.mockClear();
   delete (globalThis as any).__TEST_SEARCH__;
 });
 
@@ -112,5 +115,43 @@ describe('WorkspaceSettingsPage billing visibility', () => {
     setup();
     expect(screen.queryByRole('tab', { name: /plan/i })).not.toBeInTheDocument();
     expect(screen.getByRole('tab', { name: /general/i })).toHaveAttribute('aria-selected', 'true');
+  });
+});
+
+describe('PlanTabPanel checkout actions (admin)', () => {
+  // Self-serve checkout applies only to tenant-scope, non-quote tiers:
+  // director_60 and director_150. Institution is quote-priced ("From
+  // $250/mo") so it goes to email; Personal is a user-scope plan that a
+  // tenant checkout would reject (scope='tenant' filter in the fn).
+  it('offers Choose Plan checkout only for the two self-serve tenant tiers', () => {
+    role.admin = true;
+    setup();
+    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(2);
+  });
+
+  it('starts checkout with plan id, cycle, and tenant slug', async () => {
+    role.admin = true;
+    setup();
+    fireEvent.click(screen.getAllByRole('button', { name: /choose plan/i })[0]);
+    await waitFor(() => expect(invokeMock).toHaveBeenCalledWith('create-plan-checkout', {
+      body: { plan_id: 'director_60', billing_cycle: 'monthly', tenant_slug: 'demo' },
+    }));
+  });
+
+  it('sends the annual cycle after toggling to Annual', async () => {
+    role.admin = true;
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: /annual/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /choose plan/i })[0]);
+    await waitFor(() => expect(invokeMock).toHaveBeenCalledWith('create-plan-checkout', {
+      body: { plan_id: 'director_60', billing_cycle: 'annual', tenant_slug: 'demo' },
+    }));
+  });
+
+  it('sends the Institution tier to email instead of checkout', () => {
+    role.admin = true;
+    setup();
+    const contact = screen.getByRole('link', { name: /contact us/i });
+    expect(contact.getAttribute('href')).toMatch(/^mailto:/);
   });
 });

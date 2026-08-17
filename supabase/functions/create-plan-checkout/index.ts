@@ -76,23 +76,54 @@ serve(async (req) => {
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
-  // deno-lint-ignore no-explicit-any
-  const tenantId = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
-  // deno-lint-ignore no-explicit-any
-  const tenantRole = (payload as any)?.tenant_role || (payload as any)?.app_metadata?.tenant_role;
-  if (!tenantId) return err(400, "no_tenant_in_jwt");
-  // Only a tenant admin may change the org's base plan (matches the role gate
-  // in create-module-checkout / create-course-checkout).
-  if (!["owner", "admin", "super-admin", "super_admin"].includes(String(tenantRole))) {
-    return err(403, "admin_only", "Only tenant admins can change the plan");
-  }
-
   let body: {
     planId?: string; plan_id?: string;
     interval?: "monthly" | "annual"; billing_cycle?: "monthly" | "annual";
+    tenant_slug?: string;
     success_url?: string; cancel_url?: string;
   };
   try { body = await req.json(); } catch { return err(400, "bad_json"); }
+
+  // Tenant + role resolution. JWT tenant claims would be ideal, but in
+  // production 1 of ~1100 auth.users carries them (raw_app_meta_data has no
+  // tenant_id — verified 2026-08-17), so the claims-only version of this fn
+  // returned no_tenant_in_jwt for essentially every real caller. Honor the
+  // claims when present, otherwise fall back to what the rest of the app
+  // does (current_tenant_id model): the frontend names the tenant by slug
+  // and we check the caller's gw_tenant_members role in THAT tenant.
+  // deno-lint-ignore no-explicit-any
+  let tenantId = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
+  // deno-lint-ignore no-explicit-any
+  let tenantRole = (payload as any)?.tenant_role || (payload as any)?.app_metadata?.tenant_role;
+
+  if (!tenantId) {
+    const slug = String(body.tenant_slug ?? req.headers.get("x-tenant-slug") ?? "").trim();
+    if (!slug) return err(400, "no_tenant", "Pass tenant_slug (or x-tenant-slug header)");
+    const { data: t } = await admin.from("gw_tenants").select("id").eq("slug", slug).maybeSingle();
+    if (!t?.id) return err(404, "tenant_not_found", slug);
+    tenantId = t.id;
+  }
+  if (!tenantRole) {
+    // deno-lint-ignore no-explicit-any
+    const userId = (payload as any)?.sub;
+    const [{ data: member }, { data: profile }] = await Promise.all([
+      admin.from("gw_tenant_members").select("role")
+        .eq("tenant_id", tenantId).eq("user_id", userId).maybeSingle(),
+      admin.from("gw_profiles").select("is_super_admin")
+        .eq("user_id", userId).maybeSingle(),
+    ]);
+    // Platform super-admins may manage any tenant's plan (platform-admin
+    // model); otherwise the caller needs an admin-tier membership row in
+    // the target tenant. 'director' is the admin-equivalent membership
+    // role (see useUserRole MEMBER_ADMIN_ROLES).
+    tenantRole = profile?.is_super_admin ? "super_admin" : (member?.role ?? "");
+  }
+  // Only a tenant admin may change the org's base plan (matches the role gate
+  // in create-module-checkout / create-course-checkout, plus 'director' —
+  // the membership role GleeWorld actually grants tenant admins).
+  if (!["owner", "admin", "director", "super-admin", "super_admin"].includes(String(tenantRole))) {
+    return err(403, "admin_only", "Only tenant admins can change the plan");
+  }
   const planId = body.planId ?? body.plan_id;
   if (!planId) return err(400, "plan_id_required");
   const cycleRaw = body.interval ?? body.billing_cycle;
