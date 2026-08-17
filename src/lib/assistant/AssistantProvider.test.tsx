@@ -252,6 +252,25 @@ describe('AssistantProvider', () => {
     expect(startSession).toHaveBeenCalledWith(expect.not.objectContaining({ overrides: expect.anything() }));
   });
 
+  it('an article result auto-opens the sheet — the reader lives there, so a closed sheet was silent', async () => {
+    // The live failure (Kevin, 2026-08-17): by voice with the sheet closed,
+    // "read it to me" → open_link {read_aloud:true} → showResult set state,
+    // but AssistantResultsPanel only renders INSIDE the open sheet — the
+    // ArticleCard that extracts and speaks never mounted. She announced the
+    // article and went silent.
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: {
+        reply: '',
+        actions: [{ tool: 'open_link', args: { url: 'https://example.com/story', title: 'Story', read_aloud: true }, confirm: false }],
+      },
+      error: null,
+    } as never);
+    renderProbe();
+    expect(screen.getByTestId('sheet')).toHaveTextContent('false');
+    await act(async () => { screen.getByText('go').click(); });
+    expect(screen.getByTestId('sheet')).toHaveTextContent('true');
+  });
+
   it('a confirm-gated action auto-opens the sheet', async () => {
     vi.mocked(supabase.functions.invoke).mockResolvedValue({
       data: { reply: 'ready to send', actions: [{ tool: 'send_sms', args: {}, confirm: true }] },
@@ -363,6 +382,28 @@ describe('voice conversation mode', () => {
       expect(speechStart).toHaveBeenCalledTimes(3);
       await advance(10000); // and it stays down
       expect(speechStart).toHaveBeenCalledTimes(3);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('a read-aloud article ends conversation mode — no hot mic over her reading', async () => {
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: {
+        reply: '',
+        actions: [{ tool: 'open_link', args: { url: 'https://example.com/story', title: 'Story', read_aloud: true }, confirm: false }],
+      },
+      error: null,
+    } as never);
+    renderProbe();
+    vi.useFakeTimers();
+    try {
+      await tapMic();
+      expect(speechStart).toHaveBeenCalledTimes(1);
+      await speakUtterance('read me the article about the story');
+      await advance(8000);
+      // No echo cancellation on this path: while the ArticleCard reads the
+      // story aloud, a re-armed mic would hear her own voice and barge her in.
+      expect(speechStart).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('listening')).toHaveTextContent('false');
     } finally { vi.useRealTimers(); }
   });
 
