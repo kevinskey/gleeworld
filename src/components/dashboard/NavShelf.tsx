@@ -143,18 +143,15 @@ export function NavShelf({ home, tools, groups, onToggleGroup, onOpenAllTools, v
               aria-expanded={!group.collapsed}
               className={`${ROW_BASE} ${variant === 'desktop' ? ROW_DESKTOP : ROW_MOBILE} ${ROW_INACTIVE} text-muted-foreground`}
             >
+              {/* Label leads, caret trails on the right, no count badge
+                  (Kevin, 2026-08-17) — the number read as a quota and the
+                  left caret pushed every group name out of line with the
+                  tool rows above. */}
+              <span className="truncate flex-1 text-left">{group.name}</span>
               <ChevronRight
                 className={`w-4 h-4 shrink-0 transition-transform motion-reduce:transition-none ${group.collapsed ? '' : 'rotate-90'}`}
                 aria-hidden
               />
-              <span className="truncate flex-1 text-left">{group.name}</span>
-              {/* Count only while collapsed: expanded, the rows below say the
-                  same thing, and a permanent badge reads as a quota. */}
-              {group.collapsed && (
-                <span data-testid={`nav-group-count-${group.id}`} className="text-xs tabular-nums opacity-70">
-                  {group.entries.length}
-                </span>
-              )}
             </button>
             {!group.collapsed && (
               <div className="space-y-0.5 pl-3">

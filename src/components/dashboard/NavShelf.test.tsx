@@ -158,15 +158,10 @@ describe('NavShelf — groups', () => {
     expect(screen.getByText('Liturgy Planner')).toBeInTheDocument();
   });
 
-  it('hides members and shows a count when collapsed', () => {
+  it('hides members when collapsed, with no count badge (removed 2026-08-17)', () => {
     renderShelf({ tools: [], groups: [groupOf('Sunday', [entry('liturgy')], true)] });
     expect(screen.getByText('Sunday')).toBeInTheDocument();
     expect(screen.queryByText('Liturgy Planner')).not.toBeInTheDocument();
-    expect(screen.getByTestId('nav-group-count-sunday')).toHaveTextContent('1');
-  });
-
-  it('shows no count when expanded — the rows speak for themselves', () => {
-    renderShelf({ tools: [], groups: [groupOf('Sunday', [entry('liturgy')])] });
     expect(screen.queryByTestId('nav-group-count-sunday')).not.toBeInTheDocument();
   });
 
