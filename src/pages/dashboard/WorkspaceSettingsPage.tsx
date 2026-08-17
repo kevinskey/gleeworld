@@ -241,7 +241,12 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
           treatment (matches the landing's MOST POPULAR chip). */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {PLAN_TIERS.map((tier: PlanTier) => {
-          const isCurrent = current?.plan_id === tier.id && current?.billing_cycle === cycle;
+          // A trial row is NOT an owned plan — only an active subscription
+          // makes a tier "current". Treating a trial as current hid the
+          // Choose Plan button on exactly the tier the tenant is trialing
+          // (lykehouse couldn't buy Director, 2026-08-17).
+          const isCurrent = current?.status === 'active'
+            && current?.plan_id === tier.id && current?.billing_cycle === cycle;
           const featured = tier.id === 'director_60';
           const priceLabel = tier.quote ? `From ${formatPrice(tier.monthlyCents)}` : formatPrice(tier.monthlyCents);
           const monthsFree = monthsFreeFor(tier);

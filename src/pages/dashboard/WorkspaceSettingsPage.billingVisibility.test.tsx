@@ -154,4 +154,32 @@ describe('PlanTabPanel checkout actions (admin)', () => {
     const contact = screen.getByRole('link', { name: /contact us/i });
     expect(contact.getAttribute('href')).toMatch(/^mailto:/);
   });
+
+  // A TRIAL row is not an owned plan. Marking the trialed tier CURRENT hid
+  // its Choose Plan button — on lykehouse (trial of director_60) the featured
+  // tier was literally unpurchasable (found live 2026-08-17).
+  it('a trial row does not mark its tier CURRENT — its Choose Plan stays', async () => {
+    role.admin = true;
+    fromMock.mockImplementation((table: string) => pgChain(
+      table === 'gw_tenant_plans'
+        ? { data: { plan_id: 'director_60', billing_cycle: 'monthly', status: 'trial' }, error: null }
+        : { data: null, error: null },
+    ));
+    render(<WorkspaceSettingsPage />, { wrapper });
+    await waitFor(() => expect(screen.getByText('trial')).toBeInTheDocument());
+    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(2);
+    expect(screen.queryByText('CURRENT')).not.toBeInTheDocument();
+  });
+
+  it('an active row still marks its tier CURRENT and hides its button', async () => {
+    role.admin = true;
+    fromMock.mockImplementation((table: string) => pgChain(
+      table === 'gw_tenant_plans'
+        ? { data: { plan_id: 'director_60', billing_cycle: 'monthly', status: 'active' }, error: null }
+        : { data: null, error: null },
+    ));
+    render(<WorkspaceSettingsPage />, { wrapper });
+    await waitFor(() => expect(screen.getByText('CURRENT')).toBeInTheDocument());
+    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(1);
+  });
 });
