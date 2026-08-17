@@ -26,6 +26,32 @@ ALTER TABLE gw_student_fees
 -- or waive it. The gate must keep the service role allowed because
 -- verify-fee-payment calls record_fee_payment with the service key.
 
+-- The self-hosted droplet predates 20260809060000, so the canonical admin
+-- helper may not exist yet. Definition copied VERBATIM from that migration —
+-- applying it later is a no-op replace, never a divergence.
+CREATE OR REPLACE FUNCTION public.current_user_is_tenant_admin()
+RETURNS boolean
+LANGUAGE sql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $function$
+  SELECT EXISTS (
+    SELECT 1 FROM public.gw_profiles p
+    WHERE p.user_id = auth.uid()
+      AND p.tenant_id = public.current_tenant_id()
+      AND (p.is_admin = true
+           OR p.is_super_admin = true
+           OR p.role IN ('admin', 'super-admin', 'super_admin'))
+  )
+  OR EXISTS (
+    SELECT 1 FROM public.gw_tenant_members m
+    WHERE m.user_id = auth.uid()
+      AND m.tenant_id = public.current_tenant_id()
+      AND m.role IN ('admin', 'director', 'owner', 'super-admin', 'super_admin')
+  )
+  OR public.is_platform_owner();
+$function$;
+
 CREATE OR REPLACE FUNCTION fee_rpc_caller_allowed() RETURNS boolean
   LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
 AS $$
