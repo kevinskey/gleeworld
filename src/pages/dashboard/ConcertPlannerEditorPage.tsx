@@ -27,7 +27,7 @@ import {
 } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  ArrowLeft, Loader2, Plus, Type, Minus, Users, Library, ListMusic, AlertTriangle, Info, ChevronDown,
+  ArrowLeft, Loader2, Plus, Type, Minus, Users, Library, ListMusic, AlertTriangle, Info, ChevronDown, PanelRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +40,7 @@ import QRCode from 'qrcode';
 import { supabase } from '@/integrations/supabase/client';
 import { useConcertProgramDoc } from '@/hooks/useConcertProgramDoc';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile, useCoarsePointer } from '@/hooks/use-mobile';
 import {
   PRINT_DESIGNS, newBlockId, type PrintDesign, type ProgramBlock, type ProgramFormat,
   type PieceGroupBlock,
@@ -66,12 +66,48 @@ import type { RenderCtx } from '@/components/concert-program/blocks/BlockRendere
 import type { ProgramEditCtx } from '@/components/concert-program/editTypes';
 import type { ConcertProgramPiece } from '@/hooks/useConcertPrograms';
 
+// Persisted open/closed state of the lg+ tools rail — see the "Hide tools"
+// toggle in the header. Default (unset) is open.
+const RAIL_OPEN_STORAGE_KEY = 'gw.concertPlanner.railOpen';
+
 // ── Rail ─────────────────────────────────────────────────────────────────
 // Shared between the lg+ sticky column and the below-lg Sheet drawer so the
 // two surfaces can never drift out of sync. Below lg there is no on-page
 // editing (mobile piece rows open PieceEditPopover as a Dialog instead), so
 // the header fields live here too — this is the ONLY way to edit them on a
 // phone/tablet.
+
+// ── Blocks section ───────────────────────────────────────────────────────
+// A Collapsible "Blocks" section wrapping BlockRail — shared verbatim
+// between the below-lg Sheet drawer and the lg+ tools rail so both surfaces
+// render the identical block-ops presentation instead of two copies that
+// can drift. The Sheet keeps its historical default-closed behavior;
+// the lg+ rail opens it by default (`defaultOpen`) since it's now the
+// TOP section of the single rail rather than tucked in a drawer.
+interface BlocksRailSectionProps {
+  blocks: ProgramBlock[];
+  onReorderMiddle: (nextMiddle: ProgramBlock[]) => void;
+  onMoveBlock: (blockId: string, direction: 'up' | 'down') => void;
+  onDeleteBlock: (blockId: string) => void;
+  onInsertTextAt: (indexInMiddle: number) => void;
+  defaultOpen?: boolean;
+}
+
+function BlocksRailSection({ defaultOpen, ...blockRailProps }: BlocksRailSectionProps) {
+  return (
+    <Collapsible defaultOpen={defaultOpen}>
+      <CollapsibleTrigger asChild>
+        <Button variant="ghost" size="sm" className="w-full justify-between px-2 -mx-2">
+          <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Blocks</span>
+          <ChevronDown className="w-3.5 h-3.5" />
+        </Button>
+      </CollapsibleTrigger>
+      <CollapsibleContent className="pt-2">
+        <BlockRail {...blockRailProps} />
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 interface EditorRailProps {
   design: PrintDesign;
@@ -297,6 +333,18 @@ export default function ConcertPlannerEditorPage() {
   } = useConcertProgramDoc(id);
   const { settings } = useBrandingSettings();
   const isMobile = useIsMobile();
+  const coarsePointer = useCoarsePointer();
+
+  // ── lg+ tools rail open/closed (the "Hide tools" toggle) ────────────────
+  // Persisted so the choice survives navigation/reloads; default open.
+  const [railOpen, setRailOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return window.localStorage.getItem(RAIL_OPEN_STORAGE_KEY) !== '0';
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(RAIL_OPEN_STORAGE_KEY, railOpen ? '1' : '0');
+  }, [railOpen]);
 
   // Legacy print_format values (trifold, qr-lobby) predate the true-paper
   // rebuild and have no renderer here; they fall back to letter-portrait.
@@ -957,6 +1005,14 @@ export default function ConcertPlannerEditorPage() {
     ? `${pages.length} panels → ${paddedPanels / 4} sheets (${paddedPanels - pages.length} blank panels)`
     : null;
 
+  const blockRailProps = {
+    blocks: blocks ?? [],
+    onReorderMiddle: handleReorderMiddle,
+    onMoveBlock: handleMoveBlock,
+    onDeleteBlock: handleDeleteBlock,
+    onInsertTextAt: handleInsertTextAt,
+  };
+
   const railProps: EditorRailProps = {
     design,
     format,
@@ -1012,12 +1068,16 @@ export default function ConcertPlannerEditorPage() {
     onOpenPieceEditor: openPieceEditor,
     onAddPieceAtEnd,
     registerPieceEl,
-    inlineEditable: !isMobile,
+    // Fine pointers only (mouse/trackpad). A coarse pointer (touch) — iPad
+    // landscape included, even at ≥1024px — must fall back to the
+    // tap-to-open dialog: this deliberately closes a known iPad on-page
+    // caret risk that width alone didn't catch.
+    inlineEditable: !isMobile && !coarsePointer,
     onOpenRoster: () => setRosterPanelOpen(true),
   }), [
     selectedPieceId, onSelectPiece, onCommitPieceField, onCommitBlockField, onCommitHeaderField,
     onCommitEventDate, onFastEnter, onTabToComposer, onComposerEnter, openPieceEditor, onAddPieceAtEnd,
-    registerPieceEl, isMobile,
+    registerPieceEl, isMobile, coarsePointer,
   ]);
 
   // The visible sheet gets `edit`; the hidden measurement pass (built from
@@ -1061,27 +1121,20 @@ export default function ConcertPlannerEditorPage() {
           <SheetContent side="right" className="w-[85vw] sm:max-w-sm overflow-y-auto">
             <SheetHeader><SheetTitle>Program tools</SheetTitle></SheetHeader>
             <div className="mt-4 space-y-4">
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-full justify-between px-2 -mx-2">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Blocks</span>
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="pt-2">
-                  <BlockRail
-                    blocks={blocks ?? []}
-                    onReorderMiddle={handleReorderMiddle}
-                    onMoveBlock={handleMoveBlock}
-                    onDeleteBlock={handleDeleteBlock}
-                    onInsertTextAt={handleInsertTextAt}
-                  />
-                </CollapsibleContent>
-              </Collapsible>
+              <BlocksRailSection {...blockRailProps} />
               <EditorRail {...railProps} />
             </div>
           </SheetContent>
         </Sheet>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="hidden lg:inline-flex"
+          aria-label={railOpen ? 'Hide tools' : 'Show tools'}
+          onClick={() => setRailOpen((v) => !v)}
+        >
+          <PanelRight className="w-4 h-4" />
+        </Button>
         <Button variant="outline" size="sm" disabled={!program || !blocks} onClick={handlePrintClick}>
           Print / Save PDF
         </Button>
@@ -1090,16 +1143,11 @@ export default function ConcertPlannerEditorPage() {
         </Button>
       </header>
 
-      <main className="flex-1 lg:grid lg:grid-cols-[10rem_1fr_280px] gap-4 p-3 lg:p-4 min-h-0">
-        <aside className="hidden lg:block lg:sticky lg:top-4 self-start">
-          <BlockRail
-            blocks={blocks ?? []}
-            onReorderMiddle={handleReorderMiddle}
-            onMoveBlock={handleMoveBlock}
-            onDeleteBlock={handleDeleteBlock}
-            onInsertTextAt={handleInsertTextAt}
-          />
-        </aside>
+      <main
+        className={`flex-1 lg:grid gap-4 p-3 lg:p-4 min-h-0 ${
+          railOpen ? 'lg:grid-cols-[minmax(0,1fr)_300px]' : 'lg:grid-cols-1'
+        }`}
+      >
         <div className="min-w-0">
           {oversized.length > 0 ? (
             <div className="mb-3 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 text-amber-800 text-xs px-3 py-2">
@@ -1115,12 +1163,18 @@ export default function ConcertPlannerEditorPage() {
           ) : null}
           <div className="bg-muted/40 rounded-lg overflow-auto p-4 lg:p-8">
             {measureHost}
-            <ProgramSheetView pages={pages} ctx={viewCtx} design={design} format={format} scaleToFit={isMobile} />
+            {/* Always fit-to-width: the true-size sheet plus the tools rail
+                never both fit at desktop widths otherwise — this is the
+                single-rail redesign's whole point. */}
+            <ProgramSheetView pages={pages} ctx={viewCtx} design={design} format={format} scaleToFit />
           </div>
         </div>
-        <aside className="hidden lg:block lg:sticky lg:top-4 self-start">
-          <EditorRail {...railProps} />
-        </aside>
+        {railOpen ? (
+          <aside className="hidden lg:block lg:sticky lg:top-4 self-start space-y-6">
+            <BlocksRailSection {...blockRailProps} defaultOpen />
+            <EditorRail {...railProps} />
+          </aside>
+        ) : null}
       </main>
 
       <PieceEditPopover
