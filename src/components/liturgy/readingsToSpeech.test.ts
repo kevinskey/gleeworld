@@ -20,6 +20,17 @@ describe('readingsToSpeech — lector pacing', () => {
     expect(announcements[2].pauseBeforeMs).toBe(5000);
   });
 
+  it('announces citations with full spoken book names, display form untouched', () => {
+    const chunks = readingsToSpeech([
+      { heading: 'First reading', citation: 'Dt 4:32-40', summary: null, html: '<p>Moses said.</p>' },
+      { heading: 'Responsorial Psalm', citation: 'Ps 77:12-16', summary: null, html: '<p>Sing.</p>' },
+      { heading: 'Gospel', citation: 'Mt 13:44-46', summary: null, html: '<p>Jesus said.</p>' },
+    ]);
+    expect(chunks[0].text).toBe('First reading. Deuteronomy 4:32-40.');
+    expect(chunks.map((c) => c.text)).toContain('Responsorial Psalm. Psalm 77:12-16.');
+    expect(chunks.map((c) => c.text)).toContain('Gospel. Matthew 13:44-46.');
+  });
+
   it('never pauses between body chunks within one reading', () => {
     const longBody = `<p>${'A full sentence goes right here. '.repeat(30)}</p>`;
     const chunks = readingsToSpeech([
