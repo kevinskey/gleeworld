@@ -16,9 +16,9 @@ describe('gwInstruments catalog', () => {
     for (const g of GW_INSTRUMENTS) expect(g.name).toMatch(/^[a-z0-9_]+$/);
   });
 
-  it('includes the five drum kits as kind=kit', () => {
+  it('includes the six drum kits as kind=kit', () => {
     const kits = GW_INSTRUMENTS.filter((g) => g.kind === 'kit').map((g) => g.name);
-    expect(kits).toEqual(['kit_studio', 'kit_rock', 'kit_jazz', 'kit_808', 'kit_trap']);
+    expect(kits).toEqual(['kit_studio', 'kit_rock', 'kit_jazz', 'kit_808', 'kit_trap', 'kit_909']);
   });
 
   it('bass_808 is pitched with a GM fallback (a pitched instrument without one would fall back to the basic KIT)', () => {
