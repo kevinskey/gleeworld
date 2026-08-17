@@ -92,7 +92,6 @@ export const UniversalLayout = ({
   onViewModeChange
 }: UniversalLayoutProps) => {
   const alreadyInsideLayout = useContext(UniversalLayoutNestedContext);
-  if (alreadyInsideLayout) return <>{children}</>;
   const location = useLocation();
 
   // Pull the tenant's public-site theme so the admin shell stays in lockstep
@@ -106,6 +105,7 @@ export const UniversalLayout = ({
       return data as any;
     },
   });
+  if (alreadyInsideLayout) return <>{children}</>;
   const primary = publicSite?.theme?.primaryColor;
   const accent = publicSite?.theme?.accentColor;
   const shellBackground = primary ? tint(primary, 0.06) : 'hsl(40, 10%, 96%)';

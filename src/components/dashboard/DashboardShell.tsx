@@ -221,11 +221,13 @@ function BrandLogo({
 // and text-[15px] on desktops for comfortable reading. The previous
 // flat text-[13px] looked cramped on a 12.9" iPad.
 const NAV_BASE =
-  'flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] md:text-[14px] lg:text-[15px] leading-tight transition-colors w-full text-left';
-// Hover background is 5% brand-gold (--brand-gold is HSL 45 100% 55%).
+  'group flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] md:text-[14px] lg:text-[15px] leading-tight transition-all duration-150 w-full text-left';
+// Hover: brand-gold wash (--brand-gold is HSL 45 100% 55%) plus a 2px
+// nudge right so rows feel physically responsive, not just repainted.
 // arbitrary value syntax keeps the alpha channel without needing a
 // dedicated Tailwind color token.
-const NAV_INACTIVE = 'text-foreground/85 hover:bg-[hsl(var(--brand-gold)/0.05)] hover:text-foreground';
+const NAV_INACTIVE =
+  'text-foreground/85 hover:bg-[hsl(var(--brand-gold)/0.12)] hover:text-foreground hover:translate-x-0.5 active:scale-[0.98]';
 const NAV_ACTIVE = 'bg-primary/10 text-primary font-semibold';
 // `tone` is now {color}-600/700 text-only — strip the legacy bg- portion.
 const iconTextOnly = (tone: string) =>
@@ -436,7 +438,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
                 <button
                   type="button"
                   onClick={() => toggleSection(section.label!)}
-                  className="w-full flex items-center justify-between px-2.5 pb-1 pt-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground hover:text-foreground transition-colors"
+                  className="w-full flex items-center justify-between px-2.5 pb-1 pt-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground hover:text-primary transition-colors"
                 >
                   <span>{section.label}</span>
                   {isCollapsed ? (
@@ -459,7 +461,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
                       return `${NAV_BASE} ${
                         isActive
                           ? 'bg-primary/15 text-primary font-semibold ring-1 ring-primary/30'
-                          : 'bg-primary/5 text-foreground font-semibold hover:bg-primary/10'
+                          : 'bg-primary/5 text-foreground font-semibold hover:bg-primary/10 hover:ring-1 hover:ring-primary/20 hover:translate-x-0.5 active:scale-[0.98]'
                       }`;
                     }
                     return `${NAV_BASE} ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`;
@@ -471,7 +473,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
                    * amber, violet, indigo, sky, pink…) which violated
                    * the "hero accent only for the main brand identity"
                    * discipline. */}
-                  <item.icon className={`w-[18px] h-[18px] shrink-0 ${item.hero ? 'text-primary' : 'text-slate-500'}`} />
+                  <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-150 ${item.hero ? 'text-primary' : 'text-slate-500 group-hover:text-primary'}`} />
                   <span className="truncate">{item.label}</span>
                 </NavLink>
                 </SortableNavRow>
@@ -571,10 +573,10 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
                   // the phone viewport. 17px ≈ iOS standard menu row.
                   // py-2.5 keeps the tap target at 44px (Apple HIG).
                   className={({ isActive }) =>
-                    `flex items-center gap-2.5 px-2.5 py-2.5 rounded-md !text-[17px] leading-tight transition-colors w-full text-left ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`
+                    `group flex items-center gap-2.5 px-2.5 py-2.5 rounded-md !text-[17px] leading-tight transition-all duration-150 w-full text-left ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`
                   }
                 >
-                  <item.icon className="w-5 h-5 shrink-0 text-slate-500" />
+                  <item.icon className="w-5 h-5 shrink-0 transition-colors duration-150 text-slate-500 group-hover:text-primary" />
                   <span className="truncate">{item.label}</span>
                 </NavLink>
               ))}
@@ -1005,7 +1007,6 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const alreadyInsideShell = useContext(DashboardShellNestedContext);
-  if (alreadyInsideShell) return <>{children}</>;
   // Calendar keeps its compact header spacing but shows the nav like every
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
@@ -1020,6 +1021,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const [navCollapsed, setNavCollapsed] = useState<boolean>(() => {
     try { return localStorage.getItem('gw_sidebar_collapsed') === '1'; } catch { return false; }
   });
+  if (alreadyInsideShell) return <>{children}</>;
   const setCollapsed = (v: boolean) => {
     setNavCollapsed(v);
     try { localStorage.setItem('gw_sidebar_collapsed', v ? '1' : '0'); } catch { /* private mode */ }

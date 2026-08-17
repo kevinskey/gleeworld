@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { MediaFile } from './types';
 import { cn } from '@/lib/utils';
 import { Image, Video, Music, FileText, File, Play, Pause, Presentation, FileSpreadsheet, FileCode, FileArchive, Folder, FolderInput } from 'lucide-react';
@@ -37,6 +37,17 @@ const getExtendedFileType = (file: MediaFile): string => {
   return 'other';
 };
 
+// Fully dispose an audio element so late events (e.g. canplaythrough with preload='auto')
+// can't restart playback after it has been replaced or the component unmounted
+const disposeAudio = (audio: HTMLAudioElement | null) => {
+  if (!audio) return;
+  audio.pause();
+  audio.oncanplaythrough = null;
+  audio.onended = null;
+  audio.onerror = null;
+  audio.removeAttribute('src');
+};
+
 export const FinderFileGrid = ({
   files,
   selectedFiles,
@@ -53,6 +64,14 @@ export const FinderFileGrid = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { data: folders = [] } = useAllMediaFolders();
   const moveToFolder = useMoveToFolder();
+
+  // Stop any playing audio when the component unmounts
+  useEffect(() => {
+    return () => {
+      disposeAudio(audioRef.current);
+      audioRef.current = null;
+    };
+  }, []);
 
   // Handle bulk move - moves all selected files if file is in selection, otherwise just the single file
   const handleMoveToFolder = (fileId: string, folderId: string | null) => {
@@ -107,13 +126,13 @@ export const FinderFileGrid = ({
     
     if (playingAudio === file.id) {
       if (audioRef.current) {
-        audioRef.current.pause();
+        disposeAudio(audioRef.current);
         audioRef.current = null;
       }
       setPlayingAudio(null);
     } else {
       if (audioRef.current) {
-        audioRef.current.pause();
+        disposeAudio(audioRef.current);
         audioRef.current = null;
       }
       
@@ -140,6 +159,7 @@ export const FinderFileGrid = ({
         // Try without crossOrigin as fallback
         if (audio.crossOrigin) {
           console.log('Retrying without crossOrigin...');
+          disposeAudio(audio);
           const fallbackAudio = new Audio(audioUrl);
           fallbackAudio.oncanplaythrough = () => {
             fallbackAudio.play().catch(err => {
@@ -153,6 +173,7 @@ export const FinderFileGrid = ({
           };
           fallbackAudio.onerror = () => {
             console.error('Fallback also failed');
+            disposeAudio(fallbackAudio);
             setPlayingAudio(null);
             audioRef.current = null;
           };

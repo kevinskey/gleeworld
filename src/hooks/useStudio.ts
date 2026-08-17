@@ -143,10 +143,16 @@ export function useStudioSession(sessionId: string | null) {
     });
   }, [queueSave]);
 
+  // Latest session in a ref so the unmount flush below doesn't capture the
+  // first-render value (always null — the session loads async), which
+  // silently discarded any pending debounced save.
+  const sessionRef = useRef<Session | null>(null);
+  useEffect(() => { sessionRef.current = session; }, [session]);
+
   // Flush on unmount.
   useEffect(() => () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    if (session) saveSession(session).catch(() => { /* swallow */ });
+    if (sessionRef.current) saveSession(sessionRef.current).catch(() => { /* swallow */ });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

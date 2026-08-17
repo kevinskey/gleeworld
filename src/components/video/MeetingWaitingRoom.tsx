@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Clock, Video, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -26,7 +26,10 @@ export const MeetingWaitingRoom: React.FC<MeetingWaitingRoomProps> = ({
 }) => {
   const [meetingInfo, setMeetingInfo] = useState<MeetingInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [checkingStatus, setCheckingStatus] = useState(false);
+  // Refs so the interval callback (registered once with the first-render closure)
+  // sees current values instead of stale state
+  const meetingInfoRef = useRef<MeetingInfo | null>(null);
+  const checkingStatusRef = useRef(false);
 
   useEffect(() => {
     fetchMeetingInfo();
@@ -53,13 +56,15 @@ export const MeetingWaitingRoom: React.FC<MeetingWaitingRoomProps> = ({
       if (error) throw error;
 
       if (data) {
-        setMeetingInfo({
+        const info: MeetingInfo = {
           title: data.title,
           scheduled_at: data.scheduled_at,
           description: data.description || undefined,
           created_by: data.created_by,
           host_name: (data.gw_profiles as any)?.full_name || undefined,
-        });
+        };
+        meetingInfoRef.current = info;
+        setMeetingInfo(info);
       }
     } catch (error) {
       console.error('Error fetching meeting info:', error);
@@ -69,13 +74,13 @@ export const MeetingWaitingRoom: React.FC<MeetingWaitingRoomProps> = ({
   };
 
   const checkMeetingStatus = async () => {
-    if (checkingStatus) return;
-    setCheckingStatus(true);
+    if (checkingStatusRef.current) return;
+    checkingStatusRef.current = true;
 
     try {
       // Check if the scheduled time has passed
-      if (meetingInfo?.scheduled_at) {
-        const scheduledTime = new Date(meetingInfo.scheduled_at);
+      if (meetingInfoRef.current?.scheduled_at) {
+        const scheduledTime = new Date(meetingInfoRef.current.scheduled_at);
         const now = new Date();
         
         // Meeting should start if scheduled time has passed
@@ -85,7 +90,7 @@ export const MeetingWaitingRoom: React.FC<MeetingWaitingRoomProps> = ({
         }
       }
     } finally {
-      setCheckingStatus(false);
+      checkingStatusRef.current = false;
     }
   };
 
