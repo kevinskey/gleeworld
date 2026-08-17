@@ -411,11 +411,14 @@ describe('MyWorldEditor — groups', () => {
     expect(onGroupsChange.mock.calls.at(-1)![0]).toEqual([]);
   });
 
-  it('a tool added from More Tools lands loose', () => {
+  it('a tool added from More Tools lands in its category group', () => {
     const { onToolsChange, onGroupsChange } = renderEditor();
     fireEvent.click(screen.getByRole('button', { name: 'Add Studio' }));
-    expect(onToolsChange).toHaveBeenCalledWith(['calendar', 'messages', 'studio']);
-    expect(onGroupsChange).not.toHaveBeenCalled();
+    // Studio is a Make tool: loose list untouched, a "Make" group appears
+    // after the member's own groups with the new tool inside it.
+    expect(onToolsChange).toHaveBeenCalledWith(['calendar', 'messages']);
+    const sentGroups = onGroupsChange.mock.calls.at(-1)![0];
+    expect(sentGroups.at(-1)).toMatchObject({ name: 'Make', tools: ['studio'], collapsed: false });
   });
 
   // The tenant-defaults tab stores a flat text[] that cannot hold groups
