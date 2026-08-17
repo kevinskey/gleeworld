@@ -1,3 +1,5 @@
+import { Blob as NodeBlob } from 'node:buffer';
+
 // Provide a minimal Deno global shim so that edge-function files (which use
 // Deno.env.get) can be imported by Vitest without modification. The shim
 // delegates to process.env so tests can set env vars the normal Node way.
@@ -59,7 +61,7 @@ if (typeof HTMLCanvasElement !== 'undefined' && !(HTMLCanvasElement.prototype as
 // "jsdom" section. No-op under the default node test environment, where
 // globalThis.Blob already is Node's Blob.
 if (typeof window !== 'undefined') {
-  (globalThis as unknown as { Blob: typeof Blob }).Blob = require('node:buffer').Blob;
+  (globalThis as unknown as { Blob: typeof Blob }).Blob = NodeBlob as unknown as typeof Blob;
 }
 
 // A global ResizeObserver/scrollIntoView polyfill was tried here and
