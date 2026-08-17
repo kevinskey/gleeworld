@@ -1124,6 +1124,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const [navCollapsed, setNavCollapsed] = useState<boolean>(() => {
     try { return localStorage.getItem('gw_sidebar_collapsed') === '1'; } catch { return false; }
   });
+  // After all hooks — an early return above any hook is a rules-of-hooks
+  // violation (hook count changes if the nested flag ever flips in place).
   if (alreadyInsideShell) return <>{children}</>;
   const setCollapsed = (v: boolean) => {
     setNavCollapsed(v);

@@ -72,6 +72,7 @@ export const UniversalLayout = ({
       return data as any;
     },
   });
+  if (alreadyInsideLayout) return <>{children}</>;
   // Branding owns the palette; the public-site theme is only the fallback for
   // tenants that haven't set branding colors yet — the same merge order
   // TenantThemeRoot uses. The shell tint is the ONLY color this layout

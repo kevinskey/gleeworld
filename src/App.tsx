@@ -3531,6 +3531,9 @@ const App = () => {
                                </Routes>
                       </Suspense>
                       </UsageTracker>
+                    {/* Lazy — needs its own Suspense: the route-level one has
+                        already closed, and with no boundary a suspend here
+                        blocks the whole app's first paint. */}
                     <Suspense fallback={null}>
                       <GlobalMusicPlayer />
                     </Suspense>
