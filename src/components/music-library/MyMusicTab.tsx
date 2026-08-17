@@ -18,6 +18,7 @@ import { getSignedUrl } from '@/utils/storage';
 import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
 import { SOFT_CARD } from '@/components/music-library/scores/types';
 import { ScoreViewerDialog, type ViewingScore } from '@/components/music-library/ScoreViewerDialog';
+import { toViewerScoreId } from '@/lib/viewerScoreId';
 import { MyMusicCard } from '@/components/music-library/my-music/MyMusicCard';
 import { MyMusicListRow } from '@/components/music-library/my-music/MyMusicListRow';
 import { MyMusicUploadDialog } from '@/components/music-library/my-music/MyMusicUploadDialog';
@@ -32,9 +33,10 @@ export function MyMusicTab() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<PersonalScore | null>(null);
   // Personal PDFs open in the SAME contain-fit viewer as the Scores tab
-  // (whole page visible, no scrolling — PR #321). No `id`: annotation
-  // tables FK to gw_sheet_music, so the viewer's annotation/audio lookups
-  // stay disabled for personal scores.
+  // (whole page visible, no scrolling — PR #321). `id` is a `personal:`-
+  // prefixed viewer id (see toViewerScoreId below): annotations persist via
+  // gw_personal_score_annotations, while audio/bookmarks/layers stay
+  // tenant-only (they FK gw_sheet_music) and are disabled for these scores.
   const [viewing, setViewing] = useState<ViewingScore | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -193,7 +195,7 @@ export function MyMusicTab() {
         toast.error(`Could not open "${s.title}". The file may be missing.`);
         return;
       }
-      setViewing({ title: s.title, pdfUrl: url });
+      setViewing({ id: toViewerScoreId(s.id, true), title: s.title, pdfUrl: url });
     } finally {
       setOpeningId(null);
     }

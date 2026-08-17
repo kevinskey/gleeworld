@@ -1,9 +1,10 @@
 // Shared score viewer dialog — extracted from MusicLibraryPage so the
 // Scores tab and My Music open PDFs through the SAME contain-fit viewer
 // (whole page visible, no scrolling — PR #321). Wraps the lazy
-// PDFViewerWithAnnotations; `viewing.id` is optional and, when absent
-// (personal scores — annotation tables FK to gw_sheet_music), the viewer's
-// annotation/audio lookups short-circuit cleanly.
+// PDFViewerWithAnnotations; `viewing.id` may be a `personal:`-prefixed
+// viewer id for My Music scores, which persist annotations via
+// gw_personal_score_annotations while audio/bookmarks/layers stay
+// tenant-only (FK gw_sheet_music) and are guarded off for those ids.
 import { lazy, Suspense, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {

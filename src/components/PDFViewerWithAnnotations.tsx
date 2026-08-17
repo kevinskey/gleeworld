@@ -49,6 +49,7 @@ import { cn } from '@/lib/utils';
 import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
 import { BookmarksMenu } from '@/components/music-library/BookmarksMenu';
 import { STAMP_CATEGORIES } from '@/lib/smuflStamps';
+import { isPersonalScoreId } from '@/lib/viewerScoreId';
 import * as pdfjsLib from 'pdfjs-dist';
 // Value-import (not side-effect) so Vite cannot tree-shake the worker setup.
 import { PDF_WORKER_READY } from '@/lib/pdfWorker';
@@ -134,17 +135,21 @@ export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWit
     saveAnnotation,
     fetchAnnotations
   } = useSheetMusicAnnotations(musicId);
+  // Personal (My Music) scores annotate via the id-aware hook above, but
+  // audio, bookmarks, and layers FK gw_sheet_music — feed them undefined so
+  // their queries never fire against a `personal:` id.
+  const tenantMusicId = musicId && !isPersonalScoreId(musicId) ? musicId : undefined;
   // Annotation layers: each annotation can belong to a layer (Fingerings,
   // Bowing, Conductor notes…). Hidden layers don't render. New strokes
   // are saved under `currentLayerId` if set.
-  const { layers: annotationLayers, addLayer, toggleLayerVisible, deleteLayer } = useAnnotationLayers(musicId);
+  const { layers: annotationLayers, addLayer, toggleLayerVisible, deleteLayer } = useAnnotationLayers(tenantMusicId);
   const [currentLayerId, setCurrentLayerId] = useState<string | null>(null);
   const visibleLayerIds = useMemo(
     () => new Set(annotationLayers.filter((l) => l.is_visible).map((l) => l.id)),
     [annotationLayers],
   );
-  const { audioData } = useSheetMusicAudio(musicId);
-  const { tracks: audioTracks, defaultTrack: defaultAudioTrack } = useSheetMusicTracks(musicId);
+  const { audioData } = useSheetMusicAudio(tenantMusicId);
+  const { tracks: audioTracks, defaultTrack: defaultAudioTrack } = useSheetMusicTracks(tenantMusicId);
   const { loadUrl, loadYouTube, loadAppleMusic, audioSource, stop: stopAudio, closeYouTube } = useAudioCompanion();
   
   // Initialize the default layout plugin
@@ -1827,7 +1832,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             {/* Audio Companion in annotation mode - hidden on mobile */}
             <div className="hidden sm:flex items-center border-l pl-1.5 sm:pl-2 ml-1">
               {showAudioCompanion ? (
-                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={tenantMusicId} />
               ) : (
                 <Button
                   variant="outline"
@@ -1952,7 +1957,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 
                 {/* Audio Companion */}
                 {showAudioCompanion ? (
-                  <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
+                  <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={tenantMusicId} />
                 ) : (
                   <Button
                     size="sm"
@@ -2292,7 +2297,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             {/* Right: Tools */}
             <div className="flex items-center gap-1">
               {showAudioCompanion ? (
-                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={musicId} />
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} musicId={tenantMusicId} />
               ) : (
                 <Button
                   size="sm"
@@ -2325,9 +2330,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               >
                 <Palette className="h-4 w-4" />
               </Button>
-              {musicId && (
+              {tenantMusicId && (
                 <BookmarksMenu
-                  sheetMusicId={musicId}
+                  sheetMusicId={tenantMusicId}
                   currentPage={currentPage}
                   onJumpToPage={goToPage}
                 />
