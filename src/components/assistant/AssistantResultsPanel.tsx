@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { X, Car, Utensils, Globe, Sparkles, MapPin, Star, Play, Newspaper, Volume2, Square, ExternalLink, Loader2 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
+import { SaveArticleButton, useArticleExtract } from '@/components/news/ArticleReader';
 import { youtubeEmbedSrc } from '@/lib/youtubeEmbed';
 import { speak, stopSpeaking } from '@/lib/assistant/speech';
 import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
@@ -71,17 +71,9 @@ function hostnameOf(url: string): string {
 function ArticleCard({ result }: { result: Extract<ConciergeResult, { kind: 'article' }> }) {
   const assistant = useAssistantOptional();
   const [reading, setReading] = useState(false);
-  const { data, isFetching, isError } = useQuery({
-    queryKey: ['assistant-article', result.url],
-    staleTime: Infinity,
-    retry: false,
-    queryFn: async () => {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase.functions.invoke('extract-article', { body: { url: result.url } });
-      if (error || !data?.success) throw new Error(data?.error || 'extraction failed');
-      return data as { title: string | null; byline: string | null; siteName: string | null; paragraphs: string[]; truncated: boolean };
-    },
-  });
+  // Shared extraction hook = shared cache key: a story already opened from
+  // the news rail (or vice versa) renders here without a second extraction.
+  const { data, isFetching, isError } = useArticleExtract(result.url);
 
   // A dismissed or swapped article must stop talking.
   const autoReadStartedRef = useRef(false);
@@ -152,15 +144,24 @@ function ArticleCard({ result }: { result: Extract<ConciergeResult, { kind: 'art
       {data?.truncated && (
         <p className="text-xs text-muted-foreground">Shortened — the full story continues at the source.</p>
       )}
-      <a
-        href={result.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium border border-border hover:bg-accent transition-colors"
-      >
-        <ExternalLink className="w-4 h-4" />
-        Open at {hostnameOf(result.url)}
-      </a>
+      <div className="flex flex-wrap items-center gap-2">
+        <SaveArticleButton
+          url={result.url}
+          title={title}
+          source={data?.siteName ?? undefined}
+          extract={data}
+          className="h-9 rounded-full"
+        />
+        <a
+          href={result.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium border border-border hover:bg-accent transition-colors"
+        >
+          <ExternalLink className="w-4 h-4" />
+          Open at {hostnameOf(result.url)}
+        </a>
+      </div>
     </div>
   );
 }

@@ -178,6 +178,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- "Just the highlights" / "give me a quick summary": compress to one or two sentences distilling the top items, grouped by theme.',
     '- "Read the third one" / "read the one about X": pick that single item and read its title, source, and the summary field. If ambiguous, ask which of the matches they mean.',
     '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — the article opens in the in-app reader beside the chat. If they asked to HEAR it ("read it to me", "read that article"), also pass read_aloud: true and the reader speaks it in your voice. Never say you opened a new tab or left the app.',
+    '- If the user says an article MATTERS to them — "save that one", "this is important, keep it", "put that story in my notes" — call save_article_note with the item\'s exact link, title, source, and summary. The full article text is extracted and saved into their private Planner notes with the link. Confirm in a few words; never claim it is saved without the call.',
     '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly.',
   ].join('\n');
   const streamingNote = [

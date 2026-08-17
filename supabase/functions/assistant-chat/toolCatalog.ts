@@ -415,6 +415,22 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
+    name: 'save_article_note',
+    description: "Save a NEWS ARTICLE into the user's private Planner notes — 'save that article', 'this one's important, note it', 'keep the story about X'. The full article text is extracted server-side and stored with the link, so pass the item's exact link/title/source/summary from read_news_feeds (or the article currently open in the reader). For saving anything that is not a news article, use create_note instead.",
+    parameters: {
+      type: 'object',
+      properties: {
+        url: str('The article link, exactly as the tool result gave it — never fabricated'),
+        title: str('The headline'),
+        source: str('Publisher name, e.g. "Choral Journal" (optional)'),
+        published: str('Published date/time from the feed item (optional)'),
+        summary: str("The feed item's short summary — used as the note body if the full text can't be extracted (optional)"),
+      },
+      required: ['url', 'title'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
     name: 'create_task',
     description: "Create a task in the user's Planner. due_at is an ISO datetime; scheduled_date an ISO date; priority one of none|low|medium|high.",
     parameters: {

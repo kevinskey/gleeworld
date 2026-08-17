@@ -75,6 +75,57 @@ describe('executeClientAction', () => {
     }
   });
 
+  it('save_article_note extracts the article and saves a self-contained note', async () => {
+    const invoke = vi.fn(async () => ({
+      data: { success: true, paragraphs: ['Para one.', 'Para two.'], byline: 'By Ada', siteName: 'Example News', truncated: false },
+      error: null,
+    }));
+    const createNote = vi.fn(async (p: { title: string; content?: unknown; properties?: Record<string, unknown> }) => ({ id: 'n1', title: p.title }));
+    const out = await executeClientAction(
+      { tool: 'save_article_note', args: { url: 'https://example.com/story', title: 'Big Story', source: 'Example News', published: '2026-08-15' }, confirm: false },
+      {
+        ...makeDeps({ createNote, textToDoc: (t: string) => ({ doc: t }) }),
+        supabase: { from: () => ({}), functions: { invoke }, rpc: vi.fn() } as unknown as ActionDeps['supabase'],
+      },
+    );
+    expect(invoke).toHaveBeenCalledWith('extract-article', { body: { url: 'https://example.com/story' } });
+    expect(out.ok).toBe(true);
+    expect(out.message).toContain('Big Story');
+    // Saving must not yank the user out of what they're reading.
+    expect(out.navigateTo).toBeUndefined();
+    const saved = createNote.mock.calls[0][0];
+    expect(saved.title).toBe('Big Story');
+    expect((saved.content as { doc: string }).doc).toContain('Para one.');
+    expect((saved.content as { doc: string }).doc).toContain('https://example.com/story');
+    expect(saved.properties).toMatchObject({ source_url: 'https://example.com/story', source_name: 'Example News' });
+  });
+
+  it('save_article_note still saves link + summary when extraction fails', async () => {
+    const invoke = vi.fn(async () => ({ data: { success: false, error: 'paywall' }, error: null }));
+    const createNote = vi.fn(async (p: { title: string; content?: unknown; properties?: Record<string, unknown> }) => ({ id: 'n1', title: p.title }));
+    const out = await executeClientAction(
+      { tool: 'save_article_note', args: { url: 'https://example.com/pay', title: 'Walled', summary: 'RSS summary here.' }, confirm: false },
+      {
+        ...makeDeps({ createNote, textToDoc: (t: string) => ({ doc: t }) }),
+        supabase: { from: () => ({}), functions: { invoke }, rpc: vi.fn() } as unknown as ActionDeps['supabase'],
+      },
+    );
+    expect(out.ok).toBe(true);
+    const saved = createNote.mock.calls[0][0];
+    expect((saved.content as { doc: string }).doc).toContain('RSS summary here.');
+    expect((saved.content as { doc: string }).doc).toContain('https://example.com/pay');
+  });
+
+  it('save_article_note rejects non-http(s) urls without saving anything', async () => {
+    const createNote = vi.fn();
+    const out = await executeClientAction(
+      { tool: 'save_article_note', args: { url: 'javascript:alert(1)', title: 'X' }, confirm: false },
+      makeDeps({ createNote }),
+    );
+    expect(out.ok).toBe(false);
+    expect(createNote).not.toHaveBeenCalled();
+  });
+
   it('add_to_nav appends a catalog key to the stored shelf via the definer RPCs', async () => {
     const record = { v: 4, tools: ['calendar'], groups: [], widgets: [], setupComplete: true };
     const rpc = vi.fn(async (fn: string, _args?: Record<string, unknown>) => {

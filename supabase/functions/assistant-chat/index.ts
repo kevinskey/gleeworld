@@ -381,7 +381,7 @@ serve(async (req) => {
         // Phantom-note guard + save-intent floor (Kevin's real 17:32
         // phantom: "I've saved a note … It's in your Planner notes now"
         // with no create_note action).
-        const notedThisTurn = actions.some((a) => a.tool === 'create_note');
+        const notedThisTurn = actions.some((a) => a.tool === 'create_note' || a.tool === 'save_article_note');
         if (!noteNudged && !notedThisTurn && claimsNoteSaved(reply)) {
           noteNudged = true;
           messages.push({ role: 'assistant', content: reply });

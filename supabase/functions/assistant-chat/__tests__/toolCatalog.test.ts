@@ -20,6 +20,20 @@ describe('toolCatalog', () => {
     expect(names).toContain('play_video');
   });
 
+  it('save_article_note is a member client tool taking url + title', () => {
+    const t = TOOL_CATALOG.find((x) => x.name === 'save_article_note')!;
+    expect(t).toBeTruthy();
+    expect(t.minRole).toBe('member');
+    expect(t.execution).toBe('client');
+    expect(t.confirm).toBe(false);
+    expect(t.parameters.required).toEqual(['url', 'title']);
+    // Optional context the model already holds from read_news_feeds — the
+    // summary doubles as the note body when extraction fails (paywalls).
+    expect(Object.keys(t.parameters.properties)).toEqual(
+      expect.arrayContaining(['url', 'title', 'source', 'published', 'summary']),
+    );
+  });
+
   it('get_score_analysis is a read-only member server tool', () => {
     const t = TOOL_CATALOG.find((x) => x.name === 'get_score_analysis')!;
     expect(t.minRole).toBe('member');

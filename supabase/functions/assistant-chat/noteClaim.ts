@@ -39,7 +39,7 @@ export function isSaveNoteIntent(userMessage: string): boolean {
 }
 
 export const NOTE_CLAIM_NUDGE =
-  'You told the user a note was saved, but you called create_note on nothing this turn — no note exists, no matter what earlier turns say. Either call create_note RIGHT NOW with a distilled title and body of what they asked to keep, or answer honestly without claiming anything was saved.';
+  'You told the user a note was saved, but you called no note tool this turn — no note exists, no matter what earlier turns say. Either call create_note (or save_article_note for a news article) RIGHT NOW with a distilled title and body of what they asked to keep, or answer honestly without claiming anything was saved.';
 
 export const NOTE_INTENT_NUDGE =
-  'The user asked you to SAVE something to their notes and you have not called create_note this turn. Call create_note NOW with a clear title and a distilled body of what they asked to keep. Do not claim it is saved without the call.';
+  'The user asked you to SAVE something to their notes and you have called no note tool this turn. Call create_note NOW with a clear title and a distilled body of what they asked to keep — or save_article_note if it is a news article. Do not claim it is saved without the call.';
