@@ -44,4 +44,25 @@ BEGIN
             AND column_default = 'false'), 'shared_with_members missing';
 END $$;
 
+DO $$
+BEGIN
+  ASSERT (SELECT count(*) = 1 FROM information_schema.tables
+          WHERE table_name = 'gw_personal_score_annotations'),
+         'personal annotations table missing';
+  ASSERT (SELECT relrowsecurity FROM pg_class
+          WHERE relname = 'gw_personal_score_annotations'),
+         'personal annotations RLS not enabled';
+  ASSERT (SELECT count(*) = 0 FROM information_schema.columns
+          WHERE table_name = 'gw_personal_score_annotations'
+            AND column_name = 'tenant_id'),
+         'personal annotations must NOT have tenant_id';
+  ASSERT (SELECT count(*) = 4 FROM pg_policies
+          WHERE tablename = 'gw_personal_score_annotations'),
+         'personal annotations owner policies missing';
+  ASSERT (SELECT count(*) = 1 FROM pg_indexes
+          WHERE tablename = 'gw_personal_scores'
+            AND indexname = 'gw_personal_scores_purchase_uq'),
+         'purchase idempotency index missing';
+END $$;
+
 ROLLBACK;
