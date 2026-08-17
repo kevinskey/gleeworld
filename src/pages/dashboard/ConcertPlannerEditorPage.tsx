@@ -35,7 +35,7 @@ import { Label } from '@/components/ui/label';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
-// Not called yet — wired for Publish in Task 12/13.
+import QRCode from 'qrcode';
 import { supabase } from '@/integrations/supabase/client';
 import { useConcertProgramDoc } from '@/hooks/useConcertProgramDoc';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
@@ -48,6 +48,9 @@ import { flattenPieceOrder } from '@/lib/concertProgram/blocks';
 import { contentHeightIn } from '@/lib/concertProgram/geometry';
 import { paginateProgram } from '@/lib/concertProgram/paginate';
 import { paddedPanelCount } from '@/lib/concertProgram/impose';
+import { slugify } from '@/lib/concertProgram/slug';
+import { validateProgram } from '@/lib/concertPlanner/validate';
+import type { ConcertProgram as ValidateConcertProgram } from '@/lib/concertPlanner/types';
 import { useBlockMeasurements } from '@/components/concert-program/useBlockMeasurements';
 import { ProgramSheetView } from '@/components/concert-program/ProgramSheetView';
 import { PieceEditPopover } from '@/components/concert-program/PieceEditPopover';
@@ -55,6 +58,7 @@ import { BlockRail } from '@/components/concert-program/BlockRail';
 import { RosterPanel } from '@/components/concert-program/RosterPanel';
 import { LibraryPickerDialog, type LibraryPickFields } from '@/components/concert-program/LibraryPickerDialog';
 import { SetlistImportDialog, type SetlistImportResult } from '@/components/concert-program/SetlistImportDialog';
+import { PublishPanel } from '@/components/concert-program/PublishPanel';
 import { PIECE_FIELD_DEBOUNCE_MS } from '@/components/concert-program/editDebounce';
 import type { RenderCtx } from '@/components/concert-program/blocks/BlockRenderers';
 import type { ProgramEditCtx } from '@/components/concert-program/editTypes';
@@ -298,8 +302,41 @@ export default function ConcertPlannerEditorPage() {
   const orgName = settings.org_name;
   const logoUrl = settings.logo_url;
 
+  // ── Validation (Task 12: Publish panel) ─────────────────────────────────
+  // validateProgram's ConcertProgram type (src/lib/concertPlanner/types.ts)
+  // differs from the hook's (missing here: tenant_id) — validate.ts only
+  // ever reads venue/event_date/conductor/accompanist/target_length_minutes
+  // off it, so the cast is safe; nothing this function reads is absent
+  // from the hook's shape.
+  const validation = useMemo(
+    () => validateProgram(program as unknown as ValidateConcertProgram | null, pieces, roster),
+    [program, pieces, roster],
+  );
+
+  // ── Footer QR (Task 12) ──────────────────────────────────────────────────
+  const footerBlock = useMemo(() => (blocks ?? []).find((b) => b.kind === 'footer'), [blocks]);
+  const footerShowQr = !!(footerBlock && footerBlock.kind === 'footer' && footerBlock.showQr);
+  const isPublished = !!program?.published_at;
+
+  const [footerQrDataUrl, setFooterQrDataUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!isPublished || !footerShowQr || !program?.published_slug) {
+      setFooterQrDataUrl(null);
+      return;
+    }
+    let cancelled = false;
+    const publicUrl = `${window.location.origin}/program/${program.published_slug}`;
+    QRCode.toDataURL(publicUrl, { width: 300, margin: 2, color: { dark: '#000000', light: '#FFFFFF' } })
+      .then((url) => { if (!cancelled) setFooterQrDataUrl(url); })
+      .catch(() => { if (!cancelled) setFooterQrDataUrl(null); });
+    return () => { cancelled = true; };
+  }, [isPublished, footerShowQr, program?.published_slug]);
+
   // Plain ctx — no `edit` key. This is what print/public would see, and
-  // it's what feeds measurement (see file header note).
+  // it's what feeds measurement (see file header note). qrDataUrl is only
+  // ever non-null here when published && the footer block has showQr —
+  // gated explicitly (not just trusting the effect above) so a toggle-off
+  // can never show a stale QR for even one render.
   const ctx: RenderCtx = useMemo(() => ({
     blocks: blocks ?? [],
     piecesById,
@@ -307,8 +344,8 @@ export default function ConcertPlannerEditorPage() {
     program: headerCtx,
     orgName,
     logoUrl,
-    qrDataUrl: null,
-  }), [blocks, piecesById, roster, headerCtx, orgName, logoUrl]);
+    qrDataUrl: isPublished && footerShowQr ? footerQrDataUrl : null,
+  }), [blocks, piecesById, roster, headerCtx, orgName, logoUrl, isPublished, footerShowQr, footerQrDataUrl]);
 
   const { heights, measureHost } = useBlockMeasurements({
     blocks: blocks ?? [], ctx, design, format, rosterSectionIds,
@@ -344,6 +381,62 @@ export default function ConcertPlannerEditorPage() {
     setEditorAnchorEl(pieceRefs.current.get(pieceId) ?? null);
     setEditorOpen(true);
   }, []);
+
+  // ── Publish panel (Task 12) ─────────────────────────────────────────────
+  const [publishOpen, setPublishOpen] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+
+  // Verbatim slug scheme + publish/unpublish semantics from the old editor
+  // (ConcertPlannerEditorPage, handlePublish/handleUnpublish): unpublish
+  // KEEPS published_slug so re-publishing reuses the same public URL.
+  const handlePublish = useCallback(async () => {
+    if (!program) return;
+    setPublishing(true);
+    try {
+      const slug = program.published_slug ?? `${slugify(program.title)}-${program.id.slice(0, 6)}`;
+      const { data: { user } } = await supabase.auth.getUser();
+      await updateProgram.mutateAsync({
+        published_at: new Date().toISOString(),
+        published_by: user?.id ?? null,
+        published_slug: slug,
+      });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Publish failed');
+    } finally {
+      setPublishing(false);
+    }
+  }, [program, updateProgram]);
+
+  const handleUnpublish = useCallback(async () => {
+    if (!program) return;
+    try {
+      await updateProgram.mutateAsync({ published_at: null, published_by: null });
+      toast.success('Program unpublished');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Unpublish failed');
+    }
+  }, [program, updateProgram]);
+
+  // Close the panel, select + scroll to the offending piece (scrollIntoView
+  // feature-detected — absent in jsdom), then open its popover focused on
+  // whichever field the blocker is actually about.
+  const onJumpToPiece = useCallback((pieceId: string) => {
+    setPublishOpen(false);
+    setSelectedPieceId(pieceId);
+    const el = pieceRefs.current.get(pieceId);
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ block: 'center' });
+    }
+    const isRightsIssue = validation.items.some(
+      (i) => i.id === `rights-${pieceId}` || i.id === `rights-info-${pieceId}`,
+    );
+    openPieceEditor(pieceId, isRightsIssue ? 'rights_status' : 'composer');
+  }, [validation, openPieceEditor]);
+
+  const onToggleFooterQr = useCallback((v: boolean) => {
+    if (!blocks) return;
+    setBlocks(blocks.map((b) => (b.kind === 'footer' ? { ...b, showQr: v } : b)));
+  }, [blocks, setBlocks]);
 
   // ── Debounced piece-field commits for inline (non-popover) edits ───────
   // Same buffer-then-diff semantics the popover uses (shared DEBOUNCE_MS),
@@ -852,7 +945,9 @@ export default function ConcertPlannerEditorPage() {
           </SheetContent>
         </Sheet>
         <Button variant="outline" size="sm" disabled>Print / Save PDF</Button>
-        <Button size="sm" disabled>Publish</Button>
+        <Button size="sm" disabled={!program} onClick={() => setPublishOpen(true)}>
+          {isPublished ? 'Published' : 'Publish'}
+        </Button>
       </header>
 
       <main className="flex-1 lg:grid lg:grid-cols-[10rem_1fr_280px] gap-4 p-3 lg:p-4 min-h-0">
@@ -903,6 +998,19 @@ export default function ConcertPlannerEditorPage() {
 
       <LibraryPickerDialog open={libraryOpen} onOpenChange={setLibraryOpen} onPick={handleLibraryPick} />
       <SetlistImportDialog open={setlistOpen} onOpenChange={setSetlistOpen} onImport={handleSetlistImport} />
+
+      <PublishPanel
+        open={publishOpen}
+        onOpenChange={setPublishOpen}
+        validation={validation}
+        program={program}
+        onJumpToPiece={onJumpToPiece}
+        onPublish={handlePublish}
+        onUnpublish={handleUnpublish}
+        publishing={publishing}
+        footerShowQr={footerShowQr}
+        onToggleFooterQr={onToggleFooterQr}
+      />
     </div>
   );
 }
