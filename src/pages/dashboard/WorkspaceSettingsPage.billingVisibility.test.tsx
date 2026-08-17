@@ -119,20 +119,30 @@ describe('WorkspaceSettingsPage billing visibility', () => {
 });
 
 describe('PlanTabPanel checkout actions (admin)', () => {
-  // Self-serve checkout applies only to tenant-scope, non-quote tiers:
-  // director_60 and director_150. Institution is quote-priced ("From
-  // $250/mo") so it goes to email; Personal is a user-scope plan that a
-  // tenant checkout would reject (scope='tenant' filter in the fn).
-  it('offers Choose Plan checkout only for the two self-serve tenant tiers', () => {
+  // Tenant-scope non-quote tiers (director_60, director_150) buy through
+  // create-plan-checkout; the user-scope Personal tier buys through
+  // create-personal-checkout (payer = the caller, no tenant involved).
+  // Institution is quote-priced ("From $250/mo") so it goes to email.
+  // Button order follows card order: Personal, Director, Director+.
+  it('offers Choose Plan on the three purchasable tiers', () => {
     role.admin = true;
     setup();
-    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(3);
   });
 
-  it('starts checkout with plan id, cycle, and tenant slug', async () => {
+  it('Personal buys through create-personal-checkout', async () => {
     role.admin = true;
     setup();
     fireEvent.click(screen.getAllByRole('button', { name: /choose plan/i })[0]);
+    await waitFor(() => expect(invokeMock).toHaveBeenCalledWith('create-personal-checkout', {
+      body: { plan_id: 'personal', billing_cycle: 'monthly' },
+    }));
+  });
+
+  it('starts tenant checkout with plan id, cycle, and tenant slug', async () => {
+    role.admin = true;
+    setup();
+    fireEvent.click(screen.getAllByRole('button', { name: /choose plan/i })[1]);
     await waitFor(() => expect(invokeMock).toHaveBeenCalledWith('create-plan-checkout', {
       body: { plan_id: 'director_60', billing_cycle: 'monthly', tenant_slug: 'demo' },
     }));
@@ -142,7 +152,7 @@ describe('PlanTabPanel checkout actions (admin)', () => {
     role.admin = true;
     setup();
     fireEvent.click(screen.getByRole('button', { name: /annual/i }));
-    fireEvent.click(screen.getAllByRole('button', { name: /choose plan/i })[0]);
+    fireEvent.click(screen.getAllByRole('button', { name: /choose plan/i })[1]);
     await waitFor(() => expect(invokeMock).toHaveBeenCalledWith('create-plan-checkout', {
       body: { plan_id: 'director_60', billing_cycle: 'annual', tenant_slug: 'demo' },
     }));
@@ -167,7 +177,7 @@ describe('PlanTabPanel checkout actions (admin)', () => {
     ));
     render(<WorkspaceSettingsPage />, { wrapper });
     await waitFor(() => expect(screen.getByText('trial')).toBeInTheDocument());
-    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(2);
+    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(3);
     expect(screen.queryByText('CURRENT')).not.toBeInTheDocument();
   });
 
@@ -180,6 +190,6 @@ describe('PlanTabPanel checkout actions (admin)', () => {
     ));
     render(<WorkspaceSettingsPage />, { wrapper });
     await waitFor(() => expect(screen.getByText('CURRENT')).toBeInTheDocument());
-    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(2);
   });
 });
