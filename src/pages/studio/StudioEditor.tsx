@@ -59,12 +59,11 @@ import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defa
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
 import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioTrack, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
 import {
-  formatTime, formatBarBeat, formatBarBeatCompact, formatSamples, nextCounterMode, type CounterMode,
+  formatTime, formatBarBeat, formatSamples, barBeatParts, nextCounterMode, type CounterMode,
   preRollStartSeconds, postRollEndSeconds, punchTransition,
   nextMarker, prevMarker, sortMarkers, defaultMarkerName, shuttleStepSeconds,
 } from '@/lib/studio/transport';
 import { MidiClockSender } from '@/lib/studio/midiClock';
-import { useIsPhone } from '@/hooks/use-mobile';
 import { PianoRollPanel } from '@/pages/studio/pianoroll/PianoRollPanel';
 import { MidiClipPreview } from '@/pages/studio/pianoroll/MidiClipPreview';
 import type { EngineState } from '@/lib/studio/engine/engine';
@@ -2557,8 +2556,9 @@ function Editor({
       <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 space-y-1.5">
         <div className="flex flex-wrap items-center justify-center gap-1.5 sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:justify-normal sm:gap-3">
 
-        {/* LEFT — transport controls. Play/Pause/Stop/Rec/Metro are
-         *  visible on every breakpoint; nav (skip start/end + scrub) and
+        {/* LEFT — transport controls. Play/Pause/Stop/Rec are visible on
+         *  every breakpoint (metronome + count-in live in the LCD); nav
+         *  (skip start/end + scrub) and
          *  markers appear on wider screens where there's room. Every
          *  button is shrink-0 — squeezed cells must wrap to a second
          *  line (flex-wrap), never compress the buttons into slivers. */}
@@ -2636,22 +2636,6 @@ function Editor({
           className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${isRecording ? 'bg-rose-500 border-rose-500 text-white animate-pulse' : 'bg-muted border-border hover:bg-rose-100 hover:border-rose-300'}`}
           title={punchEnabled ? 'Record (R) — punch mode: rolls pre-roll, then drops in/out at the punch range' : 'Record (R)'}>
           <Circle className={`w-3.5 h-3.5 ${isRecording ? 'fill-white text-white' : 'fill-rose-500 text-rose-500'}`} />
-        </button>
-        <button onClick={() => {
-            // Do NOT await start() here — the native engine only needs
-            // to be running for playback, and setMetronome now just
-            // flips the flag on the native side. Awaiting start() has
-            // been observed to reject on some device audio session
-            // states, which then silently swallows the setMetronome
-            // call and leaves the button stuck grey. Kick start() in
-            // the background so the engine is warm when the user hits
-            // Play, but never gate the toggle on it.
-            void Promise.resolve(start?.()).catch(() => { /* engine will retry on play */ });
-            setMetronome(!state?.metronomeOn);
-          }}
-          className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${state?.metronomeOn ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border hover:bg-muted/70'}`}
-          title="Metronome (M)">
-          <Timer className="w-4 h-4" />
         </button>
         <button
           onClick={() => {
@@ -2737,36 +2721,75 @@ function Editor({
         </button>
         </div>
 
-        {/* CENTER — LCD timecode. Anchored to the middle grid cell so it
-         *  reads dead-center at every breakpoint regardless of how many
-         *  buttons occupy the left cell. Position/length text stacks below
-         *  on phones and sits beside the counter on md+ where there's room. */}
-        <div className="order-first w-full sm:order-none sm:w-auto flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-3 shrink-0">
-          <TransportCounter
-            store={transportTick}
-            counterMode={counterMode}
-            onCycleMode={() => setCounterMode(nextCounterMode(counterMode))}
-            tempoBpm={session.tempo_bpm}
-            numerator={session.time_signature.numerator}
-            sampleRate={state?.sampleRate ?? 48000}
-            lengthSeconds={session.length_seconds}
-          />
+        {/* CENTER — the LCD, Logic Pro's control-bar model: one dark
+         *  display unit holding everything glanced at while tracking.
+         *  Count-in (♪) and metronome toggles sit inside its left edge,
+         *  then segmented bar|beat|tick digits, elapsed time, editable
+         *  tempo (label doubles as tap tempo), and time signature.
+         *  Anchored to the middle grid cell so it reads dead-center at
+         *  every breakpoint. Only TransportLCDPosition re-renders per
+         *  transport tick — the shell stays still. On phones the LCD gets
+         *  a full-width line of its own up top (order-first), per the
+         *  earlier 390px crowding report. */}
+        <div className="order-first w-full sm:order-none sm:w-auto flex items-center justify-center shrink-0">
+        <TransportLCD
+          store={transportTick}
+          counterMode={counterMode}
+          onCycleMode={() => setCounterMode(nextCounterMode(counterMode))}
+          tempoBpm={session.tempo_bpm}
+          numerator={session.time_signature.numerator}
+          denominator={session.time_signature.denominator}
+          sampleRate={state?.sampleRate ?? 48000}
+          lengthSeconds={session.length_seconds}
+          countInBars={countInBars}
+          onCycleCountIn={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
+          metronomeOn={!!state?.metronomeOn}
+          onToggleMetronome={() => {
+            // Do NOT await start() here — the native engine only needs
+            // to be running for playback, and setMetronome now just
+            // flips the flag on the native side. Awaiting start() has
+            // been observed to reject on some device audio session
+            // states, which then silently swallows the setMetronome
+            // call and leaves the button stuck grey. Kick start() in
+            // the background so the engine is warm when the user hits
+            // Play, but never gate the toggle on it.
+            void Promise.resolve(start?.()).catch(() => { /* engine will retry on play */ });
+            setMetronome(!state?.metronomeOn);
+          }}
+          onTempoChange={(bpm) => {
+            update((s) => ({ ...s, tempo_bpm: bpm }));
+            updateTempo(bpm);
+          }}
+          onTapTempo={() => {
+            const now = performance.now();
+            const taps = tapTempoTimesRef.current;
+            taps.push(now);
+            while (taps.length > 5 && taps[0] < now - 3000) taps.shift();
+            if (taps.length < 2) return;
+            const intervals: number[] = [];
+            for (let i = 1; i < taps.length; i++) intervals.push(taps[i] - taps[i - 1]);
+            const avgMs = intervals.reduce((s, n) => s + n, 0) / intervals.length;
+            const detected = Math.round(60000 / avgMs);
+            if (detected >= 30 && detected <= 300) {
+              update((s) => ({ ...s, tempo_bpm: detected }));
+              updateTempo(detected);
+            }
+          }}
+          onTimeSignatureChange={(n, d) => {
+            update((s) => ({ ...s, time_signature: { numerator: n, denominator: d } }));
+            updateTimeSignature(n, d);
+          }}
+        />
         </div>
 
-        {/* RIGHT — secondary actions. Count-in is a first-class pill here
-         *  (used before every take, so pushing it into a sheet slowed
-         *  mobile users down). Undo has no keyboard shortcut on iPad, so
-         *  a persistent button is the only way to reach it there. The
-         *  More button opens the settings sheet with tempo/TS/snap/grid/
-         *  end/punch — the same controls that live in Row 2's chip row on
-         *  desktop, so nothing is ever exclusively phone- or desktop-only. */}
+        {/* RIGHT — secondary actions. Count-in moved into the LCD's left
+         *  edge (Logic model) but stays one tap away on every breakpoint.
+         *  Undo has no keyboard shortcut on iPad, so a persistent button
+         *  is the only way to reach it there. The More button opens the
+         *  settings sheet with tempo/TS/snap/grid/end/punch — the same
+         *  controls that live in the LCD + Row 2 on desktop, so nothing
+         *  is ever exclusively phone- or desktop-only. */}
         <div className="contents sm:flex sm:items-center sm:gap-1.5 sm:justify-end sm:min-w-0">
-          <button
-            onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
-            className={`shrink-0 h-8 sm:h-9 px-2 sm:px-3 rounded border text-xs sm:text-sm font-bold whitespace-nowrap ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
-            title={countInBars === 0 ? 'Count-in OFF — tap to cycle 1 bar → 2 bars → off' : `Count-in: ${countInBars} bar${countInBars > 1 ? 's' : ''}`}>
-            <span className="hidden md:inline">Count-in </span>{countInBars === 0 ? 'Off' : `${countInBars}`}
-          </button>
           {countInBeat !== null && (
             <span className="text-xs sm:text-sm font-bold px-2 py-0.5 rounded bg-rose-500 text-white tabular-nums animate-pulse">
               {countInBeat}
@@ -2826,51 +2849,12 @@ function Editor({
         </div>
         </div>
 
-        {/* Row 2 — desktop chip row (md+). Tempo + Tap + TS, Punch,
-         *  Snap/Grid/End. On phones these live inside the settings sheet
-         *  (accessible from the More button) — this row disappears
-         *  entirely so the transport can fit in one clean line. */}
+        {/* Row 2 — desktop chip row (md+). Punch, Zoom, Snap/Grid/End.
+         *  Tempo + Tap + TS moved up into the LCD (Logic model). On
+         *  phones these live inside the settings sheet (accessible from
+         *  the More button) — this row disappears entirely so the
+         *  transport can fit in one clean line. */}
         <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1.5 border-t border-border/60 text-sm">
-          <div className="flex items-center gap-1">
-            <span className="text-muted-foreground">BPM</span>
-            <input type="number" min={20} max={300} value={session.tempo_bpm}
-              onChange={(e) => {
-                const bpm = Number(e.target.value) || 120;
-                update((s) => ({ ...s, tempo_bpm: bpm }));
-                updateTempo(bpm);
-              }}
-              className="w-14 h-7 bg-background border border-border rounded text-center" />
-            <button
-              type="button"
-              onClick={() => {
-                const now = performance.now();
-                const taps = tapTempoTimesRef.current;
-                taps.push(now);
-                while (taps.length > 5 && taps[0] < now - 3000) taps.shift();
-                if (taps.length < 2) return;
-                const intervals: number[] = [];
-                for (let i = 1; i < taps.length; i++) intervals.push(taps[i] - taps[i - 1]);
-                const avgMs = intervals.reduce((s, n) => s + n, 0) / intervals.length;
-                const detected = Math.round(60000 / avgMs);
-                if (detected >= 30 && detected <= 300) {
-                  update((s) => ({ ...s, tempo_bpm: detected }));
-                  updateTempo(detected);
-                }
-              }}
-              className="h-7 px-2 rounded border border-border bg-muted text-xs font-semibold hover:bg-muted/70"
-              title="Tap Tempo — tap along with a beat 2+ times to detect the BPM">
-              Tap
-            </button>
-            <CompactTimeSignaturePicker
-              numerator={session.time_signature.numerator}
-              denominator={session.time_signature.denominator}
-              onChange={(n, d) => {
-                update((s) => ({ ...s, time_signature: { numerator: n, denominator: d } }));
-                updateTimeSignature(n, d);
-              }}
-            />
-          </div>
-
           <div className="flex items-center gap-1">
             <span className="text-muted-foreground">Punch</span>
             <button
@@ -4177,7 +4161,23 @@ function TimeSignaturePicker({
 // stays still while the transport rolls (see TransportTickStore in
 // useStudio.ts).
 
-function TransportCounter({
+/** One LCD cell — a value with a Logic-style label beneath it. */
+function LCDSeg({ value, label, dim = false, size = 'lg' }: {
+  value: React.ReactNode; label: string; dim?: boolean; size?: 'lg' | 'sm';
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center px-1.5 sm:px-2 leading-none gap-0.5">
+      <span className={`font-mono tabular-nums ${dim ? 'text-emerald-600' : 'text-emerald-400'} ${size === 'lg' ? 'text-sm sm:text-lg' : 'text-xs sm:text-sm'}`}>
+        {value}
+      </span>
+      <span className="text-emerald-700 text-xs font-semibold lowercase tracking-wide">{label}</span>
+    </div>
+  );
+}
+
+/** The tick-driven digit groups — the ONLY part of the LCD that
+ * re-renders per ~30Hz transport tick. */
+function TransportLCDPosition({
   store, counterMode, onCycleMode, tempoBpm, numerator, sampleRate, lengthSeconds,
 }: {
   store: TransportTickStore;
@@ -4189,30 +4189,114 @@ function TransportCounter({
   lengthSeconds: number;
 }) {
   const pos = useTransportPosition(store);
-  // Phones get bar.beat ("7.3") — the padded BBB.beat.tick readout ate a
-  // third of the 390px transport row and crowded the rewind cluster out.
-  const isPhone = useIsPhone();
+  const bb = barBeatParts(pos, tempoBpm, numerator);
   return (
-    <>
-      <button
-        onClick={onCycleMode}
-        className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1 sm:gap-1.5 hover:bg-zinc-800"
-        title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
-        <span className="text-emerald-400 text-sm sm:text-lg">
-          {counterMode === 'bars' && (isPhone
-            ? formatBarBeatCompact(pos, tempoBpm, numerator)
-            : formatBarBeat(pos, tempoBpm, numerator))}
-          {counterMode === 'time' && formatTime(pos)}
-          {counterMode === 'samples' && formatSamples(pos, sampleRate)}
-        </span>
-        <span className="text-emerald-700 text-xs font-semibold">
-          {counterMode === 'bars' ? 'BAR' : counterMode === 'time' ? 'SEC' : 'SMP'}
-        </span>
-      </button>
-      <div className="hidden md:block text-muted-foreground text-xs tabular-nums font-mono">
-        {formatTime(pos)} / {formatTime(lengthSeconds)}
+    <button
+      onClick={onCycleMode}
+      className="flex items-stretch divide-x divide-zinc-800 hover:bg-zinc-800/50 transition-colors"
+      title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
+      {counterMode === 'bars' && (
+        <>
+          <LCDSeg value={String(bb.bar).padStart(3, '0')} label="bar" />
+          <LCDSeg value={bb.beat} label="beat" />
+          <LCDSeg value={String(bb.tick).padStart(3, '0')} label="tick" />
+        </>
+      )}
+      {counterMode === 'time' && <LCDSeg value={formatTime(pos)} label="time" />}
+      {counterMode === 'samples' && <LCDSeg value={formatSamples(pos, sampleRate)} label="samples" />}
+      <div className="hidden md:flex">
+        <LCDSeg size="sm" dim value={`${formatTime(pos)} / ${formatTime(lengthSeconds)}`} label="elapsed / end" />
       </div>
-    </>
+    </button>
+  );
+}
+
+/** The Logic-style LCD — one dark display unit holding the mode icons
+ * (count-in ♪ + metronome), position digits, elapsed time, tempo, and
+ * time signature. Static shell: only TransportLCDPosition subscribes to
+ * the transport tick, so the rest never re-renders while rolling. */
+function TransportLCD({
+  store, counterMode, onCycleMode, tempoBpm, numerator, denominator,
+  sampleRate, lengthSeconds, countInBars, onCycleCountIn,
+  metronomeOn, onToggleMetronome, onTempoChange, onTapTempo, onTimeSignatureChange,
+}: {
+  store: TransportTickStore;
+  counterMode: 'bars' | 'time' | 'samples';
+  onCycleMode: () => void;
+  tempoBpm: number;
+  numerator: number;
+  denominator: number;
+  sampleRate: number;
+  lengthSeconds: number;
+  countInBars: number;
+  onCycleCountIn: () => void;
+  metronomeOn: boolean;
+  onToggleMetronome: () => void;
+  onTempoChange: (bpm: number) => void;
+  onTapTempo: () => void;
+  onTimeSignatureChange: (numerator: number, denominator: number) => void;
+}) {
+  return (
+    <div className="flex items-stretch bg-zinc-900 border border-zinc-700/70 rounded-md overflow-hidden divide-x divide-zinc-800 shrink-0">
+      {/* Mode toggles inside the LCD's left edge, like Logic's ♪ + click */}
+      <div className="flex items-center gap-0.5 px-1 sm:px-1.5 py-0.5">
+        <button
+          onClick={onCycleCountIn}
+          className={`relative h-8 w-7 sm:w-8 rounded flex items-center justify-center transition-colors ${countInBars > 0 ? 'text-sky-400 bg-sky-500/15' : 'text-zinc-500 hover:text-zinc-300'}`}
+          title={countInBars === 0 ? 'Count-in off — tap to cycle 1 bar → 2 bars → off' : `Count-in: ${countInBars} bar${countInBars > 1 ? 's' : ''}`}>
+          <Music2 className="w-4 h-4" />
+          {countInBars > 0 && (
+            <span className="absolute -top-0.5 right-0 text-xs font-bold text-sky-300 tabular-nums">{countInBars}</span>
+          )}
+        </button>
+        <button
+          onClick={onToggleMetronome}
+          className={`h-8 w-7 sm:w-8 rounded flex items-center justify-center transition-colors ${metronomeOn ? 'text-amber-400 bg-amber-400/15' : 'text-zinc-500 hover:text-zinc-300'}`}
+          title="Metronome (M)">
+          <Timer className="w-4 h-4" />
+        </button>
+      </div>
+
+      <TransportLCDPosition
+        store={store}
+        counterMode={counterMode}
+        onCycleMode={onCycleMode}
+        tempoBpm={tempoBpm}
+        numerator={numerator}
+        sampleRate={sampleRate}
+        lengthSeconds={lengthSeconds}
+      />
+
+      {/* Tempo — editable digits; the label beneath doubles as tap tempo */}
+      <div className="hidden md:flex flex-col items-center justify-center px-2 leading-none gap-0.5">
+        <input
+          type="number" min={20} max={300} value={tempoBpm}
+          onChange={(e) => onTempoChange(Number(e.target.value) || 120)}
+          className="w-12 bg-transparent text-emerald-400 font-mono tabular-nums text-sm sm:text-lg text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          aria-label="Tempo (BPM)"
+        />
+        <button
+          onClick={onTapTempo}
+          className="text-emerald-700 hover:text-emerald-400 text-xs font-semibold lowercase tracking-wide"
+          title="Tap tempo — tap along with a beat 2+ times to detect the BPM">
+          bpm · tap
+        </button>
+      </div>
+
+      {/* Time signature */}
+      <div className="hidden md:flex flex-col items-center justify-center px-2 leading-none gap-0.5">
+        <select
+          value={`${numerator}/${denominator}`}
+          onChange={(e) => { const [n, d] = e.target.value.split('/').map(Number); onTimeSignatureChange(n, d); }}
+          className="bg-transparent text-emerald-400 font-mono tabular-nums text-sm sm:text-lg text-center outline-none appearance-none cursor-pointer"
+          aria-label="Time signature">
+          {TIME_SIGS.map(([n, d, label]) => (
+            <option key={label} value={`${n}/${d}`} className="bg-zinc-900 text-emerald-400">{label}</option>
+          ))}
+        </select>
+        <span className="text-emerald-700 text-xs font-semibold lowercase tracking-wide">signature</span>
+      </div>
+    </div>
   );
 }
 
