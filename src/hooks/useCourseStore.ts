@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 
 export type CourseProduct = {
   id: string;
@@ -121,6 +121,9 @@ export async function startCourseCheckout(sku: string): Promise<string> {
   const { data, error } = await supabase.functions.invoke('create-course-checkout', {
     body: {
       sku,
+      // tenant_slug: the JWT's tenant claim is the caller's HOME tenant,
+      // not the workspace on screen (see resolveTargetTenant).
+      tenant_slug: getTenantSlug(),
       success_url: `${window.location.origin}/dashboard?course_purchased=${sku}`,
       cancel_url: `${window.location.origin}/dashboard?course_cancelled=${sku}`,
     },

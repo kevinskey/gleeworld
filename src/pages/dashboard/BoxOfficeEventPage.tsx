@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import {
   getBoxOfficeEvent, listTicketTiers, updateBoxOfficeEvent, deleteBoxOfficeEvent,
@@ -567,6 +567,7 @@ function IssueCompDialog({
     try {
       const { data, error } = await supabase.functions.invoke('box-office-issue-comp', {
         body: {
+          tenant_slug: getTenantSlug(),
           event_id: eventId,
           tier_id: tierId,
           holder_name: holderName.trim(),
@@ -856,6 +857,7 @@ function RequestRow({
     try {
       const { data, error } = await supabase.functions.invoke('box-office-decide-request', {
         body: {
+          tenant_slug: getTenantSlug(),
           request_id: request.id,
           decision,
           tier_id: decision === 'approve' ? tierId : undefined,
@@ -996,7 +998,7 @@ function OrderRow({ order, onChanged }: { order: OrderRow; onChanged: () => void
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke('box-office-refund-order', {
-        body: { order_id: order.id },
+        body: { order_id: order.id, tenant_slug: getTenantSlug() },
       });
       if (error) throw new Error(error.message || 'Refund failed');
       const result = data as { error?: string };
