@@ -25,6 +25,20 @@ export interface BlockRailProps {
   onInsertTextAt(indexInMiddle: number): void;
 }
 
+// Pure transformation behind handleDragEnd below — extracted so it's
+// testable without simulating a real dnd-kit pointer gesture in jsdom
+// (impractical: PointerSensor drives off real pointer events dnd-kit
+// itself listens for). Returns `null` for every no-op case (dropped on
+// itself, either id not present in the middle slice) so callers can tell
+// "nothing changed" apart from "reordered to the same visual spot".
+export function reorderMiddleIds(middleIds: string[], activeId: string, overId: string): string[] | null {
+  if (activeId === overId) return null;
+  const oldIndex = middleIds.indexOf(activeId);
+  const newIndex = middleIds.indexOf(overId);
+  if (oldIndex === -1 || newIndex === -1) return null;
+  return arrayMove(middleIds, oldIndex, newIndex);
+}
+
 function blockLabel(b: ProgramBlock): string {
   switch (b.kind) {
     case 'title': return 'Title';
@@ -129,11 +143,11 @@ export function BlockRail({
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    const oldIndex = middleIds.indexOf(String(active.id));
-    const newIndex = middleIds.indexOf(String(over.id));
-    if (oldIndex === -1 || newIndex === -1) return;
-    onReorderMiddle(arrayMove(middle, oldIndex, newIndex));
+    if (!over) return;
+    const reorderedIds = reorderMiddleIds(middleIds, String(active.id), String(over.id));
+    if (!reorderedIds) return;
+    const byId = new Map(middle.map((b) => [b.id, b]));
+    onReorderMiddle(reorderedIds.map((id) => byId.get(id)!));
   };
 
   return (

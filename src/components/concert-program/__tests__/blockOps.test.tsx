@@ -4,10 +4,12 @@
 // rail (whole-block reorder/delete). Same page-mount pattern as
 // fastEntry.test.tsx — useConcertProgramDoc + useBrandingSettings are
 // mocked; everything downstream runs for real.
+import type { ReactNode } from 'react';
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import type { DragEndEvent } from '@dnd-kit/core';
 
 // jsdom does not implement matchMedia; useIsMobile (src/hooks/use-mobile.tsx)
 // calls it in a useEffect. jsdom defaults window.innerWidth to 1024 ("not
@@ -93,7 +95,27 @@ vi.mock('@/hooks/useBrandingSettings', () => ({
   useBrandingSettings: () => ({ settings: { org_name: 'Demo Choir', logo_url: null } }),
 }));
 
+// dnd-kit's PointerSensor drives off real pointer events, which jsdom can't
+// meaningfully simulate for a drag gesture — so instead of faking the
+// gesture, capture the real onDragEnd handler BlockRail hands to DndContext
+// and invoke it directly with a synthetic DragEndEvent-shaped payload. This
+// exercises the actual page wiring (BlockRail's handleDragEnd →
+// reorderMiddleIds → onReorderMiddle → the page's handleReorderMiddle →
+// persistBlocksNow), not a reimplementation of it.
+const dndMocks = vi.hoisted(() => ({ onDragEnd: null as ((event: DragEndEvent) => void) | null }));
+vi.mock('@dnd-kit/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@dnd-kit/core')>();
+  return {
+    ...actual,
+    DndContext: (props: { children: ReactNode; onDragEnd?: (event: DragEndEvent) => void }) => {
+      dndMocks.onDragEnd = props.onDragEnd ?? null;
+      return props.children;
+    },
+  };
+});
+
 import ConcertPlannerEditorPage from '../../../pages/dashboard/ConcertPlannerEditorPage';
+import { reorderMiddleIds } from '../BlockRail';
 
 function groupBlocks() {
   return [
@@ -112,12 +134,23 @@ function textDividerBlocks() {
   ];
 }
 
+function threeMiddleBlocks() {
+  return [
+    { id: 'b-title', kind: 'title', showLogo: false, showOrgName: false },
+    { id: 'b-a', kind: 'text', text: 'A', align: 'center' },
+    { id: 'b-b', kind: 'text', text: 'B', align: 'center' },
+    { id: 'b-c', kind: 'text', text: 'C', align: 'center' },
+    { id: 'b-footer', kind: 'footer', showQr: false },
+  ];
+}
+
 afterEach(cleanup);
 beforeEach(() => {
   mocks.program.blocks = groupBlocks();
   mocks.setBlocks.mockClear();
   mocks.persistBlocksNow.mockClear();
   mocks.deleteBlockWithUndo.mockClear();
+  dndMocks.onDragEnd = null;
 });
 
 function mount() {
@@ -196,5 +229,62 @@ describe('Block rail', () => {
     expect(screen.queryByRole('button', { name: /Delete Footer/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Drag Title/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Drag Footer/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('reorderMiddleIds (pure drag-end transformation)', () => {
+  const ids = ['a', 'b', 'c'];
+
+  it('reorders when the active block is dropped on a higher position', () => {
+    expect(reorderMiddleIds(ids, 'a', 'c')).toEqual(['b', 'c', 'a']);
+  });
+
+  it('reorders when the active block is dropped on a lower position', () => {
+    expect(reorderMiddleIds(ids, 'c', 'a')).toEqual(['c', 'a', 'b']);
+  });
+
+  it('returns null when dropped on itself (no-op)', () => {
+    expect(reorderMiddleIds(ids, 'b', 'b')).toBeNull();
+  });
+
+  it('returns null when the active id is unknown (no-op)', () => {
+    expect(reorderMiddleIds(ids, 'zzz', 'b')).toBeNull();
+  });
+
+  it('returns null when the over id is unknown (no-op)', () => {
+    expect(reorderMiddleIds(ids, 'a', 'zzz')).toBeNull();
+  });
+});
+
+describe('Block rail — drag reorder end-to-end (via a captured DndContext.onDragEnd)', () => {
+  it('a normal drag-end persists [title, ...reordered, footer] through the page, immediately', () => {
+    mocks.program.blocks = threeMiddleBlocks();
+    mount();
+    expect(dndMocks.onDragEnd).toBeTruthy();
+
+    dndMocks.onDragEnd!({ active: { id: 'b-a' }, over: { id: 'b-c' } } as DragEndEvent);
+
+    expect(mocks.persistBlocksNow).toHaveBeenCalledTimes(1);
+    expect(mocks.setBlocks).not.toHaveBeenCalled();
+    const next = mocks.persistBlocksNow.mock.calls[0][0] as Array<{ id: string }>;
+    expect(next.map((b) => b.id)).toEqual(['b-title', 'b-b', 'b-c', 'b-a', 'b-footer']);
+  });
+
+  it('dropping a block on itself never calls persistBlocksNow', () => {
+    mocks.program.blocks = threeMiddleBlocks();
+    mount();
+
+    dndMocks.onDragEnd!({ active: { id: 'b-a' }, over: { id: 'b-a' } } as DragEndEvent);
+
+    expect(mocks.persistBlocksNow).not.toHaveBeenCalled();
+  });
+
+  it('an unrecognized id never calls persistBlocksNow', () => {
+    mocks.program.blocks = threeMiddleBlocks();
+    mount();
+
+    dndMocks.onDragEnd!({ active: { id: 'not-a-real-id' }, over: { id: 'b-a' } } as DragEndEvent);
+
+    expect(mocks.persistBlocksNow).not.toHaveBeenCalled();
   });
 });

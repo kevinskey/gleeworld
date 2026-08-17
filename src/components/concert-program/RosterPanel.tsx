@@ -3,7 +3,7 @@
 // EXISTING RosterEditor (src/components/concertPlanner/RosterEditor.tsx) in
 // a Dialog on every breakpoint (the roster editor is form-like, so a Dialog
 // is simpler than popover anchoring and fine on desktop too).
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { RosterEditor } from '@/components/concertPlanner/RosterEditor';
 import type { useConcertProgram } from '@/hooks/useConcertPrograms';
 
@@ -19,6 +19,7 @@ export function RosterPanel({ open, onOpenChange, concert }: RosterPanelProps) {
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Roster</DialogTitle>
+          <DialogDescription>Add voice parts and names for the printed roster.</DialogDescription>
         </DialogHeader>
         <RosterEditor concert={concert} />
       </DialogContent>

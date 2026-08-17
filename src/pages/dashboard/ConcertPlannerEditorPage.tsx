@@ -639,7 +639,7 @@ export default function ConcertPlannerEditorPage() {
   // Hover-revealed "+" between rail rows: typed text, so the debounced
   // setBlocks (not persistBlocksNow) — same path insertBeforeFooter uses.
   const handleInsertTextAt = useCallback((indexInMiddle: number) => {
-    if (!blocks) return;
+    if (!blocks || blocks.length < 2) return;
     const footerIdx = blocks.length - 1;
     const insertAt = Math.min(Math.max(indexInMiddle + 1, 1), footerIdx);
     const block: ProgramBlock = { id: newBlockId(), kind: 'text', text: '', align: 'center' };
