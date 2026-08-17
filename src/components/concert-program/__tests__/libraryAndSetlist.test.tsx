@@ -11,7 +11,7 @@
 //      a matching insert → persistBlocksNow gets a new piece-group (with
 //      the returned ids) before the footer, and updateProgram.mutate gets
 //      { setlist_id }.
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach, type Mock } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
@@ -32,21 +32,24 @@ if (!window.matchMedia) {
 // ── Supabase mock: a generic thenable chain per table, backed by a
 // dedicated resolver fn so each table's response is independently
 // configurable and every call site (however many .select/.or/.order/.eq
-// hops it chains) resolves through the same terminal. ────────────────────
+// hops it chains) resolves through the same terminal. Chains are created
+// ONCE per table (not per `.from()` call) so `.or.mock.calls` etc. can be
+// inspected directly — needed by the search-term escaping tests below,
+// which assert on exactly what string reached `.or()`. ───────────────────
 const {
   fromMock,
   sheetMusicBrowseFetch, personalScoresFetch, setlistsFetch, setlistItemsFetch,
-  piecesWriteFetch,
+  piecesWriteFetch, scoresChain, mineChain,
 } = vi.hoisted(() => {
   type Chain = {
-    select: (...args: unknown[]) => Chain;
-    or: (...args: unknown[]) => Chain;
-    order: (...args: unknown[]) => Chain;
-    limit: (...args: unknown[]) => Chain;
-    eq: (...args: unknown[]) => Chain;
-    insert: (...args: unknown[]) => Chain;
-    delete: (...args: unknown[]) => Chain;
-    in: (...args: unknown[]) => Chain;
+    select: Mock<(...args: unknown[]) => Chain>;
+    or: Mock<(...args: unknown[]) => Chain>;
+    order: Mock<(...args: unknown[]) => Chain>;
+    limit: Mock<(...args: unknown[]) => Chain>;
+    eq: Mock<(...args: unknown[]) => Chain>;
+    insert: Mock<(...args: unknown[]) => Chain>;
+    delete: Mock<(...args: unknown[]) => Chain>;
+    in: Mock<(...args: unknown[]) => Chain>;
     then: (
       onFulfilled?: (value: { data: unknown; error: unknown }) => unknown,
       onRejected?: (reason: unknown) => unknown,
@@ -76,20 +79,26 @@ const {
   const setlistItemsFetch = vi.fn();
   const piecesWriteFetch = vi.fn();
 
+  const scoresChain = makeChain(sheetMusicBrowseFetch);
+  const mineChain = makeChain(personalScoresFetch);
+  const setlistsChain = makeChain(setlistsFetch);
+  const setlistItemsChain = makeChain(setlistItemsFetch);
+  const piecesChain = makeChain(piecesWriteFetch);
+
   const fromMock = vi.fn((table: string) => {
     switch (table) {
-      case 'gw_sheet_music_browse': return makeChain(sheetMusicBrowseFetch);
-      case 'gw_personal_scores': return makeChain(personalScoresFetch);
-      case 'gw_setlists': return makeChain(setlistsFetch);
-      case 'gw_setlist_items': return makeChain(setlistItemsFetch);
-      case 'gw_concert_program_pieces': return makeChain(piecesWriteFetch);
+      case 'gw_sheet_music_browse': return scoresChain;
+      case 'gw_personal_scores': return mineChain;
+      case 'gw_setlists': return setlistsChain;
+      case 'gw_setlist_items': return setlistItemsChain;
+      case 'gw_concert_program_pieces': return piecesChain;
       default: throw new Error(`unexpected table ${table}`);
     }
   });
 
   return {
     fromMock, sheetMusicBrowseFetch, personalScoresFetch, setlistsFetch, setlistItemsFetch,
-    piecesWriteFetch,
+    piecesWriteFetch, scoresChain, mineChain,
   };
 });
 
@@ -108,6 +117,8 @@ beforeEach(() => {
   setlistsFetch.mockReset();
   setlistItemsFetch.mockReset();
   piecesWriteFetch.mockReset();
+  scoresChain.or.mockClear();
+  mineChain.or.mockClear();
   toastMock.success.mockClear();
   toastMock.error.mockClear();
 });
@@ -169,6 +180,42 @@ describe('LibraryPickerDialog', () => {
 
     await screen.findByText(/Couldn't load/);
     expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
+  // Security fix: a comma in the search box used to split the .or() filter
+  // into extra PostgREST clauses (mis-filter/error); % and _ used to act as
+  // raw LIKE wildcards. Both are now escaped before interpolation.
+  it('a comma in the search term never reaches .or() raw — still a single .or() call', async () => {
+    render(<LibraryPickerDialog open onOpenChange={vi.fn()} onPick={vi.fn()} />);
+    await waitFor(() => expect(sheetMusicBrowseFetch).toHaveBeenCalledTimes(1)); // initial empty-query load
+    scoresChain.or.mockClear();
+
+    fireEvent.change(screen.getByPlaceholderText(/Search title or composer/), {
+      target: { value: 'Bach, J.S.' },
+    });
+
+    await waitFor(() => expect(scoresChain.or).toHaveBeenCalledTimes(1), { timeout: 2000 });
+    const [pattern] = scoresChain.or.mock.calls[0] as [string];
+    // Exactly ONE comma — the legitimate title/composer clause separator —
+    // not one contributed by the user's "Bach, J.S." (which would split
+    // into extra, malformed .or() clauses).
+    expect(pattern.split(',')).toHaveLength(2);
+    expect(pattern).toContain('Bach');
+    expect(pattern).toContain('J.S.');
+  });
+
+  it('% and _ in the search term are escaped so they cannot act as raw LIKE wildcards', async () => {
+    render(<LibraryPickerDialog open onOpenChange={vi.fn()} onPick={vi.fn()} />);
+    await waitFor(() => expect(sheetMusicBrowseFetch).toHaveBeenCalledTimes(1));
+    scoresChain.or.mockClear();
+
+    fireEvent.change(screen.getByPlaceholderText(/Search title or composer/), {
+      target: { value: '50%_off' },
+    });
+
+    await waitFor(() => expect(scoresChain.or).toHaveBeenCalledTimes(1), { timeout: 2000 });
+    const [pattern] = scoresChain.or.mock.calls[0] as [string];
+    expect(pattern).toContain('50\\%\\_off');
   });
 });
 
@@ -338,5 +385,23 @@ describe('Page-level handleSetlistImport', () => {
 
     expect(pageMocks.updateProgramMutate).toHaveBeenCalledWith({ setlist_id: 'sl1' });
     expect(toastMock.success).toHaveBeenCalled();
+  });
+
+  it('when the block persist fails, an incomplete rollback delete (fewer rows than inserted) is warned, not swallowed', async () => {
+    pageMocks.persistBlocksNow.mockResolvedValue(false); // persist fails → rollback path
+    piecesWriteFetch
+      .mockResolvedValueOnce({ data: [{ id: 'new-1' }, { id: 'new-2' }], error: null }) // insert: 2 rows
+      .mockResolvedValueOnce({ data: [{ id: 'new-1' }], error: null }); // rollback delete: only 1 of 2 came back
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await openSetlistAndChoose();
+
+    await waitFor(() => expect(toastMock.error).toHaveBeenCalledWith('Import failed — nothing was added'));
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[concert-program] setlist import rollback incomplete — orphan piece rows may remain',
+      expect.objectContaining({ expected: 2, deleted: 1 }),
+    );
+
+    warnSpy.mockRestore();
   });
 });

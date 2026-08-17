@@ -43,6 +43,18 @@ type LibraryTab = 'scores' | 'mine';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
+// Sanitize a raw search-box value before it gets interpolated into a
+// PostgREST `.or()` ilike pattern. Two hazards, both from untrusted user
+// input: `%`/`_` are LIKE wildcards (a bare "_" would match any single
+// char), and `,` is the `.or()` clause separator — an unescaped comma
+// (e.g. "Bach, J.S.") splits into extra filter clauses and mis-filters or
+// errors. There's no way to carry a literal comma inside an unquoted
+// ilike pattern in `.or()` syntax, so it's replaced with a space instead
+// (search still matches on the surrounding words) rather than rejected.
+function sanitizeSearchTerm(raw: string): string {
+  return raw.replace(/[%_]/g, (m) => `\\${m}`).replace(/,/g, ' ');
+}
+
 function LibraryResultList({
   loading, error, rows, onRetry, onPick,
 }: {
@@ -120,7 +132,10 @@ export function LibraryPickerDialog({ open, onOpenChange, onPick }: LibraryPicke
       const table = activeTab === 'scores' ? 'gw_sheet_music_browse' : 'gw_personal_scores';
       let builder = supabase.from(table).select('id, title, composer, voicing');
       const trimmed = q.trim();
-      if (trimmed) builder = builder.or(`title.ilike.%${trimmed}%,composer.ilike.%${trimmed}%`);
+      if (trimmed) {
+        const safe = sanitizeSearchTerm(trimmed);
+        builder = builder.or(`title.ilike.%${safe}%,composer.ilike.%${safe}%`);
+      }
       const { data, error: err } = await builder.order('title').limit(50);
       if (err) { setError(true); setRows([]); return; }
       setRows((data ?? []) as LibraryRow[]);

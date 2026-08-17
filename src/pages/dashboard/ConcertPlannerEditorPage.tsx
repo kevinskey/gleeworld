@@ -663,7 +663,24 @@ export default function ConcertPlannerEditorPage() {
       updateProgram.mutate({ setlist_id: setlistId });
       toast.success(`Imported ${rows.length} piece${rows.length === 1 ? '' : 's'}`);
     } else {
-      await supabase.from('gw_concert_program_pieces').delete().in('id', data.map((d: { id: string }) => d.id)).select('id');
+      // Rollback the orphaned insert. Mirrors addPieceToGroup's rollback
+      // pattern (Task 7): if the delete itself doesn't cleanly remove every
+      // row (RLS-silenced, network error, etc.), don't pretend it worked —
+      // warn so it's traceable, and let reconcile visibly re-adopt any
+      // orphan rows into the program next time blocks load.
+      const insertedIds = data.map((d: { id: string }) => d.id);
+      const { data: delData, error: delError } = await supabase
+        .from('gw_concert_program_pieces')
+        .delete()
+        .in('id', insertedIds)
+        .select('id');
+      if (delError || delData?.length !== insertedIds.length) {
+        console.warn('[concert-program] setlist import rollback incomplete — orphan piece rows may remain', {
+          expected: insertedIds.length,
+          deleted: delData?.length ?? 0,
+          error: delError,
+        });
+      }
       toast.error('Import failed — nothing was added');
     }
   }, [blocks, id, persistBlocksNow, updateProgram]);
