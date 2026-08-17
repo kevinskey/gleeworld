@@ -32,6 +32,10 @@ const schema = z.object({
   heading: z.string().default('Scholar Music Program Application'),
   intro: z.string().default('Apply to join the program. Review the agreement below, complete the form, and sign. If accepted, your class login will be emailed to you.'),
   buttonLabel: z.string().default('Submit application'),
+  /** Label on the collapsed section's call-to-action; the full form only
+   *  renders after it's clicked (Kevin: the whole application on the page
+   *  was too much). */
+  ctaLabel: z.string().default('Start your application'),
   /** Course the accepted applicant is enrolled in (gw_courses.course_code). */
   courseCode: z.string().default(''),
   academicYear: z.string().default(''),
@@ -57,6 +61,7 @@ const CLASSIFICATIONS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Graduate'
 
 function Render({ config, ctx }: BlockRenderProps<Config>) {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [formOpen, setFormOpen] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const set = (patch: Partial<FormState>) => setForm((f) => ({ ...f, ...patch }));
 
@@ -108,6 +113,18 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
             <p className="font-semibold text-lg">Application received.</p>
             <p className="text-muted-foreground mt-1">Thank you, {form.full_name.trim()}. The program director will review your application — if you are accepted, your class sign-in link will be emailed to {form.email.trim()}.</p>
           </div>
+        ) : !formOpen ? (
+          /* Collapsed by default — the section is an invitation, not a
+             wall of fields. The form renders only after the click. */
+          <Button
+            size="lg"
+            className="h-12 px-8 text-base font-semibold"
+            style={{ background: 'var(--site-accent)', color: '#fff' }}
+            onClick={() => setFormOpen(true)}
+          >
+            <GraduationCap className="w-5 h-5 mr-2" />
+            {config.ctaLabel}
+          </Button>
         ) : (
           <form
             className="rounded-xl border border-border bg-white p-5 cq-sm:p-6 space-y-6 max-w-3xl"
@@ -234,9 +251,15 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
         <Label>Terms &amp; conditions</Label>
         <Textarea value={config.terms} onChange={(e) => set({ terms: e.target.value })} rows={10} className="text-xs" />
       </div>
-      <div className="space-y-1.5">
-        <Label>Button label</Label>
-        <Input value={config.buttonLabel} onChange={(e) => set({ buttonLabel: e.target.value })} />
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1.5">
+          <Label>Open-form button</Label>
+          <Input value={config.ctaLabel} onChange={(e) => set({ ctaLabel: e.target.value })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Submit button</Label>
+          <Input value={config.buttonLabel} onChange={(e) => set({ buttonLabel: e.target.value })} />
+        </div>
       </div>
     </div>
   );
