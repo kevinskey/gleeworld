@@ -5,11 +5,20 @@ import { useToast } from '@/components/ui/use-toast';
 
 interface PayFeeButtonProps {
   studentFeeId: string;
+  /** When set, pays this single installment instead of the full remaining balance. */
+  installmentId?: string;
   disabled?: boolean;
   label?: string;
+  size?: 'default' | 'sm';
 }
 
-export function PayFeeButton({ studentFeeId, disabled, label = 'Pay now' }: PayFeeButtonProps) {
+export function PayFeeButton({
+  studentFeeId,
+  installmentId,
+  disabled,
+  label = 'Pay now',
+  size = 'default',
+}: PayFeeButtonProps) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -27,7 +36,11 @@ export function PayFeeButton({ studentFeeId, disabled, label = 'Pay now' }: PayF
             Authorization: `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ studentFeeId, paymentType: 'full' }),
+          body: JSON.stringify(
+            installmentId
+              ? { studentFeeId, paymentType: 'installment', installmentId }
+              : { studentFeeId, paymentType: 'full' },
+          ),
         },
       );
 
@@ -46,7 +59,12 @@ export function PayFeeButton({ studentFeeId, disabled, label = 'Pay now' }: PayF
   };
 
   return (
-    <Button onClick={onPay} disabled={disabled || loading} className="w-full sm:w-auto">
+    <Button
+      onClick={onPay}
+      disabled={disabled || loading}
+      size={size}
+      className={size === 'sm' ? undefined : 'w-full sm:w-auto'}
+    >
       {loading ? 'Loading…' : label}
     </Button>
   );

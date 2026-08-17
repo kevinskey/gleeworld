@@ -15,7 +15,7 @@ interface TreasurerInfo {
 }
 
 export default function MyFeesPage() {
-  const { unpaid, paid, totalOwed, loading } = useMyFees();
+  const { unpaid, paid, totalOwed, loading, splitIntoInstallments } = useMyFees();
   const connect = useTenantStripeConnect();
   const [treasurer, setTreasurer] = useState<TreasurerInfo | null>(null);
 
@@ -71,7 +71,7 @@ export default function MyFeesPage() {
 
             {!connect.enabled && treasurer && (
               <div className="text-sm sm:text-right">
-                <div className="font-semibold">Contact your treasurer</div>
+                <div className="font-semibold">How to pay</div>
                 {treasurer.name && <div className="text-muted-foreground">{treasurer.name}</div>}
                 {treasurer.email && (
                   <a href={`mailto:${treasurer.email}`} className="text-primary hover:underline">
@@ -100,7 +100,12 @@ export default function MyFeesPage() {
               <h2 className="text-lg font-semibold mb-3">Unpaid</h2>
               <div className="grid gap-3">
                 {unpaid.map((fee) => (
-                  <StudentFeeCard key={fee.id} fee={fee} canPay={connect.enabled} />
+                  <StudentFeeCard
+                    key={fee.id}
+                    fee={fee}
+                    canPay={connect.enabled}
+                    onSplit={splitIntoInstallments}
+                  />
                 ))}
               </div>
             </section>
