@@ -157,11 +157,11 @@ function RosterSectionRow({
           onChange={(e) => setPending(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
           onPaste={handleMemberPaste}
-          placeholder="Add member…"
+          placeholder="Add name…"
           className="text-[11px] h-7"
         />
         <SpeechInputButton
-          label={`Dictate member name for ${sectionName}`}
+          label={`Dictate a name for ${sectionName}`}
           className="h-7 w-7"
           onTranscript={(text) => onAddMember(text)}
         />

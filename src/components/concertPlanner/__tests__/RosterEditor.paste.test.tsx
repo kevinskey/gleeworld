@@ -34,7 +34,7 @@ describe('RosterEditor bulk paste — member input', () => {
   it('splits a multi-line paste into individual addRosterMember calls, in order', () => {
     const concert = makeConcert();
     render(<RosterEditor concert={concert} />);
-    const memberInput = screen.getByPlaceholderText('Add member…');
+    const memberInput = screen.getByPlaceholderText('Add name…');
 
     fireEvent.paste(memberInput, { clipboardData: { getData: () => 'Amara\nBrianna\n\nCorinne' } });
 
@@ -48,7 +48,7 @@ describe('RosterEditor bulk paste — member input', () => {
   it('falls through to default paste behavior for a single-line paste (no mutations fired)', () => {
     const concert = makeConcert();
     render(<RosterEditor concert={concert} />);
-    const memberInput = screen.getByPlaceholderText('Add member…');
+    const memberInput = screen.getByPlaceholderText('Add name…');
 
     fireEvent.paste(memberInput, { clipboardData: { getData: () => 'Amara' } });
 

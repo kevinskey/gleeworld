@@ -193,6 +193,24 @@ describe('Concert Planner fast entry + piece popover', () => {
     expect(mocks.updatePiece).not.toHaveBeenCalled();
   });
 
+  it('parses a bare-digit duration as minutes, not seconds', () => {
+    vi.useFakeTimers();
+    try {
+      mount();
+      const titleEl = getEditableTitle('Ave Maria');
+      fireEvent.click(titleEl);
+      fireEvent.click(screen.getByText('Unknown rights'));
+
+      const durationInput = document.getElementById('pep-duration') as HTMLInputElement;
+      fireEvent.change(durationInput, { target: { value: '3' } });
+      vi.advanceTimersByTime(800);
+
+      expect(mocks.updatePiece).toHaveBeenCalledWith('pc1', { duration_seconds: 180 });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('flushes a pending inline title edit on unmount instead of dropping it', () => {
     vi.useFakeTimers();
     try {

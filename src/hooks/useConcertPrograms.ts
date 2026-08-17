@@ -122,18 +122,6 @@ export function useConcertProgram(id: string | undefined) {
     onError: () => toast.error('Could not save changes'),
   });
 
-  const addPiece = useMutation({
-    mutationFn: async (input: Partial<ConcertProgramPiece>) => {
-      if (!id) throw new Error('Missing program id');
-      const order = (piecesQ.data?.length ?? 0);
-      const { error } = await supabase
-        .from('gw_concert_program_pieces')
-        .insert({ program_id: id, sort_order: order, title: 'New piece', ...input });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] }),
-  });
-
   const updatePiece = useMutation({
     mutationFn: async ({ pieceId, patch }: { pieceId: string; patch: Partial<ConcertProgramPiece> }) => {
       const { error, data } = await supabase
@@ -154,17 +142,6 @@ export function useConcertProgram(id: string | undefined) {
         .delete()
         .eq('id', pieceId);
       if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] }),
-  });
-
-  const reorderPieces = useMutation({
-    mutationFn: async (orderedIds: string[]) => {
-      await Promise.all(
-        orderedIds.map((pieceId, idx) =>
-          supabase.from('gw_concert_program_pieces').update({ sort_order: idx }).eq('id', pieceId),
-        ),
-      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] }),
   });
@@ -266,10 +243,8 @@ export function useConcertProgram(id: string | undefined) {
     roster: rosterQ.data ?? [],
     isLoading: programQ.isLoading || piecesQ.isLoading || rosterQ.isLoading,
     updateProgram,
-    addPiece,
     updatePiece,
     deletePiece,
-    reorderPieces,
     addRosterSection,
     updateRosterSection,
     deleteRosterSection,

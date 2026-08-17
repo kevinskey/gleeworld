@@ -27,7 +27,7 @@ import {
 } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  ArrowLeft, Loader2, Plus, Type, Minus, Users, Library, ListMusic, AlertTriangle, ChevronDown,
+  ArrowLeft, Loader2, Plus, Type, Minus, Users, Library, ListMusic, AlertTriangle, Info, ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,7 +47,7 @@ import {
 } from '@/lib/concertProgram/types';
 import { flattenPieceOrder } from '@/lib/concertProgram/blocks';
 import { contentHeightIn } from '@/lib/concertProgram/geometry';
-import { paginateProgram } from '@/lib/concertProgram/paginate';
+import { paginateProgram, pagesHaveSplitGroup } from '@/lib/concertProgram/paginate';
 import { paddedPanelCount } from '@/lib/concertProgram/impose';
 import { slugify } from '@/lib/concertProgram/slug';
 import { validateProgram } from '@/lib/concertPlanner/validate';
@@ -375,6 +375,7 @@ export default function ConcertPlannerEditorPage() {
     () => paginateProgram(blocks ?? [], rosterSectionIds, heights ?? new Map(), contentHeightIn(format)),
     [blocks, rosterSectionIds, heights, format],
   );
+  const hasSplitGroup = useMemo(() => pagesHaveSplitGroup(pages), [pages]);
 
   // ── Piece selection + focus registry ────────────────────────────────────
   const [selectedPieceId, setSelectedPieceId] = useState<string | null>(null);
@@ -466,7 +467,9 @@ export default function ConcertPlannerEditorPage() {
     const isRightsIssue = validation.items.some(
       (i) => i.id === `rights-${pieceId}` || i.id === `rights-info-${pieceId}`,
     );
-    openPieceEditor(pieceId, isRightsIssue ? 'rights_status' : 'composer');
+    const isArrangerIssue = validation.items.some((i) => i.id === `rep-arranger-${pieceId}`);
+    const focusField = isRightsIssue ? 'rights_status' : isArrangerIssue ? 'arranger' : 'composer';
+    openPieceEditor(pieceId, focusField);
   }, [validation, openPieceEditor]);
 
   const onToggleFooterQr = useCallback((v: boolean) => {
@@ -911,18 +914,25 @@ export default function ConcertPlannerEditorPage() {
   // debounced setBlocks.
   const handleReorderMiddle = useCallback((nextMiddle: ProgramBlock[]) => {
     if (!blocks || blocks.length < 2) return;
-    const titleBlock = blocks[0];
-    const footerBlock = blocks[blocks.length - 1];
+    const titleBlock = blocks.find((b) => b.kind === 'title');
+    const footerBlock = blocks.find((b) => b.kind === 'footer');
+    if (!titleBlock || !footerBlock) return;
     void persistBlocksNow([titleBlock, ...nextMiddle, footerBlock]);
   }, [blocks, persistBlocksNow]);
 
-  // ▲▼ buttons: also a discrete gesture, also immediate.
+  // ▲▼ buttons: also a discrete gesture, also immediate. Identifies
+  // title/footer by kind (not position) so this stays correct even if a
+  // future doc ever has them somewhere other than first/last.
   const handleMoveBlock = useCallback((blockId: string, direction: 'up' | 'down') => {
     if (!blocks) return;
     const idx = blocks.findIndex((b) => b.id === blockId);
-    if (idx <= 0 || idx >= blocks.length - 1) return; // not found, or title/footer
+    if (idx === -1) return;
+    const block = blocks[idx];
+    if (block.kind === 'title' || block.kind === 'footer') return;
     const swapWith = direction === 'up' ? idx - 1 : idx + 1;
-    if (swapWith <= 0 || swapWith >= blocks.length - 1) return; // would land on title/footer
+    if (swapWith < 0 || swapWith >= blocks.length) return;
+    const swapBlock = blocks[swapWith];
+    if (swapBlock.kind === 'title' || swapBlock.kind === 'footer') return; // would land on title/footer
     const next = blocks.slice();
     [next[idx], next[swapWith]] = [next[swapWith], next[idx]];
     void persistBlocksNow(next);
@@ -1095,6 +1105,12 @@ export default function ConcertPlannerEditorPage() {
             <div className="mb-3 flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 text-amber-800 text-xs px-3 py-2">
               <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
               A block is taller than one page and will be clipped — split it up.
+            </div>
+          ) : null}
+          {hasSplitGroup ? (
+            <div className="mb-3 flex items-center gap-2 rounded-md border border-border bg-muted text-muted-foreground text-xs px-3 py-2">
+              <Info className="w-3.5 h-3.5 shrink-0" />
+              A piece group is longer than one page — it continues with a repeated heading.
             </div>
           ) : null}
           <div className="bg-muted/40 rounded-lg overflow-auto p-4 lg:p-8">

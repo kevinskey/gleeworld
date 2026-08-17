@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { blocksToUnits, unitKey, paginateProgram, type FlowUnit } from './paginate';
+import {
+  blocksToUnits, unitKey, paginateProgram, pagesHaveSplitGroup, type FlowUnit, type PageItem,
+} from './paginate';
 import type { ProgramBlock } from './types';
 
 const H = (pairs: Array<[string, number]>) => new Map(pairs);
@@ -61,5 +63,30 @@ describe('paginateProgram', () => {
   it('missing heights count as 0 and everything lands on one page', () => {
     const r = paginateProgram([title, footer], [], new Map(), 9.5);
     expect(r.pages).toHaveLength(1);
+  });
+  it('flags pagesHaveSplitGroup true for a real over-tall group split', () => {
+    const pieces = ['a', 'b', 'c', 'd', 'e', 'f6'];
+    const blocks = [group('g', pieces, 'credit')];
+    const heights: Array<[string, number]> = [['gh:g', 1], ['gc:g', 1], ...pieces.map((p): [string, number] => [`pl:g:${p}`, 2])];
+    const r = paginateProgram(blocks, [], H(heights), 9.5);
+    expect(pagesHaveSplitGroup(r.pages)).toBe(true);
+  });
+});
+
+describe('pagesHaveSplitGroup', () => {
+  const line = (blockId: string, pieceId: string): PageItem => ({ unit: { type: 'piece-line', blockId, pieceId } });
+  const header = (blockId: string, continued = false): PageItem =>
+    ({ unit: { type: 'group-header', blockId }, ...(continued ? { continued: true as const } : {}) });
+
+  it('is false when no page carries a continued header', () => {
+    const pages: PageItem[][] = [[header('g'), line('g', 'a')], [line('g', 'b')]];
+    expect(pagesHaveSplitGroup(pages)).toBe(false);
+  });
+  it('is true when a later page repeats the group header as continued', () => {
+    const pages: PageItem[][] = [[header('g'), line('g', 'a')], [header('g', true), line('g', 'b')]];
+    expect(pagesHaveSplitGroup(pages)).toBe(true);
+  });
+  it('is false for an empty pages array', () => {
+    expect(pagesHaveSplitGroup([])).toBe(false);
   });
 });
