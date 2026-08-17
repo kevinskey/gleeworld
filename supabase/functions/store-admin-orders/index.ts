@@ -37,7 +37,7 @@
 // invoke it directly against a constructed `Request` with `globalThis.fetch`
 // stubbed. `Deno.serve(handler)` at the bottom keeps this file directly
 // deployable.
-import { verifyJwtClaims } from '../_shared/verifyJwt.ts';
+import { verifyJwtClaims, resolveTargetTenant } from '../_shared/verifyJwt.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -76,22 +76,23 @@ export async function handler(req: Request): Promise<Response> {
     const accessToken = authHeader.replace(/^Bearer\s+/i, '');
     if (!accessToken) return j({ error: 'Unauthorized' }, 401);
 
-    let tenantId: string | null = null;
-    let tenantRole: string | null = null;
+    let payload: Record<string, any> | null = null;
     try {
-      const payload = (await verifyJwtClaims(accessToken)) ?? null;
-      if (!payload) return j({ error: 'Unauthorized' }, 401);
-      tenantId = payload.tenant_id ?? null;
-      tenantRole = payload.tenant_role ?? null;
+      payload = (await verifyJwtClaims(accessToken)) ?? null;
     } catch {
       return j({ error: 'Unauthorized' }, 401);
     }
-    if (!tenantId) return j({ error: 'JWT missing tenant_id' }, 401);
-    if (!ADMIN_TENANT_ROLES.includes(tenantRole ?? '')) {
+    if (!payload?.sub) return j({ error: 'Unauthorized' }, 401);
+
+    const { order_id, tenant_slug } = await req.json().catch(() => ({}));
+    // Target tenant from the page's slug, not the JWT's home-tenant claim
+    // (see resolveTargetTenant).
+    const { tenantId, tenantRole } = await resolveTargetTenant(
+      payload, tenant_slug ?? req.headers.get('x-tenant-slug'));
+    if (!tenantId) return j({ error: 'Unknown tenant' }, 401);
+    if (!ADMIN_TENANT_ROLES.includes(tenantRole)) {
       return j({ error: 'Admin role required' }, 403);
     }
-
-    const { order_id } = await req.json().catch(() => ({}));
 
     if (order_id !== undefined) {
       if (typeof order_id !== 'string' || !UUID_RE.test(order_id)) {

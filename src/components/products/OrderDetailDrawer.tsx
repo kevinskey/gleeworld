@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,7 +83,7 @@ export const OrderDetailDrawer = ({ orderId, isOpen, onClose, onRefunded }: Orde
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('store-admin-orders', {
-        body: { order_id: orderId },
+        body: { order_id: orderId, tenant_slug: getTenantSlug() },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
