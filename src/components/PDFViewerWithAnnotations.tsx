@@ -1871,8 +1871,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               >
                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
-              {annotations.length > 0 && musicTitle && (
-                <AnnotationShareButton 
+              {!isPersonal && annotations.length > 0 && musicTitle && (
+                <AnnotationShareButton
                   annotationIds={annotations.map(a => a.id)}
                   musicTitle={musicTitle}
                 />

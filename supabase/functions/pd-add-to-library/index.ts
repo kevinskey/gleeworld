@@ -20,6 +20,11 @@
 //      (user_id, pd_work_id)). Requires an authenticated caller.
 //      `no_cached_pdf` (502) fires only in the rare case where the work
 //      has neither a storage_key NOR an original_score_url to fetch.
+//      already_in_my_music is true only when a row ALREADY had a
+//      storage_path (a true re-save/no-op) or on the 23505 insert race.
+//      Upgrading a metadata-only row (attaching storage_path for the
+//      first time) is real work, so that response reports
+//      already_in_my_music:false — the UI toasts "Saved to My Music".
 //   4. Return the inserted (or pre-existing) score row so the UI can
 //      update the library list.
 //
@@ -208,12 +213,16 @@ serve(async (req) => {
         });
       }
 
-      // Re-save: RLS scopes this select to the caller's own rows.
-      const { data: mine } = await supabase
+      // Re-save: RLS scopes this select to the caller's own rows. A
+      // swallowed error here would fall through to the insert below,
+      // hit the 23505 unique-violation race handler, and report a
+      // silent "already" success without ever performing the upgrade.
+      const { data: mine, error: mineErr } = await supabase
         .from("gw_personal_scores")
         .select("id, storage_path")
         .eq("pd_work_id", work.id)
         .maybeSingle();
+      if (mineErr) throw new Error(`personal lookup: ${mineErr.message}`);
 
       if (mine?.storage_path) {
         return new Response(JSON.stringify({
@@ -244,8 +253,12 @@ serve(async (req) => {
           .select("id")
           .maybeSingle();
         if (updErr || !upd) throw new Error(`personal upgrade: ${updErr?.message ?? "no row updated"}`);
+        // This save just attached the PDF to a metadata-only row (saved
+        // earlier via Repertoire search) — that's real work, not a no-op,
+        // so report already_in_my_music:false so the UI toasts "Saved to
+        // My Music" instead of "Already in My Music".
         return new Response(JSON.stringify({
-          ok: true, already_in_my_music: true, personal_score_id: mine.id,
+          ok: true, already_in_my_music: false, personal_score_id: mine.id,
           title: work.title, cached: Boolean(storageKey),
         }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
