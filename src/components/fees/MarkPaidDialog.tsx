@@ -24,22 +24,32 @@ export function MarkPaidDialog({
   onClose,
   feeId,
   remainingAmount,
+  bulkFees,
 }: {
   open: boolean;
   onClose: () => void;
-  feeId: string;
-  remainingAmount: number;
+  feeId?: string;
+  remainingAmount?: number;
+  /** Bulk mode: record each fee's full remaining balance in one pass. */
+  bulkFees?: { id: string; remaining: number }[];
 }) {
   const { recordPayment } = useFeesManagement();
-  const [amount, setAmount] = useState(remainingAmount);
+  const [amount, setAmount] = useState(remainingAmount ?? 0);
   const [method, setMethod] = useState<PaymentMethod>('cash');
   const [ref, setRef] = useState('');
   const [busy, setBusy] = useState(false);
+  const isBulk = !!bulkFees?.length;
 
   const submit = async () => {
     setBusy(true);
     try {
-      await recordPayment(feeId, method, amount, ref || undefined);
+      if (isBulk) {
+        for (const f of bulkFees!) {
+          await recordPayment(f.id, method, f.remaining, ref || undefined);
+        }
+      } else if (feeId) {
+        await recordPayment(feeId, method, amount, ref || undefined);
+      }
       onClose();
     } finally {
       setBusy(false);
@@ -67,13 +77,20 @@ export function MarkPaidDialog({
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
-          <Input
-            type="number"
-            step="0.01"
-            placeholder="Amount"
-            value={amount}
-            onChange={e => setAmount(Number(e.target.value))}
-          />
+          {isBulk ? (
+            <p className="text-sm text-muted-foreground">
+              Records the full remaining balance on each of the{' '}
+              {bulkFees!.length} selected fees.
+            </p>
+          ) : (
+            <Input
+              type="number"
+              step="0.01"
+              placeholder="Amount"
+              value={amount}
+              onChange={e => setAmount(Number(e.target.value))}
+            />
+          )}
           <Input
             placeholder="Reference (check #, Venmo handle, etc.)"
             value={ref}
@@ -84,8 +101,12 @@ export function MarkPaidDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={submit} disabled={busy || amount <= 0}>
-            {busy ? 'Recording…' : 'Record'}
+          <Button onClick={submit} disabled={busy || (!isBulk && amount <= 0)}>
+            {busy
+              ? 'Recording…'
+              : isBulk
+                ? `Record ${bulkFees!.length} payments`
+                : 'Record'}
           </Button>
         </DialogFooter>
       </DialogContent>

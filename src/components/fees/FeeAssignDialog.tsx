@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeeAssignment } from '@/hooks/useFeeAssignment';
+import { filterAssignableMembers } from '@/lib/fees/feeListUtils';
 
 interface Member {
   user_id: string;
@@ -36,6 +37,7 @@ export function FeeAssignDialog({
   const [members, setMembers] = useState<Member[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState('');
+  const [studentsOnly, setStudentsOnly] = useState(true);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -55,14 +57,15 @@ export function FeeAssignDialog({
   }, [open, restrictToUserIds]);
 
   const filtered = useMemo(() => {
+    const base = filterAssignableMembers(members, studentsOnly);
     const q = filter.trim().toLowerCase();
-    if (!q) return members;
-    return members.filter(m => {
+    if (!q) return base;
+    return base.filter(m => {
       const name = (m.full_name ?? '').toLowerCase();
       const email = (m.email ?? '').toLowerCase();
       return name.includes(q) || email.includes(q);
     });
-  }, [members, filter]);
+  }, [members, filter, studentsOnly]);
 
   const toggle = (userId: string, checked: boolean) => {
     const next = new Set(selected);
@@ -94,6 +97,26 @@ export function FeeAssignDialog({
             value={filter}
             onChange={e => setFilter(e.target.value)}
           />
+          <div className="flex items-center justify-between text-sm">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={studentsOnly}
+                onCheckedChange={v => setStudentsOnly(!!v)}
+              />
+              Students only
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={filtered.length > 0 && filtered.every(m => selected.has(m.user_id))}
+                onCheckedChange={v => {
+                  const next = new Set(selected);
+                  filtered.forEach(m => (v ? next.add(m.user_id) : next.delete(m.user_id)));
+                  setSelected(next);
+                }}
+              />
+              Select all ({filtered.length})
+            </label>
+          </div>
           <div className="max-h-96 overflow-y-auto border rounded divide-y">
             {filtered.map(m => (
               <label

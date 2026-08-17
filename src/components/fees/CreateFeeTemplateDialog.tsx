@@ -84,6 +84,8 @@ export function CreateFeeTemplateDialog({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="dues">Dues</SelectItem>
+              <SelectItem value="participation">Participation</SelectItem>
+              <SelectItem value="fundraiser">Fundraiser</SelectItem>
               <SelectItem value="wardrobe">Wardrobe</SelectItem>
               <SelectItem value="trip">Trip</SelectItem>
               <SelectItem value="travel">Travel</SelectItem>

@@ -20,6 +20,7 @@ export interface StudentFee {
   name: string;
   payment_reference?: string;
   stripe_payment_intent_id?: string;
+  guest_pay_token?: string;
   context_type?: string;
   context_id?: string;
   paid_at?: string;
