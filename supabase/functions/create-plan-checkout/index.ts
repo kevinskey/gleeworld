@@ -138,6 +138,18 @@ serve(async (req) => {
   const cycleRaw = body.interval ?? body.billing_cycle;
   const cycle: "monthly" | "annual" = cycleRaw === "annual" ? "annual" : "monthly";
 
+  // Double-subscribe guard: a tenant with a LIVE subscription must change
+  // plans through the Customer Portal (create-billing-portal), where Stripe
+  // updates the existing subscription with proration. A fresh checkout here
+  // would mint a SECOND subscription billing in parallel while the webhook
+  // silently overwrites the plan row with whichever event lands last.
+  const { data: existingPlan } = await admin.from("gw_tenant_plans")
+    .select("status").eq("tenant_id", tenantId).maybeSingle();
+  if (existingPlan?.status === "active" || existingPlan?.status === "past_due") {
+    return err(409, "already_subscribed",
+      "This workspace already has a live subscription — use Manage billing to switch plans.");
+  }
+
   // Look up the plan (tenant-scope only — the Personal tier is
   // scope='user' and goes through create-personal-checkout instead) + the
   // tenant slug for the success/cancel redirect.
