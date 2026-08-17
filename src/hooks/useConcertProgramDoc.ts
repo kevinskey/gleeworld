@@ -102,35 +102,58 @@ export function useConcertProgramDoc(id: string | undefined): ProgramDoc {
     if (debounceRef.current) clearTimeout(debounceRef.current);
   }, []);
 
-  const persistBlocksNow = useCallback(async (next: ProgramBlock[]): Promise<boolean> => {
-    if (!id) return false;
-    setLocalBlocks(next); // optimistic
-    const { data, error } = await supabase
-      .from('gw_concert_programs')
-      .update({ blocks: next, updated_at: new Date().toISOString() })
-      .eq('id', id)
-      .select('id');
-    if (error || !data?.length) {
-      toast.error('Could not save the program layout');
-      setLocalBlocks(null); // fall back to server state
-      return false;
-    }
-    // Mirror: gw_concert_program_pieces.sort_order follows flattened block order.
-    const order = flattenPieceOrder(next);
-    const stale = order
-      .map((pieceId, idx) => ({ pieceId, idx }))
-      .filter(({ pieceId, idx }) => piecesById.get(pieceId)?.sort_order !== idx);
-    const mirrorResults = await Promise.all(stale.map(({ pieceId, idx }) =>
-      supabase.from('gw_concert_program_pieces').update({ sort_order: idx }).eq('id', pieceId).select('id'),
-    ));
-    // The blocks write is authoritative and already succeeded; a mirror
-    // failure (e.g. RLS-silenced update) must surface, not revert it.
-    if (mirrorResults.some((r: { error: unknown; data: unknown[] | null }) => r.error || !r.data?.length)) {
-      toast.error('Could not save the running order');
-    }
-    qc.invalidateQueries({ queryKey: ['concert-program', id] });
-    qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] });
-    return true;
+  // Single writer for gw_concert_programs.blocks, but many independent call
+  // sites race to be it: the doc hook's own first-open effect, the debounced
+  // setBlocks, drag/reorder, undo, and (Task 14) the setlist auto-import
+  // effect can all fire persistBlocksNow within the same render pass. Without
+  // ordering, two in-flight UPDATEs can resolve out of call order and the
+  // later-arriving response — not the later CALL — wins, silently clobbering
+  // whichever write actually happened last. persistQueueRef chains every
+  // write onto the tail of the previous one so the network section always
+  // runs in strict call order, regardless of which resolves first. The
+  // optimistic setLocalBlocks stays OUTSIDE the queue — the UI must update
+  // immediately on every call, not wait its turn.
+  const persistQueueRef = useRef<Promise<unknown>>(Promise.resolve());
+
+  const persistBlocksNow = useCallback((next: ProgramBlock[]): Promise<boolean> => {
+    if (!id) return Promise.resolve(false);
+    setLocalBlocks(next); // optimistic — immediate, outside the write queue
+
+    const run = async (): Promise<boolean> => {
+      const { data, error } = await supabase
+        .from('gw_concert_programs')
+        .update({ blocks: next, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select('id');
+      if (error || !data?.length) {
+        toast.error('Could not save the program layout');
+        setLocalBlocks(null); // fall back to server state
+        return false;
+      }
+      // Mirror: gw_concert_program_pieces.sort_order follows flattened block order.
+      const order = flattenPieceOrder(next);
+      const stale = order
+        .map((pieceId, idx) => ({ pieceId, idx }))
+        .filter(({ pieceId, idx }) => piecesById.get(pieceId)?.sort_order !== idx);
+      const mirrorResults = await Promise.all(stale.map(({ pieceId, idx }) =>
+        supabase.from('gw_concert_program_pieces').update({ sort_order: idx }).eq('id', pieceId).select('id'),
+      ));
+      // The blocks write is authoritative and already succeeded; a mirror
+      // failure (e.g. RLS-silenced update) must surface, not revert it.
+      if (mirrorResults.some((r: { error: unknown; data: unknown[] | null }) => r.error || !r.data?.length)) {
+        toast.error('Could not save the running order');
+      }
+      qc.invalidateQueries({ queryKey: ['concert-program', id] });
+      qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] });
+      return true;
+    };
+
+    // Chain onto the queue regardless of whether the previous write
+    // resolved or rejected, so one failure can never wedge every write
+    // after it.
+    const p = persistQueueRef.current.then(run, run);
+    persistQueueRef.current = p;
+    return p;
   }, [id, piecesById, qc]);
 
   const setBlocks = useCallback((next: ProgramBlock[]) => {

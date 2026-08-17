@@ -407,4 +407,74 @@ describe('useConcertProgramDoc', () => {
     const group = result.current.blocks!.find((b) => b.id === 'grp1') as Extract<ProgramBlock, { kind: 'piece-group' }>;
     expect(group.pieceIds).toEqual(['restored-a', 'piece-b']);
   });
+
+  // Review fix (Important 2): the doc hook's own first-open effect and any
+  // other caller of persistBlocksNow (debounced setBlocks, drag/reorder,
+  // undo, Task 14's setlist auto-import) can all fire an UPDATE to
+  // gw_concert_programs.blocks in the same render pass. Without ordering,
+  // the response that resolves LAST — not the call made last — wins and
+  // silently clobbers the other write. persistQueueRef must serialize the
+  // network section so the second UPDATE never even hits the network until
+  // the first one has resolved.
+  it('persistBlocksNow serializes writes: the second UPDATE does not hit the network until the first resolves', async () => {
+    const blocks: ProgramBlock[] = [
+      { id: 'grp1', kind: 'piece-group', sectionHeading: null, pieceIds: ['piece-a'], creditLine: null },
+    ];
+    legacyMock.mockReturnValue(legacyReturn({
+      program: makeProgram(blocks),
+      pieces: [pieceA],
+    }));
+
+    const { result } = renderDoc();
+    await waitFor(() => expect(result.current.blocks).not.toBeNull());
+
+    // First call's UPDATE hangs until we resolve it manually; the default
+    // (from beforeEach) covers the second call once it's finally reached.
+    let resolveFirst: (value: { data: unknown; error: unknown }) => void = () => {};
+    const firstUpdate = new Promise<{ data: unknown; error: unknown }>((resolve) => { resolveFirst = resolve; });
+    programsUpdateSelectMock.mockImplementationOnce(() => firstUpdate);
+
+    const blocksA: ProgramBlock[] = [
+      { id: 'grp1', kind: 'piece-group', sectionHeading: null, pieceIds: ['piece-a'], creditLine: null },
+      { id: 'note-a', kind: 'text', text: 'First write', align: 'center' },
+    ];
+    const blocksB: ProgramBlock[] = [
+      { id: 'grp1', kind: 'piece-group', sectionHeading: null, pieceIds: ['piece-a'], creditLine: null },
+      { id: 'note-b', kind: 'text', text: 'Second write', align: 'center' },
+    ];
+
+    let firstOk: boolean | undefined;
+    let secondOk: boolean | undefined;
+    let p1: Promise<boolean>;
+    let p2: Promise<boolean>;
+    act(() => {
+      p1 = result.current.persistBlocksNow(blocksA).then((ok) => { firstOk = ok; return ok; });
+      p2 = result.current.persistBlocksNow(blocksB).then((ok) => { secondOk = ok; return ok; });
+    });
+
+    // Flush pending microtasks (letting the queued first `run()` reach its
+    // network call) without resolving the first UPDATE.
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); await Promise.resolve(); });
+
+    expect(programsUpdateMock).toHaveBeenCalledTimes(1); // only the first write reached the network
+    expect(firstOk).toBeUndefined();
+    expect(secondOk).toBeUndefined(); // second call is queued, not yet even started
+
+    await act(async () => {
+      resolveFirst({ data: [{ id: 'prog-1' }], error: null });
+      await p1;
+    });
+    expect(firstOk).toBe(true);
+
+    // Only now — after the first write resolved — does the second UPDATE fire.
+    await waitFor(() => expect(programsUpdateMock).toHaveBeenCalledTimes(2));
+    await act(async () => { await p2; });
+    expect(secondOk).toBe(true);
+
+    // invocationCallOrder confirms strict call order too (belt + suspenders
+    // on top of the "not called yet" assertion above).
+    expect(programsUpdateMock.mock.invocationCallOrder[0]).toBeLessThan(
+      programsUpdateMock.mock.invocationCallOrder[1],
+    );
+  });
 });

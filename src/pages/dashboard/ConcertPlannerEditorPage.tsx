@@ -824,7 +824,13 @@ export default function ConcertPlannerEditorPage() {
         .select('music_id, order_index, score:gw_sheet_music(title, composer, voicing)')
         .eq('setlist_id', setlistId)
         .order('order_index');
-      if (error || !data || data.length === 0) return;
+      // A fetch error must surface — the user would otherwise land on a
+      // silently empty program with no clue why. A genuinely empty setlist
+      // (no error, zero rows) is not an error and stays silent; the manual
+      // "Import setlist" rail action is the retry path either way, so the
+      // ref is claimed above regardless of which branch this takes.
+      if (error) { toast.error('Could not import the setlist — use "Import Setlist" in the rail to try again'); return; }
+      if (!data || data.length === 0) return;
       const mapped: Array<Partial<ConcertProgramPiece>> = (data as Array<{
         music_id: string;
         order_index: number;
