@@ -16,6 +16,8 @@ source of truth for the in-app credits page (`public/studio-sound-credits.html`)
 | Drum Kit · Studio | MuldjordKit (FreePats stereo edition) | Lars Muldjord; FreePats edition by Roberto (zenvoid.org) | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
 | Drum Kit · Rock | AVL Drumkits — Red Zeppelin | Glen MacArthur (bandshed.net) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
 | Drum Kit · Jazz | AVL Drumkits — Black Pearl | Glen MacArthur (bandshed.net) | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
+| Drum Kit · TR-808 | Roland TR-808 sample set (1994) | Michael Fischer / Technopolis | CC0 1.0 |
+| Drum Kit · Trap, 808 Bass | Free Drum Samples (trap/bounce/lo-fi) | Boochi44 (derived from the CC0 TR-808 set) | CC0 1.0 (per repo README) |
 
 The converted sample sets for the CC BY-SA kits (Red Zeppelin, Black Pearl)
 are themselves redistributable under CC BY-SA 3.0.

@@ -214,12 +214,22 @@ function buildLayeredVoice(name: string, manifest: GwManifest, out: Tone.Gain): 
   };
 }
 
+// GM hi-hat choke: striking a closed (42) or pedal (44) hat silences a
+// ringing open hat (46) — every hardware drum machine and GM module does
+// this, and without it open hats smear over trap hat patterns.
+const HAT_CHOKERS = new Set([42, 44]);
+const HAT_OPEN = 46;
+const CHOKE_FADE_S = 0.03;
+
 function buildKitVoice(name: string, manifest: GwManifest, out: Tone.Gain): EngineInstrument {
   const kit = manifest.kit ?? {};
   // Pre-touch buffers so downloads start (and register with Tone's loader).
   for (const hits of Object.values(kit)) for (const h of hits) getBuffer(gwSampleUrl(name, h.url));
 
   let disposed = false;
+  // Ringing open-hat hits, so a closed hat can choke them. Entries remove
+  // themselves in onended, so the set only ever holds live sources.
+  const openHats = new Set<{ src: Tone.ToneBufferSource; gain: Tone.Gain }>();
   const hit = (pitch: number, time: number, vel01: number) => {
     if (disposed) return;
     const hits = kit[String(pitch)];
@@ -228,6 +238,19 @@ function buildKitVoice(name: string, manifest: GwManifest, out: Tone.Gain): Engi
     const i = gwLayerIndexForVelocity(hits, vel);
     const buf = getBuffer(gwSampleUrl(name, hits[i].url));
     if (!buf.loaded) return;
+    if (HAT_CHOKERS.has(pitch)) {
+      for (const oh of openHats) {
+        // Fast fade instead of hard stop — a zero-crossing-agnostic cut
+        // clicks; 30ms reads as the real pedal-catch sound.
+        try {
+          oh.gain.gain.cancelScheduledValues(time);
+          oh.gain.gain.setValueAtTime(oh.gain.gain.value, time);
+          oh.gain.gain.linearRampToValueAtTime(0, time + CHOKE_FADE_S);
+          oh.src.stop(time + CHOKE_FADE_S);
+        } catch { /* already ended */ }
+      }
+      openHats.clear();
+    }
     // Within the chosen layer, follow velocity with a gentle gain ramp
     // (the big dynamic jumps come from the layer switch itself). One
     // source + gain per hit: overlapping hits and ringing tails keep
@@ -235,7 +258,9 @@ function buildKitVoice(name: string, manifest: GwManifest, out: Tone.Gain): Engi
     const ratio = Math.min(1, vel / Math.max(1, hits[i].maxVel));
     const gain = new Tone.Gain(0.6 + 0.4 * ratio).connect(out);
     const src = new Tone.ToneBufferSource({ url: buf, fadeOut: 0.01 }).connect(gain);
-    src.onended = () => { src.dispose(); gain.dispose(); };
+    const entry = { src, gain };
+    if (pitch === HAT_OPEN) openHats.add(entry);
+    src.onended = () => { openHats.delete(entry); src.dispose(); gain.dispose(); };
     src.start(time);
   };
 
