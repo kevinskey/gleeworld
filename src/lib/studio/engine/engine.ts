@@ -1359,6 +1359,14 @@ export class StudioEngine {
     const raw = Tone.getContext().rawContext as AudioContext;
     return ((raw.outputLatency || raw.baseLatency) ?? 0) * 1000;
   }
+
+  /** Live transport position, read directly off Tone.Transport. Unlike
+   * state.positionSeconds (a ~30Hz snapshot for the playhead UI), this
+   * advances per audio render quantum — MIDI capture anchors takes to
+   * it so a take's constant offset isn't a random slice of UI staleness. */
+  transportSecondsNow(): number {
+    return Tone.getTransport().seconds;
+  }
 }
 
 export function dbToGain(db: number): number {

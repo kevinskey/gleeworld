@@ -78,10 +78,17 @@ export class LiveVoices {
     tail.connect(this.output as any);
   }
 
+  // Live monitoring MUST trigger at Tone.immediate() (raw currentTime),
+  // never Tone.now(): now() adds context.lookAhead — 100ms at Tone's
+  // default — on top of device output latency, which made live playing
+  // feel a tenth of a second behind the keys. The lookahead exists so
+  // TRANSPORT-scheduled events survive main-thread jank; an
+  // already-received key press has nothing to look ahead for.
+
   noteOn(pitch: number, velocity01: number): void {
     const inst = this.inst;
     if (!inst) return;
-    const now = Tone.now();
+    const now = Tone.immediate();
     // Re-striking a sustained pitch: release the ringing voice first so the
     // new attack doesn't stack on top of it.
     if (this.sustained.delete(pitch) && inst.triggerRelease) inst.triggerRelease(pitch, now);
@@ -93,7 +100,7 @@ export class LiveVoices {
   noteOff(pitch: number): void {
     this.held.delete(pitch);
     if (this.pedalDown) { this.sustained.add(pitch); return; } // damper keeps it ringing
-    if (this.inst?.triggerRelease) this.inst.triggerRelease(pitch, Tone.now());
+    if (this.inst?.triggerRelease) this.inst.triggerRelease(pitch, Tone.immediate());
   }
 
   /** Piano damper (CC64). Lifting releases every sustained pitch whose key
@@ -104,7 +111,7 @@ export class LiveVoices {
     if (down) return;
     const inst = this.inst;
     if (inst?.triggerRelease) {
-      const now = Tone.now();
+      const now = Tone.immediate();
       for (const p of this.sustained) if (!this.held.has(p)) inst.triggerRelease(p, now);
     }
     this.sustained.clear();
