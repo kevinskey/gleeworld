@@ -86,6 +86,14 @@ export class LiveVoices {
     // Re-striking a sustained pitch: release the ringing voice first so the
     // new attack doesn't stack on top of it.
     if (this.sustained.delete(pitch) && inst.triggerRelease) inst.triggerRelease(pitch, now);
+    // Duplicate note-on for a pitch that is still HELD stacks a second
+    // voice on it — and the single note-off then frees only one, leaving
+    // the other ringing forever (the "stuck note"). Real keyboards make
+    // this ordinary, not exotic: Komplete Kontrol hardware echoes every
+    // key on 2–3 ports and the Studio subscribes to "All MIDI inputs",
+    // so one press arrives as 2–3 note-ons. Release the held voice
+    // before re-attacking so a pitch can never stack.
+    if (this.held.has(pitch) && inst.triggerRelease) inst.triggerRelease(pitch, now);
     this.held.add(pitch);
     if (inst.triggerAttack) inst.triggerAttack(pitch, now, velocity01);
     else inst.triggerAttackRelease(pitch, 0.3, now, velocity01); // one-shot fallback (drums)
@@ -125,6 +133,11 @@ export class LiveVoices {
   private disposeInst(): void {
     this.sustained.clear(); // voices die with the instrument
     if (!this.inst) return;
+    // Belt-and-braces ordering: silence every voice BEFORE disposal.
+    // dispose() is supposed to kill active voices too, but a voice that
+    // survives a mid-note instrument switch rings with no handle left to
+    // release it — the failure mode behind tonight's endless tone.
+    try { this.inst.releaseAll?.(); } catch { /* nothing held */ }
     try { this.inst.dispose(); } catch { /* already gone */ }
     this.inst = null;
   }
