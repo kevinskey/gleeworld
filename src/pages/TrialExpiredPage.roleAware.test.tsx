@@ -9,7 +9,7 @@
 // render — no pricing flash for students.
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 const auth = vi.hoisted(() => ({ user: null as null | { id: string }, loading: false }));
 const role = vi.hoisted(() => ({ loading: false, admin: false }));
@@ -23,8 +23,11 @@ vi.mock('@/hooks/useUserRole', () => ({
 vi.mock('@/hooks/useTrialStatus', () => ({
   useTrialStatus: () => ({ kind: 'expired', endsAt: '2026-11-01T03:59:59.000Z', planId: 'director_60' }),
 }));
+const invokeMock = vi.hoisted(() => vi.fn(async () => ({ data: { url: null }, error: null })));
+
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { auth: { signOut: vi.fn() } },
+  supabase: { auth: { signOut: vi.fn() }, functions: { invoke: invokeMock } },
+  getTenantSlug: () => 'demo',
 }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
@@ -43,6 +46,7 @@ afterEach(() => {
   auth.loading = false;
   role.loading = false;
   role.admin = false;
+  invokeMock.mockClear();
 });
 
 describe('TrialExpiredPage role-aware content', () => {
@@ -66,6 +70,36 @@ describe('TrialExpiredPage role-aware content', () => {
     expect(screen.getByText(/ask your workspace admin/i)).toBeInTheDocument();
     expect(screen.queryByText('Choose Plan')).not.toBeInTheDocument();
     expect(screen.queryByText(/\/mo/)).not.toBeInTheDocument();
+  });
+
+  it('admin Choose Plan starts real checkout with plan, cycle, and tenant slug', async () => {
+    auth.user = { id: 'u1' };
+    role.admin = true;
+    render(<TrialExpiredPage />);
+    fireEvent.click(screen.getAllByRole('button', { name: /choose plan/i })[0]);
+    await waitFor(() => expect(invokeMock).toHaveBeenCalledWith('create-plan-checkout', {
+      body: { plan_id: 'director_60', billing_cycle: 'monthly', tenant_slug: 'demo' },
+    }));
+  });
+
+  it('annual toggle flows through to the checkout cycle', async () => {
+    auth.user = { id: 'u1' };
+    role.admin = true;
+    render(<TrialExpiredPage />);
+    fireEvent.click(screen.getByRole('button', { name: /^annual/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: /choose plan/i })[0]);
+    await waitFor(() => expect(invokeMock).toHaveBeenCalledWith('create-plan-checkout', {
+      body: { plan_id: 'director_60', billing_cycle: 'annual', tenant_slug: 'demo' },
+    }));
+  });
+
+  it('only the two self-serve tenant tiers get checkout; Institution goes to email', () => {
+    auth.user = { id: 'u1' };
+    role.admin = true;
+    render(<TrialExpiredPage />);
+    expect(screen.getAllByRole('button', { name: /choose plan/i })).toHaveLength(2);
+    const contact = screen.getByRole('link', { name: /contact us/i });
+    expect(contact.getAttribute('href')).toMatch(/^mailto:/);
   });
 
   it('shows neither variant while auth is still bootstrapping (user momentarily null)', () => {
