@@ -81,6 +81,12 @@ const pieceB = {
   soloists: null, duration_seconds: null, program_notes: null,
   sheet_music_id: null, rights_status: null, copyright_info: null,
 };
+const pieceC = {
+  id: 'piece-c', program_id: 'prog-1', sort_order: 2, section_heading: null,
+  title: 'Locus Iste', composer: 'Bruckner', arranger: null, voicing: null,
+  soloists: null, duration_seconds: null, program_notes: null,
+  sheet_music_id: null, rights_status: null, copyright_info: null,
+};
 
 function makeProgram(blocks: ProgramBlock[], notes: string | null = null) {
   return {
@@ -278,5 +284,127 @@ describe('useConcertProgramDoc', () => {
     const insertPayload = piecesInsertMock.mock.calls[0][0];
     expect(insertPayload.title).toBe('Ave Maria');
     expect(insertPayload.id).toBeUndefined();
+  });
+
+  it('persistBlocksNow does not rewrite sort_order for a piece that keeps its position', async () => {
+    const blocks: ProgramBlock[] = [
+      { id: 'grp1', kind: 'piece-group', sectionHeading: null, pieceIds: ['piece-a', 'piece-b', 'piece-c'], creditLine: null },
+    ];
+    legacyMock.mockReturnValue(legacyReturn({
+      program: makeProgram(blocks),
+      pieces: [pieceA, pieceB, pieceC], // a:0, b:1, c:2
+    }));
+
+    const { result } = renderDoc();
+    await waitFor(() => expect(result.current.blocks).not.toBeNull());
+
+    // Swap a/b, leave c exactly where it was (still index 2 → sort_order 2).
+    const reordered: ProgramBlock[] = [
+      { id: 'grp1', kind: 'piece-group', sectionHeading: null, pieceIds: ['piece-b', 'piece-a', 'piece-c'], creditLine: null },
+    ];
+
+    await act(async () => {
+      await result.current.persistBlocksNow(reordered);
+    });
+
+    expect(piecesUpdateMock).toHaveBeenCalledTimes(2);
+    expect(piecesUpdateEqMock.mock.calls.map((c) => c[1])).toEqual(['piece-b', 'piece-a']);
+    expect(piecesUpdateEqMock.mock.calls.map((c) => c[1])).not.toContain('piece-c');
+  });
+
+  it('deletePieceWithUndo treats an RLS-silenced delete (empty data, no error) as a failure', async () => {
+    const blocks: ProgramBlock[] = [
+      { id: 'grp1', kind: 'piece-group', sectionHeading: null, pieceIds: ['piece-a', 'piece-b'], creditLine: null },
+    ];
+    legacyMock.mockReturnValue(legacyReturn({
+      program: makeProgram(blocks),
+      pieces: [pieceA, pieceB],
+    }));
+    piecesDeleteSelectMock.mockResolvedValueOnce({ data: [], error: null }); // silently rejected
+
+    const { result } = renderDoc();
+    await waitFor(() => expect(result.current.blocks).not.toBeNull());
+
+    await act(async () => {
+      await result.current.deletePieceWithUndo('piece-a');
+    });
+
+    expect(toastMock.error).toHaveBeenCalledWith('Could not remove the piece');
+    expect(toastMock).not.toHaveBeenCalled(); // no Undo toast — nothing was actually removed
+    expect(programsUpdateMock).not.toHaveBeenCalled(); // blocks must not be touched
+
+    const group = result.current.blocks!.find((b) => b.id === 'grp1') as Extract<ProgramBlock, { kind: 'piece-group' }>;
+    expect(group.pieceIds).toContain('piece-a'); // still there
+  });
+
+  it('deleteBlockWithUndo (piece-group) still offers Undo when some but not all piece deletes fail', async () => {
+    const blocks: ProgramBlock[] = [
+      { id: 'grp1', kind: 'piece-group', sectionHeading: null, pieceIds: ['piece-a', 'piece-b'], creditLine: null },
+    ];
+    legacyMock.mockReturnValue(legacyReturn({
+      program: makeProgram(blocks),
+      pieces: [pieceA, pieceB],
+    }));
+    // piece-a's delete succeeds, piece-b's is RLS-silenced (empty data).
+    piecesDeleteSelectMock
+      .mockResolvedValueOnce({ data: [{ id: 'piece-a' }], error: null })
+      .mockResolvedValueOnce({ data: [], error: null });
+
+    const { result } = renderDoc();
+    await waitFor(() => expect(result.current.blocks).not.toBeNull());
+
+    await act(async () => {
+      await result.current.deleteBlockWithUndo('grp1');
+    });
+
+    // Partial failure still reported...
+    expect(toastMock.error).toHaveBeenCalledWith('Could not remove the section');
+    // ...but the row that DID get deleted still gets an Undo offer.
+    expect(toastMock).toHaveBeenCalledTimes(1);
+    const [, opts] = toastMock.mock.calls[0];
+    expect(opts.action.label).toBe('Undo');
+
+    // The group survives (piece-b's row is still really there), pruned to
+    // just the surviving piece.
+    const group = result.current.blocks!.find((b) => b.id === 'grp1') as Extract<ProgramBlock, { kind: 'piece-group' }>;
+    expect(group.pieceIds).toEqual(['piece-b']);
+  });
+
+  it('Undo restores into the CURRENT blocks, not a stale delete-time snapshot', async () => {
+    const blocks: ProgramBlock[] = [
+      { id: 'grp1', kind: 'piece-group', sectionHeading: null, pieceIds: ['piece-a', 'piece-b'], creditLine: null },
+    ];
+    legacyMock.mockReturnValue(legacyReturn({
+      program: makeProgram(blocks),
+      pieces: [pieceA, pieceB],
+    }));
+    piecesInsertSingleMock.mockResolvedValue({ data: { id: 'restored-a' }, error: null });
+
+    const { result } = renderDoc();
+    await waitFor(() => expect(result.current.blocks).not.toBeNull());
+
+    await act(async () => {
+      await result.current.deletePieceWithUndo('piece-a');
+    });
+    const [, opts] = toastMock.mock.calls[0];
+
+    // An edit lands between the delete and the Undo click. Uses
+    // persistBlocksNow (not setBlocks) so the test doesn't leave a real
+    // 700ms debounce timer pending past the test's lifetime.
+    const editBlock: ProgramBlock = { id: 'note-1', kind: 'text', text: 'Program note added mid-flight', align: 'center' };
+    await act(async () => {
+      await result.current.persistBlocksNow([...result.current.blocks!, editBlock]);
+    });
+    expect(result.current.blocks!.some((b) => b.id === 'note-1')).toBe(true);
+
+    await act(async () => {
+      await opts.action.onClick();
+    });
+
+    // The interim edit survived the Undo restore...
+    expect(result.current.blocks!.some((b) => b.id === 'note-1')).toBe(true);
+    // ...and the restored piece landed back in its original group.
+    const group = result.current.blocks!.find((b) => b.id === 'grp1') as Extract<ProgramBlock, { kind: 'piece-group' }>;
+    expect(group.pieceIds).toEqual(['restored-a', 'piece-b']);
   });
 });

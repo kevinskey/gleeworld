@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useConcertProgram, type ConcertProgram, type ConcertProgramPiece } from '@/hooks/useConcertPrograms';
 import type { RosterSection } from '@/lib/concertPlanner/types';
-import type { PieceGroupBlock, ProgramBlock } from '@/lib/concertProgram/types';
+import { newBlockId, type PieceGroupBlock, type ProgramBlock } from '@/lib/concertProgram/types';
 import { deriveDefaultBlocks, flattenPieceOrder, reconcileBlocks } from '@/lib/concertProgram/blocks';
 
 export interface ProgramDoc {
@@ -34,6 +34,43 @@ export interface ProgramDoc {
 
 const DEBOUNCE_MS = 700;
 
+// ── Undo-restore helpers ─────────────────────────────────────────────────
+// These read/write "current" blocks (at click time, via blocksRef), never a
+// stale snapshot captured when the delete happened — an edit made between
+// delete and Undo must survive the restore.
+
+function clampInsertIndex(current: ProgramBlock[], desiredIndex: number): number {
+  const footerIdx = current.findIndex((b) => b.kind === 'footer');
+  const maxIdx = footerIdx === -1 ? current.length : footerIdx;
+  return Math.min(desiredIndex, maxIdx);
+}
+
+function restorePieceIntoBlocks(
+  current: ProgramBlock[],
+  groupId: string | null,
+  indexInGroup: number,
+  newPieceId: string,
+): ProgramBlock[] {
+  if (groupId) {
+    const idx = current.findIndex((b) => b.id === groupId && b.kind === 'piece-group');
+    if (idx !== -1) {
+      const g = current[idx] as PieceGroupBlock;
+      const ids = g.pieceIds.slice();
+      ids.splice(Math.min(indexInGroup, ids.length), 0, newPieceId);
+      return current.map((b, i) => (i === idx ? { ...g, pieceIds: ids } : b));
+    }
+  }
+  // Original group is gone — land in the last surviving group, or create one.
+  const lastGroupIdx = current.map((b) => b.kind).lastIndexOf('piece-group');
+  if (lastGroupIdx !== -1) {
+    const g = current[lastGroupIdx] as PieceGroupBlock;
+    return current.map((b, i) => (i === lastGroupIdx ? { ...g, pieceIds: [...g.pieceIds, newPieceId] } : b));
+  }
+  const newGroup: PieceGroupBlock = { id: newBlockId(), kind: 'piece-group', sectionHeading: null, pieceIds: [newPieceId], creditLine: null };
+  const footerIdx = current.findIndex((b) => b.kind === 'footer');
+  return footerIdx === -1 ? [...current, newGroup] : [...current.slice(0, footerIdx), newGroup, ...current.slice(footerIdx)];
+}
+
 export function useConcertProgramDoc(id: string | undefined): ProgramDoc {
   const legacyConcert = useConcertProgram(id);
   const {
@@ -52,6 +89,13 @@ export function useConcertProgramDoc(id: string | undefined): ProgramDoc {
 
   const [localBlocks, setLocalBlocks] = useState<ProgramBlock[] | null>(null);
   const blocks = localBlocks ?? reconciled;
+
+  // Always holds the latest rendered blocks, for Undo handlers to read at
+  // click time rather than closing over a stale delete-time snapshot.
+  const blocksRef = useRef<ProgramBlock[] | null>(blocks);
+  useEffect(() => {
+    blocksRef.current = blocks;
+  }, [blocks]);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -76,9 +120,14 @@ export function useConcertProgramDoc(id: string | undefined): ProgramDoc {
     const stale = order
       .map((pieceId, idx) => ({ pieceId, idx }))
       .filter(({ pieceId, idx }) => piecesById.get(pieceId)?.sort_order !== idx);
-    await Promise.all(stale.map(({ pieceId, idx }) =>
+    const mirrorResults = await Promise.all(stale.map(({ pieceId, idx }) =>
       supabase.from('gw_concert_program_pieces').update({ sort_order: idx }).eq('id', pieceId).select('id'),
     ));
+    // The blocks write is authoritative and already succeeded; a mirror
+    // failure (e.g. RLS-silenced update) must surface, not revert it.
+    if (mirrorResults.some((r: { error: unknown; data: unknown[] | null }) => r.error || !r.data?.length)) {
+      toast.error('Could not save the running order');
+    }
     qc.invalidateQueries({ queryKey: ['concert-program', id] });
     qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] });
     return true;
@@ -129,7 +178,18 @@ export function useConcertProgramDoc(id: string | undefined): ProgramDoc {
     if (!ok) {
       // Roll back the orphan row rather than leave a half-state; reconcile
       // would re-adopt it visibly, but the spec wants no silent half-writes.
-      await supabase.from('gw_concert_program_pieces').delete().eq('id', data.id).select('id');
+      const { data: delData, error: delError } = await supabase
+        .from('gw_concert_program_pieces')
+        .delete()
+        .eq('id', data.id)
+        .select('id');
+      if (delError || !delData?.length) {
+        console.warn(
+          '[useConcertProgramDoc] rollback delete failed after a blocks-persist failure — orphan piece row survives; reconcile will re-adopt it visibly.',
+          data.id, delError,
+        );
+      }
+      toast.error('Could not add the piece');
       return null;
     }
     qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] });
@@ -146,12 +206,25 @@ export function useConcertProgramDoc(id: string | undefined): ProgramDoc {
     if (!snapshotPiece) return;
     const snapshotBlocks = blocks;
 
-    const { error } = await supabase
+    // Where the piece lived, so Undo can put it back in the right spot even
+    // if the group has since moved or been edited.
+    let originalGroupId: string | null = null;
+    let originalIndexInGroup = 0;
+    for (const b of snapshotBlocks) {
+      if (b.kind === 'piece-group') {
+        const idx = b.pieceIds.indexOf(pieceId);
+        if (idx !== -1) { originalGroupId = b.id; originalIndexInGroup = idx; break; }
+      }
+    }
+
+    const { data, error } = await supabase
       .from('gw_concert_program_pieces')
       .delete()
       .eq('id', pieceId)
       .select('id');
-    if (error) { toast.error('Could not remove the piece'); return; }
+    // A demo-tenant RLS-silenced delete returns {error: null, data: []} —
+    // that's a failure, not a success; the row still exists.
+    if (error || !data?.length) { toast.error('Could not remove the piece'); return; }
 
     const remainingPieces = pieces.filter((p) => p.id !== pieceId);
     const withoutPiece = snapshotBlocks.map((b) => (
@@ -165,18 +238,15 @@ export function useConcertProgramDoc(id: string | undefined): ProgramDoc {
         label: 'Undo',
         onClick: async () => {
           const { id: _oldId, ...content } = snapshotPiece;
-          const { data, error: insertError } = await supabase
+          const { data: insertData, error: insertError } = await supabase
             .from('gw_concert_program_pieces')
             .insert(content)
             .select('id')
             .single();
-          if (insertError || !data) { toast.error('Could not restore the piece'); return; }
-          const restoredBlocks = snapshotBlocks.map((b) => (
-            b.kind === 'piece-group'
-              ? { ...b, pieceIds: b.pieceIds.map((pid) => (pid === pieceId ? data.id : pid)) }
-              : b
-          ));
-          await persistBlocksNow(restoredBlocks);
+          if (insertError || !insertData) { toast.error('Could not restore the piece'); return; }
+          const current = blocksRef.current ?? [];
+          const restored = restorePieceIntoBlocks(current, originalGroupId, originalIndexInGroup, insertData.id);
+          await persistBlocksNow(restored);
           qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] });
         },
       },
@@ -186,8 +256,9 @@ export function useConcertProgramDoc(id: string | undefined): ProgramDoc {
   const deleteBlockWithUndo = useCallback(async (blockId: string) => {
     if (!blocks) return;
     const snapshotBlocks = blocks;
-    const block = snapshotBlocks.find((b) => b.id === blockId);
-    if (!block) return;
+    const originalIndex = snapshotBlocks.findIndex((b) => b.id === blockId);
+    if (originalIndex === -1) return;
+    const block = snapshotBlocks[originalIndex];
 
     if (block.kind !== 'piece-group') {
       const next = snapshotBlocks.filter((b) => b.id !== blockId);
@@ -197,54 +268,95 @@ export function useConcertProgramDoc(id: string | undefined): ProgramDoc {
         action: {
           label: 'Undo',
           onClick: async () => {
-            await persistBlocksNow(snapshotBlocks);
+            const current = blocksRef.current ?? [];
+            if (current.some((b) => b.id === blockId)) return; // already present
+            const insertAt = clampInsertIndex(current, originalIndex);
+            const restored = [...current.slice(0, insertAt), block, ...current.slice(insertAt)];
+            await persistBlocksNow(restored);
           },
         },
       });
       return;
     }
 
-    // piece-group: snapshot + delete its piece rows too.
+    // piece-group: snapshot + delete its piece rows too. Each row's delete
+    // is checked individually — an RLS-silenced delete (error: null,
+    // data: []) must not be treated as success.
     const group = block;
     const groupPieces = group.pieceIds
       .map((pid) => piecesById.get(pid))
       .filter((p): p is ConcertProgramPiece => !!p);
 
-    await Promise.all(group.pieceIds.map((pid) =>
-      supabase.from('gw_concert_program_pieces').delete().eq('id', pid).select('id'),
-    ));
+    const deleteResults = await Promise.all(group.pieceIds.map(async (pid) => {
+      const { data, error } = await supabase
+        .from('gw_concert_program_pieces')
+        .delete()
+        .eq('id', pid)
+        .select('id');
+      return { pid, ok: !error && !!data?.length };
+    }));
+    const deletedIds = new Set(deleteResults.filter((r) => r.ok).map((r) => r.pid));
 
-    const groupIdSet = new Set(group.pieceIds);
-    const remainingPieces = pieces.filter((p) => !groupIdSet.has(p.id));
-    const withoutGroup = snapshotBlocks.filter((b) => b.id !== blockId);
-    const { blocks: prunedBlocks } = reconcileBlocks(withoutGroup, remainingPieces);
-    const ok = await persistBlocksNow(prunedBlocks);
-    if (!ok) return;
+    if (deletedIds.size < deleteResults.length) {
+      toast.error('Could not remove the section');
+    }
+    if (deletedIds.size === 0) {
+      // Nothing actually changed in the DB — don't touch blocks, no Undo.
+      return;
+    }
+
+    // At least one row is really gone. Reflect that in blocks regardless of
+    // whether every row succeeded, and offer Undo for whatever was deleted.
+    const remainingGroupPieceIds = group.pieceIds.filter((pid) => !deletedIds.has(pid));
+    const groupFullyRemoved = remainingGroupPieceIds.length === 0;
+    const remainingPieces = pieces.filter((p) => !deletedIds.has(p.id));
+    const patchedBlocks = groupFullyRemoved
+      ? snapshotBlocks.filter((b) => b.id !== blockId)
+      : snapshotBlocks.map((b) => (b.id === blockId ? { ...b, pieceIds: remainingGroupPieceIds } : b));
+    const { blocks: prunedBlocks } = reconcileBlocks(patchedBlocks, remainingPieces);
+    // Rows are already gone from the DB; Undo must be offered regardless of
+    // whether this metadata write itself succeeds.
+    await persistBlocksNow(prunedBlocks);
+
+    const restorableSnapshot = groupPieces.filter((p) => deletedIds.has(p.id));
 
     toast('Removed section', {
       action: {
         label: 'Undo',
         onClick: async () => {
-          const inserted = await Promise.all(groupPieces.map(async (p) => {
+          const inserted = await Promise.all(restorableSnapshot.map(async (p) => {
             const { id: _oldId, ...content } = p;
             const { data, error } = await supabase
               .from('gw_concert_program_pieces')
               .insert(content)
               .select('id')
               .single();
-            if (error || !data) return null;
-            return { oldId: p.id, newId: data.id as string };
+            return error || !data ? null : (data.id as string);
           }));
-          const idMap = new Map(
-            inserted.filter((x): x is { oldId: string; newId: string } => !!x).map((x) => [x.oldId, x.newId]),
-          );
-          const restoredGroup: PieceGroupBlock = {
-            ...group,
-            pieceIds: group.pieceIds.map((pid) => idMap.get(pid) ?? pid),
-          };
-          const restoredBlocks = snapshotBlocks.map((b) => (b.id === blockId ? restoredGroup : b));
-          await persistBlocksNow(restoredBlocks);
+          const newIds = inserted.filter((x): x is string => !!x);
+          if (newIds.length === 0) {
+            toast.error('Could not restore the section');
+            return;
+          }
+
+          const current = blocksRef.current ?? [];
+          const stillPresent = current.some((b) => b.id === blockId && b.kind === 'piece-group');
+          const restored: ProgramBlock[] = stillPresent
+            ? current.map((b) => (
+                b.id === blockId && b.kind === 'piece-group' ? { ...b, pieceIds: [...b.pieceIds, ...newIds] } : b
+              ))
+            : (() => {
+                const insertAt = clampInsertIndex(current, originalIndex);
+                const restoredGroup: PieceGroupBlock = { ...group, pieceIds: newIds };
+                return [...current.slice(0, insertAt), restoredGroup, ...current.slice(insertAt)];
+              })();
+          await persistBlocksNow(restored);
           qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] });
+
+          if (newIds.length < restorableSnapshot.length) {
+            const failedCount = restorableSnapshot.length - newIds.length;
+            toast.error(`Restored ${newIds.length} of ${restorableSnapshot.length} pieces — ${failedCount} could not be restored`);
+          }
         },
       },
     });
