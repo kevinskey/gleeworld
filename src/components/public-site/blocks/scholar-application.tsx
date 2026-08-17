@@ -94,7 +94,10 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
             </p>
           )}
           <h2 className="text-3xl cq-sm:text-4xl font-bold leading-tight" style={{ fontFamily: 'var(--site-heading-font)' }}>
-            {config.heading}{config.academicYear ? ` · ${config.academicYear}` : ''}
+            {config.heading}
+            {/* nowrap: browsers happily break at the en-dash, orphaning
+                "2027" on its own line — the year wraps as one unit. */}
+            {config.academicYear && <> · <span className="whitespace-nowrap">{config.academicYear}</span></>}
           </h2>
           {config.intro && <p className="text-muted-foreground mt-2 max-w-2xl">{config.intro}</p>}
         </div>
