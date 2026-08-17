@@ -176,11 +176,18 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
 
   const checkout = useMutation({
     mutationFn: async (planId: string) => {
-      const { data, error } = await supabase.functions.invoke('create-plan-checkout', {
-        // tenant_slug because production JWTs carry no tenant claim — the fn
-        // resolves the tenant by slug and checks the caller's membership role.
-        body: { plan_id: planId, billing_cycle: cycle, tenant_slug: getTenantSlug() },
-      });
+      // User-scope tiers (Personal) bill the CALLER via
+      // create-personal-checkout — no tenant involved. Tenant tiers name the
+      // target workspace by slug because JWT tenant claims describe the
+      // caller's HOME tenant, not the workspace on screen (see PR #714).
+      const isUserScope = PLAN_TIERS.find((t) => t.id === planId)?.scope === 'user';
+      const { data, error } = isUserScope
+        ? await supabase.functions.invoke('create-personal-checkout', {
+            body: { plan_id: planId, billing_cycle: cycle },
+          })
+        : await supabase.functions.invoke('create-plan-checkout', {
+            body: { plan_id: planId, billing_cycle: cycle, tenant_slug: getTenantSlug() },
+          });
       if (error) throw error;
       // deno-lint-ignore no-explicit-any
       if ((data as any)?.url) window.location.href = (data as any).url;
@@ -293,10 +300,23 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                 ))}
               </ul>
               {canManage && !isCurrent && (
-                tier.scope !== 'tenant' ? (
-                  <p className="text-xs text-slate-500">
-                    Individual plan — sign up from your personal account, not the workspace.
-                  </p>
+                tier.scope !== 'tenant' && !tier.quote ? (
+                  // Personal bills the signed-in user (gw_user_plans), not
+                  // the workspace — same button, different checkout fn.
+                  <button
+                    type="button"
+                    disabled={checkout.isPending}
+                    onClick={() => checkout.mutate(tier.id)}
+                    className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#0f172a' }}
+                  >
+                    {checkout.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                      <>
+                        Choose Plan
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
                 ) : !tierIsSelfServe(tier) ? (
                   // Quote-priced tier ("From $X/mo") — sized per school, so
                   // it goes to email rather than a fixed-price checkout.
