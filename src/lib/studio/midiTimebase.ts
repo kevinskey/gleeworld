@@ -8,11 +8,12 @@
 // that; this class anchors that clock to the transport once per take
 // and converts by hardware delta from then on.
 //
-// The anchor itself inherits the snapshot's staleness (a constant
-// offset of ≤ ~33ms for the whole take) — constant offsets are handled
-// by the existing latency compensation + user trim; it's the per-note
-// JITTER that made recordings feel unstable, and that is what the
-// hardware deltas eliminate.
+// The anchor inherits whatever staleness `fallbackSeconds` carries, so
+// callers should pass the LIVEST transport reading they have: the web
+// engine's transportSecondsNow() (per render quantum, ~3ms) rather than
+// the ~30Hz UI snapshot, whose staleness used to shift each whole take
+// by a random 0–33ms. Any residual constant offset is handled by the
+// existing latency compensation + user trim.
 
 /** Mapped-vs-snapshot divergence beyond this means the transport moved
  * under us (loop wrap, seek) — or the timestamp isn't in the expected

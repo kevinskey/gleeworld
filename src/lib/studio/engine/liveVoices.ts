@@ -86,6 +86,13 @@ export class LiveVoices {
     tail.connect(this.output as any);
   }
 
+  // Live monitoring MUST trigger at Tone.immediate() (raw currentTime),
+  // never Tone.now(): now() adds context.lookAhead — 100ms at Tone's
+  // default — on top of device output latency, which made live playing
+  // feel a tenth of a second behind the keys. The lookahead exists so
+  // TRANSPORT-scheduled events survive main-thread jank; an
+  // already-received key press has nothing to look ahead for.
+
   noteOn(pitch: number, velocity01: number): void {
     const inst = this.inst;
     if (!inst) return;

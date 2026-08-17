@@ -422,6 +422,12 @@ function Editor({
   // instead — `state` deliberately does NOT update per position tick
   // (see TransportTickStore in useStudio.ts).
   const posNow = () => transportTick.get().positionSeconds;
+  // Live transport clock for MIDI capture: the web engine reads
+  // Tone.Transport directly (per-render-quantum, ~3ms), so the take
+  // anchor isn't offset by a random slice of the snapshot's ~33ms
+  // staleness. Native has no web engine — the snapshot is all we have,
+  // and its events carry no hardware timestamps to anchor anyway.
+  const posLive = () => engineState.engine?.transportSecondsNow() ?? posNow();
   // Export sheet (B1 Task 7) — MP3 320 / WAV / Stems. Owned here (not
   // inside MixerView) so the header's Export button AND the MasterStrip's
   // Export button (inside MixerView, a different component subtree) open
@@ -535,10 +541,12 @@ function Editor({
   useEffect(() => { midiTimebase.reset(); }, [state?.recordingActive, midiTimebase]);
   // Transport position minus recording compensation — the musical moment
   // the player MEANT, given they play in time with late-by-outputLatency audio.
-  const compNow = () => Math.max(0, posNow() - midiCompSecRef.current);
+  const compNow = () => Math.max(0, posLive() - midiCompSecRef.current);
   // Same, but placed by the event's hardware timestamp when it has one.
+  // posLive (not the snapshot) feeds the anchor, so a take's whole-take
+  // offset is one render quantum, not a random 0–33ms per take.
   const compAt = (timeStampMs?: number) => Math.max(0,
-    midiTimebase.toTransportSeconds(timeStampMs, posNow()) - midiCompSecRef.current);
+    midiTimebase.toTransportSeconds(timeStampMs, posLive()) - midiCompSecRef.current);
   // The single clip owned by the current recording take — every note of a
   // take appends here so one take never sprays one-clip-per-note.
   const midiTakeClipRef = useRef<string | null>(null);
