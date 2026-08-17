@@ -110,6 +110,22 @@ describe('DateCardSlot', () => {
     );
   });
 
+  it('renders the switcher inline in the eyebrow row, not as an overlay', () => {
+    mockSetting.current = { v: 1, type: 'plain', config: {} };
+    renderSlot({ canManage: true });
+    const trigger = screen.getByRole('button', { name: /change date card/i });
+    // Same flex row as the eyebrow text — beside "AUG 17"-style eyebrow,
+    // away from the card's right-edge '›' chevron.
+    expect(trigger.parentElement).toContainElement(screen.getByText(/2026/i));
+  });
+
+  it('renders the switcher inside the liturgical card eyebrow row too', () => {
+    mockSetting.current = { v: 1, type: 'liturgical', config: {} };
+    renderSlot({ canManage: true, activeAddons: ['liturgy_planner'] });
+    const trigger = screen.getByRole('button', { name: /change date card/i });
+    expect(trigger.parentElement).toContainElement(screen.getByText(/today's liturgy/i));
+  });
+
   it('disables add-on-gated types the tenant does not have', async () => {
     mockSetting.current = { v: 1, type: 'plain', config: {} };
     renderSlot({ canManage: true });
