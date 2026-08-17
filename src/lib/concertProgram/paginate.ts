@@ -44,6 +44,12 @@ export function blocksToUnits(blocks: ProgramBlock[], rosterSectionIds: string[]
 export interface PageItem { unit: FlowUnit; continued?: boolean }
 export interface PaginateResult { pages: PageItem[][]; oversized: string[] }
 
+/** True when any page carries a repeated ("continued") group header — i.e.
+ * a piece group's rows didn't fit on one page and split across two+. */
+export function pagesHaveSplitGroup(pages: PageItem[][]): boolean {
+  return pages.some((p) => p.some((i) => i.continued));
+}
+
 const h = (heights: Map<string, number>, u: FlowUnit) => heights.get(unitKey(u)) ?? 0;
 
 export function paginateProgram(

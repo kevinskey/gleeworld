@@ -39,7 +39,9 @@ function parseDuration(text: string): number | null {
   if (!t) return null;
   const withColon = t.match(/^(\d+):([0-5]?\d)$/);
   if (withColon) return Number(withColon[1]) * 60 + Number(withColon[2]);
-  if (/^\d+$/.test(t)) return Number(t);
+  // Bare digits (no colon) are minutes, matching the mm:ss field label —
+  // typing "3" means 3 minutes, not 3 seconds.
+  if (/^\d+$/.test(t)) return Number(t) * 60;
   return null;
 }
 

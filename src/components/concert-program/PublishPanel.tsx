@@ -35,12 +35,13 @@ export interface PublishPanelProps {
   onToggleFooterQr(v: boolean): void;
 }
 
-// Blocker/warning ids are `rights-<pieceId>`, `rights-info-<pieceId>`, or
-// `rep-composer-<pieceId>` — every other id (meta-core, rep-empty,
-// roster-empties, timing-*) has no single piece to jump to. "rights-info"
-// is tried before the bare "rights" prefix so it isn't swallowed by it.
+// Blocker/warning ids are `rights-<pieceId>`, `rights-info-<pieceId>`,
+// `rep-composer-<pieceId>`, or `rep-arranger-<pieceId>` — every other id
+// (meta-core, rep-empty, roster-empties, timing-*) has no single piece to
+// jump to. "rights-info" is tried before the bare "rights" prefix so it
+// isn't swallowed by it.
 function pieceIdFromItemId(id: string): string | null {
-  const m = id.match(/^(rights-info|rights|rep-composer)-(.+)$/);
+  const m = id.match(/^(rights-info|rights|rep-composer|rep-arranger)-(.+)$/);
   return m ? m[2] : null;
 }
 

@@ -75,6 +75,20 @@ const dirtyValidation = validateProgram(makeValidateProgram(), basePieces, roste
 const cleanPieces = basePieces.map((p) => (p.id === 'p2' ? { ...p, rights_status: 'public_domain' as const } : p));
 const cleanValidation = validateProgram(makeValidateProgram(), cleanPieces, roster);
 
+// p3 looks traditional (program_notes mentions "spiritual") and has no
+// arranger credited — validateProgram flags it `rep-arranger-p3`/warning.
+// Everything else is clean, so this is the only Fix button rendered.
+const arrangerWarningPieces: ConcertPiece[] = [
+  ...cleanPieces,
+  {
+    id: 'p3', program_id: 'prog1', sort_order: 2, section_heading: null,
+    title: 'Wade in the Water', composer: 'Traditional', arranger: null, voicing: null,
+    soloists: null, duration_seconds: 120, program_notes: 'Traditional spiritual',
+    rights_status: 'public_domain', copyright_info: null,
+  },
+];
+const arrangerWarningValidation = validateProgram(makeValidateProgram(), arrangerWarningPieces, roster);
+
 function baseProps(overrides: Record<string, unknown> = {}) {
   return {
     open: true,
@@ -99,6 +113,15 @@ describe('PublishPanel', () => {
     expect(screen.getByText(/1 piece missing rights status/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Fix' }));
     expect(onJumpToPiece).toHaveBeenCalledWith('p2');
+  });
+
+  it('renders a rep-arranger warning with a Fix button that jumps to the offending piece', () => {
+    const onJumpToPiece = vi.fn();
+    render(<PublishPanel {...baseProps({ validation: arrangerWarningValidation, onJumpToPiece })} />);
+
+    fireEvent.click(screen.getByText(/1 warning/i));
+    fireEvent.click(screen.getByRole('button', { name: 'Fix' }));
+    expect(onJumpToPiece).toHaveBeenCalledWith('p3');
   });
 
   it('keeps Publish disabled while required items remain, even once approved', () => {
