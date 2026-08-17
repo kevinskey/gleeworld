@@ -125,6 +125,35 @@ describe('FeesAdminPage smoke test', () => {
     expect(tabNames).toContain('Other');
   });
 
+  it('search filters the individual fees list', () => {
+    render(
+      <MemoryRouter>
+        <FeesAdminPage />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('Choir Fee')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Search fees'), {
+      target: { value: 'zzz-no-match' },
+    });
+    expect(screen.queryByText('Choir Fee')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('No fees match the current search or filter.'),
+    ).toBeInTheDocument();
+  });
+
+  it('selecting a fee reveals the bulk mark-paid bar', () => {
+    render(
+      <MemoryRouter>
+        <FeesAdminPage />
+      </MemoryRouter>,
+    );
+    fireEvent.click(
+      screen.getByLabelText('Select Choir Fee for Kevin Phillip Johnson'),
+    );
+    expect(screen.getByText('1 selected')).toBeInTheDocument();
+    expect(screen.getByText('Mark 1 paid…')).toBeInTheDocument();
+  });
+
   it('shows + New template button', () => {
     const { getAllByText } = render(
       <MemoryRouter>
