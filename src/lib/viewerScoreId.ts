@@ -11,11 +11,8 @@
 // the way out. Keeping that in one place stops the landing and the reader from
 // disagreeing about what a bare uuid means.
 //
-// A personal score cannot carry annotations or linked audio: those tables have
-// a foreign key to gw_sheet_music, so there is no row for them to point at.
-// Callers use isPersonalScoreId() to hide those affordances rather than
-// offering markup that silently fails to save. Sharing a score to the library
-// creates a real gw_sheet_music row and gets full annotation support.
+// Personal scores persist annotations in gw_personal_score_annotations via
+// annotationTarget(); audio and linked tables remain gw_sheet_music-only.
 
 const PERSONAL_PREFIX = 'personal:';
 
@@ -32,4 +29,17 @@ export function toTableId(viewerId: string): string {
   return viewerId.startsWith(PERSONAL_PREFIX)
     ? viewerId.slice(PERSONAL_PREFIX.length)
     : viewerId;
+}
+
+/** Which annotation table a viewer musicId writes to. Personal scores keep
+ *  their markup in gw_personal_score_annotations (FK gw_personal_scores);
+ *  everything else stays on gw_sheet_music_annotations. */
+export function annotationTarget(musicId: string): {
+  table: 'gw_sheet_music_annotations' | 'gw_personal_score_annotations';
+  idColumn: 'sheet_music_id' | 'personal_score_id';
+  rowId: string;
+} {
+  return isPersonalScoreId(musicId)
+    ? { table: 'gw_personal_score_annotations', idColumn: 'personal_score_id', rowId: toTableId(musicId) }
+    : { table: 'gw_sheet_music_annotations', idColumn: 'sheet_music_id', rowId: musicId };
 }
