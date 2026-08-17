@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { parseMidiMessage } from './midiMessage';
 import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode, grownSessionLength, ensureTakeClip } from './midiRecord';
 import { HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY } from './midiRecord';
@@ -206,6 +206,17 @@ describe('attachTakeCc', () => {
 
 describe('getMidiTrimMs', () => {
   it('defaults to 0 and clamps to ±100', () => {
+    // Node ≥22 injects its own experimental `localStorage` global that
+    // shadows jsdom's and — without --localstorage-file — has no working
+    // Storage methods (`removeItem is not a function`). Swap in a real
+    // Map-backed Storage for this test, scoped per the vitest.setup.ts
+    // rule (suite-local stubs only); unstubbed at the end of the test.
+    const store = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => { store.set(k, String(v)); },
+      removeItem: (k: string) => { store.delete(k); },
+    });
     localStorage.removeItem(MIDI_TRIM_STORAGE_KEY);
     expect(getMidiTrimMs()).toBe(0);
     localStorage.setItem(MIDI_TRIM_STORAGE_KEY, '250');
@@ -213,6 +224,7 @@ describe('getMidiTrimMs', () => {
     localStorage.setItem(MIDI_TRIM_STORAGE_KEY, '-40');
     expect(getMidiTrimMs()).toBe(-40);
     localStorage.removeItem(MIDI_TRIM_STORAGE_KEY);
+    vi.unstubAllGlobals();
   });
 });
 
