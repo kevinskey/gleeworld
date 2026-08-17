@@ -203,3 +203,78 @@ CREATE POLICY admin_write_fee_settings ON gw_tenant_fee_settings
   FOR ALL TO authenticated
   USING (tenant_id = current_tenant_id() AND public.current_user_is_tenant_admin())
   WITH CHECK (tenant_id = current_tenant_id() AND public.current_user_is_tenant_admin());
+
+-- ── 5. Self-serve installment split (student-callable) ───────────────────────
+-- Students may split their OWN payable fee into 2–4 monthly installments when
+-- the owning template allows it (template-less one-off fees allow it too).
+-- SECURITY DEFINER because students have no INSERT policy on the plan tables;
+-- ownership + tenant checks below are the guard.
+CREATE OR REPLACE FUNCTION split_fee_into_installments(p_fee_id uuid, p_count int)
+RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_fee gw_student_fees%ROWTYPE;
+  v_allow boolean;
+  v_remaining numeric;
+  v_per numeric;
+  v_plan_id uuid;
+  i int;
+BEGIN
+  IF p_count NOT BETWEEN 2 AND 4 THEN
+    RAISE EXCEPTION 'count must be between 2 and 4';
+  END IF;
+
+  SELECT * INTO v_fee FROM gw_student_fees
+   WHERE id = p_fee_id AND tenant_id = current_tenant_id() AND user_id = auth.uid()
+   FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'fee not found'; END IF;
+  IF v_fee.status NOT IN ('pending','partial','overdue') THEN
+    RAISE EXCEPTION 'fee is not payable';
+  END IF;
+
+  IF v_fee.template_id IS NOT NULL THEN
+    SELECT allow_self_serve_split INTO v_allow
+      FROM gw_fee_templates WHERE id = v_fee.template_id;
+    IF v_allow IS FALSE THEN
+      RAISE EXCEPTION 'installments are not offered for this fee';
+    END IF;
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM gw_fee_payment_plans
+     WHERE student_fee_id = p_fee_id AND status = 'active'
+  ) THEN
+    RAISE EXCEPTION 'an active payment plan already exists';
+  END IF;
+
+  v_remaining := v_fee.amount - v_fee.paid_amount;
+  IF v_remaining <= 0 THEN RAISE EXCEPTION 'no balance remains'; END IF;
+  -- Cent-floor each installment; the last one absorbs the remainder.
+  v_per := floor(v_remaining * 100 / p_count) / 100;
+
+  INSERT INTO gw_fee_payment_plans
+    (student_fee_id, user_id, tenant_id, total_amount, installments,
+     installment_amount, frequency, start_date, end_date, status, source)
+  VALUES
+    (p_fee_id, v_fee.user_id, v_fee.tenant_id, v_remaining, p_count, v_per,
+     'monthly', current_date,
+     (current_date + ((p_count - 1) || ' months')::interval)::date,
+     'active', 'self_serve')
+  RETURNING id INTO v_plan_id;
+
+  FOR i IN 1..p_count LOOP
+    INSERT INTO gw_fee_plan_installments
+      (payment_plan_id, installment_number, amount, due_date, tenant_id)
+    VALUES (
+      v_plan_id,
+      i,
+      CASE WHEN i = p_count THEN v_remaining - v_per * (p_count - 1) ELSE v_per END,
+      (current_date + ((i - 1) || ' months')::interval)::date,
+      v_fee.tenant_id
+    );
+  END LOOP;
+
+  RETURN v_plan_id;
+END $$;
+
+REVOKE ALL ON FUNCTION split_fee_into_installments(uuid, int) FROM public;
+GRANT EXECUTE ON FUNCTION split_fee_into_installments(uuid, int) TO authenticated;
