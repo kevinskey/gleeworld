@@ -107,6 +107,7 @@ const StudioHome = lazy(() => import("./pages/studio/StudioHome"));
 const StudioEditor = lazy(() => import("./pages/studio/StudioEditor"));
 const VideoLibrary = lazy(() => import("./pages/video/VideoLibrary"));
 const VideoPlayer = lazy(() => import("./pages/video/VideoPlayer"));
+const ListenPage = lazy(() => import("./pages/ListenPage"));
 const Messenger = lazy(() => import("./pages/admin/Messenger"));
 import { Terms, Privacy } from "./pages/Legal";
 const ThankYou = lazy(() => import("./pages/ThankYou"));
@@ -1035,6 +1036,11 @@ const App = () => {
               <Route path="/studio/videos/:id" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><VideoPlayer /></DashboardShell></UniversalLayout></ProtectedRoute>} />
               {/* Legacy /video/:id → studio player (backward compat). */}
               <Route path="/video/:id" element={<Navigate to="/studio/videos" replace />} />
+              <Route path="/listen/:id" element={
+                <ProtectedRoute>
+                  <ListenPage />
+                </ProtectedRoute>
+              } />
               <Route
                 path="/academy/c/:code/discuss/:threadId"
                 element={
