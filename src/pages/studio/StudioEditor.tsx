@@ -2060,18 +2060,22 @@ function Editor({
          *  dead-center. */}
         <div className="flex flex-wrap sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-3">
 
-        {/* LEFT — transport controls. Play/Pause/Stop/Rec/Metro are
+        {/* LEFT — transport controls. Play/Pause/Stop/Rec/Loop are
          *  visible on every breakpoint; nav (skip start/end + scrub) and
-         *  markers appear on wider screens where there's room. */}
+         *  markers appear on wider screens where there's room. Width
+         *  budget per tier (LCD is shrink-0, so the three cells MUST sum
+         *  under the viewport or buttons collide — seen on iPad
+         *  2026-08-17): <lg = 5 primary only; lg adds nav + flag + LCD
+         *  tempo/TS; xl adds marker hop, button labels, VU. */}
         <div className="flex items-center gap-0.5 sm:gap-1 min-w-0">
         <button
           onClick={() => engineState.seek?.(0)}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="hidden lg:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Go to beginning (Home)">
           <SkipBack className="w-4 h-4" />
         </button>
         <ScrubButton
-          className="hidden sm:flex"
+          className="hidden lg:flex"
           direction={-1}
           getPosition={posNow}
           max={session.length_seconds}
@@ -2080,7 +2084,7 @@ function Editor({
           title="Rewind — click to nudge, hold to scrub"
         />
         <ScrubButton
-          className="hidden sm:flex"
+          className="hidden lg:flex"
           direction={+1}
           getPosition={posNow}
           max={session.length_seconds}
@@ -2090,12 +2094,12 @@ function Editor({
         />
         <button
           onClick={() => engineState.seek?.(session.length_seconds)}
-          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="hidden lg:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Skip to end">
           <SkipForward className="w-4 h-4" />
         </button>
 
-        <div className="hidden sm:block w-px h-7 bg-border mx-0.5" />
+        <div className="hidden lg:block w-px h-7 bg-border mx-0.5" />
 
         {/* Primary transport — always visible */}
         <button onClick={async () => {
@@ -2173,24 +2177,24 @@ function Editor({
         </button>
 
         {/* Markers — drop a flag at the playhead, hop between flags.
-         *  Flag on sm+, prev/next on md+ (they only help once markers exist). */}
+         *  Flag on lg+, prev/next on xl+ (they only help once markers exist). */}
         <button
           onClick={addMarkerAtPlayhead}
-          className="hidden sm:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
+          className="hidden lg:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 items-center justify-center"
           title="Add marker at playhead (K)">
           <Flag className="w-4 h-4 text-amber-500" />
         </button>
         <button
           onClick={jumpPrevMarker}
           disabled={markers.length === 0}
-          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          className="hidden xl:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
           title="Previous marker (,)">
           <ChevronLeft className="w-4 h-4" />
         </button>
         <button
           onClick={jumpNextMarker}
           disabled={markers.length === 0}
-          className="hidden md:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
+          className="hidden xl:flex h-8 w-8 sm:h-9 sm:w-9 rounded bg-muted border border-border hover:bg-muted/70 disabled:opacity-50 items-center justify-center"
           title="Next marker (.)">
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -2271,16 +2275,16 @@ function Editor({
             className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
             aria-label="Undo" title="Undo (⌘Z)">
             <Undo2 className="w-4 h-4" />
-            <span className="hidden lg:inline text-sm font-semibold">Undo</span>
+            <span className="hidden xl:inline text-sm font-semibold">Undo</span>
           </button>
           <button
             onClick={() => setSettingsOpen(true)}
             className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
             aria-label="Session settings" title="Session — tempo, time signature, snap, grid, punch, end">
             <SlidersHorizontal className="w-4 h-4" />
-            <span className="hidden lg:inline text-sm font-semibold">More</span>
+            <span className="hidden xl:inline text-sm font-semibold">More</span>
           </button>
-          <div className="hidden lg:block ml-1">
+          <div className="hidden xl:block ml-1">
             <LiveVuMeter store={transportTick} />
           </div>
         </div>
@@ -3710,8 +3714,11 @@ function TransportLCD({
         lengthSeconds={lengthSeconds}
       />
 
-      {/* Tempo — editable digits; the label beneath doubles as tap tempo */}
-      <div className="hidden md:flex flex-col items-center justify-center px-2 leading-none gap-0.5">
+      {/* Tempo — editable digits; the label beneath doubles as tap tempo.
+       *  lg+ only: on iPad-portrait widths these two panels pushed the
+       *  LCD (shrink-0) into the side button cells. Below lg they live
+       *  in the More settings sheet. */}
+      <div className="hidden lg:flex flex-col items-center justify-center px-2 leading-none gap-0.5">
         <input
           type="number" min={20} max={300} value={tempoBpm}
           onChange={(e) => onTempoChange(Number(e.target.value) || 120)}
@@ -3727,7 +3734,7 @@ function TransportLCD({
       </div>
 
       {/* Time signature */}
-      <div className="hidden md:flex flex-col items-center justify-center px-2 leading-none gap-0.5">
+      <div className="hidden lg:flex flex-col items-center justify-center px-2 leading-none gap-0.5">
         <select
           value={`${numerator}/${denominator}`}
           onChange={(e) => { const [n, d] = e.target.value.split('/').map(Number); onTimeSignatureChange(n, d); }}
