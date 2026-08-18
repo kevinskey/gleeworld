@@ -12,7 +12,7 @@ import {
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
-  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, CreditCard, Receipt,
+  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, Gavel, CreditCard, Receipt,
   HandHeart, ConciergeBell, QrCode, Award,
   type LucideIcon, FileText } from 'lucide-react';
 
@@ -107,6 +107,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'tour',      to: '/tour-manager',              label: 'Travel Manager',  icon: RouteIcon,     section: 'plan', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-tour-manager', gate: { module: 'tour' } },
   { key: 'seating-charts', to: '/seating-charts',       label: 'Seating Charts',  icon: Armchair,      section: 'plan', tone: 'bg-indigo-50 text-indigo-600',   tourId: 'nav-seating-charts' },
   { key: 'auditions', to: '/dashboard/auditions',       label: 'Auditions',       icon: ScanLine,      section: 'plan', tone: 'bg-lime-50 text-lime-600',       tourId: 'nav-auditions', gate: { module: 'auditions' } },
+  { key: 'auctions',  to: '/auctions',                  label: 'Auctions',        icon: Gavel,         section: 'plan', tone: 'bg-stone-50 text-stone-600',     tourId: 'nav-auctions', gate: { module: 'auctions' } },
   // Reach
   { key: 'pr-hub',    to: '/dashboard/pr-hub', label: 'PR Hub',    icon: Megaphone,     section: 'reach', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-pr-hub', gate: { module: 'pr_hub' } },
   { key: 'fan-page',  to: '/admin/fan-page',   label: 'Fan Page',  icon: Heart,         section: 'reach', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-fan-page', gate: { adminOnly: true } },
