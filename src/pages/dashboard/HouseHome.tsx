@@ -34,6 +34,8 @@ import { hasParsableEventAt } from '@/components/home/date-card/eventAt';
 import type { DateCardContext } from '@/components/home/date-card/types';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
 import { YouOweCard } from '@/components/dashboard/YouOweCard';
+import { HomeBackgroundPicker } from '@/components/dashboard/HomeBackgroundPicker';
+import { useCommandCenterBackground } from '@/hooks/useCommandCenterBackground';
 
 interface FeedRow {
   section: string; subtype: string | null; id: string; title: string;
@@ -43,6 +45,7 @@ interface FeedRow {
 
 export default function HouseHome() {
   const { profile, loading: roleLoading, canEditMusicLibrary, isAdmin } = useUserRole();
+  const { background: homeBackground, setBackground: setHomeBackground } = useCommandCenterBackground();
   const isFaculty = isFacultyProfile(profile);
   const firstName = preferredFirstName(profile);
   const { settings: brandingSettings } = useBrandingSettings();
@@ -280,7 +283,14 @@ export default function HouseHome() {
 
   return (
     <DashboardShell>
-      <div className="px-4 sm:px-6 pt-3 pb-8 space-y-4">
+      {/* min-h-full + negative top margin re-absorbing the shell's pt-3/4:
+          the user-chosen background must paint the whole content column,
+          not start below a default-colored strip. When no color is chosen
+          the style is empty and this renders exactly as before. */}
+      <div
+        className="px-4 sm:px-6 -mt-3 sm:-mt-4 pt-6 sm:pt-8 pb-8 space-y-4 min-h-full"
+        style={homeBackground ? { backgroundColor: homeBackground } : undefined}
+      >
         <YouOweCard />
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -288,6 +298,7 @@ export default function HouseHome() {
                 leads with the full date and weekday. */}
             <PageTitle>{greetingFor(now.getHours(), firstName)}</PageTitle>
           </div>
+          <HomeBackgroundPicker background={homeBackground} onChange={setHomeBackground} />
         </div>
 
         <DateCardSlot ctx={dateCardCtx} activeAddons={Array.from(moduleSet)} canManage={isAdmin()} />

@@ -112,6 +112,10 @@ vi.mock('@/hooks/useMyFees', () => ({
   useMyFees: () => myFeesResult.current,
 }));
 
+vi.mock('@/hooks/useCommandCenterBackground', () => ({
+  useCommandCenterBackground: () => ({ background: null, setBackground: vi.fn() }),
+}));
+
 vi.mock('@/hooks/use-mobile', () => ({
   useIsMobile: () => false,
   // The grid asks whether the phone tab bar is on screen before deciding
