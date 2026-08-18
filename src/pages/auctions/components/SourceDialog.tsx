@@ -11,7 +11,10 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { INGEST_METHOD_LABELS, type AuctionSource, type IngestMethod } from '@/lib/auctions/types';
+import {
+  INGEST_METHOD_LABELS, TERMS_POSITION_LABELS,
+  type AuctionSource, type IngestMethod, type TermsPosition,
+} from '@/lib/auctions/types';
 import type { SourceInput } from '@/lib/auctions/sourcesApi';
 
 function slugify(name: string): string {
@@ -20,7 +23,9 @@ function slugify(name: string): string {
 
 const EMPTY: SourceInput = {
   name: '', slug: '', base_url: null, ingest_method: 'manual',
-  buyer_premium_pct: null, notes: null, active: true,
+  buyer_premium_pct: null, buyer_premium_note: null, buyer_premium_source_url: null,
+  terms_url: null, terms_position: 'unreviewed', calendar_url: null,
+  email_alerts_url: null, notes: null, active: true,
 };
 
 interface SourceDialogProps {
@@ -45,6 +50,12 @@ export function SourceDialog({ open, onOpenChange, source, onSubmit, saving }: S
           base_url: source.base_url,
           ingest_method: source.ingest_method,
           buyer_premium_pct: source.buyer_premium_pct,
+          buyer_premium_note: source.buyer_premium_note,
+          buyer_premium_source_url: source.buyer_premium_source_url,
+          terms_url: source.terms_url,
+          terms_position: source.terms_position,
+          calendar_url: source.calendar_url,
+          email_alerts_url: source.email_alerts_url,
           notes: source.notes,
           active: source.active,
         }
@@ -58,7 +69,12 @@ export function SourceDialog({ open, onOpenChange, source, onSubmit, saving }: S
     setForm((f) => ({ ...f, name, slug: slugTouched ? f.slug : slugify(name) }));
   }
 
-  const canSave = form.name.trim().length > 0 && form.slug.trim().length > 0 && !saving;
+  // Mirrors the database CHECK: a premium without provenance is refused
+  // there, so the form refuses it here rather than surfacing a constraint error.
+  const premiumNeedsSource =
+    form.buyer_premium_pct !== null && !form.buyer_premium_source_url?.trim();
+  const canSave =
+    form.name.trim().length > 0 && form.slug.trim().length > 0 && !premiumNeedsSource && !saving;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -125,6 +141,79 @@ export function SourceDialog({ open, onOpenChange, source, onSubmit, saving }: S
                 Leave blank until you have confirmed it from the house's own terms. A guessed premium
                 would quietly distort cost planning later.
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="source-premium-url">Where the premium is published</Label>
+              <Input
+                id="source-premium-url"
+                placeholder="https://"
+                value={form.buyer_premium_source_url ?? ''}
+                onChange={(e) => set('buyer_premium_source_url', e.target.value || null)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Required whenever a premium is entered — a rate with no source cannot be told apart
+                from a guess later.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="source-premium-note">What the terms actually say</Label>
+              <Input
+                id="source-premium-note"
+                placeholder="18% online, 15% in the room"
+                value={form.buyer_premium_note ?? ''}
+                onChange={(e) => set('buyer_premium_note', e.target.value || null)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="source-terms-position">What their terms allow</Label>
+              <Select
+                value={form.terms_position}
+                onValueChange={(v) => set('terms_position', v as TermsPosition)}
+              >
+                <SelectTrigger id="source-terms-position"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(TERMS_POSITION_LABELS) as TermsPosition[]).map((t) => (
+                    <SelectItem key={t} value={t}>{TERMS_POSITION_LABELS[t]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                A house stays on manual entry until its terms have been read and allow more.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="source-terms-url">Terms page</Label>
+              <Input
+                id="source-terms-url"
+                placeholder="https://"
+                value={form.terms_url ?? ''}
+                onChange={(e) => set('terms_url', e.target.value || null)}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="source-calendar-url">Upcoming auctions page</Label>
+                <Input
+                  id="source-calendar-url"
+                  placeholder="https://"
+                  value={form.calendar_url ?? ''}
+                  onChange={(e) => set('calendar_url', e.target.value || null)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="source-alerts-url">Email alert signup</Label>
+                <Input
+                  id="source-alerts-url"
+                  placeholder="https://"
+                  value={form.email_alerts_url ?? ''}
+                  onChange={(e) => set('email_alerts_url', e.target.value || null)}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

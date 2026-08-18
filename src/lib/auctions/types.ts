@@ -43,6 +43,18 @@ export type AuctionStatus =
   | 'closed'
   | 'cancelled';
 
+// What a house's own terms allow. Only 'email_ok'/'api_ok' may leave the
+// manual ingest tier — the database enforces that, it is not a convention.
+export type TermsPosition = 'unreviewed' | 'manual_only' | 'email_ok' | 'api_ok' | 'prohibited';
+
+export const TERMS_POSITION_LABELS: Record<TermsPosition, string> = {
+  unreviewed: 'Terms not reviewed yet',
+  manual_only: 'Manual entry only',
+  email_ok: 'Email notifications allowed',
+  api_ok: 'API access allowed',
+  prohibited: 'Automated access prohibited',
+};
+
 export interface AuctionSource {
   id: string;
   name: string;
@@ -50,6 +62,15 @@ export interface AuctionSource {
   base_url: string | null;
   ingest_method: IngestMethod;
   buyer_premium_pct: number | null;
+  // Provenance for the premium — it feeds the landed-cost maths, so a number
+  // without a source URL is refused by a CHECK constraint.
+  buyer_premium_note: string | null;
+  buyer_premium_source_url: string | null;
+  terms_url: string | null;
+  terms_reviewed_at: string | null;
+  terms_position: TermsPosition;
+  calendar_url: string | null;
+  email_alerts_url: string | null;
   notes: string | null;
   active: boolean;
   last_refreshed_at: string | null;

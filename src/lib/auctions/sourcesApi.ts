@@ -2,10 +2,12 @@
 // writes are refused by RLS for anyone who is not platform staff, so the UI
 // hides the admin surface rather than relying on the error.
 import { supabase } from '@/integrations/supabase/client';
-import type { AuctionSource, IngestMethod } from './types';
+import type { AuctionSource, IngestMethod, TermsPosition } from './types';
 
 const COLUMNS =
-  'id, name, slug, base_url, ingest_method, buyer_premium_pct, notes, active, last_refreshed_at, created_at, updated_at';
+  'id, name, slug, base_url, ingest_method, buyer_premium_pct, buyer_premium_note, ' +
+  'buyer_premium_source_url, terms_url, terms_reviewed_at, terms_position, calendar_url, ' +
+  'email_alerts_url, notes, active, last_refreshed_at, created_at, updated_at';
 
 export async function listSources(includeInactive = false): Promise<AuctionSource[]> {
   let query = supabase.from('ext_auction_sources').select(COLUMNS).order('name');
@@ -22,6 +24,12 @@ export interface SourceInput {
   base_url: string | null;
   ingest_method: IngestMethod;
   buyer_premium_pct: number | null;
+  buyer_premium_note: string | null;
+  buyer_premium_source_url: string | null;
+  terms_url: string | null;
+  terms_position: TermsPosition;
+  calendar_url: string | null;
+  email_alerts_url: string | null;
   notes: string | null;
   active: boolean;
 }
