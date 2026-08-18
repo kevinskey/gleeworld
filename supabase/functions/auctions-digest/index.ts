@@ -15,6 +15,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { buildDigestHtml, isSearchDue, type DigestMatch } from '../_shared/auctionDigest.ts';
+import { buildAuctionNudge, sendWhatsApp } from '../_shared/whatsapp.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,6 +31,7 @@ interface SearchRow {
   name: string;
   notify_channel: string;
   notify_frequency: string;
+  notify_whatsapp: boolean;
   last_notified_at: string | null;
 }
 
@@ -53,9 +55,11 @@ serve(async (req) => {
 
   const { data: searches, error: searchErr } = await admin
     .from('gw_auction_saved_searches')
-    .select('id, tenant_id, user_id, name, notify_channel, notify_frequency, last_notified_at')
+    .select('id, tenant_id, user_id, name, notify_channel, notify_frequency, notify_whatsapp, last_notified_at')
     .eq('active', true)
-    .neq('notify_channel', 'none');
+    // A search with WhatsApp on still wants sending even if its other
+    // channels are off, so 'none' alone no longer excludes it.
+    .or('notify_channel.neq.none,notify_whatsapp.eq.true');
 
   if (searchErr) {
     return new Response(JSON.stringify({ error: searchErr.message }), {
@@ -66,6 +70,7 @@ serve(async (req) => {
 
   let digestsSent = 0;
   let lotsReported = 0;
+  let whatsappSent = 0;
   const problems: string[] = [];
 
   for (const search of (searches ?? []) as SearchRow[]) {
@@ -155,6 +160,37 @@ serve(async (req) => {
       }
     }
 
+    if (search.notify_whatsapp) {
+      // Consent is checked at SEND time, not at save time: someone may have
+      // opted out since they turned this on, and the opt-out has to win.
+      const { data: optin } = await admin
+        .from('gw_whatsapp_optins')
+        .select('phone_e164, opted_out_at')
+        .eq('user_id', search.user_id)
+        .maybeSingle();
+
+      if (!optin || optin.opted_out_at) {
+        problems.push(`${search.id} whatsapp: no live opt-in for this user`);
+      } else {
+        const appUrl = Deno.env.get('APP_ORIGIN') ?? 'https://gleeworld.org';
+        const result = await sendWhatsApp(
+          optin.phone_e164 as string,
+          buildAuctionNudge({ searchName: search.name, count, appUrl }),
+          // Positional variables for an approved Meta template, when one is
+          // configured. Order matches the template's {{1}}/{{2}}.
+          { '1': String(count), '2': search.name },
+        );
+        if (!result.ok) {
+          problems.push(`${search.id} whatsapp: ${result.error}`);
+        } else {
+          whatsappSent++;
+          await admin.from('gw_whatsapp_optins')
+            .update({ last_sent_at: new Date().toISOString() })
+            .eq('user_id', search.user_id);
+        }
+      }
+    }
+
     // Stamped whatever the channel outcome: a delivery failure is logged, but
     // re-sending the same 25 lots on the next tick would be worse than a gap.
     const stamped = new Date().toISOString();
@@ -178,6 +214,7 @@ serve(async (req) => {
       ok: true,
       digests_sent: digestsSent,
       lots_reported: lotsReported,
+      whatsapp_sent: whatsappSent,
       problems: problems.slice(0, 50),
     }),
     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

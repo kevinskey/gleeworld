@@ -28,13 +28,14 @@ interface FormState {
   condition: string;
   notify_channel: NotifyChannel;
   notify_frequency: NotifyFrequency;
+  notify_whatsapp: boolean;
   active: boolean;
 }
 
 const EMPTY: FormState = {
   name: '', modality: [], manufacturer: '', model_contains: '', year_min: '',
   max_hammer_dollars: '', states: '', condition: '',
-  notify_channel: 'in_app', notify_frequency: 'daily', active: true,
+  notify_channel: 'in_app', notify_frequency: 'daily', notify_whatsapp: false, active: true,
 };
 
 function splitList(value: string): string[] {
@@ -54,6 +55,7 @@ function toForm(search: SavedSearch): FormState {
     condition: (c.condition ?? []).join(', '),
     notify_channel: search.notify_channel,
     notify_frequency: search.notify_frequency,
+    notify_whatsapp: search.notify_whatsapp,
     active: search.active,
   };
 }
@@ -265,6 +267,24 @@ export function SavedSearchDialog({
               </div>
             </div>
 
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="search-whatsapp"
+                className="mt-0.5"
+                checked={form.notify_whatsapp}
+                onCheckedChange={(v) => set('notify_whatsapp', v === true)}
+              />
+              <div>
+                <Label htmlFor="search-whatsapp" className="font-normal">
+                  Also send a WhatsApp nudge
+                </Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  A short message with the count and a link — the lots stay here and in your email.
+                  Needs WhatsApp alerts turned on for your account, on the Saved searches page.
+                </p>
+              </div>
+            </div>
+
             <div className="flex items-center gap-2">
               <Checkbox
                 id="search-active"
@@ -286,6 +306,7 @@ export function SavedSearchDialog({
                 criteria: toCriteria(form),
                 notify_channel: form.notify_channel,
                 notify_frequency: form.notify_frequency,
+                notify_whatsapp: form.notify_whatsapp,
                 active: form.active,
               })}
             >
