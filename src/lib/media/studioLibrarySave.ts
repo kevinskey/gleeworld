@@ -33,7 +33,7 @@ export async function saveStudioBlobToLibrary(
     uploaded_by: userId,
     download_count: 0,
     view_count: 0,
-  } as never).select('id');
+  }).select('id');
   if (error) throw new Error(`Library save failed: ${error.message}`);
   if (!data || data.length === 0) throw new Error('Library save failed — row not saved (read-only workspace?).');
   return {

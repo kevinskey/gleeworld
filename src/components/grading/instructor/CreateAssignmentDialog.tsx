@@ -66,7 +66,7 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
         due_date: data.due_at || null,
         is_published: data.is_active,
         media_id: mediaId ?? null,
-      } as never).select('id');
+      }).select('id');
       if (error) throw error;
       // Demo-tenant writes match 0 rows silently — treat empty as failure.
       if (!inserted || inserted.length === 0) throw new Error('Assignment was not saved (read-only workspace?)');
