@@ -252,25 +252,36 @@ export function StudentAssignmentDialog({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="md:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 pr-10">
-            <FileText className="h-5 w-5 text-primary shrink-0" />
-            <span className="min-w-0 truncate">{assignment.title}</span>
-            {/* Top-right: play the shared recording without leaving the
-                response being written. pr-10 above keeps this clear of the
-                dialog's own close button. */}
+          {/* Title + the recording pill on one row. pr-10 keeps the pill
+              clear of the dialog's own close button. */}
+          <div className="flex items-center gap-3 pr-10">
+            <DialogTitle className="flex items-center gap-2 min-w-0 flex-1">
+              <FileText className="h-5 w-5 text-primary shrink-0" />
+              <span className="min-w-0 truncate">{assignment.title}</span>
+            </DialogTitle>
+            {/* rounded-full is the one sanctioned exception to the square-
+                corner system — pills only. Uses the Button primitive so the
+                focus ring and the 44pt touch target (relaxed to 36 at lg)
+                come for free rather than being re-derived here. */}
             {assignment.attachedMedia && (
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => setShowPlayer((v) => !v)}
-                className="ml-auto shrink-0 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+                className="shrink-0 rounded-full gap-1.5"
                 title={`Play "${assignment.attachedMedia.title}"`}
                 aria-expanded={showPlayer}
               >
-                <Music className="h-3.5 w-3.5" />
-                {showPlayer ? 'Hide recording' : 'Play recording'}
-              </button>
+                <Music className="h-4 w-4" />
+                {/* Full label from sm up; the title needs the room at 375px. */}
+                <span className="hidden sm:inline">
+                  {showPlayer ? 'Hide recording' : 'Play recording'}
+                </span>
+                <span className="sm:hidden">{showPlayer ? 'Hide' : 'Play'}</span>
+              </Button>
             )}
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
         <div className="space-y-5">
