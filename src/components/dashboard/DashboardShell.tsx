@@ -561,12 +561,17 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
           as the TopBar): a fixed h-[80px] + safe-area padding would
           collapse and push the brand under the iOS clock. */}
       <div className="flex items-center gap-3 px-4 pt-[env(safe-area-inset-top,0px)] min-h-[calc(80px+env(safe-area-inset-top,0px))] border-b border-border">
+        {/* Wordmark logos carry the name; text only on monogram fallback
+            (same rule as the desktop sidebar + topbar compact brand). */}
         <BrandLogo
           logoUrl={platformLogoFor(branding?.logo_url)}
           fallbackInitial={tenantName.charAt(0).toUpperCase()}
           alt={tenantName}
+          size="hero"
         />
-        <span className="font-bold text-[22px] tracking-tight truncate">{tenantName}</span>
+        {!platformLogoFor(branding?.logo_url) && (
+          <span className="font-bold text-[22px] tracking-tight truncate">{tenantName}</span>
+        )}
       </div>
       <nav className="flex-1 overflow-y-auto pt-2 px-2 space-y-1.5 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         {sections.map((section) => (
