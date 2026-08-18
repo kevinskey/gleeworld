@@ -17,7 +17,7 @@ export interface ModuleFlags {
   hasViewer: boolean; hasStudio: boolean;
   hasSightReading: boolean; hasBoxOffice: boolean; hasConcertPlanner: boolean;
   hasMerch: boolean; hasFinance: boolean; hasAcademy: boolean; hasStore: boolean;
-  hasSongwriting: boolean; hasPlanner: boolean;
+  hasSongwriting: boolean; hasPlanner: boolean; hasAuctions: boolean;
 }
 
 export interface Destination { key: string; to: string; label: string; icon: LucideIcon; section?: NavSectionKey; tone?: string; }

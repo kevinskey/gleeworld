@@ -230,6 +230,8 @@ const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPa
 const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/SongwritingLibraryPage"));
 const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));
 const PlannerPage = lazy(() => import("./pages/planner/PlannerPage"));
+const AuctionsCalendarPage = lazy(() => import("./pages/auctions/AuctionsCalendarPage"));
+const AuctionsAdminPage = lazy(() => import("./pages/auctions/AuctionsAdminPage"));
 const PrayerApp = lazy(() => import("./pages/prayer/PrayerApp"));
 const BibleApp = lazy(() => import("./pages/bible/BibleApp"));
 const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
@@ -1819,6 +1821,34 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell>
                           <ModuleGate moduleId="planner"><PlannerPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Auctions — addon module 'auctions'. Phase 1 is the calendar:
+                    a member-facing list of upcoming equipment sales, plus a
+                    platform-staff-only curation page (the auction tables are
+                    global reference data, so the admin page self-gates too). */}
+                <Route
+                  path="/auctions"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsCalendarPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/admin"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsAdminPage /></ModuleGate>
                         </DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>

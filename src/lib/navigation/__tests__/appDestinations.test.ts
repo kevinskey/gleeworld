@@ -12,13 +12,13 @@ import type { ToolGroup } from '../myTools';
 const allOn: ModuleFlags = {
   hasViewer: true, hasStudio: true, hasSightReading: true,
   hasBoxOffice: true, hasConcertPlanner: true, hasMerch: true, hasFinance: true, hasAcademy: true,
-  hasStore: true, hasSongwriting: true, hasPlanner: true,
+  hasStore: true, hasSongwriting: true, hasPlanner: true, hasAuctions: true,
 };
 
 const allOff: ModuleFlags = {
   hasViewer: false, hasStudio: false, hasSightReading: false,
   hasBoxOffice: false, hasConcertPlanner: false, hasMerch: false, hasFinance: false, hasAcademy: false,
-  hasStore: false, hasSongwriting: false, hasPlanner: false,
+  hasStore: false, hasSongwriting: false, hasPlanner: false, hasAuctions: false,
 };
 
 // Mirrors toModuleFlags's key set so flags and nav agree in tests.
@@ -27,6 +27,7 @@ const FLAG_MODULE: Record<keyof ModuleFlags, string> = {
   hasSightReading: 'sight_reading', hasBoxOffice: 'box_office',
   hasConcertPlanner: 'concert_planner', hasMerch: 'merch', hasStore: 'store',
   hasFinance: 'finance', hasAcademy: 'academy', hasSongwriting: 'songwriting', hasPlanner: 'planner',
+  hasAuctions: 'auctions',
 };
 const navFor = (flags: ModuleFlags, over: Partial<NavContext> = {}): NavContext => ({
   hasModule: (k) => Object.entries(FLAG_MODULE).some(([f, m]) => m === k && flags[f as keyof ModuleFlags]),
@@ -388,7 +389,7 @@ describe('getAppTiles with a My Tools key list', () => {
   const flags: ModuleFlags = {
     hasViewer: true, hasStudio: true, hasSightReading: true, hasBoxOffice: true,
     hasConcertPlanner: true, hasMerch: true, hasFinance: true, hasAcademy: true,
-    hasStore: true, hasSongwriting: true, hasPlanner: true,
+    hasStore: true, hasSongwriting: true, hasPlanner: true, hasAuctions: true,
   };
 
   it('honours stored order', () => {
