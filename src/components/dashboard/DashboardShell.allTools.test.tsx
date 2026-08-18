@@ -55,6 +55,11 @@ vi.mock('@/hooks/useEffectivePreviewRole', () => ({
 vi.mock('@/hooks/useMyTools', () => ({
   useMyTools: useMyToolsMock,
 }));
+// useHideSiteName wraps useQuery; this harness has no QueryClientProvider.
+// Its behavior has its own file (DashboardShell.siteName.test.tsx).
+vi.mock('@/hooks/useHideSiteName', () => ({
+  useHideSiteName: () => false,
+}));
 
 // ── Extra mocks the full DashboardShell needs beyond Sidebar/MobileNav ────
 vi.mock('@/contexts/AuthContext', () => ({

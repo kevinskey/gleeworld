@@ -28,6 +28,7 @@ import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
 import { HEADER_ICON_SIZES } from "@/components/layout/headerIconSizes";
 
 import { LandingPageModal } from "@/components/landing/LandingPageModal";
+import { publicSiteHidesSiteName } from "@/hooks/useHideSiteName";
 
 interface UniversalHeaderProps {
   viewMode?: 'admin' | 'member';
@@ -52,7 +53,7 @@ export const UniversalHeader = ({
   // Fall back to the public site's Header block logo (configured in the page
   // builder) when gw_branding_settings.logo_url is empty — most tenants
   // upload their logo there now, not in legacy site-setup.
-  const { data: publicSite } = useQuery<{ blocks?: Array<{ block_type: string; config?: { logoUrl?: string; siteName?: string } }> } | null>({
+  const { data: publicSite } = useQuery<{ blocks?: Array<{ block_type: string; config?: { logoUrl?: string; siteName?: string; showSiteName?: boolean } }> } | null>({
     queryKey: ['tenant-public-site'],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
@@ -287,14 +288,20 @@ export const UniversalHeader = ({
                     style={{ filter: 'drop-shadow(0 0 4px rgba(56,146,227,0.3))' }}
                   />
                 </div>
-                <span style={{
-                    fontFamily: "'Cinzel', serif",
-                    letterSpacing: '0.04em',
-                    color: headerFg || '#ffffff',
-                    textShadow: headerFg === '#0f172a' ? 'none' : '0 0 10px rgba(56,146,227,0.3)',
-                  }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-semibold truncate max-w-[40vw] md:max-w-none">
-                  {siteName}
-                </span>
+                {/* Mirrors the public Header block's "Show site name" toggle
+                    (same rule as DashboardShell's brand chrome) — a tenant
+                    who removed the name from their public page doesn't get
+                    it back here. */}
+                {!publicSiteHidesSiteName(publicSite) && (
+                  <span style={{
+                      fontFamily: "'Cinzel', serif",
+                      letterSpacing: '0.04em',
+                      color: headerFg || '#ffffff',
+                      textShadow: headerFg === '#0f172a' ? 'none' : '0 0 10px rgba(56,146,227,0.3)',
+                    }} className="text-lg sm:text-xl md:text-lg lg:text-2xl xl:text-3xl whitespace-nowrap relative font-semibold truncate max-w-[40vw] md:max-w-none">
+                    {siteName}
+                  </span>
+                )}
               </Link>
             </EnhancedTooltip>
             
