@@ -53,6 +53,9 @@ interface MediaRow {
   created_at: string;
   folder: string | null;
   uploaded_by: string;
+  // Present when this row is itself a class copy — lets sharing resolve back
+  // to the original instead of stacking copies of copies.
+  source_media_id?: string | null;
 }
 
 function kindOf(fileType: string): Exclude<Kind, 'all'> {
@@ -97,7 +100,7 @@ export default function MediaLibraryPage() {
     queryFn: async () => {
       let q = supabase
         .from('gw_media_library')
-        .select('id, title, file_url, file_path, file_type, file_size, course_id, created_at, folder, uploaded_by')
+        .select('id, title, file_url, file_path, file_type, file_size, course_id, created_at, folder, uploaded_by, source_media_id')
         .eq('is_deleted', false)
         .order('created_at', { ascending: false })
         .limit(200);

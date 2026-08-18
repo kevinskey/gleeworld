@@ -358,6 +358,9 @@ export function ShareRecordingDialog({
           courseId={assignmentCopy.courseId}
           mediaId={assignmentCopy.mediaId}
           defaultTitle={media?.title}
+          // Must be the table CourseShell's AssignmentsTab reads, or the
+          // assignment is created successfully and never appears in the class.
+          table="gw_assignments"
           open
           onOpenChange={(v) => {
             if (!v) { setAssignmentCopy(null); reset(); onOpenChange(false); }

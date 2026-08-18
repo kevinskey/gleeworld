@@ -70,6 +70,27 @@ describe('ensureClassCopy', () => {
     const { sb } = fakeSb([{ data: [] }, { data: [] }]);
     await expect(ensureClassCopy(sb, MEDIA, 'c1')).rejects.toThrow(/could not/i);
   });
+
+  it('sharing a class copy links back to the ORIGINAL, not the copy', async () => {
+    // Observed in prod 2026-08-18: re-sharing an already-shared take made a
+    // copy whose source was the first copy.
+    const COPY = { ...MEDIA, id: 'copy1', source_media_id: 'm1' };
+    const { sb, calls } = fakeSb([{ data: [] }, { data: [{ id: 'copy2' }] }]);
+    await ensureClassCopy(sb, COPY, 'c1');
+    const ins = calls.find((c) => c.method === 'insert')!;
+    expect(ins.args[0]).toMatchObject({ source_media_id: 'm1' });
+    // and the existence probe must look up the origin, not the copy
+    const eqArgs = calls.filter((c) => c.method === 'eq').map((c) => c.args);
+    expect(eqArgs).toContainEqual(['source_media_id', 'm1']);
+  });
+
+  it('reuses the existing class copy when re-sharing the copy itself', async () => {
+    const COPY = { ...MEDIA, id: 'copy1', source_media_id: 'm1' };
+    const { sb, calls } = fakeSb([{ data: [{ id: 'copy1' }] }]);
+    const out = await ensureClassCopy(sb, COPY, 'c1');
+    expect(out.id).toBe('copy1');
+    expect(calls.some((c) => c.method === 'insert')).toBe(false);
+  });
 });
 
 describe('createItemShares', () => {

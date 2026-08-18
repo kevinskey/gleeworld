@@ -18,6 +18,13 @@ export interface ShareableMedia {
   file_type: string;
   file_size: number;
   uploaded_by: string;
+  /**
+   * Set when this row is ITSELF a class copy of another recording. Sharing a
+   * copy must resolve back to the original, or you get copies of copies —
+   * observed in prod 2026-08-18, where re-sharing an already-shared take
+   * produced a second class row whose source was the first copy.
+   */
+  source_media_id?: string | null;
 }
 
 export const listenPath = (id: string) => `/listen/${id}`;
@@ -27,10 +34,13 @@ export const listenPath = (id: string) => `/listen/${id}`;
 export async function ensureClassCopy(
   sb: Sb, media: ShareableMedia, courseId: string,
 ): Promise<{ id: string }> {
+  // Always hang copies off the ORIGINAL recording, never off another copy.
+  const originId = media.source_media_id ?? media.id;
+
   const { data: existing, error: exErr } = await sb
     .from('gw_media_library')
     .select('id')
-    .eq('source_media_id', media.id)
+    .eq('source_media_id', originId)
     .eq('course_id', courseId)
     .eq('is_deleted', false)
     .limit(1);
@@ -53,7 +63,7 @@ export async function ensureClassCopy(
     uploaded_by: media.uploaded_by,
     download_count: 0,
     view_count: 0,
-    source_media_id: media.id,
+    source_media_id: originId,
   }).select('id');
   if (error) throw new Error(error.message);
   // Demo-tenant writes match 0 rows silently — empty result = failure.
