@@ -198,6 +198,33 @@ export function resolveNav(ctx: NavContext): CatalogEntry[] {
   return NAV_CATALOG.filter((e) => gateOpen(e.gate, ctx) && !ctx.hiddenRoutes.has(e.to));
 }
 
+/**
+ * Every module id any catalog entry gates on.
+ *
+ * The shells (DashboardShell, MyWorldPage) loop this to build the
+ * `moduleAccess` map that backs `NavContext.hasModule`, so a gated entry is
+ * only ever visible if its module id appears here. This used to be a
+ * hand-maintained array duplicated in both shells, and forgetting to add a
+ * key hid the destination completely — no error, no warning, nothing in the
+ * console. That cost us All-State on its first deploy and Auctions on its
+ * second, which is twice too often for a list a computer can derive.
+ *
+ * Computed once at module load from the static catalog, so the shells' hook
+ * count is fixed across renders — the property the hand-written list was
+ * there to guarantee.
+ */
+export const GATED_MODULE_KEYS: readonly string[] = (() => {
+  const keys = new Set<string>();
+  for (const entry of NAV_CATALOG) {
+    if (entry.gate?.module) keys.add(entry.gate.module);
+    for (const m of entry.gate?.moduleAny ?? []) keys.add(m);
+  }
+  // 'alumni' has no catalog entry gating on it today but the shells have
+  // always probed it; keep it so removing it is a separate, deliberate change.
+  keys.add('alumni');
+  return Object.freeze([...keys]);
+})();
+
 // Every page the assistant may offer to open, derived from the catalog so
 // it can never drift from the real nav (its predecessor was a hand-kept
 // key list in the assistant-chat edge fn that missed every add-on shipped

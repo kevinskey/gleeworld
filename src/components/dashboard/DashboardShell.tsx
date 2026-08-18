@@ -47,7 +47,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
-import { HIDEABLE_NAV_ROLES, applyPreviewRole, type NavRole } from '@/lib/navigation/navCatalog';
+import { HIDEABLE_NAV_ROLES, applyPreviewRole, type NavRole, GATED_MODULE_KEYS } from '@/lib/navigation/navCatalog';
 import { setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -103,7 +103,10 @@ import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 // sheet's own catalog hook below, so the three call sites can't drift out
 // of sync with which modules exist. (Cost us All-State on first deploy,
 // once, when a gated nav entry was added without adding its key here.)
-const MODULE_KEYS = ['sight_reading', 'box_office', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner', 'all_state'] as const;
+// Derived from NAV_CATALOG (GATED_MODULE_KEYS) rather than hand-listed: a
+// gated nav entry whose module id was missing from this list rendered
+// nowhere, silently. See navCatalog.ts for the two times that shipped.
+const MODULE_KEYS = GATED_MODULE_KEYS;
 
 // The platform ('main') tenant ships no branding.logo_url of its own, so
 // BrandLogo fell back to the monogram there. Use the GleeWorld platform logo
