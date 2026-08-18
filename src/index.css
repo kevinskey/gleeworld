@@ -325,7 +325,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 0%;
     --muted: 240 24% 96%;             /* systemGray6 — secondary fill */
-    --muted-foreground: 240 2% 55%;   /* #8A8A8E = secondaryLabel flattened on white */
+    --muted-foreground: 240 2% 43%;   /* #6C6C70 — 4.7:1 on the #F2F2F7 canvas (AA); #8A8A8E only passed on white cards */
     --accent: 240 24% 96%;
     --accent-foreground: 0 0% 0%;
     --border: 240 2% 78%;             /* #C7C7C9 = separator (3C3C43 @29%) flattened */
@@ -334,8 +334,8 @@
 
     /* Tiered text (flattened Apple label opacities on white) */
     --text-primary: 0 0% 0%;
-    --text-secondary: 240 2% 55%;     /* #8A8A8E — secondaryLabel */
-    --text-metadata: 240 2% 55%;
+    --text-secondary: 240 2% 43%;     /* #6C6C70 — AA on canvas and cards */
+    --text-metadata: 240 2% 43%;
 
     /* iOS system grays 1–6 (light) */
     --gray-1: 240 2% 57%;  /* #8E8E93 */

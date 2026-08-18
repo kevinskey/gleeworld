@@ -252,6 +252,9 @@ export const UnifiedDashboard = () => {
       if (activeModuleId === 'librarian') {
         return <Navigate to="/librarian-dashboard" replace />;
       }
+      if (activeModuleId === 'soundcloud-player') {
+        return <Navigate to="/dashboard/music-player" replace />;
+      }
       if (activeModuleId && activeModuleId !== 'collapsed-toggle') {
         return <div className="min-h-screen">
             <div className="py-3 px-3 sm:py-4 sm:px-4 md:py-6 md:px-6 max-w-7xl mx-auto">
@@ -275,6 +278,11 @@ export const UnifiedDashboard = () => {
               // Librarian module view is just an "Open Dashboard" stub — go straight there
               if (moduleId === 'librarian') {
                 navigate('/librarian-dashboard');
+                return;
+              }
+              // SoundCloud tile is a navigator, not an inline module
+              if (moduleId === 'soundcloud-player') {
+                navigate('/dashboard/music-player');
                 return;
               }
               navigate(`/control-center?module=${moduleId}`);

@@ -26,7 +26,7 @@ export const GlobalDesignFixes = () => {
       }
       
       .text-gray-300, .text-gray-200, .text-gray-100 {
-        color: hsl(var(--muted-foreground) / 0.6) !important;
+        color: hsl(var(--muted-foreground) / 0.8) !important;
       }
       
       /* Background colors - map to semantic tokens */
