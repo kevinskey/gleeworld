@@ -156,7 +156,7 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
         ...(courseData || []).map(a => ({
           ...a,
           source: 'course' as const,
-          attachedMedia: (a as any).media_id ? mediaById[(a as any).media_id] ?? null : null,
+          attachedMedia: a.media_id ? mediaById[a.media_id] ?? null : null,
         })),
         ...readMusicAssignments,
       ];
