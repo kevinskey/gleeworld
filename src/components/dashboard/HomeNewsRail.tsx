@@ -15,7 +15,8 @@
 // hatch).
 import { useEffect, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { Newspaper, RefreshCw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ExternalLink, Newspaper, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
@@ -88,7 +89,12 @@ export function HomeNewsRail() {
     // the shared grid row taller.
     <aside className="relative min-h-[16rem] border border-border bg-card" aria-label="News">
       <div className="flex h-full flex-col p-3 lg:absolute lg:inset-0">
-        <div className="mb-2 text-xs uppercase tracking-widest text-muted-foreground">News</div>
+        <div className="mb-2 flex min-h-[44px] items-center justify-between">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground">News</span>
+          <Link to="/dashboard/feeds" className="text-sm text-muted-foreground hover:text-foreground">
+            Edit
+          </Link>
+        </div>
         {isLoading ? (
           <div className="space-y-3 py-1" aria-hidden>
             {[1, 2, 3, 4].map((i) => (

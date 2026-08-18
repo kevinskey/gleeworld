@@ -20,6 +20,7 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const cancelledRef = useRef(false);
 
   const startCamera = useCallback(async () => {
     try {
@@ -51,6 +52,13 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
         console.log('QuickCameraCapture: Default camera started');
       }
       
+      // If we were cancelled (unmounted) while awaiting getUserMedia, stop the
+      // resolved stream immediately instead of storing it (camera light stays on otherwise)
+      if (cancelledRef.current) {
+        stream.getTracks().forEach(track => track.stop());
+        return;
+      }
+
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -195,10 +203,12 @@ export const QuickCameraCapture = ({ onClose, onCapture }: QuickCameraCapturePro
 
   // Auto-start camera when component mounts
   useEffect(() => {
+    cancelledRef.current = false;
     setIsCapturing(true);
     startCamera();
-    
+
     return () => {
+      cancelledRef.current = true;
       stopCamera();
     };
   }, [startCamera, stopCamera]);

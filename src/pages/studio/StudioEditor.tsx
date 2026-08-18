@@ -59,7 +59,7 @@ import { newAudioTrack, newMidiTrack, newId, newFxNode } from '@/lib/studio/defa
 import { listFxPresets, saveFxPreset, type FxPreset } from '@/lib/studio/fxPresets';
 import { isAudioTrack, isMidiTrack, withMasteringDefaults, type Session, type Track, type AudioTrack, type AudioClip, type MidiClip, type FxNode, type FxType, type AudioAsset, type SessionMarker } from '@/lib/studio/session';
 import {
-  formatTime, formatBarBeat, formatBarBeatCompact, formatSamples, nextCounterMode, type CounterMode,
+  formatTime, formatBarBeat, formatSamples, barBeatParts, nextCounterMode, type CounterMode,
   preRollStartSeconds, postRollEndSeconds, punchTransition,
   nextMarker, prevMarker, sortMarkers, defaultMarkerName, shuttleStepSeconds,
 } from '@/lib/studio/transport';
@@ -2555,7 +2555,10 @@ function Editor({
        *  buttons become direct flex items of this row). The old grid
        *  crammed all buttons into a tall left column beside a huge LCD. */}
       <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 space-y-1.5">
-        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:justify-normal sm:gap-3">
+        {/* Phones flex-wrap (buttons row, LCD wraps whole beneath — nothing
+         *  ever clips); sm+ uses the three-cell grid that keeps the LCD
+         *  dead-center. */}
+        <div className="flex flex-wrap sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-3">
 
         {/* LEFT — transport controls. Play/Pause/Stop/Rec/Metro are
          *  visible on every breakpoint; nav (skip start/end + scrub) and
@@ -2636,22 +2639,6 @@ function Editor({
           className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center transition border ${isRecording ? 'bg-rose-500 border-rose-500 text-white animate-pulse' : 'bg-muted border-border hover:bg-rose-100 hover:border-rose-300'}`}
           title={punchEnabled ? 'Record (R) — punch mode: rolls pre-roll, then drops in/out at the punch range' : 'Record (R)'}>
           <Circle className={`w-3.5 h-3.5 ${isRecording ? 'fill-white text-white' : 'fill-rose-500 text-rose-500'}`} />
-        </button>
-        <button onClick={() => {
-            // Do NOT await start() here — the native engine only needs
-            // to be running for playback, and setMetronome now just
-            // flips the flag on the native side. Awaiting start() has
-            // been observed to reject on some device audio session
-            // states, which then silently swallows the setMetronome
-            // call and leaves the button stuck grey. Kick start() in
-            // the background so the engine is warm when the user hits
-            // Play, but never gate the toggle on it.
-            void Promise.resolve(start?.()).catch(() => { /* engine will retry on play */ });
-            setMetronome(!state?.metronomeOn);
-          }}
-          className={`shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded flex items-center justify-center border ${state?.metronomeOn ? 'bg-amber-400 border-amber-400 text-amber-950' : 'bg-muted border-border hover:bg-muted/70'}`}
-          title="Metronome (M)">
-          <Timer className="w-4 h-4" />
         </button>
         <button
           onClick={() => {
@@ -2737,36 +2724,71 @@ function Editor({
         </button>
         </div>
 
-        {/* CENTER — LCD timecode. Anchored to the middle grid cell so it
-         *  reads dead-center at every breakpoint regardless of how many
-         *  buttons occupy the left cell. Position/length text stacks below
-         *  on phones and sits beside the counter on md+ where there's room. */}
-        <div className="order-first w-full sm:order-none sm:w-auto flex flex-col md:flex-row items-center justify-center gap-0.5 md:gap-3 shrink-0">
-          <TransportCounter
-            store={transportTick}
-            counterMode={counterMode}
-            onCycleMode={() => setCounterMode(nextCounterMode(counterMode))}
-            tempoBpm={session.tempo_bpm}
-            numerator={session.time_signature.numerator}
-            sampleRate={state?.sampleRate ?? 48000}
-            lengthSeconds={session.length_seconds}
-          />
-        </div>
+        {/* CENTER — the LCD, Logic Pro's control-bar model: one dark
+         *  display unit holding everything glanced at while tracking.
+         *  Count-in (♪) and metronome toggles sit inside its left edge,
+         *  then segmented bar|beat|tick digits, elapsed time, editable
+         *  tempo (label doubles as tap tempo), and time signature.
+         *  Anchored to the middle grid cell so it reads dead-center at
+         *  every breakpoint. Only TransportLCDPosition re-renders per
+         *  transport tick — the shell stays still. */}
+        <TransportLCD
+          store={transportTick}
+          counterMode={counterMode}
+          onCycleMode={() => setCounterMode(nextCounterMode(counterMode))}
+          tempoBpm={session.tempo_bpm}
+          numerator={session.time_signature.numerator}
+          denominator={session.time_signature.denominator}
+          sampleRate={state?.sampleRate ?? 48000}
+          lengthSeconds={session.length_seconds}
+          countInBars={countInBars}
+          onCycleCountIn={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
+          metronomeOn={!!state?.metronomeOn}
+          onToggleMetronome={() => {
+            // Do NOT await start() here — the native engine only needs
+            // to be running for playback, and setMetronome now just
+            // flips the flag on the native side. Awaiting start() has
+            // been observed to reject on some device audio session
+            // states, which then silently swallows the setMetronome
+            // call and leaves the button stuck grey. Kick start() in
+            // the background so the engine is warm when the user hits
+            // Play, but never gate the toggle on it.
+            void Promise.resolve(start?.()).catch(() => { /* engine will retry on play */ });
+            setMetronome(!state?.metronomeOn);
+          }}
+          onTempoChange={(bpm) => {
+            update((s) => ({ ...s, tempo_bpm: bpm }));
+            updateTempo(bpm);
+          }}
+          onTapTempo={() => {
+            const now = performance.now();
+            const taps = tapTempoTimesRef.current;
+            taps.push(now);
+            while (taps.length > 5 && taps[0] < now - 3000) taps.shift();
+            if (taps.length < 2) return;
+            const intervals: number[] = [];
+            for (let i = 1; i < taps.length; i++) intervals.push(taps[i] - taps[i - 1]);
+            const avgMs = intervals.reduce((s, n) => s + n, 0) / intervals.length;
+            const detected = Math.round(60000 / avgMs);
+            if (detected >= 30 && detected <= 300) {
+              update((s) => ({ ...s, tempo_bpm: detected }));
+              updateTempo(detected);
+            }
+          }}
+          onTimeSignatureChange={(n, d) => {
+            update((s) => ({ ...s, time_signature: { numerator: n, denominator: d } }));
+            updateTimeSignature(n, d);
+          }}
+        />
 
-        {/* RIGHT — secondary actions. Count-in is a first-class pill here
-         *  (used before every take, so pushing it into a sheet slowed
-         *  mobile users down). Undo has no keyboard shortcut on iPad, so
-         *  a persistent button is the only way to reach it there. The
-         *  More button opens the settings sheet with tempo/TS/snap/grid/
-         *  end/punch — the same controls that live in Row 2's chip row on
-         *  desktop, so nothing is ever exclusively phone- or desktop-only. */}
-        <div className="contents sm:flex sm:items-center sm:gap-1.5 sm:justify-end sm:min-w-0">
-          <button
-            onClick={() => setCountInBars((b) => (b === 0 ? 1 : b === 1 ? 2 : 0) as 0 | 1 | 2)}
-            className={`shrink-0 h-8 sm:h-9 px-2 sm:px-3 rounded border text-xs sm:text-sm font-bold whitespace-nowrap ${countInBars > 0 ? 'bg-sky-500 border-sky-500 text-white' : 'bg-muted border-border text-muted-foreground hover:bg-muted/70'}`}
-            title={countInBars === 0 ? 'Count-in OFF — tap to cycle 1 bar → 2 bars → off' : `Count-in: ${countInBars} bar${countInBars > 1 ? 's' : ''}`}>
-            <span className="hidden md:inline">Count-in </span>{countInBars === 0 ? 'Off' : `${countInBars}`}
-          </button>
+        {/* RIGHT — secondary actions. Count-in moved into the LCD's left
+         *  edge (Logic model) but stays one tap away on every breakpoint.
+         *  Undo has no keyboard shortcut on iPad, so a persistent button
+         *  is the only way to reach it there. The More button opens the
+         *  settings sheet with tempo/TS/snap/grid/end/punch — the same
+         *  controls that live in the LCD + Row 2 on desktop, so nothing
+         *  is ever exclusively phone- or desktop-only. */}
+        <div className="flex items-center gap-1 sm:gap-1.5 justify-end min-w-0">
           {countInBeat !== null && (
             <span className="text-xs sm:text-sm font-bold px-2 py-0.5 rounded bg-rose-500 text-white tabular-nums animate-pulse">
               {countInBeat}
@@ -2826,51 +2848,12 @@ function Editor({
         </div>
         </div>
 
-        {/* Row 2 — desktop chip row (md+). Tempo + Tap + TS, Punch,
-         *  Snap/Grid/End. On phones these live inside the settings sheet
-         *  (accessible from the More button) — this row disappears
-         *  entirely so the transport can fit in one clean line. */}
+        {/* Row 2 — desktop chip row (md+). Punch, Zoom, Snap/Grid/End.
+         *  Tempo + Tap + TS moved up into the LCD (Logic model). On
+         *  phones these live inside the settings sheet (accessible from
+         *  the More button) — this row disappears entirely so the
+         *  transport can fit in one clean line. */}
         <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1.5 border-t border-border/60 text-sm">
-          <div className="flex items-center gap-1">
-            <span className="text-muted-foreground">BPM</span>
-            <input type="number" min={20} max={300} value={session.tempo_bpm}
-              onChange={(e) => {
-                const bpm = Number(e.target.value) || 120;
-                update((s) => ({ ...s, tempo_bpm: bpm }));
-                updateTempo(bpm);
-              }}
-              className="w-14 h-7 bg-background border border-border rounded text-center" />
-            <button
-              type="button"
-              onClick={() => {
-                const now = performance.now();
-                const taps = tapTempoTimesRef.current;
-                taps.push(now);
-                while (taps.length > 5 && taps[0] < now - 3000) taps.shift();
-                if (taps.length < 2) return;
-                const intervals: number[] = [];
-                for (let i = 1; i < taps.length; i++) intervals.push(taps[i] - taps[i - 1]);
-                const avgMs = intervals.reduce((s, n) => s + n, 0) / intervals.length;
-                const detected = Math.round(60000 / avgMs);
-                if (detected >= 30 && detected <= 300) {
-                  update((s) => ({ ...s, tempo_bpm: detected }));
-                  updateTempo(detected);
-                }
-              }}
-              className="h-7 px-2 rounded border border-border bg-muted text-xs font-semibold hover:bg-muted/70"
-              title="Tap Tempo — tap along with a beat 2+ times to detect the BPM">
-              Tap
-            </button>
-            <CompactTimeSignaturePicker
-              numerator={session.time_signature.numerator}
-              denominator={session.time_signature.denominator}
-              onChange={(n, d) => {
-                update((s) => ({ ...s, time_signature: { numerator: n, denominator: d } }));
-                updateTimeSignature(n, d);
-              }}
-            />
-          </div>
-
           <div className="flex items-center gap-1">
             <span className="text-muted-foreground">Punch</span>
             <button
@@ -3721,21 +3704,37 @@ function MidiClipBlock({
       duration={clip.duration_seconds}
       label=""
       preview={<MidiClipPreview notes={clip.notes} durationSeconds={clip.duration_seconds} />}
-      title={`${clip.notes.length} notes — drag body to move · ⌥-drag to copy`}
+      title={`${clip.notes.length} notes — drag body to move · ⌥-drag to copy · pull right edge (top) to loop`}
       snapSeconds={snapSeconds}
       selected={selected}
       canTrimLeft={false}
       onSelect={onSelect}
-      onChange={(p) => {
-        // Right-edge trim (shrink only — a grow or a move must leave
-        // notes untouched) truncates notes so playback always matches
-        // what the piano roll shows.
-        const isRightTrimShrink = p.duration != null && p.duration < clip.duration_seconds;
-        onChange({
-          start_seconds: p.start ?? clip.start_seconds,
-          duration_seconds: p.duration ?? clip.duration_seconds,
-          ...(isRightTrimShrink ? { notes: trimNotesToDuration(clip.notes, p.duration!) } : {}),
-        });
+      onChange={(p) => onChange({
+        start_seconds: p.start ?? clip.start_seconds,
+        duration_seconds: p.duration ?? clip.duration_seconds,
+      })}
+      onLoopResize={(newDur) => {
+        // Tile the clip's content into the new length. `clip` here is the
+        // clip as of the pointerdown render — DraggableClip's drag listeners
+        // hold that closure for the whole gesture, so every move event
+        // re-tiles from the same base and repeats never compound mid-drag.
+        const baseDur = clip.duration_seconds;
+        if (baseDur <= 0) return;
+        const reps = Math.ceil(newDur / baseDur);
+        const notes = [];
+        for (let k = 0; k < reps; k++) {
+          for (const n of clip.notes) {
+            const s = k * baseDur + n.start_seconds;
+            if (s >= newDur) continue;
+            notes.push({ ...n, start_seconds: s, duration_seconds: Math.min(n.duration_seconds, newDur - s) });
+          }
+        }
+        const cc = clip.cc && clip.cc.length > 0
+          ? Array.from({ length: reps }, (_, k) => clip.cc!
+              .map((ev) => ({ ...ev, time_seconds: k * baseDur + ev.time_seconds }))
+              .filter((ev) => ev.time_seconds < newDur)).flat()
+          : clip.cc;
+        onChange({ duration_seconds: newDur, notes, ...(cc !== undefined ? { cc } : {}) });
       }}
       onRemove={onRemove}
       onDuplicate={onDuplicate}
@@ -3743,10 +3742,14 @@ function MidiClipBlock({
   );
 }
 
+/** Circular-arrow cursor for the loop handle (GarageBand-style). White
+ * halo + dark stroke so it reads on both light and dark clip tints. */
+const LOOP_CURSOR = `url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M10 3.5a6.5 6.5 0 1 1-5.8 3.6' fill='none' stroke='white' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M10 3.5a6.5 6.5 0 1 1-5.8 3.6' fill='none' stroke='%23222' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M1.5 3.2l2.8 5.4 4.4-3.4z' fill='%23222' stroke='white' stroke-width='1'/%3E%3C/svg%3E") 10 10, e-resize`;
+
 function DraggableClip({
   tint, start, duration, offset = 0, label, peaks, preview, assetDuration, snapSeconds, selected,
   fadeIn = 0, fadeOut = 0, canTrimLeft = true, title,
-  onSelect, onChange, onRemove, onDuplicate,
+  onSelect, onChange, onLoopResize, onRemove, onDuplicate,
 }: {
   tint: string;
   start: number; duration: number; offset?: number; label: string;
@@ -3777,6 +3780,11 @@ function DraggableClip({
     fadeIn?: number;
     fadeOut?: number;
   }) => void;
+  /** Loop-extend from the right edge's upper half (MIDI clips). Called
+   * with the new total duration while dragging; the parent tiles the
+   * clip's content to fill it. Extension only — never below the
+   * duration at drag start (the plain trim handle shortens). */
+  onLoopResize?: (newDuration: number) => void;
   onRemove: () => void;
   /** Option/Alt-drag duplication (Logic/GarageBand style): the parent
    * inserts a clone at the clip's CURRENT (pre-drag) position; the body
@@ -3836,6 +3844,29 @@ function DraggableClip({
       const minDur = snapSeconds > 0 ? snapSeconds : 0.05;
       const newDur = Math.max(minDur, snap(startDur + dx / pxPerSecond));
       onChange({ duration: newDur });
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  // Right edge, upper half — loop-extend. Pulling right repeats the
+  // clip's content into the new length; the parent owns the tiling so
+  // this stays clip-kind agnostic. Clamped to never shrink below the
+  // drag-start duration — shortening stays the trim handle's job.
+  const onLoopDrag = (e: React.PointerEvent) => {
+    if (!onLoopResize) return;
+    e.stopPropagation();
+    onSelect();
+    const startX = e.clientX;
+    const startDur = duration;
+    const move = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const newDur = Math.max(startDur, snap(startDur + dx / pxPerSecond));
+      onLoopResize(newDur);
     };
     const up = () => {
       window.removeEventListener('pointermove', move);
@@ -3992,13 +4023,23 @@ function DraggableClip({
           title="Trim start (left edge)"
         />
       )}
-      {/* Right-edge trim handle */}
+      {/* Right-edge trim handle (bottom half when a loop handle sits above) */}
       <div
         data-handle="resize-right"
         onPointerDown={onResizeRight}
-        className="absolute top-0 bottom-0 right-0 w-1.5 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10"
+        className={`absolute bottom-0 right-0 w-1.5 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10 ${onLoopResize ? 'top-1/2' : 'top-0'}`}
         title="Trim end (right edge)"
       />
+      {/* Loop handle — upper half of the right edge, loop cursor */}
+      {onLoopResize && (
+        <div
+          data-handle="loop"
+          onPointerDown={onLoopDrag}
+          className="absolute top-0 right-0 h-1/2 w-2 bg-black/10 hover:bg-black/30 z-10"
+          style={{ cursor: LOOP_CURSOR }}
+          title="Loop — drag right to repeat the clip"
+        />
+      )}
       {/* Fade-in handle — small dot at top-left corner */}
       {hasFades && (
         <div
@@ -4177,7 +4218,23 @@ function TimeSignaturePicker({
 // stays still while the transport rolls (see TransportTickStore in
 // useStudio.ts).
 
-function TransportCounter({
+/** One LCD cell — a value with a Logic-style label beneath it. */
+function LCDSeg({ value, label, dim = false, size = 'lg' }: {
+  value: React.ReactNode; label: string; dim?: boolean; size?: 'lg' | 'sm';
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center px-1.5 sm:px-2 leading-none gap-0.5">
+      <span className={`font-mono tabular-nums ${dim ? 'text-emerald-600' : 'text-emerald-400'} ${size === 'lg' ? 'text-sm sm:text-lg' : 'text-xs sm:text-sm'}`}>
+        {value}
+      </span>
+      <span className="text-emerald-700 text-xs font-semibold lowercase tracking-wide">{label}</span>
+    </div>
+  );
+}
+
+/** The tick-driven digit groups — the ONLY part of the LCD that
+ * re-renders per ~30Hz transport tick. */
+function TransportLCDPosition({
   store, counterMode, onCycleMode, tempoBpm, numerator, sampleRate, lengthSeconds,
 }: {
   store: TransportTickStore;
@@ -4189,30 +4246,114 @@ function TransportCounter({
   lengthSeconds: number;
 }) {
   const pos = useTransportPosition(store);
-  // Phones get bar.beat ("7.3") — the padded BBB.beat.tick readout ate a
-  // third of the 390px transport row and crowded the rewind cluster out.
-  const isPhone = useIsPhone();
+  const bb = barBeatParts(pos, tempoBpm, numerator);
   return (
-    <>
-      <button
-        onClick={onCycleMode}
-        className="px-2 sm:px-3 py-1 bg-zinc-900 rounded leading-none tabular-nums font-mono inline-flex items-baseline gap-1 sm:gap-1.5 hover:bg-zinc-800"
-        title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
-        <span className="text-emerald-400 text-sm sm:text-lg">
-          {counterMode === 'bars' && (isPhone
-            ? formatBarBeatCompact(pos, tempoBpm, numerator)
-            : formatBarBeat(pos, tempoBpm, numerator))}
-          {counterMode === 'time' && formatTime(pos)}
-          {counterMode === 'samples' && formatSamples(pos, sampleRate)}
-        </span>
-        <span className="text-emerald-700 text-xs font-semibold">
-          {counterMode === 'bars' ? 'BAR' : counterMode === 'time' ? 'SEC' : 'SMP'}
-        </span>
-      </button>
-      <div className="hidden md:block text-muted-foreground text-xs tabular-nums font-mono">
-        {formatTime(pos)} / {formatTime(lengthSeconds)}
+    <button
+      onClick={onCycleMode}
+      className="flex items-stretch divide-x divide-zinc-800 hover:bg-zinc-800/50 transition-colors"
+      title="Time counter — click to switch Bars|Beats → Min:Sec → Samples">
+      {counterMode === 'bars' && (
+        <>
+          <LCDSeg value={String(bb.bar).padStart(3, '0')} label="bar" />
+          <LCDSeg value={bb.beat} label="beat" />
+          <LCDSeg value={String(bb.tick).padStart(3, '0')} label="tick" />
+        </>
+      )}
+      {counterMode === 'time' && <LCDSeg value={formatTime(pos)} label="time" />}
+      {counterMode === 'samples' && <LCDSeg value={formatSamples(pos, sampleRate)} label="samples" />}
+      <div className="hidden md:flex">
+        <LCDSeg size="sm" dim value={`${formatTime(pos)} / ${formatTime(lengthSeconds)}`} label="elapsed / end" />
       </div>
-    </>
+    </button>
+  );
+}
+
+/** The Logic-style LCD — one dark display unit holding the mode icons
+ * (count-in ♪ + metronome), position digits, elapsed time, tempo, and
+ * time signature. Static shell: only TransportLCDPosition subscribes to
+ * the transport tick, so the rest never re-renders while rolling. */
+function TransportLCD({
+  store, counterMode, onCycleMode, tempoBpm, numerator, denominator,
+  sampleRate, lengthSeconds, countInBars, onCycleCountIn,
+  metronomeOn, onToggleMetronome, onTempoChange, onTapTempo, onTimeSignatureChange,
+}: {
+  store: TransportTickStore;
+  counterMode: 'bars' | 'time' | 'samples';
+  onCycleMode: () => void;
+  tempoBpm: number;
+  numerator: number;
+  denominator: number;
+  sampleRate: number;
+  lengthSeconds: number;
+  countInBars: number;
+  onCycleCountIn: () => void;
+  metronomeOn: boolean;
+  onToggleMetronome: () => void;
+  onTempoChange: (bpm: number) => void;
+  onTapTempo: () => void;
+  onTimeSignatureChange: (numerator: number, denominator: number) => void;
+}) {
+  return (
+    <div className="flex items-stretch bg-zinc-900 border border-zinc-700/70 rounded-md overflow-hidden divide-x divide-zinc-800 shrink-0">
+      {/* Mode toggles inside the LCD's left edge, like Logic's ♪ + click */}
+      <div className="flex items-center gap-0.5 px-1 sm:px-1.5 py-0.5">
+        <button
+          onClick={onCycleCountIn}
+          className={`relative h-8 w-7 sm:w-8 rounded flex items-center justify-center transition-colors ${countInBars > 0 ? 'text-sky-400 bg-sky-500/15' : 'text-zinc-500 hover:text-zinc-300'}`}
+          title={countInBars === 0 ? 'Count-in off — tap to cycle 1 bar → 2 bars → off' : `Count-in: ${countInBars} bar${countInBars > 1 ? 's' : ''}`}>
+          <Music2 className="w-4 h-4" />
+          {countInBars > 0 && (
+            <span className="absolute -top-0.5 right-0 text-xs font-bold text-sky-300 tabular-nums">{countInBars}</span>
+          )}
+        </button>
+        <button
+          onClick={onToggleMetronome}
+          className={`h-8 w-7 sm:w-8 rounded flex items-center justify-center transition-colors ${metronomeOn ? 'text-amber-400 bg-amber-400/15' : 'text-zinc-500 hover:text-zinc-300'}`}
+          title="Metronome (M)">
+          <Timer className="w-4 h-4" />
+        </button>
+      </div>
+
+      <TransportLCDPosition
+        store={store}
+        counterMode={counterMode}
+        onCycleMode={onCycleMode}
+        tempoBpm={tempoBpm}
+        numerator={numerator}
+        sampleRate={sampleRate}
+        lengthSeconds={lengthSeconds}
+      />
+
+      {/* Tempo — editable digits; the label beneath doubles as tap tempo */}
+      <div className="hidden md:flex flex-col items-center justify-center px-2 leading-none gap-0.5">
+        <input
+          type="number" min={20} max={300} value={tempoBpm}
+          onChange={(e) => onTempoChange(Number(e.target.value) || 120)}
+          className="w-12 bg-transparent text-emerald-400 font-mono tabular-nums text-sm sm:text-lg text-center outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          aria-label="Tempo (BPM)"
+        />
+        <button
+          onClick={onTapTempo}
+          className="text-emerald-700 hover:text-emerald-400 text-xs font-semibold lowercase tracking-wide"
+          title="Tap tempo — tap along with a beat 2+ times to detect the BPM">
+          bpm · tap
+        </button>
+      </div>
+
+      {/* Time signature */}
+      <div className="hidden md:flex flex-col items-center justify-center px-2 leading-none gap-0.5">
+        <select
+          value={`${numerator}/${denominator}`}
+          onChange={(e) => { const [n, d] = e.target.value.split('/').map(Number); onTimeSignatureChange(n, d); }}
+          className="bg-transparent text-emerald-400 font-mono tabular-nums text-sm sm:text-lg text-center outline-none appearance-none cursor-pointer"
+          aria-label="Time signature">
+          {TIME_SIGS.map(([n, d, label]) => (
+            <option key={label} value={`${n}/${d}`} className="bg-zinc-900 text-emerald-400">{label}</option>
+          ))}
+        </select>
+        <span className="text-emerald-700 text-xs font-semibold lowercase tracking-wide">signature</span>
+      </div>
+    </div>
   );
 }
 

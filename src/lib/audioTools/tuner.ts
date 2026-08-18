@@ -21,6 +21,10 @@ let analyser: AnalyserNode | null = null;
 let buf: Float32Array | null = null;
 let rafId: number | null = null;
 let listener: ((r: TunerReading | null) => void) | null = null;
+// Generation counter: stopTuner() bumps it, so a startTuner() still awaiting
+// getUserMedia / ctx.resume can tell it was cancelled and must not leave the
+// mic live or kick off the rAF loop.
+let startGen = 0;
 
 function frequencyToNote(freq: number) {
   const noteNum = 12 * (Math.log(freq / 440) / Math.log(2)) + 69; // MIDI number
@@ -77,14 +81,25 @@ function autoCorrelate(buf: Float32Array, sampleRate: number): { freq: number; c
 }
 
 export async function startTuner(onReading: (r: TunerReading | null) => void): Promise<void> {
+  const gen = ++startGen;
   listener = onReading;
   if (!stream) {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
+    const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
+    if (gen !== startGen) {
+      // stopTuner ran while the permission prompt was pending — the stream
+      // isn't in the module var yet, so stop its tracks here.
+      s.getTracks().forEach((t) => t.stop());
+      return;
+    }
+    stream = s;
   }
   if (!ctx) {
     ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
   }
   if (ctx.state === 'suspended') await ctx.resume();
+  // stopTuner ran during resume(); it already stopped the stream and closed
+  // the context — just don't start the rAF loop.
+  if (gen !== startGen) return;
   if (!analyser) {
     analyser = ctx.createAnalyser();
     analyser.fftSize = 2048;
@@ -110,6 +125,7 @@ export async function startTuner(onReading: (r: TunerReading | null) => void): P
 }
 
 export function stopTuner(): void {
+  startGen++; // cancel any startTuner still awaiting getUserMedia/resume
   if (rafId) { window.cancelAnimationFrame(rafId); rafId = null; }
   listener = null;
   if (stream) {

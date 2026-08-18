@@ -13,7 +13,7 @@ import {
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
   PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, CreditCard, Receipt,
-  HandHeart, ConciergeBell, QrCode, Award,
+  HandHeart, ConciergeBell, QrCode, Award, Cloud,
   type LucideIcon, FileText } from 'lucide-react';
 
 export type NavSectionKey =
@@ -74,6 +74,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'music-store',   to: '/store',                   label: 'Music Store',   icon: ShoppingBag, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-music-store' },
   { key: 'librarian',     to: '/dashboard/librarian',     label: 'Librarian',     icon: LibraryBig, section: 'music', tone: 'bg-slate-50 text-slate-600', tourId: 'nav-librarian',    gate: { module: 'librarian', librarianOnly: true } },
   { key: 'partner-portal', to: '/partner', label: 'Partner Portal', icon: Store, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-partner-portal', gate: { partnerOnly: true } },
+  { key: 'soundcloud',    to: '/dashboard/music-player',  label: 'SoundCloud',    icon: Cloud,      section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-soundcloud' },
   // Teach
   { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-primary text-primary-foreground', tourId: 'nav-academy' },
   { key: 'office-hours', to: '/dashboard/office-hours',        label: 'Studio Hours', icon: CalendarClock, section: 'teach', tone: 'bg-emerald-50 text-emerald-600',     tourId: 'nav-office-hours' },

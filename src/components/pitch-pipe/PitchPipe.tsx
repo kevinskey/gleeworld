@@ -130,12 +130,17 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
         gain.cancelScheduledValues(now);
         gain.setValueAtTime(gain.value, now);
         gain.linearRampToValueAtTime(0, now + 0.12);
+        // Capture THIS note's nodes now — startTone may overwrite the refs
+        // before the timeout fires, and reading the refs at fire time would
+        // kill the new note's oscillators while leaking these.
+        const oscillators = oscillatorsRef.current;
+        const gainNode = gainNodeRef.current;
         setTimeout(() => {
-          oscillatorsRef.current.forEach(osc => {
+          oscillators.forEach(osc => {
             try { osc.stop(); } catch {}
           });
-          oscillatorsRef.current = [];
-          gainNodeRef.current = null;
+          if (oscillatorsRef.current === oscillators) oscillatorsRef.current = [];
+          if (gainNodeRef.current === gainNode) gainNodeRef.current = null;
         }, 180);
       } catch {
         oscillatorsRef.current = [];

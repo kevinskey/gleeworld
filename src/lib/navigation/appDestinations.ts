@@ -126,7 +126,7 @@ export function parseTileLayout(raw: unknown): TileLayout | null {
 // through resolveKey as a defensive backstop, so a FUTURE merge doesn't
 // require remembering to hand-edit this frozen literal to avoid the same
 // silent-drop bug getAppTiles's My Tools path had for 'merch' itself.
-export const DEFAULT_GRID_ORDER = ['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'shop'];
+export const DEFAULT_GRID_ORDER = ['music', 'studio', 'sight', 'soundcloud', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'shop'];
 
 export interface AppTilesOptions {
   /**

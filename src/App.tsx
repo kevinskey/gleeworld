@@ -6,6 +6,7 @@ import { FanRoute } from "@/components/routes/FanRoute";
 import { GraduatesRoute } from "@/components/routes/GraduatesRoute";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import GlobalDictation from "@/components/voice/GlobalDictation";
+import { useFloatingSoundCloudTrack } from "@/components/soundcloud/soundcloudPlayerStore";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipContext";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -334,6 +335,8 @@ const MemberDirectory = lazy(() => import("./pages/MemberDirectory"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
 const AuditionsManagement = lazy(() => import("./components/admin/AuditionsManagement").then(m => ({ default: m.AuditionsManagement })));
 const SoundCloudSearch = lazy(() => import("./pages/SoundCloudSearch"));
+const SoundCloudPlayerPage = lazy(() => import("./pages/dashboard/SoundCloudPlayerPage"));
+const FloatingSoundCloudPlayerHost = lazy(() => import("./components/soundcloud/FloatingSoundCloudPlayer"));
 const ShoutcastManagement = lazy(() => import("./pages/admin/ShoutcastManagement").then(m => ({ default: m.ShoutcastManagement })));
 const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage").then(m => ({ default: m.ReceiptsPage })));
 const ApprovalSystemPage = lazy(() => import("./pages/ApprovalSystemPage"));
@@ -497,6 +500,9 @@ const PublicRoute = ({ children }: { children: ReactNode }) => {
 // PersistentMeetingOverlay / NativePushBridge code.
 function AuthenticatedGlobals() {
   const { user } = useAuth();
+  // Store hook is a few bytes; the player chunk itself only downloads once a
+  // track is actually detached.
+  const floatingScTrack = useFloatingSoundCloudTrack();
   if (!user) return null;
   return (
     <Suspense fallback={null}>
@@ -504,6 +510,7 @@ function AuthenticatedGlobals() {
       <PersistentMeetingOverlay />
       <MessengerModal />
       <GlobalMiniPlayer />
+      {floatingScTrack && <FloatingSoundCloudPlayerHost />}
     </Suspense>
   );
 }
@@ -3063,13 +3070,21 @@ const App = () => {
                                  } 
                                 />
                                 {/* /radio route + RadioStationPage removed 2026-05-31 — Radio.co integration deleted. */}
-                                 <Route 
-                                   path="/soundcloud" 
+                                 <Route
+                                   path="/soundcloud"
                                    element={
                                      <ProtectedRoute>
                                        <SoundCloudSearch />
                                      </ProtectedRoute>
-                                   } 
+                                   }
+                                  />
+                                 <Route
+                                   path="/dashboard/music-player"
+                                   element={
+                                     <ProtectedRoute>
+                                       <SoundCloudPlayerPage />
+                                     </ProtectedRoute>
+                                   }
                                   />
                                   <Route 
                                     path="/receipts" 
@@ -3471,7 +3486,9 @@ const App = () => {
                                </Routes>
                       </Suspense>
                       </UsageTracker>
-                    <GlobalMusicPlayer />
+                    <Suspense fallback={null}>
+                      <GlobalMusicPlayer />
+                    </Suspense>
                     <PWAInstallPrompt />
                    </div>
                    </AudioCompanionProvider>

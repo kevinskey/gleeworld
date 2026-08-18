@@ -10,7 +10,7 @@ import {
   PenTool, TrendingUp, Inbox, ScrollText, BadgeCheck, Folder, SquareUser, Newspaper,
   ImagePlus, Clapperboard, BookMarked, PencilRuler, Award, MessageCircle, Layers,
   Presentation, MicVocal, Wrench, Contact, ClipboardList,
-  Rss, Activity,
+  Rss, Activity, Cloud,
 } from 'lucide-react';
 
 // Import core module components
@@ -319,6 +319,20 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     dbFunctionName: "media-library"
   },
   // Karaoke Studio removed.
+  {
+    // Tile is a pure navigator — UnifiedDashboard special-cases this id and
+    // routes to /dashboard/music-player (same pattern as "librarian"), so
+    // the component stub below never renders.
+    id: "soundcloud-player",
+    name: "soundcloud-player",
+    title: "SoundCloud Player",
+    description: "Build a SoundCloud listening deck and pop out a floating mini player",
+    icon: Cloud,
+    iconColor: "orange",
+    category: "musical-leadership",
+    isActive: true,
+    component: () => null,
+  },
   {
     id: "librarian",
     name: "librarian",
