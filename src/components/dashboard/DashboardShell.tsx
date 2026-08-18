@@ -56,6 +56,7 @@ import { useMessenger } from '@/contexts/MessengerContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { getOrgName } from '@/lib/orgName';
+import { useHideSiteName } from '@/hooks/useHideSiteName';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
@@ -312,6 +313,7 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
   const fallbackName = getOrgName();
   const tenantName = branding?.short_name || branding?.org_name || fallbackName;
   const tenantLongName = branding?.org_name || branding?.short_name || fallbackName;
+  const hideSiteName = useHideSiteName();
   const location = useLocation();
   const { resolvedEntries, homeEntry, myTools, myToolsLoaded: toolsLoaded, saveMyTools, roleLoading, isPlatformAdmin } = useGatedNav();
   // isFaculty is a guess (profile is still null) until roleLoading clears —
@@ -397,7 +399,10 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
             competing for the room.
 
             A tenant with NO logo keeps the name: dropping it there would
-            leave a single monogram letter identifying the workspace. */}
+            leave a single monogram letter identifying the workspace. The one
+            exception is hideSiteName — the tenant switched the name off on
+            their public page's Header block, and the workspace chrome
+            mirrors that choice. */}
         <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-4 h-full">
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
@@ -405,7 +410,7 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
             alt={tenantName}
             size={hasLogo ? 'banner' : 'xl'}
           />
-          {!hasLogo && (
+          {!hasLogo && !hideSiteName && (
             <div className="min-w-0 flex-1">
               <div className="font-bold text-[22px] leading-tight tracking-tight truncate">
                 {tenantName}
@@ -491,6 +496,7 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
 export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => void; onOpenAllTools: () => void }) {
   const { settings: branding } = useBrandingSettings();
   const tenantName = branding?.short_name || branding?.org_name || getOrgName();
+  const hideSiteName = useHideSiteName();
   const { resolvedEntries, homeEntry, myTools, myToolsLoaded: toolsLoaded, saveMyTools, roleLoading } = useGatedNav();
   // Same knownGood/roleLoading gate as Sidebar — see the matching comment
   // there for why this isn't `roleLoading ? [] : ...` anymore.
@@ -529,7 +535,11 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
           fallbackInitial={tenantName.charAt(0).toUpperCase()}
           alt={tenantName}
         />
-        <span className="font-bold text-[22px] tracking-tight truncate">{tenantName}</span>
+        {/* hideSiteName mirrors the public Header block's "Show site name"
+            toggle — see the sidebar brand comment. */}
+        {!hideSiteName && (
+          <span className="font-bold text-[22px] tracking-tight truncate">{tenantName}</span>
+        )}
       </div>
       <nav className="flex-1 min-h-0 overflow-y-auto pt-2 px-2 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         <NavShelf
@@ -648,6 +658,7 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
   const sidebarHidden = inImmersiveRoute || navCollapsed;
   const compactBrandName =
     branding?.short_name || branding?.org_name || getOrgName();
+  const hideSiteName = useHideSiteName();
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -744,9 +755,13 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
             alt={compactBrandName}
             size="wide"
           />
-          <span className="font-bold text-[22px] tracking-tight truncate max-w-[260px]">
-            {compactBrandName}
-          </span>
+          {/* hideSiteName mirrors the public Header block's "Show site name"
+              toggle — see the sidebar brand comment. */}
+          {!hideSiteName && (
+            <span className="font-bold text-[22px] tracking-tight truncate max-w-[260px]">
+              {compactBrandName}
+            </span>
+          )}
         </Link>
       )}
 

@@ -459,6 +459,9 @@ export default function PublicPageEditor() {
               toast({ title: 'Saved, but not published', description: pubErr.message, variant: 'destructive' });
             } else {
               queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+              // Workspace chrome mirrors header config (showSiteName, logo)
+              // through this cache — see useHideSiteName/UniversalHeader.
+              queryClient.invalidateQueries({ queryKey: ['tenant-public-site'] });
             }
           }
         }
@@ -632,6 +635,7 @@ export default function PublicPageEditor() {
         .eq('id', site.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-public-site'] });
       toast({ title: 'Published', description: `Your page is live at /sites/${site.slug}` });
     } catch (e: any) {
       toast({ title: 'Publish failed', description: e.message, variant: 'destructive' });
