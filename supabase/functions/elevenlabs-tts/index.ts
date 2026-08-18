@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { resolveElevenLabsKey } from "../_shared/elevenLabsKey.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,10 +16,10 @@ serve(async (req) => {
   try {
     const { text, voiceId } = await req.json();
     // Support both the connector secret and legacy secret
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY_1") || Deno.env.get("ELEVENLABS_API_KEY");
+    const ELEVENLABS_API_KEY = resolveElevenLabsKey();
 
     if (!ELEVENLABS_API_KEY) {
-      console.error("ElevenLabs API key not configured (checked ELEVENLABS_API_KEY_1 and ELEVENLABS_API_KEY)");
+      console.error("ElevenLabs API key not configured (set ELEVENLABS_API_KEY_1)");
       throw new Error("ElevenLabs API key is not configured");
     }
 
