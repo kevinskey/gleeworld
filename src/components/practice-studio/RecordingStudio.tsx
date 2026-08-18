@@ -82,23 +82,29 @@ export const RecordingStudio: React.FC<RecordingStudioProps> = ({
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      // Convert audio blob to file
-      const audioFile = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
-      
+      // Wrap the recorded blob as a File. useAudioRecorder produces
+      // audio/webm — preserve that type so storage/playback are correct.
+      const mimeType = audioBlob.type || 'audio/webm';
+      const ext = mimeType.includes('webm') ? 'webm' : (mimeType.split('/')[1]?.split(';')[0] || 'webm');
+      const audioFile = new File([audioBlob], `recording.${ext}`, { type: mimeType });
+
+      // Uploads the recording and writes the submission row; throws on failure.
       await submitAssignment(assignment.id, {
-        notes: submissionNotes
+        notes: submissionNotes,
+        audioFile,
       });
-      
+
       toast({
         title: "Assignment Submitted",
         description: "Your recording has been submitted successfully.",
       });
-      
+
       onSubmissionComplete();
     } catch (error) {
       console.error('Submission error:', error);
+      // Leave the recording intact so the student can retry.
       toast({
         title: "Submission Failed",
         description: error instanceof Error ? error.message : "Failed to submit assignment.",
