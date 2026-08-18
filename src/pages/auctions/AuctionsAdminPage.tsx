@@ -17,7 +17,10 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useUserRole } from '@/hooks/useUserRole';
-import { INGEST_METHOD_LABELS, type AuctionSource, type AuctionWithSource } from '@/lib/auctions/types';
+import {
+  INGEST_METHOD_LABELS, TERMS_POSITION_LABELS,
+  type AuctionSource, type AuctionWithSource,
+} from '@/lib/auctions/types';
 import type { SourceInput } from '@/lib/auctions/sourcesApi';
 import type { AuctionInput } from '@/lib/auctions/auctionsApi';
 import { AuctionDialog } from './components/AuctionDialog';
@@ -206,6 +209,7 @@ export default function AuctionsAdminPage() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Listings from</TableHead>
+                      <TableHead>Terms</TableHead>
                       <TableHead>Premium</TableHead>
                       <TableHead>Last checked</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
@@ -220,7 +224,21 @@ export default function AuctionsAdminPage() {
                         </TableCell>
                         <TableCell className="text-xs">{INGEST_METHOD_LABELS[s.ingest_method]}</TableCell>
                         <TableCell className="text-xs">
-                          {s.buyer_premium_pct === null ? 'Not confirmed' : `${s.buyer_premium_pct}%`}
+                          <Badge
+                            variant={s.terms_position === 'unreviewed' ? 'outline' : 'secondary'}
+                            className="text-xs whitespace-nowrap"
+                          >
+                            {TERMS_POSITION_LABELS[s.terms_position]}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {s.buyer_premium_pct === null
+                            ? <span className="text-muted-foreground">Not confirmed</span>
+                            : (
+                              <span title={s.buyer_premium_note ?? undefined}>
+                                {s.buyer_premium_pct}%
+                              </span>
+                            )}
                         </TableCell>
                         <TableCell className="text-xs">{formatDate(s.last_refreshed_at)}</TableCell>
                         <TableCell className="text-right whitespace-nowrap">
