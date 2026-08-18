@@ -882,6 +882,29 @@ function ModuleCard({
 
 // ─── Assignments ──────────────────────────────────────────────────────────
 
+/**
+ * Resolve any recordings attached to these assignments (shared from the
+ * Studio / Media Library via ShareRecordingDialog) in ONE batched query, so
+ * a long assignment list doesn't fan out into a request per row. Rows the
+ * caller cannot read under RLS simply come back unattached rather than
+ * failing the whole list.
+ */
+async function withAttachedMedia(rows: any[]): Promise<any[]> {
+  const ids = [...new Set(rows.map((r) => r.media_id).filter(Boolean))];
+  if (ids.length === 0) return rows;
+  const { data } = await supabase
+    .from("gw_media_library")
+    .select("id, title, file_url")
+    .in("id", ids)
+    .eq("is_deleted", false);
+  const byId: Record<string, { id: string; title: string; file_url: string }> =
+    Object.fromEntries(((data as any[]) ?? []).map((m) => [m.id, m]));
+  return rows.map((r) => ({
+    ...r,
+    attachedMedia: r.media_id ? byId[r.media_id] ?? null : null,
+  }));
+}
+
 function AssignmentsTab({ course, canEdit }: TabProps) {
   const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
@@ -909,26 +932,30 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
   function reload() {
     supabase
       .from("gw_assignments")
-      .select("id, title, description, due_at, points, is_active, tenant_id")
+      .select("id, title, description, due_at, points, is_active, tenant_id, media_id")
       .eq("course_id", course.id)
       .order("due_at", { ascending: true })
-      .then(({ data }) => setItems((data || []).map((r: any) => ({
-        ...r, due_date: r.due_at, is_published: r.is_active,
-      }))));
+      .then(async ({ data }) => {
+        const rows = (data || []).map((r: any) => ({
+          ...r, due_date: r.due_at, is_published: r.is_active,
+        }));
+        setItems(await withAttachedMedia(rows));
+      });
   }
 
   useEffect(() => {
     let c = false;
     supabase
       .from("gw_assignments")
-      .select("id, title, description, due_at, points, is_active, tenant_id")
+      .select("id, title, description, due_at, points, is_active, tenant_id, media_id")
       .eq("course_id", course.id)
       .order("due_at", { ascending: true })
       .then(async ({ data }) => {
         if (c) return;
-        const rows = (data || []).map((r: any) => ({
+        const rows = await withAttachedMedia((data || []).map((r: any) => ({
           ...r, due_date: r.due_at, is_published: r.is_active,
-        }));
+        })));
+        if (c) return;
         setItems(rows);
         setLoading(false);
 
@@ -1084,6 +1111,20 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
                     {" · "}{a.points || 0} pts
                     {overdue && !isSubmitted && <span className="text-red-600 font-semibold"> · OVERDUE</span>}
                   </div>
+                  {/* Recording shared to the class as an assignment. preload
+                      "none" so a long list doesn't fetch every take up front;
+                      the row itself is clickable, so don't let player clicks
+                      open the assignment. */}
+                  {a.attachedMedia && (
+                    <audio
+                      controls
+                      preload="none"
+                      src={a.attachedMedia.file_url}
+                      className="w-full max-w-sm mt-2"
+                      aria-label={`Recording: ${a.attachedMedia.title}`}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {canEdit && a.is_published && (
