@@ -90,6 +90,9 @@ import { FloatingScorePanel } from '@/components/studio/FloatingScorePanel';
 import { useQuery } from '@tanstack/react-query';
 import { followPlayheadScroll } from './followPlayhead';
 import { nudgeStepSeconds } from './nudge';
+import { saveStudioBlobToLibrary } from '@/lib/media/studioLibrarySave';
+import { ShareRecordingDialog } from '@/components/media/ShareRecordingDialog';
+import type { ShareableMedia } from '@/lib/media/shareRecording';
 
 const PX_PER_SECOND_DEFAULT = 40;
 const PX_PER_SECOND_MIN = 8;
@@ -902,6 +905,10 @@ function Editor({
   // (Download vs Media Library → Studio folder) BEFORE the render runs.
   // Previously the MP3 button downloaded immediately with an auto name.
   const [clipExportPrompt, setClipExportPrompt] = useState<{ name: string; dest: 'download' | 'library' } | null>(null);
+  // Recording just saved to the Media Library, offered a one-click Share…
+  // follow-up (Task 8). Keyed per-recording so the dialog resets its
+  // internal tab/form state each time (Task 7 convention).
+  const [shareMedia, setShareMedia] = useState<ShareableMedia | null>(null);
 
   const openClipExportPrompt = () => {
     if (!selectedClip || exportingClip) return;
@@ -915,40 +922,25 @@ function Editor({
     setClipExportPrompt({ name: base.replace(/[^\p{L}\p{N}\s—_-]+/gu, '').trim(), dest: 'download' });
   };
 
-  /** MP3 flavor of RegionExportSheet's sendToLibrary (same bucket/path/
-   *  row shape — columns must match the LIVE gw_media_library schema). */
+  /** MP3 flavor of RegionExportSheet's sendToLibrary — both delegate to
+   *  the shared saveStudioBlobToLibrary util (same bucket/path/row shape;
+   *  columns must match the LIVE gw_media_library schema). */
   const saveClipMp3ToLibrary = async (filename: string, blob: Blob) => {
     if (!authUser?.id) throw new Error('Not signed in.');
-    const path = `media/${authUser.id}/studio/${Date.now()}-${filename}`;
-    const { error: upErr } = await supabase.storage
-      .from('media-library').upload(path, blob, { contentType: 'audio/mpeg', upsert: true });
-    if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
-    const fileUrl = supabase.storage.from('media-library').getPublicUrl(path).data.publicUrl;
-    const { error: insErr } = await supabase.from('gw_media_library').insert({
-      title: filename.replace(/\.mp3$/i, ''),
-      file_url: fileUrl,
-      file_path: path,
-      file_type: 'audio/mpeg',
-      file_size: blob.size,
-      folder: 'Studio',
-      category: 'studio',
-      is_public: false,
-      is_featured: false,
-      is_deleted: false,
-      course_id: null,
-      uploaded_by: authUser.id,
-      download_count: 0,
-      view_count: 0,
-    } as never);
-    if (insErr) throw new Error(`Library save failed: ${insErr.message}`);
+    const saved = await saveStudioBlobToLibrary(supabase, authUser.id, {
+      filename, blob, contentType: 'audio/mpeg',
+    });
+    return saved;
   };
 
   const deliverClipMp3 = async (blob: Blob, name: string, dest: 'download' | 'library') => {
     const clean = name.replace(/[/\\]+/g, '-').trim();
     const filename = /\.mp3$/i.test(clean) ? clean : `${clean}.mp3`;
     if (dest === 'library') {
-      await saveClipMp3ToLibrary(filename, blob);
-      toast.success(`Saved to Media Library (Studio): ${filename}`);
+      const saved = await saveClipMp3ToLibrary(filename, blob);
+      toast.success(`Saved to Media Library (Studio): ${filename}`, {
+        action: { label: 'Share…', onClick: () => setShareMedia(saved) },
+      });
       return;
     }
     const dlUrl = URL.createObjectURL(blob);
@@ -2472,8 +2464,16 @@ function Editor({
         </div>
       </div>
 
-      <ExportSheet session={session} open={exportOpen} onOpenChange={setExportOpen} engineState={engineState} />
-      <RegionExportSheet session={session} region={loopRegion} open={regionExportOpen} onOpenChange={setRegionExportOpen} />
+      <ExportSheet session={session} open={exportOpen} onOpenChange={setExportOpen} engineState={engineState} onShareSaved={setShareMedia} />
+      <RegionExportSheet session={session} region={loopRegion} open={regionExportOpen} onOpenChange={setRegionExportOpen} onShareSaved={setShareMedia} />
+      {/* Share-to-class/assignment/email dialog for a just-saved Studio
+       *  recording (Task 8 follow-up). Keyed per-recording so internal
+       *  form state resets between shares. */}
+      <ShareRecordingDialog
+        key={shareMedia?.id ?? 'none'}
+        media={shareMedia}
+        onOpenChange={(v) => { if (!v) setShareMedia(null); }}
+      />
       {/* Score attach dialog — music library search, picks a scoreId. */}
       <AttachScoreDialog
         open={attachScoreOpen}
@@ -4656,15 +4656,15 @@ const EXPORT_PRESET_LABEL: Record<ExportPreset, string> = {
 
 /** Region export — bounce the selected loop range of chosen tracks as a
  *  stereo mix (one file) or mono stems (per track), delivered as
- *  individual downloads or one zip. (Send-to-Media-Library lands in a
- *  follow-up phase.) */
+ *  individual downloads or one zip. */
 function RegionExportSheet({
-  session, region, open, onOpenChange,
+  session, region, open, onOpenChange, onShareSaved,
 }: {
   session: Session;
   region: { start: number; end: number } | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  onShareSaved?: (m: ShareableMedia) => void;
 }) {
   const { user } = useAuth();
   const bounceable = session.tracks.filter((t) => isAudioTrack(t) || isMidiTrack(t));
@@ -4695,40 +4695,15 @@ function RegionExportSheet({
     setTimeout(() => URL.revokeObjectURL(url), 4000);
   };
 
-  // Upload one WAV to the Media Library's per-user Studio folder:
-  //   bucket media-library, path media/<userId>/studio/<file>
+  // Upload one WAV to the Media Library's per-user Studio folder via the
+  // shared util: bucket media-library, path media/<userId>/studio/<file>
   // + a gw_media_library row with folder='Studio'. tenant_id fills from
   // the table's DEFAULT current_tenant_id() + trigger (cutover model).
   const sendToLibrary = async (blob: Blob, filename: string) => {
     if (!user?.id) throw new Error('Not signed in.');
-    const path = `media/${user.id}/studio/${Date.now()}-${filename}`;
-    const { error: upErr } = await supabase.storage
-      .from('media-library').upload(path, blob, { contentType: 'audio/wav', upsert: true });
-    if (upErr) throw new Error(`Upload failed: ${upErr.message}`);
-    const fileUrl = supabase.storage.from('media-library').getPublicUrl(path).data.publicUrl;
-    // Columns must match the LIVE gw_media_library schema (the same set
-    // MediaLibraryPage's working upload uses) + folder. An earlier cut
-    // included filename/original_filename/mime_type/bucket_name which
-    // don't exist on the live table — PostgREST rejected the whole insert
-    // ("Could not find the 'bucket_name' column"), so takes never
-    // appeared in the library (2026-07-08).
-    const { error: insErr } = await supabase.from('gw_media_library').insert({
-      title: filename.replace(/\.wav$/i, ''),
-      file_url: fileUrl,
-      file_path: path,
-      file_type: 'audio/wav',
-      file_size: blob.size,
-      folder: 'Studio',
-      category: 'studio',
-      is_public: false,
-      is_featured: false,
-      is_deleted: false,
-      course_id: null,
-      uploaded_by: user.id,
-      download_count: 0,
-      view_count: 0,
-    } as never);
-    if (insErr) throw new Error(`Library save failed: ${insErr.message}`);
+    return saveStudioBlobToLibrary(supabase, user.id, {
+      filename, blob, contentType: 'audio/wav',
+    });
   };
 
   const run = async () => {
@@ -4756,8 +4731,15 @@ function RegionExportSheet({
       }
 
       if (dest === 'library') {
-        for (const f of files) await sendToLibrary(f.blob, f.name);
-        toast.success(`Saved ${files.length} file${files.length === 1 ? '' : 's'} to your Media Library (Studio).`);
+        const saved: ShareableMedia[] = [];
+        for (const f of files) saved.push(await sendToLibrary(f.blob, f.name));
+        // Multi-file sends get no one-click share — sharing is
+        // per-recording; the user shares from the Media Library instead.
+        toast.success(`Saved ${files.length} file${files.length === 1 ? '' : 's'} to your Media Library (Studio).`, {
+          action: saved.length === 1 && onShareSaved
+            ? { label: 'Share…', onClick: () => onShareSaved(saved[0]) }
+            : undefined,
+        });
       } else if (mode === 'stems' && pkg === 'zip') {
         download(await zipBlobs(files), `${stamp}_stems.zip`);
         toast.success(`${files.length} stem${files.length === 1 ? '' : 's'} zipped.`);
@@ -4882,17 +4864,20 @@ function RegionExportSheet({
 }
 
 function ExportSheet({
-  session, open, onOpenChange, engineState,
+  session, open, onOpenChange, engineState, onShareSaved,
 }: {
   session: Session;
   open: boolean;
   onOpenChange: (o: boolean) => void;
   engineState: ReturnType<typeof useStudioEngine>;
+  onShareSaved?: (m: ShareableMedia) => void;
 }) {
+  const { user } = useAuth();
   const [preset, setPreset] = useState<ExportPreset>('wav');
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [resumeAvailable, setResumeAvailable] = useState(false);
+  const [dest, setDest] = useState<'download' | 'library'>('download');
   const mastering = withMasteringDefaults(session).master.mastering!;
 
   // Only mp3/wav (renderMaster) persist chunked-render progress — stems
@@ -4935,19 +4920,34 @@ function ExportSheet({
           { description: 'The limiter worklet was unavailable — exported with HPF/air/comp only.' },
         ),
       });
-      for (let i = 0; i < files.length; i++) {
-        const { filename, blob } = files[i];
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-        // Sequential downloads (spec) — stagger so the browser's
-        // multi-download throttle doesn't drop any of the stems.
-        if (i < files.length - 1) await new Promise((r) => setTimeout(r, 200));
+      if (dest === 'library') {
+        if (!user?.id) throw new Error('Not signed in.');
+        const saved: ShareableMedia[] = [];
+        for (const { filename, blob } of files) {
+          saved.push(await saveStudioBlobToLibrary(supabase, user.id, {
+            filename, blob,
+            contentType: /\.mp3$/i.test(filename) ? 'audio/mpeg' : 'audio/wav',
+          }));
+        }
+        toast.success(
+          files.length > 1 ? `Saved ${files.length} stems to your Media Library (Studio).` : 'Saved to your Media Library (Studio).',
+          { action: saved.length === 1 && onShareSaved ? { label: 'Share…', onClick: () => onShareSaved(saved[0]) } : undefined },
+        );
+      } else {
+        for (let i = 0; i < files.length; i++) {
+          const { filename, blob } = files[i];
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          a.click();
+          URL.revokeObjectURL(url);
+          // Sequential downloads (spec) — stagger so the browser's
+          // multi-download throttle doesn't drop any of the stems.
+          if (i < files.length - 1) await new Promise((r) => setTimeout(r, 200));
+        }
+        toast.success(files.length > 1 ? `Exported ${files.length} stems` : 'Export complete');
       }
-      toast.success(files.length > 1 ? `Exported ${files.length} stems` : 'Export complete');
       setResumeAvailable(false);
       onOpenChange(false);
     } catch (e) {
@@ -4992,6 +4992,19 @@ function ExportSheet({
                 {EXPORT_PRESET_LABEL[p]}
               </button>
             ))}
+          </div>
+
+          {/* Destination */}
+          <div>
+            <span className="font-semibold block mb-1.5">Destination</span>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button onClick={() => setDest('download')}
+                className={`h-10 rounded border text-sm font-semibold ${dest === 'download' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
+              >Download</button>
+              <button onClick={() => setDest('library')}
+                className={`h-10 rounded border text-sm font-semibold ${dest === 'library' ? 'bg-primary/15 border-primary/50 text-primary' : 'border-border bg-background text-muted-foreground'}`}
+              >Media Library</button>
+            </div>
           </div>
 
           {resumeAvailable && !busy && (
