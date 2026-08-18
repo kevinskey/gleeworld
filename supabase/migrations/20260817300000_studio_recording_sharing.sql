@@ -21,6 +21,8 @@ CREATE INDEX IF NOT EXISTS gw_media_library_source_idx
 ALTER TABLE public.gw_course_assignments
   ADD COLUMN IF NOT EXISTS media_id uuid
   REFERENCES public.gw_media_library(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS gw_course_assignments_media_idx
+  ON public.gw_course_assignments (media_id) WHERE media_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS public.gw_media_item_shares (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -99,15 +101,25 @@ AS $$
 $$;
 GRANT EXECUTE ON FUNCTION public.user_can_manage_course(uuid) TO authenticated;
 
--- Write-side gate. Rows without a course tag are unaffected, so every
--- existing upload/update path (course_id NULL) keeps working.
+-- Write-side gate. Rows without a course tag pass unchanged; course-tagged
+-- writes require managing the course OR writing your own row into a course
+-- you can access (preserves the shipped student-upload flow while blocking
+-- writes into unrelated courses).
 DROP POLICY IF EXISTS course_write_media_library ON public.gw_media_library;
 CREATE POLICY course_write_media_library ON public.gw_media_library
   AS RESTRICTIVE FOR INSERT TO authenticated
-  WITH CHECK (course_id IS NULL OR public.user_can_manage_course(course_id));
+  WITH CHECK (
+    course_id IS NULL
+    OR public.user_can_manage_course(course_id)
+    OR (uploaded_by = auth.uid() AND public.user_can_access_course(course_id))
+  );
 
 DROP POLICY IF EXISTS course_write_media_library_upd ON public.gw_media_library;
 CREATE POLICY course_write_media_library_upd ON public.gw_media_library
   AS RESTRICTIVE FOR UPDATE TO authenticated
   USING (true)
-  WITH CHECK (course_id IS NULL OR public.user_can_manage_course(course_id));
+  WITH CHECK (
+    course_id IS NULL
+    OR public.user_can_manage_course(course_id)
+    OR (uploaded_by = auth.uid() AND public.user_can_access_course(course_id))
+  );

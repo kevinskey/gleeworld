@@ -22,7 +22,7 @@ DECLARE
   v_course   record;  -- id, tenant_id, instructor_id
   v_student  record;  -- user_id, email
   v_outsider record;  -- user_id, email
-  v_orig     uuid; v_copy uuid;
+  v_orig     uuid; v_copy uuid; v_student_row uuid;
   v_cnt int;
 BEGIN
   SELECT c.id, c.tenant_id, c.instructor_id INTO v_course
@@ -79,16 +79,14 @@ BEGIN
   SELECT count(*) INTO v_cnt FROM gw_media_library WHERE id = v_orig;
   ASSERT v_cnt = 0, 'student must NOT see the private original';
 
-  -- Student cannot forge a course-tagged insert (write-side gate).
-  BEGIN
-    INSERT INTO gw_media_library (title, file_url, file_path, file_type, file_size,
-      folder, category, is_public, is_featured, is_deleted, course_id, uploaded_by,
-      download_count, view_count, tenant_id)
-    VALUES ('forged', 'https://x/f.wav', 'media/t/f.wav', 'audio/wav', 1,
-      NULL, 'general', false, false, false, v_course.id, v_student.user_id, 0, 0, v_course.tenant_id);
-    RAISE EXCEPTION 'student insert with course_id must be rejected';
-  EXCEPTION WHEN insufficient_privilege OR check_violation THEN NULL;
-  END;
+  -- Student CAN insert their own row into an enrolled course (shipped behavior).
+  INSERT INTO gw_media_library (title, file_url, file_path, file_type, file_size,
+    folder, category, is_public, is_featured, is_deleted, course_id, uploaded_by,
+    download_count, view_count, tenant_id)
+  VALUES ('student-upload', 'https://x/s.wav', 'media/t/s.wav', 'audio/wav', 1,
+    NULL, 'general', false, false, false, v_course.id, v_student.user_id, 0, 0, v_course.tenant_id)
+  RETURNING id INTO v_student_row;
+  ASSERT v_student_row IS NOT NULL, 'enrolled student must be able to insert their own row into their course';
 
   -- Simulate the outsider (same tenant, not enrolled): sees the shared
   -- original via the item share, but not the class copy.
@@ -100,6 +98,17 @@ BEGIN
   ASSERT v_cnt = 1, 'item-share grantee must see the shared original';
   SELECT count(*) INTO v_cnt FROM gw_media_library WHERE id = v_copy;
   ASSERT v_cnt = 0, 'non-enrolled member must NOT see the class copy';
+
+  -- Outsider cannot forge a course-tagged insert into an unrelated course (write-side gate).
+  BEGIN
+    INSERT INTO gw_media_library (title, file_url, file_path, file_type, file_size,
+      folder, category, is_public, is_featured, is_deleted, course_id, uploaded_by,
+      download_count, view_count, tenant_id)
+    VALUES ('forged', 'https://x/f.wav', 'media/t/f.wav', 'audio/wav', 1,
+      NULL, 'general', false, false, false, v_course.id, v_outsider.user_id, 0, 0, v_course.tenant_id);
+    RAISE EXCEPTION 'outsider insert with course_id must be rejected';
+  EXCEPTION WHEN insufficient_privilege OR check_violation THEN NULL;
+  END;
 
   -- Revocation kills access.
   RESET ROLE;
