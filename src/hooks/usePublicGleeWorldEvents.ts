@@ -90,7 +90,10 @@ export const usePublicGleeWorldEvents = () => {
   }, [events]);
 
   const getUpcomingEvents = useCallback((limit: number = 6) => {
-    return events.slice(0, limit);
+    const now = new Date();
+    return events
+      .filter(event => new Date(event.end_date || event.start_date) >= now)
+      .slice(0, limit);
   }, [events]);
 
   const getEventsByMonth = useCallback((year: number, month: number) => {

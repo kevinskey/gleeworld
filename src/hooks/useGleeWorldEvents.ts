@@ -288,7 +288,10 @@ export const useGleeWorldEvents = () => {
   };
 
   const getUpcomingEvents = (limit: number = 6) => {
-    return events.slice(0, limit);
+    const now = new Date();
+    return events
+      .filter(event => new Date(event.end_date || event.start_date) >= now)
+      .slice(0, limit);
   };
 
   const getEventsByMonth = (year: number, month: number) => {
