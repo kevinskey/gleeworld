@@ -130,13 +130,33 @@ AS $$
       OR EXISTS (SELECT 1 FROM public.gw_courses
                  WHERE id = p_course_id AND instructor_id = auth.uid());
 $$;
+-- AMENDED during implementation (see note below): the third branch keeps
+-- the already-shipped flow where an ENROLLED user uploads/edits their OWN
+-- media in a class they belong to.
 CREATE POLICY course_write_media_library ON public.gw_media_library
   AS RESTRICTIVE FOR INSERT TO authenticated
-  WITH CHECK (course_id IS NULL OR public.user_can_manage_course(course_id));
+  WITH CHECK (course_id IS NULL
+              OR public.user_can_manage_course(course_id)
+              OR (uploaded_by = auth.uid()
+                  AND public.user_can_access_course(course_id)));
 CREATE POLICY course_write_media_library_upd ON public.gw_media_library
   AS RESTRICTIVE FOR UPDATE TO authenticated
-  WITH CHECK (course_id IS NULL OR public.user_can_manage_course(course_id));
+  USING (true)
+  WITH CHECK (course_id IS NULL
+              OR public.user_can_manage_course(course_id)
+              OR (uploaded_by = auth.uid()
+                  AND public.user_can_access_course(course_id)));
 ```
+
+**Write-gate amendment (2026-08-18, implementation review).** As first
+specified, the gate allowed only course managers to write course-tagged
+rows. Review caught that this breaks shipped behavior: `MediaLibraryPage`'s
+UploadDialog lets ANY signed-in user pick a class they are merely enrolled
+in (`useScopeFilter` lists enrolled courses), and the UPDATE check would
+also have blocked students renaming/deleting their own pre-existing
+course-tagged rows. The third branch above preserves that status quo while
+still blocking writes into courses the caller has no relationship with.
+Sharing itself remains instructor/admin-only in the UI.
 
 Notes:
 
@@ -186,10 +206,12 @@ class copy, so every enrolled student passes RLS on it.
 - For each individual recipient who is not covered by a class copy, insert a
   `gw_media_item_shares` row (idempotent on the unique key; re-share after
   revoke re-activates by clearing `revoked_at`).
-- Send via **`send-branded-email`** (tenant branding, handles Resend's
-  50-recipient batching): recording title, sharer's name, optional personal
-  message, and a button linking to the in-app listen page. No new edge
-  function.
+- Send via **`gw-send-email`** (chosen over `send-branded-email` during
+  implementation: it BCC-chunks multi-recipient sends at 49/batch, so class
+  recipients never see each other's addresses, while `send-branded-email`
+  puts the whole batch in `To:`): recording title, sharer's name, optional
+  personal message, and a button linking to the in-app listen page. No new
+  edge function.
 - Also create in-app notifications via `create_notification_with_delivery`
   (type 'info', category 'general', `action_url` = listen page) for recipients
   who are tenant members. Notification failures are non-fatal (toast still
@@ -237,7 +259,7 @@ deleted by sharing or unsharing.
 
 - Share dialog surfaces per-step failures distinctly (copy created but email
   failed → say exactly that; the copy is kept).
-- Email send is all-or-nothing per batch via `send-branded-email`'s response;
+- Email send is all-or-nothing per batch via `gw-send-email`'s response;
   report counts (sent / failed) in the toast.
 - Assignment path: if the class copy succeeds but the teacher cancels the
   assignment dialog, the copy remains in the class library (harmless, visible,
