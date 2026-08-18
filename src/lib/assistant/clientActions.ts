@@ -32,6 +32,17 @@ export function resolvePageRoute(rawKey: string): { route: string; label: string
   return undefined;
 }
 
+/** Same catalog lookup, but yields the catalog KEY — what the My World
+ *  shelf stores — rather than a route. */
+export function resolveNavKey(rawKey: string): { key: string; label: string } | undefined {
+  const key = normalize(rawKey);
+  const byKey = NAV_CATALOG.find((e) => e.key === key);
+  if (byKey) return { key: byKey.key, label: byKey.label };
+  const byLabel = NAV_CATALOG.find((e) => normalize(e.label) === key);
+  if (byLabel) return { key: byLabel.key, label: byLabel.label };
+  return undefined;
+}
+
 // Legacy route whitelist for open_page — superseded by resolvePageRoute's
 // nav-catalog lookup; kept only as an alias fallback for old key spellings.
 export const PAGE_ROUTES: Record<string, string> = {
@@ -67,6 +78,9 @@ export interface ActionOutcome {
   /** Start Apple Music playback in the floating popout (same window the
    *  YouTube player uses). The provider owns the MusicKit hand-off. */
   appleMusic?: { id: string; kind: 'song' | 'album' | 'playlist'; title?: string; artist?: string; artworkUrl?: string | null };
+  /** Show an article in the in-app reader panel (extract-article) instead of
+   *  leaving the Command Center for a new tab. readAloud auto-starts speech. */
+  article?: { url: string; title?: string; readAloud?: boolean };
   message: string;
 }
 
@@ -76,7 +90,7 @@ export interface ActionDeps {
     functions: { invoke: (name: string, opts: { body: unknown }) => Promise<{ data: any; error: any }> };
     rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: any; error: any }>;
   };
-  createNote: (partial: { title: string; content?: unknown }) => Promise<{ id: string; title: string }>;
+  createNote: (partial: { title: string; content?: unknown; properties?: Record<string, unknown> }) => Promise<{ id: string; title: string }>;
   createTask: (input: { title: string; due_at?: string | null; scheduled_date?: string | null; priority?: string }) => Promise<unknown>;
   textToDoc: (text: string) => unknown;
   pushEventToGoogle: (eventId: string, op: 'create' | 'update' | 'delete') => Promise<unknown>;
@@ -129,13 +143,50 @@ export async function executeClientAction(
         return { ok: true, navigateTo: `/bible?${qs.toString()}`, message: `Opening ${ref}.` };
       }
       case 'open_link': {
-        // External article/link hand-off (e.g. "open the full article" on a
-        // news item). http(s) only — the URL is model-supplied and may echo
-        // feed content, so never allow javascript:/data:/custom schemes.
+        // External article/link (e.g. "open the full article" on a news
+        // item). Shown in the in-app reader panel — never a new tab; leaving
+        // the Command Center for a headline reads as the app dumping the
+        // user (Kevin, 2026-08-13). http(s) only — the URL is model-supplied
+        // and may echo feed content, so never allow javascript:/data:/custom
+        // schemes.
         const url = String(a.url ?? '');
         if (!/^https?:\/\/\S+$/i.test(url)) return { ok: false, message: 'That link looks invalid.' };
-        (globalThis as unknown as Window).open(url, '_blank', 'noopener,noreferrer');
-        return { ok: true, message: `Opening ${String(a.title ?? 'the article').slice(0, 120)} in a new tab.` };
+        const title = typeof a.title === 'string' && a.title.trim() ? a.title.trim().slice(0, 160) : undefined;
+        return {
+          ok: true,
+          article: { url, ...(title ? { title } : {}), ...(a.read_aloud === true ? { readAloud: true } : {}) },
+          message: `Opening ${title ?? 'the article'}.`,
+        };
+      }
+      case 'add_to_nav': {
+        // "Add the Studio to my nav": append a catalog key to the member's
+        // My World shelf. Headless mirror of useMyTools.pinTool — reads via
+        // get_nav_prefs and writes via the SECURITY DEFINER save RPC
+        // (user_preferences standing rule: never direct select/upsert).
+        const target = resolveNavKey(String(a.key));
+        if (!target) return { ok: false, message: `I don't know a feature called "${a.key}".` };
+        const [{ resolveKey, resolveKeys, parseMyTools }, { flattenShelf }] = await Promise.all([
+          import('@/lib/navigation/myTools'),
+          import('@/lib/navigation/toolGroups'),
+        ]);
+        const toolKey = resolveKey(target.key);
+        if (toolKey === 'home') return { ok: true, message: 'Home is always on your shelf.' };
+        const { data, error } = await deps.supabase.rpc('get_nav_prefs', {});
+        if (error) return { ok: false, message: "I couldn't read your world settings just now." };
+        const row = Array.isArray(data) ? data[0] : data;
+        const record = parseMyTools(row?.nav_item_order ?? null);
+        if (!record) {
+          // No parseable stored shelf: seeding one here would bake in the
+          // wrong role's defaults. My World's first save migrates it.
+          return { ok: false, message: "Your world hasn't been set up yet — open My World once, then I can add tools for you." };
+        }
+        if (resolveKeys(flattenShelf(record)).includes(toolKey)) {
+          return { ok: true, message: `${target.label} is already in your world.` };
+        }
+        const next = { ...record, tools: [...record.tools, toolKey] };
+        const { error: saveErr } = await deps.supabase.rpc('save_nav_item_order', { p_nav_item_order: next });
+        if (saveErr) return { ok: false, message: "I couldn't save that — try again in a moment." };
+        return { ok: true, message: `Added ${target.label} to your world.` };
       }
       case 'open_song': {
         const id = String(a.score_id ?? '');
@@ -257,6 +308,40 @@ export async function executeClientAction(
           ...(body && deps.textToDoc ? { content: deps.textToDoc(body) } : {}),
         });
         return { ok: true, navigateTo: '/planner', message: `Created the note "${note.title}".` };
+      }
+      case 'save_article_note': {
+        // "That article's important — save it." Full text is pulled through
+        // extract-article (same hardened function the reader uses) so the
+        // note stands alone even after the link dies. Extraction is
+        // best-effort: a paywall must not turn the save into a failure, so
+        // the note falls back to the feed summary + link. URL is
+        // model-supplied → http(s) only, same rule as open_link.
+        const url = String(a.url ?? '');
+        if (!/^https?:\/\/\S+$/i.test(url)) return { ok: false, message: 'That article link looks invalid.' };
+        const title = String(a.title ?? '').trim().slice(0, 300) || 'Untitled article';
+        let extracted: { paragraphs?: string[]; byline?: string | null } = {};
+        try {
+          const { data } = await deps.supabase.functions.invoke('extract-article', { body: { url } });
+          if (data?.success) extracted = data;
+        } catch { /* fall through to summary fallback */ }
+        const { buildArticleNote } = await import('@/lib/news/articleNote');
+        const built = buildArticleNote({
+          title,
+          url,
+          source: typeof a.source === 'string' && a.source.trim() ? a.source.trim() : undefined,
+          published: typeof a.published === 'string' && a.published.trim() ? a.published.trim() : undefined,
+          byline: extracted.byline ?? undefined,
+          paragraphs: extracted.paragraphs,
+          summary: typeof a.summary === 'string' && a.summary.trim() ? a.summary.trim() : undefined,
+        });
+        const note = await deps.createNote({
+          title: built.title,
+          content: deps.textToDoc(built.body),
+          properties: built.properties,
+        });
+        // No navigateTo: the user is usually mid-article — saving must not
+        // yank them to the Planner. The note is confirmed by name instead.
+        return { ok: true, message: `Saved "${note.title}" to your notes.` };
       }
       case 'create_task': {
         await deps.createTask({

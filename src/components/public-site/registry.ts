@@ -18,11 +18,17 @@ import { concertRsvpBlock } from './blocks/concert-rsvp';
 import { alumniSpotlightBlock } from './blocks/alumni-spotlight';
 import { spotlightBlock } from './blocks/spotlight';
 import { scholarshipBlock } from './blocks/scholarship';
+import { scholarApplicationBlock } from './blocks/scholar-application';
 import { appointmentBookingBlock } from './blocks/appointment-booking';
 import { auditionBlock } from './blocks/audition';
 import { pressBlock } from './blocks/press';
 import { supportBlock } from './blocks/support';
 import { fanSignupBlock } from './blocks/fan-signup';
+import { wishesWallBlock } from './blocks/wishes-wall';
+import { auditionSignupBlock } from './blocks/audition-signup';
+import { eventSpotlightBlock } from './blocks/event-spotlight';
+import { imageBlock } from './blocks/image';
+import { footerBlock } from './blocks/footer';
 import { liturgicalCalendarBlock } from './blocks/liturgical-calendar';
 import { columnsBlock } from './blocks/columns';
 
@@ -40,6 +46,11 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [pressBlock.type]: pressBlock,
   [supportBlock.type]: supportBlock,
   [fanSignupBlock.type]: fanSignupBlock,
+  [wishesWallBlock.type]: wishesWallBlock,
+  [auditionSignupBlock.type]: auditionSignupBlock,
+  [eventSpotlightBlock.type]: eventSpotlightBlock,
+  [imageBlock.type]: imageBlock,
+  [footerBlock.type]: footerBlock,
   [liturgicalCalendarBlock.type]: liturgicalCalendarBlock,
   [contactBlock.type]: contactBlock,
   [donationsBlock.type]: donationsBlock,
@@ -49,6 +60,7 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [alumniSpotlightBlock.type]: alumniSpotlightBlock,
   [spotlightBlock.type]: spotlightBlock,
   [scholarshipBlock.type]: scholarshipBlock,
+  [scholarApplicationBlock.type]: scholarApplicationBlock,
   [appointmentBookingBlock.type]: appointmentBookingBlock,
   [auditionBlock.type]: auditionBlock,
   // Back-compat: `video-gallery` was the original key for the Videos block.

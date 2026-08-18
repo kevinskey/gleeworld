@@ -12,14 +12,14 @@ const FULL = {
 describe('buildAuditionPages', () => {
   it('puts the account step last for signed-out visitors', () => {
     expect(buildAuditionPages(false)).toEqual([
-      'basic', 'background', 'skills', 'personal', 'scheduling', 'account',
+      'basic', 'scheduling', 'account',
     ]);
   });
 
   it('omits the account step for signed-in users', () => {
     const pages = buildAuditionPages(true);
     expect(pages).not.toContain('account');
-    expect(pages).toEqual(['basic', 'background', 'skills', 'personal', 'scheduling']);
+    expect(pages).toEqual(['basic', 'scheduling']);
   });
 
   it('never asks a signed-out visitor for credentials first', () => {

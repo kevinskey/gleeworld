@@ -6,7 +6,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AssistantProvider, useAssistant } from './AssistantProvider';
 import { saveThread } from './threadStorage';
-import { setMuted } from './speech';
+import { setMuted, speak } from './speech';
 import { supabase } from '@/integrations/supabase/client';
 
 vi.mock('@/hooks/useUserRole', () => ({
@@ -30,6 +30,15 @@ vi.mock('@/integrations/supabase/client', () => ({
 // WKWebView synth, ElevenLabs error, blocked autoplay — calls onEnd alone.
 type SpeakOpts = { muted?: boolean; onStart?: () => void; onEnd?: () => void };
 const speakBehavior = { current: 'audible' as 'audible' | 'silent' | 'never-reports' };
+// Controllable fake mic: tests drive recognition results/end by hand, and
+// count start() calls to observe conversation-mode re-arms.
+const speechHandlers = {
+  current: null as null | { onResult: (t: string, isFinal: boolean) => void; onEnd: () => void },
+};
+const speechStart = vi.fn();
+const speechStop = vi.fn();
+// What takeInterruptedSpeech() hands the provider on the next send().
+const interruptedFixture = { current: null as null | { text: string; fraction: number; at: number } };
 vi.mock('./speech', async (importActual) => {
   const actual = await importActual<typeof import('./speech')>();
   return {
@@ -41,6 +50,25 @@ vi.mock('./speech', async (importActual) => {
       // Real speak() returns early when muted — onEnd, never onStart.
       if (!opts?.muted && speakBehavior.current === 'audible') opts?.onStart?.();
       opts?.onEnd?.();
+    }),
+    getSpeechInput: () => ({
+      available: true,
+      start: (onResult: (t: string, isFinal: boolean) => void, onEnd: () => void) => {
+        speechStart();
+        speechHandlers.current = { onResult, onEnd };
+      },
+      stop: () => {
+        speechStop();
+        const h = speechHandlers.current;
+        speechHandlers.current = null;
+        // Real backends fire their end callback after stop().
+        h?.onEnd();
+      },
+    }),
+    takeInterruptedSpeech: vi.fn(() => {
+      const v = interruptedFixture.current;
+      interruptedFixture.current = null;
+      return v;
     }),
   };
 });
@@ -65,8 +93,10 @@ const Probe = () => {
       <span data-testid="count">{a.state.messages.length}</span>
       <span data-testid="sheet">{String(a.sheetOpen)}</span>
       <span data-testid="caption">{a.captionReply?.text ?? ''}</span>
+      <span data-testid="listening">{String(a.listening)}</span>
       <button onClick={() => a.send('hello')}>go</button>
       <button onClick={() => a.startLive()}>live</button>
+      <button onClick={() => a.toggleMic()}>mic</button>
     </div>
   );
 };
@@ -80,7 +110,10 @@ const renderProbe = () =>
     </MemoryRouter>,
   );
 
-beforeEach(() => { sessionStorage.clear(); brandingVoice.current = null; startSession.mockClear(); speakBehavior.current = 'audible'; });
+beforeEach(() => {
+  sessionStorage.clear(); brandingVoice.current = null; startSession.mockClear(); speakBehavior.current = 'audible';
+  speechHandlers.current = null; speechStart.mockClear(); speechStop.mockClear(); interruptedFixture.current = null;
+});
 
 /**
  * Click send, then let the speech path finish. speakNow() waits up to
@@ -210,6 +243,46 @@ describe('AssistantProvider', () => {
     );
   });
 
+  it('live open_link opens the in-app reader and hands the agent the full text to read', async () => {
+    // Live failure (Kevin, 2026-08-17): in live voice, "read the article in
+    // full" → the agent had only read_news summaries and its open_link
+    // window.open'd a new tab — so it repeated the summary and said it could
+    // only summarize. The handler must open the IN-APP reader and return the
+    // extracted article text for the agent to read verbatim in its own
+    // (echo-cancelled) voice.
+    const opened: string[] = [];
+    vi.stubGlobal('open', (url: string) => { opened.push(url); return null; });
+    vi.mocked(supabase.functions.invoke).mockImplementation(async (name: string) => {
+      if (name === 'extract-article') {
+        return { data: { success: true, paragraphs: ['Full para one.', 'Full para two.'], byline: null, siteName: 'Example', truncated: false }, error: null } as never;
+      }
+      return { data: { token: 'tok' }, error: null } as never;
+    });
+    renderProbe();
+    await act(async () => { screen.getByText('live').click(); });
+    const tools = ((startSession.mock.calls[0] as unknown[])[0] as { clientTools: Record<string, (p: unknown) => Promise<string>> }).clientTools;
+    const out = await act(async () => tools.open_link({ url: 'https://example.com/story', title: 'Story' }));
+    expect(opened).toHaveLength(0); // never a new tab
+    expect(out).toContain('Full para one.');
+    expect(out).toContain('Full para two.');
+    expect(out.toLowerCase()).toContain('read');
+    expect(screen.getByTestId('sheet')).toHaveTextContent('true'); // reader visible
+    vi.unstubAllGlobals();
+  });
+
+  it('live open_link degrades honestly when extraction fails', async () => {
+    vi.mocked(supabase.functions.invoke).mockImplementation(async (name: string) => {
+      if (name === 'extract-article') return { data: { success: false, error: 'paywall' }, error: null } as never;
+      return { data: { token: 'tok' }, error: null } as never;
+    });
+    renderProbe();
+    await act(async () => { screen.getByText('live').click(); });
+    const tools = ((startSession.mock.calls[0] as unknown[])[0] as { clientTools: Record<string, (p: unknown) => Promise<string>> }).clientTools;
+    const out = await act(async () => tools.open_link({ url: 'https://example.com/pay', title: 'Walled' }));
+    expect(out.toLowerCase()).toContain('could not');
+    expect(screen.getByTestId('sheet')).toHaveTextContent('true'); // panel still shows what we have
+  });
+
   it('live mode sends NO voice override when the tenant has not picked one', async () => {
     // null → the agent's configured default; 'browser' is meaningless to a
     // WebRTC agent (there is no browser-synth path in live mode).
@@ -217,6 +290,25 @@ describe('AssistantProvider', () => {
     renderProbe();
     await act(async () => { screen.getByText('live').click(); });
     expect(startSession).toHaveBeenCalledWith(expect.not.objectContaining({ overrides: expect.anything() }));
+  });
+
+  it('an article result auto-opens the sheet — the reader lives there, so a closed sheet was silent', async () => {
+    // The live failure (Kevin, 2026-08-17): by voice with the sheet closed,
+    // "read it to me" → open_link {read_aloud:true} → showResult set state,
+    // but AssistantResultsPanel only renders INSIDE the open sheet — the
+    // ArticleCard that extracts and speaks never mounted. She announced the
+    // article and went silent.
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: {
+        reply: '',
+        actions: [{ tool: 'open_link', args: { url: 'https://example.com/story', title: 'Story', read_aloud: true }, confirm: false }],
+      },
+      error: null,
+    } as never);
+    renderProbe();
+    expect(screen.getByTestId('sheet')).toHaveTextContent('false');
+    await act(async () => { screen.getByText('go').click(); });
+    expect(screen.getByTestId('sheet')).toHaveTextContent('true');
   });
 
   it('a confirm-gated action auto-opens the sheet', async () => {
@@ -228,5 +320,149 @@ describe('AssistantProvider', () => {
     expect(screen.getByTestId('sheet')).toHaveTextContent('false');
     await act(async () => { screen.getByText('go').click(); });
     expect(screen.getByTestId('sheet')).toHaveTextContent('true');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// "Next" context + voice conversation mode
+// ---------------------------------------------------------------------------
+
+describe('send() situational context ("Next" support)', () => {
+  it('carries the open article panel and the interrupted-speech tail on the next turn', async () => {
+    vi.mocked(supabase.functions.invoke).mockClear();
+    vi.mocked(supabase.functions.invoke)
+      .mockResolvedValueOnce({
+        data: {
+          reply: 'Opening it.', actions: [],
+          resultsPanel: { kind: 'article', url: 'https://example.com/story', title: 'Big Story', readAloud: true },
+        },
+        error: null,
+      } as never)
+      .mockResolvedValueOnce({ data: { reply: 'ok', actions: [] }, error: null } as never);
+    renderProbe();
+    await sendAndSettleSpeech(); // turn 1: article lands on the panel
+    interruptedFixture.current = {
+      text: 'x'.repeat(100) + ' HEARD-TAIL-MARKER ' + 'y'.repeat(100),
+      fraction: 0.6,
+      at: Date.now(),
+    };
+    await sendAndSettleSpeech(); // turn 2 carries the context
+    const secondBody = vi.mocked(supabase.functions.invoke).mock.calls[1][1] as { body: { context: Record<string, unknown> } };
+    expect(secondBody.body.context.panel).toMatchObject({
+      kind: 'article', url: 'https://example.com/story', title: 'Big Story', readAloud: true,
+    });
+    expect(String(secondBody.body.context.heardUpTo)).toContain('HEARD-TAIL-MARKER');
+    // Only the heard portion: the tail window must not reach the unheard end.
+    expect(String(secondBody.body.context.heardUpTo)).not.toContain('y'.repeat(40));
+  });
+
+  it('ignores a stale interruption from minutes ago', async () => {
+    vi.mocked(supabase.functions.invoke).mockClear();
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'ok', actions: [] }, error: null } as never);
+    renderProbe();
+    interruptedFixture.current = { text: 'old rundown text', fraction: 0.5, at: Date.now() - 120_000 };
+    await sendAndSettleSpeech();
+    const body = vi.mocked(supabase.functions.invoke).mock.calls[0][1] as { body: { context: Record<string, unknown> } };
+    expect(body.body.context.heardUpTo).toBeUndefined();
+  });
+});
+
+describe('voice conversation mode', () => {
+  const tapMic = async () => { await act(async () => { screen.getByText('mic').click(); }); };
+  const speakUtterance = async (text: string) => {
+    await act(async () => {
+      speechHandlers.current!.onResult(text, true);
+      speechHandlers.current!.onEnd();
+    });
+  };
+  const advance = async (ms: number) => { await act(async () => { await vi.advanceTimersByTimeAsync(ms); }); };
+
+  it('re-arms the mic after a voice turn completes; typed turns never do', async () => {
+    vi.mocked(supabase.functions.invoke).mockClear();
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'Done.', actions: [] }, error: null } as never);
+    renderProbe();
+    vi.useFakeTimers();
+    try {
+      await tapMic();
+      expect(speechStart).toHaveBeenCalledTimes(1);
+      await speakUtterance('open music library');
+      await advance(3000); // voice settle + spoken reply (mock speech ends instantly)
+      expect(speechStart).toHaveBeenCalledTimes(2); // conversation mode re-armed
+      expect(screen.getByTestId('listening')).toHaveTextContent('true');
+      // The re-arm marked the turn as voice for the server too.
+      const body = vi.mocked(supabase.functions.invoke).mock.calls[0][1] as { body: { context: Record<string, unknown> } };
+      expect(body.body.context.voice).toBe(true);
+    } finally { vi.useRealTimers(); }
+
+    // Typed turn: no re-arm.
+    speechStart.mockClear();
+    cleanup();
+    renderProbe();
+    await sendAndSettleSpeech();
+    expect(speechStart).not.toHaveBeenCalled();
+  });
+
+  it('after 5s of silence asks "Are you still there…", after the final window stands down', async () => {
+    vi.mocked(speak).mockClear();
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'Done.', actions: [] }, error: null } as never);
+    renderProbe();
+    vi.useFakeTimers();
+    try {
+      await tapMic();
+      await speakUtterance('open music library');
+      await advance(3000); // reply spoken → re-armed (start #2)
+      expect(speechStart).toHaveBeenCalledTimes(2);
+      await advance(5000); // idle window elapses silently
+      const spokenTexts = vi.mocked(speak).mock.calls.map((c) => String(c[0]));
+      expect(spokenTexts.some((t) => /are you still there/i.test(t))).toBe(true);
+      await advance(3000); // check-in spoken → final listening window (start #3)
+      expect(speechStart).toHaveBeenCalledTimes(3);
+      await advance(8000); // still silent → stand down for good
+      expect(screen.getByTestId('listening')).toHaveTextContent('false');
+      expect(speechStart).toHaveBeenCalledTimes(3);
+      await advance(10000); // and it stays down
+      expect(speechStart).toHaveBeenCalledTimes(3);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('a read-aloud article ends conversation mode — no hot mic over her reading', async () => {
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({
+      data: {
+        reply: '',
+        actions: [{ tool: 'open_link', args: { url: 'https://example.com/story', title: 'Story', read_aloud: true }, confirm: false }],
+      },
+      error: null,
+    } as never);
+    renderProbe();
+    vi.useFakeTimers();
+    try {
+      await tapMic();
+      expect(speechStart).toHaveBeenCalledTimes(1);
+      await speakUtterance('read me the article about the story');
+      await advance(8000);
+      // No echo cancellation on this path: while the ArticleCard reads the
+      // story aloud, a re-armed mic would hear her own voice and barge her in.
+      expect(speechStart).toHaveBeenCalledTimes(1);
+      expect(screen.getByTestId('listening')).toHaveTextContent('false');
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('tapping the mic off during conversation mode ends it', async () => {
+    vi.mocked(speak).mockClear();
+    vi.mocked(supabase.functions.invoke).mockResolvedValue({ data: { reply: 'Done.', actions: [] }, error: null } as never);
+    renderProbe();
+    vi.useFakeTimers();
+    try {
+      await tapMic();
+      await speakUtterance('open music library');
+      await advance(3000);
+      expect(screen.getByTestId('listening')).toHaveTextContent('true');
+      await tapMic(); // explicit off
+      expect(screen.getByTestId('listening')).toHaveTextContent('false');
+      await advance(20000); // no check-in, no re-arm
+      const spokenTexts = vi.mocked(speak).mock.calls.map((c) => String(c[0]));
+      expect(spokenTexts.some((t) => /are you still there/i.test(t))).toBe(false);
+      expect(screen.getByTestId('listening')).toHaveTextContent('false');
+    } finally { vi.useRealTimers(); }
   });
 });

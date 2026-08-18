@@ -325,7 +325,9 @@ const OfficeHoursPage = lazy(() => import("./pages/dashboard/OfficeHoursPage"));
 const DashboardShell = lazy(() => import("./components/dashboard/DashboardShell").then(m => ({ default: m.DashboardShell })));
 import { TenantThemeRoot } from "@/components/theme/TenantThemeRoot";
 const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
+const TenantSitePage = lazy(() => import("./pages/TenantSitePage"));
 const TrialExpiredPage = lazy(() => import("./pages/TrialExpiredPage"));
+const PayFeePage = lazy(() => import("./pages/PayFeePage"));
 import { TrialGuard } from "@/components/routes/TrialGuard";
 const MobileScoring = lazy(() => import("./pages/MobileScoring"));
 const MemberDirectory = lazy(() => import("./pages/MemberDirectory"));
@@ -406,6 +408,7 @@ const StorePage = lazy(() => import("./pages/store/StorePage"));
 const StoreScoreDetail = lazy(() => import("./pages/store/StoreScoreDetail"));
 const StorePartnerPage = lazy(() => import("./pages/store/StorePartnerPage"));
 const StoreThanksPage = lazy(() => import("./pages/store/StoreThanksPage"));
+const MyMusicOfflinePage = lazy(() => import("./pages/MyMusicOfflinePage"));
 
 
 // /dashboard/part-tracks briefly redirected to /studio after the old
@@ -598,6 +601,7 @@ const App = () => {
               <Route path="/dpa" element={<PublicRoute><DataProcessingAddendum /></PublicRoute>} />
               <Route path="/data-processing-addendum" element={<PublicRoute><DataProcessingAddendum /></PublicRoute>} />
               <Route path="/thank-you" element={<PublicRoute><ThankYou /></PublicRoute>} />
+              <Route path="/my-music" element={<PublicRoute><MyMusicOfflinePage /></PublicRoute>} />
               <Route
                 path="/academy/:courseCode/rehearsal-today"
                 element={
@@ -637,6 +641,9 @@ const App = () => {
                   link, and bounces back home if the trial is not actually
                   expired (stale link, superadmin fixed it, etc). */}
               <Route path="/paywall" element={<TrialExpiredPage />} />
+              {/* Parent-payable fee link — public on purpose: the URL token is
+                  the capability and the payer usually has no account. */}
+              <Route path="/pay/fee/:feeId" element={<PayFeePage />} />
               {/* Sandbox: animated cursor + spotlight tour over a mock Command Center.
                   Gated by ?key=preview inside the component itself. */}
               <Route path="/tour-sandbox" element={<TourSandbox />} />
@@ -792,7 +799,7 @@ const App = () => {
                 path="/glee-cam/:categorySlug" 
                 element={<GleeCamGallery />} 
               />
-              {/* MUS 100 - Music Theory Fundamentals */}
+              {/* GW 100 - Music Theory Fundamentals */}
               <Route 
                 path="/mus-100" 
                 element={
@@ -804,7 +811,7 @@ const App = () => {
               {/* Legacy redirect */}
               <Route path="/music-theory-fundamentals" element={<Navigate to="/mus-100" replace />} />
               
-              {/* MUS 210 - Legacy redirects to academy */}
+              {/* GW 210 - Legacy redirects to academy */}
               <Route path="/mus-210" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/choral-conducting-literature" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/classes/mus210" element={<Navigate to="/academy/mus-210" replace />} />
@@ -1181,6 +1188,7 @@ const App = () => {
               />
               {/* Published tenant public sites — no auth */}
               <Route path="/sites/:slug" element={<PublicSitePage />} />
+              <Route path="/sites/:slug/:page" element={<PublicSitePage />} />
               <Route
                 path="/admin/ai-rehearsal"
                 element={
@@ -1349,7 +1357,7 @@ const App = () => {
                    </PublicRoute>
                  } 
                />
-               {/* MUS100 Sight Singing Practice - retired, redirects to canonical sight-reading studio */}
+               {/* GW100 Sight Singing Practice - retired, redirects to canonical sight-reading studio */}
                <Route
                  path="/mus100-sight-singing"
                  element={<Navigate to="/dashboard/sight-reading" replace />}
@@ -3455,6 +3463,9 @@ const App = () => {
                                      path="/parent/permission-slip"
                                      element={<ParentPermissionSlip />}
                                    />
+                                   {/* Extra public-site pages on tenant hosts (yo-doc.com/retirement).
+                                       Static routes above always outrank this dynamic segment. */}
+                                   <Route path="/:page" element={<TenantSitePage />} />
                                    {/* Catch-all route for 404 */}
                                    <Route path="*" element={<NotFound />} />
                                </Routes>

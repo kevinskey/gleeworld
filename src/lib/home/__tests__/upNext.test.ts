@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { selectUpNext, fuseProgress, greetingFor } from '../upNext';
+import { selectUpNext, fuseProgress, greetingFor, preferredFirstName } from '../upNext';
 
 const row = (title: string, iso: string) =>
   ({ section: 'schedule', title, detail: null, event_at: iso });
@@ -34,5 +34,19 @@ describe('greetingFor', () => {
     expect(greetingFor(8, 'Amara')).toBe('Morning, Amara');
     expect(greetingFor(14, 'Amara')).toBe('Afternoon, Amara');
     expect(greetingFor(20, 'Amara')).toBe('Evening, Amara');
+  });
+});
+
+describe('preferredFirstName', () => {
+  it('nickname wins over the legal first name', () => {
+    expect(preferredFirstName({ preferred_name: 'Doc', full_name: 'Kevin Johnson' })).toBe('Doc');
+  });
+  it('falls back to the first word of full_name', () => {
+    expect(preferredFirstName({ preferred_name: null, full_name: 'Kevin Johnson' })).toBe('Kevin');
+    expect(preferredFirstName({ preferred_name: '  ', full_name: 'Kevin Johnson' })).toBe('Kevin');
+  });
+  it('falls back to "there" with no profile or names', () => {
+    expect(preferredFirstName(null)).toBe('there');
+    expect(preferredFirstName({ preferred_name: null, full_name: '' })).toBe('there');
   });
 });

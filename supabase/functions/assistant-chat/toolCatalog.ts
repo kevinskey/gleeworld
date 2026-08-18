@@ -110,6 +110,19 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
+    name: 'set_preferred_name',
+    description: "Set what the assistant CALLS THE USER (personal, follows them across workspaces). Use when they say 'call me Doc', 'my friends call me Bea', 'use my nickname', or 'go back to my real name' (pass clear=true). Takes effect immediately.",
+    parameters: {
+      type: 'object',
+      properties: {
+        name: str('What the user wants to be called, e.g. "Doc"'),
+        clear: { type: 'boolean', description: 'true to clear the preferred name and return to their first name' },
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'lookup_hymn',
     description: "Hymnal number lookup across the loaded hymnal indexes (Lead Me Guide Me 2nd ed. 'LMGM II', Gather Comprehensive 'Gather', Baptist Hymnal 2008). Use for 'what number is <hymn>', picking hymns while planning a liturgy, or reverse lookup ('what is 457 in LMGM'). Pass `query` (title, first line, or tune name), and/or `number` for reverse lookup; `hymnal` narrows to one book. NEVER state a hymn number from memory — only from this tool.",
     parameters: {
@@ -335,11 +348,25 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
-    name: 'open_link',
-    description: 'Open an external http(s) link in a new browser tab — e.g. the full article behind a news headline from read_news_feeds. Use the exact link from the tool result; never fabricate URLs.',
+    name: 'add_to_nav',
+    description: 'Add a feature to the user\'s personal navigation (their My World shelf) — "add the Studio to my nav", "put Part Tracks in my tools". key is the same page key open_page uses. Adding never opens the page; confirm what was added in a few words.',
     parameters: {
       type: 'object',
-      properties: { url: str('The http(s) URL to open'), title: str('Short human name for the link, for the spoken confirmation (optional)') },
+      properties: { key: str('The page key of the feature to add (same catalog as open_page)') },
+      required: ['key'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'open_link',
+    description: 'Open an external http(s) link in the in-app article reader — e.g. the full article behind a news headline from read_news_feeds. The reader shows the article text beside the chat (with a Read-aloud button) without leaving the app. Use the exact link from the tool result; never fabricate URLs.',
+    parameters: {
+      type: 'object',
+      properties: {
+        url: str('The http(s) URL to open'),
+        title: str('Short human name for the link, for the spoken confirmation (optional)'),
+        read_aloud: { type: 'boolean', description: 'true ONLY if the user asked to HEAR the article ("read it to me") — the reader starts speaking it as soon as it loads' },
+      },
       required: ['url'],
     },
     minRole: 'member', execution: 'client', confirm: false,
@@ -384,6 +411,22 @@ export const TOOL_CATALOG: ToolDef[] = [
       type: 'object',
       properties: { title: str('Note title'), body: str('Plain-text body (optional)') },
       required: ['title'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'save_article_note',
+    description: "Save a NEWS ARTICLE into the user's private Planner notes — 'save that article', 'this one's important, note it', 'keep the story about X'. The full article text is extracted server-side and stored with the link, so pass the item's exact link/title/source/summary from read_news_feeds (or the article currently open in the reader). For saving anything that is not a news article, use create_note instead.",
+    parameters: {
+      type: 'object',
+      properties: {
+        url: str('The article link, exactly as the tool result gave it — never fabricated'),
+        title: str('The headline'),
+        source: str('Publisher name, e.g. "Choral Journal" (optional)'),
+        published: str('Published date/time from the feed item (optional)'),
+        summary: str("The feed item's short summary — used as the note body if the full text can't be extracted (optional)"),
+      },
+      required: ['url', 'title'],
     },
     minRole: 'member', execution: 'client', confirm: false,
   },

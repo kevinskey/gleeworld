@@ -156,6 +156,15 @@ export function monthsFreeFor(tier: PlanTier): number {
   return Math.round(12 - tier.annualCents / tier.monthlyCents);
 }
 
+// Which tiers a tenant admin can buy with one click. Quote-priced tiers
+// ("From $X/mo") go through email; user-scope tiers (Personal) aren't tenant
+// plans at all — create-plan-checkout filters scope='tenant' and would 404.
+// Shared by the workspace Plan tab and the paywall so the two surfaces can't
+// disagree about which cards get a live Choose Plan button.
+export function tierIsSelfServe(tier: PlanTier): boolean {
+  return tier.scope === 'tenant' && !tier.quote;
+}
+
 // Card background per tier — purely presentational, keyed to PlanTierId so
 // it can't drift out of sync with PLAN_TIERS. Both the marketing landing
 // and Workspace Settings → Plan render with the same palette.

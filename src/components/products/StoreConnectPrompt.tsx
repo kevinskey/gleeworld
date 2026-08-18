@@ -19,7 +19,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { CreditCard, Loader2, ExternalLink, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTenantStripeStatus } from '@/hooks/useTenantStripeStatus';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface StoreConnectPromptProps {
@@ -59,7 +59,7 @@ export function StoreConnectPrompt({
     try {
       setConnecting(true);
       const { data, error } = await supabase.functions.invoke('stripe-oauth-start', {
-        body: { return_path: returnPath },
+        body: { return_path: returnPath, tenant_slug: getTenantSlug() },
       });
       if (error) throw new Error(error.message || 'failed');
       if (data?.error) throw new Error(data.error);

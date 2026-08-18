@@ -160,12 +160,30 @@ export interface SiteBlock {
   position: number;
   config: Record<string, unknown>;
   is_visible: boolean;
+  /** Page slug this block belongs to. Absent (legacy snapshots) = 'home'. */
+  page?: string;
+}
+
+/** Page slug of a block; legacy blocks (pre-pages snapshots) are home. */
+export function blockPage(b: Pick<SiteBlock, 'page'>): string {
+  return b.page || 'home';
+}
+
+/** Distinct page slugs present in a block list, home first. */
+export function sitePages(blocks: Array<Pick<SiteBlock, 'page'>>): string[] {
+  const pages = new Set<string>(['home']);
+  for (const b of blocks) pages.add(blockPage(b));
+  return ['home', ...[...pages].filter((p) => p !== 'home').sort()];
 }
 
 // Context handed to every block render. isPreview = editor preview (admin
 // session, draft data, tenant-scoped queries); otherwise the public /sites/:slug
 // page (anon, published snapshot + RPCs only).
 export interface SiteRenderContext {
+  /** True when this block renders as a Columns child — the column already
+   *  provides the container/gutter, so the block must not add its own
+   *  (double-gutter misalignment, Kevin 2026-08-13). */
+  inColumn?: boolean;
   slug: string;
   theme: SiteTheme;
   orgName: string;

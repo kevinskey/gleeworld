@@ -30,8 +30,14 @@ export const HomeRoute = () => {
   // by definition, and bouncing a signed-in admin to Command Center there
   // means the owner can never see their own site without signing out.
   const brandedRoot = isCustomDomainHost(window.location.host) && !!tenantSlug && tenantSlug !== 'main';
+  // ANY tenant's root is their public site — bouncing a signed-in member
+  // to Command Center made the public site unreachable while logged in
+  // (Kevin, 2026-08-13: "it blinks back to the command center"), and broke
+  // the nav's Public Site entry. Only the main platform root still
+  // redirects authenticated users.
+  const publicRoot = !!tenantSlug && tenantSlug !== 'main';
 
-  useRoleBasedRedirect({ enabled: !brandedRoot });
+  useRoleBasedRedirect({ enabled: !publicRoot });
 
   if (loading) {
     return (
@@ -77,5 +83,5 @@ function CustomDomainHome({ slug }: { slug: string }) {
   }
 
   if (!data) return <TenantLanding />;
-  return <PublicSiteView data={data} slug={slug} />;
+  return <PublicSiteView data={data} slug={slug} memberSignIn pageHref={(p) => (p === 'home' ? '/' : `/${p}`)} />;
 }

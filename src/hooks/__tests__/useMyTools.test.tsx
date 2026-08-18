@@ -24,6 +24,8 @@ vi.mock('@/contexts/AuthContext', () => ({
 import { useMyTools } from '../useMyTools';
 import { DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY, type ToolGroup } from '@/lib/navigation/myTools';
 
+const saveCalls = () => rpc.mock.calls.filter((c) => c[0] === 'save_nav_item_order');
+
 const wrapper = ({ children }: { children: ReactNode }) => {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return <QueryClientProvider client={qc}>{children}</QueryClientProvider>;
@@ -32,8 +34,16 @@ const wrapper = ({ children }: { children: ReactNode }) => {
 beforeEach(() => {
   maybeSingle.mockReset();
   rpc.mockReset();
+  // Reads now ride rpc('get_nav_prefs') — fed from the same maybeSingle
+  // holder so per-test read setups stay unchanged; saves resolve ok.
+  rpc.mockImplementation(async (fn: string) => {
+    if (fn === 'get_nav_prefs') {
+      const r = await maybeSingle();
+      return { data: r?.data ? [r.data] : [], error: r?.error ?? null };
+    }
+    return { error: null };
+  });
   upsert.mockReset();
-  rpc.mockResolvedValue({ error: null });
 });
 
 describe('useMyTools', () => {
@@ -95,7 +105,7 @@ describe('useMyTools', () => {
     const many = Array.from({ length: 20 }, (_, i) => `k${i}`);
     await act(async () => { await result.current.saveTools(many); });
 
-    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[] };
+    const sent = saveCalls()[0][1].p_nav_item_order as { tools: string[] };
     expect(sent.tools).toEqual(many);
   });
 
@@ -136,7 +146,13 @@ describe('useMyTools', () => {
 
   it('rolls the cache back when the save fails', async () => {
     maybeSingle.mockResolvedValue({ data: null, error: null });
-    rpc.mockResolvedValue({ error: { message: 'denied' } });
+    rpc.mockImplementation(async (fn: string) => {
+      if (fn === 'get_nav_prefs') {
+        const r = await maybeSingle();
+        return { data: r?.data ? [r.data] : [], error: r?.error ?? null };
+      }
+      return { error: { message: 'denied' } };
+    });
     const { result } = renderHook(() => useMyTools('student'), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
     const before = result.current.myTools?.tools;
@@ -168,7 +184,7 @@ describe('pinTool', () => {
     await act(async () => { ok = await result.current.pinTool('academy'); });
 
     expect(ok).toBe(false);
-    expect(rpc).not.toHaveBeenCalled();
+    expect(saveCalls()).toHaveLength(0);
 
     // Let the in-flight query settle so it can't resolve into a torn-down
     // test and trip an act() warning in the next one.
@@ -191,10 +207,10 @@ describe('pinTool', () => {
     let ok = true;
     await act(async () => { ok = await result.current.pinTool('academy'); });
     expect(ok).toBe(false);
-    expect(rpc).not.toHaveBeenCalled();
+    expect(saveCalls()).toHaveLength(0);
   });
 
-  it('appends to the STORED record, preserving widgets and a stored-but-unrendered key', async () => {
+  it('files the pin into its category group, preserving widgets and a stored-but-unrendered key', async () => {
     maybeSingle.mockResolvedValue({
       data: {
         // 'tenants' is platform-admin-gated: a real member can hold it in
@@ -211,11 +227,15 @@ describe('pinTool', () => {
     await act(async () => { ok = await result.current.pinTool('academy'); });
 
     expect(ok).toBe(true);
+    // A fresh pin lands in a group named for its catalog section ('academy'
+    // → Teach), not loose — the group id is generated, so match its shape.
     expect(rpc).toHaveBeenCalledWith('save_nav_item_order', {
       p_nav_item_order: {
         v: 4,
-        tools: ['tenants', 'calendar', 'academy'],
-        groups: [],
+        tools: ['tenants', 'calendar'],
+        groups: [
+          { id: expect.any(String), name: 'Teach', tools: ['academy'], collapsed: false },
+        ],
         widgets: ['today'],
         setupComplete: true,
       },
@@ -238,11 +258,20 @@ describe('pinTool', () => {
       await Promise.all([result.current.pinTool('academy'), result.current.pinTool('finance')]);
     });
 
-    expect(rpc).toHaveBeenCalledTimes(2);
-    const first = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[] };
-    const second = rpc.mock.calls[1][1].p_nav_item_order as { tools: string[] };
-    expect(first.tools).toEqual(['calendar', 'academy']);
-    expect(second.tools).toEqual(['calendar', 'academy', 'finance']);
+    expect(saveCalls()).toHaveLength(2);
+    // Pins land in category groups now; the loose list stays put. The
+    // property under test is unchanged: the SECOND save must still carry the
+    // first pin (read from the cache at call time, not a stale closure).
+    type Sent = { tools: string[]; groups: Array<{ name: string; tools: string[] }> };
+    const first = saveCalls()[0][1].p_nav_item_order as Sent;
+    const second = saveCalls()[1][1].p_nav_item_order as Sent;
+    expect(first.tools).toEqual(['calendar']);
+    expect(first.groups.map((g) => [g.name, ...g.tools])).toEqual([['Teach', 'academy']]);
+    expect(second.tools).toEqual(['calendar']);
+    expect(second.groups.map((g) => [g.name, ...g.tools])).toEqual([
+      ['Teach', 'academy'],
+      ['Money', 'finance'],
+    ]);
   });
 
   // pinTool used to resolve false once the record held 8 keys. It no longer
@@ -261,8 +290,13 @@ describe('pinTool', () => {
     await act(async () => { ok = await result.current.pinTool('academy'); });
 
     expect(ok).toBe(true);
-    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[] };
-    expect(sent.tools).toEqual([...eight, 'academy']);
+    const sent = saveCalls()[0][1].p_nav_item_order as {
+      tools: string[]; groups: Array<{ name: string; tools: string[] }>;
+    };
+    // The eight stay loose (k0…k7 aren't catalog keys); the 9th pin is not
+    // refused — it lands in its category group.
+    expect(sent.tools).toEqual(eight);
+    expect(sent.groups.map((g) => [g.name, ...g.tools])).toEqual([['Teach', 'academy']]);
   });
 
   // Round 2 review: `record.tools.includes(resolved)` compared the RESOLVED
@@ -288,7 +322,7 @@ describe('pinTool', () => {
     await act(async () => { ok = await result.current.pinTool('shop'); });
 
     expect(ok).toBe(true);
-    expect(rpc).not.toHaveBeenCalled();
+    expect(saveCalls()).toHaveLength(0);
   });
 
   it('refuses to store home — sanitizeTools would strip it and the write would be a no-op', async () => {
@@ -303,7 +337,7 @@ describe('pinTool', () => {
     await act(async () => { ok = await result.current.pinTool('home'); });
 
     expect(ok).toBe(false);
-    expect(rpc).not.toHaveBeenCalled();
+    expect(saveCalls()).toHaveLength(0);
   });
 });
 
@@ -332,7 +366,7 @@ describe('saveMyTools', () => {
 
     await act(async () => { await result.current.saveMyTools({ widgets: ['today'] }); });
 
-    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[]; widgets: string[] };
+    const sent = saveCalls()[0][1].p_nav_item_order as { tools: string[]; widgets: string[] };
     expect(sent.tools).toEqual(['studio']);
     expect(sent.widgets).toEqual(['today']);
   });
@@ -342,7 +376,7 @@ describe('saveMyTools', () => {
     const { result } = renderHook(() => useMyTools('student'), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
     await act(async () => { await result.current.saveMyTools({ widgets: ['a', 'b', 'c'] }); });
-    const sent = rpc.mock.calls[0][1].p_nav_item_order as { widgets: string[] };
+    const sent = saveCalls()[0][1].p_nav_item_order as { widgets: string[] };
     expect(sent.widgets).toHaveLength(2);
   });
 
@@ -354,7 +388,7 @@ describe('saveMyTools', () => {
 
     await act(async () => { await result.current.saveMyTools({ setupComplete: true }); });
 
-    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[]; setupComplete: boolean };
+    const sent = saveCalls()[0][1].p_nav_item_order as { tools: string[]; setupComplete: boolean };
     expect(sent.tools).toEqual(before);
     expect(sent.setupComplete).toBe(true);
   });
@@ -382,7 +416,7 @@ describe('groups', () => {
       });
     });
 
-    const sent = rpc.mock.calls[0][1].p_nav_item_order as { v: number; tools: string[]; groups: ToolGroup[] };
+    const sent = saveCalls()[0][1].p_nav_item_order as { v: number; tools: string[]; groups: ToolGroup[] };
     expect(sent.tools).toEqual(['calendar']);
     expect(sent.groups[0].name).toBe('Sunday');
     // v STAYS 4 with `groups` alongside it — see parseMyTools' comment in
@@ -408,7 +442,7 @@ describe('groups', () => {
 
     await act(async () => { await result.current.saveTools(['calendar', 'messages']); });
 
-    const sent = rpc.mock.calls[0][1].p_nav_item_order as { groups: ToolGroup[] };
+    const sent = saveCalls()[0][1].p_nav_item_order as { groups: ToolGroup[] };
     expect(sent.groups).toHaveLength(1);
   });
 
@@ -430,12 +464,12 @@ describe('groups', () => {
       });
     });
 
-    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[]; groups: ToolGroup[] };
+    const sent = saveCalls()[0][1].p_nav_item_order as { tools: string[]; groups: ToolGroup[] };
     expect(sent.tools).toEqual(['liturgy']);
     expect(sent.groups[0].tools).toEqual([]);
   });
 
-  it('pinTool lands the new tool loose, above every group', async () => {
+  it('pinTool files the new tool into a category group, leaving member groups alone', async () => {
     maybeSingle.mockResolvedValue({
       data: {
         nav_item_order: {
@@ -451,9 +485,14 @@ describe('groups', () => {
 
     await act(async () => { await result.current.pinTool('studio'); });
 
-    const sent = rpc.mock.calls[0][1].p_nav_item_order as { tools: string[]; groups: ToolGroup[] };
-    expect(sent.tools).toEqual(['calendar', 'studio']);
-    expect(sent.groups[0].tools).toEqual(['liturgy']);
+    // 'studio' is a Make tool: it lands in a fresh "Make" group after the
+    // member's own "Sunday" group, which keeps its contents untouched.
+    const sent = saveCalls()[0][1].p_nav_item_order as { tools: string[]; groups: ToolGroup[] };
+    expect(sent.tools).toEqual(['calendar']);
+    expect(sent.groups.map((g) => [g.name, ...g.tools])).toEqual([
+      ['Sunday', 'liturgy'],
+      ['Make', 'studio'],
+    ]);
   });
 
   it('refuses to pin a key that already lives inside a group', async () => {
@@ -474,6 +513,6 @@ describe('groups', () => {
     await act(async () => { ok = await result.current.pinTool('liturgy'); });
 
     expect(ok).toBe(true);
-    expect(rpc).not.toHaveBeenCalled();
+    expect(saveCalls()).toHaveLength(0);
   });
 });

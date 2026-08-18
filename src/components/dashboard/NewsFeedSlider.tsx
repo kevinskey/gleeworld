@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeedSaves } from '@/hooks/useFeedSaves';
 import { FeedCardActions } from './FeedCardActions';
+import { ArticleReaderSheet } from '@/components/news/ArticleReader';
 
 interface NewsItem {
   title: string;
@@ -48,8 +49,14 @@ export const NewsFeedSlider: React.FC = () => {
     }
   };
 
-  const handleCardClick = (link: string) => {
-    window.open(link, '_blank', 'noopener,noreferrer');
+  // Tap opens the shared in-app reader sheet — reading a story shouldn't
+  // dump the user on the source site. `readerOpen` drives the sheet so
+  // `reading` stays mounted through the close animation.
+  const [reading, setReading] = React.useState<NewsItem | null>(null);
+  const [readerOpen, setReaderOpen] = React.useState(false);
+  const handleCardClick = (item: NewsItem) => {
+    setReading(item);
+    setReaderOpen(true);
   };
 
   return (
@@ -77,7 +84,7 @@ export const NewsFeedSlider: React.FC = () => {
             {newsItems.map((item, index) => (
               <div
                 key={`${item.link}-${index}`}
-                onClick={() => handleCardClick(item.link)}
+                onClick={() => handleCardClick(item)}
                 className="flex-shrink-0 snap-start group text-left cursor-pointer"
               >
                 <div className="relative w-72 sm:w-80 lg:w-96 rounded-lg overflow-hidden border border-white/5 hover:border-primary/50 transition-all shadow-lg bg-[hsl(220,35%,12%)]">
@@ -129,6 +136,8 @@ export const NewsFeedSlider: React.FC = () => {
           <div className="text-white/60 text-sm py-4 px-5">No news available</div>
         )}
       </div>
+
+      <ArticleReaderSheet item={reading} open={readerOpen} onOpenChange={setReaderOpen} />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import * as Tone from 'tone';
 import type { Instrument, TrackEqBand } from '../session';
 import { buildInstrument, type EngineInstrument } from './instruments';
 import { enabledEqBands, eqBandToBiquadOptions, trackEqSig } from './trackEq';
+import { registerStudioAudio } from '../audioLeakGuard';
 
 // Plays a MIDI keyboard live through a track's instrument, independent of the
 // scheduled-playback engine. Builds one EngineInstrument from the given spec
@@ -27,6 +28,8 @@ export class LiveVoices {
   private muteGate: Tone.Gain;
   private output: Tone.ToneAudioNode | AudioNode;
 
+  private unregister: () => void;
+
   constructor(output: Tone.ToneAudioNode | AudioNode = Tone.getDestination()) {
     this.panvol = new Tone.PanVol(0, 0);
     this.muteGate = new Tone.Gain(1);
@@ -34,6 +37,10 @@ export class LiveVoices {
     this.panvol.connect(this.muteGate);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.muteGate.connect(this.output as any);
+    // Leak guard: if the owning effect's cleanup never runs (aborted
+    // cleanup batch on unmount — seen in prod), the route-level
+    // disposeAllStudioAudio() still reaches this instance.
+    this.unregister = registerStudioAudio(this);
   }
 
   setInstrument(spec: Instrument | null): void {
@@ -79,6 +86,13 @@ export class LiveVoices {
     tail.connect(this.output as any);
   }
 
+  // Live monitoring MUST trigger at Tone.immediate() (raw currentTime),
+  // never Tone.now(): now() adds context.lookAhead — 100ms at Tone's
+  // default — on top of device output latency, which made live playing
+  // feel a tenth of a second behind the keys. The lookahead exists so
+  // TRANSPORT-scheduled events survive main-thread jank; an
+  // already-received key press has nothing to look ahead for.
+
   noteOn(pitch: number, velocity01: number): void {
     const inst = this.inst;
     if (!inst) return;
@@ -86,6 +100,14 @@ export class LiveVoices {
     // Re-striking a sustained pitch: release the ringing voice first so the
     // new attack doesn't stack on top of it.
     if (this.sustained.delete(pitch) && inst.triggerRelease) inst.triggerRelease(pitch, now);
+    // Duplicate note-on for a pitch that is still HELD stacks a second
+    // voice on it — and the single note-off then frees only one, leaving
+    // the other ringing forever (the "stuck note"). Real keyboards make
+    // this ordinary, not exotic: Komplete Kontrol hardware echoes every
+    // key on 2–3 ports and the Studio subscribes to "All MIDI inputs",
+    // so one press arrives as 2–3 note-ons. Release the held voice
+    // before re-attacking so a pitch can never stack.
+    if (this.held.has(pitch) && inst.triggerRelease) inst.triggerRelease(pitch, now);
     this.held.add(pitch);
     if (inst.triggerAttack) inst.triggerAttack(pitch, now, velocity01);
     else inst.triggerAttackRelease(pitch, 0.3, now, velocity01); // one-shot fallback (drums)
@@ -112,6 +134,7 @@ export class LiveVoices {
   }
 
   dispose(): void {
+    this.unregister();
     this.disposeInst();
     this.held.clear();
     this.pedalDown = false;
@@ -125,6 +148,11 @@ export class LiveVoices {
   private disposeInst(): void {
     this.sustained.clear(); // voices die with the instrument
     if (!this.inst) return;
+    // Belt-and-braces ordering: silence every voice BEFORE disposal.
+    // dispose() is supposed to kill active voices too, but a voice that
+    // survives a mid-note instrument switch rings with no handle left to
+    // release it — the failure mode behind tonight's endless tone.
+    try { this.inst.releaseAll?.(); } catch { /* nothing held */ }
     try { this.inst.dispose(); } catch { /* already gone */ }
     this.inst = null;
   }

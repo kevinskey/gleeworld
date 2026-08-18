@@ -1,4 +1,4 @@
-// End-to-end test using MUS 070's real seeded category weights.
+// End-to-end test using GW 070's real seeded category weights.
 // Categories fetched from production on 2026-07-25 via MCP:
 //   Assignments 20 · Quizzes 10 · Tests 15 · Discussions 5 ·
 //   Midterm 15 · Final Exam 20 · Group Assignment 10 · Special 5
@@ -16,7 +16,7 @@ import {
   type GradeSubmission,
 } from './computeCourseGrade';
 
-// Snapshot of MUS 070's seeded weights (see migration 20260725230000).
+// Snapshot of GW 070's seeded weights (see migration 20260725230000).
 const MUS_070_CATEGORIES: GradeCategory[] = [
   { key: 'assignments',        label: 'Assignments',        weightPct: 20, dropLowest: 0 },
   { key: 'quizzes',            label: 'Quizzes',            weightPct: 10, dropLowest: 0 },
@@ -28,7 +28,7 @@ const MUS_070_CATEGORIES: GradeCategory[] = [
   { key: 'special_assignment', label: 'Special Assignment', weightPct:  5, dropLowest: 0 },
 ];
 
-describe('MUS 070 grading — production weight profile', () => {
+describe('GW 070 grading — production weight profile', () => {
   it('strong all-around student: 90% in every category → final = 90', () => {
     const subs: GradeSubmission[] = MUS_070_CATEGORIES.map((c) => ({
       categoryKey: c.key,

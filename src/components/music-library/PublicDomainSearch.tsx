@@ -12,7 +12,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Search, ExternalLink, Plus, Loader2, ShieldCheck, BookOpen, Check } from 'lucide-react';
+import { Search, ExternalLink, Plus, Loader2, ShieldCheck, BookOpen, Check, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -223,6 +223,31 @@ function PdResultCard({ row }: { row: PdSearchRow }) {
       setAdding(false);
     }
   };
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSaveToMyMusic = async () => {
+    setSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('pd-add-to-library', {
+        body: { pd_work_id: row.id, target: 'personal' },
+      });
+      if (error) throw error;
+      if (data?.already_in_my_music) {
+        toast.success('Already in My Music', { description: `"${row.title}" is in your personal library.` });
+      } else {
+        toast.success('Saved to My Music', { description: `"${row.title}" is in your personal library — open it from the My Music tab.` });
+      }
+      setSaved(true);
+      queryClient.invalidateQueries({ queryKey: ['personal-scores'] });
+    } catch (e: unknown) {
+      toast.error('Could not save to My Music', {
+        description: e instanceof Error ? e.message : 'Try again, or contact support if it persists.',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
   const licenseLabel = useMemo(
     () => row.license_type === 'public_domain' ? 'Public domain' : 'CPDL edition (share-alike)',
     [row.license_type],
@@ -277,6 +302,21 @@ function PdResultCard({ row }: { row: PdSearchRow }) {
                   <><Check className="w-3.5 h-3.5 mr-1" /> Added</>
                 ) : (
                   <><Plus className="w-3.5 h-3.5 mr-1" /> Add to library</>
+                )}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleSaveToMyMusic}
+                disabled={saving || saved}
+                className="h-8 text-xs"
+              >
+                {saving ? (
+                  <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Saving…</>
+                ) : saved ? (
+                  <><Check className="w-3.5 h-3.5 mr-1" /> Saved</>
+                ) : (
+                  <><Download className="w-3.5 h-3.5 mr-1" /> Save to My Music</>
                 )}
               </Button>
             </div>

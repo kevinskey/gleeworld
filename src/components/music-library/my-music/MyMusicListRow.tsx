@@ -2,13 +2,13 @@
 // mirrors the Scores tab's ScoreListRow so the two tabs read as one library.
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, FileMusic, Library as LibraryIcon, Loader2, Pencil, Star, Trash2 } from 'lucide-react';
+import { ExternalLink, FileMusic, HardDriveDownload, Library as LibraryIcon, Loader2, Pencil, Star, Trash2 } from 'lucide-react';
 import type { PersonalScore } from '@/hooks/usePersonalScores';
 import { SOURCE_LABEL, isExternalOnly } from './personalScoreDisplay';
 
 export function MyMusicListRow({
   score, opening, onOpen, onEdit, onRemove, onToggleFavorite,
-  published = false, onTogglePublish,
+  published = false, onTogglePublish, savedOnDevice, onToggleDevice,
 }: {
   score: PersonalScore;
   opening: boolean;
@@ -19,6 +19,10 @@ export function MyMusicListRow({
   // Librarian-only publish-to-tenant-library affordance; undefined hides it.
   published?: boolean;
   onTogglePublish?: () => void;
+  // Save-to-device (offline vault) affordance; undefined hides it (external-
+  // only rows, unsupported browsers).
+  savedOnDevice?: boolean;
+  onToggleDevice?: () => void;
 }) {
   const externalOnly = isExternalOnly(score);
   return (
@@ -70,6 +74,19 @@ export function MyMusicListRow({
             title={published ? 'Published — click to unpublish' : 'Publish to your group’s library'}
           >
             <LibraryIcon className="w-4 h-4" />
+          </Button>
+        )}
+        {onToggleDevice && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className={savedOnDevice ? 'text-primary hover:text-primary/70' : 'text-muted-foreground/60 hover:text-foreground'}
+            onClick={(e) => { e.stopPropagation(); onToggleDevice(); }}
+            aria-label={savedOnDevice ? `Remove ${score.title} from this device` : `Save ${score.title} to this device`}
+            aria-pressed={savedOnDevice}
+            title={savedOnDevice ? 'Remove from this device' : 'Save to this device (works offline)'}
+          >
+            <HardDriveDownload className="w-4 h-4" />
           </Button>
         )}
         <Button

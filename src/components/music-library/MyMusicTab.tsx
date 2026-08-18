@@ -14,6 +14,7 @@ import { Music, Plus, LayoutGrid, List as ListIcon, Search, Star } from 'lucide-
 import { toast } from 'sonner';
 import { usePersonalScores, type PersonalScore } from '@/hooks/usePersonalScores';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useOfflineVault } from '@/hooks/useOfflineVault';
 import { getSignedUrl } from '@/utils/storage';
 import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
 import { SOFT_CARD } from '@/components/music-library/scores/types';
@@ -24,6 +25,7 @@ import { MyMusicUploadDialog } from '@/components/music-library/my-music/MyMusic
 import { EditPersonalScoreDialog } from '@/components/music-library/my-music/EditPersonalScoreDialog';
 import { PublishToLibraryDialog, isPublishableSource } from '@/components/music-library/my-music/PublishToLibraryDialog';
 import { isExternalOnly } from '@/components/music-library/my-music/personalScoreDisplay';
+import { toViewerScoreId } from '@/lib/viewerScoreId';
 
 type SortKey = 'recent' | 'oldest' | 'title-asc' | 'title-desc' | 'composer-asc' | 'source';
 
@@ -32,9 +34,11 @@ export function MyMusicTab() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<PersonalScore | null>(null);
   // Personal PDFs open in the SAME contain-fit viewer as the Scores tab
-  // (whole page visible, no scrolling — PR #321). No `id`: annotation
-  // tables FK to gw_sheet_music, so the viewer's annotation/audio lookups
-  // stay disabled for personal scores.
+  // (whole page visible, no scrolling — PR #321). `id` is a `personal:`-
+  // prefixed viewer id: annotations route to gw_personal_score_annotations
+  // and just work, while audio/bookmarks/jumps/layers/page-order stay
+  // hidden via the viewer's own isPersonalScoreId() gates (those tables
+  // FK gw_sheet_music, which a personal score has no row in).
   const [viewing, setViewing] = useState<ViewingScore | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
@@ -121,6 +125,7 @@ export function MyMusicTab() {
   // for MY paths to badge published scores and drive unpublish.
   const { canEditMusicLibrary } = useUserRole();
   const canPublish = canEditMusicLibrary();
+  const vault = useOfflineVault();
   const qc = useQueryClient();
   const [publishing, setPublishing] = useState<PersonalScore | null>(null);
   const myPaths = useMemo(
@@ -193,7 +198,7 @@ export function MyMusicTab() {
         toast.error(`Could not open "${s.title}". The file may be missing.`);
         return;
       }
-      setViewing({ title: s.title, pdfUrl: url });
+      setViewing({ id: toViewerScoreId(s.id, true), title: s.title, pdfUrl: url });
     } finally {
       setOpeningId(null);
     }
@@ -342,6 +347,12 @@ export function MyMusicTab() {
                 onToggleFavorite={() => toggleFavorite(s)}
                 published={!!(s.storage_path && publishedByPath.get(s.storage_path))}
                 onTogglePublish={canPublish && isPublishableSource(s) ? () => togglePublish(s) : undefined}
+                savedOnDevice={vault.savedIds.has(s.id)}
+                onToggleDevice={
+                  vault.supported && s.storage_path
+                    ? () => (vault.savedIds.has(s.id) ? vault.removeScore(s.id) : vault.saveScore(s))
+                    : undefined
+                }
               />
             </li>
           ))}
@@ -360,6 +371,12 @@ export function MyMusicTab() {
                 onToggleFavorite={() => toggleFavorite(s)}
                 published={!!(s.storage_path && publishedByPath.get(s.storage_path))}
                 onTogglePublish={canPublish && isPublishableSource(s) ? () => togglePublish(s) : undefined}
+                savedOnDevice={vault.savedIds.has(s.id)}
+                onToggleDevice={
+                  vault.supported && s.storage_path
+                    ? () => (vault.savedIds.has(s.id) ? vault.removeScore(s.id) : vault.saveScore(s))
+                    : undefined
+                }
               />
             ))}
           </div>

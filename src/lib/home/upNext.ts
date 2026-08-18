@@ -24,3 +24,13 @@ export function greetingFor(hour: number, firstName: string): string {
   const part = hour < 12 ? 'Morning' : hour < 18 ? 'Afternoon' : 'Evening';
   return `${part}, ${firstName}`;
 }
+
+// The name a greeting addresses the signed-in user by. preferred_name is
+// the nickname the assistant's set_preferred_name tool writes ("call me
+// Doc") — same fallback chain AssistantProvider uses, so the dashboard
+// and the assistant always agree on what to call the user.
+export function preferredFirstName(
+  p?: { preferred_name?: string | null; full_name?: string | null } | null,
+): string {
+  return p?.preferred_name?.trim() || p?.full_name?.trim().split(' ')[0] || 'there';
+}

@@ -51,7 +51,7 @@ export const CourseSliderManager: React.FC<CourseSliderManagerProps> = ({
   icon,
 }) => {
   const navigate = useNavigate();
-  // Generate placement key from course code (e.g., "MUS 240" -> "mus240-topic-photos")
+  // Generate placement key from course code (e.g., "GW 240" -> "mus240-topic-photos")
   const placementKey = `${courseCode.toLowerCase().replace(/\s+/g, '')}-topic-photos`;
   
   const { data: slider, isLoading, refetch } = useSliderByPlacementAdmin(placementKey);

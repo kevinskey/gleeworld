@@ -3,14 +3,14 @@
 // trailing affordance) so the two tabs read as one library.
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ExternalLink, FileMusic, Library as LibraryIcon, Loader2, Pencil, Star, Trash2 } from 'lucide-react';
+import { ExternalLink, FileMusic, HardDriveDownload, Library as LibraryIcon, Loader2, Pencil, Star, Trash2 } from 'lucide-react';
 import { SOFT_CARD } from '@/components/music-library/scores/types';
 import type { PersonalScore } from '@/hooks/usePersonalScores';
 import { SOURCE_LABEL, isExternalOnly } from './personalScoreDisplay';
 
 export function MyMusicCard({
   score, opening, onOpen, onEdit, onRemove, onToggleFavorite,
-  published = false, onTogglePublish,
+  published = false, onTogglePublish, savedOnDevice, onToggleDevice,
 }: {
   score: PersonalScore;
   opening: boolean;
@@ -21,17 +21,23 @@ export function MyMusicCard({
   // Librarian-only publish-to-tenant-library affordance; undefined hides it.
   published?: boolean;
   onTogglePublish?: () => void;
+  // Save-to-device (offline vault) affordance; undefined hides it (external-
+  // only rows, unsupported browsers).
+  savedOnDevice?: boolean;
+  onToggleDevice?: () => void;
 }) {
   const externalOnly = isExternalOnly(score);
   // The action cluster below is absolutely positioned, so it does not push the
   // title out of the way — the title has to reserve the space itself. Each
   // button is w-4 (16px) + p-1 (8px) = 24px, plus gap-0.5 (2px) between them.
-  // Star, edit and delete are always present; publish appears for librarians,
-  // which is when a long filename collided with the icons.
-  const actionCount = onTogglePublish ? 4 : 3;
-  // 3 → pr-20 (80px), 4 → pr-28 (112px). Rounded up past the measured width so
-  // the descender of a wrapped second line never touches an icon.
-  const titlePadding = actionCount === 4 ? 'pr-28' : 'pr-20';
+  // Star, edit and delete are always present; publish appears for librarians
+  // and save-to-device for supported browsers, which is when a long filename
+  // collided with the icons.
+  const actionCount = 3 + (onTogglePublish ? 1 : 0) + (onToggleDevice ? 1 : 0);
+  // 3 → pr-20 (80px), 4 → pr-28 (112px), 5 → pr-36 (144px). Rounded up past
+  // the measured width so the descender of a wrapped second line never
+  // touches an icon.
+  const titlePadding = actionCount >= 5 ? 'pr-36' : actionCount === 4 ? 'pr-28' : 'pr-20';
   return (
     <Card className={`${SOFT_CARD} group relative h-full flex flex-col transition-colors hover:bg-accent/40 focus-within:bg-accent/40`}>
       <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
@@ -88,6 +94,22 @@ export function MyMusicCard({
         <div className="absolute top-3 right-3 flex items-center gap-0.5">
           {/* Star stays visible always (it carries state); edit/delete
               reveal on hover on desktop like before. */}
+          {onToggleDevice && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onToggleDevice(); }}
+              className={`p-1 rounded transition-colors ${
+                savedOnDevice
+                  ? 'text-primary hover:text-primary/70'
+                  : 'text-muted-foreground/50 hover:text-foreground opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus-visible:opacity-100'
+              }`}
+              aria-label={savedOnDevice ? `Remove ${score.title} from this device` : `Save ${score.title} to this device`}
+              aria-pressed={savedOnDevice}
+              title={savedOnDevice ? 'Remove from this device' : 'Save to this device (works offline)'}
+            >
+              <HardDriveDownload className="w-4 h-4" />
+            </button>
+          )}
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}

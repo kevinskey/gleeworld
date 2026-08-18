@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
+import { supabase, SUPABASE_URL, getTenantSlug } from '@/integrations/supabase/client';
 import { decodeJwtClaims } from '@/lib/demoSession';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
@@ -25,7 +25,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FONT_OPTIONS } from '@/components/public-site/types';
 import { ImageUploadField } from '@/components/public-site/ImageUploadField';
-import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor, type PlanTier } from '@/lib/planTiers';
+import { PLAN_TIERS, TIER_PASTELS, formatPrice, monthsFreeFor, tierIsSelfServe, type PlanTier } from '@/lib/planTiers';
 import { ArrowRight } from 'lucide-react';
 import {
   Loader2, CheckCircle2, ExternalLink, CreditCard, Palette,
@@ -51,15 +51,19 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
 const TAB_VALUES = new Set(['plan', 'navigation', 'branding', 'datecard', 'parents', 'billing', 'general']);
 
 export default function WorkspaceSettingsPage() {
-  const { isSuperAdmin, isAdmin } = useUserRole();
+  const { isSuperAdmin, isAdmin, loading: roleLoading } = useUserRole();
   const canManage = isSuperAdmin() || isAdmin();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab');
   // `modules` is the retired Add-ons tab — bounce old bookmarks to Plan
   // (the tier's included feature list) instead of a dead 404 tab state.
-  const activeTab = tab === 'modules'
-    ? 'plan'
-    : (tab && TAB_VALUES.has(tab) ? tab : 'plan');
+  // Billing UI is admin-only (2026-08-17): non-admins never see the Plan or
+  // Billing tabs, and a deep link to either falls back to General.
+  const requestedTab = tab === 'modules' ? 'plan' : (tab && TAB_VALUES.has(tab) ? tab : null);
+  const billingTab = requestedTab === 'plan' || requestedTab === 'billing';
+  const activeTab = requestedTab && (canManage || !billingTab)
+    ? requestedTab
+    : (canManage ? 'plan' : 'general');
   const setActiveTab = (value: string) => {
     const sp = new URLSearchParams(searchParams);
     sp.set('tab', value);
@@ -73,6 +77,16 @@ export default function WorkspaceSettingsPage() {
       title="Workspace Settings"
       subtitle="Configure your workspace — branding, modules, billing, integrations."
     >
+      {/* Tab visibility depends on the resolved role — don't paint the
+          non-admin layout (no Plan/Billing, read-only badge, General
+          selected) at an admin who just followed the banner's ?tab=plan
+          link. Nothing renders until the role settles. */}
+      {roleLoading ? (
+        <div className="flex justify-center py-16">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+      <>
       {!canManage && (
         <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
           <Lock className="w-4 h-4 mr-1" /> Read-only — only workspace admins can change settings
@@ -85,24 +99,32 @@ export default function WorkspaceSettingsPage() {
             The Add-ons tab was removed 2026-07-28 — features are now bundled
             by plan tier, not toggled à la carte. A legacy ?tab=modules query
             param transparently redirects to `plan` below. */}
-        <TabsList className="flex md:grid md:grid-cols-7 h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto touch-pan-x overscroll-x-contain md:overflow-visible scrollbar-hide">
-          <TabsTrigger value="plan" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
+        {/* Column count tracks the rendered tab set — non-admins get 5 tabs
+            (no Plan/Billing), and a 7-col grid would leave two dead columns. */}
+        <TabsList className={`flex md:grid ${canManage ? 'md:grid-cols-7' : 'md:grid-cols-5'} h-auto w-full max-w-3xl justify-start gap-1 overflow-x-auto touch-pan-x overscroll-x-contain md:overflow-visible scrollbar-hide`}>
+          {canManage && (
+            <TabsTrigger value="plan" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Sparkles className="w-3.5 h-3.5 mr-1.5" />Plan</TabsTrigger>
+          )}
           <TabsTrigger value="navigation" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Menu className="w-3.5 h-3.5 mr-1.5" />Navigation</TabsTrigger>
           <TabsTrigger value="branding" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Palette className="w-3.5 h-3.5 mr-1.5" />Branding</TabsTrigger>
           <TabsTrigger value="datecard" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><CalendarDays className="w-3.5 h-3.5 mr-1.5" />Date card</TabsTrigger>
           <TabsTrigger value="parents" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Users className="w-3.5 h-3.5 mr-1.5" />Parents</TabsTrigger>
-          <TabsTrigger value="billing" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Billing</TabsTrigger>
+          {canManage && (
+            <TabsTrigger value="billing" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><CreditCard className="w-3.5 h-3.5 mr-1.5" />Billing</TabsTrigger>
+          )}
           <TabsTrigger value="general" className="shrink-0 text-sm xl:text-base px-2 lg:px-3"><Building2 className="w-3.5 h-3.5 mr-1.5" />General</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="plan"><PlanTabPanel canManage={canManage} /></TabsContent>
+        {canManage && <TabsContent value="plan"><PlanTabPanel canManage={canManage} /></TabsContent>}
         <TabsContent value="navigation"><NavigationTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="branding"><BrandingTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="datecard"><DateCardTabPanel canManage={canManage} /></TabsContent>
         <TabsContent value="parents"><ParentsTabPanel canManage={canManage} /></TabsContent>
-        <TabsContent value="billing"><BillingTabPanel /></TabsContent>
+        {canManage && <TabsContent value="billing"><BillingTabPanel /></TabsContent>}
         <TabsContent value="general"><GeneralTabPanel canManage={canManage} /></TabsContent>
       </Tabs>
+      </>
+      )}
     </DashboardPageShell>
     </DashboardShell>
     </UniversalLayout>
@@ -113,6 +135,18 @@ export default function WorkspaceSettingsPage() {
 
 function PlanTabPanel({ canManage }: { canManage: boolean }) {
   const [cycle, setCycle] = useState<'monthly' | 'annual'>('monthly');
+
+  // Back from Stripe: the success_url lands on ?tab=plan&activated=<planId>.
+  // Activation itself is webhook-driven (may lag the redirect by a moment),
+  // so acknowledge rather than assert.
+  const [checkoutParams] = useSearchParams();
+  const activatedPlan = checkoutParams.get('activated');
+  useEffect(() => {
+    if (activatedPlan) {
+      const label = PLAN_TIERS.find((t) => t.id === activatedPlan)?.label ?? activatedPlan;
+      toast.success(`Payment received — your ${label} plan is activating.`);
+    }
+  }, [activatedPlan]);
 
   // Plan catalog comes from PLAN_TIERS (single source of truth, shared with
   // the marketing landing) rather than gw_billing_plans, so the two surfaces
@@ -142,14 +176,39 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
 
   const checkout = useMutation({
     mutationFn: async (planId: string) => {
-      const { data, error } = await supabase.functions.invoke('create-plan-checkout', {
-        body: { plan_id: planId, billing_cycle: cycle },
-      });
+      // User-scope tiers (Personal) bill the CALLER via
+      // create-personal-checkout — no tenant involved. Tenant tiers name the
+      // target workspace by slug because JWT tenant claims describe the
+      // caller's HOME tenant, not the workspace on screen (see PR #714).
+      const isUserScope = PLAN_TIERS.find((t) => t.id === planId)?.scope === 'user';
+      const { data, error } = isUserScope
+        ? await supabase.functions.invoke('create-personal-checkout', {
+            body: { plan_id: planId, billing_cycle: cycle },
+          })
+        : await supabase.functions.invoke('create-plan-checkout', {
+            body: { plan_id: planId, billing_cycle: cycle, tenant_slug: getTenantSlug() },
+          });
       if (error) throw error;
       // deno-lint-ignore no-explicit-any
       if ((data as any)?.url) window.location.href = (data as any).url;
     },
     onError: (e: any) => toast.error(e?.message || 'Plan checkout failed.'),
+  });
+
+  // A live subscription is managed in the Stripe Customer Portal — switching
+  // tiers there UPDATES the existing subscription with proration. Starting a
+  // second checkout instead would double-bill (the fn 409s on that now).
+  const hasLiveSub = current?.status === 'active' || current?.status === 'past_due';
+  const portal = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('create-billing-portal', {
+        body: { kind: 'tenant', tenant_slug: getTenantSlug() },
+      });
+      if (error) throw error;
+      // deno-lint-ignore no-explicit-any
+      if ((data as any)?.url) window.location.href = (data as any).url;
+    },
+    onError: (e: any) => toast.error(e?.message || 'Could not open billing portal.'),
   });
 
   const currentTierLabel = current
@@ -169,6 +228,19 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                   <span className="text-base font-bold">{currentTierLabel}</span>
                   <Badge variant="outline" className="text-xs">{current.status}</Badge>
                   <Badge variant="outline" className="text-xs">{current.billing_cycle}</Badge>
+                  {hasLiveSub && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={portal.isPending}
+                      onClick={() => portal.mutate()}
+                    >
+                      {portal.isPending
+                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                        : <><CreditCard className="w-4 h-4 mr-1.5" /> Manage billing</>}
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground mt-1">No paid plan yet — running on free tier.</p>
@@ -205,7 +277,12 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
           treatment (matches the landing's MOST POPULAR chip). */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {PLAN_TIERS.map((tier: PlanTier) => {
-          const isCurrent = current?.plan_id === tier.id && current?.billing_cycle === cycle;
+          // A trial row is NOT an owned plan — only an active subscription
+          // makes a tier "current". Treating a trial as current hid the
+          // Choose Plan button on exactly the tier the tenant is trialing
+          // (lykehouse couldn't buy Director, 2026-08-17).
+          const isCurrent = current?.status === 'active'
+            && current?.plan_id === tier.id && current?.billing_cycle === cycle;
           const featured = tier.id === 'director_60';
           const priceLabel = tier.quote ? `From ${formatPrice(tier.monthlyCents)}` : formatPrice(tier.monthlyCents);
           const monthsFree = monthsFreeFor(tier);
@@ -252,15 +329,42 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                 ))}
               </ul>
               {canManage && !isCurrent && (
-                // create-plan-checkout doesn't yet support the new tier ids
-                // + lookup-key resolution — clicking today surfaces the fn
-                // error via the mutation's onError toast. Button label stays
-                // "Choose Plan" per Kevin; wiring self-serve checkout is a
-                // separate billing workstream.
+                tier.scope !== 'tenant' && !tier.quote ? (
+                  // Personal bills the signed-in user (gw_user_plans), not
+                  // the workspace — same button, different checkout fn.
+                  <button
+                    type="button"
+                    disabled={checkout.isPending}
+                    onClick={() => checkout.mutate(tier.id)}
+                    className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#0f172a' }}
+                  >
+                    {checkout.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                      <>
+                        Choose Plan
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                ) : !tierIsSelfServe(tier) ? (
+                  // Quote-priced tier ("From $X/mo") — sized per school, so
+                  // it goes to email rather than a fixed-price checkout.
+                  <a
+                    href={`mailto:kevin@gleeworld.org?subject=${encodeURIComponent(`${tier.label} plan quote`)}`}
+                    className="inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+                    style={{ backgroundColor: '#0f172a' }}
+                  >
+                    Contact us
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                ) : (
                 <button
                   type="button"
-                  disabled={checkout.isPending}
-                  onClick={() => checkout.mutate(tier.id)}
+                  disabled={checkout.isPending || portal.isPending}
+                  // With a live subscription, tier changes go through the
+                  // Customer Portal (updates the existing sub, prorated) —
+                  // a fresh checkout would create a second subscription.
+                  onClick={() => (hasLiveSub ? portal.mutate() : checkout.mutate(tier.id))}
                   className={cn(
                     'inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed',
                   )}
@@ -268,13 +372,14 @@ function PlanTabPanel({ canManage }: { canManage: boolean }) {
                     ? { background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }
                     : { backgroundColor: '#0f172a' }}
                 >
-                  {checkout.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                  {(checkout.isPending || portal.isPending) ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                     <>
-                      Choose Plan
+                      {hasLiveSub ? 'Switch Plan' : 'Choose Plan'}
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
                 </button>
+                )
               )}
             </div>
           );
@@ -406,7 +511,9 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
   const checkout = useMutation({
     mutationFn: async (moduleId: string) => {
       const { data, error } = await supabase.functions.invoke('create-module-checkout', {
-        body: { module_id: moduleId },
+        // tenant_slug: the JWT's tenant claim is the caller's HOME tenant,
+        // not the workspace on screen — same reasoning as the plan checkout.
+        body: { module_id: moduleId, tenant_slug: getTenantSlug() },
       });
       if (error) throw error;
       if ((data as any)?.url) window.location.href = (data as any).url;

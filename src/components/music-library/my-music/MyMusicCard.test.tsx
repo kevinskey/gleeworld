@@ -9,7 +9,7 @@
 // Worst case is a librarian, because the publish button is the fourth icon.
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { MyMusicCard } from './MyMusicCard';
 import type { PersonalScore } from '@/hooks/usePersonalScores';
 
@@ -71,5 +71,20 @@ describe('MyMusicCard title / action collision', () => {
   it('still clamps to two lines so cards keep a uniform height', () => {
     render(<MyMusicCard {...baseProps} />);
     expect(titleEl().className).toContain('line-clamp-2');
+  });
+});
+
+describe('MyMusicCard save-to-device action', () => {
+  it('renders a save-to-device action and fires it', () => {
+    const onToggleDevice = vi.fn();
+    render(<MyMusicCard {...baseProps} onToggleDevice={onToggleDevice} savedOnDevice={false} />);
+    const btn = screen.getByRole('button', { name: /save .* to this device/i });
+    fireEvent.click(btn);
+    expect(onToggleDevice).toHaveBeenCalledOnce();
+  });
+
+  it('labels the action as remove when already saved on device', () => {
+    render(<MyMusicCard {...baseProps} onToggleDevice={vi.fn()} savedOnDevice />);
+    expect(screen.getByRole('button', { name: /remove .* from this device/i })).toBeInTheDocument();
   });
 });

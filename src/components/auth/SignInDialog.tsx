@@ -4,7 +4,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
-import { pickDestination } from '@/hooks/useRoleBasedRedirect';
+import { signInDestination } from '@/hooks/useRoleBasedRedirect';
 import { claimPartnerByEmailWithTimeout } from '@/lib/partner/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -57,7 +57,7 @@ export function SignInDialog({ open, onOpenChange, onAuthenticated, primaryColor
       onOpenChange(false);
       // Route the newly-signed-in user to their role's destination so they
       // don't sit on the public page wondering where the admin lives. Look
-      // up the profile by the freshly-returned user_id and use pickDestination,
+      // up the profile by the freshly-returned user_id and use signInDestination,
       // same logic the global useRoleBasedRedirect would apply.
       const uid = session?.user?.id;
       if (uid) {
@@ -71,9 +71,7 @@ export function SignInDialog({ open, onOpenChange, onAuthenticated, primaryColor
           // socket can never hang this navigation.
           claimPartnerByEmailWithTimeout(),
         ]);
-        const dest = prof
-          ? pickDestination({ role: prof.role, is_admin: prof.is_admin, is_super_admin: prof.is_super_admin, partner_id: partnerId })
-          : null;
+        const dest = signInDestination(prof, partnerId);
         if (dest) navigate(dest);
       }
       onAuthenticated?.();

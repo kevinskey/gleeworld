@@ -95,6 +95,7 @@ import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
 import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
 import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
+import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 
 // The fixed module-gate key list a `module: 'x'` catalog gate checks
 // against. One definition shared by Sidebar, MobileNav, and the All Tools
@@ -234,7 +235,7 @@ export function BrandLogo({
   logoUrl: string | null | undefined;
   fallbackInitial: string;
   alt: string;
-  size?: 'md' | 'lg' | 'xl' | 'banner';
+  size?: 'md' | 'lg' | 'xl' | 'banner' | 'wide';
 }) {
   // No global fallback to the GleeWorld marketing globe — that bled
   // platform branding into every tenant that hadn't uploaded a logo
@@ -254,22 +255,28 @@ export function BrandLogo({
   // (a device plus two lines of type), and forcing one into a 67px box
   // letterboxes it down to an illegible stamp. Height is capped so a tall
   // or square logo cannot push the nav's first item off the screen.
+  // `wide` is the collapsed-nav TOPBAR brand: same insight as `banner` —
+  // most tenant marks are horizontal lockups, and a square box letterboxes
+  // them to a stamp (Kevin's screenshot, 2026-08-17: the xl box rendered
+  // the Lyke House lockup ~17px tall beside 22px type). Height-driven
+  // instead: the mark fills most of the 80px bar and the width follows.
   const dim = size === 'banner'
     ? 'w-full h-auto max-h-[76px]'
+    : size === 'wide' ? 'h-14 w-auto max-w-[240px]'
     : size === 'xl' ? 'w-[67px] h-[67px]' : size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
   if (src) {
     return (
       <img
         src={src}
         alt={alt}
-        className={`${dim} object-contain ${size === 'banner' ? 'object-left' : 'shrink-0'}`}
+        className={`${dim} object-contain ${size === 'banner' || size === 'wide' ? 'object-left shrink-0' : 'shrink-0'}`}
         onError={() => setSrc(null)}
       />
     );
   }
   return (
     <span
-      className={`${size === 'banner' ? 'w-[67px] h-[67px]' : dim} rounded-lg bg-primary text-primary-foreground inline-flex items-center justify-center text-lg font-bold shrink-0`}
+      className={`${size === 'banner' || size === 'wide' ? 'w-[67px] h-[67px]' : dim} rounded-lg bg-primary text-primary-foreground inline-flex items-center justify-center text-lg font-bold shrink-0`}
       aria-hidden
     >
       {fallbackInitial}
@@ -287,6 +294,11 @@ const iconTextOnly = (tone: string) =>
 // as BrandLogo's export above — standing up the full DashboardShell (auth,
 // routing, branding, tenant prefs, module access, ×2 for MobileNav) to
 // reach one `if (!homeEntry) return null` guard would be disproportionate.
+const PINNED_BOTTOM = (entries: CatalogEntry[]): CatalogEntry[] =>
+  ['site-setup', 'settings']
+    .map((k) => entries.find((e) => e.key === k))
+    .filter((e): e is CatalogEntry => !!e);
+
 // onOpenAllTools is required — NavShelf's own prop is required, and this
 // task deliberately doesn't weaken that at the Sidebar boundary. The six
 // call sites in DashboardShell.shelf.test.tsx that used to render
@@ -443,6 +455,7 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
+          pinned={PINNED_BOTTOM(resolvedEntries)}
           groups={shelfGroups}
           onToggleGroup={handleToggleGroup}
           onOpenAllTools={onOpenAllTools}
@@ -522,6 +535,7 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
         <NavShelf
           home={homeEntry}
           tools={shelfTools}
+          pinned={PINNED_BOTTOM(resolvedEntries)}
           groups={shelfGroups}
           onToggleGroup={handleToggleGroup}
           // Close the drawer FIRST: the sheet is a modal dialog over the
@@ -667,14 +681,15 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
   // min-height INCLUDES the safe-area inset: with border-box, a fixed
   // h-14 + padding-top collapses the content region and the icons spill
   // 40+px below the bar (the header/toolbar overlap on notched iPhones).
-  // Visible bar stays 56px (md: 80px, matching the sidebar's h-[80px]
-  // brand block); the inset grows the box above it. bg-background/80 +
+  // Visible bar stays 56px (md: 92px, matching the sidebar's h-[92px]
+  // brand block so the two bottom borders align); the inset grows the
+  // box above it. bg-background/80 +
   // blur instead of opaque bg-card so the bar reads as the page surface
   // continuing under the iOS clock rather than a white strip over the
   // gray page.
   return (
     <header
-      className="border-b border-border/60 bg-card flex items-center gap-3 px-4 sm:px-6 sticky z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:min-h-[calc(5rem+env(safe-area-inset-top,0px))]"
+      className="border-b border-border/60 bg-card flex items-center gap-3 px-4 sm:px-6 sticky z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:min-h-[calc(92px+env(safe-area-inset-top,0px))]"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         top: 'var(--gw-demo-bar-h, 0px)',
@@ -719,12 +734,17 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
           className="hidden md:inline-flex items-center gap-2 shrink-0 pl-1 pr-2 py-1 rounded-md hover:bg-muted transition"
           title={`Back to ${compactBrandName} dashboard`}
         >
+          {/* xl glyph + 22px name (Kevin, 2026-08-17): this block replaces
+              the whole sidebar brand while the nav is collapsed, and at the
+              old lg/text-base it read as an afterthought next to the 80px
+              topbar chrome. Matches the open sidebar's brand type size. */}
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={compactBrandName.charAt(0).toUpperCase()}
             alt={compactBrandName}
+            size="wide"
           />
-          <span className="font-bold text-base tracking-tight truncate max-w-[180px]">
+          <span className="font-bold text-[22px] tracking-tight truncate max-w-[260px]">
             {compactBrandName}
           </span>
         </Link>
@@ -969,9 +989,28 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const alreadyInsideShell = useContext(DashboardShellNestedContext);
+  // Role for the trial banner (billing UI is admin-only). The shell owns the
+  // hook call and hands the banner plain props — keeps the banner pure and
+  // gives later sharers one place to consolidate useUserRole instances.
+  // Defensive form, same as useGatedNav above.
+  const { loading: roleLoading, isAdmin } = useUserRole();
+  const userIsAdmin = typeof isAdmin === 'function' ? isAdmin() : false;
   // Calendar keeps its compact header spacing but shows the nav like every
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
+  // Studio audio kill switch. Leaving a Studio session is supposed to tear
+  // down the engine, live-monitor voices, and MIDI subscription via the
+  // Studio's own effect cleanups — and that provably failed in prod once
+  // (2026-08-17: the USB keyboard kept playing piano on Command Center; one
+  // aborted cleanup batch is enough, React skips the rest of the commit's
+  // cleanups). This shell mounts on every dashboard-side route and does not
+  // share the Studio's lifecycle, so it can always finish the job. Happy
+  // path: the registry is already empty and this is a no-op.
+  // audioLeakGuard is dependency-free — importing it here does NOT pull
+  // Tone.js into the shell chunk.
+  useEffect(() => {
+    if (!/^\/studio\/sessions\//.test(pathname)) disposeAllStudioAudio();
+  }, [pathname]);
   const isCalendar = pathname.startsWith('/dashboard/calendar');
   // User-controlled nav collapse (persisted). Collapsing frees the full
   // window width for work surfaces like Calendar and Studio; the topbar
@@ -1043,8 +1082,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} onOpenAllTools={openAllTools} />}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Trial countdown — self-gates on trial state so it renders null
-              for grandfathered / paid / loading / no-tenant. */}
-          <TrialBanner />
+              for grandfathered / paid / loading / no-tenant, and is admin-only
+              (billing UI never shows to students/parents/fans). */}
+          <TrialBanner roleLoading={roleLoading} isAdmin={userIsAdmin} />
           <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} onOpenAllTools={openAllTools} />
           {/* pt-3 gives every page a small breath of space below the
               sticky topbar — pages that want more (CommandCenter, Viewer

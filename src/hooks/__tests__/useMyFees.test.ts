@@ -37,10 +37,12 @@ function makeChain(result: ChainResult) {
 
 const mockFrom = vi.fn();
 const mockAuthGetUser = vi.fn();
+const mockRpc = vi.fn();
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: (...args: unknown[]) => mockFrom(...args),
+    rpc: (...args: unknown[]) => mockRpc(...args),
     auth: {
       getUser: () => mockAuthGetUser(),
     },
@@ -379,6 +381,45 @@ describe('useMyFees', () => {
       const calls = mockFrom.mock.calls.filter(([name]) => name === 'gw_student_fees');
       expect(calls.length).toBe(2);
       expect(result.current.unpaid).toHaveLength(1);
+    });
+  });
+
+  describe('splitIntoInstallments', () => {
+    it('calls the RPC with the fee id and count, then refetches', async () => {
+      setupFromSequence([FEE_PENDING], []);
+      mockRpc.mockResolvedValue({ data: 'plan-1', error: null });
+
+      const { result } = renderHook(() => useMyFees());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+      const feesFetchesBefore = mockFrom.mock.calls.filter(
+        ([name]) => name === 'gw_student_fees',
+      ).length;
+
+      await result.current.splitIntoInstallments(FEE_PENDING.id, 3);
+
+      expect(mockRpc).toHaveBeenCalledWith('split_fee_into_installments', {
+        p_fee_id: FEE_PENDING.id,
+        p_count: 3,
+      });
+      const feesFetchesAfter = mockFrom.mock.calls.filter(
+        ([name]) => name === 'gw_student_fees',
+      ).length;
+      expect(feesFetchesAfter).toBe(feesFetchesBefore + 1);
+    });
+
+    it('surfaces RPC errors', async () => {
+      setupFromSequence([FEE_PENDING], []);
+      mockRpc.mockResolvedValue({
+        data: null,
+        error: { message: 'an active payment plan already exists' },
+      });
+
+      const { result } = renderHook(() => useMyFees());
+      await waitFor(() => expect(result.current.loading).toBe(false));
+
+      await expect(
+        result.current.splitIntoInstallments(FEE_PENDING.id, 2),
+      ).rejects.toThrow('an active payment plan already exists');
     });
   });
 

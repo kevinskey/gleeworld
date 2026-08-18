@@ -7,7 +7,7 @@ import { fetchPassage, searchScripture } from '@/lib/bible/fetchPassage';
 import { assistantNavTargets } from '@/lib/navigation/navCatalog';
 import { threadReducer, INITIAL_THREAD } from './threadReducer';
 import { executeClientAction, resolvePageRoute } from './clientActions';
-import { getSpeechInput, isMuted, setMuted, sanitizeForSpeech, speak, stopSpeaking } from './speech';
+import { getSpeechInput, isMuted, setMuted, sanitizeForSpeech, speak, stopSpeaking, takeInterruptedSpeech } from './speech';
 import { ConfirmActionQueue } from './confirmQueue';
 import { loadThread, saveThread } from './threadStorage';
 import { useAssistantVoice, BROWSER_VOICE_ID } from './voices';
@@ -32,7 +32,7 @@ export interface NowPlaying {
 
 export interface AssistantContextValue {
   state: ThreadState;
-  send: (content: string) => Promise<void>;
+  send: (content: string, opts?: { fromVoice?: boolean }) => Promise<void>;
   runAction: (msgId: string, action: AssistantAction) => Promise<void>;
   cancelAction: (msgId: string) => void;
   sheetOpen: boolean;
@@ -281,6 +281,35 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   sheetOpenRef.current = sheetOpen;
   const videoRoomRef = useRef(videoRoom);
   videoRoomRef.current = videoRoom;
+  const resultsPanelRef = useRef(resultsPanel);
+  resultsPanelRef.current = resultsPanel;
+  const nowPlayingRef = useRef(nowPlaying);
+  nowPlayingRef.current = nowPlaying;
+  // Imperative mirror of the mic being live. The `listening` STATE mirrors
+  // it for the UI, but conversation-mode decisions happen inside timer and
+  // speech callbacks that can run before React re-renders — a render-synced
+  // ref would be stale there.
+  const micActiveRef = useRef(false);
+
+  // ---- Voice conversation mode (Kevin, 2026-08-17) --------------------
+  // A voice-initiated turn keeps the conversation going: after the reply is
+  // spoken (and any action lands), the mic re-arms by itself. Five seconds
+  // of silence → "Are you still there, {name}?" → one final window → quiet
+  // stand-down. Typed turns, live mode, and playback all end the mode.
+  const conversationRef = useRef(false);
+  const idleStageRef = useRef<0 | 1>(0);
+  const idleTimerRef = useRef<number | null>(null);
+  // Set after their definitions each render; breaks the send ↔ beginListening
+  // callback cycle.
+  const maybeRearmRef = useRef<() => void>(() => {});
+  const clearIdleTimer = useCallback(() => {
+    if (idleTimerRef.current != null) { window.clearTimeout(idleTimerRef.current); idleTimerRef.current = null; }
+  }, []);
+  const endConversation = useCallback(() => {
+    conversationRef.current = false;
+    idleStageRef.current = 0;
+    clearIdleTimer();
+  }, [clearIdleTimer]);
 
   useEffect(() => { saveThread(state.messages); }, [state.messages]);
 
@@ -292,11 +321,13 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     setSheetOpenState(next);
   }, []);
 
-  // Unmount safety: stop the mic and any in-flight reply speech.
+  // Unmount safety: stop the mic, any in-flight reply speech, and the
+  // conversation-mode idle clock.
   useEffect(() => () => {
+    clearIdleTimer();
     speechRef.current.stop();
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
-  }, []);
+  }, [clearIdleTimer]);
 
   // Speak a reply while tracking `speaking` so the UI can show a Stop
   // control; stopSpeakingNow cuts her off immediately (barge-in / Stop tap).
@@ -309,7 +340,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
    */
   const speakNow = useCallback(async (
     text: string,
-    cbs?: { onStarted?: () => void; onSilent?: () => void },
+    cbs?: { onStarted?: () => void; onSilent?: () => void; onDone?: () => void },
   ) => {
     // EVERY exit path must report. The previous version returned early on a
     // speak-token bump and had no catch, so a Stop tap, a barge-in, or a
@@ -317,6 +348,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // text, an invisible turn. That is the bug this whole guard exists for.
     let started = false;
     const reportSilent = () => { if (!started) cbs?.onSilent?.(); };
+    // onDone = "this speech request is over", audible or not — the hook the
+    // conversation-mode re-arm hangs off. Guarded to fire exactly once.
+    let doneReported = false;
+    const reportDone = () => { if (!doneReported) { doneReported = true; cbs?.onDone?.(); } };
     try {
     // Speaking goes true the moment a spoken reply is REQUESTED, not when
     // audio starts. ElevenLabs synthesis of a long reply (news rundown)
@@ -336,7 +371,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     const accessToken = sessionData?.session?.access_token;
     // Stop was tapped while we awaited the token — honor it; calling
     // speak() now would start a fresh TTS session the tap can't cancel.
-    if (speakRequestRef.current !== myRequest) { reportSilent(); return; }
+    if (speakRequestRef.current !== myRequest) { reportSilent(); reportDone(); return; }
     // onStart fires ONLY on real audio (utterance.onstart / audio.onplay);
     // every silent path in speak() calls onEnd alone. So "ended without
     // starting" is a reliable signal that the user heard nothing.
@@ -351,13 +386,14 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       // out in the OS default voice regardless of the tenant's pick.
       supabaseUrl: SUPABASE_URL,
       onStart: () => { started = true; setSpeaking(true); cbs?.onStarted?.(); },
-      onEnd: () => { setSpeaking(false); reportSilent(); },
+      onEnd: () => { setSpeaking(false); reportSilent(); reportDone(); },
     });
     } catch (err) {
       // Speech never got as far as playback. Say so rather than hanging.
       console.warn('[assistant] speech failed before playback:', err);
       setSpeaking(false);
       reportSilent();
+      reportDone();
     }
   }, [muted]);
 
@@ -385,6 +421,11 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       setNowPlaying({ videoId: result.videoId, title: result.title, channel: result.channel });
       return;
     }
+    // Imperative ref update too: the conversation-mode re-arm decision runs
+    // in the same async continuation, before React re-renders — the render-
+    // synced ref alone would still be stale there and re-arm the mic over a
+    // read-aloud article.
+    resultsPanelRef.current = result;
     setResultsPanel(result);
   }, [stopSpeakingNow]);
 
@@ -406,6 +447,17 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // isn't popup-blocked. The URL always comes from our own deep-link
     // builders, never from model output.
     if (outcome.openExternalUrl) window.open(outcome.openExternalUrl, '_blank', 'noopener,noreferrer');
+    // Articles open in the in-app reader panel, keeping the Command Center
+    // in place (Kevin, 2026-08-13). The panel renders ONLY inside the open
+    // sheet, so a closed sheet must open — same rule as confirm cards. By
+    // voice with the sheet closed, "read it to me" used to set panel state
+    // that nothing rendered: the ArticleCard that extracts and speaks never
+    // mounted, and she announced an article and went silent (Kevin,
+    // 2026-08-17: "keeps saying it's going to read an article but doesn't").
+    if (outcome.article) {
+      showResult({ kind: 'article', ...outcome.article });
+      if (!sheetOpenRef.current) setSheetOpen(true);
+    }
     if (outcome.stopPlayback) setNowPlaying(null);
     if (outcome.appleMusic) {
       // Same rule as the YouTube popout: two audio sources on one speaker
@@ -445,9 +497,22 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         case 'set_date_card':
           qc.invalidateQueries({ queryKey: ['date-card-setting'] });
           break;
+        case 'add_to_nav':
+          // useMyTools caches the raw prefs row under ['my-tools', uid];
+          // base-key invalidation matches every user variant so the shelf
+          // shows the new tool without a refresh.
+          qc.invalidateQueries({ queryKey: ['my-tools'] });
+          break;
+        case 'create_note':
+        case 'save_article_note':
+          // The Planner caches every list/search under ['planner', ...];
+          // base-key invalidation makes the new note visible without a
+          // refresh if the Planner is already open.
+          qc.invalidateQueries({ queryKey: ['planner'] });
+          break;
       }
     }
-  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc, setNowPlaying, stopSpeakingNow]);
+  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc, setNowPlaying, stopSpeakingNow, showResult]);
 
   const cancelAction = useCallback((msgId: string) => {
     dispatch({ type: 'action-state', id: msgId, state: 'cancelled' });
@@ -582,7 +647,9 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         liveVoiceId && liveVoiceId !== BROWSER_VOICE_ID
           ? { overrides: { tts: { voiceId: liveVoiceId } } }
           : {};
-      const firstName = profile?.full_name?.trim().split(/\s+/)[0] || '';
+      // Preferred form of address ("call me Doc") outranks the real first name.
+      const firstName = profile?.preferred_name?.trim()
+        || profile?.full_name?.trim().split(/\s+/)[0] || '';
       const session = await Conversation.startSession({
         conversationToken: token,
         connectionType: 'webrtc',
@@ -596,6 +663,13 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           // The user's personal name for her. The agent prompt reads
           // {{assistant_name}}; the platform default covers old bundles.
           assistant_name: profile?.assistant_name?.trim() || 'the GleeWorld Assistant',
+          // The live agent has no clock of its own; hand it the local time at
+          // session start so "what time is it" never comes back empty.
+          user_local_time: new Date().toLocaleString(undefined, {
+            weekday: 'long', month: 'long', day: 'numeric',
+            hour: 'numeric', minute: '2-digit',
+          }),
+          user_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         },
         clientTools: {
           /**
@@ -635,7 +709,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
                   messages: [{ role: 'user', content: question }],
                   thread_id: liveThreadRef.current ?? readStoredThreadId(),
                   context: {
-                    firstName: profile?.full_name?.split(' ')[0] ?? 'there',
+                    firstName: profile?.preferred_name?.trim() || profile?.full_name?.split(' ')[0] || 'there',
                     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                     navTargets: assistantNavTargets(),
                     // Tells the server this reply is read aloud in full, so
@@ -751,10 +825,31 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
             return `Opened ${ref}.`;
           },
           open_link: async (params: { url?: string; title?: string }) => {
+            // In-app reader, never a new tab — the rule everywhere else, and
+            // live voice was the last window.open holdout. The agent gets the
+            // EXTRACTED TEXT back to read in its own voice: the WebRTC channel
+            // is echo-cancelled, while our ArticleCard TTS is not — a second
+            // audio source here would be heard by the live mic as speech.
+            // Before this, the agent only ever held read_news summaries, so
+            // "read it in full" got a repeated summary and "I can only
+            // summarize" (Kevin, 2026-08-17).
             const url = String(params?.url ?? '');
             if (!/^https?:\/\/\S+$/i.test(url)) return 'That link is invalid — do not retry it.';
-            (globalThis as unknown as Window).open(url, '_blank', 'noopener,noreferrer');
-            return `Opened ${String(params?.title ?? 'the article').slice(0, 120)}.`;
+            const title = String(params?.title ?? 'the article').slice(0, 120);
+            // No readAloud flag: the on-screen card must not start its own TTS.
+            showResult({ kind: 'article', url, ...(params?.title ? { title } : {}) });
+            setSheetOpen(true);
+            try {
+              const { data } = await supabase.functions.invoke('extract-article', { body: { url } });
+              const paragraphs: string[] = data?.success && Array.isArray(data.paragraphs) ? data.paragraphs : [];
+              if (paragraphs.length) {
+                // Capped so the tool result stays within the agent's limits;
+                // the full text is on screen regardless.
+                const text = paragraphs.join('\n\n').slice(0, 5000);
+                return `The article "${title}" is open on screen. Read the following article text aloud to the user IN FULL, verbatim — do not summarize:\n\n${text}`;
+              }
+            } catch { /* fall through to the honest miss below */ }
+            return `Opened ${title} on screen, but the full text could not be extracted from the source — offer to read the summary instead, and say the full story is on screen.`;
           },
         },
         onDisconnect: () => {
@@ -781,15 +876,20 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     } finally {
       liveConnectingRef.current = false;
     }
-  }, [navigate, stopSpeakingNow, showResult, failVisibly, profile?.full_name, profile?.assistant_name, getFreshGeo, runAction, setSheetOpen]);
+  }, [navigate, stopSpeakingNow, showResult, failVisibly, profile?.full_name, profile?.assistant_name, profile?.preferred_name, getFreshGeo, runAction, setSheetOpen]);
 
   // End the live session if the provider ever unmounts (sign-out, tenant
   // switch) — a dangling WebRTC session would keep the mic open.
   useEffect(() => endLive, [endLive]);
 
-  const send = useCallback(async (content: string) => {
+  const send = useCallback(async (content: string, opts?: { fromVoice?: boolean }) => {
     const text = content.trim();
     if (!text || state.busy) return;
+    // A voice turn (re)opens conversation mode; a typed turn ends it — the
+    // keyboard is an explicit signal the user is done talking hands-free.
+    conversationRef.current = opts?.fromVoice === true;
+    idleStageRef.current = 0;
+    clearIdleTimer();
     dispatch({ type: 'send', id: crypto.randomUUID(), content: text });
     // Only the latest user turn matters — the edge function loads prior
     // history from the DB by thread_id (Layer 2 persistence). Older
@@ -802,18 +902,38 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // mid-conversation. Silently no-op when the user has denied or the
     // API is unavailable — the assistant will just ask where they are.
     const geo = await getFreshGeo();
+    // Situational context for "next"/skip: how far the interrupted reply got
+    // (a barge-in captured it in speech.ts), and which article the reader
+    // panel is showing. Both are cheap, both make bare follow-ups resolvable.
+    const interrupted = takeInterruptedSpeech();
+    const heardUpTo = interrupted && Date.now() - interrupted.at < 30_000
+      ? interrupted.text.slice(0, Math.floor(interrupted.text.length * interrupted.fraction)).slice(-120)
+      : undefined;
+    const panelState = resultsPanelRef.current;
+    const panel = panelState?.kind === 'article'
+      ? {
+          kind: 'article',
+          url: panelState.url,
+          ...(panelState.title ? { title: panelState.title } : {}),
+          ...(panelState.readAloud === true ? { readAloud: true } : {}),
+        }
+      : undefined;
     try {
       const { data, error } = await supabase.functions.invoke('assistant-chat', {
         body: {
           messages: history,
           thread_id: storedThreadId,
           context: {
-            firstName: profile?.full_name?.split(' ')[0] ?? 'there',
+            firstName: profile?.preferred_name?.trim() || profile?.full_name?.split(' ')[0] || 'there',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
             // Live page list from the nav catalog, so open_page keeps up
             // with new add-ons without touching the edge function.
             navTargets: assistantNavTargets(),
             ...(geo ? { geo } : {}),
+            // Spoken replies get the server's voice-length budget.
+            ...(opts?.fromVoice ? { voice: true } : {}),
+            ...(heardUpTo ? { heardUpTo } : {}),
+            ...(panel ? { panel } : {}),
           },
         },
       });
@@ -864,9 +984,14 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         speakNow(replyText, {
           onStarted: () => window.clearTimeout(captionTimer),
           onSilent: () => { window.clearTimeout(captionTimer); showCaption(); },
+          // Conversation mode: the reply has finished (or failed to) speak —
+          // hand the floor back to the user.
+          onDone: () => maybeRearmRef.current(),
         });
       } else {
         dispatch({ type: 'settle' });
+        // Silent action turn (the page changing IS the feedback) — re-arm
+        // once the actions below have run; see the post-autoRun call.
       }
       // Sheet closed = this turn came from the floating mic. Voice-first by
       // Kevin's request (2026-08-03): a spoken reply is NOT also printed as
@@ -879,28 +1004,100 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       for (const action of autoRun) {
         await runAction(replyId, action);
       }
+      // No spoken reply on this turn (empty action-only reply, or a confirm
+      // card waiting): the speech onDone above never fires, so re-arm here.
+      if (!replyText) maybeRearmRef.current();
     } catch {
       failVisibly("I couldn't reach the assistant right now.");
     }
-  }, [state.busy, state.messages, profile, speakNow, showResult, runAction, setSheetOpen, getFreshGeo, failVisibly]);
+  }, [state.busy, state.messages, profile, speakNow, showResult, runAction, setSheetOpen, getFreshGeo, failVisibly, clearIdleTimer]);
+
+  // One listening session — shared by the mic tap and conversation-mode
+  // re-arms. Every mic-originated turn is marked fromVoice so the server
+  // applies its spoken-length budget and the conversation stays open.
+  const beginListening = useCallback((): boolean => {
+    if (liveSessionRef.current) return false;
+    const speech = speechRef.current;
+    if (!speech.available) return false;
+    micActiveRef.current = true;
+    setListening(true);
+    setTranscript('');
+    setCaptionReply(null);
+    let finalTranscript = '';
+    speech.start(
+      (t, isFinal) => {
+        // The user is talking — the "are you still there" clock stands down.
+        clearIdleTimer();
+        setTranscript(t);
+        if (isFinal) finalTranscript = t;
+      },
+      () => {
+        micActiveRef.current = false;
+        setListening(false);
+        if (finalTranscript.trim()) void send(finalTranscript, { fromVoice: true });
+      },
+    );
+    return true;
+  }, [send, clearIdleTimer]);
+
+  // Conversation-mode idle clock. Stage 0: five quiet seconds → stop the
+  // mic (it must never be live while she speaks — there is no echo
+  // cancellation on this path), ask "Are you still there, {name}?", and
+  // re-arm one final window. Stage 1: still quiet → stand down silently.
+  const IDLE_CHECKIN_MS = 5_000;
+  const IDLE_FINAL_MS = 8_000;
+  const startIdleTimer = useCallback(() => {
+    clearIdleTimer();
+    const stage = idleStageRef.current;
+    idleTimerRef.current = window.setTimeout(() => {
+      idleTimerRef.current = null;
+      speechRef.current.stop();
+      micActiveRef.current = false;
+      setListening(false);
+      if (stage === 1 || !conversationRef.current) {
+        endConversation();
+        return;
+      }
+      idleStageRef.current = 1;
+      const name = profile?.preferred_name?.trim() || profile?.full_name?.split(' ')[0] || '';
+      void speakNow(name ? `Are you still there, ${name}?` : 'Are you still there?', {
+        onDone: () => maybeRearmRef.current(),
+      });
+    }, stage === 1 ? IDLE_FINAL_MS : IDLE_CHECKIN_MS);
+  }, [clearIdleTimer, endConversation, profile?.preferred_name, profile?.full_name, speakNow]);
+
+  // Re-arm the mic after a turn's speech/actions finish — only while the
+  // conversation is open and nothing else owns the audio (live voice, a
+  // video call, music playing) or the mic (already listening via barge-in).
+  maybeRearmRef.current = () => {
+    if (!conversationRef.current) return;
+    if (liveSessionRef.current || videoRoomRef.current || nowPlayingRef.current) { endConversation(); return; }
+    // A read-aloud article owns the speaker for the next several minutes —
+    // like music, a hot mic over it would hear her own voice and barge her
+    // in mid-story. (No echo cancellation on the push-to-talk path.)
+    if (resultsPanelRef.current?.kind === 'article' && resultsPanelRef.current.readAloud) { endConversation(); return; }
+    if (micActiveRef.current) return; // barge-in already owns the mic
+    if (!beginListening()) { endConversation(); return; }
+    startIdleTimer();
+  };
 
   const toggleMic = useCallback(() => {
     // Live mode owns the mic — push-to-talk stays out of the way.
     if (liveSessionRef.current) return;
     const speech = speechRef.current;
     if (!speech.available) return;
-    if (listening) { speech.stop(); setListening(false); return; }
+    if (listening) {
+      // Explicit off-tap also closes conversation mode — the user said stop.
+      endConversation();
+      speech.stop();
+      micActiveRef.current = false;
+      setListening(false);
+      return;
+    }
     // Barge-in: starting to talk cuts off whatever she's saying.
     stopSpeakingNow();
-    setListening(true);
-    setTranscript('');
-    setCaptionReply(null);
-    let finalTranscript = '';
-    speech.start(
-      (t, isFinal) => { setTranscript(t); if (isFinal) finalTranscript = t; },
-      () => { setListening(false); if (finalTranscript.trim()) void send(finalTranscript); },
-    );
-  }, [listening, send, stopSpeakingNow]);
+    beginListening();
+  }, [listening, stopSpeakingNow, beginListening, endConversation]);
 
   const toggleMute = useCallback(() => {
     const m = !muted;

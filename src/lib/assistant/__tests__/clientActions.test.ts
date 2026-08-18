@@ -55,21 +55,100 @@ describe('executeClientAction', () => {
     expect(seating.ok).toBe(true);
   });
 
-  it('open_link opens http(s) URLs in a new tab and rejects other schemes', async () => {
+  it('open_link surfaces the in-app article reader and rejects other schemes', async () => {
+    // In-app reader, NOT window.open — a new tab abandons the Command
+    // Center (Kevin, 2026-08-13).
     const opened: string[] = [];
     vi.stubGlobal('open', (url: string) => { opened.push(url); return null; });
     try {
-      const ok = await executeClientAction({ tool: 'open_link', args: { url: 'https://example.com/story' }, confirm: false });
-      expect(ok.ok).toBe(true);
-      expect(opened).toEqual(['https://example.com/story']);
+      const ok = await executeClientAction({ tool: 'open_link', args: { url: 'https://example.com/story', title: 'Story' }, confirm: false });
+      expect(ok).toMatchObject({ ok: true, article: { url: 'https://example.com/story', title: 'Story' } });
+      const heard = await executeClientAction({ tool: 'open_link', args: { url: 'https://example.com/story', read_aloud: true }, confirm: false });
+      expect(heard.article?.readAloud).toBe(true);
       const js = await executeClientAction({ tool: 'open_link', args: { url: 'javascript:alert(1)' }, confirm: false });
       expect(js.ok).toBe(false);
       const data = await executeClientAction({ tool: 'open_link', args: { url: 'data:text/html,x' }, confirm: false });
       expect(data.ok).toBe(false);
-      expect(opened).toHaveLength(1);
+      expect(opened).toHaveLength(0);
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+
+  it('save_article_note extracts the article and saves a self-contained note', async () => {
+    const invoke = vi.fn(async () => ({
+      data: { success: true, paragraphs: ['Para one.', 'Para two.'], byline: 'By Ada', siteName: 'Example News', truncated: false },
+      error: null,
+    }));
+    const createNote = vi.fn(async (p: { title: string; content?: unknown; properties?: Record<string, unknown> }) => ({ id: 'n1', title: p.title }));
+    const out = await executeClientAction(
+      { tool: 'save_article_note', args: { url: 'https://example.com/story', title: 'Big Story', source: 'Example News', published: '2026-08-15' }, confirm: false },
+      {
+        ...makeDeps({ createNote, textToDoc: (t: string) => ({ doc: t }) }),
+        supabase: { from: () => ({}), functions: { invoke }, rpc: vi.fn() } as unknown as ActionDeps['supabase'],
+      },
+    );
+    expect(invoke).toHaveBeenCalledWith('extract-article', { body: { url: 'https://example.com/story' } });
+    expect(out.ok).toBe(true);
+    expect(out.message).toContain('Big Story');
+    // Saving must not yank the user out of what they're reading.
+    expect(out.navigateTo).toBeUndefined();
+    const saved = createNote.mock.calls[0][0];
+    expect(saved.title).toBe('Big Story');
+    expect((saved.content as { doc: string }).doc).toContain('Para one.');
+    expect((saved.content as { doc: string }).doc).toContain('https://example.com/story');
+    expect(saved.properties).toMatchObject({ source_url: 'https://example.com/story', source_name: 'Example News' });
+  });
+
+  it('save_article_note still saves link + summary when extraction fails', async () => {
+    const invoke = vi.fn(async () => ({ data: { success: false, error: 'paywall' }, error: null }));
+    const createNote = vi.fn(async (p: { title: string; content?: unknown; properties?: Record<string, unknown> }) => ({ id: 'n1', title: p.title }));
+    const out = await executeClientAction(
+      { tool: 'save_article_note', args: { url: 'https://example.com/pay', title: 'Walled', summary: 'RSS summary here.' }, confirm: false },
+      {
+        ...makeDeps({ createNote, textToDoc: (t: string) => ({ doc: t }) }),
+        supabase: { from: () => ({}), functions: { invoke }, rpc: vi.fn() } as unknown as ActionDeps['supabase'],
+      },
+    );
+    expect(out.ok).toBe(true);
+    const saved = createNote.mock.calls[0][0];
+    expect((saved.content as { doc: string }).doc).toContain('RSS summary here.');
+    expect((saved.content as { doc: string }).doc).toContain('https://example.com/pay');
+  });
+
+  it('save_article_note rejects non-http(s) urls without saving anything', async () => {
+    const createNote = vi.fn();
+    const out = await executeClientAction(
+      { tool: 'save_article_note', args: { url: 'javascript:alert(1)', title: 'X' }, confirm: false },
+      makeDeps({ createNote }),
+    );
+    expect(out.ok).toBe(false);
+    expect(createNote).not.toHaveBeenCalled();
+  });
+
+  it('add_to_nav appends a catalog key to the stored shelf via the definer RPCs', async () => {
+    const record = { v: 4, tools: ['calendar'], groups: [], widgets: [], setupComplete: true };
+    const rpc = vi.fn(async (fn: string, _args?: Record<string, unknown>) => {
+      if (fn === 'get_nav_prefs') return { data: [{ nav_item_order: record, home_tile_layout: null }], error: null };
+      return { data: null, error: null };
+    });
+    const out = await executeClientAction({ tool: 'add_to_nav', args: { key: 'studio' }, confirm: false }, makeDeps({ rpc }));
+    expect(out.ok).toBe(true);
+    const saveCall = rpc.mock.calls.find((c) => c[0] === 'save_nav_item_order');
+    expect((saveCall?.[1] as { p_nav_item_order: { tools: string[] } }).p_nav_item_order.tools).toEqual(['calendar', 'studio']);
+  });
+
+  it('add_to_nav is idempotent and honest about unknown features', async () => {
+    const record = { v: 4, tools: ['studio'], groups: [], widgets: [], setupComplete: true };
+    const rpc = vi.fn(async (fn: string) => {
+      if (fn === 'get_nav_prefs') return { data: [{ nav_item_order: record, home_tile_layout: null }], error: null };
+      return { data: null, error: null };
+    });
+    const dup = await executeClientAction({ tool: 'add_to_nav', args: { key: 'studio' }, confirm: false }, makeDeps({ rpc }));
+    expect(dup.ok).toBe(true);
+    expect(rpc.mock.calls.some((c) => c[0] === 'save_nav_item_order')).toBe(false);
+    const unknown = await executeClientAction({ tool: 'add_to_nav', args: { key: 'flux-capacitor' }, confirm: false }, makeDeps({ rpc }));
+    expect(unknown.ok).toBe(false);
   });
 
   it('open_song builds the viewer deep link', async () => {

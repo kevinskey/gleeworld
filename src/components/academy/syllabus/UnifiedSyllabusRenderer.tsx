@@ -240,7 +240,7 @@ export const UnifiedSyllabusRenderer: React.FC<UnifiedSyllabusRendererProps> = (
         </Card>
       )}
 
-      {/* Semester Phases (phase-based courses like MUS 210) */}
+      {/* Semester Phases (phase-based courses like GW 210) */}
       {hasPhases && (
         <Card>
           <Collapsible open={showSchedule} onOpenChange={setShowSchedule}>

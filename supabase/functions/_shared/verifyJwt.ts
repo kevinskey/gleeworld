@@ -38,3 +38,55 @@ export async function verifyJwtClaims(
     return null;
   }
 }
+
+// The GoTrue hook stamps every JWT with the caller's HOME tenant
+// (tenant_id / tenant_role) — the WRONG tenant whenever an admin manages a
+// workspace they aren't homed on, which is the common case (profiles are
+// homed on 'main' while the admin membership lives on the customer tenant).
+// Found 2026-08-17 on create-plan-checkout: legitimate tenant admins got
+// 403, and super-admin actions targeted their home tenant. Admin-action
+// functions resolve the TARGET tenant here instead: the frontend names it
+// by tenant_slug; the JWT claims count only when they refer to that same
+// tenant; otherwise the caller's gw_tenant_members role in the TARGET
+// tenant (or the platform super-admin flag) decides.
+//
+// 'director' is the membership role GleeWorld actually grants tenant
+// admins (see useUserRole MEMBER_ADMIN_ROLES).
+export const TENANT_ADMIN_ROLES = ['owner', 'admin', 'director', 'super-admin', 'super_admin'];
+
+export async function resolveTargetTenant(
+  payload: Record<string, any>,
+  slugRaw: string | null | undefined,
+): Promise<{ tenantId: string | null; tenantRole: string }> {
+  const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000';
+  const SR = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  const headers = { apikey: SR, Authorization: `Bearer ${SR}` };
+  const get = async (path: string): Promise<any[]> => {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers });
+      if (!res.ok) return [];
+      const json = await res.json();
+      return Array.isArray(json) ? json : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const slug = String(slugRaw ?? '').trim();
+  let tenantId: string | null = payload.tenant_id ?? null;
+  if (slug) {
+    const rows = await get(`gw_tenants?slug=eq.${encodeURIComponent(slug)}&select=id&limit=1`);
+    tenantId = rows[0]?.id ?? null; // unknown slug → null; caller rejects
+  }
+  if (!tenantId) return { tenantId: null, tenantRole: '' };
+
+  let tenantRole = payload.tenant_id === tenantId ? String(payload.tenant_role ?? '') : '';
+  if (!tenantRole && payload.sub) {
+    const [members, profiles] = await Promise.all([
+      get(`gw_tenant_members?tenant_id=eq.${tenantId}&user_id=eq.${payload.sub}&select=role&limit=1`),
+      get(`gw_profiles?user_id=eq.${payload.sub}&select=is_super_admin&limit=1`),
+    ]);
+    tenantRole = profiles[0]?.is_super_admin ? 'super_admin' : (members[0]?.role ?? '');
+  }
+  return { tenantId, tenantRole };
+}

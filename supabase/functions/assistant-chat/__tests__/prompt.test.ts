@@ -282,3 +282,77 @@ describe('score analysis honesty', () => {
     expect(p).toContain('double-check anything critical against the printed score');
   });
 });
+
+describe('preferred-name rule', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: ['studio', 'planner'], nowIso: '2026-07-12T20:00:00-04:00',
+    timezone: 'America/New_York',
+  };
+  it('teaches the set_preferred_name tool', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).toContain('set_preferred_name');
+    expect(p).toContain('call me Doc');
+  });
+});
+
+describe('platform feature glossary (2026-08-13)', () => {
+  const prompt = buildSystemPrompt({
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'Harmony Hall Choir',
+    activeModules: [], nowIso: '2026-08-13T10:00:00-04:00', timezone: 'America/New_York',
+  });
+  it('explains what GleeWorld is', () => {
+    expect(prompt).toContain('What GleeWorld is');
+  });
+  it.each([
+    ['recording studio', 'Studio'],
+    ['the Library', 'Music Library'],
+    ['score reader', 'Viewer'],
+    ['practice tracks', 'Part Tracks'],
+    ['sight singing', 'Sight Reading Studio'],
+    ['permission slips', 'Travel Manager'],
+  ])('alias "%s" appears with canonical %s', (alias, canonical) => {
+    expect(prompt).toContain(alias);
+    expect(prompt).toContain(canonical);
+  });
+});
+
+describe('interrupted-speech + panel context ("Next" support)', () => {
+  const ctx = {
+    firstName: 'Kevin', role: 'member' as const, tenantName: 'T',
+    activeModules: [], nowIso: '2026-08-17T12:00:00-04:00', timezone: 'America/New_York',
+  };
+
+  it('renders where the user stopped hearing when a spoken reply was interrupted', () => {
+    const p = buildSystemPrompt({ ...ctx, heardUpTo: 'and the Atlanta Symphony announced its new season' });
+    expect(p).toContain('Atlanta Symphony announced');
+    expect(p.toLowerCase()).toContain('interrupted');
+  });
+
+  it('renders the article currently open in the reader panel', () => {
+    const p = buildSystemPrompt({
+      ...ctx,
+      panel: { kind: 'article', url: 'https://example.com/story', title: 'Big Story', readAloud: true },
+    });
+    expect(p).toContain('Big Story');
+    expect(p).toContain('https://example.com/story');
+    expect(p.toLowerCase()).toContain('read aloud');
+  });
+
+  it('omits both lines when the context is absent', () => {
+    const p = buildSystemPrompt(ctx);
+    expect(p).not.toContain('Your previous spoken reply was interrupted');
+    expect(p).not.toContain('The in-app reader panel is currently showing');
+  });
+
+  it('teaches "next / next article / skip" in both news contexts', () => {
+    const p = buildSystemPrompt(ctx);
+    // Article context: advance to the item after the current panel article.
+    expect(p).toMatch(/next article|"next"/i);
+    expect(p).toContain('read_news_feeds');
+    // Rundown context: continue from the item after the last heard headline.
+    expect(p.toLowerCase()).toContain('continue the rundown');
+    // The blanket interruption rule must carve out next/skip.
+    expect(p).toMatch(/except.*(next|skip)/i);
+  });
+});

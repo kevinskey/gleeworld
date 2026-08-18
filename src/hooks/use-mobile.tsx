@@ -97,6 +97,31 @@ export function useIsPhone() {
   return isPhone
 }
 
+/** True for coarse (touch) pointers — phones and tablets, regardless of
+ *  viewport width. An iPad in landscape can be ≥1024px (past MOBILE_BREAKPOINT)
+ *  yet still has no mouse; `(pointer: coarse)` is the signal that actually
+ *  tracks input type instead of screen size. Guards matchMedia's absence
+ *  (jsdom in some test environments) by defaulting to false. */
+export function useCoarsePointer() {
+  const getMatches = () =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(pointer: coarse)').matches
+      : false
+
+  const [coarse, setCoarse] = React.useState<boolean>(getMatches)
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const mql = window.matchMedia('(pointer: coarse)')
+    const onChange = () => setCoarse(mql.matches)
+    mql.addEventListener("change", onChange)
+    setCoarse(mql.matches)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
+
+  return coarse
+}
+
 /** True when the viewport is taller than it is wide (phones, iPad portrait).
  *  Used to swap in portrait-cropped artwork (e.g. auth backgrounds) that
  *  would otherwise lose its subject to a center crop. */

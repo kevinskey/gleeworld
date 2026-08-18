@@ -7,6 +7,9 @@ import { buildChatRequest, callModel, type ChatMessage } from './provider.ts';
 import { executeServerTool, type ConciergeResult } from './executors.ts';
 import { validateCourseSpec } from '../_shared/courseSpec.ts';
 import { namesItsSources, SOURCE_LEAK_NUDGE } from './sourceLeak.ts';
+import { claimsPlayback, PLAYBACK_CLAIM_NUDGE, isPlayIntent, PLAY_INTENT_NUDGE } from './playbackClaim.ts';
+import { claimsNoteSaved, isSaveNoteIntent, NOTE_CLAIM_NUDGE, NOTE_INTENT_NUDGE } from './noteClaim.ts';
+import { claimsOpen, OPEN_CLAIM_NUDGE, isOpenScoreIntent, OPEN_INTENT_NUDGE } from './openClaim.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -142,12 +145,13 @@ serve(async (req) => {
     class_year?: string | null;
     home_address?: string | null;
     assistant_name?: string | null;
+    preferred_name?: string | null;
   } | null;
   const fetchProfile = async (): Promise<ProfileRow> => {
     try {
       const { data } = await userClient
         .from('gw_profiles')
-        .select('full_name, role, voice_part, class_year, home_address, assistant_name')
+        .select('full_name, role, voice_part, class_year, home_address, assistant_name, preferred_name')
         .eq('user_id', caller.userId)
         .maybeSingle();
       return (data as ProfileRow) ?? null;
@@ -200,10 +204,30 @@ serve(async (req) => {
         .slice(0, 100)
     : undefined;
   const voice = body.context?.voice === true;
+  // Situational client state for "next"/skip resolution. Model-visible
+  // strings from the request body, so length-capped and shape-checked hard.
+  const rawHeard = body.context?.heardUpTo;
+  const heardUpTo = typeof rawHeard === 'string' && rawHeard.trim()
+    ? rawHeard.trim().slice(-160)
+    : undefined;
+  const rawPanel = body.context?.panel as { kind?: unknown; url?: unknown; title?: unknown; readAloud?: unknown } | undefined;
+  const panel = rawPanel
+      && rawPanel.kind === 'article'
+      && typeof rawPanel.url === 'string'
+      && /^https?:\/\/\S+$/i.test(rawPanel.url)
+    ? {
+        kind: 'article',
+        url: rawPanel.url.slice(0, 500),
+        title: typeof rawPanel.title === 'string' && rawPanel.title.trim() ? rawPanel.title.trim().slice(0, 200) : undefined,
+        readAloud: rawPanel.readAloud === true,
+      }
+    : undefined;
   const ctx = {
     voice,
     assistantName: text(profile?.assistant_name) || undefined,
-    firstName: inferredFirst || String(body.context?.firstName ?? 'there'),
+    // Preferred form of address ("call me Doc") outranks the inferred first
+    // name; the prompt's userLine addresses whatever lands here.
+    firstName: text(profile?.preferred_name) || inferredFirst || String(body.context?.firstName ?? 'there'),
     fullName: fullName || undefined,
     tenantRole: text(profile?.role) || undefined,
     voicePart: text(profile?.voice_part) || undefined,
@@ -215,6 +239,8 @@ serve(async (req) => {
     timezone: String(body.context?.timezone ?? 'America/New_York'),
     geo,
     navTargets,
+    heardUpTo,
+    panel,
   };
 
   const tools = toolsForRole(role);
@@ -275,6 +301,12 @@ serve(async (req) => {
   // source, so the source-leak guard has to know whether it ran.
   const calledTools = new Set<string>();
   let sourceLeakNudged = false;
+  let playbackNudged = false;
+  let openNudged = false;
+  let openIntentNudged = false;
+  let playIntentNudged = false;
+  let noteNudged = false;
+  let noteIntentNudged = false;
 
   // Voice length guard. The prompt's "at most 4 sentences" rule alone does
   // not hold — this model paraphrases around prohibitions (the source-leak
@@ -324,6 +356,62 @@ serve(async (req) => {
           sourceLeakNudged = true;
           messages.push({ role: 'assistant', content: reply });
           messages.push({ role: 'user', content: SOURCE_LEAK_NUDGE });
+          continue;
+        }
+        // Phantom playback: on long threads the model copies its own prior
+        // "Playing X now." turns instead of calling the play tool — the
+        // reply claims playback while no player opens (2026-08-12). Guard
+        // shape as above: one corrective re-ask, then accept.
+        const playedThisTurn = resultsPanel?.kind === 'video'
+          || actions.some((a) => a.tool.startsWith('play_'));
+        if (!playbackNudged && !playedThisTurn && claimsPlayback(reply)) {
+          playbackNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: PLAYBACK_CLAIM_NUDGE });
+          continue;
+        }
+        // Phantom-open guard — same disease, viewer/page strain: "Opened X
+        // in the Viewer." with no open action attached, nothing happens on
+        // screen (2026-08-12). One corrective re-ask, then accept.
+        const openedThisTurn = actions.some((a) =>
+          ['open_song', 'open_page', 'open_note', 'open_link', 'close_viewer', 'open_bible'].includes(a.tool));
+        if (!openNudged && !openedThisTurn && claimsOpen(reply)) {
+          openNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: OPEN_CLAIM_NUDGE });
+          continue;
+        }
+        // Open-intent floor: the user's message asked to open a score and
+        // the turn is ending without any open action — regardless of what
+        // the reply claims. One corrective re-ask (Kevin, 2026-08-12:
+        // score-opens are the assistant's most important action).
+        if (!openIntentNudged && !openedThisTurn && isOpenScoreIntent(latestUser.content)) {
+          openIntentNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: OPEN_INTENT_NUDGE });
+          continue;
+        }
+        // Play-intent floor — the playback twin of the open-intent floor.
+        if (!playIntentNudged && !playedThisTurn && isPlayIntent(latestUser.content)) {
+          playIntentNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: PLAY_INTENT_NUDGE });
+          continue;
+        }
+        // Phantom-note guard + save-intent floor (Kevin's real 17:32
+        // phantom: "I've saved a note … It's in your Planner notes now"
+        // with no create_note action).
+        const notedThisTurn = actions.some((a) => a.tool === 'create_note' || a.tool === 'save_article_note');
+        if (!noteNudged && !notedThisTurn && claimsNoteSaved(reply)) {
+          noteNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: NOTE_CLAIM_NUDGE });
+          continue;
+        }
+        if (!noteIntentNudged && !notedThisTurn && isSaveNoteIntent(latestUser.content)) {
+          noteIntentNudged = true;
+          messages.push({ role: 'assistant', content: reply });
+          messages.push({ role: 'user', content: NOTE_INTENT_NUDGE });
           continue;
         }
         if (voice && !wantsDepth && !voiceLengthNudged && reply.length > VOICE_REPLY_MAX) {

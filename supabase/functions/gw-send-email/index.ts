@@ -60,9 +60,32 @@ const handler = async (req: Request): Promise<Response> => {
     // Only allow senders on our verified domain; otherwise spoofed From
     // addresses would relay through Resend under our account.
     const requestedFrom = emailData.from ?? "";
-    const fromAddress = /(@|<[^>]*@)gleeworld\.org>?\s*$/i.test(requestedFrom)
-      ? requestedFrom
-      : "GleeWorld <noreply@gleeworld.org>";
+    let fromAddress: string;
+    if (/(@|<[^>]*@)gleeworld\.org>?\s*$/i.test(requestedFrom)) {
+      fromAddress = requestedFrom;
+    } else {
+      // Default From carries the tenant's display name (the address must stay
+      // on the verified domain). Every app client sends x-tenant-slug as a
+      // global supabase-js header, so it rides along on functions.invoke too.
+      let senderName = "GleeWorld";
+      const tenantSlug = req.headers.get("x-tenant-slug");
+      if (tenantSlug && tenantSlug !== "main") {
+        const admin = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        );
+        const { data: tenant } = await admin
+          .from("gw_tenants")
+          .select("name")
+          .eq("slug", tenantSlug)
+          .maybeSingle();
+        // Display-name only — strip characters that could smuggle in a
+        // different address or break the header.
+        const clean = (tenant?.name ?? "").replace(/[<>@\r\n"]/g, "").trim();
+        if (clean) senderName = clean;
+      }
+      fromAddress = `${senderName} <noreply@gleeworld.org>`;
+    }
 
     const emailPayload: any = {
       from: fromAddress,
@@ -85,13 +108,68 @@ const handler = async (req: Request): Promise<Response> => {
     if (emailData.bcc?.length) emailPayload.bcc = emailData.bcc;
     if (emailData.attachments?.length) emailPayload.attachments = emailData.attachments;
 
-    const emailResponse = await resend.emails.send(emailPayload);
+    // Resend hard-caps `to` at 50 addresses, and a big broadcast must not
+    // expose every address to every recipient anyway. Multi-recipient sends
+    // go out in BCC chunks (to: = our own from address); a single recipient
+    // keeps the normal To: header. Explicit cc/bcc passthrough only applies
+    // to single-recipient sends.
+    // 49, not 50: BCC chunks also carry our own address in To:, and Resend's
+    // 50-recipient cap counts to + cc + bcc together (learned from a live 422).
+    const BATCH = 49;
+    const recipients: string[] = emailPayload.to;
+    const chunks: string[][] = [];
+    if (recipients.length > 1) {
+      for (let i = 0; i < recipients.length; i += BATCH) {
+        chunks.push(recipients.slice(i, i + BATCH));
+      }
+    } else {
+      chunks.push(recipients);
+    }
 
-    console.log("Email sent successfully:", emailResponse);
+    let sentCount = 0;
+    const errors: string[] = [];
+    const ids: string[] = [];
+    for (const [i, chunk] of chunks.entries()) {
+      const payload = { ...emailPayload };
+      if (recipients.length > 1) {
+        payload.to = [fromAddress.replace(/^.*<|>$/g, "") || "noreply@gleeworld.org"];
+        payload.bcc = chunk;
+        delete payload.cc;
+      }
+      // resend-js does NOT throw on API errors — it returns { data, error }.
+      // The old code ignored `error` and reported success on rejected sends.
+      const { data, error } = await resend.emails.send(payload);
+      if (error) {
+        console.error(`Batch ${i + 1}/${chunks.length} failed:`, error);
+        errors.push(`batch ${i + 1}: ${error.message ?? JSON.stringify(error)}`);
+      } else {
+        sentCount += chunk.length;
+        if (data?.id) ids.push(data.id);
+      }
+      // Stay under Resend's request rate limit between chunks.
+      if (i < chunks.length - 1) await new Promise((r) => setTimeout(r, 600));
+    }
+
+    if (errors.length > 0) {
+      console.error(`Send finished with failures: ${sentCount}/${recipients.length} delivered`, errors);
+      return new Response(JSON.stringify({
+        success: false,
+        error: `Sent ${sentCount} of ${recipients.length} recipients; failures: ${errors.join("; ")}`,
+        sentCount,
+        totalCount: recipients.length,
+      }), {
+        status: 502,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
+    console.log(`Email sent successfully to ${sentCount} recipient(s) in ${chunks.length} batch(es)`, ids);
 
     return new Response(JSON.stringify({
       success: true,
-      id: emailResponse.data?.id,
+      id: ids[0],
+      ids,
+      sentCount,
       message: "Email sent successfully"
     }), {
       status: 200,

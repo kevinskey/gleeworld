@@ -239,10 +239,42 @@ function applyPlaybackGain(audio: HTMLAudioElement, level: number): void {
   }
 }
 
+// ---- Interrupted-speech tracking -------------------------------------
+// "Next" (and any follow-up after a barge-in) needs to know how far the
+// spoken reply got. TTS pace is near-uniform, so currentTime/duration maps
+// linearly onto the spoken text closely enough to tell which headline the
+// user last heard. Captured HERE, at the moment of interruption, because
+// teardown below destroys the element's position. ElevenLabs path only —
+// browser SpeechSynthesis exposes no playback position.
+let currentSpeechText: string | null = null;
+let lastInterrupted: { text: string; fraction: number; at: number } | null = null;
+
+function captureInterrupt(a: HTMLAudioElement | null): void {
+  const text = currentSpeechText;
+  currentSpeechText = null;
+  if (!a || text == null) return;
+  const d = a.duration;
+  const t = a.currentTime;
+  if (!Number.isFinite(d) || d <= 0 || !Number.isFinite(t) || t <= 0) return;
+  const fraction = Math.min(1, t / d);
+  if (fraction >= 0.98) return; // effectively finished — not an interruption
+  lastInterrupted = { text, fraction, at: Date.now() };
+}
+
+/** Consume-once: the interrupted utterance and how far it got (0..1), or
+ *  null when the last reply finished naturally / never became audible.
+ *  `at` lets callers ignore stale interruptions from minutes ago. */
+export function takeInterruptedSpeech(): { text: string; fraction: number; at: number } | null {
+  const v = lastInterrupted;
+  lastInterrupted = null;
+  return v;
+}
+
 function stopElevenLabs(): void {
   speakSession += 1;
   const a = elevenAudio;
   elevenAudio = null;
+  captureInterrupt(a);
   if (!a) return;
   try {
     a.pause();
@@ -493,10 +525,13 @@ export function speak(
       audio.src = url;
       applyPlaybackGain(audio, volume * voiceGain(voiceId));
       elevenAudio = audio;
+      currentSpeechText = text;
       audio.onplay = () => { if (mySession === speakSession) opts?.onStart?.(); };
       const cleanup = () => {
         try { URL.revokeObjectURL(url); } catch { /* already revoked */ }
-        if (elevenAudio === audio) elevenAudio = null;
+        // Natural end: nothing was interrupted, so a later stop must not
+        // record this utterance.
+        if (elevenAudio === audio) { elevenAudio = null; currentSpeechText = null; }
         opts?.onEnd?.();
       };
       audio.onended = cleanup;
@@ -521,6 +556,21 @@ export function speak(
       browserSynth.speak(utterance);
     }
   })();
+}
+
+/** Freeze the current utterance in place (readings Pause button). The
+ *  audio element keeps its position; resumeSpeaking() picks up mid-word.
+ *  No session bump — a paused utterance still belongs to its run. */
+export function pauseSpeaking(synth?: SpeechSynthesis): void {
+  const s = synth ?? (typeof speechSynthesis !== 'undefined' ? speechSynthesis : undefined);
+  try { s?.pause(); } catch { /* nothing playing */ }
+  try { elevenAudio?.pause(); } catch { /* already torn down */ }
+}
+
+export function resumeSpeaking(synth?: SpeechSynthesis): void {
+  const s = synth ?? (typeof speechSynthesis !== 'undefined' ? speechSynthesis : undefined);
+  try { s?.resume(); } catch { /* nothing paused */ }
+  try { void elevenAudio?.play(); } catch { /* already torn down */ }
 }
 
 // Immediately silence any in-flight reply (barge-in / explicit Stop).

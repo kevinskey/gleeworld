@@ -28,6 +28,7 @@ import { buildTrack, type EngineTrack } from './tracks';
 import { buildBus, type EngineBus } from './buses';
 import { buildSend, type EngineSend } from './sends';
 import { scheduleAutomation, type AutomatableParam } from './automation';
+import { registerStudioAudio } from '../audioLeakGuard';
 import { setAssetUrl } from './assetUrlCache';
 import { shouldLoopWrap } from '../transport';
 import { buildMasterChain, type MasterChainHandle } from './masterChain';
@@ -235,7 +236,12 @@ export class StudioEngine {
   private rafId: number | null = null;
   private state: EngineState;
 
+  private unregisterLeakGuard: () => void;
+
   constructor(opts: StudioEngineOptions = {}) {
+    // Leak guard: the route-level disposeAllStudioAudio() reaches this
+    // engine even when the owning hook's unmount cleanup never ran.
+    this.unregisterLeakGuard = registerStudioAudio(this);
     this.onMasteringDegraded = opts.onMasteringDegraded;
     this.masterIn = new Tone.Gain(1);
     this.masterPan = new Tone.Panner(0);
@@ -517,6 +523,7 @@ export class StudioEngine {
   }
 
   dispose(): void {
+    this.unregisterLeakGuard();
     this.stopPositionLoop();
     this.stopMetronomeInterval();
     this.stopLoopInterval();
@@ -1331,7 +1338,12 @@ export class StudioEngine {
 
   subscribe(fn: Listener): () => void {
     this.listeners.add(fn);
-    fn(this.state);
+    // COPY, matching emit() below. Handing out the live object let React
+    // keep a reference that this engine mutates in place — so every later
+    // emit compared equal against it ("nothing changed") and discrete
+    // state flips (metronome on/off was the visible one) never re-rendered
+    // on web. The engine's own behavior was fine; the UI just never heard.
+    fn({ ...this.state });
     return () => this.listeners.delete(fn);
   }
   getState(): EngineState { return { ...this.state }; }
@@ -1376,6 +1388,22 @@ export class StudioEngine {
   getOutputLatencyMs(): number {
     const raw = Tone.getContext().rawContext as AudioContext;
     return ((raw.outputLatency || raw.baseLatency) ?? 0) * 1000;
+  }
+
+  /** Live transport position, read directly off Tone.Transport. Unlike
+   * state.positionSeconds (a ~30Hz snapshot for the playhead UI), this
+   * advances per audio render quantum — MIDI capture anchors takes to
+   * it so a take's constant offset isn't a random slice of UI staleness. */
+  transportSecondsNow(): number {
+    return Tone.getTransport().seconds;
+  }
+
+  /** Raw AudioContext time, seconds — the clock triggerMetronomeClick's
+   * `time` argument lives in. The latency-calibration wizard schedules
+   * its click run against this and correlates it with performance.now()
+   * to compare hardware tap timestamps against click output times. */
+  contextSecondsNow(): number {
+    return Tone.getContext().currentTime;
   }
 }
 

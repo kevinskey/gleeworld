@@ -741,36 +741,53 @@ function AppleNav() {
       </div>
 
       {menuOpen && (
-        <nav
-          id="marketing-mobile-nav"
-          className="lg:hidden border-t border-slate-200 bg-white px-6 py-4 flex flex-col gap-1 text-base font-medium text-slate-700"
-        >
-          {MARKETING_NAV_LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              onClick={() => setMenuOpen(false)}
-              className="py-2.5 hover:text-slate-900 transition-colors"
-            >
-              {l.label}
-            </a>
-          ))}
-          <a
-            href="/auth"
-            onClick={() => setMenuOpen(false)}
-            className="py-2.5 hover:text-slate-900 transition-colors"
-          >
-            Sign in
-          </a>
+        <>
+          {/* Click-away layer: any tap outside the card closes the menu.
+              Sits under the card (z-40 vs z-50) but over the page. */}
           <button
             type="button"
-            onClick={() => { setMenuOpen(false); openInquiry(); }}
-            className="mt-2 inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
-            style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={() => setMenuOpen(false)}
+            className="lg:hidden fixed inset-0 z-40 cursor-default bg-transparent"
+          />
+          {/* Compact dropdown card anchored to the toggle, not a full-width
+              sheet — at tablet widths a sheet spans the whole viewport and
+              reads as broken. Width is fixed at w-72 with a viewport cap so
+              a 375px phone still gets breathing room on both sides. */}
+          <nav
+            id="marketing-mobile-nav"
+            className="lg:hidden absolute right-4 sm:right-6 top-full z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] border border-slate-200 bg-white shadow-xl py-2 flex flex-col text-base font-medium text-slate-700"
           >
-            Get started
-          </button>
-        </nav>
+            {MARKETING_NAV_LINKS.map((l) => (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setMenuOpen(false)}
+                className="px-4 py-2.5 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+              >
+                {l.label}
+              </a>
+            ))}
+            <a
+              href="/auth"
+              onClick={() => setMenuOpen(false)}
+              className="px-4 py-2.5 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              Sign in
+            </a>
+            <div className="border-t border-slate-200 mt-2 pt-2 px-4 pb-1">
+              <button
+                type="button"
+                onClick={() => { setMenuOpen(false); openInquiry(); }}
+                className="w-full inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold text-white transition-transform hover:scale-[1.02]"
+                style={{ background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #c084fc 100%)' }}
+              >
+                Get started
+              </button>
+            </div>
+          </nav>
+        </>
       )}
     </header>
   );
@@ -978,7 +995,7 @@ function GradebookMockup() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <div className="font-bold text-slate-900">Gradebook</div>
-          <div className="text-xs sm:text-xs text-slate-500">MUS 240 · Fall 2026</div>
+          <div className="text-xs sm:text-xs text-slate-500">GW 240 · Fall 2026</div>
         </div>
         <div className="text-xs sm:text-xs px-2 py-1 rounded bg-emerald-50 text-emerald-700 font-semibold">Class avg 92%</div>
       </div>

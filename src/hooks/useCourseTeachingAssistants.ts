@@ -18,7 +18,7 @@ export const useCourseTeachingAssistants = (courseCode: string) => {
   return useQuery({
     queryKey: ['course-teaching-assistants', courseCode],
     queryFn: async (): Promise<TeachingAssistant[]> => {
-      // Normalize course code for query (MUS 240 -> MUS240)
+      // Normalize course code for query (GW 240 -> GW240)
       const normalizedCode = courseCode.replace(' ', '');
       
       const { data, error } = await supabase

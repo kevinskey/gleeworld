@@ -117,10 +117,41 @@ describe('FeesAdminPage smoke test', () => {
     const tabNames = Array.from(tabs).map(t => t.textContent);
     expect(tabNames).toContain('All');
     expect(tabNames).toContain('Dues');
+    expect(tabNames).toContain('Participation');
+    expect(tabNames).toContain('Fundraisers');
     expect(tabNames).toContain('Wardrobe');
     expect(tabNames).toContain('Trips');
     expect(tabNames).toContain('Travel');
     expect(tabNames).toContain('Other');
+  });
+
+  it('search filters the individual fees list', () => {
+    render(
+      <MemoryRouter>
+        <FeesAdminPage />
+      </MemoryRouter>,
+    );
+    expect(screen.getByText('Choir Fee')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Search fees'), {
+      target: { value: 'zzz-no-match' },
+    });
+    expect(screen.queryByText('Choir Fee')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('No fees match the current search or filter.'),
+    ).toBeInTheDocument();
+  });
+
+  it('selecting a fee reveals the bulk mark-paid bar', () => {
+    render(
+      <MemoryRouter>
+        <FeesAdminPage />
+      </MemoryRouter>,
+    );
+    fireEvent.click(
+      screen.getByLabelText('Select Choir Fee for Kevin Phillip Johnson'),
+    );
+    expect(screen.getByText('1 selected')).toBeInTheDocument();
+    expect(screen.getByText('Mark 1 paid…')).toBeInTheDocument();
   });
 
   it('shows + New template button', () => {
@@ -262,7 +293,12 @@ describe('FeesAdminPage — deleting a fee', () => {
 
   const openConfirm = async () => {
     render(<FeesAdminPage />);
-    fireEvent.click(await screen.findByRole('button', { name: /delete choir fee/i }));
+    // Delete now lives behind the row's actions menu. Radix triggers open on
+    // pointerdown/keyboard, not click — jsdom has no PointerEvent, so open
+    // via keyboard.
+    const trigger = await screen.findByRole('button', { name: /actions for choir fee/i });
+    fireEvent.keyDown(trigger, { key: 'Enter' });
+    fireEvent.click(await screen.findByRole('menuitem', { name: /delete/i }));
     return screen.findByRole('alertdialog');
   };
 

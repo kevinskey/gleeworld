@@ -15,7 +15,15 @@ import {
   migrateToMyTools, sanitizeShelf, resolveKey, resolveKeys, WIDGETS_CAP,
   type MyTools, type Shelf, type ToolGroup,
 } from '@/lib/navigation/myTools';
-import { flattenShelf } from '@/lib/navigation/toolGroups';
+import { fileToolByCategory, flattenShelf } from '@/lib/navigation/toolGroups';
+import { NAV_CATALOG, NAV_SECTION_LABELS } from '@/lib/navigation/navCatalog';
+
+// Category (section label) per catalog key, for filing a fresh pin into its
+// category group. Module-level: the catalog is static, so building this once
+// beats rebuilding a Map inside every pin. A resolved key with no catalog
+// entry (retired key kept alive by a stored record) maps to undefined and
+// the pin lands loose, exactly as before categories existed.
+const CATEGORY_OF = new Map(NAV_CATALOG.map((e) => [e.key, NAV_SECTION_LABELS[e.section]]));
 
 /** The two user_preferences columns this hook reads, exactly as stored. */
 interface StoredNavPrefs {
@@ -69,20 +77,24 @@ export function useMyTools(role: 'student' | 'faculty') {
     staleTime: 60 * 1000,
     queryFn: async () => {
       try {
-        const { data, error } = await supabase
-          .from('user_preferences')
-          .select('nav_item_order, home_tile_layout')
-          .eq('user_id', uid!)
-          .maybeSingle();
+        // get_nav_prefs is SECURITY DEFINER and tenant-blind ON PURPOSE:
+        // the row is UNIQUE(user_id) and save_nav_item_order re-tenants it
+        // on every save, so a tenant-walled read made a two-tenant member
+        // ping-pong through the first-run sheet forever (2026-08-13). The
+        // record is personal — one shelf that follows you — and per-tenant
+        // gating still happens at render via resolveNav.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data, error } = await (supabase as any).rpc('get_nav_prefs');
         if (error) {
           console.warn('[useMyTools] load failed:', error.message);
           return { ok: false };
         }
+        const row = Array.isArray(data) ? data[0] : data;
         return {
           ok: true,
           row: {
-            nav_item_order: data?.nav_item_order ?? null,
-            home_tile_layout: data?.home_tile_layout ?? null,
+            nav_item_order: row?.nav_item_order ?? null,
+            home_tile_layout: row?.home_tile_layout ?? null,
           },
         };
       } catch (err) {
@@ -244,7 +256,17 @@ export function useMyTools(role: 'student' | 'faculty') {
     // same reason the flat check does: a stored merged key ('merch') must
     // match an incoming resolved one ('shop').
     if (resolveKeys(flattenShelf(record)).includes(resolved)) return true;
-    return saveMyTools({ tools: [...record.tools, resolved] });
+    // A fresh pin lands in its CATEGORY group (created on first use), not
+    // loose — a member who picks a dozen apps from All Tools gets a nav they
+    // can collapse by category, not a wall of rows. Keys the catalog no
+    // longer carries have no category and land loose, as they always did.
+    const category = CATEGORY_OF.get(resolved);
+    if (!category) return saveMyTools({ tools: [...record.tools, resolved] });
+    const next = fileToolByCategory(
+      { tools: record.tools, groups: record.groups },
+      resolved, category, crypto.randomUUID(),
+    );
+    return saveMyTools({ tools: next.tools, groups: next.groups });
   }, [readLoadedRecord, saveMyTools]);
 
   return { myTools, loading: isLoading, loaded, saveTools, saveMyTools, saveShelf, pinTool };

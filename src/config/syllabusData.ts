@@ -50,8 +50,8 @@ export interface CourseSyllabus {
 }
 
 export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
-  'MUS 070': {
-    courseCode: 'MUS 070',
+  'GW 070': {
+    courseCode: 'GW 070',
     courseTitle: 'Glee Club',
     term: 'Fall 2025',
     credits: 1,
@@ -111,8 +111,8 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     schedule: [], // Performance ensemble - no weekly academic schedule
   },
 
-  'MUS 240': {
-    courseCode: 'MUS 240',
+  'GW 240': {
+    courseCode: 'GW 240',
     courseTitle: 'Survey of African American Music',
     term: 'Spring 2026',
     credits: 4,
@@ -194,8 +194,8 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     ],
   },
 
-  'MUS 210': {
-    courseCode: 'MUS 210',
+  'GW 210': {
+    courseCode: 'GW 210',
     courseTitle: 'Choral Conducting and Literature',
     term: 'Fall 2025',
     credits: 2,
@@ -474,8 +474,8 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     ],
   },
 
-  'MUS 001': {
-    courseCode: 'MUS 001',
+  'GW 001': {
+    courseCode: 'GW 001',
     courseTitle: 'Private Applied Lessons',
     term: 'Fall 2025',
     credits: 1,

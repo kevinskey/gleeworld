@@ -130,7 +130,7 @@ interface MintResult {
   event_title?: string; tier_name?: string; quantity?: number;
 }
 
-import { verifyJwtClaims } from '../_shared/verifyJwt.ts'
+import { verifyJwtClaims, resolveTargetTenant, TENANT_ADMIN_ROLES } from '../_shared/verifyJwt.ts'
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
@@ -141,22 +141,24 @@ Deno.serve(async (req) => {
     const accessToken = authHeader.replace(/^Bearer\s+/i, '')
     if (!accessToken) return bad('Missing Authorization', 401)
     let userId: string | null = null
-    let tenantId: string | null = null
-    let tenantRole: string | null = null
+    let payload: Record<string, any> = {}
     try {
-      const payload = (await verifyJwtClaims(accessToken)) ?? {}
+      payload = (await verifyJwtClaims(accessToken)) ?? {}
       userId = payload.sub ?? null
-      tenantId = payload.tenant_id ?? null
-      tenantRole = payload.tenant_role ?? null
     } catch {
       return bad('Invalid JWT', 401)
     }
-    if (!userId || !tenantId) return bad('Sign in to manage requests', 401)
-    if (!['owner', 'admin', 'super-admin', 'super_admin'].includes(tenantRole ?? '')) {
-      return bad('Only tenant admins can decide requests', 403)
-    }
+    if (!userId) return bad('Sign in to manage requests', 401)
 
     const body = await req.json().catch(() => ({}))
+    // Target tenant from the page's slug, not the JWT's home-tenant claim
+    // (see resolveTargetTenant).
+    const { tenantId, tenantRole } = await resolveTargetTenant(
+      payload, body.tenant_slug ?? req.headers.get('x-tenant-slug'))
+    if (!tenantId) return bad('Unknown tenant', 401)
+    if (!TENANT_ADMIN_ROLES.includes(tenantRole)) {
+      return bad('Only tenant admins can decide requests', 403)
+    }
     const requestId = String(body.request_id ?? '').trim()
     const decision  = String(body.decision   ?? '').trim()
     const tierIdOverride = String(body.tier_id ?? '').trim() || null

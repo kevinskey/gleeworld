@@ -28,6 +28,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const schema = z.object({
@@ -55,6 +57,10 @@ const schema = z.object({
     )
     .default([]),
   parts: z.array(z.string()).default([]),
+  // True = the block reads the ACTIVE session from the Auditions module
+  // (Sessions tab) — the director's scheduling backend — and the manual
+  // fields above become fallbacks. (Kevin, 2026-08-13.)
+  useSession: z.boolean().default(false),
 });
 type Config = z.infer<typeof schema>;
 
@@ -62,7 +68,77 @@ type Config = z.infer<typeof schema>;
 // intentional. Cycles through four music-education glyphs.
 const REQUIREMENT_ICONS = [Book, Mic, ListChecks, Sparkles] as const;
 
-function Render({ config }: BlockRenderProps<Config>) {
+interface LiveSession {
+  name: string | null; description: string | null; start_date: string | null;
+  audition_dates: string[] | null; application_deadline: string | null;
+  location: string | null; time_label: string | null; requirements: string | null;
+  audition_slots: Array<{ date: string; time?: string; location?: string }> | null;
+}
+
+/** "One prepared piece — any style, three minutes" → {title, detail}.
+ *  Accepts —, –, -, or : as the separator; a bare line is title-only. */
+function parseRequirementLines(text: string): Array<{ title: string; detail: string }> {
+  return text.split('\n').map((l) => l.trim()).filter(Boolean).map((line) => {
+    // ': ' needs the space — bare colons appear in clock times and URLs
+    // ('Doors open 7:30'), which must not split (review 2026-08-13).
+    const m = line.match(/^(.{2,80}?)\s*(?:—|–|: |\s-\s)\s*(.+)$/);
+    return m ? { title: m[1], detail: m[2] } : { title: line, detail: '' };
+  });
+}
+
+function fmtDay(iso: string): string {
+  const d = new Date(`${iso}T12:00:00`);
+  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function fmtSessionDate(s: LiveSession): string {
+  const dates = (s.audition_dates ?? []).filter(Boolean);
+  if (dates.length) return dates.join(' · ');
+  if (!s.start_date) return '';
+  const d = new Date(`${s.start_date}T12:00:00`);
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function Render({ config, ctx }: BlockRenderProps<Config>) {
+  // Live mode: the active session from the Auditions module wins over the
+  // manual fields; each field falls back independently so a half-filled
+  // session still renders a complete block.
+  const { data: live } = useQuery<LiveSession | null>({
+    queryKey: ['public-audition-session', ctx.slug],
+    enabled: config.useSession,
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc('get_public_audition_session', { p_slug: ctx.slug });
+      if (error) return null;
+      const row = Array.isArray(data) ? data[0] : data;
+      return (row as LiveSession) ?? null;
+    },
+  });
+  const liveSlots = (config.useSession && live?.audition_slots?.filter((s) => s.date)) || [];
+  if (config.useSession && live) {
+    // With structured slots, the banner's Date chip carries the PERFORMANCE
+    // date (what they audition for) and the slots render as their own list.
+    const performance = live.start_date ? fmtDay(live.start_date) : '';
+    // LIVE MODE IS LIVE ONLY: a field the session does not define renders
+    // as NOTHING, never as the manual/mock fallback — placeholder rooms
+    // and times read as real directions (Kevin, 2026-08-13 "this is still
+    // mock"). Manual config applies solely when live mode is off or the
+    // session fetch returns nothing.
+    config = {
+      ...config,
+      heading: live.name || config.heading,
+      intro: live.description || '',
+      session: {
+        dateLabel: liveSlots.length ? performance : fmtSessionDate(live),
+        timeLabel: liveSlots.length ? '' : (live.time_label || ''),
+        location: live.location || '',
+      },
+      requirements: live.requirements?.trim()
+        ? parseRequirementLines(live.requirements)
+        : [],
+    };
+  }
   const hasSession = !!(
     config.session.dateLabel ||
     config.session.timeLabel ||
@@ -79,7 +155,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   if (noContent) return null;
 
   return (
-    <section id="auditions" className="max-w-6xl mx-auto w-full">
+    <section id="auditions" className="gw-container">
       <div className="px-4 cq-sm:px-6 py-10 cq-sm:py-14">
         {/* `cq-*` (container queries against `.gw-site`), not `sm:`/`lg:`, so
             the builder's phone preview stacks like a phone instead of laying
@@ -167,7 +243,7 @@ function Render({ config }: BlockRenderProps<Config>) {
                     </div>
                     <div className="min-w-0">
                       <div className="text-xs uppercase tracking-widest text-muted-foreground">
-                        Date
+                        {liveSlots.length ? 'Performance' : 'Date'}
                       </div>
                       <div className="font-semibold text-sm">{config.session.dateLabel}</div>
                     </div>
@@ -215,6 +291,29 @@ function Render({ config }: BlockRenderProps<Config>) {
                 )}
               </div>
             )}
+
+            {liveSlots.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs uppercase tracking-widest text-muted-foreground">
+                  Audition dates
+                </div>
+                <ul className="grid gap-2 cq-sm:grid-cols-2">
+                  {liveSlots.map((s, i) => (
+                    <li
+                      key={i}
+                      className="rounded-xl border px-3 py-2.5 text-sm"
+                      style={{ borderColor: 'color-mix(in oklab, var(--site-accent) 24%, transparent)' }}
+                    >
+                      <div className="font-semibold">{fmtDay(s.date)}</div>
+                      <div className="text-muted-foreground text-xs mt-0.5">
+                        {[s.time, s.location || config.session.location].filter(Boolean).join(' · ')}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
 
             {requirements.length > 0 && (
               <div>
@@ -310,6 +409,21 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
 
   return (
     <div className="space-y-4">
+      <label className="flex items-start gap-2 rounded-md border border-border p-3 text-sm">
+        <input
+          type="checkbox"
+          className="mt-0.5"
+          checked={config.useSession}
+          onChange={(e) => set({ useSession: e.target.checked })}
+        />
+        <span>
+          <span className="font-medium">Use the live audition session</span>
+          <span className="block text-xs text-muted-foreground">
+            Pulls the active session from Auditions → Sessions (name, dates, time, location, requirements).
+            Schedule there; this page updates itself. Fields below fill any gaps.
+          </span>
+        </span>
+      </label>
       <div className="grid grid-cols-1 sm:grid-cols-[1fr_2fr] gap-2">
         <div className="space-y-1.5">
           <Label>Eyebrow</Label>

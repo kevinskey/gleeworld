@@ -42,7 +42,7 @@ export const TAManagement = () => {
   const [tas, setTas] = useState<TA[]>([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState('');
-  const [courseCode, setCourseCode] = useState('MUS070');
+  const [courseCode, setCourseCode] = useState('GW070');
   const [notes, setNotes] = useState('');
 
   useEffect(() => {
@@ -146,7 +146,7 @@ export const TAManagement = () => {
             Teaching Assistant Management
           </CardTitle>
           <CardDescription>
-            Manage teaching assistants for MUS 240 and other courses
+            Manage teaching assistants for GW 240 and other courses
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -172,8 +172,8 @@ export const TAManagement = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="MUS100">MUS 100</SelectItem>
-                  <SelectItem value="MUS200">MUS 200</SelectItem>
+                  <SelectItem value="GW100">GW 100</SelectItem>
+                  <SelectItem value="GW200">GW 200</SelectItem>
                   <SelectItem value="LH100">LH 100 (Bowman Scholars)</SelectItem>
                   <SelectItem value="GLEE-CLUB">GLEE 101 (Glee Club)</SelectItem>
                 </SelectContent>

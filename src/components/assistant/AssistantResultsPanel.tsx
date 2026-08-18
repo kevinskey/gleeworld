@@ -1,5 +1,10 @@
-import { X, Car, Utensils, Globe, Sparkles, MapPin, Star, Play } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { X, Car, Utensils, Globe, Sparkles, MapPin, Star, Play, Newspaper, Volume2, Square, ExternalLink, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SaveArticleButton, useArticleExtract } from '@/components/news/ArticleReader';
+import { youtubeEmbedSrc } from '@/lib/youtubeEmbed';
+import { speak, stopSpeaking } from '@/lib/assistant/speech';
+import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
 import type { ConciergeResult } from '@/lib/assistant/conciergeTypes';
 
 interface Props {
@@ -21,11 +26,13 @@ export function AssistantResultsPanel({ result, onClose, className }: Props) {
           {result.kind === 'web'    && <Globe className="w-4 h-4 text-violet-600" />}
           {result.kind === 'places' && <MapPin className="w-4 h-4 text-rose-600" />}
           {result.kind === 'video'  && <Play className="w-4 h-4 text-red-600" />}
+          {result.kind === 'article' && <Newspaper className="w-4 h-4 text-emerald-600" />}
           {result.kind === 'ride'   && 'Ride ready'}
           {result.kind === 'food'   && 'Order ready'}
           {result.kind === 'web'    && 'Search results'}
           {result.kind === 'places' && 'Nearby'}
           {result.kind === 'video'  && 'Now playing'}
+          {result.kind === 'article' && 'Article'}
         </div>
         <button
           type="button"
@@ -43,6 +50,117 @@ export function AssistantResultsPanel({ result, onClose, className }: Props) {
         {result.kind === 'web'    && <WebCard result={result} />}
         {result.kind === 'places' && <PlacesCard result={result} />}
         {result.kind === 'video'  && <VideoCard result={result} />}
+        {result.kind === 'article' && <ArticleCard result={result} />}
+      </div>
+    </div>
+  );
+}
+
+function hostnameOf(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, ''); } catch { return url; }
+}
+
+/**
+ * An article, read in place.
+ *
+ * Same philosophy as VideoCard: the user asked to READ something, and a new
+ * tab abandons the Command Center. extract-article returns plain-text
+ * paragraphs (best-effort — paywalls fail), and the Read button speaks them
+ * in the assistant's own voice. The source link stays as the escape hatch.
+ */
+function ArticleCard({ result }: { result: Extract<ConciergeResult, { kind: 'article' }> }) {
+  const assistant = useAssistantOptional();
+  const [reading, setReading] = useState(false);
+  // Shared extraction hook = shared cache key: a story already opened from
+  // the news rail (or vice versa) renders here without a second extraction.
+  const { data, isFetching, isError } = useArticleExtract(result.url);
+
+  // A dismissed or swapped article must stop talking.
+  const autoReadStartedRef = useRef(false);
+  useEffect(() => () => { stopSpeaking(); autoReadStartedRef.current = false; }, [result.url]);
+
+  const toggleRead = async () => {
+    if (reading) { stopSpeaking(); setReading(false); return; }
+    const paras = data?.paragraphs ?? [];
+    if (!paras.length) return;
+    // Explicit request overrides mute; capped so a 40-paragraph feature
+    // doesn't run away with the synthesis bill.
+    const text = [result.title ?? data?.title ?? '', ...paras].filter(Boolean).join('\n\n').slice(0, 9000);
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data: session } = await supabase.auth.getSession();
+    setReading(true);
+    speak(text, {
+      muted: false,
+      voiceId: assistant?.voiceId ?? null,
+      accessToken: session.session?.access_token,
+      onEnd: () => setReading(false),
+    });
+  };
+
+  // "Read it to me": the ask WAS the request to hear it — start as soon as
+  // the text lands, once per article. The assistant's gesture-primed audio
+  // element makes this legal without a fresh tap.
+  useEffect(() => {
+    if (result.readAloud && !autoReadStartedRef.current && (data?.paragraphs?.length ?? 0) > 0) {
+      autoReadStartedRef.current = true;
+      void toggleRead();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, result.readAloud]);
+
+  const title = result.title ?? data?.title ?? 'Article';
+  const source = [data?.siteName || hostnameOf(result.url), data?.byline].filter(Boolean).join(' · ');
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold leading-snug">{title}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground truncate">{source}</p>
+        </div>
+        {(data?.paragraphs?.length ?? 0) > 0 && (
+          <button
+            type="button"
+            onClick={toggleRead}
+            className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium border border-border hover:bg-accent transition-colors"
+          >
+            {reading ? <Square className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            {reading ? 'Stop' : 'Read to me'}
+          </button>
+        )}
+      </div>
+      {isFetching && (
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin" /> Loading the article…
+        </p>
+      )}
+      {isError && (
+        <p className="text-sm text-muted-foreground">
+          This site won't let me pull the story in here — the link below opens it at the source.
+        </p>
+      )}
+      {data?.paragraphs?.map((p, i) => (
+        <p key={i} className="text-sm leading-relaxed">{p}</p>
+      ))}
+      {data?.truncated && (
+        <p className="text-xs text-muted-foreground">Shortened — the full story continues at the source.</p>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <SaveArticleButton
+          url={result.url}
+          title={title}
+          source={data?.siteName ?? undefined}
+          extract={data}
+          className="h-9 rounded-full"
+        />
+        <a
+          href={result.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 h-9 px-3 rounded-full text-sm font-medium border border-border hover:bg-accent transition-colors"
+        >
+          <ExternalLink className="w-4 h-4" />
+          Open at {hostnameOf(result.url)}
+        </a>
       </div>
     </div>
   );
@@ -164,7 +282,7 @@ function VideoCard({ result }: { result: Extract<ConciergeResult, { kind: 'video
     <div className="space-y-2">
       <div className="relative w-full overflow-hidden border border-border" style={{ aspectRatio: '16 / 9' }}>
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(result.videoId)}?autoplay=1&rel=0`}
+          src={youtubeEmbedSrc(result.videoId)}
           title={result.title || 'Video'}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen

@@ -35,6 +35,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { ScholarApplicationsPanel } from '@/components/academy/ScholarApplicationsPanel';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -254,6 +255,10 @@ export default function WorkspaceUsersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Applications from the public site's scholar-application block —
+          also shown in the course's own People tab. Hidden when empty. */}
+      {canManage && <ScholarApplicationsPanel />}
 
       <InviteDialog
         open={inviteOpen}

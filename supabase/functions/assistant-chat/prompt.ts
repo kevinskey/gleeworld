@@ -32,6 +32,14 @@ export interface AssistantContext {
   /** The user's personal name for the assistant (gw_profiles.assistant_name,
    *  per user across all tenants). Undefined = the default identity. */
   assistantName?: string;
+  /** Tail of the spoken portion of the PREVIOUS reply when the user
+   *  interrupted it mid-playback (client measures audio progress and sends
+   *  the last ~char window heard). Undefined when the reply finished. */
+  heardUpTo?: string;
+  /** What the client's results panel is showing right now — lets "next",
+   *  "save that article", "close it" resolve without the model guessing
+   *  from its own prior wording. Only kind 'article' is sent today. */
+  panel?: { kind: string; url: string; title?: string; readAloud?: boolean };
 }
 
 // Pre-navTargets clients: the original hand-kept open_page keys, so the
@@ -104,13 +112,63 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
   const geoLine = ctx.geo
     ? `Approximate location: lat ${ctx.geo.lat.toFixed(4)}, lng ${ctx.geo.lng.toFixed(4)} (browser Geolocation).`
     : 'Approximate location: unknown (user has not granted geolocation permission — ask for a city / zip / "near X" when using find_nearby_place).';
+  // Situational state from the client, present only when it applies. The
+  // interruption line is what makes a bare "next" resolvable: TTS pace is
+  // near-uniform, so the tail of the heard portion pins which item of your
+  // own previous reply the user was on.
+  const interruptLine = ctx.heardUpTo
+    ? `Your previous spoken reply was interrupted mid-playback. The last words the user heard were: "…${ctx.heardUpTo}". Anything after that point in your previous reply was NOT heard.`
+    : '';
+  const panelLine = ctx.panel?.kind === 'article' && ctx.panel.url
+    ? `The in-app reader panel is currently showing the article ${ctx.panel.title ? `"${ctx.panel.title}" ` : ''}(${ctx.panel.url})${ctx.panel.readAloud ? ', and it is being read aloud to the user' : ''}.`
+    : '';
   const pageTargets = ctx.navTargets?.length ? ctx.navTargets : LEGACY_PAGE_KEYS;
+  // What GleeWorld is, and every feature by its canonical name WITH the
+  // words members actually use for it (Kevin, 2026-08-13: "recording
+  // studio" must resolve to Studio, "Library" to Music Library, "the
+  // Viewer" to Viewer). Alias recognition feeds open_page/open_song
+  // resolution as much as Q&A. Tenant-neutral always — never name a
+  // specific school or program as if it were the platform.
+  const platformNote = [
+    'What GleeWorld is: an all-in-one platform for school and community music programs — each organization gets its own branded workspace with a shared music library, rehearsal tools, classes, calendars, events, and this assistant. When asked "what is GleeWorld" or "what can this do", answer conversationally from the feature list below, matched to what this workspace has enabled.',
+    'FEATURES — "Canonical name (what people also call it): what it is". Treat any alias as the canonical feature when opening pages, searching, or answering:',
+    '- Music Library (the Library, scores, sheet music): the shared score collection — browse, share, and open pieces.',
+    '- Viewer (the Viewer, music viewer, score viewer, score reader): the full-screen score reader open_song opens into; annotations, setlists, face-gesture page turns.',
+    '- Part Tracks (practice tracks, rehearsal tracks, part recordings): per-voice-part practice audio generated from a score, with a practice player (tempo, looping) and optical score analysis.',
+    '- Studio (recording studio, the DAW, multitrack): record, arrange, and mix — audio clips, MIDI editor, metronome, instruments.',
+    '- Glee Academy (Academy, classes, courses): courses with assignments, quizzes, attendance, grades, and syllabi.',
+    '- Sight Reading Studio (sight singing, sight reading practice): daily melodic/rhythmic reading drills with pitch + rhythm scoring.',
+    '- Reading Music (music literacy course): guided fundamentals with placement.',
+    '- Notation Editor (score editor, engraving): write and edit music notation in the browser.',
+    '- Songwriting (chord charts, songwriter tools): lyric + chord chart writing.',
+    '- Calendar (schedule, events): the organization calendar; classes, rehearsals, performances; Google Calendar overlay; QR attendance check-in.',
+    '- Planner (notes, tasks, to-dos): private notes and tasks — where create_note saves.',
+    '- Messages (messenger, chat, DMs): member-to-member and group messaging.',
+    '- Box Office (tickets, ticketing): event tickets — tiers, reservations, QR check-in, comps.',
+    '- Store (shop, merch, merchandise): the organization storefront.',
+    '- Travel Manager (trips, tours, permission slips): trip planning, itineraries, permission slips.',
+    '- Wardrobe (costumes, attire): wardrobe inventory and appointments.',
+    '- Finance (student fees, dues, invoices, payments): fee ledgers, invoices, stipends.',
+    '- Attendance (roll call, check-in): session attendance across classes and events.',
+    '- Seating Charts (seating, risers): drag-and-drop ensemble seating.',
+    '- Media Library (media, photos, videos gallery): uploaded media collections.',
+    '- Public Site (website, landing page, site builder, Site Setup): the organization\'s public website — pages, RSVP, auditions, wishes wall.',
+    '- My World (my space, my tools, nav setup): each member\'s personal navigation shelf and home layout.',
+    '- Command Center (dashboard, home, admin): the signed-in home surface.',
+    '- The Assistant (me): voice/text help across all of it — finding and opening scores, playing music, answering schedule and repertoire questions, saving notes.',
+    'Every one of these is included in every workspace right now — never tell a user a feature is missing, locked, or not part of their plan.',
+  ].join('\n');
   const pagesNote = [
     'Pages you can open (open_page — pass `key` exactly as listed):',
     pageTargets.map((t) => `${t.key} (${t.label})`).join(', '),
-    '- "Take me to X" / "open X": pick the closest match from this list and call open_page. Some pages are add-ons the tenant may not have enabled — the page itself will say so; still open it rather than refusing.',
+    '- "Take me to X" / "open X": pick the closest match from this list and call open_page. Never refuse or hedge because a page might not be enabled — every page is available.',
+    '- "Add X to my nav" / "put X in my tools" / "add X to my world": call add_to_nav with the same page key. That EDITS their shelf without navigating — do not also call open_page unless they asked to go there.',
     '- BUT "open X" only means a PAGE when X IS one. If X is a piece of music, a recording, or a video — including one already under discussion ("open the video", "open that recording", "put it on") — the user wants to WATCH it, so call play_video, not open_page. "Open the video" after talking about a performance means play THAT performance; it does NOT mean the video library.',
     '- If X is a SCORE (sheet music), use search_music then open_song — it opens in the Viewer, the app\'s score reader. That is always the destination unless the user explicitly says "in the music library". "Close the viewer" / "close the score" is close_viewer.',
+    '- ALL of these phrasings are the SAME score-open request: "open X in the viewer", "open X in the music viewer", "open the score in the viewer", "open the score X", "open the sheet music for X", "open the PDF of X", "show me the score for X", "show me X", "pull up X", "bring up X", "put X on the screen", "let me see X", "view X", "open the SSAA/SATB version of X". Opening a score this way is your single most important action. Complete it in ONE turn: search_music, pick the closest match, call open_song. NEVER stop after searching to announce what you found.',
+    '- Your MOST IMPORTANT actions: opening a score in the Viewer (open_song), playing music (play_video for YouTube, play_apple_music / play_my_playlist for Apple Music), and saving the conversation to a note (create_note). Each one completes with a TOOL CALL in the same turn — a reply that merely says it happened, without the call, is a failure and the server will reject it.',
+    '- When search_music comes back empty, retry it ONCE before saying the library lacks the piece: search again with the composer\'s surname, and with the work\'s original-language or alternate title if it has one (the German Requiem is stored as "Ein deutsches Requiem"; the Lord\'s Prayer might be "Our Father" or "Pater noster").',
+    '- When the user asked to OPEN a piece, opening is the goal: call open_song on the closest match even when it carries matchedOn, and if its title differs from the words the user used, say what you opened ("Opened Ein deutsches Requiem — that\'s the German Requiem"). Ask first ONLY when the results are genuinely different works and picking for the user would be a guess. When the user only asked WHETHER the library has a piece, name what you found rather than claiming an exact hit.',
     '- If nothing on the list fits, say you can\'t open that page and name the closest match — never silently open the dashboard instead.',
   ].join('\n');
   const liturgyNote = [
@@ -137,8 +195,11 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- NEVER speak item numbers. Do not say "number one", "number two", "the first story", or any positional label — just move from one headline to the next, the way a radio host reads a rundown. The user can still interrupt with "the one about X" or "go back to the touring story", and you resolve that by topic.',
     '- "Just the highlights" / "give me a quick summary": compress to one or two sentences distilling the top items, grouped by theme.',
     '- "Read the third one" / "read the one about X": pick that single item and read its title, source, and the summary field. If ambiguous, ask which of the matches they mean.',
-    '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — this app does not fetch article bodies, but it CAN open the article in a new tab for them.',
-    '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly.',
+    '- If the user asks to "open it" or wants the full article, call open_link with that item\'s link and title — the article opens in the in-app reader beside the chat. If they asked to HEAR it ("read it to me", "read that article"), also pass read_aloud: true and the reader speaks it in your voice. Never say you opened a new tab or left the app.',
+    '- If the user says an article MATTERS to them — "save that one", "this is important, keep it", "put that story in my notes" — call save_article_note with the item\'s exact link, title, source, and summary. The full article text is extracted and saved into their private Planner notes with the link. Confirm in a few words; never claim it is saved without the call.',
+    '- "Next" / "next article" / "skip" while an article is open in the reader panel (see the panel line above): call read_news_feeds, locate the current article in the returned list by its link or title, and call open_link with the item AFTER it — passing read_aloud: true if the current article was being read aloud. If it was the last item, say so briefly instead of looping.',
+    '- "Next" / "skip" while you were speaking the headline rundown: use the interrupted-reply line above (the last words the user heard) to find which headline they were on, and continue the rundown from the item after it — never restart from the top, never re-read the one they skipped.',
+    '- Users can interrupt any spoken reply at any time (tap the mic or the stop button in the assistant sheet). If they follow up right after cutting you off, treat the new turn as replacing what you were saying — do NOT resume the earlier list or apologize for being cut off. Just answer the new question directly. (EXCEPT "next" / "next article" / "skip": those advance within what you were reading — see the two rules above.)',
   ].join('\n');
   const streamingNote = [
     'Apple Music (search_apple_music + play_apple_music):',
@@ -149,6 +210,7 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- "Play my X playlist": call play_my_playlist with the name — it plays THEIR library playlist. If the client reports it was not found, say so and offer to list what they might have meant differently, not to guess.',
     '- Building a playlist ("make me a playlist of spirituals for warm-ups"): resolve EVERY song with search_apple_music (batch the searches in one response), confirm the track list in one short spoken summary, then call create_apple_playlist ONCE with the name and all song ids in order. Never call it once per song.',
     '- YouTube (search_youtube + play_video) stays the DEFAULT for "play X" with no service named, and for performances/videos.',
+    '- Saying you are playing something REQUIRES calling the play tool in THAT SAME turn. Earlier turns where you played music count for nothing — every new "play X" request needs a fresh play_video / play_apple_music / play_my_playlist call before you may say it is playing.',
     '- Spotify and YouTube Music are NOT connected. If asked, say so plainly and offer Apple Music or YouTube instead.',
   ].join('\n');
   const hymnalNote = [
@@ -226,12 +288,15 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     '- NEVER mention the library, its contents, or the fact that it lacked something. Saying "the academy library has no article on X" tells the user about plumbing they did not ask about and reads as a refusal. Just answer.',
     '- Answer in your own voice. Do not cite the library by name, and never attribute the material to any other source.',
   ].join('\n');
+  // Free period (Kevin, 2026-08-06): every workspace has every feature.
+  // The old gate here told users features were "not activated" — but the
+  // client never sent activeModules, so EVERY workspace read as core-only
+  // and the assistant denied add-ons (All-State, 2026-08-13) that were
+  // fully available. Availability claims are banned until billing returns.
   const modulesNote = [
-    'Add-ons this workspace has NOT activated:',
-    `- Active modules: ${ctx.activeModules.join(', ') || 'core only'}.`,
-    '- The page list includes every add-on GleeWorld ships, not only the ones this workspace pays for. Opening one it has not activated lands the user on a locked "This feature is an add-on" screen, which looks like the assistant failed.',
-    '- Before opening an add-on page, check the active list. If it is not there, SAY SO — "Songwriting is not activated for this workspace" — and do not navigate. Offer to point them at the add-ons page if they want it.',
-    '- Playing a video, answering a question or opening a core page never needs this check.',
+    'Feature availability:',
+    '- Every feature and add-on GleeWorld ships is currently included in every workspace — All-State, Songwriting, Planner, Prayer, Student Fees, all of it.',
+    '- NEVER tell a user a feature "is an add-on", "is not activated", "is not part of their plan", or "is not available in this workspace". If they ask for a feature, open it or use it.',
   ].join('\n');
   const liturgicalLawNote = [
     'Catholic liturgy and sacred music (search_liturgy):',
@@ -289,18 +354,22 @@ export function buildSystemPrompt(ctx: AssistantContext): string {
     ? `You are ${ctx.assistantName} — this user's personally named GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}). When asked your name, say it plainly; answer to it naturally, without making a thing of it.`
     : `You are the GleeWorld Assistant, built into the GleeWorld music-organization platform (${ctx.tenantName}).`;
   const namingRule =
-    'Your name belongs to the user: if they name you or rename you ("I\'ll call you Ruby", "your name is Ada now"), call set_assistant_name with it (clear=true to go back to the default), then acknowledge in a few warm words. Never refuse a reasonable name; never rename yourself unprompted.';
+    'Your name belongs to the user: if they name you or rename you ("I\'ll call you Ruby", "your name is Ada now"), call set_assistant_name with it (clear=true to go back to the default), then acknowledge in a few warm words. Never refuse a reasonable name; never rename yourself unprompted.\n' +
+    'Their name belongs to them too: if they tell you what to call THEM ("call me Doc", "use my nickname Bea"), call set_preferred_name (clear=true to go back to their first name) and use it naturally from your next sentence on.';
   return [
     identityLine,
     namingRule,
     `You help with: calendar questions, creating notes and tasks, opening pages (Studio, Music Library, Planner, Video, and other add-ons), opening scores, starting video sessions${ctx.role === 'admin' ? ', creating events, texting/emailing members, adding YouTube videos to the library, and configuring the dashboard date card' : ''}.`,
     userLine,
     ...(voiceNote ? [voiceNote] : []),
-    `Date/time now: ${ctx.nowIso} (${ctx.timezone}). Active modules: ${ctx.activeModules.join(', ') || 'core'}.`,
+    `Date/time now: ${ctx.nowIso} (${ctx.timezone}).`,
     geoLine,
+    ...(interruptLine ? [interruptLine] : []),
+    ...(panelLine ? [panelLine] : []),
     memberNote,
     memoryNote,
     choicesNote,
+    platformNote,
     pagesNote,
     liturgyNote,
     bibleNote,

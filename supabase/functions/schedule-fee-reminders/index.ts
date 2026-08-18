@@ -21,12 +21,15 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
 
 const admin = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   { auth: { persistSession: false } },
 );
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 interface ReminderWindow {
   start: string;
@@ -72,7 +75,7 @@ serve(async (_req) => {
   for (const w of windows) {
     const { data: fees, error: feesErr } = await admin
       .from("gw_student_fees")
-      .select("id, user_id, name, amount, paid_amount, due_date, tenant_id")
+      .select("id, user_id, name, amount, paid_amount, due_date, tenant_id, guest_pay_token, gw_tenants!inner(slug, name)")
       .in("status", ["pending", "partial", "overdue"])
       .gte("due_date", w.start)
       .lte("due_date", w.end);
@@ -117,8 +120,50 @@ serve(async (_req) => {
 
       if (insertErr) {
         errors.push(`fee ${fee.id}: ${insertErr.message}`);
-      } else {
-        created++;
+        continue;
+      }
+      created++;
+
+      // Email rides the same 20h idempotency gate as the notification above.
+      // Best-effort: a failed send is logged, never thrown — in-app
+      // notifications must not stop because Resend hiccuped.
+      try {
+        const { data: profile } = await admin
+          .from("gw_profiles")
+          .select("email, full_name")
+          .eq("user_id", fee.user_id)
+          .maybeSingle();
+        if (!profile?.email) continue;
+
+        const tenant = (fee as Record<string, any>).gw_tenants;
+        // Always the gleeworld.org subdomain — custom domains may be
+        // misconfigured, the subdomain always resolves (provisioning rule).
+        const payUrl = `https://${tenant.slug}.gleeworld.org/pay/fee/${fee.id}?token=${fee.guest_pay_token}`;
+        const amount = `$${remaining.toFixed(2)}`;
+
+        await resend.emails.send({
+          from: "GleeWorld <noreply@gleeworld.org>",
+          to: [profile.email],
+          subject: `${title}: ${fee.name}`,
+          html: `
+            <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+              <h2 style="margin-bottom: 4px;">${tenant.name ?? "Payment reminder"}</h2>
+              <p>${message}</p>
+              <p style="font-size: 20px; font-weight: bold; margin: 16px 0 4px;">${amount} due</p>
+              <p style="margin: 16px 0;">
+                <a href="${payUrl}"
+                   style="background: #2563eb; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+                  View &amp; pay this fee
+                </a>
+              </p>
+              <p style="color: #666; font-size: 13px;">
+                Parents and guardians can pay directly from this link — no account needed.
+                Feel free to forward this email.
+              </p>
+            </div>`,
+        });
+      } catch (emailErr) {
+        errors.push(`fee ${fee.id} email: ${(emailErr as Error).message}`);
       }
     }
   }

@@ -10,7 +10,7 @@ import { FileCheck, Brain, Play, Eye, RotateCcw, Clock, CheckCircle } from 'luci
 
 interface CourseTestsSectionProps {
   courseId: string;
-  legacyCourseId?: string; // For courses like MUS 240 that use 'mus240' in DB
+  legacyCourseId?: string; // For courses like GW 240 that use 'mus240' in DB
 }
 
 export const CourseTestsSection: React.FC<CourseTestsSectionProps> = ({ 

@@ -29,6 +29,7 @@ vi.mock('@/hooks/useUserRole', () => ({
     profile: profileResult.current,
     loading: false,
     canEditMusicLibrary: () => false,
+    isAdmin: () => false,
   }),
 }));
 vi.mock('@/hooks/useModuleAccess', () => ({

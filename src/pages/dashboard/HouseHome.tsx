@@ -21,7 +21,7 @@ import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { getAppTiles, bandDestinations, type ModuleFlags } from '@/lib/navigation/appDestinations';
 import { toModuleFlags, toModuleSet } from '@/lib/navigation/moduleFlags';
 import { applyPreviewRole, previewRoleIsFaculty, resolveNav, type NavContext } from '@/lib/navigation/navCatalog';
-import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
+import { selectUpNext, fuseProgress, greetingFor, preferredFirstName } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useMyTools } from '@/hooks/useMyTools';
 import { mergeGridOrder, sanitizeShelf, type Shelf } from '@/lib/navigation/myTools';
@@ -42,9 +42,9 @@ interface FeedRow {
 }
 
 export default function HouseHome() {
-  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
+  const { profile, loading: roleLoading, canEditMusicLibrary, isAdmin } = useUserRole();
   const isFaculty = isFacultyProfile(profile);
-  const firstName = (profile?.full_name || 'there').split(' ')[0];
+  const firstName = preferredFirstName(profile);
   const { settings: brandingSettings } = useBrandingSettings();
   const isMobile = useIsMobile();
 
@@ -290,7 +290,7 @@ export default function HouseHome() {
           </div>
         </div>
 
-        <DateCardSlot ctx={dateCardCtx} activeAddons={Array.from(moduleSet)} />
+        <DateCardSlot ctx={dateCardCtx} activeAddons={Array.from(moduleSet)} canManage={isAdmin()} />
 
         {/* Status cards on the left, News rail on the right. Below lg they
             stack. On lg+ they render inside a horizontal resizable pair —

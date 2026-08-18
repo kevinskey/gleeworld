@@ -47,14 +47,18 @@ import {
   Shield,
   UserCheck,
   Trash2,
-  CalendarDays
+  CalendarDays,
+  Mic2,
 } from "lucide-react";
+import { AuditionSignupsList } from '@/components/admin/AuditionSignupsList';
+import { AuditionSessionEditDialog, type EditableSession } from '@/components/admin/AuditionSessionEditDialog';
 
 // Tab strip config. Analytics uses TrendingUp rather than a second BarChart3 —
 // Overview already owns that glyph, and two identical icons in one strip is a
 // coin flip for the reader.
 const AUDITION_TABS = [
   { value: 'overview', label: 'Overview', icon: BarChart3 },
+  { value: 'signups', label: 'Concert Signups', icon: Mic2 },
   { value: 'roster', label: 'Roster', icon: Users },
   { value: 'evaluations', label: 'Evaluations', icon: Star },
   { value: 'sessions', label: 'Sessions', icon: Calendar },
@@ -216,8 +220,12 @@ export const AuditionsManagement = () => {
     application_deadline: "",
     audition_dates: [""],
     max_applicants: "",
-    requirements: ""
+    requirements: "",
+    location: "",
+    time_label: ""
   });
+
+  const [editingSession, setEditingSession] = useState<EditableSession | null>(null);
 
   // State for collapsible sections
   const [isCreateSessionExpanded, setIsCreateSessionExpanded] = useState(false);
@@ -516,7 +524,9 @@ export const AuditionsManagement = () => {
         application_deadline: "",
         audition_dates: [""],
         max_applicants: "",
-        requirements: ""
+        requirements: "",
+        location: "",
+        time_label: ""
       });
 
       fetchData();
@@ -844,6 +854,10 @@ export const AuditionsManagement = () => {
           </TabsList>
         </div>
 
+        <TabsContent value="signups" className="pt-6">
+          <AuditionSignupsList />
+        </TabsContent>
+
         <TabsContent value="overview" className="space-y-6 pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
@@ -972,9 +986,14 @@ export const AuditionsManagement = () => {
                       <CardTitle className="text-lg font-semibold text-foreground">{session.name}</CardTitle>
                       <CardDescription className="text-muted-foreground">{session.description}</CardDescription>
                     </div>
-                    <Badge variant="outline" className={session.is_active ? 'bg-status-confirmed text-status-confirmed-fg' : 'bg-muted text-muted-foreground'}>
-                      {session.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={session.is_active ? 'bg-status-confirmed text-status-confirmed-fg' : 'bg-muted text-muted-foreground'}>
+                        {session.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                      <Button size="sm" variant="outline" onClick={() => setEditingSession(session as unknown as EditableSession)}>
+                        Edit
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -1000,6 +1019,15 @@ export const AuditionsManagement = () => {
               </Card>
             ))}
           </div>
+          {editingSession && (
+            <AuditionSessionEditDialog
+              key={editingSession.id}
+              session={editingSession}
+              open
+              onOpenChange={(o) => { if (!o) setEditingSession(null); }}
+              onSaved={fetchData}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="roster" className="space-y-6 mt-8">
@@ -1313,6 +1341,24 @@ export const AuditionsManagement = () => {
                     onChange={(e) => setNewSession({...newSession, end_date: e.target.value})}
                   />
                 </div>
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={newSession.location}
+                    onChange={(e) => setNewSession({...newSession, location: e.target.value})}
+                    placeholder="Music Building, Rm 210"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="time_label">Time</Label>
+                  <Input
+                    id="time_label"
+                    value={newSession.time_label}
+                    onChange={(e) => setNewSession({...newSession, time_label: e.target.value})}
+                    placeholder="10am – 2pm"
+                  />
+                </div>
                 <div className="md:col-span-2">
                   <Label htmlFor="application_deadline">Application Deadline</Label>
                   <Input
@@ -1340,7 +1386,7 @@ export const AuditionsManagement = () => {
                   id="requirements"
                   value={newSession.requirements}
                   onChange={(e) => setNewSession({...newSession, requirements: e.target.value})}
-                  placeholder="List audition requirements..."
+                  placeholder={"One per line, shown on your public site as numbered cards:\nOne prepared piece — any style, three minutes or fewer\nSight-singing — a brief passage in a major or minor key"}
                 />
               </div>
 

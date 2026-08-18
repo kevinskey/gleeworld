@@ -19,7 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantStripeStatus } from '@/hooks/useTenantStripeStatus';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { listBoxOfficeEvents, createBoxOfficeEvent, slugify, type BoxOfficeEvent } from '@/lib/boxOffice/api';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
@@ -52,7 +52,7 @@ export default function BoxOfficePage() {
     try {
       setConnecting(true);
       const { data, error } = await supabase.functions.invoke('stripe-oauth-start', {
-        body: { return_path: '/dashboard/box-office' },
+        body: { return_path: '/dashboard/box-office', tenant_slug: getTenantSlug() },
       });
       if (error) throw new Error(error.message || 'failed');
       if (data?.error) throw new Error(data.error);

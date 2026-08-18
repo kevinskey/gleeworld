@@ -23,12 +23,14 @@ function musicDb(rows: Row[]) {
   builder.limit = self;
   builder.or = (expr: string) => { ors.push(expr); return builder; };
   builder.then = (resolve: (v: unknown) => void) => {
-    // Each `or` is one token: "title.ilike.%tok%,composer.ilike.%tok%".
-    // PostgREST ANDs repeated or-params, so every token must match somewhere.
+    // PostgREST ANDs repeated or-params; WITHIN one expression the
+    // comma-separated alternatives are ORed. The strict pass sends one
+    // or() per token; the any-token fallback sends one or() carrying
+    // every token as an alternative.
     const data = rows.filter((r) => ors.every((expr) => {
-      const token = expr.match(/title\.ilike\.%(.*?)%/)?.[1] ?? '';
+      const tokens = [...expr.matchAll(/(?:title|composer)\.ilike\.%(.*?)%/g)].map((m) => m[1]);
       const hay = `${r.title} ${r.composer ?? ''}`.toLowerCase();
-      return hay.includes(token.toLowerCase());
+      return tokens.some((t) => hay.includes(t.toLowerCase()));
     }));
     resolve({ data, error: null });
   };
@@ -40,6 +42,8 @@ const LIBRARY: Row[] = [
   { id: 's2', title: 'Children, Go Where I Send Thee SATB' },
   { id: 's3', title: 'Lift Every Voice and Sing', composer: 'J. Rosamond Johnson' },
   { id: 's4', title: 'Ave Verum Corpus', composer: 'Mozart' },
+  { id: 's5', title: 'Requiem', composer: 'Gabriel Fauré' },
+  { id: 's6', title: 'Ein deutsches Requiem, Op. 45', composer: 'Johannes Brahms' },
 ];
 
 const search = async (query: string) => JSON.parse(
@@ -85,6 +89,25 @@ describe('search_music', () => {
   it('returns nothing for a piece that really is absent', async () => {
     const out = await search('Rachmaninoff Vespers');
     expect(out.scores).toEqual([]);
+  });
+
+  // The live 2026-08-12 report: "Is the German Requiem in the music library?"
+  // → "I couldn't find it." The library holds "Ein deutsches Requiem, Op. 45";
+  // prefix-only relaxation tried [german+requiem] then [german] and never
+  // [requiem]. When no prefix subset matches, ANY matching token must count.
+  it('finds Ein deutsches Requiem from "German Requiem"', async () => {
+    const out = await search('German Requiem');
+    expect(out.scores.map((s: Row) => s.id)).toContain('s6');
+  });
+
+  it('flags the any-token fallback as a loose match', async () => {
+    const out = await search('German Requiem');
+    expect(out.matchedOn).toBeTruthy();
+  });
+
+  it('ranks rows matching more tokens above rows matching fewer', async () => {
+    const out = await search('german requiem brahms');
+    expect(out.scores[0].id).toBe('s6'); // requiem + brahms beat Fauré's requiem-only
   });
 
   it('survives an empty or punctuation-only query', async () => {

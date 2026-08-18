@@ -34,8 +34,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { GM_GROUPED, toGmPresetId } from '@/lib/studio/gmInstruments';
-import { GW_INSTRUMENTS, toGwPresetId } from '@/lib/studio/gwInstruments';
+import { InstrumentPicker } from './InstrumentPicker';
 import { LiveVoices } from '@/lib/studio/engine/liveVoices';
 import { trackEqSig } from '@/lib/studio/engine/trackEq';
 import { useStudioMidiInput } from '@/hooks/useStudioMidiInput';
@@ -47,6 +46,11 @@ import {
   type HeldPress, type CapturedCc, type MidiCommitQueue,
 } from '@/lib/studio/midiRecord';
 import { MidiTimebase, formatMonitoringLatency } from '@/lib/studio/midiTimebase';
+import {
+  buildClickSchedule, matchTapOffsets, calibrationStats, recommendedTrim,
+  setCalibrationRig, getCalibrationRig, emitCalibrationTap, onCalibrationTap,
+  CAL_COUNT_IN, CAL_MEASURED, CAL_INTERVAL_SEC, CAL_LEAD_IN_SEC, CAL_MIN_TAPS, type CalStats,
+} from '@/lib/studio/latencyCal';
 import { useStudioSession, useStudioEngine, useUploadAudioAsset, type TransportTickStore } from '@/hooks/useStudio';
 import { useTransportPosition, useTransportTick } from './useTransportTick';
 import { retainUnsavedWork } from '@/lib/unsavedWork';
@@ -101,7 +105,10 @@ const IS_COARSE_POINTER =
 // header (name + M/S/R + volume) always has breathing room above the
 // divider — at 88 the buttons sat flush and read as clipped by the next
 // track (2026-07-07).
-const TRACK_HEIGHT_DEFAULT = IS_COARSE_POINTER ? 100 : 72;
+// Defaults raised again 72 → 88 / 100 → 112 (Kevin, 2026-08-17): a MIDI
+// strip carries THREE rows (name, M/S/R + fader, instrument + Roll) and
+// at 72 they filled the row edge-to-edge with no top/bottom inset.
+const TRACK_HEIGHT_DEFAULT = IS_COARSE_POINTER ? 112 : 88;
 const TRACK_HEIGHT_MIN = IS_COARSE_POINTER ? 100 : 48;
 const TRACK_HEIGHT_MAX = 240;
 
@@ -420,6 +427,12 @@ function Editor({
   // instead — `state` deliberately does NOT update per position tick
   // (see TransportTickStore in useStudio.ts).
   const posNow = () => transportTick.get().positionSeconds;
+  // Live transport clock for MIDI capture: the web engine reads
+  // Tone.Transport directly (per-render-quantum, ~3ms), so the take
+  // anchor isn't offset by a random slice of the snapshot's ~33ms
+  // staleness. Native has no web engine — the snapshot is all we have,
+  // and its events carry no hardware timestamps to anchor anyway.
+  const posLive = () => engineState.engine?.transportSecondsNow() ?? posNow();
   // Export sheet (B1 Task 7) — MP3 320 / WAV / Stems. Owned here (not
   // inside MixerView) so the header's Export button AND the MasterStrip's
   // Export button (inside MixerView, a different component subtree) open
@@ -533,10 +546,12 @@ function Editor({
   useEffect(() => { midiTimebase.reset(); }, [state?.recordingActive, midiTimebase]);
   // Transport position minus recording compensation — the musical moment
   // the player MEANT, given they play in time with late-by-outputLatency audio.
-  const compNow = () => Math.max(0, posNow() - midiCompSecRef.current);
+  const compNow = () => Math.max(0, posLive() - midiCompSecRef.current);
   // Same, but placed by the event's hardware timestamp when it has one.
+  // posLive (not the snapshot) feeds the anchor, so a take's whole-take
+  // offset is one render quantum, not a random 0–33ms per take.
   const compAt = (timeStampMs?: number) => Math.max(0,
-    midiTimebase.toTransportSeconds(timeStampMs, posNow()) - midiCompSecRef.current);
+    midiTimebase.toTransportSeconds(timeStampMs, posLive()) - midiCompSecRef.current);
   // The single clip owned by the current recording take — every note of a
   // take appends here so one take never sprays one-clip-per-note.
   const midiTakeClipRef = useRef<string | null>(null);
@@ -549,6 +564,21 @@ function Editor({
   // master pan / master FX / mastering / master out that playback does;
   // fall back to the destination while the engine warms up.
   const monitorOut = engineState.engine?.getMasterIn();
+
+  // Latency-calibration rig — hands the wizard (deep inside the audio
+  // settings sheet, no prop path) the engine click + clocks it needs.
+  // Native has no web engine to click through, so no rig → no wizard.
+  useEffect(() => {
+    const engine = engineState.engine;
+    if (!engine) return;
+    setCalibrationRig({
+      click: (accent, ctxTimeSec) => engine.triggerMetronomeClick(accent, ctxTimeSec),
+      nowCtxSec: () => engine.contextSecondsNow(),
+      autoLatencyMs: () => engine.getOutputLatencyMs(),
+      ensureRunning: () => start(),
+    });
+    return () => setCalibrationRig(null);
+  }, [engineState.engine, start]);
   useEffect(() => {
     if (!midiInputEnabled) return;
     const lv = new LiveVoices(monitorOut);
@@ -655,6 +685,9 @@ function Editor({
   };
 
   const handleMidiNoteOn = (pitch: number, velocity: number, timeStampMs?: number) => {
+    // Calibration taps see every key-down BEFORE the armed-track gate —
+    // the wizard must work with nothing armed. Free when no wizard runs.
+    emitCalibrationTap(timeStampMs && timeStampMs > 0 ? timeStampMs : performance.now());
     if (!midiInputTrack) return; // no armed MIDI track → keyboard is silent
     liveVoicesRef.current?.noteOn(pitch, velocity / 127); // monitoring stays UNgated
     if (shouldCaptureMidi(!!state?.recordingActive, punchRef.current?.phase ?? null)) {
@@ -1101,6 +1134,12 @@ function Editor({
   // of any row to resize them all.
   const [trackHeight, setTrackHeight] = useState<number>(() => {
     const v = Number(localStorage.getItem('studio.trackHeight') || 0);
+    // The persist-on-mount effect below stores the DEFAULT on first visit,
+    // so nearly every returning user "has" the old default (72/100) saved
+    // without ever having dragged the handle. Treat those exact values as
+    // unset so the raised default actually reaches them; a deliberate
+    // custom height (any other value) is kept.
+    if (v === 72 || v === 100) return TRACK_HEIGHT_DEFAULT;
     return v >= TRACK_HEIGHT_MIN && v <= TRACK_HEIGHT_MAX ? v : TRACK_HEIGHT_DEFAULT;
   });
   useEffect(() => { localStorage.setItem('studio.trackHeight', String(trackHeight)); }, [trackHeight]);
@@ -3773,10 +3812,15 @@ function DraggableClip({
       onChange({ start: newStart });
     };
     const up = (ev: PointerEvent) => {
-      el.releasePointerCapture(ev.pointerId);
-      el.style.cursor = prevCursor;
+      // Listeners FIRST, capture-release inside try: if the element was
+      // unmounted mid-gesture (a handler deleted the clip), releasing
+      // capture on the detached node throws — and with the old ordering
+      // that throw skipped removeEventListener, leaving `move` attached
+      // forever, mutating a clip that no longer exists on every mouse move.
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      try { el.releasePointerCapture(ev.pointerId); } catch { /* node detached */ }
+      el.style.cursor = prevCursor;
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
@@ -3890,7 +3934,15 @@ function DraggableClip({
         touchAction: 'none',
       }}
       onPointerDown={onDragBody}
-      onDoubleClick={onRemove}
+      // Double-click SELECTS (which, for a MIDI clip, surfaces the piano
+      // roll) — it must never remove. It used to be onRemove: the second
+      // click's pointerdown had already started a drag with pointer
+      // capture, then the dblclick handler deleted the element out from
+      // under that live gesture mid-dispatch — Kevin double-clicked a MIDI
+      // clip expecting the roll (every DAW's gesture), lost the clip, and
+      // the renderer hard-froze (2026-08-17). Deletion stays on the
+      // Delete key, the clip toolbar, and the strip trash.
+      onDoubleClick={(e) => { e.stopPropagation(); onSelect(); }}
       title={title ?? `${label} — click to select · drag body to move · ⌥-drag to copy · L/R edges to trim · corners to fade · Delete to remove`}
     >
       {peaks && peaks.length > 0 && (() => {
@@ -5415,7 +5467,7 @@ function DarkTrackRow({
             against (and reads as clipped by) the divider to the next
             track, and clip cleanly at the strip edge rather than bleeding
             under the row below. */}
-        <div className="flex-1 min-w-0 px-2 py-1.5 flex flex-col justify-center gap-1 overflow-hidden">
+        <div className="flex-1 min-w-0 px-2 py-2.5 flex flex-col justify-center gap-1.5 overflow-hidden">
           {/* Row 1: number + name + remove */}
           <div className="flex items-center gap-1.5">
             <span className="text-xs text-muted-foreground tabular-nums w-5 font-mono">{index}</span>
@@ -5571,12 +5623,11 @@ function MidiInstrumentDropdown({
   const inst = track.instrument;
   return (
     <div className="flex items-center gap-1 text-xs">
-      <select
+      <InstrumentPicker
         value={`${inst.type}:${inst.preset_id ?? ''}`}
-        onChange={(e) => {
+        onChange={(v) => {
           // Split on the FIRST colon only: a GM preset id is itself 'gm:<name>',
           // so 'sampler:gm:violin' must yield type='sampler', preset='gm:violin'.
-          const v = e.target.value;
           const i = v.indexOf(':');
           const type = v.slice(0, i);
           const preset = v.slice(i + 1);
@@ -5584,26 +5635,7 @@ function MidiInstrumentDropdown({
             ? { ...t, instrument: { ...t.instrument, type: type as 'synth_basic' | 'sampler', preset_id: preset || undefined } } as Track
             : t);
         }}
-        className="h-5 bg-zinc-950 border border-zinc-800 rounded text-zinc-300 px-1 flex-1 min-w-0"
-      >
-        <optgroup label="Studio">
-          {GW_INSTRUMENTS.map((g) => (
-            <option key={g.name} value={`sampler:${toGwPresetId(g.name)}`}>{g.label}</option>
-          ))}
-        </optgroup>
-        <option value="synth_basic:sine">Synth · Sine</option>
-        <option value="synth_basic:triangle">Synth · Triangle</option>
-        <option value="synth_basic:square">Synth · Square</option>
-        <option value="synth_basic:sawtooth">Synth · Sawtooth</option>
-        <option value="sampler:kit_basic">Sampler · Kit</option>
-        {GM_GROUPED.map((group) => (
-          <optgroup key={group.family} label={group.family}>
-            {group.instruments.map((g) => (
-              <option key={g.name} value={`sampler:${toGmPresetId(g.name)}`}>{g.label}</option>
-            ))}
-          </optgroup>
-        ))}
-      </select>
+      />
       <button onClick={onOpenPianoRoll} className="px-1.5 h-5 bg-zinc-800 border border-zinc-700 rounded hover:bg-zinc-700">Roll</button>
     </div>
   );
@@ -6193,6 +6225,130 @@ function RecordingLatencyControl() {
   );
 }
 
+// ── MIDI latency calibration wizard ─────────────────────────────────
+// Tap-along measurement for the trim dial above: a 12-second click run
+// through the engine's real metronome path; the player plays along on
+// any key; hardware tap timestamps vs. the clicks' scheduled output
+// times give the TOTAL compensation capture needs (see latencyCal.ts).
+// This is the honest path on WebKit, where auto output latency reads 0
+// and the whole device latency otherwise rides on ear-tuned trim.
+
+type CalPhase = 'idle' | 'running' | 'done';
+interface CalOutcome { stats: CalStats; trimMs: number; clamped: boolean; autoMs: number }
+
+function MidiCalibrationWizard({ onApply }: { onApply: (trimMs: number) => void }) {
+  const [phase, setPhase] = useState<CalPhase>('idle');
+  const [tapCount, setTapCount] = useState(0);
+  const [outcome, setOutcome] = useState<CalOutcome | null>(null);
+  const runRef = useRef<{ stop: () => void } | null>(null);
+  useEffect(() => () => runRef.current?.stop(), []);
+  // Rig presence is decided at mount (sheet open) — the engine long
+  // precedes the settings sheet, and on native it never appears.
+  const [rig] = useState(() => getCalibrationRig());
+  if (!rig) return null;
+
+  const startRun = async () => {
+    setTapCount(0);
+    setOutcome(null);
+    setPhase('running');
+    await rig.ensureRunning();
+    const corr = { ctxSec: rig.nowCtxSec(), perfMs: performance.now() };
+    const schedule = buildClickSchedule(corr.ctxSec + CAL_LEAD_IN_SEC);
+    const clicksPerfMs = schedule.filter((c) => c.measured)
+      .map((c) => corr.perfMs + (c.ctxSec - corr.ctxSec) * 1000);
+    const taps: number[] = [];
+    const unsub = onCalibrationTap((perfMs) => {
+      taps.push(perfMs);
+      setTapCount(taps.length);
+    });
+    // Feed clicks to the synth a beat ahead (not all up front) so Cancel
+    // actually silences the run — a Tone.Synth has no way to unschedule
+    // attacks already handed to it.
+    let nextIdx = 0;
+    const feeder = window.setInterval(() => {
+      while (nextIdx < schedule.length && schedule[nextIdx].ctxSec - rig.nowCtxSec() < CAL_INTERVAL_SEC) {
+        rig.click(schedule[nextIdx].accent, schedule[nextIdx].ctxSec);
+        nextIdx++;
+      }
+    }, 100);
+    const runMs = (CAL_LEAD_IN_SEC + (CAL_COUNT_IN + CAL_MEASURED) * CAL_INTERVAL_SEC + 0.45) * 1000;
+    const doneTimer = window.setTimeout(() => {
+      runRef.current?.stop();
+      const stats = calibrationStats(matchTapOffsets(taps, clicksPerfMs));
+      const autoMs = rig.autoLatencyMs();
+      const rec = recommendedTrim(stats.medianMs, autoMs);
+      setOutcome({ stats, trimMs: rec.trimMs, clamped: rec.clamped, autoMs });
+      setPhase('done');
+    }, runMs);
+    runRef.current = {
+      stop: () => {
+        window.clearInterval(feeder);
+        window.clearTimeout(doneTimer);
+        unsub();
+        runRef.current = null;
+      },
+    };
+  };
+
+  const cancelRun = () => {
+    runRef.current?.stop();
+    setPhase('idle');
+  };
+
+  const btn = 'text-xs font-semibold px-1.5 py-0.5 rounded border border-border bg-muted hover:bg-muted/70';
+
+  if (phase === 'running') {
+    return (
+      <div className="flex items-center justify-between gap-2 text-xs">
+        <span className="animate-pulse">Play any key on each click… <span className="font-mono tabular-nums">{tapCount}</span> taps</span>
+        <button onClick={cancelRun} className={btn}>Cancel</button>
+      </div>
+    );
+  }
+
+  if (phase === 'done' && outcome) {
+    const { stats, trimMs, clamped } = outcome;
+    if (stats.quality === 'insufficient') {
+      return (
+        <div className="flex items-center justify-between gap-2 text-xs">
+          <span className="text-rose-600">Only {stats.count} taps landed — need {CAL_MIN_TAPS}. Try again?</span>
+          <span className="flex gap-1">
+            <button onClick={startRun} className={btn}>Redo</button>
+            <button onClick={() => setPhase('idle')} className={btn}>Close</button>
+          </span>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-0.5 text-xs">
+        <div>
+          You land <span className="font-mono tabular-nums">{Math.abs(Math.round(stats.medianMs))} ms</span>
+          {stats.medianMs >= 0 ? ' after ' : ' before '} the click
+          (±{Math.round(stats.madMs)} ms, {stats.count} taps{stats.quality === 'poor' ? ', inconsistent — consider redoing' : ''})
+          {' → trim '}<span className="font-mono tabular-nums">{trimMs} ms</span>
+        </div>
+        {clamped && (
+          <div className="text-rose-600">Measured offset exceeds the ±100 ms dial — check the output device (Bluetooth?).</div>
+        )}
+        <div className="flex justify-end gap-1">
+          <button onClick={() => { onApply(trimMs); setPhase('idle'); }} className={`${btn} border-primary text-primary`}>Apply</button>
+          <button onClick={startRun} className={btn}>Redo</button>
+          <button onClick={() => setPhase('idle')} className={btn}>Close</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-2 text-xs">
+      <span className="text-muted-foreground">Or measure it: play along with a 12-second click.</span>
+      <button onClick={() => { void startRun(); }} className={btn} title="Plays a steady click; play any key on each beat and the trim is set from your timing">
+        Calibrate
+      </button>
+    </div>
+  );
+}
+
 function MidiLatencyControl() {
   const [trim, setTrim] = useState<number>(() => getMidiTrimMs());
   // Auto value read once for display — the actual per-take value is
@@ -6223,6 +6379,7 @@ function MidiLatencyControl() {
       <div className="text-xs text-muted-foreground italic">
         Auto compensation is measured each take. Add trim if recorded notes still sit late against the click; go negative if they land early.
       </div>
+      <MidiCalibrationWizard onApply={setTrim} />
     </div>
   );
 }

@@ -6,7 +6,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { Editor } from '@tiptap/react';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, MonitorPlay } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -27,6 +27,7 @@ import { DocumentEditor } from '@/components/documents/DocumentEditor';
 import { removeCitationsFor } from '@/components/documents/extensions/CitationChip';
 import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRef';
 import { SourcesPanel } from '@/components/documents/SourcesPanel';
+import { PrompterOverlay } from '@/components/prompter/PrompterOverlay';
 import { WorksCitedPreview } from '@/components/documents/WorksCitedPreview';
 import { PrintPaperView } from '@/components/documents/PrintPaperView';
 import { useDocAutosave } from './useDocAutosave';
@@ -141,6 +142,10 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [sourcesSheetOpen, setSourcesSheetOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  // Prompter text is snapshotted at open — reading live editor state during
+  // the overlay would re-render the whole prompter on every keystroke from
+  // a second window.
+  const [prompterText, setPrompterText] = useState<string | null>(null);
   const [printContent, setPrintContent] = useState<unknown>(null);
 
   // Live refs so citationChipText/footnoteIndex — stable callbacks handed
@@ -417,43 +422,63 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <div className="flex flex-wrap items-center gap-3">
+      {/* flex-1 alone let the pills claim the whole line and crush the
+          title to a couple of characters on phones (the row's flex-wrap
+          never fired because flex-1's basis is 0). The title takes a full
+          line of its own below sm; the actions are their own wrapping
+          cluster so nothing ever clips off-screen. */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <input
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           onBlur={() => void autosaver.flush()}
           placeholder="Untitled"
           aria-label="Document title"
-          className="min-w-0 flex-1 bg-transparent text-2xl font-semibold text-foreground focus:outline-none"
+          className="basis-full min-w-0 bg-transparent text-2xl font-semibold text-foreground focus:outline-none sm:basis-auto sm:flex-1"
         />
 
-        <ToggleGroup
-          type="single"
-          value={style}
-          onValueChange={(v) => { if (v === 'mla9' || v === 'apa7') handleStyleChange(v); }}
-          className="rounded-lg border border-border p-0.5"
-        >
-          <ToggleGroupItem value="mla9" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">MLA</ToggleGroupItem>
-          <ToggleGroupItem value="apa7" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">APA</ToggleGroupItem>
-        </ToggleGroup>
+        <div className="flex flex-wrap items-center gap-2">
+          <ToggleGroup
+            type="single"
+            value={style}
+            onValueChange={(v) => { if (v === 'mla9' || v === 'apa7') handleStyleChange(v); }}
+            className="rounded-lg border border-border p-0.5"
+          >
+            <ToggleGroupItem value="mla9" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">MLA</ToggleGroupItem>
+            <ToggleGroupItem value="apa7" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">APA</ToggleGroupItem>
+          </ToggleGroup>
 
-        <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setExportOpen(true)}>
-          Export
-        </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-xs"
+            onClick={() => setPrompterText(editorInstanceRef.current?.getText() ?? '')}
+          >
+            <MonitorPlay className="mr-1 h-3.5 w-3.5" /> Prompter
+          </Button>
 
-        <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
-          <SheetTrigger asChild>
-            <Button type="button" variant="outline" size="sm" className="text-xs lg:hidden">Sources</Button>
-          </SheetTrigger>
-          <SheetContent side="bottom">
-            <SheetHeader><SheetTitle>Sources</SheetTitle></SheetHeader>
-            <div className="mt-3">{sourcesPanel}</div>
-          </SheetContent>
-        </Sheet>
+          <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setExportOpen(true)}>
+            Export
+          </Button>
+
+          {/* Sources live up here now, at every size — the docked right rail
+              squeezed the page (Kevin, 2026-08-13: "move sources up and let
+              doc have width"). The sheet slides OVER the doc instead. */}
+          <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
+            <SheetTrigger asChild>
+              <Button type="button" variant="outline" size="sm" className="text-xs">Sources</Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader><SheetTitle>Sources</SheetTitle></SheetHeader>
+              <div className="mt-3">{sourcesPanel}</div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        <div className="min-w-0 flex-1" ref={editorContainerRef}>
+      <div className="flex flex-col gap-4">
+        <div className="min-w-0" ref={editorContainerRef}>
           <DocumentEditor
             content={initialContent}
             onUpdate={handleEditorUpdate}
@@ -468,13 +493,13 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
           {/* Footer: live word count + save status (spec §"Editor page"). The
               count comes straight from the editor's onUpdate, so it tracks
               typing rather than the last persisted value. */}
-          <div className="mx-auto mt-2 flex max-w-[700px] items-center justify-between px-6">
+          <div className="mx-auto mt-2 flex max-w-[816px] items-center justify-between px-6">
             <span className="text-xs text-muted-foreground">{wordCountLabel(wordCount)}</span>
             <span className="text-xs text-muted-foreground" role="status">{statusLabel}</span>
           </div>
 
           {openFootnoteId && (
-            <div className="mx-auto mt-2 max-w-[700px]">
+            <div className="mx-auto mt-2 max-w-[816px]">
               <Card className="flex flex-col gap-2 p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-foreground">Footnote</span>
@@ -491,12 +516,10 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             </div>
           )}
 
-          <div className="mx-auto mt-8 max-w-[700px]">
+          <div className="mx-auto mt-8 max-w-[816px]">
             <WorksCitedPreview sources={sources} style={style} />
           </div>
         </div>
-
-        <div className="hidden lg:flex">{sourcesPanel}</div>
       </div>
 
       <input
@@ -507,6 +530,13 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
         onChange={(e) => void handleImageFileChange(e)}
         disabled={uploadingImage}
         aria-label="Upload image"
+      />
+
+      <PrompterOverlay
+        open={prompterText != null}
+        onClose={() => setPrompterText(null)}
+        text={prompterText ?? ''}
+        title={title || 'Untitled'}
       />
 
       <AlertDialog open={!!deletingSourceId} onOpenChange={(open) => { if (!open) setDeletingSourceId(null); }}>

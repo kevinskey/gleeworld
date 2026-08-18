@@ -106,10 +106,10 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const [loading, setLoading] = useState(true);
   const [stipendDialogOpen, setStipendDialogOpen] = useState(false);
 
-  const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
-  const isMus070 = course.courseCode === 'MUS 070';
+  const course = getCourseByCode(courseId) || { courseCode: 'GW 240', title: 'Course' };
+  const isMus070 = course.courseCode === 'GW 070';
 
-  // Glass card classes for MUS 070 deep-sea theme
+  // Glass card classes for GW 070 deep-sea theme
   const glassCard = isMus070 ? 'bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl shadow-none' : '';
   const glassText = isMus070 ? 'text-white' : 'text-foreground';
   const glassTextMuted = isMus070 ? 'text-slate-400' : 'text-muted-foreground';
@@ -442,7 +442,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
       {/* Advertising Hero - Full width above content */}
       <AdvertisingHero className="rounded-xl overflow-hidden" />
 
-      {/* Stipend Receipt Button - MUS 070 only */}
+      {/* Stipend Receipt Button - GW 070 only */}
       {isMus070 && (
         <Button
           onClick={() => setStipendDialogOpen(true)}
@@ -529,13 +529,13 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         {/* Topic Photo Slider */}
         <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
 
-        {/* Class Schedule Form - For MUS 070 (Glee Club) */}
-        {course.courseCode === 'MUS 070' && (
+        {/* Class Schedule Form - For GW 070 (Glee Club) */}
+        {course.courseCode === 'GW 070' && (
           <ClassScheduleForm semester="Spring 2026" />
         )}
 
-        {/* Current Module / Week - Only show for MUS 240 which has DB-driven modules */}
-        {currentModule && course.courseCode === 'MUS 240' && (
+        {/* Current Module / Week - Only show for GW 240 which has DB-driven modules */}
+        {currentModule && course.courseCode === 'GW 240' && (
         <Card className={glassCard}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">

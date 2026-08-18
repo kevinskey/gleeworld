@@ -1,4 +1,5 @@
-// TypeScript bridge for the iOS GWSpeechPlugin (SFSpeechRecognizer).
+// TypeScript bridge for the native GWSpeech plugins (iOS SFSpeechRecognizer,
+// Android SpeechRecognizer).
 //
 // iOS WebKit has no Web Speech recognition API (window.SpeechRecognition
 // is undefined in WKWebView), so the Assistant's mic was dead in the app.
@@ -27,5 +28,8 @@ export interface GWSpeechPluginShape {
 export const GWSpeech = registerPlugin<GWSpeechPluginShape>('GWSpeech');
 
 export function isNativeSpeechAvailable(): boolean {
-  return Capacitor.getPlatform() === 'ios';
+  // Neither WKWebView nor the Android WebView implements Web Speech
+  // recognition; both platforms carry a native GWSpeech plugin.
+  const platform = Capacitor.getPlatform();
+  return platform === 'ios' || platform === 'android';
 }

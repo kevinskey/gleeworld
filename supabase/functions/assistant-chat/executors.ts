@@ -87,6 +87,7 @@ export async function executeServerTool(
       case 'schedule_event_playlist': return { replyJson: await scheduleEventPlaylist(args, deps) };
       case 'search_apple_music': return { replyJson: await searchAppleMusicTool(args) };
       case 'set_assistant_name': return { replyJson: await setAssistantName(args, deps) };
+      case 'set_preferred_name': return { replyJson: await setPreferredName(args, deps) };
       case 'list_courses': return { replyJson: await listCourses(args, deps) };
       case 'get_course_info': return { replyJson: await getCourseInfo(args, deps) };
       case 'get_course_deadlines': return { replyJson: await getCourseDeadlines(args, deps) };
@@ -291,6 +292,26 @@ async function searchMusic(args: Record<string, unknown>, { supabase }: Deps): P
       return JSON.stringify({ scores: data, ...(relaxed ? { matchedOn: tokens.slice(0, n).join(' ') } : {}) });
     }
   }
+
+  // Any-token fallback. Prefix relaxation assumes the informative word comes
+  // first, but "German Requiem" stores as "Ein deutsches Requiem" — the only
+  // matching token is the LAST one, and dropping from the end never tries it.
+  // One query ORs every token; rows matching more tokens rank first, and
+  // matchedOn always flags the looseness so the model names what it found
+  // instead of claiming an exact hit.
+  const safeTokens = tokens.map((t) => t.replace(/[%_,()]/g, '')).filter(Boolean);
+  if (safeTokens.length > 1) {
+    const orExpr = safeTokens.map((t) => `title.ilike.%${t}%,composer.ilike.%${t}%`).join(',');
+    const { data, error } = await supabase
+      .from('gw_sheet_music').select('id, title, composer, voicing').or(orExpr).limit(25);
+    if (error) return JSON.stringify({ error: error.message });
+    if (data && data.length > 0) {
+      const hits = (row: { title?: string; composer?: string }) => safeTokens.filter((t) =>
+        `${row.title ?? ''} ${row.composer ?? ''}`.toLowerCase().includes(t.toLowerCase()));
+      const ranked = [...data].sort((a, b) => hits(b).length - hits(a).length).slice(0, 10);
+      return JSON.stringify({ scores: ranked, matchedOn: hits(ranked[0]).join(' ') });
+    }
+  }
   return JSON.stringify({ scores: [] });
 }
 
@@ -475,18 +496,21 @@ async function playVideo(args: Record<string, unknown>, deps: Deps): Promise<Too
   if (!q) return { replyJson: JSON.stringify({ error: 'Ask which song or video they want.' }) };
 
   const raw = await searchYoutube({ q }, deps);
-  let first: { id?: string; title?: string; channel?: string } | undefined;
-  try { first = JSON.parse(raw)?.videos?.[0]; } catch { /* fall through */ }
-  if (!first?.id) {
+  // searchYoutube returns { hits: [{ video_id, title, channel, ... }] } —
+  // this read { videos: [{ id }] } for months, so the q path NEVER matched
+  // and every direct "play X" call failed honest-but-wrong (2026-08-12).
+  let first: { video_id?: string; title?: string; channel?: string } | undefined;
+  try { first = JSON.parse(raw)?.hits?.[0]; } catch { /* fall through */ }
+  if (!first?.video_id) {
     return { replyJson: JSON.stringify({ error: `Nothing on YouTube matched "${q}".` }) };
   }
   return {
     replyJson: JSON.stringify({
-      playing: first.id, title: first.title, channel: first.channel,
+      playing: first.video_id, title: first.title, channel: first.channel,
       note: 'The video is now on screen. Say what is playing; never read the URL or the id aloud.',
     }),
     resultsPanel: {
-      kind: 'video', query: q, videoId: first.id,
+      kind: 'video', query: q, videoId: first.video_id,
       title: first.title ?? q, channel: first.channel,
     },
   };
@@ -1313,16 +1337,58 @@ async function getEnrollments(args: Record<string, unknown>, deps: Deps): Promis
   });
 }
 
+// Libraries hold duplicate copies of the same title ("A Choice to Change the
+// World" ×7), and the model can only pass ONE score_id — usually not the copy
+// that went through Part Tracks. When the asked copy has no analysis, fall
+// back to an analyzed same-tenant copy whose title matches (RLS scopes the
+// candidate list, so this never crosses tenants).
+const normTitle = (t: string) => t.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+
+async function findAnalyzedCopy(
+  supabase: SupabaseLike, scoreId: string,
+): Promise<{ row: Record<string, unknown>; title: string } | null> {
+  const { data: me } = await supabase
+    .from('gw_sheet_music').select('title').eq('id', scoreId).maybeSingle();
+  const askedTitle = typeof me?.title === 'string' ? me.title : '';
+  if (!askedTitle) return null;
+  const { data: cands } = await supabase
+    .from('gw_parttrack_scores')
+    .select('id, sheet_music_id, analysis, source_type, status, validation_report, tempo_override_bpm, manifest, error_message')
+    .not('analysis', 'is', null)
+    .in('status', ['awaiting_confirmation', 'rendering', 'ready'])
+    .limit(25);
+  const rows = (cands ?? []) as Array<Record<string, unknown>>;
+  if (rows.length === 0) return null;
+  const { data: sheets } = await supabase
+    .from('gw_sheet_music').select('id, title')
+    .in('id', rows.map((r) => r.sheet_music_id));
+  const mine = normTitle(askedTitle);
+  const candIds = new Set(rows.map((r) => String(r.sheet_music_id)));
+  // Prefix match either way so "…World" and "…World SSAA" pair up. Only
+  // sheets that actually own an analyzed candidate row count (defensive
+  // even though the .in() filter already restricts the query).
+  const sheet = ((sheets ?? []) as Array<{ id: string; title?: string }>).find((s) => {
+    if (!candIds.has(s.id)) return false;
+    const other = normTitle(s.title ?? '');
+    return other.length > 0 && (other === mine || other.startsWith(mine) || mine.startsWith(other));
+  });
+  if (!sheet) return null;
+  const row = rows.find((r) => r.sheet_music_id === sheet.id);
+  return row ? { row, title: sheet.title ?? '' } : null;
+}
+
 async function getScoreAnalysis(args: Record<string, unknown>, { supabase, role }: Deps): Promise<string> {
   const scoreId = String(args.score_id ?? '').trim();
   if (!scoreId) return JSON.stringify({ error: 'Pass score_id from search_music first.' });
 
-  const { data: row, error } = await supabase
+  const { data: rowData, error } = await supabase
     .from('gw_parttrack_scores')
     .select('id, analysis, source_type, status, validation_report, tempo_override_bpm, manifest, error_message')
     .eq('sheet_music_id', scoreId)
     .maybeSingle();
   if (error) return JSON.stringify({ error: error.message });
+  let row = rowData as Record<string, unknown> | null;
+  let matchedCopy: string | null = null;
 
   // Honesty split (Deps.role): admins can run the analysis themselves;
   // students need their director to do it.
@@ -1346,7 +1412,10 @@ async function getScoreAnalysis(args: Record<string, unknown>, { supabase, role 
     });
   }
   if (!row || !row.analysis) {
-    return JSON.stringify({ analyzed: false, hint });
+    const alt = await findAnalyzedCopy(supabase, scoreId);
+    if (!alt) return JSON.stringify({ analyzed: false, hint });
+    row = alt.row;
+    matchedCopy = alt.title;
   }
 
   const { data: partRows, error: pErr } = await supabase
@@ -1378,6 +1447,10 @@ async function getScoreAnalysis(args: Record<string, unknown>, { supabase, role 
   return JSON.stringify({
     analyzed: true,
     optical,
+    ...(matchedCopy ? {
+      matched_copy: matchedCopy,
+      matched_copy_note: 'The analyzed Part Tracks project lives on a different library copy of this title (matched_copy). Answer with these facts and mention which copy they come from.',
+    } : {}),
     ...(optical ? {
       optical_note: 'These facts were read optically from the PDF (beta) and can contain errors. The FIRST time you state them in this conversation, add: "I read this optically from the PDF, so double-check anything critical against the printed score."',
     } : {}),
@@ -1478,6 +1551,28 @@ async function lookupHymn(args: Record<string, unknown>, { supabase }: Deps): Pr
 // RLS lets a user update only their own row; the .eq is belt-and-braces
 // and the .select() is required — a silently-rejected write otherwise
 // reports success (the demo-tenant lesson).
+
+async function setPreferredName(args: Record<string, unknown>, { supabase, userId }: Deps): Promise<string> {
+  if (!userId) return JSON.stringify({ error: 'No caller id available.' });
+  const raw = String(args.name ?? '').trim();
+  const clear = args.clear === true || /^(default|none|nothing|clear)$/i.test(raw);
+  const name = clear ? null : raw.slice(0, 40);
+  if (!clear && !name) return JSON.stringify({ error: 'Pass what the user wants to be called.' });
+  const { data, error } = await supabase
+    .from('gw_profiles')
+    .update({ preferred_name: name })
+    .eq('user_id', userId)
+    .select('preferred_name');
+  if (error) return JSON.stringify({ error: error.message });
+  if (!data || data.length === 0) return JSON.stringify({ error: 'The name did not save.' });
+  return JSON.stringify({
+    ok: true,
+    preferred_name: name,
+    note: name
+      ? `The user is now addressed as ${name} everywhere they use the assistant. Use it naturally from your NEXT sentence on.`
+      : 'Cleared — address the user by their first name again.',
+  });
+}
 
 async function setAssistantName(args: Record<string, unknown>, { supabase, userId }: Deps): Promise<string> {
   if (!userId) return JSON.stringify({ error: 'No caller id available.' });

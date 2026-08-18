@@ -38,14 +38,25 @@ export default function StoreThanksPage() {
   }
 
   const isPaid = order?.status === 'paid';
-  const totalCents = (order?.items ?? []).reduce((s, i) => s + (i.price_cents ?? 0), 0);
-  const anyWatermarking = isPaid && (order?.items ?? []).some((i) => !i.watermarked_storage_path);
+  const isRefunded = order?.status === 'refunded' || order?.status === 'partial_refund';
+  // Partial refund: the surviving items stay listed and downloadable.
+  const showItems = isPaid || order?.status === 'partial_refund';
+  const visibleItems = (order?.items ?? []).filter((i) => !i.refunded_at);
+  const totalCents = visibleItems.reduce((s, i) => s + (i.price_cents ?? 0), 0);
+  const anyWatermarking = isPaid && visibleItems.some((i) => !i.watermarked_storage_path);
 
   return (
     <DashboardPageShell title="Thanks for your purchase" subtitle="We're preparing your scores.">
       <Card>
         <CardContent className="p-4 space-y-3">
-          {!isPaid && (
+          {isRefunded && (
+            <p className="text-sm text-muted-foreground">
+              {order?.status === 'refunded'
+                ? 'This order was refunded.'
+                : 'Part of this order was refunded — your remaining scores are below.'}
+            </p>
+          )}
+          {!isPaid && !isRefunded && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="w-4 h-4 animate-spin" /> Confirming payment…
             </div>
@@ -58,10 +69,10 @@ export default function StoreThanksPage() {
               <p className="text-base font-semibold">Payment confirmed</p>
             </div>
           )}
-          {isPaid && order && order.items.length === 0 && (
+          {showItems && order && visibleItems.length === 0 && (
             <p className="text-sm text-muted-foreground">Preparing your files…</p>
           )}
-          {isPaid && order && order.items.map((it) => (
+          {showItems && order && visibleItems.map((it) => (
             <div key={it.id} className="flex items-center gap-3 border-t pt-3">
               <StoreScoreCover
                 score={{
@@ -87,7 +98,7 @@ export default function StoreThanksPage() {
               )}
             </div>
           ))}
-          {isPaid && totalCents > 0 && (
+          {showItems && totalCents > 0 && (
             <div className="flex justify-between border-t pt-3 text-sm font-semibold">
               <span>Order total</span><span>${(totalCents / 100).toFixed(2)}</span>
             </div>

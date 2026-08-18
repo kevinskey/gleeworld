@@ -15,7 +15,11 @@ import {
   useSetPartnerFeatured,
   useCreatePartnerByEmail,
   useSetGwFeaturedScore,
+  useSetPartnerStatus,
+  useAdminPartnerOrders,
+  useAdminRefundItem,
 } from '@/lib/partner/api';
+import { itemRefundAmountCents } from '@/lib/partner/refunds';
 import { useStoreScores } from '@/lib/store/api';
 
 const APP_HOST = window.location.origin;
@@ -42,6 +46,34 @@ export default function PartnersAdmin() {
   const scores = useStoreScores();
   const setGwFeatured = useSetGwFeaturedScore();
   const [scoreSearch, setScoreSearch] = useState('');
+
+  const setStatus = useSetPartnerStatus();
+  const orders = useAdminPartnerOrders(canCurate);
+  const refundItem = useAdminRefundItem();
+
+  const toggleSuspend = (p: { id: string; display_name: string; status: string }) => {
+    const suspending = p.status === 'active';
+    if (suspending && !confirm(`Suspend ${p.display_name}? Their catalog disappears from the store immediately; buyers keep prior purchases.`)) return;
+    setStatus.mutate(
+      { id: p.id, status: suspending ? 'suspended' : 'active' },
+      {
+        onSuccess: () => toast.success(suspending ? `${p.display_name} suspended` : `${p.display_name} reactivated`),
+        onError: (err) => toast.error(`Status change failed: ${err.message}`),
+      },
+    );
+  };
+
+  const refund = (item: { id: string; price_cents: number; quantity: number | null; score: { title: string } | null }, buyerEmail: string | null) => {
+    const amount = (itemRefundAmountCents(item) / 100).toFixed(2);
+    if (!confirm(`Refund $${amount} for "${item.score?.title ?? 'this score'}"${buyerEmail ? ` to ${buyerEmail}` : ''}? The score is removed from their My Music and the partner's payout is reversed.`)) return;
+    refundItem.mutate(
+      { order_item_id: item.id },
+      {
+        onSuccess: (res) => toast.success(`Refunded $${(res.amount_cents / 100).toFixed(2)} — order now ${res.order_status.replace('_', ' ')}`),
+        onError: (err) => toast.error(`Refund failed: ${err.message}`),
+      },
+    );
+  };
 
   const submit = () => {
     if (!email.trim()) return;
@@ -211,6 +243,17 @@ export default function PartnersAdmin() {
                 </span>
                 <div className="flex items-center gap-2">
                   <Badge variant={p.status === 'active' ? 'default' : 'outline'} className="text-xs">{p.status}</Badge>
+                  {canCurate && (p.status === 'active' || p.status === 'suspended') && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className={p.status === 'active' ? 'text-destructive hover:text-destructive' : ''}
+                      disabled={setStatus.isPending}
+                      onClick={() => toggleSuspend(p)}
+                    >
+                      {p.status === 'active' ? 'Suspend' : 'Reactivate'}
+                    </Button>
+                  )}
                   {canCurate && (
                     p.featured_order != null ? (
                       <Button
@@ -238,6 +281,71 @@ export default function PartnersAdmin() {
           </ul>
         </CardContent>
       </Card>
+
+      {/* Orders + refunds are super-admin only, like store curation:
+          refunds move real money platform-wide (partner-refund enforces
+          the same gate server-side). */}
+      {canCurate && (
+      <Card className="mt-6">
+        <CardHeader><CardTitle className="text-sm">Orders</CardTitle></CardHeader>
+        <CardContent>
+          {orders.isLoading && <p className="text-xs text-muted-foreground">Loading…</p>}
+          {orders.data && orders.data.length === 0 && (
+            <p className="text-xs text-muted-foreground">No orders yet.</p>
+          )}
+          <ul className="space-y-3">
+            {(orders.data ?? []).map((o) => (
+              <li key={o.id} className="border border-border rounded-md p-3 space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="min-w-0 truncate">
+                    {o.buyer_email ?? o.buyer_user_id}
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {new Date(o.created_at).toLocaleDateString()} · ${(o.subtotal_cents / 100).toFixed(2)}
+                    </span>
+                  </span>
+                  <Badge
+                    variant={o.status === 'paid' ? 'default' : 'outline'}
+                    className="text-xs shrink-0"
+                  >
+                    {o.status.replace('_', ' ')}
+                  </Badge>
+                </div>
+                <ul className="space-y-1">
+                  {o.items.map((it) => (
+                    <li key={it.id} className="flex items-center justify-between gap-2 text-sm">
+                      <span className="min-w-0 truncate">
+                        {it.score?.title ?? it.partner_score_id}
+                        {it.score?.composer ? ` — ${it.score.composer}` : ''}
+                        <span className="text-xs text-muted-foreground ml-2">
+                          ${(itemRefundAmountCents(it) / 100).toFixed(2)}
+                          {(it.quantity ?? 1) > 1 ? ` (${it.quantity} seats)` : ''}
+                        </span>
+                      </span>
+                      {it.refunded_at ? (
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          refunded {new Date(it.refunded_at).toLocaleDateString()}
+                        </span>
+                      ) : (o.status === 'paid' || o.status === 'partial_refund') ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive shrink-0"
+                          disabled={refundItem.isPending || !o.stripe_payment_intent_id}
+                          title={o.stripe_payment_intent_id ? undefined : 'No Stripe payment on this order'}
+                          onClick={() => refund(it, o.buyer_email)}
+                        >
+                          Refund
+                        </Button>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
+      )}
 
       <Card className="mt-6">
         <CardHeader><CardTitle className="text-sm">GW featured pieces</CardTitle></CardHeader>

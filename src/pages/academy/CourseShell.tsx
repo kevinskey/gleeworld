@@ -39,6 +39,7 @@ import { ModuleResources } from "@/components/academy/ModuleResources";
 import { useEnabledAddonTabs, type AddonSlug } from "@/hooks/useCourseAddons";
 import { StudentDetailDialog } from "@/components/academy/StudentDetailDialog";
 import { CourseCohortsPanel } from "@/components/academy/CourseCohortsPanel";
+import { ScholarApplicationsPanel } from "@/components/academy/ScholarApplicationsPanel";
 import { SimpleMarkdown } from "@/components/markdown/SimpleMarkdown";
 import { ConfirmDeleteButton } from "@/components/shared/ConfirmDeleteButton";
 import { publishCourse } from "@/lib/academy/publishCourse";
@@ -154,7 +155,7 @@ export default function CourseShell() {
     const reqId = ++loadReqId.current;
     setLoading(true);
     // Two encoding conventions exist in the wild:
-    //   legacy: "MUS 101" stored, URL is "mus-101" (hyphen→space)
+    //   legacy: "GW 101" stored, URL is "mus-101" (hyphen→space)
     //   templates / new: "TPL-CHOIR101" stored, URL is "tpl-choir101" (hyphen kept)
     // Try both — exact match on the as-is uppercase first, then the
     // hyphen-as-space variant. Don't use .or() with raw user input
@@ -2023,6 +2024,11 @@ function PeopleTab({ course, canEdit }: TabProps) {
           </div>
         )}
       </SectionCard>
+
+      {/* Applications from the public site's scholar-application block —
+          accepting enrolls + emails a sign-in link. Renders nothing when
+          the course has no applications. */}
+      {canEdit && <ScholarApplicationsPanel courseId={course.id} onAccepted={refreshRoster} />}
 
       {/* Cohort sub-grouping inside the course (instructor-managed). */}
       <CourseCohortsPanel

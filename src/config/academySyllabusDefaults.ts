@@ -14,7 +14,7 @@ const STANDARD_POLICIES = {
 };
 
 export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
-  'MUS 070': {
+  'GW 070': {
     name: 'Glee Club',
     term: 'Spring 2026',
     credits: 1,
@@ -38,7 +38,7 @@ export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
     ...STANDARD_POLICIES
   },
 
-  'MUS 210': {
+  'GW 210': {
     name: 'Choral Conducting and Literature',
     term: 'Spring 2026',
     credits: 3,
@@ -114,7 +114,7 @@ export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
     ...STANDARD_POLICIES
   },
 
-  'MUS 240': {
+  'GW 240': {
     name: 'Survey of African American Music',
     term: 'Spring 2026',
     credits: 3,
@@ -159,7 +159,7 @@ export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
     ...STANDARD_POLICIES
   },
 
-  'MUS 101': {
+  'GW 101': {
     name: 'Music Fundamentals Theory',
     term: 'Spring 2026',
     credits: 3,
@@ -204,7 +204,7 @@ export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
     ...STANDARD_POLICIES
   },
 
-  'MUS 001': {
+  'GW 001': {
     name: 'Private Applied Lessons',
     term: 'Spring 2026',
     credits: 1,
@@ -231,7 +231,7 @@ export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
     ...STANDARD_POLICIES
   },
 
-  'MUS 000': {
+  'GW 000': {
     name: 'Sight Singing Institute',
     term: 'Spring 2026',
     credits: 1,
@@ -317,7 +317,7 @@ export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
  * Falls back to generic content if no specific default exists
  */
 export const getDefaultSyllabus = (courseCode: string): SyllabusDefaults | null => {
-  // Normalize course code (handle MUS 210-A, MUS 210-B, etc.)
+  // Normalize course code (handle GW 210-A, GW 210-B, etc.)
   const normalizedCode = courseCode.trim().toUpperCase().split('-')[0].trim();
   return SYLLABUS_DEFAULTS[normalizedCode] || null;
 };

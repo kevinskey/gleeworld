@@ -12,6 +12,7 @@ public class MainActivity extends BridgeActivity {
         // them up, but we register explicitly so a refactor that removes
         // the annotation doesn't silently drop them from the JS bridge.
         registerPlugin(AudioSessionConfigPlugin.class);
+        registerPlugin(GWSpeechPlugin.class);
         registerPlugin(RecordingLiveActivityPlugin.class);
         super.onCreate(savedInstanceState);
     }

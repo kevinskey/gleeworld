@@ -570,7 +570,7 @@ const LH100_MODULES: WeeklyModule[] = [
 
 
 // Course modules map - only LH100 uses static data now
-// MUS 240 is fully DB-driven
+// GW 240 is fully DB-driven
 const COURSE_MODULES: Record<string, WeeklyModule[]> = {
   'a0000000-0000-0000-0000-000000000100': LH100_MODULES // LH 100
 };

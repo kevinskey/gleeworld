@@ -270,7 +270,7 @@ export function CreateClassDialog({ open, onOpenChange, onCreated }: Props) {
           <TabsContent value="scratch" className="space-y-3 pt-3">
             <div className="space-y-1.5">
               <Label>Course code</Label>
-              <Input value={scratchCode} onChange={(e) => setScratchCode(e.target.value)} placeholder="e.g. MUS 240" />
+              <Input value={scratchCode} onChange={(e) => setScratchCode(e.target.value)} placeholder="e.g. GW 240" />
             </div>
             <div className="space-y-1.5">
               <Label>Title</Label>

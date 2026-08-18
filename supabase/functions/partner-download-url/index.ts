@@ -25,7 +25,7 @@ serve(async (req) => {
 
   const { data: item, error: itemErr } = await supa
     .from("gw_partner_order_items")
-    .select("id, order_id, watermarked_storage_path")
+    .select("id, order_id, watermarked_storage_path, refunded_at")
     .eq("id", order_item_id)
     .single();
   if (itemErr || !item) return new Response(JSON.stringify({ error: "item not found" }), { status: 404, headers: { ...corsHeaders, "content-type": "application/json" } });
@@ -49,8 +49,13 @@ serve(async (req) => {
   if (!order || (!isBuyer && !isSharedWith)) {
     return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, headers: { ...corsHeaders, "content-type": "application/json" } });
   }
-  if (order.status !== "paid") {
+  // partial_refund means OTHER items were refunded — this one stays
+  // downloadable unless it carries its own refunded_at stamp below.
+  if (order.status !== "paid" && order.status !== "partial_refund") {
     return new Response(JSON.stringify({ error: "order not paid" }), { status: 402, headers: { ...corsHeaders, "content-type": "application/json" } });
+  }
+  if (item.refunded_at) {
+    return new Response(JSON.stringify({ error: "purchase refunded" }), { status: 410, headers: { ...corsHeaders, "content-type": "application/json" } });
   }
   if (!item.watermarked_storage_path) {
     return new Response(JSON.stringify({ error: "watermark still processing, try again shortly" }), { status: 425, headers: { ...corsHeaders, "content-type": "application/json" } });

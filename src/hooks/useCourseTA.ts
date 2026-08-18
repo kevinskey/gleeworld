@@ -14,7 +14,7 @@ interface CourseTA {
   updated_at: string;
 }
 
-export const useCourseTA = (courseCode: string = 'MUS240') => {
+export const useCourseTA = (courseCode: string = 'GW240') => {
   const { user } = useAuth();
   const [isTA, setIsTA] = useState(false);
   const [taInfo, setTaInfo] = useState<CourseTA | null>(null);

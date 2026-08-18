@@ -12,7 +12,7 @@ export interface FeeTemplateInstallment {
 export interface FeeTemplate {
   id: string;
   tenant_id: string;
-  category: 'dues' | 'wardrobe' | 'trip' | 'travel' | 'other';
+  category: 'dues' | 'participation' | 'fundraiser' | 'wardrobe' | 'trip' | 'travel' | 'other';
   name: string;
   description: string | null;
   total_amount: number;

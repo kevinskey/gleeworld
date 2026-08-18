@@ -25,12 +25,12 @@ export const Mus070GradesAdmin = () => {
         <TabsContent value="attendance" className="mt-4 overflow-visible">
           <CourseAttendanceGrid 
             courseId={MUS_070_COURSE_ID} 
-            courseCode="MUS 070"
+            courseCode="GW 070"
             isInstructor={true} 
           />
         </TabsContent>
         <TabsContent value="performances" className="mt-4 overflow-visible">
-          <PerformanceGradeEntry courseId={MUS_070_COURSE_ID} courseCode="MUS 070" />
+          <PerformanceGradeEntry courseId={MUS_070_COURSE_ID} courseCode="GW 070" />
         </TabsContent>
         <TabsContent value="conflicts" className="mt-4 overflow-visible">
           <ScheduleConflictAnalysis />
