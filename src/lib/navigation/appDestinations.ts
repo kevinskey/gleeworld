@@ -106,7 +106,7 @@ export function parseTileLayout(raw: unknown): TileLayout | null {
 // built from the shared catalog rather than a hard-coded array — changing
 // this list changes what every tenant sees on day one, so it's a deliberate,
 // reviewable diff rather than an emergent side effect of catalog order.
-export const DEFAULT_GRID_ORDER = ['music', 'tracks', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch'];
+export const DEFAULT_GRID_ORDER = ['music', 'tracks', 'studio', 'sight', 'soundcloud', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch'];
 
 export function getAppTiles(role: 'student' | 'faculty', flags: ModuleFlags, nav: NavContext, layout?: TileLayout | null):
   { primary: Destination[]; overflow: Destination[] } {
