@@ -17,6 +17,10 @@
 -- outright. All four publish or permit auction-notification email. That
 -- asymmetry is why the module's tier-2 ingestion is email and never scraping.
 --
+-- The one exception is GSA Auctions, which publishes a genuine public API with
+-- a free self-serve key and no anti-automation clause — verified returning 781
+-- active lots. That is the only sanctioned programmatic source of the eleven.
+--
 -- Applied to prod 2026-08-18; committed here so the curation is reproducible.
 --
 -- Self-hosted: record-only; apply by hand as supabase_admin, WITHOUT
@@ -147,6 +151,32 @@ UPDATE ext_auction_sources SET
   email_alerts_url  = 'https://www.allsurplus.com/account/savedsearches',
   notes             = 'DO NOT CRAWL. Terms reviewed 2026-08-18, User Agreement s.2(m): "use spiders, crawlers, robots or any other similar means to access our Site or substantially download, reproduce or archive any portion of our Site, or otherwise engage in any data-mining activities". Their front end calls an undocumented internal API at maestro.lqdt1.com — do NOT build against it; there is no public contract and using it would collide with s.2(m) anyway. Email is the sanctioned path and the strongest of any source here: saved-search alerts are a first-class feature with "coming soon", "latest online" and "ending soon" cadences. NO PREMIUM STORED: their terms define it only as "the Service fees charged ... as expressly stated in a Seller''s Listing" and publish no rate anywhere, so it is per-listing. CATEGORY TRAP: their /x-ray-inspection-systems category is INDUSTRIAL PCB inspection, not clinical radiology. Live medical inventory could not be confirmed — the site is an SPA that blocks non-browser clients — so its real imaging volume is still unproven.'
 WHERE slug = 'allsurplus';
+
+-- ── GSA Auctions ──────────────────────────────────────────────────────────
+-- The only source reviewed with a genuinely sanctioned automated path: an
+-- official public API, free self-serve key, no partner agreement, and no
+-- anti-automation clause in their terms.
+UPDATE ext_auction_sources SET
+  base_url          = 'https://gsaauctions.gov',
+  terms_url         = 'https://gsaauctions.gov/auctions/terms-conditions',
+  terms_reviewed_at = now(),
+  terms_position    = 'api_ok',
+  calendar_url      = 'https://gsaauctions.gov/auctions/home',
+  email_alerts_url  = 'https://public.govdelivery.com/accounts/USGSAAUCTIONS/subscriber/new',
+  notes             = 'OFFICIAL PUBLIC API — the cleanest ingestion path of any source here. GET https://api.gsa.gov/assets/gsaauctions/v2/auctions?api_key=... ; free self-serve key at api.data.gov/signup, no partner agreement, 5,000 calls/day. Verified 2026-08-18: HTTP 200, 2.6MB, 781 active lots. It is a WHOLE-DATASET DUMP with no query parameters — pull on a schedule and filter locally. v1 is gone (404). Terms reviewed 2026-08-18: no scraping, robot or data-mining clause of any kind, and no robots.txt. PREMIUM UNKNOWN, deliberately not stored: their FAQ asks the buyer''s-premium question and answers only about sales tax, and the word "premium" appears nowhere in their terms. They never state a rate AND never state zero — do not default it to 0 silently; confirm with gsaauctionshelp@gsa.gov before it feeds cost maths. REGISTER AS A COMPANY, not a shared individual account: their terms limit individuals to one account and hold the account holder liable for anything bid under it. The "Subscribe" link in their own header is broken — use the GovDelivery URL. FIT: 38 of 781 active lots are medical by item name, and they are carts, beds, exam tables and endoscopy stacks rather than imaging iron.'
+WHERE slug = 'gsa-auctions';
+
+-- ── GovDeals ──────────────────────────────────────────────────────────────
+-- Same Liquidity Services terms as AllSurplus: crawling banned, email fine.
+UPDATE ext_auction_sources SET
+  base_url          = 'https://www.govdeals.com/en/',
+  terms_url         = 'https://www.govdeals.com/en/content/site-terms',
+  terms_reviewed_at = now(),
+  terms_position    = 'email_ok',
+  calendar_url      = 'https://www.govdeals.com/en/events',
+  email_alerts_url  = 'https://www.govdeals.com/en/account/register',
+  notes             = 'DO NOT CRAWL. Terms reviewed 2026-08-18, User Agreement s.2: "use spiders, crawlers, robots or any other similar means to access our Site or substantially download, reproduce or archive any portion of our Site, or otherwise engage in any data-mining activities". Same Liquidity Services terms as AllSurplus. NOTE THE CONFLICT: their robots.txt is permissive (crawl-delay 5, six public sitemaps) — it does NOT override the User Agreement, which also survives termination. Email is clean and consent is explicit at registration; saved searches on the medical and laboratory categories generate the notification mail we ingest. Register with the Company field filled in. NO PREMIUM STORED: their terms define it only as "the Service fees charged ... as expressly stated in a Seller''s Listing", it is shown per lot in the bid box, and ten live listings sampled showed none at all. Third-party sources quoting 7.5-12.5% are not verifiable on their site. SEARCH PARAM TRAP: the keyword parameter is kWord — using keywords= is silently ignored and returns the entire unfiltered corpus (~26,000 results).'
+WHERE slug = 'govdeals';
 
 COMMIT;
 
