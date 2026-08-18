@@ -31,14 +31,22 @@ import {
   type NormalizationInput,
 } from '../_shared/auctionNormalize.ts';
 import { getLlmProvider } from '../_shared/llm/index.ts';
+import { JOB_BUDGET_MS, makeDeadline } from '../_shared/jobDeadline.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const DEFAULT_LIMIT = 100;
-const DEFAULT_BATCH_SIZE = 10;
+// Sized for one invocation, not for the whole backlog. The runtime kills a
+// function at 60s and the kill takes the response with it, so a job that
+// tries to drain everything reports nothing at all — see _shared/jobDeadline.
+// Whatever is left over is picked up by the next scheduled run.
+const DEFAULT_LIMIT = 24;
+const DEFAULT_BATCH_SIZE = 4;
+// Seeded from observed batch times (~10-20s for four lots); replaced by the
+// real measured average after the first batch of each run.
+const INITIAL_BATCH_ESTIMATE_MS = 18_000;
 const DEFAULT_THRESHOLD = 0.75;
 
 serve(async (req) => {
@@ -88,13 +96,25 @@ serve(async (req) => {
   const provider = getLlmProvider();
   const runId = crypto.randomUUID();
   const peak = isPeakPricing(new Date());
+  const startedAt = Date.now();
+  const deadline = makeDeadline(startedAt, JOB_BUDGET_MS);
+  let batchEstimateMs = INITIAL_BATCH_ESTIMATE_MS;
+  let batchesRun = 0;
+  let stoppedEarly = false;
 
   let normalized = 0;
   let flagged = 0;
+  let flaggedFailures = 0;
   let costMicrocents = 0;
   const problems: string[] = [];
 
   for (let i = 0; i < lots.length; i += batchSize) {
+    // Stop one batch short of the wall rather than being killed mid-flight.
+    if (!deadline.canAfford(Date.now(), batchEstimateMs, batchesRun === 0)) {
+      stoppedEarly = true;
+      break;
+    }
+    const batchStartedAt = Date.now();
     const batch = lots.slice(i, i + batchSize);
     const ids = new Set(batch.map((l) => l.id));
 
@@ -110,6 +130,12 @@ serve(async (req) => {
       });
       continue;
     }
+
+    // Learn the real pace: the seed estimate is a guess, the measured
+    // average is not.
+    batchesRun++;
+    const elapsed = Date.now() - batchStartedAt;
+    batchEstimateMs = Math.round((batchEstimateMs * (batchesRun - 1) + elapsed) / batchesRun);
 
     const batchCost = estimateCostMicrocents(result.usage, peak);
     costMicrocents += batchCost;
@@ -153,7 +179,7 @@ serve(async (req) => {
         })
         .eq('id', lot.id);
 
-      if (updateErr) problems.push(`${lot.id}: ${updateErr.message}`);
+      if (updateErr) { problems.push(`${lot.id}: ${updateErr.message}`); flaggedFailures++; }
       else normalized++;
     }
   }
@@ -165,6 +191,11 @@ serve(async (req) => {
       considered: lots.length,
       normalized,
       needs_review: flagged,
+      // A run that stops early is healthy, not failed — say so plainly so a
+      // cron log shows progress rather than looking stuck.
+      stopped_early: stoppedEarly,
+      remaining_after_run: Math.max(0, lots.length - normalized - flaggedFailures),
+      elapsed_ms: Date.now() - startedAt,
       peak_pricing: peak,
       estimated_cost_usd: Number((costMicrocents / 100_000_000).toFixed(6)),
       problems: problems.slice(0, 50),
