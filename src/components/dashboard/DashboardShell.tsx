@@ -191,12 +191,13 @@ function BrandLogo({
   useEffect(() => {
     setSrc(logoUrl ?? null);
   }, [logoUrl]);
-  // hero is the desktop left-nav brand: fills the 80px header row.
-  // The img is height-driven (w-auto) so wide wordmark logos like
-  // Yo-Doc's use the full sidebar width instead of shrinking inside
-  // a square box; the monogram fallback stays square.
+  // hero is the desktop left-nav brand: 56px inside the 80px header row,
+  // leaving ~12px of breathing room above and below. The img is
+  // height-driven (w-auto) so wide wordmark logos like Yo-Doc's use the
+  // full sidebar width instead of shrinking inside a square box; the
+  // monogram fallback stays square.
   const dim =
-    size === 'hero' ? 'w-[68px] h-[68px]' :
+    size === 'hero' ? 'w-14 h-14' :
     size === 'xl' ? 'w-[67px] h-[67px]' :
     size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
   if (src) {
@@ -204,7 +205,7 @@ function BrandLogo({
       <img
         src={src}
         alt={alt}
-        className={`${size === 'hero' ? 'h-[68px] w-auto max-w-full' : dim} object-contain shrink-0`}
+        className={`${size === 'hero' ? 'h-14 w-auto max-w-full' : dim} object-contain shrink-0`}
         onError={() => setSrc(null)}
       />
     );
@@ -384,7 +385,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
       <div
         className="flex items-center border-b border-border pr-2 pt-[env(safe-area-inset-top,0px)] h-[calc(80px+env(safe-area-inset-top,0px))]"
       >
-        <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-3 h-full">
+        <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 h-full">
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={(branding?.short_name || tenantName).charAt(0).toUpperCase()}
