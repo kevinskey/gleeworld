@@ -896,6 +896,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
     logo_url: '',
     assistant_voice_id: '' as string,
     youtube_channel_handle: '',
+    soundcloud_url: '',
     welcome_sms_template: '',
   });
   const [saving, setSaving] = useState(false);
@@ -912,6 +913,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         logo_url: (settings as any).logo_url || '',
         assistant_voice_id: (settings as any).assistant_voice_id || '',
         youtube_channel_handle: (settings as any).youtube_channel_handle || '',
+        soundcloud_url: settings.soundcloud_url || '',
         welcome_sms_template: settings.welcome_sms_template || '',
       });
     }
@@ -965,6 +967,7 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
         logo_url: form.logo_url,
         assistant_voice_id: form.assistant_voice_id || null,
         youtube_channel_handle: form.youtube_channel_handle.trim().replace(/^@/, '') || null,
+        soundcloud_url: form.soundcloud_url.trim() || null,
         welcome_sms_template: form.welcome_sms_template.trim() || null,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'tenant_id' })
@@ -1170,6 +1173,20 @@ function BrandingTabPanel({ canManage }: { canManage: boolean }) {
           <p className="text-xs text-muted-foreground">
             Optional. When set, the Video Library gets a "Sync from YouTube" button that pulls
             the channel's uploads into this workspace.
+          </p>
+        </div>
+        {/* Same idea as the YouTube handle: the tenant's external audio home
+            lives in branding, so the SoundCloud page stays tenant-neutral. */}
+        <div className="space-y-1.5">
+          <Label className="text-xs">SoundCloud profile URL</Label>
+          <Input
+            value={form.soundcloud_url}
+            disabled={!canManage}
+            onChange={(e) => setForm({ ...form, soundcloud_url: e.target.value })}
+            placeholder="https://soundcloud.com/yourname"
+          />
+          <p className="text-xs text-muted-foreground">
+            Optional. When set, the SoundCloud page plays this profile's tracks and playlists.
           </p>
         </div>
         {/* Welcome SMS — sent by the public-intake edge function after an

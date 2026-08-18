@@ -1,33 +1,40 @@
-// SoundCloud — the Command Center listening surface. Plays the tenant's
-// Media Library audio: tap a track, it plays; a strip pinned to the bottom
-// keeps transport controls in reach while the list scrolls.
+// SoundCloud — the Command Center listening surface.
 //
-// Distinct from /soundcloud (the SoundCloud.com OAuth search page, kept for
-// now and still unlinked). Nothing here talks to soundcloud.com — the name
-// is Kevin's, for the surface his listeners already call that.
+// Plays the tenant's SoundCloud profile through SoundCloud's own widget,
+// organized by the playlists ("sets") that already exist on the account.
+// Nothing is downloaded or copied: the widget streams full tracks straight
+// from SoundCloud, so new uploads appear here with no sync job to maintain.
 //
-// Media Library's RLS decides what comes back, so this page adds no
-// visibility rules of its own: a member sees their tenant's audio and
-// nothing else, exactly as /dashboard/media-library shows it.
+// Why embeds rather than our own <audio>: app-token stream URLs resolve to
+// cf-preview-media 30-second previews, and there is no unauthenticated file
+// URL to link (401/429). The widget is the only route to full audio that
+// does not require every listener to connect a SoundCloud account.
+//
+// The profile comes from branding (gw_branding_settings.soundcloud_url),
+// the same way youtube_channel_handle does — no account is baked into
+// shared code. Distinct from /soundcloud, the 2025 OAuth search page.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
-import { Music, Play, Pause, SkipBack, SkipForward, Search, Loader2 } from 'lucide-react';
-import { nextIndex, prevIndex, toggleFor, type PlaybackState } from '@/lib/media/playlist';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { Music, ListMusic, ExternalLink, Loader2, Settings } from 'lucide-react';
 
-interface TrackRow {
-  id: string;
+interface Playlist {
+  id: number;
   title: string;
-  file_url: string;
-  file_type: string;
-  created_at: string;
+  trackCount: number;
+  permalinkUrl: string;
+}
+
+interface ProfileResponse {
+  user: { id: number; username: string; permalinkUrl: string; trackCount: number };
+  playlists: Playlist[];
 }
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
@@ -35,73 +42,142 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
   boxShadow: '0 3px 6px rgba(15,23,42,0.08), 0 10px 20px -6px rgba(15,23,42,0.18)',
 };
 
-/** mm:ss, or a dash while the browser still has no duration for the track. */
-function clock(seconds: number): string {
-  if (!Number.isFinite(seconds) || seconds < 0) return '—:—';
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${String(s).padStart(2, '0')}`;
+/** SoundCloud's embeddable player for any track, set, or profile URL. */
+function widgetSrc(resourceUrl: string): string {
+  const params = new URLSearchParams({
+    url: resourceUrl,
+    auto_play: 'false',
+    hide_related: 'true',
+    show_comments: 'false',
+    show_user: 'true',
+    show_reposts: 'false',
+    visual: 'false',
+  });
+  return `https://w.soundcloud.com/player/?${params.toString()}`;
 }
 
 export default function SoundCloudPlayerPage() {
-  const [query, setQuery] = useState('');
-  const [state, setState] = useState<PlaybackState>({ index: null, playing: false });
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { settings, isLoading: brandingLoading } = useBrandingSettings();
+  const profileUrl = settings.soundcloud_url?.trim() || '';
+  // null = the whole profile ("All tracks"); otherwise the selected set.
+  const [selected, setSelected] = useState<Playlist | null>(null);
 
-  const { data: rows = [], isLoading } = useQuery<TrackRow[]>({
-    queryKey: ['soundcloud-tracks'],
+  const { data, isLoading, error } = useQuery<ProfileResponse>({
+    queryKey: ['soundcloud-profile', profileUrl],
+    enabled: !!profileUrl,
+    staleTime: 10 * 60 * 1000,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('gw_media_library')
-        .select('id, title, file_url, file_type, created_at')
-        .eq('is_deleted', false)
-        .like('file_type', 'audio/%')
-        .order('created_at', { ascending: false })
-        .limit(200);
-      return (data ?? []) as TrackRow[];
+      const { data, error } = await supabase.functions.invoke('soundcloud-playlists', {
+        body: { profileUrl },
+      });
+      if (error) throw error;
+      if ((data as { error?: string })?.error) throw new Error((data as { error: string }).error);
+      return data as ProfileResponse;
     },
   });
 
-  const tracks = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => r.title?.toLowerCase().includes(q));
-  }, [rows, query]);
+  const playlists = useMemo(
+    () => [...(data?.playlists ?? [])].sort((a, b) => b.trackCount - a.trackCount),
+    [data],
+  );
+  const nowPlayingUrl = selected?.permalinkUrl || data?.user.permalinkUrl || profileUrl;
 
-  const current = state.index !== null ? tracks[state.index] ?? null : null;
-  // Keyed on the id, not the row: re-fetches hand back equal-but-new objects,
-  // and depending on those would restart playback under the listener.
-  const currentId = current?.id;
+  const body = () => {
+    if (brandingLoading) return null;
 
-  // One <audio> element for the whole page, driven by state — two tracks can
-  // never sound at once, which a per-row <audio controls> list allows.
-  useEffect(() => {
-    const el = audioRef.current;
-    if (!el || !currentId) return;
-    if (state.playing) {
-      void el.play().catch(() => setState((s) => ({ ...s, playing: false })));
-    } else {
-      el.pause();
+    if (!profileUrl) {
+      return (
+        <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+          <CardContent className="py-10 text-center">
+            <Music className="w-8 h-8 mx-auto mb-3 opacity-50" />
+            <p className="font-medium mb-1">No SoundCloud profile set</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              Add your profile URL in Workspace Settings and your tracks and playlists show up here.
+            </p>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/dashboard/workspace">
+                <Settings className="w-4 h-4 mr-1.5" /> Open Workspace Settings
+              </a>
+            </Button>
+          </CardContent>
+        </Card>
+      );
     }
-  }, [state.playing, currentId]);
 
-  // Filtering while a track plays would otherwise leave `index` pointing at
-  // a different row. Drop the selection rather than swap the audio silently.
-  useEffect(() => {
-    setState((s) => (s.index !== null && s.index >= tracks.length ? { index: null, playing: false } : s));
-  }, [tracks.length]);
+    if (isLoading) {
+      return (
+        <div className="flex items-center gap-2 text-muted-foreground py-10 justify-center">
+          <Loader2 className="w-4 h-4 animate-spin" /> Loading playlists…
+        </div>
+      );
+    }
 
-  const select = (i: number) => setState((s) => toggleFor(s, i));
-  const goNext = () => setState((s) => ({ index: nextIndex(s.index, tracks.length), playing: true }));
-  const goPrev = () => setState((s) => ({ index: prevIndex(s.index, tracks.length), playing: true }));
+    if (error) {
+      return (
+        <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+          <CardContent className="py-10 text-center">
+            <p className="font-medium mb-1">Couldn't reach SoundCloud</p>
+            <p className="text-sm text-muted-foreground">
+              {(error as Error).message}. The player below may still work.
+            </p>
+          </CardContent>
+        </Card>
+      );
+    }
 
-  const seek = (value: number) => {
-    const el = audioRef.current;
-    if (!el || !Number.isFinite(value)) return;
-    el.currentTime = value;
-    setPosition(value);
+    return (
+      <>
+        {/* One widget, re-pointed as the selection changes: 30 mounted
+            iframes would each open their own player and their own network
+            connection. */}
+        <Card className={`${SOFT_CARD} mb-5 overflow-hidden`} style={SOFT_CARD_STYLE}>
+          <CardContent className="p-0">
+            <iframe
+              key={nowPlayingUrl}
+              title={selected ? `SoundCloud — ${selected.title}` : 'SoundCloud — all tracks'}
+              src={widgetSrc(nowPlayingUrl)}
+              width="100%"
+              height={selected ? 450 : 450}
+              frameBorder="0"
+              allow="autoplay"
+              scrolling="no"
+              className="block w-full"
+            />
+          </CardContent>
+        </Card>
+
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h2 className="text-sm font-semibold text-muted-foreground">
+            {playlists.length} playlist{playlists.length === 1 ? '' : 's'}
+          </h2>
+          {data?.user.permalinkUrl && (
+            <Button variant="ghost" size="sm" asChild>
+              <a href={data.user.permalinkUrl} target="_blank" rel="noreferrer">
+                Open on SoundCloud <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+              </a>
+            </Button>
+          )}
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <PlaylistRow
+            label="All tracks"
+            count={data?.user.trackCount ?? 0}
+            active={selected === null}
+            onClick={() => setSelected(null)}
+          />
+          {playlists.map((p) => (
+            <PlaylistRow
+              key={p.id}
+              label={p.title}
+              count={p.trackCount}
+              active={selected?.id === p.id}
+              onClick={() => setSelected(p)}
+            />
+          ))}
+        </div>
+      </>
+    );
   };
 
   return (
@@ -109,116 +185,39 @@ export default function SoundCloudPlayerPage() {
       <DashboardShell>
         <DashboardPageShell
           title="SoundCloud"
-          subtitle="Every audio track in your Media Library, in one player."
+          subtitle={
+            data?.user.username
+              ? `${data.user.username} — ${data.user.trackCount} tracks, streamed from SoundCloud.`
+              : 'Your SoundCloud tracks and playlists.'
+          }
         >
-          <div className="mb-4 relative max-w-md">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search tracks"
-              className="pl-9"
-              aria-label="Search tracks"
-            />
-          </div>
-
-          {isLoading ? (
-            <div className="flex items-center gap-2 text-muted-foreground py-10 justify-center">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading tracks…
-            </div>
-          ) : tracks.length === 0 ? (
-            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-              <CardContent className="py-10 text-center text-muted-foreground">
-                <Music className="w-8 h-8 mx-auto mb-3 opacity-50" />
-                {rows.length === 0
-                  ? 'No audio in your Media Library yet. Upload audio there and it shows up here.'
-                  : 'No track matches that search.'}
-              </CardContent>
-            </Card>
-          ) : (
-            // Bottom padding clears the fixed transport strip so the last
-            // row is never parked underneath it.
-            <div className="space-y-2 pb-28">
-              {tracks.map((t, i) => {
-                const isCurrent = state.index === i;
-                return (
-                  <Card
-                    key={t.id}
-                    className={`${SOFT_CARD} cursor-pointer transition-colors ${isCurrent ? 'ring-2 ring-primary' : ''}`}
-                    style={SOFT_CARD_STYLE}
-                    onClick={() => select(i)}
-                  >
-                    <CardContent className="py-3 px-4 flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                        {isCurrent && state.playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium truncate">{t.title || 'Untitled'}</div>
-                        {isCurrent && (
-                          <div className="text-xs text-muted-foreground">
-                            {clock(position)} / {clock(duration)}
-                          </div>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-
-          {current && (
-            <div
-              className="fixed bottom-0 left-0 right-0 z-30 border-t bg-card px-4 py-3"
-              style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}
-            >
-              <div className="max-w-4xl mx-auto flex items-center gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="font-medium truncate text-sm">{current.title || 'Untitled'}</div>
-                  <input
-                    type="range"
-                    min={0}
-                    max={Number.isFinite(duration) && duration > 0 ? duration : 0}
-                    value={position}
-                    onChange={(e) => seek(Number(e.target.value))}
-                    className="w-full mt-1"
-                    aria-label="Seek"
-                  />
-                </div>
-                <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-                  {clock(position)} / {clock(duration)}
-                </span>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" onClick={goPrev} aria-label="Previous track">
-                    <SkipBack className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setState((s) => ({ ...s, playing: !s.playing }))}
-                    aria-label={state.playing ? 'Pause' : 'Play'}
-                  >
-                    {state.playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={goNext} aria-label="Next track">
-                    <SkipForward className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <audio
-            ref={audioRef}
-            src={current?.file_url}
-            preload="metadata"
-            onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-            onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
-            onEnded={goNext}
-            className="hidden"
-          />
+          {body()}
         </DashboardPageShell>
       </DashboardShell>
     </UniversalLayout>
+  );
+}
+
+function PlaylistRow({
+  label, count, active, onClick,
+}: { label: string; count: number; active: boolean; onClick: () => void }) {
+  return (
+    <Card
+      className={`${SOFT_CARD} cursor-pointer transition-colors ${active ? 'ring-2 ring-primary' : ''}`}
+      style={SOFT_CARD_STYLE}
+      onClick={onClick}
+    >
+      <CardContent className="py-3 px-4 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <ListMusic className="w-4 h-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="font-medium truncate">{label}</div>
+          <div className="text-xs text-muted-foreground">
+            {count} track{count === 1 ? '' : 's'}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
