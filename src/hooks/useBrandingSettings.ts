@@ -27,6 +27,10 @@ export interface BrandingSettings {
    *  default ("Thanks for joining {org_name}!") — see
    *  supabase/functions/_shared/publicIntake.ts. */
   welcome_sms_template: string | null;
+  /** Public SoundCloud profile URL for this tenant, e.g.
+   *  https://soundcloud.com/doctorkj. Empty leaves the Command Center's
+   *  SoundCloud page on its setup prompt. Set on the Branding tab. */
+  soundcloud_url: string | null;
 }
 
 const TENANT = typeof window !== 'undefined'
@@ -50,6 +54,7 @@ function fallback(): BrandingSettings {
     assistant_voice_id: null,
     setup_completed: false,
     welcome_sms_template: null,
+    soundcloud_url: null,
   };
 }
 
