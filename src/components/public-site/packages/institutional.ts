@@ -43,6 +43,7 @@ export const institutionalPackage: TemplatePackage = {
     { type: 'staff', config: { heading: 'Direction' } },
     { type: 'press', config: { heading: 'Reviews & press' } },
     { type: 'music-player', config: { heading: 'Recent recordings', tracks: [] } },
+    { type: 'soundcloud', config: { heading: 'Listen on SoundCloud', playlistUrl: '', visual: false } },
     { type: 'contact', config: { email: '', phone: '' } },
   ],
 };

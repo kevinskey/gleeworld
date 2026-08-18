@@ -338,8 +338,9 @@ export default function PublicPageEditor() {
       logoUrl: branding.logo_url || null,
       isPreview: true,
       activeAddons,
+      soundcloudUrl: branding.soundcloud_url || null,
     }),
-    [site?.slug, theme, branding.org_name, branding.logo_url, activeAddons],
+    [site?.slug, theme, branding.org_name, branding.logo_url, branding.soundcloud_url, activeAddons],
   );
 
   const activate = async () => {
