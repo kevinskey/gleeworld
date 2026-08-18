@@ -217,6 +217,7 @@ const SeatingChartViewPage = lazy(() => import("./pages/seating-charts/ViewPage"
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
+const SoundCloudPlayerPage = lazy(() => import("./pages/dashboard/SoundCloudPlayerPage"));
 const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
 const ReadingMusicPage = lazy(() => import("./pages/dashboard/ReadingMusicPage"));
 const NotationEditorPage = lazy(() => import("./pages/notation/NotationEditorPage"));
@@ -1965,6 +1966,16 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell><NewMediaLibraryPage /></DashboardShell>
                       </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* The Command Center player. /soundcloud (no /dashboard) is
+                    the separate SoundCloud.com OAuth search page. */}
+                <Route
+                  path="/dashboard/soundcloud"
+                  element={
+                    <ProtectedRoute>
+                      <SoundCloudPlayerPage />
                     </ProtectedRoute>
                   }
                 />
