@@ -137,80 +137,86 @@ export const ConciergePage: React.FC = () => {
           maxWidth="4xl"
         >
           <div className="space-y-6">
-            {/* Rides */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <span className="rounded-md bg-sky-50 p-1.5 text-sky-600"><Car className="h-4 w-4" /></span>
-                  Get a ride
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Enter where you're headed. We'll open Uber or Lyft with the trip pre-filled —
-                  you confirm and pay in your own account.
-                </p>
-                <AddressAutocomplete
-                  value={destination}
-                  onChange={setDestination}
-                  placeholder="Where to? (address or place name)"
-                />
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => openRide("uber")}
-                    disabled={!destination.trim() || rideLoading !== null}
-                  >
-                    {rideLoading === "uber" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ExternalLink className="mr-2 h-4 w-4" />}
-                    Ride with Uber
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => openRide("lyft")}
-                    disabled={!destination.trim() || rideLoading !== null}
-                  >
-                    {rideLoading === "lyft" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ExternalLink className="mr-2 h-4 w-4" />}
-                    Ride with Lyft
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Food */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <span className="rounded-md bg-amber-50 p-1.5 text-amber-600"><UtensilsCrossed className="h-4 w-4" /></span>
-                  Order food
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Optionally tell us what you're craving, then pick a delivery service.
-                  It opens with your search ready to go.
-                </p>
-                <Input
-                  value={craving}
-                  onChange={(e) => setCraving(e.target.value)}
-                  placeholder="What are you craving? (optional — e.g. wings, sushi)"
-                />
-                <div className="flex flex-wrap gap-2">
-                  {foodLinks().map((f) => (
-                    <Button key={f.name} variant="outline" asChild>
-                      <a href={f.href} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                        {f.name}
-                      </a>
+            {/* Rides + food side by side at lg — two focused action panels
+                instead of a stack of identical cards. Each panel opens with
+                the Command Center's editorial kicker (heavy top rule +
+                uppercase micro-label) so the page reads as one system. */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Rides */}
+              <Card className="border-t-2 border-t-foreground">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
+                    <Car className="h-4 w-4 text-primary" />
+                    Get a ride
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex h-full flex-col gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    We'll open Uber or Lyft with the trip pre-filled — you confirm
+                    and pay in your own account.
+                  </p>
+                  <AddressAutocomplete
+                    value={destination}
+                    onChange={setDestination}
+                    placeholder="Where to? (address or place name)"
+                  />
+                  <div className="mt-auto flex flex-wrap gap-2 pt-1">
+                    <Button
+                      onClick={() => openRide("uber")}
+                      disabled={!destination.trim() || rideLoading !== null}
+                    >
+                      {rideLoading === "uber" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ExternalLink className="mr-2 h-4 w-4" />}
+                      Ride with Uber
                     </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                    <Button
+                      variant="outline"
+                      onClick={() => openRide("lyft")}
+                      disabled={!destination.trim() || rideLoading !== null}
+                    >
+                      {rideLoading === "lyft" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ExternalLink className="mr-2 h-4 w-4" />}
+                      Ride with Lyft
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Web search */}
-            <Card>
+              {/* Food */}
+              <Card className="border-t-2 border-t-foreground">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
+                    <UtensilsCrossed className="h-4 w-4 text-primary" />
+                    Order food
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex h-full flex-col gap-3">
+                  <p className="text-sm text-muted-foreground">
+                    Tell us what you're craving, then pick a delivery service.
+                    It opens with your search ready to go.
+                  </p>
+                  <Input
+                    value={craving}
+                    onChange={(e) => setCraving(e.target.value)}
+                    placeholder="Craving something? (optional — e.g. wings, sushi)"
+                  />
+                  <div className="mt-auto flex flex-wrap gap-2 pt-1">
+                    {foodLinks().map((f) => (
+                      <Button key={f.name} variant="outline" asChild>
+                        <a href={f.href} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="mr-2 h-4 w-4" />
+                          {f.name}
+                        </a>
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Web search — full-width because its results render in-page */}
+            <Card className="border-t-2 border-t-foreground">
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <span className="rounded-md bg-violet-50 p-1.5 text-violet-600"><Globe className="h-4 w-4" /></span>
+                <CardTitle className="flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
+                  <Globe className="h-4 w-4 text-primary" />
                   Search the web
                 </CardTitle>
               </CardHeader>
@@ -229,9 +235,9 @@ export const ConciergePage: React.FC = () => {
                 {searchError && <p className="text-sm text-destructive">{searchError}</p>}
 
                 {search?.answer && (
-                  <div className="rounded-lg border border-border bg-muted/40 p-4">
-                    <div className="mb-2 flex items-center gap-2 text-sm font-medium">
-                      <Sparkles className="h-4 w-4 text-violet-600" />
+                  <div className="border-l-2 border-primary bg-muted/40 py-3 pl-4 pr-3">
+                    <div className="mb-2 flex items-center gap-2 text-[12px] font-black uppercase tracking-[0.08em]">
+                      <Sparkles className="h-4 w-4 text-primary" />
                       AI answer
                     </div>
                     <p className="whitespace-pre-wrap text-sm leading-relaxed">{search.answer}</p>
@@ -243,16 +249,16 @@ export const ConciergePage: React.FC = () => {
                 )}
 
                 {search && search.results.length > 0 && (
-                  <ul className="space-y-3">
+                  <ul className="divide-y divide-border">
                     {search.results.map((r, i) => (
-                      <li key={`${r.link}-${i}`} className="rounded-md border border-border p-3">
+                      <li key={`${r.link}-${i}`} className="py-3 first:pt-0 last:pb-0">
                         <a
                           href={r.link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm font-medium text-primary hover:underline"
+                          className="text-sm font-semibold text-primary hover:underline"
                         >
-                          {i + 1}. {r.title}
+                          {r.title}
                         </a>
                         <div className="text-xs text-muted-foreground">{r.displayLink}</div>
                         <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{r.snippet}</p>
