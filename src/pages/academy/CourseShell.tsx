@@ -215,7 +215,7 @@ export default function CourseShell() {
           <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">
               <p className="text-slate-600 mb-4">Class not found.</p>
-              <Button onClick={() => navigate("/control-center?module=glee-academy")}>Back to Glee Academy</Button>
+              <Button onClick={() => navigate("/academy")}>Back to Glee Academy</Button>
             </div>
           </div>
         </DashboardShell>
@@ -235,7 +235,11 @@ export default function CourseShell() {
       <div className="bg-primary text-primary-foreground" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <button
-            onClick={() => navigate("/control-center?module=glee-academy")}
+            // "Glee Academy" must land on Glee Academy. This pointed at
+            // /control-center?module=glee-academy — the command center —
+            // so the back arrow took you somewhere that is not the place
+            // named on the label.
+            onClick={() => navigate("/academy")}
             className="inline-flex items-center gap-1.5 text-xs text-primary-foreground/70 hover:text-primary-foreground mb-3"
           >
             <ArrowLeft className="w-4 h-4" />
