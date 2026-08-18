@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Trash2 } from 'lucide-react';
 import { SignInDialog } from '@/components/auth/SignInDialog';
 import { EditableText } from '../EditableText';
+import { scrollToHash } from '../scrollToHash';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 // Friendly names for the on-page anchor targets that ship as built-in blocks.
@@ -139,13 +140,30 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   const navSizeClass = config.navSize === 'lg' ? 'text-lg' : config.navSize === 'base' ? 'text-base' : 'text-sm';
   const navWeightClass = config.navWeight === 'semibold' ? 'font-semibold' : '';
   const navSpacingClass = config.navSpacing === 'wide' ? 'gap-8 tracking-wide' : 'gap-4';
+  // In-page links can't be left to the browser's fragment jump: `html` sets
+  // `scroll-behavior: smooth`, and over a long tenant home page that animated
+  // jump regularly stops short or never starts, so the URL says `#music`
+  // while the viewport sits in the middle of About. scrollToHash lands it
+  // outright, offset by the sticky bar. Modified clicks (new tab/window) and
+  // the editor preview keep default behavior.
+  const onNavLinkClick = (url: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+    setMenuOpen(false);
+    if (editable || !url.startsWith('#')) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+    if (!scrollToHash(url, barHeight)) return;
+    e.preventDefault();
+    // Keep the address bar honest so the section stays linkable. Raw
+    // pushState doesn't notify the router, so ScrollToTop stays asleep —
+    // letting the fragment navigate would wake it and undo the scroll.
+    window.history.pushState(null, '', url);
+  };
   const navInline = (
     <>
       {config.navLinks.map((l, i) => (
         <a
           key={i}
           href={l.url}
-          onClick={() => setMenuOpen(false)}
+          onClick={onNavLinkClick(l.url)}
           className="whitespace-nowrap opacity-80 hover:opacity-100 transition-opacity"
           style={{ color: linkColor }}
         >
@@ -275,7 +293,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
               <a
                 key={i}
                 href={l.url}
-                onClick={() => setMenuOpen(false)}
+                onClick={onNavLinkClick(l.url)}
                 className={`py-2 px-2 rounded text-base text-slate-900 hover:bg-slate-100 transition-colors ${navWeightClass}`}
               >
                 {l.label}
