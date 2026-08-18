@@ -61,7 +61,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
-import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
+import { isTenantAdminOrAboveRole } from '@/lib/auth/tenantRoles';
 import { useMyTenants, tenantHomeUrl, tenantSwitchUrl, performTenantSwitch } from '@/hooks/useMyTenants';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -563,9 +563,15 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
 
 // ── Top bar ─────────────────────────────────────────────────────────────────
 
-// Views switcher — visible only to tenant super-admins. Lets them
-// preview the command-center sidebar as any lower-privilege role
-// without signing out. "Home" restores their own super-admin view.
+// Views switcher — visible to whoever runs the tenant: owner, admin, or
+// super-admin (either spelling). Lets them preview the command-center
+// sidebar as any lower-privilege role without signing out. "Home" restores
+// their own view.
+//
+// It was super-admin-only, which hid it on tenant sites from the two roles
+// that most need it: tenant admins, and the tenant OWNER — the site's own
+// creator. Keep this gate identical to useEffectivePreviewRole's, or the
+// button appears and does nothing.
 // Backed by the shared navPreview module (sessionStorage-persisted so
 // the preview survives a route change but auto-clears on tab close,
 // preventing a super-admin from getting trapped with a hidden
@@ -581,7 +587,7 @@ function ViewsSwitcher() {
   // the control from them.
   const myTenantRole = useMyTenantRole();
 
-  if (!isTenantSuperAdminRole(myTenantRole)) return null;
+  if (!isTenantAdminOrAboveRole(myTenantRole)) return null;
 
   const label = preview
     ? HIDEABLE_NAV_ROLES.find((r) => r.value === preview)?.label ?? 'Preview'

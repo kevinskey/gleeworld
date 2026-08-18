@@ -15,3 +15,20 @@
 export function isTenantSuperAdminRole(role: string | null | undefined): boolean {
   return role === 'super_admin' || role === 'super-admin';
 }
+
+/**
+ * True for the roles that run a tenant: super-admin (both spellings), admin,
+ * and owner.
+ *
+ * 'owner' is real and load-bearing despite being rare in the data — it is the
+ * role the tenant's creator holds, so a strict super-admin check hid the Views
+ * switcher from the one person who owns the site. That is exactly how this
+ * surfaced: Kevin is 'super_admin' on main (control visible) but 'owner' on
+ * his own yo-doc tenant (control gone).
+ *
+ * Deliberately NOT included: 'staff', and every member-level role. Use
+ * isTenantSuperAdminRole for gates that must stay super-admin-only.
+ */
+export function isTenantAdminOrAboveRole(role: string | null | undefined): boolean {
+  return isTenantSuperAdminRole(role) || role === 'admin' || role === 'owner';
+}
