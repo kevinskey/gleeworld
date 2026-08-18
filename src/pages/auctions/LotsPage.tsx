@@ -1,7 +1,9 @@
 // Auctions — lots. Every individual item across the tracked sales.
 import { useMemo, useState } from 'react';
-import { Gavel, Search } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Gavel, Search, X } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -12,18 +14,31 @@ import {
 import { MODALITIES, MODALITY_LABELS, type Modality } from '@/lib/auctions/types';
 import { AuctionsTabs } from './components/AuctionsTabs';
 import { LotRow } from './components/LotRow';
-import { useLots, useWatchlist, useWatchlistMutations } from './hooks';
+import { useAuction, useLots, useWatchlist, useWatchlistMutations } from './hooks';
 
 export default function LotsPage() {
   const [modality, setModality] = useState('all');
   const [search, setSearch] = useState('');
   const [openOnly, setOpenOnly] = useState(true);
+  // Arriving from a calendar card: show only that sale's equipment.
+  const [params, setParams] = useSearchParams();
+  const auctionId = params.get('auction') ?? undefined;
+  const { data: focusedAuction } = useAuction(auctionId);
 
   const options = useMemo(() => ({
     modality: modality === 'all' ? undefined : (modality as Modality),
     search: search.trim() || undefined,
-    openOnly,
-  }), [modality, search, openOnly]);
+    // A specific sale is worth seeing whole, closed lots included — the
+    // hide-closed default is for browsing everything, not for one catalog.
+    openOnly: auctionId ? false : openOnly,
+    auctionId,
+  }), [modality, search, openOnly, auctionId]);
+
+  function clearAuctionFilter() {
+    const next = new URLSearchParams(params);
+    next.delete('auction');
+    setParams(next, { replace: true });
+  }
 
   const { data: lots = [], isLoading } = useLots(options);
   const { data: watchlist = [] } = useWatchlist();
@@ -47,6 +62,26 @@ export default function LotsPage() {
       subtitle="Individual items across every tracked sale."
     >
       <AuctionsTabs />
+
+      {auctionId && (
+        <div className="flex items-center justify-between gap-3 flex-wrap border border-primary/30 bg-primary/5 p-3">
+          <p className="text-sm min-w-0">
+            Showing equipment from{' '}
+            <span className="font-semibold">{focusedAuction?.title ?? 'one sale'}</span>
+            {focusedAuction?.source?.name && (
+              <span className="text-muted-foreground"> · {focusedAuction.source.name}</span>
+            )}
+          </p>
+          <div className="flex gap-2 shrink-0">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/auctions">Back to the calendar</Link>
+            </Button>
+            <Button variant="ghost" size="sm" onClick={clearAuctionFilter}>
+              <X className="w-4 h-4 mr-1" /> Show all equipment
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
         <div className="relative flex-1 min-w-0">
@@ -72,7 +107,7 @@ export default function LotsPage() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center gap-2 pb-2">
+        <div className={`flex items-center gap-2 pb-2 ${auctionId ? 'hidden' : ''}`}>
           <Checkbox
             id="lots-open-only"
             checked={openOnly}
@@ -89,7 +124,9 @@ export default function LotsPage() {
       ) : lots.length === 0 ? (
         <Card className="p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            No lots match this search. Lots appear once a catalog has been brought in and read.
+            {auctionId
+              ? 'No equipment from this sale is listed yet. Lots appear once its catalog has been brought in and read.'
+              : 'No lots match this search. Lots appear once a catalog has been brought in and read.'}
           </p>
         </Card>
       ) : (

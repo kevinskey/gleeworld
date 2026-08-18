@@ -91,6 +91,9 @@ export interface Auction {
   catalog_released_at: string | null;
   status: AuctionStatus;
   modality_focus: Modality[];
+  // True when the source published a date but no clock time, so opens_at /
+  // closes_at carry a placeholder. The UI must then show the date alone.
+  times_are_estimated: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -98,6 +101,8 @@ export interface Auction {
 // An auction joined to the house that runs it, as the calendar renders it.
 export interface AuctionWithSource extends Auction {
   source: Pick<AuctionSource, 'id' | 'name' | 'slug' | 'ingest_method' | 'last_refreshed_at'> | null;
+  /** How many lots are visible to this viewer — RLS already hides the rest. */
+  lot_count?: number;
 }
 
 // ── Phase 2 ───────────────────────────────────────────────────────────────

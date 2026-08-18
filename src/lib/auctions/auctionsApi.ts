@@ -5,10 +5,13 @@ import type { Auction, AuctionStatus, AuctionWithSource, Modality } from './type
 
 const COLUMNS =
   'id, source_id, external_id, title, location_city, location_state, opens_at, closes_at, ' +
-  'catalog_url, catalog_released_at, status, modality_focus, created_at, updated_at';
+  'catalog_url, catalog_released_at, status, modality_focus, times_are_estimated, created_at, updated_at';
 
+// The lot count comes back as an aggregate; PostgREST returns it as an array
+// of one object, which listAuctions flattens to a plain number.
 const COLUMNS_WITH_SOURCE =
-  `${COLUMNS}, source:ext_auction_sources(id, name, slug, ingest_method, last_refreshed_at)`;
+  `${COLUMNS}, source:ext_auction_sources(id, name, slug, ingest_method, last_refreshed_at), ` +
+  'lots:ext_auction_lots(count)';
 
 export interface ListAuctionsOptions {
   // Hide sales that closed more than this many days ago. The calendar is a
@@ -36,7 +39,14 @@ export async function listAuctions(opts: ListAuctionsOptions = {}): Promise<Auct
 
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as AuctionWithSource[];
+  return (data ?? []).map(flattenLotCount) as unknown as AuctionWithSource[];
+}
+
+// PostgREST returns an embedded aggregate as `lots: [{ count: n }]`.
+function flattenLotCount(row: Record<string, unknown>): Record<string, unknown> {
+  const lots = row.lots as Array<{ count?: number }> | undefined;
+  const { lots: _drop, ...rest } = row;
+  return { ...rest, lot_count: lots?.[0]?.count ?? 0 };
 }
 
 export async function getAuction(id: string): Promise<AuctionWithSource | null> {
@@ -46,7 +56,9 @@ export async function getAuction(id: string): Promise<AuctionWithSource | null> 
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
-  return (data as AuctionWithSource) ?? null;
+  return data
+    ? (flattenLotCount(data as Record<string, unknown>) as unknown as AuctionWithSource)
+    : null;
 }
 
 export interface AuctionInput {

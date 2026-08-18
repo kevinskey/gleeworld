@@ -14,6 +14,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { filterAuctions, groupAuctionsByMonth } from '@/lib/auctions/calendar';
 import { MODALITIES, MODALITY_LABELS, type Modality } from '@/lib/auctions/types';
 import { AuctionCard } from './components/AuctionCard';
+import { AuctionsTabs } from './components/AuctionsTabs';
 import { SubscribeDialog } from './components/SubscribeDialog';
 import { useAuctions, useAuctionSources } from './hooks';
 
@@ -57,6 +58,8 @@ export default function AuctionsCalendarPage() {
         </div>
       }
     >
+      <AuctionsTabs />
+
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="w-full sm:w-64">
           <Select value={sourceId} onValueChange={setSourceId}>
@@ -110,7 +113,7 @@ export default function AuctionsCalendarPage() {
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {group.auctions.map((a) => (
-                  <AuctionCard key={a.id} auction={a as never} />
+                  <AuctionCard key={a.id} auction={a} />
                 ))}
               </div>
             </section>
