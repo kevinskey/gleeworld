@@ -26,6 +26,7 @@ import type { EngineInstrument } from './instruments';
 import type { Session } from '../session';
 import {
   GW_BY_NAME, GwManifest, fromGwPresetId, gwLayerIndexForVelocity, gwManifestUrl, gwSampleUrl,
+  gwSampleRelForFormat, pickGwSampleFormat,
 } from '../gwInstruments';
 
 const NOTE = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
@@ -59,6 +60,20 @@ function getManifest(name: string): GwManifest | Promise<GwManifest> {
   return p;
 }
 
+// Sample encoding pinned per instrument at first use, so preload and later
+// voice builds request identical URLs (a probe resolving in between must not
+// split an instrument across mp3 and webm and re-download half the set).
+const formatCache = new Map<string, 'mp3' | 'webm'>();
+
+function sampleUrl(name: string, manifest: GwManifest, rel: string): string {
+  let fmt = formatCache.get(name);
+  if (!fmt) {
+    fmt = pickGwSampleFormat(manifest);
+    formatCache.set(name, fmt);
+  }
+  return gwSampleUrl(name, gwSampleRelForFormat(rel, fmt));
+}
+
 function getBuffer(url: string): Tone.ToneAudioBuffer {
   const hit = bufferCache.get(url);
   if (hit) return hit;
@@ -85,11 +100,11 @@ export async function preloadGwSession(session: Session): Promise<void> {
     try {
       const manifest = await getManifest(name);
       for (const layer of manifest.layers ?? []) {
-        for (const rel of Object.values(layer.urls)) getBuffer(gwSampleUrl(name, rel));
+        for (const rel of Object.values(layer.urls)) getBuffer(sampleUrl(name, manifest, rel));
       }
-      for (const rel of Object.values(manifest.release?.urls ?? {})) getBuffer(gwSampleUrl(name, rel));
+      for (const rel of Object.values(manifest.release?.urls ?? {})) getBuffer(sampleUrl(name, manifest, rel));
       for (const hits of Object.values(manifest.kit ?? {})) {
-        for (const hit of hits) getBuffer(gwSampleUrl(name, hit.url));
+        for (const hit of hits) getBuffer(sampleUrl(name, manifest, hit.url));
       }
     } catch { /* manifest unreachable — instrument falls back at build time */ }
   }));
@@ -138,7 +153,7 @@ export function buildGwInstrument(name: string, makeFallback: () => EngineInstru
 function buildLayeredVoice(name: string, manifest: GwManifest, out: Tone.Gain): EngineInstrument {
   const layers = manifest.layers ?? [];
   const samplerUrls = (urls: Record<string, string>) =>
-    Object.fromEntries(Object.entries(urls).map(([note, rel]) => [note, getBuffer(gwSampleUrl(name, rel))]));
+    Object.fromEntries(Object.entries(urls).map(([note, rel]) => [note, getBuffer(sampleUrl(name, manifest, rel))]));
 
   // No load gates: cached ToneAudioBuffers fill in as they arrive, and a
   // trigger that finds no loaded sample throws — caught below, note dropped.
@@ -224,7 +239,7 @@ const CHOKE_FADE_S = 0.03;
 function buildKitVoice(name: string, manifest: GwManifest, out: Tone.Gain): EngineInstrument {
   const kit = manifest.kit ?? {};
   // Pre-touch buffers so downloads start (and register with Tone's loader).
-  for (const hits of Object.values(kit)) for (const h of hits) getBuffer(gwSampleUrl(name, h.url));
+  for (const hits of Object.values(kit)) for (const h of hits) getBuffer(sampleUrl(name, manifest, h.url));
 
   let disposed = false;
   // Ringing open-hat hits, so a closed hat can choke them. Entries remove
@@ -236,7 +251,7 @@ function buildKitVoice(name: string, manifest: GwManifest, out: Tone.Gain): Engi
     if (!hits) return;
     const vel = Math.max(1, Math.round(vel01 * 127));
     const i = gwLayerIndexForVelocity(hits, vel);
-    const buf = getBuffer(gwSampleUrl(name, hits[i].url));
+    const buf = getBuffer(sampleUrl(name, manifest, hits[i].url));
     if (!buf.loaded) return;
     if (HAT_CHOKERS.has(pitch)) {
       for (const oh of openHats) {

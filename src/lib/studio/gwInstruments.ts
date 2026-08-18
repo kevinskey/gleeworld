@@ -13,9 +13,14 @@ export const GW_SAMPLE_BASE =
   'https://supabase.gleeworld.org/storage/v1/object/public/studio-samples';
 
 export interface GwInstrument {
-  name: string;          // manifest folder name, e.g. 'grand_piano'
+  name: string;          // stable preset name, e.g. 'grand_piano' (stored in sessions)
   label: string;         // picker label, e.g. 'Grand Piano'
   kind: 'pitched' | 'kit';
+  // Space folder when it differs from `name`. Samples upload with
+  // Cache-Control: immutable, so a rebuild that changes what layer paths
+  // MEAN (e.g. the 4→8-velocity-layer grand piano) must publish to a fresh
+  // folder — reusing paths would serve stale mixed layers to return visitors.
+  dir?: string;
   // GM soundfont instrument to fall back to when the premium manifest can't
   // be fetched (offline bank, renamed instrument). Kits omit it and fall
   // back to the synthesized basic kit instead.
@@ -24,7 +29,7 @@ export interface GwInstrument {
 
 // Picker order: keyboard → voices → strings → guitars → organ → kits.
 export const GW_INSTRUMENTS: GwInstrument[] = [
-  { name: 'grand_piano',      label: 'Grand Piano',              kind: 'pitched', gmFallback: 'acoustic_grand_piano' },
+  { name: 'grand_piano',      label: 'Grand Piano',              kind: 'pitched', gmFallback: 'acoustic_grand_piano', dir: 'grand_piano_v2' },
   { name: 'electric_piano',   label: 'Electric Piano',           kind: 'pitched', gmFallback: 'electric_piano_1' },
   { name: 'choir_aahs',       label: 'Choir Aahs',               kind: 'pitched', gmFallback: 'choir_aahs' },
   { name: 'string_ensemble',  label: 'String Ensemble',          kind: 'pitched', gmFallback: 'string_ensemble_1' },
@@ -69,6 +74,10 @@ export interface GwKitHit {
 export interface GwManifest {
   name: string;
   kind: 'pitched' | 'kit';
+  // Encodings available for every sample. `urls` always name .mp3 files
+  // (the universal fallback); when 'webm' is listed, a same-path .webm
+  // (Opus, ~40% smaller) also exists and capable clients swap extensions.
+  formats?: string[];
   // Pitched: velocity layers in ascending maxVel order (last must be 127).
   layers?: GwLayer[];
   // Optional release samples (played briefly on note-off; piano dampers).
@@ -77,8 +86,10 @@ export interface GwManifest {
   kit?: Record<string, GwKitHit[]>;
 }
 
+const gwDir = (name: string): string => GW_BY_NAME[name]?.dir ?? name;
+
 export function gwManifestUrl(name: string): string {
-  return `${GW_SAMPLE_BASE}/${name}/manifest.json`;
+  return `${GW_SAMPLE_BASE}/${gwDir(name)}/manifest.json`;
 }
 
 export function gwSampleUrl(name: string, relative: string): string {
@@ -86,8 +97,53 @@ export function gwSampleUrl(name: string, relative: string): string {
   // would start a URL fragment and truncate the request. Encode each path
   // segment, never the separators.
   const encoded = relative.split('/').map(encodeURIComponent).join('/');
-  return `${GW_SAMPLE_BASE}/${name}/${encoded}`;
+  return `${GW_SAMPLE_BASE}/${gwDir(name)}/${encoded}`;
 }
+
+// ── webm/opus support probe ──────────────────────────────────────────
+//
+// Newer sample sets ship each file as .mp3 plus a smaller .webm (Opus).
+// Whether Web Audio can decode webm/opus varies (Safari gained it late),
+// and canPlayType answers for <audio>, not decodeAudioData — so probe the
+// exact capability once: decode a 567-byte silent webm/opus clip. Until
+// the async probe resolves, callers get 'mp3' (both encodings exist
+// server-side, so a mixed prefix of downloads is harmless).
+
+// 0.02s of silence, 48kHz mono Opus in webm (ffmpeg -f lavfi anullsrc).
+const WEBM_OPUS_PROBE =
+  'GkXfo59ChoEBQveBAULygQRC84EIQoKEd2VibUKHgQRChYECGFOAZwEAAAAAAAIHEU2bdLpNu4tTq4QVSalmU6yBoU27i1OrhBZUrmtTrIHYTbuMU6uEElTDZ1OsggFCTbuMU6uEHFO7a1OsggHx7AEAAAAAAABZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmsirXsYMPQkBNgI1MYXZmNjIuMTIuMTAyV0GNTGF2ZjYyLjEyLjEwMkSJiEA8AAAAAAAAFlSua+WuAQAAAAAAAFzXgQFzxYjRQycHOWoAL5yBACK1nIN1bmSIgQCGhkFfT1BVU1aqg2MuoFa7hATEtACDgQLhkZ+BAbWIQOdwAAAAAABiZIEQY6KTT3B1c0hlYWQBATgBgLsAAAAAABJUw2f9c3OgY8CAZ8iaRaOHRU5DT0RFUkSHjUxhdmY2Mi4xMi4xMDJzc9djwItjxYjRQycHOWoAL2fIokWjh0VOQ09ERVJEh5VMYXZjNjIuMjguMTAyIGxpYm9wdXNnyKFFo4hEVVJBVElPTkSHkzAwOjAwOjAwLjAyODAwMDAwMAAfQ7Z1qOeBAKOLgQAAgAgL5jsjq2CglqGKgQAVAAgIrLMOxpuBB3WihADN/mAcU7trkbuPs4EAt4r3gQHxggHE8IED';
+
+let webmOpusSupported = false;
+let probeStarted = false;
+
+function startWebmOpusProbe(): void {
+  if (probeStarted) return;
+  probeStarted = true;
+  try {
+    const bytes = Uint8Array.from(atob(WEBM_OPUS_PROBE), (c) => c.charCodeAt(0));
+    // OfflineAudioContext: no user-gesture requirement and no audible tap on
+    // the live context. decodeAudioData rejects on unsupported containers.
+    const ctx = new OfflineAudioContext(1, 1, 48000);
+    ctx.decodeAudioData(bytes.buffer)
+      .then(() => { webmOpusSupported = true; })
+      .catch(() => { /* mp3 fallback stands */ });
+  } catch { /* no Web Audio (tests/SSR) — mp3 fallback stands */ }
+}
+
+// Best sample encoding for a manifest on this client. Sync by design: it is
+// called on the note-on hot path's setup; the probe is kicked off at module
+// load and resolves long before any Studio session opens.
+export function pickGwSampleFormat(manifest: Pick<GwManifest, 'formats'>): 'mp3' | 'webm' {
+  startWebmOpusProbe();
+  return webmOpusSupported && (manifest.formats?.includes('webm') ?? false) ? 'webm' : 'mp3';
+}
+
+// Rewrite a manifest-relative .mp3 path to the chosen encoding.
+export function gwSampleRelForFormat(rel: string, format: 'mp3' | 'webm'): string {
+  return format === 'webm' ? rel.replace(/\.mp3$/, '.webm') : rel;
+}
+
+startWebmOpusProbe();
 
 // Pick the layer index for a MIDI velocity (1..127): first layer whose
 // maxVel covers it; velocities past the last maxVel clamp to the top layer.

@@ -41,7 +41,10 @@ const recipes = [];
 {
   const dir = 'salamander_piano/SalamanderGrandPiano-SFZ+FLAC-V3+20200602/samples';
   const files = ls(dir);
-  const LAYERS = [{ v: 4, maxVel: 32 }, { v: 8, maxVel: 64 }, { v: 12, maxVel: 96 }, { v: 16, maxVel: 127 }];
+  const LAYERS = [
+    { v: 2, maxVel: 16 }, { v: 4, maxVel: 32 }, { v: 6, maxVel: 48 }, { v: 8, maxVel: 64 },
+    { v: 10, maxVel: 80 }, { v: 12, maxVel: 96 }, { v: 14, maxVel: 112 }, { v: 16, maxVel: 127 },
+  ];
   const layers = LAYERS.map(({ v, maxVel }) => {
     const samples = {};
     for (const f of files) {
