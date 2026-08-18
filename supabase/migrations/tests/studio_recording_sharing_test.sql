@@ -120,6 +120,27 @@ BEGIN
   SELECT count(*) INTO v_cnt FROM gw_media_library WHERE id = v_orig;
   ASSERT v_cnt = 0, 'revoked share must remove access';
   RESET ROLE;
+
+  -- Forged self-share (privilege-escalation regression): RLS blocks the
+  -- outsider from inserting a share row owned by someone else, but
+  -- media_item_shares_owner_all lets them insert one owned by THEMSELVES,
+  -- pointed at the victim's private original. Without the owner_user_id =
+  -- uploaded_by binding on media_library_item_shared_select, this alone
+  -- would grant read access to any discoverable media_id.
+  -- (The earlier legitimate fixture share already claimed the (v_orig,
+  -- outsider-email) unique key and was revoked above; clear it first so
+  -- this insert isn't a leftover-revoked-row false negative.)
+  DELETE FROM gw_media_item_shares WHERE media_id = v_orig AND invited_email = lower(v_outsider.email);
+  INSERT INTO gw_media_item_shares (media_id, owner_user_id, invited_email, tenant_id)
+  VALUES (v_orig, v_outsider.user_id, v_outsider.email, v_course.tenant_id);
+
+  PERFORM set_config('request.jwt.claims',
+    json_build_object('sub', v_outsider.user_id, 'role', 'authenticated',
+                      'email', v_outsider.email, 'tenant_id', v_course.tenant_id)::text, true);
+  SET LOCAL ROLE authenticated;
+  SELECT count(*) INTO v_cnt FROM gw_media_library WHERE id = v_orig;
+  ASSERT v_cnt = 0, 'forged self-owned share on someone else''s row must grant nothing';
+  RESET ROLE;
 END $$;
 
 ROLLBACK;

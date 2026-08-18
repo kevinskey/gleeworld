@@ -18,6 +18,12 @@ CREATE INDEX IF NOT EXISTS gw_media_library_source_idx
   ON public.gw_media_library (source_media_id)
   WHERE source_media_id IS NOT NULL;
 
+-- Idempotency backstop for ensureClassCopy: two concurrent shares of the
+-- same recording to the same class must not produce duplicate copies.
+CREATE UNIQUE INDEX IF NOT EXISTS gw_media_library_source_course_uniq
+  ON public.gw_media_library (source_media_id, course_id)
+  WHERE source_media_id IS NOT NULL AND is_deleted = false;
+
 ALTER TABLE public.gw_course_assignments
   ADD COLUMN IF NOT EXISTS media_id uuid
   REFERENCES public.gw_media_library(id) ON DELETE SET NULL;
@@ -73,7 +79,10 @@ CREATE POLICY media_item_shares_owner_all ON public.gw_media_item_shares
 
 CREATE POLICY media_item_shares_grantee_read ON public.gw_media_item_shares
   FOR SELECT TO authenticated
-  USING (lower(invited_email) = lower(auth.jwt() ->> 'email'));
+  USING (
+    revoked_at IS NULL
+    AND lower(invited_email) = lower(auth.jwt() ->> 'email')
+  );
 
 DROP POLICY IF EXISTS media_library_item_shared_select ON public.gw_media_library;
 CREATE POLICY media_library_item_shared_select ON public.gw_media_library
@@ -81,6 +90,7 @@ CREATE POLICY media_library_item_shared_select ON public.gw_media_library
   USING (EXISTS (
     SELECT 1 FROM public.gw_media_item_shares s
     WHERE s.media_id = gw_media_library.id
+      AND s.owner_user_id = gw_media_library.uploaded_by
       AND s.revoked_at IS NULL
       AND lower(s.invited_email) = lower(auth.jwt() ->> 'email')
   ));

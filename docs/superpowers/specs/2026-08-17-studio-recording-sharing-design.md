@@ -110,12 +110,16 @@ CREATE TABLE public.gw_media_item_shares (
 --               AND revoked_at IS NULL)
 -- — copy the shapes from 20260708010000_media_folder_shares.sql verbatim.
 
--- 4. Grant policy on media rows.
+-- 4. Grant policy on media rows. The binding to uploaded_by is load-bearing:
+-- without it, any authenticated user could insert a share row they own
+-- (owner_user_id = self) against ANY media_id and read that row — the
+-- share's owner must match the row's actual uploader.
 CREATE POLICY media_library_item_shared_select ON public.gw_media_library
   FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.gw_media_item_shares s
     WHERE s.media_id = gw_media_library.id
+      AND s.owner_user_id = gw_media_library.uploaded_by
       AND lower(s.invited_email) = lower(auth.jwt()->>'email')
       AND s.revoked_at IS NULL
   ));

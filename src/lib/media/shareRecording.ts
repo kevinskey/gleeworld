@@ -112,7 +112,7 @@ export function buildShareEmailHtml(o: {
     <h2 style="color:#0f172a;font-size:20px;margin:0 0 4px">${esc(o.title)}</h2>
     ${msg}
     <p style="margin:24px 0">
-      <a href="${o.url}" style="background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:600;font-size:15px">Listen in GleeWorld</a>
+      <a href="${esc(o.url)}" style="background:#0f172a;color:#ffffff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:600;font-size:15px">Listen in GleeWorld</a>
     </p>
     <p style="color:#94a3b8;font-size:12px;line-height:1.5">You'll be asked to sign in. This link is for members of your organization.</p>
   </div>`;

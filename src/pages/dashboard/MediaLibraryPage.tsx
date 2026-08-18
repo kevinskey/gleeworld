@@ -33,6 +33,7 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { ShareRecordingDialog } from '@/components/media/ShareRecordingDialog';
 import { useManagedCourses } from '@/hooks/useManagedCourses';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -85,7 +86,10 @@ export default function MediaLibraryPage() {
   // playback always stays inside the Media Library shell.
   const [playing, setPlaying] = useState<MediaRow | null>(null);
   const { data: managedCourses = [] } = useManagedCourses();
-  const canShareRecordings = managedCourses.length > 0;
+  const { isAdmin, isSuperAdmin } = useUserRole();
+  // Admins can always email-share (no course required); non-admin
+  // instructors need at least one managed course for any share flow.
+  const canShareRecordings = isAdmin() || isSuperAdmin() || managedCourses.length > 0;
   const [shareMedia, setShareMedia] = useState<MediaRow | null>(null);
 
   const { data: rows = [], isLoading } = useQuery<MediaRow[]>({

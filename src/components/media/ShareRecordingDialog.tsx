@@ -3,11 +3,12 @@
 // Teacher/admin-gated: renders nothing useful without managed courses or
 // admin role; callers also hide their Share affordances (defense in
 // depth — RLS enforces regardless).
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useManagedCourses } from '@/hooks/useManagedCourses';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -36,6 +37,7 @@ export function ShareRecordingDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { user } = useAuth();
+  const { isAdmin, isSuperAdmin } = useUserRole();
   const open = media !== null;
   const { data: courses = [], isLoading: coursesLoading } = useManagedCourses();
   const [tab, setTab] = useState<ShareTab>('class');
@@ -58,29 +60,42 @@ export function ShareRecordingDialog({
   const shareToClass = useMutation({
     mutationFn: async () => {
       if (!media || !courseId) throw new Error('Pick a class first.');
+      // The copy is the success condition per spec: once it exists, the
+      // share has happened. A notify/email failure after this point must
+      // not read as "share failed" — the copy is kept either way.
       const copy = await ensureClassCopy(supabase, media, courseId);
       if (notifyClass) {
-        const recipients = await fetchCourseRecipients(supabase, courseId);
-        if (recipients.length > 0) {
-          await sendShareEmail(supabase, {
-            to: recipients.map((r) => r.email),
-            subject: `New recording: ${media.title}`,
-            html: buildShareEmailHtml({
-              title: media.title, sharerName, message,
-              url: absoluteListenUrl(copy.id),
-            }),
-          });
-          await notifyRecipients(supabase, recipients.map((r) => r.user_id), {
-            title: 'New recording shared',
-            message: `${sharerName} shared "${media.title}" with your class.`,
-            actionUrl: listenPath(copy.id),
-          });
+        try {
+          const recipients = await fetchCourseRecipients(supabase, courseId);
+          if (recipients.length > 0) {
+            await sendShareEmail(supabase, {
+              to: recipients.map((r) => r.email),
+              subject: `New recording: ${media.title}`,
+              html: buildShareEmailHtml({
+                title: media.title, sharerName, message,
+                url: absoluteListenUrl(copy.id),
+              }),
+            });
+            await notifyRecipients(supabase, recipients.map((r) => r.user_id), {
+              title: 'New recording shared',
+              message: `${sharerName} shared "${media.title}" with your class.`,
+              actionUrl: listenPath(copy.id),
+            });
+          }
+        } catch (notifyError: any) {
+          return { copy, notifyError };
         }
       }
-      return copy;
+      return { copy, notifyError: null };
     },
-    onSuccess: () => {
-      toast.success(notifyClass ? 'Shared with the class and notified everyone.' : 'Added to the class library.');
+    onSuccess: ({ notifyError }) => {
+      if (notifyError) {
+        toast.warning("Added to the class library, but the email didn't send.", {
+          description: notifyError?.message || String(notifyError),
+        });
+      } else {
+        toast.success(notifyClass ? 'Shared with the class and notified everyone.' : 'Added to the class library.');
+      }
       reset(); onOpenChange(false);
     },
     onError: (e: any) => toast.error(e?.message || 'Share failed.'),
@@ -183,7 +198,9 @@ export function ShareRecordingDialog({
   });
 
   const busy = shareToClass.isPending || startAssignment.isPending || sendEmails.isPending;
-  const canShare = courses.length > 0;
+  // Admins can always share (email-to-individuals needs no course); other
+  // instructors need at least one managed course for any share flow.
+  const canShare = isAdmin() || isSuperAdmin() || courses.length > 0;
 
   const TABS: Array<{ key: ShareTab; label: string; icon: React.ComponentType<{ className?: string }> }> = [
     { key: 'class', label: 'Class library', icon: Users },
