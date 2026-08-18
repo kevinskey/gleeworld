@@ -15,17 +15,19 @@ interface CreateAssignmentDialogProps {
   courseId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Attach a Media Library recording (a class-copy row) to the new assignment. */
+  mediaId?: string;
+  /** Pre-fill the title (e.g. the shared recording's name). */
+  defaultTitle?: string;
 }
 
 interface AssignmentFormData {
   title: string;
   description?: string;
   assignment_type: string;
-  category?: string;
   points: number;
   due_at?: string;
   instructions?: string;
-  rubric?: string;
   is_active: boolean;
 }
 
@@ -33,10 +35,13 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
   courseId,
   open,
   onOpenChange,
+  mediaId,
+  defaultTitle,
 }) => {
   const queryClient = useQueryClient();
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<AssignmentFormData>({
     defaultValues: {
+      title: defaultTitle ?? '',
       assignment_type: 'other',
       is_active: true,
     }
@@ -50,15 +55,21 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.from('gw_course_assignments').insert({
+      const { data: inserted, error } = await supabase.from('gw_course_assignments').insert({
         course_id: courseId,
         created_by: user.id,
-        is_published: data.is_active,
+        title: data.title,
+        description: data.description || null,
+        instructions: data.instructions || null,
+        assignment_type: data.assignment_type,
+        points: data.points,
         due_date: data.due_at || null,
-        ...data,
-      });
-
+        is_published: data.is_active,
+        media_id: mediaId ?? null,
+      } as never).select('id');
       if (error) throw error;
+      // Demo-tenant writes match 0 rows silently — treat empty as failure.
+      if (!inserted || inserted.length === 0) throw new Error('Assignment was not saved (read-only workspace?)');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gw-course-assignments', courseId] });
@@ -80,6 +91,11 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Create New Assignment</DialogTitle>
         </DialogHeader>
+        {mediaId && (
+          <p className="text-xs rounded-md bg-primary/5 text-primary px-3 py-2">
+            A recording is attached — students will see a player on this assignment.
+          </p>
+        )}
         <form onSubmit={handleSubmit((data) => createMutation.mutate(data))} className="space-y-4">
           <div>
             <Label htmlFor="title">Title *</Label>
@@ -92,28 +108,21 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
             <Textarea id="description" {...register('description')} rows={3} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="assignment_type">Assignment Type</Label>
-              <Select value={assignmentType} onValueChange={(value) => setValue('assignment_type', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="writing">Writing</SelectItem>
-                  <SelectItem value="reflection_paper">Reflection Paper</SelectItem>
-                  <SelectItem value="exam">Exam</SelectItem>
-                  <SelectItem value="project">Project</SelectItem>
-                  <SelectItem value="presentation">Presentation</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Input id="category" {...register('category')} placeholder="e.g., Journals, Exams" />
-            </div>
+          <div>
+            <Label htmlFor="assignment_type">Assignment Type</Label>
+            <Select value={assignmentType} onValueChange={(value) => setValue('assignment_type', value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="writing">Writing</SelectItem>
+                <SelectItem value="reflection_paper">Reflection Paper</SelectItem>
+                <SelectItem value="exam">Exam</SelectItem>
+                <SelectItem value="project">Project</SelectItem>
+                <SelectItem value="presentation">Presentation</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -132,11 +141,6 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
           <div>
             <Label htmlFor="instructions">Instructions</Label>
             <Textarea id="instructions" {...register('instructions')} rows={4} placeholder="Detailed instructions for students" />
-          </div>
-
-          <div>
-            <Label htmlFor="rubric">Rubric</Label>
-            <Textarea id="rubric" {...register('rubric')} rows={4} placeholder="Grading criteria and rubric" />
           </div>
 
           <div className="flex items-center gap-2">
