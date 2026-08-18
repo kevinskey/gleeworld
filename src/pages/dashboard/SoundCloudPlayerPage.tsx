@@ -23,7 +23,10 @@ import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
-import { Music, ListMusic, ExternalLink, Loader2, Settings } from 'lucide-react';
+import { Music, ListMusic, ExternalLink, Loader2, Settings, Share2 } from 'lucide-react';
+import { useUserRole } from '@/hooks/useUserRole';
+import { PlaylistShareDialog, type SharablePlaylist } from '@/components/soundcloud/PlaylistShareDialog';
+import { visiblePlaylists, sharesByPlaylist, describeShare, type PlaylistShare } from '@/lib/soundcloud/shares';
 
 interface Playlist {
   id: number;
@@ -58,6 +61,9 @@ function widgetSrc(resourceUrl: string): string {
 
 export default function SoundCloudPlayerPage() {
   const { settings, isLoading: brandingLoading } = useBrandingSettings();
+  const { isAdmin, isSuperAdmin } = useUserRole();
+  const canManage = isAdmin() || isSuperAdmin();
+  const [sharing, setSharing] = useState<SharablePlaylist | null>(null);
   const profileUrl = settings.soundcloud_url?.trim() || '';
   // null = the whole profile ("All tracks"); otherwise the selected set.
   const [selected, setSelected] = useState<Playlist | null>(null);
@@ -76,10 +82,23 @@ export default function SoundCloudPlayerPage() {
     },
   });
 
-  const playlists = useMemo(
-    () => [...(data?.playlists ?? [])].sort((a, b) => b.trackCount - a.trackCount),
-    [data],
-  );
+  const { data: shares = [] } = useQuery<PlaylistShare[]>({
+    queryKey: ['soundcloud-shares'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_soundcloud_playlist_shares')
+        .select('id, playlist_id, playlist_title, playlist_url, share_type, target_role, course_id, invited_email, revoked_at')
+        .is('revoked_at', null);
+      if (error) throw error;
+      return (data ?? []) as unknown as PlaylistShare[];
+    },
+  });
+
+  const shareMap = useMemo(() => sharesByPlaylist(shares), [shares]);
+  const playlists = useMemo(() => {
+    const sorted = [...(data?.playlists ?? [])].sort((a, b) => b.trackCount - a.trackCount);
+    return visiblePlaylists(sorted, shares, canManage);
+  }, [data, shares, canManage]);
   const nowPlayingUrl = selected?.permalinkUrl || data?.user.permalinkUrl || profileUrl;
 
   const body = () => {
@@ -159,6 +178,14 @@ export default function SoundCloudPlayerPage() {
           )}
         </div>
 
+        {!canManage && playlists.length === 0 && (
+          <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+            <CardContent className="py-8 text-center text-muted-foreground text-sm">
+              No playlists have been shared with you yet.
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid gap-2 sm:grid-cols-2">
           <PlaylistRow
             label="All tracks"
@@ -173,9 +200,20 @@ export default function SoundCloudPlayerPage() {
               count={p.trackCount}
               active={selected?.id === p.id}
               onClick={() => setSelected(p)}
+              shares={shareMap.get(p.id) ?? []}
+              onShare={canManage
+                ? () => setSharing({ id: p.id, title: p.title, permalinkUrl: p.permalinkUrl })
+                : undefined}
             />
           ))}
         </div>
+
+        <PlaylistShareDialog
+          playlist={sharing}
+          open={!!sharing}
+          onOpenChange={(v) => { if (!v) setSharing(null); }}
+          shares={sharing ? (shareMap.get(sharing.id) ?? []) : []}
+        />
       </>
     );
   };
@@ -199,8 +237,13 @@ export default function SoundCloudPlayerPage() {
 }
 
 function PlaylistRow({
-  label, count, active, onClick,
-}: { label: string; count: number; active: boolean; onClick: () => void }) {
+  label, count, active, onClick, shares = [], onShare,
+}: {
+  label: string; count: number; active: boolean; onClick: () => void;
+  shares?: PlaylistShare[];
+  /** Admins only — absent for members, who cannot change sharing. */
+  onShare?: () => void;
+}) {
   return (
     <Card
       className={`${SOFT_CARD} cursor-pointer transition-colors ${active ? 'ring-2 ring-primary' : ''}`}
@@ -213,10 +256,24 @@ function PlaylistRow({
         </div>
         <div className="min-w-0 flex-1">
           <div className="font-medium truncate">{label}</div>
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground truncate">
             {count} track{count === 1 ? '' : 's'}
+            {onShare && (shares.length === 0
+              ? ' · shared with nobody'
+              : ` · ${shares.map((s) => describeShare(s)).join(', ')}`)}
           </div>
         </div>
+        {onShare && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0"
+            aria-label={`Share ${label}`}
+            onClick={(e) => { e.stopPropagation(); onShare(); }}
+          >
+            <Share2 className="w-4 h-4" />
+          </Button>
+        )}
       </CardContent>
     </Card>
   );
