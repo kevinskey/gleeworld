@@ -69,8 +69,10 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'sight',         to: '/dashboard/reading-music', label: 'Reading Music', icon: Eye,      section: 'music', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-reading-music', gridIcon: ScanEye, gate: { module: 'sight_reading' } },
   { key: 'part-tracks',   to: '/dashboard/part-tracks',   label: 'Part Tracks',   icon: ListMusic, section: 'music', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-part-tracks' },
   { key: 'media-library', to: '/dashboard/media-library', label: 'Media Library', icon: Images,   section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-media-library' },
-  // Plays the Media Library's audio. Named for what Kevin's listeners call
-  // it, not for soundcloud.com — nothing here touches that service.
+  // Streams the tenant's soundcloud.com profile through SoundCloud's own
+  // widget, grouped by the sets on that account. Profile comes from
+  // gw_branding_settings.soundcloud_url; unset shows a setup prompt.
+  // Not to be confused with /soundcloud, the 2025 OAuth search page.
   { key: 'soundcloud',    to: '/dashboard/soundcloud',    label: 'SoundCloud',    icon: Music,    section: 'music', tone: 'bg-sky-50 text-sky-600',       tourId: 'nav-soundcloud' },
   // The partner sheet-music marketplace (buyer side). Everyone can browse
   // and buy; partners manage their catalog via Partner Portal below.
