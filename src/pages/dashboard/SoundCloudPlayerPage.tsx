@@ -7,12 +7,8 @@ import { toast } from 'sonner';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
-import {
-  buildSoundCloudEmbedUrl,
-  isSoundCloudSet,
-  isSoundCloudUrl,
-  type SoundCloudTrack,
-} from '@/lib/soundcloud';
+import { isSoundCloudSet, isSoundCloudUrl, type SoundCloudTrack } from '@/lib/soundcloud';
+import { SoundCloudEmbed } from '@/components/soundcloud/SoundCloudEmbed';
 import {
   detachSoundCloudPlayer,
   useFloatingSoundCloudTrack,
@@ -121,15 +117,11 @@ export default function SoundCloudPlayerPage() {
               {/* Hide the inline embed while this track floats so two widgets
                   don't play over each other. */}
               {floating?.url !== selected.url && (
-                <iframe
-                  title={selected.title || 'SoundCloud player'}
-                  src={buildSoundCloudEmbedUrl(selected.url, {
-                    visual: !isSoundCloudSet(selected.url),
-                  })}
+                <SoundCloudEmbed
+                  url={selected.url}
+                  title={selected.title}
+                  visual={!isSoundCloudSet(selected.url)}
                   height={isSoundCloudSet(selected.url) ? 420 : 300}
-                  className="w-full block"
-                  style={{ border: 'none' }}
-                  allow="autoplay"
                 />
               )}
             </Card>

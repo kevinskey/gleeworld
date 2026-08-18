@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { Rnd } from 'react-rnd';
 import { X, Minimize2, Maximize2, GripHorizontal, Music } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { buildSoundCloudEmbedUrl, isSoundCloudSet, type SoundCloudTrack } from '@/lib/soundcloud';
+import { isSoundCloudSet, type SoundCloudTrack } from '@/lib/soundcloud';
+import { SoundCloudEmbed } from './SoundCloudEmbed';
 import { closeSoundCloudPlayer, useFloatingSoundCloudTrack } from './soundcloudPlayerStore';
 
 const POS_KEY = 'gw:sc-float:pos';
@@ -52,11 +53,6 @@ function FloatingSoundCloudPlayer({ track }: { track: SoundCloudTrack }) {
     setGeo(g);
     localStorage.setItem(POS_KEY, JSON.stringify(g));
   };
-
-  const embedUrl = buildSoundCloudEmbedUrl(track.url, {
-    autoPlay: true,
-    visual: !isSoundCloudSet(track.url),
-  });
 
   const content = (
     <Rnd
@@ -137,12 +133,11 @@ function FloatingSoundCloudPlayer({ track }: { track: SoundCloudTrack }) {
             isDragging && 'pointer-events-none',
           )}
         >
-          <iframe
-            title={track.title || 'SoundCloud player'}
-            src={embedUrl}
-            allow="autoplay"
-            className="w-full h-full"
-            style={{ border: 'none' }}
+          <SoundCloudEmbed
+            url={track.url}
+            title={track.title}
+            autoPlay
+            visual={!isSoundCloudSet(track.url)}
           />
         </div>
       </div>

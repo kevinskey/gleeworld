@@ -49,6 +49,8 @@ export const TakeAttendance = () => {
   const [selectedEvent, setSelectedEvent] = useState<string>('');
   const [members, setMembers] = useState<AttendanceMember[]>([]);
   const [attendance, setAttendance] = useState<Record<string, { status: string; notes: string }>>({});
+  const [existingRows, setExistingRows] = useState<Record<string, { check_in_time: string | null }>>({});
+  const [touchedIds, setTouchedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -142,7 +144,7 @@ export const TakeAttendance = () => {
       // Load existing attendance for this event
       const { data: attendanceData, error: attendanceError } = await supabase
         .from('gw_event_attendance')
-        .select('user_id, attendance_status, notes')
+        .select('user_id, attendance_status, notes, check_in_time')
         .eq('event_id', selectedEvent);
 
       if (attendanceError) throw attendanceError;
@@ -160,6 +162,14 @@ export const TakeAttendance = () => {
       const attendanceMap = new Map(
         attendanceData?.map(a => [a.user_id, { status: a.attendance_status, notes: a.notes || '' }]) || []
       );
+
+      // Track which members already have a saved attendance row (and their check-in time)
+      const existingRowMap: Record<string, { check_in_time: string | null }> = {};
+      attendanceData?.forEach(a => {
+        existingRowMap[a.user_id] = { check_in_time: a.check_in_time };
+      });
+      setExistingRows(existingRowMap);
+      setTouchedIds(new Set());
 
       const preExcuseMap = new Map(
         preExcuseData?.map(e => [e.user_id, e.reason]) || []
@@ -212,6 +222,7 @@ export const TakeAttendance = () => {
   };
 
   const updateAttendance = (userId: string, field: 'status' | 'notes', value: string) => {
+    setTouchedIds(prev => new Set(prev).add(userId));
     setAttendance(prev => ({
       ...prev,
       [userId]: {
@@ -226,14 +237,29 @@ export const TakeAttendance = () => {
 
     setSaving(true);
     try {
-      const attendanceRecords = Object.entries(attendance).map(([userId, data]) => ({
-        event_id: selectedEvent,
-        user_id: userId,
-        attendance_status: data.status,
-        notes: data.notes || null,
-        recorded_by: user.id,
-        check_in_time: data.status === 'present' ? new Date().toISOString() : null
-      }));
+      // Only write rows the director touched this session, or members with no
+      // saved row yet — never rewrite untouched existing records.
+      const attendanceRecords = Object.entries(attendance)
+        .filter(([userId]) => touchedIds.has(userId) || !(userId in existingRows))
+        .map(([userId, data]) => ({
+          event_id: selectedEvent,
+          user_id: userId,
+          attendance_status: data.status,
+          notes: data.notes || null,
+          recorded_by: user.id,
+          // Preserve an existing check-in time; only stamp a new one for
+          // members marked present who don't have one yet.
+          check_in_time: existingRows[userId]?.check_in_time
+            ?? (data.status === 'present' ? new Date().toISOString() : null)
+        }));
+
+      if (attendanceRecords.length === 0) {
+        toast({
+          title: "No changes",
+          description: "No attendance changes to save",
+        });
+        return;
+      }
 
       const { error } = await supabase
         .from('gw_event_attendance')

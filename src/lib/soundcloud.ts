@@ -34,6 +34,44 @@ export interface SoundCloudEmbedOptions {
   visual?: boolean;
 }
 
+// The widget's own permalink resolver is unreliable (public playlists load
+// as the sad-face error page), but SoundCloud's oEmbed endpoint is
+// CORS-open and returns the canonical api.soundcloud.com resource URL,
+// which the widget always accepts. Resolve through it, cache per
+// permalink, and fall back to the raw permalink if oEmbed is unreachable.
+const resolveCache = new Map<string, Promise<string | null>>();
+
+export function resolveSoundCloudResourceUrl(permalink: string): Promise<string | null> {
+  const key = permalink.trim();
+  let pending = resolveCache.get(key);
+  if (!pending) {
+    pending = (async () => {
+      try {
+        const res = await fetch(
+          `https://soundcloud.com/oembed?format=json&url=${encodeURIComponent(key)}`,
+        );
+        if (!res.ok) return null;
+        const data = await res.json();
+        const src = /src="([^"]+)"/.exec(String(data.html ?? ''))?.[1]?.replace(/&amp;/g, '&');
+        if (!src) return null;
+        return new URL(src).searchParams.get('url');
+      } catch {
+        return null;
+      }
+    })();
+    resolveCache.set(key, pending);
+  }
+  return pending;
+}
+
+export async function buildResolvedSoundCloudEmbedUrl(
+  url: string,
+  opts: SoundCloudEmbedOptions = {},
+): Promise<string> {
+  const resolved = await resolveSoundCloudResourceUrl(url);
+  return buildSoundCloudEmbedUrl(resolved ?? url, opts);
+}
+
 export function buildSoundCloudEmbedUrl(
   url: string,
   opts: SoundCloudEmbedOptions = {},
