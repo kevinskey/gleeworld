@@ -1,10 +1,12 @@
 // One auction in the calendar list. The catalog badge is the loudest thing
 // on the card on purpose: for several houses the catalog release, not the
 // close date, is the moment a buyer has to act on.
-import { CalendarClock, ExternalLink, FileText, MapPin } from 'lucide-react';
+import { CalendarClock, ChevronRight, ExternalLink, FileText, MapPin, Package } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { catalogBadge, deriveDisplayStatus } from '@/lib/auctions/calendar';
+import { formatAuctionWindow } from '@/lib/auctions/window';
 import { INGEST_METHOD_LABELS, MODALITY_LABELS, type AuctionWithSource, type Modality } from '@/lib/auctions/types';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -22,14 +24,9 @@ function formatDate(iso: string | null): string {
   });
 }
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
-    month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-  });
-}
-
 export function AuctionCard({ auction }: { auction: AuctionWithSource }) {
   const status = deriveDisplayStatus(auction);
+  const lotCount = auction.lot_count ?? 0;
   const catalog = catalogBadge(auction);
   const location = [auction.location_city, auction.location_state].filter(Boolean).join(', ');
 
@@ -79,8 +76,7 @@ export function AuctionCard({ auction }: { auction: AuctionWithSource }) {
         <div className="grid gap-1.5 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <CalendarClock className="w-4 h-4 shrink-0" />
-            {auction.opens_at ? `Opens ${formatDateTime(auction.opens_at)}` : 'Opening date to be announced'}
-            {auction.closes_at && ` · closes ${formatDateTime(auction.closes_at)}`}
+            {formatAuctionWindow(auction)}
           </span>
           {location && (
             <span className="flex items-center gap-1.5">
@@ -100,17 +96,35 @@ export function AuctionCard({ auction }: { auction: AuctionWithSource }) {
           </div>
         )}
 
-        {auction.catalog_url && (
-          <a
-            href={auction.catalog_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-[hsl(var(--link))] hover:underline"
-          >
-            <ExternalLink className="w-4 h-4" />
-            View the catalog on {auction.source?.name ?? 'the house site'}
-          </a>
-        )}
+        <div className="flex items-center justify-between gap-3 flex-wrap border-t border-border pt-3">
+          {/* The reason the card exists: get to the equipment. */}
+          {lotCount > 0 ? (
+            <Link
+              to={`/auctions/lots?auction=${auction.id}`}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-[hsl(var(--link))] hover:underline"
+            >
+              <Package className="w-4 h-4" />
+              See {lotCount} {lotCount === 1 ? 'item' : 'items'}
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              No equipment listed yet — the catalog usually lands closer to the sale.
+            </span>
+          )}
+
+          {auction.catalog_url && (
+            <a
+              href={auction.catalog_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-[hsl(var(--link))] hover:underline"
+            >
+              <ExternalLink className="w-4 h-4" />
+              On {auction.source?.name ?? 'the house site'}
+            </a>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

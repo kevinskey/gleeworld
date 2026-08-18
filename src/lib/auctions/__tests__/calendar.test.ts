@@ -24,6 +24,7 @@ function auction(overrides: Partial<Auction> = {}): Auction {
     catalog_released_at: null,
     status: 'announced',
     modality_focus: [],
+    times_are_estimated: false,
     created_at: '2026-08-01T00:00:00Z',
     updated_at: '2026-08-01T00:00:00Z',
     ...overrides,

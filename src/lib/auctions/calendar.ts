@@ -62,10 +62,13 @@ export function catalogBadge(auction: Auction, now: Date = new Date()): CatalogB
   return { kind: 'estimate', at: new Date(opens - CATALOG_LEAD_DAYS * DAY_MS).toISOString() };
 }
 
-export interface AuctionMonthGroup {
+// Generic over the row type so a caller passing AuctionWithSource gets
+// AuctionWithSource back — the calendar needs the joined house and lot count
+// on the far side of grouping, and casting them back would defeat the point.
+export interface AuctionMonthGroup<T extends Auction = Auction> {
   key: string;
   label: string;
-  auctions: Auction[];
+  auctions: T[];
 }
 
 const MONTH_NAMES = [
@@ -75,8 +78,8 @@ const MONTH_NAMES = [
 
 // Grouped by month in UTC so the grouping is stable regardless of where the
 // viewer is; undated auctions collect in a trailing "Date TBA" group.
-export function groupAuctionsByMonth(auctions: Auction[]): AuctionMonthGroup[] {
-  const groups = new Map<string, AuctionMonthGroup>();
+export function groupAuctionsByMonth<T extends Auction>(auctions: T[]): AuctionMonthGroup<T>[] {
+  const groups = new Map<string, AuctionMonthGroup<T>>();
 
   for (const auction of auctions) {
     const iso = primaryDate(auction);
@@ -114,7 +117,7 @@ export interface AuctionFilters {
 
 // A house with no declared modality focus is a general sale — it can hold
 // anything, so it is never filtered out by modality.
-export function filterAuctions(auctions: Auction[], filters: AuctionFilters): Auction[] {
+export function filterAuctions<T extends Auction>(auctions: T[], filters: AuctionFilters): T[] {
   return auctions.filter((auction) => {
     if (filters.sourceId && auction.source_id !== filters.sourceId) return false;
     if (filters.modality) {
