@@ -191,10 +191,12 @@ function BrandLogo({
   useEffect(() => {
     setSrc(logoUrl ?? null);
   }, [logoUrl]);
-  // hero is the desktop left-nav brand: the old 67px xl tripled → 200px,
-  // large enough that logos with internal whitespace still read clearly.
+  // hero is the desktop left-nav brand: fills the 80px header row.
+  // The img is height-driven (w-auto) so wide wordmark logos like
+  // Yo-Doc's use the full sidebar width instead of shrinking inside
+  // a square box; the monogram fallback stays square.
   const dim =
-    size === 'hero' ? 'w-[200px] h-[200px]' :
+    size === 'hero' ? 'w-[68px] h-[68px]' :
     size === 'xl' ? 'w-[67px] h-[67px]' :
     size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
   if (src) {
@@ -202,14 +204,14 @@ function BrandLogo({
       <img
         src={src}
         alt={alt}
-        className={`${dim} object-contain shrink-0`}
+        className={`${size === 'hero' ? 'h-[68px] w-auto max-w-full' : dim} object-contain shrink-0`}
         onError={() => setSrc(null)}
       />
     );
   }
   return (
     <span
-      className={`${dim} rounded-lg bg-primary text-primary-foreground inline-flex items-center justify-center ${size === 'hero' ? 'text-6xl' : 'text-lg'} font-bold shrink-0`}
+      className={`${dim} rounded-lg bg-primary text-primary-foreground inline-flex items-center justify-center ${size === 'hero' ? 'text-4xl' : 'text-lg'} font-bold shrink-0`}
       aria-hidden
     >
       {fallbackInitial}
@@ -375,22 +377,22 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
     <aside className="hidden md:flex flex-col w-56 lg:w-64 shrink-0 bg-card self-stretch min-h-[100dvh] gw-collapsible-sidebar">
       {/* Site brand — tenant logo when set; if the logo image fails to
           load (broken URL / wrong tenant settings), fall back to a
-          colored monogram so the brand block never disappears. The hero
-          logo (200px) is too wide to sit beside the name in a 224px
-          sidebar, so the block stacks: big centered logo, name below. */}
-      <div className="relative border-b border-border pt-[env(safe-area-inset-top,0px)]">
-        <Link to="/dashboard" className="flex min-w-0 flex-col items-center gap-2 px-4 py-4">
+          colored monogram so the brand block never disappears. The row
+          stays 80px tall (matching the topbar) and the hero logo fills
+          that height; wordmark logos (e.g. Yo-Doc) carry the name, so
+          the text only renders on the monogram fallback. */}
+      <div
+        className="flex items-center border-b border-border pr-2 pt-[env(safe-area-inset-top,0px)] h-[calc(80px+env(safe-area-inset-top,0px))]"
+      >
+        <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-3 h-full">
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={(branding?.short_name || tenantName).charAt(0).toUpperCase()}
             alt={tenantName}
             size="hero"
           />
-          {/* Tenant logos usually carry their own wordmark (e.g. Yo-Doc),
-              so repeating the name under them is redundant. Only show the
-              text when we're on the monogram fallback (no logo_url). */}
           {!platformLogoFor(branding?.logo_url) && (
-            <div className="min-w-0 w-full text-center">
+            <div className="min-w-0 flex-1">
               <div className="font-bold text-[22px] leading-tight tracking-tight truncate">
                 {tenantName}
               </div>
@@ -406,7 +408,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
           <button
             type="button"
             onClick={onCollapse}
-            className="absolute right-2 top-[calc(env(safe-area-inset-top,0px)+0.5rem)] inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition"
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground transition"
             aria-label="Hide navigation"
             title="Hide navigation"
           >
