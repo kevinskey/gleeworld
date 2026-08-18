@@ -78,3 +78,106 @@ export interface Auction {
 export interface AuctionWithSource extends Auction {
   source: Pick<AuctionSource, 'id' | 'name' | 'slug' | 'ingest_method' | 'last_refreshed_at'> | null;
 }
+
+// ── Phase 2 ───────────────────────────────────────────────────────────────
+
+// 'pending' and 'rejected' lots are invisible to members by RLS; only 'auto'
+// and 'approved' reach search results.
+export type LotReviewStatus = 'pending' | 'auto' | 'needs_review' | 'approved' | 'rejected';
+
+export interface AuctionLot {
+  id: string;
+  auction_id: string;
+  lot_number: string | null;
+  // Immutable source text, exactly as the house published it.
+  raw_title: string;
+  raw_text: string | null;
+  // Derived by the normalizer; null means "not extracted", not "absent".
+  modality: Modality | null;
+  manufacturer: string | null;
+  model: string | null;
+  year_of_manufacture: number | null;
+  serial: string | null;
+  condition_notes: string | null;
+  current_bid_cents: number | null;
+  currency: string;
+  closes_at: string | null;
+  url: string | null;
+  normalized_at: string | null;
+  normalization_confidence: number | null;
+  review_status: LotReviewStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LotWithAuction extends AuctionLot {
+  auction: (Pick<Auction, 'id' | 'title' | 'location_city' | 'location_state' | 'closes_at'> & {
+    source: Pick<AuctionSource, 'id' | 'name' | 'slug'> | null;
+  }) | null;
+}
+
+// Mirrors the Criteria type in supabase/functions/_shared/auctionMatching.ts,
+// which is the authority — the matcher runs there.
+export interface SearchCriteria {
+  modality?: Modality[];
+  manufacturer?: string[];
+  model_contains?: string;
+  year_min?: number;
+  max_hammer_cents?: number;
+  states?: string[];
+  radius_miles?: number;
+  origin_zip?: string;
+  condition?: string[];
+}
+
+export type NotifyChannel = 'none' | 'in_app' | 'email' | 'both';
+export type NotifyFrequency = 'instant' | 'daily' | 'weekly';
+
+export const NOTIFY_CHANNEL_LABELS: Record<NotifyChannel, string> = {
+  none: 'Do not alert me',
+  in_app: 'In the app',
+  email: 'By email',
+  both: 'In the app and by email',
+};
+
+export const NOTIFY_FREQUENCY_LABELS: Record<NotifyFrequency, string> = {
+  instant: 'As soon as they appear',
+  daily: 'Once a day',
+  weekly: 'Once a week',
+};
+
+export interface SavedSearch {
+  id: string;
+  user_id: string;
+  name: string;
+  criteria: SearchCriteria;
+  notify_channel: NotifyChannel;
+  notify_frequency: NotifyFrequency;
+  active: boolean;
+  last_run_at: string | null;
+  last_notified_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AuctionMatch {
+  id: string;
+  saved_search_id: string;
+  lot_id: string;
+  score: number;
+  notified_at: string | null;
+  dismissed_at: string | null;
+  created_at: string;
+}
+
+export interface MatchWithLot extends AuctionMatch {
+  lot: LotWithAuction | null;
+  saved_search: Pick<SavedSearch, 'id' | 'name'> | null;
+}
+
+export interface WatchlistEntry {
+  id: string;
+  lot_id: string;
+  notify_minutes_before: number[];
+  created_at: string;
+}

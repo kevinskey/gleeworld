@@ -20,6 +20,24 @@ import {
   updateSource,
   type SourceInput,
 } from '@/lib/auctions/sourcesApi';
+import {
+  addToWatchlist,
+  getLot,
+  listLots,
+  listWatchlist,
+  removeFromWatchlist,
+  type ListLotsOptions,
+} from '@/lib/auctions/lotsApi';
+import {
+  createSavedSearch,
+  deleteSavedSearch,
+  dismissMatch,
+  listMatches,
+  listSavedSearches,
+  restoreMatch,
+  updateSavedSearch,
+  type SavedSearchInput,
+} from '@/lib/auctions/searchesApi';
 
 const KEY = 'auctions';
 
@@ -81,6 +99,106 @@ export function useSourceMutations() {
   });
 
   return { create, update, remove, markRefreshed };
+}
+
+export function useLots(opts: ListLotsOptions = {}) {
+  return useQuery({
+    queryKey: [KEY, 'lots', opts],
+    queryFn: () => listLots(opts),
+  });
+}
+
+export function useLot(id: string | undefined) {
+  return useQuery({
+    queryKey: [KEY, 'lot', id],
+    queryFn: () => getLot(id as string),
+    enabled: Boolean(id),
+  });
+}
+
+export function useWatchlist() {
+  return useQuery({
+    queryKey: [KEY, 'watchlist'],
+    queryFn: () => listWatchlist(),
+  });
+}
+
+export function useWatchlistMutations() {
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: [KEY, 'watchlist'] });
+
+  const add = useMutation({
+    mutationFn: (lotId: string) => addToWatchlist(lotId),
+    onSuccess: () => { invalidate(); toast.success('Added to your watchlist'); },
+    onError: reportError('add that lot to your watchlist'),
+  });
+
+  const remove = useMutation({
+    mutationFn: (lotId: string) => removeFromWatchlist(lotId),
+    onSuccess: () => { invalidate(); toast.success('Removed from your watchlist'); },
+    onError: reportError('remove that lot from your watchlist'),
+  });
+
+  return { add, remove };
+}
+
+export function useSavedSearches() {
+  return useQuery({
+    queryKey: [KEY, 'saved-searches'],
+    queryFn: () => listSavedSearches(),
+  });
+}
+
+export function useSavedSearchMutations() {
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: [KEY] });
+
+  const create = useMutation({
+    mutationFn: (input: SavedSearchInput) => createSavedSearch(input),
+    onSuccess: () => { invalidate(); toast.success('Saved search created'); },
+    onError: reportError('save that search'),
+  });
+
+  const update = useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<SavedSearchInput> }) =>
+      updateSavedSearch(id, patch),
+    onSuccess: () => { invalidate(); toast.success('Saved search updated'); },
+    onError: reportError('update that saved search'),
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => deleteSavedSearch(id),
+    onSuccess: () => { invalidate(); toast.success('Saved search deleted'); },
+    onError: reportError('delete that saved search'),
+  });
+
+  return { create, update, remove };
+}
+
+export function useMatches(includeDismissed = false) {
+  return useQuery({
+    queryKey: [KEY, 'matches', { includeDismissed }],
+    queryFn: () => listMatches(includeDismissed),
+  });
+}
+
+export function useMatchMutations() {
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: [KEY, 'matches'] });
+
+  const dismiss = useMutation({
+    mutationFn: (id: string) => dismissMatch(id),
+    onSuccess: () => { invalidate(); toast.success('Match dismissed'); },
+    onError: reportError('dismiss that match'),
+  });
+
+  const restore = useMutation({
+    mutationFn: (id: string) => restoreMatch(id),
+    onSuccess: () => { invalidate(); toast.success('Match restored'); },
+    onError: reportError('restore that match'),
+  });
+
+  return { dismiss, restore };
 }
 
 export function useAuctionMutations() {
