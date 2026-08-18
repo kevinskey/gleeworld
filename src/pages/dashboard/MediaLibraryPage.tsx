@@ -31,6 +31,8 @@ import { useScopeFilter } from '@/hooks/useScopeFilter';
 import { ScopeFilterChips } from '@/components/library/ScopeFilterChips';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { ShareRecordingDialog } from '@/components/media/ShareRecordingDialog';
+import { useManagedCourses } from '@/hooks/useManagedCourses';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -49,6 +51,7 @@ interface MediaRow {
   course_id: string | null;
   created_at: string;
   folder: string | null;
+  uploaded_by: string;
 }
 
 function kindOf(fileType: string): Exclude<Kind, 'all'> {
@@ -81,13 +84,16 @@ export default function MediaLibraryPage() {
   // tabs / "open in another app" affordances are removed deliberately so
   // playback always stays inside the Media Library shell.
   const [playing, setPlaying] = useState<MediaRow | null>(null);
+  const { data: managedCourses = [] } = useManagedCourses();
+  const canShareRecordings = managedCourses.length > 0;
+  const [shareMedia, setShareMedia] = useState<MediaRow | null>(null);
 
   const { data: rows = [], isLoading } = useQuery<MediaRow[]>({
     queryKey: ['media-library', scope],
     queryFn: async () => {
       let q = supabase
         .from('gw_media_library')
-        .select('id, title, file_url, file_path, file_type, file_size, course_id, created_at, folder')
+        .select('id, title, file_url, file_path, file_type, file_size, course_id, created_at, folder, uploaded_by')
         .eq('is_deleted', false)
         .order('created_at', { ascending: false })
         .limit(200);
@@ -275,6 +281,11 @@ export default function MediaLibraryPage() {
               onDelete={() => deleteRow.mutate(r.id)}
               onRename={(title) => renameRow.mutate({ id: r.id, title })}
               onOpen={() => setPlaying(r)}
+              onShare={
+                canShareRecordings && r.uploaded_by === user?.id && kindOf(r.file_type) === 'audio'
+                  ? () => setShareMedia(r)
+                  : undefined
+              }
             />
           ))}
         </div>
@@ -300,6 +311,12 @@ export default function MediaLibraryPage() {
         folder={shareFolder}
         ownerId={user?.id ?? null}
         onOpenChange={(v) => { if (!v) setShareFolder(null); }}
+      />
+
+      <ShareRecordingDialog
+        media={shareMedia}
+        onOpenChange={(v) => { if (!v) setShareMedia(null); }}
+        key={shareMedia?.id ?? 'none'}
       />
     </DashboardPageShell>
     </DashboardShell>
@@ -406,7 +423,7 @@ function ShareFolderDialog({
   );
 }
 
-function MediaCard({ row, courseCode, onDelete, onRename, onOpen }: { row: MediaRow; courseCode: string | null; onDelete: () => void; onRename: (title: string) => void; onOpen: () => void }) {
+function MediaCard({ row, courseCode, onDelete, onRename, onOpen, onShare }: { row: MediaRow; courseCode: string | null; onDelete: () => void; onRename: (title: string) => void; onOpen: () => void; onShare?: () => void }) {
   const k = kindOf(row.file_type);
   const tone = {
     audio:    'bg-rose-50 text-rose-600',
@@ -480,6 +497,16 @@ function MediaCard({ row, courseCode, onDelete, onRename, onOpen }: { row: Media
             </>
           ) : (
             <>
+              {onShare && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => { e.stopPropagation(); onShare(); }}
+                  title="Share recording"
+                >
+                  <Share2 className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="sm"
