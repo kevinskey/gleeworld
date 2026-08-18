@@ -137,21 +137,25 @@ export async function notifyRecipients(
   sb: Sb, userIds: string[], o: { title: string; message: string; actionUrl: string },
 ): Promise<void> {
   for (const uid of [...new Set(userIds)].filter(Boolean)) {
-    const { error } = await sb.rpc('create_notification_with_delivery', {
-      p_user_id: uid,
-      p_title: o.title,
-      p_message: o.message,
-      p_type: 'info',
-      p_category: 'general',
-      p_action_url: o.actionUrl,
-      p_action_label: 'Listen',
-      p_metadata: {},
-      p_priority: 0,
-      p_expires_at: null,
-      p_send_email: false,
-      p_send_sms: false,
-    });
-    if (error) console.error('[shareRecording] notification failed', uid, error);
+    try {
+      const { error } = await sb.rpc('create_notification_with_delivery', {
+        p_user_id: uid,
+        p_title: o.title,
+        p_message: o.message,
+        p_type: 'info',
+        p_category: 'general',
+        p_action_url: o.actionUrl,
+        p_action_label: 'Listen',
+        p_metadata: {},
+        p_priority: 0,
+        p_expires_at: null,
+        p_send_email: false,
+        p_send_sms: false,
+      });
+      if (error) console.error('[shareRecording] notification failed', uid, error);
+    } catch (e) {
+      console.error('[shareRecording] notification failed', uid, e);
+    }
   }
 }
 

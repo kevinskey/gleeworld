@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   ensureClassCopy, createItemShares, buildShareEmailHtml, listenPath,
-  fetchCourseRecipients, notifyRecipients, fetchManagedCourses,
+  fetchCourseRecipients, notifyRecipients, fetchManagedCourses, sendShareEmail,
   type ShareableMedia,
 } from '../shareRecording';
 
@@ -130,6 +130,42 @@ describe('notifyRecipients', () => {
     expect((sb.rpc as any).mock.calls[0][1]).toMatchObject({
       p_user_id: 'u2', p_action_url: '/listen/m1', p_send_email: false, p_send_sms: false,
     });
+  });
+
+  it('never throws on RPC rejection, continues to next user', async () => {
+    const { sb } = fakeSb([]);
+    (sb.rpc as any).mockRejectedValueOnce(new Error('network fail'));
+    (sb.rpc as any).mockResolvedValueOnce({ data: null, error: null });
+    await notifyRecipients(sb, ['u2', 'u3'], { title: 't', message: 'm', actionUrl: '/listen/m1' });
+    expect(sb.rpc).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('sendShareEmail', () => {
+  it('invokes gw-send-email edge function with body', async () => {
+    const { sb } = fakeSb([]);
+    await sendShareEmail(sb, {
+      to: ['a@x.com', 'b@y.com'],
+      subject: 'Check it out',
+      html: '<div>hi</div>',
+    });
+    expect((sb.functions.invoke as any)).toHaveBeenCalledOnce();
+    expect((sb.functions.invoke as any).mock.calls[0][0]).toBe('gw-send-email');
+    expect((sb.functions.invoke as any).mock.calls[0][1]).toMatchObject({
+      body: { to: ['a@x.com', 'b@y.com'], subject: 'Check it out', html: '<div>hi</div>' },
+    });
+  });
+
+  it('throws on invoke error', async () => {
+    const { sb } = fakeSb([]);
+    (sb.functions.invoke as any).mockResolvedValueOnce({ data: null, error: { message: 'CORS fail' } });
+    await expect(sendShareEmail(sb, { to: [], subject: 's', html: 'h' })).rejects.toThrow(/CORS fail/);
+  });
+
+  it('throws on data-level error', async () => {
+    const { sb } = fakeSb([]);
+    (sb.functions.invoke as any).mockResolvedValueOnce({ data: { error: 'rate limited' }, error: null });
+    await expect(sendShareEmail(sb, { to: [], subject: 's', html: 'h' })).rejects.toThrow(/rate limited/);
   });
 });
 
