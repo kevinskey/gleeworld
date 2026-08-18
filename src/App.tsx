@@ -336,6 +336,7 @@ const UserManagement = lazy(() => import("./pages/UserManagement"));
 const AuditionsManagement = lazy(() => import("./components/admin/AuditionsManagement").then(m => ({ default: m.AuditionsManagement })));
 const SoundCloudSearch = lazy(() => import("./pages/SoundCloudSearch"));
 const SoundCloudPlayerPage = lazy(() => import("./pages/dashboard/SoundCloudPlayerPage"));
+const PublicSitePreviewPage = lazy(() => import("./pages/dashboard/PublicSitePreviewPage"));
 const FloatingSoundCloudPlayerHost = lazy(() => import("./components/soundcloud/FloatingSoundCloudPlayer"));
 const ShoutcastManagement = lazy(() => import("./pages/admin/ShoutcastManagement").then(m => ({ default: m.ShoutcastManagement })));
 const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage").then(m => ({ default: m.ReceiptsPage })));
@@ -3078,6 +3079,14 @@ const App = () => {
                                      </ProtectedRoute>
                                    }
                                   />
+                                 <Route
+                                   path="/dashboard/public-site"
+                                   element={
+                                     <ProtectedRoute>
+                                       <PublicSitePreviewPage />
+                                     </ProtectedRoute>
+                                   }
+                                    />
                                  <Route
                                    path="/dashboard/music-player"
                                    element={

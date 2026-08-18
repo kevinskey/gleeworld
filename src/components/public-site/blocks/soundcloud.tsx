@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { buildSoundCloudEmbedUrl, isSoundCloudSet, isSoundCloudUrl } from '@/lib/soundcloud';
+import { isSoundCloudSet, isSoundCloudUrl } from '@/lib/soundcloud';
+import { SoundCloudEmbed } from '@/components/soundcloud/SoundCloudEmbed';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 
 const schema = z.object({
@@ -40,17 +41,12 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
             {item.title && (
               <div className="px-4 pt-3 pb-1 font-semibold">{item.title}</div>
             )}
-            <iframe
+            <SoundCloudEmbed
+              url={item.url}
               title={item.title || `SoundCloud player ${i + 1}`}
-              src={buildSoundCloudEmbedUrl(item.url, {
-                color: ctx.theme.accentColor,
-                visual: config.visual && !isSoundCloudSet(item.url),
-              })}
+              color={ctx.theme.accentColor}
+              visual={config.visual && !isSoundCloudSet(item.url)}
               height={embedHeight(item.url, config.visual)}
-              className="w-full block"
-              style={{ border: 'none' }}
-              allow="autoplay"
-              loading="lazy"
             />
           </div>
         ))}

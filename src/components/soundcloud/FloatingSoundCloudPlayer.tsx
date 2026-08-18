@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { Rnd } from 'react-rnd';
 import { X, Minimize2, Maximize2, GripHorizontal, Music } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { buildSoundCloudEmbedUrl, isSoundCloudSet, type SoundCloudTrack } from '@/lib/soundcloud';
+import { isSoundCloudSet, type SoundCloudTrack } from '@/lib/soundcloud';
+import { SoundCloudEmbed } from './SoundCloudEmbed';
 import { closeSoundCloudPlayer, useFloatingSoundCloudTrack } from './soundcloudPlayerStore';
 
 const POS_KEY = 'gw:sc-float:pos';
@@ -53,11 +54,6 @@ function FloatingSoundCloudPlayer({ track }: { track: SoundCloudTrack }) {
     localStorage.setItem(POS_KEY, JSON.stringify(g));
   };
 
-  const embedUrl = buildSoundCloudEmbedUrl(track.url, {
-    autoPlay: true,
-    visual: !isSoundCloudSet(track.url),
-  });
-
   const content = (
     <Rnd
       position={{ x: geo.x, y: geo.y }}
@@ -89,8 +85,8 @@ function FloatingSoundCloudPlayer({ track }: { track: SoundCloudTrack }) {
       style={{ zIndex: 999999 }}
     >
       <div className="flex flex-col h-full w-full bg-card border-2 border-border rounded-lg shadow-2xl overflow-hidden">
-        <div className="sc-drag-handle flex items-center justify-between px-3 py-2 bg-[#f50] cursor-move select-none shrink-0">
-          <div className="flex items-center gap-2 text-white min-w-0">
+        <div className="sc-drag-handle flex items-center justify-between px-3 py-2 bg-primary cursor-move select-none shrink-0">
+          <div className="flex items-center gap-2 text-primary-foreground min-w-0">
             <GripHorizontal className="h-4 w-4 opacity-60 shrink-0" />
             <Music className="h-4 w-4 shrink-0" />
             <span className="text-sm font-medium truncate">
@@ -100,7 +96,7 @@ function FloatingSoundCloudPlayer({ track }: { track: SoundCloudTrack }) {
           <div className="flex items-center gap-1" style={{ pointerEvents: 'auto' }}>
             <button
               type="button"
-              className="h-6 w-6 flex items-center justify-center text-white hover:bg-white/20 rounded"
+              className="h-6 w-6 flex items-center justify-center text-primary-foreground hover:bg-primary-foreground/20 rounded"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsMinimized((prev) => !prev);
@@ -113,7 +109,7 @@ function FloatingSoundCloudPlayer({ track }: { track: SoundCloudTrack }) {
             </button>
             <button
               type="button"
-              className="h-6 w-6 flex items-center justify-center text-white hover:bg-destructive hover:text-destructive-foreground rounded"
+              className="h-6 w-6 flex items-center justify-center text-primary-foreground hover:bg-destructive hover:text-destructive-foreground rounded"
               onClick={(e) => {
                 e.stopPropagation();
                 closeSoundCloudPlayer();
@@ -137,12 +133,11 @@ function FloatingSoundCloudPlayer({ track }: { track: SoundCloudTrack }) {
             isDragging && 'pointer-events-none',
           )}
         >
-          <iframe
-            title={track.title || 'SoundCloud player'}
-            src={embedUrl}
-            allow="autoplay"
-            className="w-full h-full"
-            style={{ border: 'none' }}
+          <SoundCloudEmbed
+            url={track.url}
+            title={track.title}
+            autoPlay
+            visual={!isSoundCloudSet(track.url)}
           />
         </div>
       </div>

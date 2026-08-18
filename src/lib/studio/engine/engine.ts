@@ -481,21 +481,38 @@ export class StudioEngine {
     if (this.metronomeEventId !== null) return;
     const transport = Tone.getTransport();
     const numerator = this.session?.time_signature.numerator ?? 4;
-    this.metronomeBeatInBar = 0;
-    // Fire beat 1 immediately so the first click aligns with playback.
-    this.triggerMetronomeClick(true);
-    this.metronomeBeatInBar = 1 % numerator;
-    // Later beats ride the transport clock: scheduleRepeat anchored one
-    // beat past the current position, click fired at the callback's
-    // `time` — sample-accurate regardless of main-thread load, and
-    // phase-locked to the grid recorded notes are stamped on. A numeric
-    // interval (not '4n') keeps the beat length explicit; tempo changes
-    // re-anchor via updateTransport's stop/start of this repeat.
     const beatSeconds = 60 / this.state.tempoBpm;
+    // Anchor to the SESSION'S beat grid (beat 0 = 0:00), never to the
+    // moment this happened to be called. This restarts on toggle, seek,
+    // loop wrap, and tempo/TS change — the old "click now, repeat from
+    // now + one beat" left the metronome permanently phase-shifted by
+    // wherever inside the beat the restart landed, so a click enabled
+    // mid-play could never sit on the beat (reported 2026-08-17). The
+    // accent likewise derives from the absolute beat index, so beat 1
+    // stays on real bar lines instead of "wherever we restarted".
+    const pos = transport.seconds;
+    const beatsIn = pos / beatSeconds;
+    // Within 1ms of a grid line counts as ON it (float slop from
+    // repositionAndPlay writing exact loop/seek targets).
+    const onGrid = Math.abs(beatsIn - Math.round(beatsIn)) * beatSeconds < 1e-3;
+    const nextIndex = onGrid ? Math.round(beatsIn) : Math.ceil(beatsIn);
+    this.metronomeBeatInBar = ((nextIndex % numerator) + numerator) % numerator;
+    if (onGrid) {
+      // Starting exactly on a grid line (play from a bar start, loop
+      // wrap): sound that beat immediately so playback doesn't begin
+      // with a silent downbeat, then schedule from the following beat.
+      this.triggerMetronomeClick(this.metronomeBeatInBar === 0);
+      this.metronomeBeatInBar = (this.metronomeBeatInBar + 1) % numerator;
+    }
+    // Clicks ride the transport clock: fired at the callback's `time`,
+    // sample-accurate regardless of main-thread load. A numeric interval
+    // (not '4n') keeps the beat length explicit; tempo changes re-anchor
+    // via updateTransport's stop/start of this repeat.
+    const firstFire = (nextIndex + (onGrid ? 1 : 0)) * beatSeconds;
     this.metronomeEventId = transport.scheduleRepeat((time) => {
       this.triggerMetronomeClick(this.metronomeBeatInBar === 0, time);
       this.metronomeBeatInBar = (this.metronomeBeatInBar + 1) % numerator;
-    }, beatSeconds, transport.seconds + beatSeconds);
+    }, beatSeconds, firstFire);
   }
 
   private stopMetronomeInterval(): void {
