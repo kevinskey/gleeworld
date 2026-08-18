@@ -782,14 +782,19 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           className="hidden md:inline-flex items-center gap-2 shrink-0 pl-1 pr-2 py-1 rounded-md hover:bg-muted transition"
           title={`Back to ${compactBrandName} dashboard`}
         >
+          {/* Same treatment as the sidebar brand: height-driven hero logo
+              (wordmarks carry the name), text only on monogram fallback. */}
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={compactBrandName.charAt(0).toUpperCase()}
             alt={compactBrandName}
+            size="hero"
           />
-          <span className="font-bold text-base tracking-tight truncate max-w-[180px]">
-            {compactBrandName}
-          </span>
+          {!platformLogoFor(branding?.logo_url) && (
+            <span className="font-bold text-base tracking-tight truncate max-w-[180px]">
+              {compactBrandName}
+            </span>
+          )}
         </Link>
       )}
 
