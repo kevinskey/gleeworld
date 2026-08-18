@@ -29,13 +29,17 @@ import {
 } from '../_shared/auctionEmail.ts';
 import { estimateCostMicrocents, isPeakPricing } from '../_shared/auctionNormalize.ts';
 import { getLlmProvider } from '../_shared/llm/index.ts';
+import { JOB_BUDGET_MS, makeDeadline } from '../_shared/jobDeadline.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const DEFAULT_LIMIT = 25;
+// One invocation's worth, not the whole inbox — the runtime kills at 60s and
+// takes the response with it. Leftovers wait for the next run.
+const DEFAULT_LIMIT = 8;
+const EMAIL_ESTIMATE_MS = 15_000;
 // Below this the sale is not created. Chosen low enough to accept ordinary
 // well-formed notices, high enough to reject "this email mentions three
 // different sales and I guessed".
@@ -85,6 +89,10 @@ serve(async (req) => {
   const provider = getLlmProvider();
   const runId = crypto.randomUUID();
   const peak = isPeakPricing(new Date());
+  const startedAt = Date.now();
+  const deadline = makeDeadline(startedAt, JOB_BUDGET_MS);
+  let processed = 0;
+  let stoppedEarly = false;
 
   let auctionsCreated = 0;
   let lotsCreated = 0;
@@ -92,6 +100,11 @@ serve(async (req) => {
   const results: unknown[] = [];
 
   for (const email of emails) {
+    if (!deadline.canAfford(Date.now(), EMAIL_ESTIMATE_MS, processed === 0)) {
+      stoppedEarly = true;
+      break;
+    }
+    processed++;
     const problems: string[] = [];
     let status = 'parsed';
     let auctionId: string | null = null;
