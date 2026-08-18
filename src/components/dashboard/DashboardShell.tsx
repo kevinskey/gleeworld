@@ -311,6 +311,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const navCtx: NavContext = applyPreviewRole({
     hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole);
   const { navOrder, saveNavOrder } = useNavItemOrder();
@@ -535,6 +536,7 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const navCtx: NavContext = applyPreviewRole({
     hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
     isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole);
   // same per-user ordering + section overrides as the desktop sidebar
@@ -1007,6 +1009,11 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const alreadyInsideShell = useContext(DashboardShellNestedContext);
+  // TrialBanner is admin-only billing UI (never shown to students/parents/
+  // fans) — it needs the resolved role, and roleLoading keeps it hidden
+  // until the profile has actually loaded rather than flashing for everyone.
+  const { profile: shellProfile, loading: shellRoleLoading } = useUserRole();
+  const shellIsAdmin = !!(shellProfile?.is_admin || shellProfile?.is_super_admin);
   // Calendar keeps its compact header spacing but shows the nav like every
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
@@ -1038,7 +1045,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Trial countdown — self-gates on trial state so it renders null
               for grandfathered / paid / loading / no-tenant. */}
-          <TrialBanner />
+          <TrialBanner roleLoading={shellRoleLoading} isAdmin={shellIsAdmin} />
           <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} />
           {/* pt-3 gives every page a small breath of space below the
               sticky topbar — pages that want more (CommandCenter, Viewer

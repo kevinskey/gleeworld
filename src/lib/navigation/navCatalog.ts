@@ -46,6 +46,9 @@ export interface CatalogEntry {
   end?: boolean;
   surfaces?: Array<'sidebar' | 'grid'>;
   gate?: NavGate;
+  // Visually prominent row in the grouped sidebar (e.g. Home) — see
+  // DashboardShell's NavLink styling.
+  hero?: boolean;
 }
 
 export const NAV_CATALOG: CatalogEntry[] = [
