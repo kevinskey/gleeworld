@@ -71,11 +71,13 @@ describe('resolveNav gates', () => {
     const out = resolveNav(openCtx({ hiddenRoutes: new Set(['/dashboard/pr-hub']) }));
     expect(out.find((e) => e.to === '/dashboard/pr-hub')).toBeUndefined();
   });
-  it('flagless core (Music Library, People, Video) survives an all-off context', () => {
+  it('flagless core (Music Library, Video) survives an all-off context', () => {
+    // 'people' left this list when it became adminOnly (routes to /dashboard/users).
     const out = resolveNav({ hasModule: () => false, isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, hiddenRoutes: new Set() });
-    for (const key of ['music-library', 'people', 'video', 'music-tools', 'office-hours', 'analytics', 'settings', 'attendance', 'academy']) {
+    for (const key of ['music-library', 'video', 'music-tools', 'office-hours', 'analytics', 'settings', 'attendance', 'academy']) {
       expect(out.find((e) => e.key === key), key).toBeDefined();
     }
+    expect(out.find((e) => e.key === 'people'), 'people is admin-gated now').toBeUndefined();
   });
 });
 

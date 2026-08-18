@@ -133,6 +133,7 @@ const KNOWN_ROUTES = new Set([
   '/dashboard/box-office', '/dashboard/users', '/admin/public-page',
   '/dashboard/analytics', '/dashboard/workspace', '/songwriting',
   '/planner', '/dashboard/fundraising', '/qr-generator',
+  '/dashboard/music-player', '/dashboard/concierge',
 ]);
 
 describe('getAppTiles', () => {
@@ -247,17 +248,18 @@ describe('getAppTiles with a custom layout', () => {
 });
 
 describe('getAppTiles catalog parity', () => {
-  it('default primary is byte-identical to the pre-catalog grid for both roles (allOn)', () => {
+  it('default primary matches the frozen grid for both roles (allOn)', () => {
     // Faculty tabs claim /dashboard/viewer (Music); student tabs claim
     // /dashboard/viewer AND /studio — so those keys dedupe out of the grid,
-    // exactly as before this change.
+    // exactly as before this change. SoundCloud added 2026-08-17, bumping
+    // the last pre-catalog key (finance/merch) into overflow.
     expect(getAppTiles('faculty', allOn, navFor(allOn)).primary.map((t) => t.key))
-      .toEqual(['tracks', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance']);
+      .toEqual(['tracks', 'studio', 'sight', 'soundcloud', 'attendance', 'academy', 'tickets', 'planner']);
     expect(getAppTiles('student', allOn, navFor(allOn)).primary.map((t) => t.key))
-      .toEqual(['tracks', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
+      .toEqual(['tracks', 'sight', 'soundcloud', 'attendance', 'academy', 'tickets', 'planner', 'finance']);
   });
-  it('DEFAULT_GRID_ORDER is the frozen 10-key list', () => {
-    expect(DEFAULT_GRID_ORDER).toEqual(['music', 'tracks', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
+  it('DEFAULT_GRID_ORDER is the frozen 11-key list', () => {
+    expect(DEFAULT_GRID_ORDER).toEqual(['music', 'tracks', 'studio', 'sight', 'soundcloud', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'merch']);
   });
   it('sidebar-parity destinations land in overflow, never default primary', () => {
     const { primary, overflow } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }));
@@ -295,8 +297,9 @@ describe('getAppTiles catalog parity', () => {
     expect(keys).not.toContain('music-tools');
   });
   it('custom layouts can pin parity destinations', () => {
+    // 'people' is adminOnly now, so pinning it needs a tenant-admin nav.
     const layout: TileLayout = { v: 1, order: ['people', 'music-library', 'tickets'] };
-    const { primary } = getAppTiles('faculty', allOn, navFor(allOn), layout);
+    const { primary } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }), layout);
     expect(primary.map((t) => t.key)).toEqual(['people', 'music-library', 'tickets']);
   });
   it('grid tiles carry their catalog section and grid label/icon overrides', () => {
