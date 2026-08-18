@@ -135,6 +135,31 @@ export default function SoundCloudPlayerPage() {
     localStorage.setItem(LIST_KEY, JSON.stringify(tracks));
   }, [tracks]);
 
+  // Bulk import via ?add=<comma-separated SoundCloud URLs>. Lets a
+  // shared link (or an assistant) preload a whole deck; titles backfill
+  // from oEmbed. Param is stripped after the merge so refreshes don't
+  // re-trigger the toast.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('add');
+    if (!raw) return;
+    const urls = raw.split(',').map((u) => decodeURIComponent(u.trim())).filter(isSoundCloudUrl);
+    if (urls.length) {
+      setTracks((prev) => {
+        const have = new Set(prev.map((t) => t.url));
+        const fresh = urls.filter((u) => !have.has(u)).map((u) => ({ url: u }));
+        if (fresh.length) {
+          toast.success(`Added ${fresh.length} item${fresh.length === 1 ? '' : 's'} to your deck`);
+          setSelected((sel) => sel ?? fresh[0]);
+          return [...prev, ...fresh];
+        }
+        toast.info('Everything in that link is already in your deck');
+        return prev;
+      });
+    }
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }, []);
+
   const addTrack = async () => {
     const url = newUrl.trim();
     if (!isSoundCloudUrl(url)) {
