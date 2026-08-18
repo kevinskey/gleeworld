@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Play, Youtube, Loader2, Search, ArrowUpDown, Star, Upload, Pencil,
   Share2, ListPlus, Check, Users, Inbox, Plus, Trash2, ListVideo, Bookmark,
-  RefreshCw,
+  RefreshCw, Download,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { YouTubeVideoModal } from '@/components/youtube/YouTubeVideoModal';
@@ -28,6 +28,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface VideoRow {
@@ -43,9 +47,12 @@ interface VideoRow {
   category: string | null;
   tags: string[] | null;
   is_featured: boolean | null;
+  /** Set when a downloadable master exists in DO Spaces. Admin-only affordance. */
+  archive_object_key: string | null;
+  archive_size_bytes: number | null;
 }
 
-type Tab = 'all' | 'featured' | 'uploads' | 'playlists' | 'shared';
+type Tab = 'all' | 'featured' | 'uploads' | 'archived' | 'playlists' | 'shared';
 type Sort = 'recent' | 'oldest' | 'title' | 'views';
 
 const LIBRARY_HARD_CAP = 500;
@@ -54,6 +61,13 @@ const formatViewCount = (count: number): string => {
   if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`;
   if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K`;
   return count.toString();
+};
+
+const formatBytes = (bytes: number | null): string => {
+  if (!bytes) return '';
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`;
+  return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 };
 
 const formatDate = (dateString: string | null): string => {
@@ -89,13 +103,16 @@ export const YouTubeChannel: React.FC = () => {
   const branding = useBrandingSettings();
   const channelHandle = (branding.settings as { youtube_channel_handle?: string } | null)?.youtube_channel_handle || '';
   const [syncing, setSyncing] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<VideoRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchVideos = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('youtube_videos')
-        .select('id, video_id, title, description, thumbnail_url, video_url, duration, view_count, published_at, category, tags, is_featured')
+        .select('id, video_id, title, description, thumbnail_url, video_url, duration, view_count, published_at, category, tags, is_featured, archive_object_key, archive_size_bytes')
         .order('published_at', { ascending: false, nullsFirst: false })
         .limit(LIBRARY_HARD_CAP);
       if (error) throw error;
@@ -135,6 +152,7 @@ export const YouTubeChannel: React.FC = () => {
         return p?.provider === 'direct';
       });
     }
+    else if (tab === 'archived') list = list.filter((v) => !!v.archive_object_key);
 
     if (category !== '__all__') list = list.filter((v) => v.category === category);
     if (activeTags.size > 0) {
@@ -193,10 +211,72 @@ export const YouTubeChannel: React.FC = () => {
     }
   };
 
+  // Ask the edge function for a short-lived presigned URL, then let the
+  // browser fetch it directly — a 10 GB archive must never be proxied
+  // through the app. The link expires in minutes, so it is minted per click
+  // rather than embedded in the page.
+  const downloadArchive = async (v: VideoRow) => {
+    setDownloadingId(v.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('video-archive-download', {
+        body: { videoId: v.id },
+      });
+      if (error) throw error;
+      const d = data as { url?: string; error?: string };
+      if (d?.error || !d?.url) throw new Error(d?.error || 'No download URL returned');
+
+      // Assigning location rather than clicking a synthetic <a download>:
+      // cross-origin `download` is ignored, and the presigned URL already
+      // carries Content-Disposition: attachment, so the page stays put.
+      window.location.assign(d.url);
+    } catch (e) {
+      toast({
+        title: 'Could not start download',
+        description: (e as Error).message,
+        variant: 'destructive',
+      });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  // Removes the library entry only. The archived file in Spaces is left
+  // alone — it is the master copy, and the RLS delete here is reversible by
+  // re-running the importer, whereas an object delete is not.
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('youtube_videos')
+        .delete()
+        .eq('id', deleteTarget.id);
+      if (error) throw error;
+
+      // Drop it locally rather than refetching — the list is a single
+      // capped fetch, so a round trip here would just re-download 500 rows.
+      setVideos((prev) => prev.filter((v) => v.id !== deleteTarget.id));
+      if (selectedVideo?.id === deleteTarget.id) setSelectedVideo(null);
+      toast({ title: 'Removed', description: `"${deleteTarget.title}" is no longer in the library.` });
+      setDeleteTarget(null);
+    } catch (e) {
+      toast({
+        title: 'Could not remove video',
+        description: (e as Error).message,
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const tabs: { key: Tab; label: string; icon?: React.ComponentType<{ className?: string }> }[] = [
     { key: 'all', label: 'All' },
     { key: 'featured', label: 'Featured', icon: Star },
     { key: 'uploads', label: 'Uploads', icon: Upload },
+    // Downloadable masters are an admin affordance, so the tab that filters
+    // to them is too — it would be an empty, confusing tab for everyone else.
+    ...(isAdmin() ? [{ key: 'archived' as Tab, label: 'Downloadable', icon: Download }] : []),
     { key: 'playlists', label: 'My Playlists', icon: ListVideo },
     { key: 'shared', label: 'Shared with me', icon: Inbox },
   ];
@@ -583,6 +663,20 @@ export const YouTubeChannel: React.FC = () => {
                         </Button>
                         {isAdmin() && (
                           <>
+                            {video.archive_object_key && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs px-2"
+                                disabled={downloadingId === video.id}
+                                onClick={(e) => { e.stopPropagation(); downloadArchive(video); }}
+                                title={`Download the original file${video.archive_size_bytes ? ` (${formatBytes(video.archive_size_bytes)})` : ''}`}
+                              >
+                                {downloadingId === video.id
+                                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  : <Download className="w-3.5 h-3.5" />}
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -600,6 +694,15 @@ export const YouTubeChannel: React.FC = () => {
                               title="Edit video metadata"
                             >
                               <Pencil className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs px-2 text-destructive hover:text-destructive"
+                              onClick={(e) => { e.stopPropagation(); setDeleteTarget(video); }}
+                              title="Remove from library"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
                             </Button>
                           </>
                         )}
@@ -663,10 +766,38 @@ export const YouTubeChannel: React.FC = () => {
               category: null,
               tags: null,
               is_featured: null,
+              // Playlist items carry only enough to play; the archive pointer
+              // isn't loaded here, and the modal doesn't offer downloads.
+              archive_object_key: null,
+              archive_size_bytes: null,
             });
           }}
           onChanged={() => personal.refresh()}
         />
+
+        <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove this video from the library?</AlertDialogTitle>
+              <AlertDialogDescription>
+                “{deleteTarget?.title}” will no longer appear in the library, and any
+                playlist that uses it will lose the entry.
+                {deleteTarget?.archive_object_key
+                  ? ' The archived file itself is kept in storage, so this can be undone by re-importing.'
+                  : ' The video stays on its original site — only this library entry is removed.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Keep it</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deleting}
+                onClick={(e) => { e.preventDefault(); confirmDelete(); }}
+              >
+                {deleting ? 'Removing…' : 'Remove video'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </DashboardShell>
     </UniversalLayout>
   );
