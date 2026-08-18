@@ -1185,6 +1185,11 @@ function AssignmentEditDialog({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [gradingOpen, setGradingOpen] = useState(false);
+  // How much student work this delete would take with it. Submissions are
+  // FK'd to gw_assignments ON DELETE CASCADE, so deleting the assignment
+  // destroys every response and grade on it — the confirmation has to say so
+  // in numbers, not in the abstract. null = not counted yet.
+  const [submissionCount, setSubmissionCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (assignment) {
@@ -1196,6 +1201,18 @@ function AssignmentEditDialog({
       setForm(null);
     }
   }, [assignment]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSubmissionCount(null);
+    if (!open || !assignment?.id) return;
+    supabase
+      .from('gw_course_submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('assignment_id', assignment.id)
+      .then(({ count }) => { if (!cancelled) setSubmissionCount(count ?? 0); });
+    return () => { cancelled = true; };
+  }, [open, assignment?.id]);
 
   if (!open || !form) return null;
 
@@ -1297,10 +1314,31 @@ function AssignmentEditDialog({
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t">
-            <Button variant="destructive" size="sm" onClick={del} disabled={deleting}>
-              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+            {/* Deleting cascades student submissions away, so this confirms
+                and names the damage in numbers. No "don't ask again" — an
+                opt-out on other people's graded work is not ours to offer. */}
+            <ConfirmDeleteButton
+              confirmKey="delete-course-assignment"
+              title={`Delete "${form.title}"?`}
+              description={
+                submissionCount === null
+                  ? 'Checking for student submissions…'
+                  : submissionCount === 0
+                    ? 'No one has submitted yet. This removes the assignment for the whole class.'
+                    : `This also permanently deletes ${submissionCount} student ${submissionCount === 1 ? 'submission' : 'submissions'}, including grades and feedback.`
+              }
+              confirmLabel={submissionCount ? 'Delete anyway' : 'Delete'}
+              allowDontAskAgain={false}
+              onConfirm={del}
+              disabled={deleting || submissionCount === null}
+              ariaLabel="Delete assignment"
+              className="inline-flex items-center justify-center h-9 px-4 text-sm font-medium text-rose-600 hover:text-rose-700 hover:bg-muted disabled:opacity-50"
+            >
+              {deleting
+                ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                : <Trash2 className="w-4 h-4 mr-1.5" />}
               Delete
-            </Button>
+            </ConfirmDeleteButton>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={onClose}>Cancel</Button>
               <Button onClick={save} disabled={saving}>
