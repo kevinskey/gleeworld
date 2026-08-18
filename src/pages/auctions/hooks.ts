@@ -29,6 +29,11 @@ import {
   type ListLotsOptions,
 } from '@/lib/auctions/lotsApi';
 import {
+  getWhatsAppOptIn,
+  optInToWhatsApp,
+  optOutOfWhatsApp,
+} from '@/lib/auctions/whatsappApi';
+import {
   createSavedSearch,
   deleteSavedSearch,
   dismissMatch,
@@ -173,6 +178,32 @@ export function useSavedSearchMutations() {
   });
 
   return { create, update, remove };
+}
+
+export function useWhatsAppOptIn() {
+  return useQuery({
+    queryKey: [KEY, 'whatsapp-optin'],
+    queryFn: () => getWhatsAppOptIn(),
+  });
+}
+
+export function useWhatsAppMutations() {
+  const qc = useQueryClient();
+  const invalidate = () => qc.invalidateQueries({ queryKey: [KEY, 'whatsapp-optin'] });
+
+  const optIn = useMutation({
+    mutationFn: (phoneE164: string) => optInToWhatsApp(phoneE164),
+    onSuccess: () => { invalidate(); toast.success('WhatsApp alerts turned on'); },
+    onError: reportError('turn on WhatsApp alerts'),
+  });
+
+  const optOut = useMutation({
+    mutationFn: () => optOutOfWhatsApp(),
+    onSuccess: () => { invalidate(); toast.success('WhatsApp alerts turned off'); },
+    onError: reportError('turn off WhatsApp alerts'),
+  });
+
+  return { optIn, optOut };
 }
 
 export function useMatches(includeDismissed = false) {

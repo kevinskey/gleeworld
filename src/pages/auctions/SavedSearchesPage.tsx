@@ -17,6 +17,7 @@ import {
 import type { SavedSearchInput } from '@/lib/auctions/searchesApi';
 import { AuctionsTabs } from './components/AuctionsTabs';
 import { SavedSearchDialog } from './components/SavedSearchDialog';
+import { WhatsAppOptInCard } from './components/WhatsAppOptInCard';
 import { useSavedSearches, useSavedSearchMutations } from './hooks';
 
 // A plain-language rendering of the criteria JSONB, so someone can confirm at
@@ -68,6 +69,8 @@ export default function SavedSearchesPage() {
     >
       <AuctionsTabs />
 
+      <WhatsAppOptInCard />
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground py-8">Loading your searches…</p>
       ) : searches.length === 0 ? (
@@ -99,7 +102,8 @@ export default function SavedSearchesPage() {
                         ? <BellOff className="w-4 h-4" />
                         : <Bell className="w-4 h-4" />}
                       {NOTIFY_CHANNEL_LABELS[s.notify_channel]}
-                      {s.notify_channel !== 'none' &&
+                      {s.notify_whatsapp && ' · and WhatsApp'}
+                      {(s.notify_channel !== 'none' || s.notify_whatsapp) &&
                         ` · ${NOTIFY_FREQUENCY_LABELS[s.notify_frequency].toLowerCase()}`}
                     </p>
                   </div>

@@ -179,6 +179,7 @@ export interface SavedSearch {
   criteria: SearchCriteria;
   notify_channel: NotifyChannel;
   notify_frequency: NotifyFrequency;
+  notify_whatsapp: boolean;
   active: boolean;
   last_run_at: string | null;
   last_notified_at: string | null;

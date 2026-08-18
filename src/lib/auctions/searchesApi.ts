@@ -7,7 +7,7 @@ import type {
 } from './types';
 
 const SEARCH_COLUMNS =
-  'id, user_id, name, criteria, notify_channel, notify_frequency, active, ' +
+  'id, user_id, name, criteria, notify_channel, notify_frequency, notify_whatsapp, active, ' +
   'last_run_at, last_notified_at, created_at, updated_at';
 
 export async function listSavedSearches(): Promise<SavedSearch[]> {
@@ -24,6 +24,7 @@ export interface SavedSearchInput {
   criteria: SearchCriteria;
   notify_channel: NotifyChannel;
   notify_frequency: NotifyFrequency;
+  notify_whatsapp: boolean;
   active: boolean;
 }
 
