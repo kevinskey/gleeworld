@@ -19,8 +19,7 @@ import { useTenantDefaultTools } from '@/hooks/useTenantDefaultTools';
 import { useToast } from '@/hooks/use-toast';
 import { isFacultyProfile } from '@/lib/roles';
 import {
-  applyPreviewRole, resolveNav, HIDEABLE_NAV_ROLES, type NavContext, type NavRole,
-} from '@/lib/navigation/navCatalog';
+  applyPreviewRole, resolveNav, HIDEABLE_NAV_ROLES, type NavContext, type NavRole, GATED_MODULE_KEYS } from '@/lib/navigation/navCatalog';
 import {
   DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT, sanitizeShelf,
   type Shelf, type ToolGroup,
@@ -46,7 +45,10 @@ function platformDefaultFor(role: NavRole): string[] {
 // consumer, this page included. Hooks must run unconditionally and in
 // stable order, so the loop below carries the same rules-of-hooks
 // disable DashboardShell uses.
-const MODULE_KEYS = ['sight_reading', 'box_office', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner', 'all_state'] as const;
+// Derived from NAV_CATALOG (GATED_MODULE_KEYS) rather than hand-listed: a
+// gated nav entry whose module id was missing from this list rendered
+// nowhere, silently. See navCatalog.ts for the two times that shipped.
+const MODULE_KEYS = GATED_MODULE_KEYS;
 
 export default function MyWorldPage() {
   const { toast } = useToast();
