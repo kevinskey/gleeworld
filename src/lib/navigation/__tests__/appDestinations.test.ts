@@ -318,12 +318,12 @@ describe('getAppTiles catalog parity', () => {
     // context (navFor's default) is a non-admin — see the isTenantAdmin:
     // true variant of this exact check below.
     expect(getAppTiles('faculty', allOn, navFor(allOn)).primary.map((t) => t.key))
-      .toEqual(['studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance']);
+      .toEqual(['studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'soundcloud']);
     expect(getAppTiles('student', allOn, navFor(allOn)).primary.map((t) => t.key))
-      .toEqual(['sight', 'attendance', 'academy', 'tickets', 'planner', 'finance']);
+      .toEqual(['sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'soundcloud']);
   });
-  it('DEFAULT_GRID_ORDER is the frozen 9-key list — merch -> shop as of 2026-08-09', () => {
-    expect(DEFAULT_GRID_ORDER).toEqual(['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'shop']);
+  it('DEFAULT_GRID_ORDER is the frozen 10-key list — merch -> shop 2026-08-09, soundcloud appended 2026-08-17', () => {
+    expect(DEFAULT_GRID_ORDER).toEqual(['music', 'studio', 'sight', 'attendance', 'academy', 'tickets', 'planner', 'finance', 'shop', 'soundcloud']);
   });
   it('an admin DOES get Store Admin in the default day-one grid (no stored record)', () => {
     const { primary } = getAppTiles('faculty', allOn, navFor(allOn, { isTenantAdmin: true }));
