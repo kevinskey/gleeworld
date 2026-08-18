@@ -192,6 +192,11 @@ export interface SiteRenderContext {
   activeAddons: string[];
   /** Show a member sign-in link (set when the site renders on the tenant's own domain). */
   memberSignIn?: boolean;
+  /** The tenant's public SoundCloud profile (branding.soundcloud_url). The
+   *  `soundcloud` block reads it from here rather than holding a copy, so
+   *  setting it once in Branding lights up the block with no per-block
+   *  setup — and leaving it blank renders nothing. */
+  soundcloudUrl?: string | null;
 }
 
 export interface BlockRenderProps<C = Record<string, unknown>> {

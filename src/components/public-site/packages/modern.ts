@@ -43,6 +43,7 @@ export const modernPackage: TemplatePackage = {
     // they scroll the Blocks list in the editor.
     { type: 'media-gallery', config: { heading: 'Photos', layout: 'grid', items: [] } },
     { type: 'music-player', config: { heading: 'Listen', tracks: [] } },
+    { type: 'soundcloud', config: { heading: 'Listen on SoundCloud', playlistUrl: '', visual: false } },
     { type: 'videos', config: { heading: 'Watch', layout: 'grid', videos: [] } },
     { type: 'contact', config: { email: '', phone: '' } },
   ],

@@ -39,6 +39,7 @@ export const minimalistPackage: TemplatePackage = {
     },
     { type: 'about', config: { title: '', body: '', imageSide: 'right' } },
     { type: 'music-player', config: { heading: 'Listen', tracks: [] } },
+    { type: 'soundcloud', config: { heading: 'Listen on SoundCloud', playlistUrl: '', visual: false } },
     { type: 'events', config: { heading: 'Upcoming', style: 'list', limit: 6 } },
     { type: 'contact', config: { email: '', phone: '' } },
   ],
