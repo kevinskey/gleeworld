@@ -48,9 +48,18 @@ const SECTION_ORDER = Object.keys(NAV_SECTION_LABELS) as NavSectionKey[];
 // would succeed and change nothing. Spec §5.4: "Home is always here."
 const ALWAYS_PRESENT_KEY = 'home';
 
+// `group` so the row's selected state can colour its CHILDREN explicitly.
+// Setting text-accent-foreground on the row alone is not enough: the label
+// and the pinned note render dark on a dark tenant accent because they do
+// not inherit it (verified in-browser on a gold-accent tenant — the row
+// computed white while its label computed black). Every child that carries
+// text on a selected row therefore names its own selected colour, which
+// also keeps the icons from staying muted-slate on a saturated accent.
 const CARD_ITEM =
-  'relative flex items-center gap-3 min-h-11 px-3 bg-card text-card-foreground cursor-pointer ' +
+  'group relative flex items-center gap-3 min-h-11 px-3 bg-card text-card-foreground cursor-pointer ' +
   'data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground';
+// Applied to every child of a row that renders text or an icon.
+const ON_SELECTED = 'group-data-[selected=true]:text-accent-foreground';
 // Targets cmdk's own generated [cmdk-group-heading]/[cmdk-group-items]
 // elements directly (arbitrary-variant selectors), rather than setting
 // typography on the CommandGroup wrapper itself — that would cascade onto
@@ -62,7 +71,7 @@ const GROUP_CARD =
   '[&_[cmdk-group-heading]]:px-1 [&_[cmdk-group-heading]]:pb-1.5 ' +
   '[&_[cmdk-group-items]]:bg-card [&_[cmdk-group-items]]:rounded-xl ' +
   '[&_[cmdk-group-items]]:overflow-hidden [&_[cmdk-group-items]]:divide-y [&_[cmdk-group-items]]:divide-border';
-const ROW_LABEL = 'flex-1 text-[17px] truncate';
+const ROW_LABEL = 'flex-1 text-[17px] truncate ' + ON_SELECTED;
 const BADGE = 'w-6 h-6 rounded-full flex items-center justify-center shrink-0';
 // Same 44px-hit-target-around-a-24px-badge trick as MyWorldEditor, so the
 // tap target meets the 44pt minimum without inflating the visible badge.
@@ -81,7 +90,7 @@ function PinControl({
 }) {
   if (isPinned) {
     return (
-      <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground shrink-0">
+      <span className={`flex items-center gap-1.5 text-[13px] text-muted-foreground shrink-0 ${ON_SELECTED}`}>
         <Check className="w-4 h-4" aria-hidden />
         In your world
       </span>
@@ -109,7 +118,11 @@ function PinControl({
       aria-label={`Pin ${entry.label} to your world`}
       className={TAP_TARGET}
     >
-      <span className={`${BADGE} bg-primary/10 text-primary`}>
+      <span
+        className={`${BADGE} bg-primary/10 text-primary `
+          + 'group-data-[selected=true]:bg-accent-foreground/20 '
+          + 'group-data-[selected=true]:text-accent-foreground'}
+      >
         <Plus className="w-4 h-4" aria-hidden />
       </span>
     </button>
@@ -149,7 +162,7 @@ function ToolRow({
       data-tour={entry.tourId}
       className={CARD_ITEM}
     >
-      <entry.icon className="w-5 h-5 shrink-0 text-muted-foreground" aria-hidden />
+      <entry.icon className={`w-5 h-5 shrink-0 text-muted-foreground ${ON_SELECTED}`} aria-hidden />
       <span className={ROW_LABEL}>{entry.label}</span>
       <PinControl entry={entry} isPinned={isPinned} canPin={canPin} onPin={onPin} />
     </CommandItem>
