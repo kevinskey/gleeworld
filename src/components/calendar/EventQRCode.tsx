@@ -13,7 +13,6 @@ import { useAuth } from '@/contexts/AuthContext';
 interface EventQRCodeProps {
   eventId: string;
   eventTitle: string;
-  eventQrToken?: string; // Legacy token, kept for backward compatibility
   compact?: boolean;
   /** Custom trigger element (e.g. an Apple-style inspector row). */
   trigger?: React.ReactNode;

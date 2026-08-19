@@ -269,13 +269,10 @@ export const EventDetailDialog = ({ event, open, onOpenChange, onEventUpdated }:
                     eventTitle={event.title}
                   />
                   
-                  {event.event_qr_token && (
-                    <EventQRCode
-                      eventId={event.id}
-                      eventTitle={event.title}
-                      eventQrToken={event.event_qr_token}
-                    />
-                  )}
+                  <EventQRCode
+                    eventId={event.id}
+                    eventTitle={event.title}
+                  />
                   
                   <Button 
                     variant="outline"
