@@ -73,15 +73,21 @@ function buildHtml(opts: {
   }
 
   const dayBlocks = Array.from(byDay.entries()).map(([day, times]) => {
+    // One button per ROW, not per column. Several <td>s in a single <tr>
+    // each get ~1/N of the width, and on a phone that squeezes a button down
+    // to about 40px — narrow enough that "9:00 AM" wraps one character per
+    // line. Full-width rows read the same on a desktop and a phone, and
+    // nowrap makes the character-wrap failure impossible regardless.
     const buttons = times.map((t) => `
-      <td style="padding:0 8px 8px 0;">
+      <tr><td style="padding:0 0 8px;">
         <a href="${opts.bookingUrl}?d=${day}&t=${t.slice(0, 5)}"
-           style="display:inline-block;padding:11px 18px;background:#1e293b;color:#ffffff;
-                  text-decoration:none;border-radius:10px;font-size:15px;font-weight:600;
+           style="display:block;padding:14px 18px;background:#1e293b;color:#ffffff;
+                  text-decoration:none;border-radius:10px;font-size:16px;font-weight:600;
+                  text-align:center;white-space:nowrap;
                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
           ${fmtTime(t)}
         </a>
-      </td>`).join("");
+      </td></tr>`).join("");
 
     return `
       <tr><td style="padding-top:14px;">
@@ -89,7 +95,8 @@ function buildHtml(opts: {
                   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
           ${esc(fmtDay(day))}
         </p>
-        <table role="presentation" cellpadding="0" cellspacing="0"><tr>${buttons}</tr></table>
+        <table role="presentation" cellpadding="0" cellspacing="0" width="100%"
+               style="width:100%;max-width:320px;">${buttons}</table>
       </td></tr>`;
   }).join("");
 

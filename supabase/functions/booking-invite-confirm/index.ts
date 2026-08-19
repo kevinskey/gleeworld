@@ -315,6 +315,14 @@ serve(async (req) => {
           ? "You'll also get a calendar invitation from Google — accept it to add this to your calendar. If you need to change or cancel, just reply to this email."
           : "I'll send the meeting link before we meet. If you need to change or cancel, just reply to this email."}
       </p>
+      <p style="margin:16px 0 0;font-size:13px;color:#64748b;">
+        Need to change it?
+        <a href="${siteUrl.replace(/\/$/, "")}/rsvp/${token}?action=reschedule"
+           style="color:#1d4ed8;">Reschedule</a>
+        &nbsp;·&nbsp;
+        <a href="${siteUrl.replace(/\/$/, "")}/rsvp/${token}?action=cancel"
+           style="color:#1d4ed8;">Cancel</a>
+      </p>
       <p style="margin:22px 0 0;font-size:14px;color:#0f172a;">— ${esc(hostName)}</p>
     </td></tr>
   </table>

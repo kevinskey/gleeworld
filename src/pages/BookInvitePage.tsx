@@ -61,12 +61,71 @@ interface Slot {
   available: boolean;
 }
 
+const HOST_TZ = 'America/New_York';
+
+// The viewer's timezone, e.g. "America/Los_Angeles". Everything the host
+// publishes is Eastern; everything the guest reads should be theirs.
+const VIEWER_TZ = (() => {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || HOST_TZ; }
+  catch { return HOST_TZ; }
+})();
+
+const SHOWS_LOCAL = VIEWER_TZ !== HOST_TZ;
+
+// What wall-clock time is `instant` in `tz`?
+function wallClockIn(instant: Date, tz: string) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).formatToParts(instant).reduce<Record<string, string>>((acc, p) => {
+    if (p.type !== 'literal') acc[p.type] = p.value;
+    return acc;
+  }, {});
+  return Date.UTC(
+    Number(parts.year), Number(parts.month) - 1, Number(parts.day),
+    Number(parts.hour === '24' ? '00' : parts.hour), Number(parts.minute), Number(parts.second),
+  );
+}
+
+// Turn an Eastern date + wall time into the real instant. Solved by iteration
+// rather than a hardcoded -04:00/-05:00, so it stays correct across the DST
+// change — which matters here: the Singapore window straddles nothing, but an
+// October booking made in August would otherwise be off by an hour.
+function etToInstant(dateStr: string, timeStr: string): Date {
+  const target = Date.parse(`${dateStr}T${timeStr.slice(0, 8).padEnd(8, ':00')}Z`);
+  let guess = target;
+  for (let i = 0; i < 3; i++) {
+    guess = target + (guess - wallClockIn(new Date(guess), HOST_TZ));
+  }
+  return new Date(guess);
+}
+
 const prettyTime = (t: string) => {
   const [h, m] = t.split(':').map(Number);
   const suffix = h >= 12 ? 'PM' : 'AM';
   const hour12 = h % 12 === 0 ? 12 : h % 12;
   return `${hour12}:${String(m).padStart(2, '0')} ${suffix}`;
 };
+
+// A slot rendered in whichever zone the guest is actually sitting in.
+function slotLocal(dateStr: string, timeStr: string) {
+  const instant = etToInstant(dateStr, timeStr);
+  return {
+    time: new Intl.DateTimeFormat('en-US', {
+      timeZone: VIEWER_TZ, hour: 'numeric', minute: '2-digit',
+    }).format(instant),
+    day: new Intl.DateTimeFormat('en-US', {
+      timeZone: VIEWER_TZ, weekday: 'long', month: 'long', day: 'numeric',
+    }).format(instant),
+    // Crossing midnight is the case that actually confuses people — a 6pm
+    // Eastern slot is 6am the NEXT day in Singapore.
+    shiftsDay: new Intl.DateTimeFormat('en-CA', { timeZone: VIEWER_TZ }).format(instant) !== dateStr,
+  };
+}
+
+// "America/Los_Angeles" → "Los Angeles"; good enough to reassure someone the
+// page knows where they are.
+const TZ_LABEL = VIEWER_TZ.split('/').pop()?.replace(/_/g, ' ') ?? VIEWER_TZ;
 
 const prettyDay = (d: string) => {
   const date = parseISO(d);
@@ -84,6 +143,12 @@ export default function BookInvitePage() {
   const [notes, setNotes] = useState('');
   const [phone, setPhone] = useState('');
   const [confirmation, setConfirmation] = useState<any>(null);
+  const [pendingAction, setPendingAction] = useState<'cancel' | 'reschedule' | null>(
+    () => {
+      const a = new URLSearchParams(window.location.search).get('action');
+      return a === 'cancel' || a === 'reschedule' ? a : null;
+    },
+  );
 
   const { data: context, isLoading: contextLoading } = useQuery<InviteContext>({
     queryKey: ['invite-context', token],
@@ -154,6 +219,29 @@ export default function BookInvitePage() {
     return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
   }, [slots]);
 
+  // Cancel / reschedule. Never fires on page load — the ?action= param only
+  // preselects which confirmation UI to show, because mail scanners prefetch
+  // links and a cancel-on-GET would wipe bookings nobody touched.
+  const changeBooking = useMutation({
+    mutationFn: async (mode: 'cancel' | 'reschedule') => {
+      const { data, error } = await supabase.functions.invoke('booking-invite-cancel', {
+        body: { token, mode, siteUrl: window.location.origin },
+      });
+      if (error) throw error;
+      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Could not change this booking.');
+      return { data, mode };
+    },
+    onSuccess: ({ mode }) => {
+      setConfirmation(null);
+      setSelected(null);
+      setPendingAction(null);
+      queryClient.invalidateQueries({ queryKey: ['invite-context', token] });
+      queryClient.invalidateQueries({ queryKey: ['invite-slots', token] });
+      toast.success(mode === 'cancel' ? 'Your meeting was cancelled.' : 'Pick a new time below.');
+    },
+    onError: (e: any) => toast.error(e.message || 'Could not change this booking.'),
+  });
+
   const book = useMutation({
     mutationFn: async () => {
       if (!selected) throw new Error('No time selected');
@@ -223,6 +311,10 @@ export default function BookInvitePage() {
       <Confirmed
         context={context}
         result={confirmation}
+        pendingAction={pendingAction}
+        busy={changeBooking.isPending}
+        onAsk={setPendingAction}
+        onConfirm={(mode) => changeBooking.mutate(mode)}
       />
     );
   }
@@ -272,13 +364,27 @@ export default function BookInvitePage() {
               </button>
 
               <div className="rounded-xl bg-muted/50 p-4">
-                <p className="font-medium">{prettyDay(selectedSlot.slot_date)}</p>
+                <p className="font-medium">
+                  {SHOWS_LOCAL
+                    ? slotLocal(selectedSlot.slot_date, selectedSlot.start_time).day
+                    : prettyDay(selectedSlot.slot_date)}
+                </p>
                 <p className="text-2xl font-semibold tracking-tight mt-0.5">
-                  {prettyTime(selectedSlot.start_time)}
+                  {SHOWS_LOCAL
+                    ? slotLocal(selectedSlot.slot_date, selectedSlot.start_time).time
+                    : prettyTime(selectedSlot.start_time)}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Eastern Time · {service?.duration_minutes} minutes
+                  {SHOWS_LOCAL
+                    ? `${TZ_LABEL} · ${prettyTime(selectedSlot.start_time)} Eastern`
+                    : 'Eastern Time'}
+                  {` · ${service?.duration_minutes} minutes`}
                 </p>
+                {SHOWS_LOCAL && slotLocal(selectedSlot.slot_date, selectedSlot.start_time).shiftsDay && (
+                  <p className="text-xs text-amber-700 mt-1.5">
+                    Note: this is a different calendar day where you are than it is here.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -314,7 +420,9 @@ export default function BookInvitePage() {
               >
                 {book.isPending
                   ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Reserving…</>
-                  : <>Confirm {prettyTime(selectedSlot.start_time)}</>}
+                  : <>Confirm {SHOWS_LOCAL
+                        ? slotLocal(selectedSlot.slot_date, selectedSlot.start_time).time
+                        : prettyTime(selectedSlot.start_time)}</>}
               </Button>
               <p className="text-xs text-center text-muted-foreground">
                 We'll send your confirmation to {context.invitee_email}
@@ -352,7 +460,11 @@ export default function BookInvitePage() {
                     <CardContent className="p-4 sm:p-5">
                       <div className="flex items-center gap-2 mb-3">
                         <CalendarDays className="w-4 h-4 text-muted-foreground" />
-                        <p className="font-medium">{prettyDay(day)}</p>
+                        <p className="font-medium">
+                          {SHOWS_LOCAL && daySlots.length
+                            ? slotLocal(day, daySlots[0].start_time).day
+                            : prettyDay(day)}
+                        </p>
                         <Badge variant="secondary" className="ml-auto text-xs">
                           {daySlots.length} open
                         </Badge>
@@ -362,10 +474,15 @@ export default function BookInvitePage() {
                           <Button
                             key={`${day}-${s.start_time}`}
                             variant="outline"
-                            className="h-11 rounded-xl"
+                            className={cn('rounded-xl', SHOWS_LOCAL ? 'h-14 flex-col gap-0' : 'h-11')}
                             onClick={() => setSelected({ date: s.slot_date, time: s.start_time })}
                           >
-                            {prettyTime(s.start_time)}
+                            <span>{SHOWS_LOCAL ? slotLocal(s.slot_date, s.start_time).time : prettyTime(s.start_time)}</span>
+                            {SHOWS_LOCAL && (
+                              <span className="text-[11px] font-normal text-muted-foreground">
+                                {prettyTime(s.start_time)} ET
+                              </span>
+                            )}
                           </Button>
                         ))}
                       </div>
@@ -377,7 +494,10 @@ export default function BookInvitePage() {
 
             {dataUpdatedAt ? (
               <p className="text-xs text-center text-muted-foreground">
-                Times shown in Eastern Time · updated {format(new Date(dataUpdatedAt), 'h:mm:ss a')}
+                {SHOWS_LOCAL
+                  ? `Times shown in your timezone (${TZ_LABEL}) · host is Eastern`
+                  : 'Times shown in Eastern Time'}
+                {' · updated '}{format(new Date(dataUpdatedAt), 'h:mm:ss a')}
               </p>
             ) : null}
           </>
@@ -433,7 +553,16 @@ function icsHref(opts: { title: string; startISO: string; minutes: number; locat
   return `data:text/calendar;charset=utf-8,${encodeURIComponent(lines.join('\r\n'))}`;
 }
 
-function Confirmed({ context, result }: { context: InviteContext; result: any }) {
+function Confirmed({
+  context, result, pendingAction, busy, onAsk, onConfirm,
+}: {
+  context: InviteContext;
+  result: any;
+  pendingAction: 'cancel' | 'reschedule' | null;
+  busy: boolean;
+  onAsk: (mode: 'cancel' | 'reschedule' | null) => void;
+  onConfirm: (mode: 'cancel' | 'reschedule') => void;
+}) {
   const service = context.service;
   const startISO = result
     ? new Date(`${result.appointment_date}T${result.start_time}`).toISOString()
@@ -461,10 +590,26 @@ function Confirmed({ context, result }: { context: InviteContext; result: any })
           {when && (
             <div className="rounded-xl bg-muted/50 p-4 text-left">
               <p className="text-sm text-muted-foreground">{service?.name}</p>
-              <p className="font-medium mt-0.5">{format(when, 'EEEE, MMMM d, yyyy')}</p>
-              <p className="text-2xl font-semibold tracking-tight">
-                {format(when, 'h:mm a')} <span className="text-sm font-normal text-muted-foreground">ET</span>
+              <p className="font-medium mt-0.5">
+                {new Intl.DateTimeFormat('en-US', {
+                  timeZone: VIEWER_TZ, weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+                }).format(when)}
               </p>
+              <p className="text-2xl font-semibold tracking-tight">
+                {new Intl.DateTimeFormat('en-US', {
+                  timeZone: VIEWER_TZ, hour: 'numeric', minute: '2-digit',
+                }).format(when)}{' '}
+                <span className="text-sm font-normal text-muted-foreground">
+                  {SHOWS_LOCAL ? TZ_LABEL : 'ET'}
+                </span>
+              </p>
+              {SHOWS_LOCAL && (
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {new Intl.DateTimeFormat('en-US', {
+                    timeZone: HOST_TZ, hour: 'numeric', minute: '2-digit',
+                  }).format(when)} Eastern
+                </p>
+              )}
               <p className="text-sm text-muted-foreground mt-1">{minutes} minutes</p>
             </div>
           )}
@@ -485,9 +630,47 @@ function Confirmed({ context, result }: { context: InviteContext; result: any })
             </Button>
           )}
 
-          <p className="text-xs text-muted-foreground pt-2">
-            Need to change it? Just reply to the email that brought you here.
-          </p>
+          {pendingAction ? (
+            <div className="pt-2 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {pendingAction === 'cancel'
+                  ? 'Cancel this meeting? The time will be offered to someone else.'
+                  : 'Release this time and pick a new one?'}
+              </p>
+              <div className="flex gap-2 justify-center">
+                <Button variant="outline" className="rounded-xl" onClick={() => onAsk(null)} disabled={busy}>
+                  Keep it
+                </Button>
+                <Button
+                  variant={pendingAction === 'cancel' ? 'destructive' : 'default'}
+                  className="rounded-xl"
+                  disabled={busy}
+                  onClick={() => onConfirm(pendingAction)}
+                >
+                  {busy
+                    ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Working…</>
+                    : pendingAction === 'cancel' ? 'Yes, cancel' : 'Yes, pick a new time'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="pt-2 space-y-2">
+              <div className="flex gap-2 justify-center">
+                <Button variant="outline" size="sm" className="rounded-xl"
+                        onClick={() => onAsk('reschedule')}>
+                  Reschedule
+                </Button>
+                <Button variant="ghost" size="sm"
+                        className="rounded-xl text-muted-foreground hover:text-destructive"
+                        onClick={() => onAsk('cancel')}>
+                  Cancel
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Or just reply to the email that brought you here.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </Shell>
