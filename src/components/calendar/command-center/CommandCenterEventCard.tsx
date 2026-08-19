@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteCalendarItem } from '@/lib/calendar/deleteCalendarItem';
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { EditEventDialog } from "../EditEventDialog";
@@ -130,21 +131,14 @@ export const CommandCenterEventCard = ({
       // Tell Google first — once the row is gone we can't read its
       // google_event_id anymore. push-event reads it via service role so
       // this happens before the local DELETE.
-      const { pushEventToGoogle } = await import('@/hooks/useGoogleConnection');
-      await pushEventToGoogle(event.id, 'delete');
-
-      const { data: deleted, error } = await supabase
-        .from('gw_events')
-        .delete()
-        .eq('id', event.id)
-        .select('id');
-
-      if (error) throw error;
-      if (!deleted || deleted.length === 0) {
-        throw new Error('Not permitted to delete this event');
+      // Routes by source — gw_events, gw_appointments, or a read-only Google
+      // mirror all need different handling. See deleteCalendarItem.
+      const result = await deleteCalendarItem(event as any);
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
       }
-
-      toast.success('Event deleted successfully');
+      toast.success(result.message);
       onEventDeleted?.();
     } catch (error) {
       console.error('Error deleting event:', error);

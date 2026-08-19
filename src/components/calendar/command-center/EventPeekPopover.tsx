@@ -5,6 +5,7 @@ import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteCalendarItem } from '@/lib/calendar/deleteCalendarItem';
 import { toast } from "sonner";
 import { EventQRCode } from "../EventQRCode";
 import { EventAttendanceDialog } from "./EventAttendanceDialog";
@@ -76,17 +77,12 @@ export const EventPeekPopover = ({
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      const { pushEventToGoogle } = await import('@/hooks/useGoogleConnection');
-      await pushEventToGoogle(event.id, 'delete');
-      const { data: deleted, error } = await supabase
-        .from('gw_events').delete().eq('id', event.id).select('id');
-      if (error) throw error;
-      // RLS-blocked deletes return success with zero rows — surface that
-      // honestly instead of pretending it worked.
-      if (!deleted || deleted.length === 0) {
-        throw new Error('Not permitted to delete this event');
+      const result = await deleteCalendarItem(event as any);
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
       }
-      toast.success('Event deleted');
+      toast.success(result.message);
       setOpen(false);
       onEventDeleted?.();
     } catch (error) {

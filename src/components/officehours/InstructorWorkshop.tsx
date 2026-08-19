@@ -4,7 +4,7 @@
 // services can have different bookable windows. Bookings push to both sides'
 // Google primary calendars (best-effort) via google-push-appointment.
 
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -24,6 +24,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useServices, useCreateService, useUpdateService, useDeleteService, type Service } from '@/hooks/useServices';
 import { toast } from 'sonner';
 import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
+
+const InvitesPanel = lazy(() => import('@/components/officehours/InvitesPanel'));
 import { format, parseISO, isFuture, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -37,18 +39,24 @@ const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 type AvailabilityRow = { day_of_week: number; start_time: string; end_time: string; is_active: boolean };
 
 export default function InstructorWorkshop() {
-  const [tab, setTab] = useState<'services' | 'bookings'>('services');
+  const [tab, setTab] = useState<'services' | 'invites' | 'bookings'>('services');
 
   return (
     <div className="space-y-4">
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
-        <TabsList className="grid w-full max-w-sm grid-cols-2">
+        <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="invites">Invites</TabsTrigger>
           <TabsTrigger value="bookings">Bookings</TabsTrigger>
         </TabsList>
 
         <TabsContent value="services" className="mt-5">
           <ServicesPanel />
+        </TabsContent>
+        <TabsContent value="invites" className="mt-5">
+          <Suspense fallback={<div className="py-10 text-center"><Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" /></div>}>
+            <InvitesPanel />
+          </Suspense>
         </TabsContent>
         <TabsContent value="bookings" className="mt-5 space-y-4">
           <BookingsPanel />
@@ -135,6 +143,7 @@ function GoogleConnectionBar() {
 
 function ServicesPanel() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { data: services = [], isLoading } = useServices();
   const createService = useCreateService();
   const updateService = useUpdateService();
@@ -216,10 +225,23 @@ function ServicesPanel() {
                 const created: any = await createService.mutateAsync(payload);
                 savedId = created?.id;
               }
-              if (savedId) await replaceAvailability(savedId, avail);
+              if (savedId) {
+                const daysOpen = await replaceAvailability(savedId, avail);
+                // The card reads its own availability query — without this it
+                // keeps showing "No availability set" until a full reload,
+                // which reads as a failed save.
+                queryClient.invalidateQueries({ queryKey: ['service-availability', savedId] });
+                if (!daysOpen) {
+                  toast.warning('Service saved, but no days are switched on — nobody can book it yet.');
+                }
+              }
               setDialogOpen(false);
               setEditing(null);
-            } catch { /* toasts handled in hooks */ }
+            } catch (e: any) {
+              // Availability failures used to be swallowed here, so a rejected
+              // write was indistinguishable from a successful one.
+              toast.error(e?.message || 'Could not save this service.');
+            }
           }}
           saving={createService.isPending || updateService.isPending}
         />
@@ -285,25 +307,28 @@ function ServiceCard({ service, onEdit, onDelete }: { service: Service; onEdit: 
 }
 
 // Replace all gw_service_availability rows for a service with the given set.
+//
+// Goes through set_service_availability rather than writing the rows from the
+// browser: the RPC is atomic (no window where a service has lost its old hours
+// and not yet gained its new ones) and it stamps tenant_id from the parent
+// service, which the client has no reliable way to know.
 async function replaceAvailability(serviceId: string, rows: AvailabilityRow[]) {
-  const { error: delErr } = await supabase
-    .from('gw_service_availability')
-    .delete()
-    .eq('service_id', serviceId);
-  if (delErr) throw delErr;
-
   const active = rows.filter((r) => r.is_active);
-  if (active.length === 0) return;
-  const { error: insErr } = await supabase
-    .from('gw_service_availability')
-    .insert(active.map((r) => ({
-      service_id: serviceId,
+
+  const { data, error } = await supabase.rpc('set_service_availability', {
+    p_service_id: serviceId,
+    p_rows: active.map((r) => ({
       day_of_week: r.day_of_week,
       start_time: r.start_time,
       end_time: r.end_time,
-      is_active: true,
-    })));
-  if (insErr) throw insErr;
+    })),
+  });
+
+  if (error) throw error;
+  if (!(data as any)?.success) {
+    throw new Error((data as any)?.error || 'Could not save availability.');
+  }
+  return (data as any).days_open as number;
 }
 
 // ── Service editor dialog (details + weekly availability) ─────────────────
