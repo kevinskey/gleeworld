@@ -936,7 +936,7 @@ export function useStudioEngine(session: Session | null) {
       setBusOutput: async (busId: string, targetBusId: string): Promise<RoutingEditResult> => {
         const r = engineRef.current?.setBusOutput(busId, targetBusId);
         if (r === undefined) return { ok: false, error: 'unknown_bus' };
-        if (r.ok) return { ok: true };
+        if (r.ok === true) return { ok: true };
         if ('cycle' in r) return { ok: false, error: 'cycle', cycle: r.cycle };
         return { ok: false, error: r.error === 'unknown_bus' ? 'unknown_bus' : 'unknown_target' };
       },

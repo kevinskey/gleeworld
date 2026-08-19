@@ -420,7 +420,7 @@ export function MixerView({
       from: b.id, to: b.output.bus_id,
     }));
     const check = wouldEditCycle(edges, { from: busId, to: targetBusId });
-    if (!check.ok) {
+    if (check.ok === false) {
       toast.error('Cannot route: would create a cycle', {
         description: formatCycle(check.cycle),
       });

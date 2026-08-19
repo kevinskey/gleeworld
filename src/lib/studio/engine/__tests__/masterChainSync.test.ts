@@ -55,12 +55,9 @@ const enabledParams = (n = 0): MasteringParams => ({
   enabled: true,
   hpf_hz: 30 + n,
   air_gain_db: 0,
-  comp_threshold_db: -18,
-  comp_ratio: 4,
-  comp_attack_ms: 10,
-  comp_release_ms: 100,
-  ceiling_db: -1,
-  target_lufs: -14,
+  comp: { threshold_db: -18, ratio: 4, attack_ms: 10, release_ms: 100 },
+  limiter: { ceiling_db: -1, release_ms: 200 },
+  loudness_target_lufs: -14,
 });
 
 const disabledParams: MasteringParams = { ...enabledParams(), enabled: false };

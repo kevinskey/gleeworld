@@ -141,7 +141,9 @@ export default function CourseShell() {
   // editor. Preview is sessionStorage-only, so refreshing or opening a
   // new tab restores full instructor capability.
   const previewRole = useEffectivePreviewRole();
-  const previewingAsStudent = previewRole && previewRole !== 'admin' && previewRole !== 'super_admin';
+  // NavRole is only 'admin' | 'student' | 'member' — super-admins previewing
+  // pick one of those, so "not admin" is the full lower-role check.
+  const previewingAsStudent = previewRole && previewRole !== 'admin';
   const canEdit = (isAdmin || isInstructor) && !previewingAsStudent;
 
   // Guards against a late-resolving fetch from a previous `code` clobbering

@@ -610,7 +610,7 @@ export class StudioEngine {
     const cycleEdges: RoutingEdge[] = sessionBuses.map((b) => ({ from: b.id, to: b.output.bus_id }));
     const cycleCheck = findRoutingCycle(cycleEdges);
     const busGraphOk = cycleCheck.ok;
-    if (!busGraphOk) {
+    if (cycleCheck.ok === false) {
       // eslint-disable-next-line no-console
       console.error(`[studio] bus routing cycle detected — bypassing all bus routing this load: ${formatCycle(cycleCheck.cycle)}`);
     }
@@ -967,7 +967,7 @@ export class StudioEngine {
       to: this.reverseResolveTarget(target),
     }));
     const check = wouldEditCycle(currentEdges, { from: busId, to: targetBusId });
-    if (!check.ok) return { ok: false, cycle: check.cycle };
+    if (check.ok === false) return { ok: false, cycle: check.cycle };
     const newTarget = this.resolveRoutingTarget(targetBusId);
     const oldTarget = this.busOutputTargets.get(busId) ?? this.masterIn;
     if (oldTarget === newTarget) return { ok: true };

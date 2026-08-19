@@ -1,4 +1,4 @@
-import { ParsedScore, ParsedNote } from './musicXMLParser';
+import { ParsedScore, ParsedNote } from '@/lib/sightReading/musicXMLParser';
 
 export class MusicXMLPlayer {
   private audioContext: AudioContext | null = null;

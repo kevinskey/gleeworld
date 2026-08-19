@@ -38,7 +38,7 @@ describe('NoteEditor', () => {
     expect(latest.elements[0]).toMatchObject({ kind: 'rest', base: 'half' });
   });
   it('Backspace deletes the last element', () => {
-    let latest = { ...emptyScore(), elements: [noteOf({ step:'C', octave:4, alter:0 }, 'quarter')] };
+    let latest: EditorScore = { ...emptyScore(), elements: [noteOf({ step:'C', octave:4, alter:0 }, 'quarter')] };
     render(<NoteEditor score={latest} onChange={(s) => { latest = s; }} />);
     fireEvent.keyDown(window, { key: 'Backspace' });
     expect(latest.elements).toHaveLength(0);
@@ -116,7 +116,7 @@ describe('NoteEditor', () => {
 
   it('pad pitch buttons honor an armed accidental', () => {
     render(<Harness initial={emptyScore()} />);
-    fireEvent.click(screen.getByRole('button', { name: '♭' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Flat' }));
     fireEvent.click(screen.getByRole('button', { name: 'Add note E' }));
     expect(latest.elements[0]).toMatchObject({ pitch: { step: 'E', alter: -1 } });
   });

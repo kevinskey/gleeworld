@@ -9,7 +9,7 @@ const base = (): Session => newSession({ ownerUserId: 'u1', tenantId: 't1' });
 // rather than a bare { errors }. Normalize to an error array for the assertions.
 const errorsOf = (s: unknown): string[] => {
   const result = validateSession(s);
-  return result.ok ? [] : result.errors;
+  return result.ok === true ? [] : result.errors;
 };
 
 describe('schema versions', () => {
