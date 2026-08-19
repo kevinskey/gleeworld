@@ -5232,6 +5232,11 @@ function BarRuler({
   const gridLevel = useGridLevel();
   // Live position while the End caret is being dragged; null = parked.
   const [endPreview, setEndPreview] = useState<number | null>(null);
+  // Manual double-tap detection for marker flags — iOS Safari doesn't
+  // reliably fire dblclick, which made the rename/delete dialog
+  // unreachable on touch. Single tap jumps; a second tap on the same
+  // flag within the window opens the editor.
+  const lastMarkerTap = useRef<{ id: string; t: number } | null>(null);
   const secondsPerBeat = 60 / tempoBpm;
   const secondsPerBar = secondsPerBeat * numerator;
   const totalBars = Math.ceil(lengthSeconds / secondsPerBar);
@@ -5341,9 +5346,19 @@ function BarRuler({
         <button
           key={mk.id}
           onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onMarkerJump?.(mk.seconds); }}
-          onDoubleClick={(e) => { e.stopPropagation(); onMarkerEdit?.(mk.id); }}
-          className="absolute top-0 z-10 h-4 max-w-[96px] truncate rounded-sm bg-amber-500/90 hover:bg-amber-400 px-1 text-xs font-semibold leading-4 text-amber-950"
+          onClick={(e) => {
+            e.stopPropagation();
+            const now = performance.now();
+            const last = lastMarkerTap.current;
+            if (last && last.id === mk.id && now - last.t < 400) {
+              lastMarkerTap.current = null;
+              onMarkerEdit?.(mk.id);
+            } else {
+              lastMarkerTap.current = { id: mk.id, t: now };
+              onMarkerJump?.(mk.seconds);
+            }
+          }}
+          className="absolute top-0 z-10 h-4 max-w-[96px] truncate rounded-sm bg-amber-500/90 hover:bg-amber-400 px-1 text-xs font-semibold leading-4 text-amber-950 touch-manipulation"
           style={{ left: mk.seconds * pxPerSecond }}
           title={`${mk.name} — click to jump · double-click to rename/delete`}
         >
