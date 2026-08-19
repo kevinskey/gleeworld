@@ -12,6 +12,11 @@ vi.mock('@/integrations/supabase/client', () => ({
     },
   },
 }));
+// ReadingsModal (mounted closed inside the card) pulls the assistant-voice
+// hook chain, which needs branding queries this test never exercises.
+vi.mock('@/lib/assistant/voices', () => ({
+  useAssistantVoice: () => ({ voiceId: null, loading: false }),
+}));
 
 const ctx: DateCardContext = {
   now: new Date('2026-07-18T09:30:00'),

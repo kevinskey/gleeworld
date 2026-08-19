@@ -35,6 +35,7 @@ import {
   hasWriteScope,
 } from '@/hooks/useGoogleConnection';
 import { useAuth } from '@/contexts/AuthContext';
+import { IosCalendarPanel } from './IosCalendarPanel';
 
 interface CalendarRow {
   id: string;
@@ -395,6 +396,7 @@ function SyncTab() {
     <div className="space-y-5">
       {/* Inbound: Google Calendar */}
       <GoogleConnectionPanel />
+      <IosCalendarPanel />
 
       {/* Outbound: per-user iCal feed URL */}
       <div className="rounded-lg border border-border p-4 bg-muted/30 space-y-3">

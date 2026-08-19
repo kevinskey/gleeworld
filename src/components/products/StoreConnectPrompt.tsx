@@ -19,12 +19,22 @@ import { useQueryClient } from '@tanstack/react-query';
 import { CreditCard, Loader2, ExternalLink, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTenantStripeStatus } from '@/hooks/useTenantStripeStatus';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-const RETURN_PATH = '/dashboard/store';
+interface StoreConnectPromptProps {
+  /** Where Stripe sends the admin back after OAuth. Must be in the
+   * stripe-oauth-start RETURN_PATH_ALLOWLIST. */
+  returnPath?: string;
+  /** What the money is, for the banner copy — e.g. "Store payments",
+   * "Student fee payments". */
+  moneyLabel?: string;
+}
 
-export function StoreConnectPrompt() {
+export function StoreConnectPrompt({
+  returnPath = '/dashboard/store',
+  moneyLabel = 'Store payments',
+}: StoreConnectPromptProps = {}) {
   const { data: stripe, isLoading } = useTenantStripeStatus();
   const [connecting, setConnecting] = useState(false);
   const [searchParams] = useSearchParams();
@@ -49,7 +59,7 @@ export function StoreConnectPrompt() {
     try {
       setConnecting(true);
       const { data, error } = await supabase.functions.invoke('stripe-oauth-start', {
-        body: { return_path: RETURN_PATH },
+        body: { return_path: returnPath, tenant_slug: getTenantSlug() },
       });
       if (error) throw new Error(error.message || 'failed');
       if (data?.error) throw new Error(data.error);
@@ -76,7 +86,7 @@ export function StoreConnectPrompt() {
           <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
             <div className="font-semibold">Stripe connected. You're ready to accept payments.</div>
-            <p className="text-sm mt-0.5">Money from your Store lands in your Stripe account. Manage it any time from your Stripe Dashboard.</p>
+            <p className="text-sm mt-0.5">{moneyLabel} land in your Stripe account. Manage it any time from your Stripe Dashboard.</p>
           </div>
         </div>
       );
@@ -116,7 +126,7 @@ export function StoreConnectPrompt() {
         <p className="text-sm mt-0.5">
           {connected
             ? "Your Stripe account is linked but charges aren't enabled yet. Finish the remaining verification steps to start taking payments."
-            : "You'll be sent to Stripe to create a new Stripe account or sign in to yours. Store payments go directly to your Stripe — GleeWorld never holds the funds."}
+            : `You'll be sent to Stripe to create a new Stripe account or sign in to yours. ${moneyLabel} go directly to your Stripe — GleeWorld never holds the funds.`}
         </p>
         <div className="flex flex-wrap gap-2 mt-2">
           <Button size="sm" onClick={startConnect} disabled={connecting}>

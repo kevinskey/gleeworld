@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { getSpeechInput, createNativeSpeechInput, isMuted, setMuted, speak, stopSpeaking } from '../speech';
+import { getSpeechInput, createNativeSpeechInput, isMuted, setMuted, speak, stopSpeaking, sanitizeForSpeech } from '../speech';
 import type { GWSpeechPluginShape, GWSpeechResultEvent } from '@/plugins/gwSpeech';
 
 // Minimal fake of the GWSpeech Capacitor plugin: captures listeners so
@@ -151,5 +151,50 @@ describe('speech facade', () => {
     expect(u.onend).toBe(onEnd);
     expect(u.onerror).toBe(onEnd);
     delete (globalThis as any).SpeechSynthesisUtterance;
+  });
+});
+
+describe('sanitizeForSpeech', () => {
+  it('rewrites markdown links to their label and drops the URL', () => {
+    const input = "The map is [Open in Maps](https://maps.google.com/?cid=1234567890) — tap to launch.";
+    expect(sanitizeForSpeech(input)).toBe('The map is Open in Maps — tap to launch.');
+  });
+
+  it('strips bare URLs so they never get spelled letter-by-letter', () => {
+    expect(sanitizeForSpeech('See https://gleeworld.org for details.'))
+      .toBe('See for details.');
+  });
+
+  it('strips bold/italic markers and keeps the words', () => {
+    expect(sanitizeForSpeech('That was **great** and *really* fun.'))
+      .toBe('That was great and really fun.');
+    expect(sanitizeForSpeech('__loud__ and _quiet_'))
+      .toBe('loud and quiet');
+  });
+
+  it('keeps inline code contents, drops the backticks', () => {
+    expect(sanitizeForSpeech('Run `npm test` first.')).toBe('Run npm test first.');
+  });
+
+  it('drops fenced code blocks entirely', () => {
+    const input = "Here's a snippet:\n```ts\nconst x = 1;\n```\nAnd here's more prose.";
+    expect(sanitizeForSpeech(input)).toBe("Here's a snippet: And here's more prose.");
+  });
+
+  it('leaves emojis and plain punctuation alone', () => {
+    expect(sanitizeForSpeech('Great job! 🎉 That worked.'))
+      .toBe('Great job! 🎉 That worked.');
+  });
+
+  it('handles the concierge failure case verbatim', () => {
+    // The exact shape Kevin flagged — a maps link inside prose.
+    const input = "The nearest Starbucks is around the corner: **7920 Senoia Rd, Fairburn** — [Open in Maps](https://maps.google.com/?cid=3269259697820597057&g_mp=Cidnb29nbGUubWFwcy5wbGFjZXMudjEuUGxhY2VzLlNlYXJjaFRleHQQAhgEIAA)";
+    const out = sanitizeForSpeech(input);
+    expect(out).not.toContain('https://');
+    expect(out).not.toContain('[');
+    expect(out).not.toContain('](');
+    expect(out).not.toContain('**');
+    expect(out).toContain('7920 Senoia Rd, Fairburn');
+    expect(out).toContain('Open in Maps');
   });
 });

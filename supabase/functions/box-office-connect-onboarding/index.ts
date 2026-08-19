@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
     // gw_tenant_members.role is stored with a hyphen ('super-admin'),
     // so the JWT claim follows the same shape. Accept both spellings to
     // tolerate a future rename.
-    const ROLES_ALLOWED = ['admin', 'super-admin', 'super_admin']
+    const ROLES_ALLOWED = ['owner', 'admin', 'super-admin', 'super_admin']
     if (!ROLES_ALLOWED.includes(tenantRole)) {
       return new Response(JSON.stringify({ error: `Only tenant admins can connect Stripe (role: ${tenantRole ?? 'none'})` }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }

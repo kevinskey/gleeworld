@@ -82,7 +82,6 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
     'graduates-portal': 'alumni_portal',
     'merch-store': 'merch',
     'feed-control': 'feeds',
-    'part-tracks': 'part_tracks',
     'program-health': 'program_health',
   };
   const ADDON_MODULE_IDS = new Set(Object.keys(UI_TO_BILLING));
@@ -143,7 +142,10 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
             <Settings className="h-4 w-4 mr-2" />
             Site setup
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate('/store')}>
+          {/* /store/products redirects here now (Phase 5 nav consolidation,
+              2026-08-09) — point the link at the live route directly so this
+              button doesn't take an extra redirect hop. */}
+          <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/shop')}>
             <Store className="h-4 w-4 mr-2" />
             Store
           </Button>
@@ -195,7 +197,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
                 >
                   <Icon
                     className="h-4 w-4 mt-0.5 shrink-0"
-                    style={{ color: 'var(--site-accent, hsl(var(--brand-blue-dark)))' }}
+                    style={{ color: 'var(--tint)' }}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
@@ -265,7 +267,7 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
       {/* Premium course add-ons */}
       {courseStore && courseItems.length > 0 && (
         <section>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--site-accent,hsl(var(--brand-blue-dark)))] mb-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-[color:var(--tint)] mb-3">
             Premium Courses <span className="text-muted-foreground">({courseItems.length})</span>
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -273,9 +275,9 @@ export const ControlCenter = ({ onModuleSelect }: ControlCenterProps) => {
               <button
                 key={p.sku}
                 onClick={() => navigate(`/academy/templates/${p.template_course_id}`)}
-                className="text-left rounded-md border-2 border-[color:var(--site-accent,hsl(var(--brand-blue-dark)))] border-opacity-40 bg-card p-3 flex items-start gap-2 shadow-sm hover:border-[color:var(--site-accent,hsl(var(--brand-blue-dark)))] hover:shadow transition-all"
+                className="text-left rounded-md border-2 border-[color:var(--tint)] border-opacity-40 bg-card p-3 flex items-start gap-2 shadow-sm hover:border-[color:var(--tint)] hover:shadow transition-all"
               >
-                <GraduationCap className="h-4 w-4 mt-0.5 text-[color:var(--site-accent,hsl(var(--brand-blue-dark)))] shrink-0" />
+                <GraduationCap className="h-4 w-4 mt-0.5 text-[color:var(--tint)] shrink-0" />
                 <div className="min-w-0 flex-1">
                   <span className="text-sm font-semibold text-foreground">{p.name}</span>
                   <p className="text-sm text-muted-foreground mt-0.5">

@@ -69,9 +69,8 @@ export const TestSettings = ({ test }: TestSettingsProps) => {
                   <SelectValue placeholder="Select a course" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mus240">MUS 240 - African American Music</SelectItem>
-                  <SelectItem value="mus101">MUS 101 - Music Theory I</SelectItem>
-                  <SelectItem value="mus102">MUS 102 - Music Theory II</SelectItem>
+                  <SelectItem value="mus101">GW 101 - Music Theory I</SelectItem>
+                  <SelectItem value="mus102">GW 102 - Music Theory II</SelectItem>
                   <SelectItem value="all">All Courses</SelectItem>
                 </SelectContent>
               </Select>

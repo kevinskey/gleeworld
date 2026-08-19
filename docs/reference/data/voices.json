@@ -1,0 +1,146 @@
+[
+  {
+    "id": "voice/mixed-adult-choir-satb-sounding-pitch-soprano",
+    "part": "Soprano",
+    "ensemble": "Mixed adult choir (SATB), sounding pitch",
+    "extremeLow": "A3",
+    "extremeHigh": "C6",
+    "comfortable": [
+      "D4",
+      "F5"
+    ],
+    "tessituraCenter": "A4"
+  },
+  {
+    "id": "voice/mixed-adult-choir-satb-sounding-pitch-alto",
+    "part": "Alto",
+    "ensemble": "Mixed adult choir (SATB), sounding pitch",
+    "extremeLow": "E3",
+    "extremeHigh": "F5",
+    "comfortable": [
+      "A3",
+      "C5"
+    ],
+    "tessituraCenter": "E4"
+  },
+  {
+    "id": "voice/mixed-adult-choir-satb-sounding-pitch-tenor",
+    "part": "Tenor",
+    "ensemble": "Mixed adult choir (SATB), sounding pitch",
+    "extremeLow": "B2",
+    "extremeHigh": "B♭4",
+    "comfortable": [
+      "D3",
+      "F4"
+    ],
+    "tessituraCenter": "A3"
+  },
+  {
+    "id": "voice/mixed-adult-choir-satb-sounding-pitch-bass",
+    "part": "Bass",
+    "ensemble": "Mixed adult choir (SATB), sounding pitch",
+    "extremeLow": "E2",
+    "extremeHigh": "F4",
+    "comfortable": [
+      "G2",
+      "D4"
+    ],
+    "tessituraCenter": "C3"
+  },
+  {
+    "id": "voice/treble-choir-ssaa-women-s-or-upper-voice-ensemble-soprano-i",
+    "part": "Soprano I",
+    "ensemble": "Treble choir (SSAA) — women's or upper-voice ensemble",
+    "extremeLow": "C4",
+    "extremeHigh": "C6",
+    "comfortable": [
+      "E4",
+      "G5"
+    ],
+    "tessituraCenter": null
+  },
+  {
+    "id": "voice/treble-choir-ssaa-women-s-or-upper-voice-ensemble-soprano-ii",
+    "part": "Soprano II",
+    "ensemble": "Treble choir (SSAA) — women's or upper-voice ensemble",
+    "extremeLow": "B3",
+    "extremeHigh": "A5",
+    "comfortable": [
+      "C4",
+      "E5"
+    ],
+    "tessituraCenter": null
+  },
+  {
+    "id": "voice/treble-choir-ssaa-women-s-or-upper-voice-ensemble-alto-i",
+    "part": "Alto I",
+    "ensemble": "Treble choir (SSAA) — women's or upper-voice ensemble",
+    "extremeLow": "G3",
+    "extremeHigh": "F5",
+    "comfortable": [
+      "A3",
+      "D5"
+    ],
+    "tessituraCenter": null
+  },
+  {
+    "id": "voice/treble-choir-ssaa-women-s-or-upper-voice-ensemble-alto-ii",
+    "part": "Alto II",
+    "ensemble": "Treble choir (SSAA) — women's or upper-voice ensemble",
+    "extremeLow": "E3",
+    "extremeHigh": "D5",
+    "comfortable": [
+      "G3",
+      "B♭4"
+    ],
+    "tessituraCenter": null
+  },
+  {
+    "id": "voice/male-chorus-ttbb-tenor-i",
+    "part": "Tenor I",
+    "ensemble": "Male chorus (TTBB)",
+    "extremeLow": "C3",
+    "extremeHigh": "B♭4",
+    "comfortable": [
+      "E3",
+      "G4"
+    ],
+    "tessituraCenter": null
+  },
+  {
+    "id": "voice/male-chorus-ttbb-tenor-ii",
+    "part": "Tenor II",
+    "ensemble": "Male chorus (TTBB)",
+    "extremeLow": "B2",
+    "extremeHigh": "G4",
+    "comfortable": [
+      "D3",
+      "E4"
+    ],
+    "tessituraCenter": null
+  },
+  {
+    "id": "voice/male-chorus-ttbb-baritone",
+    "part": "Baritone",
+    "ensemble": "Male chorus (TTBB)",
+    "extremeLow": "G2",
+    "extremeHigh": "F4",
+    "comfortable": [
+      "B2",
+      "D4"
+    ],
+    "tessituraCenter": null
+  },
+  {
+    "id": "voice/male-chorus-ttbb-bass",
+    "part": "Bass",
+    "ensemble": "Male chorus (TTBB)",
+    "extremeLow": "D2",
+    "extremeHigh": "E♭4",
+    "comfortable": [
+      "F2",
+      "C4"
+    ],
+    "tessituraCenter": null
+  }
+]

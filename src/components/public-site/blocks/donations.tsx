@@ -15,7 +15,7 @@ function Render({ config }: BlockRenderProps<Config>) {
     <section id="donate" className="gw-container py-5 text-center">
       <div className="max-w-3xl mx-auto">
         <HandHeart className="w-10 h-10 mx-auto mb-4" style={{ color: 'var(--site-accent)' }} />
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-3">{config.heading}</h2>
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-3">{config.heading}</h2>
         <p className="text-lg text-muted-foreground leading-relaxed mb-6">{config.blurb}</p>
         <Button size="lg" className="rounded-full px-8 text-white" style={{ background: 'var(--site-accent)' }} disabled>
           Donate (coming soon)

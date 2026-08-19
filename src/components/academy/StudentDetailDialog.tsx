@@ -164,7 +164,7 @@ export function StudentDetailDialog({ student, courseId, courseCode, onClose }: 
         </DialogHeader>
 
         {/* Stat strip */}
-        <div className="grid grid-cols-3 gap-3 mt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
           <Metric
             icon={Award}
             label="Grade"

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { tenantHostFromRow, buildTenantHandoffUrl } from '../tenantRedirect';
+import { tenantHostFromRow, tenantPublicHostFromRow, buildTenantHandoffUrl } from '../tenantRedirect';
 
 describe('tenantHostFromRow', () => {
   it('maps the main tenant to the bare root domain', () => {
@@ -36,6 +36,48 @@ describe('tenantHostFromRow', () => {
     expect(tenantHostFromRow(null, 'kevin')).toBe('kevin.gleeworld.org');
     expect(tenantHostFromRow({ slug: 'kevin', subdomain: '   ', custom_domain: null }, 'kevin'))
       .toBe('kevin.gleeworld.org');
+  });
+});
+
+describe('tenantPublicHostFromRow', () => {
+  it('prefers the custom domain — the inverse of tenantHostFromRow', () => {
+    // Same row as the recovery-path test above, opposite answer. This is the
+    // host an admin means when they click "View site".
+    const row = {
+      slug: 'the-silvertones-chorus',
+      subdomain: 'the-silvertones-chorus',
+      custom_domain: 'thesilvertoneschorus.com',
+    };
+    expect(tenantPublicHostFromRow(row, 'the-silvertones-chorus')).toBe('thesilvertoneschorus.com');
+    expect(tenantHostFromRow(row, 'the-silvertones-chorus')).toBe('the-silvertones-chorus.gleeworld.org');
+  });
+
+  it('falls back to the canonical subdomain when no custom domain is set', () => {
+    expect(tenantPublicHostFromRow({ slug: 'kevin', subdomain: 'kevin', custom_domain: null }, 'kevin'))
+      .toBe('kevin.gleeworld.org');
+    expect(tenantPublicHostFromRow({ slug: 'kevin', subdomain: 'kevin', custom_domain: '  ' }, 'kevin'))
+      .toBe('kevin.gleeworld.org');
+  });
+
+  it('still maps main to the bare root domain', () => {
+    expect(tenantPublicHostFromRow({ slug: 'main', subdomain: 'gleeworld.org', custom_domain: null }, 'main'))
+      .toBe('gleeworld.org');
+  });
+
+  it('normalizes a custom domain pasted as a full URL', () => {
+    // The admin field is free text, so 'https://Example.ORG/' happens.
+    expect(tenantPublicHostFromRow(
+      { slug: 'x', subdomain: 'x', custom_domain: 'https://Example.ORG/' },
+      'x',
+    )).toBe('example.org');
+    expect(tenantPublicHostFromRow(
+      { slug: 'x', subdomain: 'x', custom_domain: 'http://example.org/path/here' },
+      'x',
+    )).toBe('example.org');
+  });
+
+  it('survives a missing row', () => {
+    expect(tenantPublicHostFromRow(null, 'kevin')).toBe('kevin.gleeworld.org');
   });
 });
 

@@ -1,0 +1,139 @@
+{
+  "state_slug": "maine",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Maine's All-State choral program is the MMEA 'BOC' (Band/Orchestra/Chorus) All-State Music Festival, which includes an SSAA choir and an SATB choir. As of retrieval the MMEA 'BOC All-State Audition Info' page still described the 2025-26 cycle and the general Auditions page said audition dates/locations for the upcoming year would be 'posted shortly', so no 2026-27 audition date is included here. The 2026-27 audition materials ARE published in MMEA's Four-Year Rotation document (updated May 2026), which lists 'Year C (Fall 2026)' selections and states sight singing is suspended for 2026-2027. The festival itself is confirmed for May 13-15, 2027 at UMaine, Orono.",
+  "organization": {
+    "name": "Maine Music Educators Association",
+    "acronym": "MMEA",
+    "website_url": "https://mainemmea.org/",
+    "description": "Maine Music Educators Association is the state music education association that organizes Maine's All-State festivals, including the BOC (Band/Orchestra/Chorus) All-State Music Festival and Jazz All-State. Choral matters are handled by the MMEA Choral Vice President (choralvp@mainemea.org)."
+  },
+  "sources": [
+    {
+      "name": "MMEA BOC All-State Festival Info",
+      "url": "https://mainemmea.org/boc-all-state-festival-info/",
+      "source_type": "official"
+    },
+    {
+      "name": "MMEA BOC All-State Audition Info",
+      "url": "https://mainemmea.org/boc-all-state-audition-info/",
+      "source_type": "official"
+    },
+    {
+      "name": "MMEA BOC All-State Audition Materials: Four-Year Rotation (adopted 2016, updated May 2026)",
+      "url": "https://docs.google.com/document/d/1QwNfbB16Q3lVCtEiGgogAnORlyiwyRo15Tf2fS3T5h0/edit",
+      "source_type": "handbook_pdf"
+    }
+  ],
+  "programs": [
+    {
+      "name": "BOC All-State Music Festival — SSAA & SATB Choirs",
+      "lineage_key": "maine-boc-all-state-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "SSAA treble chorus and SATB mixed chorus",
+      "description": "Maine MMEA's BOC All-State Music Festival brings together auditioned high school students in band, orchestra and chorus. The choral side comprises an SSAA choir and an SATB choir, which perform a joint concert at the close of the festival at the University of Maine, Orono.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "2027 BOC All-State Music Festival",
+          "start_at": "2027-05-13",
+          "end_at": "2027-05-15",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Held at UMaine, Orono. MMEA lists the Orchestra & Band Concert at 11:00am and the SSAA & SATB Choir Concert at 3:30pm; the site does not state which festival day the concerts fall on, so no clock time is attached to this entry.",
+          "source_url": "https://mainemmea.org/boc-all-state-festival-info/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "sight_reading",
+          "title": "Sight singing suspended for 2026-2027",
+          "description": "MMEA's Four-Year Rotation document states, for both the Soprano/Tenor and Alto/Bass audition tracks, that sight singing is suspended for the 2026-2027 audition.",
+          "source_url": "https://docs.google.com/document/d/1QwNfbB16Q3lVCtEiGgogAnORlyiwyRo15Tf2fS3T5h0/edit"
+        },
+        {
+          "category": "scales",
+          "title": "Two major scales",
+          "description": "Singers sing two major scales — one ascending to assess high range and one descending to assess low range. Scales are sung legato on 'Ah' at a comfortable tempo on quarter notes. Singers hear the starting pitch for each scale before they sing.",
+          "structured_data": {
+            "scale_count": 2,
+            "type": "major",
+            "syllable": "Ah",
+            "articulation": "legato",
+            "note_values": "quarter notes",
+            "starting_pitch_given": true
+          },
+          "source_url": "https://docs.google.com/document/d/1QwNfbB16Q3lVCtEiGgogAnORlyiwyRo15Tf2fS3T5h0/edit"
+        },
+        {
+          "category": "materials",
+          "title": "Solo song drawn from 24 Italian Songs and Arias",
+          "description": "Solo song selections come from '24 Italian Songs and Arias' (G. Schirmer, 1992) — Medium High Voice edition for the Soprano/Tenor track and Medium Low Voice edition for the Alto/Bass track.",
+          "source_url": "https://docs.google.com/document/d/1QwNfbB16Q3lVCtEiGgogAnORlyiwyRo15Tf2fS3T5h0/edit"
+        },
+        {
+          "category": "format",
+          "title": "Voice part and divisi chosen by the teacher",
+          "description": "Teachers choose the preferred voice part and divisi for their student on the registration form.",
+          "source_url": "https://docs.google.com/document/d/1QwNfbB16Q3lVCtEiGgogAnORlyiwyRo15Tf2fS3T5h0/edit"
+        },
+        {
+          "category": "rubric",
+          "title": "Audition rubrics and demo materials published",
+          "description": "MMEA publishes audition rubrics and demo/practice recordings in shared Google Drive folders linked from the Four-Year Rotation document, including an MMEA All-State BOC Vocal Audition Demo Video.",
+          "source_url": "https://docs.google.com/document/d/1QwNfbB16Q3lVCtEiGgogAnORlyiwyRo15Tf2fS3T5h0/edit"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Gia il Sole Dal Gange",
+          "purpose": "audition",
+          "notes": "Year C (Fall 2026) solo song for both the Soprano/Tenor and Alto/Bass tracks; measures 1-48. Sung from the 24 Italian Songs and Arias collection (Medium High Voice for Soprano/Tenor, Medium Low Voice for Alto/Bass).",
+          "source_url": "https://docs.google.com/document/d/1QwNfbB16Q3lVCtEiGgogAnORlyiwyRo15Tf2fS3T5h0/edit"
+        },
+        {
+          "title": "Sing We And Chant It",
+          "composer": "Thomas Morley",
+          "purpose": "audition",
+          "notes": "Year C (Fall 2026) choral assessment selection for both the Soprano/Tenor and Alto/Bass tracks.",
+          "source_url": "https://docs.google.com/document/d/1QwNfbB16Q3lVCtEiGgogAnORlyiwyRo15Tf2fS3T5h0/edit"
+        }
+      ],
+      "documents": [
+        {
+          "title": "MMEA BOC All-State Audition Materials: Four-Year Rotation",
+          "url": "https://docs.google.com/document/d/1QwNfbB16Q3lVCtEiGgogAnORlyiwyRo15Tf2fS3T5h0/edit",
+          "document_type": "handbook",
+          "published_at": "2026-05-01"
+        },
+        {
+          "title": "Maine All-State Choir Auditions — full audition components and rubrics (Google Drive folder)",
+          "url": "https://drive.google.com/drive/folders/1ok6cQRa84y_GtD6tiqWFpF-nyKCwaSyc",
+          "document_type": "rules"
+        },
+        {
+          "title": "MMEA All-State BOC Vocal Audition Demo Video",
+          "url": "https://drive.google.com/file/d/1_1u2qRZjeFpu03-Rc6i6M0gS7tqNGbIx/view",
+          "document_type": "other"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 audition dates, locations and registration deadlines — the MMEA Auditions page says 'Check back soon for titles, dates, locations, and audition information for the upcoming school year'",
+    "Audition or participation fee amounts — the BOC All-State School Registration Fee Invoice is listed on the festival page but no amount is stated on the page",
+    "Eligibility rules (grade levels, per-school quotas) — not stated on the pages reviewed",
+    "Concert ticket information — listed as 'TBA' at the Collins Center for the Arts Box Office",
+    "Which festival day the choral concert falls on — only the 3:30pm time is given",
+    "Performance repertoire for the 2027 festival choirs — not published",
+    "Exact SSAA/SATB divisi voice-part labels (e.g. S1/S2) — the rotation document refers only to Soprano/Tenor and Alto/Bass tracks with teacher-selected divisi"
+  ]
+}

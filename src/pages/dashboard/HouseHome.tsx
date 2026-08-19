@@ -3,14 +3,14 @@
 // Letterpress plates: bg-card border border-border (+ the up-next plate's
 // top accent stripe); no other elevations.
 // Spec: docs/superpowers/specs/2026-07-04-house-and-stage-design.md
-import { useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { HomeNewsRail } from '@/components/dashboard/HomeNewsRail';
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable';
 import { supabase } from '@/integrations/supabase/client';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsCompactNav, useIsMobile } from '@/hooks/use-mobile';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantModules } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
@@ -18,17 +18,24 @@ import { useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { isFacultyProfile } from '@/lib/roles';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
-import { getAppTiles, type ModuleFlags } from '@/lib/navigation/appDestinations';
+import { getAppTiles, bandDestinations, type ModuleFlags } from '@/lib/navigation/appDestinations';
 import { toModuleFlags, toModuleSet } from '@/lib/navigation/moduleFlags';
-import { applyPreviewRole, previewRoleIsFaculty, type NavContext } from '@/lib/navigation/navCatalog';
-import { selectUpNext, fuseProgress, greetingFor } from '@/lib/home/upNext';
+import { applyPreviewRole, previewRoleIsFaculty, resolveNav, type NavContext } from '@/lib/navigation/navCatalog';
+import { selectUpNext, fuseProgress, greetingFor, preferredFirstName } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
-import { useHomeTileLayout } from '@/hooks/useHomeTileLayout';
+import { useMyTools } from '@/hooks/useMyTools';
+import { mergeGridOrder, sanitizeShelf, type Shelf } from '@/lib/navigation/myTools';
+import { flattenShelf, groupIdOf } from '@/lib/navigation/toolGroups';
+import { resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
+import { FirstRunSheet } from '@/components/dashboard/FirstRunSheet';
 import { DateCardSlot } from '@/components/home/date-card/DateCardSlot';
 import { hasParsableEventAt } from '@/components/home/date-card/eventAt';
 import type { DateCardContext } from '@/components/home/date-card/types';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
+import { YouOweCard } from '@/components/dashboard/YouOweCard';
+import { HomeBackgroundPicker } from '@/components/dashboard/HomeBackgroundPicker';
+import { useCommandCenterBackground } from '@/hooks/useCommandCenterBackground';
 
 interface FeedRow {
   section: string; subtype: string | null; id: string; title: string;
@@ -37,9 +44,10 @@ interface FeedRow {
 }
 
 export default function HouseHome() {
-  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
+  const { profile, loading: roleLoading, canEditMusicLibrary, isAdmin } = useUserRole();
+  const { background: homeBackground, setBackground: setHomeBackground } = useCommandCenterBackground();
   const isFaculty = isFacultyProfile(profile);
-  const firstName = (profile?.full_name || 'there').split(' ')[0];
+  const firstName = preferredFirstName(profile);
   const { settings: brandingSettings } = useBrandingSettings();
   const isMobile = useIsMobile();
 
@@ -172,30 +180,128 @@ export default function HouseHome() {
     canLibrarian: typeof canEditMusicLibrary === 'function'
       ? canEditMusicLibrary()
       : !!(profile?.is_admin || profile?.is_super_admin),
+    isPartner: !!profile?.is_partner,
     hiddenRoutes: hiddenNav,
   }, previewRole), [moduleSet, profile, tenantSlug, canEditMusicLibrary, hiddenNav, previewRole]);
-  const { layout, layoutLoading, save: saveTileLayout } = useHomeTileLayout();
+  // Same gated pool getAppTiles resolves internally (resolveNav(nav), minus
+  // the implicit 'home' entry) — the first-run sheet's ⊕ picker must never
+  // offer an entry this member cannot actually open.
+  const available = useMemo(() => resolveNav(nav).filter((e) => e.key !== 'home'), [nav]);
+  const { myTools, loading: layoutLoading, saveShelf } = useMyTools(isFaculty ? 'faculty' : 'student');
+  // sanitizeShelf on READ, not a bare { tools, groups } literal, because
+  // every key below is compared against getAppTiles' output, which resolves
+  // merges internally. A tool filed in a group under a retired key ('merch')
+  // would otherwise render as its successor ('shop') in `primary`, match no
+  // group, band as LOOSE — and then the re-split in handleSave would move it
+  // out of the member's group for good. This is the same class of bug the
+  // resolvedTools fix closed for the flat list (Phase 5 review, 2026-08-09);
+  // groups reopened it, so read and write now agree on resolved keys.
+  const shelf = useMemo<Shelf>(
+    () => sanitizeShelf(myTools?.tools ?? [], myTools?.groups ?? []),
+    [myTools],
+  );
+  // Render order: loose tools, then each group's. The keycap pool must
+  // contain every chosen tool, grouped or not — and in this order, so
+  // bandDestinations only has to partition what it is handed.
+  const shelfOrder = useMemo(() => flattenShelf(shelf), [shelf]);
+  // First-run sheet: shown once, on a brand-new member's very first load of
+  // this page. `firstRunDismissed` is held locally (not derived solely from
+  // myTools.setupComplete) so a Skip/Looks good tap closes the sheet
+  // immediately and it stays closed for the rest of this mount even during
+  // the brief window before the optimistic saveMyTools write is reflected
+  // back in the query cache — without it the sheet could flash open again
+  // before the save round-trips.
+  const [firstRunDismissed, setFirstRunDismissed] = useState(false);
+  const showFirstRun = !firstRunDismissed && !layoutLoading && !roleLoading && myTools?.setupComplete === false;
+  // The member's chosen home widgets (My World, Phase 2) — falls back to
+  // the role default pair when unset, so the home never renders zero.
+  const shownWidgets = useMemo(
+    () => resolveWidgets(isFaculty ? 'faculty' : 'student', myTools?.widgets ?? []),
+    [isFaculty, myTools],
+  );
+  // The phone tab bar is what the grid must not duplicate, and it only
+  // exists below md — the same gate MobileBottomNav itself uses. Above it,
+  // Calendar/Messages belong on the grid exactly as they do on the shelf.
+  const tabBarVisible = useIsCompactNav();
   const { primary, overflow } = modulesLoading || layoutLoading || roleLoading
     ? { primary: [], overflow: [] }
     // Tile set follows the previewed role too — otherwise previewing as a
     // student still renders the faculty grid.
     : getAppTiles(
         (previewRole ? previewRoleIsFaculty(previewRole) : isFaculty) ? 'faculty' : 'student',
-        flags, nav, layout,
+        // `null` still means "no record at all" (→ the frozen default grid);
+        // an empty shelfOrder is a deliberate "I cleared everything".
+        flags, nav, myTools ? shelfOrder : null, { tabBarVisible },
       );
+
+  // The grid shows the same SET as the sidebar shelf, and now the same
+  // STRUCTURE: loose keycaps under no heading, then a heading per group.
+  // Empty bands are dropped inside bandDestinations, so an unfilled group —
+  // or one whose every tool is gated off for this viewer — never renders a
+  // heading over nothing.
+  const bands = useMemo(() => bandDestinations(primary, shelf.groups), [primary, shelf.groups]);
+
+  // Which stored keys this grid is able to show at all. A stored key outside
+  // this set (route claimed by the tab bar, module switched off, key retired)
+  // has no keycap, so an edit session cannot speak for it — mergeGridOrder
+  // carries it through untouched instead of letting Done delete it.
+  const representable = useMemo(
+    () => new Set([...primary, ...overflow].map((t) => t.key)),
+    [primary, overflow],
+  );
+  // No grid budget is computed anymore. This used to pass HomeTileGrid a
+  // `cap` of 8 (the retired MY_TOOLS_CAP) minus the stored keys with no
+  // keycap (on a phone
+  // the tab bar claims Home/Messages/Calendar), because a merged record over
+  // the cap would have been silently truncated by sanitizeTools on save.
+  // There is no cap to exceed now — see MY_TOOLS_SANITY_MAX in myTools.ts —
+  // so the grid is simply as long as the member makes it.
+  //
+  // mergeGridOrder still owns the lossy-projection problem: every stored key
+  // the grid could not represent survives at its stored index. What is NEW is
+  // that the merged flat order is then RE-SPLIT into loose + groups by
+  // membership, so a grid edit can never flatten a member's filing. Saving
+  // the flat draft here is exactly the lossy write that cost this feature a
+  // review round the first time; do not simplify this back to saveTools.
+  //
+  // Both lists are rebuilt from `merged` rather than filtered in place, so a
+  // reorder the member made INSIDE a band persists instead of snapping back
+  // to the stored order the next time the page renders.
+  const saveGridOrder = useCallback(
+    (draft: string[]) => {
+      const merged = mergeGridOrder(shelfOrder, draft, representable);
+      return saveShelf({
+        tools: merged.filter((k) => groupIdOf(shelf, k) === null),
+        groups: shelf.groups.map((g) => ({
+          ...g,
+          tools: merged.filter((k) => groupIdOf(shelf, k) === g.id),
+        })),
+      });
+    },
+    [saveShelf, shelfOrder, representable, shelf],
+  );
 
   return (
     <DashboardShell>
-      <div className="px-4 sm:px-6 pt-3 pb-8 space-y-4">
+      {/* min-h-full + negative top margin re-absorbing the shell's pt-3/4:
+          the user-chosen background must paint the whole content column,
+          not start below a default-colored strip. When no color is chosen
+          the style is empty and this renders exactly as before. */}
+      <div
+        className="px-4 sm:px-6 -mt-3 sm:-mt-4 pt-6 sm:pt-8 pb-8 space-y-4 min-h-full"
+        style={homeBackground ? { backgroundColor: homeBackground } : undefined}
+      >
+        <YouOweCard />
         <div className="flex items-start justify-between gap-3">
           <div>
             {/* No date line here — the DateCardSlot directly below already
                 leads with the full date and weekday. */}
             <PageTitle>{greetingFor(now.getHours(), firstName)}</PageTitle>
           </div>
+          <HomeBackgroundPicker background={homeBackground} onChange={setHomeBackground} />
         </div>
 
-        <DateCardSlot ctx={dateCardCtx} activeAddons={Array.from(moduleSet)} />
+        <DateCardSlot ctx={dateCardCtx} activeAddons={Array.from(moduleSet)} canManage={isAdmin()} />
 
         {/* Status cards on the left, News rail on the right. Below lg they
             stack. On lg+ they render inside a horizontal resizable pair —
@@ -225,63 +331,79 @@ export default function HouseHome() {
           )}
         </div>
 
-        {/* Widget 1 */}
-        {isFaculty ? (
-          <div className="bg-card border border-border p-3">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Needs attention</div>
-            {urgent.length === 0 ? (
-              <div className="text-sm text-muted-foreground">All caught up.</div>
+        {/* Widget 1 — 'needs-attention' (faculty) or 'practice-ledger'
+            (student), only when the member chose it in My World. Gated on
+            the same three loading flags as the keycap grid below: shownWidgets
+            depends on isFaculty (roleLoading) and myTools (layoutLoading), so
+            rendering before those resolve would show the guessed pair and
+            then flip to the real one — the same flash the grid's own gate
+            exists to prevent. */}
+        {!modulesLoading && !layoutLoading && !roleLoading && (
+          <>
+            {isFaculty ? (
+              shownWidgets.includes('needs-attention') && (
+                <div className="bg-card border border-border p-3">
+                  <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Needs attention</div>
+                  {urgent.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">All caught up.</div>
+                  ) : (
+                    <ul className="divide-y divide-border">
+                      {urgent.map((r) => (
+                        <li key={r.id}>
+                          <Link to={r.subtype === 'practice_recording' ? '/dashboard/practice-recordings' : '/attendance'}
+                            className="flex items-center justify-between py-2 text-sm min-h-[44px]">
+                            <span className="truncate">{r.title}</span>
+                            <span className="text-xs text-status-warning-fg bg-status-warning-bg border border-status-warning-border px-1.5 py-0.5 ml-2 shrink-0">
+                              {r.detail ?? 'Open'}
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )
             ) : (
-              <ul className="divide-y divide-border">
-                {urgent.map((r) => (
-                  <li key={r.id}>
-                    <Link to={r.subtype === 'practice_recording' ? '/dashboard/practice-recordings' : '/attendance'}
-                      className="flex items-center justify-between py-2 text-sm min-h-[44px]">
-                      <span className="truncate">{r.title}</span>
-                      <span className="text-xs text-status-warning-fg bg-status-warning-bg border border-status-warning-border px-1.5 py-0.5 ml-2 shrink-0">
-                        {r.detail ?? 'Open'}
+              shownWidgets.includes('practice-ledger') && (
+                <div className="bg-card border border-border p-3">
+                  <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Practice this week</div>
+                  <div className="text-xl tracking-[0.35em] text-primary"
+                    aria-label={`${glyphs.filter((g) => g === 'note').length} of 7 days practiced this week`}>
+                    {glyphs.map((g, i) => (
+                      <span key={i} aria-hidden="true" className={g === 'note' ? '' : 'text-muted-foreground/40'}>
+                        {/* '○' rather than the quarter rest U+1D13D — the Musical
+                            Symbols block has no font coverage on Android and some
+                            desktop stacks, so it renders as tofu. */}
+                        {g === 'note' ? '♩' : g === 'rest' ? '○' : '·'}
                       </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                    ))}
+                  </div>
+                </div>
+              )
             )}
-          </div>
-        ) : (
-          <div className="bg-card border border-border p-3">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Practice this week</div>
-            <div className="text-xl tracking-[0.35em] text-primary"
-              aria-label={`${glyphs.filter((g) => g === 'note').length} of 7 days practiced this week`}>
-              {glyphs.map((g, i) => (
-                <span key={i} aria-hidden="true" className={g === 'note' ? '' : 'text-muted-foreground/40'}>
-                  {/* '○' rather than the quarter rest U+1D13D — the Musical
-                      Symbols block has no font coverage on Android and some
-                      desktop stacks, so it renders as tofu. */}
-                  {g === 'note' ? '♩' : g === 'rest' ? '○' : '·'}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Widget 2: Today */}
-        <div className="bg-card border border-border p-3">
-          <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Today</div>
-          {todayRows.length === 0 ? (
-            <div className="text-sm text-muted-foreground">No sessions today.</div>
-          ) : (
-            <ul className="divide-y divide-border">
-              {todayRows.map((r) => (
-                <li key={r.id} className="flex items-center justify-between py-2 text-sm">
-                  <span className="truncate">{r.title}</span>
-                  <span className="tabular-nums text-muted-foreground ml-2 shrink-0">
-                    {format(new Date(r.event_at), 'h:mm a')}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+            {/* Widget 2: Today */}
+            {shownWidgets.includes('today') && (
+              <div className="bg-card border border-border p-3">
+                <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Today</div>
+                {todayRows.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">No sessions today.</div>
+                ) : (
+                  <ul className="divide-y divide-border">
+                    {todayRows.map((r) => (
+                      <li key={r.id} className="flex items-center justify-between py-2 text-sm">
+                        <span className="truncate">{r.title}</span>
+                        <span className="tabular-nums text-muted-foreground ml-2 shrink-0">
+                          {format(new Date(r.event_at), 'h:mm a')}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </>
+        )}
             </div>
           );
 
@@ -313,9 +435,30 @@ export default function HouseHome() {
 
         {/* Keycap app grid (editable — see HomeTileGrid) */}
         {!modulesLoading && !layoutLoading && !roleLoading && (
-          <HomeTileGrid primary={primary} overflow={overflow} onSave={saveTileLayout} />
+          <HomeTileGrid bands={bands} overflow={overflow} onSave={saveGridOrder} />
         )}
       </div>
+
+      {/* Mounted CONDITIONALLY, not rendered with open={false}. The sheet
+          seeds its draft from the tenant default the moment that query
+          resolves, and useUserRole caches nothing — `roleLoading` starts
+          true on every mount while useTenantDefaultTools has a 60s
+          staleTime, so on any remount inside that window the defaults
+          resolve first and a mounted-but-closed sheet would seed against
+          `role='student'` computed from a still-null profile. The role
+          then flips to 'faculty' and every exit path persists that student
+          shelf. `showFirstRun` already waits on !roleLoading, so gating the
+          MOUNT on it means the seed cannot be computed from a guess. It
+          also stops every member's home load firing a gw_tenant_nav_prefs
+          query for a sheet they will never see. */}
+      {showFirstRun && (
+        <FirstRunSheet
+          open
+          onOpenChange={(next) => { if (!next) setFirstRunDismissed(true); }}
+          available={available}
+          role={isFaculty ? 'faculty' : 'student'}
+        />
+      )}
     </DashboardShell>
   );
 }

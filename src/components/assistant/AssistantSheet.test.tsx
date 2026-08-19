@@ -17,6 +17,11 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
   SUPABASE_URL: 'http://localhost',
 }));
+// AssistantProvider → useAssistantVoice → useBrandingSettings, which needs
+// getTenantSlug + a queryable supabase client; stub the hook instead.
+vi.mock('@/hooks/useBrandingSettings', () => ({
+  useBrandingSettings: () => ({ settings: {}, isLoading: false }),
+}));
 
 function setViewportWidth(width: number) {
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: width });
@@ -30,13 +35,13 @@ function setViewportWidth(width: number) {
 
 const renderSheet = () =>
   render(
-    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
-      <MemoryRouter>
+    <MemoryRouter>
+      <QueryClientProvider client={new QueryClient()}>
         <AssistantProvider initialSheetOpen>
           <AssistantSheet />
         </AssistantProvider>
-      </MemoryRouter>
-    </QueryClientProvider>,
+      </QueryClientProvider>
+    </MemoryRouter>,
   );
 
 beforeEach(() => { sessionStorage.clear(); setViewportWidth(390); });

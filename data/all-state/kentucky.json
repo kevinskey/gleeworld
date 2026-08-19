@@ -1,0 +1,145 @@
+{
+  "state_slug": "kentucky",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Kentucky has active all-state choral programs run by KMEA, but nearly all of the operational detail is behind a member login. The Choral Division landing page, the All-State Chorus page, the All-State Chorus Repertoire page, and the All-State Chorus Sightreading Criteria page all redirect to a KMEA login form; KMEA's own School Registration page states that All-State audition forms live inside the divisions and that school registration must be complete before access is granted. KMEA's public sitemap confirms the existence and official names of the choral all-state programs, and the public conference page gives conference dates. The public calendar is an embedded Google Calendar that returned no event data. As a result this record is deliberately thin: dates, fees, repertoire, and audition requirements for 2026-27 could not be verified from a public KMEA source and are listed in not_published rather than guessed. Note also: KMEA's 2027 conference dates are published as tentative.",
+  "organization": {
+    "name": "Kentucky Music Educators Association",
+    "acronym": "KMEA",
+    "website_url": "https://www.kmea.org/",
+    "description": "KMEA is Kentucky's NAfME-federated state music educators association, headquartered in Richmond, KY. It administers the state's All-State ensembles, which perform at the KMEA Professional Development Conference, held in the Kentucky International Convention Center in Louisville."
+  },
+  "sources": [
+    {
+      "name": "KMEA Sitemap (confirms official program names and URLs)",
+      "url": "https://www.kmea.org/sitemap/",
+      "source_type": "official"
+    },
+    {
+      "name": "KMEA Conference (conference dates and future dates)",
+      "url": "https://www.kmea.org/professional-development-conference/",
+      "source_type": "official"
+    },
+    {
+      "name": "KMEA All-State Chorus (member login required)",
+      "url": "https://www.kmea.org/divisions/choral/all-state-hs-chorus/",
+      "source_type": "official"
+    },
+    {
+      "name": "KMEA Choral Division (member login required)",
+      "url": "https://www.kmea.org/divisions/choral/",
+      "source_type": "official"
+    },
+    {
+      "name": "KMEA Home Page",
+      "url": "https://www.kmea.org/",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "KMEA All-State Chorus",
+      "lineage_key": "kentucky-all-state-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "KMEA's high school All-State Chorus, which rehearses and performs at the KMEA Professional Development Conference in Louisville. KMEA publishes separate All-State Chorus Repertoire and All-State Chorus Sightreading Criteria pages, both of which require a member login.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "KMEA Professional Development Conference 2027 (tentative)",
+          "start_at": "2027-02-03",
+          "end_at": "2027-02-06",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "KMEA lists February 3-6, 2027 under 'Future Conference Dates (tentative)'. The All-State ensembles perform during the conference; specific 2027 All-State Chorus performance dates and times were not published publicly at retrieval.",
+          "source_url": "https://www.kmea.org/professional-development-conference/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "membership",
+          "title": "School registration required before access to All-State audition forms",
+          "description": "KMEA states that All-State audition forms are located within each division, and that a school's registration must be complete before a director will be granted access to them.",
+          "source_url": "https://www.kmea.org/school-registration/"
+        },
+        {
+          "category": "sight_reading",
+          "title": "Sightreading is part of the All-State Chorus audition",
+          "description": "KMEA maintains a dedicated 'All-State Chorus Sightreading Criteria' page within the Choral Division. The criteria themselves are behind the member login and were not retrieved.",
+          "source_url": "https://www.kmea.org/divisions/choral/all-state-hs-chorus/sightreading-criteria/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "All-State Chorus Repertoire (member login required)",
+          "url": "https://www.kmea.org/divisions/choral/all-state-hs-chorus/all-state-chorus-repertoire/",
+          "document_type": "other"
+        },
+        {
+          "title": "All-State Chorus Sightreading Criteria (member login required)",
+          "url": "https://www.kmea.org/divisions/choral/all-state-hs-chorus/sightreading-criteria/",
+          "document_type": "rules"
+        }
+      ]
+    },
+    {
+      "name": "Kentucky Junior High School Chorus",
+      "lineage_key": "kentucky-junior-high-school-chorus",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "KMEA's statewide junior high honor chorus, administered by the Choral Division. KMEA maintains roster and past-repertoire pages for it. All program detail is behind the member login.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "KMEA Professional Development Conference 2027 (tentative)",
+          "start_at": "2027-02-03",
+          "end_at": "2027-02-06",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "KMEA's tentative 2027 conference dates. The specific Kentucky Junior High School Chorus event date for 2026-27 was not published publicly at retrieval.",
+          "source_url": "https://www.kmea.org/professional-development-conference/"
+        }
+      ]
+    },
+    {
+      "name": "Kentucky Children's Chorus",
+      "lineage_key": "kentucky-childrens-chorus",
+      "season": "2026-27",
+      "school_level": "elementary",
+      "ensemble_type": "treble chorus",
+      "description": "KMEA's statewide elementary honor chorus, administered through the General Music K-5 Division. KMEA maintains roster, schedule, and past-repertoire pages for it. All program detail is behind the member login.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "KMEA Professional Development Conference 2027 (tentative)",
+          "start_at": "2027-02-03",
+          "end_at": "2027-02-06",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "KMEA's tentative 2027 conference dates. The specific Kentucky Children's Chorus event date for 2026-27 was not published publicly at retrieval.",
+          "source_url": "https://www.kmea.org/professional-development-conference/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "Kentucky Children's Chorus Schedule (member login required)",
+          "url": "https://www.kmea.org/divisions/general-music-k-5/kentucky-childrens-chorus/kentucky-childrens-chorus-schedule/",
+          "document_type": "calendar"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 All-State Chorus audition dates, rounds, and deadlines — the Choral Division and All-State Chorus pages require a KMEA member login",
+    "2026-27 All-State Chorus repertoire and audition music — repertoire page is behind the member login",
+    "All-State Chorus sightreading criteria detail — behind the member login",
+    "Audition and participation fee amounts for any KMEA choral all-state program — no public fee page found (only conference registration and All-State ticket prices are public)",
+    "Eligibility rules (grade levels, membership requirements) for the All-State Chorus, Kentucky Junior High School Chorus, and Kentucky Children's Chorus",
+    "2026-27 conductors/clinicians for the choral all-state ensembles",
+    "Specific 2027 performance dates and times for each choral ensemble within the Feb. 3-6, 2027 conference — KMEA labels the 2027 conference dates themselves as tentative",
+    "Kentucky Junior High School Chorus and Kentucky Children's Chorus audition procedures and deadlines — behind the member login",
+    "KMEA's public Calendar of Events page is an embedded Google Calendar that returned no event entries when scraped"
+  ]
+}

@@ -1,0 +1,274 @@
+{
+  "state_slug": "illinois",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "ILMEA runs a two-stage process: students audition at the district level (9 districts, each with its own audition dates and its own district-selected piece), and top district scorers are selected for the All-State ensembles that rehearse and perform at the Illinois Music Education Conference (IMEC). The 2026-2027 statewide audition selections and audition requirements are explicitly posted for the 2026-27 school year (IMEC 2027). The performance repertoire and guest conductors currently listed on ILMEA's All-State Chorus Information page are for IMEC 2026 (the 2025-26 season), so they were deliberately NOT recorded here as 2026-27 data. District-level audition dates are published per-district and vary; they were not aggregated.",
+  "organization": {
+    "name": "Illinois Music Education Association",
+    "acronym": "ILMEA",
+    "website_url": "https://ilmea.org/",
+    "description": "ILMEA is the statewide music educators association for Illinois. It administers district-level auditions in nine districts and selects students for All-State ensembles that perform at the Illinois Music Education Conference (IMEC)."
+  },
+  "sources": [
+    {
+      "name": "ILMEA Chorus Audition Process",
+      "url": "https://ilmea.org/chorus-audition-process",
+      "source_type": "official"
+    },
+    {
+      "name": "ILMEA All-State Chorus Information",
+      "url": "https://ilmea.org/allstate-chorus-information",
+      "source_type": "official"
+    },
+    {
+      "name": "ILMEA Upcoming IMEC Dates",
+      "url": "https://ilmea.org/upcomingimec",
+      "source_type": "official"
+    },
+    {
+      "name": "ILMEA All-State Student & Director Info",
+      "url": "https://ilmea.org/allstateinfo",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "ILMEA All-State Chorus (Senior Level)",
+      "lineage_key": "illinois-all-state-chorus-senior",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "Senior-level All-State mixed chorus selected from district auditions and performing at the Illinois Music Education Conference (IMEC).",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "Illinois Music Education Conference (IMEC) 2027",
+          "start_at": "2027-01-27",
+          "end_at": "2027-01-30",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "ILMEA's published IMEC dates: Wednesday, January 27 - Saturday, January 30, 2027. All-State ensembles rehearse and perform during the conference.",
+          "source_url": "https://ilmea.org/upcomingimec"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Senior level audition — 100 points total",
+          "description": "The senior chorus audition is a performance test totaling 100 points: two statewide prepared selections (28 points each), one district-selected piece (28 points), and tonal skills (16 points). Tie-breaker categories, in order, are Tone, Musicianship, Intonation.",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        },
+        {
+          "category": "scales",
+          "title": "Senior tonal skills — triads and scales",
+          "description": "Sing the Major triad on E; sing two of the other three root-position triads (minor, diminished, augmented) selected by the Chorus Division President (F and D suggested as root tones); sing one major scale and one minor scale — Soprano/Tenor sing F Major and d minor, Alto/Bass sing Db Major and bb minor. The minor form (natural, harmonic, or melodic) is selected annually by the Chorus Division President and is consistent statewide, though students are responsible for all three forms. Scales are sung one octave up and down with the top note sung only once. Numbers, solfeggio, or a neutral syllable may be used; humming is not allowed.",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        },
+        {
+          "category": "materials",
+          "title": "Video-recorded audition",
+          "description": "ILMEA publishes audition video recording and sharing instructions in separate student and educator editions.",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Beati quorum via",
+          "composer": "Charles Villiers Stanford",
+          "voicing": "SSATTB",
+          "purpose": "audition",
+          "notes": "One of two 2026-2027 statewide senior chorus audition selections.",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        },
+        {
+          "title": "Alleluia",
+          "composer": "Elaine Hagenberg",
+          "publisher": "Elaine Hagenberg Music",
+          "catalog_number": "EH1007",
+          "voicing": "SATB with divisi",
+          "purpose": "audition",
+          "notes": "One of two 2026-2027 statewide senior chorus audition selections.",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        }
+      ],
+      "documents": [
+        {
+          "title": "2026 Sr Chorus Audition Material",
+          "url": "https://docs.google.com/document/d/1ASPhvvy7Kyo303hm61kVAxs44_EeFZA0Q5qlQJ5HieE/edit?usp=sharing",
+          "document_type": "rules"
+        },
+        {
+          "title": "Recording & Sharing Auditions - Educator Edition",
+          "url": "https://ilmea.org/s/26-27-Audition-Video-Recording-Instructions-TEACHER-EDITION.pdf",
+          "document_type": "rules"
+        },
+        {
+          "title": "Senior Level Audition Scoring Breakdown",
+          "url": "https://docs.google.com/document/d/1MnxWIXA0QT8K3QB-e5QrTVLheSc6JER9oUrnaM0mxxc/edit?usp=sharing",
+          "document_type": "rules"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "ILMEA Honors Chorus (Senior Level)",
+      "lineage_key": "illinois-honors-chorus-senior",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "Second senior-level statewide honor chorus selected through the same district audition process as the All-State Chorus and performing at IMEC.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "Illinois Music Education Conference (IMEC) 2027",
+          "start_at": "2027-01-27",
+          "end_at": "2027-01-30",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://ilmea.org/upcomingimec"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Senior level audition — 100 points total",
+          "description": "Selection uses the same senior-level chorus audition as the All-State Chorus: two statewide prepared selections (28 points each), one district selection (28 points), and tonal skills (16 points).",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Beati quorum via",
+          "composer": "Charles Villiers Stanford",
+          "voicing": "SSATTB",
+          "purpose": "audition",
+          "notes": "2026-2027 statewide senior chorus audition selection.",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        },
+        {
+          "title": "Alleluia",
+          "composer": "Elaine Hagenberg",
+          "publisher": "Elaine Hagenberg Music",
+          "catalog_number": "EH1007",
+          "voicing": "SATB with divisi",
+          "purpose": "audition",
+          "notes": "2026-2027 statewide senior chorus audition selection.",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        }
+      ]
+    },
+    {
+      "name": "ILMEA Junior High Chorus (Junior Level)",
+      "lineage_key": "illinois-junior-high-chorus",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus (SAB)",
+      "description": "Junior-level All-State chorus for junior high students, selected through district auditions and performing at IMEC.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "Illinois Music Education Conference (IMEC) 2027",
+          "start_at": "2027-01-27",
+          "end_at": "2027-01-30",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://ilmea.org/upcomingimec"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Junior level audition — 50 points total",
+          "description": "The junior chorus audition is a performance test totaling 50 points: two prepared selections (20 points each, 40 total) — one statewide selection chosen by the Chorus Division President and one district selection chosen by the District Junior Chorus Representative — plus triads (3 points each, 6 total) and one major scale (4 points).",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        },
+        {
+          "category": "scales",
+          "title": "Junior triads and scale starting pitches",
+          "description": "Students sing one Major triad and one Minor triad unaccompanied, ascending and descending, from a given pitch, and one Major scale unaccompanied, ascending and descending, from a given pitch. Sopranos start from the F above middle C; Altos from the D-flat above middle C; Baritones from a pitch of their choice, which must be played audibly on the video audition before being sung.",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "The Old Mill",
+          "composer": "Kenneth Riggs",
+          "publisher": "Choristers Guild",
+          "catalog_number": "CGE90",
+          "voicing": "SAB",
+          "purpose": "audition",
+          "notes": "Statewide Junior Chorus audition selection for the 2026-2027 school year (IMEC 2027). Each junior audition also includes a district-selected piece.",
+          "source_url": "https://ilmea.org/chorus-audition-process"
+        }
+      ],
+      "documents": [
+        {
+          "title": "2026 Jr Chorus Audition Material",
+          "url": "https://docs.google.com/document/d/1VMj_GB4ItXfm3TgmsMp5EUVyHdS7cZA_0uBuWCccQ78/edit?usp=sharing",
+          "document_type": "rules"
+        },
+        {
+          "title": "Junior Level Audition Scoring Breakdown",
+          "url": "https://docs.google.com/document/d/1-a0EHB42qt_zuRk6DiWlWIUmlZPv48LDM5BvCz_fneU/edit?usp=sharing",
+          "document_type": "rules"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "B", "label": "Baritone" }
+      ]
+    },
+    {
+      "name": "ILMEA All-State 4th & 5th Grade Chorus",
+      "lineage_key": "illinois-elementary-4-5-chorus",
+      "season": "2026-27",
+      "school_level": "elementary",
+      "ensemble_type": "treble chorus",
+      "description": "Elementary All-State chorus for 4th and 5th grade students, performing at IMEC.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "Illinois Music Education Conference (IMEC) 2027",
+          "start_at": "2027-01-27",
+          "end_at": "2027-01-30",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://ilmea.org/upcomingimec"
+        }
+      ]
+    },
+    {
+      "name": "ILMEA All-State 6th Grade Chorus",
+      "lineage_key": "illinois-elementary-6-chorus",
+      "season": "2026-27",
+      "school_level": "elementary",
+      "ensemble_type": "treble chorus",
+      "description": "All-State chorus for 6th grade students, performing at IMEC.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "Illinois Music Education Conference (IMEC) 2027",
+          "start_at": "2027-01-27",
+          "end_at": "2027-01-30",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://ilmea.org/upcomingimec"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 performance repertoire and guest conductors for the All-State/Honors/Junior/Elementary choruses — ILMEA's All-State Chorus Information page still shows the IMEC 2026 (2025-26) conductors and repertoire",
+    "Statewide district audition dates — each of the nine ILMEA districts publishes its own audition and selection calendar on its district page",
+    "Audition or participation fee amounts — no fee schedule found on the public chorus pages",
+    "Eligibility rules (grade levels, membership requirements) — not stated on the chorus audition process page",
+    "Specific IMEC 2027 venue/city detail was not confirmed on the pages read",
+    "Elementary chorus audition or nomination requirements — not published on the chorus pages read"
+  ]
+}

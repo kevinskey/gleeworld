@@ -11,13 +11,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { X, Send, Loader2, Mail, Paperclip, FileIcon } from 'lucide-react';
+import { roleForGroup, type ComposerGroup } from '@/lib/messengerGroups';
 
-type Group = 'all' | 'students' | 'admins' | 'fans' | 'custom';
+type Group = ComposerGroup;
 const GROUPS: Array<{ value: Group; label: string }> = [
   { value: 'all', label: 'Everyone' },
   { value: 'students', label: 'Students only' },
   { value: 'admins', label: 'Staff / Admins only' },
   { value: 'fans', label: 'Fans only' },
+  { value: 'parents', label: 'Parents only' },
   { value: 'custom', label: 'Specific people…' },
 ];
 
@@ -76,10 +78,8 @@ export function EmailBlastComposer({ onClose, initialGroup = 'students' }: { onC
     enabled: group !== 'custom',
     queryFn: async () => {
       let q = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
-      if (group !== 'all') {
-        const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
-        q = q.eq('role', role);
-      }
+      const role = roleForGroup(group);
+      if (role) q = q.eq('role', role);
       const { count: emails } = await q;
       return { emails: emails ?? 0, phones: 0 };
     },
@@ -126,7 +126,7 @@ export function EmailBlastComposer({ onClose, initialGroup = 'students' }: { onC
     }
     setSending(true);
     try {
-      const role = group !== 'all' && group !== 'custom' ? (group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan') : undefined;
+      const role = roleForGroup(group);
 
       let emails: string[];
       if (group === 'custom') {
@@ -178,7 +178,10 @@ export function EmailBlastComposer({ onClose, initialGroup = 'students' }: { onC
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center px-4 pb-4 overflow-y-auto"
+      style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 1rem)' }}
+    >
       <Card className="w-full max-w-lg my-4 bg-white text-gray-900">
         <CardHeader className="flex flex-row items-center justify-between sticky top-0 bg-white text-gray-900 z-10 border-b rounded-t-xl">
           <CardTitle className="flex items-center gap-2 text-gray-900"><Mail className="w-5 h-5" /> Email blast</CardTitle>

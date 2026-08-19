@@ -15,6 +15,7 @@ import { ArrowLeft, Trash2, Pin, Loader2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { GuardianList } from '@/components/travel-manager/GuardianList';
 
 export default function StudentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -62,7 +63,7 @@ export default function StudentDetail() {
       </Button>
 
       <Tabs defaultValue="overview">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-5 h-auto w-full">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="notes">Notes</TabsTrigger>
           <TabsTrigger value="uniform">Uniform</TabsTrigger>
@@ -81,6 +82,7 @@ export default function StudentDetail() {
               )}
             </CardContent>
           </Card>
+          <GuardianList studentUserId={id} />
         </TabsContent>
 
         <TabsContent value="notes" className="mt-4">

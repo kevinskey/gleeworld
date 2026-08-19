@@ -8,9 +8,9 @@ import { getBlockModule } from '../../registry';
 import { themeSchema } from '../../types';
 
 describe('template packages', () => {
-  it('registry exposes exactly modern, institutional, minimalist', () => {
+  it('registry exposes exactly the five shipping looks', () => {
     expect(Object.keys(PACKAGE_REGISTRY).sort()).toEqual(
-      ['institutional', 'minimalist', 'modern'],
+      ['bold', 'elegant', 'institutional', 'minimalist', 'modern'],
     );
   });
 

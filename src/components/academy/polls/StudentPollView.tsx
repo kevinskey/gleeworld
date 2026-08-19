@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AcademyPoll, PollQuestion } from './AcademyPollSystem';
-import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { useSemesterSafe } from '@/contexts/SemesterContext';
 
 interface StudentPollViewProps {
   poll: AcademyPoll;
@@ -22,7 +22,7 @@ interface PollResponse {
 
 export const StudentPollView: React.FC<StudentPollViewProps> = ({ poll, onResponseSubmitted }) => {
   const { user } = useAuth();
-  const { currentSemester } = useMus240SemesterSafe();
+  const { currentSemester } = useSemesterSafe();
   const [responses, setResponses] = useState<PollResponse[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);

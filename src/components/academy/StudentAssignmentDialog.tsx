@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, CheckCircle, Loader2, Send, Link as LinkIcon, FileText, Award, MessageSquare, Upload, X, ExternalLink } from 'lucide-react';
+import { Calendar, CheckCircle, Loader2, Send, Link as LinkIcon, FileText, Award, MessageSquare, Upload, X, ExternalLink, Music } from 'lucide-react';
 import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +34,11 @@ interface AssignmentLite {
    * students who aren't in gw_tenant_members (they got in via
    * gw_course_enrollments only). */
   tenant_id?: string | null;
+  /** Recording shared to the class as this assignment (gw_assignments.media_id,
+   *  resolved by CourseShell's withAttachedMedia). Students need to hear it
+   *  while they write, so it plays inside this dialog rather than behind a
+   *  link that would navigate away from an unsaved response. */
+  attachedMedia?: { id: string; title: string; file_url: string } | null;
 }
 
 // Row shape returned from gw_course_submissions. We use varchar `status`
@@ -83,6 +88,8 @@ export function StudentAssignmentDialog({
   const [link, setLink] = useState('');
   /** When set, indicates the current `link` is a file we uploaded. */
   const [uploadedName, setUploadedName] = useState<string | null>(null);
+  /** Inline player for the shared recording, toggled from the header. */
+  const [showPlayer, setShowPlayer] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleFilePick(e: React.ChangeEvent<HTMLInputElement>) {
@@ -132,6 +139,9 @@ export function StudentAssignmentDialog({
   // assignments.
   useEffect(() => {
     if (!open || !assignment || !user) return;
+    // Collapse the player between assignments — leaving it open would
+    // autoPlay the next one the moment the dialog reopens.
+    setShowPlayer(false);
     setLoading(true);
     supabase
       .from('gw_course_submissions')
@@ -242,10 +252,36 @@ export function StudentAssignmentDialog({
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="md:max-w-2xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 pr-6">
-            <FileText className="h-5 w-5 text-primary shrink-0" />
-            <span className="min-w-0 truncate">{assignment.title}</span>
-          </DialogTitle>
+          {/* Title + the recording pill on one row. pr-10 keeps the pill
+              clear of the dialog's own close button. */}
+          <div className="flex items-center gap-3 pr-10">
+            <DialogTitle className="flex items-center gap-2 min-w-0 flex-1">
+              <FileText className="h-5 w-5 text-primary shrink-0" />
+              <span className="min-w-0 truncate">{assignment.title}</span>
+            </DialogTitle>
+            {/* rounded-full is the one sanctioned exception to the square-
+                corner system — pills only. Uses the Button primitive so the
+                focus ring and the 44pt touch target (relaxed to 36 at lg)
+                come for free rather than being re-derived here. */}
+            {assignment.attachedMedia && (
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowPlayer((v) => !v)}
+                className="shrink-0 rounded-full gap-1.5"
+                title={`Play "${assignment.attachedMedia.title}"`}
+                aria-expanded={showPlayer}
+              >
+                <Music className="h-4 w-4" />
+                {/* Full label from sm up; the title needs the room at 375px. */}
+                <span className="hidden sm:inline">
+                  {showPlayer ? 'Hide recording' : 'Play recording'}
+                </span>
+                <span className="sm:hidden">{showPlayer ? 'Hide' : 'Play'}</span>
+              </Button>
+            )}
+          </div>
         </DialogHeader>
 
         <div className="space-y-5">
@@ -277,6 +313,25 @@ export function StudentAssignmentDialog({
               </Badge>
             )}
           </div>
+
+          {/* Shared recording — revealed from the header link. autoPlay is
+              safe here because it only mounts on an explicit click, which
+              satisfies the browser's user-gesture requirement. */}
+          {assignment.attachedMedia && showPlayer && (
+            <div className="rounded-md border bg-muted/30 p-3">
+              <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+                <Music className="h-3.5 w-3.5" />
+                <span className="truncate">{assignment.attachedMedia.title}</span>
+              </div>
+              <audio
+                controls
+                autoPlay
+                src={assignment.attachedMedia.file_url}
+                className="w-full"
+                aria-label={`Recording: ${assignment.attachedMedia.title}`}
+              />
+            </div>
+          )}
 
           {/* Description */}
           {assignment.description && (

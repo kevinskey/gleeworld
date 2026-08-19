@@ -37,7 +37,6 @@ import {
 } from 'lucide-react';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ToastAction } from '@/components/ui/toast';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
@@ -65,9 +64,11 @@ import { AutoForm } from '@/components/public-site/AutoForm';
 import { BlockFrame } from '@/components/public-site/BlockFrame';
 import { fontStack, FONT_OPTIONS, safeConfig, themeCssVars, themeSchema, type SiteBlock, type SiteRenderContext, type SiteTheme } from '@/components/public-site/types';
 import { PACKAGE_LIST, type TemplatePackage } from '@/components/public-site/packages';
+import { tenantPublicHostFromRow, type TenantHostRow } from '@/lib/auth/tenantRedirect';
 
 interface SiteRow {
   id: string;
+  tenant_id: string;
   slug: string;
   theme: Record<string, unknown>;
   is_published: boolean;
@@ -191,6 +192,11 @@ export default function PublicPageEditor() {
   const [blocks, setBlocks] = useState<SiteBlock[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  // Multi-page: which page's blocks the editor shows. A page exists when a
+  // block carries its slug; `draftPages` keeps a freshly created page's tab
+  // alive until its first block lands.
+  const [activePage, setActivePage] = useState('home');
+  const [draftPages, setDraftPages] = useState<string[]>([]);
   // When set, opens the right-side settings Sheet for that block. Kept
   // separate from selectedId so the canvas can stay in a "block selected"
   // state without the sheet being open.
@@ -211,12 +217,6 @@ export default function PublicPageEditor() {
   // configured hero (Kevin, 2026-08-04). Nothing is destroyed until the
   // dialog is confirmed.
   const [pendingPackage, setPendingPackage] = useState<TemplatePackage | null>(null);
-  // Pre-apply snapshot of the block list, kept so the success toast can offer
-  // a real Undo. Held in state (not localStorage) deliberately: it's an
-  // in-session safety net, and a stale cross-session snapshot restoring over
-  // newer work would be its own data-loss bug.
-  const [undoBlocks, setUndoBlocks] = useState<SiteBlock[] | null>(null);
-  const [restoring, setRestoring] = useState(false);
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
   const sensors = useSensors(
@@ -232,13 +232,29 @@ export default function PublicPageEditor() {
     },
   });
 
+  // Host for the "View site" link. Kept separate from the site row because
+  // the branded domain lives on gw_tenants, not gw_public_sites.
+  const { data: tenantHostRow } = useQuery<TenantHostRow | null>({
+    queryKey: ['gw_tenants_host', site?.tenant_id],
+    enabled: !!site?.tenant_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_tenants')
+        .select('slug, subdomain, custom_domain')
+        .eq('id', site!.tenant_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data as TenantHostRow | null;
+    },
+  });
+
   const { data: dbBlocks } = useQuery<SiteBlock[]>({
     queryKey: ['gw_site_blocks'],
     enabled: !!site,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_site_blocks')
-        .select('id, block_type, position, config, is_visible')
+        .select('id, block_type, position, config, is_visible, page')
         .order('position');
       if (error) throw error;
       return data as SiteBlock[];
@@ -322,8 +338,9 @@ export default function PublicPageEditor() {
       logoUrl: branding.logo_url || null,
       isPreview: true,
       activeAddons,
+      soundcloudUrl: branding.soundcloud_url || null,
     }),
-    [site?.slug, theme, branding.org_name, branding.logo_url, activeAddons],
+    [site?.slug, theme, branding.org_name, branding.logo_url, branding.soundcloud_url, activeAddons],
   );
 
   const activate = async () => {
@@ -341,12 +358,36 @@ export default function PublicPageEditor() {
     }
   };
 
+  // Persist the new order.
+  //
+  // This used to skip any row where `b.position === i`. Every caller
+  // (onDragEnd, moveBlock) renumbers before calling — `arrayMove(...).map((b,
+  // i) => ({ ...b, position: i }))` — so that condition was true for EVERY
+  // row and the function silently wrote nothing, ever. Reordering blocks
+  // looked fine until the next reload, when the editor re-read the old order
+  // from the DB. Draft rows still carry the fossil of that: positions with
+  // gaps and duplicates, because nothing ever renumbered them.
+  //
+  // Write every row unconditionally. There are ~10 blocks, and there is no
+  // unique (tenant_id, position) index to collide with — despite what
+  // duplicateBlock's comment claims — so these can go in parallel.
   const persistPositions = async (ordered: SiteBlock[]) => {
-    await Promise.all(
+    const results = await Promise.all(
       ordered.map((b, i) =>
-        b.position === i ? null : supabase.from('gw_site_blocks').update({ position: i }).eq('id', b.id),
+        supabase.from('gw_site_blocks').update({ position: i }).eq('id', b.id).select('id'),
       ),
     );
+    // .select() is what makes a rejected write observable: without it an
+    // RLS-blocked update returns 204 and reads as success.
+    const failed = results.find((r) => r.error) ?? results.find((r) => !r.data?.length);
+    if (failed) {
+      toast({
+        title: 'Order not saved',
+        description: failed.error?.message ?? 'The new block order could not be saved.',
+        variant: 'destructive',
+      });
+      queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
+    }
   };
 
   const onDragEnd = (e: DragEndEvent) => {
@@ -377,8 +418,55 @@ export default function PublicPageEditor() {
     }
     clearTimeout(saveTimers.current[id]);
     saveTimers.current[id] = setTimeout(async () => {
-      const { error } = await supabase.from('gw_site_blocks').update({ config }).eq('id', id);
-      if (error) toast({ title: 'Save failed', description: error.message, variant: 'destructive' });
+      // .select() so a row the caller is not allowed to touch is reported.
+      // A bare update() returns 204 whether it changed one row or none, so
+      // an RLS rejection is indistinguishable from success.
+      const { data, error } = await supabase
+        .from('gw_site_blocks')
+        .update({ config })
+        .eq('id', id)
+        .select('id');
+      if (error) {
+        toast({ title: 'Save failed', description: error.message, variant: 'destructive' });
+      } else if (!data?.length) {
+        toast({
+          title: 'Save failed',
+          description: 'That block could not be saved — it may have been deleted, or you may not have permission.',
+          variant: 'destructive',
+        });
+      } else {
+        // Header edits (nav links, logo, countdown) go live IMMEDIATELY on a
+        // published site — no Republish step. Site chrome isn't page content:
+        // "there is no way to know [nav is stuck in a draft] … nav should
+        // save instantly" (Kevin, 2026-08-14). Content blocks keep the
+        // draft → Republish flow. Fresh read of published_blocks rather than
+        // the mounted `site` row so a Republish from another tab between
+        // mount and now isn't clobbered with stale blocks.
+        const isHeader = blocks.find((b) => b.id === id)?.block_type === 'header';
+        if (isHeader) {
+          const { data: fresh } = await supabase
+            .from('gw_public_sites')
+            .select('id, is_published, published_blocks')
+            .maybeSingle();
+          if (fresh?.is_published && Array.isArray(fresh.published_blocks)) {
+            const patched = (fresh.published_blocks as Array<Record<string, unknown>>).map(
+              (e) => (e.id === id ? { ...e, config } : e),
+            );
+            const { error: pubErr } = await supabase
+              .from('gw_public_sites')
+              .update({ published_blocks: patched, published_at: new Date().toISOString() })
+              .eq('id', fresh.id);
+            if (pubErr) {
+              toast({ title: 'Saved, but not published', description: pubErr.message, variant: 'destructive' });
+            } else {
+              queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+              // Workspace chrome mirrors header config (showSiteName, logo)
+              // through this cache — see useHideSiteName/UniversalHeader.
+              queryClient.invalidateQueries({ queryKey: ['tenant-public-site'] });
+            }
+          }
+        }
+      }
     }, 600);
   };
 
@@ -485,8 +573,8 @@ export default function PublicPageEditor() {
     const position = blocks.length === 0 ? 0 : Math.max(...blocks.map((b) => b.position)) + 1;
     const { data, error } = await supabase
       .from('gw_site_blocks')
-      .insert({ block_type: type, position, config: mod.defaultConfig, is_visible: true })
-      .select('id, block_type, position, config, is_visible')
+      .insert({ block_type: type, position, config: mod.defaultConfig, is_visible: true, page: activePage })
+      .select('id, block_type, position, config, is_visible, page')
       .single();
     if (error) {
       toast({ title: 'Could not add block', description: error.message, variant: 'destructive' });
@@ -548,6 +636,7 @@ export default function PublicPageEditor() {
         .eq('id', site.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-public-site'] });
       toast({ title: 'Published', description: `Your page is live at /sites/${site.slug}` });
     } catch (e: any) {
       toast({ title: 'Publish failed', description: e.message, variant: 'destructive' });
@@ -573,32 +662,6 @@ export default function PublicPageEditor() {
   // brand identity survives). Client-side rather than an RPC so package
   // definitions stay in TypeScript alongside the block modules they refer
   // to. RLS scopes the delete + insert to the current tenant.
-  // Restore the block list captured before the last package apply. Mirrors
-  // applyPackage's delete-then-insert, minus the theme write, so an Undo puts
-  // the tenant back exactly where they were.
-  const restoreBlocks = async (snapshot: SiteBlock[]) => {
-    if (!site || !snapshot.length) return;
-    setRestoring(true);
-    try {
-      const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
-      if (del.error) throw del.error;
-      const rows = snapshot.map((b, i) => ({
-        block_type: b.block_type,
-        position: i,
-        config: b.config,
-        is_visible: b.is_visible,
-      }));
-      const ins = await supabase.from('gw_site_blocks').insert(rows);
-      if (ins.error) throw ins.error;
-      await queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
-      setUndoBlocks(null);
-      toast({ title: 'Blocks restored', description: 'Your previous layout and settings are back.' });
-    } catch (e: any) {
-      toast({ title: 'Could not restore', description: e.message, variant: 'destructive' });
-    } finally {
-      setRestoring(false);
-    }
-  };
 
   const applyPackage = async (pkg: TemplatePackage) => {
     if (!site) return;
@@ -608,8 +671,13 @@ export default function PublicPageEditor() {
     // is the live draft list, which is exactly what the delete destroys.
     const snapshot = blocks.map((b) => ({ ...b }));
     try {
-      const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
-      if (del.error) throw del.error;
+      // NON-DESTRUCTIVE by design (Kevin, 2026-07-31): applying a look
+      // changes the THEME only — typography, rhythm, shape. It must never
+      // delete the tenant's blocks, logo, or content edits. The package's
+      // starter blocks are seeded ONLY when the site has no content yet
+      // (nothing beyond a header), i.e. the fresh-site case the seeder was
+      // built for.
+      const hasContent = blocks.some((b) => b.block_type !== 'header');
 
       // Package theme merges OVER the current theme, but tenant colors are
       // preserved on top — packages are about typography / rhythm / shape,
@@ -626,51 +694,50 @@ export default function PublicPageEditor() {
         .eq('id', site.id);
       if (themeUpd.error) throw themeUpd.error;
 
-      // Header always seeds from tenant branding — not part of the package
-      // schema. Keeps every package's nav consistent with what the block
-      // anchors expect. (Logo image comes from Branding at render time.)
-      const headerConfig = {
-        siteName: branding.org_name || site.slug,
-        navLinks: [
-          { label: 'Events', url: '#events' },
-          { label: 'About', url: '#about' },
-          { label: 'Listen', url: '#music' },
-          { label: 'Watch', url: '#watch' },
-          { label: 'Contact', url: '#contact' },
-        ],
-        logoHeight: 36,
-      };
+      if (!hasContent) {
+        const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
+        if (del.error) throw del.error;
 
-      const rows = [
-        { block_type: 'header', position: 0, config: headerConfig, is_visible: true },
-        ...pkg.blocks.map((b, i) => {
-          const mod = getBlockModule(b.type);
-          return {
-            block_type: b.type,
-            position: i + 1,
-            config: { ...(mod?.defaultConfig ?? {}), ...(b.config ?? {}) },
-            is_visible: true,
-          };
-        }),
-      ];
-      const ins = await supabase.from('gw_site_blocks').insert(rows);
-      if (ins.error) throw ins.error;
+        // Header always seeds from tenant branding — not part of the package
+        // schema. Keeps every package's nav consistent with what the block
+        // anchors expect. (Logo image comes from Branding at render time.)
+        const headerConfig = {
+          siteName: branding.org_name || site.slug,
+          navLinks: [
+            { label: 'Events', url: '#events' },
+            { label: 'About', url: '#about' },
+            { label: 'Listen', url: '#music' },
+            { label: 'Watch', url: '#watch' },
+            { label: 'Contact', url: '#contact' },
+          ],
+          logoHeight: 36,
+        };
 
-      setSelectedId(null);
-      await queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
+        const rows = [
+          { block_type: 'header', position: 0, config: headerConfig, is_visible: true },
+          ...pkg.blocks.map((b, i) => {
+            const mod = getBlockModule(b.type);
+            return {
+              block_type: b.type,
+              position: i + 1,
+              config: { ...(mod?.defaultConfig ?? {}), ...(b.config ?? {}) },
+              is_visible: true,
+            };
+          }),
+        ];
+        const ins = await supabase.from('gw_site_blocks').insert(rows);
+        if (ins.error) throw ins.error;
+        setSelectedId(null);
+        await queryClient.invalidateQueries({ queryKey: ['gw_site_blocks'] });
+      }
+
       await queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
       setPackagePickerOpen(false);
-      setUndoBlocks(snapshot);
       toast({
         title: `${pkg.name} applied`,
-        description: `Replaced ${snapshot.length} block${snapshot.length === 1 ? '' : 's'}. Undo puts your previous layout back.`,
-        action: snapshot.length
-          ? (
-              <ToastAction altText="Undo and restore my previous blocks" onClick={() => restoreBlocks(snapshot)}>
-                Undo
-              </ToastAction>
-            )
-          : undefined,
+        description: hasContent
+          ? 'Fonts, spacing, and shape updated — your blocks and content are untouched.'
+          : 'Your site now uses this look.',
       });
     } catch (e: any) {
       toast({ title: 'Could not apply look', description: e.message, variant: 'destructive' });
@@ -705,6 +772,42 @@ export default function PublicPageEditor() {
   };
 
   const existingBlockTypes = useMemo(() => new Set(blocks.map((b) => b.block_type)), [blocks]);
+
+  // ---- pages ----
+  const pages = useMemo(() => {
+    const set = new Set<string>(['home']);
+    for (const b of blocks) set.add(b.page || 'home');
+    for (const p of draftPages) set.add(p);
+    return ['home', ...[...set].filter((p) => p !== 'home').sort()];
+  }, [blocks, draftPages]);
+
+  /** Blocks on the page the editor is showing, in stored order. */
+  const pageBlocks = useMemo(
+    () => blocks.filter((b) => (b.page || 'home') === activePage),
+    [blocks, activePage],
+  );
+
+  const createPage = () => {
+    const raw = window.prompt('New page address (letters, numbers, dashes — e.g. "retirement"):');
+    if (!raw) return;
+    const clean = raw.trim().toLowerCase().replace(/\s+/g, '-');
+    if (!/^[a-z0-9-]{2,40}$/.test(clean) || clean === 'home') {
+      toast({ title: 'Invalid page name', description: 'Use 2-40 lowercase letters, numbers, or dashes.', variant: 'destructive' });
+      return;
+    }
+    if (!pages.includes(clean)) setDraftPages((prev) => [...prev, clean]);
+    setActivePage(clean);
+    setSelectedId(null);
+  };
+
+  const moveBlockToPage = async (block: SiteBlock, targetPage: string) => {
+    if ((block.page || 'home') === targetPage) return;
+    const position = Math.max(-1, ...blocks.filter((b) => (b.page || 'home') === targetPage).map((b) => b.position)) + 1;
+    setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, page: targetPage, position } : b)));
+    const { error } = await supabase.from('gw_site_blocks').update({ page: targetPage, position }).eq('id', block.id);
+    if (error) toast({ title: 'Move failed', description: error.message, variant: 'destructive' });
+    else toast({ title: 'Block moved', description: `Now on the ${targetPage === 'home' ? 'home page' : `/${targetPage}`} page.` });
+  };
 
   if (siteLoading) {
     return (
@@ -782,9 +885,7 @@ export default function PublicPageEditor() {
                     Presets
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Applying a preset <strong className="font-semibold text-foreground">deletes your current blocks</strong> and
-                    their settings, then rebuilds the page from that layout. Your brand colors and uploaded media stay the same.
-                    You&rsquo;ll be asked to confirm first.
+                    A look changes fonts, spacing, and shape only — your blocks, text, logo, and media are never touched. Brand colors stay yours.
                   </p>
                   <div className="space-y-2">
                     {PACKAGE_LIST.map((pkg) => {
@@ -1008,20 +1109,23 @@ export default function PublicPageEditor() {
             </DialogContent>
           </Dialog>
           {site.is_published && site.slug && (
-            // "View site" opens the built blocks at /sites/<slug>, which
-            // mounts PublicSitePage directly.
+            // "View site" opens the URL a visitor would use to see the built
+            // blocks. Always use `/sites/<slug>` — the subdomain root
+            // (kevin.gleeworld.org/, etc.) mounts HomeRoute, which calls
+            // useRoleBasedRedirect and bounces authenticated users to
+            // Command Center. `/sites/:slug` mounts PublicSitePage directly
+            // and renders the built blocks without any redirect, so the
+            // admin sees exactly what a visitor sees regardless of their
+            // signed-in state.
             //
-            // It used to send non-main tenants to the subdomain root on the
-            // theory that it renders TenantLanding. That holds for anonymous
-            // visitors, but `/` is HomeRoute, and HomeRoute runs
-            // useRoleBasedRedirect() — so an authenticated user is bounced to
-            // their role's home. The only person who ever clicks this button
-            // is the signed-in admin editing the page, so it always landed on
-            // Command Center instead of the site. /sites/<slug> has no such
-            // redirect and is the same address shown in "Page address" below.
+            // The HOST comes from tenantPublicHostFromRow, so a tenant with a
+            // branded domain gets example.org/sites/<slug> rather than the
+            // gleeworld.org subdomain — this button is how admins check and
+            // share their live site, and the branded host is the one they
+            // mean. Falls back to the subdomain until the tenant row loads.
             <Button variant="outline" asChild title="Open your live site in a new tab">
               <a
-                href={`/sites/${site.slug}`}
+                href={`https://${tenantPublicHostFromRow(tenantHostRow ?? null, site.slug)}/sites/${site.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -1048,9 +1152,28 @@ export default function PublicPageEditor() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-1.5">
+              {/* Page tabs: home + any extra pages. Blocks below belong to
+                  the active tab; "+ Page" starts a new one (it goes live on
+                  publish once it has blocks). */}
+              <div className="flex flex-wrap gap-1 pb-2">
+                {pages.map((p) => (
+                  <Button
+                    key={p}
+                    size="sm"
+                    variant={p === activePage ? 'default' : 'outline'}
+                    className="h-7 px-2.5 text-xs"
+                    onClick={() => { setActivePage(p); setSelectedId(null); }}
+                  >
+                    {p === 'home' ? 'Home' : `/${p}`}
+                  </Button>
+                ))}
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={createPage}>
+                  <Plus className="w-3 h-3 mr-1" /> Page
+                </Button>
+              </div>
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-                <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
-                  {blocks.map((block) => {
+                <SortableContext items={pageBlocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
+                  {pageBlocks.map((block) => {
                     const isSelected = block.id === selectedId;
                     return (
                       <SortableBlockRow
@@ -1401,14 +1524,13 @@ export default function PublicPageEditor() {
             >
             <div
               ref={previewInnerRef}
+              // `.gw-site` is a `gwsite` size container (index.css), and the
+              // blocks lay themselves out with `cq-*` container variants, so
+              // this frame's own width — not the editor's viewport — decides
+              // what the preview shows. That's what makes the phone preview
+              // honest; it used to render the desktop layout inside 390px and
+              // spill out, and only the header block had a CSS workaround.
               className="gw-site bg-white"
-              // Sibling styling hook. Tailwind's `sm:` media queries fire
-              // against the real editor viewport, not the previewed 390px
-              // frame, so the site's `hidden sm:flex` desktop nav still
-              // appears when previewing on phone. index.css forces the
-              // header block into mobile behavior when this attribute is
-              // "mobile", using selectors scoped to `.gw-site`.
-              data-preview-device={device}
               style={{
                 width: deviceWidth,
                 transform: 'scale(var(--gw-preview-scale))',
@@ -1430,7 +1552,7 @@ export default function PublicPageEditor() {
                 // canvas gets hover/select outlines and a floating toolbar.
                 // Hidden blocks still show (dimmed) so tenants can toggle
                 // them back — the public site skips them entirely.
-                const renderable = blocks.filter((b) => {
+                const renderable = pageBlocks.filter((b) => {
                   const mod = getBlockModule(b.block_type);
                   return mod && isBlockAvailable(mod, activeAddons);
                 });
@@ -1552,6 +1674,20 @@ export default function PublicPageEditor() {
                   </SheetTitle>
                   <SheetDescription>{mod.description}</SheetDescription>
                 </SheetHeader>
+                {pages.length > 1 && !mod.locked && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground shrink-0">On page</span>
+                    <select
+                      className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                      value={b.page || 'home'}
+                      onChange={(e) => void moveBlockToPage(b, e.target.value)}
+                    >
+                      {pages.map((p) => (
+                        <option key={p} value={p}>{p === 'home' ? 'Home' : `/${p}`}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div className="mt-6">
                   {mod.EditorForm ? (
                     <mod.EditorForm

@@ -26,6 +26,7 @@ import {
 import { useAttendanceSessions, useAttendanceRecords, AttendanceSession } from '@/hooks/useAttendanceSessions';
 import { AttendanceQRDisplay } from './AttendanceQRDisplay';
 import { AttendanceLiveRoster } from './AttendanceLiveRoster';
+import { RollCallChallengeDisplay } from './RollCallChallengeDisplay';
 import { format } from 'date-fns';
 
 interface AttendanceConsoleProps {
@@ -38,7 +39,7 @@ export const AttendanceConsole: React.FC<AttendanceConsoleProps> = ({ courseId }
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newSession, setNewSession] = useState({
     title: '',
-    mode: 'qr' as 'qr' | 'manual' | 'hybrid',
+    mode: 'qr' as 'qr' | 'manual' | 'hybrid' | 'roll_call',
     roster_scope: 'enrolled_students' as 'enrolled_students' | 'tour_roster' | 'custom_group',
     allow_late_checkin: true,
     late_threshold_minutes: 15,
@@ -140,7 +141,7 @@ export const AttendanceConsole: React.FC<AttendanceConsoleProps> = ({ courseId }
                   <Label>Check-in Mode</Label>
                   <Select
                     value={newSession.mode}
-                    onValueChange={(value: 'qr' | 'manual' | 'hybrid') => 
+                    onValueChange={(value: 'qr' | 'manual' | 'hybrid' | 'roll_call') =>
                       setNewSession({ ...newSession, mode: value })
                     }
                   >
@@ -151,6 +152,7 @@ export const AttendanceConsole: React.FC<AttendanceConsoleProps> = ({ courseId }
                       <SelectItem value="qr">QR Code Only</SelectItem>
                       <SelectItem value="manual">Manual Only</SelectItem>
                       <SelectItem value="hybrid">Hybrid (QR + Manual)</SelectItem>
+                      <SelectItem value="roll_call">Roll Call (tap-in)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -330,7 +332,9 @@ export const AttendanceConsole: React.FC<AttendanceConsoleProps> = ({ courseId }
 
             {/* QR Display or Session Details */}
             {selectedSession ? (
-              selectedSession.status === 'open' && (selectedSession.mode === 'qr' || selectedSession.mode === 'hybrid') ? (
+              selectedSession.status === 'open' && selectedSession.mode === 'roll_call' ? (
+                <RollCallChallengeDisplay sessionId={selectedSession.id} />
+              ) : selectedSession.status === 'open' && (selectedSession.mode === 'qr' || selectedSession.mode === 'hybrid') ? (
                 <AttendanceQRDisplay
                   sessionId={selectedSession.id}
                   generateToken={generateQRToken}

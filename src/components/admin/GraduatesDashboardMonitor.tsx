@@ -184,7 +184,7 @@ export const GraduatesDashboardMonitor = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-primary flex items-center gap-3">
+          <h1 className="text-2xl md:text-3xl font-bold text-primary flex items-center gap-3">
             <GraduationCap className="h-8 w-8" />
             Graduates Dashboard Monitor
           </h1>

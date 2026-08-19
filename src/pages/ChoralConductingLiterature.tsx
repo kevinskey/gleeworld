@@ -6,7 +6,7 @@ import { DashboardShell } from '@/components/dashboard/DashboardShell';
 export default function ChoralConductingLiterature() {
   const courseData = {
     courseId: 'mus-210-conducting',
-    courseCode: 'MUS 210',
+    courseCode: 'GW 210',
     title: 'Choral Conducting and Literature',
     credits: 2,
     meetingTimes: 'MW — 2× per week (50 min)',

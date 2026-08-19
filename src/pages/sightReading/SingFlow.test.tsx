@@ -209,3 +209,33 @@ describe('SingFlow — unmount teardown', () => {
     expect(mic.stop).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('SingFlow — metronome + practice tempo', () => {
+  it('defaults the metronome on and toggles it off', () => {
+    renderFlow();
+    const toggle = screen.getByRole('button', { name: /click on/i });
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(toggle);
+    expect(screen.getByRole('button', { name: /click off/i })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('feeds the adjusted BPM (not the written tempo) into the mic beat clock', async () => {
+    mic.outcome = 'granted';
+    renderFlow(); // exercise tempo 120
+    fireEvent.click(screen.getByRole('button', { name: /slower/i }));
+    expect(screen.getByText('♩ = 115')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /start take/i }));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4000);
+    });
+    expect(mic.start).toHaveBeenCalledWith(115);
+  });
+
+  it('clamps the BPM stepper to its 40–180 range', () => {
+    renderFlow();
+    const slower = screen.getByRole('button', { name: /slower/i });
+    for (let i = 0; i < 30; i++) fireEvent.click(slower);
+    expect(screen.getByText('♩ = 40')).toBeInTheDocument();
+    expect(slower).toBeDisabled();
+  });
+});

@@ -1,4 +1,5 @@
 import type { AssistantAction } from './types';
+import { NAV_CATALOG } from '@/lib/navigation/navCatalog';
 
 // Model-generated text (assistant tool args, possibly steered via indirect prompt
 // injection through tool results) must never be trusted as HTML. Escape before
@@ -12,19 +13,49 @@ function escapeHtml(s: string): string {
     .replace(/'/g, '&#39;');
 }
 
-// Route whitelist for open_page. Paths come from src/lib/navigation/navCatalog.ts —
-// keep keys in sync with the open_page tool description in toolCatalog.ts.
+// Resolve an open_page key against the live nav catalog: exact key first,
+// then a normalized label match ("Reading Music" ≈ "reading-music") so the
+// model's best guess still lands. Returns undefined for anything unknown —
+// the caller reports honestly instead of dumping the user on /dashboard.
+const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+export function resolvePageRoute(rawKey: string): { route: string; label: string } | undefined {
+  const key = normalize(rawKey);
+  const byKey = NAV_CATALOG.find((e) => e.key === key);
+  if (byKey) return { route: byKey.to, label: byKey.label };
+  const byLabel = NAV_CATALOG.find((e) => normalize(e.label) === key);
+  if (byLabel) return { route: byLabel.to, label: byLabel.label };
+  // Legacy aliases from the original hand-kept whitelist (older threads /
+  // cached prompts may still emit these).
+  if (Object.prototype.hasOwnProperty.call(PAGE_ROUTES, key)) {
+    return { route: PAGE_ROUTES[key], label: rawKey };
+  }
+  return undefined;
+}
+
+/** Same catalog lookup, but yields the catalog KEY — what the My World
+ *  shelf stores — rather than a route. */
+export function resolveNavKey(rawKey: string): { key: string; label: string } | undefined {
+  const key = normalize(rawKey);
+  const byKey = NAV_CATALOG.find((e) => e.key === key);
+  if (byKey) return { key: byKey.key, label: byKey.label };
+  const byLabel = NAV_CATALOG.find((e) => normalize(e.label) === key);
+  if (byLabel) return { key: byLabel.key, label: byLabel.label };
+  return undefined;
+}
+
+// Legacy route whitelist for open_page — superseded by resolvePageRoute's
+// nav-catalog lookup; kept only as an alias fallback for old key spellings.
 export const PAGE_ROUTES: Record<string, string> = {
   home: '/dashboard',
   calendar: '/dashboard/calendar',
-  notes: '/planner',
+  planner: '/planner',
+  notes: '/planner',   // legacy spelling, pre-rename
   'music-library': '/dashboard/music-library',
   studio: '/studio',
   video: '/video',
   messenger: '/dashboard/messenger',
   academy: '/dashboard/academy',
   'sight-reading': '/dashboard/sight-reading',
-  'part-tracks': '/dashboard/part-tracks',
   'media-library': '/dashboard/media-library',
   songwriting: '/songwriting',
   'concert-planner': '/dashboard/concert-planner',
@@ -41,6 +72,15 @@ export interface ActionOutcome {
   /** External URL to open in a new tab. Only ever set from our own whitelisted
    *  deep-link builders (deepLinks.ts) — never from a model-supplied URL. */
   openExternalUrl?: string;
+  /** Close the assistant's floating mini player ("stop the music"). The
+   *  player is provider state, so the provider acts on this flag. */
+  stopPlayback?: boolean;
+  /** Start Apple Music playback in the floating popout (same window the
+   *  YouTube player uses). The provider owns the MusicKit hand-off. */
+  appleMusic?: { id: string; kind: 'song' | 'album' | 'playlist'; title?: string; artist?: string; artworkUrl?: string | null };
+  /** Show an article in the in-app reader panel (extract-article) instead of
+   *  leaving the Command Center for a new tab. readAloud auto-starts speech. */
+  article?: { url: string; title?: string; readAloud?: boolean };
   message: string;
 }
 
@@ -50,7 +90,7 @@ export interface ActionDeps {
     functions: { invoke: (name: string, opts: { body: unknown }) => Promise<{ data: any; error: any }> };
     rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: any; error: any }>;
   };
-  createNote: (partial: { title: string; content?: unknown }) => Promise<{ id: string; title: string }>;
+  createNote: (partial: { title: string; content?: unknown; properties?: Record<string, unknown> }) => Promise<{ id: string; title: string }>;
   createTask: (input: { title: string; due_at?: string | null; scheduled_date?: string | null; priority?: string }) => Promise<unknown>;
   textToDoc: (text: string) => unknown;
   pushEventToGoogle: (eventId: string, op: 'create' | 'update' | 'delete') => Promise<unknown>;
@@ -77,24 +117,90 @@ export async function executeClientAction(
   action: AssistantAction,
   depsOverride?: Partial<ActionDeps>,
 ): Promise<ActionOutcome> {
-  const needsDeps = !['open_page', 'open_song', 'open_note', 'start_video_session', 'book_ride', 'order_food'].includes(action.tool);
+  const needsDeps = ![
+    'open_page', 'open_link', 'open_song', 'open_bible', 'open_note',
+    'start_video_session', 'book_ride', 'order_food', 'stop_playback',
+    'close_viewer', 'play_apple_music', 'create_apple_playlist', 'play_my_playlist',
+  ].includes(action.tool);
   const deps = { ...(needsDeps && !depsOverride ? await defaultDeps() : {}), ...depsOverride } as ActionDeps;
   const a = action.args;
   try {
     switch (action.tool) {
       case 'open_page': {
-        const key = String(a.key);
-        // hasOwnProperty guard: PAGE_ROUTES[key] alone resolves inherited keys like
-        // 'constructor' / '__proto__' / 'hasOwnProperty' to truthy non-route values,
-        // which would bypass the whitelist rejection below.
-        const route = Object.prototype.hasOwnProperty.call(PAGE_ROUTES, key) ? PAGE_ROUTES[key] : undefined;
-        if (typeof route !== 'string') return { ok: false, message: `I don't know a page called "${a.key}".` };
-        return { ok: true, navigateTo: route, message: `Opening ${a.key}.` };
+        const resolved = resolvePageRoute(String(a.key));
+        if (!resolved) return { ok: false, message: `I don't know a page called "${a.key}".` };
+        return { ok: true, navigateTo: resolved.route, message: `Opening ${resolved.label}.` };
+      }
+      case 'open_bible': {
+        // The Bible reads its passage from the query string, so navigation is
+        // the whole action. The reference is model-supplied, so it is passed
+        // through encodeURIComponent and length-capped rather than trusted.
+        const ref = String(a.reference ?? '').trim().slice(0, 60);
+        if (!ref) return { ok: false, message: 'Which passage would you like?' };
+        const tr = String(a.translation ?? '').trim().toUpperCase().slice(0, 12);
+        const qs = new URLSearchParams({ ref });
+        if (tr) qs.set('t', tr);
+        return { ok: true, navigateTo: `/bible?${qs.toString()}`, message: `Opening ${ref}.` };
+      }
+      case 'open_link': {
+        // External article/link (e.g. "open the full article" on a news
+        // item). Shown in the in-app reader panel — never a new tab; leaving
+        // the Command Center for a headline reads as the app dumping the
+        // user (Kevin, 2026-08-13). http(s) only — the URL is model-supplied
+        // and may echo feed content, so never allow javascript:/data:/custom
+        // schemes.
+        const url = String(a.url ?? '');
+        if (!/^https?:\/\/\S+$/i.test(url)) return { ok: false, message: 'That link looks invalid.' };
+        const title = typeof a.title === 'string' && a.title.trim() ? a.title.trim().slice(0, 160) : undefined;
+        return {
+          ok: true,
+          article: { url, ...(title ? { title } : {}), ...(a.read_aloud === true ? { readAloud: true } : {}) },
+          message: `Opening ${title ?? 'the article'}.`,
+        };
+      }
+      case 'add_to_nav': {
+        // "Add the Studio to my nav": append a catalog key to the member's
+        // My World shelf. Headless mirror of useMyTools.pinTool — reads via
+        // get_nav_prefs and writes via the SECURITY DEFINER save RPC
+        // (user_preferences standing rule: never direct select/upsert).
+        const target = resolveNavKey(String(a.key));
+        if (!target) return { ok: false, message: `I don't know a feature called "${a.key}".` };
+        const [{ resolveKey, resolveKeys, parseMyTools }, { flattenShelf }] = await Promise.all([
+          import('@/lib/navigation/myTools'),
+          import('@/lib/navigation/toolGroups'),
+        ]);
+        const toolKey = resolveKey(target.key);
+        if (toolKey === 'home') return { ok: true, message: 'Home is always on your shelf.' };
+        const { data, error } = await deps.supabase.rpc('get_nav_prefs', {});
+        if (error) return { ok: false, message: "I couldn't read your world settings just now." };
+        const row = Array.isArray(data) ? data[0] : data;
+        const record = parseMyTools(row?.nav_item_order ?? null);
+        if (!record) {
+          // No parseable stored shelf: seeding one here would bake in the
+          // wrong role's defaults. My World's first save migrates it.
+          return { ok: false, message: "Your world hasn't been set up yet — open My World once, then I can add tools for you." };
+        }
+        if (resolveKeys(flattenShelf(record)).includes(toolKey)) {
+          return { ok: true, message: `${target.label} is already in your world.` };
+        }
+        const next = { ...record, tools: [...record.tools, toolKey] };
+        const { error: saveErr } = await deps.supabase.rpc('save_nav_item_order', { p_nav_item_order: next });
+        if (saveErr) return { ok: false, message: "I couldn't save that — try again in a moment." };
+        return { ok: true, message: `Added ${target.label} to your world.` };
       }
       case 'open_song': {
         const id = String(a.score_id ?? '');
         if (!/^[0-9a-f-]{3,64}$/i.test(id)) return { ok: false, message: 'That score id looks invalid.' };
-        return { ok: true, navigateTo: `/dashboard/music-library?view=${id}`, message: `Opening ${a.title ?? 'the score'}.` };
+        // Default surface is the Viewer — the immersive full-bleed reader —
+        // not the Music Library (Kevin, 2026-08-11). The library variant
+        // stays reachable, but only when the user names it.
+        const route = a.in_library === true
+          ? `/dashboard/music-library?view=${id}`
+          : `/dashboard/viewer/${id}`;
+        return { ok: true, navigateTo: route, message: `Opening ${a.title ?? 'the score'}.` };
+      }
+      case 'close_viewer': {
+        return { ok: true, navigateTo: '/dashboard/music-library', message: 'Closed the viewer.' };
       }
       case 'open_note': {
         const id = String(a.note_id ?? '');
@@ -131,6 +237,66 @@ export async function executeClientAction(
         if (!link) return { ok: false, message: 'The food service has to be DoorDash, Uber Eats, or Grubhub.' };
         return { ok: true, openExternalUrl: link.url, message: `Opening ${link.label} — finish your order there.` };
       }
+      case 'stop_playback': {
+        return { ok: true, stopPlayback: true, message: 'Stopped.' };
+      }
+      case 'play_apple_music': {
+        const id = String(a.id ?? '').trim();
+        // Apple catalog ids are numeric (songs/albums) or prefixed
+        // (playlists 'pl.'). Model-supplied, so shape-checked.
+        if (!/^[A-Za-z0-9.\-]{4,40}$/.test(id)) return { ok: false, message: 'That Apple Music id looks invalid.' };
+        const kind = a.kind === 'album' ? 'album' as const : 'song' as const;
+        return {
+          ok: true,
+          appleMusic: {
+            id, kind,
+            title: typeof a.title === 'string' ? a.title : undefined,
+            artist: typeof a.artist === 'string' ? a.artist : undefined,
+            artworkUrl: typeof a.artwork_url === 'string' ? a.artwork_url : null,
+          },
+          message: `Playing ${a.title ?? 'it'} on Apple Music.`,
+        };
+      }
+      case 'create_apple_playlist': {
+        const playlistName = String(a.name ?? '').trim().slice(0, 80);
+        if (!playlistName) return { ok: false, message: 'The playlist needs a name.' };
+        const ids = Array.isArray(a.song_ids)
+          ? a.song_ids.map(String).filter((s) => /^[A-Za-z0-9.\-]{4,40}$/.test(s)).slice(0, 100)
+          : [];
+        try {
+          const mk = await import('@/lib/musicKit');
+          const auth = await mk.authorizeAppleMusic();
+          if (!auth.ok) return { ok: false, message: auth.message ?? 'Apple Music sign-in is required to create playlists.' };
+          await mk.createLibraryPlaylist(
+            playlistName,
+            typeof a.description === 'string' ? a.description.slice(0, 200) : undefined,
+            ids,
+          );
+          return {
+            ok: true,
+            message: `Created "${playlistName}" in your Apple Music library${ids.length ? ` with ${ids.length} song${ids.length === 1 ? '' : 's'}` : ''}. It can take a moment to appear on your devices.`,
+          };
+        } catch {
+          return { ok: false, message: "Couldn't create the playlist in Apple Music." };
+        }
+      }
+      case 'play_my_playlist': {
+        const wanted = String(a.name ?? '').trim();
+        if (!wanted) return { ok: false, message: 'Which playlist?' };
+        try {
+          const mk = await import('@/lib/musicKit');
+          const auth = await mk.authorizeAppleMusic();
+          if (!auth.ok) return { ok: false, message: auth.message ?? 'Apple Music sign-in is required to reach your playlists.' };
+          const lists = await mk.listLibraryPlaylists();
+          const needle = wanted.toLowerCase();
+          const hit = lists.find((p) => p.name.toLowerCase() === needle)
+            ?? lists.find((p) => p.name.toLowerCase().includes(needle));
+          if (!hit) return { ok: false, message: `I couldn't find a playlist named "${wanted}" in your Apple Music library.` };
+          return { ok: true, appleMusic: { id: hit.id, kind: 'playlist', title: hit.name }, message: `Playing ${hit.name}.` };
+        } catch {
+          return { ok: false, message: "Couldn't reach your Apple Music library." };
+        }
+      }
       case 'start_video_session': {
         const slug = String(a.room_name ?? 'gleeworld-room').replace(/[^a-zA-Z0-9._-]/g, '-').slice(0, 60) || 'gleeworld-room';
         return { ok: true, openVideoRoom: slug, message: 'Starting your video session.' };
@@ -142,6 +308,40 @@ export async function executeClientAction(
           ...(body && deps.textToDoc ? { content: deps.textToDoc(body) } : {}),
         });
         return { ok: true, navigateTo: '/planner', message: `Created the note "${note.title}".` };
+      }
+      case 'save_article_note': {
+        // "That article's important — save it." Full text is pulled through
+        // extract-article (same hardened function the reader uses) so the
+        // note stands alone even after the link dies. Extraction is
+        // best-effort: a paywall must not turn the save into a failure, so
+        // the note falls back to the feed summary + link. URL is
+        // model-supplied → http(s) only, same rule as open_link.
+        const url = String(a.url ?? '');
+        if (!/^https?:\/\/\S+$/i.test(url)) return { ok: false, message: 'That article link looks invalid.' };
+        const title = String(a.title ?? '').trim().slice(0, 300) || 'Untitled article';
+        let extracted: { paragraphs?: string[]; byline?: string | null } = {};
+        try {
+          const { data } = await deps.supabase.functions.invoke('extract-article', { body: { url } });
+          if (data?.success) extracted = data;
+        } catch { /* fall through to summary fallback */ }
+        const { buildArticleNote } = await import('@/lib/news/articleNote');
+        const built = buildArticleNote({
+          title,
+          url,
+          source: typeof a.source === 'string' && a.source.trim() ? a.source.trim() : undefined,
+          published: typeof a.published === 'string' && a.published.trim() ? a.published.trim() : undefined,
+          byline: extracted.byline ?? undefined,
+          paragraphs: extracted.paragraphs,
+          summary: typeof a.summary === 'string' && a.summary.trim() ? a.summary.trim() : undefined,
+        });
+        const note = await deps.createNote({
+          title: built.title,
+          content: deps.textToDoc(built.body),
+          properties: built.properties,
+        });
+        // No navigateTo: the user is usually mid-article — saving must not
+        // yank them to the Planner. The note is confirmed by name instead.
+        return { ok: true, message: `Saved "${note.title}" to your notes.` };
       }
       case 'create_task': {
         await deps.createTask({
@@ -274,25 +474,6 @@ export async function executeClientAction(
             ? `Added "${title}" to your videos.`
             : `Added "${title}" to your YouTube videos (couldn't pin it to the dashboard section).`,
         };
-      }
-      case 'remember_preference': {
-        const key = String(a.key ?? '').trim();
-        const value = String(a.value ?? '').trim();
-        if (!key || !value) return { ok: false, message: 'Missing key or value.' };
-        // RLS scopes to auth.uid(); user_id column is filled by the DEFAULT
-        // auth.uid() would-be pattern OR by our explicit assignment below.
-        // Setting it here rather than trusting a DEFAULT keeps the same
-        // upsert working even if the table default ever changes.
-        const { data: { user } } = await (deps.supabase as any).auth?.getUser?.() ?? { data: { user: null } };
-        if (!user?.id) return { ok: false, message: "You aren't signed in." };
-        const { error } = await deps.supabase
-          .from('gw_user_preferences')
-          .upsert(
-            { user_id: user.id, key, value },
-            { onConflict: 'user_id,key' } as unknown as Record<string, unknown>,
-          );
-        if (error) return { ok: false, message: `Couldn't save that preference: ${error.message}` };
-        return { ok: true, message: `Got it — I'll remember your ${key.replace(/_/g, ' ')}.` };
       }
       case 'set_date_card': {
         // Import lazily so the registry (which pulls in lucide + zod) stays out

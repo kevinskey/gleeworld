@@ -102,7 +102,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
               {config.eyebrow}
             </p>
           )}
-          <h2 className="text-3xl sm:text-4xl font-bold leading-tight" style={{ fontFamily: 'var(--site-heading-font)' }}>
+          <h2 className="text-3xl cq-sm:text-4xl font-bold leading-tight" style={{ fontFamily: 'var(--site-heading-font)' }}>
             {config.heading}
             {/* nowrap: browsers happily break at the en-dash, orphaning
                 "2027" on its own line — the year wraps as one unit. */}
@@ -131,12 +131,12 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           </Button>
         ) : (
           <form
-            className="rounded-xl border border-border bg-white p-5 sm:p-6 space-y-6 max-w-3xl mx-auto"
+            className="rounded-xl border border-border bg-white p-5 cq-sm:p-6 space-y-6 max-w-3xl mx-auto"
             onSubmit={(e) => { e.preventDefault(); submit.mutate(); }}
           >
             <div className="space-y-4">
               <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">About you</h3>
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid cq-sm:grid-cols-2 gap-4">
                 {field('full_name', 'Full name', { required: true })}
                 {field('email', 'Email', { type: 'email', required: true })}
                 <div className="space-y-1.5">
@@ -178,7 +178,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
             <div className="space-y-4">
               <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">School &amp; music</h3>
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid cq-sm:grid-cols-2 gap-4">
                 {field('school', 'College / University')}
                 {field('major_minor', 'Major / Minor')}
                 {field('instrument_voice', 'Instrument / Voice type', { placeholder: 'e.g. Soprano, Piano, Organ' })}
@@ -187,7 +187,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
             <div className="space-y-4">
               <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">Emergency contact</h3>
-              <div className="grid sm:grid-cols-3 gap-4">
+              <div className="grid cq-sm:grid-cols-3 gap-4">
                 {field('emergency_name', 'Name')}
                 {field('emergency_relationship', 'Relationship', { maxLength: 60 })}
                 {field('emergency_phone', 'Phone', { type: 'tel', maxLength: 30 })}
@@ -208,7 +208,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                 <input type="checkbox" className="mt-0.5 h-4 w-4" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
                 <span>I have read the agreement above, understand its meaning and intent, and enter it knowingly and voluntarily.</span>
               </label>
-              <div className="grid sm:grid-cols-2 gap-4 items-end">
+              <div className="grid cq-sm:grid-cols-2 gap-4 items-end">
                 {field('signature_name', 'Signature (type your full name)', { placeholder: form.full_name || 'Your full name' })}
                 <p className="text-xs text-muted-foreground pb-2.5">Dated automatically when you submit.</p>
               </div>

@@ -22,18 +22,37 @@ describe('sectionKeyFromPath', () => {
 
 describe('collapse prefs', () => {
   beforeEach(() => localStorage.clear());
-  it('round-trips per section', () => {
-    expect(isFabCollapsed('studio')).toBe(false);
-    setFabCollapsed('studio', true);
+
+  // The FAB starts tucked so it never sits on a page's Save button. Anything
+  // not explicitly pulled out is collapsed.
+  it('defaults to collapsed', () => {
     expect(isFabCollapsed('studio')).toBe(true);
-    expect(isFabCollapsed('calendar')).toBe(false);
+    expect(isFabCollapsed('calendar')).toBe(true);
+  });
+
+  it('round-trips per section', () => {
     setFabCollapsed('studio', false);
     expect(isFabCollapsed('studio')).toBe(false);
-  });
-  it('survives corrupt storage', () => {
-    localStorage.setItem('gw_assistant_fab_collapsed', '{nope');
-    expect(isFabCollapsed('studio')).toBe(false);
+    // Pulling it out in one section must not pull it out everywhere.
+    expect(isFabCollapsed('calendar')).toBe(true);
     setFabCollapsed('studio', true);
     expect(isFabCollapsed('studio')).toBe(true);
+  });
+
+  // The regression this guards: recording "open" by DELETING the key would
+  // read back as the default — collapsed — so the pill would tuck itself
+  // away again on the next visit to a section the user had opened.
+  it('remembers being pulled out across reloads', () => {
+    setFabCollapsed('viewer', false);
+    const stored = JSON.parse(localStorage.getItem('gw_assistant_fab_collapsed') ?? '{}');
+    expect(stored).toHaveProperty('viewer', false);
+    expect(isFabCollapsed('viewer')).toBe(false);
+  });
+
+  it('survives corrupt storage', () => {
+    localStorage.setItem('gw_assistant_fab_collapsed', '{nope');
+    expect(isFabCollapsed('studio')).toBe(true);
+    setFabCollapsed('studio', false);
+    expect(isFabCollapsed('studio')).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-// Unified Academy Course Configuration - Ordered: MUS 070, MUS 240, MUS 210, MUS 001, GLEE 101, GLEE 000
+// Unified Academy Course Configuration - Ordered: GW 070, GW 240, GW 210, GW 001, GLEE 101, GLEE 000
 import { Users, Music, BookOpen, Mic, Eye, Award, GraduationCap, LucideIcon } from 'lucide-react';
 
 export interface AcademyCourse {
@@ -24,7 +24,7 @@ export interface AcademyCourse {
 export const ACADEMY_COURSES: AcademyCourse[] = [
   {
     id: 'a0000000-0000-0000-0000-000000000070',
-    courseCode: 'MUS 070',
+    courseCode: 'GW 070',
     title: 'Glee Club',
     description: 'The premier choral ensemble of Riverside Music Institute with over 100 years of musical excellence.',
     icon: Users,
@@ -42,27 +42,8 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: '23c4ee3c-7bbb-4534-8c0a-eecd88298d37',
-    courseCode: 'MUS 240',
-    title: 'Survey of African American Music',
-    description: 'Explore the rich tapestry of African American musical traditions, from spirituals and blues to jazz, gospel, R&B, and hip-hop.',
-    icon: BookOpen,
-    level: 'All Levels',
-    duration: '16 Weeks',
-    highlights: ['Music History', 'Cultural Context', 'Critical Analysis'],
-    route: '/academy/mus-240',
-    instructor: {
-      name: 'Dr. Kevin Johnson',
-      email: 'kjohns10@riversidechoir.example',
-      office: 'Fine Arts 105',
-      hours: 'MWF 3-5 PM',
-      imageUrl: 'https://supabase.gleeworld.org/storage/v1/object/public/user-files/avatars/4e6c2ec0-1f83-449a-a984-8920f6056ab5.jpg'
-    },
-    isActive: true
-  },
-  {
     id: '2026c613-bda7-487a-a5d9-91e57c26a741',
-    courseCode: 'MUS 210',
+    courseCode: 'GW 210',
     title: 'Choral Conducting and Literature',
     description: 'Master the art of choral conducting with technique, score analysis, and repertoire selection.',
     icon: Music,
@@ -81,7 +62,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
   },
   {
     id: 'a0000000-0000-0000-0000-000000000001',
-    courseCode: 'MUS 001',
+    courseCode: 'GW 001',
     title: 'Private Applied Lessons',
     description: 'One-on-one instruction in voice or instrument with personalized curriculum tailored to your skill level and musical goals.',
     icon: Mic,
@@ -138,7 +119,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
   },
   {
     id: 'a0000000-0000-0000-0000-000000000101',
-    courseCode: 'MUS 101',
+    courseCode: 'GW 101',
     title: 'Music Fundamentals Theory',
     description: 'Build a strong foundation in music theory including notation, rhythm, scales, intervals, chords, and basic harmony.',
     icon: BookOpen,

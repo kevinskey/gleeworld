@@ -1,0 +1,184 @@
+{
+  "state_slug": "oregon",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "OMEA labels the season by the event year: '2027 All-State'. The event is held January 14-17, 2027 in Eugene, alongside the OMEA state conference. For 2027 OMEA is running TWO high school honor choirs for the first time: an SSAA Choir and an SATB Choir. Conductor and repertoire for the choral ensembles were still blank in the official '2027 OMEA All-State Ensemble Conductors and Repertoire' document except HS Mixed Choir (Joseph Kemper, St. Olaf College) and Elementary Choir (Raymond Sexton, Troy University); no choral performance titles were listed. Audition materials are hosted on Google Drive and auditions/applications are submitted by OMEA member teachers via OpusEvent.com.",
+  "organization": {
+    "name": "Oregon Music Education Association",
+    "acronym": "OMEA",
+    "website_url": "https://oregonmea.org/",
+    "description": "The Oregon Music Education Association is the state affiliate of the National Association for Music Education (NAfME). It is a non-profit organization whose mission is to promote excellence in music education and serve the professional needs of its members. All-State has been an annual event in Oregon for more than 60 years."
+  },
+  "sources": [
+    { "name": "2027 All-State Audition Information", "url": "https://oregonmea.org/all-state/", "source_type": "official" },
+    { "name": "2027 All-State High School Information", "url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit", "source_type": "handbook_pdf" },
+    { "name": "2027 High School Choir Audition Packet", "url": "https://drive.google.com/file/d/1hgsdrvk0p0423E7OT-2h8WszbyRhpS4e/view", "source_type": "handbook_pdf" },
+    { "name": "2027 OMEA All-State Ensemble Conductors & Repertoire", "url": "https://docs.google.com/document/d/11J2h91RkVK5gVN5j1g5Oz4GjG1GaQ2LLL0-Qmo7PBP8/edit", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "OMEA All-State High School SATB Choir",
+      "lineage_key": "oregon-hs-satb-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "One of two OMEA All-State high school honor choirs for 2027. OMEA states the SSAA and SATB ensembles are designed to be equal in musical excellence, vocal strength, and technical skill. Open to students in grades 9-12; auditions are submitted online through OpusEvent.com by an OMEA member teacher.",
+      "dates": [
+        { "date_type": "other", "title": "Audition materials released online", "start_at": "2026-05-15", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "other", "title": "Audition and application window opens on OpusEvent.com", "start_at": "2026-09-01", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "registration_deadline", "title": "Audition and application window closes", "start_at": "2026-10-05T23:59:59", "all_day": false, "timezone": "America/Los_Angeles", "description": "Closes at 11:59:59pm on OpusEvent.com.", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "audition_round", "title": "Audition screening", "start_at": "2026-10-06", "end_at": "2026-10-17", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "other", "title": "Ensemble placement", "start_at": "2026-10-18", "end_at": "2026-10-20", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "results", "title": "All-State results and placement sent via Opus", "start_at": "2026-10-21", "all_day": true, "timezone": "America/Los_Angeles", "description": "Results are emailed to students and directors through Opus; OMEA does not post results publicly.", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "acceptance_deadline", "title": "All-State registration and payment window", "start_at": "2026-10-21", "end_at": "2026-11-01", "all_day": true, "timezone": "America/Los_Angeles", "description": "Payment window closes at 11:59:59pm on November 1.", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "other", "title": "Add/drop/alternates notified; registration and payment completed", "start_at": "2026-11-02", "end_at": "2026-11-15", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "other", "title": "Student music and information folders sent to schools/teachers", "start_at": "2026-11-20", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "event", "title": "OMEA All-State event, Eugene, Oregon", "start_at": "2027-01-14", "end_at": "2027-01-17", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 9-12", "description": "The All-State High School ensembles are open to students in grades 9, 10, 11, and 12.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "category": "eligibility", "title": "Enrolled in the corresponding school ensemble", "description": "To be eligible for an All-State honor group, the student shall be enrolled in the class for the appropriate performing ensemble for the instrument/voice on which they are performing. If no corresponding ensemble exists at the school, the student may participate through an OMEA member teacher at their school at that teacher's discretion. Home school students are welcome as long as they regularly participate in a school music class offered for credit and taught by a current OMEA member.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "category": "membership", "title": "Teacher must be a current NAfME/OMEA member and attend the conference", "description": "Teachers must be current members of NAfME/OMEA to submit applications and auditions through OpusEvent.com. Teachers of students in OMEA honor groups are required to register for the full conference and pay in full. Parents/guardians may not submit the initial audition application.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "category": "materials", "title": "Four recorded audition tracks", "description": "Audition requirements are: two major scales, 'Winter Song' (voice-part specific), and Track 4 Part Singing on Chorale 61. Track 4 is recorded while playing the corresponding Chorale 61 mp3 in the background as the student sings their part; both the student's voice and the chorale mp3 must be audible. Rehearsal tracks for Soprano, Alto, Tenor, Bass and a full mix are provided by OMEA.", "source_url": "https://drive.google.com/file/d/1hgsdrvk0p0423E7OT-2h8WszbyRhpS4e/view" },
+        { "category": "format", "title": "Recording rules", "description": "Each audition track must be a separate audio file (mp3, wav, aac, m4a, flac and other listed formats). Do not speak the name of the student, teacher, or school. Recordings may not be electronically or otherwise enhanced. Choir recordings have stated exceptions to the no-accompaniment rule (see audition materials). The application/audition fee must be paid before audition files can be uploaded.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "category": "other", "title": "Hotel stay required", "description": "Students are required to stay in the hotel assigned to their performing group in Eugene, sharing a room with three other All-State students of their age level. Exceptions require Executive Board approval, requested no later than two months before the event.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "category": "other", "title": "Refund policy", "description": "Audition screening fees are non-refundable. No refunds except for medical or family emergencies within 10 days of the event, with documentation; 50% of the fee is retained in either case.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" }
+      ],
+      "repertoire": [
+        { "title": "Winter Song", "voicing": "SATB (voice-part specific parts provided)", "purpose": "audition", "notes": "Audition Track 3. Packet notes: Copyright 2015 WMEA (Washington Music Educators Association), prepared by Don Neptun, used with permission by OMEA. Composer not stated in the OMEA packet.", "source_url": "https://drive.google.com/file/d/1hgsdrvk0p0423E7OT-2h8WszbyRhpS4e/view" },
+        { "title": "Chorale 61", "purpose": "audition", "notes": "Audition Track 4, part singing. Sung against a provided mp3 accompaniment track. Composer/arranger not stated in the OMEA packet.", "source_url": "https://drive.google.com/file/d/1hgsdrvk0p0423E7OT-2h8WszbyRhpS4e/view" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2200, "payable_to": "state_association", "description": "High school audition and application fee, paid by the teacher/school via credit card through OpusEvent.com. Covers the cost of running the event website. Non-refundable.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "fee_type": "participation", "amount_cents": 36800, "payable_to": "state_association", "description": "High school registration and participation fee, due if selected. Covers hotel rooms, meals, transportation, rehearsal and performance space rental, equipment rental, and guest conductor travel and hotel.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "fee_type": "concert_ticket", "amount_cents": 2500, "payable_to": "state_association", "description": "High school concert ticket: $25 for adults, $5 for students 17 and under. Sold online at SeatYourself.com.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" }
+      ],
+      "documents": [
+        { "title": "2027 High School Choir Audition Packet", "url": "https://drive.google.com/file/d/1hgsdrvk0p0423E7OT-2h8WszbyRhpS4e/view", "document_type": "handbook" },
+        { "title": "2027 All-State High School Information", "url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit", "document_type": "handbook" },
+        { "title": "2027 OMEA All-State Ensemble Conductors & Repertoire", "url": "https://docs.google.com/document/d/11J2h91RkVK5gVN5j1g5Oz4GjG1GaQ2LLL0-Qmo7PBP8/edit", "document_type": "other" },
+        { "title": "Past All-State Repertoire Lists (1998-2026)", "url": "https://oregonmea.org/all-state/past-all-state-repertoire-lists/", "document_type": "other" }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano I" },
+        { "code": "S2", "label": "Soprano II" },
+        { "code": "A1", "label": "Alto I" },
+        { "code": "A2", "label": "Alto II" },
+        { "code": "T1", "label": "Tenor I" },
+        { "code": "T2", "label": "Tenor II" },
+        { "code": "B1", "label": "Bass I" },
+        { "code": "B2", "label": "Bass II" }
+      ]
+    },
+    {
+      "name": "OMEA All-State High School SSAA Choir",
+      "lineage_key": "oregon-hs-ssaa-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "New for 2027: OMEA hosts two distinct high school honor choirs, an SSAA Choir and an SATB Choir, designed to be equal in musical excellence, vocal strength, and technical skill. Open to students in grades 9-12; auditions submitted through OpusEvent.com by an OMEA member teacher using the same 2027 High School Choir Audition Packet.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Audition and application window closes", "start_at": "2026-10-05T23:59:59", "all_day": false, "timezone": "America/Los_Angeles", "description": "Closes at 11:59:59pm on OpusEvent.com.", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "results", "title": "All-State results and placement sent via Opus", "start_at": "2026-10-21", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "event", "title": "OMEA All-State event, Eugene, Oregon", "start_at": "2027-01-14", "end_at": "2027-01-17", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 9-12", "description": "The All-State High School ensembles are open to students in grades 9, 10, 11, and 12.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "category": "materials", "title": "Four recorded audition tracks", "description": "Two major scales, 'Winter Song' (voice-part specific), and Track 4 Part Singing on Chorale 61 recorded against the provided chorale mp3.", "source_url": "https://drive.google.com/file/d/1hgsdrvk0p0423E7OT-2h8WszbyRhpS4e/view" }
+      ],
+      "repertoire": [
+        { "title": "Winter Song", "purpose": "audition", "notes": "Audition Track 3. Packet notes: Copyright 2015 WMEA, prepared by Don Neptun, used with permission by OMEA.", "source_url": "https://drive.google.com/file/d/1hgsdrvk0p0423E7OT-2h8WszbyRhpS4e/view" },
+        { "title": "Chorale 61", "purpose": "audition", "notes": "Audition Track 4, part singing.", "source_url": "https://drive.google.com/file/d/1hgsdrvk0p0423E7OT-2h8WszbyRhpS4e/view" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2200, "payable_to": "state_association", "description": "High school audition and application fee via OpusEvent.com.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "fee_type": "participation", "amount_cents": 36800, "payable_to": "state_association", "description": "High school registration and participation fee, due if selected.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" }
+      ],
+      "documents": [
+        { "title": "2027 High School Choir Audition Packet", "url": "https://drive.google.com/file/d/1hgsdrvk0p0423E7OT-2h8WszbyRhpS4e/view", "document_type": "handbook" }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano I" },
+        { "code": "S2", "label": "Soprano II" },
+        { "code": "A1", "label": "Alto I" },
+        { "code": "A2", "label": "Alto II" }
+      ]
+    },
+    {
+      "name": "OMEA All-State Middle School Treble Choir",
+      "lineage_key": "oregon-ms-treble-choir",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "treble chorus",
+      "description": "Middle school All-State treble honor choir, open to students in grades 6-8. Auditions submitted via OpusEvent.com by an OMEA member teacher.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Audition and application window closes", "start_at": "2026-10-05T23:59:59", "all_day": false, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "event", "title": "OMEA All-State event, Eugene, Oregon", "start_at": "2027-01-14", "end_at": "2027-01-17", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 6-8", "description": "Middle School ensembles are open to students in grades 6, 7, and 8.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 1700, "payable_to": "state_association", "description": "Middle school audition and application fee.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "fee_type": "participation", "amount_cents": 27500, "payable_to": "state_association", "description": "Middle school registration and participation fee.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "fee_type": "concert_ticket", "amount_cents": 2000, "payable_to": "state_association", "description": "Middle school concert ticket: $20 adults, $5 students 17 and under.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" }
+      ],
+      "documents": [
+        { "title": "2027 Middle School Choir Audition Packet", "url": "https://drive.google.com/file/d/1-RYh59SMU4SVWzdBHYLSKL_dbcN2ggtx/view", "document_type": "handbook" },
+        { "title": "2027 All-State Middle School Information", "url": "https://docs.google.com/document/d/1KsU_tnAZ5qEIrvAAQUmp3V2vFiLw_z3w/edit", "document_type": "handbook" }
+      ]
+    },
+    {
+      "name": "OMEA All-State Middle School Tenor/Bass Choir",
+      "lineage_key": "oregon-ms-tenor-bass-choir",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "tenor-bass chorus",
+      "description": "Middle school All-State tenor/bass honor choir, open to students in grades 6-8. Auditions submitted via OpusEvent.com by an OMEA member teacher.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Audition and application window closes", "start_at": "2026-10-05T23:59:59", "all_day": false, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "event", "title": "OMEA All-State event, Eugene, Oregon", "start_at": "2027-01-14", "end_at": "2027-01-17", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 6-8", "description": "Middle School ensembles are open to students in grades 6, 7, and 8.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 1700, "payable_to": "state_association", "description": "Middle school audition and application fee.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "fee_type": "participation", "amount_cents": 27500, "payable_to": "state_association", "description": "Middle school registration and participation fee.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" }
+      ],
+      "documents": [
+        { "title": "2027 Middle School Choir Audition Packet", "url": "https://drive.google.com/file/d/1-RYh59SMU4SVWzdBHYLSKL_dbcN2ggtx/view", "document_type": "handbook" }
+      ]
+    },
+    {
+      "name": "OMEA All-State Elementary Choir",
+      "lineage_key": "oregon-elementary-choir",
+      "season": "2026-27",
+      "school_level": "elementary",
+      "ensemble_type": "children's chorus",
+      "description": "Open to 5th grade students. Students apply via teacher nomination; no audition is required. Conductor for 2027 is Raymond Sexton, Troy University (Alabama), with collaborative pianist Vicki Brabham.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Nomination and application window closes", "start_at": "2026-10-05T23:59:59", "all_day": false, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" },
+        { "date_type": "event", "title": "OMEA All-State event, Eugene, Oregon", "start_at": "2027-01-14", "end_at": "2027-01-17", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://oregonmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "5th grade, teacher nomination only", "description": "Elementary Choir is open to 5th grade students and students apply via teacher nomination; no audition is required.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" }
+      ],
+      "fees": [
+        { "fee_type": "application", "amount_cents": 700, "payable_to": "state_association", "description": "Elementary nomination/application fee.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "fee_type": "participation", "amount_cents": 12500, "payable_to": "state_association", "description": "Elementary registration and participation fee.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" },
+        { "fee_type": "concert_ticket", "amount_cents": 1000, "payable_to": "state_association", "description": "Elementary concert ticket: $10 adults, $2 students 17 and under.", "source_url": "https://docs.google.com/document/d/1IlQvP6CJZ4A06ngqAINk3GolgUWRUx63/edit" }
+      ],
+      "documents": [
+        { "title": "2027 All-State Elementary School Information", "url": "https://docs.google.com/document/d/1rFxWb2HOSZDaOB8NOSI_DOcjij5gcouL/edit", "document_type": "handbook" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2027 performance repertoire for all OMEA All-State choral ensembles — the official conductors and repertoire document has the choir repertoire sections present but empty",
+    "Conductors for the Middle School Treble Choir and Middle School Tenor/Bass Choir — listed but blank",
+    "Composer/arranger credits for the audition selections 'Winter Song' and 'Chorale 61' — not stated in the OMEA audition packet",
+    "Clock times for the All-State event days in Eugene (Jan 14-17, 2027) — only dates published",
+    "Separate audition requirements for the SSAA vs SATB high school choirs — a single 2027 HS Choir audition packet covers both"
+  ]
+}

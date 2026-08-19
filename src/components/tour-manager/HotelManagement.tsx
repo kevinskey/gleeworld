@@ -451,13 +451,13 @@ export const HotelManagement = () => {
                   Search Google to find and verify the hotel. Only verified hotels with real addresses can be added.
                 </p>
 
-                {/* Tour City Selection — pre-fills city/state for search */}
+                {/* Travel City Selection — pre-fills city/state for search */}
                 {tourCities.length > 0 && (
                   <div className="space-y-2">
-                    <Label>Tour City (narrows search)</Label>
+                    <Label>Travel City (narrows search)</Label>
                     <Select value={formData.tour_city_id} onValueChange={handleTourCityChange}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a tour city..." />
+                        <SelectValue placeholder="Select a travel city..." />
                       </SelectTrigger>
                       <SelectContent>
                         {tourCities.map(city => (
@@ -512,24 +512,24 @@ export const HotelManagement = () => {
                       <button
                         key={place.place_id}
                         onClick={() => handleSelectPlace(place)}
-                        className="w-full text-left p-3 rounded-lg border border-slate-200 hover:border-blue-400 hover:bg-blue-50 transition-colors"
+                        className="w-full text-left p-3 rounded-lg border border-border hover:border-primary/40 hover:bg-muted/50 transition-colors"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-slate-900 truncate">{place.name}</p>
-                            <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                            <p className="text-sm font-medium text-foreground truncate">{place.name}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                               <MapPin className="h-3 w-3 flex-shrink-0" />
                               {place.formatted_address}
                             </p>
                             {place.phone && (
-                              <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                              <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
                                 <Phone className="h-3 w-3 flex-shrink-0" />
                                 {place.phone}
                               </p>
                             )}
                           </div>
                           {place.rating && (
-                            <Badge variant="secondary" className="flex items-center gap-1 text-xs shrink-0 bg-slate-100 text-slate-700">
+                            <Badge variant="secondary" className="flex items-center gap-1 text-xs shrink-0 bg-muted text-muted-foreground">
                               <Star className="h-3 w-3 fill-current text-amber-500" />
                               {place.rating}
                             </Badge>
@@ -556,11 +556,11 @@ export const HotelManagement = () => {
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200">
                     <CheckCircle2 className="h-4 w-4 text-blue-600 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-slate-900">{selectedPlace.name}</p>
-                      <p className="text-xs text-slate-500 truncate">{selectedPlace.formatted_address}</p>
+                      <p className="text-sm font-medium text-foreground">{selectedPlace.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{selectedPlace.formatted_address}</p>
                     </div>
                     {!editingHotel && (
-                      <Button variant="ghost" size="sm" className="text-xs shrink-0 text-slate-600 hover:text-slate-900 hover:bg-slate-100" onClick={() => {
+                      <Button variant="ghost" size="sm" className="text-xs shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted" onClick={() => {
                         setStep('search');
                         setSelectedPlace(null);
                       }}>
@@ -570,13 +570,13 @@ export const HotelManagement = () => {
                   </div>
                 )}
 
-                {/* Tour City Selection */}
+                {/* Travel City Selection */}
                 {tourCities.length > 0 && !formData.tour_city_id && (
                   <div className="space-y-2">
-                    <Label>Link to Tour City</Label>
+                    <Label>Link to Travel City</Label>
                     <Select value={formData.tour_city_id} onValueChange={(value) => setFormData(prev => ({ ...prev, tour_city_id: value }))}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Link to a tour city..." />
+                        <SelectValue placeholder="Link to a travel city..." />
                       </SelectTrigger>
                       <SelectContent>
                         {tourCities.map(city => (
@@ -593,7 +593,7 @@ export const HotelManagement = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Hotel Name</Label>
-                    <Input value={formData.hotel_name} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-slate-100 text-slate-700' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, hotel_name: e.target.value }))} />
+                    <Input value={formData.hotel_name} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-muted text-muted-foreground' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, hotel_name: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
                     <Label>Confirmation #</Label>
@@ -607,22 +607,22 @@ export const HotelManagement = () => {
 
                 {/* Address — read only from Google */}
                 <div className="space-y-2">
-                  <Label>Street Address {selectedPlace && <span className="text-xs text-slate-500">(verified by Google)</span>}</Label>
-                  <Input value={formData.address} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-slate-100 text-slate-700' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, address: e.target.value }))} />
+                  <Label>Street Address {selectedPlace && <span className="text-xs text-muted-foreground">(verified by Google)</span>}</Label>
+                  <Input value={formData.address} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-muted text-muted-foreground' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, address: e.target.value }))} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>City</Label>
-                    <Input value={formData.city} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-slate-100 text-slate-700' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, city: e.target.value }))} />
+                    <Input value={formData.city} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-muted text-muted-foreground' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, city: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
                     <Label>State</Label>
-                    <Input value={formData.state} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-slate-100 text-slate-700' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, state: e.target.value }))} />
+                    <Input value={formData.state} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-muted text-muted-foreground' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, state: e.target.value }))} />
                   </div>
                   <div className="space-y-2">
                     <Label>ZIP Code</Label>
-                    <Input value={formData.zip_code} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-slate-100 text-slate-700' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, zip_code: e.target.value }))} />
+                    <Input value={formData.zip_code} readOnly={!!selectedPlace} className={selectedPlace ? 'bg-muted text-muted-foreground' : ''} onChange={(e) => !selectedPlace && setFormData(prev => ({ ...prev, zip_code: e.target.value }))} />
                   </div>
                 </div>
 
@@ -633,7 +633,7 @@ export const HotelManagement = () => {
                     <Input 
                       value={formData.phone}
                       readOnly={!!selectedPlace && !!formData.phone}
-                      className={selectedPlace && formData.phone ? 'bg-slate-100 text-slate-700' : ''}
+                      className={selectedPlace && formData.phone ? 'bg-muted text-muted-foreground' : ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                       placeholder="(555) 123-4567"
                     />
@@ -643,7 +643,7 @@ export const HotelManagement = () => {
                     <Input 
                       value={formData.website}
                       readOnly={!!selectedPlace && !!formData.website}
-                      className={selectedPlace && formData.website ? 'bg-slate-100 text-slate-700' : ''}
+                      className={selectedPlace && formData.website ? 'bg-muted text-muted-foreground' : ''}
                       onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
                       placeholder="https://..."
                     />

@@ -1,0 +1,684 @@
+{
+  "state_slug": "minnesota",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Minnesota's All-State choral program is run by the Minnesota Music Educators Association (MMEA, mmea.org). MMEA labels this cycle 'the 2026 All-State Auditions ... for the 2026 All-State Summer Camp / 2027 All-State February experience', and states the camp cost as 'the 2026-2027 All-State Camp cost' — so this file records it as season 2026-27. Note that MMEA's audition cycle runs a full year ahead of the performance: auditions closed February 24, 2026 (already past at retrieval), camp is July 28-August 1, 2026, and the February experience is February 19-20, 2027. Three choral ensembles: SATB, SSAA, and TTBB. MMEA publishes past All-State choir repertoire lists but not upcoming performance repertoire. ACDA of Minnesota is a separate organization and does not run All-State.",
+  "organization": {
+    "name": "Minnesota Music Educators Association",
+    "acronym": "MMEA",
+    "website_url": "https://mmea.org/",
+    "description": "MMEA administers Minnesota's All-State program, which selects secondary students by recorded video audition into choral, band, orchestra, and jazz ensembles. Selected students attend a residential All-State Summer Camp and then reconvene for an All-State performance the following February."
+  },
+  "sources": [
+    {
+      "name": "MMEA All-State Auditions",
+      "url": "https://mmea.org/events/all-state/auditions/",
+      "source_type": "official"
+    },
+    {
+      "name": "MMEA All-State Choir Auditions",
+      "url": "https://mmea.org/events/all-state/auditions/choir/",
+      "source_type": "official"
+    },
+    {
+      "name": "MMEA All-State Eligibility and Policies",
+      "url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "All-State SATB Choir",
+      "lineage_key": "minnesota-all-state-satb-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "Minnesota MMEA All-State choir. Students audition by video through the Opus portal in the winter; those selected attend the All-State Summer Camp at Concordia College, Moorhead, and return for the All-State February experience. 2026-2027 conductor: Dr. Mariana Farah.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Opus audition portal opens",
+          "start_at": "2026-01-01",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Sponsoring teachers upload audition videos through the Opus portal; the event in Opus is called 'Minnesota All-State 2026'.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Audition deadline",
+          "start_at": "2026-02-24T12:00:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "description": "Audition deadline is NOON (12 PM) February 24, 2026. MMEA recommends uploading no later than the evening of February 23 so staff can support any issues during the workday on February 24.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State Summer Camp",
+          "start_at": "2026-07-28",
+          "end_at": "2026-08-01",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "All-State Camp for ALL ensembles at Concordia College in Moorhead, MN.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State February experience",
+          "start_at": "2027-02-19",
+          "end_at": "2027-02-20",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "The All-State February rehearsal and concert experience that follows the summer camp.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Three separate video components, each in one continuous take",
+          "description": "Each choral audition consists of a video recording of three components — Scales, 'Alma del Coré', and a Solo. All three components must be separate files and each file must be recorded in one continuous take. No part of the audition needs to be memorized. Video files cannot be larger than 250 MB.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "scales",
+          "title": "Scales, unaccompanied, in the key for the student's voice type",
+          "description": "Scales must be unaccompanied and in the key corresponding with the student's voice type, using MMEA's published 'All-State Scales for All Voices'. Students may use numbers, solfege, or neutral syllables; humming is not permitted. A tonic chord and starting pitch are permitted at the start of the recorded file. Students MUST start on the correct designated pitch or the scales score is automatically a zero.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "materials",
+          "title": "Required piece: 'Alma del Coré', unaccompanied",
+          "description": "Must be unaccompanied. Tonic chord and starting pitch are permitted at the start of the recorded audition file. Students MUST start on the correct designated pitch or the Alma score is automatically a zero.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "materials",
+          "title": "Solo selected by the sponsoring teacher and student",
+          "description": "The solo is chosen by the sponsoring teacher and student and need not be classical repertoire. MMEA recommends a video length of 1.5-2.5 minutes ('your best two minutes is enough'); the video may be trimmed at the beginning and end but cannot be trimmed or spliced in the middle. Accompaniment is permitted but not required, and may be pre-recorded or computer-generated, but cannot be added after recording. Solos are evaluated for tone (clear, resonant), technique (breath support, articulation, registers), rhythm and tempo, diction, intonation, and expressive musicianship.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "eligibility",
+          "title": "Grade at time of audition",
+          "description": "Choral auditions are limited to students who are sophomores or juniors at the time of the audition.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "eligibility",
+          "title": "Member in good standing of the corresponding school ensemble",
+          "description": "A student must be a member in good standing of their secondary school's corresponding ensemble (choir, for vocal auditions) from the time of the audition through the following February performance. Provisions cover students whose school has no choir, PSEO students, homeschooled and online-school students via shared-time enrollment, and students sponsored by private teachers (membership verified by the MMEA office prior to April 10).",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "membership",
+          "title": "Sponsoring teacher must be an MMEA and NAfME member",
+          "description": "Participation is limited to students whose sponsoring teacher is a current member in good standing of MMEA and NAfME at the time of audition and throughout the rehearsal and performance period. The sponsoring educator must currently teach the student and continue as their music educator through the following February.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "format",
+          "title": "Digital Ethics Policy",
+          "description": "Audition files may not be edited or enhanced in any way; videos may be trimmed at the beginning and end but not altered or spliced in the middle. Each audition element must be a separate file in a single continuous take. Sponsoring teachers certify on submission that the recording is of their student and that the policy was discussed beforehand. Students CANNOT wear headphones during the audition — staff review videos before judging and disqualify auditions where headphones are worn. No metronomes may be used. Altered recordings make the student ineligible.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "format",
+          "title": "Auditioning for multiple voice parts",
+          "description": "Students may audition for more than one voice part; each audition must be separate and paid for individually (e.g. a student auditioning for Tenor 2 and Bass 1 sings two different scales and two different Almas and pays $30 per audition, $60 total). Students can only be accepted as one voice part for one ensemble. The preferred voice part must be noted on the registration form and in Opus.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "format",
+          "title": "Video file required but never seen by judges",
+          "description": "Video files are required, but the videos will never be seen by judges. Students must include signs in their videos per the published requirements.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "category": "eligibility",
+          "title": "Maximum years of participation and ensemble rotation",
+          "description": "Choral students may participate in an All-State group for two years. A student selected for a second year is typically placed in a different ensemble from the previous year whenever possible.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Alma del Core",
+          "purpose": "audition",
+          "notes": "Required audition piece for all voices, sung unaccompanied. MMEA's pages render the title variously as 'Alma de Core' and 'Alma del Core'. No composer is credited on the MMEA audition page, so none is recorded here.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 3000,
+          "payable_to": "state_association",
+          "description": "$30 per audition. A student auditioning for two voice parts pays $30 per audition, $60 total.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "fee_type": "camp",
+          "amount_cents": 97000,
+          "payable_to": "state_association",
+          "description": "The 2026-2027 All-State Camp cost is $970.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "All-State Audition Requirements 2026",
+          "url": "https://docs.google.com/document/d/188wpVO0Kv4MOM38HrwXYHL-VpWiHMWyzJAVjz65Qw9U/edit",
+          "document_type": "rules"
+        },
+        {
+          "title": "All-State Program Overview",
+          "url": "https://docs.google.com/document/d/1nyBc-BYHpT1-r_7DDKrdVzqElhoE4uV772mJZIfAfrg/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "Vocal Audition Registration Form",
+          "url": "https://docs.google.com/document/d/1MKr61RJ_kmX2irDd5ztMkBKt5piRnh-4GxJD0EmsVSc/edit",
+          "document_type": "form"
+        },
+        {
+          "title": "All-State Scales for All Voices (PDF)",
+          "url": "https://mmea.org/wp-content/uploads/2021/01/All-Voices-All-State-Scales.pdf",
+          "document_type": "other"
+        },
+        {
+          "title": "Alma del Core for All Voices",
+          "url": "https://drive.google.com/file/d/1MXfDQNvo38oiaGjkpT2JldPmJyu9_eeZ/view",
+          "document_type": "other"
+        },
+        {
+          "title": "Vocal Rubric (updated 2025)",
+          "url": "https://drive.google.com/file/d/16t9ybvnZD0uvIcbRC-ye3yiB534we9_F/view",
+          "document_type": "rules"
+        },
+        {
+          "title": "All-State Audition Timeline for 2026",
+          "url": "https://drive.google.com/file/d/1Gr3cnYbLKBMeid9WUi9Z0TwTHC5yd-1o/view",
+          "document_type": "calendar"
+        },
+        {
+          "title": "All-State Audition Checklist",
+          "url": "https://docs.google.com/document/d/1jz2lr-KDITs6VQA4NQz1GpaK1LI_IjX4bFaM-o_JyCM/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "How to Get Started: For Students",
+          "url": "https://docs.google.com/document/d/1F-odgmIEUz5Mz4bgqBWm2SvB7tO-VuGfFUyDyJWG1dQ/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "How to Get Started: For Sponsoring Teachers",
+          "url": "https://docs.google.com/document/d/1IMddo1k-4bJXCzt-Qz4MLnhFwDfWfBnSzREZj-hl51E/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "MMEA's All-State Selection Procedures",
+          "url": "https://docs.google.com/document/d/1BpNEautgLwjRsfyeOyTpGUHiMnk94Y-rNMM3rjqAcIQ/edit",
+          "document_type": "rules"
+        }
+      ],
+      "voice_parts": [
+        {
+          "code": "S",
+          "label": "Soprano"
+        },
+        {
+          "code": "A",
+          "label": "Alto"
+        },
+        {
+          "code": "T",
+          "label": "Tenor"
+        },
+        {
+          "code": "B",
+          "label": "Bass"
+        }
+      ]
+    },
+    {
+      "name": "All-State SSAA Choir",
+      "lineage_key": "minnesota-all-state-ssaa-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "Minnesota MMEA All-State choir. Students audition by video through the Opus portal in the winter; those selected attend the All-State Summer Camp at Concordia College, Moorhead, and return for the All-State February experience. 2026-2027 conductor: Dr. Stephanie Tubiolo.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Opus audition portal opens",
+          "start_at": "2026-01-01",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Sponsoring teachers upload audition videos through the Opus portal; the event in Opus is called 'Minnesota All-State 2026'.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Audition deadline",
+          "start_at": "2026-02-24T12:00:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "description": "Audition deadline is NOON (12 PM) February 24, 2026. MMEA recommends uploading no later than the evening of February 23 so staff can support any issues during the workday on February 24.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State Summer Camp",
+          "start_at": "2026-07-28",
+          "end_at": "2026-08-01",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "All-State Camp for ALL ensembles at Concordia College in Moorhead, MN.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State February experience",
+          "start_at": "2027-02-19",
+          "end_at": "2027-02-20",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "The All-State February rehearsal and concert experience that follows the summer camp.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Three separate video components, each in one continuous take",
+          "description": "Each choral audition consists of a video recording of three components — Scales, 'Alma del Coré', and a Solo. All three components must be separate files and each file must be recorded in one continuous take. No part of the audition needs to be memorized. Video files cannot be larger than 250 MB.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "scales",
+          "title": "Scales, unaccompanied, in the key for the student's voice type",
+          "description": "Scales must be unaccompanied and in the key corresponding with the student's voice type, using MMEA's published 'All-State Scales for All Voices'. Students may use numbers, solfege, or neutral syllables; humming is not permitted. A tonic chord and starting pitch are permitted at the start of the recorded file. Students MUST start on the correct designated pitch or the scales score is automatically a zero.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "materials",
+          "title": "Required piece: 'Alma del Coré', unaccompanied",
+          "description": "Must be unaccompanied. Tonic chord and starting pitch are permitted at the start of the recorded audition file. Students MUST start on the correct designated pitch or the Alma score is automatically a zero.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "materials",
+          "title": "Solo selected by the sponsoring teacher and student",
+          "description": "The solo is chosen by the sponsoring teacher and student and need not be classical repertoire. MMEA recommends a video length of 1.5-2.5 minutes ('your best two minutes is enough'); the video may be trimmed at the beginning and end but cannot be trimmed or spliced in the middle. Accompaniment is permitted but not required, and may be pre-recorded or computer-generated, but cannot be added after recording. Solos are evaluated for tone (clear, resonant), technique (breath support, articulation, registers), rhythm and tempo, diction, intonation, and expressive musicianship.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "eligibility",
+          "title": "Grade at time of audition",
+          "description": "Choral auditions are limited to students who are sophomores or juniors at the time of the audition.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "eligibility",
+          "title": "Member in good standing of the corresponding school ensemble",
+          "description": "A student must be a member in good standing of their secondary school's corresponding ensemble (choir, for vocal auditions) from the time of the audition through the following February performance. Provisions cover students whose school has no choir, PSEO students, homeschooled and online-school students via shared-time enrollment, and students sponsored by private teachers (membership verified by the MMEA office prior to April 10).",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "membership",
+          "title": "Sponsoring teacher must be an MMEA and NAfME member",
+          "description": "Participation is limited to students whose sponsoring teacher is a current member in good standing of MMEA and NAfME at the time of audition and throughout the rehearsal and performance period. The sponsoring educator must currently teach the student and continue as their music educator through the following February.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "format",
+          "title": "Digital Ethics Policy",
+          "description": "Audition files may not be edited or enhanced in any way; videos may be trimmed at the beginning and end but not altered or spliced in the middle. Each audition element must be a separate file in a single continuous take. Sponsoring teachers certify on submission that the recording is of their student and that the policy was discussed beforehand. Students CANNOT wear headphones during the audition — staff review videos before judging and disqualify auditions where headphones are worn. No metronomes may be used. Altered recordings make the student ineligible.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "format",
+          "title": "Auditioning for multiple voice parts",
+          "description": "Students may audition for more than one voice part; each audition must be separate and paid for individually (e.g. a student auditioning for Tenor 2 and Bass 1 sings two different scales and two different Almas and pays $30 per audition, $60 total). Students can only be accepted as one voice part for one ensemble. The preferred voice part must be noted on the registration form and in Opus.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "format",
+          "title": "Video file required but never seen by judges",
+          "description": "Video files are required, but the videos will never be seen by judges. Students must include signs in their videos per the published requirements.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "category": "eligibility",
+          "title": "Maximum years of participation and ensemble rotation",
+          "description": "Choral students may participate in an All-State group for two years. A student selected for a second year is typically placed in a different ensemble from the previous year whenever possible.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Alma del Core",
+          "purpose": "audition",
+          "notes": "Required audition piece for all voices, sung unaccompanied. MMEA's pages render the title variously as 'Alma de Core' and 'Alma del Core'. No composer is credited on the MMEA audition page, so none is recorded here.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 3000,
+          "payable_to": "state_association",
+          "description": "$30 per audition. A student auditioning for two voice parts pays $30 per audition, $60 total.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "fee_type": "camp",
+          "amount_cents": 97000,
+          "payable_to": "state_association",
+          "description": "The 2026-2027 All-State Camp cost is $970.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "All-State Audition Requirements 2026",
+          "url": "https://docs.google.com/document/d/188wpVO0Kv4MOM38HrwXYHL-VpWiHMWyzJAVjz65Qw9U/edit",
+          "document_type": "rules"
+        },
+        {
+          "title": "All-State Program Overview",
+          "url": "https://docs.google.com/document/d/1nyBc-BYHpT1-r_7DDKrdVzqElhoE4uV772mJZIfAfrg/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "Vocal Audition Registration Form",
+          "url": "https://docs.google.com/document/d/1MKr61RJ_kmX2irDd5ztMkBKt5piRnh-4GxJD0EmsVSc/edit",
+          "document_type": "form"
+        },
+        {
+          "title": "All-State Scales for All Voices (PDF)",
+          "url": "https://mmea.org/wp-content/uploads/2021/01/All-Voices-All-State-Scales.pdf",
+          "document_type": "other"
+        },
+        {
+          "title": "Alma del Core for All Voices",
+          "url": "https://drive.google.com/file/d/1MXfDQNvo38oiaGjkpT2JldPmJyu9_eeZ/view",
+          "document_type": "other"
+        },
+        {
+          "title": "Vocal Rubric (updated 2025)",
+          "url": "https://drive.google.com/file/d/16t9ybvnZD0uvIcbRC-ye3yiB534we9_F/view",
+          "document_type": "rules"
+        },
+        {
+          "title": "All-State Audition Timeline for 2026",
+          "url": "https://drive.google.com/file/d/1Gr3cnYbLKBMeid9WUi9Z0TwTHC5yd-1o/view",
+          "document_type": "calendar"
+        },
+        {
+          "title": "All-State Audition Checklist",
+          "url": "https://docs.google.com/document/d/1jz2lr-KDITs6VQA4NQz1GpaK1LI_IjX4bFaM-o_JyCM/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "How to Get Started: For Students",
+          "url": "https://docs.google.com/document/d/1F-odgmIEUz5Mz4bgqBWm2SvB7tO-VuGfFUyDyJWG1dQ/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "How to Get Started: For Sponsoring Teachers",
+          "url": "https://docs.google.com/document/d/1IMddo1k-4bJXCzt-Qz4MLnhFwDfWfBnSzREZj-hl51E/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "MMEA's All-State Selection Procedures",
+          "url": "https://docs.google.com/document/d/1BpNEautgLwjRsfyeOyTpGUHiMnk94Y-rNMM3rjqAcIQ/edit",
+          "document_type": "rules"
+        }
+      ],
+      "voice_parts": [
+        {
+          "code": "S1",
+          "label": "Soprano 1"
+        },
+        {
+          "code": "S2",
+          "label": "Soprano 2"
+        },
+        {
+          "code": "A1",
+          "label": "Alto 1"
+        },
+        {
+          "code": "A2",
+          "label": "Alto 2"
+        }
+      ]
+    },
+    {
+      "name": "All-State TTBB Choir",
+      "lineage_key": "minnesota-all-state-ttbb-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "tenor-bass chorus",
+      "description": "Minnesota MMEA All-State choir. Students audition by video through the Opus portal in the winter; those selected attend the All-State Summer Camp at Concordia College, Moorhead, and return for the All-State February experience. 2026-2027 conductor: Dr. Brandon T. Cash.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Opus audition portal opens",
+          "start_at": "2026-01-01",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Sponsoring teachers upload audition videos through the Opus portal; the event in Opus is called 'Minnesota All-State 2026'.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Audition deadline",
+          "start_at": "2026-02-24T12:00:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "description": "Audition deadline is NOON (12 PM) February 24, 2026. MMEA recommends uploading no later than the evening of February 23 so staff can support any issues during the workday on February 24.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State Summer Camp",
+          "start_at": "2026-07-28",
+          "end_at": "2026-08-01",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "All-State Camp for ALL ensembles at Concordia College in Moorhead, MN.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State February experience",
+          "start_at": "2027-02-19",
+          "end_at": "2027-02-20",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "The All-State February rehearsal and concert experience that follows the summer camp.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Three separate video components, each in one continuous take",
+          "description": "Each choral audition consists of a video recording of three components — Scales, 'Alma del Coré', and a Solo. All three components must be separate files and each file must be recorded in one continuous take. No part of the audition needs to be memorized. Video files cannot be larger than 250 MB.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "scales",
+          "title": "Scales, unaccompanied, in the key for the student's voice type",
+          "description": "Scales must be unaccompanied and in the key corresponding with the student's voice type, using MMEA's published 'All-State Scales for All Voices'. Students may use numbers, solfege, or neutral syllables; humming is not permitted. A tonic chord and starting pitch are permitted at the start of the recorded file. Students MUST start on the correct designated pitch or the scales score is automatically a zero.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "materials",
+          "title": "Required piece: 'Alma del Coré', unaccompanied",
+          "description": "Must be unaccompanied. Tonic chord and starting pitch are permitted at the start of the recorded audition file. Students MUST start on the correct designated pitch or the Alma score is automatically a zero.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "materials",
+          "title": "Solo selected by the sponsoring teacher and student",
+          "description": "The solo is chosen by the sponsoring teacher and student and need not be classical repertoire. MMEA recommends a video length of 1.5-2.5 minutes ('your best two minutes is enough'); the video may be trimmed at the beginning and end but cannot be trimmed or spliced in the middle. Accompaniment is permitted but not required, and may be pre-recorded or computer-generated, but cannot be added after recording. Solos are evaluated for tone (clear, resonant), technique (breath support, articulation, registers), rhythm and tempo, diction, intonation, and expressive musicianship.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "eligibility",
+          "title": "Grade at time of audition",
+          "description": "Choral auditions are limited to students who are sophomores or juniors at the time of the audition.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "eligibility",
+          "title": "Member in good standing of the corresponding school ensemble",
+          "description": "A student must be a member in good standing of their secondary school's corresponding ensemble (choir, for vocal auditions) from the time of the audition through the following February performance. Provisions cover students whose school has no choir, PSEO students, homeschooled and online-school students via shared-time enrollment, and students sponsored by private teachers (membership verified by the MMEA office prior to April 10).",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "membership",
+          "title": "Sponsoring teacher must be an MMEA and NAfME member",
+          "description": "Participation is limited to students whose sponsoring teacher is a current member in good standing of MMEA and NAfME at the time of audition and throughout the rehearsal and performance period. The sponsoring educator must currently teach the student and continue as their music educator through the following February.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "format",
+          "title": "Digital Ethics Policy",
+          "description": "Audition files may not be edited or enhanced in any way; videos may be trimmed at the beginning and end but not altered or spliced in the middle. Each audition element must be a separate file in a single continuous take. Sponsoring teachers certify on submission that the recording is of their student and that the policy was discussed beforehand. Students CANNOT wear headphones during the audition — staff review videos before judging and disqualify auditions where headphones are worn. No metronomes may be used. Altered recordings make the student ineligible.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        },
+        {
+          "category": "format",
+          "title": "Auditioning for multiple voice parts",
+          "description": "Students may audition for more than one voice part; each audition must be separate and paid for individually (e.g. a student auditioning for Tenor 2 and Bass 1 sings two different scales and two different Almas and pays $30 per audition, $60 total). Students can only be accepted as one voice part for one ensemble. The preferred voice part must be noted on the registration form and in Opus.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "category": "format",
+          "title": "Video file required but never seen by judges",
+          "description": "Video files are required, but the videos will never be seen by judges. Students must include signs in their videos per the published requirements.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        },
+        {
+          "category": "eligibility",
+          "title": "Maximum years of participation and ensemble rotation",
+          "description": "Choral students may participate in an All-State group for two years. A student selected for a second year is typically placed in a different ensemble from the previous year whenever possible.",
+          "source_url": "https://mmea.org/events/all-state/all-state-eligibility-and-policies/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Alma del Core",
+          "purpose": "audition",
+          "notes": "Required audition piece for all voices, sung unaccompanied. MMEA's pages render the title variously as 'Alma de Core' and 'Alma del Core'. No composer is credited on the MMEA audition page, so none is recorded here.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 3000,
+          "payable_to": "state_association",
+          "description": "$30 per audition. A student auditioning for two voice parts pays $30 per audition, $60 total.",
+          "source_url": "https://mmea.org/events/all-state/auditions/choir/"
+        },
+        {
+          "fee_type": "camp",
+          "amount_cents": 97000,
+          "payable_to": "state_association",
+          "description": "The 2026-2027 All-State Camp cost is $970.",
+          "source_url": "https://mmea.org/events/all-state/auditions/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "All-State Audition Requirements 2026",
+          "url": "https://docs.google.com/document/d/188wpVO0Kv4MOM38HrwXYHL-VpWiHMWyzJAVjz65Qw9U/edit",
+          "document_type": "rules"
+        },
+        {
+          "title": "All-State Program Overview",
+          "url": "https://docs.google.com/document/d/1nyBc-BYHpT1-r_7DDKrdVzqElhoE4uV772mJZIfAfrg/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "Vocal Audition Registration Form",
+          "url": "https://docs.google.com/document/d/1MKr61RJ_kmX2irDd5ztMkBKt5piRnh-4GxJD0EmsVSc/edit",
+          "document_type": "form"
+        },
+        {
+          "title": "All-State Scales for All Voices (PDF)",
+          "url": "https://mmea.org/wp-content/uploads/2021/01/All-Voices-All-State-Scales.pdf",
+          "document_type": "other"
+        },
+        {
+          "title": "Alma del Core for All Voices",
+          "url": "https://drive.google.com/file/d/1MXfDQNvo38oiaGjkpT2JldPmJyu9_eeZ/view",
+          "document_type": "other"
+        },
+        {
+          "title": "Vocal Rubric (updated 2025)",
+          "url": "https://drive.google.com/file/d/16t9ybvnZD0uvIcbRC-ye3yiB534we9_F/view",
+          "document_type": "rules"
+        },
+        {
+          "title": "All-State Audition Timeline for 2026",
+          "url": "https://drive.google.com/file/d/1Gr3cnYbLKBMeid9WUi9Z0TwTHC5yd-1o/view",
+          "document_type": "calendar"
+        },
+        {
+          "title": "All-State Audition Checklist",
+          "url": "https://docs.google.com/document/d/1jz2lr-KDITs6VQA4NQz1GpaK1LI_IjX4bFaM-o_JyCM/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "How to Get Started: For Students",
+          "url": "https://docs.google.com/document/d/1F-odgmIEUz5Mz4bgqBWm2SvB7tO-VuGfFUyDyJWG1dQ/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "How to Get Started: For Sponsoring Teachers",
+          "url": "https://docs.google.com/document/d/1IMddo1k-4bJXCzt-Qz4MLnhFwDfWfBnSzREZj-hl51E/edit",
+          "document_type": "other"
+        },
+        {
+          "title": "MMEA's All-State Selection Procedures",
+          "url": "https://docs.google.com/document/d/1BpNEautgLwjRsfyeOyTpGUHiMnk94Y-rNMM3rjqAcIQ/edit",
+          "document_type": "rules"
+        }
+      ],
+      "voice_parts": [
+        {
+          "code": "T1",
+          "label": "Tenor 1"
+        },
+        {
+          "code": "T2",
+          "label": "Tenor 2"
+        },
+        {
+          "code": "B1",
+          "label": "Bass 1"
+        },
+        {
+          "code": "B2",
+          "label": "Bass 2"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 All-State choir performance repertoire — MMEA publishes only PAST All-State choir repertoire lists",
+    "Concert venue and clock times for the February 19-20, 2027 All-State experience",
+    "Camp fee payment deadline and refund policy dates",
+    "Number of singers selected per ensemble or per voice part for 2026-27",
+    "Whether the audition cap policy changed — the eligibility page states 'There is no audition cap for submitting student auditions for 2025 All-State Auditions', which is prior-year wording",
+    "Composer/edition of the required audition piece 'Alma del Core' — not credited on the MMEA audition page"
+  ]
+}

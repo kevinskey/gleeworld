@@ -97,7 +97,7 @@ export default function CanvasInbox() {
                           {c.participants.map((p) => p.name).slice(0, 3).join(', ')}
                           {c.participants.length > 3 && <span className="text-muted-foreground"> +{c.participants.length - 3}</span>}
                         </div>
-                        <div className="text-[10px] text-muted-foreground shrink-0">{formatDate(c.last_message_at)}</div>
+                        <div className="text-xs text-muted-foreground shrink-0">{formatDate(c.last_message_at)}</div>
                       </div>
                       <div className="text-xs font-medium truncate">{c.subject ?? '(no subject)'}</div>
                       {c.last_message && (

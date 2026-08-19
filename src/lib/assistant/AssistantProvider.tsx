@@ -3,17 +3,36 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
+import { fetchPassage, searchScripture } from '@/lib/bible/fetchPassage';
+import { assistantNavTargets } from '@/lib/navigation/navCatalog';
 import { threadReducer, INITIAL_THREAD } from './threadReducer';
-import { executeClientAction } from './clientActions';
-import { getSpeechInput, isMuted, setMuted, speak, stopSpeaking } from './speech';
+import { executeClientAction, resolvePageRoute } from './clientActions';
+import { getSpeechInput, isMuted, setMuted, sanitizeForSpeech, speak, stopSpeaking, takeInterruptedSpeech } from './speech';
 import { ConfirmActionQueue } from './confirmQueue';
 import { loadThread, saveThread } from './threadStorage';
-import { useAssistantVoice } from './voices';
+import { useAssistantVoice, BROWSER_VOICE_ID } from './voices';
 import type { AssistantAction, ThreadState } from './types';
+import type { ConciergeResult } from './conciergeTypes';
+
+export interface NowPlaying {
+  /** Which engine the popout drives. Absent = 'youtube' (older callers). */
+  source?: 'youtube' | 'apple';
+  /** YouTube video id — required when source is youtube. */
+  videoId?: string;
+  /** Apple Music catalog id + kind — required when source is apple. */
+  appleId?: string;
+  appleKind?: 'song' | 'album' | 'playlist';
+  artworkUrl?: string | null;
+  title?: string;
+  channel?: string;
+  /** True when restored after a page refresh: render paused with a
+   *  tap-to-resume — browsers forbid un-gestured audio after reload. */
+  resumePaused?: boolean;
+}
 
 export interface AssistantContextValue {
   state: ThreadState;
-  send: (content: string) => Promise<void>;
+  send: (content: string, opts?: { fromVoice?: boolean }) => Promise<void>;
   runAction: (msgId: string, action: AssistantAction) => Promise<void>;
   cancelAction: (msgId: string) => void;
   sheetOpen: boolean;
@@ -28,13 +47,53 @@ export interface AssistantContextValue {
   stopSpeaking: () => void;
   videoRoom: string | null;
   setVideoRoom: (room: string | null) => void;
+  resultsPanel: ConciergeResult | null;
+  setResultsPanel: (r: ConciergeResult | null) => void;
+  /** The video playing in the floating window, if any. Deliberately NOT part
+   *  of resultsPanel: music has to keep playing while the sheet is closed and
+   *  while the next question is being asked. */
+  nowPlaying: NowPlaying | null;
+  setNowPlaying: (v: NowPlaying | null) => void;
   captionReply: { id: string; text: string } | null;
   /** Tenant-configured assistant voice from Workspace Settings → Branding.
    *  Null while loading, or if the tenant hasn't picked one (app default). */
   voiceId: string | null;
+  /** A playlist scheduled on a calendar event that just started: the
+   *  one-tap offer. Browsers cannot start audio unattended, so the tap IS
+   *  the schedule firing. */
+  scheduledPlay: { eventTitle: string; label: string } | null;
+  acceptScheduledPlay: () => void;
+  dismissScheduledPlay: () => void;
+  /** The user's personal name for the assistant (gw_profiles.assistant_name,
+   *  per USER across tenants). Null = default "GleeWorld Assistant". Set by
+   *  telling the assistant "I'll call you Ruby" (set_assistant_name tool);
+   *  surfaces in the sheet header and the live-voice agent identity. */
+  assistantName: string | null;
+  /** Live conversation mode (ElevenLabs WebRTC agent): full-duplex voice
+   *  with real barge-in — the user's VOICE interrupts the assistant, no
+   *  tapping required. 'connecting' while the session is being set up. */
+  liveStatus: 'off' | 'connecting' | 'live';
+  startLive: () => void;
+  endLive: () => void;
 }
 
 const AssistantContext = createContext<AssistantContextValue | null>(null);
+
+// One conversation across both brains. Typed sends and live-voice
+// ask_gleeworld calls used to keep separate thread ids (localStorage vs an
+// in-memory ref), so switching to live voice silently started a fresh thread
+// — on 2026-08-10 the assistant answered "we're just getting started here"
+// twenty seconds after the user's first question. Both paths now read and
+// write this one stored id.
+const THREAD_ID_KEY = 'gw-assistant-thread-id';
+function readStoredThreadId(): string | undefined {
+  try { return localStorage.getItem(THREAD_ID_KEY) ?? undefined; }
+  catch { return undefined; }
+}
+function writeStoredThreadId(id: string): void {
+  try { localStorage.setItem(THREAD_ID_KEY, id); }
+  catch { /* private mode / quota — persistence just doesn't survive refresh */ }
+}
 
 export function useAssistant(): AssistantContextValue {
   const ctx = useContext(AssistantContext);
@@ -51,6 +110,21 @@ export function useAssistantOptional(): AssistantContextValue | null {
 // Mounted once in DashboardShell; AssistantSheet and AssistantFab are
 // pure consumers. The thread mirrors to sessionStorage so a reload keeps
 // the conversation (see threadStorage for the confirm-card sanitizing).
+/** How long a reply will wait for the voice preference to resolve before
+ *  speaking anyway. Long enough for a warm query, short enough that a stalled
+ *  one never reads as the assistant ignoring you. */
+const VOICE_RESOLVE_TIMEOUT_MS = 2500;
+/**
+ * Last-resort delay before printing a reply that has not started speaking.
+ * Generous on purpose: a normal spoken reply waits up to
+ * VOICE_RESOLVE_TIMEOUT_MS for the tenant voice and then several seconds for
+ * ElevenLabs synthesis, and captioning THAT would undo the voice-first
+ * behaviour. This only catches turns where speech never reports back at all.
+ */
+const CAPTION_FALLBACK_MS = 8000;
+
+let liveNowPlaying: NowPlaying | null = null;
+
 export const AssistantProvider = ({ children, initialSheetOpen = false }: { children: ReactNode; initialSheetOpen?: boolean }) => {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -65,11 +139,139 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   const [transcript, setTranscript] = useState('');
   const [muted, setMutedState] = useState(isMuted());
   const [speaking, setSpeaking] = useState(false);
+  // Bumped by every Stop tap; a speakNow that started before the bump
+  // aborts instead of launching TTS the tap couldn't reach.
+  const speakRequestRef = useRef(0);
   const [videoRoom, setVideoRoom] = useState<string | null>(null);
+  const [resultsPanel, setResultsPanel] = useState<ConciergeResult | null>(null);
   const [captionReply, setCaptionReply] = useState<{ id: string; text: string } | null>(null);
-  const { voiceId } = useAssistantVoice();
+  /**
+   * The voice, and whether it has actually been decided yet.
+   *
+   * `loading` used to be dropped on the floor here. Until the tenant's
+   * branding AND this user's own preference have both resolved, voiceId is
+   * null — and speak() maps null to the app default. So the first reply after
+   * a page load came out in Jessica and later ones in the chosen voice, which
+   * is what "the voice changes through the conversation" was.
+   */
+  const { voiceId, loading: voiceLoading } = useAssistantVoice();
   const voiceIdRef = useRef<string | null>(voiceId);
   useEffect(() => { voiceIdRef.current = voiceId; }, [voiceId]);
+
+  // Waiters parked by speakNow while the voice is still resolving.
+  const voiceReadyRef = useRef({ ready: false, waiters: [] as Array<() => void> });
+  /**
+   * Music starts, the assistant stops talking.
+   *
+   * Two audio sources competing for the same speaker is not a preference
+   * question: the reply is "Playing Ave Verum" while Ave Verum is already
+   * playing over it. Anything spoken is cut the moment a video appears.
+   */
+  // The popout survives a page refresh (Kevin, 2026-08-11): what was
+  // playing is mirrored to sessionStorage and restored on mount. Browsers
+  // forbid audio resuming without a gesture after a reload, so the popout
+  // comes back PAUSED with resumePaused set — its play button is the tap.
+  const NOW_PLAYING_KEY = 'gw-assistant-now-playing';
+  // Module-scope survivor: remounts of this provider (route changes swap
+  // DashboardShell instances) keep the SAME page-load state — only a real
+  // refresh goes to sessionStorage and comes back paused.
+  const [nowPlaying, setNowPlayingState] = useState<NowPlaying | null>(() => {
+    if (liveNowPlaying) return liveNowPlaying;
+    try {
+      const raw = sessionStorage.getItem(NOW_PLAYING_KEY);
+      if (!raw) return null;
+      const v = JSON.parse(raw) as NowPlaying;
+      return v && (v.videoId || v.appleId) ? { ...v, resumePaused: true } : null;
+    } catch { return null; }
+  });
+  const setNowPlaying = useCallback((v: NowPlaying | null) => {
+    setNowPlayingState(v);
+    liveNowPlaying = v;
+    // Explicitly cleared (X button / stop_playback): silence MusicKit here,
+    // in the provider — the popout's unmount is NOT a stop signal, because
+    // route changes remount it while the music should keep going.
+    if (v === null) {
+      import('@/lib/musicKit').then(({ getMusicKit }) => getMusicKit()).then((kit) => kit.stop()).catch(() => { /* never loaded */ });
+    }
+    try {
+      if (v) sessionStorage.setItem(NOW_PLAYING_KEY, JSON.stringify(v));
+      else sessionStorage.removeItem(NOW_PLAYING_KEY);
+    } catch { /* private mode — playback just won't survive refresh */ }
+  }, []);
+  /** Event-scheduled playlist offer. Polls once a minute for events that
+   *  started in the last 20 minutes carrying assistant_playlist. Only the
+   *  two playback tools may run from DB data — anything else is ignored. */
+  const [scheduledPlay, setScheduledPlay] = useState<{ eventId: string; eventTitle: string; label: string; action: AssistantAction } | null>(null);
+  useEffect(() => {
+    let stopped = false;
+    const SEEN_KEY = 'gw-assistant-sched-seen';
+    const ALLOWED = ['play_my_playlist', 'play_apple_music'];
+    const check = async () => {
+      try {
+        const since = new Date(Date.now() - 20 * 60000).toISOString();
+        const until = new Date(Date.now() + 60000).toISOString();
+        const { data } = await supabase
+          .from('gw_events')
+          .select('id, title, start_date, assistant_playlist')
+          .gte('start_date', since)
+          .lte('start_date', until)
+          .not('assistant_playlist', 'is', null)
+          .limit(5);
+        if (stopped || !data?.length) return;
+        let seen: string[] = [];
+        try { seen = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '[]'); } catch { /* fresh */ }
+        const ev = (data as Array<{ id: string; title?: string; assistant_playlist?: { tool?: string; args?: Record<string, unknown>; label?: string } }>)
+          .find((e) => !seen.includes(e.id) && e.assistant_playlist?.tool && ALLOWED.includes(e.assistant_playlist.tool));
+        if (!ev) return;
+        setScheduledPlay({
+          eventId: ev.id,
+          eventTitle: ev.title ?? 'your event',
+          label: ev.assistant_playlist!.label ?? 'Music',
+          action: { tool: ev.assistant_playlist!.tool!, args: ev.assistant_playlist!.args ?? {}, confirm: false },
+        });
+      } catch { /* offline — try again next tick */ }
+    };
+    check();
+    const timer = setInterval(check, 60000);
+    return () => { stopped = true; clearInterval(timer); };
+  }, []);
+  const markScheduledSeen = useCallback((eventId: string) => {
+    try {
+      const seen: string[] = JSON.parse(localStorage.getItem('gw-assistant-sched-seen') ?? '[]');
+      localStorage.setItem('gw-assistant-sched-seen', JSON.stringify([...seen.slice(-40), eventId]));
+    } catch { /* best effort */ }
+  }, []);
+
+
+  /** Thread used by spoken questions, so a follow-up keeps its context.
+   *  Seeded from the same stored id the typed path uses — see THREAD_ID_KEY. */
+  const liveThreadRef = useRef<string | null>(null);
+  /** In-flight ask_gleeworld call. The live agent (or an impatient human
+   *  re-asking into 15s of silence) can fire the same question twice —
+   *  on 2026-08-10 both ran to completion and two answers were spoken over
+   *  each other. Identical question → share the one in-flight result;
+   *  different question → wait for the current one to settle first, so
+   *  answers can never interleave. */
+  const liveAskRef = useRef<{ question: string; promise: Promise<string> } | null>(null);
+  useEffect(() => {
+    if (voiceLoading) return;
+    voiceReadyRef.current.ready = true;
+    voiceReadyRef.current.waiters.splice(0).forEach((w) => w());
+  }, [voiceLoading]);
+
+  /**
+   * Wait for the voice to be decided — but never for long.
+   *
+   * Bounded because being SILENT is worse than being in the wrong voice: if
+   * branding is slow or fails, the assistant still has to answer. One
+   * consistent voice for a whole conversation is the goal; a stalled query
+   * must not buy silence.
+   */
+  const awaitVoice = useCallback(() => new Promise<void>((resolve) => {
+    if (voiceReadyRef.current.ready) { resolve(); return; }
+    const timer = setTimeout(resolve, VOICE_RESOLVE_TIMEOUT_MS);
+    voiceReadyRef.current.waiters.push(() => { clearTimeout(timer); resolve(); });
+  }), []);
   const speechRef = useRef(getSpeechInput());
   const confirmQueueRef = useRef(new ConfirmActionQueue());
   // Async send() must see the CURRENT open state, not the one captured at
@@ -79,6 +281,35 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   sheetOpenRef.current = sheetOpen;
   const videoRoomRef = useRef(videoRoom);
   videoRoomRef.current = videoRoom;
+  const resultsPanelRef = useRef(resultsPanel);
+  resultsPanelRef.current = resultsPanel;
+  const nowPlayingRef = useRef(nowPlaying);
+  nowPlayingRef.current = nowPlaying;
+  // Imperative mirror of the mic being live. The `listening` STATE mirrors
+  // it for the UI, but conversation-mode decisions happen inside timer and
+  // speech callbacks that can run before React re-renders — a render-synced
+  // ref would be stale there.
+  const micActiveRef = useRef(false);
+
+  // ---- Voice conversation mode (Kevin, 2026-08-17) --------------------
+  // A voice-initiated turn keeps the conversation going: after the reply is
+  // spoken (and any action lands), the mic re-arms by itself. Five seconds
+  // of silence → "Are you still there, {name}?" → one final window → quiet
+  // stand-down. Typed turns, live mode, and playback all end the mode.
+  const conversationRef = useRef(false);
+  const idleStageRef = useRef<0 | 1>(0);
+  const idleTimerRef = useRef<number | null>(null);
+  // Set after their definitions each render; breaks the send ↔ beginListening
+  // callback cycle.
+  const maybeRearmRef = useRef<() => void>(() => {});
+  const clearIdleTimer = useCallback(() => {
+    if (idleTimerRef.current != null) { window.clearTimeout(idleTimerRef.current); idleTimerRef.current = null; }
+  }, []);
+  const endConversation = useCallback(() => {
+    conversationRef.current = false;
+    idleStageRef.current = 0;
+    clearIdleTimer();
+  }, [clearIdleTimer]);
 
   useEffect(() => { saveThread(state.messages); }, [state.messages]);
 
@@ -90,19 +321,60 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     setSheetOpenState(next);
   }, []);
 
-  // Unmount safety: stop the mic and any in-flight reply speech.
+  // Unmount safety: stop the mic, any in-flight reply speech, and the
+  // conversation-mode idle clock.
   useEffect(() => () => {
+    clearIdleTimer();
     speechRef.current.stop();
     if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
-  }, []);
+  }, [clearIdleTimer]);
 
   // Speak a reply while tracking `speaking` so the UI can show a Stop
   // control; stopSpeakingNow cuts her off immediately (barge-in / Stop tap).
-  const speakNow = useCallback(async (text: string) => {
+  /**
+   * @param onSilent Called when the reply never became audible — speak()
+   *   reported onEnd without ever reporting onStart. That covers muting, a
+   *   dead WKWebView synth, an ElevenLabs failure and a blocked autoplay
+   *   alike. Callers use it to surface the text instead, so a failed voice
+   *   can never leave a turn with no audio AND no words on screen.
+   */
+  const speakNow = useCallback(async (
+    text: string,
+    cbs?: { onStarted?: () => void; onSilent?: () => void; onDone?: () => void },
+  ) => {
+    // EVERY exit path must report. The previous version returned early on a
+    // speak-token bump and had no catch, so a Stop tap, a barge-in, or a
+    // throw in getSession() left the caller waiting forever — no audio, no
+    // text, an invisible turn. That is the bug this whole guard exists for.
+    let started = false;
+    const reportSilent = () => { if (!started) cbs?.onSilent?.(); };
+    // onDone = "this speech request is over", audible or not — the hook the
+    // conversation-mode re-arm hangs off. Guarded to fire exactly once.
+    let doneReported = false;
+    const reportDone = () => { if (!doneReported) { doneReported = true; cbs?.onDone?.(); } };
+    try {
+    // Speaking goes true the moment a spoken reply is REQUESTED, not when
+    // audio starts. ElevenLabs synthesis of a long reply (news rundown)
+    // takes many seconds, and waiting for onplay left that whole window
+    // with a mic instead of a Stop — Kevin: "I am unable to stop." A Stop
+    // tap during synthesis bumps the speak session, so the late-arriving
+    // audio checks the token and never plays. speak() guarantees onEnd on
+    // every path (muted, empty, dead synth, error) so this can't stick.
+    if (text.trim() && !muted) setSpeaking(true);
+    const myRequest = speakRequestRef.current;
     // Grab the current auth token on every speak() so a token refresh
     // doesn't leave us stuck on a 401 — cheap, session cache is in memory.
+    // Let the voice settle before speaking, so a conversation does not start
+    // in one voice and continue in another.
+    await awaitVoice();
     const { data: sessionData } = await supabase.auth.getSession();
     const accessToken = sessionData?.session?.access_token;
+    // Stop was tapped while we awaited the token — honor it; calling
+    // speak() now would start a fresh TTS session the tap can't cancel.
+    if (speakRequestRef.current !== myRequest) { reportSilent(); reportDone(); return; }
+    // onStart fires ONLY on real audio (utterance.onstart / audio.onplay);
+    // every silent path in speak() calls onEnd alone. So "ended without
+    // starting" is a reliable signal that the user heard nothing.
     speak(text, {
       muted,
       voiceId: voiceIdRef.current,
@@ -113,15 +385,50 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       // to browser SpeechSynthesis and ignores voiceId — every reply comes
       // out in the OS default voice regardless of the tenant's pick.
       supabaseUrl: SUPABASE_URL,
-      onStart: () => setSpeaking(true),
-      onEnd: () => setSpeaking(false),
+      onStart: () => { started = true; setSpeaking(true); cbs?.onStarted?.(); },
+      onEnd: () => { setSpeaking(false); reportSilent(); reportDone(); },
     });
+    } catch (err) {
+      // Speech never got as far as playback. Say so rather than hanging.
+      console.warn('[assistant] speech failed before playback:', err);
+      setSpeaking(false);
+      reportSilent();
+      reportDone();
+    }
   }, [muted]);
 
   const stopSpeakingNow = useCallback(() => {
+    speakRequestRef.current += 1;
     stopSpeaking();
     setSpeaking(false);
   }, []);
+
+  /**
+   * Route an incoming panel result: video to the floating player, everything
+   * else to the sheet's panel.
+   *
+   * A video is the one result you keep using AFTER the answer — you listen to
+   * it, and you go on talking to the assistant while it plays. In the panel it
+   * died the moment the sheet closed and it took half the sheet away from the
+   * conversation meanwhile.
+   *
+   * Anything being spoken is cut when the music starts: two audio sources on
+   * one speaker means the reply is read out over the recording it announced.
+   */
+  const showResult = useCallback((result: ConciergeResult) => {
+    if (result.kind === 'video' && result.videoId) {
+      stopSpeakingNow();
+      setNowPlaying({ videoId: result.videoId, title: result.title, channel: result.channel });
+      return;
+    }
+    // Imperative ref update too: the conversation-mode re-arm decision runs
+    // in the same async continuation, before React re-renders — the render-
+    // synced ref alone would still be stale there and re-arm the mic over a
+    // read-aloud article.
+    resultsPanelRef.current = result;
+    setResultsPanel(result);
+  }, [stopSpeakingNow]);
+
 
   const advanceConfirmQueue = useCallback((msgId: string) => {
     const nextId = crypto.randomUUID();
@@ -140,6 +447,31 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // isn't popup-blocked. The URL always comes from our own deep-link
     // builders, never from model output.
     if (outcome.openExternalUrl) window.open(outcome.openExternalUrl, '_blank', 'noopener,noreferrer');
+    // Articles open in the in-app reader panel, keeping the Command Center
+    // in place (Kevin, 2026-08-13). The panel renders ONLY inside the open
+    // sheet, so a closed sheet must open — same rule as confirm cards. By
+    // voice with the sheet closed, "read it to me" used to set panel state
+    // that nothing rendered: the ArticleCard that extracts and speaks never
+    // mounted, and she announced an article and went silent (Kevin,
+    // 2026-08-17: "keeps saying it's going to read an article but doesn't").
+    if (outcome.article) {
+      showResult({ kind: 'article', ...outcome.article });
+      if (!sheetOpenRef.current) setSheetOpen(true);
+    }
+    if (outcome.stopPlayback) setNowPlaying(null);
+    if (outcome.appleMusic) {
+      // Same rule as the YouTube popout: two audio sources on one speaker
+      // means the reply gets read out over the music it announced.
+      stopSpeakingNow();
+      setNowPlaying({
+        source: 'apple',
+        appleId: outcome.appleMusic.id,
+        appleKind: outcome.appleMusic.kind,
+        title: outcome.appleMusic.title,
+        channel: outcome.appleMusic.artist,
+        artworkUrl: outcome.appleMusic.artworkUrl,
+      });
+    }
     if (outcome.navigateTo) { setSheetOpen(false); navigate(outcome.navigateTo); }
     if (!outcome.ok) speakNow(outcome.message);
     // Only a confirm-gated action can have a queued follow-up waiting on it.
@@ -165,9 +497,22 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         case 'set_date_card':
           qc.invalidateQueries({ queryKey: ['date-card-setting'] });
           break;
+        case 'add_to_nav':
+          // useMyTools caches the raw prefs row under ['my-tools', uid];
+          // base-key invalidation matches every user variant so the shelf
+          // shows the new tool without a refresh.
+          qc.invalidateQueries({ queryKey: ['my-tools'] });
+          break;
+        case 'create_note':
+        case 'save_article_note':
+          // The Planner caches every list/search under ['planner', ...];
+          // base-key invalidation makes the new note visible without a
+          // refresh if the Planner is already open.
+          qc.invalidateQueries({ queryKey: ['planner'] });
+          break;
       }
     }
-  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc]);
+  }, [navigate, setSheetOpen, advanceConfirmQueue, speakNow, qc, setNowPlaying, stopSpeakingNow, showResult]);
 
   const cancelAction = useCallback((msgId: string) => {
     dispatch({ type: 'action-state', id: msgId, state: 'cancelled' });
@@ -183,6 +528,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   // back to asking the user for a `near` string.
   const geoRef = useRef<{ lat: number; lng: number; ts: number } | null>(null);
   const geoDeniedRef = useRef(false);
+  // Set after a getCurrentPosition call that never called back. From then on
+  // sends never AWAIT geolocation again — they fire a background warm-up and
+  // proceed without geo immediately.
+  const geoSlowRef = useRef(false);
   const getFreshGeo = useCallback(async (): Promise<{ lat: number; lng: number } | null> => {
     if (geoDeniedRef.current) return null;
     const cached = geoRef.current;
@@ -190,105 +539,584 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       return { lat: cached.lat, lng: cached.lng };
     }
     if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
-    return new Promise((resolve) => {
+    const request = (onDone?: (v: { lat: number; lng: number } | null) => void) =>
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const next = { lat: pos.coords.latitude, lng: pos.coords.longitude, ts: Date.now() };
           geoRef.current = next;
-          resolve({ lat: next.lat, lng: next.lng });
+          geoSlowRef.current = false;
+          onDone?.({ lat: next.lat, lng: next.lng });
         },
         () => {
           // Permission dismissed / denied / errored. Don't re-prompt this
           // session — user can enable in browser settings if they want it.
           geoDeniedRef.current = true;
-          resolve(null);
+          onDone?.(null);
         },
         { enableHighAccuracy: false, maximumAge: 15 * 60 * 1000, timeout: 5000 },
       );
+    if (geoSlowRef.current) {
+      // A previous call stalled (or the permission prompt is still up) —
+      // warm the cache in the background but never block this send on it.
+      request();
+      return null;
+    }
+    return new Promise((resolve) => {
+      // WKWebView with no NSLocationWhenInUseUsageDescription NEVER invokes
+      // either callback — the PositionOptions timeout only starts counting
+      // once permission is resolved (verified on the iOS 18 simulator,
+      // 2026-08-02: probe saw no callback after 15s). Every send() awaits
+      // this, so without a wall-clock race one geolocation stall froze the
+      // assistant for the rest of the session (busy stuck true = every
+      // later message silently dropped). Race a hard 4s timer; a late
+      // success still lands in geoRef for the next message.
+      let settled = false;
+      const settle = (v: { lat: number; lng: number } | null) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        resolve(v);
+      };
+      const timer = setTimeout(() => {
+        geoSlowRef.current = true;
+        settle(null);
+      }, 4000);
+      request(settle);
     });
   }, []);
 
-  const send = useCallback(async (content: string) => {
+  // A failure with the sheet closed (floating-mic flow) used to render only
+  // inside the invisible thread — the user spoke, watched their words appear,
+  // then NOTHING. Surface it as a caption too so every failure is visible.
+  const failVisibly = useCallback((message: string) => {
+    dispatch({ type: 'fail', error: message });
+    if (!sheetOpenRef.current) setCaptionReply({ id: crypto.randomUUID(), text: message });
+  }, []);
+
+  // ── Live conversation mode (ElevenLabs WebRTC agent) ────────────────
+  // Full-duplex voice: the agent hears the user WHILE it speaks, so the
+  // user's voice interrupts naturally (Kevin: "my voice can't interrupt?").
+  // The SDK (+ LiveKit) is ~heavy, so it's dynamically imported only when
+  // a session actually starts. Client tools mirror the chat assistant's
+  // navigation/news surface; anything else stays with push-to-talk chat.
+  const [liveStatus, setLiveStatus] = useState<'off' | 'connecting' | 'live'>('off');
+  const liveSessionRef = useRef<{ endSession: () => Promise<void> } | null>(null);
+  const liveConnectingRef = useRef(false);
+
+  const endLive = useCallback(() => {
+    const session = liveSessionRef.current;
+    liveSessionRef.current = null;
+    setLiveStatus('off');
+    if (session) void session.endSession().catch(() => { /* already closed */ });
+  }, []);
+
+  const startLive = useCallback(async () => {
+    if (liveSessionRef.current || liveConnectingRef.current) return;
+    liveConnectingRef.current = true;
+    setLiveStatus('connecting');
+    // Live mode owns the audio path — silence push-to-talk TTS and mic.
+    stopSpeakingNow();
+    speechRef.current.stop();
+    setListening(false);
+    try {
+      const { data, error } = await supabase.functions.invoke('elevenlabs-conversation-token');
+      const token = (data as { token?: string } | null)?.token;
+      if (error || !token) {
+        // The function returns a 500 with a body explaining why, but
+        // supabase-js reports non-2xx as a generic FunctionsHttpError and
+        // leaves the body unread — so the specific cause was being thrown
+        // away one step short of the user. Read it back off the response.
+        let detail = (data as { error?: string } | null)?.error ?? '';
+        const res = (error as { context?: Response } | null)?.context;
+        if (!detail && res && typeof res.json === 'function') {
+          try { detail = (await res.json())?.error ?? ''; } catch { /* not JSON */ }
+        }
+        throw new Error(detail || error?.message || 'no conversation token');
+      }
+      const { Conversation } = await import('@elevenlabs/client');
+      // The agent carries its own TTS voice (Jessica). Without this override
+      // every tenant hears Jessica in live mode regardless of the Branding
+      // tab pick — the push-to-talk path honored it, live mode didn't.
+      // Requires `conversation_config_override.tts.voice_id: true` in the
+      // agent's security settings; with it off, ElevenLabs rejects the
+      // session outright, so this and that flag ship together.
+      // BROWSER_VOICE_ID is meaningless here (a WebRTC agent has no
+      // browser-synth path) — it falls through to the agent default.
+      const liveVoiceId = voiceIdRef.current;
+      const voiceOverride =
+        liveVoiceId && liveVoiceId !== BROWSER_VOICE_ID
+          ? { overrides: { tts: { voiceId: liveVoiceId } } }
+          : {};
+      // Preferred form of address ("call me Doc") outranks the real first name.
+      let firstName = profile?.preferred_name?.trim()
+        || profile?.full_name?.trim().split(/\s+/)[0] || '';
+      let assistantName = profile?.assistant_name?.trim() || '';
+      if (!firstName) {
+        // No name usually means the mic was pressed before useUserRole's
+        // profile query landed, not that the user has no name — and being
+        // early must not demote "Doc" to "Hi, there". One direct read
+        // settles it; the token round-trip above already cost more.
+        const { data: u } = await supabase.auth.getUser();
+        if (u?.user) {
+          const { data: p } = await supabase
+            .from('gw_profiles')
+            .select('preferred_name, full_name, assistant_name')
+            .eq('user_id', u.user.id)
+            .maybeSingle();
+          const row = p as { preferred_name?: string | null; full_name?: string | null; assistant_name?: string | null } | null;
+          firstName = row?.preferred_name?.trim()
+            || row?.full_name?.trim().split(/\s+/)[0] || '';
+          assistantName = assistantName || row?.assistant_name?.trim() || '';
+        }
+      }
+      const session = await Conversation.startSession({
+        conversationToken: token,
+        connectionType: 'webrtc',
+        ...voiceOverride,
+        // Greets by name. The agent's first_message is "Hi, {{user_first_name}}!"
+        // and ElevenLabs substitutes this before speaking, so the greeting is
+        // personal without a round trip. A blank name would leave a dangling
+        // "Hi," so it falls back to "there".
+        dynamicVariables: {
+          user_first_name: firstName || 'there',
+          // The user's personal name for her. The agent prompt reads
+          // {{assistant_name}}; the platform default covers old bundles.
+          assistant_name: assistantName || 'the GleeWorld Assistant',
+          // The live agent has no clock of its own; hand it the local time at
+          // session start so "what time is it" never comes back empty.
+          user_local_time: new Date().toLocaleString(undefined, {
+            weekday: 'long', month: 'long', day: 'numeric',
+            hour: 'numeric', minute: '2-digit',
+          }),
+          user_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+        clientTools: {
+          /**
+           * Everything the typed assistant can do, spoken.
+           *
+           * Live voice is a different brain — an ElevenLabs agent with its own
+           * small tool list — so it could not reach the choral library, the
+           * calendar, the liturgical calendar or the user's own data. Asked
+           * about the Negro spiritual it had nothing to consult, which is no
+           * use to someone who only wants to speak.
+           *
+           * Porting each tool across would mean maintaining two catalogues
+           * that drift. Instead this hands the question to assistant-chat —
+           * the same brain, the same tools, the same prompt — and speaks what
+           * comes back. One tool here buys every capability there, and
+           * anything added to the text assistant reaches voice for free.
+           *
+           * The thread id is carried so a spoken follow-up keeps its context,
+           * exactly as it would when typed.
+           */
+          ask_gleeworld: async (params: { question?: string }) => {
+            const question = String(params?.question ?? '').trim();
+            if (!question) return 'Ask the user what they would like to know.';
+            const pending = liveAskRef.current;
+            if (pending && pending.question === question.toLowerCase()) return pending.promise;
+            if (pending) await pending.promise.catch(() => { /* settled is all we need */ });
+            const run = (async (): Promise<string> => {
+            try {
+              // The SAME context the typed path sends. Without it the
+              // delegated brain is half-blind: no geo means "find me a
+              // coffee" cannot locate anything, and no navTargets means it
+              // cannot resolve a page by name. A question asked aloud
+              // deserves the same footing as one typed.
+              const geo = await getFreshGeo();
+              const { data, error } = await supabase.functions.invoke('assistant-chat', {
+                body: {
+                  messages: [{ role: 'user', content: question }],
+                  thread_id: liveThreadRef.current ?? readStoredThreadId(),
+                  context: {
+                    firstName: profile?.preferred_name?.trim() || profile?.full_name?.split(' ')[0] || 'there',
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    navTargets: assistantNavTargets(),
+                    // Tells the server this reply is read aloud in full, so
+                    // it answers short-first (prompt + length guard there).
+                    voice: true,
+                    ...(geo ? { geo } : {}),
+                  },
+                },
+              });
+              if (error) throw error;
+              const res = (data as {
+                reply?: string;
+                thread_id?: string;
+                actions?: AssistantAction[];
+                resultsPanel?: unknown;
+              } | null);
+              if (res?.thread_id) {
+                liveThreadRef.current = res.thread_id;
+                writeStoredThreadId(res.thread_id);
+              }
+
+              // Its ACTIONS matter as much as its words. A spoken "find me a
+              // coffee" should still raise the card with the tap-to-open-maps
+              // button, and "open the calendar" should still open it —
+              // dropping these left voice describing things it had not done.
+              if (res?.resultsPanel && typeof res.resultsPanel === 'object' && 'kind' in res.resultsPanel) {
+                showResult(res.resultsPanel as ConciergeResult);
+              }
+              const spokenId = crypto.randomUUID();
+              const actions = res?.actions ?? [];
+              // Confirm-gated actions (texts, emails, deletes) are NOT run
+              // from a voice turn: they are registered so the sheet shows
+              // their card and a human presses the button. Speaking is not
+              // consent to send something on someone's behalf.
+              const { first: needsConfirm, autoRun } = confirmQueueRef.current.register(spokenId, actions);
+              for (const action of autoRun) await runAction(spokenId, action);
+              if (needsConfirm) setSheetOpen(true);
+
+              // The agent speaks this verbatim, so markdown scaffolding
+              // ("***Ein deutsches Requiem***", bullet asterisks) must go.
+              const spoken = sanitizeForSpeech(res?.reply || '');
+              if (spoken) return spoken;
+              // Empty reply + an action = a silent action turn (stopping
+              // playback, opening a page). Telling the agent "nothing found"
+              // here would have it apologize for a success.
+              return actions.length > 0
+                ? 'The action is done and visible on screen. Acknowledge in at most three words.'
+                : "I couldn't find anything on that.";
+            } catch (err) {
+              return `I couldn't look that up: ${err instanceof Error ? err.message : 'unknown error'}`;
+            }
+            })();
+            liveAskRef.current = { question: question.toLowerCase(), promise: run };
+            try { return await run; }
+            finally { if (liveAskRef.current?.promise === run) liveAskRef.current = null; }
+          },
+          open_page: async (params: { name?: string }) => {
+            const resolved = resolvePageRoute(String(params?.name ?? ''));
+            if (!resolved) return `No page called "${String(params?.name ?? '')}" — tell the user you couldn't find it.`;
+            navigate(resolved.route);
+            return `Opened ${resolved.label}.`;
+          },
+          read_news: async (params: { limit?: number }) => {
+            const raw = Number(params?.limit);
+            const limit = Math.max(1, Math.min(30, Number.isFinite(raw) ? Math.trunc(raw) : 12));
+            const { data: news, error: newsErr } = await supabase.functions.invoke('fetch-news-feeds', {
+              body: { offset: 0, limit },
+            });
+            if (newsErr) return JSON.stringify({ error: newsErr.message ?? 'news fetch failed' });
+            const items = Array.isArray((news as { items?: unknown[] } | null)?.items)
+              ? (news as { items: Array<Record<string, unknown>> }).items
+              : [];
+            return JSON.stringify({
+              items: items.slice(0, limit).map((it) => ({
+                title: it?.title,
+                source: it?.source,
+                summary: typeof it?.description === 'string' ? it.description.slice(0, 240) : '',
+                url: it?.link,
+              })),
+            });
+          },
+          /**
+           * Scripture in live voice.
+           *
+           * Live mode is a DIFFERENT brain from the typed assistant — an
+           * ElevenLabs agent with its own tool list — so the Bible tools the
+           * chat path has had all along simply did not exist here. Asking her
+           * to read a psalm out loud got nothing.
+           *
+           * lookup_bible RETURNS text for her to speak; open_bible only
+           * navigates. Both, because "read me Psalm 23 and put it up" is one
+           * request, not two.
+           */
+          lookup_bible: async (params: { reference?: string; query?: string; translation?: string }) => {
+            const translation = String(params?.translation ?? '') || undefined;
+            const ref = String(params?.reference ?? '').trim();
+            const query = String(params?.query ?? '').trim();
+            if (!ref && !query) return 'Ask which passage or phrase they want.';
+            const result = ref
+              ? await fetchPassage(ref, translation)
+              : await searchScripture(query, translation);
+            // Returned verbatim either way: on failure she is told to say she
+            // could not find it rather than recite from memory, and eight
+            // translations differ enough that a remembered verse is wrong.
+            return result.text;
+          },
+          open_bible: async (params: { reference?: string; translation?: string }) => {
+            const ref = String(params?.reference ?? '').trim();
+            if (!ref) return 'Ask which passage they want to see.';
+            const qs = new URLSearchParams({ ref });
+            if (params?.translation) qs.set('translation', String(params.translation));
+            navigate(`/bible?${qs.toString()}`);
+            return `Opened ${ref}.`;
+          },
+          open_link: async (params: { url?: string; title?: string }) => {
+            // In-app reader, never a new tab — the rule everywhere else, and
+            // live voice was the last window.open holdout. The agent gets the
+            // EXTRACTED TEXT back to read in its own voice: the WebRTC channel
+            // is echo-cancelled, while our ArticleCard TTS is not — a second
+            // audio source here would be heard by the live mic as speech.
+            // Before this, the agent only ever held read_news summaries, so
+            // "read it in full" got a repeated summary and "I can only
+            // summarize" (Kevin, 2026-08-17).
+            const url = String(params?.url ?? '');
+            if (!/^https?:\/\/\S+$/i.test(url)) return 'That link is invalid — do not retry it.';
+            const title = String(params?.title ?? 'the article').slice(0, 120);
+            // No readAloud flag: the on-screen card must not start its own TTS.
+            showResult({ kind: 'article', url, ...(params?.title ? { title } : {}) });
+            setSheetOpen(true);
+            try {
+              const { data } = await supabase.functions.invoke('extract-article', { body: { url } });
+              const paragraphs: string[] = data?.success && Array.isArray(data.paragraphs) ? data.paragraphs : [];
+              if (paragraphs.length) {
+                // Capped so the tool result stays within the agent's limits;
+                // the full text is on screen regardless.
+                const text = paragraphs.join('\n\n').slice(0, 5000);
+                return `The article "${title}" is open on screen. Read the following article text aloud to the user IN FULL, verbatim — do not summarize:\n\n${text}`;
+              }
+            } catch { /* fall through to the honest miss below */ }
+            return `Opened ${title} on screen, but the full text could not be extracted from the source — offer to read the summary instead, and say the full story is on screen.`;
+          },
+        },
+        onDisconnect: () => {
+          liveSessionRef.current = null;
+          setLiveStatus('off');
+        },
+      });
+      liveSessionRef.current = session;
+      setLiveStatus('live');
+    } catch (err) {
+      setLiveStatus('off');
+      // Say WHY. The reason travelled all the way from ElevenLabs — through
+      // the edge function, through supabase-js — and was thrown away in this
+      // catch, leaving a fixed string that could mean a dead key, a missing
+      // permission, a deleted agent or no microphone. Configuration faults
+      // last hours; a message that cannot distinguish them costs every one of
+      // those hours.
+      const reason = err instanceof Error ? err.message : String(err ?? '');
+      failVisibly(
+        reason && !/^no conversation token$/i.test(reason)
+          ? `Live voice isn't available: ${reason}`
+          : "Live voice isn't available right now.",
+      );
+    } finally {
+      liveConnectingRef.current = false;
+    }
+  }, [navigate, stopSpeakingNow, showResult, failVisibly, profile?.full_name, profile?.assistant_name, profile?.preferred_name, getFreshGeo, runAction, setSheetOpen]);
+
+  // End the live session if the provider ever unmounts (sign-out, tenant
+  // switch) — a dangling WebRTC session would keep the mic open.
+  useEffect(() => endLive, [endLive]);
+
+  const send = useCallback(async (content: string, opts?: { fromVoice?: boolean }) => {
     const text = content.trim();
     if (!text || state.busy) return;
+    // A voice turn (re)opens conversation mode; a typed turn ends it — the
+    // keyboard is an explicit signal the user is done talking hands-free.
+    conversationRef.current = opts?.fromVoice === true;
+    idleStageRef.current = 0;
+    clearIdleTimer();
     dispatch({ type: 'send', id: crypto.randomUUID(), content: text });
     // Only the latest user turn matters — the edge function loads prior
     // history from the DB by thread_id (Layer 2 persistence). Older
     // clients that sent full history still work; the server takes the
     // last user message.
     const history = [{ role: 'user' as const, content: text }];
-    const storedThreadId = (() => {
-      try { return localStorage.getItem('gw-assistant-thread-id') ?? undefined; }
-      catch { return undefined; }
-    })();
+    const storedThreadId = liveThreadRef.current ?? readStoredThreadId();
     // Try for a fresh coordinate before the request so the assistant can
     // answer "find me a starbucks nearby" without a permission prompt
     // mid-conversation. Silently no-op when the user has denied or the
     // API is unavailable — the assistant will just ask where they are.
     const geo = await getFreshGeo();
+    // Situational context for "next"/skip: how far the interrupted reply got
+    // (a barge-in captured it in speech.ts), and which article the reader
+    // panel is showing. Both are cheap, both make bare follow-ups resolvable.
+    const interrupted = takeInterruptedSpeech();
+    const heardUpTo = interrupted && Date.now() - interrupted.at < 30_000
+      ? interrupted.text.slice(0, Math.floor(interrupted.text.length * interrupted.fraction)).slice(-120)
+      : undefined;
+    const panelState = resultsPanelRef.current;
+    const panel = panelState?.kind === 'article'
+      ? {
+          kind: 'article',
+          url: panelState.url,
+          ...(panelState.title ? { title: panelState.title } : {}),
+          ...(panelState.readAloud === true ? { readAloud: true } : {}),
+        }
+      : undefined;
     try {
       const { data, error } = await supabase.functions.invoke('assistant-chat', {
         body: {
           messages: history,
           thread_id: storedThreadId,
           context: {
-            firstName: profile?.full_name?.split(' ')[0] ?? 'there',
+            firstName: profile?.preferred_name?.trim() || profile?.full_name?.split(' ')[0] || 'there',
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            // Live page list from the nav catalog, so open_page keeps up
+            // with new add-ons without touching the edge function.
+            navTargets: assistantNavTargets(),
             ...(geo ? { geo } : {}),
+            // Spoken replies get the server's voice-length budget.
+            ...(opts?.fromVoice ? { voice: true } : {}),
+            ...(heardUpTo ? { heardUpTo } : {}),
+            ...(panel ? { panel } : {}),
           },
         },
       });
-      if (data?.thread_id && data.thread_id !== storedThreadId) {
-        try { localStorage.setItem('gw-assistant-thread-id', data.thread_id); }
-        catch { /* private mode / quota — persistence just doesn't survive refresh */ }
-      }
+      if (data?.thread_id && data.thread_id !== storedThreadId) writeStoredThreadId(data.thread_id);
+      if (data?.thread_id) liveThreadRef.current = data.thread_id;
       if (error || data?.error) {
-        dispatch({ type: 'fail', error: data?.error ?? "I couldn't reach the assistant right now." });
+        failVisibly(data?.error ?? "I couldn't reach the assistant right now.");
         return;
       }
       // Malformed response: no reply text and no error to show — surface a
       // failure instead of dispatching an empty-content assistant message
       // and leaving busy stuck (or silently doing nothing).
       if (!data || (data.reply == null && data.error == null)) {
-        dispatch({ type: 'fail', error: "I couldn't reach the assistant right now." });
+        failVisibly("I couldn't reach the assistant right now.");
         return;
+      }
+      if (data.resultsPanel && typeof data.resultsPanel === 'object' && 'kind' in data.resultsPanel) {
+        showResult(data.resultsPanel as ConciergeResult);
       }
       const replyId = crypto.randomUUID();
       const actions: AssistantAction[] = data.actions ?? [];
       const { first: confirmAction, autoRun } = confirmQueueRef.current.register(replyId, actions);
-      dispatch({ type: 'reply', id: replyId, content: data.reply ?? '', pendingAction: confirmAction });
-      speakNow(data.reply ?? '');
-      // Sheet closed = this turn came from the floating mic. Surface the
-      // reply as a caption; and NEVER leave a confirm card invisible —
-      // SMS/email sends must show their Send/Cancel, so open the sheet.
-      if (!sheetOpenRef.current) {
-        if (confirmAction) setSheetOpen(true);
-        else if (data.reply) setCaptionReply({ id: replyId, text: data.reply });
+      // Silent action turns (Kevin 2026-08-03: "not respond when just
+      // completing a task"): the model replies with an empty message when
+      // its whole turn is a UI action. No bubble, no speech — the page
+      // changing is the feedback. A confirm card still needs its bubble.
+      const replyText = (data.reply ?? '').trim();
+      if (replyText || confirmAction) {
+        dispatch({ type: 'reply', id: replyId, content: data.reply ?? '', pendingAction: confirmAction });
+        // If she never actually speaks it, print it instead. The caption used
+        // to be gated on isMuted(), which is only ONE of the ways a reply goes
+        // unheard — a dead WKWebView synth, an ElevenLabs error or a blocked
+        // autoplay left no audio AND no text, which users read as the
+        // assistant being broken (Kevin, 2026-08-06: asked who wrote the
+        // German Requiem, saw nothing, while the server had persisted a
+        // correct answer).
+        // Belt AND braces. onSilent covers the speech pipeline reporting
+        // failure; the timer covers it never reporting at all — a hang, a
+        // rejected promise, a code path added later that forgets to call
+        // back. Kevin lost a turn to exactly that (2026-08-06) AFTER the
+        // first fix, so the caption no longer depends on speech behaving.
+        const showCaption = () => {
+          if (!sheetOpenRef.current && !confirmAction && data.reply) {
+            setCaptionReply({ id: replyId, text: data.reply });
+          }
+        };
+        const captionTimer = window.setTimeout(showCaption, CAPTION_FALLBACK_MS);
+        speakNow(replyText, {
+          onStarted: () => window.clearTimeout(captionTimer),
+          onSilent: () => { window.clearTimeout(captionTimer); showCaption(); },
+          // Conversation mode: the reply has finished (or failed to) speak —
+          // hand the floor back to the user.
+          onDone: () => maybeRearmRef.current(),
+        });
+      } else {
+        dispatch({ type: 'settle' });
+        // Silent action turn (the page changing IS the feedback) — re-arm
+        // once the actions below have run; see the post-autoRun call.
       }
+      // Sheet closed = this turn came from the floating mic. Voice-first by
+      // Kevin's request (2026-08-03): a spoken reply is NOT also printed as
+      // a caption — the text is always in the thread behind the FAB's caret.
+      // The caption remains only as the fallback when she can't speak
+      // (muted), and NEVER leave a confirm card invisible — SMS/email sends
+      // must show their Send/Cancel, so open the sheet.
+      if (!sheetOpenRef.current && confirmAction) setSheetOpen(true);
       // Non-confirm actions run immediately, in order.
       for (const action of autoRun) {
         await runAction(replyId, action);
       }
+      // No spoken reply on this turn (empty action-only reply, or a confirm
+      // card waiting): the speech onDone above never fires, so re-arm here.
+      if (!replyText) maybeRearmRef.current();
     } catch {
-      dispatch({ type: 'fail', error: "I couldn't reach the assistant right now." });
+      failVisibly("I couldn't reach the assistant right now.");
     }
-  }, [state.busy, state.messages, profile, speakNow, runAction, setSheetOpen, getFreshGeo]);
+  }, [state.busy, state.messages, profile, speakNow, showResult, runAction, setSheetOpen, getFreshGeo, failVisibly, clearIdleTimer]);
 
-  const toggleMic = useCallback(() => {
+  // One listening session — shared by the mic tap and conversation-mode
+  // re-arms. Every mic-originated turn is marked fromVoice so the server
+  // applies its spoken-length budget and the conversation stays open.
+  const beginListening = useCallback((): boolean => {
+    if (liveSessionRef.current) return false;
     const speech = speechRef.current;
-    if (!speech.available) return;
-    if (listening) { speech.stop(); setListening(false); return; }
-    // Barge-in: starting to talk cuts off whatever she's saying.
-    stopSpeakingNow();
+    if (!speech.available) return false;
+    micActiveRef.current = true;
     setListening(true);
     setTranscript('');
     setCaptionReply(null);
     let finalTranscript = '';
     speech.start(
-      (t, isFinal) => { setTranscript(t); if (isFinal) finalTranscript = t; },
-      () => { setListening(false); if (finalTranscript.trim()) void send(finalTranscript); },
+      (t, isFinal) => {
+        // The user is talking — the "are you still there" clock stands down.
+        clearIdleTimer();
+        setTranscript(t);
+        if (isFinal) finalTranscript = t;
+      },
+      () => {
+        micActiveRef.current = false;
+        setListening(false);
+        if (finalTranscript.trim()) void send(finalTranscript, { fromVoice: true });
+      },
     );
-  }, [listening, send, stopSpeakingNow]);
+    return true;
+  }, [send, clearIdleTimer]);
+
+  // Conversation-mode idle clock. Stage 0: five quiet seconds → stop the
+  // mic (it must never be live while she speaks — there is no echo
+  // cancellation on this path), ask "Are you still there, {name}?", and
+  // re-arm one final window. Stage 1: still quiet → stand down silently.
+  const IDLE_CHECKIN_MS = 5_000;
+  const IDLE_FINAL_MS = 8_000;
+  const startIdleTimer = useCallback(() => {
+    clearIdleTimer();
+    const stage = idleStageRef.current;
+    idleTimerRef.current = window.setTimeout(() => {
+      idleTimerRef.current = null;
+      speechRef.current.stop();
+      micActiveRef.current = false;
+      setListening(false);
+      if (stage === 1 || !conversationRef.current) {
+        endConversation();
+        return;
+      }
+      idleStageRef.current = 1;
+      const name = profile?.preferred_name?.trim() || profile?.full_name?.split(' ')[0] || '';
+      void speakNow(name ? `Are you still there, ${name}?` : 'Are you still there?', {
+        onDone: () => maybeRearmRef.current(),
+      });
+    }, stage === 1 ? IDLE_FINAL_MS : IDLE_CHECKIN_MS);
+  }, [clearIdleTimer, endConversation, profile?.preferred_name, profile?.full_name, speakNow]);
+
+  // Re-arm the mic after a turn's speech/actions finish — only while the
+  // conversation is open and nothing else owns the audio (live voice, a
+  // video call, music playing) or the mic (already listening via barge-in).
+  maybeRearmRef.current = () => {
+    if (!conversationRef.current) return;
+    if (liveSessionRef.current || videoRoomRef.current || nowPlayingRef.current) { endConversation(); return; }
+    // A read-aloud article owns the speaker for the next several minutes —
+    // like music, a hot mic over it would hear her own voice and barge her
+    // in mid-story. (No echo cancellation on the push-to-talk path.)
+    if (resultsPanelRef.current?.kind === 'article' && resultsPanelRef.current.readAloud) { endConversation(); return; }
+    if (micActiveRef.current) return; // barge-in already owns the mic
+    if (!beginListening()) { endConversation(); return; }
+    startIdleTimer();
+  };
+
+  const toggleMic = useCallback(() => {
+    // Live mode owns the mic — push-to-talk stays out of the way.
+    if (liveSessionRef.current) return;
+    const speech = speechRef.current;
+    if (!speech.available) return;
+    if (listening) {
+      // Explicit off-tap also closes conversation mode — the user said stop.
+      endConversation();
+      speech.stop();
+      micActiveRef.current = false;
+      setListening(false);
+      return;
+    }
+    // Barge-in: starting to talk cuts off whatever she's saying.
+    stopSpeakingNow();
+    beginListening();
+  }, [listening, stopSpeakingNow, beginListening, endConversation]);
 
   const toggleMute = useCallback(() => {
     const m = !muted;
@@ -298,6 +1126,19 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     if (m) stopSpeakingNow();
   }, [muted, stopSpeakingNow]);
 
+  const acceptScheduledPlay = useCallback(() => {
+    if (!scheduledPlay) return;
+    markScheduledSeen(scheduledPlay.eventId);
+    const action = scheduledPlay.action;
+    setScheduledPlay(null);
+    void runAction(crypto.randomUUID(), action);
+  }, [scheduledPlay, markScheduledSeen, runAction]);
+  const dismissScheduledPlay = useCallback(() => {
+    if (!scheduledPlay) return;
+    markScheduledSeen(scheduledPlay.eventId);
+    setScheduledPlay(null);
+  }, [scheduledPlay, markScheduledSeen]);
+
   return (
     <AssistantContext.Provider value={{
       state, send, runAction, cancelAction,
@@ -305,9 +1146,15 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       micAvailable: speechRef.current.available, listening, transcript, toggleMic,
       muted, toggleMute,
       speaking, stopSpeaking: stopSpeakingNow,
+      liveStatus, startLive, endLive,
       videoRoom, setVideoRoom,
+      resultsPanel, setResultsPanel,
+      nowPlaying, setNowPlaying,
+      scheduledPlay: scheduledPlay ? { eventTitle: scheduledPlay.eventTitle, label: scheduledPlay.label } : null,
+      acceptScheduledPlay, dismissScheduledPlay,
       captionReply,
       voiceId,
+      assistantName: profile?.assistant_name?.trim() || null,
     }}>
       {children}
     </AssistantContext.Provider>

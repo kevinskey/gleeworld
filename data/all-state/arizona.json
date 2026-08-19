@@ -1,0 +1,205 @@
+{
+  "state_slug": "arizona",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Arizona's All-State choral programs are run by Arizona Choral Educators (ACE), the choral constituent organization of the Arizona Music Educators Association (AMEA, azmea.org), a NAfME state affiliate. Registration for all ACE events except the State Choral Festival goes through the AMEA website; the AzACDA-run State Choral Festival is a separate non-audition event. IMPORTANT ON DATING: AMEA's own 'High School All-State Festival of Performance' page was badly stale at retrieval (forms and deadlines dated 2021), and the ACE calendar page returned 'App Unavailable'. ACE's Events page describes the audition and festival timing only generically (regional auditions end of January, All-State auditions in March, two-day festivals) with no calendar dates. The only 2026-27 dates confirmed on an AMEA source were ACE registration-open dates in August 2026. No 2026-27 audition dates, deadlines, fees, clinicians, or performance repertoire were published publicly; much of it appears to sit behind the AMEA member login. The 2027 AMEA In-Service Conference is January 29-30, 2027. Structural facts below (ensemble sizes, audition format, selection pipeline) come from ACE's evergreen program descriptions, not from a 2026-27 calendar.",
+
+  "organization": {
+    "name": "Arizona Choral Educators",
+    "acronym": "ACE",
+    "website_url": "https://www.azchoraleducators.org/",
+    "description": "Arizona Choral Educators is the choral constituent organization of the Arizona Music Educators Association (AMEA). ACE administers the Regional Honor Choirs, the Arizona All-State Choir, the All-State Jazz and Show Choirs, the Fall Choral Festival, and the elementary/junior high choral festivals. Registration for ACE events is handled through the AMEA website."
+  },
+
+  "sources": [
+    { "name": "Arizona Choral Educators — Events",
+      "url": "https://www.azchoraleducators.org/news",
+      "source_type": "official" },
+    { "name": "Arizona Choral Educators — Regional/All-State Auditions",
+      "url": "https://www.azchoraleducators.org/regional-all-state-information",
+      "source_type": "official" },
+    { "name": "Arizona Choral Educators — Regional/All-State Solo Resources",
+      "url": "https://www.azchoraleducators.org/regional-all-state-solo-information",
+      "source_type": "official" },
+    { "name": "AMEA Festivals",
+      "url": "https://azmea.org/festivals/",
+      "source_type": "official" },
+    { "name": "AMEA High School All-State Festival of Performance (stale, 2021 forms)",
+      "url": "https://azmea.org/high-school-all-state-festival-of-performance/",
+      "source_type": "official" },
+    { "name": "AMEA Calendar",
+      "url": "https://azmea.org/calendar/",
+      "source_type": "calendar" }
+  ],
+
+  "programs": [
+    {
+      "name": "Arizona All-State Choir",
+      "lineage_key": "arizona-all-state-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The Arizona All-State Choir is a choir of 200 high school students selected from the eight Regional Choirs. All Regional participants are eligible to audition. Live auditions are held in March. Selected students learn and memorize the performance songs before attending a two-day festival where they work with a nationally known clinician.",
+      "requirements": [
+        { "category": "eligibility",
+          "title": "Selected from the eight Regional Choirs",
+          "description": "The All-State Choir is drawn from the eight Arizona Regional Honor Choirs; all Regional participants are eligible to audition for All-State. Each Regional Honor Choir is made up of 100 high school students, with live regional auditions held at the end of January and a two-day regional festival in February.",
+          "source_url": "https://www.azchoraleducators.org/news" },
+        { "category": "format",
+          "title": "Audition format: prepared solo (60%) plus sight reading (40%)",
+          "description": "The Arizona Regional and All-State Audition consists of the performance of a required solo worth 60% of the total points, followed by a sight reading audition worth the remaining 40%. Auditions are live.",
+          "structured_data": { "solo_weight_percent": 60, "sight_reading_weight_percent": 40 },
+          "source_url": "https://www.azchoraleducators.org/regional-all-state-information" },
+        { "category": "sight_reading",
+          "title": "Sight reading practice examples published",
+          "description": "ACE publishes separate Regional and All-State sight reading practice examples for audition preparation.",
+          "source_url": "https://www.azchoraleducators.org/regional-all-state-information" },
+        { "category": "materials",
+          "title": "Approved editions of the required solo repertoire",
+          "description": "ACE publishes Dropbox links to public-domain sheet music, accompaniment tracks, practice tracks and pronunciation videos for the solo portion. ACE states these are the approved editions of the Regional/All-State solo repertoire.",
+          "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "category": "other",
+          "title": "Memorization before the festival",
+          "description": "Selected students learn and memorize the performance songs before attending the two-day festival.",
+          "source_url": "https://www.azchoraleducators.org/news" },
+        { "category": "membership",
+          "title": "AMEA membership required of directors",
+          "description": "AMEA states its festivals are open to members only, and registration for ACE festivals is done on the AMEA site.",
+          "source_url": "https://azmea.org/festivals/" }
+      ],
+      "repertoire": [
+        { "title": "An die Musik", "purpose": "audition", "notes": "One of the approved Regional/All-State required solo options. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "Caro mio ben", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "Die Lotosblume", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "Gia il sole dal Gange", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "I Attempt from Love's Sickness to Fly", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "Ich liebe dich", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "Linden Lea", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "Vergebliches Ständchen", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "Vergin, tutto amor", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "Vittoria, mio core!", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "Weep You No More", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" },
+        { "title": "Where'er You Walk", "purpose": "audition", "notes": "Approved Regional/All-State solo option. Composer not stated on the ACE page.", "source_url": "https://www.azchoraleducators.org/regional-all-state-solo-information" }
+      ],
+      "documents": [
+        { "title": "General Guide for the AMEA All-State Festival of Performance", "url": "https://azmea.org/wp-content/uploads/2019/07/ALL-STATE-DOC.pdf", "document_type": "handbook" },
+        { "title": "AMEA/ACE All-State Choir Participation Article", "url": "https://azmea.org/wp-content/uploads/2021/03/AMEA-ACE-All-State-Choir-Participation-Article.pdf", "document_type": "rules" },
+        { "title": "AMEA/ACE All-State Choir Audition Requisition/PO Form", "url": "https://azmea.org/wp-content/uploads/2021/03/AMEA-ACE-All-State-Choir-Audition-Requisition-PO-1.pdf", "document_type": "form" }
+      ]
+    },
+    {
+      "name": "All-State Jazz Choir",
+      "lineage_key": "arizona-all-state-jazz-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "jazz choir",
+      "description": "The All-State Jazz Choir is part of the Arizona All-State Jazz/Show Choir Festival. It consists of two choirs, each made up of 20 high school students selected from the state. Selection is through a September audition process requiring a live singing audition. Selected students learn and memorize the performance songs before attending the festival, where they work with a nationally known jazz clinician. The festival takes place in the fall.",
+      "dates": [
+        { "date_type": "registration_deadline",
+          "title": "ACE registration opens — Jazz/Show Choir auditions",
+          "start_at": "2026-08-03",
+          "all_day": true,
+          "timezone": "America/Phoenix",
+          "description": "Listed on the AMEA calendar as an all-day event. This is the opening of registration, not a deadline; no closing date was published.",
+          "source_url": "https://azmea.org/calendar/" }
+      ],
+      "requirements": [
+        { "category": "format",
+          "title": "Live singing audition in September",
+          "description": "Selection is made through an audition process in September which requires a live singing audition.",
+          "source_url": "https://www.azchoraleducators.org/news" },
+        { "category": "other",
+          "title": "Memorization before the festival",
+          "description": "Selected students learn and memorize the performance songs before attending the festival.",
+          "source_url": "https://www.azchoraleducators.org/news" }
+      ]
+    },
+    {
+      "name": "All-State Mixed Show Choir",
+      "lineage_key": "arizona-all-state-show-choir-mixed",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "show choir",
+      "description": "Part of the Arizona All-State Jazz/Show Choir Festival. The mixed show choir is made up of 60 treble and bass singers from across the state. Selection is through a September audition requiring a live singing and dancing audition. Selected students learn and memorize the performance songs before attending a festival where they learn the choreography and refine the music.",
+      "dates": [
+        { "date_type": "registration_deadline",
+          "title": "ACE registration opens — Jazz/Show Choir auditions",
+          "start_at": "2026-08-03",
+          "all_day": true,
+          "timezone": "America/Phoenix",
+          "source_url": "https://azmea.org/calendar/" }
+      ],
+      "requirements": [
+        { "category": "format",
+          "title": "Live singing and dancing audition in September",
+          "description": "Selection is made through an audition process in September which requires a live singing and dancing audition.",
+          "source_url": "https://www.azchoraleducators.org/news" }
+      ]
+    },
+    {
+      "name": "All-State Treble Show Choir",
+      "lineage_key": "arizona-all-state-show-choir-treble",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "show choir",
+      "description": "Part of the Arizona All-State Jazz/Show Choir Festival. The treble show choir is made up of 42 treble singers from across the state. Selection is through a September audition requiring a live singing and dancing audition.",
+      "dates": [
+        { "date_type": "registration_deadline",
+          "title": "ACE registration opens — Jazz/Show Choir auditions",
+          "start_at": "2026-08-03",
+          "all_day": true,
+          "timezone": "America/Phoenix",
+          "source_url": "https://azmea.org/calendar/" }
+      ],
+      "requirements": [
+        { "category": "format",
+          "title": "Live singing and dancing audition in September",
+          "description": "Selection is made through an audition process in September which requires a live singing and dancing audition.",
+          "source_url": "https://www.azchoraleducators.org/news" }
+      ]
+    },
+    {
+      "name": "All-State Treble Choir (Elementary/Middle School)",
+      "lineage_key": "arizona-esjh-all-state-treble-choir",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "treble chorus",
+      "description": "Listed by AMEA among its Elementary/Middle School Festivals. Details are on the AMEA Elementary/Middle School Festivals page; registration is through the AMEA site and AMEA states festivals are open to members only.",
+      "requirements": [
+        { "category": "membership",
+          "title": "AMEA membership required",
+          "description": "AMEA states its festivals are open to members only.",
+          "source_url": "https://azmea.org/festivals/" }
+      ]
+    },
+    {
+      "name": "All-State Mixed Choir (Elementary/Middle School)",
+      "lineage_key": "arizona-esjh-all-state-mixed-choir",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "Listed by AMEA among its Elementary/Middle School Festivals. Details are on the AMEA Elementary/Middle School Festivals page; registration is through the AMEA site and AMEA states festivals are open to members only.",
+      "requirements": [
+        { "category": "membership",
+          "title": "AMEA membership required",
+          "description": "AMEA states its festivals are open to members only.",
+          "source_url": "https://azmea.org/festivals/" }
+      ]
+    }
+  ],
+
+  "not_published": [
+    "2026-27 All-State Choir audition dates — ACE says only 'live auditions are held in March'",
+    "2026-27 Regional Choir audition and festival dates — ACE says only 'end of January' auditions and a February two-day festival",
+    "2026-27 All-State Choir festival dates and venue",
+    "2026-27 All-State Jazz/Show Choir audition dates, festival dates and venue — only the August 3, 2026 registration-open date was found",
+    "All audition and participation fees — the AMEA All-State forms page still shows 2021 deadlines and the fee/requisition forms are 2021 vintage; current amounts appear to be behind the AMEA member login",
+    "2026-27 audition registration deadlines — the AMEA All-State page still lists March 16, 2021 and April 8, 2021",
+    "2026-27 All-State clinicians/conductors",
+    "Performance repertoire for any 2026-27 All-State choir",
+    "Composers/arrangers of the approved solo repertoire — ACE lists titles only",
+    "Grade-level eligibility and per-school quotas",
+    "Elementary/Middle School All-State Treble and Mixed Choir audition requirements, dates and fees — on the AMEA Elementary/Middle School Festivals page, not retrieved",
+    "ACE event calendar — the ACE calendar page returned 'App Unavailable' at retrieval"
+  ]
+}

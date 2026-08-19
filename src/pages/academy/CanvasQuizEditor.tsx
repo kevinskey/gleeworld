@@ -318,7 +318,7 @@ function QuestionEditor({
               <>
                 <div className="text-sm" dangerouslySetInnerHTML={{ __html: question.question_text ?? '' }} />
                 <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                  <Badge variant="outline" className="text-[10px]">{labelForType(question.question_type)}</Badge>
+                  <Badge variant="outline" className="text-xs">{labelForType(question.question_type)}</Badge>
                   <span>{question.points_possible ?? 0} pts</span>
                 </div>
                 {question.answers && question.answers.length > 0 && (
@@ -415,7 +415,7 @@ function SettingsForm({
         <div>
           <Label className="text-xs">Allowed attempts</Label>
           <Input value={attempts} onChange={(e) => setAttempts(e.target.value)} type="number" min="-1" />
-          <p className="text-[10px] text-muted-foreground mt-0.5">-1 = unlimited</p>
+          <p className="text-xs text-muted-foreground mt-0.5">-1 = unlimited</p>
         </div>
         <div className="flex items-end gap-2">
           <div>

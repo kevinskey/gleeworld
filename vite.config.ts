@@ -95,6 +95,13 @@ export default defineConfig({
           if (id.includes('jspdf') || id.includes('pdf-lib')) return 'pdf-tools';
           // Canvas raster used by the save flow + some annotation paths.
           if (id.includes('html2canvas')) return 'html2canvas';
+          // .docx generation — Documents word processor export only. Pure
+          // data library (no React dependency), so — unlike react/radix/
+          // shadcn — it's safe to split regardless of where it's consumed
+          // from. Only ExportDialog.tsx imports it, and that component is
+          // itself dynamically imported, so this chunk loads solely when a
+          // user opens Export.
+          if (id.includes('/docx/') || id.endsWith('/docx')) return 'docx';
           // Score rendering — sight-singing studio. ~700KB.
           if (id.includes('opensheetmusicdisplay')) return 'osmd';
           // Studio audio — Tone.js graph + scheduler. ~400KB.

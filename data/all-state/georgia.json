@@ -1,0 +1,716 @@
+{
+    "notes": "Originally hand-entered as a migration (Georgia 20260808130000, Texas 20260808150000) before the JSON loader existed; exported back to a data file so every state loads the same way.",
+    "sources": [
+        {
+            "url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+            "name": "GMEA 2026-27 Statewide Calendar (approved 5/16/2026)",
+            "source_type": "calendar"
+        },
+        {
+            "url": "https://www.gmea.org/asc-audition-information",
+            "name": "GMEA All-State Chorus — Audition Information",
+            "source_type": "official"
+        },
+        {
+            "url": "https://www.gmea.org/asc-information",
+            "name": "GMEA All-State Chorus — Event Information",
+            "source_type": "official"
+        },
+        {
+            "url": "https://www.gmea.org/s/2024-ASC-Rules-and-Regulations-e4l7.pdf",
+            "name": "GMEA All-State Chorus Rules and Regulations (Jan 2024)",
+            "source_type": "handbook_pdf"
+        },
+        {
+            "url": "https://www.gmea.org/s/Sight-Reading-Score-Sheet-rv2-25.pdf",
+            "name": "GMEA Sight Reading Score Sheet",
+            "source_type": "official"
+        },
+        {
+            "url": "https://www.gmea.org/choral",
+            "name": "GMEA Choral Division index",
+            "source_type": "official"
+        }
+    ],
+    "programs": [
+        {
+            "fees": [
+            ],
+            "name": "All-State Chorus — 11th & 12th Grade",
+            "dates": [
+                {
+                    "title": "Registration and payment due",
+                    "all_day": true,
+                    "start_at": "2026-09-15",
+                    "timezone": "America/New_York",
+                    "date_type": "registration_deadline",
+                    "sort_order": 10,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Postmark deadline. Students are registered by their chorus director through Opus, not individually. GMEA publishes no time of day."
+                },
+                {
+                    "title": "Region auditions (first audition)",
+                    "all_day": true,
+                    "start_at": "2026-11-07",
+                    "timezone": "America/New_York",
+                    "date_type": "audition_round",
+                    "sort_order": 20,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Held in person at five regional sites. Not a recorded submission."
+                },
+                {
+                    "title": "Acceptance form and payment due",
+                    "all_day": true,
+                    "start_at": "2026-12-15",
+                    "timezone": "America/New_York",
+                    "date_type": "acceptance_deadline",
+                    "sort_order": 30,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Postmark deadline for students advancing past the first audition."
+                },
+                {
+                    "title": "Final auditions (second audition)",
+                    "end_at": "2027-01-23",
+                    "all_day": true,
+                    "start_at": "2027-01-20",
+                    "timezone": "America/New_York",
+                    "date_type": "audition_round",
+                    "sort_order": 40,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Districts choose one date within this window. Rehearsal tracks are emailed to the directors of accepted students."
+                },
+                {
+                    "title": "All-State Chorus",
+                    "end_at": "2027-02-20",
+                    "all_day": true,
+                    "start_at": "2027-02-18",
+                    "timezone": "America/New_York",
+                    "date_type": "event",
+                    "sort_order": 50,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "The Classic Center, Athens, Georgia."
+                }
+            ],
+            "season": "2026-27",
+            "documents": [
+                {
+                    "url": "https://www.gmea.org/s/2024-ASC-Rules-and-Regulations-e4l7.pdf",
+                    "title": "All-State Chorus Rules and Regulations",
+                    "sort_order": 10,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.gmea.org/s/Sight-Reading-Score-Sheet-rv2-25.pdf",
+                    "title": "Sight Reading Score Sheet",
+                    "sort_order": 20,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "title": "2026-27 GMEA Statewide Calendar",
+                    "sort_order": 30,
+                    "document_type": "calendar"
+                },
+                {
+                    "url": "https://www.gmea.org/asc-audition-information",
+                    "title": "All-State Chorus audition information",
+                    "sort_order": 40,
+                    "document_type": "rules"
+                }
+            ],
+            "repertoire": [
+                {
+                    "notes": "Composer and edition not published by GMEA. Confirm the required edition with your district organizer.",
+                    "title": "Se Florindo è fedele",
+                    "purpose": "audition",
+                    "sort_order": 10,
+                    "source_url": "https://www.gmea.org/asc-audition-information"
+                },
+                {
+                    "notes": "Composer and edition not published by GMEA. Confirm the required edition with your district organizer.",
+                    "title": "Lasciatemi morire",
+                    "purpose": "audition",
+                    "sort_order": 20,
+                    "source_url": "https://www.gmea.org/asc-audition-information"
+                }
+            ],
+            "description": "Upperclass high school bracket of GMEA All-State Chorus. Two audition rounds: region auditions in November, final auditions in January.",
+            "lineage_key": "georgia-asc-11-12",
+            "voice_parts": [
+                {
+                    "code": "S1",
+                    "label": "Soprano 1",
+                    "sort_order": 10
+                },
+                {
+                    "code": "S2",
+                    "label": "Soprano 2",
+                    "sort_order": 20
+                },
+                {
+                    "code": "A1",
+                    "label": "Alto 1",
+                    "sort_order": 30
+                },
+                {
+                    "code": "A2",
+                    "label": "Alto 2",
+                    "sort_order": 40
+                },
+                {
+                    "code": "T1",
+                    "label": "Tenor 1",
+                    "sort_order": 50
+                },
+                {
+                    "code": "T2",
+                    "label": "Tenor 2",
+                    "sort_order": 60
+                },
+                {
+                    "code": "B1",
+                    "label": "Bass 1",
+                    "sort_order": 70
+                },
+                {
+                    "code": "B2",
+                    "label": "Bass 2",
+                    "sort_order": 80
+                }
+            ],
+            "requirements": [
+                {
+                    "title": "Director must be a current GMEA/NAfME member",
+                    "category": "membership",
+                    "sort_order": 10,
+                    "source_url": "https://www.gmea.org/asc-information",
+                    "description": "Students cannot register themselves. The registering director must hold current GMEA/NAfME membership, and the application lives in the director's Opus account. Where no school program exists, a GMEA-member private teacher who is directly responsible for instruction on the All-State music may register the student.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Required scales",
+                    "category": "scales",
+                    "sort_order": 20,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "Major, harmonic minor, and chromatic.",
+                    "structured_data": {
+                        "scales": [
+                            "major",
+                            "harmonic_minor",
+                            "chromatic"
+                        ]
+                    }
+                },
+                {
+                    "title": "Prepare one solo from the two published options",
+                    "category": "materials",
+                    "sort_order": 30,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "GMEA publishes two solos per grade bracket. The student performs ONE.",
+                    "structured_data": {
+                        "of": 2,
+                        "choose": 1
+                    }
+                },
+                {
+                    "title": "Sight-reading — three examples",
+                    "category": "sight_reading",
+                    "sort_order": 40,
+                    "source_url": "https://www.gmea.org/s/Sight-Reading-Score-Sheet-rv2-25.pdf",
+                    "description": "Scored on three examples. Credit is given per half-measure for correct pitches and rhythms, with additional intonation and tempo scoring. There is a study period and an enforced time limit.",
+                    "structured_data": {
+                        "examples": 3
+                    }
+                },
+                {
+                    "title": "Solo scored on six criteria",
+                    "category": "rubric",
+                    "sort_order": 50,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "Pitch accuracy, rhythmic accuracy, vocal tone, diction, phrasing/breath, and musicality — each scored 0 to 5.",
+                    "structured_data": {
+                        "criteria": [
+                            "pitch_accuracy",
+                            "rhythmic_accuracy",
+                            "vocal_tone",
+                            "diction",
+                            "phrasing_breath",
+                            "musicality"
+                        ],
+                        "scale_max": 5
+                    }
+                },
+                {
+                    "title": "Auditions are in person, not recorded",
+                    "category": "format",
+                    "sort_order": 60,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "First auditions are held at five regional sites. GMEA publishes no recorded or digital submission option.",
+                    "structured_data": {
+                    }
+                }
+            ],
+            "school_level": "high",
+            "ensemble_type": "chorus"
+        },
+        {
+            "fees": [
+            ],
+            "name": "All-State Chorus — 7th & 8th Grade",
+            "dates": [
+                {
+                    "title": "Registration and payment due",
+                    "all_day": true,
+                    "start_at": "2026-09-15",
+                    "timezone": "America/New_York",
+                    "date_type": "registration_deadline",
+                    "sort_order": 10,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Postmark deadline. Students are registered by their chorus director through Opus, not individually. GMEA publishes no time of day."
+                },
+                {
+                    "title": "Region auditions (first audition)",
+                    "all_day": true,
+                    "start_at": "2026-11-07",
+                    "timezone": "America/New_York",
+                    "date_type": "audition_round",
+                    "sort_order": 20,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Held in person at five regional sites. Not a recorded submission."
+                },
+                {
+                    "title": "Acceptance form and payment due",
+                    "all_day": true,
+                    "start_at": "2026-12-15",
+                    "timezone": "America/New_York",
+                    "date_type": "acceptance_deadline",
+                    "sort_order": 30,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Postmark deadline for students advancing past the first audition."
+                },
+                {
+                    "title": "Final auditions (second audition)",
+                    "end_at": "2027-01-23",
+                    "all_day": true,
+                    "start_at": "2027-01-20",
+                    "timezone": "America/New_York",
+                    "date_type": "audition_round",
+                    "sort_order": 40,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Districts choose one date within this window. Rehearsal tracks are emailed to the directors of accepted students."
+                },
+                {
+                    "title": "All-State Chorus",
+                    "end_at": "2027-02-20",
+                    "all_day": true,
+                    "start_at": "2027-02-18",
+                    "timezone": "America/New_York",
+                    "date_type": "event",
+                    "sort_order": 50,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "The Classic Center, Athens, Georgia."
+                }
+            ],
+            "season": "2026-27",
+            "documents": [
+                {
+                    "url": "https://www.gmea.org/s/2024-ASC-Rules-and-Regulations-e4l7.pdf",
+                    "title": "All-State Chorus Rules and Regulations",
+                    "sort_order": 10,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.gmea.org/s/Sight-Reading-Score-Sheet-rv2-25.pdf",
+                    "title": "Sight Reading Score Sheet",
+                    "sort_order": 20,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "title": "2026-27 GMEA Statewide Calendar",
+                    "sort_order": 30,
+                    "document_type": "calendar"
+                },
+                {
+                    "url": "https://www.gmea.org/asc-audition-information",
+                    "title": "All-State Chorus audition information",
+                    "sort_order": 40,
+                    "document_type": "rules"
+                }
+            ],
+            "repertoire": [
+                {
+                    "notes": "Composer and edition not published by GMEA. Confirm the required edition with your district organizer.",
+                    "title": "Scarborough Fair",
+                    "purpose": "audition",
+                    "sort_order": 10,
+                    "source_url": "https://www.gmea.org/asc-audition-information"
+                },
+                {
+                    "notes": "Composer and edition not published by GMEA. Confirm the required edition with your district organizer.",
+                    "title": "Oh Shenandoah",
+                    "purpose": "audition",
+                    "sort_order": 20,
+                    "source_url": "https://www.gmea.org/asc-audition-information"
+                }
+            ],
+            "description": "Middle school bracket of GMEA All-State Chorus. Two audition rounds: region auditions in November, final auditions in January.",
+            "lineage_key": "georgia-asc-7-8",
+            "voice_parts": [
+                {
+                    "code": "S1",
+                    "label": "Soprano 1",
+                    "sort_order": 10
+                },
+                {
+                    "code": "S2",
+                    "label": "Soprano 2",
+                    "sort_order": 20
+                },
+                {
+                    "code": "A1",
+                    "label": "Alto 1",
+                    "sort_order": 30
+                },
+                {
+                    "code": "A2",
+                    "label": "Alto 2",
+                    "sort_order": 40
+                },
+                {
+                    "code": "T1",
+                    "label": "Tenor 1",
+                    "sort_order": 50
+                },
+                {
+                    "code": "T2",
+                    "label": "Tenor 2",
+                    "sort_order": 60
+                },
+                {
+                    "code": "B1",
+                    "label": "Bass 1",
+                    "sort_order": 70
+                },
+                {
+                    "code": "B2",
+                    "label": "Bass 2",
+                    "sort_order": 80
+                }
+            ],
+            "requirements": [
+                {
+                    "title": "Director must be a current GMEA/NAfME member",
+                    "category": "membership",
+                    "sort_order": 10,
+                    "source_url": "https://www.gmea.org/asc-information",
+                    "description": "Students cannot register themselves. The registering director must hold current GMEA/NAfME membership, and the application lives in the director's Opus account. Where no school program exists, a GMEA-member private teacher who is directly responsible for instruction on the All-State music may register the student.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Required scales",
+                    "category": "scales",
+                    "sort_order": 20,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "Major, natural minor, and chromatic.",
+                    "structured_data": {
+                        "scales": [
+                            "major",
+                            "natural_minor",
+                            "chromatic"
+                        ]
+                    }
+                },
+                {
+                    "title": "Prepare one solo from the two published options",
+                    "category": "materials",
+                    "sort_order": 30,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "GMEA publishes two solos per grade bracket. The student performs ONE.",
+                    "structured_data": {
+                        "of": 2,
+                        "choose": 1
+                    }
+                },
+                {
+                    "title": "Sight-reading — three examples",
+                    "category": "sight_reading",
+                    "sort_order": 40,
+                    "source_url": "https://www.gmea.org/s/Sight-Reading-Score-Sheet-rv2-25.pdf",
+                    "description": "Scored on three examples. Credit is given per half-measure for correct pitches and rhythms, with additional intonation and tempo scoring. There is a study period and an enforced time limit.",
+                    "structured_data": {
+                        "examples": 3
+                    }
+                },
+                {
+                    "title": "Solo scored on six criteria",
+                    "category": "rubric",
+                    "sort_order": 50,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "Pitch accuracy, rhythmic accuracy, vocal tone, diction, phrasing/breath, and musicality — each scored 0 to 5.",
+                    "structured_data": {
+                        "criteria": [
+                            "pitch_accuracy",
+                            "rhythmic_accuracy",
+                            "vocal_tone",
+                            "diction",
+                            "phrasing_breath",
+                            "musicality"
+                        ],
+                        "scale_max": 5
+                    }
+                },
+                {
+                    "title": "Auditions are in person, not recorded",
+                    "category": "format",
+                    "sort_order": 60,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "First auditions are held at five regional sites. GMEA publishes no recorded or digital submission option.",
+                    "structured_data": {
+                    }
+                }
+            ],
+            "school_level": "middle",
+            "ensemble_type": "chorus"
+        },
+        {
+            "fees": [
+            ],
+            "name": "All-State Chorus — 9th & 10th Grade",
+            "dates": [
+                {
+                    "title": "Registration and payment due",
+                    "all_day": true,
+                    "start_at": "2026-09-15",
+                    "timezone": "America/New_York",
+                    "date_type": "registration_deadline",
+                    "sort_order": 10,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Postmark deadline. Students are registered by their chorus director through Opus, not individually. GMEA publishes no time of day."
+                },
+                {
+                    "title": "Region auditions (first audition)",
+                    "all_day": true,
+                    "start_at": "2026-11-07",
+                    "timezone": "America/New_York",
+                    "date_type": "audition_round",
+                    "sort_order": 20,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Held in person at five regional sites. Not a recorded submission."
+                },
+                {
+                    "title": "Acceptance form and payment due",
+                    "all_day": true,
+                    "start_at": "2026-12-15",
+                    "timezone": "America/New_York",
+                    "date_type": "acceptance_deadline",
+                    "sort_order": 30,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Postmark deadline for students advancing past the first audition."
+                },
+                {
+                    "title": "Final auditions (second audition)",
+                    "end_at": "2027-01-23",
+                    "all_day": true,
+                    "start_at": "2027-01-20",
+                    "timezone": "America/New_York",
+                    "date_type": "audition_round",
+                    "sort_order": 40,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "Districts choose one date within this window. Rehearsal tracks are emailed to the directors of accepted students."
+                },
+                {
+                    "title": "All-State Chorus",
+                    "end_at": "2027-02-20",
+                    "all_day": true,
+                    "start_at": "2027-02-18",
+                    "timezone": "America/New_York",
+                    "date_type": "event",
+                    "sort_order": 50,
+                    "source_url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "description": "The Classic Center, Athens, Georgia."
+                }
+            ],
+            "season": "2026-27",
+            "documents": [
+                {
+                    "url": "https://www.gmea.org/s/2024-ASC-Rules-and-Regulations-e4l7.pdf",
+                    "title": "All-State Chorus Rules and Regulations",
+                    "sort_order": 10,
+                    "document_type": "rules"
+                },
+                {
+                    "url": "https://www.gmea.org/s/Sight-Reading-Score-Sheet-rv2-25.pdf",
+                    "title": "Sight Reading Score Sheet",
+                    "sort_order": 20,
+                    "document_type": "form"
+                },
+                {
+                    "url": "https://docs.google.com/document/d/1p17s-MXuD9STUcUSbGWlKkapGBOs4pg2b54DOr_p3AE/edit",
+                    "title": "2026-27 GMEA Statewide Calendar",
+                    "sort_order": 30,
+                    "document_type": "calendar"
+                },
+                {
+                    "url": "https://www.gmea.org/asc-audition-information",
+                    "title": "All-State Chorus audition information",
+                    "sort_order": 40,
+                    "document_type": "rules"
+                }
+            ],
+            "repertoire": [
+                {
+                    "notes": "Composer and edition not published by GMEA. Confirm the required edition with your district organizer.",
+                    "title": "Per la gloria",
+                    "purpose": "audition",
+                    "sort_order": 10,
+                    "source_url": "https://www.gmea.org/asc-audition-information"
+                },
+                {
+                    "notes": "Composer and edition not published by GMEA. Confirm the required edition with your district organizer.",
+                    "title": "Caro mio ben",
+                    "purpose": "audition",
+                    "sort_order": 20,
+                    "source_url": "https://www.gmea.org/asc-audition-information"
+                }
+            ],
+            "description": "Underclass high school bracket of GMEA All-State Chorus. Two audition rounds: region auditions in November, final auditions in January.",
+            "lineage_key": "georgia-asc-9-10",
+            "voice_parts": [
+                {
+                    "code": "S1",
+                    "label": "Soprano 1",
+                    "sort_order": 10
+                },
+                {
+                    "code": "S2",
+                    "label": "Soprano 2",
+                    "sort_order": 20
+                },
+                {
+                    "code": "A1",
+                    "label": "Alto 1",
+                    "sort_order": 30
+                },
+                {
+                    "code": "A2",
+                    "label": "Alto 2",
+                    "sort_order": 40
+                },
+                {
+                    "code": "T1",
+                    "label": "Tenor 1",
+                    "sort_order": 50
+                },
+                {
+                    "code": "T2",
+                    "label": "Tenor 2",
+                    "sort_order": 60
+                },
+                {
+                    "code": "B1",
+                    "label": "Bass 1",
+                    "sort_order": 70
+                },
+                {
+                    "code": "B2",
+                    "label": "Bass 2",
+                    "sort_order": 80
+                }
+            ],
+            "requirements": [
+                {
+                    "title": "Director must be a current GMEA/NAfME member",
+                    "category": "membership",
+                    "sort_order": 10,
+                    "source_url": "https://www.gmea.org/asc-information",
+                    "description": "Students cannot register themselves. The registering director must hold current GMEA/NAfME membership, and the application lives in the director's Opus account. Where no school program exists, a GMEA-member private teacher who is directly responsible for instruction on the All-State music may register the student.",
+                    "structured_data": {
+                    }
+                },
+                {
+                    "title": "Required scales",
+                    "category": "scales",
+                    "sort_order": 20,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "Major, natural minor, and chromatic.",
+                    "structured_data": {
+                        "scales": [
+                            "major",
+                            "natural_minor",
+                            "chromatic"
+                        ]
+                    }
+                },
+                {
+                    "title": "Prepare one solo from the two published options",
+                    "category": "materials",
+                    "sort_order": 30,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "GMEA publishes two solos per grade bracket. The student performs ONE.",
+                    "structured_data": {
+                        "of": 2,
+                        "choose": 1
+                    }
+                },
+                {
+                    "title": "Sight-reading — three examples",
+                    "category": "sight_reading",
+                    "sort_order": 40,
+                    "source_url": "https://www.gmea.org/s/Sight-Reading-Score-Sheet-rv2-25.pdf",
+                    "description": "Scored on three examples. Credit is given per half-measure for correct pitches and rhythms, with additional intonation and tempo scoring. There is a study period and an enforced time limit.",
+                    "structured_data": {
+                        "examples": 3
+                    }
+                },
+                {
+                    "title": "Solo scored on six criteria",
+                    "category": "rubric",
+                    "sort_order": 50,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "Pitch accuracy, rhythmic accuracy, vocal tone, diction, phrasing/breath, and musicality — each scored 0 to 5.",
+                    "structured_data": {
+                        "criteria": [
+                            "pitch_accuracy",
+                            "rhythmic_accuracy",
+                            "vocal_tone",
+                            "diction",
+                            "phrasing_breath",
+                            "musicality"
+                        ],
+                        "scale_max": 5
+                    }
+                },
+                {
+                    "title": "Auditions are in person, not recorded",
+                    "category": "format",
+                    "sort_order": 60,
+                    "source_url": "https://www.gmea.org/asc-audition-information",
+                    "description": "First auditions are held at five regional sites. GMEA publishes no recorded or digital submission option.",
+                    "structured_data": {
+                    }
+                }
+            ],
+            "school_level": "high",
+            "ensemble_type": "chorus"
+        }
+    ],
+    "state_slug": "georgia",
+    "organization": {
+        "name": "Georgia Music Educators Association",
+        "acronym": "GMEA",
+        "description": "Georgia's NAfME state affiliate, based in Stockbridge, GA. Administers All-State Chorus, All-State Reading Chorus, statewide honor choruses, and Chorus LGPE. Registration and payment run through GMEA's Opus system at https://opus.gmea.org/.",
+        "website_url": "https://www.gmea.org/"
+    },
+    "retrieved_at": "2026-08-07",
+    "not_published": [
+        "Fee amounts — GMEA publishes none publicly; they sit behind the Opus login",
+        "Clock times for any deadline or audition",
+        "Results/acceptance announcement date",
+        "2027 conductors and ensemble divisions",
+        "Composers and editions for the audition solos",
+        "A 2026-27 revision of the ASC Rules and Regulations (latest is Jan 2024)"
+    ]
+}

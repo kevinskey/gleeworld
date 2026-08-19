@@ -11,6 +11,10 @@
 // with deployed clients; only the upstream and parser changed.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import {
+  isReadingsPageForDate,
+  READINGS_OUT_OF_RANGE,
+} from "../_shared/liturgy/readingsWindow.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,6 +62,22 @@ serve(async (req: Request) => {
   if (!upstream.ok) {
     return json({ error: `Upstream ${upstream.status}`, sourceUrl }, 502);
   }
+
+  // Universalis 302s out-of-window dates to /n-otherdates.htm. fetch follows
+  // redirects, so that arrives as a healthy 200 with no readings in it. Report
+  // the real reason instead of letting the parser come up empty and look
+  // broken.
+  if (!isReadingsPageForDate(upstream.url, yyyymmdd)) {
+    return json({
+      date,
+      sourceUrl,
+      liturgicalTitle: null,
+      readings: [],
+      error: READINGS_OUT_OF_RANGE,
+      outOfRange: true,
+    }, 200);
+  }
+
   const html = await upstream.text();
 
   const parsed = parseUniversalisReadings(html, yyyymmdd);
@@ -143,8 +163,9 @@ function extractBlock(chunk: string): ReadingBlock | null {
 
   const citation = thMatches.slice(1).find(t => t && t.length > 0) || null;
 
-  const afterTable = chunk.slice(tableMatch.index! + tableMatch[0].length);
-  let body = afterTable;
+  let body = truncateAtPageChrome(
+    chunk.slice(tableMatch.index! + tableMatch[0].length),
+  );
   let summary: string | null = null;
   const h4Match = body.match(/<h4[^>]*>([\s\S]*?)<\/h4>/i);
   if (h4Match) {
@@ -159,6 +180,29 @@ function extractBlock(chunk: string): ReadingBlock | null {
   // popover gracefully handles an empty body by showing the citation.
   if (!body && !summary && !citation) return null;
   return { heading, citation, summary, html: body };
+}
+
+/**
+ * The final shortrule chunk carries the rest of the page after the last
+ * reading: the Greek/English cross-link (<p class="rubric">), the
+ * "Christian Art" blurb (<h2>), the Dates navigation and the copyright
+ * block. Tag-stripping keeps their TEXT, so it all rode along after the
+ * Gospel. No reading body ever contains an <h2> or these rubric/nav
+ * phrases, so cut at the earliest marker.
+ */
+function truncateAtPageChrome(body: string): string {
+  const markers = [
+    /<h2[\s>]/i,
+    /<p\s+class="rubric"[^>]*>\s*You can also view this page/i,
+    /<!--\s*Delta/i,
+    /<div[^>]*class="[^"]*\bbottomstuff\b/i,
+  ];
+  let cut = -1;
+  for (const re of markers) {
+    const m = body.match(re);
+    if (m && m.index !== undefined && (cut < 0 || m.index < cut)) cut = m.index;
+  }
+  return cut < 0 ? body : body.slice(0, cut);
 }
 
 function stripTags(s: string): string {

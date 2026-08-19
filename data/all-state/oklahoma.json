@@ -1,0 +1,145 @@
+{
+  "state_slug": "oklahoma",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Oklahoma's All-State ensembles are split between two organizations. OkMEA's Choral Division administers the High School Mixed Chorus, High School Treble Chorus and the Intercollegiate Choir; its Elementary Division administers the Children's All-State Chorus. OkCDA (Oklahoma Choral Directors Association) separately administers Junior High Mixed Chorus, Junior High Treble Chorus, High School Show Choir and Vocal Jazz Ensemble. This record covers the OkMEA high school choruses, whose page was last updated July 17, 2026 and carries full 2026-27 information. Both All-State chorus rounds are published as 'Saturday, October 31' and 'Saturday, November 14' without a year; those weekdays match 2026 and sit between the September 2026 deadlines and the January 2027 festival. There is one audition process for both choruses: every interested student auditions for the Mixed Chorus and the committee places singers after the final round.",
+  "organization": {
+    "name": "Oklahoma Music Educators Association",
+    "acronym": "OkMEA",
+    "website_url": "https://okmea.org/",
+    "description": "OkMEA is Oklahoma's state music education association. Its Choral Division administers the All-State High School Mixed Chorus, High School Treble Chorus and Intercollegiate Choir, and its Elementary Division administers the Children's All-State Chorus. All-State ensembles rehearse and perform at the annual January conference/festival."
+  },
+  "sources": [
+    { "name": "OkMEA All-State — Mixed Chorus and Treble Chorus", "url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/", "source_type": "official" },
+    { "name": "OkMEA All-State (audition process overview)", "url": "https://okmea.org/all-state/", "source_type": "official" },
+    { "name": "OkCDA — All-State Organizations (division of responsibility, future festival dates)", "url": "https://www.oklacda.org/all-state-organizations/", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "All-State Mixed Chorus and Treble Chorus",
+      "lineage_key": "oklahoma-hs-all-state-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus and treble chorus",
+      "description": "OkMEA runs a single two-round audition process for both the All-State Mixed Chorus and the All-State Treble Chorus: every interested student auditions for the Mixed Chorus, and the committee places singers into the two ensembles after the final round. 2026-27 conductors are Dr. Frances Fonza (Southeastern Louisiana University) for the Mixed Chorus and Dr. Alissa Mercurio Rowe (Louisiana State University) for the Treble Chorus.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "First Deadline",
+          "start_at": "2026-09-12",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "$20.00 per student entry fee at this deadline.",
+          "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Second Deadline",
+          "start_at": "2026-09-19",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "$45.00 per student entry fee at this deadline.",
+          "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "First Round auditions",
+          "start_at": "2026-10-31",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Published as 'Saturday, October 31'. Four quadrant sites: Northwest — Enid High School; Northeast — Centennial Middle School, Broken Arrow; Southwest — Lawton Eisenhower Middle School; Southeast — Ada High School. A separate document lists the schools assigned to each quadrant.",
+          "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Second Round auditions",
+          "start_at": "2026-11-14",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Published as 'Saturday, November 14'. University of Central Oklahoma, Edmond.",
+          "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/"
+        },
+        {
+          "date_type": "event",
+          "title": "January Festival / OkMEA Conference",
+          "start_at": "2027-01-14",
+          "end_at": "2027-01-16",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Published in the 'Future January Festival Dates' list on the OkCDA All-State Organizations page.",
+          "source_url": "https://www.oklacda.org/all-state-organizations/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "membership",
+          "title": "Current NAfME/OkMEA membership required",
+          "description": "Directors must verify their NAfME/OkMEA membership is current; students cannot be entered for auditions without membership in the organization.",
+          "source_url": "https://okmea.org/all-state/"
+        },
+        {
+          "category": "other",
+          "title": "Non-traditional voice part registration",
+          "description": "Students may audition on a non-traditional voice part (for example, a boy auditioning as an alto) only if the student consistently sings that part in their school's choral organization. The director must complete a Non-Traditional Voice Part Registration Form for each such student, notify the Mixed Chorus Chair by email, and scan/email the form to the chair or deliver it to the Quad Chair at the first round audition site. Completed forms must be received before the student attempts the first round audition.",
+          "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/"
+        },
+        {
+          "category": "materials",
+          "title": "Official rehearsal tracks",
+          "description": "Student auditions use the official Rehearsal Tracks, which are purchased through OkCDA. The tracks, produced by Kevin Zinn, include pronunciation guides for foreign-language pieces, and are ordered via an online Rehearsal Track Order Form.",
+          "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/"
+        },
+        {
+          "category": "format",
+          "title": "Two-round quadrant audition process",
+          "description": "First round auditions are held at four quadrant sites (Northwest, Northeast, Southwest, Southeast); students who advance audition in a second round at a single statewide site. OkMEA instructs directors to arrive early, remain available to assist with the audition process as directed by the site manager, and observe scheduled audition times — a student who does not appear at the scheduled time is disqualified.",
+          "source_url": "https://okmea.org/all-state/"
+        },
+        {
+          "category": "other",
+          "title": "Fees escalate by deadline; deadlines strictly enforced",
+          "description": "OkMEA states that most groups have three levels of fees — first deadline, second deadline and emergency — and that deadlines are strictly enforced, with a much higher per-student rate after the first deadline passes.",
+          "source_url": "https://okmea.org/all-state/"
+        }
+      ],
+      "repertoire": [
+        { "title": "Nisi Dominus", "composer": "Baldassare Galuppi", "publisher": "Hal Leonard", "catalog_number": "00244305", "purpose": "audition", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Crucifixus", "composer": "Antonio Lotti", "publisher": "CPDL", "purpose": "audition", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Cum Sancto Spiritu", "composer": "Hyo-Won Woo", "publisher": "Walton Music/GIA", "catalog_number": "10746462", "purpose": "audition", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Hold On", "composer": "Brandon A. Boyd", "publisher": "Hinshaw Music", "catalog_number": "HMC2524D", "purpose": "audition", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Eloyi", "composer": "Mbuso Ndlovu & Sydney Masetlhe", "publisher": "Walton Music", "catalog_number": "WW2055", "purpose": "performance", "notes": "Listed under Non-Audition Selections.", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Pure Imagination", "composer": "Matthew D. Nielsen", "publisher": "Santa Barbara Music Press", "catalog_number": "SBMP1214", "purpose": "performance", "notes": "Listed under Non-Audition Selections.", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Hope", "composer": "Zachary Moore", "publisher": "Musicspoke", "purpose": "performance", "notes": "Listed under Non-Audition Selections.", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Bonk' abaphandle", "arranger": "Barrett/Ndlovu", "publisher": "GIA Publications / Walton Music", "catalog_number": "WW1843", "purpose": "performance", "notes": "Treble Chorus repertoire.", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Arirang", "composer": "Hyo-Won Woo", "publisher": "Walton Music", "catalog_number": "WW1878", "purpose": "performance", "notes": "Treble Chorus repertoire.", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Aia la 'o Pele I Hawai'i", "composer": "Jace Kaholokula Saplan", "publisher": "Walton Music", "catalog_number": "WW1961", "purpose": "performance", "notes": "Treble Chorus repertoire.", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Suscepit Israel from Magnificat", "composer": "J.S. Bach", "arranger": "Liza Maidens", "publisher": "MusicSpoke", "purpose": "performance", "notes": "Treble Chorus repertoire. Listed on the OkMEA page as 'Sucepit Israel'.", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Odi et Amo", "composer": "Marina Quintanilla", "publisher": "OkCDA Commissioned Piece", "purpose": "performance", "notes": "Treble Chorus repertoire.", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "title": "Rise Up", "composer": "Jake Runestad", "publisher": "Jake Runestad Music", "catalog_number": "JR0063", "purpose": "performance", "notes": "Treble Chorus repertoire.", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2000, "payable_to": "state_association", "description": "Per student, at the First Deadline (September 12, 2026).", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "fee_type": "audition_late", "amount_cents": 4500, "payable_to": "state_association", "description": "Per student, at the Second Deadline (September 19, 2026).", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" },
+        { "fee_type": "audition_emergency", "amount_cents": 10000, "payable_to": "state_association", "description": "Per student, Emergency Deadline — requires emailing student information to the OkMEA contact listed on the page.", "source_url": "https://okmea.org/all-state/mixed-chorus-and-treble-chorus/" }
+      ],
+      "documents": [
+        { "title": "OkMEA All-State Chorus Audition Guidelines (Revised 2022)", "url": "https://docs.google.com/document/d/1d0ao7zyoZ-mLax36WkvezzadeXdX2d-mA-RLIyZPfEI/edit", "document_type": "rules" },
+        { "title": "Mixed Chorus Repertoire List (through 2026)", "url": "https://docs.google.com/document/d/1BRHQG5RZasKId7KB7x9-tl1KeN1QKhFrgwcCoRRfSew/edit", "document_type": "other" },
+        { "title": "Treble Chorus Repertoire List (through 2026)", "url": "https://drive.google.com/open?id=1cAddpeZQDLy8kDNa9Z_cXLmHFYHXD04j0GUOQquTNGw", "document_type": "other" },
+        { "title": "Non-Traditional Voice Part Registration Form", "url": "https://drive.google.com/open?id=1A3lcUoKCinCkku7Bacu3Z-PU1-N1_QRC", "document_type": "form" },
+        { "title": "Quadrant school assignments", "url": "https://docs.google.com/document/d/19RAh3nMBsEJwxwfBG_gQX1xLJb4zrBKsPIDHJFM_j9I/edit", "document_type": "other" },
+        { "title": "OkMEA Rules, Policies, and Procedures", "url": "https://docs.google.com/document/d/13rQVkM4nA6ocBeq4vQWg-DLhAIicBQdnLiuuLiwlPog/edit", "document_type": "rules" },
+        { "title": "Repertoire notes", "url": "https://docs.google.com/document/d/14zJrkUXJF-WQYT-35xejPtlibItCMXwYi4JuE5t4GC8/edit", "document_type": "other" }
+      ]
+    }
+  ],
+  "not_published": [
+    "Explicit calendar years on the audition round dates — OkMEA lists them only as 'Saturday, October 31' and 'Saturday, November 14'",
+    "Grade-level eligibility rules for the OkMEA high school choruses (the OSSAA sanction and no-home-school rules on the OkCDA page apply to OkCDA-administered festivals, not OkMEA's HS choruses)",
+    "Which measures/excerpts of each audition selection are used, and any round-by-round restrictions (in the linked repertoire-notes and guidelines documents, not retrieved)",
+    "Participation/acceptance fee for students selected to an All-State chorus (only audition entry fees are published)",
+    "Voice-part list and ensemble sizes",
+    "Rehearsal track pricing",
+    "Details for the OkMEA Children's All-State Chorus and Intercollegiate Choir (separate divisions, not covered here)"
+  ]
+}

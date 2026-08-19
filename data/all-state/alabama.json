@@ -1,0 +1,813 @@
+{
+  "state_slug": "alabama",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Alabama's All-State chorus is run by the Alabama Vocal Association (AVA), the choral division of the Alabama Music Educators Association (AMEA), a NAfME state affiliate. AVA labels the season by the spring festival year (\"2027 All-State\"), which is the 2026-27 school year; data on the site was current for that season at retrieval. Five audition choirs (MS Treble, MS Mixed, HS SSAA, HS TTBB, HS SATB) plus a separate All-State Show Choir. Every choir performs the common piece \"Alabama\" in addition to its own repertoire. Note AVA also announced a 2026-2027 trial year in which sight-singing assessments are administered but do not count toward All-State selection (per an AMEA/AVA news post); the AVA All-State pages themselves do not detail that, so it is not encoded as a requirement here.",
+  "organization": {
+    "name": "Alabama Vocal Association",
+    "acronym": "AVA",
+    "website_url": "https://alabamavocalassociation.org/",
+    "description": "The Alabama Vocal Association is the choral division of the Alabama Music Educators Association (AMEA). It administers statewide choral events including the All-State Choral Festival, the All-State Show Choir Festival, State Choral Performance Assessment, Solo & Ensemble, and Honor Choir."
+  },
+  "sources": [
+    {
+      "name": "AVA All-State Chorus Auditions",
+      "url": "https://alabamavocalassociation.org/all-state-chorus-auditions/",
+      "source_type": "official"
+    },
+    {
+      "name": "AVA All-State Festivals",
+      "url": "https://alabamavocalassociation.org/all-state-festivals/",
+      "source_type": "official"
+    },
+    {
+      "name": "AVA All-State Chorus Repertoire (2027)",
+      "url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/",
+      "source_type": "official"
+    },
+    {
+      "name": "AVA All-State Standing Rules",
+      "url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateStandingRules.pdf",
+      "source_type": "handbook_pdf"
+    }
+  ],
+  "programs": [
+    {
+      "name": "All-State Choral Festival — High School SATB",
+      "lineage_key": "alabama-hs-satb",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The All-State Choral Festival is a three-day event that culminates in a professionally recorded concert. The 2027 high school festival runs Thursday through Saturday at Samford University in Birmingham. 2027 HS SATB clinician: Dr. Brittney E. Boykin.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "All-State Chorus audition registration and payment postmark deadline",
+          "start_at": "2026-09-25",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Registrations will not be accepted after September 25. Payments postmarked after September 25 are charged a late fee.",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "All-State Chorus auditions (by district site)",
+          "start_at": "2026-10-29",
+          "end_at": "2026-11-06",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Auditions are held October 29 - November 6, 2026 depending on the district. Sites: Montgomery (Saint James School) Oct 29; Mobile (Springhill Baptist Church) Oct 30; Florence (Florence High School) Nov 1; Madison (First Baptist Church Madison) Nov 2-3; Oxford (Meadowbrook Baptist Church) Nov 4; Tuscaloosa (Christ Episcopal Church) Nov 5; Birmingham (Bluff Park United Methodist Church) Nov 6.",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "date_type": "results",
+          "title": "All-State results published",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "All-State results will be published within two weeks of the close of auditions. No specific calendar date is published.",
+          "source_url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateStandingRules.pdf"
+        },
+        {
+          "date_type": "event",
+          "title": "2027 All-State Choral Festival (high school)",
+          "start_at": "2027-03-11",
+          "end_at": "2027-03-13",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Held on the campus of Samford University, Birmingham, AL. The high school festival is Thursday-Saturday.",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        },
+        {
+          "date_type": "event",
+          "title": "High school All-State concert",
+          "start_at": "2027-03-13T12:00:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "description": "The high school festival culminates in a 12:00 Saturday concert.",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "materials",
+          "title": "Audition materials each student must bring",
+          "description": "Each student must bring an All-State Audition Adjudication Form F2.2 signed by parent and student (students will not be allowed to audition without a parent signature) and a complete set of music, with measures numbered, for the choir for which they are auditioning, including \"Alabama\" (no photocopies).",
+          "source_url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateStandingRules.pdf"
+        },
+        {
+          "category": "format",
+          "title": "Director acknowledgment at registration",
+          "description": "Each director must bring to the registration desk a completed and signed All-State Audition Director Acknowledgment Form F2.4.",
+          "source_url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateStandingRules.pdf"
+        },
+        {
+          "category": "rubric",
+          "title": "Adjudication rubric",
+          "description": "Students are adjudicated on each piece using a 0-10 rubric scored on pitch accuracy, rhythm accuracy, diction, intonation, tone production, and consistency of expressive style, tempo, phrasing and dynamics.",
+          "structured_data": {
+            "scale_min": 0,
+            "scale_max": 10,
+            "criteria": [
+              "pitch",
+              "rhythm",
+              "diction",
+              "intonation",
+              "tone production",
+              "expression (style, tempo, phrasing, dynamics)"
+            ]
+          },
+          "source_url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateStandingRules.pdf"
+        },
+        {
+          "category": "other",
+          "title": "Festival participation and attire",
+          "description": "Students must attend the festival and concert in their entirety, bring a complete original set of numbered music and a pencil to each rehearsal (no photocopies), bring a black folder for the concert, and memorize their part for the National Anthem by the beginning of the festival. School choral uniform or formal concert attire is required; cell phones are prohibited during rehearsals and concerts.",
+          "source_url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateStandingRules.pdf"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Dies Irae from Requiem",
+          "composer": "Michael John Trotta",
+          "publisher": "Hampton Roads Music Group",
+          "catalog_number": "11315425",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "notes": "J.W. Pepper number. Complete music packets can be purchased through J.W. Pepper.",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "To Sit and Dream",
+          "composer": "Rosephanye Powell",
+          "publisher": "Hal Leonard",
+          "catalog_number": "10091834",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "We Wear the Mask",
+          "composer": "Kenney Potter",
+          "publisher": "Galaxy Music Corp.",
+          "catalog_number": "11538006",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "The Space Within",
+          "composer": "B.E. Boykin",
+          "publisher": "Graphite Publishing",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Sway (Quien Sera?)",
+          "composer": "Kirby Shaw",
+          "publisher": "Hal Leonard",
+          "catalog_number": "10010117",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "More Waters Rising",
+          "composer": "Saro Lynch-Thomason",
+          "arranger": "Adam & Michael Podd",
+          "publisher": "Podd Brothers Music",
+          "catalog_number": "11616231",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Alabama",
+          "composer": "Edna Gockel-Gussen",
+          "arranger": "Ed Robertson",
+          "publisher": "Plymouth Music",
+          "catalog_number": "258652",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "notes": "Common piece required of every All-State choir.",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition_school",
+          "amount_cents": 5000,
+          "payable_to": "state_association",
+          "description": "All-State Chorus audition school fee.",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "fee_type": "audition_student",
+          "amount_cents": 1100,
+          "payable_to": "state_association",
+          "description": "All-State Chorus audition student fee.",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "fee_type": "festival_school",
+          "amount_cents": 5000,
+          "payable_to": "state_association",
+          "description": "All-State Festival registration school fee.",
+          "source_url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateStandingRules.pdf"
+        },
+        {
+          "fee_type": "festival_student",
+          "amount_cents": 5000,
+          "payable_to": "state_association",
+          "description": "$50 per accepted student at festival registration; no exceptions.",
+          "source_url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateStandingRules.pdf"
+        },
+        {
+          "fee_type": "late",
+          "payable_to": "state_association",
+          "description": "Festival registration late fee: 2 weeks late $50, 3rd week $100, 4th week $150. No registrations accepted more than twenty business days late.",
+          "source_url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateStandingRules.pdf"
+        }
+      ],
+      "documents": [
+        {
+          "title": "AVA All-State Standing Rules",
+          "url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateStandingRules.pdf",
+          "document_type": "rules"
+        },
+        {
+          "title": "All-State Parent Information",
+          "url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/AllStateParent.pdf",
+          "document_type": "rules"
+        },
+        {
+          "title": "All-State Audition Adjudication Form F2.2",
+          "url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/Form2.2AllStateAdjudication.pdf",
+          "document_type": "form"
+        },
+        {
+          "title": "All-State Audition Director Acknowledgement Form F2.4",
+          "url": "https://alabamavocalassociation.org/wp-content/uploads/2023/07/Director-Acknowledgement-Form-F2.4-Fillable.pdf",
+          "document_type": "form"
+        },
+        {
+          "title": "2024-2026 AVA Handbook",
+          "url": "https://alabamavocalassociation.org/wp-content/uploads/2024/07/2024-2026-AVA-Handbook.pdf",
+          "document_type": "handbook"
+        },
+        {
+          "title": "2024-2026 AVA Event Fees",
+          "url": "https://alabamavocalassociation.org/wp-content/uploads/2024/07/2024-2026-AVA-Event-Fees.pdf",
+          "document_type": "other"
+        },
+        {
+          "title": "26-27 AVA Printable Calendar of Events",
+          "url": "https://alabamavocalassociation.org/wp-content/uploads/2026/08/26-27-AVA-Calendar-of-Events-1.pdf",
+          "document_type": "calendar"
+        }
+      ]
+    },
+    {
+      "name": "All-State Choral Festival — High School SSAA",
+      "lineage_key": "alabama-hs-ssaa",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "High school treble (SSAA) All-State choir. 2027 clinician: Dr. Phillip Stockton.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "All-State Chorus audition registration and payment postmark deadline",
+          "start_at": "2026-09-25",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "All-State Chorus auditions (by district site)",
+          "start_at": "2026-10-29",
+          "end_at": "2026-11-06",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "date_type": "event",
+          "title": "2027 All-State Choral Festival (high school)",
+          "start_at": "2027-03-11",
+          "end_at": "2027-03-13",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Samford University, Birmingham, AL.",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        },
+        {
+          "date_type": "event",
+          "title": "High school All-State concert",
+          "start_at": "2027-03-13T12:00:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Psallite",
+          "composer": "Kyle Pedersen",
+          "publisher": "Walton",
+          "catalog_number": "10994184",
+          "voicing": "SSAA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Allegro (A Wedding Serenade)",
+          "composer": "Antonio Vivaldi",
+          "arranger": "Z. Randall Stroope",
+          "publisher": "Walton",
+          "catalog_number": "11618459",
+          "voicing": "SSAA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Ubi Caritas",
+          "composer": "Dan Forrest",
+          "publisher": "Dan Forrest Music",
+          "catalog_number": "11408035",
+          "voicing": "SSAA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Swifter Than Flame",
+          "composer": "Elaine Hagenberg",
+          "publisher": "Walton",
+          "catalog_number": "11595811",
+          "voicing": "SSAA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "In the Sweet Bye and Bye",
+          "arranger": "D.J. Hall",
+          "publisher": "Walton",
+          "catalog_number": "10067372",
+          "voicing": "SSAA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Elijah Rock",
+          "composer": "Stacey Gibbs",
+          "publisher": "Santa Barbara",
+          "catalog_number": "10775010",
+          "voicing": "SSAA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Alabama",
+          "composer": "Edna Gockel-Gussen",
+          "arranger": "Ed Robertson",
+          "publisher": "Plymouth Music",
+          "catalog_number": "258652",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "notes": "Common piece required of every All-State choir.",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition_school",
+          "amount_cents": 5000,
+          "payable_to": "state_association",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "fee_type": "audition_student",
+          "amount_cents": 1100,
+          "payable_to": "state_association",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        }
+      ]
+    },
+    {
+      "name": "All-State Choral Festival — High School TTBB",
+      "lineage_key": "alabama-hs-ttbb",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "tenor-bass chorus",
+      "description": "High school tenor-bass (TTBB) All-State choir. 2027 clinician: Dr. Alissa A. Rowe.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "All-State Chorus audition registration and payment postmark deadline",
+          "start_at": "2026-09-25",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "All-State Chorus auditions (by district site)",
+          "start_at": "2026-10-29",
+          "end_at": "2026-11-06",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "date_type": "event",
+          "title": "2027 All-State Choral Festival (high school)",
+          "start_at": "2027-03-11",
+          "end_at": "2027-03-13",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Samford University, Birmingham, AL.",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        },
+        {
+          "date_type": "event",
+          "title": "High school All-State concert",
+          "start_at": "2027-03-13T12:00:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Glory, Glory Hallelujah",
+          "composer": "Howard Helvey",
+          "publisher": "Beckenhorst Press",
+          "catalog_number": "10341897",
+          "voicing": "TTBB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Ad Amore",
+          "composer": "Lee Kesselman",
+          "publisher": "Boosey & Hawkes, Inc",
+          "catalog_number": "10609877",
+          "voicing": "TTBB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Laudate Dominum",
+          "composer": "Dan Davison",
+          "publisher": "Walton",
+          "catalog_number": "10067350",
+          "voicing": "TB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Victimae Paschali Laudes",
+          "arranger": "Michael Englehardt",
+          "publisher": "Michael Englehardt",
+          "catalog_number": "10522508",
+          "voicing": "TTBB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Stardust",
+          "composer": "B.E. Boykin",
+          "publisher": "Graphite Publishing",
+          "catalog_number": "11556422",
+          "voicing": "TBB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Glory! From Selma",
+          "composer": "Eugene Rogers",
+          "publisher": "Mark Foster",
+          "catalog_number": "10715769",
+          "voicing": "TTBB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Alabama",
+          "composer": "Edna Gockel-Gussen",
+          "arranger": "Ed Robertson",
+          "publisher": "Plymouth Music",
+          "catalog_number": "258652",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "notes": "Common piece required of every All-State choir.",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition_school",
+          "amount_cents": 5000,
+          "payable_to": "state_association",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "fee_type": "audition_student",
+          "amount_cents": 1100,
+          "payable_to": "state_association",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        }
+      ]
+    },
+    {
+      "name": "All-State Choral Festival — Middle School Mixed",
+      "lineage_key": "alabama-ms-mixed",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "Middle school mixed (SATB) All-State choir. 2027 clinician: Dr. Eric G. Johnson.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "All-State Chorus audition registration and payment postmark deadline",
+          "start_at": "2026-09-25",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "All-State Chorus auditions (by district site)",
+          "start_at": "2026-10-29",
+          "end_at": "2026-11-06",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "date_type": "event",
+          "title": "2027 All-State Choral Festival (middle school)",
+          "start_at": "2027-03-11",
+          "end_at": "2027-03-12",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Samford University, Birmingham, AL. The middle school festival is Thursday-Friday.",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        },
+        {
+          "date_type": "event",
+          "title": "Middle school All-State concert",
+          "start_at": "2027-03-12T19:00:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Come and See",
+          "composer": "J. Reese Norris",
+          "publisher": "MusicSpoke",
+          "catalog_number": "11691572",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "For This Joy",
+          "composer": "Susan LaBarr",
+          "publisher": "Walton",
+          "catalog_number": "11371557",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Voces Lucis",
+          "composer": "Andrea Ramsey",
+          "publisher": "Santa Barbara",
+          "catalog_number": "10307825",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Who Has Seen The Wind",
+          "composer": "Bruce Tippette",
+          "publisher": "Excelcia Music Publishing",
+          "catalog_number": "11674791",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "I Choose Love",
+          "composer": "Mark Miller",
+          "publisher": "Choristers Guild",
+          "catalog_number": "10661699",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Temporal",
+          "composer": "Diana Saez & Suzzette Ortiz",
+          "publisher": "La Voz Publishing",
+          "catalog_number": "11535672",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Alabama",
+          "composer": "Edna Gockel-Gussen",
+          "arranger": "Ed Robertson",
+          "publisher": "Plymouth Music",
+          "catalog_number": "258652",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "notes": "Common piece required of every All-State choir.",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition_school",
+          "amount_cents": 5000,
+          "payable_to": "state_association",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "fee_type": "audition_student",
+          "amount_cents": 1100,
+          "payable_to": "state_association",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        }
+      ]
+    },
+    {
+      "name": "All-State Choral Festival — Middle School Treble",
+      "lineage_key": "alabama-ms-treble",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "treble chorus",
+      "description": "Middle school treble (SSA) All-State choir. 2027 clinician: Dr. Jordan Langworthy.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "All-State Chorus audition registration and payment postmark deadline",
+          "start_at": "2026-09-25",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "All-State Chorus auditions (by district site)",
+          "start_at": "2026-10-29",
+          "end_at": "2026-11-06",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "date_type": "event",
+          "title": "2027 All-State Choral Festival (middle school)",
+          "start_at": "2027-03-11",
+          "end_at": "2027-03-12",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Samford University, Birmingham, AL.",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        },
+        {
+          "date_type": "event",
+          "title": "Middle school All-State concert",
+          "start_at": "2027-03-12T19:00:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Fire and Ice",
+          "composer": "Emily Crocker",
+          "publisher": "Hal Leonard",
+          "catalog_number": "114277775",
+          "voicing": "SSA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Agnus Dei",
+          "composer": "J.D. Frizzell",
+          "publisher": "Colla Voce",
+          "catalog_number": "10369439",
+          "voicing": "SSA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Salmo 150",
+          "composer": "Emani Aguiar",
+          "publisher": "Earthsongs",
+          "catalog_number": "3128758",
+          "voicing": "SSA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Does the World Say",
+          "composer": "Kyle Pederson",
+          "publisher": "Walton",
+          "catalog_number": "11392436",
+          "voicing": "SSA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "I Took My Power in My Hand (The Duel)",
+          "composer": "Meredith Tompkins",
+          "publisher": "Carl Fischer",
+          "catalog_number": "11673958",
+          "voicing": "SSA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Dance!",
+          "composer": "Robert T. Gipson",
+          "publisher": "Alfred",
+          "catalog_number": "11503185",
+          "voicing": "SSA",
+          "purpose": "audition",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        },
+        {
+          "title": "Alabama",
+          "composer": "Edna Gockel-Gussen",
+          "arranger": "Ed Robertson",
+          "publisher": "Plymouth Music",
+          "catalog_number": "258652",
+          "voicing": "SATB",
+          "purpose": "audition",
+          "notes": "Common piece required of every All-State choir.",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-repertoire/"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition_school",
+          "amount_cents": 5000,
+          "payable_to": "state_association",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        },
+        {
+          "fee_type": "audition_student",
+          "amount_cents": 1100,
+          "payable_to": "state_association",
+          "source_url": "https://alabamavocalassociation.org/all-state-chorus-auditions/"
+        }
+      ]
+    },
+    {
+      "name": "All-State Show Choir Festival",
+      "lineage_key": "alabama-show-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "show choir",
+      "description": "The Alabama All-State Show Choir is an elite performance ensemble made up of Alabama high school students. They audition with a rigorous vocal and dance audition, are selected to the group, then learn and present a show chosen by their clinicians.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "2027 All-State Show Choir Festival",
+          "start_at": "2027-04-01",
+          "end_at": "2027-04-03",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Spain Park High School, Birmingham, AL.",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Vocal and dance audition",
+          "description": "Students audition with a rigorous vocal and dance audition.",
+          "source_url": "https://alabamavocalassociation.org/all-state-festivals/"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "Explicit grade-level eligibility ranges for each All-State choir — not stated on the All-State Chorus Auditions page (may be in the AVA Handbook, not retrieved)",
+    "AVA/AMEA membership requirement for participating directors — not stated on the pages retrieved",
+    "Specific audition times at each district site — only dates published",
+    "Exact calendar date for publication of All-State results — rules say only 'within two weeks of the close of auditions'",
+    "All-State Show Choir audition dates, deadlines, fees and repertoire — separate page not retrieved",
+    "Details of the announced 2026-2027 sight-singing trial year (assessments administered but not counted) — described only in an AVA news post, not on the All-State pages",
+    "Named voice-part divisions per choir (S1/S2/A1/A2 etc.) as AVA's own wording — inferred from voicing labels only"
+  ]
+}

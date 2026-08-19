@@ -32,36 +32,42 @@
 // Both of those files carry a comment pointing back at this one. If you
 // change a tier's label, price, or lookup_key, update all three in the same
 // commit.
+// Prices updated 2026-08-17 to match the PR #247 price bump in planTiers.ts
+// ($15 / $50 / $65 / $250 monthly) — the script had drifted and still carried
+// the pre-bump numbers, so the live catalog was never created at the shipped
+// prices. Stripe prices are immutable: if a lookup_key already resolves to a
+// price with a DIFFERENT amount, this script now fails loudly instead of
+// silently keeping the stale price (see ensurePrice).
 const TIERS = [
   {
     id: 'personal',
     label: 'Personal',
-    monthlyCents: 899,
-    annualCents: 7900,
+    monthlyCents: 1500,
+    annualCents: 13500,
     lookupKeyMonthly: 'gw_personal_monthly',
     lookupKeyAnnual: 'gw_personal_annual',
   },
   {
     id: 'director_60',
     label: 'Director',
-    monthlyCents: 3900,
-    annualCents: 39000,
+    monthlyCents: 5000,
+    annualCents: 50000,
     lookupKeyMonthly: 'gw_director60_monthly',
     lookupKeyAnnual: 'gw_director60_annual',
   },
   {
     id: 'director_150',
     label: 'Director+',
-    monthlyCents: 6900,
-    annualCents: 69000,
+    monthlyCents: 6500,
+    annualCents: 65000,
     lookupKeyMonthly: 'gw_director150_monthly',
     lookupKeyAnnual: 'gw_director150_annual',
   },
   {
     id: 'institution',
     label: 'Institution',
-    monthlyCents: 19900,
-    annualCents: 199000,
+    monthlyCents: 25000,
+    annualCents: 250000,
     lookupKeyMonthly: 'gw_institution_monthly',
     lookupKeyAnnual: 'gw_institution_annual',
   },
@@ -74,7 +80,7 @@ if (!STRIPE_KEY) {
   process.exit(1);
 }
 
-if (STRIPE_KEY.startsWith('sk_live_')) {
+if (STRIPE_KEY.startsWith('sk_live_') || STRIPE_KEY.startsWith('rk_live_')) {
   console.error('='.repeat(72));
   console.error('!! LIVE-MODE STRIPE KEY DETECTED (sk_live_...) !!');
   console.error('This script is intended to run against Stripe TEST mode.');
@@ -200,6 +206,37 @@ async function ensurePrice(tier, productId, interval) {
 
   const existing = await findPriceByLookupKey(lookupKey);
   if (existing) {
+    // Stripe prices are immutable. A lookup_key resolving to a different
+    // amount means the catalog predates a price change in TIERS — that needs
+    // a deliberate migration, not a silent "found it". With MIGRATE_PRICES=yes
+    // this creates the replacement price (transfer_lookup_key moves the key)
+    // and deactivates the stale one; otherwise it fails loudly so nobody
+    // checks out at a stale price. Deactivating is safe for the 2026-08-17
+    // drift specifically because no plan subscription ever succeeded on the
+    // old prices (checkout was broken until PR #708); a price that backs live
+    // subscriptions should be left active even after the key transfers.
+    if (existing.unit_amount !== unitAmount) {
+      if (process.env.MIGRATE_PRICES !== 'yes') {
+        throw new Error(
+          `price [${lookupKey}] exists as ${existing.id} at ${existing.unit_amount}¢ but TIERS says ${unitAmount}¢ — ` +
+          `re-run with MIGRATE_PRICES=yes to create the replacement (transfer_lookup_key) and deactivate the stale price.`,
+        );
+      }
+      const replacement = await stripeFetch('POST', 'prices', {
+        params: {
+          product: productId,
+          unit_amount: String(unitAmount),
+          currency: 'usd',
+          'recurring[interval]': interval,
+          lookup_key: lookupKey,
+          transfer_lookup_key: 'true',
+        },
+        idempotencyKey: `gw-migrate-price-${lookupKey}-${unitAmount}`,
+      });
+      await stripeFetch('POST', `prices/${existing.id}`, { params: { active: 'false' } });
+      console.log(`  price (${interval}): MIGRATED ${lookupKey} — created ${replacement.id} at ${unitAmount}¢, deactivated ${existing.id} (was ${existing.unit_amount}¢)`);
+      return replacement;
+    }
     console.log(`  price (${interval}): found ${existing.id} [${lookupKey}]`);
     return existing;
   }

@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "https://esm.sh/resend@2.0.0?target=deno";
 import { getOrgName } from "../_shared/branding.ts";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +25,20 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // This function sends mail from the platform domain and had NO auth gate at
+  // all, so with FUNCTIONS_VERIFY_JWT=false anyone on the internet could POST
+  // an arbitrary recipient and body and phish from gleeworld.org.
+  //
+  // Unlike send-booking-confirmation-email, this one cannot require
+  // { internal: true }: it has a legitimate browser caller in
+  // src/utils/sendAuditionConfirmationEmail.ts, invoked by signed-in users on
+  // the authenticated audition path. Requiring a caller of ANY kind closes it
+  // to anonymous traffic without breaking that path. The anonymous audition
+  // flow does not reach here directly — it goes through public-intake, which
+  // calls with the service-role key.
+  const caller = await authenticateCaller(req);
+  if (!caller) return unauthorizedResponse(corsHeaders);
+
   try {
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
@@ -43,7 +58,18 @@ const handler = async (req: Request): Promise<Response> => {
       day: 'numeric'
     });
 
-    const location = auditionLocation || 'Spelman College Music Department';
+    // No hardcoded institution fallback: auditionLocation is optional end to
+    // end (client type, this request type, and here). When it's absent —
+    // audition_sessions has no location column, so most tenants will never
+    // send one — the location row is omitted from the email entirely rather
+    // than printing a placeholder or another tenant's real address.
+    const locationRow = auditionLocation
+      ? `
+              <div class="detail-row">
+                <span class="detail-label">Location:</span>
+                <span class="detail-value">${auditionLocation}</span>
+              </div>`
+      : '';
     const dashboardUrl = `${Deno.env.get('SITE_URL') || 'https://gleeworld.org'}/auditioner-dashboard`;
 
     const emailResponse = await resend.emails.send({
@@ -97,11 +123,7 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
               </div>
               
-              <div class="detail-row">
-                <span class="detail-label">Location:</span>
-                <span class="detail-value">${location}</span>
-              </div>
-              
+              ${locationRow}
               <div class="detail-row">
                 <span class="detail-label">Application ID:</span>
                 <span class="detail-value">${applicationId}</span>

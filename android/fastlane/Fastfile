@@ -37,8 +37,8 @@ platform :android do
 
   desc "Build a signed AAB. Pulls the latest web bundle via cap sync first."
   lane :bundle do
-    sh("cd .. && npm run build")
-    sh("cd .. && npx cap sync android")
+    sh("cd ../.. && npm run build")
+    sh("cd ../.. && npx cap sync android")
     gradle(task: "clean bundleRelease")
   end
 

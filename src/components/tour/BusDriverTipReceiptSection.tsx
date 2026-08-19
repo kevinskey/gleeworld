@@ -238,11 +238,11 @@ export const BusDriverTipReceiptSection: React.FC<BusDriverTipReceiptSectionProp
             </Badge>
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Capture the driver’s signature in Tour Manager after the tip is paid.
+            Capture the driver’s signature in Travel Manager after the tip is paid.
           </p>
           {resolvedTour && (
             <p className="text-xs text-muted-foreground">
-              Tour: {resolvedTour.name}
+              Travel: {resolvedTour.name}
               {resolvedTour.start_date ? ` · ${format(new Date(resolvedTour.start_date), 'MMM d, yyyy')}` : ''}
             </p>
           )}

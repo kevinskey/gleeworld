@@ -72,44 +72,6 @@ export const useAssignmentSubmissions = (assignmentId: string) => {
       const assignment = await resolveAssignmentId(assignmentId);
       if (!assignment) return [];
       
-      if (assignment.is_mus240) {
-        // Fetch from legacy system
-        const queryId = assignment.legacy_id || assignment.id;
-        const { data: entries, error } = await supabase
-          .from('mus240_journal_entries')
-          .select(`
-            *,
-            mus240_journal_grades(*)
-          `)
-          .eq('assignment_id', queryId)
-          .order('submitted_at', { ascending: false });
-        
-        if (error) throw error;
-        
-        // Get student names
-        const studentIds = entries?.map(e => e.student_id) || [];
-        const { data: profiles } = await supabase
-          .from('gw_profiles_directory')
-          .select('user_id, full_name, email')
-          .in('user_id', studentIds);
-        
-        const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-        
-        return entries?.map(entry => ({
-          id: entry.id,
-          assignment_id: assignment.id,
-          student_id: entry.student_id,
-          student_name: profileMap.get(entry.student_id)?.full_name || 'Unknown',
-          student_email: profileMap.get(entry.student_id)?.email,
-          content: entry.content,
-          audio_url: null,
-          submitted_at: entry.submitted_at,
-          status: entry.submitted_at ? 'submitted' : 'draft',
-          grade: (entry as any).mus240_journal_grades?.[0] || null,
-          word_count: entry.word_count
-        })) || [];
-      }
-      
       // For new system (future implementation)
       return [];
     },

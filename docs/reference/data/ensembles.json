@@ -1,0 +1,37 @@
+[
+  {
+    "id": "ensemble/classical-mozart-orchestra",
+    "name": "Classical / \"Mozart\" orchestra",
+    "instrumentation": "2.2.2.2 — 2.2.0.0 — timp — str (8.6.4.4.2)"
+  },
+  {
+    "id": "ensemble/early-romantic",
+    "name": "Early Romantic",
+    "instrumentation": "2.2.2.2 — 4.2.3.0 — timp — str (10.8.6.4.3)"
+  },
+  {
+    "id": "ensemble/standard-double-wind",
+    "name": "Standard \"double wind\"",
+    "instrumentation": "2.2.2.2 — 4.2.3.1 — timp, perc — str"
+  },
+  {
+    "id": "ensemble/full-romantic-triple-wind",
+    "name": "Full Romantic (\"triple wind\")",
+    "instrumentation": "3.3.3.3 — 4.3.3.1 — timp, 3–4 perc, hp — str (16.14.12.10.8)"
+  },
+  {
+    "id": "ensemble/late-romantic-quadruple-wind",
+    "name": "Late Romantic / \"quadruple wind\"",
+    "instrumentation": "4.4.4.4 — 8.4.4.1 — timp, 5 perc, 2 hp, cel — str (16.16.12.10.8)"
+  },
+  {
+    "id": "ensemble/chamber-orchestra",
+    "name": "Chamber orchestra",
+    "instrumentation": "1.1.1.1 — 1.1.0.0 — str (6.5.4.3.1) or similar"
+  },
+  {
+    "id": "ensemble/sinfonietta-pierrot",
+    "name": "Sinfonietta / Pierrot+",
+    "instrumentation": "Variable, typically 8–20 players"
+  }
+]

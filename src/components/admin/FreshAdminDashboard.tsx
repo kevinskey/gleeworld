@@ -57,7 +57,7 @@ const adminModules = [
   { id: 'documents', name: 'Documents & Forms', icon: FileText, description: 'Contracts, W9s, and official paperwork', route: '/admin/documents' },
   { id: 'access-control', name: 'Access Control', icon: Shield, description: 'Role assignments and security policies', route: '/admin/access' },
   { id: 'analytics', name: 'Analytics', icon: BarChart3, description: 'Platform analytics', route: '/admin/analytics' },
-  { id: 'course-statistics', name: 'Course Statistics', icon: BarChart3, description: 'MUS 240 submission analytics', route: '/admin/course-statistics' },
+  { id: 'course-statistics', name: 'Course Statistics', icon: BarChart3, description: 'GW 240 submission analytics', route: '/admin/course-statistics' },
   { id: 'database', name: 'Database', icon: Database, description: 'Database management', route: '/admin/database' },
   { id: 'system-settings', name: 'System Settings', icon: Settings, description: 'Platform configuration', route: '/admin/settings' },
   { id: 'module-access', name: 'Module Access', icon: Shield, description: 'Assign module visibility to users', route: '/admin/module-access' },
@@ -82,7 +82,7 @@ export const FreshAdminDashboard = () => {
         onViewModeChange={setViewMode}
       />
       
-      <div className="container mx-auto px-6 pt-24 pb-6">
+      <div className="container mx-auto px-4 md:px-6 pt-20 md:pt-24 pb-6">
         <Card className="mb-8 bg-background/50 border-border">
           <CardHeader>
             <CardTitle className="text-lg">Quick Actions</CardTitle>

@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PublicSiteView, type PublicSitePayload } from '@/components/public-site/PublicSiteView';
 
 export default function PublicSitePage() {
-  const { slug = '' } = useParams<{ slug: string }>();
+  const { slug = '', page = 'home' } = useParams<{ slug: string; page?: string }>();
 
   const { data, isLoading } = useQuery<PublicSitePayload | null>({
     queryKey: ['public-site', slug],
@@ -37,5 +37,25 @@ export default function PublicSitePage() {
     );
   }
 
-  return <PublicSiteView data={data} slug={slug} />;
+  // A page URL only works if the published site actually has blocks on it.
+  const pageExists = page === 'home'
+    || (data.blocks ?? []).some((b) => (b.page || 'home') === page);
+  if (!pageExists) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white px-6 text-center">
+        <h1 className="font-sans normal-case tracking-tight text-3xl font-bold mb-2">Page not found</h1>
+        <p className="text-muted-foreground mb-6">This page doesn&apos;t exist on this site.</p>
+        <Link to={`/sites/${slug}`} className="text-primary underline">Go to the site&apos;s home page</Link>
+      </div>
+    );
+  }
+
+  return (
+    <PublicSiteView
+      data={data}
+      slug={slug}
+      page={page}
+      pageHref={(p) => (p === 'home' ? `/sites/${slug}` : `/sites/${slug}/${p}`)}
+    />
+  );
 }

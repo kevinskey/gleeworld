@@ -569,8 +569,8 @@ export default function Messenger() {
             <MessageSquare className="w-4 h-4" /> Groups
           </h2>
           <div className="flex gap-1">
-            <Button variant="ghost" size="sm" onClick={() => setShowNewGroup((v) => !v)} title="New group">
-              <Plus className="w-4 h-4" />
+            <Button variant="ghost" size="sm" onClick={() => setShowNewGroup((v) => !v)} title="New group" className="text-foreground hover:text-foreground">
+              <Plus className="w-6 h-6" strokeWidth={2.5} />
             </Button>
           </div>
         </div>

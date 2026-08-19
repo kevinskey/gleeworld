@@ -145,6 +145,7 @@ export function buildGwInstrument(name: string, makeFallback: () => EngineInstru
     triggerAttackRelease: (pitch, dur, time, vel) => voice?.triggerAttackRelease(pitch, dur, time, vel),
     triggerAttack: (pitch, time, vel) => voice?.triggerAttack?.(pitch, time, vel),
     triggerRelease: (pitch, time) => voice?.triggerRelease?.(pitch, time),
+    releaseAll: () => voice?.releaseAll?.(),
     dispose: () => { disposed = true; voice?.dispose(); out.dispose(); },
   };
 }
@@ -208,6 +209,18 @@ function buildLayeredVoice(name: string, manifest: GwManifest, out: Tone.Gain): 
         catch { /* damper sample not loaded */ }
       }
     },
+    // Transport pause/stop/seek: cut every held note now, no damper —
+    // this is a hard stop, not a musical note-off. Use Tone.immediate()
+    // (see liveVoices.ts header comment): this must not pay the transport
+    // lookAhead (~100ms) the way scheduled playback does, or held notes
+    // ring on past the pause/stop/seek point.
+    releaseAll: () => {
+      const time = Tone.immediate();
+      for (const [pitch, i] of heldLayer) {
+        try { samplers[i].triggerRelease(midiToNote(pitch), time); } catch { /* already ended */ }
+      }
+      heldLayer.clear();
+    },
     dispose: () => {
       samplers.forEach((s) => s.dispose());
       releaseSampler?.dispose();
@@ -216,12 +229,22 @@ function buildLayeredVoice(name: string, manifest: GwManifest, out: Tone.Gain): 
   };
 }
 
+// GM hi-hat choke: striking a closed (42) or pedal (44) hat silences a
+// ringing open hat (46) — every hardware drum machine and GM module does
+// this, and without it open hats smear over trap hat patterns.
+const HAT_CHOKERS = new Set([42, 44]);
+const HAT_OPEN = 46;
+const CHOKE_FADE_S = 0.03;
+
 function buildKitVoice(name: string, manifest: GwManifest, out: Tone.Gain): EngineInstrument {
   const kit = manifest.kit ?? {};
   // Pre-touch buffers so downloads start (and register with Tone's loader).
   for (const hits of Object.values(kit)) for (const h of hits) getBuffer(sampleUrl(name, manifest, h.url));
 
   let disposed = false;
+  // Ringing open-hat hits, so a closed hat can choke them. Entries remove
+  // themselves in onended, so the set only ever holds live sources.
+  const openHats = new Set<{ src: Tone.ToneBufferSource; gain: Tone.Gain }>();
   const hit = (pitch: number, time: number, vel01: number) => {
     if (disposed) return;
     const hits = kit[String(pitch)];
@@ -230,6 +253,19 @@ function buildKitVoice(name: string, manifest: GwManifest, out: Tone.Gain): Engi
     const i = gwLayerIndexForVelocity(hits, vel);
     const buf = getBuffer(sampleUrl(name, manifest, hits[i].url));
     if (!buf.loaded) return;
+    if (HAT_CHOKERS.has(pitch)) {
+      for (const oh of openHats) {
+        // Fast fade instead of hard stop — a zero-crossing-agnostic cut
+        // clicks; 30ms reads as the real pedal-catch sound.
+        try {
+          oh.gain.gain.cancelScheduledValues(time);
+          oh.gain.gain.setValueAtTime(oh.gain.gain.value, time);
+          oh.gain.gain.linearRampToValueAtTime(0, time + CHOKE_FADE_S);
+          oh.src.stop(time + CHOKE_FADE_S);
+        } catch { /* already ended */ }
+      }
+      openHats.clear();
+    }
     // Within the chosen layer, follow velocity with a gentle gain ramp
     // (the big dynamic jumps come from the layer switch itself). One
     // source + gain per hit: overlapping hits and ringing tails keep
@@ -237,7 +273,9 @@ function buildKitVoice(name: string, manifest: GwManifest, out: Tone.Gain): Engi
     const ratio = Math.min(1, vel / Math.max(1, hits[i].maxVel));
     const gain = new Tone.Gain(0.6 + 0.4 * ratio).connect(out);
     const src = new Tone.ToneBufferSource({ url: buf, fadeOut: 0.01 }).connect(gain);
-    src.onended = () => { src.dispose(); gain.dispose(); };
+    const entry = { src, gain };
+    if (pitch === HAT_OPEN) openHats.add(entry);
+    src.onended = () => { openHats.delete(entry); src.dispose(); gain.dispose(); };
     src.start(time);
   };
 

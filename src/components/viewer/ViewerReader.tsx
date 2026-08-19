@@ -18,6 +18,8 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { getSignedUrl } from '@/utils/storage';
+import { isPersonalScoreId, toTableId } from '@/lib/viewerScoreId';
+import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -104,6 +106,11 @@ const COLOR_OPTIONS = ['#ff0000', '#000000', '#0000ff', '#008000', '#800080', '#
 
 export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) {
   const navigate = useNavigate();
+  // My Music scores annotate fine (Task 2 routes to gw_personal_score_
+  // annotations) but bookmarks, jumps, page-rearrange, layers and audio
+  // tracks all FK gw_sheet_music — there's no row for a personal score to
+  // point at, so those affordances are hidden rather than left to 400.
+  const personalScore = isPersonalScoreId(scoreId);
   const [chromeVisible, setChromeVisible] = useState(true);
   const [toolsOpen, setToolsOpen] = useState(false);
   // forScore-style chrome — left hamburger opens a content-source drawer
@@ -227,6 +234,29 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
     queryKey: ['viewer-score', scoreId],
     queryFn: async () => {
       if (!scoreId) return null;
+
+      // My Music scores arrive with a prefixed id and live in a different
+      // table. They are private by RLS, carry no legacy pdf_url, and always
+      // sit in the personal-scores bucket — so once mapped into ScoreMeta the
+      // existing signing path below handles them with no further branching.
+      if (isPersonalScoreId(scoreId)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data } = await (supabase as any)
+          .from('gw_personal_scores')
+          .select('id, title, composer, storage_path')
+          .eq('id', toTableId(scoreId))
+          .maybeSingle();
+        if (!data) return null;
+        return {
+          id: scoreId,
+          title: data.title,
+          composer: data.composer ?? null,
+          pdf_url: null,
+          storage_path: data.storage_path ?? null,
+          storage_bucket: PERSONAL_SCORES_BUCKET,
+        } as ScoreMeta;
+      }
+
       const { data } = await supabase
         .from('gw_sheet_music')
         .select('id, title, composer, pdf_url, storage_path, storage_bucket')
@@ -582,28 +612,37 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
                   note="Horizontal teleprompter — strip-by-strip scroll"
                   onClick={() => { setDisplayMode('reflow'); setToolsOpen(false); showChrome(); }}
                 />
-                <ToolButton
-                  Icon={Link2}
-                  label="Add jump"
-                  note="Tap a spot to drop a jump circle (repeats, codas)"
-                  onClick={() => { setPlacingJump(true); setToolsOpen(false); showChrome(); }}
-                />
-                <ToolButton
-                  Icon={Shuffle}
-                  label="Rearrange pages"
-                  note="Reorder, duplicate (for repeats), or skip pages"
-                  onClick={() => { setRearrangeOpen(true); setToolsOpen(false); showChrome(); }}
-                />
-                <div className="pt-3 mt-3 border-t">
-                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground px-1 mb-2">
-                    Bookmarks
-                  </div>
-                  <BookmarksMenu
-                    sheetMusicId={m.id}
-                    currentPage={page.current}
-                    onJumpToPage={(p) => callTool((h) => h.goToPage(p))}
+                {/* Jumps, page-rearrange and bookmarks all FK gw_sheet_music —
+                    hide them for personal scores instead of offering an
+                    affordance that errors on save. */}
+                {!personalScore && (
+                  <ToolButton
+                    Icon={Link2}
+                    label="Add jump"
+                    note="Tap a spot to drop a jump circle (repeats, codas)"
+                    onClick={() => { setPlacingJump(true); setToolsOpen(false); showChrome(); }}
                   />
-                </div>
+                )}
+                {!personalScore && (
+                  <ToolButton
+                    Icon={Shuffle}
+                    label="Rearrange pages"
+                    note="Reorder, duplicate (for repeats), or skip pages"
+                    onClick={() => { setRearrangeOpen(true); setToolsOpen(false); showChrome(); }}
+                  />
+                )}
+                {!personalScore && (
+                  <div className="pt-3 mt-3 border-t">
+                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground px-1 mb-2">
+                      Bookmarks
+                    </div>
+                    <BookmarksMenu
+                      sheetMusicId={m.id}
+                      currentPage={page.current}
+                      onJumpToPage={(p) => callTool((h) => h.goToPage(p))}
+                    />
+                  </div>
+                )}
               </div>
             </SheetContent>
           </Sheet>
@@ -617,7 +656,9 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
           <div className="px-2 md:px-3 py-1 bg-background/95 backdrop-blur border-b border-border">
             <AudioCompanionControls
               className="bg-transparent border-0 shadow-none rounded-none px-0 py-0"
-              musicId={m.id}
+              // Track-switcher list is tenant-only (FK gw_sheet_music);
+              // omit musicId for personal scores so it never queries.
+              musicId={personalScore ? undefined : m.id}
               onClose={() => setAudioCompanionOn(false)}
             />
           </div>
@@ -788,16 +829,19 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
                 onPageChange={(current, total) => setPage({ current, total })}
                 className="h-full"
               />
-              {/* Tap-to-jump circles on top of the score. */}
-              <JumpsOverlay
-                sheetMusicId={m.id}
-                currentPage={page.current}
-                totalPages={page.total}
-                surfaceRef={scoreSurfaceRef}
-                placementMode={placingJump}
-                onPlacementEnd={() => setPlacingJump(false)}
-                onJump={(p) => pdfRef.current?.goToPage(p)}
-              />
+              {/* Tap-to-jump circles on top of the score — jumps FK
+                  gw_sheet_music, so personal scores skip this overlay. */}
+              {!personalScore && (
+                <JumpsOverlay
+                  sheetMusicId={m.id}
+                  currentPage={page.current}
+                  totalPages={page.total}
+                  surfaceRef={scoreSurfaceRef}
+                  placementMode={placingJump}
+                  onPlacementEnd={() => setPlacingJump(false)}
+                  onJump={(p) => pdfRef.current?.goToPage(p)}
+                />
+              )}
             </>
           ) : (
             // Empty-state surface — black canvas with a quiet hint so
@@ -833,11 +877,12 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
           pdfRef={pdfRef}
           onExit={exitAnnotate}
           onShowChrome={showChrome}
+          personalScore={personalScore}
         />
       ) : (
         <BottomSeekBar
           chromeVisible={chromeVisible}
-          scoreId={m.id}
+          scoreId={personalScore ? undefined : m.id}
           page={page}
           onShowChrome={showChrome}
           onSeek={(p) => callTool((h) => h.goToPage(p))}
@@ -939,14 +984,18 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
         </div>
       )}
 
-      {/* Rearrange / clone / delete pages. */}
-      <RearrangePagesDialog
-        open={rearrangeOpen}
-        onOpenChange={setRearrangeOpen}
-        sheetMusicId={m.id}
-        totalPhysical={page.total}
-        pdfRef={pdfRef}
-      />
+      {/* Rearrange / clone / delete pages — page-order rows FK gw_sheet_music,
+          so personal scores never open this dialog (the menu item above is
+          gated too, this is belt-and-suspenders). */}
+      {!personalScore && (
+        <RearrangePagesDialog
+          open={rearrangeOpen}
+          onOpenChange={setRearrangeOpen}
+          sheetMusicId={m.id}
+          totalPhysical={page.total}
+          pdfRef={pdfRef}
+        />
+      )}
 
       {/* Cue session sheet — lead / follow page-turn sync. */}
       <Sheet open={cueOpen} onOpenChange={setCueOpen}>
@@ -1001,7 +1050,9 @@ function BottomSeekBar({
   prevSetlistScore, nextSetlistScore, onPrevSetlistScore, onNextSetlistScore,
 }: {
   chromeVisible: boolean;
-  scoreId: string;
+  // undefined for personal scores — bookmarks FK gw_sheet_music, so the
+  // caller omits the id and the hook below never queries.
+  scoreId: string | undefined;
   page: { current: number; total: number };
   onShowChrome: () => void;
   onSeek: (page: number) => void;
@@ -1087,12 +1138,14 @@ function truncate(s: string, n: number) {
 }
 
 function AnnotationChrome({
-  chromeVisible, pdfRef, onExit, onShowChrome,
+  chromeVisible, pdfRef, onExit, onShowChrome, personalScore,
 }: {
   chromeVisible: boolean;
   pdfRef: React.MutableRefObject<PDFViewerHandle | null>;
   onExit: () => void;
   onShowChrome: () => void;
+  /** Layers FK gw_sheet_music — hide the Layers popover for personal scores. */
+  personalScore: boolean;
 }) {
   // We poll the PDFViewer's annotation state at a low frequency (only while
   // chrome is up) so the toolbar reflects which tool is active without
@@ -1179,20 +1232,24 @@ function AnnotationChrome({
           (text-sm on text buttons, text-base on stamp glyphs) per the
           user's spec; only the container chrome got shrunk. */}
       <div className="px-1.5 py-1 bg-background/95 backdrop-blur border border-t-0 border-border rounded-b-lg shadow-xl flex items-center gap-1 flex-wrap max-w-[92vw]">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button size="sm" variant="outline" className="h-7 px-1.5" title="Annotation layers">
-              <LayersIcon className="w-3.5 h-3.5 mr-1" /> Layers
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="start" className="w-72 p-3">
-            <LayersPanel
-              pdfRef={pdfRef}
-              refreshSignal={layersTick}
-              onChanged={() => setLayersTick((t) => t + 1)}
-            />
-          </PopoverContent>
-        </Popover>
+        {/* Layers FK gw_sheet_music — personal scores have no layer rows
+            to offer, so the picker is hidden rather than shown empty. */}
+        {!personalScore && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="outline" className="h-7 px-1.5" title="Annotation layers">
+                <LayersIcon className="w-3.5 h-3.5 mr-1" /> Layers
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-72 p-3">
+              <LayersPanel
+                pdfRef={pdfRef}
+                refreshSignal={layersTick}
+                onChanged={() => setLayersTick((t) => t + 1)}
+              />
+            </PopoverContent>
+          </Popover>
+        )}
         <Button size="sm" variant="outline" onClick={onExit} className="h-7 px-1.5">
           <X className="w-3.5 h-3.5 mr-1" /> Exit
         </Button>

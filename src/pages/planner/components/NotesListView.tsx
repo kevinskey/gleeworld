@@ -74,12 +74,13 @@ export default function NotesListView({ scope, title, onOpenNote }: NotesListVie
             const noteTitle = noteDisplayTitle(n.title, n.note_type as NoteType, n.date_key);
             // Row is a positioned container so the trash button can sit
             // as a SIBLING of the open-note button (nesting buttons is
-            // invalid HTML). Trash fades in on hover / keyboard focus on
-            // md+ and stays visible on touch, matching the messenger
-            // pattern. Right padding on the button keeps text from
-            // colliding with the trash zone.
+            // invalid HTML). Trash stays visible at every width — the old
+            // md:opacity-0 + group-hover reveal keyed on viewport width,
+            // not pointer type, so iPads (md+ AND touch, no hover) had no
+            // way to delete a note. Right padding on the button keeps text
+            // from colliding with the trash zone.
             return (
-              <div key={n.id} className="group relative">
+              <div key={n.id} className="relative">
                 <button
                   onClick={() => onOpenNote(n.id)}
                   className="flex w-full items-start gap-3 rounded-md border border-border bg-card px-3 py-2.5 pr-12 text-left transition-colors hover:bg-accent"
@@ -110,7 +111,7 @@ export default function NotesListView({ scope, title, onOpenNote }: NotesListVie
                     trash.mutate(n.id);
                   }}
                   disabled={trash.isPending}
-                  className="absolute top-1/2 right-2 -translate-y-1/2 inline-flex h-8 w-8 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 focus-visible:bg-destructive/10 disabled:opacity-40 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100 transition-opacity"
+                  className="absolute top-1/2 right-2 -translate-y-1/2 inline-flex h-9 w-9 items-center justify-center rounded-full text-destructive hover:bg-destructive/10 focus-visible:bg-destructive/10 disabled:opacity-40"
                   aria-label={`Delete ${noteTitle}`}
                   title="Move to Trash"
                 >

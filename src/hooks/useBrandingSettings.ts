@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 
 export interface BrandingSettings {
   id: number;
@@ -22,9 +22,20 @@ export interface BrandingSettings {
    *  color palette. */
   assistant_voice_id: string | null;
   setup_completed: boolean;
+  /** SMS sent after a public appointment booking or audition. Placeholders:
+   *  {org_name}, {first_name}. NULL/blank falls back to the server-side
+   *  default ("Thanks for joining {org_name}!") — see
+   *  supabase/functions/_shared/publicIntake.ts. */
+  welcome_sms_template: string | null;
+  /** Public SoundCloud profile URL for this tenant, e.g.
+   *  https://soundcloud.com/doctorkj. Empty leaves the Command Center's
+   *  SoundCloud page on its setup prompt. Set on the Branding tab. */
+  soundcloud_url: string | null;
 }
 
-const TENANT = typeof window !== 'undefined' ? (window as any).__TENANT_CONFIG__ : null;
+const TENANT = typeof window !== 'undefined'
+  ? (window as { __TENANT_CONFIG__?: { org?: string; shortName?: string; logoUrl?: string } }).__TENANT_CONFIG__
+  : null;
 
 /** Defaults sourced from the tenant bootstrap, used while the DB query is loading. */
 function fallback(): BrandingSettings {
@@ -36,17 +47,24 @@ function fallback(): BrandingSettings {
     logo_url: TENANT?.logoUrl ?? null,
     auth_background_url: null,
     auth_background_mobile_url: null,
-    primary_color: '#150d26',
+    primary_color: 'hsl(var(--brand-navy))',
     accent_color: '#9333ea',
     font_family: 'sans',
     letter_spacing: 0,
     assistant_voice_id: null,
     setup_completed: false,
+    welcome_sms_template: null,
+    soundcloud_url: null,
   };
 }
 
 export function useBrandingSettings() {
-  const bootstrapTenantSlug = TENANT?.tenant ?? null;
+  // getTenantSlug() falls back to 'main' when no tenant bootstrap exists
+  // (gleeworld.org serves no tenant-config.json). The pin must NEVER be
+  // dropped: a platform owner's RLS can read every tenant's branding row,
+  // so an unpinned `limit 1` returns an arbitrary tenant's branding — this
+  // is how Kevin's World's logo showed up in gleeworld.org's header.
+  const bootstrapTenantSlug = getTenantSlug();
 
   const query = useQuery({
     queryKey: ['gw_branding_settings', bootstrapTenantSlug],
@@ -54,11 +72,12 @@ export function useBrandingSettings() {
       // For ANON visitors, RLS doesn't filter by tenant (no tenant claim in JWT).
       // We pin the lookup to the subdomain's tenant via the bootstrap slug.
       // For authenticated visitors, RLS also enforces the match — defense in depth.
-      let q = supabase.from('gw_branding_settings').select('*, gw_tenants!inner(slug)');
-      if (bootstrapTenantSlug) {
-        q = q.eq('gw_tenants.slug', bootstrapTenantSlug);
-      }
-      const { data, error } = await q.limit(1).maybeSingle();
+      const { data, error } = await supabase
+        .from('gw_branding_settings')
+        .select('*, gw_tenants!inner(slug)')
+        .eq('gw_tenants.slug', bootstrapTenantSlug)
+        .limit(1)
+        .maybeSingle();
       const fb = fallback();
       if (error) {
         console.warn('[branding] read failed', error.message);

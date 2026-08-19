@@ -1,0 +1,301 @@
+{
+  "state_slug": "nevada",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "IMPORTANT: as of the retrieval date the Nevada Music Educators Association website had NOT yet posted 2026-27 (i.e. the January 2027 festival) All-State information. Every page still described the 2026 All-State Festival, January 29-31, 2026, and stated '2026 Nevada All-State Auditions have Closed'. The program recorded below is therefore explicitly labeled season 2025-26 and its dates are the fall 2025 audition cycle. Do not treat these dates as 2026-27. NMEA runs 12 All-State ensembles; the choral ones are the All-State High School SA Choir and TB Choir (captured here), All-State Vocal Jazz, and a separate Middle School All-State choir program (nmeamusic.org/middleschoolallstateaudition), which was not scraped.",
+  "organization": {
+    "name": "Nevada Music Educators Association",
+    "acronym": "NMEA",
+    "website_url": "https://www.nmeamusic.org/",
+    "description": "NMEA is the Nevada federated state association of NAfME. It runs the annual Nevada All-State Festival and Conference, with concerts at UNLV's Artemus W. Ham Concert Hall and other Las Vegas venues, along with a Solo and Small Ensemble Festival, Small School All-State, Command Performance, and Vocal Adventures."
+  },
+  "sources": [
+    {
+      "name": "NMEA — All-State Festival",
+      "url": "https://www.nmeamusic.org/all-state",
+      "source_type": "official"
+    },
+    {
+      "name": "NMEA — High School All-State Auditions",
+      "url": "https://www.nmeamusic.org/highschoolallstateaudition",
+      "source_type": "official"
+    },
+    {
+      "name": "2026 Nevada All-State High School SA/TB Choir Audition and Nomination Information",
+      "url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "Nevada All-State High School SA and TB Choirs",
+      "lineage_key": "nevada-hs-sa-tb-choir",
+      "season": "2025-26",
+      "school_level": "high",
+      "ensemble_type": "treble chorus and tenor-bass chorus",
+      "description": "NMEA seats two high school all-state choirs, an SA choir and a TB choir. Entry is by two routes: directors may nominate up to eight students in balanced voicing, and may additionally submit auditions for any number of non-nominated students. Auditions are submitted through Opus Events. The choirs perform at the All-State Festival concert at UNLV's Artemus W. Ham Concert Hall. NOTE: this record describes the January 2026 festival cycle, the most recent published by NMEA as of August 2026.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Director registration and audition materials open",
+          "start_at": "2025-09-02",
+          "all_day": true,
+          "timezone": "America/Los_Angeles",
+          "description": "2025-26 cycle.",
+          "source_url": "https://www.nmeamusic.org/highschoolallstateaudition"
+        },
+        {
+          "date_type": "other",
+          "title": "Checks due (must be received by the State Executive)",
+          "start_at": "2025-10-17",
+          "all_day": true,
+          "timezone": "America/Los_Angeles",
+          "description": "Schools paying by check: made payable to Nevada Music Educators Association and received by David Morris on this date.",
+          "source_url": "https://www.nmeamusic.org/highschoolallstateaudition"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Registration closes and all remaining payments due",
+          "start_at": "2025-10-27",
+          "all_day": true,
+          "timezone": "America/Los_Angeles",
+          "description": "Registration must be completed by the school directors. Online audition-fee payment due the same day.",
+          "source_url": "https://www.nmeamusic.org/highschoolallstateaudition"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Audition submission window",
+          "start_at": "2025-10-27",
+          "end_at": "2025-11-14T23:59:00",
+          "all_day": false,
+          "timezone": "America/Los_Angeles",
+          "description": "Monday, October 27 - Friday, November 14, 2025. Submissions due by 11:59 pm on Friday, November 14, via Opus Events.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Nomination deadline",
+          "start_at": "2025-11-14",
+          "all_day": true,
+          "timezone": "America/Los_Angeles",
+          "description": "Directors submit the nomination form for up to eight nominated students by Monday, November 14, 2025.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "date_type": "results",
+          "title": "Audition results posted",
+          "start_at": "2025-11-21T16:00:00",
+          "all_day": false,
+          "timezone": "America/Los_Angeles",
+          "description": "Results posted on the NMEA website on November 21, 2025 by 4:00 pm.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "date_type": "acceptance_deadline",
+          "title": "All-State participation, director and chaperone fees due",
+          "start_at": "2026-01-15T12:00:00",
+          "all_day": false,
+          "timezone": "America/Los_Angeles",
+          "description": "Due by noon January 15, 2026; student and director registration each increase by $25 for late registration after that time.",
+          "source_url": "https://www.nmeamusic.org/all-state"
+        },
+        {
+          "date_type": "event",
+          "title": "Nevada All-State Festival and Conference",
+          "start_at": "2026-01-29",
+          "end_at": "2026-01-31",
+          "all_day": true,
+          "timezone": "America/Los_Angeles",
+          "source_url": "https://www.nmeamusic.org/all-state"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State Choirs & Vocal Jazz Concert",
+          "start_at": "2026-01-30T19:00:00",
+          "all_day": false,
+          "timezone": "America/Los_Angeles",
+          "description": "University of Nevada Las Vegas, Artemus W. Ham Concert Hall, 4505 S. Maryland Pkwy, Las Vegas, NV 89154.",
+          "source_url": "https://www.nmeamusic.org/all-state"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Choral ensemble membership and NAfME teacher membership",
+          "description": "To be nominated or to audition, a student must be a regular member of their high school choral ensemble, and the student's music teacher must be a current member of NAfME.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "category": "format",
+          "title": "Nomination route",
+          "description": "Directors may nominate up to 8 students in balanced voicing (Soprano 1, Soprano 2, Alto 1, Alto 2, Tenor 1, Tenor 2, Bass 1, Bass 2). Nominated students do not need to audition. A nominated student who wishes to be considered for a section leader position must submit an audition; such students are guaranteed a spot but still pay the audition fee.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "category": "format",
+          "title": "Audition route",
+          "description": "In addition to the eight nominated students, directors may submit auditions for any interested non-nominated students; there is no limit on the number auditioning from a school. Auditions are submitted by directors through Opus Events. Students cannot audition on Opus Events unless audition fees have been paid and registration completed.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "category": "scales",
+          "title": "Vocalise — major scales",
+          "description": "Sing the ascending and descending major scales appropriate to the voice part on the vowel 'ah' as in father. Only the starting pitch may be played; accompanied singers will be disqualified. Starting pitches — Soprano: ascending A above Middle C, descending B-flat above Middle C. Alto: ascending E-flat above Middle C, descending A above Middle C. Tenor: ascending F below Middle C, descending Middle C. Bass/Baritone: ascending D below Middle C, descending G below Middle C.",
+          "structured_data": {
+            "vowel": "ah",
+            "accompanied": false,
+            "starting_pitches": {
+              "Soprano": { "ascending": "A above Middle C", "descending": "Bb above Middle C" },
+              "Alto": { "ascending": "Eb above Middle C", "descending": "A above Middle C" },
+              "Tenor": { "ascending": "F below Middle C", "descending": "Middle C" },
+              "Bass/Baritone": { "ascending": "D below Middle C", "descending": "G below Middle C" }
+            }
+          },
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "category": "materials",
+          "title": "Repertoire excerpt",
+          "description": "Sing the appropriate vocal part of the assigned repertoire excerpt, measures 39-47, beginning on the appropriate part's entrance, accompanied by the provided track. Adjudicators must be able to hear both the singer and the accompaniment; the piano accompaniment begins at measure 36 (1:50 timestamp). Score, accompaniment track, and practice tracks are provided by NMEA.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "category": "materials",
+          "title": "Solo",
+          "description": "Sing the first verse of 'America the Beautiful' a cappella in the key appropriate to the voice part. Soprano: C major starting on G above Middle C. Alto: A major starting on E above Middle C. Tenor: C major starting on G below Middle C. Bass: A major starting on E below Middle C.",
+          "structured_data": {
+            "Soprano": { "key": "C major", "starting_pitch": "G above Middle C" },
+            "Alto": { "key": "A major", "starting_pitch": "E above Middle C" },
+            "Tenor": { "key": "C major", "starting_pitch": "G below Middle C" },
+            "Bass": { "key": "A major", "starting_pitch": "E below Middle C" }
+          },
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "category": "rubric",
+          "title": "Scoring guidelines (120 points total)",
+          "description": "Scales 20 points (ascending: pitch 5, tone 5; descending: pitch 5, tone 5). Repertoire excerpt 60 points (pitch 15, rhythm 15, tone 15, musicality 15). Solo 40 points (pitch 10, rhythm 10, tone 10, musicality 10).",
+          "structured_data": {
+            "scales": { "total": 20, "ascending": { "pitch": 5, "tone": 5 }, "descending": { "pitch": 5, "tone": 5 } },
+            "repertoire_excerpt": { "total": 60, "pitch": 15, "rhythm": 15, "tone": 15, "musicality": 15 },
+            "solo": { "total": 40, "pitch": 10, "rhythm": 10, "tone": 10, "musicality": 10 },
+            "grand_total": 120
+          },
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "category": "other",
+          "title": "One ensemble only",
+          "description": "Per NMEA policy students may NOT be in more than one All-State Ensemble. Students may audition for more than one ensemble but must select one if accepted into more than one.",
+          "source_url": "https://www.nmeamusic.org/highschoolallstateaudition"
+        },
+        {
+          "category": "other",
+          "title": "Expectations of accepted singers",
+          "description": "Accepted singers must attend all scheduled rehearsals, dress rehearsals, and performances; tardiness or absence affects participation. Singers must be well prepared on all music prior to arrival or they will not be allowed to participate. Singers must abide by all NMEA All-State Choir policies; if rules are broken singers are sent home at their personal expense. Each singer must have an NMEA sponsor (or a named representative) attending All-State who can give the chairpersons a cell phone number.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "category": "other",
+          "title": "Director forms",
+          "description": "Directors must ensure each student completes the Student Participation Form (which includes Media Release and Code of Conduct), complete the Chaperone Form naming who will supervise their students, complete the Director Form indicating conference attendance, and complete the lunch form and all fees.",
+          "source_url": "https://www.nmeamusic.org/all-state"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Sure on this Shining Night",
+          "composer": "Morten Lauridsen",
+          "purpose": "audition",
+          "notes": "Audition excerpt, mm. 39-47, sung with the NMEA-provided accompaniment track. 2026 cycle selection.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "title": "America the Beautiful",
+          "purpose": "audition",
+          "notes": "Required a cappella solo, first verse only, from 'O beautiful...' through 'From sea to shining sea.' No composer published by NMEA.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 2000,
+          "payable_to": "school",
+          "description": "$20 per audition, paid on the Opus Events audition site. All audition fees are to be paid by each school's director, not by parents or students; directors submit one payment per school. Checks are made payable to Nevada Music Educators Association.",
+          "source_url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing"
+        },
+        {
+          "fee_type": "participation",
+          "amount_cents": 7500,
+          "payable_to": "state_association",
+          "description": "$75 NMEA All-State student registration for nominated and accepted students. Increases by $25 at noon on January 15, 2026 for late registrations.",
+          "source_url": "https://www.nmeamusic.org/all-state"
+        },
+        {
+          "fee_type": "director_registration",
+          "amount_cents": 7500,
+          "payable_to": "state_association",
+          "description": "$75 NMEA All-State director registration; increases by $25 for late registration after noon January 15, 2026.",
+          "source_url": "https://www.nmeamusic.org/all-state"
+        },
+        {
+          "fee_type": "chaperone",
+          "amount_cents": 2500,
+          "payable_to": "state_association",
+          "description": "$25 for NMEA All-State additional chaperones.",
+          "source_url": "https://www.nmeamusic.org/all-state"
+        }
+      ],
+      "documents": [
+        {
+          "title": "2026 Nevada All-State High School SA/TB Choir Audition and Nomination Information",
+          "url": "https://docs.google.com/document/d/1D04WgjD8GOF703c6JP0NbMn0HkBhbaApAAJ97SKFxKE/edit?usp=sharing",
+          "document_type": "rules"
+        },
+        {
+          "title": "Opus Events — NMEA All-State Audition System",
+          "url": "https://audition.opusevent.com/Default.aspx?n=3530",
+          "document_type": "form"
+        },
+        {
+          "title": "NMEA All-State Director Instructions for Opus Events",
+          "url": "https://docs.google.com/document/d/1ypMv5mMrFyvdfjdcJqYTTEqZxxrq2dPeVBE7ZcU3aWI/edit?usp=sharing",
+          "document_type": "other"
+        },
+        {
+          "title": "All-State Auditions Directions Presentation Slideshow",
+          "url": "https://docs.google.com/presentation/d/15y6-vmSGFzxWntccX6GIdJH1Bw6M6OE4dl6rHy7Wu78/edit?usp=sharing",
+          "document_type": "other"
+        },
+        {
+          "title": "2026 Nevada All-State HS Choir Results",
+          "url": "https://docs.google.com/spreadsheets/d/110e-tzf8RqoDPJHudiGUios77dFTCfX9V89tKT1D2Mg/edit?usp=sharing",
+          "document_type": "other"
+        },
+        {
+          "title": "All-State Festival Student Participation Form",
+          "url": "https://www.cognitoforms.com/NevadaMusicEducatorsAssociation/AllStateFestivalStudentParticipationForm",
+          "document_type": "form"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" },
+        { "code": "T1", "label": "Tenor 1" },
+        { "code": "T2", "label": "Tenor 2" },
+        { "code": "B1", "label": "Bass 1" },
+        { "code": "B2", "label": "Bass 2" }
+      ]
+    }
+  ],
+  "not_published": [
+    "ALL 2026-27 information — as of 2026-08-07 the NMEA site still showed only the January 2026 festival; no 2027 festival dates, audition dates, audition selections, or fees were posted",
+    "2026-27 audition repertoire excerpt",
+    "Performance repertoire and conductors for the All-State choirs",
+    "Middle School All-State choir details (a separate NMEA page exists but was not retrieved)",
+    "All-State Vocal Jazz audition requirements"
+  ]
+}

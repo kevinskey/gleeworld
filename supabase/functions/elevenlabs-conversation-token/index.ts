@@ -1,5 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
+import { resolveElevenLabsKey } from "../_shared/elevenLabsKey.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,12 +13,19 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Signed-in users only — every token starts a billable ElevenLabs WebRTC
+  // conversation, so this must never be an open faucet.
+  const caller = await authenticateCaller(req);
+  if (!caller || !caller.userId) return unauthorizedResponse(corsHeaders);
+
   try {
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+    // Key rotation left the live env var named ELEVENLABS_API_KEY_1 —
+    // same fallback chain elevenlabs-tts uses.
+    const ELEVENLABS_API_KEY = resolveElevenLabsKey();
     const ELEVENLABS_AGENT_ID = Deno.env.get("ELEVENLABS_AGENT_ID");
 
     if (!ELEVENLABS_API_KEY) {
-      throw new Error("ELEVENLABS_API_KEY not configured");
+      throw new Error("ElevenLabs API key not configured (set ELEVENLABS_API_KEY_1)");
     }
 
     if (!ELEVENLABS_AGENT_ID) {
@@ -37,7 +46,27 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("ElevenLabs API error:", errorText);
-      throw new Error(`ElevenLabs API error: ${response.status}`);
+      // Pass the REASON through, not just the status.
+      //
+      // "ElevenLabs API error: 401" told a user nothing and told the next
+      // person debugging it even less — the actual cause (a restricted key
+      // without convai permissions, an expired key, a deleted agent) was
+      // visible only in a container log nobody thinks to read. These are
+      // configuration faults that persist for hours, so the message has to
+      // survive the trip to the browser.
+      let detail = "";
+      try {
+        const parsed = JSON.parse(errorText);
+        detail = parsed?.detail?.message ?? parsed?.detail?.status ?? parsed?.message ?? "";
+      } catch {
+        detail = errorText.slice(0, 200);
+      }
+      const hint = /convai/i.test(detail)
+        ? " The ElevenLabs API key is missing its Conversational AI permissions — enable convai_read and convai_write on the key."
+        : response.status === 401
+          ? " The ElevenLabs API key was rejected."
+          : "";
+      throw new Error(`ElevenLabs ${response.status}: ${detail}${hint}`);
     }
 
     const data = await response.json();

@@ -22,20 +22,13 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { verifyClaims } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-
-function decodeJwtPayload(jwt: string): Record<string, unknown> | null {
-  try {
-    const part = jwt.split(".")[1];
-    const padded = part + "===".slice((part.length + 3) % 4);
-    return JSON.parse(atob(padded.replace(/-/g, "+").replace(/_/g, "/")));
-  } catch { return null; }
-}
 
 function err(status: number, code: string, detail?: string) {
   return new Response(JSON.stringify({ error: code, detail }), {
@@ -69,9 +62,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return err(405, "method_not_allowed");
 
-  const auth = req.headers.get("Authorization") || "";
-  const jwt = auth.replace(/^Bearer\s+/i, "");
-  if (!jwt) return err(401, "unauthorized");
+  // The edge-functions container runs with VERIFY_JWT=false, so the gateway
+  // does NOT check the token signature — we MUST verify it here. Without this
+  // a forged JWT (any tenant_id / tenant_role, garbage signature) would be
+  // trusted and let an attacker open a plan checkout against any tenant.
+  // verifyClaims() calls admin.auth.getUser() before returning claims.
+  const payload = await verifyClaims(req);
+  if (!payload) return err(401, "invalid_token");
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -79,37 +76,79 @@ serve(async (req) => {
     { auth: { autoRefreshToken: false, persistSession: false } },
   );
 
-  // The edge-functions container runs with VERIFY_JWT=false, so the gateway
-  // does NOT check the token signature — we MUST verify it here. Without this
-  // a forged JWT (any tenant_id / tenant_role, garbage signature) would be
-  // trusted and let an attacker open a plan checkout against any tenant.
-  const { data: userData, error: authErr } = await admin.auth.getUser(jwt);
-  if (authErr || !userData?.user) return err(401, "invalid_token");
-
-  // Signature is now verified — the custom claims injected by the GoTrue hook
-  // are trustworthy. Read tenant_id / tenant_role from the verified payload.
-  const payload = decodeJwtPayload(jwt);
-  // deno-lint-ignore no-explicit-any
-  const tenantId = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
-  // deno-lint-ignore no-explicit-any
-  const tenantRole = (payload as any)?.tenant_role || (payload as any)?.app_metadata?.tenant_role;
-  if (!tenantId) return err(400, "no_tenant_in_jwt");
-  // Only a tenant admin may change the org's base plan (matches the role gate
-  // in create-module-checkout / create-course-checkout).
-  if (!["admin", "super-admin", "super_admin"].includes(String(tenantRole))) {
-    return err(403, "admin_only", "Only tenant admins can change the plan");
-  }
-
   let body: {
     planId?: string; plan_id?: string;
     interval?: "monthly" | "annual"; billing_cycle?: "monthly" | "annual";
+    tenant_slug?: string;
     success_url?: string; cancel_url?: string;
   };
   try { body = await req.json(); } catch { return err(400, "bad_json"); }
+
+  // Tenant + role resolution. The frontend names the TARGET workspace by
+  // slug. The JWT's tenant_id/tenant_role claims (stamped by the GoTrue
+  // hook for every user) describe the caller's HOME tenant — the wrong
+  // tenant whenever an admin manages a workspace they aren't homed on,
+  // which is the common case (profiles are homed on 'main' while the
+  // admin membership lives on the customer tenant). The claims-first
+  // version of this fn therefore 403'd legitimate tenant admins AND would
+  // have checked out a super-admin's HOME tenant instead of the workspace
+  // on screen (found 2026-08-17, Lyke House plan tab). The slug decides
+  // the tenant; claims count only when they refer to that same tenant.
+  const slugParam = String(body.tenant_slug ?? req.headers.get("x-tenant-slug") ?? "").trim();
+  // deno-lint-ignore no-explicit-any
+  const claimTenant = (payload as any)?.tenant_id || (payload as any)?.app_metadata?.tenant_id;
+  let tenantId: string;
+  if (slugParam) {
+    const { data: t } = await admin.from("gw_tenants").select("id").eq("slug", slugParam).maybeSingle();
+    if (!t?.id) return err(404, "tenant_not_found", slugParam);
+    tenantId = t.id;
+  } else if (claimTenant) {
+    tenantId = claimTenant;
+  } else {
+    return err(400, "no_tenant", "Pass tenant_slug (or x-tenant-slug header)");
+  }
+
+  let tenantRole = claimTenant === tenantId
+    // deno-lint-ignore no-explicit-any
+    ? ((payload as any)?.tenant_role || (payload as any)?.app_metadata?.tenant_role || "")
+    : "";
+  if (!tenantRole) {
+    // deno-lint-ignore no-explicit-any
+    const userId = (payload as any)?.sub;
+    const [{ data: member }, { data: profile }] = await Promise.all([
+      admin.from("gw_tenant_members").select("role")
+        .eq("tenant_id", tenantId).eq("user_id", userId).maybeSingle(),
+      admin.from("gw_profiles").select("is_super_admin")
+        .eq("user_id", userId).maybeSingle(),
+    ]);
+    // Platform super-admins may manage any tenant's plan (platform-admin
+    // model); otherwise the caller needs an admin-tier membership row in
+    // the target tenant. 'director' is the admin-equivalent membership
+    // role (see useUserRole MEMBER_ADMIN_ROLES).
+    tenantRole = profile?.is_super_admin ? "super_admin" : (member?.role ?? "");
+  }
+  // Only a tenant admin may change the org's base plan (matches the role gate
+  // in create-module-checkout / create-course-checkout, plus 'director' —
+  // the membership role GleeWorld actually grants tenant admins).
+  if (!["owner", "admin", "director", "super-admin", "super_admin"].includes(String(tenantRole))) {
+    return err(403, "admin_only", "Only tenant admins can change the plan");
+  }
   const planId = body.planId ?? body.plan_id;
   if (!planId) return err(400, "plan_id_required");
   const cycleRaw = body.interval ?? body.billing_cycle;
   const cycle: "monthly" | "annual" = cycleRaw === "annual" ? "annual" : "monthly";
+
+  // Double-subscribe guard: a tenant with a LIVE subscription must change
+  // plans through the Customer Portal (create-billing-portal), where Stripe
+  // updates the existing subscription with proration. A fresh checkout here
+  // would mint a SECOND subscription billing in parallel while the webhook
+  // silently overwrites the plan row with whichever event lands last.
+  const { data: existingPlan } = await admin.from("gw_tenant_plans")
+    .select("status").eq("tenant_id", tenantId).maybeSingle();
+  if (existingPlan?.status === "active" || existingPlan?.status === "past_due") {
+    return err(409, "already_subscribed",
+      "This workspace already has a live subscription — use Manage billing to switch plans.");
+  }
 
   // Look up the plan (tenant-scope only — the Personal tier is
   // scope='user' and goes through create-personal-checkout instead) + the

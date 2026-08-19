@@ -26,6 +26,7 @@ interface Assignment {
   assignment_type: string;
   source?: 'course' | 'readmusic';
   external_url?: string;
+  attachedMedia?: { id: string; title: string; file_url: string } | null;
   submission?: {
     status: string;
     grade: number | null;
@@ -96,6 +97,19 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
 
       if (courseError) throw courseError;
 
+      // Attached recordings (assignments created from a Studio share carry
+      // media_id → a class-copy gw_media_library row every enrollee can read).
+      const mediaIds = (courseData || []).map((a: any) => a.media_id).filter(Boolean);
+      let mediaById: Record<string, { id: string; title: string; file_url: string }> = {};
+      if (mediaIds.length > 0) {
+        const { data: mediaRows } = await supabase
+          .from('gw_media_library')
+          .select('id, title, file_url')
+          .in('id', mediaIds)
+          .eq('is_deleted', false);
+        mediaById = Object.fromEntries((mediaRows ?? []).map((m: any) => [m.id, m]));
+      }
+
       // Fetch ReadMusic sight-reading assignments for THIS course only (if enabled)
       const courseConfig = COURSE_TEMPLATE_CONFIGS[courseId];
       const hasSightReading = courseConfig?.features?.hasSightReading !== false;
@@ -139,7 +153,11 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
 
       // Combine all sources
       const allAssignments = [
-        ...(courseData || []).map(a => ({ ...a, source: 'course' as const })),
+        ...(courseData || []).map(a => ({
+          ...a,
+          source: 'course' as const,
+          attachedMedia: a.media_id ? mediaById[a.media_id] ?? null : null,
+        })),
         ...readMusicAssignments,
       ];
 
@@ -296,6 +314,15 @@ export const CourseAssignments: React.FC<CourseAssignmentsProps> = ({ courseId, 
                     <p className="text-sm text-muted-foreground line-clamp-1">
                       {assignment.description}
                     </p>
+                  )}
+                  {assignment.attachedMedia && (
+                    <audio
+                      controls
+                      preload="none"
+                      src={assignment.attachedMedia.file_url}
+                      className="w-full max-w-sm mt-2"
+                      aria-label={`Recording: ${assignment.attachedMedia.title}`}
+                    />
                   )}
                   <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">

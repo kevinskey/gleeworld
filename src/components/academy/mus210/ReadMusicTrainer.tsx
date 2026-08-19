@@ -26,7 +26,7 @@ export const ReadMusicTrainer: React.FC = () => {
             </Button>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Practice sight-reading exercises and warm-ups for MUS 210
+            Practice sight-reading exercises and warm-ups for GW 210
           </p>
         </CardHeader>
         <CardContent>

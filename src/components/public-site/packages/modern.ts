@@ -10,8 +10,8 @@ export const modernPackage: TemplatePackage = {
   description:
     'Bold sans-serif type, soft-rounded corners, and roomy whitespace. Photos and video take the lead; text plays a supporting role.',
   theme: {
-    fontFamily: 'poppins',
-    headingFontFamily: 'poppins',
+    fontFamily: 'open-sans',
+    headingFontFamily: 'montserrat',
     radiusScale: 'round',
     sectionPaddingScale: 'generous',
     dividerStyle: 'none',
@@ -43,6 +43,7 @@ export const modernPackage: TemplatePackage = {
     // they scroll the Blocks list in the editor.
     { type: 'media-gallery', config: { heading: 'Photos', layout: 'grid', items: [] } },
     { type: 'music-player', config: { heading: 'Listen', tracks: [] } },
+    { type: 'soundcloud', config: { heading: 'Listen on SoundCloud', playlistUrl: '', visual: false } },
     { type: 'videos', config: { heading: 'Watch', layout: 'grid', videos: [] } },
     { type: 'contact', config: { email: '', phone: '' } },
   ],

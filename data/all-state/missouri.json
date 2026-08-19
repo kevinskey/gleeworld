@@ -1,0 +1,174 @@
+{
+  "state_slug": "missouri",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "The Missouri All-State Choir is administered by the Missouri Choral Directors Association (MCDA), an affiliate of the Missouri Music Educators Association (MMEA); the choir performs at the MMEA Conference at Tan-Tar-A / Margaritaville Lake Resort, Lake Ozark (Osage Beach area), MO. MCDA has published the 2027 event dates (January 27-30, 2027) and the $180 participation fee on its All-State Choir page. However, the linked 'All-District/All-State Procedures Handbook' is still the edition titled 2025-2026 — all requirement, scoring, and fee detail below is drawn from that 2025-2026 handbook and has NOT been re-published for 2026-27. Audition dates are set by each of the individual MMEA districts and were not published on MCDA's site at the time of retrieval.",
+  "organization": {
+    "name": "Missouri Choral Directors Association",
+    "acronym": "MCDA",
+    "website_url": "https://www.moacda.org/",
+    "description": "MCDA is the Missouri state chapter of the American Choral Directors Association. It administers the Missouri All-State Choir and the All-District Choirs, publishes the All-District/All-State Procedures Handbook, and runs a summer conference and summer honor choirs."
+  },
+  "sources": [
+    {
+      "name": "MCDA — MO All-State Choir",
+      "url": "https://www.moacda.org/mo-all-state-choir",
+      "source_type": "official"
+    },
+    {
+      "name": "MCDA — ASC Audition Music",
+      "url": "https://www.moacda.org/all-state-choir-audition-music",
+      "source_type": "official"
+    },
+    {
+      "name": "District Choir & Missouri All-State Choir: Information for Parents/Students/Directors (2025-2026)",
+      "url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf",
+      "source_type": "handbook_pdf"
+    }
+  ],
+  "programs": [
+    {
+      "name": "Missouri All-State Choir",
+      "lineage_key": "missouri-all-state-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "A statewide auditioned high school choir administered by MCDA. Students first audition for and participate in their MMEA District Choir (solo audition plus a recorded music-literacy audition); students who qualify then take an additional quartet audition for the Missouri All-State Choir. The choir rehearses at pre-MMEA rehearsals and performs at the MMEA Conference.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "2027 Missouri All-State Choir",
+          "start_at": "2027-01-27",
+          "end_at": "2027-01-30",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Tan-Tar-A Resort at Margaritaville, Lake Ozark, MO. Clinician: Pearl Shangkuan.",
+          "source_url": "https://www.moacda.org/mo-all-state-choir"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "MSHSAA eligibility and school certification",
+          "description": "District Choir and the Missouri All-State Choir are competitive, MSHSAA-sanctioned events. The student's school must be an MSHSAA member and each school must certify its students' MSHSAA eligibility, including the citizenship by-law (2.2.1) and faculty supervision by-law (1.3.1). From the 2025-2026 handbook.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        },
+        {
+          "category": "eligibility",
+          "title": "Grade levels",
+          "description": "Per MSHSAA By-Law 2.10.1, All-State membership is drawn from students in 11th and 12th grade at the start of the school year. District Choir membership may also include 9th and 10th graders; the grades eligible for District Choir are set by each individual district. Students who graduate in December are not eligible to participate. From the 2025-2026 handbook.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        },
+        {
+          "category": "eligibility",
+          "title": "School ensemble participation",
+          "description": "A student auditioning for a District/All-State performing group must be a member of the corresponding high school ensemble at their school. If a school has no high school choir, students from that school may still audition. From the 2025-2026 handbook.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        },
+        {
+          "category": "format",
+          "title": "District Choir audition components",
+          "description": "Both components must be completed: (1) a solo audition and (2) a music literacy audition. The solo audition is blind, judged by three adjudicators, and runs 60-90 seconds of the selected solo at each district's discretion. Students must bring original (not photocopied) music. From the 2025-2026 handbook.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        },
+        {
+          "category": "sight_reading",
+          "title": "Music Literacy Audition",
+          "description": "The entirety of the Music Literacy Audition is pre-recorded; examples are available on the MCDA website. It includes melodic and part-specific sight-singing, and the student must maintain the tempo given in the recorded audition. From the 2025-2026 handbook.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        },
+        {
+          "category": "format",
+          "title": "All-State Quartet Audition",
+          "description": "Students who audition for All-State Choir must do so on the same voice part as their District Choir audition. The student is judged blind by three adjudicators. The quartet audition uses a music-minus-one recording in which all voice parts are present except the one auditioning. Students must submit the Audition/Permission Google Form prior to the audition or they will not be permitted to audition. From the 2025-2026 handbook.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        },
+        {
+          "category": "rubric",
+          "title": "Scoring",
+          "description": "Standardized scoring rubrics on a 5-point scale are used statewide. The District Choir audition evaluates solo singing and music literacy (melodic sight-singing 10 points, part-specific sight-singing 10 points). The All-State audition evaluates harmonic part-singing within the required choral selection. From the 2025-2026 handbook.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        },
+        {
+          "category": "other",
+          "title": "Pre-MMEA rehearsal attendance",
+          "description": "All students selected for the Missouri All-State Choir, including alternates, must attend a minimum of 480 minutes (8 hours) of pre-All-State scheduled rehearsals, arriving on time and present for the entirety of each rehearsal. From the 2025-2026 handbook.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        },
+        {
+          "category": "materials",
+          "title": "Missouri All-State Choir Enrollment Form",
+          "description": "Members of and alternates to the Missouri All-State Choir must complete the Enrollment Form within 10 days of notification. It includes the Code of Conduct, Medical Form, and additional MCDA-required information. Students need an official identification document (driver's license, passport, or school ID) and their health insurance information. Honorable Mention designates do not complete this form.",
+          "source_url": "https://www.moacda.org/mo-all-state-choir"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Exultate Justi",
+          "composer": "Viadana",
+          "purpose": "audition",
+          "notes": "MCDA publishes a two-year rotation for the All-State quartet audition selection: 'Fall of even years for All-State in odd years — Exultate Justi (Viadana).' Auditions in fall 2026 for the January 2027 All-State Choir therefore fall on this selection. Score PDF posted on the MCDA ASC Audition Music page.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        },
+        {
+          "title": "O Sing Joyfully",
+          "composer": "Batten",
+          "purpose": "audition",
+          "notes": "The alternate year of the rotation: 'Fall of odd years for All-State in even years.' Score PDF also posted on the MCDA ASC Audition Music page.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "participation",
+          "amount_cents": 18000,
+          "payable_to": "state_association",
+          "description": "$180 participation fee per student for members of the Missouri All-State Choir.",
+          "source_url": "https://www.moacda.org/mo-all-state-choir"
+        },
+        {
+          "fee_type": "alternate_t_shirt",
+          "amount_cents": 1000,
+          "payable_to": "state_association",
+          "description": "Alternates pay a $10 T-shirt fee. Honorable Mention designates pay no fee. From the 2025-2026 handbook.",
+          "source_url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf"
+        }
+      ],
+      "documents": [
+        {
+          "title": "District Choir & Missouri All-State Choir: Information for Parents/Students/Directors (2025-2026)",
+          "url": "https://www.moacda.org/_files/ugd/49baea_5a2ff105640d42aa97c1a66e43a09199.pdf",
+          "document_type": "handbook"
+        },
+        {
+          "title": "Missouri All-State Choir Enrollment Form",
+          "url": "https://docs.google.com/forms/d/e/1FAIpQLSfTaTyCsc6x6cFJjSzGaMc5hY-He6qGtl3VInK9OyFF2FlR8w/viewform",
+          "document_type": "form"
+        },
+        {
+          "title": "All-State Choir Enrollment Form — sample",
+          "url": "https://www.moacda.org/_files/ugd/49baea_f5e784190b654dd08a9b546a540f2439.pdf",
+          "document_type": "form"
+        },
+        {
+          "title": "Exultate Justi — audition score",
+          "url": "https://www.moacda.org/_files/ugd/49baea_b4a8a209ce6a4c06b98088751620077c.pdf",
+          "document_type": "other"
+        },
+        {
+          "title": "O Sing Joyfully — audition score",
+          "url": "https://www.moacda.org/_files/ugd/49baea_5a32f6bae5dd423f83a0d7fbeee44c6f.pdf",
+          "document_type": "other"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 District Choir and All-State quartet audition dates — set by each individual MMEA district, not posted centrally on the MCDA site",
+    "Audition fee amount — the handbook references fees due within 2 days of the completion of all-state auditions but does not state a district audition fee",
+    "Voice part list and section sizes for the Missouri All-State Choir",
+    "Enrollment form / fee submission deadline — handbook says the date is 'supplied by the All-State Coordinator'",
+    "A 2026-2027 edition of the All-District/All-State Procedures Handbook — only the 2025-2026 edition was posted",
+    "Whether the 2026-27 audition selection rotation was confirmed unchanged for this cycle"
+  ]
+}

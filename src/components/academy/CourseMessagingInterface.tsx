@@ -106,7 +106,7 @@ export const CourseMessagingInterface: React.FC<CourseMessagingInterfaceProps> =
   // Check if current user is the instructor using the prop
   const isInstructor = !!instructorEmail && user?.email === instructorEmail;
   
-  // Extract course code from courseId (e.g., "a0000000-0000-0000-0000-000000000210" -> "210" -> "MUS 210")
+  // Extract course code from courseId (e.g., "a0000000-0000-0000-0000-000000000210" -> "210" -> "GW 210")
   const courseCodeMatch = courseId.match(/0{10}(\d+)$/);
   const courseCode = courseCodeMatch ? `MUS${courseCodeMatch[1]}` : courseName;
 

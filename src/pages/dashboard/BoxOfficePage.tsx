@@ -19,7 +19,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useTenantStripeStatus } from '@/hooks/useTenantStripeStatus';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { listBoxOfficeEvents, createBoxOfficeEvent, slugify, type BoxOfficeEvent } from '@/lib/boxOffice/api';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
@@ -52,7 +52,7 @@ export default function BoxOfficePage() {
     try {
       setConnecting(true);
       const { data, error } = await supabase.functions.invoke('stripe-oauth-start', {
-        body: { return_path: '/dashboard/box-office' },
+        body: { return_path: '/dashboard/box-office', tenant_slug: getTenantSlug() },
       });
       if (error) throw new Error(error.message || 'failed');
       if (data?.error) throw new Error(data.error);
@@ -144,7 +144,7 @@ export default function BoxOfficePage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Ticket className="w-5 h-5 text-rose-700" />
-            <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground font-semibold">
+            <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground font-semibold">
               Add-on
             </span>
           </div>
@@ -336,7 +336,7 @@ function EventRow({ event }: { event: BoxOfficeEvent }) {
             {event.venue_name && <>· {event.venue_name}</>}
           </div>
         </div>
-        <span className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full border ${statusTone}`}>
+        <span className={`text-xs uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full border ${statusTone}`}>
           {event.box_office_status}
         </span>
       </Link>
@@ -394,7 +394,7 @@ function NewEventDialog({ open, onClose, onCreated }: { open: boolean; onClose: 
             <Label htmlFor="bo-title">Title</Label>
             <Input id="bo-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Spring Concert 2026" autoFocus />
             {title && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Public URL: <code>/concert-tickets/{slugify(title) || 'event'}</code>
               </p>
             )}

@@ -60,8 +60,9 @@ export const GraduatesManagementModule = ({
     }
   };
   return <div className={isFullPage ? "container mx-auto px-4 py-8 space-y-6" : "space-y-6"}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header — wraps so the View Live Page button drops below the title
+          on phones instead of squeezing it. */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         {isFullPage ? <div className="space-y-2">
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary">Graduates Page Management</h1>
             <p className="text-lg text-muted-foreground">
@@ -71,7 +72,7 @@ export const GraduatesManagementModule = ({
             <h2 className="text-2xl font-bold text-primary">Graduates Page Management</h2>
             
           </div>}
-        <Button onClick={() => navigate('/graduates')} variant="outline" className="gap-2">
+        <Button onClick={() => navigate('/graduates')} variant="outline" className="gap-2 shrink-0">
           <ExternalLink className="h-4 w-4" />
           View Live Page
         </Button>
@@ -147,41 +148,44 @@ export const GraduatesManagementModule = ({
         <CardContent>
           <Tabs defaultValue="page-builder" className="w-full">
             <div className="border-b -mx-6 px-6">
-              <TabsList className="w-full h-auto p-0 bg-transparent justify-start gap-0 rounded-none overflow-x-auto">
+              {/* Labels always visible (were icon-only below lg — five bare
+                  icons read as mystery buttons); the strip scrolls with the
+                  swipe locked to its own axis. */}
+              <TabsList className="w-full h-auto p-0 bg-transparent justify-start gap-0 rounded-none overflow-x-auto touch-pan-x overscroll-x-contain scrollbar-hide">
                 <TabsTrigger 
                   value="page-builder" 
                   className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
                 >
                   <Layout className="h-4 w-4" />
-                  <span className="hidden lg:inline">Page Builder</span>
+                  <span>Page Builder</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="interviews" 
                   className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
                 >
                   <Video className="h-4 w-4" />
-                  <span className="hidden lg:inline">Interviews</span>
+                  <span>Interviews</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="hero" 
                   className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
                 >
                   <Image className="h-4 w-4" />
-                  <span className="hidden lg:inline">Hero</span>
+                  <span>Hero</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="spotlights" 
                   className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
                 >
                   <Star className="h-4 w-4" />
-                  <span className="hidden lg:inline">Spotlights</span>
+                  <span>Spotlights</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="forms"
                   className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
                 >
                   <FormInput className="h-4 w-4" />
-                  <span className="hidden lg:inline">Forms</span>
+                  <span>Forms</span>
                 </TabsTrigger>
               </TabsList>
             </div>

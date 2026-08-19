@@ -1,0 +1,148 @@
+{
+  "state_slug": "washington",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "WMEA hosts High School (grades 9-12) and Junior (grades 7-8, plus a grades 5-6 Youth Choir) All-State events. Auditions are recorded and submitted through OpusEvent; recordings are ranked by screening committees. IMPORTANT: at the retrieval date WMEA had not yet posted a 2026-27 (2027 All-State) information center — the site's Honor Group Information page and the '2026 WMEA ALL-STATE' center still described the 2025-26 cycle (auditions opened September 1, 2025; High School Band/Choir/Orchestra May 28-30, 2026 in Tacoma; Junior and Jazz ensembles at the February 2026 Yakima conference). All dates below are therefore labeled season 2025-26 and must NOT be relabeled 2026-27. Separately, WMEA's conference-proposals page does publish that the 2027 WMEA State Conference is February 11-14, 2027 in Yakima, but WMEA has not yet tied specific 2027 All-State choir dates to it. Note also that in 2025-26 the high school choirs did NOT meet in Yakima — only the Junior/Youth choirs and High School Jazz Choir did.",
+  "organization": {
+    "name": "Washington Music Educators Association",
+    "acronym": "WMEA",
+    "website_url": "https://wmea.org/",
+    "description": "WMEA has been a Federated Affiliate Member of the National Association for Music Education since 1937. It hosts the WMEA All-State honor groups, the WIAA/WMEA State Solo & Ensemble Contest, and an annual state conference."
+  },
+  "sources": [
+    { "name": "WMEA — Honor Group Information", "url": "https://wmea.org/all-state/", "source_type": "official" },
+    { "name": "WMEA — 2026 All-State Honor Group Information Center", "url": "https://wmea.org/2026-all-state-honor-group-information-center/", "source_type": "official" },
+    { "name": "WMEA All-State Governing Policy (rev. 2025)", "url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf", "source_type": "handbook_pdf" },
+    { "name": "WMEA — 2027 State Conference Proposals and Performing Group Auditions", "url": "https://wmea.org/conferences/wmea-state-conference-proposals/", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "WMEA All-State High School Symphonic Choir (SATB)",
+      "lineage_key": "washington-hs-symphonic-choir",
+      "season": "2025-26",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The SATB high school All-State choir, one of WMEA's High School Choirs (grades 9-12). Students audition by recorded submission through OpusEvent; screening committees listen to and rank all recordings for a given section.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Auditions open", "start_at": "2025-09-01", "all_day": true, "timezone": "America/Los_Angeles", "description": "Auditions for all All-State groups open.", "source_url": "https://wmea.org/2026-all-state-honor-group-information-center/" },
+        { "date_type": "registration_deadline", "title": "Auditions close — High School Band, Choir, and Orchestra", "start_at": "2025-11-14", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/2026-all-state-honor-group-information-center/" },
+        { "date_type": "event", "title": "High School All-State Band, Choir, and Orchestra rehearsals and performance", "start_at": "2026-05-28", "end_at": "2026-05-30", "all_day": true, "timezone": "America/Los_Angeles", "description": "Held in Tacoma.", "source_url": "https://wmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 9-12", "description": "WMEA's High School All-State ensembles serve students in grades 9-12.", "source_url": "https://wmea.org/all-state/" },
+        { "category": "membership", "title": "Participating teacher must be an active WMEA/NAfME member", "description": "Participating teachers must be active members of WMEA/NAfME from the time of application through the time of WMEA All-State.", "source_url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf" },
+        { "category": "format", "title": "Recorded audition, teacher-verified, no enhancement", "description": "Either teachers or students may produce audition recordings. Students must submit recordings to the submitting teacher for verification before submission; once verified, recordings may not be returned to the student. Teachers and students may NOT electronically or otherwise enhance any recording beyond the actual recording session.", "source_url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf" },
+        { "category": "rubric", "title": "Screening committee ranking", "description": "Individual screening committee members listen to all recordings for a given section and rank the recordings in order of quality. Screening committees are members of WMEA unless the WMEA All-State manager waives the requirement for specific personnel.", "source_url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "application", "payable_to": "state_association", "description": "Each applicant is charged an application fee, which is NOT applied to later fees for those accepted. The WMEA Board establishes student fees; amounts are not published in the governing policy.", "source_url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf" },
+        { "fee_type": "registration", "payable_to": "state_association", "description": "Accepted students pay a registration fee set by the WMEA Board; the amount is not published in the governing policy.", "source_url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf" }
+      ],
+      "documents": [
+        { "title": "WMEA All-State Governing Policy (rev. 2025)", "url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf", "document_type": "rules" },
+        { "title": "WMEA All-State Housing and Supervision Policy", "url": "https://docs.google.com/document/d/1DRfz3Q0W-vYeaU5tVY-sNgvYl5wDCY3fg4alsyVNim4/edit?usp=drive_link", "document_type": "rules" },
+        { "title": "WMEA All-State Hub (2026 audition materials)", "url": "https://new.express.adobe.com/webpage/SJ9bsguZkKOiq", "document_type": "other" },
+        { "title": "OpusEvent (audition submission platform)", "url": "https://www.opusevent.com/", "document_type": "form" },
+        { "title": "YME Financial Aid Applications", "url": "https://drive.google.com/drive/folders/1Yw7Kg7xzAqYvJHWya4MagvlAf3831OHD?usp=sharing", "document_type": "form" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "WMEA All-State High School Treble Choir (SSAA)",
+      "lineage_key": "washington-hs-treble-choir",
+      "season": "2025-26",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "The SSAA high school All-State treble choir, one of WMEA's High School Choirs (grades 9-12).",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Auditions open", "start_at": "2025-09-01", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/2026-all-state-honor-group-information-center/" },
+        { "date_type": "registration_deadline", "title": "Auditions close — High School Band, Choir, and Orchestra", "start_at": "2025-11-14", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/2026-all-state-honor-group-information-center/" },
+        { "date_type": "event", "title": "High School All-State Band, Choir, and Orchestra rehearsals and performance", "start_at": "2026-05-28", "end_at": "2026-05-30", "all_day": true, "timezone": "America/Los_Angeles", "description": "Held in Tacoma.", "source_url": "https://wmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 9-12", "description": "WMEA's High School All-State ensembles serve students in grades 9-12.", "source_url": "https://wmea.org/all-state/" },
+        { "category": "membership", "title": "Participating teacher must be an active WMEA/NAfME member", "description": "Participating teachers must be active members of WMEA/NAfME from the time of application through the time of WMEA All-State.", "source_url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf" }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" }
+      ]
+    },
+    {
+      "name": "WMEA All-State High School Jazz Choir",
+      "lineage_key": "washington-hs-jazz-choir",
+      "season": "2025-26",
+      "school_level": "high",
+      "ensemble_type": "jazz choir",
+      "description": "WMEA's high school Jazz Choir, offered in non-Northwest Conference years. It meets at the WMEA state conference in Yakima rather than with the other high school choirs.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Auditions open", "start_at": "2025-09-01", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/2026-all-state-honor-group-information-center/" },
+        { "date_type": "registration_deadline", "title": "Auditions close — High School Jazz Band and Jazz Choir", "start_at": "2025-10-10", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/2026-all-state-honor-group-information-center/" },
+        { "date_type": "event", "title": "High School Jazz at the WMEA conference", "start_at": "2026-02-12", "end_at": "2026-02-14", "all_day": true, "timezone": "America/Los_Angeles", "description": "Held Thursday-Saturday during the 2026 WMEA conference in Yakima.", "source_url": "https://wmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Offered in non-Northwest Conference years", "description": "WMEA's governing policy lists the Jazz Choir (grades 9-12) as offered in non-Northwest Conference years.", "source_url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf" }
+      ]
+    },
+    {
+      "name": "WMEA All-State Junior Mixed Choir (7-8)",
+      "lineage_key": "washington-junior-mixed-choir",
+      "season": "2025-26",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "WMEA's Junior All-State mixed choir for grades 7-8, meeting at the WMEA state conference in Yakima.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Auditions open", "start_at": "2025-09-01", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/2026-all-state-honor-group-information-center/" },
+        { "date_type": "registration_deadline", "title": "Auditions close — all Junior and Youth ensembles", "start_at": "2025-10-10", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/2026-all-state-honor-group-information-center/" },
+        { "date_type": "event", "title": "Junior Choirs at the WMEA conference", "start_at": "2026-02-14", "all_day": true, "timezone": "America/Los_Angeles", "description": "Junior Jazz, Junior Choirs and Youth Choir take place on Saturday, February 14, 2026 in Yakima.", "source_url": "https://wmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 7-8", "source_url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf" }
+      ]
+    },
+    {
+      "name": "WMEA All-State Junior Treble Choir (7-8)",
+      "lineage_key": "washington-junior-treble-choir",
+      "season": "2025-26",
+      "school_level": "middle",
+      "ensemble_type": "treble chorus",
+      "description": "WMEA's Junior All-State treble choir for grades 7-8, meeting at the WMEA state conference in Yakima.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Auditions close — all Junior and Youth ensembles", "start_at": "2025-10-10", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/2026-all-state-honor-group-information-center/" },
+        { "date_type": "event", "title": "Junior Choirs at the WMEA conference", "start_at": "2026-02-14", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 7-8", "source_url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf" }
+      ]
+    },
+    {
+      "name": "WMEA All-State Junior Youth Choir (5-6)",
+      "lineage_key": "washington-youth-choir",
+      "season": "2025-26",
+      "school_level": "elementary",
+      "ensemble_type": "children's chorus",
+      "description": "WMEA's Youth Choir for grades 5-6, the youngest All-State ensemble, meeting at the WMEA state conference in Yakima.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Auditions close — all Junior and Youth ensembles", "start_at": "2025-10-10", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/2026-all-state-honor-group-information-center/" },
+        { "date_type": "event", "title": "Youth Choir at the WMEA conference", "start_at": "2026-02-14", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://wmea.org/all-state/" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 5-6", "source_url": "https://wmea.org/wp-content/uploads/2024/08/WMEA-All-State-Governing-Policy.rev-2025.pdf" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 (2027) All-State audition open/close dates, event dates, and venues — WMEA had not posted a 2027 All-State information center at the retrieval date",
+    "Application and registration fee amounts — the governing policy states the WMEA Board sets fees but publishes no dollar figures, and no amounts appear on the public All-State pages",
+    "Audition repertoire and specific audition requirements per voice part — these live behind the WMEA All-State Hub / OpusEvent, which were not opened",
+    "Performance repertoire and guest conductors for any All-State choir",
+    "Student grade-level eligibility exceptions and quota/acceptance counts"
+  ]
+}

@@ -179,15 +179,38 @@ function TimelineBlock({ item, task, style, date, onSetBlock, onSetStatus }: {
     </div>
   );
 
+  // before:-inset-y-1.5 grows the tap target past the visual box — a
+  // 30-minute block renders ~22px tall, well under a fingertip. The
+  // pseudo-element takes hits without changing the layout or overlapping
+  // neighbors visually.
+  const hitArea = 'relative block h-full w-full before:absolute before:inset-x-0 before:-inset-y-1.5';
+
   if (isEvent) {
-    return <div className="absolute z-10" style={style} title={`${item.label} · ${timeLabel}`}>{body}</div>;
+    // Events are read-only, but they still need a tap surface: the old
+    // title-attribute tooltip is unreachable on touch, and short blocks
+    // clip the inline time label.
+    return (
+      <div className="absolute z-10" style={style}>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button className={hitArea} aria-label={`Event: ${item.label}, ${timeLabel}`}>
+              {body}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 space-y-1" align="start">
+            <p className="text-sm font-medium text-foreground">{item.label}</p>
+            <p className="text-xs text-muted-foreground">{timeLabel}</p>
+          </PopoverContent>
+        </Popover>
+      </div>
+    );
   }
 
   return (
     <div className="absolute z-10" style={style}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <button className="block h-full w-full" aria-label={`Time block: ${item.label}, ${timeLabel}`}>
+          <button className={hitArea} aria-label={`Time block: ${item.label}, ${timeLabel}`}>
             {body}
           </button>
         </PopoverTrigger>

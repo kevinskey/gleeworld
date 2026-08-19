@@ -115,7 +115,7 @@ export const CourseHandbook: React.FC<CourseHandbookProps> = ({ courseCode }) =>
     }
   }, [location.pathname]);
 
-  // Get course ID for appendix queries (MUS070 format)
+  // Get course ID for appendix queries (GW070 format)
   const courseId = courseCode.replace(' ', '').toUpperCase();
   
   // Use custom sections state that can be updated

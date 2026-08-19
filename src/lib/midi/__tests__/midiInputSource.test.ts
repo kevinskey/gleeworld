@@ -120,6 +120,31 @@ describe('createWebMidiInputSource', () => {
     c.fire([0x90, 72, 80]);
     expect(got).toEqual([[0x90, 72, 80]]);
   });
+
+  it('subscribeManaged switches device filter without re-requesting access', async () => {
+    const access = makeFakeAccess();
+    const nav = navWith(access);
+    const src = createWebMidiInputSource(nav);
+    const seen: string[] = [];
+    const sub = await src.subscribeManaged('a', () => seen.push('hit'));
+    access.ports.a.fire([0x90, 60, 100]);
+    access.ports.b.fire([0x90, 61, 100]);
+    expect(seen.length).toBe(1);
+    sub.setDevice('b');
+    access.ports.a.fire([0x90, 60, 100]);
+    access.ports.b.fire([0x90, 61, 100]);
+    expect(seen.length).toBe(2);
+    expect((nav as any).requestMIDIAccess).toHaveBeenCalledTimes(1); // no second permission round-trip
+    sub.close();
+    access.ports.b.fire([0x90, 61, 100]);
+    expect(seen.length).toBe(2); // close() stops delivery
+  });
+
+  it('subscribeManaged rejects on denied permission', async () => {
+    const requestMIDIAccess = vi.fn().mockRejectedValue(new Error('denied'));
+    const src = createWebMidiInputSource({ requestMIDIAccess } as unknown as Navigator);
+    await expect(src.subscribeManaged('', () => {})).rejects.toThrow('denied');
+  });
 });
 
 function makeFakePlugin() {
@@ -283,6 +308,43 @@ describe('createNativeMidiInputSource', () => {
     const lastStopIdx = fake.calls.lastIndexOf('stop');
     expect(lastStartIdx).toBeGreaterThanOrEqual(0);
     expect(lastStopIdx).toBeLessThan(lastStartIdx);
+  });
+
+  it('subscribeManaged switches device filter without stop/start of the plugin', async () => {
+    const fake = makeFakePlugin();
+    const src = createNativeMidiInputSource(fake.plugin);
+    const seen: string[] = [];
+    const sub = await src.subscribeManaged('101', () => seen.push('hit'));
+    fake.emit('midiMessage', { portId: '101', data: [0x90, 60, 100], tsMs: 0 });
+    fake.emit('midiMessage', { portId: '202', data: [0x90, 61, 100], tsMs: 0 });
+    expect(seen.length).toBe(1);
+    sub.setDevice('202');
+    fake.emit('midiMessage', { portId: '101', data: [0x90, 60, 100], tsMs: 0 });
+    fake.emit('midiMessage', { portId: '202', data: [0x90, 61, 100], tsMs: 0 });
+    expect(seen.length).toBe(2);
+    expect(fake.raw.start).toHaveBeenCalledTimes(1); // no re-attach on device switch
+    sub.close();
+    await flush();
+    expect(fake.raw.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('subscribeManaged rejects when plugin.start fails, rolling back the subscriber', async () => {
+    const fake = makeFakePlugin();
+    (fake.raw.start as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('bt off'));
+    const src = createNativeMidiInputSource(fake.plugin);
+
+    await expect(src.subscribeManaged('', () => {})).rejects.toThrow('bt off');
+    for (const removeMock of fake.removeMocks) {
+      expect(removeMock).toHaveBeenCalledTimes(1);
+    }
+
+    // A later subscribeManaged retries start() fresh — the singleton isn't wedged.
+    const got: number[][] = [];
+    const sub = await src.subscribeManaged('', (d) => got.push([...d]));
+    expect(fake.raw.start).toHaveBeenCalledTimes(2);
+    fake.emit('midiMessage', { portId: '101', data: [0x90, 60, 100], tsMs: 0 });
+    expect(got).toEqual([[0x90, 60, 100]]);
+    sub.close();
   });
 
   it('concurrent subscribes settle truthfully when the first start fails', async () => {

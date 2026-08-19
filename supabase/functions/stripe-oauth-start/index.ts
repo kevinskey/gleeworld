@@ -17,7 +17,7 @@
 //   4. Return { url: 'https://connect.stripe.com/oauth/authorize?...' } for
 //      the frontend to `window.location.href` to.
 
-import { verifyJwtClaims } from '../_shared/verifyJwt.ts';
+import { verifyJwtClaims, resolveTargetTenant } from '../_shared/verifyJwt.ts';
 import { signState } from '../_shared/oauthState.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') ?? 'http://kong:8000';
@@ -34,10 +34,11 @@ const corsHeaders = {
 const RETURN_PATH_ALLOWLIST = new Set([
   '/dashboard/store',
   '/dashboard/box-office',
+  '/dashboard/fees',
   '/store',
 ]);
 
-const ROLES_ALLOWED = ['admin', 'super-admin', 'super_admin'];
+const ROLES_ALLOWED = ['owner', 'admin', 'director', 'super-admin', 'super_admin'];
 
 async function pgRead<T>(table: string, query: string): Promise<T[]> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
@@ -72,32 +73,41 @@ Deno.serve(async (req) => {
       });
     }
     const claims = (await verifyJwtClaims(accessToken)) ?? {};
-    const tenantId = claims.tenant_id as string | undefined;
-    const tenantRole = claims.tenant_role as string | undefined;
     const userId = claims.sub as string | undefined;
     const userEmail = claims.email as string | undefined;
-    if (!tenantId) throw new Error('JWT missing tenant_id claim');
-    if (!ROLES_ALLOWED.includes(tenantRole ?? '')) {
-      return new Response(JSON.stringify({ error: `Only tenant admins can connect Stripe (role: ${tenantRole ?? 'none'})` }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    if (!userId) throw new Error('Invalid JWT');
 
     // Body: optional return_path (defaults to /dashboard/store). Also allows
     // GET with ?return_path=… for flexibility.
     let bodyReturnPath: string | undefined;
+    let bodySlug: string | undefined;
     if (req.method === 'POST') {
       try {
         const parsed = await req.json();
         bodyReturnPath = parsed?.return_path;
+        bodySlug = parsed?.tenant_slug;
       } catch {
         // ignore — return_path stays undefined
       }
     } else {
       const u = new URL(req.url);
       bodyReturnPath = u.searchParams.get('return_path') ?? undefined;
+      bodySlug = u.searchParams.get('tenant_slug') ?? undefined;
     }
+
+    // Target tenant from the page's slug, not the JWT's home-tenant claim
+    // (see resolveTargetTenant — the claim is the caller's HOME tenant and
+    // connecting Stripe to the wrong tenant would route money incorrectly).
+    const { tenantId, tenantRole } = await resolveTargetTenant(
+      claims, bodySlug ?? req.headers.get('x-tenant-slug'));
+    if (!tenantId) throw new Error('Unknown tenant (pass tenant_slug)');
+    if (!ROLES_ALLOWED.includes(tenantRole)) {
+      return new Response(JSON.stringify({ error: `Only tenant admins can connect Stripe (role: ${tenantRole || 'none'})` }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const returnPath = bodyReturnPath ?? '/dashboard/store';
     if (!RETURN_PATH_ALLOWLIST.has(returnPath)) {
       return new Response(JSON.stringify({ error: `return_path not allowed: ${returnPath}` }), {

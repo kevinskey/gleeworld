@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useCourseStudents, COURSE_IDS } from '@/hooks/useCourseStudents';
 
-// MUS 070 Grade weights per Glee Club Handbook
+// GW 070 Grade weights per Glee Club Handbook
 const GRADE_WEIGHTS = {
   sectionals: 25,      // Sectionals & Rehearsals
   sightSinging: 25,    // Sight Singing / Music Reading
@@ -279,7 +279,7 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <CardTitle className="text-foreground flex items-center gap-2">
-              MUS 070 - Glee Club Grade Sheet
+              GW 070 - Glee Club Grade Sheet
               {canEditGrades ? (
                 <Badge className="bg-green-500/20 text-green-600 border-green-500/30">Edit Mode</Badge>
               ) : (

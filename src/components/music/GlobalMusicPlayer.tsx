@@ -15,6 +15,7 @@ import {
   Minimize2,
   X
 } from 'lucide-react';
+import { useIsCompactNav } from '@/hooks/use-mobile';
 
 export const GlobalMusicPlayer = () => {
   const {
@@ -37,6 +38,18 @@ export const GlobalMusicPlayer = () => {
     hidePlayer,
     formatTime
   } = useMusicPlayer();
+  // The docked bottom tab bar (MobileBottomNav) is z-30 while this player is
+  // z-50, so on a phone a playing track completely covered Home / Messages /
+  // Calendar — navigation was unreachable until playback stopped. Sit above
+  // the bar instead.
+  //
+  // Gated on the SAME hook the bar itself uses rather than a Tailwind `md:`
+  // guess: the bar's breakpoint (768) lives in JS, so a CSS-only offset would
+  // silently drift the moment that constant moves. Same pattern as AssistantFab.
+  const isCompactNav = useIsCompactNav();
+  const bottomOffset = isCompactNav
+    ? 'calc(env(safe-area-inset-bottom, 0px) + 56px)'
+    : 0;
 
   if (!isVisible || !currentTrack) return null;
 
@@ -52,9 +65,13 @@ export const GlobalMusicPlayer = () => {
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   // Minimized player (bottom bar)
+
   if (isMinimized) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t shadow-lg pb-[env(safe-area-inset-bottom)]">
+      <div
+        className="fixed left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t shadow-lg pb-[env(safe-area-inset-bottom)]"
+        style={{ bottom: bottomOffset }}
+      >
         <div className="container mx-auto px-2 py-1.5">
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Track Info */}

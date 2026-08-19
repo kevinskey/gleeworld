@@ -1,0 +1,252 @@
+{
+  "state_slug": "new-jersey",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "NJMEA seats two high school All-State choruses from one spring audition cycle: the All-State Mixed Chorus, which rehearses in the fall and performs in November, and the All-State Treble Chorus, which rehearses in winter and performs in February. NJMEA's announcement reads '2026-2027 All-State Chorus materials will be open Monday, February 23rd - Friday, April 3rd'; February 23 falls on a Monday and April 3 on a Friday in 2026, so that window is Feb 23 - Apr 3, 2026, and it feeds the 2026-27 ensembles whose rehearsal and concert dates on the NJMEA calendar are Sept-Nov 2026 (Mixed) and Jan-Feb 2027 (Treble). Detailed audition requirements (scales, solo, quintet, ranges, rubric) live behind TheDirectorsRoom.com, which requires a director login, so they are not captured here. NJMEA's public chorus landing page was still headed '2025-2026 All-State Chorus Information' at retrieval; only the auditions page carried 2026-2027 content. Elementary and junior high All-State choirs are run by NJACDA, not NJMEA.",
+  "organization": {
+    "name": "New Jersey Music Educators Association",
+    "acronym": "NJMEA",
+    "website_url": "https://www.njmea.org/",
+    "description": "NJMEA, at 300 W. Somerdale Rd., Suite C, Voorhees, NJ 08043, administers New Jersey's All-State Band, Chorus, Orchestra, and (with NJAJE) Jazz ensembles, plus a state conference and a range of festivals. The All-State Chorus program is led by a Choral Performance Chair and a Choral Procedures Chair; elementary and junior high All-State choirs are handled by the affiliated New Jersey ACDA."
+  },
+  "sources": [
+    {
+      "name": "NJMEA — All-State HS Chorus Auditions",
+      "url": "https://www.njmea.org/all-state-chorus/auditions",
+      "source_type": "official"
+    },
+    {
+      "name": "NJMEA — All-State Chorus",
+      "url": "https://www.njmea.org/all-state/chorus",
+      "source_type": "official"
+    },
+    {
+      "name": "NJMEA — All-State Mixed Chorus",
+      "url": "https://www.njmea.org/all-state/chorus-1-1",
+      "source_type": "official"
+    },
+    {
+      "name": "NJMEA Events calendar",
+      "url": "https://www.njmea.org/njmea-events/",
+      "source_type": "calendar"
+    }
+  ],
+  "programs": [
+    {
+      "name": "NJMEA All-State Mixed Chorus",
+      "lineage_key": "new-jersey-mixed-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "New Jersey's high school All-State Mixed Chorus. Auditions are recorded and submitted online through TheDirectorsRoom.com during a spring window; selected students rehearse across the fall and perform jointly with the All-State Orchestra in November. Managed by the All-State Choir Managers with a Choral Performance Chair and Choral Procedures Chair.",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "2026-2027 All-State Chorus audition materials window",
+          "start_at": "2026-02-23",
+          "end_at": "2026-04-03",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "NJMEA announced 'the 2026-2027 All-State Chorus materials will be open Monday, February 23rd - Friday, April 3rd.' Materials and submission are handled through TheDirectorsRoom.com and a shared Google Drive folder.",
+          "source_url": "https://www.njmea.org/all-state-chorus/auditions"
+        },
+        {
+          "date_type": "other",
+          "title": "All-State Mixed Chorus rehearsal",
+          "start_at": "2026-09-26T08:30:00",
+          "end_at": "2026-09-26T12:30:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        },
+        {
+          "date_type": "other",
+          "title": "All-State Mixed Chorus rehearsal",
+          "start_at": "2026-10-18T13:00:00",
+          "end_at": "2026-10-18T17:00:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        },
+        {
+          "date_type": "other",
+          "title": "All-State Mixed Chorus and Orchestra rehearsal",
+          "start_at": "2026-11-04T17:00:00",
+          "end_at": "2026-11-04T21:00:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        },
+        {
+          "date_type": "other",
+          "title": "All-State Mixed Chorus and Orchestra rehearsal",
+          "start_at": "2026-11-05T09:00:00",
+          "end_at": "2026-11-05T22:00:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        },
+        {
+          "date_type": "other",
+          "title": "All-State Mixed Chorus and Orchestra rehearsal",
+          "start_at": "2026-11-06T09:00:00",
+          "end_at": "2026-11-06T19:00:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        },
+        {
+          "date_type": "event",
+          "title": "NJMEA All-State Mixed Chorus and Orchestra Concert",
+          "start_at": "2026-11-06T19:30:00",
+          "end_at": "2026-11-06T21:30:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        },
+        {
+          "date_type": "other",
+          "title": "All-State Mixed Chorus and Orchestra rehearsal",
+          "start_at": "2026-11-15T10:00:00",
+          "end_at": "2026-11-15T15:00:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        },
+        {
+          "date_type": "event",
+          "title": "NJMEA All-State Mixed Chorus and Orchestra Concert",
+          "start_at": "2026-11-15T15:00:00",
+          "end_at": "2026-11-15T17:00:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "materials",
+          "title": "Only NJMEA-provided accompaniment tracks may be used",
+          "description": "NJMEA states it is critically important that all students and teachers use ONLY the tracks provided in TheDirectorsRoom and the StudentFolder for all recordings. The Silver Swan tracks were updated for the '26-27 season. Use of any other tracks results in an automatic score of '9's' — no exceptions.",
+          "source_url": "https://www.njmea.org/all-state-chorus/auditions"
+        },
+        {
+          "category": "format",
+          "title": "Audition documents and registration",
+          "description": "Students and teachers must review all documents provided in both the shared online Google Drive folder and TheDirectorsRoom.com. Registration and audition upload are managed through TheDirectorsRoom by an Online Registration Manager; questions about the audition process go to the Choral Procedures Chair.",
+          "source_url": "https://www.njmea.org/all-state-chorus/auditions"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "The Silver Swan",
+          "purpose": "audition",
+          "notes": "Named by NJMEA as an audition selection whose accompaniment tracks were updated for the 2026-27 season. NJMEA did not publish a composer, arranger, publisher, or voicing on the public auditions page.",
+          "source_url": "https://www.njmea.org/all-state-chorus/auditions"
+        }
+      ],
+      "documents": [
+        {
+          "title": "2026-2027 All-State Chorus Audition Information (Google Drive folder)",
+          "url": "https://drive.google.com/drive/folders/1BGLdMaG-_yNf3K_DwQoKrjHp6ud1eyoq?usp=drive_link",
+          "document_type": "other"
+        },
+        {
+          "title": "TheDirectorsRoom.com — audition materials and registration portal",
+          "url": "http://thedirectorsroom.com/",
+          "document_type": "form"
+        },
+        {
+          "title": "NJMEA All-State Forms",
+          "url": "https://www.njmea.org/all-state-forms",
+          "document_type": "form"
+        },
+        {
+          "title": "Mixed Choir Running Document",
+          "url": "https://docs.google.com/document/d/17vSlAMHJuzrLI5P7zsDtsnduQIamSVMIi_2OFKGKjWQ/edit",
+          "document_type": "other"
+        }
+      ]
+    },
+    {
+      "name": "NJMEA All-State Treble Chorus",
+      "lineage_key": "new-jersey-treble-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "New Jersey's high school All-State Treble Chorus, seated from the same spring audition cycle as the Mixed Chorus. It rehearses in January and February and performs on a joint concert with the All-State Band in February.",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "2026-2027 All-State Chorus audition materials window",
+          "start_at": "2026-02-23",
+          "end_at": "2026-04-03",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Shared audition window with the Mixed Chorus.",
+          "source_url": "https://www.njmea.org/all-state-chorus/auditions"
+        },
+        {
+          "date_type": "other",
+          "title": "All-State Treble Chorus rehearsal",
+          "start_at": "2027-01-31T13:00:00",
+          "end_at": "2027-01-31T17:00:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        },
+        {
+          "date_type": "other",
+          "title": "All-State Treble Chorus rehearsal",
+          "start_at": "2027-02-13T08:30:00",
+          "end_at": "2027-02-13T12:00:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        },
+        {
+          "date_type": "event",
+          "title": "NJMEA All-State Band & Treble Chorus Concert",
+          "start_at": "2027-02-21T15:00:00",
+          "end_at": "2027-02-21T17:00:00",
+          "all_day": false,
+          "timezone": "America/New_York",
+          "source_url": "https://www.njmea.org/njmea-events/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "materials",
+          "title": "Only NJMEA-provided accompaniment tracks may be used",
+          "description": "Same rule as the Mixed Chorus: only tracks provided in TheDirectorsRoom and the StudentFolder may be used for recordings; any other track results in an automatic score of '9's'.",
+          "source_url": "https://www.njmea.org/all-state-chorus/auditions"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "The Silver Swan",
+          "purpose": "audition",
+          "notes": "Audition selection whose tracks were updated for the 2026-27 season; no composer or publisher published on the public NJMEA page.",
+          "source_url": "https://www.njmea.org/all-state-chorus/auditions"
+        }
+      ],
+      "documents": [
+        {
+          "title": "2026-2027 All-State Chorus Audition Information (Google Drive folder)",
+          "url": "https://drive.google.com/drive/folders/1BGLdMaG-_yNf3K_DwQoKrjHp6ud1eyoq?usp=drive_link",
+          "document_type": "other"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "Detailed audition requirements (scales, ranges, solo, quintet, memorization rules, adjudication rubric) — held on TheDirectorsRoom.com, which requires a director login",
+    "Audition fee and participation fee for the high school All-State Chorus — no amount published on any public NJMEA page (the $15 fee found on njacda.org applies to the NJACDA Elementary/Junior High All-State choirs, not to NJMEA's high school chorus)",
+    "Eligibility rules — grade levels, NJMEA/NAfME membership requirements, and any limit on students per school",
+    "Results / acceptance notification date for the 2026-27 choruses",
+    "2026-27 conductors — NJMEA was still running a conductor search form for the 2026-2027 season",
+    "Performance repertoire for the Mixed and Treble Choruses",
+    "Rehearsal and concert venues — the calendar entries listed locations as TBA",
+    "Full composer/publisher metadata for 'The Silver Swan'"
+  ]
+}

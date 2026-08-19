@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,7 +62,7 @@ export const OrdersManager = ({ onSelectOrder }: OrdersManagerProps = {}) => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('store-admin-orders', { body: {} });
+      const { data, error } = await supabase.functions.invoke('store-admin-orders', { body: { tenant_slug: getTenantSlug() } });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setOrders(data?.orders || []);

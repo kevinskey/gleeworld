@@ -29,6 +29,9 @@ export interface BlockPageEditorOptions {
   /** React Query keys so cache invalidation stays scoped to this page. */
   pageQueryKey: string;
   blocksQueryKey: string;
+  /** True when blocksTable has a `page` column (public sites). Fan pages
+   *  stay single-page and must not select the column. */
+  supportsPages?: boolean;
 }
 
 export interface BlockPageRow {
@@ -43,6 +46,14 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [blocks, setBlocks] = useState<SiteBlock[]>([]);
+  const blockColumns = opts.supportsPages
+    ? 'id, block_type, position, config, is_visible, page'
+    : 'id, block_type, position, config, is_visible';
+  // Which page's blocks the editor shows. Pages with no blocks yet live in
+  // `draftPages` so a freshly created page keeps its tab until the first
+  // block lands (a page IS its blocks — nothing else to persist).
+  const [activePage, setActivePage] = useState('home');
+  const [draftPages, setDraftPages] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activating, setActivating] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -69,10 +80,10 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from(opts.blocksTable)
-        .select('id, block_type, position, config, is_visible')
+        .select(blockColumns)
         .order('position');
       if (error) throw error;
-      return data as SiteBlock[];
+      return data as unknown as SiteBlock[];
     },
   });
 
@@ -127,7 +138,7 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
         // stale in-memory state if multiple edits raced.
         const { data: latest, error: readErr } = await supabase
           .from(opts.blocksTable)
-          .select('id, block_type, position, config, is_visible')
+          .select(blockColumns)
           .order('position');
         if (readErr) throw readErr;
         const snapshot = (latest ?? []).map((b: any, i: number) => ({ ...b, position: i }));
@@ -144,6 +155,39 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
       }
     }, 700);
   }
+
+  // ---- pages (public sites only; fan pages never set supportsPages) ----
+
+  /** Every page with blocks, plus empty just-created ones. Home first. */
+  const pages = useMemo(() => {
+    const set = new Set<string>(['home']);
+    for (const b of blocks) set.add(b.page || 'home');
+    for (const p of draftPages) set.add(p);
+    return ['home', ...[...set].filter((p) => p !== 'home').sort()];
+  }, [blocks, draftPages]);
+
+  const PAGE_SLUG = /^[a-z0-9-]{2,40}$/;
+
+  const createPage = (slug: string): boolean => {
+    const clean = slug.trim().toLowerCase().replace(/\s+/g, '-');
+    if (!PAGE_SLUG.test(clean)) {
+      toast({ title: 'Invalid page name', description: 'Use 2-40 lowercase letters, numbers, or dashes.', variant: 'destructive' });
+      return false;
+    }
+    if (!pages.includes(clean)) setDraftPages((prev) => [...prev, clean]);
+    setActivePage(clean);
+    setSelectedId(null);
+    return true;
+  };
+
+  const moveBlockToPage = async (block: SiteBlock, targetPage: string) => {
+    if (!opts.supportsPages || (block.page || 'home') === targetPage) return;
+    const position = Math.max(-1, ...blocks.filter((b) => (b.page || 'home') === targetPage).map((b) => b.position)) + 1;
+    setBlocks((prev) => prev.map((b) => (b.id === block.id ? { ...b, page: targetPage, position } : b)));
+    const { error } = await supabase.from(opts.blocksTable).update({ page: targetPage, position }).eq('id', block.id);
+    if (error) toast({ title: 'Move failed', description: error.message, variant: 'destructive' });
+    else scheduleAutoRepublish();
+  };
 
   const onDragEnd = (active: { id: string }, over: { id: string } | null) => {
     if (!over || active.id === over.id) return;
@@ -194,19 +238,21 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
     if (!mod) return;
     // Avoid position collisions after deletes — use max+1 not blocks.length.
     const position = blocks.length === 0 ? 0 : Math.max(...blocks.map((b) => b.position)) + 1;
+    const insertRow: Record<string, unknown> = { block_type: type, position, config: mod.defaultConfig, is_visible: true };
+    if (opts.supportsPages) insertRow.page = activePage;
     const { data, error } = await supabase
       .from(opts.blocksTable)
-      .insert({ block_type: type, position, config: mod.defaultConfig, is_visible: true })
-      .select('id, block_type, position, config, is_visible')
+      .insert(insertRow)
+      .select(blockColumns)
       .single();
     if (error) {
       toast({ title: 'Could not add block', description: error.message, variant: 'destructive' });
       return null;
     }
-    setBlocks((prev) => [...prev, data as SiteBlock]);
-    setSelectedId((data as SiteBlock).id);
+    setBlocks((prev) => [...prev, data as unknown as SiteBlock]);
+    setSelectedId((data as unknown as SiteBlock).id);
     scheduleAutoRepublish();
-    return data as SiteBlock;
+    return data as unknown as SiteBlock;
   };
 
   const updateTheme = (patch: Partial<SiteTheme>) => {
@@ -301,5 +347,11 @@ export function useBlockPageEditor(opts: BlockPageEditorOptions) {
     publish,
     unpublish,
     resetToTemplate,
+    // pages
+    activePage,
+    setActivePage,
+    pages,
+    createPage,
+    moveBlockToPage,
   };
 }

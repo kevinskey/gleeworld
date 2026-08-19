@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { buildDeleteUserRequest, deleteConfirmationText } from './deleteUserRequest';
 import { User } from "@/hooks/useUsers";
 import { ResetPasswordDialog } from "../ResetPasswordDialog";
 import { ALL_DIETARY_OPTIONS } from "@/constants/dietaryOptions";
@@ -140,7 +141,8 @@ export const UserDetailPanel = ({
   const [twitter, setTwitter] = useState("");
   const [facebook, setFacebook] = useState("");
   const [youtube, setYoutube] = useState("");
-  
+  const [patreon, setPatreon] = useState("");
+
   const { toast } = useToast();
 
   // Load user data when user changes
@@ -205,6 +207,7 @@ export const UserDetailPanel = ({
         setTwitter(socialLinks.twitter || "");
         setFacebook(socialLinks.facebook || "");
         setYoutube(socialLinks.youtube || "");
+        setPatreon(socialLinks.patreon || "");
       }
     } catch (error) {
       console.error("Error loading user profile:", error);
@@ -213,7 +216,7 @@ export const UserDetailPanel = ({
 
   if (!isOpen || !user) return null;
 
-  const expectedDeleteText = `DELETE ${user.email}`;
+  const expectedDeleteText = deleteConfirmationText(user.email);
   const isConfirmValid = confirmText === expectedDeleteText;
 
   const getRoleIcon = (userRole: string) => {
@@ -278,6 +281,7 @@ export const UserDetailPanel = ({
         twitter,
         facebook,
         youtube,
+        patreon,
       };
 
       // Update gw_profiles table with comprehensive data
@@ -441,12 +445,19 @@ export const UserDetailPanel = ({
 
     setLoading(true);
     try {
-      // Use Edge Function with service role to fully delete Auth user and clean up profile
+      // The edge function destructures { userId, userEmail, confirmText } and
+      // 400s without them. This panel used to send { target_user_id }, so every
+      // delete failed before the function did any work. buildDeleteUserRequest
+      // is the single typed statement of that contract.
       const { data, error } = await supabase.functions.invoke('admin-delete-user', {
-        body: { target_user_id: user.id },
+        body: buildDeleteUserRequest({ id: user.id, email: user.email }, confirmText),
       });
 
-      if (error) throw error as any;
+      if (error) throw error;
+
+      // The function can also answer 200 with an error body. Without this the
+      // panel would report "User Deleted" while the account still exists.
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: 'User Deleted',
@@ -951,6 +962,16 @@ export const UserDetailPanel = ({
                             value={youtube}
                             onChange={(e) => setYoutube(e.target.value)}
                             placeholder="Channel URL"
+                            disabled={loading}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="editPatreon">Patreon</Label>
+                          <Input
+                            id="editPatreon"
+                            value={patreon}
+                            onChange={(e) => setPatreon(e.target.value)}
+                            placeholder="patreon.com/username"
                             disabled={loading}
                           />
                         </div>

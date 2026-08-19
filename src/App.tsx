@@ -1,22 +1,23 @@
 import { useState, useEffect, lazy, Suspense, ReactNode } from "react";
 import { AudioCompanionProvider } from "@/contexts/AudioCompanionContext";
+import { AssistantProvider } from "@/lib/assistant/AssistantProvider";
 import { TenantFavicon } from "@/components/TenantFavicon";
 import { Toaster } from "@/components/ui/toaster";
 import { FanRoute } from "@/components/routes/FanRoute";
 import { GraduatesRoute } from "@/components/routes/GraduatesRoute";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import GlobalDictation from "@/components/voice/GlobalDictation";
-import { GlobalAssistantHost } from "@/components/assistant/GlobalAssistantHost";
 import { useFloatingSoundCloudTrack } from "@/components/soundcloud/soundcloudPlayerStore";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipContext";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { QueryClient } from "@tanstack/query-core";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
-import { Mus240SemesterProvider } from "@/contexts/Mus240SemesterContext";
+import { SemesterProvider } from "@/contexts/SemesterContext";
 import { CourseProvider } from "@/contexts/CourseContext";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,10 +34,13 @@ if (typeof window !== 'undefined') installDemoWriteInterceptor();
 
 import { MessengerProvider } from "@/contexts/MessengerContext";
 import { ActiveMeetingProvider } from "@/contexts/ActiveMeetingContext";
+import { IosCalendarAutoPull } from "@/components/app/IosCalendarAutoPull";
+import { isNativeCalendarAvailable } from "@/plugins/gwCalendar";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { ControlCenterRedirect } from "@/components/routing/ControlCenterRedirect";
 import { ScrollToTop } from "@/components/routing/ScrollToTop";
+import { RedirectPreservingQuery } from "@/components/routing/RedirectPreservingQuery";
 
 // Heavy dashboard-only globals — gated behind useAuth() so public landing
 // visitors don't download their chunks. Each lazy() boundary splits the
@@ -75,6 +79,7 @@ const QuizAttemptsPage = lazy(() => import("./pages/academy/QuizAttemptsPage"));
 const QuizAttemptDetailPage = lazy(() => import("./pages/academy/QuizAttemptDetailPage"));
 const WorkspaceUsersPage = lazy(() => import("./pages/dashboard/WorkspaceUsersPage"));
 const WorkspaceSettingsPage = lazy(() => import("./pages/dashboard/WorkspaceSettingsPage"));
+const MyWorldPage = lazy(() => import("./pages/dashboard/MyWorldPage"));
 const WorkspaceAnalyticsPage = lazy(() => import("./pages/dashboard/WorkspaceAnalyticsPage"));
 const FundraisingPage = lazy(() => import("./pages/dashboard/FundraisingPage"));
 const DiscussionThreadPage = lazy(() => import("./pages/academy/DiscussionThreadPage"));
@@ -104,6 +109,7 @@ const StudioHome = lazy(() => import("./pages/studio/StudioHome"));
 const StudioEditor = lazy(() => import("./pages/studio/StudioEditor"));
 const VideoLibrary = lazy(() => import("./pages/video/VideoLibrary"));
 const VideoPlayer = lazy(() => import("./pages/video/VideoPlayer"));
+const ListenPage = lazy(() => import("./pages/ListenPage"));
 const Messenger = lazy(() => import("./pages/admin/Messenger"));
 import { Terms, Privacy } from "./pages/Legal";
 const ThankYou = lazy(() => import("./pages/ThankYou"));
@@ -147,7 +153,8 @@ const ForcePasswordChange = lazy(() => import("./pages/ForcePasswordChange"));
 const AuditionApplicationPage = lazy(() => import("./pages/AuditionApplicationPage"));
 const FanDashboard = lazy(() => import("./pages/FanDashboard"));
 // import AdminDashboard from "./pages/AdminDashboard";
-const DuesManagement = lazy(() => import("./pages/DuesManagement").then(m => ({ default: m.DuesManagement })));
+const FeesAdminPage = lazy(() => import("./pages/dashboard/FeesAdminPage"));
+const MyFeesPage = lazy(() => import("./pages/dashboard/MyFeesPage"));
 const PermissionsPage = lazy(() => import("./pages/admin/Permissions"));
 const WeekPage = lazy(() => import("./pages/music-theory/WeekPage"));
 
@@ -155,6 +162,7 @@ const ContractSigning = lazy(() => import("./pages/ContractSigning"));
 const AdminSigning = lazy(() => import("./pages/AdminSigning"));
 const ActivityLogs = lazy(() => import("./pages/ActivityLogs"));
 const W9FormPage = lazy(() => import("./pages/W9FormPage"));
+const ParentPermissionSlip = lazy(() => import("./pages/ParentPermissionSlip"));
 import NotFound from "./pages/NotFound";
 const Accounting = lazy(() => import("./pages/Accounting"));
 const DocsArchitecture = lazy(() => import("./pages/DocsArchitecture"));
@@ -162,15 +170,12 @@ const DocsApp = lazy(() => import("./features/docs/DocsApp"));
 const SavedFeed = lazy(() => import("./pages/SavedFeed"));
 const FeedControl = lazy(() => import("./pages/FeedControl"));
 const UnifiedDashboard = lazy(() => import("./components/dashboard/UnifiedDashboard").then(m => ({ default: m.UnifiedDashboard })));
-const TestBuilderPage = lazy(() => import("./pages/mus240/TestBuilderPage"));
 const TestBuilderEdit = lazy(() => import("./pages/TestBuilderEdit"));
 // (TestPreview page deleted with the radio purge 2026-05-31 — was the only consumer of useRadioPlayer.)
 const StudentTestPage = lazy(() => import("./pages/StudentTestPage"));
-const TestScoresPage = lazy(() => import("./pages/TestScoresPage"));
 const PollViewPage = lazy(() => import("./pages/PollViewPage"));
 
 const AuditionerDashboardPage = lazy(() => import("./pages/AuditionerDashboardPage"));
-const Mus240Auth = lazy(() => import("./pages/Mus240Auth"));
 
 const EventPlanner = lazy(() => import("./pages/EventPlanner"));
 const BudgetApprovals = lazy(() => import("./pages/BudgetApprovals"));
@@ -183,6 +188,7 @@ const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation").then(m 
 const Payments = lazy(() => import("./pages/Payments"));
 const Profile = lazy(() => import("./pages/Profile"));
 const ProfileSetup = lazy(() => import("./pages/ProfileSetup"));
+const WelcomeRegistration = lazy(() => import("./pages/WelcomeRegistration"));
 const Calendar = lazy(() => import("./pages/Calendar"));
 import { CalendarViews } from "./components/calendar/CalendarViews";
 // Note: Messenger is imported once at line 43 from pages/admin/Messenger (the merged
@@ -195,13 +201,27 @@ const Messages = lazy(() => import("./pages/Messages"));
 const EmailComposerPage = lazy(() => import("./pages/EmailComposerPage"));
 const OnboardingInfo = lazy(() => import("./pages/OnboardingInfo"));
 const MemberRegistration = lazy(() => import("./pages/MemberRegistration"));
+const ParentRegistration = lazy(() => import("./pages/ParentRegistration"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const MusicLibraryPage = lazy(() => import("./pages/member/MusicLibraryPage"));
 const NewMusicLibraryPage = lazy(() => import("./pages/dashboard/MusicLibraryPage"));
+const DocumentsLibrary = lazy(() => import("./pages/documents/DocumentsLibrary"));
+const DocumentEditorPage = lazy(() => import("./pages/documents/DocumentEditorPage"));
+const PartTracksPage = lazy(() => import("./pages/dashboard/PartTracksPage"));
+const SeatingChartsDashboardPage = lazy(() => import("./pages/seating-charts/DashboardPage"));
+const AllStateDirectoryPage = lazy(() => import("./pages/all-state/AllStateDirectoryPage"));
+const AllStateStatePage = lazy(() => import("./pages/all-state/AllStateStatePage"));
+const AllStateAdminPage = lazy(() => import("./pages/all-state/AllStateAdminPage"));
+const AllStateCohortsPage = lazy(() => import("./pages/all-state/AllStateCohortsPage"));
+const MyAllStatePage = lazy(() => import("./pages/all-state/MyAllStatePage"));
+const SeatingChartEditorPage = lazy(() => import("./pages/seating-charts/EditorPage"));
+const SeatingChartViewPage = lazy(() => import("./pages/seating-charts/ViewPage"));
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
+const SoundCloudPlayerPage = lazy(() => import("./pages/dashboard/SoundCloudPlayerPage"));
 const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
+const ReadingMusicPage = lazy(() => import("./pages/dashboard/ReadingMusicPage"));
 const NotationEditorPage = lazy(() => import("./pages/notation/NotationEditorPage"));
 const BoxOfficePage = lazy(() => import("./pages/dashboard/BoxOfficePage"));
 const BoxOfficeEventPage = lazy(() => import("./pages/dashboard/BoxOfficeEventPage"));
@@ -210,13 +230,22 @@ const BoxOfficeWillCallPage = lazy(() => import("./pages/dashboard/BoxOfficeWill
 const ConcertTicketsPublicPage = lazy(() => import("./pages/public/ConcertTicketsPublicPage"));
 const TicketsOrderPage = lazy(() => import("./pages/public/TicketsOrderPage"));
 const BoxOfficeIndexPage = lazy(() => import("./pages/public/BoxOfficeIndexPage"));
-const PartTracksModule = lazy(() => import("./components/modules/PartTracksModule"));
-const PartTracksLandingPage = lazy(() => import("./pages/dashboard/PartTracksLandingPage"));
 const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPage"));
 const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/SongwritingLibraryPage"));
 const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));
 const PlannerPage = lazy(() => import("./pages/planner/PlannerPage"));
+const AuctionsCalendarPage = lazy(() => import("./pages/auctions/AuctionsCalendarPage"));
+const AuctionsAdminPage = lazy(() => import("./pages/auctions/AuctionsAdminPage"));
+const AuctionsLotsPage = lazy(() => import("./pages/auctions/LotsPage"));
+const AuctionsLotDetailPage = lazy(() => import("./pages/auctions/LotDetailPage"));
+const AuctionsSavedSearchesPage = lazy(() => import("./pages/auctions/SavedSearchesPage"));
+const AuctionsMatchesPage = lazy(() => import("./pages/auctions/MatchesPage"));
+const PrayerApp = lazy(() => import("./pages/prayer/PrayerApp"));
+const BibleApp = lazy(() => import("./pages/bible/BibleApp"));
 const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
+const WorshipAidPage = lazy(() => import("./pages/dashboard/WorshipAidPage"));
+const WorshipAidsPage = lazy(() => import("./pages/dashboard/WorshipAidsPage"));
+const WorshipAidPublicPage = lazy(() => import("./pages/WorshipAidPublicPage"));
 const ConcertPlannerEditorPage = lazy(() => import("./pages/dashboard/ConcertPlannerEditorPage"));
 const PublicConcertProgramPage = lazy(() => import("./pages/public/PublicConcertProgramPage"));
 const AuditionsModule = lazy(() => import("./components/modules/AuditionsModule").then(m => ({ default: m.AuditionsModule })));
@@ -258,7 +287,7 @@ const TermsOfService = lazy(() => import("./pages/policies/TermsOfService"));
 const PrivacyPolicy = lazy(() => import("./pages/policies/PrivacyPolicy"));
 const TrustCenter = lazy(() => import("./pages/policies/Security"));
 const DataProcessingAddendum = lazy(() => import("./pages/policies/DataProcessingAddendum"));
-const GraduatesManagementModule = lazy(() => import("./components/modules/GraduatesManagementModule").then((m) => ({ default: (m as any).GraduatesManagementModule ?? (m as any).default })));
+const GraduatesManagementModule = lazy(() => import("./components/modules/GraduatesManagementModule").then((m) => ({ default: m.GraduatesManagementModule })));
 const SendNotificationPage = lazy(() => import("./pages/SendNotificationPage"));
 const AuditionPage = lazy(() => import("./pages/AuditionPage"));
 const Handbook = lazy(() => import("./pages/Handbook"));
@@ -306,20 +335,19 @@ const OfficeHoursPage = lazy(() => import("./pages/dashboard/OfficeHoursPage"));
 const DashboardShell = lazy(() => import("./components/dashboard/DashboardShell").then(m => ({ default: m.DashboardShell })));
 import { TenantThemeRoot } from "@/components/theme/TenantThemeRoot";
 const PublicSitePage = lazy(() => import("./pages/PublicSitePage"));
+const TenantSitePage = lazy(() => import("./pages/TenantSitePage"));
 const TrialExpiredPage = lazy(() => import("./pages/TrialExpiredPage"));
+const PayFeePage = lazy(() => import("./pages/PayFeePage"));
 import { TrialGuard } from "@/components/routes/TrialGuard";
 const MobileScoring = lazy(() => import("./pages/MobileScoring"));
 const MemberDirectory = lazy(() => import("./pages/MemberDirectory"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
 const AuditionsManagement = lazy(() => import("./components/admin/AuditionsManagement").then(m => ({ default: m.AuditionsManagement })));
 const SoundCloudSearch = lazy(() => import("./pages/SoundCloudSearch"));
-const SoundCloudPlayerPage = lazy(() => import("./pages/dashboard/SoundCloudPlayerPage"));
 const FloatingSoundCloudPlayerHost = lazy(() => import("./components/soundcloud/FloatingSoundCloudPlayer"));
 const ShoutcastManagement = lazy(() => import("./pages/admin/ShoutcastManagement").then(m => ({ default: m.ShoutcastManagement })));
 const ReceiptsPage = lazy(() => import("./pages/ReceiptsPage").then(m => ({ default: m.ReceiptsPage })));
 const ApprovalSystemPage = lazy(() => import("./pages/ApprovalSystemPage"));
-import GroupUpdatesPresentation from './pages/mus240/GroupUpdatesPresentation';
-import GroupPresentationView from './pages/mus240/GroupPresentationView';
 const AssignmentCreatorPage = lazy(() => import("./pages/AssignmentCreator"));
 const PracticeStudioPage = lazy(() => import("./pages/PracticeStudioPage"));
 const MessagingInterface = lazy(() => import("./components/messaging/MessagingInterface").then(m => ({ default: m.MessagingInterface })));
@@ -340,7 +368,6 @@ const Onboarding = lazy(() => import("./pages/Onboarding").then(m => ({ default:
 const AcademyStudentRegistration = lazy(() => import("./pages/AcademyStudentRegistration"));
 const ProviderDashboard = lazy(() => import("./components/providers/ProviderDashboard").then(m => ({ default: m.ProviderDashboard })));
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
-import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
 import { ProfileCompletionGuard } from "./components/auth/ProfileCompletionGuard";
 const TimesheetPage = lazy(() => import("./pages/TimesheetPage"));
 const BownaScholarLanding = lazy(() => import("./pages/BownaScholarLanding"));
@@ -348,23 +375,15 @@ const SMSTest = lazy(() => import("./pages/SMSTest"));
 const MemberExitInterview = lazy(() => import("./pages/MemberExitInterview"));
 
 
-const ClassLanding = lazy(() => import("./pages/mus240/ClassLanding"));
-const SyllabusPage = lazy(() => import("./pages/mus240/SyllabusPage"));
-const ListeningHub = lazy(() => import("./pages/mus240/ListeningHub"));
-const WeekDetail = lazy(() => import("./pages/mus240/WeekDetail"));
-const Resources = lazy(() => import("./pages/mus240/Resources"));
-const Groups = lazy(() => import("./pages/mus240/Groups"));
-const GroupDetail = lazy(() => import("./pages/mus240/GroupDetail"));
-const GroupUpdateForm = lazy(() => import("./pages/mus240/GroupUpdateForm"));
-const ResourcesAdmin = lazy(() => import("./pages/mus240/admin/ResourcesAdmin"));
 
-const StudentMidtermGrading = lazy(() => import("./pages/mus240/StudentMidtermGrading").then(m => ({ default: m.StudentMidtermGrading })));
-const StudentWorkOverview = lazy(() => import("./pages/mus240/StudentWorkOverview").then(m => ({ default: m.StudentWorkOverview })));
-const StudentDashboard = lazy(() => import("./pages/mus240/StudentDashboard").then(m => ({ default: m.StudentDashboard })));
-const PeerReviewBrowserPage = lazy(() => import("./pages/mus240/PeerReviewBrowserPage").then(m => ({ default: m.PeerReviewBrowserPage })));
-const MidtermExam = lazy(() => import("./pages/mus240/MidtermExam"));
 const SMUS100MidtermExamPage = lazy(() => import("./pages/SMUS100MidtermExamPage"));
 const CourseStatistics = lazy(() => import("./pages/admin/CourseStatistics"));
+const PartnersAdmin = lazy(() => import("./pages/admin/PartnersAdmin"));
+const PartnerInviteRedeem = lazy(() => import("./pages/partner/PartnerInviteRedeem"));
+const PartnerPortal = lazy(() => import("./pages/partner/PartnerPortal"));
+const PartnerProfile = lazy(() => import("./pages/partner/PartnerProfile"));
+const PartnerScoresList = lazy(() => import("./pages/partner/PartnerScoresList"));
+const PartnerScoreUpload = lazy(() => import("./pages/partner/PartnerScoreUpload"));
 const PaymentSuccess = lazy(() => import("./pages/dues-management/PaymentSuccess").then(m => ({ default: m.PaymentSuccess })));
 
 const WritingGraderPage = lazy(() => import("./pages/writing/WritingGraderPage"));
@@ -377,8 +396,6 @@ const RegistrationThankYou = lazy(() => import("./pages/RegistrationThankYou"));
 
 const GrandStaves = lazy(() => import("./pages/GrandStaves"));
 const GrandStaffClassroom = lazy(() => import("./pages/GrandStaffClassroom"));
-const Mus240PollPage = lazy(() => import("./pages/Mus240PollPage").then(m => ({ default: m.Mus240PollPage })));
-const JazzPage = lazy(() => import("./pages/mus240/JazzPage"));
 const Tour2026Page = lazy(() => import("./pages/Tour2026Page"));
 const BusInformation = lazy(() => import("./pages/BusInformation"));
 const StudentSchedulesPage = lazy(() => import("./pages/StudentSchedulesPage"));
@@ -397,13 +414,17 @@ const StudentAssignmentPage = lazy(() => import("./pages/grading/student/Student
 const CourseAudioPage = lazy(() => import("./pages/courses/CourseAudioPage"));
 const GlobalMiniPlayer = lazy(() => import("./components/audio/GlobalMiniPlayer").then((m) => ({ default: m.GlobalMiniPlayer })));
 import { ModuleGate } from "./components/auth/ModuleGate";
+import { StoreShell } from "./pages/store/StoreShell";
+const StorePage = lazy(() => import("./pages/store/StorePage"));
+const StoreScoreDetail = lazy(() => import("./pages/store/StoreScoreDetail"));
+const StorePartnerPage = lazy(() => import("./pages/store/StorePartnerPage"));
+const StoreThanksPage = lazy(() => import("./pages/store/StoreThanksPage"));
+const MyMusicOfflinePage = lazy(() => import("./pages/MyMusicOfflinePage"));
 
-// Legacy MUS240 redirect component
-const LegacyMus240Redirect = () => {
-  const location = useLocation();
-  const newPath = location.pathname.replace('/classes/mus240', '/mus-240');
-  return <Navigate to={newPath} replace />;
-};
+
+// /dashboard/part-tracks briefly redirected to /studio after the old
+// editor retired (2026-07-29); it now hosts the PartTrack rehearsal-track
+// pipeline (PR #335).
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -502,7 +523,44 @@ function AuthenticatedGlobals() {
   );
 }
 
+// Fast path for the at-the-door ticket page.
+//
+// /tickets/<token> is opened by a buyer on cellular, usually standing in a
+// queue, and all it has to do is draw a QR code. Measured on 2026-08-08: a
+// signed-in buyer's browser spent 22 seconds between loading the HTML and
+// making the ONE request that fetches the ticket, because every provider
+// below — AuthProvider, MusicPlayer, Course, Messenger, ActiveMeeting,
+// AudioCompanion — plus AuthenticatedGlobals (Messenger, mini player,
+// meeting overlay, push bridge) had to mount first. The ticket itself had
+// existed for ten seconds before the page was even requested.
+//
+// Evaluated once from window.location, not useLocation: this component sits
+// ABOVE BrowserRouter and never re-renders on navigation. In-app navigation
+// to /tickets/... therefore keeps the normal tree, which is correct — the
+// heavy providers are already mounted by then and nothing is saved by
+// tearing them down.
+//
+// TenantThemeRoot is kept: it is the single writer of the brand tokens, and
+// it is one RPC that does not block paint. Everything else is dropped.
+const IS_TICKET_FAST_PATH =
+  typeof window !== 'undefined' && /^\/tickets\/[^/]+\/?$/.test(window.location.pathname);
+
 const App = () => {
+  if (IS_TICKET_FAST_PATH) {
+    return (
+      <BrowserRouter>
+        <QueryClientProvider client={queryClient}>
+          <TenantThemeRoot />
+          <Suspense fallback={null}>
+            <Routes>
+              <Route path="/tickets/:token" element={<TicketsOrderPage />} />
+            </Routes>
+          </Suspense>
+        </QueryClientProvider>
+      </BrowserRouter>
+    );
+  }
+
   return (
     <BrowserRouter>
       <ScrollToTop />
@@ -510,15 +568,25 @@ const App = () => {
         <TenantThemeRoot />
         <NativeTenantGate>
         <AuthProvider>
+          {isNativeCalendarAvailable() && <IosCalendarAutoPull />}
           <ThemeProvider>
             <TooltipProvider>
               <CustomTooltipProvider>
                 <MusicPlayerProvider>
-                  <Mus240SemesterProvider>
+                  <SemesterProvider>
                   <CourseProvider>
                   <MessengerProvider>
                   <ActiveMeetingProvider>
                   <AudioCompanionProvider>
+                  {/* Mounted ABOVE the routes so it never remounts on
+                      navigation. It used to live inside DashboardShell,
+                      which every page instantiates for itself — so "take
+                      me to the command center" unmounted the old page's
+                      shell and hung up the live voice call mid-sentence
+                      (WebSocket close 1000). The Fab/Sheet/MiniPlayer stay
+                      in the shell; only the state and the live session are
+                      global. */}
+                  <AssistantProvider>
                   <div>
                   <TenantFavicon />
                   <Toaster />
@@ -528,9 +596,6 @@ const App = () => {
 
                   <AuthenticatedGlobals />
                   <DesignSystemEnforcer />
-                  {/* Assistant mic + chat, mounted app-wide rather than per
-                      DashboardShell so it survives onto public routes. */}
-                  <GlobalAssistantHost>
                   <UsageTracker>
                   <DemoBar />
                   <Suspense
@@ -560,6 +625,7 @@ const App = () => {
               <Route path="/dpa" element={<PublicRoute><DataProcessingAddendum /></PublicRoute>} />
               <Route path="/data-processing-addendum" element={<PublicRoute><DataProcessingAddendum /></PublicRoute>} />
               <Route path="/thank-you" element={<PublicRoute><ThankYou /></PublicRoute>} />
+              <Route path="/my-music" element={<PublicRoute><MyMusicOfflinePage /></PublicRoute>} />
               <Route
                 path="/academy/:courseCode/rehearsal-today"
                 element={
@@ -599,26 +665,31 @@ const App = () => {
                   link, and bounces back home if the trial is not actually
                   expired (stale link, superadmin fixed it, etc). */}
               <Route path="/paywall" element={<TrialExpiredPage />} />
+              {/* Parent-payable fee link — public on purpose: the URL token is
+                  the capability and the payer usually has no account. */}
+              <Route path="/pay/fee/:feeId" element={<PayFeePage />} />
               {/* Sandbox: animated cursor + spotlight tour over a mock Command Center.
                   Gated by ?key=preview inside the component itself. */}
               <Route path="/tour-sandbox" element={<TourSandbox />} />
               {/* One-click prospect demo entry — mints a read-only Director session. */}
               <Route path="/try" element={<TryDemo />} />
-              <Route 
-                path="/auth/mus240" 
-                element={
-                  <PublicRoute>
-                    <Mus240Auth />
-                  </PublicRoute>
-                } 
-              />
-              <Route 
-                path="/onboarding" 
+              <Route
+                path="/onboarding"
                 element={
                   <PublicRoute>
                     <Onboarding />
                   </PublicRoute>
-                } 
+                }
+              />
+              {/* Minimal invited-student registration (name + phone), then on
+                  to the class page. Invite emails point next= here. */}
+              <Route
+                path="/welcome"
+                element={
+                  <ProtectedRoute skipProfileCheck>
+                    <WelcomeRegistration />
+                  </ProtectedRoute>
+                }
               />
               <Route 
                 path="/registration-thank-you" 
@@ -679,13 +750,21 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              <Route 
+              <Route
+                path="/register/parent"
+                element={
+                  <PublicRoute>
+                    <ParentRegistration />
+                  </PublicRoute>
+                }
+              />
+              <Route
                 path="/reset-password"
                 element={
                   <PublicRoute>
                     <ResetPassword />
                   </PublicRoute>
-                } 
+                }
               />
               <Route 
                 path="/force-password-change"
@@ -744,7 +823,7 @@ const App = () => {
                 path="/glee-cam/:categorySlug" 
                 element={<GleeCamGallery />} 
               />
-              {/* MUS 100 - Music Theory Fundamentals */}
+              {/* GW 100 - Music Theory Fundamentals */}
               <Route 
                 path="/mus-100" 
                 element={
@@ -756,7 +835,7 @@ const App = () => {
               {/* Legacy redirect */}
               <Route path="/music-theory-fundamentals" element={<Navigate to="/mus-100" replace />} />
               
-              {/* MUS 210 - Legacy redirects to academy */}
+              {/* GW 210 - Legacy redirects to academy */}
               <Route path="/mus-210" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/choral-conducting-literature" element={<Navigate to="/academy/mus-210" replace />} />
               <Route path="/classes/mus210" element={<Navigate to="/academy/mus-210" replace />} />
@@ -904,6 +983,23 @@ const App = () => {
                 }
               />
               <Route
+                path="/dashboard/my-world"
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <DashboardShell><MyWorldPage /></DashboardShell>
+                    </UniversalLayout>
+                  </ProtectedRoute>
+                }
+              />
+              {/* My Space was renamed My World on 2026-08-09. Bookmarks,
+                  in-app deep links and the product tour all still point at
+                  the old path, so it redirects rather than 404s — through
+                  RedirectPreservingQuery (not a bare <Navigate>), the same
+                  component the store consolidation uses, so a link like
+                  /dashboard/my-space?tab=defaults keeps its query and hash. */}
+              <Route path="/dashboard/my-space" element={<RedirectPreservingQuery to="/dashboard/my-world" />} />
+              <Route
                 path="/dashboard/analytics"
                 element={
                   <ProtectedRoute>
@@ -963,6 +1059,11 @@ const App = () => {
               <Route path="/studio/videos/:id" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><VideoPlayer /></DashboardShell></UniversalLayout></ProtectedRoute>} />
               {/* Legacy /video/:id → studio player (backward compat). */}
               <Route path="/video/:id" element={<Navigate to="/studio/videos" replace />} />
+              <Route path="/listen/:id" element={
+                <ProtectedRoute>
+                  <ListenPage />
+                </ProtectedRoute>
+              } />
               <Route
                 path="/academy/c/:code/discuss/:threadId"
                 element={
@@ -1116,6 +1217,7 @@ const App = () => {
               />
               {/* Published tenant public sites — no auth */}
               <Route path="/sites/:slug" element={<PublicSitePage />} />
+              <Route path="/sites/:slug/:page" element={<PublicSitePage />} />
               <Route
                 path="/admin/ai-rehearsal"
                 element={
@@ -1228,7 +1330,6 @@ const App = () => {
               <Route path="/mus-001" element={<Navigate to="/academy/mus-001" replace />} />
               <Route path="/mus-000" element={<Navigate to="/academy/mus-000" replace />} />
               <Route path="/glee-101" element={<Navigate to="/academy/glee-101" replace />} />
-              <Route path="/mus-240" element={<Navigate to="/academy/mus-240" replace />} />
               <Route path="/bowman-scholars" element={<Navigate to="/academy/lh-100" replace />} />
               <Route path="/lh-100" element={<Navigate to="/academy/lh-100" replace />} />
               {/* Grand Staff Classroom page */}
@@ -1285,22 +1386,11 @@ const App = () => {
                    </PublicRoute>
                  } 
                />
-               {/* MUS100 Sight Singing Practice - retired, redirects to canonical sight-reading studio */}
+               {/* GW100 Sight Singing Practice - retired, redirects to canonical sight-reading studio */}
                <Route
                  path="/mus100-sight-singing"
                  element={<Navigate to="/dashboard/sight-reading" replace />}
                />
-              {/* MUS 240 Poll System */}
-              <Route 
-                path="/mus240-polls" 
-                element={
-                  <ProtectedRoute>
-                    <Mus240EnrollmentRoute>
-                      <Mus240PollPage />
-                    </Mus240EnrollmentRoute>
-                  </ProtectedRoute>
-                } 
-              />
               {/* Poll View Page - accessible to authenticated users */}
               <Route 
                 path="/polls/:pollId" 
@@ -1363,7 +1453,44 @@ const App = () => {
                 } 
                />
                {/* /admin routes — only deep links below, no bare /admin home. */}
-                 <Route 
+                 <Route
+                   path="/admin/partners"
+                   element={
+                     <ProtectedRoute>
+                       <AdminOnlyRoute>
+                         <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                           <DashboardShell><PartnersAdmin /></DashboardShell>
+                         </UniversalLayout>
+                       </AdminOnlyRoute>
+                     </ProtectedRoute>
+                   }
+                 />
+                 <Route
+                   path="/partner/invite/:token"
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><PartnerInviteRedeem /></DashboardShell>
+                       </UniversalLayout>
+                     </ProtectedRoute>
+                   }
+                 />
+                 <Route
+                   path="/partner"
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><PartnerPortal /></DashboardShell>
+                       </UniversalLayout>
+                     </ProtectedRoute>
+                   }
+                 >
+                   <Route index element={<PartnerProfile />} />
+                   <Route path="profile" element={<PartnerProfile />} />
+                   <Route path="scores" element={<PartnerScoresList />} />
+                   <Route path="scores/new" element={<PartnerScoreUpload />} />
+                 </Route>
+                 <Route
                    path="/admin/academy-courses" 
                    element={
                      <ProtectedRoute>
@@ -1474,6 +1601,46 @@ const App = () => {
                   }
                 />
                 <Route
+                  path="/seating-charts"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><SeatingChartsDashboardPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/seating-charts/:chartId/edit"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><SeatingChartEditorPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/seating-charts/:chartId"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><SeatingChartEditorPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/seating-charts/:chartId/view"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><SeatingChartViewPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/dashboard/music-tools"
                   element={
                     <ProtectedRoute>
@@ -1504,14 +1671,22 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/dashboard/sight-reading"
+                  path="/dashboard/reading-music"
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><SightReadingStudio /></DashboardShell>
+                        <DashboardShell><ReadingMusicPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
+                />
+                <Route
+                  path="/dashboard/sight-reading"
+                  element={<RedirectWithSearch to="/dashboard/reading-music" />}
+                />
+                <Route
+                  path="/dashboard/sight-reading/:rest"
+                  element={<RedirectWithSearch to="/dashboard/reading-music" />}
                 />
                 <Route
                   path="/dashboard/sight-reading/editor/:exerciseId?"
@@ -1568,21 +1743,7 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <PartTracksLandingPage />
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/dashboard/part-tracks/:projectId"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <PartTracksLandingPage />
-                        </DashboardShell>
+                        <DashboardShell><PartTracksPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
@@ -1636,6 +1797,36 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+                {/* The Bible — full text, highlights, Apple Pencil underlines, notes. */}
+                <Route
+                  path="/bible"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <BibleApp />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Prayer App — Phase 0/1 preview. No ModuleGate yet: the 'prayer'
+                    module is not registered in billing, so gating on it would
+                    make the page unreachable. The nav link is restricted to
+                    platform admins instead; swap both to the module gate once
+                    the module exists. */}
+                <Route
+                  path="/prayer"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <PrayerApp />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
                 {/* GleeWorld Planner (nav label "Notes") — addon module 'planner'.
                     One stateful workspace; view + note selection live in URL params. */}
                 <Route
@@ -1658,6 +1849,106 @@ const App = () => {
                         <DashboardShell>
                           <ModuleGate moduleId="planner"><PlannerPage /></ModuleGate>
                         </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Auctions — addon module 'auctions'. Phase 1 is the calendar:
+                    a member-facing list of upcoming equipment sales, plus a
+                    platform-staff-only curation page (the auction tables are
+                    global reference data, so the admin page self-gates too). */}
+                <Route
+                  path="/auctions"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsCalendarPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/lots"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsLotsPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/lots/:lotId"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsLotDetailPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/searches"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsSavedSearchesPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/matches"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsMatchesPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/admin"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsAdminPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Documents — personal word processor (gw_personal_docs). Not a
+                    tenant add-on module, so no ModuleGate: every signed-in user
+                    gets it, same as Notes/Planner's own personal-storage model
+                    but without the module gate planner carries. */}
+                <Route
+                  path="/dashboard/documents"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><DocumentsLibrary /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/documents/:id"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><DocumentEditorPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
@@ -1687,6 +1978,37 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+                {/* Every worship aid, as a document list. */}
+                <Route
+                  path="/dashboard/worship-aids"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <WorshipAidsPage />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* Worship aid: the printable folded program for a Mass. */}
+                <Route
+                  path="/dashboard/liturgy/:id/worship-aid"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <WorshipAidPage />
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* The phone edition, reached by scanning the QR on the printed
+                    cover. Public by capability token and read through a
+                    SECURITY DEFINER projection — no shell, no auth, and no
+                    access to anything the printed aid does not already show. */}
+                <Route path="/worship-aid/:token" element={<WorshipAidPublicPage />} />
                 {/* Anonymous public program — gated server-side by the
                     anon RLS policy that requires published_at IS NOT NULL. */}
                 <Route
@@ -1745,12 +2067,25 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+                {/* The Command Center player. /soundcloud (no /dashboard) is
+                    the separate SoundCloud.com OAuth search page. */}
+                <Route
+                  path="/dashboard/soundcloud"
+                  element={
+                    <ProtectedRoute>
+                      <SoundCloudPlayerPage />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/dashboard/alumni"
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell><GraduatesManagementModule /></DashboardShell>
+                        {/* isFullPage: this is a routed page — without it the
+                            module renders its embedded variant (no container
+                            padding) and the title sits flush at x=0 on phones. */}
+                        <DashboardShell><GraduatesManagementModule isFullPage /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
                   }
@@ -1770,9 +2105,12 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        {/* Sidebar "Store" entry → the editable backend
+                        {/* Sidebar "Store Admin" entry → the editable backend
                             (Products, Categories, Inventory, Orders, etc).
-                            The public-facing /shop has its own route. */}
+                            The public-facing /shop has its own route.
+                            /product-management and /store/products
+                            (formerly the "Merch" catalog entry) redirect
+                            here — same component, one gated route. */}
                         <DashboardShell><ProductManagement /></DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>
@@ -1861,16 +2199,6 @@ const App = () => {
                        </UniversalLayout>
                      </ProtectedRoute>
                   } 
-                 />
-                <Route
-                  path="/dashboard/mus240" 
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout>
-                        <UnifiedDashboard />
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                   } 
                  />
                  <Route 
                   path="/dashboard/public" 
@@ -1988,12 +2316,14 @@ const App = () => {
                    } 
                    />
                  <Route
-                   path="/notifications/send" 
+                   path="/notifications/send"
                    element={
                      <ProtectedRoute>
-                       <SendNotificationPage />
+                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                         <DashboardShell><SendNotificationPage /></DashboardShell>
+                       </UniversalLayout>
                      </ProtectedRoute>
-                   } 
+                   }
                   />
                  <Route
                    path="/announcements" 
@@ -2194,13 +2524,73 @@ const App = () => {
                 {/* /youtube collapsed into /video (see route above). Kept as a
                     redirect so old links and search hits still land somewhere. */}
                 <Route path="/youtube" element={<Navigate to="/video" replace />} />
-                <Route 
-                  path="/about" 
+                {/* All-State Layer 1 is global editorial canon and anon-readable
+                    (RLS gates public reads on verification_status), so these are
+                    PublicRoute — a director can send a student or parent the link
+                    without an account, and the pages are indexable. */}
+                <Route
+                  path="/all-state"
+                  element={
+                    <PublicRoute>
+                      <UniversalLayout>
+                        <AllStateDirectoryPage />
+                      </UniversalLayout>
+                    </PublicRoute>
+                  }
+                />
+                <Route
+                  path="/all-state/:stateSlug"
+                  element={
+                    <PublicRoute>
+                      <UniversalLayout>
+                        <AllStateStatePage />
+                      </UniversalLayout>
+                    </PublicRoute>
+                  }
+                />
+                {/* Staff editor. ProtectedRoute only checks that you're signed
+                    in — the real fence is RLS on is_platform_owner(), so a
+                    tenant admin who reaches this URL can read but every save
+                    is rejected with an explicit message. */}
+                {/* Director workspace — tenant data, so ProtectedRoute plus
+                    RLS tenant isolation on every Layer 2/3 table. */}
+                <Route
+                  path="/dashboard/all-state"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><AllStateCohortsPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/my-all-state"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><MyAllStatePage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/dashboard/all-state-admin"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell><AllStateAdminPage /></DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/about"
                   element={
                     <PublicRoute>
                       <About />
                     </PublicRoute>
-                  } 
+                  }
                 />
                 <Route 
                   path="/2026-tour" 
@@ -2262,15 +2652,14 @@ const App = () => {
                      path="/music-library"
                      element={<RedirectWithSearch to="/dashboard/music-library" />}
                     />
-                      <Route 
-                        path="/librarian-dashboard" 
-                        element={
-                          <ProtectedRoute>
-                            <UniversalLayout>
-                              <LibrarianDashboardPage />
-                            </UniversalLayout>
-                          </ProtectedRoute>
-                        } 
+                      {/* Legacy path. It used to render the page under a bare
+                          UniversalLayout — no DashboardShell — so the librarian
+                          got a different chrome depending on which URL they
+                          arrived by. Redirects to the canonical route instead,
+                          matching /calendar, /messenger and the rest. */}
+                      <Route
+                        path="/librarian-dashboard"
+                        element={<RedirectWithSearch to="/dashboard/librarian" />}
                       />
                       <Route 
                         path="/budgets" 
@@ -2288,13 +2677,29 @@ const App = () => {
                          </ProtectedRoute>
                        } 
                       />
-                       <Route 
-                         path="/dues-management" 
+                       <Route
+                         path="/dues-management"
+                         element={<Navigate to="/dashboard/fees" replace />}
+                       />
+                       <Route
+                         path="/dashboard/fees"
                          element={
                            <ProtectedRoute>
-                             <DuesManagement />
+                             <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                               <DashboardShell><FeesAdminPage /></DashboardShell>
+                             </UniversalLayout>
                            </ProtectedRoute>
-                         } 
+                         }
+                       />
+                       <Route
+                         path="/dashboard/my-fees"
+                         element={
+                           <ProtectedRoute>
+                             <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                               <DashboardShell><MyFeesPage /></DashboardShell>
+                             </UniversalLayout>
+                           </ProtectedRoute>
+                         }
                        />
                        <Route 
                          path="/dues-management/success" 
@@ -2627,6 +3032,26 @@ const App = () => {
                                    </ProtectedRoute>
                                  }
                                 />
+                                <Route
+                                  path="/travel-manager"
+                                  element={
+                                    <ProtectedRoute>
+                                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                        <DashboardShell><TourPlanner /></DashboardShell>
+                                      </UniversalLayout>
+                                    </ProtectedRoute>
+                                  }
+                                />
+                                <Route
+                                  path="/travel-planner"
+                                  element={
+                                    <ProtectedRoute>
+                                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                        <DashboardShell><TourPlanner /></DashboardShell>
+                                      </UniversalLayout>
+                                    </ProtectedRoute>
+                                  }
+                                />
                                 <Route 
                                   path="/weather" 
                                   element={
@@ -2671,23 +3096,64 @@ const App = () => {
                                   </ProtectedRoute>
                                 } 
                               />
-                              <Route 
-                                path="/product-management" 
-                                element={
-                                  <ProtectedRoute>
-                                    <ProductManagement />
-                                  </ProtectedRoute>
-                                } 
+                              {/* /product-management and /store/products both used to render
+                                  ProductManagement directly — the same component /dashboard/shop
+                                  renders (see the 'shop' catalog entry). Consolidated 2026-08-09:
+                                  redirect so existing links/bookmarks still land on the admin
+                                  screen, now behind the catalog's single gated route.
+                                  RedirectPreservingQuery (not a bare <Navigate>) so a link like
+                                  /store/products?tab=orders keeps its query string. */}
+                              <Route path="/product-management" element={<RedirectPreservingQuery to="/dashboard/shop" />} />
+                              <Route path="/store/products" element={<RedirectPreservingQuery to="/dashboard/shop" />} />
+                               <Route
+                                 path="/store"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StorePage /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
                                />
-                               <Route 
-                                path="/store" 
-                                element={
-                                  <ProtectedRoute>
-                                    <ProductManagement />
-                                  </ProtectedRoute>
-                                } 
+                               <Route
+                                 path="/store/scores/:id"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StoreScoreDetail /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
                                />
-                               <Route 
+                               <Route
+                                 path="/store/partners/:id"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StorePartnerPage /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
+                                 path="/store/thanks"
+                                 element={
+                                   <ProtectedRoute>
+                                     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                       <DashboardShell>
+                                         <StoreShell><StoreThanksPage /></StoreShell>
+                                       </DashboardShell>
+                                     </UniversalLayout>
+                                   </ProtectedRoute>
+                                 }
+                               />
+                               <Route
                                  path="/handbook" 
                                  element={
                                    <ProtectedRoute>
@@ -2796,13 +3262,15 @@ const App = () => {
                                      </PublicRoute>
                                    } 
                                  />
-                                 <Route 
-                                   path="/first-year" 
+                                 <Route
+                                   path="/first-year"
                                    element={
                                      <ProtectedRoute>
-                                       <FirstYearHub />
+                                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                                         <DashboardShell><FirstYearHub /></DashboardShell>
+                                       </UniversalLayout>
                                      </ProtectedRoute>
-                                   } 
+                                   }
                                  />
                                  {/* /console/first-year route removed with First Year Console module. */}
 
@@ -2978,183 +3446,10 @@ const App = () => {
                                 </ProtectedRoute>
                               } 
                              />
-                              {/* MUS 240 - Survey of African American Music */}
-                               <Route 
-                                path="/mus-240" 
-                                element={<ClassLanding />}
-                                />
                                 {/* Legacy redirects - catch all subroutes */}
-                                <Route path="/classes/mus240/*" element={<LegacyMus240Redirect />} />
-                                <Route path="/classes/mus240" element={<Navigate to="/mus-240" replace />} />
-                                <Route path="/mus240" element={<Navigate to="/mus-240" replace />} />
                                
-                                 <Route 
-                                  path="/mus-240/student/dashboard" 
-                                  element={<Navigate to="/academy/mus-240" replace />}
-                                  />
-                                  <Route 
-                                   path="/mus-240/student-dashboard" 
-                                   element={<Navigate to="/academy/mus-240" replace />}
-                                  />
-                                 <Route 
-                                  path="/mus-240/student/journal/:journal_id/grade" 
-                                  element={<Navigate to="/academy/mus-240" replace />}
-                                 />
-                              <Route 
-                               path="/mus-240/syllabus" 
-                                element={
-                                  <Mus240EnrollmentRoute>
-                                    <SyllabusPage />
-                                  </Mus240EnrollmentRoute>
-                                }
-                             />
-                               <Route 
-                                 path="/mus-240/listening" 
-                                element={
-                                  <Mus240EnrollmentRoute>
-                                    <ListeningHub />
-                                  </Mus240EnrollmentRoute>
-                                }
-                               />
-                              <Route 
-                                path="/mus-240/listening/:week" 
-                               element={
-                                 <Mus240EnrollmentRoute>
-                                   <WeekDetail />
-                                 </Mus240EnrollmentRoute>
-                               }
-                              />
-                               <Route 
-                                 path="/mus-240/groups" 
-                               element={
-                                 <Mus240EnrollmentRoute>
-                                   <Groups />
-                                 </Mus240EnrollmentRoute>
-                               }
-                               />
-                                <Route 
-                                  path="/mus-240/groups/update" 
-                                 element={
-                                   <Mus240EnrollmentRoute>
-                                     <GroupUpdateForm />
-                                   </Mus240EnrollmentRoute>
-                                 }
-                                 />
-                                  <Route 
-                                    path="/mus-240/groups/presentation" 
-                                   element={
-                                     <Mus240EnrollmentRoute>
-                                       <GroupUpdatesPresentation />
-                                     </Mus240EnrollmentRoute>
-                                   }
-                                  />
-                                  <Route 
-                                    path="/mus-240/groups/presentation/:id" 
-                                   element={
-                                     <Mus240EnrollmentRoute>
-                                       <GroupPresentationView />
-                                     </Mus240EnrollmentRoute>
-                                   }
-                                  />
-                                <Route 
-                                  path="/mus-240/groups/:groupId" 
-                                 element={
-                                   <Mus240EnrollmentRoute>
-                                     <GroupDetail />
-                                   </Mus240EnrollmentRoute>
-                                 }
-                                />
-                               <Route 
-                                 path="/mus-240/resources" 
-                                element={
-                                  <Mus240EnrollmentRoute>
-                                    <Resources />
-                                  </Mus240EnrollmentRoute>
-                                }
-                               />
-                               <Route 
-                                 path="/mus-240/resources/admin" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <AdminOnlyRoute>
-                                       <ResourcesAdmin />
-                                     </AdminOnlyRoute>
-                                   </ProtectedRoute>
-                                 } 
-                                />
-                                 <Route 
-                                  path="/mus-240/midterm" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <Mus240EnrollmentRoute>
-                                        <MidtermExam />
-                                      </Mus240EnrollmentRoute>
-                                    </ProtectedRoute>
-                                  } 
-                                 />
-                                 <Route 
-                                  path="/mus-240/midterm-exam" 
-                                  element={
-                                    <ProtectedRoute>
-                                      <Mus240EnrollmentRoute>
-                                        <MidtermExam />
-                                      </Mus240EnrollmentRoute>
-                                    </ProtectedRoute>
-                                  } 
-                                 />
                                
-                                <Route 
-                                  path="/mus-240/jazz"
-                                  element={
-                                    <Mus240EnrollmentRoute>
-                                      <JazzPage />
-                                    </Mus240EnrollmentRoute>
-                                  }
-                                />
-                                  {/* Legacy MUS-240 instructor routes → redirect to universal console */}
-                                  <Route 
-                                    path="/mus-240/admin" 
-                                    element={<Navigate to="/instructor/mus-240" replace />}
-                                  />
-                                  <Route 
-                                    path="/mus-240/instructor" 
-                                    element={<Navigate to="/instructor/mus-240" replace />}
-                                  />
-                                  {/* /mus-240/instructor/console is now handled by /:courseCode/instructor/console */}
-                                  <Route 
-                                    path="/mus-240/instructor/student/:studentId" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <AdminOnlyRoute>
-                                          <StudentWorkOverview />
-                                        </AdminOnlyRoute>
-                                      </ProtectedRoute>
-                                    } 
-                                  />
-                                  <Route 
-                                    path="/mus-240/instructor/student/:studentId/midterm" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <AdminOnlyRoute>
-                                          <StudentMidtermGrading />
-                                        </AdminOnlyRoute>
-                                      </ProtectedRoute>
-                                    } 
-                                  />
                                   {/* Removed journal/grading routes - journals removed from curriculum */}
-                                  <Route path="/mus-240/instructor/bulk-grading" element={<Navigate to="/instructor/mus-240" replace />} />
-                                  <Route path="/mus-240/journal/:journalId/review" element={<Navigate to="/academy/mus-240" replace />} />
-                                  <Route path="/mus-240/instructor/journals" element={<Navigate to="/instructor/mus-240" replace />} />
-                                  <Route path="/mus-240/instructor/journal/:journal_id/grade" element={<Navigate to="/instructor/mus-240" replace />} />
-                                   <Route path="/mus-240/peer-review" element={<Navigate to="/academy/mus-240" replace />} />
-                                   <Route 
-                                     path="/test-builder"
-                                     element={
-                                       <ProtectedRoute>
-                                         <TestBuilderPage />
-                                       </ProtectedRoute>
-                                     } 
-                                   />
                                    <Route 
                                      path="/test-builder/:testId" 
                                      element={
@@ -3177,14 +3472,6 @@ const App = () => {
                                       element={
                                         <ProtectedRoute>
                                           <StudentTestPage />
-                                        </ProtectedRoute>
-                                      } 
-                                    />
-                                    <Route 
-                                      path="/test/:testId/scores" 
-                                      element={
-                                        <ProtectedRoute>
-                                          <TestScoresPage />
                                         </ProtectedRoute>
                                       } 
                                     />
@@ -3278,22 +3565,30 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
+                                   {/* Public parent-facing permission slip — no auth required */}
+                                   <Route
+                                     path="/parent/permission-slip"
+                                     element={<ParentPermissionSlip />}
+                                   />
+                                   {/* Extra public-site pages on tenant hosts (yo-doc.com/retirement).
+                                       Static routes above always outrank this dynamic segment. */}
+                                   <Route path="/:page" element={<TenantSitePage />} />
                                    {/* Catch-all route for 404 */}
                                    <Route path="*" element={<NotFound />} />
                                </Routes>
                       </Suspense>
                       </UsageTracker>
-                      </GlobalAssistantHost>
                     <Suspense fallback={null}>
                       <GlobalMusicPlayer />
                     </Suspense>
                     <PWAInstallPrompt />
                    </div>
+                   </AssistantProvider>
                    </AudioCompanionProvider>
                   </ActiveMeetingProvider>
                   </MessengerProvider>
                   </CourseProvider>
-                  </Mus240SemesterProvider>
+                  </SemesterProvider>
                   </MusicPlayerProvider>
                 </CustomTooltipProvider>
               </TooltipProvider>

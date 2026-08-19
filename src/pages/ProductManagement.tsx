@@ -18,9 +18,10 @@ import { OrderDetailDrawer } from '@/components/products/OrderDetailDrawer';
 import { StoreConnectPrompt } from '@/components/products/StoreConnectPrompt';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Package, Tag, ShoppingCart, Users, Truck, CreditCard, Percent, Receipt, Boxes, BarChart3, Settings, RefreshCw, Store, ExternalLink, Plane } from 'lucide-react';
+import { Package, Tag, ShoppingCart, Users, Truck, CreditCard, Percent, Receipt, Boxes, BarChart3, Settings, RefreshCw, Store, ExternalLink, Plane, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
+import { useUserRole } from '@/hooks/useUserRole';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
@@ -80,6 +81,7 @@ export const ProductManagement = () => {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [isOrderDrawerOpen, setIsOrderDrawerOpen] = useState(false);
   const { hasAccess: hasStore, isLoading: moduleLoading } = useModuleAccess('store');
+  const { isAdmin, loading: roleLoading } = useUserRole();
   const handleViewOrder = (orderId: string) => {
     setSelectedOrderId(orderId);
     setIsOrderDrawerOpen(true);
@@ -89,11 +91,40 @@ export const ProductManagement = () => {
     setSelectedOrderId(null);
   };
 
-  if (moduleLoading) {
+  if (moduleLoading || roleLoading) {
     return (
       <UniversalLayout showHeader={false} showFooter={false}>
       <DashboardShell>
         <div className="p-6 text-sm text-muted-foreground">Loading…</div>
+      </DashboardShell>
+    </UniversalLayout>
+    );
+  }
+
+  // Self-gate: the 'shop' nav entry is adminOnly, but that only controls
+  // whether the entry is OFFERED — a member can still type /dashboard/shop
+  // (or the old /store/products, /product-management, which now redirect
+  // here) directly. This page composes Orders/Customers/Payments/Discounts/
+  // Tax/Inventory/Subscriptions managers reading gw_orders, gw_payments,
+  // gw_refunds, gw_disputes, so a nav-only gate is not enough. Mirrors the
+  // self-gate pattern in AuditionsManagement / LibrarianDashboardPage.
+  if (!isAdmin()) {
+    return (
+      <UniversalLayout showHeader={false} showFooter={false}>
+      <DashboardShell>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
+          <Card>
+            <CardHeader>
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-muted text-muted-foreground mb-2 rounded-full">
+                <Shield className="w-6 h-6" />
+              </div>
+              <CardTitle>Access Denied</CardTitle>
+              <CardDescription>
+                You don't have permission to access Store Admin. Please contact a workspace admin if you believe this is an error.
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        </div>
       </DashboardShell>
     </UniversalLayout>
     );
@@ -162,7 +193,7 @@ export const ProductManagement = () => {
                 return <TabsTrigger key={tab.value} value={tab.value} className="
                         flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium
                         text-muted-foreground hover:text-foreground hover:bg-muted/50
-                        data-[state=active]:bg-[#150d26] data-[state=active]:text-white
+                        data-[state=active]:bg-[hsl(var(--brand-navy))] data-[state=active]:text-white
                         data-[state=active]:shadow-sm transition-all whitespace-nowrap
                       ">
                       <Icon className="w-4 h-4" />
@@ -172,7 +203,7 @@ export const ProductManagement = () => {
                 {FEATURE_SUBSCRIPTIONS_ENABLED && <TabsTrigger value="subscriptions" className="
                       flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium
                       text-muted-foreground hover:text-foreground hover:bg-muted/50
-                      data-[state=active]:bg-[#150d26] data-[state=active]:text-white
+                      data-[state=active]:bg-[hsl(var(--brand-navy))] data-[state=active]:text-white
                       data-[state=active]:shadow-sm transition-all whitespace-nowrap
                     ">
                     <RefreshCw className="w-4 h-4" />

@@ -1,6 +1,9 @@
-// gw-invite-student — creates an auth user via service role, marks them as a
-// student in gw_profiles, optionally enrolls in a course, and emails a magic
-// link so the recipient lands signed in without needing to set a password.
+// gw-invite-student — creates an auth user via service role, marks them in
+// gw_profiles with the requested role, optionally enrolls in a course, and —
+// unless sendEmail:false — emails a magic link so the recipient lands signed
+// in without needing to set a password. With sendEmail:false the account and
+// tenant membership are still created; the person just isn't emailed (they
+// sign in later with their email via magic link or password reset).
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -14,6 +17,9 @@ const corsHeaders = {
 interface InvitePayload {
   email: string;
   fullName?: string;
+  full_name?: string; // snake_case alias — what the People page sends
+  role?: string; // clamped to ALLOWED_ROLES; anything else becomes 'student'
+  sendEmail?: boolean; // default true; false = create account + membership, no email
   courseId?: string;
   tenantId?: string; // server resolves if missing
   invitedBy?: string;
@@ -21,11 +27,18 @@ interface InvitePayload {
   orgName?: string;
 }
 
+// This endpoint runs service-role. Never let a caller-supplied role reach
+// admin/super_admin — promotion stays a deliberate act in the Edit dialog.
+const ALLOWED_ROLES = new Set(["student", "instructor", "fan"]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const body = (await req.json()) as InvitePayload;
     if (!body.email) throw new Error("email is required");
+    const role = ALLOWED_ROLES.has(String(body.role || "").toLowerCase()) ? String(body.role).toLowerCase() : "student";
+    const fullName = (body.fullName || body.full_name || "").trim() || null;
+    const sendEmail = body.sendEmail !== false;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -90,6 +103,21 @@ serve(async (req) => {
       }
     }
 
+    // Resolve the tenant's slug for the new-user metadata below. The
+    // on_auth_user_created_profile trigger fires DURING generate_link and
+    // homes the profile on raw_user_meta_data->>'tenant_slug' (default
+    // 'main') with ->>'role' (default 'fan') — so without metadata every
+    // brand-new invitee was profiled as fan-on-main and this function's own
+    // profile insert never ran (a row already existed). Passing the slug and
+    // role lets the trigger file the profile + membership correctly at
+    // creation. GoTrue only applies `data` when it creates the user, so
+    // re-invites of existing accounts are untouched.
+    let tenantSlug: string | undefined;
+    if (preflightTenantId) {
+      const { data: t } = await supabase.from("gw_tenants").select("slug").eq("id", preflightTenantId).maybeSingle();
+      if (t?.slug) tenantSlug = String(t.slug);
+    }
+
     // 1. Generate a magic link (creates user if doesn't exist).
     // The link lands on /auth/callback which handles "new user → onboarding,
     // existing user → ?next" routing.
@@ -113,12 +141,11 @@ serve(async (req) => {
       }
       if (c?.title) courseTitle = String(c.title);
     }
-    // Invited students arrive signed in via the magic link. Because the invite
-    // pre-creates their gw_profiles row, AuthCallback would treat them as an
-    // existing user and drop them straight on the class/landing page, skipping
-    // the profile form. Route them through /onboarding first to fill out their
-    // profile, then on to their course/academy (Onboarding honors ?next=).
-    const next = `/onboarding?next=${encodeURIComponent(dest)}`;
+    // Invited students arrive signed in via the magic link. Route them through
+    // /welcome — a minimal name + phone registration (the full profile comes
+    // later as a class assignment) — then on to their course/academy.
+    // /welcome honors ?next= and skips itself once a phone is on file.
+    const next = `/welcome?next=${encodeURIComponent(dest)}`;
     const redirectTo = origin ? `${origin}/auth/callback?next=${encodeURIComponent(next)}` : undefined;
 
     // Call GoTrue's admin endpoint directly. The supabase-js SDK nests
@@ -140,6 +167,12 @@ serve(async (req) => {
         type: "magiclink",
         email: body.email,
         ...(redirectTo ? { redirect_to: redirectTo } : {}),
+        // User metadata for the profile trigger — only applied on creation.
+        data: {
+          ...(tenantSlug ? { tenant_slug: tenantSlug } : {}),
+          role,
+          ...(fullName ? { full_name: fullName } : {}),
+        },
       }),
     });
     if (!linkRes.ok) {
@@ -172,23 +205,33 @@ serve(async (req) => {
       } catch {}
     }
 
-    // 3. Ensure profile row exists with role='student'.
-    await supabase.from("gw_profiles").upsert(
-      {
+    // 3. Ensure profile row exists with the requested role. Existing profiles
+    //    are never role-changed or name-clobbered by a re-invite — we only
+    //    backfill a missing full_name.
+    const { data: existingByUserId } = await supabase
+      .from("gw_profiles")
+      .select("user_id, full_name")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!existingByUserId) {
+      await supabase.from("gw_profiles").insert({
         user_id: userId,
         email: body.email,
-        full_name: body.fullName || null,
-        role: "student",
+        full_name: fullName,
+        role,
         tenant_id: tenantId,
-      },
-      { onConflict: "user_id" }
-    );
+      });
+    } else if (fullName && !existingByUserId.full_name) {
+      await supabase.from("gw_profiles").update({ full_name: fullName }).eq("user_id", userId);
+    }
 
-    // 4. Ensure tenant membership so the JWT hook injects tenant_id on next sign-in.
+    // 4. Ensure tenant membership so the JWT hook injects tenant_id on next
+    //    sign-in. DO NOTHING on conflict — a re-invite must not rewrite the
+    //    role of someone who was since promoted.
     if (tenantId) {
       await supabase.from("gw_tenant_members").upsert(
-        { user_id: userId, tenant_id: tenantId, role: "student" },
-        { onConflict: "user_id,tenant_id" }
+        { user_id: userId, tenant_id: tenantId, role },
+        { onConflict: "user_id,tenant_id", ignoreDuplicates: true }
       );
     }
 
@@ -204,58 +247,67 @@ serve(async (req) => {
       });
     }
 
-    // 4. Resolve the tenant's display name for the invite copy. Prefer an explicit
-    //    orgName from the caller, else the tenant's branding org_name, else a generic.
-    let tenantName = (body.orgName || "").replace(/[<>"]/g, "").trim();
-    if (!tenantName && tenantId) {
-      const { data: brand } = await supabase
-        .from("gw_branding_settings")
-        .select("org_name")
-        .eq("tenant_id", tenantId)
-        .maybeSingle();
-      if (brand?.org_name) tenantName = String(brand.org_name).replace(/[<>"]/g, "").trim();
+    if (sendEmail) {
+      // 4. Resolve the tenant's display name for the invite copy. Prefer an explicit
+      //    orgName from the caller, else the tenant's branding org_name, else a generic.
+      let tenantName = (body.orgName || "").replace(/[<>"]/g, "").trim();
+      if (!tenantName && tenantId) {
+        const { data: brand } = await supabase
+          .from("gw_branding_settings")
+          .select("org_name")
+          .eq("tenant_id", tenantId)
+          .maybeSingle();
+        if (brand?.org_name) tenantName = String(brand.org_name).replace(/[<>"]/g, "").trim();
+      }
+      if (!tenantName) tenantName = "your music program";
+
+      // 5. Send invite email via Resend.
+      const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
+      // Sender shows the tenant's name (the actual address stays on our verified
+      // gleeworld.org domain so Resend will deliver).
+      const safeFromName = tenantName || "Your music program";
+      // Always: "You're invited to join {Class} on {Tenant}". When the invite isn't
+      // tied to a specific class, fall back to just the tenant name.
+      const joining = courseTitle ? `${courseTitle} on ${tenantName}` : tenantName;
+      const subject = `You're invited to join ${joining}`;
+      const html = `
+        <div style="font-family:sans-serif;max-width:600px;padding:24px;">
+          <h2 style="color:#1a1a1a;">You're invited to join ${escapeHtml(joining)}.</h2>
+          <p>Click the link below to accept your invitation and sign in — no password needed.</p>
+          <p><a href="${actionLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Accept invitation &amp; sign in</a></p>
+          <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${actionLink}</p>
+        </div>
+      `;
+      const { error: emailErr } = await resend.emails.send({
+        from: `${safeFromName} <noreply@gleeworld.org>`,
+        to: [body.email],
+        subject,
+        html,
+      });
+      if (emailErr) throw new Error(`Email send failed: ${emailErr.message ?? "unknown"}`);
     }
-    if (!tenantName) tenantName = "your music program";
 
-    // 5. Send invite email via Resend.
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
-    // Sender shows the tenant's name (the actual address stays on our verified
-    // gleeworld.org domain so Resend will deliver).
-    const safeFromName = tenantName || "Your music program";
-    // Always: "You're invited to join {Class} on {Tenant}". When the invite isn't
-    // tied to a specific class, fall back to just the tenant name.
-    const joining = courseTitle ? `${courseTitle} on ${tenantName}` : tenantName;
-    const subject = `You're invited to join ${joining}`;
-    const html = `
-      <div style="font-family:sans-serif;max-width:600px;padding:24px;">
-        <h2 style="color:#1a1a1a;">You're invited to join ${escapeHtml(joining)}.</h2>
-        <p>Click the link below to accept your invitation and sign in — no password needed.</p>
-        <p><a href="${actionLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Accept invitation &amp; sign in</a></p>
-        <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${actionLink}</p>
-      </div>
-    `;
-    const { error: emailErr } = await resend.emails.send({
-      from: `${safeFromName} <noreply@gleeworld.org>`,
-      to: [body.email],
-      subject,
-      html,
-    });
-    if (emailErr) throw new Error(`Email send failed: ${emailErr.message ?? "unknown"}`);
-
-    // 5. Log invite as sent (best-effort).
+    // 5. Log the invite/add (best-effort — must never fail the request).
+    //    tenant_id must be the RESOLVED tenant: the column is NOT NULL with
+    //    a current_tenant_id() default that is null under service role, so
+    //    passing the (usually absent) caller tenantId made every insert
+    //    fail silently.
     try {
-      await supabase.from("gw_student_invites").insert({
+      const { error: logErr } = await supabase.from("gw_student_invites").insert({
         email: body.email,
-        full_name: body.fullName || null,
+        full_name: fullName,
         course_id: body.courseId || null,
         invited_by: body.invitedBy || null,
-        tenant_id: body.tenantId || undefined,
-        status: "sent",
+        tenant_id: tenantId ?? undefined,
+        status: sendEmail ? "sent" : "added",
         sent_at: new Date().toISOString(),
       });
-    } catch {}
+      if (logErr) console.error("gw_student_invites log failed:", logErr.message);
+    } catch (logEx) {
+      console.error("gw_student_invites log failed:", logEx);
+    }
 
-    return new Response(JSON.stringify({ success: true, userId, email: body.email }), {
+    return new Response(JSON.stringify({ success: true, userId, email: body.email, emailSent: sendEmail }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {

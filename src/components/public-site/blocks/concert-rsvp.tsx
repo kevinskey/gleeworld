@@ -23,7 +23,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
-import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import type { BlockModule, BlockEditorFormProps, BlockRenderProps, SiteTheme } from '../types';
+import { themeCssVars } from '../types';
 
 const schema = z.object({
   /** box_office_slug of the gw_events row this form sells. */
@@ -201,15 +202,15 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
               <Loader2 className="w-4 h-4 animate-spin" /> Loading event details…
             </div>
           ) : (
-            <div className="grid gap-10 lg:grid-cols-2 lg:gap-16 lg:items-center">
-              {/* min-w-0 on both columns: grid children default to
-                  min-width:auto, so a long unbroken title pushes its track
-                  wider than the container and spills over the neighbouring
+            <div className="grid gap-10 cq-lg:grid-cols-2 cq-lg:gap-16 cq-lg:items-center">
+              {/* Left: what it is */}
+              {/* min-w-0: grid children default to min-width:auto, so a long
+                  unbroken title widens its track and spills into the next
                   column instead of wrapping. */}
               <div className="min-w-0">
                 {config.heading && (
                   <p
-                    className="text-xl sm:text-2xl font-bold uppercase tracking-[0.18em]"
+                    className="text-sm font-semibold uppercase tracking-[0.2em]"
                     style={{ color: 'var(--site-accent)' }}
                   >
                     {config.heading}
@@ -221,7 +222,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                     broke "Retirement Concert" across two of them. break-words
                     stays only as a last resort for a single over-wide word. */}
                 <h2
-                  className="mt-3 normal-case text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1] break-words hyphens-none"
+                  className="mt-3 normal-case text-2xl cq-sm:text-4xl cq-lg:text-5xl font-bold tracking-tight leading-[1.1] break-words hyphens-none"
                   style={{ fontFamily: 'var(--site-heading-font)' }}
                 >
                   {titleLines(ev!.title).map((line, i) => (
@@ -246,7 +247,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 
               {/* Right: when, where, and the way in */}
               <div
-                className="min-w-0 bg-card border border-border p-6 sm:p-8"
+                className="min-w-0 bg-card border border-border p-6 cq-sm:p-8"
                 style={{ borderRadius: 'var(--site-radius)' }}
               >
                 <dl className="space-y-5">
@@ -281,14 +282,14 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                 <Button
                   size="lg"
                   onClick={() => handleOpenChange(true)}
-                  className="mt-8 w-full font-semibold h-auto min-h-12 py-3 text-base whitespace-normal"
+                  className="mt-8 w-full font-bold h-auto min-h-20 py-6 text-2xl whitespace-normal"
                   style={{
                     background: 'var(--site-accent)',
                     color: 'var(--site-accent-foreground, #fff)',
                     borderRadius: 'var(--site-radius)',
                   }}
                 >
-                  <Ticket className="w-4 h-4 mr-2" />
+                  <Ticket className="w-7 h-7 mr-3" />
                   {config.buttonLabel}
                 </Button>
 
@@ -315,6 +316,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           tenantSlug={ctx.slug}
           eventSlug={config.eventSlug}
           isPreview={ctx.isPreview}
+          theme={ctx.theme}
           merchHeading={config.merchHeading}
           merchBlurb={config.merchBlurb}
           storeLabel={config.showStoreLink ? config.storeLinkLabel : ''}
@@ -329,7 +331,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
 interface MerchSelection { quantity: number; size: string; color: string }
 
 function RsvpDialog({
-  open, onOpenChange, data, tenantSlug, eventSlug, isPreview, merchHeading, merchBlurb, storeLabel,
+  open, onOpenChange, data, tenantSlug, eventSlug, isPreview, theme, merchHeading, merchBlurb, storeLabel,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -337,6 +339,8 @@ function RsvpDialog({
   tenantSlug: string;
   eventSlug: string;
   isPreview: boolean;
+  /** Needed because this dialog PORTALS to document.body — see DialogContent. */
+  theme: SiteTheme;
   merchHeading: string;
   merchBlurb: string;
   /** Empty string hides the storefront link. */
@@ -386,6 +390,10 @@ function RsvpDialog({
     [data.merch, merch],
   );
   const total = ticketCents + merchCents;
+  // A $0 total skips Stripe entirely — the edge function mints the tickets and
+  // sends us straight to the tickets page. Copy must not promise a payment
+  // step that will not happen.
+  const isFree = total === 0;
 
   // No tier configured is not a buyable state either — show the same closed
   // message rather than a form that can only fail at the server.
@@ -446,9 +454,24 @@ function RsvpDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[92vh] overflow-y-auto p-0 gap-0">
+      {/* The --site-* tokens are inline styles on the .gw-site wrapper, never
+          on :root — and DialogContent portals to document.body, OUTSIDE it.
+          Without re-applying them here every var() below resolves to nothing:
+          the submit button lost its radius, the title lost the site heading
+          font, and --site-accent-foreground (never set at :root at all) fell
+          back to #fff. For a tenant whose branding accent is null that meant
+          white text on an unset background over a white dialog — an invisible
+          submit button on a ticketing flow.
+
+          Only the custom properties are applied, deliberately NOT the
+          `gw-site` class: that would also make this a `gwsite` container and
+          swap the whole type scale, which is far more than this bug needs. */}
+      <DialogContent
+        className="max-w-lg max-h-[92dvh] overflow-y-auto p-0 gap-0"
+        style={themeCssVars(theme) as React.CSSProperties}
+      >
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-          <DialogTitle className="text-xl normal-case" style={{ fontFamily: 'var(--site-heading-font)' }}>
+          <DialogTitle className="text-xl normal-case" style={{ fontFamily: 'var(--site-heading-font, inherit)' }}>
             {data.event.title}
           </DialogTitle>
           <DialogDescription>
@@ -473,10 +496,35 @@ function RsvpDialog({
           </div>
         ) : (
           <form onSubmit={submit} className="px-6 py-5 space-y-6">
+            {/* Who's buying. Name, email, and phone lead the form: a visitor
+                who abandons partway has still told us who they are, and the
+                email is where the tickets go. The notes field deliberately
+                stays at the bottom — it sits after the souvenir steppers,
+                which tell the buyer to "say so in the notes below" for mixed
+                sizes, and that instruction has to stay true. */}
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="rsvp-name">Your name</Label>
+                <Input id="rsvp-name" value={name} onChange={(e) => setName(e.target.value)}
+                       autoComplete="name" required className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="rsvp-email">Email</Label>
+                <Input id="rsvp-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                       autoComplete="email" required className="mt-1" />
+                <p className="mt-1 text-xs text-muted-foreground">Your tickets and receipt are sent here.</p>
+              </div>
+              <div>
+                <Label htmlFor="rsvp-phone">Phone <span className="text-muted-foreground font-normal">(optional)</span></Label>
+                <Input id="rsvp-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
+                       autoComplete="tel" className="mt-1" />
+              </div>
+            </div>
+
             {/* Headcount */}
-            <div>
+            <div className="border-t border-border pt-5">
               <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0">
+                <div>
                   <Label className="text-base font-semibold">How many are coming?</Label>
                   <p className="text-sm text-muted-foreground">
                     {money(tier?.price_cents ?? 0)} per person
@@ -644,7 +692,7 @@ function RsvpDialog({
               })}
               <div className="flex justify-between pt-2 border-t border-border text-base font-semibold">
                 <span>Total</span>
-                <span className="tabular-nums">{money(total)}</span>
+                <span className="tabular-nums">{isFree ? 'Free' : money(total)}</span>
               </div>
             </div>
 
@@ -658,17 +706,23 @@ function RsvpDialog({
               disabled={submitting}
               className="w-full font-semibold"
               style={{
-                background: 'var(--site-accent)',
+                // Literal fallbacks so a missing token can never render an
+                // invisible button, even if this dialog moves again.
+                background: 'var(--site-accent, #9333ea)',
                 color: 'var(--site-accent-foreground, #fff)',
-                borderRadius: 'var(--site-radius)',
+                borderRadius: 'var(--site-radius, 0.5rem)',
               }}
             >
               {submitting
-                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Starting secure checkout…</>
-                : <>Continue to payment · {money(total)}</>}
+                ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {isFree ? 'Reserving your spot…' : 'Starting secure checkout…'}</>
+                : isFree
+                  ? <>Reserve {attending === 1 ? 'my spot' : `${attending} spots`}</>
+                  : <>Continue to payment · {money(total)}</>}
             </Button>
             <p className="text-center text-xs text-muted-foreground -mt-2">
-              Payments are processed securely by Stripe. Souvenirs are picked up at the concert.
+              {isFree
+                ? 'No payment required. Your tickets appear right away — bring the QR code to the door.'
+                : 'Payments are processed securely by Stripe. Souvenirs are picked up at the concert.'}
             </p>
           </form>
         )}

@@ -105,6 +105,16 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
         // Initialize Jitsi Meet
         // For JaaS (8x8.vc), the roomName MUST include the appId prefix for tenant matching.
         const domain = '8x8.vc';
+        // JaaS's in-call "Invite your contacts" search calls this URL as
+        // GET ?query=<q>&jwt=<jaas-jwt>. Point it at our own edge fn so
+        // the picker searches the caller's tenant directory (ranked by
+        // shared courses/groups) instead of returning nothing. Same
+        // Supabase project the token endpoint lives on so no extra host.
+        const supabaseUrl = (window as { __TENANT_CONFIG__?: { supabaseUrl?: string } })
+          .__TENANT_CONFIG__?.supabaseUrl ?? '';
+        const peopleSearchUrl = supabaseUrl
+          ? `${supabaseUrl.replace(/\/$/, '')}/functions/v1/jaas-people-search`
+          : undefined;
         const options = {
           roomName: `${tokenData.appId}/${roomName}`,
           jwt: tokenData.token,
@@ -118,6 +128,10 @@ export const JitsiMeetRoom: React.FC<JitsiMeetRoomProps> = ({
             disableDeepLinking: true,
             enableClosePage: false,
             enableWelcomePage: false,
+            ...(peopleSearchUrl ? {
+              peopleSearchUrl,
+              peopleSearchQueryTypes: ['user'],
+            } : {}),
             toolbarButtons: [
               'camera',
               'chat',

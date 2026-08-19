@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { useSemesterSafe } from '@/contexts/SemesterContext';
 import { getCourseByCode } from '@/config/academyCourses';
 import { CourseTopicSlider } from './CourseTopicSlider';
 import { GleeCamCard } from '@/components/dashboard/GleeCamCard';
@@ -95,7 +95,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentSemester } = useMus240SemesterSafe();
+  const { currentSemester } = useSemesterSafe();
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
@@ -106,10 +106,10 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
   const [loading, setLoading] = useState(true);
   const [stipendDialogOpen, setStipendDialogOpen] = useState(false);
 
-  const course = getCourseByCode(courseId) || { courseCode: 'MUS 240', title: 'Course' };
-  const isMus070 = course.courseCode === 'MUS 070';
+  const course = getCourseByCode(courseId) || { courseCode: 'GW 240', title: 'Course' };
+  const isMus070 = course.courseCode === 'GW 070';
 
-  // Glass card classes for MUS 070 deep-sea theme
+  // Glass card classes for GW 070 deep-sea theme
   const glassCard = isMus070 ? 'bg-white/[0.05] backdrop-blur-xl border border-white/10 rounded-2xl shadow-none' : '';
   const glassText = isMus070 ? 'text-white' : 'text-foreground';
   const glassTextMuted = isMus070 ? 'text-slate-400' : 'text-muted-foreground';
@@ -219,7 +219,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
         setAssignments(mappedAssignments);
 
-        // Mock current module data - in production, fetch from mus240_module_settings or similar
+        // Mock current module data — replace with a real gw_course_modules lookup
         if (mappedAssignments.length > 0) {
           setCurrentModule({
             id: '1',
@@ -442,7 +442,7 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
       {/* Advertising Hero - Full width above content */}
       <AdvertisingHero className="rounded-xl overflow-hidden" />
 
-      {/* Stipend Receipt Button - MUS 070 only */}
+      {/* Stipend Receipt Button - GW 070 only */}
       {isMus070 && (
         <Button
           onClick={() => setStipendDialogOpen(true)}
@@ -456,7 +456,9 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
 
       {/* Stipend Dialog */}
       <StipendReceiptDialog open={stipendDialogOpen} onOpenChange={setStipendDialogOpen} />
-      <div className="flex gap-6">
+      {/* flex-col on mobile so the sidebar (30%) doesn't get pushed off
+          screen behind the main column at 390px. Side-by-side at lg+. */}
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
       {/* Main Content Column - 70% */}
       <div className="flex-1 space-y-6 min-w-0">
         
@@ -527,13 +529,13 @@ export const StudentDossierHome: React.FC<StudentDossierHomeProps> = ({ courseId
         {/* Topic Photo Slider */}
         <CourseTopicSlider courseCode={course.courseCode} isAdmin={isAdmin} />
 
-        {/* Class Schedule Form - For MUS 070 (Glee Club) */}
-        {course.courseCode === 'MUS 070' && (
+        {/* Class Schedule Form - For GW 070 (Glee Club) */}
+        {course.courseCode === 'GW 070' && (
           <ClassScheduleForm semester="Spring 2026" />
         )}
 
-        {/* Current Module / Week - Only show for MUS 240 which has DB-driven modules */}
-        {currentModule && course.courseCode === 'MUS 240' && (
+        {/* Current Module / Week - Only show for GW 240 which has DB-driven modules */}
+        {currentModule && course.courseCode === 'GW 240' && (
         <Card className={glassCard}>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">

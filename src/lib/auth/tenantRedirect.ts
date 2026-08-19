@@ -24,7 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const ROOT_DOMAIN = 'gleeworld.org';
 
-interface TenantHostRow {
+export interface TenantHostRow {
   slug: string;
   subdomain: string | null;
   custom_domain: string | null;
@@ -45,13 +45,43 @@ interface TenantHostRow {
  * SPA into a reload loop until it's grey-clouded, and the provisioning
  * verification gate only ever probes the gleeworld.org host). The canonical
  * subdomain is always provisioned. Callers wanting branded-domain behavior
- * should change this one function.
+ * should use tenantPublicHostFromRow below.
  */
 export function tenantHostFromRow(row: TenantHostRow | null, slug: string): string {
   if (slug === 'main') return ROOT_DOMAIN;
   const sub = row?.subdomain?.trim();
   if (sub) return sub.includes('.') ? sub : `${sub}.${ROOT_DOMAIN}`;
   return `${slug}.${ROOT_DOMAIN}`;
+}
+
+/**
+ * The column stores a bare host ('example.org'), but the admin field that
+ * writes it accepts free text, so tolerate a pasted 'https://example.org/'.
+ */
+function normalizeCustomDomain(raw: string | null | undefined): string {
+  const v = (raw ?? '').trim().toLowerCase();
+  if (!v) return '';
+  return v.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+}
+
+/**
+ * Turn a gw_tenants row into the host to SHOW the tenant's own audience —
+ * "View site", share links, anything the public is meant to see.
+ *
+ * The inverse preference of tenantHostFromRow, and deliberately so. That one
+ * is a recovery path where landing successfully is all that matters, so it
+ * takes the always-provisioned subdomain. Here the branded host IS the point:
+ * an admin who has configured example.org does not want to be handed
+ * example.gleeworld.org. Falls back to the canonical subdomain when no custom
+ * domain is set.
+ *
+ * Caveat worth knowing: a custom domain is only as good as its DNS. A
+ * Cloudflare-proxied record sends the SPA into a reload loop until it is
+ * grey-clouded, and provisioning never verifies the custom host — so this
+ * link can point somewhere broken while the subdomain works fine.
+ */
+export function tenantPublicHostFromRow(row: TenantHostRow | null, slug: string): string {
+  return normalizeCustomDomain(row?.custom_domain) || tenantHostFromRow(row, slug);
 }
 
 /**

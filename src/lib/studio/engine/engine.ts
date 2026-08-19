@@ -28,6 +28,7 @@ import { buildTrack, type EngineTrack } from './tracks';
 import { buildBus, type EngineBus } from './buses';
 import { buildSend, type EngineSend } from './sends';
 import { scheduleAutomation, type AutomatableParam } from './automation';
+import { registerStudioAudio } from '../audioLeakGuard';
 import { setAssetUrl } from './assetUrlCache';
 import { shouldLoopWrap } from '../transport';
 import { buildMasterChain, type MasterChainHandle } from './masterChain';
@@ -235,7 +236,12 @@ export class StudioEngine {
   private rafId: number | null = null;
   private state: EngineState;
 
+  private unregisterLeakGuard: () => void;
+
   constructor(opts: StudioEngineOptions = {}) {
+    // Leak guard: the route-level disposeAllStudioAudio() reaches this
+    // engine even when the owning hook's unmount cleanup never ran.
+    this.unregisterLeakGuard = registerStudioAudio(this);
     this.onMasteringDegraded = opts.onMasteringDegraded;
     this.masterIn = new Tone.Gain(1);
     this.masterPan = new Tone.Panner(0);
@@ -534,6 +540,7 @@ export class StudioEngine {
   }
 
   dispose(): void {
+    this.unregisterLeakGuard();
     this.stopPositionLoop();
     this.stopMetronomeInterval();
     this.stopLoopInterval();
@@ -1253,7 +1260,23 @@ export class StudioEngine {
   }
 
   pause(): void {
-    Tone.getTransport().pause();
+    const transport = Tone.getTransport();
+    transport.pause();
+    // Clip Players are free-running (started via player.start(), not
+    // .sync()ed to the transport) — pausing the transport freezes the
+    // playhead but not audio already streaming. Stop them explicitly;
+    // play() rebuilds every schedule from the paused position anyway.
+    for (const track of this.tracks.values()) {
+      for (const pb of track.playbacks) {
+        try { pb.player.stop(); } catch { /* not playing */ }
+      }
+      // MIDI voices are free-running too (triggered directly against
+      // Tone's clock, not .sync()ed) — cut them here or a held synth/
+      // sampler note rings past the pause.
+      try { track.instrument?.releaseAll?.(); } catch { /* nothing held */ }
+    }
+    for (const id of this.playScheduleIds) transport.clear(id);
+    this.playScheduleIds = [];
     this.state.isPlaying = false;
     this.stopMetronomeInterval();
     this.stopLoopInterval();
@@ -1273,6 +1296,7 @@ export class StudioEngine {
       for (const pb of track.playbacks) {
         try { pb.player.stop(); } catch { /* not playing */ }
       }
+      try { track.instrument?.releaseAll?.(); } catch { /* nothing held */ }
     }
     for (const id of this.playScheduleIds) transport.clear(id);
     this.playScheduleIds = [];
@@ -1304,6 +1328,7 @@ export class StudioEngine {
         for (const pb of track.playbacks) {
           try { pb.player.stop(); } catch { /* not playing */ }
         }
+        try { track.instrument?.releaseAll?.(); } catch { /* nothing held */ }
       }
     }
 
@@ -1330,7 +1355,12 @@ export class StudioEngine {
 
   subscribe(fn: Listener): () => void {
     this.listeners.add(fn);
-    fn(this.state);
+    // COPY, matching emit() below. Handing out the live object let React
+    // keep a reference that this engine mutates in place — so every later
+    // emit compared equal against it ("nothing changed") and discrete
+    // state flips (metronome on/off was the visible one) never re-rendered
+    // on web. The engine's own behavior was fine; the UI just never heard.
+    fn({ ...this.state });
     return () => this.listeners.delete(fn);
   }
   getState(): EngineState { return { ...this.state }; }
@@ -1383,6 +1413,14 @@ export class StudioEngine {
    * it so a take's constant offset isn't a random slice of UI staleness. */
   transportSecondsNow(): number {
     return Tone.getTransport().seconds;
+  }
+
+  /** Raw AudioContext time, seconds — the clock triggerMetronomeClick's
+   * `time` argument lives in. The latency-calibration wizard schedules
+   * its click run against this and correlates it with performance.now()
+   * to compare hardware tap timestamps against click output times. */
+  contextSecondsNow(): number {
+    return Tone.getContext().currentTime;
   }
 }
 

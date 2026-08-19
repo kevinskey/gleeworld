@@ -83,11 +83,11 @@ export const FeaturedProducts = ({
 
   const loadSettings = async () => {
     try {
+      // RLS scopes gw_store_settings to caller's tenant — no id filter needed.
       const { data, error } = await supabase
         .from('gw_store_settings')
         .select('*')
-        .eq('id', 1)
-        .single();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading settings:', error);

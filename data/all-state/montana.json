@@ -1,0 +1,239 @@
+{
+  "state_slug": "montana",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "In Montana the All-State Choir is part of the MHSA All-State Band, Choir & Orchestra Festival, administered by the Montana High School Association (MHSA) rather than by the Montana Music Educators Association; the MMEA convention runs concurrently and MMEA/MHSA jointly sponsor the festival. Because Montana's All-State Festival is held in October, the fall 2026 festival (October 14-16, 2026, Montana State University, Bozeman) is the 2026-27 season event, and its auditions were held in spring 2026 (submissions May 1 - June 12, 2026). All requirement and fee detail comes from the official February 2026 MHSA memo/audition packet and the MHSA Music Booklet, which is titled 2025-2026 (its rules govern the fall 2026 festival). MHSA rotates audition material sets; SET A is specified for 2026.",
+  "organization": {
+    "name": "Montana High School Association",
+    "acronym": "MHSA",
+    "website_url": "https://www.mhsa.org/sports-activities/activities/music/",
+    "description": "MHSA governs interscholastic activities in Montana, including music. It administers the All-State Band, Choir & Orchestra Festival each October, along with District Music Festivals and the State Solo and Ensemble Festivals. The Montana Music Educators Association convention is held concurrently with the All-State Festival."
+  },
+  "sources": [
+    {
+      "name": "MHSA — Music Festivals page (2026 All State Band, Choir & Orchestra Festival)",
+      "url": "https://www.mhsa.org/music-festivals/",
+      "source_type": "official"
+    },
+    {
+      "name": "MHSA — Music home page",
+      "url": "https://www.mhsa.org/sports-activities/activities/music/",
+      "source_type": "official"
+    },
+    {
+      "name": "MHSA Memo and Audition Materials 2026 (Set A), February 2026",
+      "url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf",
+      "source_type": "handbook_pdf"
+    },
+    {
+      "name": "MHSA Music Booklet 2025-2026 (revised)",
+      "url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/23143340/2025-2026-Music_BookletREVISED-with-cover-3.pdf",
+      "source_type": "handbook_pdf"
+    }
+  ],
+  "programs": [
+    {
+      "name": "MHSA All-State Choir (All-State Band, Choir & Orchestra Festival)",
+      "lineage_key": "montana-all-state-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "A statewide auditioned high school choir of not more than 160 members, selected by recorded audition submitted through OpusEvent. Selected students rehearse under a guest conductor and perform in the Gala All-State Concert at the close of the festival. The 2026 festival is hosted at Montana State University in Bozeman; the All-State Chair is Jason Bolte of the MSU School of Music.",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "Online audition submissions open",
+          "start_at": "2026-05-01",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "First available date for submitting recordings via OPUSEVENT.COM (Montana All-State Festival portal).",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Online audition submission deadline",
+          "start_at": "2026-06-12",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Friday, June 12, 2026. No late submissions will be accepted. Each recording must be accompanied by the $10 audition fee.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        },
+        {
+          "date_type": "results",
+          "title": "Schools notified of audition results",
+          "start_at": "2026-08-20",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Standing rule in the MHSA Music Booklet: 'The organizing chair will notify the school of the status of all students who submitted auditions for the All-State groups by August 20th.' Date derived from that recurring rule for the fall 2026 festival; MHSA did not publish a year-specific notification date.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/23143340/2025-2026-Music_BookletREVISED-with-cover-3.pdf"
+        },
+        {
+          "date_type": "event",
+          "title": "2026 All State Band, Choir & Orchestra Festival",
+          "start_at": "2026-10-14",
+          "end_at": "2026-10-16",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Montana State University, 1 Bobcat Circle, Bozeman, MT 59717.",
+          "source_url": "https://www.mhsa.org/music-festivals/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Final acceptance auditions for vocalists (on site)",
+          "start_at": "2026-10-14T19:00:00",
+          "all_day": false,
+          "timezone": "America/Denver",
+          "description": "Placement auditions for instrumentalists and final acceptance auditions for vocalists begin at 7:00 p.m. on the Wednesday of the festival. Directors or chaperones must check students in beginning at 6:00 p.m. All-State Choir students audition on site for music preparedness on portions of the All-State repertoire.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State Gala Concert",
+          "start_at": "2026-10-16",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "The All-State Concert is held Friday evening. Admission is $15.00; no clock time was published.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/23143340/2025-2026-Music_BookletREVISED-with-cover-3.pdf"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Grade level and school membership",
+          "description": "Students enrolled in grades 9-12 in an MHSA member school are eligible to participate in All-State groups.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/23143340/2025-2026-Music_BookletREVISED-with-cover-3.pdf"
+        },
+        {
+          "category": "membership",
+          "title": "Must be a member of the corresponding curricular ensemble",
+          "description": "Students auditioning must be a member of the corresponding curricular performing group and must remain a member in good standing through the time of the All-State performance. Where a member school has no high school music program, a student studying with a private teacher may audition with local administrator approval provided MHSA dues are paid. Non-public and home-school participants who meet MHSA Handbook 20-5-109 requirements may audition and participate with administration permission; their audition must be submitted by the school music teacher or designated staff member. Schools without the corresponding group, or with scheduling conflicts, may petition to audition by contacting MHSA by May 1.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/23143340/2025-2026-Music_BookletREVISED-with-cover-3.pdf"
+        },
+        {
+          "category": "format",
+          "title": "Recorded audition only, submitted via OpusEvent",
+          "description": "Participants are selected by recorded audition only, submitted online through OPUSEVENT.COM. Recordings must be UNEDITED — choosing among several takes is not editing, but adding effects, splicing, or changing tempo or pitch is. Each audition must be a single recording session of no more than 20 minutes per student. The recording may not include any information identifying the student or school. Directors must establish an OpusEvent account.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        },
+        {
+          "category": "materials",
+          "title": "Choir audition Set A — required exercises",
+          "description": "For 2026, Set A is used. Exercises 1, 2, and 3 are sung a cappella with the pitch given only once before each exercise, sounded on the recording. (1) Sing two scales ascending and descending on do-re-mi-fa-so-la-ti-do, breathing at the top and restating the top note on the descent, quarter = 72; each scale recorded as a separate track. Set A prints these in D Major and A Major. (2) Sing a chromatic scale ascending and descending, repeating the top note, using solfege syllables or one of the basic vowels AH-A-EE-O-OO, quarter = 104-110. (3) Sing the melody and words of the 1st verse of 'My Bonnie', quarter = 140-165. (4) Sing the 1st verse only of 'Drink to Me Only with Thine Eyes' with the appropriate audio track provided on the MHSA festivals page. Submission of incorrect exercises, incorrect keys, or incorrect starting pitches automatically eliminates the applicant.",
+          "structured_data": {
+            "exercise_count": 4,
+            "a_cappella_exercises": [1, 2, 3],
+            "scale_keys_set_a": ["D Major", "A Major"],
+            "scale_tempo_bpm": 72,
+            "chromatic_tempo_bpm": "104-110",
+            "my_bonnie_tempo_bpm": "140-165"
+          },
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        },
+        {
+          "category": "format",
+          "title": "Part assignment for Exercise 4",
+          "description": "Soprano I, II or Alto I, II sing the Alto part while the piano track plays Soprano, Tenor, and Bass. Tenor I, II sing their own part while the piano plays Soprano, Alto, Bass. Bass I, II sing their own part while the piano plays Soprano, Alto, Tenor.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        },
+        {
+          "category": "other",
+          "title": "One ensemble only for singers",
+          "description": "A student may not try out for both choir and an instrumental group. (For instrumental students, up to two audition recordings for separate ensembles are allowed, each with its own fee.)",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        },
+        {
+          "category": "materials",
+          "title": "Audition Certification Form",
+          "description": "The audition certification form must be completed and signed by each teacher and administrator and sent to the All-State organizing chair (MSU School of Music, Bozeman). It lists applicants together with their voice classification. Teachers and administrators must attest that no electronic editing was used, that the student was recorded only once for the defined duration, that only specified audition materials were used, and that the student meets MHSA eligibility requirements.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        },
+        {
+          "category": "other",
+          "title": "Attendance and conduct",
+          "description": "To participate, a student must attend all auditions, rehearsals, and sectionals in the festival schedule and perform in the All-State Concert; the first event begins Wednesday evening. Students who cannot meet this requirement should not submit audition recordings. All participants must adhere to the MHSA All-State Student Conduct Code, must be properly chaperoned for the duration of the festival, and must wear All-State identification badges at all All-State events. Chaperone names and cell numbers must be listed on the Acceptance Affidavit. Students are responsible, with guidance from their teachers, for learning the All-State music before arriving; students found not adequately prepared may be required to complete a remedial session.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/23143340/2025-2026-Music_BookletREVISED-with-cover-3.pdf"
+        },
+        {
+          "category": "other",
+          "title": "Ensemble size cap",
+          "description": "The All-State choir shall not exceed 160 members (All-State band and orchestra are each capped at 120).",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/23143340/2025-2026-Music_BookletREVISED-with-cover-3.pdf"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "My Bonnie",
+          "purpose": "audition",
+          "notes": "Audition exercise 3, Set A. Sung a cappella, 1st verse melody and words, quarter = 140-165. MHSA credits the source as The New Blue Book of Favorite Songs, Schmitt, Hall & McCreary; no composer is published.",
+          "publisher": "Schmitt, Hall & McCreary",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        },
+        {
+          "title": "Drink to Me Only with Thine Eyes",
+          "purpose": "audition",
+          "notes": "Audition exercise 4, Set A. 1st verse only, sung with the appropriate piano track provided on the MHSA festivals page. MHSA credits the source as The New Blue Book of Favorite Songs, Schmitt, Hall & McCreary; no composer is published.",
+          "publisher": "Schmitt, Hall & McCreary",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 1000,
+          "payable_to": "state_association",
+          "description": "$10.00 per audition recording, submitted with the recording via OpusEvent.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf"
+        },
+        {
+          "fee_type": "participation",
+          "amount_cents": 5500,
+          "payable_to": "state_association",
+          "description": "Nonrefundable $55.00 registration fee for each accepted student, plus reasonable and applicable site and meal fees. Local music directors return the written acceptance and fee by the deadline indicated on the acceptance affidavit.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/23143340/2025-2026-Music_BookletREVISED-with-cover-3.pdf"
+        },
+        {
+          "fee_type": "concert_admission",
+          "amount_cents": 1500,
+          "payable_to": "state_association",
+          "description": "All-State Concert admission is $15.00. Complimentary tickets go only to instructors and administrators of participating schools and to registrants of the concurrent MMEA convention.",
+          "source_url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/23143340/2025-2026-Music_BookletREVISED-with-cover-3.pdf"
+        }
+      ],
+      "documents": [
+        {
+          "title": "Memo and Audition Materials 2026 (Set A)",
+          "url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/27100622/Memo-and-Audition-Materials-2026-Set-A-FINAL-Feb-26-2026.pdf",
+          "document_type": "handbook",
+          "published_at": "2026-02-26"
+        },
+        {
+          "title": "Revised All-State Application Form",
+          "url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/19132636/Revised-All-State-Application-Form.pdf",
+          "document_type": "form"
+        },
+        {
+          "title": "MHSA Music Booklet 2025-2026 (revised)",
+          "url": "https://assets-rst7.rschooltoday.com/rst7files/uploads/sites/152/2025/10/23143340/2025-2026-Music_BookletREVISED-with-cover-3.pdf",
+          "document_type": "rules"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano I" },
+        { "code": "S2", "label": "Soprano II" },
+        { "code": "A1", "label": "Alto I" },
+        { "code": "A2", "label": "Alto II" },
+        { "code": "T1", "label": "Tenor I" },
+        { "code": "T2", "label": "Tenor II" },
+        { "code": "B1", "label": "Bass I" },
+        { "code": "B2", "label": "Bass II" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026 All-State Choir guest conductor and performance repertoire — not posted on the MHSA festivals page at time of retrieval",
+    "2026 All-State Music Festival website link — listed as 'Coming Soon' on the MHSA festivals page",
+    "Exact site and meal fee amounts charged in addition to the $55 registration fee",
+    "The deadline for returning the acceptance affidavit and $55 fee — the booklet says it is 'indicated on the acceptance affidavit'",
+    "Any published scoring rubric or point breakdown for the choir audition"
+  ]
+}

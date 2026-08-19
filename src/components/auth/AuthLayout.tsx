@@ -10,7 +10,7 @@ interface AuthLayoutProps {
   children: ReactNode;
   title: string;
   subtitle?: string;
-  theme?: "default" | "mus240";
+  theme?: "default";
 }
 
 export const AuthLayout = ({ children, title, subtitle, theme = "default" }: AuthLayoutProps) => {
@@ -26,13 +26,6 @@ export const AuthLayout = ({ children, title, subtitle, theme = "default" }: Aut
       overlay: "bg-black/10",
       cardBg: "bg-white/15 backdrop-blur-xl",
       homeRoute: "/",
-    },
-    mus240: {
-      background:
-        "linear-gradient(135deg, #1a1a2e 0%, #16213e 25%, #0f3460 50%, #533483 75%, #8b2c3d 100%)",
-      overlay: "bg-gradient-to-br from-purple-900/20 via-blue-900/30 to-indigo-900/40",
-      cardBg: "bg-gradient-to-br from-white/90 via-white/95 to-white/90",
-      homeRoute: "/classes/mus240",
     },
   };
 
@@ -65,7 +58,7 @@ export const AuthLayout = ({ children, title, subtitle, theme = "default" }: Aut
         className="absolute top-4 left-4 z-20 text-white hover:bg-white/20 border border-white/30"
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
-        {theme === "mus240" ? "Back to Course" : "Back to Home"}
+        {"Back to Home"}
       </Button>
       <div className={`w-full max-w-md relative z-10 ${config.cardBg} border border-white/20 shadow-2xl overflow-hidden rounded-lg`}>
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/3 to-transparent pointer-events-none"></div>
@@ -74,7 +67,7 @@ export const AuthLayout = ({ children, title, subtitle, theme = "default" }: Aut
         <div className="text-center space-y-4 relative z-10 p-6">
           <div className="flex justify-center">
             <img
-              src={theme === "mus240" ? gleeWorldLogoCircle : tenantLogo}
+              src={tenantLogo}
               alt={`${siteName} logo`}
               className="w-20 h-20 object-contain rounded-full bg-white/5 p-1"
             />

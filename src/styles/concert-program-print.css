@@ -1,0 +1,23 @@
+/* Print/PDF styling for the Concert Planner's true-paper print overlay
+ * (ConcertProgramPrintView). Imported ONLY by that component — never
+ * globally — because `body.printing-program #root { display: none }`
+ * would otherwise be a live rule for the whole session.
+ *
+ * The `@page` at-rule itself is NOT here (see ConcertProgramPrintView.tsx):
+ * it's a document-level rule that can't be scoped under a class selector,
+ * so it's injected as its own <style> element on mount and removed on
+ * unmount instead.
+ */
+.cp-print-overlay { position: fixed; inset: 0; z-index: 50; overflow-y: auto; background: hsl(var(--muted)); }
+@media screen {
+  .cp-print-overlay .cp-sheet, .cp-print-overlay .cp-print-sheet { box-shadow: 0 1px 12px rgba(0,0,0,0.18); margin: 0 auto 1rem; }
+}
+@media print {
+  .no-print { display: none !important; }
+  body.printing-program #root { display: none; }
+  .cp-print-overlay { position: static; background: #fff; overflow: visible; }
+  .cp-print-overlay .cp-sheet, .cp-print-overlay .cp-print-sheet { box-shadow: none; margin: 0; page-break-after: always; break-after: page; }
+  .cp-print-overlay .cp-sheet:last-child, .cp-print-overlay .cp-print-sheet:last-child { page-break-after: auto; break-after: auto; }
+  /* index.css appends " (url)" after every link when printing. */
+  .cp-print-overlay a[href]::after { content: none !important; }
+}

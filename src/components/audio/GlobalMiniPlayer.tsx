@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Play, Pause, X, ChevronUp } from 'lucide-react';
 import { useGlobalAudioPlayer } from '@/hooks/useGlobalAudioPlayer';
+import { useIsCompactNav } from '@/hooks/use-mobile';
 
 interface GlobalMiniPlayerProps {
   onExpand?: () => void;
@@ -10,6 +11,18 @@ interface GlobalMiniPlayerProps {
 
 export const GlobalMiniPlayer: React.FC<GlobalMiniPlayerProps> = ({ onExpand }) => {
   const { currentTrack, isPlaying, togglePlay, stop } = useGlobalAudioPlayer();
+  // The docked bottom tab bar (MobileBottomNav) is z-30 while this player is
+  // z-50, so on a phone a playing track completely covered Home / Messages /
+  // Calendar — navigation was unreachable until playback stopped. Sit above
+  // the bar instead.
+  //
+  // Gated on the SAME hook the bar itself uses rather than a Tailwind `md:`
+  // guess: the bar's breakpoint (768) lives in JS, so a CSS-only offset would
+  // silently drift the moment that constant moves. Same pattern as AssistantFab.
+  const isCompactNav = useIsCompactNav();
+  const bottomOffset = isCompactNav
+    ? 'calc(env(safe-area-inset-bottom, 0px) + 56px)'
+    : 0;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -35,8 +48,12 @@ export const GlobalMiniPlayer: React.FC<GlobalMiniPlayerProps> = ({ onExpand }) 
     }
   };
 
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-slate-900 to-slate-800 border-t border-slate-700 shadow-2xl safe-area-pb">
+    <div
+      className="fixed left-0 right-0 z-50 bg-gradient-to-t from-slate-900 to-slate-800 border-t border-slate-700 shadow-2xl safe-area-pb"
+      style={{ bottom: bottomOffset }}
+    >
       <div className="flex items-center gap-3 px-4 py-3">
         {/* Play/Pause Button */}
         <Button

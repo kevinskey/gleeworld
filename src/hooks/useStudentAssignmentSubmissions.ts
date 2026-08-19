@@ -23,13 +23,7 @@ export const useStudentAssignmentSubmissions = (studentId: string) => {
   return useQuery({
     queryKey: ['student-assignment-submissions', studentId],
     queryFn: async (): Promise<StudentAssignmentSubmission[]> => {
-      // First, get all journal assignment IDs to exclude them
-      const { data: journalGrades } = await supabase
-        .from('mus240_journal_grades')
-        .select('assignment_id')
-        .eq('student_id', studentId);
-
-      const journalAssignmentIds = journalGrades?.map(jg => jg.assignment_id) || [];
+      const journalAssignmentIds: string[] = [];
 
       // Then fetch assignment submissions, excluding journals
       const { data, error } = await supabase

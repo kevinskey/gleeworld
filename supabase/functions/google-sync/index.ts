@@ -20,6 +20,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { propagateUpdates, propagateDeletes, type PropagatedGoogleEvent } from './propagate.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -114,6 +115,7 @@ serve(async (req) => {
   let fetched = 0;
   let upserts = 0;
   const perCalErrors: Array<{ calendar: string; detail: string }> = [];
+  const seenForPropagation: PropagatedGoogleEvent[] = [];
 
   for (const calId of calendarIds) {
     const listUrl =
@@ -156,9 +158,21 @@ serve(async (req) => {
         .upsert(rows, { onConflict: 'user_id,google_event_id', count: 'exact' });
       if (upErr) {
         perCalErrors.push({ calendar: calId, detail: 'upsert_failed: ' + upErr.message });
-        continue;
+        continue;  // do NOT populate seenForPropagation on failure
       }
       upserts += count ?? rows.length;
+      // Now that the upsert succeeded, add these events to the seen list.
+      for (const r of rows) {
+        seenForPropagation.push({
+          google_event_id: r.google_event_id!,
+          title:           r.title,
+          description:     r.description,
+          location:        r.location,
+          start_at:        r.start_at,
+          end_at:          r.end_at,
+          all_day:         r.all_day,
+        });
+      }
     }
   }
 
@@ -172,6 +186,24 @@ serve(async (req) => {
       .delete()
       .eq('user_id', user.id)
       .not('google_calendar_id', 'in', `(${calendarIds.map(id => `"${id}"`).join(',')})`);
+  }
+
+  // Propagate to any gw_events rows the caller has published via
+  // google-event-share. Updates happen first so the row reflects the
+  // latest Google state; deletes then wipe rows whose Google source
+  // vanished from THIS sync's response.
+  // Guard: if any calendar fetch/upsert failed, the seen list is incomplete;
+  // running propagateDeletes in that state could wipe shared copies whose
+  // source events were actually present but simply unreachable this pass.
+  if (perCalErrors.length === 0) {
+    await propagateUpdates(admin, user.id, conn.tenant_id, seenForPropagation);
+    await propagateDeletes(
+      admin,
+      user.id,
+      conn.tenant_id,
+      seenForPropagation.map(e => e.google_event_id),
+      { start: timeMin, end: timeMax },
+    );
   }
 
   const lastError = perCalErrors.length

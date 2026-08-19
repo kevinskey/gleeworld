@@ -202,7 +202,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   return (
     <section id="liturgical" className="gw-container py-5">
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <Church className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
@@ -215,12 +215,18 @@ function Render({ config }: BlockRenderProps<Config>) {
 
       {/* Current season card */}
       <div
-        className="rounded-2xl p-6 sm:p-8 shadow-md mb-5"
+        className="rounded-2xl p-6 cq-sm:p-8 shadow-md mb-5"
         style={{ background: seasonStyle.bg, color: seasonStyle.fg }}
       >
         <div className="text-xs uppercase tracking-[0.18em] opacity-80 mb-1">Current season</div>
-        <h3 className="text-3xl sm:text-4xl font-bold normal-case mb-2">{season.name}</h3>
-        <p className="text-sm sm:text-base opacity-90 max-w-2xl leading-relaxed">{season.blurb}</p>
+        {/* Ranks BELOW the block's own h2 above (text-2xl cq-sm:text-3xl).
+            At text-3xl this h3 rendered 30px against that h2's 24px on a
+            phone — a child heading outranking its own section heading, and
+            outranking the page h1 too. text-xl keeps it the loudest thing
+            inside its card (blurb 14px, eyebrow 12px) without competing
+            upward. */}
+        <h3 className="text-xl cq-sm:text-2xl font-bold normal-case mb-2">{season.name}</h3>
+        <p className="text-sm cq-sm:text-base opacity-90 max-w-2xl leading-relaxed">{season.blurb}</p>
         <div className="mt-3 inline-flex items-center gap-2 text-xs uppercase tracking-wider opacity-80">
           <span className="inline-block w-3 h-3 rounded-full border border-white/40" style={{ background: seasonStyle.bg }} />
           Liturgical color: {seasonStyle.label}

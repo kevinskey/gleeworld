@@ -197,12 +197,16 @@ export const PressReleaseManager = () => {
       </div>
 
       <Tabs defaultValue="releases" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="releases">Press Releases</TabsTrigger>
-          <TabsTrigger value="create">Create New</TabsTrigger>
-          <TabsTrigger value="contacts">Media Contacts</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-        </TabsList>
+        {/* Horizontal-scroll on mobile so 4 tab labels don't crush or clip;
+            shadcn TabsList is inline-flex without overflow handling. */}
+        <div className="-mx-4 md:mx-0 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          <TabsList className="mx-4 md:mx-0">
+            <TabsTrigger value="releases" className="whitespace-nowrap shrink-0">Press Releases</TabsTrigger>
+            <TabsTrigger value="create" className="whitespace-nowrap shrink-0">Create New</TabsTrigger>
+            <TabsTrigger value="contacts" className="whitespace-nowrap shrink-0">Media Contacts</TabsTrigger>
+            <TabsTrigger value="templates" className="whitespace-nowrap shrink-0">Templates</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="releases" className="space-y-4">
           <div className="flex justify-between items-center">
@@ -216,46 +220,50 @@ export const PressReleaseManager = () => {
           <div className="space-y-4">
             {pressReleases.map((release) => (
               <Card key={release.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className="font-semibold text-lg">{release.title}</h4>
+                <CardContent className="p-4 md:p-6">
+                  {/* Stack on mobile so title + actions don't fight for a
+                      375-390px row; back to side-by-side on md+. */}
+                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <h4 className="font-semibold text-base md:text-lg break-words">{release.title}</h4>
                         <Badge className={`${getStatusColor(release.status)} text-white`}>
                           {release.status}
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                      {/* flex-wrap so long formatted dates fold onto their
+                          own line instead of overflowing the card. */}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs md:text-sm text-muted-foreground mb-3">
                         <span className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
+                          <User className="h-4 w-4 shrink-0" />
                           {release.author}
                         </span>
                         <span className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
+                          <Calendar className="h-4 w-4 shrink-0" />
                           Created {formatDate(release.createdAt)}
                         </span>
                         {release.publishedAt && (
                           <span className="flex items-center gap-1">
-                            <Send className="h-4 w-4" />
+                            <Send className="h-4 w-4 shrink-0" />
                             Published {formatDate(release.publishedAt)}
                           </span>
                         )}
                       </div>
                       <Badge variant="outline">{release.category}</Badge>
                     </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                    <div className="flex flex-wrap gap-2 md:shrink-0">
+                      <Button variant="outline" size="sm" aria-label="Preview">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" aria-label="Edit">
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" aria-label="Download">
                         <Download className="h-4 w-4" />
                       </Button>
                       {release.status === 'approved' && (
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           onClick={() => handlePublishRelease(release.id)}
                         >
                           <Send className="h-4 w-4 mr-2" />

@@ -101,10 +101,10 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
       </div>
 
       <Card className="bg-primary text-primary-foreground">
-        <CardHeader className="bg-[#150d26]">
+        <CardHeader className="bg-[hsl(var(--brand-navy))]">
           <CardTitle className="text-lg text-primary-foreground">Course Schedule</CardTitle>
         </CardHeader>
-        <CardContent className="bg-[#150d26]">
+        <CardContent className="bg-[hsl(var(--brand-navy))]">
           
           
           <div className="flex items-center gap-2 flex-wrap">

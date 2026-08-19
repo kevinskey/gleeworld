@@ -1,0 +1,303 @@
+{
+  "state_slug": "nebraska",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "NMEA's All-State ensembles happen in November at the NMEA Conference/Clinic, so the November 2026 events are the 2026-27 season and NMEA labels them '2026'. NMEA had fully published 2026 repertoire, conductors, audition materials, dates, and fees at the time of retrieval. Two choral programs are captured: the high school All-State Chorus and the All-State Middle Level Chorus (held on even years only). NMEA also lists an All-State Children's Choir (grades 4-5, odd years only) and an All-State Orff Ensemble (even years) — the Children's Choir is not running in 2026 and was not captured. NMEA notes future All-State dates 'may shift depending on the finalized Husker football schedules.'",
+  "organization": {
+    "name": "Nebraska Music Education Association",
+    "acronym": "NMEA",
+    "website_url": "https://www.nmeanebraska.org/",
+    "description": "NMEA is the Nebraska federated state association of NAfME. Annually it provides all-state honor ensemble opportunities for high school students in grades 9-12 (band, chorus, jazz band, orchestra), plus alternating-year honor ensembles for elementary (grades 4-5) and middle school students. All-State rehearsals and performances take place during the NMEA Conference/Clinic, with performances at the Lied Center for Performing Arts in Lincoln."
+  },
+  "sources": [
+    {
+      "name": "NMEA — 2026 Nebraska All-State Chorus",
+      "url": "https://www.nmeanebraska.org/2026-all-state-chorus",
+      "source_type": "official"
+    },
+    {
+      "name": "NMEA — All-State Ensembles",
+      "url": "https://www.nmeanebraska.org/all-state-ensembles",
+      "source_type": "official"
+    },
+    {
+      "name": "NMEA — 2026 All-State Middle Level Chorus",
+      "url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "2026 Nebraska All-State Chorus",
+      "lineage_key": "nebraska-all-state-chorus",
+      "season": "2026",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "NMEA's high school all-state honor chorus for students in grades 9-12 whose teachers are NMEA members. Auditions are submitted online through Festival Scores. Rehearsals are held on Days 1 and 2 and the morning of Day 3 of the NMEA Conference/Clinic, with performances at the Lied Center for Performing Arts in Lincoln, Nebraska on the afternoon and evening of Day 3. 2026 conductor: Dr. Marques L. A. Garrett, Associate Professor of Choral Studies at the University of North Texas.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Registration opens and closes",
+          "start_at": "2026-08-24",
+          "end_at": "2026-09-08",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Choral audition upload window",
+          "start_at": "2026-09-24T12:00:00",
+          "end_at": "2026-09-26T23:59:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "description": "Website portal opens and closes for choral audition uploads. Audition excerpts are announced via email September 24 at 8:00 AM CST. $25 fee per audition. The Auditions Chair is only available for support from 8 am - 10 pm CST.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        },
+        {
+          "date_type": "other",
+          "title": "Audition fee due",
+          "start_at": "2026-10-12T23:59:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        },
+        {
+          "date_type": "results",
+          "title": "All-State Ensemble selections announced",
+          "start_at": "2026-10-19T08:00:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        },
+        {
+          "date_type": "acceptance_deadline",
+          "title": "Participation fee due",
+          "start_at": "2026-11-02",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "$25 per selected student.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        },
+        {
+          "date_type": "event",
+          "title": "NMEA Conference / All-State rehearsals and concerts",
+          "start_at": "2026-11-18",
+          "end_at": "2026-11-20",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Wednesday-Friday, November 18-20, 2026. Rehearsals on Days 1 and 2 and the morning of Day 3; performances at the Lied Center for Performing Arts, Lincoln, NE on the afternoon and evening of Day 3. NMEA notes dates may shift depending on the finalized Husker football schedules.",
+          "source_url": "https://www.nmeanebraska.org/all-state-ensembles"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Grades 9-12, teacher must be an NMEA member",
+          "description": "The All-State high school ensembles are for students in grades 9-12. Students of NMEA members are encouraged to audition.",
+          "source_url": "https://www.nmeanebraska.org/all-state-ensembles"
+        },
+        {
+          "category": "format",
+          "title": "Audition submitted through Festival Scores",
+          "description": "NMEA uses the services of Festival Scores to collect student auditions. The audition consists of scales, arpeggios, and excerpts from the All-State Chorus music (made available on the NMEA website when the chorus audition window opens on Festival Scores). Excerpts are announced by email on September 24 at 8:00 AM CST, the same morning the upload portal opens.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        },
+        {
+          "category": "scales",
+          "title": "All-State scales",
+          "description": "Scales are performed without accompaniment; only the tonic pitch is sounded, four times in tempo. Soprano and Tenor sing F major ascending and descending one time only a cappella. Alto and Bass sing B-flat major ascending and descending one time only a cappella.",
+          "structured_data": {
+            "soprano_tenor_key": "F major",
+            "alto_bass_key": "B-flat major",
+            "accompanied": false,
+            "tonic_soundings": 4
+          },
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        },
+        {
+          "category": "scales",
+          "title": "All-State arpeggios",
+          "description": "Arpeggios are performed with chordal accompaniment only. The tonic pitch is sounded four times in tempo. Practice tracks for scales and arpeggios are provided for Soprano/Tenor and Alto/Bass.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        },
+        {
+          "category": "materials",
+          "title": "Rehearsal tracks are per-student purchases",
+          "description": "The 2026 Nebraska All-State Chorus rehearsal track package is purchased and downloaded per student. NMEA asks teachers on the honor system not to purchase a set (one of each voice part) and distribute it to multiple students, and asks individual purchasers not to share their MP3s.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        }
+      ],
+      "repertoire": [
+        { "title": "All Night I Could Not Sleep", "composer": "Laurel Luke Christensen", "voicing": "SATB div", "publisher": "Gentry Publications", "catalog_number": "GP2666", "purpose": "performance", "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus" },
+        { "title": "An Earth Song", "composer": "Marques L. A. Garret", "voicing": "SATB", "publisher": "Beckenhorst Press", "catalog_number": "BP131", "purpose": "performance", "notes": "Composer name as published by NMEA.", "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus" },
+        { "title": "Ong-Hye-Ya", "composer": "Hye-Young Cho", "voicing": "SATB div, Ten", "publisher": "Walton Music", "catalog_number": "WJMS1217", "purpose": "performance", "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus" },
+        { "title": "Deep River", "composer": "R. Nathaniel Dett", "voicing": "SATB, Sop", "publisher": "Lawson-Gould", "catalog_number": "48971", "purpose": "performance", "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus" },
+        { "title": "Saturn's Embrace", "composer": "David von Kampen", "voicing": "SATB div", "publisher": "MusicSpoke", "purpose": "performance", "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus" },
+        { "title": "Never Let Go", "composer": "Rob Dietz", "voicing": "SSAATTBB", "publisher": "Walton Music", "catalog_number": "WW1953", "purpose": "performance", "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus" }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 2500,
+          "payable_to": "state_association",
+          "description": "$25 fee per audition; due by October 12 at 11:59 PM CST.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        },
+        {
+          "fee_type": "participation",
+          "amount_cents": 2500,
+          "payable_to": "state_association",
+          "description": "$25 per selected student; due November 2, 2026.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-chorus"
+        }
+      ],
+      "documents": [
+        {
+          "title": "Chorus Scales-Arpeggios Instructions",
+          "url": "https://www.nmeanebraska.org/assets/docs/All-State/Chorus/Chorus%20Scales-Arpeggios%20Instructions.pdf",
+          "document_type": "rules"
+        },
+        {
+          "title": "2026 Nebraska All-State Choir Conductor Notes (Dr. Marques L. A. Garrett)",
+          "url": "https://www.nmeanebraska.org/assets/docs/All-State/Chorus/2026%20Nebraska%20All-State%20Choir%20Conductor%20Notes.pdf",
+          "document_type": "other"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "2026 All-State Middle Level Chorus",
+      "lineage_key": "nebraska-all-state-middle-level-chorus",
+      "season": "2026",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "A one-day honor chorus for students in sixth through eighth grades whose teachers are NMEA members, offered during even-numbered years at the NMEA Conference/Clinic, with the final performance on the Lied Center for Performing Arts main stage. 2026 conductor: Dr. Derrick Fox, Michigan State University.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Registration opens and closes",
+          "start_at": "2026-08-17",
+          "end_at": "2026-09-08",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Choral audition upload window",
+          "start_at": "2026-09-09",
+          "end_at": "2026-09-21T23:59:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "description": "Website portal opens September 9 and closes September 21 at 11:59 PM CST. $10 fee per audition. The Auditions Chair is only available for support from 8 am - 10 pm CST.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        },
+        {
+          "date_type": "other",
+          "title": "Audition fee due",
+          "start_at": "2026-10-05T23:59:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        },
+        {
+          "date_type": "results",
+          "title": "Middle Level Ensemble selection announced",
+          "start_at": "2026-10-12T08:00:00",
+          "all_day": false,
+          "timezone": "America/Chicago",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        },
+        {
+          "date_type": "acceptance_deadline",
+          "title": "Participation fee due",
+          "start_at": "2026-11-02",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "$50 per selected student.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        },
+        {
+          "date_type": "event",
+          "title": "2026 All-State Middle Level Chorus",
+          "start_at": "2026-11-18",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Wednesday, November 18, 2026. One-day event with the final performance on the Lied Center for Performing Arts main stage.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Who can attend",
+          "description": "Students must be registered at and attending the school or home school listed on the registration; must be under the direction of an NMEA member; must be in sixth through eighth grade during the 2026-2027 school year; and the director MUST be registered for and attend the Conference with their student(s).",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        },
+        {
+          "category": "format",
+          "title": "Audition components",
+          "description": "Auditions are collected through Festival Scores and include a scale, an excerpt of either 'My Country Tis of Thee' or 'We Shall Overcome', and a solo excerpt.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        },
+        {
+          "category": "scales",
+          "title": "Scale",
+          "description": "Students sing a scale a cappella in the key of their choosing on solfege or monosyllables. Teachers may give students their starting pitch.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        },
+        {
+          "category": "materials",
+          "title": "Prepared excerpt",
+          "description": "Students sing 'My Country Tis of Thee' or 'We Shall Overcome' a cappella. Teachers may give students their starting pitch in the same key as their scale. If a student is unable to sing either of these songs for personal reasons, NMEA directs the teacher to contact Stacy Bean at middle.level@nmeanebraska.org.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        },
+        {
+          "category": "materials",
+          "title": "Solo excerpt",
+          "description": "The solo chosen by the student and/or director should reflect the voice part for which the student is auditioning and must be 40-60 seconds in length. It may be a prepared solo or an excerpt from prepared choral literature.",
+          "structured_data": { "min_seconds": 40, "max_seconds": 60 },
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        }
+      ],
+      "repertoire": [
+        { "title": "Rise", "composer": "Derrick Fox", "voicing": "SATB", "publisher": "Hinshaw Music", "purpose": "performance", "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus" },
+        { "title": "Journey On", "composer": "Derrick Fox", "voicing": "3-Part Mixed", "publisher": "Hal Leonard", "purpose": "performance", "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus" },
+        { "title": "JAM (Jon-Ayuh-Mari!)", "composer": "Tracy Wong", "voicing": "SAB", "publisher": "Graphite Publishing", "purpose": "performance", "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus" },
+        { "title": "Music of Life", "composer": "B.E. Boykin", "voicing": "SAB", "publisher": "Oxford University Press", "purpose": "performance", "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus" },
+        { "title": "Gloria", "composer": "Vivaldi", "arranger": "Russell Robinson", "voicing": "SAB", "publisher": "Alfred Music", "purpose": "performance", "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus" },
+        { "title": "My Country Tis of Thee", "purpose": "audition", "notes": "One of two prepared audition excerpt options; no composer published by NMEA.", "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus" },
+        { "title": "We Shall Overcome", "purpose": "audition", "notes": "One of two prepared audition excerpt options; no composer published by NMEA.", "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus" }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 1000,
+          "payable_to": "state_association",
+          "description": "$10.00 audition fee for all students who audition; invoiced through Festival Scores. Due October 5 at 11:59 PM CST.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        },
+        {
+          "fee_type": "participation",
+          "amount_cents": 5000,
+          "payable_to": "state_association",
+          "description": "$50.00 participation fee for selected students; invoiced through Festival Scores. Due November 2, 2026.",
+          "source_url": "https://www.nmeanebraska.org/2026-all-state-middle-level-chorus"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "The specific All-State Chorus audition excerpts — NMEA announces them by email on September 24, 2026, the morning the upload window opens",
+    "Concert clock times for the November 18-20, 2026 All-State performances at the Lied Center",
+    "Ensemble size / number of singers selected, and any published scoring rubric",
+    "Voice-part subdivisions beyond Soprano / Alto / Tenor / Bass for the high school chorus",
+    "2027 All-State Chorus information — only the conference dates (November 18-20, 2027) were posted"
+  ]
+}

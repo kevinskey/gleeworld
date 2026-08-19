@@ -12,7 +12,7 @@ import Image from '@tiptap/extension-image';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, List, ListOrdered,
   ListChecks, Quote, Code, Undo2, Redo2, Heading1, Heading2, Heading3,
-  Link2, FileText, Loader2, AlertTriangle, Check,
+  Link2, FileText, Loader2, AlertTriangle, Check, MonitorPlay,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import {
   Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from '@/components/ui/command';
 import { saveNote, listLinkTargets, NoteConflictError } from '@/lib/planner/notesApi';
+import { PrompterOverlay } from '@/components/prompter/PrompterOverlay';
 import type { DocNode, PlannerNote } from '@/lib/planner/types';
 import './noteEditor.css';
 
@@ -68,6 +69,8 @@ export interface NoteEditorProps {
 
 export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps) {
   const [saveState, setSaveState] = useState<SaveState>('saved');
+  // Snapshotted at open (see DocumentEditorPage's prompter for why).
+  const [prompterText, setPrompterText] = useState<string | null>(null);
   // The title input is deliberately UNCONTROLLED (ref + DOM value): a
   // controlled value tied to React state could be reset by save-cycle
   // re-renders, eating typed characters (the launch-day "can't type a
@@ -92,7 +95,11 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
     content: note.content,
     editorProps: {
       attributes: {
-        class: 'planner-editor prose prose-base max-w-none focus:outline-none min-h-[40vh] text-foreground',
+        // max-w-none frees the prose cap on phones/tablets where the pane
+        // is already narrow; lg+ restores a readable measure — without it,
+        // iPad-landscape widths (1024-1279, before the xl context panel
+        // mounts) produced 700-800px text lines.
+        class: 'planner-editor prose prose-base max-w-none lg:max-w-[70ch] focus:outline-none min-h-[40vh] text-foreground',
         'aria-label': 'Note body',
       },
     },
@@ -215,8 +222,14 @@ export default function NoteEditor({ note, onSaved, hideTitle }: NoteEditorProps
         </div>
       )}
 
-      <EditorToolbar editor={editor} onDirty={markDirty} />
+      <EditorToolbar editor={editor} onDirty={markDirty} onPrompter={() => setPrompterText(editor.getText())} />
       <EditorContent editor={editor} />
+      <PrompterOverlay
+        open={prompterText != null}
+        onClose={() => setPrompterText(null)}
+        text={prompterText ?? ''}
+        title={titleRef.current || note.title || 'Untitled note'}
+      />
     </div>
   );
 }
@@ -248,7 +261,7 @@ function ToolbarButton({ onClick, active, label, children }: {
       type="button"
       variant={active ? 'secondary' : 'ghost'}
       size="sm"
-      className="h-8 w-8 p-0"
+      className="h-9 w-9 p-0"
       aria-label={label}
       aria-pressed={active}
       onClick={onClick}
@@ -258,7 +271,7 @@ function ToolbarButton({ onClick, active, label, children }: {
   );
 }
 
-function EditorToolbar({ editor, onDirty }: { editor: Editor; onDirty: () => void }) {
+function EditorToolbar({ editor, onDirty, onPrompter }: { editor: Editor; onDirty: () => void; onPrompter?: () => void }) {
   const run = (fn: () => boolean) => () => {
     fn();
     onDirty();
@@ -270,7 +283,7 @@ function EditorToolbar({ editor, onDirty }: { editor: Editor; onDirty: () => voi
   // on load and instantly dismissing any open popover/menu.
   const c = () => editor.chain().focus();
   return (
-    <div className="flex flex-wrap items-center gap-0.5 rounded-md border border-border bg-card px-1 py-0.5" role="toolbar" aria-label="Formatting">
+    <div className="flex flex-wrap items-center gap-0.5 border-b border-border/60 bg-transparent pb-1.5 mb-1" role="toolbar" aria-label="Formatting">
       <ToolbarButton label="Heading 1" active={editor.isActive('heading', { level: 1 })} onClick={run(() => c().toggleHeading({ level: 1 }).run())}><Heading1 className="h-4 w-4" /></ToolbarButton>
       <ToolbarButton label="Heading 2" active={editor.isActive('heading', { level: 2 })} onClick={run(() => c().toggleHeading({ level: 2 }).run())}><Heading2 className="h-4 w-4" /></ToolbarButton>
       <ToolbarButton label="Heading 3" active={editor.isActive('heading', { level: 3 })} onClick={run(() => c().toggleHeading({ level: 3 }).run())}><Heading3 className="h-4 w-4" /></ToolbarButton>
@@ -290,6 +303,9 @@ function EditorToolbar({ editor, onDirty }: { editor: Editor; onDirty: () => voi
       <span className="mx-1 h-5 w-px bg-border" aria-hidden />
       <ToolbarButton label="Undo" onClick={run(() => c().undo().run())}><Undo2 className="h-4 w-4" /></ToolbarButton>
       <ToolbarButton label="Redo" onClick={run(() => c().redo().run())}><Redo2 className="h-4 w-4" /></ToolbarButton>
+      {onPrompter && (
+        <ToolbarButton label="Prompter" onClick={onPrompter}><MonitorPlay className="h-4 w-4" /></ToolbarButton>
+      )}
     </div>
   );
 }

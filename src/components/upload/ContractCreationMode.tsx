@@ -74,7 +74,7 @@ export const ContractCreationMode = ({ mode, onModeChange, hasTemplate }: Contra
               <Plus className="h-5 w-5" />
               <span className="font-medium">Create New Contract</span>
             </div>
-            <p className="text-sm text-green-600 mt-1">
+            <p className="text-sm text-success-text mt-1">
               Start with a blank contract and build it from scratch
             </p>
           </CardContent>

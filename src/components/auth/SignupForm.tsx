@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { getOrgName } from '@/lib/orgName';
 import { useSecurityEnhanced } from "@/hooks/useSecurityEnhanced";
 import { useRegistrationRequest } from "@/hooks/useRegistrationRequest";
 import { RoleSelectionStep } from "./RoleSelectionStep";
@@ -202,8 +203,8 @@ export const SignupForm = () => {
           </div>
           <p className="text-sm text-white/80">
             {searchParams.get('role') === 'fan' 
-              ? 'Join the GleeWorld fan community and get exclusive access to content and events!'
-              : 'Reconnect with your Glee Club sisters and access exclusive graduates features!'}
+              ? `Join the ${getOrgName()} fan community and get exclusive access to content and events!`
+              : `Reconnect with your fellow ${getOrgName()} graduates and access exclusive graduates features!`}
           </p>
         </div>
       )}

@@ -12,7 +12,7 @@
 //   │  tenant)   │                                        │
 //   └────────────┴────────────────────────────────────────┘
 
-import { createContext, lazy, Suspense, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 // Idempotence guard. Some pages self-wrap in <DashboardShell> while their
 // route in App.tsx already wraps them — nested instances would render two
@@ -29,7 +29,6 @@ import {
   BookOpen,
   Glasses,
   Boxes,
-  ChevronRight,
   ChevronDown,
   ShoppingCart,
   Settings,
@@ -44,16 +43,11 @@ import {
   Sparkles,
   PanelLeft,
   PanelLeftClose,
+  Bug,
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { HIDEABLE_NAV_ROLES, applyPreviewRole, type NavRole } from '@/lib/navigation/navCatalog';
-import {
-  DndContext, PointerSensor, useDroppable, useSensor, useSensors, type DragEndEvent,
-} from '@dnd-kit/core';
-import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { useNavItemOrder } from '@/hooks/useNavItemOrder';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
+import { HIDEABLE_NAV_ROLES, applyPreviewRole, type NavRole, GATED_MODULE_KEYS } from '@/lib/navigation/navCatalog';
 import { setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,11 +56,12 @@ import { useMessenger } from '@/contexts/MessengerContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { getOrgName } from '@/lib/orgName';
+import { useHideSiteName } from '@/hooks/useHideSiteName';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
-import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
+import { isTenantAdminOrAboveRole } from '@/lib/auth/tenantRoles';
 import { useMyTenants, tenantHomeUrl, tenantSwitchUrl, performTenantSwitch } from '@/hooks/useMyTenants';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -83,14 +78,34 @@ import {
 } from '@/components/ui/sheet';
 import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
 import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
+import { ReportBugDialog } from '@/components/feedback/ReportBugDialog';
 import { isDemoTenant } from '@/lib/demoTenant';
+import { AssistantFab } from '@/components/assistant/AssistantFab';
+import { AssistantMiniPlayer } from '@/components/assistant/AssistantMiniPlayer';
+import { AssistantSheet } from '@/components/assistant/AssistantSheet';
 import { TrialBanner } from '@/components/dashboard/TrialBanner';
+import { PermissionSlipBell } from '@/components/dashboard/PermissionSlipBell';
 import {
-  resolveNav, entrySurfaces, NAV_SECTION_LABELS,
-  type CatalogEntry, type NavContext, type NavSectionKey,
+  resolveNav,
+  type CatalogEntry, type NavContext,
 } from '@/lib/navigation/navCatalog';
+import { NavShelf } from './NavShelf';
+import { AllToolsSheet } from './AllToolsSheet';
+import { isFacultyProfile } from '@/lib/roles';
+import { useMyTools } from '@/hooks/useMyTools';
+import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
+import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 
-const SECTION_ORDER: NavSectionKey[] = ['today', 'music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
+// The fixed module-gate key list a `module: 'x'` catalog gate checks
+// against. One definition shared by Sidebar, MobileNav, and the All Tools
+// sheet's own catalog hook below, so the three call sites can't drift out
+// of sync with which modules exist. (Cost us All-State on first deploy,
+// once, when a gated nav entry was added without adding its key here.)
+// Derived from NAV_CATALOG (GATED_MODULE_KEYS) rather than hand-listed: a
+// gated nav entry whose module id was missing from this list rendered
+// nowhere, silently. See navCatalog.ts for the two times that shipped.
+const MODULE_KEYS = GATED_MODULE_KEYS;
 
 // The platform ('main') tenant ships no branding.logo_url of its own, so
 // BrandLogo fell back to the monogram there. Use the GleeWorld platform logo
@@ -99,67 +114,109 @@ const SECTION_ORDER: NavSectionKey[] = ['today', 'music', 'teach', 'make', 'plan
 const GLEE_PLATFORM_LOGO = '/lovable-uploads/gleeworld-logo.png?v=6';
 function platformLogoFor(brandingLogoUrl?: string | null): string | undefined {
   if (brandingLogoUrl) return brandingLogoUrl;
-  const slug = (typeof window !== 'undefined'
-    && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
-  return slug === 'main' ? GLEE_PLATFORM_LOGO : undefined;
+  // getTenantSlug() falls back to 'main' when no tenant bootstrap exists —
+  // which is exactly the gleeworld.org apex, where this fallback matters.
+  return getTenantSlug() === 'main' ? GLEE_PLATFORM_LOGO : undefined;
 }
 
-// Groups resolved sidebar-surface entries into the render shape both nav
-// columns use. Sections with zero visible entries drop out (unchanged
-// behavior). label:'Today' historically rendered with its section label
-// like every other section.
-function buildNavSections(
-  ctx: NavContext,
-  userOrder?: string[] | null,
-  sectionOverrides?: Record<string, string> | null,
-): Array<{ key: string; label: string; items: CatalogEntry[] }> {
-  const resolved = resolveNav(ctx).filter((e) => entrySurfaces(e).includes('sidebar'));
-  // users may re-home an item into any section; the override wins over
-  // the catalog's section (invalid section names fall back to catalog)
-  const sectionOf = (e: CatalogEntry): string => {
-    const override = sectionOverrides?.[e.key];
-    return override && (SECTION_ORDER as readonly string[]).includes(override) ? override : e.section;
+// The gated nav shared by Sidebar, MobileNav, and the All Tools sheet's own
+// catalog hook below. Originally landed as three independent copies (one
+// per call site) on the theory that DashboardShell.shelf.test.tsx — which
+// renders Sidebar/MobileNav standalone against mocked hooks — required it.
+// That was wrong: `vi.mock` is module-level, so which function calls the
+// mocked hooks underneath is irrelevant, and a review round proved it by
+// running that test file plus DashboardShell.allTools.test.tsx and
+// NavShelf.test.tsx unchanged against this extraction — 20/20 green. One
+// definition now, used by all three, so gating can never disagree between
+// what the shelf shows and what the sheet offers.
+//
+// Also folds in a real divergence the three-copy version had let through:
+// MobileNav used to call `canEditMusicLibrary()` bare while Sidebar and the
+// sheet's hook guarded it with `typeof === 'function'` (tolerating an older
+// useUserRole shape that doesn't export the fn, so a stale bundle can't
+// white-screen the shell) — this hook always uses the defensive form.
+function useGatedNav() {
+  const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
+  const userCanLibrarian = typeof canEditMusicLibrary === 'function'
+    ? canEditMusicLibrary()
+    : !!(profile?.is_admin || profile?.is_super_admin);
+  const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
+  const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
+  const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
+
+  // Add-on modules — only render the nav entry if the tenant has access.
+  // A catalog entry gated on `module: 'x'` renders ONLY if 'x' appears here —
+  // hasModule() below reads this map, not the full tenant module set. Adding a
+  // gated nav entry without adding its key here silently hides it, with no
+  // error anywhere. (Cost us All-State on first deploy.)
+  // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
+  const moduleAccess: Record<string, boolean> = {};
+  for (const key of MODULE_KEYS) {
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
+    moduleAccess[key] = useModuleAccess(key).hasAccess;
+  }
+  const hiddenNav = useTenantNavPrefs();
+  const previewRole = useEffectivePreviewRole();
+
+  // applyPreviewRole narrows the capability flags when a super-admin is
+  // previewing — without it the gates read the real profile and admin-only
+  // entries (Users, Settings, Tenants) leak into every previewed role.
+  const navCtx: NavContext = applyPreviewRole({
+    hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
+    isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
+    isPartner: !!profile?.is_partner,
+    hiddenRoutes: hiddenNav,
+  }, previewRole);
+  // isFacultyProfile is the single definition (src/lib/roles.ts) — an inline
+  // admin||super||instructor check here missed teacher/conductor/director, so a
+  // director got the faculty grid on HouseHome and the STUDENT shelf here.
+  const isFaculty = isFacultyProfile(profile);
+  const { myTools, loaded: myToolsLoaded, pinTool, saveMyTools } = useMyTools(isFaculty ? 'faculty' : 'student');
+  // The full gated set from resolveNav — not filtered to sidebar-surface
+  // entries. The All Tools sheet is the full catalog now (Phase 3), and a
+  // member migrating from home_tile_layout can legitimately have grid-only
+  // keys (merch, tickets, attendance) in their My Tools set; resolveNav's
+  // unfiltered output keeps those reachable everywhere this is used.
+  const resolvedEntries = resolveNav(navCtx);
+  // 'home' has no gate, but hiddenRoutes could still remove it (Workspace
+  // Settings → Navigation). Callers treat a missing homeEntry as "no Home
+  // row" rather than blanking the whole nav.
+  const homeEntry = resolvedEntries.find((e) => e.key === 'home');
+
+  return { resolvedEntries, homeEntry, myTools, myToolsLoaded, pinTool, saveMyTools, roleLoading, isPlatformAdmin };
+}
+
+// The stored My Tools record + gated catalog behind the All Tools sheet.
+//
+// `pinned` is the UNFILTERED stored set — never `resolveNav`'s gated output —
+// and it is used for DISPLAY ONLY (which rows read "In your world"). It IS
+// resolved through MERGED_KEYS (via resolvedTools):
+// without that, a stored retired key (e.g. 'merch') would fail to match its
+// living catalog entry's key ('shop') in AllToolsSheet's `pinnedSet.has(...)`
+// check, and the sheet would offer Store Admin as "not yet in your space"
+// when the member already effectively has it (Phase 5 review, 2026-08-09).
+// The APPEND itself is not computed here at all: `onPin` is useMyTools'
+// pinTool, which reads the freshest record out of the query cache at call
+// time and refuses unless the row genuinely loaded. Computing the append
+// from this render-time `pinned` is precisely the bug that persisted a
+// one-key record over a member's eight tools and their widgets whenever the
+// sheet was opened before the query resolved — and the same snapshot that
+// dropped the first of two pins fired in one tick.
+function useAllToolsCatalog(): {
+  available: CatalogEntry[];
+  pinned: string[];
+  canPin: boolean;
+  onPin: (key: string) => Promise<boolean>;
+} {
+  const { resolvedEntries, myTools, myToolsLoaded, pinTool } = useGatedNav();
+  return {
+    available: resolvedEntries,
+    pinned: resolvedTools(myTools),
+    // No record, no ⊕: pinTool would refuse, and offering an action that
+    // can only fail is the "tap does nothing" shape the plan forbids.
+    canPin: myToolsLoaded,
+    onPin: pinTool,
   };
-  // per-user ordering within each (possibly overridden) section; items
-  // the user hasn't ordered keep catalog order after ordered ones
-  const rank = new Map((userOrder ?? []).map((k, i) => [k, i]));
-  const sortItems = (items: CatalogEntry[]) =>
-    userOrder?.length
-      ? [...items].sort((a, b) => (rank.get(a.key) ?? Infinity) - (rank.get(b.key) ?? Infinity))
-      : items;
-  return SECTION_ORDER
-    .map((s) => ({ key: s as string, label: NAV_SECTION_LABELS[s], items: sortItems(resolved.filter((e) => sectionOf(e) === s)) }))
-    .filter((s) => s.items.length > 0);
-}
-
-// Droppable shell for a nav section, so an item can be dragged into a
-// section even when it's collapsed (drop on the header) or at its end.
-function DroppableSection({ sectionKey, className, children }: {
-  sectionKey: string; className?: string; children: ReactNode;
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id: `section:${sectionKey}` });
-  return (
-    <div ref={setNodeRef} className={`${className ?? ''} ${isOver ? 'ring-2 ring-primary/40' : ''}`}>
-      {children}
-    </div>
-  );
-}
-
-// Sortable wrapper for a sidebar nav row. The 8px activation distance
-// keeps plain clicks navigating; only a real drag reorders.
-function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({ id });
-  return (
-    <div
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={isDragging ? 'opacity-60' : undefined}
-    >
-      {children}
-    </div>
-  );
 }
 
 // ── Sidebar ─────────────────────────────────────────────────────────────────
@@ -167,7 +224,12 @@ function SortableNavRow({ id, children }: { id: string; children: ReactNode }) {
 // Brand glyph — tries the tenant's logo, then the GleeWorld platform
 // fallback, then a monogram tile. Tracks `<img>` onError so a broken URL
 // never leaves an empty space where the brand should be.
-function BrandLogo({
+//
+// Exported for its own test: the size logic (a banner logo must be wide, not
+// boxed square) is the whole point of the open-nav brand block, and testing
+// it through the full shell would mean standing up routing, auth and branding
+// providers to assert one className.
+export function BrandLogo({
   logoUrl,
   fallbackInitial,
   alt,
@@ -176,7 +238,7 @@ function BrandLogo({
   logoUrl: string | null | undefined;
   fallbackInitial: string;
   alt: string;
-  size?: 'md' | 'lg' | 'xl';
+  size?: 'md' | 'lg' | 'xl' | 'banner' | 'wide';
 }) {
   // No global fallback to the GleeWorld marketing globe — that bled
   // platform branding into every tenant that hadn't uploaded a logo
@@ -189,20 +251,35 @@ function BrandLogo({
     setSrc(logoUrl ?? null);
   }, [logoUrl]);
   // xl is the desktop left-nav brand: w-12 (48px) grown ~40% → 67px.
-  const dim = size === 'xl' ? 'w-[67px] h-[67px]' : size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
+  //
+  // `banner` is the open left-nav: the logo stands alone with no site name
+  // beside it, so it gets the full width and grows to fill it. Crucially it
+  // is NOT square — most parish and school marks are wide horizontal lockups
+  // (a device plus two lines of type), and forcing one into a 67px box
+  // letterboxes it down to an illegible stamp. Height is capped so a tall
+  // or square logo cannot push the nav's first item off the screen.
+  // `wide` is the collapsed-nav TOPBAR brand: same insight as `banner` —
+  // most tenant marks are horizontal lockups, and a square box letterboxes
+  // them to a stamp (Kevin's screenshot, 2026-08-17: the xl box rendered
+  // the Lyke House lockup ~17px tall beside 22px type). Height-driven
+  // instead: the mark fills most of the 80px bar and the width follows.
+  const dim = size === 'banner'
+    ? 'w-full h-auto max-h-[76px]'
+    : size === 'wide' ? 'h-14 w-auto max-w-[240px]'
+    : size === 'xl' ? 'w-[67px] h-[67px]' : size === 'lg' ? 'w-12 h-12' : 'w-9 h-9';
   if (src) {
     return (
       <img
         src={src}
         alt={alt}
-        className={`${dim} object-contain shrink-0`}
+        className={`${dim} object-contain ${size === 'banner' || size === 'wide' ? 'object-left shrink-0' : 'shrink-0'}`}
         onError={() => setSrc(null)}
       />
     );
   }
   return (
     <span
-      className={`${dim} rounded-lg bg-primary text-primary-foreground inline-flex items-center justify-center text-lg font-bold shrink-0`}
+      className={`${size === 'banner' || size === 'wide' ? 'w-[67px] h-[67px]' : dim} rounded-lg bg-primary text-primary-foreground inline-flex items-center justify-center text-lg font-bold shrink-0`}
       aria-hidden
     >
       {fallbackInitial}
@@ -210,43 +287,26 @@ function BrandLogo({
   );
 }
 
-// 2026 nav type scale — denser, slightly larger touch targets, no tinted
-// tile chrome. The colored `tone` value still drives the ICON glyph color
-// (a subtle category cue) but no longer paints a background pill behind it.
-// Density tier: dense on phones / portrait iPad so the full nav fits
-// without an internal scroll, then steps up to text-[14px] on tablets
-// and text-[15px] on desktops for comfortable reading. The previous
-// flat text-[13px] looked cramped on a 12.9" iPad.
-const NAV_BASE =
-  'group flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] md:text-[14px] lg:text-[15px] leading-tight transition-all duration-150 w-full text-left';
-// Hover: brand-gold wash (--brand-gold is HSL 45 100% 55%) plus a 2px
-// nudge right so rows feel physically responsive, not just repainted.
-// arbitrary value syntax keeps the alpha channel without needing a
-// dedicated Tailwind color token.
-const NAV_INACTIVE =
-  'text-foreground/85 hover:bg-[hsl(var(--brand-gold)/0.12)] hover:text-foreground hover:translate-x-0.5 active:scale-[0.98]';
-const NAV_ACTIVE = 'bg-primary/10 text-primary font-semibold';
 // `tone` is now {color}-600/700 text-only — strip the legacy bg- portion.
 const iconTextOnly = (tone: string) =>
   tone.replace(/bg-\S+/g, '').replace(/\s+/g, ' ').trim() || 'text-foreground/70';
 
-// Sections start collapsed unless the user is currently on a page inside
-// the section (auto-expand) or they've toggled it open before (persisted
-// in localStorage so the preference sticks across reloads). Bumping the
-// key version invalidates any stale preference from earlier defaults.
-const COLLAPSED_SECTIONS_KEY = 'gw_sidebar_collapsed_v2';
-const DEFAULT_COLLAPSED = ['Admin'] as const;
+// Exported for its own test (I2 regression guard): asserting that a
+// missing/hidden Home entry degrades the shelf rather than blanking the
+// whole sidebar means rendering Sidebar with mocked hooks, same rationale
+// as BrandLogo's export above — standing up the full DashboardShell (auth,
+// routing, branding, tenant prefs, module access, ×2 for MobileNav) to
+// reach one `if (!homeEntry) return null` guard would be disproportionate.
+const PINNED_BOTTOM = (entries: CatalogEntry[]): CatalogEntry[] =>
+  ['site-setup', 'settings']
+    .map((k) => entries.find((e) => e.key === k))
+    .filter((e): e is CatalogEntry => !!e);
 
-function loadCollapsed(): Set<string> {
-  if (typeof window === 'undefined') return new Set(DEFAULT_COLLAPSED);
-  try {
-    const raw = window.localStorage.getItem(COLLAPSED_SECTIONS_KEY);
-    if (raw) return new Set(JSON.parse(raw));
-  } catch { /* fall through */ }
-  return new Set(DEFAULT_COLLAPSED);
-}
-
-function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
+// onOpenAllTools is required — NavShelf's own prop is required, and this
+// task deliberately doesn't weaken that at the Sidebar boundary. The six
+// call sites in DashboardShell.shelf.test.tsx that used to render
+// <Sidebar /> without it now pass a `vi.fn()`.
+export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => void; onOpenAllTools: () => void }) {
   const { settings: branding } = useBrandingSettings();
   // Prefer the short_name for sidebar chrome — most org_names overflow
   // the 256px column. Falls back to org_name then the platform/tenant
@@ -255,101 +315,58 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const fallbackName = getOrgName();
   const tenantName = branding?.short_name || branding?.org_name || fallbackName;
   const tenantLongName = branding?.org_name || branding?.short_name || fallbackName;
-  const { profile, canEditMusicLibrary } = useUserRole();
-  // Defensive: tolerate older useUserRole shapes that don't export this fn
-  // (avoids "canEditMusicLibrary is not a function" white-screening the shell).
-  const userCanLibrarian = typeof canEditMusicLibrary === 'function'
-    ? canEditMusicLibrary()
-    : !!(profile?.is_admin || profile?.is_super_admin);
+  const hideSiteName = useHideSiteName();
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState<Set<string>>(loadCollapsed);
+  const { resolvedEntries, homeEntry, myTools, myToolsLoaded: toolsLoaded, saveMyTools, roleLoading, isPlatformAdmin } = useGatedNav();
+  // isFaculty is a guess (profile is still null) until roleLoading clears —
+  // useUserRole(null) reads as student, so a faculty member could flash
+  // DEFAULT_TOOLS_STUDENT before their real shelf swaps in. But
+  // DashboardShell mounts fresh on every route (111 usages in App.tsx,
+  // not a persistent layout), and useUserRole caches nothing — roleLoading
+  // is true on literally every navigation, not just first load. Blanking
+  // the shelf every time (`roleLoading ? [] : ...`) traded one bug for a
+  // worse one: a member whose tools were already known instantly would
+  // watch the shelf empty out and refill on every click.
+  //
+  // `role` only changes what myTools.tools resolves to in ONE branch of
+  // migrateToMyTools — the role-default fallback for a member with NO
+  // stored record at all (myTools.ts). Anyone with a real record
+  // (setupComplete: true) gets the SAME tools back regardless of which
+  // role guess fetched them, because the query reads by uid, not by role.
+  // So: once we have a confirmed record, show it immediately — roleLoading
+  // is irrelevant. Only while genuinely guessing (no confirmed record yet)
+  // do we hide the role-specific guess, and even then we don't blank: we
+  // show the tools both role defaults agree on (ROLE_INVARIANT_CORE_TOOLS),
+  // which can never be wrong for either role. This is the MobileBottomNav
+  // convention actually applied correctly — CORE_TAB_KEYS there is the
+  // role-invariant set, not an empty one.
+  const knownGood = myTools?.setupComplete === true;
+  const shelfTools = (roleLoading && !knownGood)
+    ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
+    : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
+  // Empty groups never reach a live surface. This single filter covers both
+  // the group a member made but hasn't filled and the group whose every tool
+  // is gated off for this viewer — a header over zero rows is noise in the
+  // sidebar and worse over a keycap band. The editor still shows them, which
+  // is where a member fills or deletes one.
+  const shelfGroups = (roleLoading && !knownGood)
+    ? []
+    : (myTools?.groups ?? [])
+        .map((g) => ({
+          id: g.id,
+          name: g.name,
+          entries: selectShelfEntries(resolvedEntries, g.tools),
+          collapsed: g.collapsed,
+        }))
+        .filter((g) => g.entries.length > 0);
 
-  const toggleSection = (label: string) => {
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      try {
-        window.localStorage.setItem(COLLAPSED_SECTIONS_KEY, JSON.stringify(Array.from(next)));
-      } catch { /* ignore */ }
-      return next;
-    });
-  };
-  // Switch Site is a platform-owner action — only the super-admin on the
-  // "main" tenant can provision/jump between tenants. Demo-admins and other
-  // tenant super-admins should not see this control.
-  const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
-  const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
-  // Tenant admin (any tenant) — controls who sees admin-only nav like Modules.
-  const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
-
-  // Add-on modules — only render the nav entry if the tenant has access.
-  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner'] as const;
-  // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
-  const moduleAccess: Record<string, boolean> = {};
-  for (const key of MODULE_KEYS) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
-    moduleAccess[key] = useModuleAccess(key).hasAccess;
-  }
-  const hiddenNav = useTenantNavPrefs();
-  const previewRole = useEffectivePreviewRole();
-
-  // Verb-grouped nav (Today / Music / Teach / Make / Plan / Reach /
-  // Money / People / Admin), built from the shared nav catalog so this
-  // sidebar and the mobile drawer can never drift out of sync. Sections
-  // describe what the user is *doing*, not what kind of object the
-  // feature is — so Studio + Video sit together as creation tools,
-  // Concert Planner + Tour Manager + Auditions sit together as
-  // scheduling tools, and so on. Empty sections (no module access)
-  // collapse out of the column.
-  // applyPreviewRole narrows the capability flags when a super-admin is
-  // previewing — without it the gates read the real profile and admin-only
-  // entries (Users, Settings, Tenants) leak into every previewed role.
-  const navCtx: NavContext = applyPreviewRole({
-    hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
-    isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
-    hiddenRoutes: hiddenNav,
-  }, previewRole);
-  const { navOrder, saveNavOrder } = useNavItemOrder();
-  const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
-  const dragSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
-  const onNavDragEnd = (e: DragEndEvent) => {
-    const activeId = String(e.active.id);
-    const overId = e.over ? String(e.over.id) : null;
-    if (!overId || activeId === overId) return;
-    const from = sections.find((s) => s.items.some((i) => i.key === activeId));
-    if (!from) return;
-    // target: another row, or a section container (id "section:<key>")
-    const overSectionKey = overId.startsWith('section:') ? overId.slice(8) : null;
-    const to = overSectionKey
-      ? sections.find((s) => s.key === overSectionKey)
-      : sections.find((s) => s.items.some((i) => i.key === overId));
-    if (!to) return;
-
-    const display = new Map(sections.map((s) => [s.key, s.items.map((i) => i.key)]));
-    const fromKeys = display.get(from.key)!.filter((k) => k !== activeId);
-    display.set(from.key, fromKeys);
-    if (to.key === from.key && !overSectionKey) {
-      display.set(from.key, arrayMove(
-        from.items.map((i) => i.key),
-        from.items.findIndex((i) => i.key === activeId),
-        from.items.findIndex((i) => i.key === overId),
-      ));
-    } else if (overSectionKey) {
-      display.set(to.key, [...display.get(to.key)!, activeId]);
-    } else {
-      const toKeys = [...display.get(to.key)!];
-      toKeys.splice(toKeys.indexOf(overId), 0, activeId);
-      display.set(to.key, toKeys);
-    }
-
-    const flat = sections.flatMap((s) => display.get(s.key)!);
-    const catalogSection = from.items.find((i) => i.key === activeId)?.section;
-    const overrides = { ...(navOrder?.sections ?? {}) };
-    if (to.key === catalogSection) delete overrides[activeId];
-    else if (to.key !== from.key) overrides[activeId] = to.key;
-    void saveNavOrder(flat, overrides);
-  };
+  const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
+    // Gated on `loaded`, like every other write: saveMyTools fills omitted
+    // fields from the current record, so a toggle fired before the record
+    // arrives would persist an empty shelf over the member's real one.
+    if (!toolsLoaded || !myTools) return;
+    void saveMyTools({ groups: setGroupCollapsed(myTools, id, collapsed).groups });
+  }, [toolsLoaded, myTools, saveMyTools]);
 
   // Studio session editor needs the full window for clips + mixer.
   // Hide the sidebar when an open session is loaded. The user can
@@ -363,6 +380,10 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const inViewerReader = /^\/dashboard\/viewer\/[^/]+/.test(location.pathname);
   if (inStudioSession || inViewerReader) return null;
 
+  // Whether there is a real logo to stand on its own, as opposed to the
+  // monogram BrandLogo falls back to.
+  const hasLogo = !!platformLogoFor(branding?.logo_url);
+
   return (
     <aside className="hidden md:flex flex-col w-56 lg:w-64 shrink-0 bg-card self-stretch min-h-[100dvh] gw-collapsible-sidebar">
       {/* Site brand — tenant logo when set; if the logo image fails to
@@ -370,25 +391,39 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
           colored monogram so the brand block never disappears. Larger
           glyph + bigger type so it visibly anchors the page. */}
       <div
-        className="flex items-center border-b border-border pr-2 pt-[env(safe-area-inset-top,0px)] h-[calc(80px+env(safe-area-inset-top,0px))]"
+        className="flex items-center border-b border-border pr-2 pt-[env(safe-area-inset-top,0px)] h-[calc(92px+env(safe-area-inset-top,0px))]"
       >
+        {/* Open nav: the LOGO alone, at full width (Kevin). A logo beside a
+            site name has to share ~150px with it, which squeezed a wide
+            lockup down to a stamp and still truncated the name to "The L…".
+            Standing alone it can be read. The name is not lost — it is what
+            the collapsed-nav header shows instead, where there is no logo
+            competing for the room.
+
+            A tenant with NO logo keeps the name: dropping it there would
+            leave a single monogram letter identifying the workspace. The one
+            exception is hideSiteName — the tenant switched the name off on
+            their public page's Header block, and the workspace chrome
+            mirrors that choice. */}
         <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-4 h-full">
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={(branding?.short_name || tenantName).charAt(0).toUpperCase()}
             alt={tenantName}
-            size="xl"
+            size={hasLogo ? 'banner' : 'xl'}
           />
-          <div className="min-w-0 flex-1">
-            <div className="font-bold text-[22px] leading-tight tracking-tight truncate">
-              {tenantName}
-            </div>
-            {branding?.short_name && branding?.org_name && branding.short_name !== branding.org_name && (
-              <div className="text-[12px] text-muted-foreground truncate leading-tight mt-0.5">
-                {branding.org_name}
+          {!hasLogo && !hideSiteName && (
+            <div className="min-w-0 flex-1">
+              <div className="font-bold text-[22px] leading-tight tracking-tight truncate">
+                {tenantName}
               </div>
-            )}
-          </div>
+              {branding?.short_name && branding?.org_name && branding.short_name !== branding.org_name && (
+                <div className="text-[12px] text-muted-foreground truncate leading-tight mt-0.5">
+                  {branding.org_name}
+                </div>
+              )}
+            </div>
+          )}
         </Link>
         {onCollapse && (
           <button
@@ -403,84 +438,36 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
         )}
       </div>
 
-      {/* Nav — grouped by section. Sections with zero visible items are
-          skipped. Labeled sections (Add-ons, Admin) are collapsible; if
-          the user is on a route inside a collapsed section, that section
-          auto-expands so the active item stays visible. Extra top
-          padding (pt-4 sm:pt-5) gives the first item air below the
-          brand block instead of glueing flush against the divider. */}
-      <nav className="flex-1 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2 space-y-1.5">
-        <DndContext sensors={dragSensors} onDragEnd={onNavDragEnd}>
-        {sections.map((section, idx) => {
-          if (section.items.length === 0) return null;
-          const isCollapsible = !!section.label;
-          // Honor the user's manual collapse intent regardless of which
-          // route they're on. The previous `&& !hasActive` override
-          // re-expanded any section containing the current route, which
-          // made the chevron silently no-op on the section you most
-          // wanted to collapse (e.g. clicking "Music" while reading a
-          // score in the viewer).
-          const isCollapsed = isCollapsible && collapsed.has(section.label!);
-          return (
-            // Each section is its own card-like surface with a muted
-            // background so the long nav reads as grouped sections rather
-            // than one giant flat list. Section labels are bigger and
-            // higher-contrast to give the eye an anchor.
-            <DroppableSection
-              key={section.key ?? `section-${idx}`}
-              sectionKey={section.key}
-              className={section.label ? 'rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5' : 'space-y-0.5 px-1'}
-            >
-              {section.label && (
-                <button
-                  type="button"
-                  onClick={() => toggleSection(section.label!)}
-                  className="w-full flex items-center justify-between px-2.5 pb-1 pt-1.5 text-[11px] font-black uppercase tracking-[0.08em] text-foreground hover:text-primary transition-colors"
-                >
-                  <span>{section.label}</span>
-                  {isCollapsed ? (
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  ) : (
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  )}
-                </button>
-              )}
-              {!isCollapsed && (
-              <SortableContext items={section.items.map((i) => i.key)} strategy={verticalListSortingStrategy}>
-              {section.items.map((item) => (
-                <SortableNavRow key={item.key} id={item.key}>
-                <NavLink
-                  to={item.to}
-                  end={item.end}
-                  data-tour={item.tourId}
-                  className={({ isActive }) => {
-                    if (item.hero) {
-                      return `${NAV_BASE} ${
-                        isActive
-                          ? 'bg-primary/15 text-primary font-semibold ring-1 ring-primary/30'
-                          : 'bg-primary/5 text-foreground font-semibold hover:bg-primary/10 hover:ring-1 hover:ring-primary/20 hover:translate-x-0.5 active:scale-[0.98]'
-                      }`;
-                    }
-                    return `${NAV_BASE} ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`;
-                  }}
-                >
-                  {/* Single tonal icon family — slate-500 default, the
-                   * tenant's primary tone only on the hero row.
-                   * Replaces the previous 10+ category hues (rose,
-                   * amber, violet, indigo, sky, pink…) which violated
-                   * the "hero accent only for the main brand identity"
-                   * discipline. */}
-                  <item.icon className={`w-[18px] h-[18px] shrink-0 transition-colors duration-150 ${item.hero ? 'text-primary' : 'text-slate-500 group-hover:text-primary'}`} />
-                  <span className="truncate">{item.label}</span>
-                </NavLink>
-                </SortableNavRow>
-              ))}
-              </SortableContext>
-              )}
-            </DroppableSection>
-          );
-        })}
-        </DndContext>
+      {/* Nav — Home + the member's My Tools shelf (My World, Phase 1), with
+          every remaining destination reachable through the All Tools sheet
+          (Phase 3) rather than an in-shelf disclosure. No collapsible
+          sections, no drag reorder here — arranging the shelf is a
+          deliberate action on /dashboard/my-world, not a gesture performed
+          on the live nav.
+
+          `flex-1 min-h-0 overflow-y-auto` is load-bearing now that the shelf
+          has no length cap. The `min-h-0` is NOT decorative: a flex item
+          defaults to `min-height: auto`, which refuses to shrink below its
+          content, so `flex-1 overflow-y-auto` alone does not scroll — the
+          nav would grow past the aside, and the `overflow-hidden` on the
+          shell's outer flex row would then CLIP the tenant pill and the tail
+          of the shelf, leaving those rows unreachable. That was invisible
+          while the shelf was capped at 8 (max 11 rows always fit); it is
+          reachable now that a member may keep as many tools as they like.
+          The main column beside this one already pairs the same three
+          classes for the same reason. Extra top padding (pt-4 sm:pt-5) gives
+          the first item air below the brand block instead of glueing flush
+          against the divider. */}
+      <nav className="flex-1 min-h-0 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2">
+        <NavShelf
+          home={homeEntry}
+          tools={shelfTools}
+          pinned={PINNED_BOTTOM(resolvedEntries)}
+          groups={shelfGroups}
+          onToggleGroup={handleToggleGroup}
+          onOpenAllTools={onOpenAllTools}
+          variant="desktop"
+        />
       </nav>
 
       {/* Tenant pill — compact one-row footer. The brand + name are
@@ -502,42 +489,42 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
 }
 
 // ── Mobile nav (drawer) ─────────────────────────────────────────────────────
-// Lighter clone of the desktop sidebar — same icon-tiled item style but
-// without the collapsible-section machinery (mobile users want one flat
-// list they can scan). Hides automatically when the user picks a link.
-
-function MobileNav({ onNavigate }: { onNavigate: () => void }) {
+// Same NavShelf as the desktop sidebar — Home + the member's My Tools set,
+// with everything else behind All Tools. Hides automatically when the user
+// picks a link (onNavigate closes the Sheet).
+//
+// Exported for its own test — same rationale as Sidebar above. onOpenAllTools
+// is required for the same reason it is on Sidebar — see that comment.
+export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => void; onOpenAllTools: () => void }) {
   const { settings: branding } = useBrandingSettings();
   const tenantName = branding?.short_name || branding?.org_name || getOrgName();
-  const { profile, canEditMusicLibrary } = useUserRole();
-  const tenantSlug = (typeof window !== 'undefined' && (window as { __TENANT_CONFIG__?: { tenant?: string } }).__TENANT_CONFIG__?.tenant) || null;
-  const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
-  const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
-  const userCanLibrarian = canEditMusicLibrary();
-  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner'] as const;
-  // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
-  const moduleAccess: Record<string, boolean> = {};
-  for (const key of MODULE_KEYS) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
-    moduleAccess[key] = useModuleAccess(key).hasAccess;
-  }
-  const hiddenNav = useTenantNavPrefs();
-  const previewRole = useEffectivePreviewRole();
+  const hideSiteName = useHideSiteName();
+  const { resolvedEntries, homeEntry, myTools, myToolsLoaded: toolsLoaded, saveMyTools, roleLoading } = useGatedNav();
+  // Same knownGood/roleLoading gate as Sidebar — see the matching comment
+  // there for why this isn't `roleLoading ? [] : ...` anymore.
+  const knownGood = myTools?.setupComplete === true;
+  const shelfTools = (roleLoading && !knownGood)
+    ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
+    : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
+  // Empty groups never reach a live surface — see the matching comment on
+  // Sidebar's shelfGroups above; this is the same filter, not a second one.
+  const shelfGroups = (roleLoading && !knownGood)
+    ? []
+    : (myTools?.groups ?? [])
+        .map((g) => ({
+          id: g.id,
+          name: g.name,
+          entries: selectShelfEntries(resolvedEntries, g.tools),
+          collapsed: g.collapsed,
+        }))
+        .filter((g) => g.entries.length > 0);
 
-  // Verb-grouped to match the desktop sidebar (Today / Music / Teach /
-  // Make / Plan / Reach / Money / People / Admin), built from the same
-  // shared nav catalog. Empty sections drop out so a tenant without
-  // box-office or finance modules doesn't see an empty "Money" header.
-  // Preview narrowing applied identically to the desktop sidebar.
-  const navCtx: NavContext = applyPreviewRole({
-    hasModule: (k) => k === 'academy' || !!moduleAccess[k], // academy is core (mirrors toModuleSet); no catalog entry gates on it today
-    isTenantAdmin, isPlatformAdmin, canLibrarian: userCanLibrarian,
-    hiddenRoutes: hiddenNav,
-  }, previewRole);
-  // same per-user ordering + section overrides as the desktop sidebar
-  // (read-only here; reordering by drag is a desktop affordance)
-  const { navOrder } = useNavItemOrder();
-  const sections = buildNavSections(navCtx, navOrder?.order, navOrder?.sections);
+  const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
+    // Gated on `loaded` — see the matching comment on Sidebar's
+    // handleToggleGroup for why.
+    if (!toolsLoaded || !myTools) return;
+    void saveMyTools({ groups: setGroupCollapsed(myTools, id, collapsed).groups });
+  }, [toolsLoaded, myTools, saveMyTools]);
 
   return (
     <div className="flex flex-col h-full">
@@ -550,36 +537,27 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
           fallbackInitial={tenantName.charAt(0).toUpperCase()}
           alt={tenantName}
         />
-        <span className="font-bold text-[22px] tracking-tight truncate">{tenantName}</span>
+        {/* hideSiteName mirrors the public Header block's "Show site name"
+            toggle — see the sidebar brand comment. */}
+        {!hideSiteName && (
+          <span className="font-bold text-[22px] tracking-tight truncate">{tenantName}</span>
+        )}
       </div>
-      <nav className="flex-1 overflow-y-auto pt-2 px-2 space-y-1.5 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
-        {sections.map((section) => (
-          section.items.length === 0 ? null : (
-            <div key={section.label} className="rounded-lg bg-muted/40 ring-1 ring-border/60 p-1.5 space-y-0.5">
-              <div className="px-2.5 pb-1 pt-1.5 text-[12px] font-black tracking-[0.08em] text-foreground uppercase">
-                {section.label}
-              </div>
-              {section.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.to === '/dashboard'}
-                  onClick={onNavigate}
-                  // Mobile drawer text — comfortably bigger than the
-                  // desktop sidebar (text-[13px]) without overwhelming
-                  // the phone viewport. 17px ≈ iOS standard menu row.
-                  // py-2.5 keeps the tap target at 44px (Apple HIG).
-                  className={({ isActive }) =>
-                    `group flex items-center gap-2.5 px-2.5 py-2.5 rounded-md !text-[17px] leading-tight transition-all duration-150 w-full text-left ${isActive ? NAV_ACTIVE : NAV_INACTIVE}`
-                  }
-                >
-                  <item.icon className="w-5 h-5 shrink-0 transition-colors duration-150 text-slate-500 group-hover:text-primary" />
-                  <span className="truncate">{item.label}</span>
-                </NavLink>
-              ))}
-            </div>
-          )
-        ))}
+      <nav className="flex-1 min-h-0 overflow-y-auto pt-2 px-2 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
+        <NavShelf
+          home={homeEntry}
+          tools={shelfTools}
+          pinned={PINNED_BOTTOM(resolvedEntries)}
+          groups={shelfGroups}
+          onToggleGroup={handleToggleGroup}
+          // Close the drawer FIRST: the sheet is a modal dialog over the
+          // page, and leaving the drawer mounted underneath it means that
+          // picking the route you are already on (no shell remount, so no
+          // incidental reset) drops you back onto an open drawer.
+          onOpenAllTools={() => { onNavigate(); onOpenAllTools(); }}
+          variant="mobile"
+          onNavigate={onNavigate}
+        />
       </nav>
     </div>
   );
@@ -587,9 +565,15 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
 
 // ── Top bar ─────────────────────────────────────────────────────────────────
 
-// Views switcher — visible only to tenant super-admins. Lets them
-// preview the command-center sidebar as any lower-privilege role
-// without signing out. "Home" restores their own super-admin view.
+// Views switcher — visible to whoever runs the tenant: owner, admin, or
+// super-admin (either spelling). Lets them preview the command-center
+// sidebar as any lower-privilege role without signing out. "Home" restores
+// their own view.
+//
+// It was super-admin-only, which hid it on tenant sites from the two roles
+// that most need it: tenant admins, and the tenant OWNER — the site's own
+// creator. Keep this gate identical to useEffectivePreviewRole's, or the
+// button appears and does nothing.
 // Backed by the shared navPreview module (sessionStorage-persisted so
 // the preview survives a route change but auto-clears on tab close,
 // preventing a super-admin from getting trapped with a hidden
@@ -605,7 +589,7 @@ function ViewsSwitcher() {
   // the control from them.
   const myTenantRole = useMyTenantRole();
 
-  if (!isTenantSuperAdminRole(myTenantRole)) return null;
+  if (!isTenantAdminOrAboveRole(myTenantRole)) return null;
 
   const label = preview
     ? HIDEABLE_NAV_ROLES.find((r) => r.value === preview)?.label ?? 'Preview'
@@ -653,7 +637,7 @@ function ViewsSwitcher() {
   );
 }
 
-function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean; onExpandNav?: () => void }) {
+function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navCollapsed?: boolean; onExpandNav?: () => void; onOpenAllTools: () => void }) {
   const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { toggleMessenger } = useMessenger();
@@ -682,6 +666,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
   const sidebarHidden = inImmersiveRoute || navCollapsed;
   const compactBrandName =
     branding?.short_name || branding?.org_name || getOrgName();
+  const hideSiteName = useHideSiteName();
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -709,19 +694,21 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [becomeTenantOpen, setBecomeTenantOpen] = useState(false);
+  const [reportBugOpen, setReportBugOpen] = useState(false);
   const showBecomeTenantCta = isDemoTenant();
 
   // min-height INCLUDES the safe-area inset: with border-box, a fixed
   // h-14 + padding-top collapses the content region and the icons spill
   // 40+px below the bar (the header/toolbar overlap on notched iPhones).
-  // Visible bar stays 56px (md: 80px, matching the sidebar's h-[80px]
-  // brand block); the inset grows the box above it. bg-background/80 +
+  // Visible bar stays 56px (md: 92px, matching the sidebar's h-[92px]
+  // brand block so the two bottom borders align); the inset grows the
+  // box above it. bg-background/80 +
   // blur instead of opaque bg-card so the bar reads as the page surface
   // continuing under the iOS clock rather than a white strip over the
   // gray page.
   return (
     <header
-      className="border-b border-border/60 bg-card flex items-center gap-3 px-4 sm:px-6 sticky z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:min-h-[calc(5rem+env(safe-area-inset-top,0px))]"
+      className="border-b border-border/60 bg-card flex items-center gap-3 px-4 sm:px-6 sticky z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:min-h-[calc(92px+env(safe-area-inset-top,0px))]"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
         top: 'var(--gw-demo-bar-h, 0px)',
@@ -740,7 +727,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           </button>
         </SheetTrigger>
         <SheetContent side="left" className="p-0 w-[85vw] max-w-xs">
-          <MobileNav onNavigate={() => setMobileNavOpen(false)} />
+          <MobileNav onNavigate={() => setMobileNavOpen(false)} onOpenAllTools={onOpenAllTools} />
         </SheetContent>
       </Sheet>
 
@@ -766,14 +753,23 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           className="hidden md:inline-flex items-center gap-2 shrink-0 pl-1 pr-2 py-1 rounded-md hover:bg-muted transition"
           title={`Back to ${compactBrandName} dashboard`}
         >
+          {/* xl glyph + 22px name (Kevin, 2026-08-17): this block replaces
+              the whole sidebar brand while the nav is collapsed, and at the
+              old lg/text-base it read as an afterthought next to the 80px
+              topbar chrome. Matches the open sidebar's brand type size. */}
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={compactBrandName.charAt(0).toUpperCase()}
             alt={compactBrandName}
+            size="wide"
           />
-          <span className="font-bold text-base tracking-tight truncate max-w-[180px]">
-            {compactBrandName}
-          </span>
+          {/* hideSiteName mirrors the public Header block's "Show site name"
+              toggle — see the sidebar brand comment. */}
+          {!hideSiteName && (
+            <span className="font-bold text-[22px] tracking-tight truncate max-w-[260px]">
+              {compactBrandName}
+            </span>
+          )}
         </Link>
       )}
 
@@ -810,7 +806,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           input was simply `hidden sm:block`, which left mobile users with
           no path to search at all. The mobile button opens a focused
           search prompt (browser-native via <dialog>-style fallback). */}
-      <form onSubmit={onSearch} className="hidden sm:block w-full max-w-md">
+      <form onSubmit={onSearch} className="hidden sm:block w-full max-w-md min-w-0">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -845,6 +841,10 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 
       {/* Views switcher — tenant super-admins only */}
       <ViewsSwitcher />
+
+      {/* Permission-slip signed bell — tour managers only; RLS scopes
+          the query so non-managers see 0 rows and the bell stays hidden. */}
+      <PermissionSlipBell />
 
       {/* Notification bell — opens the personal notifications inbox
           (matches the unread badge, which counts gw_notifications).
@@ -889,7 +889,11 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div className="hidden md:block text-left leading-tight">
+            {/* lg+, not md+ — at 768-1023 (iPad portrait) the sidebar +
+                search + action buttons already fill the row; this 176px
+                text block was the piece that pushed the bell/avatar into
+                the shell's overflow-hidden crop. */}
+            <div className="hidden lg:block text-left leading-tight">
               <div className="text-base font-semibold truncate max-w-[160px]">{displayName}</div>
               <div className="text-xs text-muted-foreground truncate max-w-[160px]">{subRole}</div>
             </div>
@@ -908,6 +912,9 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
             <Link to="/settings" className="flex items-center gap-2">
               <Settings className="w-4 h-4" /> Settings
             </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setReportBugOpen(true)} className="flex items-center gap-2">
+            <Bug className="w-4 h-4" /> Report a Bug
           </DropdownMenuItem>
           {/* Switch organization — every tenant this user belongs to.
               On web, navigation crosses subdomains (full-page load into
@@ -996,6 +1003,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
           onClose={() => setBecomeTenantOpen(false)}
         />
       )}
+      <ReportBugDialog open={reportBugOpen} onClose={() => setReportBugOpen(false)} />
     </header>
   );
 }
@@ -1004,14 +1012,29 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const alreadyInsideShell = useContext(DashboardShellNestedContext);
+  // Role for the trial banner (billing UI is admin-only). The shell owns the
+  // hook call and hands the banner plain props — keeps the banner pure and
+  // gives later sharers one place to consolidate useUserRole instances.
+  // Defensive form, same as useGatedNav above.
+  const { loading: roleLoading, isAdmin } = useUserRole();
+  const userIsAdmin = typeof isAdmin === 'function' ? isAdmin() : false;
   // Calendar keeps its compact header spacing but shows the nav like every
   // other app — anyone who needs the width can collapse the nav instead.
   const { pathname } = useLocation();
+  // Studio audio kill switch. Leaving a Studio session is supposed to tear
+  // down the engine, live-monitor voices, and MIDI subscription via the
+  // Studio's own effect cleanups — and that provably failed in prod once
+  // (2026-08-17: the USB keyboard kept playing piano on Command Center; one
+  // aborted cleanup batch is enough, React skips the rest of the commit's
+  // cleanups). This shell mounts on every dashboard-side route and does not
+  // share the Studio's lifecycle, so it can always finish the job. Happy
+  // path: the registry is already empty and this is a no-op.
+  // audioLeakGuard is dependency-free — importing it here does NOT pull
+  // Tone.js into the shell chunk.
+  useEffect(() => {
+    if (!/^\/studio\/sessions\//.test(pathname)) disposeAllStudioAudio();
+  }, [pathname]);
   const isCalendar = pathname.startsWith('/dashboard/calendar');
-  // Tour Manager is a full-height self-scrolling layout (own header +
-  // section sidebar); it fills the viewport below the topbar exactly, so
-  // any main padding would force a phantom page scroll.
-  const isTourManager = pathname.startsWith('/tour-manager') || pathname.startsWith('/tour-planner');
   // User-controlled nav collapse (persisted). Collapsing frees the full
   // window width for work surfaces like Calendar and Studio; the topbar
   // grows an expand button + compact brand while collapsed.
@@ -1023,6 +1046,55 @@ export function DashboardShell({ children }: { children: ReactNode }) {
     setNavCollapsed(v);
     try { localStorage.setItem('gw_sidebar_collapsed', v ? '1' : '0'); } catch { /* private mode */ }
   };
+
+  // All Tools sheet — owned here, not by either nav surface, so a phone
+  // (Sidebar hidden, MobileNav inside a Sheet drawer) never ends up with
+  // two independent sheets fighting over open state. Both NavShelf
+  // instances below call the same `openAllTools`.
+  const [allToolsOpen, setAllToolsOpen] = useState(false);
+  const openAllTools = () => setAllToolsOpen(true);
+  const {
+    available: allToolsAvailable, pinned: allToolsPinned, canPin: allToolsCanPin, onPin: allToolsOnPin,
+  } = useAllToolsCatalog();
+
+  // Global ⌘K / Ctrl+K — registered once here (not once per nav surface),
+  // removed on unmount. Reads document.activeElement rather than the
+  // event's own target: a window-level keydown listener sees `target` as
+  // whatever dispatched the event, which for a real keypress while focused
+  // in a text field IS that field, but tests dispatch on `window` directly
+  // (see DashboardShell.allTools.test.tsx) — activeElement is the only
+  // signal that works both ways. Must not hijack typing in the messenger
+  // or the score search, hence the input/textarea/contenteditable guard.
+  //
+  // The contenteditable check reads via `closest('[contenteditable]:not(
+  // [contenteditable="false"])')` rather than `el.isContentEditable`:
+  // jsdom doesn't implement the `HTMLElement.isContentEditable` IDL
+  // attribute at all (it reads back `undefined`, not `false`, even on an
+  // element with the `contenteditable` attribute set), so that branch was
+  // untestable in this suite — a bug there could ship silently. The
+  // attribute selector is real DOM the test can actually set and jsdom can
+  // actually query, and `closest` also covers focus landing on a
+  // descendant of the editable root (contenteditable regions don't always
+  // receive focus on their own outermost element).
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key.toLowerCase() !== 'k' || !(e.metaKey || e.ctrlKey)) return;
+      const active = document.activeElement as HTMLElement | null;
+      const tag = active?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (active?.closest('[contenteditable]:not([contenteditable="false"])')) return;
+      e.preventDefault();
+      setAllToolsOpen(true);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // Guards the RENDER, not the hooks above: every hook in this component
+  // must run on every render regardless of nesting (rules-of-hooks), so
+  // this early-out has to come after all of them, not before.
+  if (alreadyInsideShell) return <>{children}</>;
+
   return (
     <DashboardShellNestedContext.Provider value={true}>
       {/* h-screen + overflow-hidden pins the shell to the viewport so the
@@ -1030,36 +1102,55 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           instead of pushing the whole document (which used to drag the
           sidebar off-screen with it). */}
       <div className="flex h-[100dvh] w-full bg-background overflow-hidden">
-        {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} />}
+        {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} onOpenAllTools={openAllTools} />}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Trial countdown — self-gates on trial state so it renders null
-              for grandfathered / paid / loading / no-tenant. */}
-          <TrialBanner />
-          <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} />
+              for grandfathered / paid / loading / no-tenant, and is admin-only
+              (billing UI never shows to students/parents/fans). */}
+          <TrialBanner roleLoading={roleLoading} isAdmin={userIsAdmin} />
+          <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} onOpenAllTools={openAllTools} />
           {/* pt-3 gives every page a small breath of space below the
               sticky topbar — pages that want more (CommandCenter, Viewer
               landing) add their own larger top padding on top of this.
               The bottom padding reserves room for the docked MobileBottomNav
-              bar (phones only; sm+ has no bottom nav) so content ends ABOVE
-              it and never scrolls under. Bar = 56px tall + the bottom
+              bar (below md; md+ has the sidebar instead) so content ends
+              ABOVE it and never scrolls under. Bar = 56px tall + the bottom
               safe-area inset, plus a small gap. */}
           <main className={cn(
             "flex-1 min-w-0 min-h-0 overflow-y-auto overflow-x-hidden",
-            isTourManager ? "pb-0" : "pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0",
-            // Calendar and Tour Manager manage their own compact header
-            // spacing — no extra breathing room below the topbar.
-            isCalendar || isTourManager ? "pt-0" : "pt-3 sm:pt-4",
+            "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0",
+            // Calendar manages its own compact header spacing — no extra
+            // breathing room below the topbar. Tour Manager used to be
+            // exempt here too, back when it shipped its own full-height
+            // shell; it's an ordinary DashboardPageShell page now.
+            isCalendar ? "pt-0" : "pt-3 sm:pt-4",
           )}>{children}</main>
         </div>
-        {/* Phone-only persistent bottom nav. Self-gates via useIsPhone()
-            so it returns null on tablet/desktop — safe to mount globally. */}
+        {/* Persistent bottom nav below md. Self-gates via useIsCompactNav()
+            so it returns null once the sidebar exists — safe to mount
+            globally. */}
         <MobileBottomNav />
         {/* Mounts only when ?tour=admin is in the URL; otherwise a no-op. */}
         <ProductTour />
-        {/* The assistant mic + chat used to mount here. They now live in
-            GlobalAssistantHost (App.tsx) so the mic follows you onto public
-            routes too, and one AssistantProvider owns the thread app-wide —
-            re-adding a provider here would fork it. */}
+        {/* Floating assistant mic + chat window. AssistantProvider is
+            mounted once in App.tsx, above the routes — the shell remounts
+            on every navigation, and a provider living here took the live
+            voice session down with it. */}
+        <AssistantFab />
+        <AssistantMiniPlayer />
+        <AssistantSheet />
+        {/* All Tools — the one searchable catalog behind both nav surfaces'
+            "All Tools" row and global ⌘K/Ctrl+K. Rendered exactly once so a
+            phone user (Sidebar hidden, MobileNav in its own drawer) never
+            gets two independent sheets. */}
+        <AllToolsSheet
+          open={allToolsOpen}
+          onOpenChange={setAllToolsOpen}
+          available={allToolsAvailable}
+          pinned={allToolsPinned}
+          canPin={allToolsCanPin}
+          onPin={allToolsOnPin}
+        />
       </div>
     </DashboardShellNestedContext.Provider>
   );

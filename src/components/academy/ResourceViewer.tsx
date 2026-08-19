@@ -17,8 +17,8 @@ import {
   Globe
 } from 'lucide-react';
 import { useIsPhone } from '@/hooks/use-mobile';
-import { NativePowerPointViewer } from '@/components/mus240/NativePowerPointViewer';
-import { TikTokPlayer } from '@/components/mus240/TikTokPlayer';
+import { NativePowerPointViewer } from '@/components/academy/NativePowerPointViewer';
+import { TikTokPlayer } from '@/components/academy/TikTokPlayer';
 import { isTikTokUrl } from '@/utils/tiktokUtils';
 interface ResourceViewerProps {
   isOpen: boolean;

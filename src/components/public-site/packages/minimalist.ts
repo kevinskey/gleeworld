@@ -13,12 +13,12 @@ export const minimalistPackage: TemplatePackage = {
   description:
     'Extreme whitespace, quiet type, one accent color. The content is the design.',
   theme: {
-    fontFamily: 'sans',
-    headingFontFamily: 'sans',
+    fontFamily: 'lato',
+    headingFontFamily: 'raleway',
     radiusScale: 'sharp',
     sectionPaddingScale: 'spacious',
     dividerStyle: 'none',
-    letterSpacing: 0,
+    letterSpacing: 0.08,
     package: 'minimalist',
   },
   blocks: [
@@ -39,6 +39,7 @@ export const minimalistPackage: TemplatePackage = {
     },
     { type: 'about', config: { title: '', body: '', imageSide: 'right' } },
     { type: 'music-player', config: { heading: 'Listen', tracks: [] } },
+    { type: 'soundcloud', config: { heading: 'Listen on SoundCloud', playlistUrl: '', visual: false } },
     { type: 'events', config: { heading: 'Upcoming', style: 'list', limit: 6 } },
     { type: 'contact', config: { email: '', phone: '' } },
   ],

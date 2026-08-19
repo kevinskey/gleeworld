@@ -16,6 +16,8 @@
 import { lazy, Suspense, useMemo, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { toViewerScoreId } from '@/lib/viewerScoreId';
+import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -58,6 +60,20 @@ interface ScoreRow {
   storage_path: string | null;
   storage_bucket: string | null;
   audio_url: string | null;
+  created_at: string | null;
+  /** True for My Music rows. They cannot carry annotations or linked audio —
+   *  those tables FK to gw_sheet_music. See lib/viewerScoreId.ts. */
+  isPersonal?: boolean;
+}
+
+/** Raw gw_personal_scores shape, before mapping into ScoreRow. */
+interface PersonalRow {
+  id: string;
+  title: string;
+  composer: string | null;
+  voicing: string | null;
+  tags: string[] | null;
+  storage_path: string | null;
   created_at: string | null;
 }
 
@@ -117,16 +133,56 @@ function ViewerLanding({
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<SortKey>('title');
 
+  // The Viewer shows the group library AND the signed-in user's own My Music
+  // together, so a singer can perform from their own PDFs without publishing
+  // them to everyone. gw_personal_scores is private by RLS (uid() = user_id),
+  // so this adds nothing to anyone else's list.
+  //
+  // Personal rows are mapped into the same ScoreRow shape. They always live in
+  // the personal-scores bucket and have no legacy pdf_url, so the reader's
+  // existing storage_bucket + storage_path signing path handles them unchanged.
   const { data: rows = [], isLoading } = useQuery<ScoreRow[]>({
     queryKey: ['viewer-library'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('gw_sheet_music')
-        .select('id, title, composer, voicing, key_signature, time_signature, tags, pdf_url, storage_path, storage_bucket, audio_url, created_at')
-        .eq('is_archived', false)
-        .order('title')
-        .limit(500);
-      return (data ?? []) as ScoreRow[];
+      const [library, personal] = await Promise.all([
+        supabase
+          .from('gw_sheet_music')
+          .select('id, title, composer, voicing, key_signature, time_signature, tags, pdf_url, storage_path, storage_bucket, audio_url, created_at')
+          .eq('is_archived', false)
+          .order('title')
+          .limit(500),
+        // gw_personal_scores is not in the generated Database types yet
+        // (regen pending) — same cast usePersonalScores.ts uses.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (supabase as any)
+          .from('gw_personal_scores')
+          .select('id, title, composer, voicing, tags, storage_path, created_at')
+          .order('title')
+          .limit(500),
+      ]);
+
+      const libraryRows = (library.data ?? []) as ScoreRow[];
+      const personalRows: ScoreRow[] = ((personal.data ?? []) as PersonalRow[])
+        // Repertoire saves (IMSLP/external) have no file of their own; the
+        // reader has nothing to render for them.
+        .filter((r) => !!r.storage_path)
+        .map((r) => ({
+          id: toViewerScoreId(r.id, true),
+          title: r.title,
+          composer: r.composer,
+          voicing: r.voicing,
+          key_signature: null,
+          time_signature: null,
+          tags: r.tags,
+          pdf_url: null,
+          storage_path: r.storage_path,
+          storage_bucket: PERSONAL_SCORES_BUCKET,
+          audio_url: null,
+          created_at: r.created_at,
+          isPersonal: true,
+        }));
+
+      return [...libraryRows, ...personalRows];
     },
   });
 
@@ -287,7 +343,7 @@ function LibraryTab({
         <div className="rounded-lg border bg-card divide-y">
           {grouped.map(([letter, items]) => (
             <section key={letter}>
-              <div className="px-3 py-1.5 text-[11px] tracking-widest font-semibold text-muted-foreground bg-muted/50">
+              <div className="px-3 py-1.5 text-xs tracking-widest font-semibold text-muted-foreground bg-muted/50">
                 {letter}
               </div>
               {items.map((r) => (
@@ -408,7 +464,7 @@ function SetlistRow({
                 {sc.pdf_url ? (
                   <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
                 ) : (
-                  <span className="text-[10px] uppercase text-muted-foreground">no pdf</span>
+                  <span className="text-xs uppercase text-muted-foreground">no pdf</span>
                 )}
               </button>
             ))
@@ -505,7 +561,7 @@ function ScoreRowItem({ row, onOpen }: { row: ScoreRow; onOpen: () => void }) {
               key={`${b.label}-${i}`}
               variant="outline"
               className={cn(
-                'h-5 px-1.5 text-[10px] font-normal',
+                'h-5 px-1.5 text-xs font-normal',
                 b.tone === 'key' && 'border-amber-400/40 text-amber-700',
                 b.tone === 'time' && 'border-sky-400/40 text-sky-700',
                 b.tone === 'tag' && 'border-muted-foreground/30',
@@ -518,7 +574,7 @@ function ScoreRowItem({ row, onOpen }: { row: ScoreRow; onOpen: () => void }) {
         </div>
       </div>
       {row.audio_url && (
-        <span className="text-[10px] uppercase tracking-wider text-muted-foreground border rounded px-1.5 py-0.5 shrink-0">
+        <span className="text-xs uppercase tracking-wider text-muted-foreground border rounded px-1.5 py-0.5 shrink-0">
           audio
         </span>
       )}

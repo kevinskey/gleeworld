@@ -1,0 +1,381 @@
+{
+  "state_slug": "colorado",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Colorado's All-State choral programs are CMEA (Colorado Music Educators Association) events, but each is run by its own committee on its own website: the High School All State Choir and the All State Jazz Choir at aschoir.com, the Middle All State Choir on a CMEA-hosted Google Site, and the Elementary All State Choir on a separate Google Site. CMEA's own /all-state-groups/ page is the umbrella page and is where the fee amounts are published. SEASON LABELING: the aschoir.com home page explicitly heads its list '2026-2027 Important Dates' and the CMASC site heads its list 'Important Dates for the 2027 Colorado Middle All State Choir', so the dates recorded here are genuinely the current cycle. Note that Colorado names its choir events by the calendar year the FESTIVAL occurs (the '2027 All State Choir'), while auditions happen in fall 2026. Two mixed-vintage hazards on aschoir.com were checked: (a) the site's news feed still carries 2026-festival posts (schedule, second-audition info, Fall 2025 audition schedules) alongside the 2026-27 date block, and those older posts were NOT used here; (b) the PDFs linked from the Auditions page (Director's Responsibility Form, Procedures and Requirements, Accommodation Request, audition site list) are all still the Fall 2025 / 2025.2026 editions as of this retrieval, so they are recorded as documents but no 2026-27 date or fee was taken from them. The audition format/scoring breakdown on the Auditions page itself is undated standing policy. The Colorado Elementary All State Choir is deliberately NOT included as a program below: CMEA publishes its eligibility and $55 participation fee but no 2026-27 dates were found on any page read, so there was nothing season-specific to record. CMEA also notes that all middle and high school All State ensembles are sanctioned by the Colorado High School Activities Association and follow CHSAA eligibility policy.",
+
+  "organization": {
+    "name": "Colorado Music Educators Association",
+    "acronym": "CMEA",
+    "website_url": "https://cmeaonline.org/",
+    "description": "CMEA sanctions and lists Colorado's All State ensembles, including the Elementary, Middle, and High School All State Choirs and the All State Jazz Choir. Directors of auditioning or participating students must be active CMEA members at the time of both audition and participation. CMEA notes that all State ensembles in Colorado are sanctioned by the Colorado High School Activities Association and follow its eligibility policies."
+  },
+
+  "sources": [
+    { "name": "CMEA — All State Groups", "url": "https://cmeaonline.org/all-state-groups/", "source_type": "official" },
+    { "name": "Colorado All State Choir — home page (2026-2027 Important Dates)", "url": "https://aschoir.com/", "source_type": "official" },
+    { "name": "Colorado All State Choir — Auditions", "url": "https://aschoir.com/auditions", "source_type": "official" },
+    { "name": "Colorado All-State Jazz Choir — Audition Information", "url": "https://aschoir.com/jazz-choir/jazz-audition-information/", "source_type": "official" },
+    { "name": "Colorado Middle All State Choir (CMASC) — home", "url": "https://sites.google.com/cmeaonline.org/cmasc/home", "source_type": "official" }
+  ],
+
+  "programs": [
+    {
+      "name": "Colorado All State Choir",
+      "lineage_key": "colorado-hs-all-state-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The Colorado All-State Choir features top junior and senior high school choir students in the state. Students must be enrolled in their school choir and pass a competitive audition, and are placed in one of three ensembles: Treble Choir, Mixed Choir, or Tenor-Bass Choir. Auditions are held each fall at regional sites; participants rehearse with internationally recognized clinicians and perform a culminating concert at the Buell Theatre in Denver. CMEA identifies the 2027 festival dates as February 11-13, 2027, at the Embassy Suites and the Buell.",
+
+      "dates": [
+        { "date_type": "registration_deadline",
+          "title": "Audition registration deadline",
+          "start_at": "2026-09-09T23:59:00",
+          "all_day": false,
+          "timezone": "America/Denver",
+          "description": "Listed on the All State Choir home page under '2026-2027 Important Dates' as 'AUDITION REGISTRATION DEADLINE: September 9, 2026 by 11:59 pm'.",
+          "source_url": "https://aschoir.com/" },
+
+        { "date_type": "registration_deadline",
+          "title": "Late audition registration closes",
+          "start_at": "2026-09-15T23:59:00",
+          "all_day": false,
+          "timezone": "America/Denver",
+          "description": "'LATE REGISTRATIONS ACCEPTED UNTIL: September 15, 2026 by 11:59 pm.' The site notes a $75/student fee applies for late registrations.",
+          "source_url": "https://aschoir.com/" },
+
+        { "date_type": "audition_round",
+          "title": "Auditions — Metro region",
+          "start_at": "2026-10-01",
+          "end_at": "2026-10-03",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Metro region audition dates, October 1, 2 and 3, 2026.",
+          "source_url": "https://aschoir.com/" },
+
+        { "date_type": "audition_round",
+          "title": "Auditions — Southern region",
+          "start_at": "2026-10-09",
+          "end_at": "2026-10-10",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "source_url": "https://aschoir.com/" },
+
+        { "date_type": "audition_round",
+          "title": "Auditions — Western region",
+          "start_at": "2026-10-16",
+          "end_at": "2026-10-17",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "source_url": "https://aschoir.com/" },
+
+        { "date_type": "audition_round",
+          "title": "Auditions — Northern region",
+          "start_at": "2026-10-23",
+          "end_at": "2026-10-24",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "source_url": "https://aschoir.com/" },
+
+        { "date_type": "acceptance_deadline",
+          "title": "Acceptance deadline",
+          "start_at": "2026-12-11",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "source_url": "https://aschoir.com/" },
+
+        { "date_type": "event",
+          "title": "Colorado All State Choir Festival",
+          "start_at": "2027-02-11",
+          "end_at": "2027-02-13",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Held at the Embassy Suites and the Buell Theatre. The site warns that this timeline overlaps Valentine's Day and Presidents' Day weekend.",
+          "source_url": "https://aschoir.com/" }
+      ],
+
+      "requirements": [
+        { "category": "eligibility",
+          "title": "Junior or senior, enrolled in the school's vocal music program",
+          "description": "Students must be a junior or senior and must be currently enrolled in their high school vocal music program. Home schooled students are required to be enrolled in their local high school's vocal music program in order to audition.",
+          "source_url": "https://aschoir.com/auditions" },
+
+        { "category": "eligibility",
+          "title": "CHSAA sanction and curricular-ensemble requirement",
+          "description": "CMEA states that All State ensembles in Colorado are sanctioned by the Colorado High School Activities Association and follow its eligibility policies. Home schooled students, or students at schools without music programs, must enroll and actively participate in a curricular high school ensemble; participation in a private or extracurricular youth ensemble does not satisfy this. Eligibility is verified at the time of audition.",
+          "source_url": "https://cmeaonline.org/all-state-groups/" },
+
+        { "category": "membership",
+          "title": "Director must be an active CMEA member",
+          "description": "Directors with auditioning or participating students must be active CMEA members at the time of audition and at the time of participation.",
+          "source_url": "https://cmeaonline.org/all-state-groups/" },
+
+        { "category": "materials",
+          "title": "Prepared solo — original score required, 2:30 limit",
+          "description": "A prepared solo is worth 50 of the 100 audition points. An original score must be provided for the judge. Jazz, pop, and musical theatre songs are not permitted. Solos are limited to 2 minutes 30 seconds; the judge will most likely stop the audition at that mark, and scoring is not impacted if the judge stops the solo. The site advises marking cuts in the original score, singing no more than two verses of a strophic piece, and cutting excessive introductions, interludes and extended cadential passages.",
+          "structured_data": { "points": 50, "max_length_seconds": 150, "excluded_genres": ["jazz", "pop", "musical theatre"] },
+          "source_url": "https://aschoir.com/auditions" },
+
+        { "category": "rubric",
+          "title": "Audition scoring — 100 points across five components",
+          "description": "Prepared Solo 50 points (tone quality 10, intonation 10, accuracy 10, diction 10, musicality 10); Sense of Tonality 10; Intervals 8; Tonal Recall 8; Sight Reading 24. Each student receives a raw score out of 100.",
+          "structured_data": { "total_points": 100, "components": { "prepared_solo": 50, "sense_of_tonality": 10, "intervals": 8, "tonal_recall": 8, "sight_reading": 24 } },
+          "source_url": "https://aschoir.com/auditions" },
+
+        { "category": "scales",
+          "title": "Sense of Tonality — scales and triads (10 points)",
+          "description": "Major scale (2), harmonic minor scale (2), melodic minor scale (2), major triad (1), minor triad (1), diminished triad (1), augmented triad (1). Any method is suitable: solfege, numbers, 'la', etc. Scales are performed before triads.",
+          "structured_data": { "scales": ["major", "harmonic minor", "melodic minor"], "triads": ["major", "minor", "diminished", "augmented"] },
+          "source_url": "https://aschoir.com/auditions" },
+
+        { "category": "sight_reading",
+          "title": "Sight reading — 24 points",
+          "description": "Melodic sight reading 16 points (2 examples, 8 points each) and rhythmic sight reading 8 points (1 example). Any method may be used — solfege, numbers, 'la' for melodic; beat numbers, 'ta', 'da' for rhythmic. Scoring occurs from what students say.",
+          "source_url": "https://aschoir.com/auditions" },
+
+        { "category": "format",
+          "title": "Intervals and Tonal Recall",
+          "description": "Intervals (8 points): sing a requested interval from a given pitch (2 intervals, 2 points each) and identify the interval between two pitches (2 intervals, 2 points each). Any sung or hummed note is scored — students must not hum or sing to practice. Tonal Recall (8 points): a short melodic example is played twice on the piano with a slight break between playings, then sung a cappella on a neutral open syllable such as 'na na', 'la la' or 'da da' (2 examples, 4 points each).",
+          "source_url": "https://aschoir.com/auditions" },
+
+        { "category": "format",
+          "title": "Z-Score tabulation",
+          "description": "Raw scores are converted to a Z-Score to account for differences between judges: (student raw score − judge's average score) / standard deviation of that judge. Choir cut-offs are made by Z-Score, and the cut-off differs for each voice part and changes every year.",
+          "source_url": "https://aschoir.com/auditions" },
+
+        { "category": "format",
+          "title": "Photo ID required at check-in",
+          "description": "As of Fall 2024, auditioning students must present photo ID at check-in.",
+          "source_url": "https://aschoir.com/auditions" },
+
+        { "category": "format",
+          "title": "Regional audition site assignment by county",
+          "description": "Students audition at the site assigned to their county under the published boundary assignments. Directors may petition to audition at an alternate site by completing the Petition Form for each student.",
+          "source_url": "https://aschoir.com/auditions" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition",
+          "amount_cents": 3500,
+          "payable_to": "state_association",
+          "description": "Audition fee for the Colorado High School All State Choir, published on CMEA's All State Groups page. Paid via CMEA's High School All State Choir audition fee payment form.",
+          "source_url": "https://cmeaonline.org/all-state-groups/" },
+
+        { "fee_type": "late_audition",
+          "amount_cents": 7500,
+          "payable_to": "state_association",
+          "description": "Audition late fee. CMEA lists it as 'Audition late fee: $75'; the All State Choir site states a $75/student fee applies for registrations made in the September 10-15, 2026 late window.",
+          "source_url": "https://cmeaonline.org/all-state-groups/" },
+
+        { "fee_type": "participation",
+          "amount_cents": 5500,
+          "payable_to": "state_association",
+          "description": "Participation fee for students accepted into the High School All State Choir.",
+          "source_url": "https://cmeaonline.org/all-state-groups/" }
+      ],
+
+      "documents": [
+        { "title": "Procedures and Requirements — Revised Fall 2025", "url": "https://aschoir.com/wp-content/uploads/2025/08/2025.2026-Updated-Procedures-and-Requirements.pdf", "document_type": "rules" },
+        { "title": "Director's Responsibility Form — Fall 2025", "url": "https://aschoir.com/wp-content/uploads/2025/08/Director-Responsibility-Form2025.pdf", "document_type": "form" },
+        { "title": "ASC Audition Director's Checklist", "url": "https://aschoir.com/wp-content/uploads/2025/08/ASC-Audition-Directors-Checklist.pdf", "document_type": "form" },
+        { "title": "IEP/504 Accommodation Request Form — Fall 2025", "url": "https://aschoir.com/wp-content/uploads/2025/08/Accommodation-Request-Form2025.pdf", "document_type": "form" },
+        { "title": "Boundary Assignments for Audition Sites by County", "url": "https://aschoir.com/wp-content/uploads/2020/08/Boundary-Assignments-Original.pdf", "document_type": "other" },
+        { "title": "Alternate Audition Site Petition Form", "url": "https://aschoir.com/wp-content/uploads/2019/07/7-Petition-Form19.pdf", "document_type": "form" },
+        { "title": "Sample Audition Card (Updated Fall 2024)", "url": "https://aschoir.com/wp-content/uploads/2024/07/Audition-card-beginning-Fall-of-2024-Original.pdf", "document_type": "other" },
+        { "title": "Explanation of the Z-Score", "url": "https://aschoir.com/wp-content/uploads/2020/08/Explanation-of-the-Z-Score-Original.pdf", "document_type": "other" }
+      ],
+
+      "voice_parts": [
+        { "code": "treble-choir", "label": "Treble Choir" },
+        { "code": "mixed-choir", "label": "Mixed Choir" },
+        { "code": "tenor-bass-choir", "label": "Tenor-Bass Choir" }
+      ]
+    },
+
+    {
+      "name": "Colorado All State Jazz Choir",
+      "lineage_key": "colorado-all-state-jazz-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "vocal jazz ensemble",
+      "description": "The Colorado All-State Jazz Choir is open to 11th and 12th grade students and comprises three auditioned ensembles of 16 singers each: Mixed Choir (SATB), Treble Choir (SSAA), and Tenor/Bass Choir (TTBB). Students complete a three-step audition process. Selected students rehearse and perform in January at the Broadmoor Hotel in Colorado Springs during the CMEA Conference, working with nationally and internationally recognized vocal jazz artists.",
+
+      "requirements": [
+        { "category": "eligibility",
+          "title": "Grades 11-12",
+          "description": "The Colorado All-State Jazz Choir is open to 11th and 12th grade students.",
+          "source_url": "https://cmeaonline.org/all-state-groups/" },
+
+        { "category": "membership",
+          "title": "Director must be an active CMEA member",
+          "description": "Directors with auditioning or participating students must be active CMEA members at the time of audition and participation.",
+          "source_url": "https://cmeaonline.org/all-state-groups/" },
+
+        { "category": "format",
+          "title": "Three-step audition; 16 students selected per choir",
+          "description": "Students complete a three-step audition process and 16 students are selected for each of the three ensembles.",
+          "structured_data": { "ensemble_size": 16, "audition_steps": 3 },
+          "source_url": "https://cmeaonline.org/all-state-groups/" },
+
+        { "category": "materials",
+          "title": "Assigned audition solo on a rotating cycle",
+          "description": "The audition solo is assigned on a three-year rotation. The published rotation is keyed to the year the choir takes place (e.g. January 2027), not the year students audition (fall 2026). For each solo an mp3 accompaniment track and a PDF of the solo score are provided; access requires a password found in the Audition Information Packet.",
+          "source_url": "https://aschoir.com/jazz-choir/jazz-audition-information/" },
+
+        { "category": "scales",
+          "title": "Audition scales with reference recordings",
+          "description": "The audition information page provides mp3 reference recordings of the required audition scales, including blues, chromatic, dorian, and major scales recorded per voice part.",
+          "source_url": "https://aschoir.com/jazz-choir/jazz-audition-information/" }
+      ],
+
+      "repertoire": [
+        { "title": "Foolish Heart",
+          "purpose": "audition",
+          "notes": "Listed as an assigned audition solo for the choirs taking place in 2027, 2030, 2033, 2036 and so on. Colorado keys the rotation to the year the choir takes place, so this applies to students auditioning in fall 2026. No composer is published on the audition information page.",
+          "source_url": "https://aschoir.com/jazz-choir/jazz-audition-information/" },
+
+        { "title": "Four",
+          "purpose": "audition",
+          "notes": "Listed as an assigned audition solo for the choirs taking place in 2027, 2030, 2033, 2036 and so on. No composer is published on the audition information page.",
+          "source_url": "https://aschoir.com/jazz-choir/jazz-audition-information/" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition",
+          "amount_cents": 3500,
+          "payable_to": "state_association",
+          "source_url": "https://cmeaonline.org/all-state-groups/" },
+
+        { "fee_type": "participation",
+          "amount_cents": 22500,
+          "payable_to": "state_association",
+          "source_url": "https://cmeaonline.org/all-state-groups/" }
+      ],
+
+      "documents": [
+        { "title": "All-State Jazz Choir Audition Information Packet", "url": "https://docs.google.com/document/d/14BQ0J2WZepFio99cUFZUE0om4WTdWP5NehRuqm5m_NE/edit?usp=sharing", "document_type": "handbook" }
+      ],
+
+      "voice_parts": [
+        { "code": "jazz-mixed", "label": "Mixed Choir (SATB)" },
+        { "code": "jazz-treble", "label": "Treble Choir (SSAA)" },
+        { "code": "jazz-tenor-bass", "label": "Tenor/Bass Choir (TTBB)" }
+      ]
+    },
+
+    {
+      "name": "Colorado Middle All State Choir",
+      "lineage_key": "colorado-middle-all-state-choir",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "The Colorado Middle All State Choir (CMASC) offers 7th and 8th grade students the chance to audition for one of three ensembles: Triplo, Mescolare, and Cambiato. (CMEA's umbrella page describes the same three ensembles as Women's Choir, Treble Choir, and Men's Choir.) Designed as a bridge between the Elementary and High School All State models, CMASC requires a prepared audition piece and a demonstration of technical skills, and ensures representation from all CMEA districts. The two-day festival is held at the Colorado Convention Center in Denver with a culminating public concert at the 5,000-seat Bellco Theatre.",
+
+      "dates": [
+        { "date_type": "other",
+          "title": "Practice audition materials posted",
+          "start_at": "2026-08-03",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "source_url": "https://sites.google.com/cmeaonline.org/cmasc/home" },
+
+        { "date_type": "other",
+          "title": "Official audition materials posted",
+          "start_at": "2026-09-21",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Additional information will be sent to directors by this date.",
+          "source_url": "https://sites.google.com/cmeaonline.org/cmasc/home" },
+
+        { "date_type": "registration_deadline",
+          "title": "Audition submission deadline",
+          "start_at": "2026-10-09T17:00:00",
+          "all_day": false,
+          "timezone": "America/Denver",
+          "description": "All audition materials, including payment, due by 5:00 PM.",
+          "source_url": "https://sites.google.com/cmeaonline.org/cmasc/home" },
+
+        { "date_type": "results",
+          "title": "Acceptance announcements",
+          "start_at": "2026-11-30",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Audition results will be emailed to directors by this date.",
+          "source_url": "https://sites.google.com/cmeaonline.org/cmasc/home" },
+
+        { "date_type": "acceptance_deadline",
+          "title": "Acceptance deadline",
+          "start_at": "2026-12-11T23:59:00",
+          "all_day": false,
+          "timezone": "America/Denver",
+          "description": "All acceptance paperwork, fees, and merchandise orders due by 11:59 PM.",
+          "source_url": "https://sites.google.com/cmeaonline.org/cmasc/home" },
+
+        { "date_type": "event",
+          "title": "All State Festival — Colorado Convention Center, Denver",
+          "start_at": "2027-02-18",
+          "end_at": "2027-02-19",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "source_url": "https://sites.google.com/cmeaonline.org/cmasc/home" },
+
+        { "date_type": "event",
+          "title": "All State Concert — Bellco Theatre",
+          "start_at": "2027-02-19T18:30:00",
+          "all_day": false,
+          "timezone": "America/Denver",
+          "description": "Culminating concert in the 5,000-seat Bellco Theatre, open to the public.",
+          "source_url": "https://sites.google.com/cmeaonline.org/cmasc/home" }
+      ],
+
+      "requirements": [
+        { "category": "eligibility",
+          "title": "Grades 7-8",
+          "description": "CMASC is open to 7th and 8th grade students in Colorado.",
+          "source_url": "https://sites.google.com/cmeaonline.org/cmasc/home" },
+
+        { "category": "membership",
+          "title": "Director must be an active CMEA member",
+          "description": "Directors must be active CMEA members at the time of audition and participation.",
+          "source_url": "https://cmeaonline.org/all-state-groups/" },
+
+        { "category": "materials",
+          "title": "Prepared piece plus technical skills demonstration",
+          "description": "CMASC requires students to audition with a prepared piece and to demonstrate their technical skills. Representation from all CMEA districts is ensured in the selection.",
+          "source_url": "https://sites.google.com/cmeaonline.org/cmasc/home" }
+      ],
+
+      "fees": [
+        { "fee_type": "audition",
+          "amount_cents": 2500,
+          "payable_to": "state_association",
+          "source_url": "https://cmeaonline.org/all-state-groups/" },
+
+        { "fee_type": "participation",
+          "amount_cents": 4500,
+          "payable_to": "state_association",
+          "source_url": "https://cmeaonline.org/all-state-groups/" }
+      ],
+
+      "voice_parts": [
+        { "code": "triplo", "label": "Triplo" },
+        { "code": "mescolare", "label": "Mescolare" },
+        { "code": "cambiato", "label": "Cambiato" }
+      ]
+    }
+  ],
+
+  "not_published": [
+    "2026-27 editions of the High School All State Choir audition documents — the Procedures and Requirements, Director's Responsibility Form, Accommodation Request Form, and the audition sites/times list linked from aschoir.com were all still the Fall 2025 / 2025.2026 versions at retrieval",
+    "2026-27 High School All State Choir audition site names, addresses and site contacts — only the Fall 2025 site list PDF is posted",
+    "Second-audition (chair placement) date for the 2027 festival — only the January 2026 second-audition post is on the site",
+    "2027 conductors/clinicians for the High School All State Choir, Jazz Choir, and Middle All State Choir",
+    "Performance repertoire for any of the Colorado All State choirs",
+    "Named audition ranges by voice part — published only as an image on the Auditions page, not as text",
+    "Colorado Elementary All State Choir 2026-27 dates — CMEA publishes the eligibility rules and a $55 participation fee, but no audition or festival dates were found",
+    "All-State Jazz Choir audition dates and deadlines for the January 2027 choirs — the audition information page gives the assigned solos but no calendar; the detailed schedule is inside the password-protected Audition Information Packet",
+    "Composer, arranger, and publisher metadata for the assigned jazz audition solos — aschoir.com lists titles only",
+    "Whether the High School All State Choir participation fee covers lodging or meals"
+  ]
+}

@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Trophy } from 'lucide-react';
 import { Mus070StudentRoster } from '@/components/mus070/instructor/Mus070StudentRoster';
 import { Mus070GradeSpreadsheet } from '@/components/mus070/instructor/Mus070GradeSpreadsheet';
-import { Mus240InstructorGradeGrid } from '@/components/mus240/instructor/Mus240InstructorGradeGrid';
-import { StudentGradesRoster } from '@/components/mus240/instructor/StudentGradesRoster';
 import { PerformanceGradeEntry } from '@/components/mus070/instructor/PerformanceGradeEntry';
 import { getCourseGradingConfig } from '@/config/courseGradingConfig';
 
@@ -24,8 +22,7 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
   semester = 'Spring 2026'
 }) => {
   // Detect specific courses for specialized components
-  const isMus070 = courseCode === 'MUS 070' || courseCode === 'MUS070';
-  const isMus240 = courseCode === 'MUS 240' || courseCode === 'MUS240';
+  const isMus070 = courseCode === 'GW 070' || courseCode === 'GW070';
   
   // Check if this course has performance-based grading components
   const gradingConfig = getCourseGradingConfig(courseId);
@@ -48,8 +45,6 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
         <TabsContent value="spreadsheet" className="mt-4 overflow-visible">
           {isMus070 ? (
             <Mus070GradeSpreadsheet />
-          ) : isMus240 ? (
-            <Mus240InstructorGradeGrid />
           ) : (
             <Card>
               <CardHeader>
@@ -85,8 +80,6 @@ export const CourseGradesAdmin: React.FC<CourseGradesAdminProps> = ({
         <TabsContent value="roster" className="mt-4 overflow-visible">
           {isMus070 ? (
             <Mus070StudentRoster />
-          ) : isMus240 ? (
-            <StudentGradesRoster />
           ) : (
             <Card>
               <CardHeader>

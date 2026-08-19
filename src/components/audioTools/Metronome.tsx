@@ -10,6 +10,13 @@ import { PracticeRecorder } from './PracticeRecorder';
 
 interface MetronomeProps {
   className?: string;
+  /**
+   * Starting tempo. Lets a caller hand the metronome a tempo instead of
+   * making the user dial it in — e.g. a practice task that specifies one.
+   * Only the INITIAL value; the user owns it after that, so changing this
+   * prop later deliberately does nothing.
+   */
+  initialBpm?: number;
 }
 
 // Time-signature label → beats per bar. The denominator only affects
@@ -52,8 +59,10 @@ const BEAT_NOTES: Array<{ key: string; glyph: string; label: string }> = [
 // Drift-free metronome with BPM slider, tap tempo, time signature.
 // Reuses the shared Tone.Transport scheduler so multiple instances
 // would conflict — this component is meant to mount once at a time.
-export function Metronome({ className }: MetronomeProps) {
-  const [bpm, setBpm] = useState(96);
+export function Metronome({ className, initialBpm }: MetronomeProps) {
+  const [bpm, setBpm] = useState(
+    initialBpm && initialBpm >= 30 && initialBpm <= 240 ? Math.round(initialBpm) : 96,
+  );
   // Time signature is stored as a "label" key into TIME_SIGS so the
   // dropdown can offer compound meters (6/8) alongside the simple-quarter
   // family without us having to track numerator/denominator separately.

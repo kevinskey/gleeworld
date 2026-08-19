@@ -145,7 +145,22 @@ export const AgendaView = ({
       </div>
 
       {/* Events List */}
-      <ScrollArea className="flex-1 min-h-0">
+      {/* Radix ScrollArea renders an inner wrapper with `display: table;
+          min-width: 100%`. A table is shrink-to-fit, so ANY descendant whose
+          min-content width exceeds the viewport widens the wrapper instead of
+          wrapping — and because this ScrollArea only scrolls vertically, the
+          extra width is silently CLIPPED with no way to reach it.
+
+          Measured on a 390px phone before this fix: viewport 372px, wrapper
+          435px, 53 elements past the right edge — a third of every event card
+          was simply unreachable.
+
+          Forcing that wrapper to `block` makes it obey the viewport width.
+          Deliberately scoped to THIS ScrollArea rather than fixed in
+          ui/scroll-area.tsx: 12 call sites (grade spreadsheets, attendance
+          ledgers) pair a ScrollArea with `<ScrollBar orientation="horizontal" />`
+          and depend on exactly the shrink-to-fit behaviour being removed here. */}
+      <ScrollArea className="flex-1 min-h-0 [&_[data-radix-scroll-area-viewport]>div]:!block">
         <div className="p-4 space-y-6">
           {/* Today's Events */}
           <div>

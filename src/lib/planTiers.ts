@@ -52,9 +52,9 @@ export const PLAN_TIERS: PlanTier[] = [
       '1 Academy course',
       'Your own score library',
       'Personal calendar + Tonight mode',
+      'Studio, Studio Hours, Concert Planner, Finances',
       'Custom domain ($25 setup + $15/yr)',
-      '25 GB',
-      'Add-ons included: Studio, Studio Hours, Concert Planner, Finances',
+      '25 GB storage',
     ],
   },
   {
@@ -76,9 +76,9 @@ export const PLAN_TIERS: PlanTier[] = [
       'Scores + part tracks',
       'Tonight mode + stage viewer',
       'Branded login (your logo & colors)',
+      'Travel Manager + PR Hub',
       'Custom domain ($25 setup + $15/yr)',
-      '50 GB',
-      'Everything in Personal + Tour Manager, PR Hub',
+      '50 GB storage',
     ],
   },
   {
@@ -96,9 +96,11 @@ export const PLAN_TIERS: PlanTier[] = [
     features: [
       'Up to 150 students',
       'Up to 50 Academy courses',
+      'Everything in Director',
+      'Box Office ticketing',
+      'Liturgy Planner',
       'Custom domain ($25 setup + $15/yr)',
-      '150 GB',
-      'Everything in Director + Box Office, Liturgy Planner',
+      '150 GB storage',
     ],
   },
   {
@@ -116,13 +118,13 @@ export const PLAN_TIERS: PlanTier[] = [
     features: [
       'Unlimited students',
       'Unlimited Academy courses',
+      'Everything in Director+',
       'Multi-ensemble + SSO + Canvas',
       'Broadcast texts included',
       'Custom app icon',
-      'Custom domain ($25 setup + $15/yr)',
       'Dedicated app (talk to us)',
-      '1 TB pooled',
-      'All add-ons included',
+      'Custom domain ($25 setup + $15/yr)',
+      '1 TB pooled storage',
     ],
     quote: true,
   },
@@ -152,6 +154,15 @@ export function formatPrice(cents: number): string {
 // pull this so the label can't drift between surfaces.
 export function monthsFreeFor(tier: PlanTier): number {
   return Math.round(12 - tier.annualCents / tier.monthlyCents);
+}
+
+// Which tiers a tenant admin can buy with one click. Quote-priced tiers
+// ("From $X/mo") go through email; user-scope tiers (Personal) aren't tenant
+// plans at all — create-plan-checkout filters scope='tenant' and would 404.
+// Shared by the workspace Plan tab and the paywall so the two surfaces can't
+// disagree about which cards get a live Choose Plan button.
+export function tierIsSelfServe(tier: PlanTier): boolean {
+  return tier.scope === 'tenant' && !tier.quote;
 }
 
 // Card background per tier — purely presentational, keyed to PlanTierId so

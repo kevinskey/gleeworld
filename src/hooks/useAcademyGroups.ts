@@ -20,7 +20,7 @@ interface GroupWithMembers extends Group {
 
 /**
  * Unified hook for managing groups across academy courses
- * Integrates with legacy MUS240 groups via legacy_id/legacy_source
+ * Integrates with legacy GW240 groups via legacy_id/legacy_source
  */
 export const useAcademyGroups = (courseId?: string) => {
   const { user } = useAuth();

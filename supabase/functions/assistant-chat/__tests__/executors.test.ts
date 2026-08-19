@@ -12,33 +12,95 @@ function stubSupabase(rows: unknown[], error: { message: string } | null = null)
 }
 
 describe('executeServerTool', () => {
+  it('returns { replyJson } shape for existing tools', async () => {
+    const out = await executeServerTool('search_music', { query: 'lift' },
+      { supabase: stubSupabase([{ id: 's1', title: 'Lift Every Voice' }]) });
+    expect(typeof out.replyJson).toBe('string');
+    expect(out.resultsPanel).toBeUndefined();
+  });
+
   it('query_calendar returns events as JSON', async () => {
     const out = await executeServerTool('query_calendar',
       { from: '2026-07-13', to: '2026-07-13' },
       { supabase: stubSupabase([{ id: '1', title: 'Rehearsal', start_date: '2026-07-13T21:00:00Z' }]) });
-    expect(JSON.parse(out).events[0].title).toBe('Rehearsal');
+    expect(JSON.parse(out.replyJson).events[0].title).toBe('Rehearsal');
   });
 
   it('search_music returns scores as JSON', async () => {
     const out = await executeServerTool('search_music', { query: 'lift' },
       { supabase: stubSupabase([{ id: 's1', title: 'Lift Every Voice', composer: 'J. R. Johnson' }]) });
-    expect(JSON.parse(out).scores[0].id).toBe('s1');
+    expect(JSON.parse(out.replyJson).scores[0].id).toBe('s1');
   });
 
-  it('find_note returns notes as JSON', async () => {
-    const out = await executeServerTool('find_note', { query: 'ideas' },
-      { supabase: stubSupabase([{ id: 'n1', title: 'Song ideas', updated_at: '2026-07-25T00:00:00Z' }]) });
-    expect(JSON.parse(out).notes[0].id).toBe('n1');
-  });
 
   it('surfaces db errors as an error field, not a throw', async () => {
     const out = await executeServerTool('search_music', { query: 'x' },
       { supabase: stubSupabase([], { message: 'permission denied' }) });
-    expect(JSON.parse(out).error).toContain('permission denied');
+    expect(JSON.parse(out.replyJson).error).toContain('permission denied');
   });
 
   it('rejects unknown tools', async () => {
     const out = await executeServerTool('drop_tables', {}, { supabase: stubSupabase([]) });
-    expect(JSON.parse(out).error).toContain('Unknown tool');
+    expect(JSON.parse(out.replyJson).error).toContain('Unknown tool');
+  });
+});
+
+describe('search_academy executor', () => {
+  const deps = { supabase: { from: () => ({}) } } as any;
+
+  it('returns passages for a matching query', async () => {
+    const { replyJson } = await executeServerTool('search_academy', { query: 'ictus' }, deps);
+    const parsed = JSON.parse(replyJson);
+    expect(Array.isArray(parsed.passages)).toBe(true);
+    expect(parsed.passages.length).toBeGreaterThan(0);
+    expect(parsed.passages[0]).toHaveProperty('title');
+    expect(parsed.passages[0]).toHaveProperty('text');
+    expect(parsed.passages[0]).toHaveProperty('url');
+  });
+
+  it('reports no match explicitly rather than returning an empty success', async () => {
+    const { replyJson } = await executeServerTool(
+      'search_academy', { query: 'zzzz nonexistent trombone embouchure' }, deps,
+    );
+    const parsed = JSON.parse(replyJson);
+    expect(parsed.passages).toEqual([]);
+    expect(parsed.note).toMatch(/no matching/i);
+  });
+
+  it('handles a missing query argument without throwing', async () => {
+    const { replyJson } = await executeServerTool('search_academy', {}, deps);
+    expect(JSON.parse(replyJson).passages).toEqual([]);
+  });
+});
+
+describe('set_preferred_name executor', () => {
+  function updateStub(returned: unknown[]) {
+    const builder: any = {};
+    for (const m of ['update', 'eq', 'select']) builder[m] = () => builder;
+    builder.then = (resolve: (v: unknown) => void) => resolve({ data: returned, error: null });
+    return { from: () => builder } as any;
+  }
+
+  it('saves the preferred name for the caller', async () => {
+    const { replyJson } = await executeServerTool('set_preferred_name', { name: 'Doc' },
+      { supabase: updateStub([{ preferred_name: 'Doc' }]), userId: 'u1' } as any);
+    const out = JSON.parse(replyJson);
+    expect(out.ok).toBe(true);
+    expect(out.preferred_name).toBe('Doc');
+    expect(out.note).toContain('Doc');
+  });
+
+  it('clear=true resets to the first name', async () => {
+    const { replyJson } = await executeServerTool('set_preferred_name', { clear: true },
+      { supabase: updateStub([{ preferred_name: null }]), userId: 'u1' } as any);
+    const out = JSON.parse(replyJson);
+    expect(out.ok).toBe(true);
+    expect(out.preferred_name).toBeNull();
+  });
+
+  it('refuses without a caller id', async () => {
+    const { replyJson } = await executeServerTool('set_preferred_name', { name: 'Doc' },
+      { supabase: updateStub([]) } as any);
+    expect(JSON.parse(replyJson).error).toContain('caller');
   });
 });

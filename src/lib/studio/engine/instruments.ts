@@ -23,6 +23,11 @@ export interface EngineInstrument {
   // LiveVoices falls back to a short triggerAttackRelease.
   triggerAttack?: (pitch: number, time: number, velocity01: number) => void;
   triggerRelease?: (pitch: number, time: number) => void;
+  // Immediately release every currently-sounding voice — called by the
+  // engine on pause/stop/seek so held notes don't ring past the transport
+  // stopping. Optional — one-shot instruments (drums) have nothing to hold
+  // and omit it.
+  releaseAll?: () => void;
   dispose: () => void;
 }
 
@@ -56,6 +61,7 @@ function buildSynth(spec: Instrument): EngineInstrument {
     },
     triggerAttack: (pitch, time, vel) => synth.triggerAttack(midiToNote(pitch), time, vel),
     triggerRelease: (pitch, time) => synth.triggerRelease(midiToNote(pitch), time),
+    releaseAll: () => synth.releaseAll(),
     dispose: () => synth.dispose(),
   };
 }
@@ -104,6 +110,7 @@ function buildGmSampler(name: string): EngineInstrument {
     },
     triggerAttack: (pitch, time, vel) => { if (loaded) sampler.triggerAttack(midiToNote(pitch), time, vel); },
     triggerRelease: (pitch, time) => { if (loaded) sampler.triggerRelease(midiToNote(pitch), time); },
+    releaseAll: () => { if (loaded) sampler.releaseAll(); },
     dispose: () => sampler.dispose(),
   };
 }

@@ -391,7 +391,7 @@ const uploadFile = async (uploadFile: UploadFile): Promise<boolean> => {
                 )}
 
                 {file.status === 'success' && (
-                  <p className="text-sm text-green-600">✓ Upload successful!</p>
+                  <p className="text-sm text-success-text">✓ Upload successful!</p>
                 )}
               </div>
             ))}

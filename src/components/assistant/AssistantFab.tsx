@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ChevronUp, Mic, Square, X } from 'lucide-react';
-import { useIsPhone } from '@/hooks/use-mobile';
+import { AudioLines, ChevronUp, Mic, Settings2, Square, X } from 'lucide-react';
+import { AssistantQuickSettings } from './AssistantQuickSettings';
+import { useIsCompactNav } from '@/hooks/use-mobile';
 import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
 import { sectionKeyFromPath, isFabCollapsed, setFabCollapsed } from '@/lib/assistant/fabPrefs';
 import { cn } from '@/lib/utils';
@@ -9,14 +10,22 @@ import { cn } from '@/lib/utils';
 const CAPTION_MS = 6000;
 
 // Floating assistant entry point: tenant-glass mic (primary, voice-first)
-// + caret that opens the chat sheet. Lives bottom-right on every
-// dashboard page; the × collapses it to an edge dot, remembered per
-// section (fabPrefs). Hidden entirely while the sheet or a video call is
-// up — the sheet has its own mic and the call owns the screen.
+// + caret that opens the chat sheet.
+//
+// RESTS as a tab on the right edge and slides out when tapped. It used to
+// float over the bottom-right corner by default, which is exactly where
+// pages put their Save button (Kevin: "assistant always blocks right bottom
+// corner"). Pulling it out is remembered per section, so a page where you
+// actually talk to it keeps it out; everywhere else stays clear.
+//
+// Hidden entirely while the sheet or a video call is up — the sheet has its
+// own mic and the call owns the screen.
 export const AssistantFab = () => {
   const assistant = useAssistantOptional();
   const { pathname } = useLocation();
-  const isPhone = useIsPhone();
+  // Tracks the docked bottom tab bar's own <768 gate so the FAB floats
+  // above the bar exactly when the bar exists.
+  const isCompactNav = useIsCompactNav();
   const section = sectionKeyFromPath(pathname);
   const [collapsed, setCollapsed] = useState(() => isFabCollapsed(section));
   // Re-read the pref when the section changes (collapse is per-section).
@@ -33,7 +42,7 @@ export const AssistantFab = () => {
   }, [captionReply]);
 
   if (!assistant) return null;
-  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state } = assistant;
+  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state, liveStatus, startLive, endLive, muted, toggleMute } = assistant;
   if (sheetOpen || videoRoom) return null;
 
   // Immersive full-screen routes (Viewer reader, Studio session editor)
@@ -46,19 +55,34 @@ export const AssistantFab = () => {
     /^\/studio\/sessions\/[^/]+/.test(pathname);
   const bottom = isImmersive
     ? 'calc(env(safe-area-inset-bottom, 0px) + 12px)'
-    : isPhone
+    : isCompactNav
       ? 'calc(env(safe-area-inset-bottom, 0px) + 68px)'
       : '1.25rem';
 
+  // Tucked: a tab on the right edge, which is the RESTING state. The old
+  // version of this was a bare 16x32 sliver with no icon — findable only if
+  // you already knew it was there, and well under a 44pt touch target. It
+  // now carries the mic so it reads as the assistant, and is tall enough to
+  // hit with a thumb.
   if (collapsed) {
     return (
       <button
         type="button"
         aria-label="Show assistant"
+        title="Assistant"
         onClick={() => { setCollapsed(false); setFabCollapsed(section, false); }}
-        className="fixed right-0 z-40 h-8 w-4 rounded-l-full bg-primary/25 backdrop-blur-xl border border-r-0 border-primary/30 shadow-md hover:bg-primary/40 transition-colors"
+        className="fixed right-0 z-40 flex h-11 w-7 lg:h-[5.5rem] lg:w-14 items-center justify-center overflow-hidden rounded-l-full border border-r-0 border-border/70 bg-background/55 text-primary shadow-md lg:shadow-xl backdrop-blur-2xl backdrop-saturate-150 transition-colors hover:bg-background/75"
         style={{ bottom }}
-      />
+      >
+        {/* Liquid glass: light gathers at the top of the pill and pools at the
+            bottom, with a specular line along the lit edge. Built from
+            foreground/background at low opacity rather than white, so it holds
+            up under a tenant's palette and in dark mode. */}
+        <span aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-foreground/10 via-transparent to-foreground/[0.07]" />
+        <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-foreground/20" />
+        <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-px bg-foreground/10" />
+        <Mic className="relative h-4 w-4 lg:h-7 lg:w-7" aria-hidden />
+      </button>
     );
   }
 
@@ -81,28 +105,66 @@ export const AssistantFab = () => {
           {caption}
         </button>
       )}
-      <div className="group relative flex items-center gap-1 rounded-full bg-primary/20 backdrop-blur-xl border border-primary/30 shadow-lg p-1">
+      {/* Neutral adaptive surface (Kevin 2026-08-03): the old bg-primary/20
+          translucency dissolved into photo/dark backgrounds — the pill now
+          sits on the theme's background token at near-opacity so it reads
+          on ANY backdrop, with primary reserved for the icons. */}
+      <div className="group relative flex items-center gap-1 rounded-full bg-background/85 backdrop-blur-xl border border-border shadow-lg p-1 animate-in slide-in-from-right-4 fade-in duration-200">
         <button
           type="button"
           aria-label="Hide assistant on this page"
+          title="Tuck away"
           onClick={() => { setCollapsed(true); setFabCollapsed(section, true); }}
-          className="absolute -top-1.5 -left-1.5 h-4 w-4 rounded-full bg-background/80 backdrop-blur border border-border shadow flex items-center justify-center text-muted-foreground opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+          className="absolute -top-1.5 -left-1.5 h-5 w-5 rounded-full bg-background/90 backdrop-blur border border-border shadow flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
         >
-          <X className="w-2.5 h-2.5" />
+          <X className="w-3 h-3" />
         </button>
+        {/* Two distinct destinations, so a tap is never a guess:
+              caret  → the chat, where you read and type
+              gear   → settings, in a small window anchored here
+            The mic stays the primary voice control it always was. */}
         <button
           type="button"
           aria-label="Open assistant chat"
+          title="Open chat"
           onClick={() => setSheetOpen(true)}
-          className="h-6 w-6 rounded-full flex items-center justify-center text-primary hover:bg-primary/20 transition-colors"
+          className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
         >
           <ChevronUp className="w-4 h-4" />
         </button>
+        <AssistantQuickSettings muted={muted} onToggleMute={toggleMute}>
+          <button
+            type="button"
+            aria-label="Assistant settings"
+            title="Assistant settings"
+            className="h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+          </button>
+        </AssistantQuickSettings>
         {/* While she's speaking, the primary button is a Stop — one tap
             silences her (Kevin: "she won't stop talking"). Otherwise it's
             the mic; tapping the mic also barges in (stops speech) via the
             provider. */}
-        {speaking ? (
+        {/* Live conversation (ElevenLabs full-duplex): while live, the
+            agent hears the user THROUGH its own speech — voice interrupts
+            voice, no tapping. The live button replaces the push-to-talk
+            mic's job entirely for the session, so mic/stop hide. */}
+        {liveStatus !== 'off' ? (
+          <button
+            type="button"
+            aria-label="End live conversation"
+            title="End live conversation"
+            onClick={endLive}
+            className={cn(
+              'h-9 rounded-full px-3 flex items-center gap-1.5 transition-colors bg-destructive/20 text-destructive hover:bg-destructive/30',
+              liveStatus === 'connecting' && 'opacity-70',
+            )}
+          >
+            <AudioLines className={cn('w-4 h-4', liveStatus === 'live' && 'animate-pulse')} />
+            <span className="text-xs font-semibold">{liveStatus === 'connecting' ? '…' : 'End'}</span>
+          </button>
+        ) : speaking ? (
           <button
             type="button"
             aria-label="Stop talking"
@@ -124,6 +186,17 @@ export const AssistantFab = () => {
             )}
           >
             <Mic className="w-4 h-4" />
+          </button>
+        )}
+        {liveStatus === 'off' && (
+          <button
+            type="button"
+            aria-label="Start live conversation"
+            title="Live conversation — talk naturally, your voice can interrupt"
+            onClick={startLive}
+            className="h-9 w-9 rounded-full flex items-center justify-center text-primary/80 hover:bg-primary/20 transition-colors"
+          >
+            <AudioLines className="w-4 h-4" />
           </button>
         )}
       </div>

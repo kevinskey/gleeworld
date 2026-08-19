@@ -1,0 +1,368 @@
+// Data layer for PartTrack. All writes chain .select() and check the row —
+// demo-tenant writes fail silently otherwise.
+import { supabase } from '@/integrations/supabase/client';
+import type {
+  PartTrackPart,
+  PartTrackRender,
+  PartTrackRights,
+  PartTrackRightsBasis,
+  PartTrackScore,
+  PartTrackSourceType,
+} from './types';
+
+const EXT: Record<PartTrackSourceType, string> = {
+  musicxml: 'musicxml', mxl: 'mxl', midi: 'mid', pdf_omr: 'pdf',
+};
+
+export async function getScoreForSheetMusic(sheetMusicId: string): Promise<PartTrackScore | null> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_scores')
+    .select('*')
+    .eq('sheet_music_id', sheetMusicId)
+    .maybeSingle();
+  if (error) throw error;
+  return data as PartTrackScore | null;
+}
+
+export async function createScore(
+  sheetMusicId: string,
+  file: File,
+  sourceType: PartTrackSourceType,
+  userId: string,
+): Promise<PartTrackScore> {
+  const id = crypto.randomUUID();
+  const path = `uploads/${id}/source.${EXT[sourceType]}`;
+  const up = await supabase.storage.from('parttrack').upload(path, file, { upsert: true });
+  if (up.error) throw up.error;
+  const { data, error } = await supabase
+    .from('gw_parttrack_scores')
+    .upsert(
+      {
+        id,
+        sheet_music_id: sheetMusicId,
+        source_type: sourceType,
+        source_path: path,
+        status: 'queued',
+        created_by: userId,
+      },
+      { onConflict: 'tenant_id,sheet_music_id' },
+    )
+    .select()
+    .single();
+  if (error || !data) throw error ?? new Error('Score row was not created');
+  const job = await supabase
+    .from('gw_parttrack_jobs')
+    .insert({ score_id: (data as PartTrackScore).id, kind: 'analyze' })
+    .select()
+    .single();
+  if (job.error || !job.data) throw job.error ?? new Error('Analyze job was not created');
+  return data as PartTrackScore;
+}
+
+export interface AttachedPdfSource {
+  url?: string | null;            // public/legacy pdf_url
+  bucket?: string | null;         // private storage rows (storage_bucket)
+  path?: string | null;           // + storage_path
+}
+
+export function hasAttachedPdf(src: AttachedPdfSource | null | undefined): boolean {
+  return Boolean(src && (src.url || (src.bucket && src.path)));
+}
+
+export async function createScoreFromAttachedPdf(
+  sheetMusicId: string,
+  src: AttachedPdfSource,
+  userId: string,
+): Promise<PartTrackScore> {
+  // Same resolution order the Music Library viewer uses: private
+  // storage rows (bucket + path) are signed per read; else the public URL.
+  let resolved: string | null = null;
+  if (src.bucket && src.path) {
+    const { getSignedUrl } = await import('@/utils/storage');
+    resolved = await getSignedUrl(src.bucket, src.path, 3600);
+  } else if (src.url) {
+    resolved = src.url;
+  }
+  if (!resolved) throw new Error('Could not read the attached PDF');
+  const res = await fetch(resolved);
+  if (!res.ok) throw new Error('Could not read the attached PDF');
+  const blob = await res.blob();
+  const file = new File([blob], 'score.pdf', { type: 'application/pdf' });
+  return createScore(sheetMusicId, file, 'pdf_omr', userId);
+}
+
+export async function replaceSource(
+  scoreId: string,
+  file: File,
+  sourceType: import('./scoreFile').ReplaceSourceType,
+): Promise<void> {
+  // Fresh path — never overwrite the old source while a claimed job might
+  // still be reading it.
+  const path = `uploads/${scoreId}/source-${crypto.randomUUID().slice(0, 8)}.${EXT[sourceType]}`;
+  const up = await supabase.storage.from('parttrack').upload(path, file, { upsert: true });
+  if (up.error) throw up.error;
+  // normalized_mxl_path = NULL is what makes the worker re-parse the new file
+  // instead of short-circuiting to the stale OMR output. Must land before the
+  // job row exists (the worker reads the scores row at claim time).
+  const upd = await supabase
+    .from('gw_parttrack_scores')
+    .update({
+      source_path: path,
+      source_type: sourceType,
+      normalized_mxl_path: null,
+      status: 'queued',
+      error_message: null,
+    })
+    .eq('id', scoreId)
+    .select()
+    .single();
+  if (upd.error || !upd.data) throw upd.error ?? new Error('Score reset did not persist');
+  const job = await supabase
+    .from('gw_parttrack_jobs')
+    .insert({ score_id: scoreId, kind: 'analyze' })
+    .select()
+    .single();
+  if (job.error || !job.data) throw job.error ?? new Error('Analyze job was not created');
+}
+
+export async function retryAnalyze(scoreId: string): Promise<void> {
+  const upd = await supabase
+    .from('gw_parttrack_scores')
+    .update({ status: 'queued', error_message: null })
+    .eq('id', scoreId)
+    .select()
+    .single();
+  if (upd.error || !upd.data) throw upd.error ?? new Error('Score reset did not persist');
+  const { data, error } = await supabase
+    .from('gw_parttrack_jobs')
+    .insert({ score_id: scoreId, kind: 'analyze' })
+    .select()
+    .single();
+  if (error || !data) throw error ?? new Error('Analyze job was not created');
+}
+
+export async function listParts(scoreId: string): Promise<PartTrackPart[]> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_parts')
+    .select('*')
+    .eq('score_id', scoreId)
+    .order('source_part_index')
+    .order('source_voice', { nullsFirst: true });
+  if (error) throw error;
+  return (data ?? []) as PartTrackPart[];
+}
+
+export async function updateParts(
+  parts: Array<Pick<PartTrackPart, 'id' | 'role' | 'label' | 'include'>>,
+): Promise<void> {
+  for (const p of parts) {
+    const { data, error } = await supabase
+      .from('gw_parttrack_parts')
+      .update({ role: p.role, label: p.label, include: p.include, confirmed: true })
+      .eq('id', p.id)
+      .select()
+      .single();
+    if (error || !data) throw error ?? new Error('Part update did not persist');
+  }
+}
+
+export async function getRights(scoreId: string): Promise<PartTrackRights | null> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_rights')
+    .select('*')
+    .eq('score_id', scoreId)
+    .maybeSingle();
+  if (error) throw error;
+  return data as PartTrackRights | null;
+}
+
+export async function attestRights(
+  scoreId: string,
+  basis: PartTrackRightsBasis,
+  licenseNumber: string | null,
+  userId: string,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_rights')
+    .upsert(
+      { score_id: scoreId, basis, license_number: licenseNumber, attested_by: userId },
+      { onConflict: 'tenant_id,score_id' },
+    )
+    .select()
+    .single();
+  if (error || !data) throw error ?? new Error('Rights attestation did not persist');
+}
+
+export async function getLatestLicenseNumber(basis: PartTrackRightsBasis): Promise<string | null> {
+  const { data } = await supabase
+    .from('gw_parttrack_rights')
+    .select('license_number')
+    .eq('basis', basis)
+    .not('license_number', 'is', null)
+    .order('attested_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as { license_number: string | null } | null)?.license_number ?? null;
+}
+
+export async function enqueueRender(scoreId: string, tempoOverrideBpm: number | null): Promise<void> {
+  // The worker reads the scores row when it claims the job, so the tempo
+  // must land before the job row exists.
+  const tempoUpd = await supabase
+    .from('gw_parttrack_scores')
+    .update({ tempo_override_bpm: tempoOverrideBpm })
+    .eq('id', scoreId)
+    .select()
+    .single();
+  if (tempoUpd.error || !tempoUpd.data) throw tempoUpd.error ?? new Error('Tempo update did not persist');
+  const { data, error } = await supabase
+    .from('gw_parttrack_jobs')
+    .insert({ score_id: scoreId, kind: 'render' })
+    .select()
+    .single();
+  if (error || !data) throw error ?? new Error('Render job was not created');
+  const upd = await supabase
+    .from('gw_parttrack_scores')
+    .update({ status: 'rendering' })
+    .eq('id', scoreId)
+    .select()
+    .single();
+  if (upd.error) throw upd.error;
+}
+
+export interface PartTrackAssignment {
+  id: string;
+  score_id: string;
+  ensemble_id: string | null;
+  voice_part: string | null;
+  due_date: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface ListenRollupRow {
+  score_id: string;
+  user_id: string;
+  total_seconds: number;
+  last_at: string;
+  avg_tempo_pct: number | null;
+}
+
+export interface TenantSinger {
+  user_id: string;
+  full_name: string | null;
+  voice_part: string | null;
+}
+
+export async function listAssignments(scoreId: string): Promise<PartTrackAssignment[]> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_assignments')
+    .select('*')
+    .eq('score_id', scoreId)
+    .order('created_at');
+  if (error) throw error;
+  return (data ?? []) as PartTrackAssignment[];
+}
+
+export async function listAssignmentsForScores(scoreIds: string[]): Promise<PartTrackAssignment[]> {
+  if (scoreIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from('gw_parttrack_assignments')
+    .select('*')
+    .in('score_id', scoreIds);
+  if (error) throw error;
+  return (data ?? []) as PartTrackAssignment[];
+}
+
+export async function createAssignment(
+  scoreId: string,
+  voicePart: string | null,
+  dueDate: string | null,
+  userId: string,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_assignments')
+    .insert({ score_id: scoreId, voice_part: voicePart, due_date: dueDate, created_by: userId })
+    .select()
+    .single();
+  if (error || !data) throw error ?? new Error('Assignment was not created');
+}
+
+export async function deleteAssignment(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('gw_parttrack_assignments')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function getListenRollup(scoreId: string): Promise<ListenRollupRow[]> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_listen_rollup')
+    .select('score_id, user_id, total_seconds, last_at, avg_tempo_pct')
+    .eq('score_id', scoreId);
+  if (error) throw error;
+  return (data ?? []) as ListenRollupRow[];
+}
+
+export async function getTenantSingers(): Promise<TenantSinger[]> {
+  const { data, error } = await supabase
+    .from('gw_profiles_directory')
+    .select('user_id, full_name, voice_part')
+    .not('voice_part', 'is', null)
+    .order('voice_part')
+    .order('full_name');
+  if (error) throw error;
+  return (data ?? []) as TenantSinger[];
+}
+
+export async function recordListen(
+  scoreId: string,
+  userId: string,
+  batch: { partRole: string | null; tempoPct: number; seconds: number },
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_listens')
+    .insert({
+      score_id: scoreId,
+      user_id: userId,
+      part_role: batch.partRole,
+      mode: 'player',
+      seconds_listened: batch.seconds,
+      tempo_pct: batch.tempoPct,
+    })
+    .select()
+    .single();
+  if (error || !data) throw error ?? new Error('Listen row was not recorded');
+}
+
+export async function logDownload(
+  scoreId: string,
+  userId: string,
+  partRole: string | null,
+  tempoPct: number | null,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_listens')
+    .insert({
+      score_id: scoreId,
+      user_id: userId,
+      part_role: partRole,
+      mode: 'download',
+      seconds_listened: null,
+      tempo_pct: tempoPct,
+    })
+    .select()
+    .single();
+  if (error || !data) throw error ?? new Error('Download row was not recorded');
+}
+
+export async function listRenders(scoreId: string): Promise<PartTrackRender[]> {
+  const { data, error } = await supabase
+    .from('gw_parttrack_renders')
+    .select('*')
+    .eq('score_id', scoreId)
+    .order('kind');
+  if (error) throw error;
+  return (data ?? []) as PartTrackRender[];
+}

@@ -1,4 +1,4 @@
-// Conventional email window: compose pane + sent history list.
+// Conventional email window: compose pane + drafts + sent history list.
 // Email-only (SMS lives in the Quick blast composer).
 import { useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -8,17 +8,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import {
-  X, Send, Loader2, Mail, Paperclip, FileIcon, PenSquare, Inbox, ChevronLeft,
+  X, Send, Loader2, Mail, Paperclip, FileIcon, PenSquare, Inbox, ChevronLeft, FileEdit, Trash2, Eye, Save,
 } from 'lucide-react';
+import { roleForGroup, type ComposerGroup } from '@/lib/messengerGroups';
 
-type Group = 'all' | 'students' | 'admins' | 'fans' | 'custom';
+type Group = ComposerGroup;
 const GROUPS: Array<{ value: Group; label: string }> = [
   { value: 'all', label: 'Everyone' },
   { value: 'students', label: 'Students only' },
   { value: 'admins', label: 'Staff / Admins only' },
   { value: 'fans', label: 'Fans only' },
+  { value: 'parents', label: 'Parents only' },
   { value: 'custom', label: 'Specific people…' },
 ];
 
@@ -42,10 +45,18 @@ interface SentEmail {
 const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024;
 const MAX_ATTACHMENTS = 5;
 
+/** Shape stored in recipient_groups while a row is still a draft, so the
+    composer can restore the audience picker exactly. Swapped for the normal
+    sent shape at send time. */
+interface DraftAudience {
+  draft_group: Group;
+  people: Person[];
+}
+
 export function EmailClient({ onClose, inline = false }: { onClose: () => void; inline?: boolean }) {
   const qc = useQueryClient();
   const { toast } = useToast();
-  const [view, setView] = useState<'compose' | 'history'>('compose');
+  const [view, setView] = useState<'compose' | 'drafts' | 'history'>('compose');
   const [selectedEmail, setSelectedEmail] = useState<SentEmail | null>(null);
 
   // Compose state
@@ -54,6 +65,9 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
   const [body, setBody] = useState('');
   const [attachments, setAttachments] = useState<File[]>([]);
   const [sending, setSending] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const [personSearch, setPersonSearch] = useState('');
   const [selectedPeople, setSelectedPeople] = useState<Person[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -92,8 +106,8 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
     queryFn: async () => {
       let q = supabase.from('gw_profiles_directory').select('user_id', { count: 'exact', head: true }).not('email', 'is', null);
       if (group !== 'all') {
-        const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
-        q = q.eq('role', role);
+        const role = roleForGroup(group);
+        if (role) q = q.eq('role', role);
       }
       const { count } = await q;
       return count ?? 0;
@@ -109,7 +123,23 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
         .from('gw_communications')
         .select('id, title, content, sent_at, created_at, total_recipients, recipient_groups, status')
         .contains('channels', ['email'])
+        .neq('status', 'draft')
         .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data ?? []) as SentEmail[];
+    },
+  });
+
+  const { data: drafts = [], isLoading: draftsLoading } = useQuery<SentEmail[]>({
+    queryKey: ['email-drafts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_communications')
+        .select('id, title, content, sent_at, created_at, total_recipients, recipient_groups, status')
+        .contains('channels', ['email'])
+        .eq('status', 'draft')
+        .order('updated_at', { ascending: false })
         .limit(100);
       if (error) throw error;
       return (data ?? []) as SentEmail[];
@@ -145,6 +175,74 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
     });
   }
 
+  function resetCompose() {
+    setSubject(''); setBody(''); setAttachments([]); setSelectedPeople([]); setDraftId(null);
+  }
+
+  async function saveDraft() {
+    if (!subject.trim() && !body.trim()) {
+      return toast({ title: 'Nothing to save', description: 'Write a subject or message first.', variant: 'destructive' });
+    }
+    setSavingDraft(true);
+    try {
+      const audience: DraftAudience = { draft_group: group, people: group === 'custom' ? selectedPeople : [] };
+      const row = {
+        title: subject,
+        content: body,
+        recipient_groups: [audience],
+        channels: ['email'],
+        total_recipients: recipientCount,
+        status: 'draft',
+        updated_at: new Date().toISOString(),
+      };
+      if (draftId) {
+        const { error } = await supabase.from('gw_communications').update(row).eq('id', draftId);
+        if (error) throw error;
+      } else {
+        const { data: user } = await supabase.auth.getUser();
+        const { data, error } = await supabase
+          .from('gw_communications')
+          .insert({ ...row, sender_id: user.user?.id })
+          .select('id')
+          .single();
+        if (error) throw error;
+        setDraftId(data.id);
+      }
+      qc.invalidateQueries({ queryKey: ['email-drafts'] });
+      toast({
+        title: 'Draft saved',
+        description: attachments.length > 0 ? 'Note: attachments aren’t kept in drafts — re-attach before sending.' : undefined,
+      });
+    } catch (e) {
+      toast({ title: 'Could not save draft', description: e instanceof Error ? e.message : 'Unknown error', variant: 'destructive' });
+    } finally {
+      setSavingDraft(false);
+    }
+  }
+
+  function loadDraft(d: SentEmail) {
+    const audience = (Array.isArray(d.recipient_groups) ? d.recipient_groups[0] : null) as DraftAudience | null;
+    setSubject(d.title || '');
+    setBody(d.content || '');
+    if (audience?.draft_group) {
+      setGroup(audience.draft_group);
+      setSelectedPeople(Array.isArray(audience.people) ? audience.people : []);
+    }
+    setAttachments([]);
+    setDraftId(d.id);
+    setView('compose');
+  }
+
+  async function deleteDraft(id: string) {
+    const { error } = await supabase.from('gw_communications').delete().eq('id', id);
+    if (error) {
+      return toast({ title: 'Could not delete draft', description: error.message, variant: 'destructive' });
+    }
+    if (id === draftId) setDraftId(null);
+    qc.invalidateQueries({ queryKey: ['email-drafts'] });
+    toast({ title: 'Draft deleted' });
+  }
+
   async function send() {
     if (!subject.trim() || !body.trim()) {
       return toast({ title: 'Subject and message required', variant: 'destructive' });
@@ -159,10 +257,8 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
         emails = selectedPeople.map((p) => p.email).filter(Boolean) as string[];
       } else {
         let rq = supabase.from('gw_profiles_directory').select('email').not('email', 'is', null);
-        if (group !== 'all') {
-          const role = group === 'students' ? 'student' : group === 'admins' ? 'admin' : 'fan';
-          rq = rq.eq('role', role);
-        }
+        const role = roleForGroup(group);
+        if (role) rq = rq.eq('role', role);
         const { data: recipients, error: rErr } = await rq;
         if (rErr) throw rErr;
         emails = (recipients ?? []).map((r: any) => r.email).filter(Boolean);
@@ -185,7 +281,7 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
       if (sErr) throw sErr;
 
       const { data: user } = await supabase.auth.getUser();
-      await supabase.from('gw_communications').insert({
+      const sentRow = {
         title: subject,
         content: body,
         sender_id: user.user?.id,
@@ -196,12 +292,20 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
         total_recipients: emails.length,
         status: 'sent',
         sent_at: new Date().toISOString(),
-      });
+      };
+      // Sending a loaded draft promotes that row to sent; otherwise insert.
+      if (draftId) {
+        await supabase.from('gw_communications').update(sentRow).eq('id', draftId);
+      } else {
+        await supabase.from('gw_communications').insert(sentRow);
+      }
 
       toast({ title: 'Email sent', description: `${emails.length} recipient${emails.length === 1 ? '' : 's'}` });
       qc.invalidateQueries({ queryKey: ['email-history'] });
+      qc.invalidateQueries({ queryKey: ['email-drafts'] });
       qc.invalidateQueries({ queryKey: ['comm-history'] });
-      setSubject(''); setBody(''); setAttachments([]); setSelectedPeople([]);
+      setShowPreview(false);
+      resetCompose();
       setView('history');
     } catch (e: any) {
       toast({ title: 'Send failed', description: e.message || 'Unknown error', variant: 'destructive' });
@@ -243,6 +347,14 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
                 onClick={() => { setView('compose'); setSelectedEmail(null); }}
               >
                 <PenSquare className="w-4 h-4 mr-2" /> Compose
+              </Button>
+              <Button
+                className="flex-1 md:flex-none md:w-full justify-center md:justify-start"
+                variant={view === 'drafts' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => { setView('drafts'); setSelectedEmail(null); }}
+              >
+                <FileEdit className="w-4 h-4 mr-2" /> Drafts ({drafts.length})
               </Button>
               <Button
                 className="flex-1 md:flex-none md:w-full justify-center md:justify-start"
@@ -335,12 +447,51 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-1">
-                  <Button onClick={send} disabled={sending || !subject.trim() || !body.trim()}>
-                    {sending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                    Send
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  {draftId && <span className="text-xs text-muted-foreground mr-auto">Editing draft</span>}
+                  <Button variant="outline" onClick={saveDraft} disabled={savingDraft || sending}>
+                    {savingDraft ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    Save draft
+                  </Button>
+                  <Button onClick={() => setShowPreview(true)} disabled={sending || !subject.trim() || !body.trim()}>
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview &amp; send
                   </Button>
                 </div>
+              </div>
+            ) : view === 'drafts' ? (
+              <div className="flex-1 overflow-y-auto divide-y">
+                {draftsLoading && (
+                  <div className="p-8 flex justify-center"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
+                )}
+                {!draftsLoading && drafts.length === 0 && (
+                  <p className="p-8 text-center text-sm text-muted-foreground">No drafts. Use “Save draft” while composing to keep one here.</p>
+                )}
+                {drafts.map((d) => (
+                  <div key={d.id} className="flex items-center hover:bg-muted/50">
+                    <button
+                      onClick={() => loadDraft(d)}
+                      className="flex-1 min-w-0 text-left px-4 py-3"
+                    >
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="font-medium text-sm truncate">{d.title || '(no subject)'}</span>
+                        <span className="text-sm text-muted-foreground shrink-0">
+                          {new Date(d.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{d.content || '(empty)'}</p>
+                    </button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="mr-2 shrink-0 text-muted-foreground hover:text-destructive"
+                      aria-label="Delete draft"
+                      onClick={() => deleteDraft(d.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             ) : selectedEmail ? (
               <div className="flex-1 overflow-y-auto">
@@ -390,6 +541,42 @@ export function EmailClient({ onClose, inline = false }: { onClose: () => void; 
           </main>
         </div>
       </div>
+
+      {/* Preview before send — shows the message the way recipients get it. */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Eye className="w-4 h-4" /> Preview</DialogTitle>
+          </DialogHeader>
+          <div className="text-sm space-y-1 border-b pb-3">
+            <p><span className="text-muted-foreground">To:</span>{' '}
+              {group === 'custom'
+                ? selectedPeople.map((p) => p.full_name).join(', ')
+                : GROUPS.find((g) => g.value === group)?.label}
+              {' '}<span className="text-muted-foreground">({recipientCount} recipient{recipientCount === 1 ? '' : 's'})</span>
+            </p>
+            <p><span className="text-muted-foreground">Subject:</span> <span className="font-medium">{subject}</span></p>
+            {attachments.length > 0 && (
+              <p className="text-muted-foreground flex items-center gap-1">
+                <Paperclip className="w-3 h-3" /> {attachments.map((f) => f.name).join(', ')}
+              </p>
+            )}
+          </div>
+          {/* Same styling as the HTML the edge function sends. */}
+          <div className="flex-1 overflow-y-auto bg-white text-gray-900 rounded-md border p-4">
+            <div style={{ fontFamily: 'sans-serif', maxWidth: 600, whiteSpace: 'pre-wrap' }}>{body}</div>
+          </div>
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setShowPreview(false)} disabled={sending}>
+              Back to edit
+            </Button>
+            <Button onClick={send} disabled={sending}>
+              {sending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+              Send to {recipientCount} recipient{recipientCount === 1 ? '' : 's'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Music, Plus, Pencil, Trash2, Play, Loader2 } from 'lucide-react';
 import { SingFlow } from './SingFlow';
 import { ProgressTab } from './ProgressTab';
 import { ClassProgressTab } from './ClassProgressTab';
+import { PitchMatchTab } from './PitchMatchTab';
 import { generateExercise, type Voice } from '@/lib/sightReading/generate';
 import type { ExerciseIR } from '@/lib/sightReading/ir';
 import { useUserRole } from '@/hooks/useUserRole';
@@ -368,6 +369,9 @@ export default function SightReadingStudio() {
           <TabsTrigger value="practice" className="flex-1">
             Practice
           </TabsTrigger>
+          <TabsTrigger value="pitch-match" className="flex-1">
+            Pitch Match
+          </TabsTrigger>
           <TabsTrigger value="library" className="flex-1">
             Library
           </TabsTrigger>
@@ -385,6 +389,10 @@ export default function SightReadingStudio() {
           <div className="rounded-2xl bg-white p-6 text-center shadow-sm">
             <p className="text-sm text-slate-600">Nothing yet. Generate a line above and sing it.</p>
           </div>
+        </TabsContent>
+
+        <TabsContent value="pitch-match" className="pt-4">
+          <PitchMatchTab voice={voice} />
         </TabsContent>
 
         <TabsContent value="library" className="pt-4">

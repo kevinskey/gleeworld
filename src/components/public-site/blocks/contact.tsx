@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Mail, Phone, Facebook, Instagram, Youtube, Twitter, Music, AtSign } from 'lucide-react';
+import { Mail, Phone, Facebook, Instagram, Youtube, Twitter, Music, Heart, AtSign } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { EditableText } from '../EditableText';
@@ -13,6 +13,7 @@ const schema = z.object({
   youtube: z.string().default(''),
   twitter: z.string().default(''),
   spotify: z.string().default(''),
+  patreon: z.string().default(''),
 });
 type Config = z.infer<typeof schema>;
 
@@ -25,6 +26,7 @@ const SOCIAL_BASE: Record<keyof Omit<Config, 'email' | 'phone'>, string> = {
   youtube: 'https://youtube.com/',
   twitter: 'https://x.com/',
   spotify: 'https://open.spotify.com/artist/',
+  patreon: 'https://patreon.com/',
 };
 
 function socialHref(platform: keyof typeof SOCIAL_BASE, value: string): string {
@@ -62,13 +64,17 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   const editable = !!onConfigChange;
   const email = cleanEmail(config.email);
   const phone = config.phone.trim();
-  const socials: Array<{ key: keyof typeof SOCIAL_BASE; href: string; Icon: typeof Facebook; label: string }> = [
+  // Annotate the literal, then filter — `.filter()` on a bare literal drops the
+  // contextual type and widens `key` back to string.
+  const allSocials: Array<{ key: keyof typeof SOCIAL_BASE; href: string; Icon: typeof Facebook; label: string }> = [
     { key: 'facebook', href: socialHref('facebook', config.facebook), Icon: Facebook, label: 'Facebook' },
     { key: 'instagram', href: socialHref('instagram', config.instagram), Icon: Instagram, label: 'Instagram' },
     { key: 'youtube', href: socialHref('youtube', config.youtube), Icon: Youtube, label: 'YouTube' },
     { key: 'twitter', href: socialHref('twitter', config.twitter), Icon: Twitter, label: 'X / Twitter' },
     { key: 'spotify', href: socialHref('spotify', config.spotify), Icon: Music, label: 'Spotify' },
-  ].filter((s) => s.href);
+    { key: 'patreon', href: socialHref('patreon', config.patreon), Icon: Heart, label: 'Patreon' },
+  ];
+  const socials = allSocials.filter((s) => s.href);
   const { fg, subFg, mutedFg } = readableOn(ctx.theme?.primaryColor || '#0f172a');
   return (
     <footer
@@ -79,7 +85,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
       className="mt-10 gw-container"
       style={{ color: fg }}
     >
-      <div className="py-5 px-4 sm:px-6 text-center space-y-4" style={{ background: 'var(--site-primary)' }}>
+      <div className="py-5 px-4 cq-sm:px-6 text-center space-y-4" style={{ background: 'var(--site-primary)' }}>
         <div className="flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm" style={{ color: subFg }}>
           {/* In edit mode, drop the mailto/tel anchors so clicking a field
               places a caret instead of prompting the browser to open a mail
@@ -185,6 +191,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
             { key: 'youtube', Icon: Youtube, label: 'YouTube', placeholder: '@awesomechoir' },
             { key: 'twitter', Icon: Twitter, label: 'X / Twitter', placeholder: '@awesomechoir' },
             { key: 'spotify', Icon: Music, label: 'Spotify', placeholder: 'Full Spotify artist URL' },
+            { key: 'patreon', Icon: Heart, label: 'Patreon', placeholder: 'awesomechoir or https://patreon.com/c/awesomechoir' },
           ].map(({ key, Icon, label, placeholder }) => (
             <div key={key} className="grid grid-cols-[auto_1fr] items-center gap-2">
               <Icon className="w-4 h-4 text-slate-500" />
@@ -211,7 +218,7 @@ export const contactBlock: BlockModule<typeof schema> = {
   tier: 'free',
   group: 'core',
   configSchema: schema,
-  defaultConfig: { email: '', phone: '', facebook: '', instagram: '', youtube: '', twitter: '', spotify: '' },
+  defaultConfig: { email: '', phone: '', facebook: '', instagram: '', youtube: '', twitter: '', spotify: '', patreon: '' },
   EditorForm,
   Render,
 };

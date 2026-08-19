@@ -36,8 +36,6 @@ interface UseCourseModulesOptions {
   courseId: string;
   /** If true, only returns published modules (for student view) */
   publishedOnly?: boolean;
-  /** If true, uses legacy MUS-240 table (temporary during migration) */
-  useLegacyMUS240?: boolean;
 }
 
 interface UseCourseModulesReturn {
@@ -53,20 +51,14 @@ interface UseCourseModulesReturn {
   updateModule: (moduleId: string, updates: Partial<CourseModule>) => Promise<void>;
 }
 
-// MUS-240 course ID (temporary - for legacy table support)
-const MUS_240_ID = '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
-
 export const useCourseModules = (options: UseCourseModulesOptions): UseCourseModulesReturn => {
-  const { courseId, publishedOnly = false, useLegacyMUS240 = true } = options;
+  const { courseId, publishedOnly = false } = options;
   
   const [modules, setModules] = useState<CourseModule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   const { activeSemester, loading: semesterLoading } = useSemesters();
-  
-  // Determine if this course uses the legacy MUS-240 table
-  const isLegacyMUS240 = useLegacyMUS240 && courseId === MUS_240_ID;
   
   const fetchModules = useCallback(async () => {
     if (!courseId || semesterLoading) return;
@@ -77,37 +69,6 @@ export const useCourseModules = (options: UseCourseModulesOptions): UseCourseMod
       
       let data: any[] = [];
       
-      if (isLegacyMUS240) {
-        // Use legacy mus240_module_settings table
-        const { data: legacyData, error: legacyError } = await supabase
-          .from('mus240_module_settings')
-          .select('*')
-          .order('week_number', { ascending: true });
-        
-        if (legacyError) throw legacyError;
-        
-        // Transform legacy data to unified format
-        data = (legacyData || []).map(m => ({
-          id: m.id,
-          course_id: MUS_240_ID,
-          module_id: m.module_id,
-          title: m.title || `Week ${m.week_number}`,
-          description: m.description,
-          week_number: m.week_number || parseInt(m.module_id.replace('week-', '')) || 0,
-          start_date: m.start_date,
-          end_date: m.end_date,
-          is_active: m.is_active ?? false,
-          is_published: m.is_published ?? true,
-          is_locked: m.is_locked ?? false,
-          unlock_date: m.unlock_date,
-          semester_id: m.semester_id,
-          semester: m.semester,
-          learning_objectives: m.learning_objectives,
-          display_order: m.week_number,
-          created_at: m.updated_at,
-          updated_at: m.updated_at,
-        }));
-      } else {
         // Use universal gw_course_modules table
         const { data: universalData, error: universalError } = await supabase
           .from('gw_course_modules')
@@ -121,7 +82,6 @@ export const useCourseModules = (options: UseCourseModulesOptions): UseCourseMod
           ...m,
           is_published: m.is_published ?? true,
         }));
-      }
       
       // Determine current week from semester
       const currentWeek = activeSemester 
@@ -182,7 +142,7 @@ export const useCourseModules = (options: UseCourseModulesOptions): UseCourseMod
     } finally {
       setIsLoading(false);
     }
-  }, [courseId, publishedOnly, isLegacyMUS240, activeSemester, semesterLoading]);
+  }, [courseId, publishedOnly, activeSemester, semesterLoading]);
   
   useEffect(() => {
     fetchModules();
@@ -203,10 +163,8 @@ export const useCourseModules = (options: UseCourseModulesOptions): UseCourseMod
   // Toggle published status
   const togglePublished = useCallback(async (moduleId: string, isPublished: boolean) => {
     try {
-      const table = isLegacyMUS240 ? 'mus240_module_settings' : 'gw_course_modules';
-      
       const { error } = await supabase
-        .from(table)
+        .from('gw_course_modules')
         .update({ is_published: isPublished, updated_at: new Date().toISOString() })
         .eq('id', moduleId);
       
@@ -220,15 +178,13 @@ export const useCourseModules = (options: UseCourseModulesOptions): UseCourseMod
       console.error('Error toggling published status:', err);
       throw err;
     }
-  }, [isLegacyMUS240]);
+  }, []);
   
   // Toggle locked status
   const toggleLocked = useCallback(async (moduleId: string, isLocked: boolean) => {
     try {
-      const table = isLegacyMUS240 ? 'mus240_module_settings' : 'gw_course_modules';
-      
       const { error } = await supabase
-        .from(table)
+        .from('gw_course_modules')
         .update({ is_locked: isLocked, updated_at: new Date().toISOString() })
         .eq('id', moduleId);
       
@@ -242,15 +198,13 @@ export const useCourseModules = (options: UseCourseModulesOptions): UseCourseMod
       console.error('Error toggling locked status:', err);
       throw err;
     }
-  }, [isLegacyMUS240]);
+  }, []);
   
   // Update module
   const updateModule = useCallback(async (moduleId: string, updates: Partial<CourseModule>) => {
     try {
-      const table = isLegacyMUS240 ? 'mus240_module_settings' : 'gw_course_modules';
-      
       const { error } = await supabase
-        .from(table)
+        .from('gw_course_modules')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', moduleId);
       
@@ -264,7 +218,7 @@ export const useCourseModules = (options: UseCourseModulesOptions): UseCourseMod
       console.error('Error updating module:', err);
       throw err;
     }
-  }, [isLegacyMUS240]);
+  }, []);
   
   return {
     modules,

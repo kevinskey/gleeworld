@@ -203,7 +203,7 @@ export const AIRoutePlanner = ({
       }).select().single();
       if (tourError) {
         if (tourError.message?.includes('course_id')) {
-          throw new Error('Open this Tour Manager from inside a course to create a new tour.');
+          throw new Error('Open this Travel Manager from inside a course to create a new travel.');
         }
         throw tourError;
       }
@@ -251,7 +251,7 @@ export const AIRoutePlanner = ({
       });
       toast({
         title: "Route created",
-        description: "Tour route has been saved to the database."
+        description: "Travel route has been saved to the database."
       });
     },
     onError: error => {
@@ -277,7 +277,7 @@ export const AIRoutePlanner = ({
       });
       toast({
         title: "Route deleted",
-        description: "Tour route has been removed."
+        description: "Travel route has been removed."
       });
     }
   });
@@ -352,7 +352,7 @@ export const AIRoutePlanner = ({
       });
       toast({
         title: "Route updated",
-        description: "Tour route has been saved."
+        description: "Travel route has been saved."
       });
     },
     onError: error => {
@@ -554,7 +554,7 @@ export const AIRoutePlanner = ({
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Tour Route</DialogTitle>
+              <DialogTitle>Create New Travel Route</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -567,7 +567,7 @@ export const AIRoutePlanner = ({
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Description</label>
-                  <Input placeholder="Brief description of the tour" value={newRoute.description} onChange={e => setNewRoute(prev => ({
+                  <Input placeholder="Brief description of the travel" value={newRoute.description} onChange={e => setNewRoute(prev => ({
                   ...prev,
                   description: e.target.value
                 }))} />
@@ -585,11 +585,11 @@ export const AIRoutePlanner = ({
                   value={originCity}
                   onChange={e => setOriginCity(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">Where the tour bus departs from — used for DOT compliance & first-leg distance calculations</p>
+                <p className="text-xs text-muted-foreground">Where the travel bus departs from — used for DOT compliance & first-leg distance calculations</p>
               </div>
 
               <div className="space-y-4">
-                <h4 className="font-medium">Add Tour Stops</h4>
+                <h4 className="font-medium">Add Travel Stops</h4>
                 
                 {/* Multiple Cities Input */}
                 <div className="space-y-2">
@@ -635,7 +635,7 @@ export const AIRoutePlanner = ({
               </div>
 
               {newRoute.stops.length > 0 && <div className="space-y-2">
-                  <h4 className="font-medium">Tour Stops ({newRoute.stops.length}) — drag to reorder</h4>
+                  <h4 className="font-medium">Travel Stops ({newRoute.stops.length}) — drag to reorder</h4>
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleStopDragEnd}>
                     <SortableContext items={newRoute.stops.map(s => s.id)} strategy={verticalListSortingStrategy}>
                       <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -666,7 +666,7 @@ export const AIRoutePlanner = ({
         <Dialog open={!!editingRoute} onOpenChange={open => !open && cancelEditing()}>
           <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Edit Tour Route</DialogTitle>
+              <DialogTitle>Edit Travel Route</DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
@@ -679,7 +679,7 @@ export const AIRoutePlanner = ({
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Description</label>
-                  <Input placeholder="Brief description of the tour" value={newRoute.description} onChange={e => setNewRoute(prev => ({
+                  <Input placeholder="Brief description of the travel" value={newRoute.description} onChange={e => setNewRoute(prev => ({
                   ...prev,
                   description: e.target.value
                 }))} />
@@ -697,11 +697,11 @@ export const AIRoutePlanner = ({
                   value={originCity}
                   onChange={e => setOriginCity(e.target.value)}
                 />
-                <p className="text-xs text-muted-foreground">Where the tour bus departs from — used for DOT compliance & first-leg distance calculations</p>
+                <p className="text-xs text-muted-foreground">Where the travel bus departs from — used for DOT compliance & first-leg distance calculations</p>
               </div>
 
               <div className="space-y-4">
-                <h4 className="font-medium">Add Tour Stops</h4>
+                <h4 className="font-medium">Add Travel Stops</h4>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-medium">Cities</label>
@@ -744,7 +744,7 @@ export const AIRoutePlanner = ({
               </div>
 
               {newRoute.stops.length > 0 && <div className="space-y-2">
-                  <h4 className="font-medium">Tour Stops ({newRoute.stops.length}) — drag to reorder</h4>
+                  <h4 className="font-medium">Travel Stops ({newRoute.stops.length}) — drag to reorder</h4>
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleStopDragEnd}>
                     <SortableContext items={newRoute.stops.map(s => s.id)} strategy={verticalListSortingStrategy}>
                       <div className="space-y-2 max-h-40 overflow-y-auto">
@@ -839,7 +839,7 @@ export const AIRoutePlanner = ({
 
               {/* Route Stops with Logistics Editor */}
               {route.cityData && route.cityData.length > 0 && <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Tour Stops & Logistics</h4>
+                  <h4 className="font-medium text-sm">Travel Stops & Logistics</h4>
                   <TourStopLogisticsEditor
                     stops={route.cityData}
                     tourId={route.id}

@@ -2,7 +2,6 @@
  * Assignment ID Resolver Utility
  * 
  * Handles the complexity of resolving assignment identifiers across:
- * - Legacy mus240_assignments (using text codes like "lj1", "lj2")
  * - New gw_assignments (using UUIDs with legacy_id tracking)
  * - Mixed identifier formats
  */
@@ -19,7 +18,6 @@ export interface ResolvedAssignment {
   points: number | null;
   due_at: string | null;
   course_id: string;
-  is_mus240: boolean;
   is_active?: boolean;
 }
 
@@ -76,24 +74,6 @@ export const resolveAssignmentIds = async (
 };
 
 /**
- * Get the correct assignment_id to use for querying journal entries
- * Returns legacy_id for mus240 assignments, UUID for others
- */
-export const getJournalQueryId = (assignment: ResolvedAssignment): string => {
-  if (assignment.is_mus240 && assignment.legacy_id) {
-    return assignment.legacy_id;
-  }
-  return assignment.id;
-};
-
-/**
- * Check if an identifier looks like a MUS240 legacy code
- */
-export const isMus240LegacyCode = (identifier: string): boolean => {
-  return /^lj\d+$/i.test(identifier);
-};
-
-/**
  * Format raw assignment data into ResolvedAssignment
  */
 function formatAssignment(data: any): ResolvedAssignment {
@@ -107,7 +87,6 @@ function formatAssignment(data: any): ResolvedAssignment {
     points: data.points,
     due_at: data.due_date,
     course_id: data.course_id,
-    is_mus240: false,
     is_active: data.is_published !== undefined ? data.is_published : true
   };
 }

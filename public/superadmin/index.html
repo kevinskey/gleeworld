@@ -68,6 +68,11 @@
 </head>
 <body>
 <h1>Superadmin</h1>
+<p class="muted" style="margin:-8px 0 16px">
+  Day-to-day tenant management now lives at
+  <a href="https://gleeworld.org/admin/tenants">gleeworld.org/admin/tenants</a>.
+  This page is the emergency fallback — it keeps working even if the main app build is broken.
+</p>
 <div id="banner" class="banner"></div>
 
 <div class="card" id="authCard" style="display:none">
@@ -83,7 +88,7 @@
 
   <div class="card">
     <h2>New tenant</h2>
-    <p class="muted">Use this after an interest email or a lead from “Request your workspace”. The welcome email with the sign-in link is sent automatically.</p>
+    <p class="muted">Use this after an interest email or a lead from “Request your workspace”. Staged setup (the default) holds the welcome email so you can build their site first — send it from “Resend welcome” at handoff.</p>
     <form id="newForm">
       <label for="f_name">Organization name</label>
       <input id="f_name" required placeholder="Eastside Community Choir">
@@ -99,9 +104,14 @@
         <option value="institution">Institution</option>
         <option value="personal">Personal</option>
       </select>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:normal">
+        <input type="checkbox" id="f_staged" checked style="width:auto;margin:0">
+        Staged setup — don’t email the admin yet; show me a temp password so we can build their site first
+      </label>
       <div class="actions">
         <button type="submit" id="createBtn">Provision tenant</button>
       </div>
+      <p id="stagedPass" style="display:none;background:#fef9c3;border:1px solid #eab308;border-radius:8px;padding:10px;margin-top:10px;user-select:all"></p>
     </form>
   </div>
 
@@ -222,18 +232,37 @@
   document.getElementById('newForm').addEventListener('submit', function (ev) {
     ev.preventDefault();
     var btn = document.getElementById('createBtn');
+    var staged = document.getElementById('f_staged').checked;
     var body = {
       name: document.getElementById('f_name').value.trim(),
       slug: slugInput.value.trim().toLowerCase(),
       admin_email: document.getElementById('f_email').value.trim(),
       plan: document.getElementById('f_plan').value,
+      staged: staged,
     };
-    if (!confirm('Provision "' + body.name + '" at ' + body.slug + '.gleeworld.org and email ' + body.admin_email + '?')) return;
+    var confirmMsg = staged
+      ? 'Provision "' + body.name + '" at ' + body.slug + '.gleeworld.org STAGED — no email to ' + body.admin_email + ' until you press Resend welcome?'
+      : 'Provision "' + body.name + '" at ' + body.slug + '.gleeworld.org and email ' + body.admin_email + '?';
+    if (!confirm(confirmMsg)) return;
     btn.disabled = true;
+    document.getElementById('stagedPass').style.display = 'none';
     api('/tenants', { method: 'POST', body: JSON.stringify(body) })
-      .then(function () {
-        say('Tenant "' + body.name + '" provisioned — welcome email sent to ' + body.admin_email + '.', true);
+      .then(function (resp) {
+        if (resp && resp.staged) {
+          say('Tenant "' + body.name + '" provisioned STAGED — no email sent. Press Resend welcome at handoff.', true);
+          var pp = document.getElementById('stagedPass');
+          if (resp.temp_password) {
+            // Shown once, never stored: copy it now to sign in as the admin.
+            pp.textContent = 'Temp password for ' + body.admin_email + ' (shown once): ' + resp.temp_password;
+          } else {
+            pp.textContent = body.admin_email + ' already had an account — their existing password is unchanged.';
+          }
+          pp.style.display = 'block';
+        } else {
+          say('Tenant "' + body.name + '" provisioned — welcome email sent to ' + body.admin_email + '.', true);
+        }
         document.getElementById('newForm').reset();
+        document.getElementById('f_staged').checked = true;
         preview.textContent = '';
         loadTenants(); loadStats();
       })

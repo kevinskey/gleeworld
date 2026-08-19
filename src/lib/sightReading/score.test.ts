@@ -180,3 +180,41 @@ describe('scoreAttempt', () => {
     expect(r.retention).toBeGreaterThan(0);
   });
 });
+
+// Kevin's pedagogy call: sight singing trains reading, not perfect pitch. A
+// note PASSES when it is at least 80% correct on pitch AND on rhythm, judged
+// independently — intonation still shapes the score, it just no longer gates
+// the pass at trained-singer precision.
+describe('a passing note is 80% correct in pitch and rhythm', () => {
+  const ir3 = makeIR([{ midi: 60, beatPos: 0 }, { midi: 62, beatPos: 1 }, { midi: 64, beatPos: 2 }]);
+  const sing = (cents: number[], beatShift: number[] = [0, 0, 0]) =>
+    ir3.notes.map((n, i) => ({ midi: n.midi, beatPos: n.beatPos + beatShift[i], cents: cents[i] }));
+
+  it('passes a note sung a quarter tone off — clearly the right note', () => {
+    // 48 cents from the baseline is just inside the 80% pitch credit line.
+    const r = scoreAttempt(ir3, sing([0, 0, 48]));
+    expect(r.perNote[2].ok).toBe(true);
+  });
+
+  it('fails a note sung most of the way to its neighbour', () => {
+    const r = scoreAttempt(ir3, sing([0, 0, 80]));
+    expect(r.perNote[2].ok).toBe(false);
+  });
+
+  it('fails a note whose pitch is perfect but whose rhythm is badly late', () => {
+    // Rhythm now gates the pass too — it used to be ignored per note.
+    const r = scoreAttempt(ir3, sing([0, 0, 0], [0, 0, 0.45]));
+    expect(r.perNote[2].ok).toBe(false);
+  });
+
+  it('passes a note a little off the beat but audibly on it', () => {
+    const r = scoreAttempt(ir3, sing([0, 0, 0], [0, 0, 0.15]));
+    expect(r.perNote[2].ok).toBe(true);
+  });
+
+  it('reports how far off the beat each note was', () => {
+    const r = scoreAttempt(ir3, sing([0, 0, 0], [0, 0, 0.25]));
+    expect(r.perNote[2].beatsOff).toBeCloseTo(0.25, 5);
+    expect(r.perNote[0].beatsOff).toBeCloseTo(0, 5);
+  });
+});

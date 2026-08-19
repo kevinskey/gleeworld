@@ -1,0 +1,158 @@
+{
+  "state_slug": "vermont",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Vermont runs a single combined All State Music Festival (band, orchestra, jazz ensemble, chorus, contemporary a cappella ensemble, modern band) supported by VMEA and operated by the Vermont All State Committee. As of the retrieval date, NEITHER vmea.org NOR the official VT All State Google Site had posted 2026-27 dates or fees — both still showed the 2025-26 cycle (auditions January 10, 2026 at Spaulding High School; festival May 6-9, 2026 at Missisquoi Valley Union High School, which has already occurred). This record is therefore labeled season 2025-26 and must NOT be read as 2026-27. The chorus audition components page is explicitly headed 'AUDITION REQUIREMENTS (2025-26 school year)'. Vermont's audition path is a single statewide audition day, not district festivals feeding All-State.",
+  "organization": {
+    "name": "Vermont Music Educators Association",
+    "acronym": "VMEA",
+    "website_url": "https://www.vmea.org/",
+    "description": "VMEA supports the annual Vermont All State Music Festival, which is operated by the Vermont All State Committee. The festival offers Vermont high school musicians the opportunity to perform in a band, orchestra, chorus or jazz ensemble under nationally recognized guest conductors, with three days of intensive rehearsals leading to performances by all groups."
+  },
+  "sources": [
+    { "name": "VMEA — All State Music Festival", "url": "https://www.vmea.org/all-state-music-festival", "source_type": "official" },
+    { "name": "VT All State Music Festival (official festival site)", "url": "https://sites.google.com/view/vtallstate/home", "source_type": "official" },
+    { "name": "VT All State — Audition Details", "url": "https://sites.google.com/view/vtallstate/audition-information/audition-details", "source_type": "official" },
+    { "name": "VT All State — Audition Fees", "url": "https://sites.google.com/view/vtallstate/audition-information/audition-fees", "source_type": "official" },
+    { "name": "VT All State Handbook", "url": "https://sites.google.com/view/vtallstate/all-state-handbook", "source_type": "handbook_pdf" }
+  ],
+  "programs": [
+    {
+      "name": "Vermont All State Music Festival — Chorus",
+      "lineage_key": "vermont-all-state-chorus",
+      "season": "2025-26",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The chorus of the Vermont All State Music Festival. Vermont high school singers audition on a single statewide audition day; auditions are scored and the top performers may be invited to participate in a festival ensemble. Educators registering students must hold an active NAfME membership.",
+      "dates": [
+        {
+          "date_type": "registration_deadline",
+          "title": "Audition registration deadline",
+          "start_at": "2025-11-21",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Late fees apply beginning November 22, 2025, with additional escalations on December 1, 2025 and January 5, 2026.",
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-fees"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "All State auditions",
+          "start_at": "2026-01-10",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Held at Spaulding High School. On-site audition requests on this date carry an additional charge.",
+          "source_url": "https://www.vmea.org/all-state-music-festival"
+        },
+        {
+          "date_type": "event",
+          "title": "Vermont All State Music Festival",
+          "start_at": "2026-05-06",
+          "end_at": "2026-05-09",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Held at Missisquoi Valley Union High School, Swanton, Vermont.",
+          "source_url": "https://www.vmea.org/all-state-music-festival"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "membership",
+          "title": "Registering educator must hold active NAfME membership",
+          "description": "Educators who wish to register students for All State must have an active membership with NAfME (the National Association for Music Education).",
+          "source_url": "https://sites.google.com/view/vtallstate/home"
+        },
+        {
+          "category": "materials",
+          "title": "Original sheet music required; photocopies prohibited",
+          "description": "Photocopies are prohibited from use for any audition. In accordance with copyright laws, students must use original legally purchased sheet music (correct publisher) or perform from memory.",
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-details"
+        },
+        {
+          "category": "format",
+          "title": "Chorus audition component 1 — Vocal Quartet",
+          "description": "Sing the required audition selection as part of an a cappella quartet. The starting pitch may be given by anyone using any sound-producing device; students may sing or hum their first pitch, and an adjudicator may provide the starting pitch on request without deduction. A restart requested because of incorrect pitch or inaccurate count-off carries a small deduction to the appropriate part.",
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-details"
+        },
+        {
+          "category": "format",
+          "title": "Chorus audition component 2 — Solo Singing",
+          "description": "Sing the assigned solo excerpt of the required quartet selection a cappella, after receiving a starting pitch under the same guidelines as the quartet. All members of the quartet remain in the room until all quartet members have finished.",
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-details"
+        },
+        {
+          "category": "scales",
+          "title": "Chorus audition component 3 — Scale and arpeggio",
+          "description": "Given a starting pitch from an adjudicator, sing in solfege the full eight-note major scale ascending and descending, then sing in solfege the arpeggio Do–Mi–Sol–Do(high)–Sol–Mi–Do–Sol(below tonic)–Do. Keys by part: Soprano and Tenor in F, Alto in D, Bass in C.",
+          "structured_data": {
+            "keys_by_voice_part": { "soprano": "F major", "tenor": "F major", "alto": "D major", "bass": "C major" }
+          },
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-details"
+        },
+        {
+          "category": "sight_reading",
+          "title": "Chorus audition component 4 — Sight-singing",
+          "description": "A 4-measure melodic phrase of quarter notes beginning and ending on Do, followed by a 4-measure rhythmic exercise, each with 30 seconds of preparation. Only pitch accuracy is judged on the melodic portion. Students may use any solfege/number/rhythm-syllable system or a neutral syllable and are not adjudicated on system accuracy. Restarts are permitted but each carries a 2-point reduction. Sight-singing is in the same key as the scale (F major for soprano/tenor, D major for alto, C major for bass).",
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-details"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "audition",
+          "amount_cents": 1000,
+          "payable_to": "state_association",
+          "description": "$10 per chorus audition. Fees are non-refundable and due as soon as the audition registration is submitted. Payment must be by check payable to 'VMEA All State Music Festival', issued by the school, a related booster organization, or the music educator — personal checks from parents/students are not accepted.",
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-fees"
+        },
+        {
+          "fee_type": "audition",
+          "amount_cents": 500,
+          "payable_to": "state_association",
+          "description": "$5 per contemporary vocal a cappella ensemble audition.",
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-fees"
+        },
+        {
+          "fee_type": "audition",
+          "amount_cents": 2000,
+          "payable_to": "state_association",
+          "description": "$20 per scholarship audition.",
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-fees"
+        },
+        {
+          "fee_type": "late",
+          "amount_cents": 10000,
+          "payable_to": "state_association",
+          "description": "$100 late fee for a school that did not register any students prior to November 22, 2025.",
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-fees"
+        },
+        {
+          "fee_type": "late",
+          "amount_cents": 5000,
+          "payable_to": "state_association",
+          "description": "$50 each for on-site audition requests made on the January 10, 2026 audition day.",
+          "source_url": "https://sites.google.com/view/vtallstate/audition-information/audition-fees"
+        }
+      ],
+      "documents": [
+        { "title": "VT All State Handbook", "url": "https://sites.google.com/view/vtallstate/all-state-handbook", "document_type": "handbook" },
+        { "title": "2027-2030 Quartet Audition Selections", "url": "https://docs.google.com/presentation/d/e/2PACX-1vTXztss6FbuDRX_A6vdc8IFHyPt_Km_ht1_reJdIWRIwbq4Ld_4kdgHM1HsnNE7vHKyvHyrjAhpEoJE/pub?start=false&loop=false&delayms=3000", "document_type": "other" },
+        { "title": "Scale & Arpeggio Notated Example (PDF)", "url": "https://app.box.com/s/zsq38gj9z2d4hq51f085rut4qxl2adyf", "document_type": "other" },
+        { "title": "Past Sightreading Examples", "url": "https://drive.google.com/drive/folders/1iZR377odd6mOVx-kc_dOPHwgK37AIwoZ?usp=drive_link", "document_type": "other" },
+        { "title": "Festival Rules", "url": "https://sites.google.com/view/vtallstate/festival-information/festival-rules", "document_type": "rules" },
+        { "title": "2026 Festival Concert Program", "url": "https://drive.google.com/file/d/1LJwbNUh3LJ04RXqF7_3I09g2oQSH_fb0/view?usp=drive_link", "document_type": "other" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 audition date, festival date, and festival site — VMEA and the VT All State site still showed only the 2025-26 cycle at the retrieval date",
+    "2026-27 audition registration deadline and fee schedule",
+    "Chorus audition repertoire assigned to each season — the state publishes a '2027-2030 Quartet Audition Selections' Google Slides deck, but the deck did not render fully enough to attribute specific titles to specific seasons",
+    "Festival participation fee amount and school participation fee amount — the site lists these as cost categories without publishing amounts on the pages read",
+    "Grade-level eligibility rules for chorus (referred to the All State Handbook, which was not retrieved)"
+  ]
+}

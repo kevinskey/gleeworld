@@ -124,7 +124,6 @@ export const DashboardModulesSection = () => {
         { name: "Performance Scoring", description: "Score auditions & performances", icon: Star, route: "/mobile-scoring" },
         { name: "Download Center", description: "Get your music files", icon: Download, route: "/downloads" },
         { name: "Audio Archive", description: "Historical recordings", icon: Volume2, route: "/audio-archive" },
-        { name: "MUS240 Groups", description: "Join and manage project teams", icon: Users, route: "/classes/mus240/groups" }
       ]
     },
     {
@@ -145,7 +144,7 @@ export const DashboardModulesSection = () => {
       iconColor: "text-indigo-600",
       modules: [
         { name: "Tour Planner", description: "Plan and manage tours", icon: Route, route: "/tour-planner" },
-        { name: "Tour Manager", description: "Manage tour logistics", icon: MapPin, route: "/tour-manager" },
+        { name: "Travel Manager", description: "Manage tour logistics", icon: MapPin, route: "/tour-manager" },
         { name: "Contract Management", description: "Handle tour contracts", icon: BookIcon, route: "/contract-signing" },
         { name: "Wardrobe Management", description: "Manage tour wardrobe", icon: Award, route: "/wardrobe-management" },
         { name: "Appointments", description: "Schedule appointments", icon: Calendar, route: "/appointments" }

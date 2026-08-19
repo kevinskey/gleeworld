@@ -1,10 +1,39 @@
 import type { Config } from 'tailwindcss';
+import defaultTheme from 'tailwindcss/defaultTheme';
+import plugin from 'tailwindcss/plugin';
+
+// Container-query variants for the public-site blocks: `cq-sm:`, `cq-md:`,
+// `cq-lg:` mirror the `sm:`/`md:`/`lg:` breakpoints but resolve against the
+// nearest `gwsite` container (the `.gw-site` root) instead of the viewport.
+//
+// Why: the public page builder previews a site inside a 390px-wide frame that
+// still lives in the editor's (wide) viewport, so plain `sm:`/`lg:` media
+// queries fire and the "phone" preview renders the desktop layout, overflowing
+// the frame. On the published `/sites/:slug` route `.gw-site` spans the
+// viewport, so `cq-*` and the media-query breakpoints agree there.
+const siteContainerVariants = plugin(({ matchVariant }) => {
+  matchVariant('cq', (value: string) => `@container gwsite ${value}`, {
+    values: {
+      sm: '(min-width: 640px)',
+      md: '(min-width: 768px)',
+      lg: '(min-width: 1024px)',
+      xl: '(min-width: 1280px)',
+    },
+  });
+});
 
 const config: Config = {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{ts,tsx,js,jsx}'],
   theme: {
     container: { center: true, padding: '2rem', screens: { '2xl': '1400px' } },
+    // xs (480px, large phones / phone-landscape) declared BEFORE the default
+    // scale — screen order = emitted media-query order, and a later query
+    // wins ties, so appending xs via extend would let `xs:` overrides beat
+    // `sm:`/`md:` ones. ~30 `xs:` classes across 12 files were written
+    // assuming this breakpoint existed and silently compiled to nothing
+    // until 2026-08-02 (the audio scrubber was invisible at every width).
+    screens: { xs: '480px', ...defaultTheme.screens },
     extend: {
       fontFamily: {
         // Route `font-serif` through a token so the serif voice (the House
@@ -63,6 +92,7 @@ const config: Config = {
         success: {
           DEFAULT: 'hsl(var(--success))',
           foreground: 'hsl(var(--success-foreground))',
+          text: 'hsl(var(--success-text))',
         },
         warning: {
           DEFAULT: 'hsl(var(--warning))',
@@ -161,7 +191,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography')],
+  plugins: [require('tailwindcss-animate'), require('@tailwindcss/typography'), siteContainerVariants],
 };
 
 export default config;

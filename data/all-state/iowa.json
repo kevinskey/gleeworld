@@ -1,0 +1,257 @@
+{
+  "state_slug": "iowa",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Important distinction: Iowa's All-State Music Festival (Band, Chorus, Orchestra) is run by the Iowa High School Music Association (IHSMA), NOT by the Iowa Music Educators Association. All data here is from IHSMA's own pages and is current 2026-27 (the festival is held in November of the school year, so the '2026 All-State Chorus' is the 2026-27 season ensemble). The repertoire listed is the packet purchased for auditions and also performed at the festival; IHSMA states the audition process in October draws on these packet pieces. Iowa also runs separate State Jazz Choir and Show Choir festivals, which are adjudicated school-ensemble festivals rather than all-state honor ensembles, and were not recorded as programs here.",
+  "organization": {
+    "name": "Iowa High School Music Association",
+    "acronym": "IHSMA",
+    "website_url": "https://ihsma.org/",
+    "description": "IHSMA administers Iowa's interscholastic music festivals, including the All-State Music Festival that selects the All-State Band, Chorus, and Orchestra. Its office is in Boone, Iowa."
+  },
+  "sources": [
+    {
+      "name": "IHSMA All-State Music Festival",
+      "url": "https://ihsma.org/all-state-music-festival/",
+      "source_type": "official"
+    },
+    {
+      "name": "2026 All-State Chorus Music Packet Information",
+      "url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf",
+      "source_type": "handbook_pdf"
+    }
+  ],
+  "programs": [
+    {
+      "name": "Iowa All-State Chorus",
+      "lineage_key": "iowa-all-state-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The All-State Chorus of the IHSMA All-State Music Festival. Students audition in October at regional sites; selected singers rehearse and perform at the festival in Ames in November. The 2026 All-State Chorus Conductor is Dr. Christopher Aspaas (Texas Christian University); the All-State Chorus Chair is Thad Wilkins, Mount Vernon.",
+      "dates": [
+        {
+          "date_type": "other",
+          "title": "Audition materials release date",
+          "start_at": "2026-07-22",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Wednesday, July 22, 2026.",
+          "source_url": "https://ihsma.org/all-state-music-festival/"
+        },
+        {
+          "date_type": "other",
+          "title": "Online registration opens (Festival Central Login)",
+          "start_at": "2026-08-06",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Thursday, August 6, 2026.",
+          "source_url": "https://ihsma.org/all-state-music-festival/"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Registration deadline",
+          "start_at": "2026-09-10",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://ihsma.org/all-state-music-festival/"
+        },
+        {
+          "date_type": "registration_deadline",
+          "title": "Penalty deadline",
+          "start_at": "2026-09-17",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "source_url": "https://ihsma.org/all-state-music-festival/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Vocal auditions",
+          "start_at": "2026-10-24",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "October 24, 2026 — audition date for Vocal, Woodwind, Brass, String, and Percussion. (Harp auditions by video recording October 9, 2026; Piano auditions October 21, 2026.)",
+          "source_url": "https://ihsma.org/all-state-music-festival/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Solo small-group audition recordings due — 'The Heavens Are Telling'",
+          "start_at": "2026-11-05",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Thursday, November 5. Students accepted into the All-State Chorus who wish to audition for the small solo groups submit a video recording of measures 22-38 and 57-95 as a Google Drive or Dropbox link to the All-State Chorus Chair.",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        },
+        {
+          "date_type": "results",
+          "title": "Solo small-group selections announced",
+          "start_at": "2026-11-12",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "Selected singers notified by Thursday, November 12. No additional audition is required in Ames.",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State Music Festival",
+          "start_at": "2026-11-19",
+          "end_at": "2026-11-21",
+          "all_day": true,
+          "timezone": "America/Chicago",
+          "description": "November 19-21, 2026. The festival is held in Ames.",
+          "source_url": "https://ihsma.org/all-state-music-festival/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "7th and 8th grade students may not participate in the All-State audition process",
+          "description": "Under the IHSMA Constitution, 7th and 8th grade students may participate in IHSMA festivals with the exception of the All-State Audition process and solos at the State Solo and Small Ensemble Festival. IHSMA notes that Iowa House File 2591 (eighth graders in high school athletics) does not affect IHSMA eligibility requirements.",
+          "source_url": "https://ihsma.org/all-state-music-festival/"
+        },
+        {
+          "category": "materials",
+          "title": "Audition music packet purchased from the designated supplier",
+          "description": "IHSMA has selected West Music Company, Coralville as the music supplier for the All-State Music Festival. Directors pre-order the All-State Chorus audition materials packet through West Music.",
+          "source_url": "https://ihsma.org/all-state-music-festival/"
+        },
+        {
+          "category": "format",
+          "title": "Audition drawn from the published packet selections",
+          "description": "The pieces included in the packet are part of the audition process in October.",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        },
+        {
+          "category": "format",
+          "title": "Secret piece learned at the festival",
+          "description": "In addition to the published selections, the 2026 Iowa All-State Chorus will prepare a secret piece that will be taught and learned during the All-State Festival in Ames.",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        },
+        {
+          "category": "format",
+          "title": "Piano auditionees receive an additional packet",
+          "description": "Students auditioning on piano for All-State must be reported via an IHSMA Google Form; in addition to the choral packet purchased through West Music, they are sent a second packet from the IHSMA office with the Band and Orchestra selections.",
+          "source_url": "https://ihsma.org/all-state-music-festival/"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "America the Beautiful",
+          "composer": "Samuel A. Ward",
+          "arranger": "Carmen Dragon",
+          "publisher": "Dragon Music",
+          "purpose": "performance",
+          "notes": "Listed as 'America the Beautiful w/Band — Bates/Ward, arr. Carmen Dragon'.",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        },
+        {
+          "title": "The Heavens are Telling (from \"The Creation\")",
+          "composer": "F. J. Haydn",
+          "publisher": "Hal Leonard",
+          "catalog_number": "HL 50322250",
+          "voicing": "SATB with 3 solos (each a group of 4)",
+          "purpose": "performance",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        },
+        {
+          "title": "O Great Spirit/Let Me Walk in Beauty",
+          "composer": "Christopher Aspaas",
+          "publisher": "MorningStar Music",
+          "catalog_number": "AHM-61",
+          "voicing": "SATB Divisi",
+          "purpose": "performance",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        },
+        {
+          "title": "Cum Sancto Spiritu",
+          "composer": "Hyo-won Woo",
+          "publisher": "Walton Music",
+          "catalog_number": "WW1637",
+          "voicing": "SATB Divisi",
+          "purpose": "performance",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        },
+        {
+          "title": "O Schöne Nacht!, Op. 92",
+          "composer": "Johannes Brahms",
+          "publisher": "Hal Leonard",
+          "catalog_number": "HL 50316790",
+          "voicing": "SATB",
+          "purpose": "performance",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        },
+        {
+          "title": "We the People",
+          "composer": "Christopher Aspaas",
+          "publisher": "MorningStar Music",
+          "catalog_number": "AHM-64",
+          "purpose": "performance",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        },
+        {
+          "title": "Battle Hymn of the Republic",
+          "arranger": "Peter J. Wilhousky",
+          "publisher": "Carl Fischer",
+          "catalog_number": "CM4743",
+          "purpose": "performance",
+          "notes": "Listed as 'Battle Hymn of the Republic/orchestra'.",
+          "source_url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf"
+        }
+      ],
+      "fees": [
+        {
+          "fee_type": "registration",
+          "amount_cents": 3000,
+          "payable_to": "state_association",
+          "description": "All-State Music Festival registration fee, Vocal — $30.00. (Instrumental registration fees are $22.00.)",
+          "source_url": "https://ihsma.org/all-state-music-festival/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "All-State Chorus Music Packet Information",
+          "url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Music-Packet-Information-Chorus.pdf",
+          "document_type": "handbook"
+        },
+        {
+          "title": "All-State Chorus Conductor's Notes",
+          "url": "https://ihsma.org/wp-content/uploads/2026/07/2026-All-State-Chorus-Conductor-Notes.pdf",
+          "document_type": "other"
+        },
+        {
+          "title": "2026-2027 IHSMA Rules and Regulations",
+          "url": "https://simbli.eboardsolutions.com/Policy/PolicyListing.aspx?S=36032045&ptid=VcHw1k44K6pyfslshzDye5eCA==",
+          "document_type": "rules"
+        },
+        {
+          "title": "All-State Music Festival — Selection of the Ensembles",
+          "url": "https://simbli.eboardsolutions.com/Policy/ViewPolicy.aspx?S=36032045&revid=ffoIGIJB39SlOvoVe0VScA==&ptid=VcHw1k44K6pyfslshzDye5eCA==&secid=&PG=6&IRP=0&isPndg=false",
+          "document_type": "rules"
+        },
+        {
+          "title": "All-State Festival — Frequently Asked Questions",
+          "url": "https://ihsma.org/wp-content/uploads/2017/05/AS_FAQ.pdf",
+          "document_type": "other"
+        },
+        {
+          "title": "Sample Vocal Audition Card (not for use at auditions)",
+          "url": "https://ihsma.org/wp-content/uploads/2017/07/AS_AuditionCardVocal_sample.pdf",
+          "document_type": "form"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+  "not_published": [
+    "Regional/site-level audition locations and clock times for the October 24 vocal auditions — not on the main All-State Music Festival page",
+    "Detailed vocal audition scoring rubric and sight-reading requirements — contained in the linked IHSMA Rules and Regulations policy pages, which were not retrieved",
+    "Title and composer of the 'secret piece' — IHSMA states it is taught during the festival and is deliberately not published",
+    "Middle school or elementary all-state choral programs — IHSMA's constitution excludes 7th and 8th graders from the All-State audition process, and no separate IHSMA middle-level all-state chorus was found",
+    "Festival venue details and concert times for November 19-21, 2026"
+  ]
+}

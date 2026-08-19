@@ -200,12 +200,6 @@ serve(async (req) => {
       }
     }
 
-    // Optional: ensure MUS240 enrollment table exists and enroll if applicable
-    try {
-      const { data: hasEnrollTable } = await supabase.rpc("get_current_user_email");
-      // no-op, the call above is just to maintain a supabase call in try-catch; real check omitted to keep function lean
-    } catch (_) {}
-
     console.log("Successfully auto-enrolled user:", { userId, email, role });
     return new Response(
       JSON.stringify({ success: true, enrolled: true, user_id: userId }),

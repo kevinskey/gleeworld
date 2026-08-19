@@ -80,7 +80,7 @@ export const CreateCourseDialog: React.FC<CreateCourseDialogProps> = ({ open, on
             <Label htmlFor="code">Course Code *</Label>
             <Input
               id="code"
-              placeholder="e.g., MUS-240"
+              placeholder="e.g., MUS-101"
               {...register('code', { required: 'Course code is required' })}
             />
             {errors.code && (

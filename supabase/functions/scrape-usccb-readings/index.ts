@@ -187,7 +187,31 @@ async function scrapeReading(firecrawlApiKey: string, day: string, cycle: string
   }
 }
 
-function parseReadings(markdown: string): any {
+
+// USCCB pages carry trailing chrome — podcast/Spanish/calendar/e-mail links
+// and the Lectionary copyright block — which the section splitter used to
+// sweep into the last reading (the gospel). Cut at the EARLIEST marker so it
+// never reaches the stored text. Cleanup of previously-stored rows:
+// migration 20260808240000_usccb_strip_boilerplate.
+function stripUsccbBoilerplate(markdown: string): string {
+  const markers = [
+    'LISTEN PODCAST',
+    '- En Español',
+    'En Español',
+    '- View Calendar',
+    '- Get Daily Readings E-mails',
+    'Lectionary for Mass for Use in the Dioceses',
+  ];
+  let cut = -1;
+  for (const m of markers) {
+    const pos = markdown.indexOf(m);
+    if (pos >= 0 && (cut < 0 || pos < cut)) cut = pos;
+  }
+  return cut < 0 ? markdown : markdown.slice(0, cut).replace(/[\s\-]+$/, '');
+}
+
+function parseReadings(rawMarkdown: string): any {
+  const markdown = stripUsccbBoilerplate(rawMarkdown);
   const result: any = {};
 
   // Extract reading references
@@ -269,7 +293,7 @@ Deno.serve(async (req) => {
             liturgical_season: season,
             year_cycle: cycle.toUpperCase(),
             liturgical_date: new Date().toISOString().split('T')[0], // Placeholder date
-            full_content: scraped.content,
+            full_content: stripUsccbBoilerplate(scraped.content),
             source_url: scraped.sourceUrl,
             ...parsed,
           };

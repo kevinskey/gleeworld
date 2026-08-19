@@ -7,7 +7,7 @@ export const SightReadingStudioCard = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-[#150d26] via-[#1a5a8a] to-[#2a7ab0] rounded-xl overflow-hidden shadow-lg">
+    <div className="bg-gradient-to-r from-[hsl(var(--brand-navy))] via-[#1a5a8a] to-[#2a7ab0] rounded-xl overflow-hidden shadow-lg">
       <div className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-white/20 rounded-full shrink-0">
@@ -25,10 +25,10 @@ export const SightReadingStudioCard = () => {
         
         <Button 
           onClick={handleVisitStudio}
-          className="!bg-white !text-[#150d26] hover:!bg-gray-100 font-semibold px-6 py-3 shrink-0"
+          className="!bg-white !text-[hsl(var(--brand-navy))] hover:!bg-gray-100 font-semibold px-6 py-3 shrink-0"
         >
-          <span className="text-[#150d26]">Visit Studio</span>
-          <ExternalLink className="h-4 w-4 text-[#150d26] ml-2" />
+          <span className="text-[hsl(var(--brand-navy))]">Visit Studio</span>
+          <ExternalLink className="h-4 w-4 text-[hsl(var(--brand-navy))] ml-2" />
         </Button>
       </div>
     </div>

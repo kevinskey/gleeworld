@@ -70,10 +70,13 @@ export const MusicLibraryModule = () => {
   const fetchSheetMusic = async () => {
     try {
       setLoading(true);
+      // Browse via the server-filtered view so members only see scores
+      // shared with them (20260803140000_sheet_music_browse_view.sql).
+      // The view already excludes archived rows.
       const {
         data,
         error
-      } = await supabase.from('gw_sheet_music').select('*').eq('is_archived', false).order('created_at', {
+      } = await (supabase as any).from('gw_sheet_music_browse').select('*').order('created_at', {
         ascending: false
       });
       if (error) throw error;
@@ -212,8 +215,8 @@ export const MusicLibraryModule = () => {
   return <div className="h-full flex flex-col">
       {/* Header */}
       <div className="py-2 md:py-4 border-b border-border bg-background">
-        <div className="flex items-center gap-2 mb-3 md:mb-4 bg-[#150d26] text-primary-foreground pl-[20px]">
-          <Music className="w-4 h-4 md:w-5 md:h-5 text-primary pl-[2px]" />
+        <div className="flex items-center gap-2 mb-3 md:mb-4 bg-primary text-primary-foreground pl-[20px]">
+          <Music className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground pl-[2px]" />
           <h2 className="text-base font-semibold py-[20px] md:text-xl text-primary-foreground">Music Library</h2>
         </div>
         

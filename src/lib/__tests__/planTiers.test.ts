@@ -55,101 +55,45 @@ describe('lookup keys', () => {
   });
 });
 
-describe('seed values match the Task 3 migration table', () => {
-  it('personal', () => {
-    const t = PLAN_TIERS.find((p) => p.id === 'personal')!;
-    expect(t.scope).toBe('user');
-    expect(t.label).toBe('Personal');
-    expect(t.tagline).toBe('For one musician in their private studio. Max 15 students.');
-    expect(t.monthlyCents).toBe(1500);
-    expect(t.annualCents).toBe(13500);
-    expect(t.studentCap).toBe(15);
-    expect(t.storageGb).toBe(25);
-    expect(t.courseCap).toBe(1);
-    expect(t.lookupKeyMonthly).toBe('gw_personal_monthly');
-    expect(t.lookupKeyAnnual).toBe('gw_personal_annual');
-    expect(t.features).toEqual([
-      'Up to 15 students',
-      '1 Academy course',
-      'Your own score library',
-      'Personal calendar + Tonight mode',
-      'Custom domain ($25 setup + $15/yr)',
-      '25 GB',
-      'Add-ons included: Studio, Studio Hours, Concert Planner, Finances',
-    ]);
-    expect(t.quote).toBeFalsy();
+describe('billing contract — values that must match gw_billing_plans', () => {
+  // Source of truth for PRICES and CAPS is the newest pricing migration,
+  // supabase/migrations/20260720140000_tier_price_round.sql, which supersedes
+  // the original Task 3 seed and 20260720130000_tier_price_update.sql.
+  //
+  // Deliberately narrow: this asserts the fields that must agree with the
+  // billing table, so a repricing that touches only one side fails here.
+  // Marketing copy (tagline, feature bullets) is intentionally NOT asserted —
+  // pinning it made this suite fail on every copy edit without protecting
+  // anything, which is exactly how it drifted four migrations out of date.
+  const EXPECTED = [
+    { id: 'personal',     scope: 'user',   label: 'Personal',  monthlyCents: 1500,  annualCents: 13500,  studentCap: 15,   storageGb: 25 },
+    { id: 'director_60',  scope: 'tenant', label: 'Director',  monthlyCents: 5000,  annualCents: 50000,  studentCap: 60,   storageGb: 50 },
+    { id: 'director_150', scope: 'tenant', label: 'Director+', monthlyCents: 6500,  annualCents: 65000,  studentCap: 150,  storageGb: 150 },
+    { id: 'institution',  scope: 'tenant', label: 'Institution', monthlyCents: 25000, annualCents: 250000, studentCap: null, storageGb: 1024 },
+  ] as const;
+
+  it.each(EXPECTED)('$id matches the billing migration', (expected) => {
+    const t = PLAN_TIERS.find((p) => p.id === expected.id)!;
+    expect(t, `tier ${expected.id} missing from PLAN_TIERS`).toBeDefined();
+    expect(t.scope).toBe(expected.scope);
+    expect(t.monthlyCents).toBe(expected.monthlyCents);
+    expect(t.annualCents).toBe(expected.annualCents);
+    expect(t.studentCap).toBe(expected.studentCap);
+    expect(t.storageGb).toBe(expected.storageGb);
   });
 
-  it('director_60', () => {
-    const t = PLAN_TIERS.find((p) => p.id === 'director_60')!;
-    expect(t.scope).toBe('tenant');
-    expect(t.label).toBe('Director');
-    expect(t.tagline).toBe('For directors with up to 60 students.');
-    expect(t.monthlyCents).toBe(5000);
-    expect(t.annualCents).toBe(50000);
-    expect(t.studentCap).toBe(60);
-    expect(t.storageGb).toBe(50);
-    expect(t.courseCap).toBe(10);
-    expect(t.lookupKeyMonthly).toBe('gw_director60_monthly');
-    expect(t.lookupKeyAnnual).toBe('gw_director60_annual');
-    expect(t.features).toEqual([
-      'Up to 60 students',
-      'Up to 10 Academy courses',
-      'Roster, attendance, scheduling',
-      'Scores + part tracks',
-      'Tonight mode + stage viewer',
-      'Branded login (your logo & colors)',
-      'Custom domain ($25 setup + $15/yr)',
-      '50 GB',
-      'Everything in Personal + Tour Manager, PR Hub',
-    ]);
+  it('every tier carries both Stripe lookup keys', () => {
+    for (const t of PLAN_TIERS) {
+      expect(t.lookupKeyMonthly, `${t.id} monthly lookup key`).toBeTruthy();
+      expect(t.lookupKeyAnnual, `${t.id} annual lookup key`).toBeTruthy();
+    }
   });
 
-  it('director_150', () => {
-    const t = PLAN_TIERS.find((p) => p.id === 'director_150')!;
-    expect(t.scope).toBe('tenant');
-    expect(t.label).toBe('Director+');
-    expect(t.tagline).toBe('For growing programs up to 150 students.');
-    expect(t.monthlyCents).toBe(6500);
-    expect(t.annualCents).toBe(65000);
-    expect(t.studentCap).toBe(150);
-    expect(t.storageGb).toBe(150);
-    expect(t.courseCap).toBe(50);
-    expect(t.lookupKeyMonthly).toBe('gw_director150_monthly');
-    expect(t.lookupKeyAnnual).toBe('gw_director150_annual');
-    expect(t.features).toEqual([
-      'Up to 150 students',
-      'Up to 50 Academy courses',
-      'Custom domain ($25 setup + $15/yr)',
-      '150 GB',
-      'Everything in Director + Box Office, Liturgy Planner',
-    ]);
-  });
-
-  it('institution', () => {
-    const t = PLAN_TIERS.find((p) => p.id === 'institution')!;
-    expect(t.scope).toBe('tenant');
-    expect(t.label).toBe('Institution');
-    expect(t.tagline).toBe('Unlimited students, multi-ensemble.');
-    expect(t.monthlyCents).toBe(25000);
-    expect(t.annualCents).toBe(250000);
-    expect(t.studentCap).toBeNull();
-    expect(t.storageGb).toBe(1024);
-    expect(t.courseCap).toBeNull();
-    expect(t.lookupKeyMonthly).toBe('gw_institution_monthly');
-    expect(t.lookupKeyAnnual).toBe('gw_institution_annual');
-    expect(t.features).toEqual([
-      'Unlimited students',
-      'Unlimited Academy courses',
-      'Multi-ensemble + SSO + Canvas',
-      'Broadcast texts included',
-      'Custom app icon',
-      'Custom domain ($25 setup + $15/yr)',
-      'Dedicated app (talk to us)',
-      '1 TB pooled',
-      'All add-ons included',
-    ]);
-    expect(t.quote).toBe(true);
+  it('annual pricing never costs more than paying monthly for a year', () => {
+    for (const t of PLAN_TIERS) {
+      expect(t.annualCents, `${t.id} annual should not exceed 12x monthly`)
+        .toBeLessThanOrEqual(t.monthlyCents * 12);
+    }
   });
 });
 

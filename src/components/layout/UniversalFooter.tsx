@@ -76,6 +76,14 @@ export const UniversalFooter = () => {
               >
                 Home
               </Link>
+              <Link
+                to="/register/parent"
+                onClick={(e) => e.stopPropagation()}
+                className="text-xs sm:text-sm transition-opacity hover:opacity-100"
+                style={{ color: subFg }}
+              >
+                Parent sign-up
+              </Link>
             </div>
           </div>
 

@@ -14,7 +14,16 @@ DECLARE
     'gw_tenants', 'gw_tenant_members',
     'gw_feature_flags', 'gw_app_functions',
     'gw_permissions', 'gw_roles', 'gw_tax_regions',
-    'gw_webhook_events'
+    'gw_webhook_events',
+    -- All-State Layer 1 (20260808120000) — see phase1_tenants.sql. These are
+    -- tenantless by design; a tenant_isolation_restrict policy referencing a
+    -- nonexistent tenant_id column would abort this whole script.
+    'gw_all_state_states', 'gw_all_state_organizations', 'gw_all_state_programs',
+    'gw_all_state_sources', 'gw_all_state_dates', 'gw_all_state_requirements',
+    'gw_all_state_repertoire', 'gw_all_state_fees', 'gw_all_state_documents',
+    'gw_all_state_voice_parts',
+    -- Phase 4 crawl infrastructure (20260808280000): global like the canon.
+    'gw_all_state_snapshots', 'gw_all_state_staged_extractions', 'gw_all_state_changes'
   ];
 BEGIN
   FOR tbl IN

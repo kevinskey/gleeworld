@@ -29,7 +29,7 @@ const Auth = () => {
     return false;
   });
   const isReset = isRecovery || isPasswordRecovery;
-  const theme = searchParams.get('theme') as 'default' | 'mus240' || 'default';
+  const theme = 'default' as const;
 
   // Listen for PASSWORD_RECOVERY event from Supabase (fires when user clicks reset link)
   useEffect(() => {
@@ -103,16 +103,12 @@ const Auth = () => {
 
   const getTitle = () => {
     if (isReset) return "Reset Password";
-    return theme === 'mus240'
-      ? "MUS 240: Survey of African American Music"
-      : `Welcome Back to ${siteName}`;
+    return `Welcome Back to ${siteName}`;
   };
 
   const getSubtitle = () => {
     if (isReset) return "Enter your new password";
-    return theme === 'mus240'
-      ? "Sign in to access course materials and assignments"
-      : "Sign in to your account or create a new one";
+    return "Sign in to your account or create a new one";
   };
 
   return (

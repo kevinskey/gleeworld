@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { parseMidiMessage, createNoteEchoFilter } from './midiMessage';
-import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode, grownSessionLength } from './midiRecord';
+import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode, grownSessionLength, ensureTakeClip } from './midiRecord';
 import { HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY } from './midiRecord';
 import type { MidiClip } from './session';
 
@@ -187,6 +187,19 @@ describe('appendTakeNote', () => {
 });
 
 
+describe('ensureTakeClip', () => {
+  it('returns the existing clip untouched', () => {
+    const existing = ensureTakeClip(null, 4.0, 0.5);
+    expect(ensureTakeClip(existing, 9.9, 0.5)).toBe(existing);
+  });
+  it('creates a clip at the first CC event when no notes were played', () => {
+    const clip = ensureTakeClip(null, 4.0, 0.5);
+    expect(clip.start_seconds).toBe(4.0);
+    expect(clip.duration_seconds).toBe(0.5);
+    expect(clip.notes).toEqual([]);
+  });
+});
+
 describe('parseMidiMessage cc', () => {
   it('reads the mod wheel (CC1) on any channel', () => {
     expect(parseMidiMessage([0xb0, 1, 90])).toEqual({ type: 'cc', controller: 1, value: 90 });
@@ -239,6 +252,17 @@ describe('attachTakeCc', () => {
 
 describe('getMidiTrimMs', () => {
   it('defaults to 0 and clamps to ±100', () => {
+    // Node ≥22 injects its own experimental `localStorage` global that
+    // shadows jsdom's and — without --localstorage-file — has no working
+    // Storage methods (`removeItem is not a function`). Swap in a real
+    // Map-backed Storage for this test, scoped per the vitest.setup.ts
+    // rule (suite-local stubs only); unstubbed at the end of the test.
+    const store = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => { store.set(k, String(v)); },
+      removeItem: (k: string) => { store.delete(k); },
+    });
     localStorage.removeItem(MIDI_TRIM_STORAGE_KEY);
     expect(getMidiTrimMs()).toBe(0);
     localStorage.setItem(MIDI_TRIM_STORAGE_KEY, '250');
@@ -246,6 +270,7 @@ describe('getMidiTrimMs', () => {
     localStorage.setItem(MIDI_TRIM_STORAGE_KEY, '-40');
     expect(getMidiTrimMs()).toBe(-40);
     localStorage.removeItem(MIDI_TRIM_STORAGE_KEY);
+    vi.unstubAllGlobals();
   });
 });
 

@@ -1,0 +1,206 @@
+{
+  "state_slug": "rhode-island",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "RIMEA labels the season '2026/27' and its All-State page was updated 6/8/26; the calendar was updated 7/9/26. All-State choral auditions for both the Junior Division (grades 7-9) and Senior Division (grades 10-12) are held on a single day, Saturday November 14, 2026 at Ponaganset HS, with a registration deadline of Friday October 9, 2026. RIMEA fields four audition-based All-State choruses (Junior Mixed, Junior Treble, Senior Mixed, Senior Treble) plus a separate Elementary All-State Chorus entered by nomination. Junior and Senior Vocal audition practice MP3s were still marked PENDING at retrieval time. Concert performance repertoire and conductors for 2026/27 were not published on the pages read.",
+  "organization": {
+    "name": "Rhode Island Music Education Association",
+    "acronym": "RIMEA",
+    "website_url": "https://www.rimea.org/",
+    "description": "RIMEA is a federated state association of the National Association for Music Education, located at 667 Waterman Avenue, East Providence, RI 02914. It runs the All-State festival, Solo & Ensemble, Large Ensemble Festivals and the Invitational Honors Festival. RIMEA states that the All-State Festival and audition process is not a right but a privilege reserved for students of RIMEA members and subject to RIMEA rules and regulations."
+  },
+  "sources": [
+    { "name": "RIMEA 2026/27 All-State MP3s/Videos, Audition Info & Sheet Music", "url": "https://www.rimea.org/allstate", "source_type": "official" },
+    { "name": "2026-2027 Senior Division All-State Audition Procedures — Vocal", "url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf", "source_type": "handbook_pdf" },
+    { "name": "2026-2027 Junior Division All-State Audition Procedures — Vocal", "url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf", "source_type": "handbook_pdf" },
+    { "name": "RIMEA All-State Eligibility", "url": "https://www.rimea.org/allstate_eligibility", "source_type": "official" },
+    { "name": "RIMEA 2026/2027 Calendar", "url": "https://www.rimea.org/calendar", "source_type": "calendar" }
+  ],
+  "programs": [
+    {
+      "name": "Senior All-State Mixed Chorus",
+      "lineage_key": "rhode-island-senior-mixed-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "RIMEA Senior Division (grades 10-12) All-State mixed chorus. Entry is by a single live audition day at Ponaganset HS; sponsors (RIMEA member directors) register students online.",
+      "dates": [
+        { "date_type": "other", "title": "All-State registration opens", "start_at": "2026-09-01", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/allstate" },
+        { "date_type": "registration_deadline", "title": "All-State Registration deadline", "start_at": "2026-10-09", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "registration_deadline", "title": "All-State audition payment POSTMARKED deadline", "start_at": "2026-10-16", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "audition_round", "title": "All-State auditions @ Ponaganset HS", "start_at": "2026-11-14", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/allstate" },
+        { "date_type": "acceptance_deadline", "title": "Final Junior and Senior All-State Concerts Master List & Student Contract — ONLINE submission", "start_at": "2026-12-04", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "acceptance_deadline", "title": "Final Junior and Senior All-State Concerts Master List & Student Contract — POSTMARKED", "start_at": "2026-12-11", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Senior All-State Mixed Chorus and Senior All-State Treble Chorus rehearsal", "start_at": "2027-02-03T18:30:00", "end_at": "2027-02-03T21:00:00", "all_day": false, "timezone": "America/New_York", "description": "6:30-9:00 p.m., location TBD. Snow date February 4.", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Senior All-State Treble and Mixed Chorus rehearsals @ Community Church of Providence", "start_at": "2027-03-05", "end_at": "2027-03-06", "all_day": true, "timezone": "America/New_York", "description": "Times listed as TBD by RIMEA.", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Junior/Senior All-State Chorus Concert @ The VETS, Providence", "start_at": "2027-03-07T11:00:00", "all_day": false, "timezone": "America/New_York", "description": "11:00 a.m. Snow day March 8 (times TBD).", "source_url": "https://www.rimea.org/calendar" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 10-12", "description": "Senior Division vocal auditions are open to all students in school grades 10-12.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf" },
+        { "category": "eligibility", "title": "Must be a member in good standing of the school choir", "description": "If a student is not a member in good standing of his/her school performing ensemble, for any reason, he/she is not eligible to audition and perform in that All-State ensemble. Choir for choir. RIMEA does not recognize 'good' or 'bad' reasons; the rule is absolute and can only be changed by a majority vote of the RIMEA executive board. If a school does not offer the ensemble, RIMEA does not deny those students the opportunity to audition. Home-schooled students may participate if they choose to be a member of a school chorus (policy in effect since 2005/2006).", "source_url": "https://www.rimea.org/allstate_eligibility" },
+        { "category": "membership", "title": "Sponsor registration", "description": "Sponsors (RIMEA member directors) must register students online at www.rimea.org/allstate.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf" },
+        { "category": "format", "title": "Three-part audition", "description": "The audition has three parts: (1) audition piece — students sing their own voice part of the assigned selection; (2) scale; (3) sight singing.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf" },
+        { "category": "scales", "title": "Major scale by voice part", "description": "Students sing an ascending/descending major scale in quarter notes at quarter note = 72 in the assigned key for their voice part on the vowel 'ah'. Repeat the top note before descending; breathe whenever necessary. Starting pitch will be given. Soprano — key of G; Alto — key of D; Tenor — key of F; Bass — key of B-flat.", "structured_data": { "tempo_bpm": 72, "note_value": "quarter", "vowel": "ah", "keys": { "soprano": "G", "alto": "D", "tenor": "F", "bass": "Bb" } }, "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf" },
+        { "category": "sight_reading", "title": "Sight singing", "description": "Students sight read an eight-measure phrase in 3/4 or 4/4 time consisting of dotted rhythms and leaps of thirds, fifths and octaves. Students may use solfege or a neutral syllable of their choice.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf" },
+        { "category": "materials", "title": "Practice MP3s / sing-along track at the audition", "description": "MP3 practice tracks with actual voices of the selected piece are posted at rimea.org/allstate. At the audition, students sing along with a track containing all other voices except their own part.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf" }
+      ],
+      "repertoire": [
+        { "title": "Domine ad adjuvandum me festina", "composer": "Giovanni Battista Martini", "voicing": "SATB", "purpose": "audition", "notes": "2026-2027 Senior Division vocal audition piece. Latin text. Measures 73-120 only. Score sourced from CPDL (Choral Public Domain Library).", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2577, "payable_to": "state_association", "description": "$25.77 per student, per audition; non-refundable. Discounted to $25.00 (3%) if paid by cash or check.", "source_url": "https://www.rimea.org/allstate" },
+        { "fee_type": "participation", "amount_cents": 9278, "payable_to": "state_association", "description": "All-State participation fee, non-refundable. Discounted to $90.00 if paid by cash or check. If a student performs in two or three ensembles, the additional fees are reduced to $41.24. Financial assistance for the participation fee is available based on financial need and available funds; sponsors may request it during audition registration.", "source_url": "https://www.rimea.org/allstate" }
+      ],
+      "documents": [
+        { "title": "2026-2027 Senior Division All-State Audition Procedures — Vocal", "url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf", "document_type": "handbook" },
+        { "title": "RIMEA 2026/2027 Calendar", "url": "https://www.rimea.org/calendar", "document_type": "calendar" },
+        { "title": "RIMEA Student Safety and Reporting Policy", "url": "https://www.rimea.org/pdf/member_handbook/student_safety_reporting.pdf", "document_type": "rules" },
+        { "title": "All-In-Music (AIM) financial assistance FAQ", "url": "http://www.rimea.org/pdf/AIM_faq.pdf", "document_type": "other" },
+        { "title": "All-State Student Contract (online)", "url": "https://www.rimea.org/forms/allstate/contract", "document_type": "form" },
+        { "title": "RIMEA All-State Archive (results, programs, recordings)", "url": "https://www.rimea.org/allstate_archive", "document_type": "other" },
+        { "title": "List of All-State Conductors/Managers", "url": "https://www.rimea.org/conductors", "document_type": "other" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "Senior All-State Treble Chorus",
+      "lineage_key": "rhode-island-senior-treble-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "RIMEA Senior Division (grades 10-12) All-State treble chorus. Selected from the same November 14, 2026 Senior Division vocal audition at Ponaganset HS.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "All-State Registration deadline", "start_at": "2026-10-09", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "audition_round", "title": "All-State auditions @ Ponaganset HS", "start_at": "2026-11-14", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/allstate" },
+        { "date_type": "event", "title": "Senior All-State Mixed Chorus and Senior All-State Treble Chorus rehearsal", "start_at": "2027-02-03T18:30:00", "end_at": "2027-02-03T21:00:00", "all_day": false, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Senior All-State Treble and Mixed Chorus rehearsals @ Community Church of Providence", "start_at": "2027-03-05", "end_at": "2027-03-06", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Junior/Senior All-State Chorus Concert @ The VETS, Providence", "start_at": "2027-03-07T11:00:00", "all_day": false, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 10-12", "description": "Senior Division vocal auditions are open to all students in school grades 10-12.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf" },
+        { "category": "format", "title": "Three-part audition", "description": "Audition piece, major scale in the assigned key for the voice part, and an eight-measure sight singing phrase in 3/4 or 4/4 with dotted rhythms and leaps of thirds, fifths and octaves.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf" }
+      ],
+      "repertoire": [
+        { "title": "Domine ad adjuvandum me festina", "composer": "Giovanni Battista Martini", "voicing": "SATB", "purpose": "audition", "notes": "2026-2027 Senior Division vocal audition piece, measures 73-120 only. Same audition for both Senior choruses.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2577, "payable_to": "state_association", "description": "$25.77 per student, per audition; $25.00 if paid by cash/check.", "source_url": "https://www.rimea.org/allstate" },
+        { "fee_type": "participation", "amount_cents": 9278, "payable_to": "state_association", "description": "$92.78 participation fee; $90.00 if paid by cash/check.", "source_url": "https://www.rimea.org/allstate" }
+      ],
+      "documents": [
+        { "title": "2026-2027 Senior Division All-State Audition Procedures — Vocal", "url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_sr.pdf", "document_type": "handbook" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" }
+      ]
+    },
+    {
+      "name": "Junior All-State Mixed Chorus",
+      "lineage_key": "rhode-island-junior-mixed-chorus",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "RIMEA Junior Division All-State mixed chorus, open to students in grades 7-9. Auditions are held on the same statewide audition day at Ponaganset HS.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "All-State Registration deadline", "start_at": "2026-10-09", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "audition_round", "title": "All-State auditions @ Ponaganset HS", "start_at": "2026-11-14", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/allstate" },
+        { "date_type": "event", "title": "Junior All-State Mixed Chorus and Junior All-State Band rehearsal", "start_at": "2027-02-03T18:15:00", "end_at": "2027-02-03T20:45:00", "all_day": false, "timezone": "America/New_York", "description": "6:15-8:45 p.m., location TBD. Snow date February 4.", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Junior All-State Orchestra & Junior All-State Mixed Chorus rehearsals @ Ponaganset HS", "start_at": "2027-03-05", "end_at": "2027-03-06", "all_day": true, "timezone": "America/New_York", "description": "Times listed as TBD by RIMEA.", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Junior/Senior All-State Chorus Concert @ The VETS, Providence", "start_at": "2027-03-07T11:00:00", "all_day": false, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 7-9", "description": "Junior Division vocal auditions are open to all students in school grades 7-9.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf" },
+        { "category": "format", "title": "Three-part audition", "description": "The audition has three parts: (1) audition piece — students sing their own voice part; (2) pitch matching; (3) sight singing.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf" },
+        { "category": "other", "title": "Pitch matching", "description": "Students listen to a four quarter-note pattern played and repeat it back on a neutral syllable. Ranges used: bass C3-A3; tenor G3-E4; alto B3-A4; soprano E4-E5.", "structured_data": { "ranges": { "bass": "C3-A3", "tenor": "G3-E4", "alto": "B3-A4", "soprano": "E4-E5" } }, "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf" },
+        { "category": "sight_reading", "title": "Sight singing", "description": "Students sight read a four-measure phrase in 4/4 time consisting of quarter and half notes in stepwise motion. Students may use solfege or a neutral syllable of their choice.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf" },
+        { "category": "materials", "title": "Practice MP3s / sing-along track at the audition", "description": "MP3 practice tracks with actual voices of the selected piece are posted at rimea.org/allstate; at the audition students sing along with a track containing all voices except their own.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf" }
+      ],
+      "repertoire": [
+        { "title": "Over My Head", "composer": "Adam Podd", "publisher": "Podd Brothers Music", "voicing": "SATB", "purpose": "audition", "notes": "2026-2027 Junior Division vocal audition piece. Measures 23-56 only.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2577, "payable_to": "state_association", "description": "$25.77 per student, per audition; $25.00 if paid by cash/check.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf" },
+        { "fee_type": "participation", "amount_cents": 9278, "payable_to": "state_association", "description": "$92.78 participation fee; $90.00 if paid by cash/check. Additional ensembles $41.24.", "source_url": "https://www.rimea.org/allstate" }
+      ],
+      "documents": [
+        { "title": "2026-2027 Junior Division All-State Audition Procedures — Vocal", "url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf", "document_type": "handbook" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "Junior All-State Treble Chorus",
+      "lineage_key": "rhode-island-junior-treble-chorus",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "treble chorus",
+      "description": "RIMEA Junior Division All-State treble chorus, open to students in grades 7-9, selected from the same November 14, 2026 Junior Division vocal audition.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "All-State Registration deadline", "start_at": "2026-10-09", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "audition_round", "title": "All-State auditions @ Ponaganset HS", "start_at": "2026-11-14", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/allstate" },
+        { "date_type": "event", "title": "Junior All-State Treble Chorus rehearsal", "start_at": "2027-02-03T17:45:00", "end_at": "2027-02-03T20:15:00", "all_day": false, "timezone": "America/New_York", "description": "5:45-8:15 p.m., location TBD. Snow date February 4.", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Junior All-State Band & Junior All-State Treble Chorus rehearsals @ Ponaganset MS", "start_at": "2027-03-05", "end_at": "2027-03-06", "all_day": true, "timezone": "America/New_York", "description": "Times listed as TBD by RIMEA.", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Junior/Senior All-State Chorus Concert @ The VETS, Providence", "start_at": "2027-03-07T11:00:00", "all_day": false, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 7-9", "description": "Junior Division vocal auditions are open to all students in school grades 7-9.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf" },
+        { "category": "format", "title": "Three-part audition", "description": "Audition piece, pitch matching, and a four-measure stepwise sight singing phrase in 4/4.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf" }
+      ],
+      "repertoire": [
+        { "title": "Over My Head", "composer": "Adam Podd", "publisher": "Podd Brothers Music", "voicing": "SATB", "purpose": "audition", "notes": "2026-2027 Junior Division vocal audition piece, measures 23-56 only.", "source_url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 2577, "payable_to": "state_association", "description": "$25.77 per student, per audition; $25.00 if paid by cash/check.", "source_url": "https://www.rimea.org/allstate" },
+        { "fee_type": "participation", "amount_cents": 9278, "payable_to": "state_association", "description": "$92.78 participation fee; $90.00 if paid by cash/check.", "source_url": "https://www.rimea.org/allstate" }
+      ],
+      "documents": [
+        { "title": "2026-2027 Junior Division All-State Audition Procedures — Vocal", "url": "https://www.rimea.org/pdf/member_handbook/allstate_vocal_jr.pdf", "document_type": "handbook" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" }
+      ]
+    },
+    {
+      "name": "Elementary All-State Chorus",
+      "lineage_key": "rhode-island-elementary-chorus",
+      "season": "2026-27",
+      "school_level": "elementary",
+      "ensemble_type": "children's chorus",
+      "description": "RIMEA's Elementary All-State Chorus is entered by nomination rather than the November audition. It holds a read-through rehearsal in February and a full rehearsal and concert at The VETS in Providence in March.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Elementary All-State Chorus Nominations deadline", "start_at": "2027-01-15", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "acceptance_deadline", "title": "Final Elementary All-State Concert Master List & Student Contract — ONLINE submission", "start_at": "2027-01-29", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "acceptance_deadline", "title": "Final Elementary All-State Concert Master List & Student Contract — POSTMARKED", "start_at": "2027-02-05", "all_day": true, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Elementary All-State Chorus Read-Through Rehearsal", "start_at": "2027-02-06T09:00:00", "end_at": "2027-02-06T12:00:00", "all_day": false, "timezone": "America/New_York", "description": "9:00 a.m.-12:00 p.m., location TBD.", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Elementary All-State Chorus Rehearsal @ The VETS", "start_at": "2027-03-06T10:00:00", "end_at": "2027-03-06T16:00:00", "all_day": false, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" },
+        { "date_type": "event", "title": "Elementary All-State Chorus Concert @ The VETS", "start_at": "2027-03-06T16:30:00", "all_day": false, "timezone": "America/New_York", "source_url": "https://www.rimea.org/calendar" }
+      ],
+      "requirements": [
+        { "category": "format", "title": "Entry by nomination", "description": "Students enter the Elementary All-State Chorus through a nomination process with a January 15, 2027 deadline; there is no November audition for this ensemble.", "source_url": "https://www.rimea.org/calendar" }
+      ],
+      "documents": [
+        { "title": "Elementary All-State Chorus Nomination form", "url": "https://www.rimea.org/forms/allstate/elem", "document_type": "form" },
+        { "title": "Final Elementary All-State Concert Master List", "url": "https://www.rimea.org/forms/allstate/elem_master_list", "document_type": "form" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026/27 All-State chorus conductors — RIMEA maintains a conductors/managers page but specific 2026/27 choral conductors were not on the pages read",
+    "2026/27 All-State chorus concert (performance) repertoire",
+    "Junior and Senior Vocal audition practice MP3s — listed as PENDING on the All-State page as of the 6/8/26 update",
+    "Fees specific to the Elementary All-State Chorus",
+    "Audition day check-in/report times and the audition schedule for November 14, 2026",
+    "Rehearsal times for the March 5-6, 2027 chorus rehearsals — listed as TBD by RIMEA"
+  ]
+}

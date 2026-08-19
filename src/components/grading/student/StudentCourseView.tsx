@@ -149,7 +149,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     enabled: !!user && !!course?.calendar_id
   });
 
-  // Fetch schedule conflicts with MUS 070 rehearsal (MWF 5:00-6:15 PM)
+  // Fetch schedule conflicts with GW 070 rehearsal (MWF 5:00-6:15 PM)
   const { data: scheduleConflicts } = useQuery({
     queryKey: ['student-schedule-conflicts', user?.id],
     queryFn: async () => {
@@ -177,7 +177,6 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     return 'text-red-600 dark:text-red-400';
   };
 
-  const isMus240 = courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37';
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -322,7 +321,7 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         {/* ═══ Grades Tab ═══ */}
         <TabsContent value="grades" className="mt-6 space-y-4">
           {isAttendanceOnly ? (
-          /* ── Attendance-Only Model (MUS 070) ── */
+          /* ── Attendance-Only Model (GW 070) ── */
           <div className="space-y-4">
               <Card>
                 <CardContent className="pt-6 space-y-4">
@@ -389,8 +388,8 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
                   </CardTitle>
                   <CardDescription className="text-xs">
                     {scheduleConflicts && scheduleConflicts.length > 0 ?
-                  "These classes overlap with MUS 070 rehearsal (MWF 5:00–6:15 PM)" :
-                  "None of your classes conflict with MUS 070 rehearsal (MWF 5:00–6:15 PM)"}
+                  "These classes overlap with GW 070 rehearsal (MWF 5:00–6:15 PM)" :
+                  "None of your classes conflict with GW 070 rehearsal (MWF 5:00–6:15 PM)"}
                   </CardDescription>
                 </CardHeader>
                 {scheduleConflicts && scheduleConflicts.length > 0 &&

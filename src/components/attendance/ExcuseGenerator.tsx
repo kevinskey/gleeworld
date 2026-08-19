@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Send, ChevronDown, ChevronUp, Calendar, Clock, AlertTriangle, CheckCircle, XCircle, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useExcuseFormSettings } from '@/hooks/useExcuseFormSettings';
 import { useToast } from '@/hooks/use-toast';
 
 interface UpcomingEvent {
@@ -86,7 +87,10 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   
+  const { settings: formSettings } = useExcuseFormSettings();
   const [excuseType, setExcuseType] = useState<'pre-event' | 'post-event'>('pre-event');
+  const [ensemble, setEnsemble] = useState<string>('');
+  const [acknowledgmentName, setAcknowledgmentName] = useState<string>('');
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
@@ -119,15 +123,20 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
   const [isConflictWorksheetCollapsed, setIsConflictWorksheetCollapsed] = useState(false);
   const [isAttendanceStatsCollapsed, setIsAttendanceStatsCollapsed] = useState(false);
 
-  const reasonOptions = [
+  // Tenant-configured conflict types (gw_excuse_form_settings) win over
+  // the generic defaults; 'Other' is always available.
+  const defaultReasons = [
     'Medical appointment',
     'Family emergency',
     'Academic conflict',
     'Work commitment',
     'Transportation issues',
     'Illness',
-    'Other'
   ];
+  const configuredReasons = formSettings?.conflict_types?.length
+    ? formSettings.conflict_types.filter((r) => r.toLowerCase() !== 'other')
+    : defaultReasons;
+  const reasonOptions = [...configuredReasons, 'Other'];
 
   useEffect(() => {
     if (user) {
@@ -296,6 +305,24 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
       return;
     }
 
+    if (formSettings?.ensembles?.length && !ensemble) {
+      toast({
+        title: "Missing Information",
+        description: "Please select your ensemble or class",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formSettings?.require_acknowledgment && !acknowledgmentName.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please type your full name to acknowledge the absence policy",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (selectedReason === 'Other' && !customReason.trim()) {
       toast({
         title: "Missing Information",
@@ -352,6 +379,14 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
       } else if (excuseType === 'pre-event') {
         const selectedEventData = upcomingEvents.find(e => e.id === selectedEvent);
         
+        // Configured-form extras (columns added 20260803120000). Null when
+        // the tenant hasn't configured the form — identical to before.
+        const formExtras = {
+          ensemble: ensemble || null,
+          conflict_type: selectedReason === 'Other' ? null : selectedReason,
+          acknowledgment_name: acknowledgmentName.trim() || null,
+        };
+
         // Submit to new excuse requests table
         const { error } = await supabase
           .from('excuse_requests')
@@ -361,8 +396,9 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
             event_date: selectedEventData?.start_date?.split('T')[0],
             event_title: selectedEventData?.title || 'Unknown Event',
             reason: reasonWithDocumentation,
-            status: 'pending'
-          });
+            status: 'pending',
+            ...formExtras,
+          } as any);
 
         if (error) throw error;
 
@@ -374,8 +410,9 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
             event_id: selectedEvent,
             reason: fullReason,
             documentation_url: documentationUrl,
-            status: 'pending'
-          });
+            status: 'pending',
+            ...formExtras,
+          } as any);
 
         if (legacyError) console.warn('Legacy table insert failed:', legacyError);
       } else {
@@ -423,6 +460,8 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
       setCustomReason('');
       setDetailedExplanation('');
       setExcuseFile(null);
+      setEnsemble('');
+      setAcknowledgmentName('');
       setEditingRequest(null);
       setIsDialogOpen(false);
       
@@ -704,6 +743,25 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
                   </Select>
                 </div>
 
+                {/* Ensemble / Class (only when the tenant configured a list) */}
+                {!!formSettings?.ensembles?.length && (
+                  <div>
+                    <Label htmlFor="ensemble-select">Ensemble or Class</Label>
+                    <Select value={ensemble} onValueChange={setEnsemble}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select ensemble" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {formSettings.ensembles.map((name) => (
+                          <SelectItem key={name} value={name}>
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
                 {/* Reason Selector */}
                 <div>
                   <Label htmlFor="reason-select">Reason</Label>
@@ -738,6 +796,11 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
                         <DialogTitle>Submit Excuse Request</DialogTitle>
                       </DialogHeader>
                       <div className="space-y-4">
+                        {formSettings?.policy_text && (
+                          <div className="bg-muted rounded-md p-3 max-h-40 overflow-y-auto">
+                            <p className="text-sm whitespace-pre-wrap">{formSettings.policy_text}</p>
+                          </div>
+                        )}
                         {selectedReason === 'Other' && (
                           <div>
                             <Label htmlFor="custom-reason">Custom Reason</Label>
@@ -784,15 +847,33 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
                           )}
                         </div>
 
+                        {formSettings?.require_acknowledgment && (
+                          <div>
+                            <Label htmlFor="acknowledgment-name">
+                              Acknowledgment <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id="acknowledgment-name"
+                              value={acknowledgmentName}
+                              onChange={(e) => setAcknowledgmentName(e.target.value)}
+                              placeholder="Type your full name"
+                            />
+                            <p className="text-sm text-gray-500 mt-1">
+                              Typing your full name signifies your understanding of the expectations
+                              for late arrivals or absences from rehearsal.
+                            </p>
+                          </div>
+                        )}
+
                         <div className="flex justify-end space-x-2">
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             onClick={() => setIsDialogOpen(false)}
                             disabled={isSubmitting}
                           >
                             Cancel
                           </Button>
-                          <Button 
+                          <Button
                             onClick={submitExcuse}
                             disabled={isSubmitting}
                           >

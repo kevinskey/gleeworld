@@ -38,6 +38,11 @@ describe('NoteEditor', () => {
     expect(latest.elements[0]).toMatchObject({ kind: 'rest', base: 'half' });
   });
   it('Backspace deletes the last element', () => {
+    // Annotated, not inferred: without this `latest` takes the narrow type of
+    // its initialiser (elements: EditorNote[], and every field EditorScore
+    // happened to have that day), so onChange handing back a real EditorScore
+    // is a type error — and one whose MESSAGE spells the whole interface out,
+    // so it re-breaks the typecheck baseline every time a field is added.
     let latest: EditorScore = { ...emptyScore(), elements: [noteOf({ step:'C', octave:4, alter:0 }, 'quarter')] };
     render(<NoteEditor score={latest} onChange={(s) => { latest = s; }} />);
     fireEvent.keyDown(window, { key: 'Backspace' });
@@ -114,6 +119,12 @@ describe('NoteEditor', () => {
     expect(latest.elements[0]).toMatchObject({ kind: 'note', base: 'half', pitch: { step: 'C' } });
   });
 
+  // Queried by accessible name, not by the glyph. fd35a187e (2026-07-23) gave
+  // the accidental buttons aria-label="Natural"/"Sharp"/"Flat" so a screen
+  // reader announces the words instead of a bare ♮/♯/♭; an aria-label REPLACES
+  // the text content as the accessible name, so { name: '♭' } stopped matching
+  // the day that landed. The button and its behaviour are unchanged — this is
+  // the same getByRole lookup against the name the button now actually has.
   it('pad pitch buttons honor an armed accidental', () => {
     render(<Harness initial={emptyScore()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Flat' }));

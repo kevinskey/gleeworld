@@ -365,10 +365,10 @@ export const TourStipends = () => {
         </CardContent>
       </Card>
 
-      {/* Tour Parameters */}
+      {/* Travel Parameters */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Tour Parameters</CardTitle>
+          <CardTitle className="text-base">Travel Parameters</CardTitle>
           <CardDescription>Set base values — auto-filled from roster and itinerary when available</CardDescription>
         </CardHeader>
         <CardContent>
@@ -396,7 +396,7 @@ export const TourStipends = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Tour Days</Label>
+              <Label>Travel Days</Label>
               <div className="flex gap-2">
                 <Input
                   type="number"
@@ -691,7 +691,7 @@ const StipendLetterCard = ({
         .single();
 
       if (!folder) {
-        toast.error('Tour Documents folder not found');
+        toast.error('Travel Documents folder not found');
         setSavingToDocs(false);
         return;
       }
@@ -740,10 +740,10 @@ const StipendLetterCard = ({
 
       if (insertError) throw insertError;
 
-      toast.success('Letter saved to Tour Documents');
+      toast.success('Letter saved to Travel Documents');
     } catch (err: any) {
       console.error('Save to docs error:', err);
-      toast.error(err.message || 'Failed to save to Tour Documents');
+      toast.error(err.message || 'Failed to save to Travel Documents');
     } finally {
       setSavingToDocs(false);
     }
@@ -803,7 +803,7 @@ const StipendLetterCard = ({
                 </Button>
                 <Button variant="outline" size="sm" onClick={handleSaveToDocs} disabled={savingToDocs}>
                   <FileText className="h-4 w-4 mr-1" />
-                  {savingToDocs ? 'Saving...' : 'Save to Tour Docs'}
+                  {savingToDocs ? 'Saving...' : 'Save to Travel Docs'}
                 </Button>
                 <Button variant="outline" size="sm" onClick={handlePrint}>
                   <Download className="h-4 w-4 mr-1" />

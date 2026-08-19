@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ImageUploadField } from '../ImageUploadField';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Our Choirs & Ensembles'),
@@ -20,19 +21,19 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const items = config.ensembles.filter((e) => e.name);
-  if (items.length === 0) return null;
+  if (items.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Choirs & Ensembles" /> : null;
   return (
     <section id="ensembles" className="gw-container py-5">
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-4 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-4 flex items-center gap-2">
           <MicVocal className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
       )}
       {config.intro && <p className="text-muted-foreground mb-8 max-w-3xl">{config.intro}</p>}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid cq-sm:grid-cols-2 cq-lg:grid-cols-3 gap-5">
         {items.map((e, i) => (
           <div key={i} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
             {e.imageUrl ? (

@@ -110,7 +110,7 @@ export const BusInfoSection = () => {
   };
 
   const emailItinerary = () => {
-    const subject = encodeURIComponent(`Charter Bus Quote Request — ${tourData?.tour.name || 'Tour'}`);
+    const subject = encodeURIComponent(`Charter Bus Quote Request — ${tourData?.tour.name || 'Travel'}`);
     const body = encodeURIComponent(itineraryText);
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };
@@ -151,11 +151,11 @@ export const BusInfoSection = () => {
 
   return (
     <div className="space-y-6">
-      {/* Saved Bus Companies — Tour's Assigned Companies */}
+      {/* Saved Bus Companies — Travel's Assigned Companies */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Bus className="h-5 w-5 text-primary" />
-          Tour Bus Companies
+          Travel Bus Companies
         </h2>
 
         {loadingSaved ? (
@@ -165,7 +165,7 @@ export const BusInfoSection = () => {
         ) : savedCompanies.length === 0 ? (
           <Card className="p-6 text-center text-muted-foreground">
             <Bus className="h-10 w-10 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No bus companies assigned to this tour yet.</p>
+            <p className="text-sm">No bus companies assigned to this travel yet.</p>
             <p className="text-xs mt-1">Add bus companies from the Route Manager.</p>
           </Card>
         ) : (
@@ -253,17 +253,17 @@ export const BusInfoSection = () => {
 
       <Separator />
 
-      {/* Tour Itinerary for Bus Companies */}
+      {/* Travel Itinerary for Bus Companies */}
       <div className="space-y-4">
         <h2 className="text-lg font-semibold flex items-center gap-2">
           <Route className="h-5 w-5 text-primary" />
-          Tour Itinerary for Bus Companies
+          Travel Itinerary for Bus Companies
         </h2>
 
         {!tourData ? (
           <Card className="p-6 text-center text-muted-foreground">
             <Route className="h-10 w-10 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">No active tour found. Create a tour to generate an itinerary.</p>
+            <p className="text-sm">No active travel found. Create a travel to generate an itinerary.</p>
           </Card>
         ) : (
           <Card>

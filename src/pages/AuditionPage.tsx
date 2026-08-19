@@ -7,9 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Mic, ArrowLeft, ArrowRight } from "lucide-react";
-import { Navigate } from "react-router-dom";
 import { CongratulationsDialog } from "@/components/audition/CongratulationsDialog";
-import { AuditionFormProvider, useAuditionForm, AuditionFormData } from "@/components/audition/AuditionFormProvider";
+import {
+  AuditionFormProvider,
+  useAuditionForm,
+  AuditionFormData,
+  clearAuditionDraft,
+} from "@/components/audition/AuditionFormProvider";
+import type { AuditionPageId } from "@/components/audition/auditionPages";
 import { AuditionFormProgress } from "@/components/audition/AuditionFormProgress";
 import { RegistrationPage } from "@/components/audition/pages/RegistrationPage";
 import { BasicInfoPage } from "@/components/audition/pages/BasicInfoPage";
@@ -21,45 +26,197 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { sendAuditionConfirmationEmail } from "@/utils/sendAuditionConfirmationEmail";
 import { logActivity } from "@/utils/activityLogger";
 import { getOrgName } from "@/lib/orgName";
+import { submitPublicIntake, type PublicIntakeResult } from "@/lib/publicIntakeClient";
+
+// tsconfig here has strictNullChecks: false, under which plain `if (!result.ok)
+// { ...; return; }` does NOT narrow the discriminated union for the rest of
+// the function — TS keeps the widened type and typecheck:guard fails on
+// `.message` (see the identical note in PublicBookingPage.tsx, which hit the
+// same trap first). A user-defined type predicate narrows correctly even
+// under that config.
+function isIntakeFailure(
+  r: PublicIntakeResult,
+): r is Extract<PublicIntakeResult, { ok: false }> {
+  return r.ok === false;
+}
+
+const PAGE_COMPONENTS: Record<AuditionPageId, () => JSX.Element> = {
+  basic: () => <BasicInfoPage />,
+  background: () => <MusicalBackgroundPage />,
+  skills: () => <MusicSkillsPage />,
+  personal: () => <PersonalInfoPage />,
+  scheduling: () => <SchedulingAndSelfiePage />,
+  account: () => <RegistrationPage />,
+};
 
 function AuditionFormContent() {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCongratulations, setShowCongratulations] = useState(false);
-  const { 
-    form, 
-    currentPage, 
-    totalPages, 
-    capturedImage, 
-    nextPage, 
-    previousPage, 
-    canProceed 
+  const [accountStatus, setAccountStatus] = useState<'created' | 'existing'>('created');
+  const {
+    form,
+    currentPage,
+    currentPageId,
+    totalPages,
+    capturedImage,
+    nextPage,
+    previousPage,
+    canProceed
   } = useAuditionForm();
 
-  const onSubmit = async (data: AuditionFormData) => {
-    console.log('🚀 Submit function called with data:', data);
-    console.log('👤 Current user:', user);
-    console.log('📸 Captured image:', capturedImage);
-    
-    if (!user) {
-      console.log('❌ No user found');
-      toast.error("Please log in to submit your audition form");
-      return;
+  // Signed-in users have no account step and therefore no password on the
+  // form — the server's 8-character rule would reject them. This remains
+  // their write path, unchanged from before this feature: a direct,
+  // idempotent insert/update against audition_applications.
+  const submitAsAuthenticatedUser = async (submissionData: Record<string, any>) => {
+    if (!user) return;
+
+    const capitalizeNames = (name: string) => {
+      return name
+        .toLowerCase()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    };
+
+    // First get an active audition session
+    const { data: activeSessions, error: sessionError } = await supabase
+      .from('audition_sessions')
+      .select('id')
+      .eq('is_active', true)
+      .limit(1);
+
+    if (sessionError || !activeSessions || activeSessions.length === 0) {
+      throw new Error('No active audition session found. Please contact administration.');
     }
 
+    const firstNameResolved = capitalizeNames(
+      form.getValues('firstName') || (user as any)?.user_metadata?.full_name?.split(' ')?.[0] || (user.email?.split('@')[0] ?? 'Auditioner')
+    );
+
+    const fullSubmissionData: Record<string, any> = {
+      ...submissionData,
+      user_id: user.id,
+      session_id: activeSessions[0].id,
+    };
+
+    // Idempotent save: update if already exists for this user/session, else insert
+    let dbError: any = null;
+
+    const { data: existingApp, error: lookupError } = await supabase
+      .from('audition_applications')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('session_id', activeSessions[0].id)
+      .maybeSingle();
+
+    if (lookupError && (lookupError as any).code && (lookupError as any).code !== 'PGRST116') {
+      console.warn('Lookup warning (continuing):', lookupError);
+    }
+
+    // Prepare a minimal safe payload in case stricter fields trigger policies
+    const minimalData: any = {
+      user_id: user.id,
+      session_id: activeSessions[0].id,
+      full_name: fullSubmissionData.full_name,
+      email: fullSubmissionData.email,
+      audition_time_slot: fullSubmissionData.audition_time_slot,
+      status: 'submitted'
+    };
+
+    if (existingApp?.id) {
+      const updateData = { ...fullSubmissionData };
+      delete (updateData as any).user_id;
+      delete (updateData as any).session_id;
+
+      const { error: updErr } = await supabase
+        .from('audition_applications')
+        .update(updateData)
+        .eq('id', existingApp.id);
+
+      if (updErr) {
+        const msg = (updErr.message || '').toLowerCase();
+        const looksPrivilege = msg.includes('privilege') || msg.includes('policy') || msg.includes('cannot modify your own privileges');
+
+        if (looksPrivilege) {
+          // Fallback: update only minimal, non-privileged fields
+          const { error: updMinimalErr } = await supabase
+            .from('audition_applications')
+            .update({
+              full_name: minimalData.full_name,
+              email: minimalData.email,
+              audition_time_slot: minimalData.audition_time_slot,
+              status: minimalData.status,
+            })
+            .eq('id', existingApp.id);
+          dbError = updMinimalErr ?? null;
+        } else {
+          dbError = updErr;
+        }
+      }
+    } else {
+      const { error: insErr } = await supabase
+        .from('audition_applications')
+        .insert(fullSubmissionData);
+
+      if (insErr) {
+        const msg = (insErr.message || '').toLowerCase();
+        const looksPrivilege = msg.includes('privilege') || msg.includes('policy') || msg.includes('cannot modify your own privileges');
+        if (looksPrivilege) {
+          // Fallback: insert a minimal, policy-friendly record
+          const { error: insMinimalErr } = await supabase
+            .from('audition_applications')
+            .insert(minimalData);
+          dbError = insMinimalErr ?? null;
+        } else {
+          dbError = insErr;
+        }
+      }
+    }
+
+    if (dbError) {
+      throw dbError;
+    }
+
+    // Send email confirmation to auditioner
+    try {
+      const sendResult = await sendAuditionConfirmationEmail({
+        applicationId: existingApp?.id || 'new-application',
+        applicantName: `${firstNameResolved} ${capitalizeNames(form.getValues('lastName'))}`,
+        applicantEmail: form.getValues('email'),
+        auditionDate: format(form.getValues('auditionDate'), 'yyyy-MM-dd'),
+        auditionTime: form.getValues('auditionTime'),
+        // No location data source exists: audition_sessions has no location
+        // column (see migration 20250804132905), so there is nothing
+        // tenant-real to put here. auditionLocation is optional on both the
+        // client type and the edge function request body — omitting it is
+        // the correct behavior, not a placeholder.
+      });
+      if (!sendResult?.success) {
+        console.warn('Email not sent or suppressed:', sendResult);
+      }
+    } catch (emailError) {
+      console.error('❌ Email error:', emailError);
+      // Don't fail the whole process if email fails
+    }
+
+    form.reset();
+    setShowCongratulations(true);
+  };
+
+  const onSubmit = async (data: AuditionFormData) => {
     if (!capturedImage) {
-      console.log('❌ No captured image');
       toast.error("Please take a selfie before submitting");
       return;
     }
-    
+
     // Require date and time selection
     if (!data.auditionDate || !data.auditionTime) {
       toast.error("Please select an audition date and time");
       return;
     }
 
-    console.log('✅ Starting submission process...');
     setIsSubmitting(true);
 
     try {
@@ -72,65 +229,36 @@ function AuditionFormContent() {
           .join(' ');
       };
 
-      // Save audition data to database - fix table and field mapping
-      console.log('💾 Attempting to save to database...');
-      
-      // First get an active audition session
-      const { data: activeSessions, error: sessionError } = await supabase
-        .from('audition_sessions')
-        .select('id')
-        .eq('is_active', true)
-        .limit(1);
-
-      if (sessionError || !activeSessions || activeSessions.length === 0) {
-        throw new Error('No active audition session found. Please contact administration.');
-      }
-      
       // Parse the selected time like "3:30 PM" onto the selected date
       const timeParsed = parse(data.auditionTime, 'h:mm a', data.auditionDate);
       if (isNaN(timeParsed.getTime())) {
         throw new Error('Invalid time value');
       }
-      
-      const firstNameResolved = capitalizeNames(
-        data.firstName || (user as any)?.user_metadata?.full_name?.split(' ')?.[0] || (user.email?.split('@')[0] ?? 'Auditioner')
-      );
-      const formattedDate = format(data.auditionDate, 'EEEE, MMMM d, yyyy');
-      const formattedTime = `${format(timeParsed, 'h:mm a')} ET`;
 
-      // Normalize values to satisfy DB CHECK constraints
-      const normalizeVoicePart = (input?: string | null): string | null => {
-        if (!input) return null;
-        const s = input.toLowerCase().trim().replace(/\s+/g, '');
-        // Direct codes like s1, s2, a1, etc.
-        if (/^(s|a|t|b)[12]$/.test(s)) return s.toUpperCase() as 'S1'|'S2'|'A1'|'A2'|'T1'|'T2'|'B1'|'B2';
-        // Names with optional section numbers
-        if (s.includes('sopr')) return s.includes('2') || /ii$/.test(s) ? 'S2' : 'S1';
-        if (s.includes('mezzo')) return 'A2';
-        if (s.includes('contralto')) return 'A2';
-        if (s.includes('alto')) return s.includes('2') ? 'A2' : 'A1';
-        if (s.includes('tenor')) return s.includes('2') ? 'T2' : 'T1';
-        if (s.includes('baritone')) return 'B1';
-        if (s.includes('bass')) return s.includes('2') ? 'B2' : 'B1';
-        return null;
-      };
-      const voicePartCode = normalizeVoicePart(data.highSchoolSection);
-      
-      const submissionData: any = {
-        user_id: user.id,
-        session_id: activeSessions[0].id,
+
+      // Note: user_id and session_id are intentionally NOT included here.
+      // For the anonymous path (submitPublicIntake below) the edge function
+      // supplies both server-side — a client-supplied user_id would let
+      // anyone file an application against another person's account. For
+      // the authenticated path, submitAsAuthenticatedUser adds them back.
+      const submissionData: Record<string, unknown> = {
         full_name: `${capitalizeNames(data.firstName)} ${capitalizeNames(data.lastName)}`,
         email: data.email,
         phone_number: data.phone,
         profile_image_url: capturedImage,
-        previous_choir_experience: data.sangInHighSchool ? 'High School Choir' : 'No previous experience',
-        voice_part_preference: voicePartCode,
+        // The middle/high-school questions were removed from the form, so
+        // neither of these has a source any more. Left unset rather than
+        // defaulted: recording 'No previous experience' for every auditioner
+        // because we stopped asking would be worse than recording nothing,
+        // and voice_part_preference came from the high-school section answer.
         years_of_vocal_training: data.isSoloist ? 1 : 0,
         instruments_played: (data.playsInstrument || data.sectionType === 'instrumental') && data.instrumentDetails
           ? [data.instrumentDetails]
           : [],
         music_theory_background: data.readsMusic ? 'Basic' : 'None',
-        why_glee_club: data.personalityDescription,
+        // Optional now, so it can arrive undefined. Empty string rather than
+        // null, because this column's nullability is not guaranteed.
+        why_glee_club: data.personalityDescription ?? '',
         vocal_goals: data.additionalInfo || 'General vocal improvement',
         audition_time_slot: timeParsed.toISOString(),
         status: 'submitted',
@@ -150,129 +278,52 @@ function AuditionFormContent() {
         submissionData.sight_reading_level = candidateSight;
       }
 
-      
-      console.log('📋 Submission data prepared:', submissionData);
-      
-      // Idempotent save: update if already exists for this user/session, else insert
-      let dbError: any = null;
-
-      const { data: existingApp, error: lookupError } = await supabase
-        .from('audition_applications')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('session_id', activeSessions[0].id)
-        .maybeSingle();
-
-      if (lookupError && (lookupError as any).code && (lookupError as any).code !== 'PGRST116') {
-        console.warn('Lookup warning (continuing):', lookupError);
+      if (user) {
+        await submitAsAuthenticatedUser(submissionData);
+        return;
       }
 
-      // Prepare a minimal safe payload in case stricter fields trigger policies
-      const minimalData: any = {
-        user_id: user.id,
-        session_id: activeSessions[0].id,
-        full_name: `${capitalizeNames(data.firstName)} ${capitalizeNames(data.lastName)}`,
-        email: data.email,
-        audition_time_slot: timeParsed.toISOString(),
-        status: 'submitted'
-      };
+      // Anonymous visitor — the case this feature exists for. The account
+      // is created (or matched to an existing one) and the application is
+      // written server-side, in the same request, with no client session
+      // required.
+      const result = await submitPublicIntake({
+        kind: 'audition',
+        account: {
+          email: data.email,
+          password: data.password ?? '',
+          firstName: data.firstName,
+          lastName: data.lastName,
+          phone: data.phone,
+        },
+        payload: { application: submissionData },
+      });
 
-      let fallbackUsed = false;
-
-      if (existingApp?.id) {
-        const updateData = { ...submissionData };
-        delete (updateData as any).user_id;
-        delete (updateData as any).session_id;
-
-        const { error: updErr } = await supabase
-          .from('audition_applications')
-          .update(updateData)
-          .eq('id', existingApp.id);
-
-        if (updErr) {
-          const msg = (updErr.message || '').toLowerCase();
-          const looksPrivilege = msg.includes('privilege') || msg.includes('policy') || msg.includes('cannot modify your own privileges');
-
-          if (looksPrivilege) {
-            // Fallback: update only minimal, non-privileged fields
-            const { error: updMinimalErr } = await supabase
-              .from('audition_applications')
-              .update({
-                full_name: minimalData.full_name,
-                email: minimalData.email,
-                audition_time_slot: minimalData.audition_time_slot,
-                status: minimalData.status,
-              })
-              .eq('id', existingApp.id);
-            dbError = updMinimalErr ?? null;
-            fallbackUsed = !updMinimalErr;
-          } else {
-            dbError = updErr;
-          }
-        }
-      } else {
-        const { error: insErr } = await supabase
-          .from('audition_applications')
-          .insert(submissionData);
-
-        if (insErr) {
-          const msg = (insErr.message || '').toLowerCase();
-          const looksPrivilege = msg.includes('privilege') || msg.includes('policy') || msg.includes('cannot modify your own privileges');
-          if (looksPrivilege) {
-            // Fallback: insert a minimal, policy-friendly record
-            const { error: insMinimalErr } = await supabase
-              .from('audition_applications')
-              .insert(minimalData);
-            dbError = insMinimalErr ?? null;
-            fallbackUsed = !insMinimalErr;
-          } else {
-            dbError = insErr;
-          }
-        }
+      if (isIntakeFailure(result)) {
+        toast.error(result.message);
+        return;
       }
 
-      if (dbError) {
-        console.log('❌ Database error details:', {
-          message: dbError.message,
-          details: dbError.details,
-          hint: dbError.hint,
-          code: dbError.code
-        });
-        throw dbError;
-      }
-
-      console.log('✅ Successfully saved to database!');
-      
-      // Send email confirmation to auditioner
-      try {
-        console.log('📧 Sending confirmation email via utility...');
-        const sendResult = await sendAuditionConfirmationEmail({
-          applicationId: existingApp?.id || 'new-application',
-          applicantName: `${firstNameResolved} ${capitalizeNames(data.lastName)}`,
-          applicantEmail: data.email,
-          auditionDate: format(data.auditionDate, 'yyyy-MM-dd'),
-          auditionTime: data.auditionTime,
-          auditionLocation: 'Rockefeller Fine Arts Building Room 109'
-        });
-        if (!sendResult?.success) {
-          console.warn('Email not sent or suppressed:', sendResult);
-        } else {
-          console.log('✅ Confirmation email sent:', sendResult);
-        }
-      } catch (emailError) {
-        console.error('❌ Email error:', emailError);
-        // Don't fail the whole process if email fails
-      }
-      
-      form.reset();
+      clearAuditionDraft();
+      setAccountStatus(result.accountStatus === 'existing' ? 'existing' : 'created');
       setShowCongratulations(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      // Narrowed once: supabase-js, our own throws and the intake client all
+      // land here, and none of them guarantee an Error instance.
+      const errMessage = error instanceof Error ? error.message : String(error);
+      // PostgREST errors carry code/details/hint; only an Error carries a
+      // stack. Narrow the whole shape once rather than asserting field by
+      // field — these four are all the diagnostics log reads.
+      const errShape = (error ?? {}) as {
+        code?: string; details?: string; hint?: string;
+      };
+      const errStack = error instanceof Error ? error.stack : undefined;
       console.error('💥 Detailed error:', {
-        message: error?.message,
-        details: error?.details,
-        hint: error?.hint,
-        code: error?.code,
-        stack: error?.stack
+        message: errMessage,
+        details: errShape.details,
+        hint: errShape.hint,
+        code: errShape.code,
+        stack: errStack
       });
       // Non-blocking activity log for diagnostics
       try {
@@ -280,57 +331,20 @@ function AuditionFormContent() {
           actionType: 'audition_application_failed',
           resourceType: 'audition',
           details: {
-            message: error?.message,
-            code: error?.code,
-            details: error?.details,
-            hint: error?.hint
+            message: errMessage,
+            code: errShape.code,
+            details: errShape.details,
+            hint: errShape.hint
           }
         });
       } catch {}
-      toast.error(`Failed to submit: ${error?.message || 'Unknown error'}`);
+      toast.error(`Failed to submit: ${errMessage || 'Unknown error'}`);
     } finally {
-      console.log('🏁 Setting isSubmitting to false');
       setIsSubmitting(false);
     }
   };
 
-  const renderCurrentPage = () => {
-    if (!user) {
-      // Flow for non-authenticated users
-      switch (currentPage) {
-        case 1:
-          return <RegistrationPage />;
-        case 2:
-          return <BasicInfoPage />;
-        case 3:
-          return <MusicalBackgroundPage />;
-        case 4:
-          return <MusicSkillsPage />;
-        case 5:
-          return <PersonalInfoPage />;
-        case 6:
-          return <SchedulingAndSelfiePage />;
-        default:
-          return <RegistrationPage />;
-      }
-    } else {
-      // Flow for authenticated users
-      switch (currentPage) {
-        case 1:
-          return <BasicInfoPage />;
-        case 2:
-          return <MusicalBackgroundPage />;
-        case 3:
-          return <MusicSkillsPage />;
-        case 4:
-          return <PersonalInfoPage />;
-        case 5:
-          return <SchedulingAndSelfiePage />;
-        default:
-          return <BasicInfoPage />;
-      }
-    }
-  };
+  const renderCurrentPage = () => PAGE_COMPONENTS[currentPageId]();
 
   // Allow access for both authenticated and non-authenticated users
 
@@ -385,14 +399,7 @@ function AuditionFormContent() {
               <Button 
                 type="button"
                 onClick={async () => {
-                  console.log('🔘 MOBILE Submit button clicked directly!');
-                  console.log('🔘 isSubmitting:', isSubmitting);
-                  console.log('🔘 canProceed():', canProceed());
-                  
-                  const formData = form.getValues();
-                  console.log('🔘 Form data:', formData);
-                  
-                  await onSubmit(formData);
+                  await onSubmit(form.getValues());
                 }}
                 className="bg-purple-600 hover:bg-purple-700 text-white flex-1"
                 disabled={isSubmitting || !canProceed()}
@@ -433,14 +440,7 @@ function AuditionFormContent() {
                   <Button 
                     type="button"
                     onClick={async () => {
-                      console.log('🔘 Submit button clicked directly!');
-                      console.log('🔘 isSubmitting:', isSubmitting);
-                      console.log('🔘 canProceed():', canProceed());
-                      
-                      const formData = form.getValues();
-                      console.log('🔘 Form data:', formData);
-                      
-                      await onSubmit(formData);
+                      await onSubmit(form.getValues());
                     }}
                     className="bg-purple-600 hover:bg-purple-700 text-white"
                     disabled={isSubmitting || !canProceed()}
@@ -454,9 +454,10 @@ function AuditionFormContent() {
         </div>
       </div>
       
-      <CongratulationsDialog 
+      <CongratulationsDialog
         open={showCongratulations}
         onOpenChange={setShowCongratulations}
+        accountStatus={accountStatus}
       />
     </div>
   );

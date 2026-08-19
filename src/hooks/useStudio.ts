@@ -9,11 +9,13 @@ import {
   getAssetUrl, uploadAudioAsset,
   type SessionListItem,
 } from '@/lib/studio/storage';
+import { blankSession, newId } from '@/lib/studio/defaults';
 import { StudioEngine, type EngineState } from '@/lib/studio/engine/engine';
 import { trackEqSig } from '@/lib/studio/engine/trackEq';
 import { setAssetUrl } from '@/lib/studio/engine/assetUrlCache';
 import { renderSessionToWav } from '@/lib/studio/engine/mixdown';
-import type { Session, MidiClip } from '@/lib/studio/session';
+import { MASTER_BUS_ID } from '@/lib/studio/session';
+import type { Session, MidiClip, AudioTrack, Accompaniment } from '@/lib/studio/session';
 import { decodeJwtClaims } from '@/lib/demoSession';
 import {
   isNativeStudioAvailable, openNativeStudio, NativeStudio,
@@ -69,10 +71,151 @@ export function useMySessions() {
   });
 }
 
+export interface CreateStudioSessionInput {
+  tenantId: string;
+  ownerUserId: string;
+  title: string;
+  template?: 'empty' | 'satb' | 'custom';
+  /** Pre-mapped accompaniment (non-file kinds: apple_music, youtube, etc.). */
+  accompaniment?: Accompaniment | null;
+  /** Raw File object from the picker. When present, it is uploaded to storage
+   * BEFORE the manifest is written so the manifest carries a real public URL.
+   * Mutually exclusive with `accompaniment` — if both are provided,
+   * `accompanimentFile` takes precedence and `accompaniment` is ignored. */
+  accompanimentFile?: File;
+  customParts?: Array<{ kind: string; label: string; color: string }>;
+}
+
+async function createStudioSessionWithTemplate(input: CreateStudioSessionInput): Promise<Session> {
+  // For empty or no-template, fall back to the existing storage helper.
+  if (!input.template || input.template === 'empty') {
+    return createSession({ tenantId: input.tenantId, ownerUserId: input.ownerUserId, title: input.title });
+  }
+
+  // Build the base session with a caller-supplied id so the storage prefix
+  // is deterministic before we write the manifest.
+  const id = newId();
+  const base = blankSession({ id, ownerUserId: input.ownerUserId, tenantId: input.tenantId, title: input.title });
+
+  // Build template tracks (AudioTrack shape — every required field present).
+  const templateTracks: AudioTrack[] = (() => {
+    if (input.template === 'satb') {
+      const defs = [
+        { id: 't-sop', name: 'Soprano', color: '#fbbf24' },
+        { id: 't-alt', name: 'Alto',    color: '#f97316' },
+        { id: 't-ten', name: 'Tenor',   color: '#3b82f6' },
+        { id: 't-bas', name: 'Bass',    color: '#9333ea' },
+      ];
+      return defs.map((d): AudioTrack => ({
+        id: d.id,
+        kind: 'audio',
+        name: d.name,
+        color: d.color,
+        volume_db: 0,
+        pan: 0,
+        mute: false,
+        solo: false,
+        arm: false,
+        fx: [],
+        clips: [],
+        output: { bus_id: MASTER_BUS_ID },
+        sends: [],
+      }));
+    }
+    if (input.template === 'custom' && input.customParts?.length) {
+      return input.customParts.map((p, i): AudioTrack => ({
+        id: `t-${p.kind}-${i}`,
+        kind: 'audio',
+        name: p.label,
+        color: p.color,
+        volume_db: 0,
+        pan: 0,
+        mute: false,
+        solo: false,
+        arm: false,
+        fx: [],
+        clips: [],
+        output: { bus_id: MASTER_BUS_ID },
+        sends: [],
+      }));
+    }
+    return [];
+  })();
+
+  // Build the storage prefix now so the accompaniment upload path uses it.
+  const prefix = `${input.tenantId}/sessions/${id}`;
+
+  // If a raw File was picked, upload it BEFORE writing the manifest so the
+  // manifest carries a real public URL instead of a '' placeholder.
+  // The accompanimentFile path takes precedence over any pre-mapped accompaniment.
+  let resolvedAccompaniment: Accompaniment | null = input.accompaniment ?? null;
+  if (input.accompanimentFile) {
+    const file = input.accompanimentFile;
+    const ext = file.name.includes('.') ? file.name.split('.').pop() ?? 'bin' : 'bin';
+    const assetPath = `${prefix}/audio/accompaniment-${Date.now()}.${ext}`;
+    const { error: uploadErr } = await supabase.storage
+      .from('studio')
+      .upload(assetPath, file, {
+        contentType: file.type || 'application/octet-stream',
+        upsert: true,
+      });
+    if (uploadErr) throw new Error(`Failed to upload accompaniment file: ${uploadErr.message}`);
+    // Studio bucket is private (holds the manifest + user audio). getPublicUrl
+    // returns a `/object/public/` URL that 403s on private buckets, so audio
+    // never played. Signed URLs bypass RLS via a JWT in the URL and work on
+    // private buckets. 1-year expiry is generous for a session-lifetime
+    // asset; on load, refreshFileAccompanimentUrl re-signs if it detects an
+    // expired URL. Match the same shape in captureFromPlayback.ts.
+    const { data: signedData, error: signErr } = await supabase.storage
+      .from('studio')
+      .createSignedUrl(assetPath, 60 * 60 * 24 * 365);
+    if (signErr || !signedData?.signedUrl) {
+      throw new Error(`Failed to sign accompaniment URL: ${signErr?.message ?? 'no url'}`);
+    }
+    resolvedAccompaniment = {
+      kind: 'file',
+      title: file.name,
+      fileUrl: signedData.signedUrl,
+    };
+  }
+
+  const session: Session = {
+    ...base,
+    tracks: [...base.tracks, ...templateTracks],
+    accompaniment: resolvedAccompaniment,
+  };
+
+  // Write the manifest directly (mirrors storage.createSession internals).
+  const body = new Blob([JSON.stringify(session)], { type: 'application/json' });
+  const { error: manifestErr } = await supabase.storage
+    .from('studio')
+    .upload(`${prefix}/manifest.json`, body, { contentType: 'application/json', upsert: true });
+  if (manifestErr) throw manifestErr;
+
+  // Register the DB index row.
+  const { error: dbErr } = await supabase.from('gw_studio_sessions').insert({
+    id: session.id,
+    tenant_id: input.tenantId,
+    owner_user_id: input.ownerUserId,
+    title: session.title,
+    schema_version: session.schema_version,
+    storage_prefix: prefix,
+    duration_seconds: session.length_seconds,
+    track_count: session.tracks.length,
+    asset_count: 0,
+  });
+  if (dbErr) {
+    // Best-effort cleanup.
+    await supabase.storage.from('studio').remove([`${prefix}/manifest.json`]);
+    throw dbErr;
+  }
+  return session;
+}
+
 export function useCreateStudioSession() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: createSession,
+    mutationFn: createStudioSessionWithTemplate,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['studio-sessions'] }),
   });
 }
@@ -93,6 +236,17 @@ export function useStudioSession(sessionId: string | null) {
   const [error, setError] = useState<Error | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks whether there is an edit that hasn't yet been dispatched to
+  // saveSession. Set true whenever an edit is queued; cleared the moment a
+  // save is actually dispatched (debounce timer fires, flushSave runs, or
+  // the unmount flush runs) — not when the save's promise resolves, so a
+  // fast second flush can't race the in-flight request. Without this the
+  // unmount flush saved unconditionally: (1) an edit that had already been
+  // debounce-saved >800ms earlier still triggered a second, redundant save
+  // on unmount, and (2) merely opening and closing a session with no edits
+  // at all triggered a spurious save that bumps updated_at and can clobber
+  // newer server state in multi-tab use.
+  const dirtyRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -131,7 +285,12 @@ export function useStudioSession(sessionId: string | null) {
 
   const queueSave = useCallback((next: Session) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => { saveSession(next).catch(setError); }, 800);
+    dirtyRef.current = true;
+    saveTimer.current = setTimeout(() => {
+      saveTimer.current = null;
+      dirtyRef.current = false;
+      saveSession(next).catch(setError);
+    }, 800);
   }, []);
 
   const update = useCallback((mutator: (s: Session) => Session) => {
@@ -143,20 +302,42 @@ export function useStudioSession(sessionId: string | null) {
     });
   }, [queueSave]);
 
-  // Latest session in a ref so the unmount flush below doesn't capture the
-  // first-render value (always null — the session loads async), which
-  // silently discarded any pending debounced save.
-  const sessionRef = useRef<Session | null>(null);
-  useEffect(() => { sessionRef.current = session; }, [session]);
+  // I2: Imperative flush — cancels the debounce timer and writes to storage
+  // immediately. Use after high-value mutations (e.g. capture-from-playback)
+  // where losing the update on a quick reload would orphan an uploaded asset.
+  //
+  // Accepts an optional session override — callers that already have the
+  // post-mutation session in hand should pass it, because React's setState
+  // batches mean the hook's own `session` may not yet reflect the caller's
+  // `update()` call. Cancelling the timer prevents a later queueSave from
+  // racing this direct write.
+  const flushSave = useCallback((override?: Session): Promise<void> => {
+    if (saveTimer.current) { clearTimeout(saveTimer.current); saveTimer.current = null; }
+    const target = override ?? session;
+    dirtyRef.current = false;
+    return target ? saveSession(target).catch(setError) : Promise.resolve();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session]);
 
-  // Flush on unmount.
+  // Latest session for the unmount flush — the cleanup closure below is
+  // created once (deps []), so reading state directly there would see the
+  // mount-time value (null) forever. Kept current every render instead.
+  const sessionRef = useRef<Session | null>(null);
+  sessionRef.current = session;
+
+  // Flush on unmount. Reads sessionRef (not `session`) — see above. Only
+  // saves when dirtyRef is true: a debounced save that already fired (or a
+  // session that was never edited) must not trigger a redundant/spurious
+  // save here — see the dirtyRef comment above.
   useEffect(() => () => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    if (sessionRef.current) saveSession(sessionRef.current).catch(() => { /* swallow */ });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (dirtyRef.current && sessionRef.current) {
+      dirtyRef.current = false;
+      saveSession(sessionRef.current).catch(() => { /* swallow */ });
+    }
   }, []);
 
-  return { session, loading, error, update, reload };
+  return { session, loading, error, update, flushSave, reload };
 }
 
 // ── Engine lifecycle bound to a session ──────────────────────────────

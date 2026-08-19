@@ -32,19 +32,13 @@ export const PAGE_NAMES: Record<string, string> = {
   '/payments': 'Payments',
   '/budget-approvals': 'Budget Approvals',
   '/budgets': 'Budget Management',
-  '/tour-manager': 'Tour Manager Dashboard',
+  '/tour-manager': 'Travel Manager Dashboard',
   '/treasurer': 'Treasurer Dashboard',
   '/tour-planner': 'Tour Planner',
   
   // Course Routes
-  '/mus-100': 'MUS 100 - Music Theory Fundamentals',
-  '/mus-210': 'MUS 210 - Choral Conducting',
-  '/mus-240': 'MUS 240 - Survey of African American Music',
-  '/mus-240/syllabus': 'MUS 240 Syllabus',
-  '/mus-240/listening': 'MUS 240 Listening Hub',
-  '/mus-240/assignments': 'MUS 240 Assignments',
-  '/mus-240/grades': 'MUS 240 Grades & Progress',
-  '/mus-240/resources': 'MUS 240 Resources'
+  '/mus-100': 'GW 100 - Music Theory Fundamentals',
+  '/mus-210': 'GW 210 - Choral Conducting',
 };
 
 export const getPageName = (pathname: string): string => {
@@ -57,12 +51,6 @@ export const getPageName = (pathname: string): string => {
   }
   if (pathname.startsWith('/contract-signing/')) {
     return 'Contract Signing';
-  }
-  if (pathname.startsWith('/mus-240/listening/')) {
-    return 'MUS 240 Week Detail';
-  }
-  if (pathname.startsWith('/mus-240/assignments/')) {
-    return 'MUS 240 Assignment';
   }
   
   // Check exact matches

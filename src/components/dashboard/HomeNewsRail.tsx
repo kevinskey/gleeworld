@@ -9,54 +9,27 @@
 // every request, so slicing separate offset pages would drift between
 // requests (duplicate/skipped headlines). One growing request is always
 // internally consistent, and the 15-minute refetch re-runs one request,
-// not one per accumulated page. Headlines open in an in-app reader sheet
-// (most news sites block iframing, so the sheet shows the feed's own
-// summary with an explicit "Open full article" escape hatch).
+// not one per accumulated page. Headlines open in the shared in-app
+// ArticleReaderSheet (most news sites block iframing; the sheet shows the
+// extracted story with save-to-notes and an "Open full article" escape
+// hatch).
 import { useEffect, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { ExternalLink, Newspaper, RefreshCw } from 'lucide-react';
+import { Newspaper, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
-  Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle,
-} from '@/components/ui/sheet';
+  ArticleReaderSheet, decodeEntities, timeAgo, type NewsReaderItem,
+} from '@/components/news/ArticleReader';
 
-interface NewsItem {
-  title: string;
-  link: string;
+interface NewsItem extends NewsReaderItem {
   pubDate: string;
   source: string;
-  description?: string;
-  imageUrl?: string | null;
 }
 
 const PAGE_SIZE = 15;
 const MAX_ITEMS = 150; // matches the edge function's limit clamp
-
-// The edge function decodes the common entities but feeds still leak a few.
-function decodeEntities(s: string): string {
-  return s
-    .replace(/&amp;/g, '&')
-    .replace(/&apos;/g, "'")
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>');
-}
-
-function timeAgo(dateStr: string): string {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  if (Number.isNaN(date.getTime())) return '';
-  const mins = Math.floor((Date.now() - date.getTime()) / 60000);
-  if (mins < 60) return `${Math.max(mins, 1)}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
 
 export function HomeNewsRail() {
   // Feeds are per-tenant: the function uses this tenant's Feed Control
@@ -92,27 +65,6 @@ export function HomeNewsRail() {
   // blank the panel on the first frame of the slide-out).
   const [reading, setReading] = useState<NewsItem | null>(null);
   const [readerOpen, setReaderOpen] = useState(false);
-
-  // Full-article extraction: the sheet opens instantly on the feed summary,
-  // then the server-extracted body streams in underneath when it lands.
-  // Extraction is best-effort (paywalls/JS pages fail) — on failure the
-  // summary simply stays, no error surfaced.
-  const { data: fullArticle, isFetching: extracting } = useQuery({
-    queryKey: ['article-extract', reading?.link],
-    enabled: readerOpen && !!reading?.link,
-    staleTime: Infinity,
-    retry: false,
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('extract-article', {
-        body: { url: reading!.link },
-      });
-      // Throw on failure (rather than returning null) so react-query keeps
-      // it as an error state — a transient blip retries on next open instead
-      // of being cached forever as a successful "no article".
-      if (error || !data?.success) throw new Error(data?.error || 'extraction failed');
-      return data as { paragraphs: string[]; byline: string | null; siteName: string | null; truncated: boolean };
-    },
-  });
 
   const listRef = useRef<HTMLUListElement>(null);
   const sentinelRef = useRef<HTMLLIElement>(null);
@@ -209,78 +161,7 @@ export function HomeNewsRail() {
         )}
       </div>
 
-      <Sheet open={readerOpen} onOpenChange={setReaderOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-          {reading && (
-            <>
-              <SheetHeader className="text-left">
-                <p className="text-xs text-muted-foreground">
-                  {reading.source}
-                  {timeAgo(reading.pubDate) && ` · ${timeAgo(reading.pubDate)}`}
-                </p>
-                <SheetTitle className="text-lg leading-snug">
-                  {decodeEntities(reading.title)}
-                </SheetTitle>
-              </SheetHeader>
-              {reading.imageUrl && (
-                <img
-                  src={reading.imageUrl}
-                  alt=""
-                  className="mt-3 w-full max-h-56 object-cover border border-border"
-                  loading="lazy"
-                  // Most outlets' image hosts aren't in the CSP img-src
-                  // allowlist — hide the frame instead of showing a broken box.
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                />
-              )}
-              {fullArticle?.paragraphs?.length ? (
-                <div className="mt-3 space-y-3">
-                  {/* Radix wires aria-describedby to SheetDescription; keep
-                      one (visually hidden) when the full article replaces
-                      the summary so the dialog stays described. */}
-                  <SheetDescription className="sr-only">
-                    Full article text from {fullArticle.siteName || reading.source}
-                  </SheetDescription>
-                  {fullArticle.byline && (
-                    <p className="text-xs text-muted-foreground">{fullArticle.byline}</p>
-                  )}
-                  {fullArticle.paragraphs.map((p, i) => (
-                    <p key={i} className="text-sm leading-relaxed text-foreground/90">{p}</p>
-                  ))}
-                  {fullArticle.truncated && (
-                    <p className="text-xs text-muted-foreground">
-                      Story shortened for the reader — the full version is on the source site.
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <SheetDescription className="mt-3 text-sm leading-relaxed text-foreground/90">
-                    {reading.description
-                      // Strip tags AFTER decoding: feeds ship entity-encoded
-                      // markup (&lt;em&gt;) that the server's pre-decode strip
-                      // pass can't see, and it would render as literal text.
-                      ? decodeEntities(reading.description).replace(/<[^>]+>/g, '')
-                      : "This source didn't include a summary. Open the full article to read the story."}
-                  </SheetDescription>
-                  {extracting && (
-                    <p className="mt-3 text-xs text-muted-foreground" role="status" aria-live="polite">
-                      Loading the full story…
-                    </p>
-                  )}
-                </>
-              )}
-              <div className="mt-5">
-                <Button asChild className="w-full sm:w-auto">
-                  <a href={reading.link} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="w-4 h-4 mr-1.5" /> Open full article
-                  </a>
-                </Button>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <ArticleReaderSheet item={reading} open={readerOpen} onOpenChange={setReaderOpen} />
     </aside>
   );
 }

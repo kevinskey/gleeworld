@@ -51,7 +51,7 @@ const statusConfig: Record<PerformanceStatus, { label: string; icon: React.React
 
 export const PerformanceGradeEntry: React.FC<PerformanceGradeEntryProps> = ({ 
   courseId,
-  courseCode = 'MUS 070'
+  courseCode = 'GW 070'
 }) => {
   const performances = getPerformanceNames(courseId);
   const performanceNames = performances.map(p => p.name);

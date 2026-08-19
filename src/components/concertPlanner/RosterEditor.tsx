@@ -6,13 +6,20 @@
 // through useConcertProgram's mutations — the transform layer picks up
 // the new rows on the next render and the grid-roster card reflows.
 
-import { useState } from 'react';
+import { useState, type ClipboardEvent } from 'react';
 import { Plus, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useConcertProgram } from '@/hooks/useConcertPrograms';
 import { SpeechInputButton } from './SpeechInputButton';
+
+// Splits a multi-line paste into trimmed, non-empty names, in order. Used
+// by both the section-name input and each section's member-name input —
+// "Roster entry keeps its fast path" (bulk paste, not one row at a time).
+function splitPastedNames(text: string): string[] {
+  return text.split('\n').map((s) => s.trim()).filter(Boolean);
+}
 
 interface RosterEditorProps {
   concert: ReturnType<typeof useConcertProgram>;
@@ -26,6 +33,17 @@ export function RosterEditor({ concert }: RosterEditorProps) {
     const name = newSection.trim();
     if (!name) return;
     addRosterSection.mutate(name);
+    setNewSection('');
+  };
+
+  // Bulk paste: several section names at once ("Soprano\nAlto\nTenor") add
+  // each as its own section. A single-line paste falls through to the
+  // input's default paste behavior (fills the field, Enter/button submits).
+  const handleSectionPaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text');
+    if (!text.includes('\n')) return;
+    e.preventDefault();
+    splitPastedNames(text).forEach((name) => addRosterSection.mutate(name));
     setNewSection('');
   };
 
@@ -43,6 +61,7 @@ export function RosterEditor({ concert }: RosterEditorProps) {
             value={newSection}
             onChange={(e) => setNewSection(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitSection(); } }}
+            onPaste={handleSectionPaste}
             placeholder="Soprano, Alto, Tenor…"
             className="text-xs h-8"
           />
@@ -93,6 +112,16 @@ function RosterSectionRow({
     setPending('');
   };
 
+  // Bulk paste: several member names at once add each in order. A
+  // single-line paste falls through to the input's default paste behavior.
+  const handleMemberPaste = (e: ClipboardEvent<HTMLInputElement>) => {
+    const text = e.clipboardData.getData('text');
+    if (!text.includes('\n')) return;
+    e.preventDefault();
+    splitPastedNames(text).forEach((name) => onAddMember(name));
+    setPending('');
+  };
+
   return (
     <div className="border border-border rounded-lg p-2 bg-muted/30">
       <div className="flex items-center justify-between mb-1.5">
@@ -127,11 +156,12 @@ function RosterSectionRow({
           value={pending}
           onChange={(e) => setPending(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
-          placeholder="Add member…"
+          onPaste={handleMemberPaste}
+          placeholder="Add name…"
           className="text-[11px] h-7"
         />
         <SpeechInputButton
-          label={`Dictate member name for ${sectionName}`}
+          label={`Dictate a name for ${sectionName}`}
           className="h-7 w-7"
           onTranscript={(text) => onAddMember(text)}
         />

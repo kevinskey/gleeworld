@@ -396,7 +396,7 @@ export function AutomationPanel({
         <div className="flex-1" />
         {(modeValue === 'write' || modeValue === 'touch' || modeValue === 'latch') && (
           <span
-            className="text-[10px] font-semibold uppercase tracking-wide text-red-500 inline-flex items-center gap-1 animate-pulse"
+            className="text-xs font-semibold uppercase tracking-wide text-red-500 inline-flex items-center gap-1 animate-pulse"
             aria-live="polite"
             title={
               modeValue === 'write'
@@ -413,7 +413,7 @@ export function AutomationPanel({
         <div
           role="group"
           aria-label="Automation mode"
-          className="inline-flex rounded border border-border overflow-hidden text-[11px] font-semibold"
+          className="inline-flex rounded border border-border overflow-hidden text-xs font-semibold"
         >
           {(['off', 'read', 'touch', 'latch', 'write'] as AutomationMode[]).map((m) => (
             <button
@@ -462,7 +462,7 @@ export function AutomationPanel({
 
       {shown && shown.points.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <div className="grid grid-cols-[6rem_1fr_3.5rem_7rem_2rem] items-center gap-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+          <div className="grid grid-cols-[6rem_1fr_3.5rem_7rem_2rem] items-center gap-2 text-xs uppercase tracking-wide text-muted-foreground">
             <span>Time (s)</span>
             <span>Value</span>
             <span className="text-right">Readout</span>

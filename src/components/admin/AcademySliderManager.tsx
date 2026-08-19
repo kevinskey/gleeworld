@@ -216,7 +216,7 @@ export const AcademySliderManager = () => {
                 id="course_code"
                 value={formData.course_code}
                 onChange={(e) => setFormData((prev) => ({ ...prev, course_code: e.target.value }))}
-                placeholder="e.g., MUS 070"
+                placeholder="e.g., GW 070"
               />
             </div>
             <div className="space-y-2">

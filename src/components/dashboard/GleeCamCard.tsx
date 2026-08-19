@@ -23,6 +23,7 @@ const IMAGE_FILE_TYPES = [
   "image/gif",
   "image/webp",
   "image/heic",
+  "image/avif",
 ];
 
 const SCROLL_SPEED = 0.6; // pixels per frame

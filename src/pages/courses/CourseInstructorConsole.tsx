@@ -21,11 +21,9 @@ import { getFilteredNavCategories, InstructorNavCategory } from '@/config/instru
 // Import shared components that can work with any course
 import { CourseAssignmentManager } from '@/components/course/CourseAssignmentManager';
 import { CourseGradesAdmin } from '@/components/course/CourseGradesAdmin';
-import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
+import { AIAssistant } from '@/components/academy/instructor/AIAssistant';
 import { CourseEnrollmentManager } from '@/components/academy/CourseEnrollmentManager';
-import { StudentAnalyticsDashboard } from '@/components/mus240/admin/StudentAnalyticsDashboard';
-import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
-import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
+import { RubricManager } from '@/components/academy/rubrics/RubricManager';
 import { CourseAnnouncementsManager } from '@/components/course/CourseAnnouncementsManager';
 import { SyllabusTemplateEditor } from '@/components/academy/syllabus/SyllabusTemplateEditor';
 import { ModulesSection } from '@/components/course/ModulesSection';
@@ -88,7 +86,7 @@ const termToSemesterLabel = (term: string | null | undefined): string => {
   return 'Spring 2026';
 };
 
-// Convert URL slug to course code (e.g., mus-240 -> MUS 240)
+// Convert URL slug to course code (e.g., mus-240 -> GW 240)
 const slugToCourseCode = (slug: string): string => {
   const parts = slug.split('-');
   const prefix = parts[0].toUpperCase();
@@ -202,7 +200,7 @@ export const CourseInstructorConsole = () => {
                       : "hover:bg-muted/50"
                   )}
                   style={{ 
-                    color: isActive ? '#150d26' : '#334155',
+                    color: isActive ? 'hsl(var(--brand-navy))' : '#334155',
                     backgroundColor: isActive ? '#e0f2fe' : undefined,
                     borderColor: isActive ? '#bae6fd' : undefined,
                     fontSize: '15px',
@@ -215,7 +213,7 @@ export const CourseInstructorConsole = () => {
                     style={{ 
                       width: '16px', 
                       height: '16px',
-                      color: isActive ? '#150d26' : '#475569',
+                      color: isActive ? 'hsl(var(--brand-navy))' : '#475569',
                     }} 
                   />
                   <span>{item.label}</span>
@@ -328,9 +326,7 @@ export const CourseInstructorConsole = () => {
                 semester={semesterLabel}
               />
             )}
-            {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
             {activeTab === 'announcements' && dbCourse && <CourseAnnouncementsManager courseId={dbCourse.id} />}
-            {activeTab === 'resources' && <ResourcesAdmin />}
             {activeTab === 'playlists' && dbCourse && <CoursePlaylistManager courseId={dbCourse.id} />}
             {activeTab === 'videos' && dbCourse && <CourseVideoLibrary courseId={dbCourse.id} isInstructor={true} />}
             {activeTab === 'attendance-security' && dbCourse && (

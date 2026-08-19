@@ -1,0 +1,101 @@
+{
+  "state_slug": "new-york",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "New York's All-State selection is unusual: there is no separate All-State audition event. Students prepare a NYSSMA Level VI solo from the current NYSSMA Manual repertoire lists and are evaluated at one of 40+ regional NYSSMA All-State evaluation sites across the state's 15 zones. Adjudicators score on a 100-point scale; scores of 98-100 must be recommended, and statewide selection committees meeting in late June build master proficiency lists from those scores. NYSSMA labels the cycle by the calendar year of the Winter Conference, so what NYSSMA calls '2026 All-State' is the 2026-27 school-year program (Winter Conference, Rochester, December 3-6, 2026). Fee amounts, evaluation-site dates, and the repertoire lists themselves are not on public NYSSMA pages (the Manual is a separate paid/member digital product).",
+  "organization": {
+    "name": "New York State School Music Association",
+    "acronym": "NYSSMA",
+    "website_url": "https://www.nyssma.org/",
+    "description": "NYSSMA administers solo and ensemble festivals, the NYSSMA Manual repertoire lists, and the Conference All-State honors ensembles for New York State. The All-State bands, chorus, orchestra and jazz ensembles comprise the top students from school music departments statewide and perform during the annual NYSSMA Winter Conference in Rochester."
+  },
+  "sources": [
+    { "name": "NYSSMA Conference All-State: 'The Process'", "url": "https://www.nyssma.org/parents-students/the-all-state-process/", "source_type": "official" },
+    { "name": "NYSSMA home page — Upcoming Events and Festival Information", "url": "https://www.nyssma.org/", "source_type": "official" },
+    { "name": "2026 NYSSMA All-State Application", "url": "https://www.nyssma.org/2026-nyssma-all-state-application/", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "NYSSMA® Conference All-State — Mixed Chorus and Treble Chorus",
+      "lineage_key": "new-york-conference-all-state-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The NYSSMA Conference All-State choruses are among eight honors ensembles directed by guest conductors, rehearsing Thursday through Sunday and performing on one of three concerts in the Eastman Theatre and Innovations Theater in Rochester during the NYSSMA Winter Conference. Approximately 825 students across all eight All-State groups are notified of selection each year in late August.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "NYSSMA® Winter Conference (All-State rehearsals and concerts)",
+          "start_at": "2026-12-03",
+          "end_at": "2026-12-06",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Joseph A. Floreano Rochester Riverside Convention Center, Rochester, NY. NYSSMA's event listing shows daily hours of 8:00 am - 5:00 pm; All-State rehearsals run Thursday through the Sunday concert.",
+          "source_url": "https://www.nyssma.org/"
+        },
+        {
+          "date_type": "other",
+          "title": "Music and instructions mailed to selected students",
+          "start_at": "2026-10-15",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "NYSSMA states that music and instructions from the All-State Chairs and conductors are mailed to successful candidates on October 15.",
+          "source_url": "https://www.nyssma.org/parents-students/the-all-state-process/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "materials",
+          "title": "NYSSMA Level VI solo from the current NYSSMA Manual",
+          "description": "Candidates prepare a NYSSMA Level VI solo, which must be selected from the repertoire lists in the current NYSSMA Manual, and perform it with an accompanist. Selection committees are instructed that all Level VI repertoire from the Manual must be given equal consideration.",
+          "source_url": "https://www.nyssma.org/parents-students/the-all-state-process/"
+        },
+        {
+          "category": "format",
+          "title": "Evaluation at a regional NYSSMA All-State site",
+          "description": "New York is divided into 15 NYSSMA zones, and typically over 40 All-State audition sites are scheduled in schools statewide. The solo is evaluated by a NYSSMA Certified All-State adjudicator, who evaluates every All-State solo for the same instrument or voice part at that site.",
+          "source_url": "https://www.nyssma.org/parents-students/the-all-state-process/"
+        },
+        {
+          "category": "rubric",
+          "title": "Scoring and proficiency ranking",
+          "description": "Every student earning a score of 98-100 must be recommended. Adjudicators rank recommended students by score, 100s ahead of 99s, and break ties by proficiency judgment. Statewide selection committees convene in late June to merge zone proficiency lists into a master proficiency list per voice part, considering (in no priority order) teacher recommendations, adjudicator recommendations, previous NYSSMA solo ratings, grade in school, zone representation, prior-year All-State participation, and participation in other performing organizations. No qualified candidate may be passed over for another student lower on the same local list. Every student receiving a score of 100 is guaranteed at least alternate status.",
+          "source_url": "https://www.nyssma.org/parents-students/the-all-state-process/"
+        },
+        {
+          "category": "eligibility",
+          "title": "School ensemble membership required",
+          "description": "All applicants must be a participating member of their corresponding school music organization both at the time of the audition and at the time of their membership in the Conference All-State organization. Candidates may be disqualified if a music teacher does not recommend the student, if application forms are incomplete or missing, or if NYSSMA rules and regulations on audition procedure are violated. NYSSMA describes the applicant pool as typically over 6,500 sophomores and juniors.",
+          "source_url": "https://www.nyssma.org/parents-students/the-all-state-process/"
+        },
+        {
+          "category": "other",
+          "title": "Application submitted by the high school ensemble director",
+          "description": "The NYSSMA All-State application is designated 'For High School Performing Group Directors ONLY' / 'For High School Ensemble Teachers Only'.",
+          "source_url": "https://www.nyssma.org/2026-nyssma-all-state-application/"
+        },
+        {
+          "category": "other",
+          "title": "Ensemble placement and notification",
+          "description": "Selected students are assigned to one of the eight All-State performing ensembles; care is taken not to place a student in the same ensemble in two consecutive years. Students selected for more than one ensemble receive an acceptance letter for each and choose. Selected students and alternates are notified by mail in late August and asked to return acceptance forms.",
+          "source_url": "https://www.nyssma.org/parents-students/the-all-state-process/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "2026 All State Application Instructions",
+          "url": "https://www.nyssma.org/wp-content/uploads/2026/01/2026-All-State-Application-Instructions-1.pdf",
+          "document_type": "form"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "Fee amounts — no All-State application or participation fee published on public NYSSMA pages",
+    "Dates of the individual All-State solo evaluation sites — these are set by each of the 15 zones and posted on zone pages, not centrally",
+    "Repertoire — the Level VI lists live in the NYSSMA Manual, a separate digital product that requires sign-in",
+    "All-State chorus conductor names for the December 2026 conference",
+    "The exact registration/application deadline date (the 2026 All State Application Instructions PDF could not be retrieved)",
+    "Explicit voice-part list for the All-State choruses"
+  ]
+}

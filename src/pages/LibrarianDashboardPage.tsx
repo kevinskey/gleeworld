@@ -5,9 +5,11 @@ import { useUsernamePermissions } from '@/hooks/useUsernamePermissions';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Shield } from 'lucide-react';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { DashboardShell } from '@/components/dashboard/DashboardShell';
 
+// No UniversalLayout/DashboardShell here — the /dashboard/librarian route
+// already supplies both, so wrapping again nested a second shell inside the
+// first. /librarian-dashboard now redirects here rather than rendering the page
+// with a different wrapper.
 const LibrarianDashboardPage = () => {
   console.log('🔍 LibrarianDashboardPage rendering');
   
@@ -19,13 +21,9 @@ const LibrarianDashboardPage = () => {
   
   if (loading) {
     return (
-      <UniversalLayout showHeader={false} showFooter={false}>
-      <DashboardShell>
         <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center py-20">
           <LoadingSpinner size="lg" text="Checking permissions..." />
         </div>
-      </DashboardShell>
-    </UniversalLayout>
     );
   }
   
@@ -40,8 +38,6 @@ const LibrarianDashboardPage = () => {
   
   if (!hasLibrarianAccess) {
     return (
-      <UniversalLayout showHeader={false} showFooter={false}>
-      <DashboardShell>
         <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4 py-20">
           <div className="max-w-md mx-auto text-center">
             <Shield className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -51,30 +47,20 @@ const LibrarianDashboardPage = () => {
             </p>
           </div>
         </div>
-      </DashboardShell>
-    </UniversalLayout>
     );
   }
 
   try {
     return (
-      <UniversalLayout showHeader={false} showFooter={false}>
-      <DashboardShell>
         <LibrarianDashboard />
-      </DashboardShell>
-    </UniversalLayout>
     );
   } catch (error) {
     console.error('🚨 LibrarianDashboardPage error:', error);
     return (
-      <UniversalLayout showHeader={false} showFooter={false}>
-      <DashboardShell>
         <div className="p-4">
           <h1>Error loading Librarian Dashboard</h1>
           <p>Please check the console for details.</p>
         </div>
-      </DashboardShell>
-    </UniversalLayout>
     );
   }
 };

@@ -1,6 +1,7 @@
 // Edge function: Stripe Checkout (one-time payment) for a premium course add-on.
 // Caller passes sku. Webhook writes gw_tenant_entitlement rows on completion.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
+import { resolveTargetTenant, TENANT_ADMIN_ROLES } from '../_shared/verifyJwt.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,18 +38,23 @@ Deno.serve(async (req) => {
       })
     }
     const payload = JSON.parse(atob(accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-    const tenantId = payload.tenant_id
-    const tenantRole = payload.tenant_role
+    payload.sub = userData.user.id
     const userEmail = payload.email
-    if (!tenantId) throw new Error('JWT missing tenant_id claim')
-    if (!['admin', 'super-admin', 'super_admin'].includes(tenantRole)) {
+
+    const { sku, success_url, cancel_url, tenant_slug } = await req.json()
+    if (!sku) throw new Error('sku required')
+
+    // Target tenant from the page's slug, not the JWT's home-tenant claim
+    // (see resolveTargetTenant in _shared/verifyJwt.ts — the claim is the
+    // caller's HOME tenant and is wrong for cross-homed admins).
+    const { tenantId, tenantRole } = await resolveTargetTenant(
+      payload, tenant_slug ?? req.headers.get('x-tenant-slug'))
+    if (!tenantId) throw new Error('Unknown tenant (pass tenant_slug)')
+    if (!TENANT_ADMIN_ROLES.includes(tenantRole)) {
       return new Response(JSON.stringify({ error: 'Only tenant admins can purchase courses' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
-
-    const { sku, success_url, cancel_url } = await req.json()
-    if (!sku) throw new Error('sku required')
     const { data: product, error: prodErr } = await sb
       .from('gw_course_product')
       .select('id, sku, name, price_cents, stripe_price_id, bundle_key, template_course_id')

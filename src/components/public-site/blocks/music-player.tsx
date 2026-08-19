@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MediaPicker, type MediaItem } from '../MediaPicker';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 const schema = z.object({
   heading: z.string().default('Listen'),
@@ -21,18 +22,22 @@ const schema = z.object({
 });
 type Config = z.infer<typeof schema>;
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   const tracks = config.tracks.filter((t) => t.url);
-  if (tracks.length === 0) return null;
+  if (tracks.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Music Player" /> : null;
   return (
     <section id="music" className="gw-container py-5">
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-6 flex items-center gap-2">
           <Music className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
       )}
-      <div className="space-y-4 max-w-3xl">
+      {/* Two to a row once there is room, matching the Watch block below it.
+          The old single column was capped at max-w-3xl, which left half the
+          section empty on a desktop. Stacks to one column in a narrow
+          container — `cq-*`, so the builder's phone preview stacks too. */}
+      <div className="grid gap-4 cq-sm:grid-cols-2">
         {tracks.map((t, i) => (
           <div key={i} className="rounded-xl border border-border bg-card p-4 space-y-2">
             {(t.title || t.artist) && (

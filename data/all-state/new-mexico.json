@@ -1,0 +1,110 @@
+{
+  "state_slug": "new-mexico",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "NMMEA has published its 2026-2027 calendar (choir All-State audition window and the January 2027 All-State Music Festival), and states that audition registration opens September 1, 2026. However, the choir audition-material document linked from the Vocal Auditions page is still headed '2025 All-State Choir Audition Material', so the specific 2026-27 choral audition excerpt is NOT yet confirmed and has been deliberately omitted from repertoire. Audition format requirements are recorded from that document but flagged as prior-season wording.",
+  "organization": {
+    "name": "New Mexico Music Educators Association",
+    "acronym": "NMMEA",
+    "website_url": "https://www.nmmea.com/",
+    "description": "NMMEA is New Mexico's state music education association. It administers statewide All-State auditions for choir, guitar, orchestra, band and jazz, and hosts the annual All-State Music Festival and In-Service Conference."
+  },
+  "sources": [
+    { "name": "NMMEA 2026-2027 Dates", "url": "https://www.nmmea.com/news-updates/2026-2027-dates/", "source_type": "calendar" },
+    { "name": "NMMEA All-State Auditions", "url": "https://www.nmmea.com/all-state-auditions/", "source_type": "official" },
+    { "name": "NMMEA All-State — Choir (Vocal Auditions)", "url": "https://www.nmmea.com/all-state/vocal-auditions/", "source_type": "official" },
+    { "name": "NMMEA All-State", "url": "https://www.nmmea.com/all-state/", "source_type": "official" },
+    { "name": "NMMEA All-State Choir Audition Material (Google Doc)", "url": "https://docs.google.com/document/d/1dyd4TTpdKYhg6QKtdAZQUpnefDZSx4ckIrcVJ9tIpQc/edit", "source_type": "other" }
+  ],
+  "programs": [
+    {
+      "name": "All-State Choir",
+      "lineage_key": "new-mexico-all-state-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "NMMEA's All-State Choir, selected by statewide audition and performing at the NMMEA All-State Music Festival and In-Service Conference.",
+      "dates": [
+        {
+          "date_type": "other",
+          "title": "Audition registration opens",
+          "start_at": "2026-09-01",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "NMMEA states 'Audition Registration will open September 1, 2026.'",
+          "source_url": "https://www.nmmea.com/all-state-auditions/"
+        },
+        {
+          "date_type": "audition_round",
+          "title": "Choir, Guitar & Orchestra All-State Auditions",
+          "start_at": "2026-10-15",
+          "end_at": "2026-10-24",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "description": "Audition window published on the NMMEA 2026-2027 dates page.",
+          "source_url": "https://www.nmmea.com/news-updates/2026-2027-dates/"
+        },
+        {
+          "date_type": "event",
+          "title": "All-State Music Festival & In-Service Conference",
+          "start_at": "2027-01-06",
+          "end_at": "2027-01-09",
+          "all_day": true,
+          "timezone": "America/Denver",
+          "source_url": "https://www.nmmea.com/news-updates/2026-2027-dates/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Three-part audition: prepared solo, choral audition excerpt, sight-reading",
+          "description": "NMMEA's linked choir audition-material document (headed '2025 All-State Choir Audition Material' at time of retrieval) describes an audition consisting of a memorized prepared solo performed with piano accompaniment, a memorized choral audition excerpt performed against a backing track with the auditioned part muted, and a sight-reading exercise.",
+          "source_url": "https://docs.google.com/document/d/1dyd4TTpdKYhg6QKtdAZQUpnefDZSx4ckIrcVJ9tIpQc/edit"
+        },
+        {
+          "category": "materials",
+          "title": "Prepared solo requirements",
+          "description": "Solo must demonstrate range, tone quality, technical ability and artistry; must be performed with piano accompaniment (a cappella solos not accepted); must be memorized; the solo audition is stopped at two minutes regardless of the length of the selection.",
+          "source_url": "https://docs.google.com/document/d/1dyd4TTpdKYhg6QKtdAZQUpnefDZSx4ckIrcVJ9tIpQc/edit"
+        },
+        {
+          "category": "sight_reading",
+          "title": "Sight-reading exercise",
+          "description": "Students sing an eight-measure sight-reading exercise; sight-reading parameters are given in the NMMEA handbook, and piano introductions in all keys are provided in NMMEA resource folders.",
+          "source_url": "https://docs.google.com/document/d/1dyd4TTpdKYhg6QKtdAZQUpnefDZSx4ckIrcVJ9tIpQc/edit"
+        },
+        {
+          "category": "eligibility",
+          "title": "Home-school students register separately",
+          "description": "Home-school students and students attending schools without music programs may not be registered through the standard vocal All-State registration form; parents must contact NMMEA for registration information.",
+          "source_url": "https://www.nmmea.com/all-state/vocal-auditions/"
+        }
+      ],
+      "documents": [
+        {
+          "title": "All-State Rubrics (Updated 2021)",
+          "url": "https://www.nmmea.com/wp-content/uploads/2021/08/All-State-Rubrics-Updated-2021.pdf",
+          "document_type": "rules"
+        },
+        {
+          "title": "Required Scale Ranges",
+          "url": "https://www.nmmea.com/wp-content/uploads/2019/03/Required-Scale-Ranges.pdf",
+          "document_type": "rules"
+        }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 choral audition selection — the linked audition-material document was still headed '2025 All-State Choir Audition Material' when retrieved",
+    "Audition or participation fee amounts — no dollar figures published on NMMEA public pages",
+    "Number and names of the individual All-State choirs (e.g. mixed vs. treble) for 2026-27",
+    "2026-27 All-State choir conductor(s)",
+    "Specific clock times for auditions or festival events"
+  ]
+}

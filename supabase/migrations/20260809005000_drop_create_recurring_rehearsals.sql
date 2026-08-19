@@ -1,0 +1,113 @@
+-- Drop create_recurring_rehearsals.
+--
+-- Disabled in #566 by revoking EXECUTE from anon/authenticated; this removes
+-- it. Approved by Kevin 2026-08-09.
+--
+-- Why it goes rather than gets fixed:
+--   * SECURITY DEFINER with NO caller authorization, and EXECUTE had been
+--     granted to anon — any anonymous visitor could INSERT into gw_events,
+--     bypassing RLS, by passing a created_by_id.
+--   * Hardcodes "Spelman College Glee Club Rehearsal" and "Spelman College
+--     Music Building". One build serves ~50 white-label tenants.
+--   * Sets no tenant_id on the insert.
+--   * Its NULL-created_by branch reads public.profiles, a table that does
+--     not exist, so that path could only ever raise.
+--   * Hardcodes Mon/Wed/Fri at 17:00-18:15 — not configurable.
+--
+-- Verified safe to drop, all against production:
+--   * 0 other functions reference it
+--   * 0 RLS policies reference it
+--   * 0 dependent objects (pg_depend, non-normal deptype)
+--   * 1 overload only — no siblings left behind
+--   * 0 call sites in src/ or supabase/functions (the sole match was the
+--     generated types.ts)
+--   * 0 rows were ever created with its hardcoded title
+--
+-- The complete prior definition is reproduced below so this is reversible
+-- from the migration alone. Recurring rehearsals should be rebuilt, if
+-- wanted, as a tenant-scoped feature with a real permission check and
+-- configurable days/times.
+--
+--   CREATE OR REPLACE FUNCTION public.create_recurring_rehearsals(start_date date, end_date date, created_by_id uuid DEFAULT NULL::uuid)
+--    RETURNS integer
+--    LANGUAGE plpgsql
+--    SECURITY DEFINER
+--    SET search_path TO 'public'
+--   AS $function$
+--   DECLARE
+--     loop_date DATE;
+--     event_count INTEGER := 0;
+--     event_start_time TIMESTAMP WITH TIME ZONE;
+--     event_end_time TIMESTAMP WITH TIME ZONE;
+--     default_user_id UUID;
+--   BEGIN
+--     -- Get a default user ID if none provided (use the first admin/super-admin)
+--     IF created_by_id IS NULL THEN
+--       SELECT id INTO default_user_id 
+--       FROM public.profiles 
+--       WHERE role IN ('admin', 'super-admin') 
+--       LIMIT 1;
+--       
+--       IF default_user_id IS NULL THEN
+--         RAISE EXCEPTION 'No admin user found and no created_by_id provided';
+--       END IF;
+--       
+--       created_by_id := default_user_id;
+--     END IF;
+--     
+--     -- Start from the given start_date
+--     loop_date := start_date;
+--     
+--     -- Loop through dates until end_date
+--     WHILE loop_date <= end_date LOOP
+--       -- Check if loop_date is Monday (1), Wednesday (3), or Friday (5)
+--       IF EXTRACT(DOW FROM loop_date) IN (1, 3, 5) THEN
+--         -- Set start time to 5:00 PM (17:00)
+--         event_start_time := loop_date + INTERVAL '17 hours';
+--         -- Set end time to 6:15 PM (18:15)
+--         event_end_time := loop_date + INTERVAL '18 hours 15 minutes';
+--         
+--         -- Insert the rehearsal event with 'performance' event_type to pass check constraint
+--         INSERT INTO public.gw_events (
+--           title,
+--           description,
+--           event_type,
+--           start_date,
+--           end_date,
+--           venue_name,
+--           location,
+--           is_public,
+--           registration_required,
+--           status,
+--           created_by,
+--           created_at,
+--           updated_at
+--         ) VALUES (
+--           'Spelman College Glee Club Rehearsal',
+--           'Regular rehearsal for the Spelman College Glee Club. All members are expected to attend.',
+--           'performance',
+--           event_start_time,
+--           event_end_time,
+--           'Spelman College Music Building',
+--           'Atlanta, GA',
+--           true,
+--           false,
+--           'scheduled',
+--           created_by_id,
+--           NOW(),
+--           NOW()
+--         );
+--         
+--         event_count := event_count + 1;
+--       END IF;
+--       
+--       -- Move to next day
+--       loop_date := loop_date + INTERVAL '1 day';
+--     END LOOP;
+--     
+--     RETURN event_count;
+--   END;
+--   $function$
+--   
+
+DROP FUNCTION IF EXISTS public.create_recurring_rehearsals(date, date, uuid);

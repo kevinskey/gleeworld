@@ -157,7 +157,7 @@ export default function CourseShell() {
     const reqId = ++loadReqId.current;
     setLoading(true);
     // Two encoding conventions exist in the wild:
-    //   legacy: "MUS 101" stored, URL is "mus-101" (hyphen→space)
+    //   legacy: "GW 101" stored, URL is "mus-101" (hyphen→space)
     //   templates / new: "TPL-CHOIR101" stored, URL is "tpl-choir101" (hyphen kept)
     // Try both — exact match on the as-is uppercase first, then the
     // hyphen-as-space variant. Don't use .or() with raw user input
@@ -217,7 +217,7 @@ export default function CourseShell() {
           <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">
               <p className="text-slate-600 mb-4">Class not found.</p>
-              <Button onClick={() => navigate("/control-center?module=glee-academy")}>Back to Glee Academy</Button>
+              <Button onClick={() => navigate("/academy")}>Back to Glee Academy</Button>
             </div>
           </div>
         </DashboardShell>
@@ -230,13 +230,19 @@ export default function CourseShell() {
   return (
     <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
       <DashboardShell>
-    <div className="min-h-screen bg-[hsl(40,10%,96%)]">
-      {/* Top bar */}
-      <div className="bg-slate-900 text-white">
+    <div className="min-h-screen bg-background">
+      {/* Top bar — pt reserves the iOS safe-area inset so the transparent
+          status bar (overlaysWebView) doesn't collide with the back button
+          and title. env() is 0 outside the app; desktop is unchanged. */}
+      <div className="bg-primary text-primary-foreground" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <button
-            onClick={() => navigate("/control-center?module=glee-academy")}
-            className="inline-flex items-center gap-1.5 text-xs text-slate-300 hover:text-white mb-3"
+            // "Glee Academy" must land on Glee Academy. This pointed at
+            // /control-center?module=glee-academy — the command center —
+            // so the back arrow took you somewhere that is not the place
+            // named on the label.
+            onClick={() => navigate("/academy")}
+            className="inline-flex items-center gap-1.5 text-xs text-primary-foreground/70 hover:text-primary-foreground mb-3"
           >
             <ArrowLeft className="w-4 h-4" />
             Glee Academy
@@ -245,13 +251,13 @@ export default function CourseShell() {
             <h1 className="text-3xl font-bold tracking-tight" style={{ fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", letterSpacing: '-0.02em' }}>
               {course.title}
             </h1>
-            <Badge className="bg-slate-700 text-slate-200 border-slate-600">{course.course_code}</Badge>
+            <Badge className="bg-primary-foreground/15 text-primary-foreground border-primary-foreground/25">{course.course_code}</Badge>
             {course.semester && (
-              <span className="text-sm text-slate-300">{fmtSemester(course.semester)}</span>
+              <span className="text-sm text-primary-foreground/80">{fmtSemester(course.semester)}</span>
             )}
           </div>
           {course.instructor_name && (
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-primary-foreground/70">
               Instructor: {course.instructor_name}
             </p>
           )}
@@ -313,8 +319,8 @@ export default function CourseShell() {
                   onClick={() => switchTab(key)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors border-l-2 ${
                     active
-                      ? "bg-slate-50 text-slate-900 font-semibold border-l-sky-600"
-                      : "text-slate-700 hover:bg-slate-50 border-l-transparent"
+                      ? "bg-muted text-[var(--tint)] font-semibold border-l-[var(--tint)]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted border-l-transparent"
                   }`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
@@ -333,8 +339,8 @@ export default function CourseShell() {
                   onClick={() => switchTab(key)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors border-l-2 ${
                     active
-                      ? "bg-slate-50 text-slate-900 font-semibold border-l-sky-600"
-                      : "text-slate-700 hover:bg-slate-50 border-l-transparent"
+                      ? "bg-muted text-[var(--tint)] font-semibold border-l-[var(--tint)]"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted border-l-transparent"
                   }`}
                 >
                   <Icon className="w-4 h-4 flex-shrink-0" />
@@ -347,7 +353,7 @@ export default function CourseShell() {
           {/* Quick action — Rehearsal tonight */}
           <button
             onClick={() => navigate(`/academy/${code}/rehearsal-today`)}
-            className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-card hover:bg-accent hover:text-accent-foreground text-foreground border border-border text-sm font-semibold transition-colors"
+            className="mt-4 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-[var(--tint)] text-[var(--tint-contrast)] hover:opacity-90 text-sm font-semibold transition-opacity"
           >
             <Zap className="w-4 h-4" />
             Rehearsal tonight
@@ -357,7 +363,7 @@ export default function CourseShell() {
             <>
               <button
                 onClick={() => navigate('/academy/grading')}
-                className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-card hover:bg-accent hover:text-accent-foreground text-foreground border border-border text-sm font-semibold transition-colors"
+                className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-card text-[var(--tint)] border border-[var(--tint)] hover:bg-[var(--tint)] hover:text-[var(--tint-contrast)] text-sm font-semibold transition-colors"
               >
                 <FileText className="w-4 h-4" />
                 Grading queue
@@ -882,6 +888,29 @@ function ModuleCard({
 
 // ─── Assignments ──────────────────────────────────────────────────────────
 
+/**
+ * Resolve any recordings attached to these assignments (shared from the
+ * Studio / Media Library via ShareRecordingDialog) in ONE batched query, so
+ * a long assignment list doesn't fan out into a request per row. Rows the
+ * caller cannot read under RLS simply come back unattached rather than
+ * failing the whole list.
+ */
+async function withAttachedMedia(rows: any[]): Promise<any[]> {
+  const ids = [...new Set(rows.map((r) => r.media_id).filter(Boolean))];
+  if (ids.length === 0) return rows;
+  const { data } = await supabase
+    .from("gw_media_library")
+    .select("id, title, file_url")
+    .in("id", ids)
+    .eq("is_deleted", false);
+  const byId: Record<string, { id: string; title: string; file_url: string }> =
+    Object.fromEntries(((data as any[]) ?? []).map((m) => [m.id, m]));
+  return rows.map((r) => ({
+    ...r,
+    attachedMedia: r.media_id ? byId[r.media_id] ?? null : null,
+  }));
+}
+
 function AssignmentsTab({ course, canEdit }: TabProps) {
   const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
@@ -909,26 +938,30 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
   function reload() {
     supabase
       .from("gw_assignments")
-      .select("id, title, description, due_at, points, is_active, tenant_id")
+      .select("id, title, description, due_at, points, is_active, tenant_id, media_id")
       .eq("course_id", course.id)
       .order("due_at", { ascending: true })
-      .then(({ data }) => setItems((data || []).map((r: any) => ({
-        ...r, due_date: r.due_at, is_published: r.is_active,
-      }))));
+      .then(async ({ data }) => {
+        const rows = (data || []).map((r: any) => ({
+          ...r, due_date: r.due_at, is_published: r.is_active,
+        }));
+        setItems(await withAttachedMedia(rows));
+      });
   }
 
   useEffect(() => {
     let c = false;
     supabase
       .from("gw_assignments")
-      .select("id, title, description, due_at, points, is_active, tenant_id")
+      .select("id, title, description, due_at, points, is_active, tenant_id, media_id")
       .eq("course_id", course.id)
       .order("due_at", { ascending: true })
       .then(async ({ data }) => {
         if (c) return;
-        const rows = (data || []).map((r: any) => ({
+        const rows = await withAttachedMedia((data || []).map((r: any) => ({
           ...r, due_date: r.due_at, is_published: r.is_active,
-        }));
+        })));
+        if (c) return;
         setItems(rows);
         setLoading(false);
 
@@ -1084,6 +1117,20 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
                     {" · "}{a.points || 0} pts
                     {overdue && !isSubmitted && <span className="text-red-600 font-semibold"> · OVERDUE</span>}
                   </div>
+                  {/* Recording shared to the class as an assignment. preload
+                      "none" so a long list doesn't fetch every take up front;
+                      the row itself is clickable, so don't let player clicks
+                      open the assignment. */}
+                  {a.attachedMedia && (
+                    <audio
+                      controls
+                      preload="none"
+                      src={a.attachedMedia.file_url}
+                      className="w-full max-w-sm mt-2"
+                      aria-label={`Recording: ${a.attachedMedia.title}`}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {canEdit && a.is_published && (
@@ -1144,6 +1191,11 @@ function AssignmentEditDialog({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [gradingOpen, setGradingOpen] = useState(false);
+  // How much student work this delete would take with it. Submissions are
+  // FK'd to gw_assignments ON DELETE CASCADE, so deleting the assignment
+  // destroys every response and grade on it — the confirmation has to say so
+  // in numbers, not in the abstract. null = not counted yet.
+  const [submissionCount, setSubmissionCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (assignment) {
@@ -1155,6 +1207,18 @@ function AssignmentEditDialog({
       setForm(null);
     }
   }, [assignment]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSubmissionCount(null);
+    if (!open || !assignment?.id) return;
+    supabase
+      .from('gw_course_submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('assignment_id', assignment.id)
+      .then(({ count }) => { if (!cancelled) setSubmissionCount(count ?? 0); });
+    return () => { cancelled = true; };
+  }, [open, assignment?.id]);
 
   if (!open || !form) return null;
 
@@ -1256,10 +1320,31 @@ function AssignmentEditDialog({
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t">
-            <Button variant="destructive" size="sm" onClick={del} disabled={deleting}>
-              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+            {/* Deleting cascades student submissions away, so this confirms
+                and names the damage in numbers. No "don't ask again" — an
+                opt-out on other people's graded work is not ours to offer. */}
+            <ConfirmDeleteButton
+              confirmKey="delete-course-assignment"
+              title={`Delete "${form.title}"?`}
+              description={
+                submissionCount === null
+                  ? 'Checking for student submissions…'
+                  : submissionCount === 0
+                    ? 'No one has submitted yet. This removes the assignment for the whole class.'
+                    : `This also permanently deletes ${submissionCount} student ${submissionCount === 1 ? 'submission' : 'submissions'}, including grades and feedback.`
+              }
+              confirmLabel={submissionCount ? 'Delete anyway' : 'Delete'}
+              allowDontAskAgain={false}
+              onConfirm={del}
+              disabled={deleting || submissionCount === null}
+              ariaLabel="Delete assignment"
+              className="inline-flex items-center justify-center h-9 px-4 text-sm font-medium text-rose-600 hover:text-rose-700 hover:bg-muted disabled:opacity-50"
+            >
+              {deleting
+                ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                : <Trash2 className="w-4 h-4 mr-1.5" />}
               Delete
-            </Button>
+            </ConfirmDeleteButton>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={onClose}>Cancel</Button>
               <Button onClick={save} disabled={saving}>
@@ -1950,15 +2035,15 @@ function PeopleTab({ course, canEdit }: TabProps) {
         title="People"
         icon={<Users className="w-4 h-4" />}
         action={canEdit ? (
-          <Button size="sm" variant="outline" onClick={() => setInviteOpen((v) => !v)}>
+          <Button size="sm" onClick={() => setInviteOpen((v) => !v)}>
             <Plus className="w-4 h-4 mr-1.5" />
             Enroll students
           </Button>
         ) : null}
       >
         {inviteOpen && (
-          <div className="mb-5 border border-slate-200 rounded-lg p-4 bg-slate-50">
-            <p className="text-xs text-slate-600 mb-2">
+          <div className="mb-5 border border-border rounded-lg p-4 bg-muted">
+            <p className="text-xs text-muted-foreground mb-2">
               Paste student emails — one per line or comma-separated. New emails get an account + sign-in link emailed to them automatically.
             </p>
             <Textarea
@@ -1969,8 +2054,8 @@ function PeopleTab({ course, canEdit }: TabProps) {
               className="text-sm bg-white"
             />
             <div className="mt-3 flex gap-2 justify-end">
-              <Button size="sm" variant="ghost" onClick={() => setInviteOpen(false)} className="text-slate-700">Cancel</Button>
-              <Button size="sm" onClick={inviteByEmail} disabled={inviting} className="bg-sky-600 hover:bg-sky-500 text-white">
+              <Button size="sm" variant="ghost" onClick={() => setInviteOpen(false)}>Cancel</Button>
+              <Button size="sm" onClick={inviteByEmail} disabled={inviting}>
                 {inviting ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Send className="w-4 h-4 mr-1.5" />}
                 Send invites
               </Button>
@@ -2090,7 +2175,7 @@ function PeopleList({ rows, canDrillIn, onSelect, cohortBadges, courseId, canRes
                 ))}
               </div>
             </div>
-            <Badge variant="outline" className="text-xs">{r.role}</Badge>
+            <Badge variant="outline" className="text-xs border-[var(--tint)] text-[var(--tint)]">{r.role}</Badge>
             {canResend && r.email && courseId && (
               <ResendInviteButton email={r.email} courseId={courseId} />
             )}
@@ -2167,7 +2252,7 @@ function RemoveStudentButton({
         }
       }}
       disabled={busy}
-      className="h-7 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 shrink-0"
+      className="h-7 px-2 text-xs text-destructive hover:text-destructive shrink-0"
       title={`Remove ${fullName || email || 'student'} from this class`}
     >
       {busy
@@ -2203,7 +2288,7 @@ function ResendInviteButton({ email, courseId }: { email: string; courseId: stri
         }
       }}
       disabled={busy}
-      className="h-7 px-2 text-xs text-slate-600 hover:text-slate-900 shrink-0"
+      className="h-7 px-2 text-xs shrink-0"
       title={`Resend invite to ${email}`}
     >
       {busy
@@ -2245,7 +2330,6 @@ function AttendanceTab({ course, canEdit }: TabProps) {
         </div>
         <Button
           size="sm"
-          className="bg-amber-600 hover:bg-amber-500 text-white"
           onClick={() => navigate(`/academy/${course.course_code.toLowerCase().replace(/\s+/g, "-")}/rehearsal-today`)}
         >
           <Zap className="w-4 h-4 mr-1.5" />

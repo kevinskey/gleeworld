@@ -41,21 +41,48 @@ Deno.serve(async (req) => {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
-    // Signature verified — custom claims from the GoTrue hook are trustworthy.
+    // Signature verified — custom claims from the GoTrue hook are trustworthy,
+    // but they describe the caller's HOME tenant, which is the wrong tenant
+    // whenever an admin manages a workspace they aren't homed on (same defect
+    // as create-plan-checkout, found 2026-08-17). The frontend names the
+    // target workspace by tenant_slug; the slug decides the tenant, and the
+    // claims' role counts only when they refer to that same tenant —
+    // otherwise the caller's gw_tenant_members row (or platform super-admin
+    // flag) is the gate.
     const payload = JSON.parse(atob(accessToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-    const tenantId = payload.tenant_id
-    const tenantRole = payload.tenant_role
     const userEmail = payload.email
-    if (!tenantId) throw new Error('JWT missing tenant_id claim')
+
+    const { module_id, success_url, cancel_url, tenant_slug } = await req.json()
+    if (!module_id) throw new Error('module_id required')
+
+    const claimTenant = payload.tenant_id
+    let tenantId = claimTenant
+    const slug = String(tenant_slug ?? req.headers.get('x-tenant-slug') ?? '').trim()
+    if (slug) {
+      const { data: t } = await sb.from('gw_tenants').select('id').eq('slug', slug).maybeSingle()
+      if (!t?.id) throw new Error(`Unknown tenant: ${slug}`)
+      tenantId = t.id
+    }
+    if (!tenantId) throw new Error('JWT missing tenant_id claim (pass tenant_slug)')
+
+    let tenantRole = claimTenant === tenantId ? (payload.tenant_role ?? '') : ''
+    if (!tenantRole) {
+      const [{ data: member }, { data: profile }] = await Promise.all([
+        sb.from('gw_tenant_members').select('role')
+          .eq('tenant_id', tenantId).eq('user_id', userData.user.id).maybeSingle(),
+        sb.from('gw_profiles').select('is_super_admin')
+          .eq('user_id', userData.user.id).maybeSingle(),
+      ])
+      tenantRole = profile?.is_super_admin ? 'super_admin' : (member?.role ?? '')
+    }
     // gw_tenant_members.role uses a hyphen ('super-admin'); accept both.
-    if (!['admin', 'super-admin', 'super_admin'].includes(tenantRole)) {
+    // 'director' is the membership role GleeWorld actually grants tenant
+    // admins (matches create-plan-checkout).
+    if (!['owner', 'admin', 'director', 'super-admin', 'super_admin'].includes(tenantRole)) {
       return new Response(JSON.stringify({ error: 'Only tenant admins can activate modules' }), {
         status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
-
-    const { module_id, success_url, cancel_url } = await req.json()
-    if (!module_id) throw new Error('module_id required')
     const { data: mod, error: modErr } = await sb
       .from('gw_billing_modules')
       .select('id, name, tier, stripe_price_id, monthly_price_cents')

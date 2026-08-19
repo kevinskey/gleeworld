@@ -84,16 +84,10 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
         attendanceRecords = records || [];
       }
 
-      // Fetch polls answered (if applicable)
-      const { data: pollsAnswered } = await supabase
-        .from('mus240_poll_responses')
-        .select('poll_id')
-        .eq('student_id', user.id);
-
-      const { data: totalPolls } = await supabase
-        .from('mus240_polls')
-        .select('id')
-        .eq('is_active', true);
+      // Poll participation lost its data source when the MUS-240 poll tables
+      // were retired; keep the shape so downstream math still works.
+      const pollsAnswered: { poll_id: string }[] = [];
+      const totalPolls: { id: string }[] = [];
 
       // Fetch discussion grades
       const { data: discussionPrompts } = await supabase
@@ -113,8 +107,8 @@ export const StudentGradeSpreadsheet: React.FC<StudentGradeSpreadsheetProps> = (
         submissions: submissions || [],
         totalSessions: sessionIds.length,
         attendanceRecords,
-        pollsAnswered: pollsAnswered || [],
-        totalPolls: totalPolls || [],
+        pollsAnswered: pollsAnswered,
+        totalPolls: totalPolls,
         discussionPrompts: discussionPrompts || [],
         discussionGrades: discussionGrades || []
       };

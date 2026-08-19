@@ -1,0 +1,110 @@
+{
+  "state_slug": "west-virginia",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "The West Virginia All-State Chorus is administered by the West Virginia Vocal Music Association (WVVMA), the choral affiliate of WVMEA, and performs at the WVMEA In-Service Conference. The 2027 performance repertoire and guest conductor ARE published; the 2027 dates, deadlines, and fees are NOT — WVMEA's home page says only 'MARCH 2027' with details to be announced in Fall 2026, and the posted Step-By-Step Guide is still the 2025-26 edition. Two program entries share the lineage key: one for 2026-27 (repertoire and conductor only) and one for 2025-26 (the published dates, fees, and process). The 2025-26 figures must NOT be read as 2026-27. West Virginia's model is unusual: schools apply and receive a voice-part allotment, the DIRECTOR chooses which students represent the school via in-school auditions, and students then sing regional auditions on random selections from the full All-State repertoire.",
+  "organization": {
+    "name": "West Virginia Vocal Music Association",
+    "acronym": "WVVMA",
+    "website_url": "https://www.wvvma.com/",
+    "description": "WVVMA is West Virginia's choral organization and the administrator of the West Virginia All-State Chorus, which rehearses and performs in conjunction with the West Virginia Music Educators Association (WVMEA) In-Service Conference. WVVMA also runs the state show choir program and maintains the state choral directory."
+  },
+  "sources": [
+    { "name": "WVVMA — All State Chorus", "url": "https://www.wvvma.com/?page_id=1784", "source_type": "official" },
+    { "name": "WV All State — Step By Step Guide (PDF)", "url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf", "source_type": "handbook_pdf" },
+    { "name": "West Virginia All State Chorus Program 2027 (PDF)", "url": "https://www.wvvma.com/wp-content/uploads/2026/06/West-Virginia-All-State-Chorus-Program-2027.pdf", "source_type": "official" },
+    { "name": "WVMEA home page", "url": "https://www.wvmea.org/", "source_type": "official" },
+    { "name": "WVVMA — Repertoire History", "url": "https://www.wvvma.com/?page_id=1713", "source_type": "official" }
+  ],
+  "programs": [
+    {
+      "name": "West Virginia All State Chorus",
+      "lineage_key": "west-virginia-all-state-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The 2027 West Virginia All State Chorus, conducted by Dr. Cara Tasher (University of North Florida). The 2027 repertoire program has been published; dates and fees for 2027 have not. WVVMA notes that directors must obtain the correct editions matching the JW Pepper links it provides.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "2027 WVMEA In-Service Conference (All-State Chorus performance)",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "WVMEA has announced only 'MARCH 2027' with more details to be announced in Fall 2026. No specific 2027 dates are published.",
+          "source_url": "https://www.wvmea.org/"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "materials",
+          "title": "Original copies of the repertoire required",
+          "description": "Directors order the repertoire from the WVVMA/WVMEA All State Chorus Repertoire page. Original copies are required; no photocopies are allowed. Directors must obtain the editions matching the JW Pepper links WVVMA provides.",
+          "source_url": "https://www.wvvma.com/?page_id=1784"
+        },
+        {
+          "category": "format",
+          "title": "Regional auditions draw random selections from all pieces",
+          "description": "Each regional audition includes random selections from all pieces in the All-State program; directors are instructed to prepare students for every measure of every piece.",
+          "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf"
+        }
+      ],
+      "repertoire": [
+        { "title": "Sicut Cervus", "composer": "Palestrina", "voicing": "SATB", "purpose": "performance", "notes": "A cappella; Latin. WVVMA lists IMSLP as the score location.", "source_url": "https://www.wvvma.com/?page_id=1784" },
+        { "title": "Anoj Pusej Dunojelio", "composer": "Augustinas", "voicing": "SATB", "purpose": "performance", "notes": "SATB with soprano/tenor solo; Lithuanian. WVVMA posts a Lithuanian pronunciation guide and a practice audio file.", "source_url": "https://www.wvvma.com/?page_id=1784" },
+        { "title": "To the Mothers in Brazil/Salve Regina", "composer": "Janson/Eriksson", "voicing": "SATB", "purpose": "performance", "notes": "SATB with improvised percussion, piano and cello; Latin.", "source_url": "https://www.wvvma.com/?page_id=1784" },
+        { "title": "O Love", "composer": "Elaine Hagenberg", "voicing": "SATB", "purpose": "performance", "notes": "SATB with piano and cello; English.", "source_url": "https://www.wvvma.com/?page_id=1784" },
+        { "title": "Fire", "composer": "Katarina Gimon", "voicing": "SATB", "catalog_number": "CP1451", "purpose": "performance", "notes": "SATB with body percussion and percussion.", "source_url": "https://www.wvvma.com/?page_id=1784" },
+        { "title": "We Rise Again", "composer": "Dubinksy/Adams", "voicing": "SATB", "catalog_number": "00-VA4018", "purpose": "performance", "notes": "Composer credit reproduced as spelled on the WVVMA page.", "source_url": "https://www.wvvma.com/?page_id=1784" }
+      ],
+      "documents": [
+        { "title": "West Virginia All State Chorus Program 2027", "url": "https://www.wvvma.com/wp-content/uploads/2026/06/West-Virginia-All-State-Chorus-Program-2027.pdf", "document_type": "other" },
+        { "title": "Lithuanian pronunciation guide (Anoj Pusej Dunojelio)", "url": "https://drive.google.com/drive/folders/12WPWGL331QGxuFJ8oyCT2pVIpomRInSA?usp=sharing", "document_type": "other" },
+        { "title": "All State Chorus Piano Audition Information", "url": "https://www.wvvma.com/wp-content/uploads/2023/09/All-State-Chorus-Piano-Auditions.pdf", "document_type": "rules" },
+        { "title": "Piano Rubric WVVMA", "url": "https://www.wvvma.com/wp-content/uploads/2022/09/Piano-rubric-WVVMA.pdf", "document_type": "rules" },
+        { "title": "WVVMA Region Map", "url": "https://www.wvvma.com/?page_id=1548", "document_type": "other" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "West Virginia All State Chorus",
+      "lineage_key": "west-virginia-all-state-chorus",
+      "season": "2025-26",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The 2025-26 cycle of the West Virginia All State Chorus, as published in WVVMA's Step-By-Step Guide. Included because WVVMA had not yet replaced the guide with a 2026-27 edition at the retrieval date — these dates and fees are prior-season and should not be presented as 2026-27.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "School application deadline", "start_at": "2025-09-30", "all_day": true, "timezone": "America/New_York", "description": "Schools submit the School Application indicating the number of each voice part they plan to bring, with proof of NAfME membership and the school registration check.", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" },
+        { "date_type": "registration_deadline", "title": "WVMEA Conference early-bird director registration", "start_at": "2026-01-17", "all_day": true, "timezone": "America/New_York", "description": "Directors must register for the WVMEA Conference at wvmea.org; early-bird rate applies through this date (fee information listed as subject to change).", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" },
+        { "date_type": "event", "title": "All State Chorus event", "start_at": "2026-03-05", "end_at": "2026-03-07", "all_day": true, "timezone": "America/New_York", "description": "Charleston Civic Center. Rehearsals Thursday through Saturday morning; concert Saturday afternoon. All rehearsals are mandatory.", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" }
+      ],
+      "requirements": [
+        { "category": "membership", "title": "Current active NAfME/WVMEA membership required", "description": "Directors must hold a current, active NAfME (WVMEA) membership in the Mountain State, and must submit proof of membership (membership card) with the school application.", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" },
+        { "category": "format", "title": "School application and voice-part allotment", "description": "Schools register using the School Application and indicate the number of each voice part they plan to bring; listing individual students is not required at that stage. The number of parts requested is not guaranteed — allotments are posted after all school applications are received.", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" },
+        { "category": "format", "title": "In-school auditions select the school's representatives", "description": "Directors conduct auditions at their own school according to the allotment provided and choose which students represent the school.", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" },
+        { "category": "format", "title": "Signed student application", "description": "Individual student applications must be printed and signed by an administrator and a parent/guardian.", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" },
+        { "category": "format", "title": "Regional auditions", "description": "Audition times and locations are set by each region chair. WVVMA is organized into six regions (Regions 1-6) each with a regional chairperson.", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "school_registration", "amount_cents": 7500, "payable_to": "state_association", "description": "$75 school registration, paid by check from a school or booster account only (no personal checks), payable to 'West Virginia All State Chorus' and mailed to the All State Chair.", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" },
+        { "fee_type": "registration", "amount_cents": 3500, "payable_to": "state_association", "description": "$35 per student registration fee, which includes a T-shirt. Submitted as one school/booster check (no personal checks).", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" },
+        { "fee_type": "director_conference", "amount_cents": 10000, "payable_to": "state_association", "description": "$100 early-bird WVMEA Conference registration for directors (by January 17); the guide notes fee information is subject to change.", "source_url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf" }
+      ],
+      "documents": [
+        { "title": "WV All State — Step By Step Guide", "url": "https://www.wvvma.com/wp-content/uploads/2025/08/WV-All-State-Step-By-Step-Guide.pdf", "document_type": "handbook" }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 All State Chorus event dates — WVMEA lists only 'MARCH 2027', with details to be announced Fall 2026",
+    "2026-27 school application deadline, student application deadline, and regional audition dates",
+    "2026-27 school registration, student registration, and director conference fee amounts — the posted Step-By-Step Guide is still the 2025-26 edition",
+    "Regional audition dates and locations — these are set individually by each of the six region chairs and are not aggregated on the WVVMA site",
+    "Grade-level eligibility rules for student participants",
+    "Voice-part allotment numbers — posted only after all school applications are received"
+  ]
+}

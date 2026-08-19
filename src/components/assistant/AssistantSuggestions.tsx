@@ -5,6 +5,9 @@ export const ASSISTANT_SUGGESTIONS = [
   "What's on my calendar tomorrow?",
   'Open Studio',
   'Make a note…',
+  'Ride home',
+  'Order food',
+  'Search the web',
 ] as const;
 
 interface AssistantSuggestionsProps {

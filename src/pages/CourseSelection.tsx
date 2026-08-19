@@ -30,8 +30,8 @@ const CourseSelection: React.FC = () => {
     );
   }
 
-  // Preferred display order: Glee Club, Survey of African American Music, MUS 210, Bowman Scholars, then rest
-  const PREFERRED_ORDER = ['MUS 070', 'MUS 240', 'MUS 210', 'LH 100'];
+  // Preferred display order: Glee Club, Survey of African American Music, GW 210, Bowman Scholars, then rest
+  const PREFERRED_ORDER = ['GW 070', 'GW 240', 'GW 210', 'LH 100'];
 
   const enrolledCourses = enrollments
     .map(e => {

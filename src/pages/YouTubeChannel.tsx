@@ -85,6 +85,14 @@ export const YouTubeChannel: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState<VideoRow | null>(null);
 
+  // ── Inline playback ───────────────────────────────────────────────────
+  // Tapping a YouTube thumbnail plays it IN the card (no modal). Leaving
+  // the page unmounts the iframe, which stops playback — deliberate
+  // (Kevin 2026-08-03: videos must NOT keep playing after leaving).
+  const [inlineId, setInlineId] = useState<string | null>(null);
+  const playInline = (video: VideoRow) => setInlineId(video.id);
+  const stopInlineTracking = () => setInlineId(null);
+
   const [tab, setTab] = useState<Tab>('all');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<string>('__all__');
@@ -211,6 +219,31 @@ export const YouTubeChannel: React.FC = () => {
     }
   };
 
+  // One-click feature toggle. The Edit dialog can also set is_featured, but
+  // starring is a per-video curation gesture, not a metadata edit — opening a
+  // modal per video to build a Featured row is unusable at library scale.
+  // Optimistic, with a revert on failure. The .select() is load-bearing:
+  // a tenant whose RLS rejects the write returns zero rows and no error, so
+  // without it a silent no-op would look like success.
+  const toggleFeatured = async (video: VideoRow) => {
+    const next = !video.is_featured;
+    setVideos((prev) => prev.map((v) => (v.id === video.id ? { ...v, is_featured: next } : v)));
+    const { data, error } = await supabase
+      .from('youtube_videos')
+      .update({ is_featured: next })
+      .eq('id', video.id)
+      .select('id');
+    if (error || !data?.length) {
+      setVideos((prev) => prev.map((v) => (v.id === video.id ? { ...v, is_featured: !next } : v)));
+      toast({
+        title: 'Could not update',
+        description: error?.message || 'The change was rejected — check permissions.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    toast({ title: next ? 'Added to Featured' : 'Removed from Featured' });
+  };
   // Ask the edge function for a short-lived presigned URL, then let the
   // browser fetch it directly — a 10 GB archive must never be proxied
   // through the app. The link expires in minutes, so it is minted per click
@@ -343,22 +376,22 @@ export const YouTubeChannel: React.FC = () => {
   return (
     <UniversalLayout showHeader={false} showFooter={false}>
       <DashboardShell>
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-full bg-destructive flex items-center justify-center">
-              <Youtube className="h-6 w-6 text-white" />
+        {/* Header + toolbar share one container with compact spacing —
+            the old stacked containers (py-4 + mb-6 + py-4 + space-y-6)
+            pushed the video grid below the fold (Kevin 2026-08-03). */}
+        <main className="container mx-auto px-4 pt-3 pb-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-destructive flex items-center justify-center">
+              <Youtube className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground">Video Library</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-xl font-bold text-foreground leading-tight">Video Library</h1>
+              <p className="text-sm text-muted-foreground leading-tight">
                 {videos.length} video{videos.length === 1 ? '' : 's'}
                 {filtered.length !== videos.length && ` · ${filtered.length} shown`}
               </p>
             </div>
           </div>
-        </div>
-
-        <main className="container mx-auto px-4 py-4 space-y-6">
           {isAdmin() && (
             <div className="flex items-start gap-2 flex-wrap">
               <AddYouTubeVideoForm onAdded={() => fetchVideos()} />
@@ -379,7 +412,7 @@ export const YouTubeChannel: React.FC = () => {
           )}
 
           {/* Toolbar: tabs (underlined library-style), search, sort */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             <div className="flex items-center gap-2 flex-wrap overflow-x-auto border-b border-border -mx-4 px-4">
               {tabs.map(({ key, label, icon: Icon }) => {
                 const active = tab === key;
@@ -387,7 +420,7 @@ export const YouTubeChannel: React.FC = () => {
                   <button
                     key={key}
                     onClick={() => setTab(key)}
-                    className={`relative flex items-center gap-1.5 px-1 py-3 text-sm transition-colors whitespace-nowrap ${
+                    className={`relative flex items-center gap-1.5 px-1 py-2 text-sm transition-colors whitespace-nowrap ${
                       active
                         ? 'text-foreground font-semibold'
                         : 'text-foreground/60 hover:text-foreground'
@@ -508,7 +541,11 @@ export const YouTubeChannel: React.FC = () => {
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">
-              <p className="text-muted-foreground text-sm">No videos match those filters.</p>
+              <p className="text-muted-foreground text-sm">
+                {tab === 'featured' && !search.trim()
+                  ? 'Nothing featured yet. Star a video on the All tab to feature it here.'
+                  : 'No videos match those filters.'}
+              </p>
               <Button
                 variant="ghost"
                 size="sm"
@@ -531,9 +568,20 @@ export const YouTubeChannel: React.FC = () => {
                     key={video.id}
                     className="group relative rounded-xl overflow-hidden bg-card border border-border hover:border-destructive/50 transition-all hover:shadow-lg"
                   >
+                    {inlineId === video.id ? (
+                    <div className="aspect-video relative bg-black">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${video.video_id}?autoplay=1&playsinline=1&rel=0`}
+                        title={video.title}
+                        className="w-full h-full"
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                    ) : (
                     <div
                       className="aspect-video relative bg-muted cursor-pointer"
-                      onClick={() => setSelectedVideo(video)}
+                      onClick={() => (isYouTube ? playInline(video) : setSelectedVideo(video))}
                     >
                       {video.thumbnail_url || fallbackThumb ? (
                         <img
@@ -567,10 +615,17 @@ export const YouTubeChannel: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <div className="p-4 space-y-2">
+                    )}
+                    <div className="p-3 space-y-1.5">
+                      {/* Explicit text-sm: the global h3 rule in index.css is
+                          22px/700, which lets the metadata block outweigh the
+                          thumbnail — the video must stay the dominant element. */}
                       <h3
-                        className="font-medium text-foreground line-clamp-2 group-hover:text-destructive transition-colors cursor-pointer"
-                        onClick={() => setSelectedVideo(video)}
+                        className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-destructive transition-colors cursor-pointer"
+                        // Title = theater mode (modal). Stop the inline
+                        // tracker first so the unmount handoff doesn't dock
+                        // a video the user just re-opened in the modal.
+                        onClick={() => { stopInlineTracking(); setSelectedVideo(video); }}
                       >
                         {video.title}
                       </h3>
@@ -677,6 +732,19 @@ export const YouTubeChannel: React.FC = () => {
                                   : <Download className="w-3.5 h-3.5" />}
                               </Button>
                             )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 text-xs px-2"
+                              onClick={(e) => { e.stopPropagation(); toggleFeatured(video); }}
+                              title={video.is_featured ? 'Remove from Featured' : 'Add to Featured'}
+                              aria-pressed={!!video.is_featured}
+                              aria-label={video.is_featured ? 'Remove from Featured' : 'Add to Featured'}
+                            >
+                              <Star
+                                className={`w-3.5 h-3.5 ${video.is_featured ? 'fill-current text-amber-500' : ''}`}
+                              />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"

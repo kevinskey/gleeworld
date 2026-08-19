@@ -1,0 +1,146 @@
+/* Print/PDF paper styling for the Documents word processor's PrintPaperView
+ * overlay. This stylesheet itself ships in DocumentEditorPage's static
+ * bundle (imported for the whole session, not just while the overlay is
+ * mounted) — it is NOT scoped to only-while-printing. Every rule here is
+ * therefore written to be inert outside `.print-paper*`/`.no-print`
+ * elements, which only exist in the DOM while PrintPaperView is mounted.
+ * The one rule that genuinely can't be class-scoped — `@page { margin: 1in
+ * }`, a document-level at-rule — is deliberately NOT here: it's injected
+ * into its own <style> element by PrintPaperView on mount and removed on
+ * unmount (see PrintPaperView.tsx), so it never leaks page margins onto
+ * unrelated print jobs for the rest of the session.
+ *
+ * Mirrors the same MLA9/APA7 conventions docxExport.ts encodes for the
+ * .docx export (double-spacing, 0.5in first-line indent on body
+ * paragraphs, 0.5in hanging indent on Works Cited/Notes entries, no indent
+ * on heading-block/title-page lines or headings) so the printed PDF and the
+ * downloaded .docx read as the same paper.
+ */
+
+.print-paper {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12pt;
+  line-height: 2;
+  max-width: 8.5in;
+  color: #000;
+}
+
+.print-paper p {
+  text-indent: 0.5in;
+  margin: 0;
+}
+
+/* Heading-block lines (MLA), title-page lines (APA), section headings, and
+ * hanging-indent entries are never first-line-indented — only ordinary body
+ * paragraphs get the 0.5in first-line indent. */
+.print-paper-meta-line,
+.print-paper-title,
+.print-paper-center,
+.print-paper-section-heading,
+.print-paper-hanging {
+  text-indent: 0;
+}
+
+.print-paper-meta-line {
+  text-align: left;
+}
+
+.print-paper-title {
+  text-align: center;
+}
+
+.print-paper-titlepage .print-paper-title {
+  font-weight: bold;
+}
+
+.print-paper-center {
+  text-align: center;
+}
+
+.print-paper-titlepage {
+  page-break-after: always;
+  break-after: page;
+  padding-top: 2in;
+}
+
+/* Body content coming out of `generateHTML` (paragraphs, headings, lists,
+ * blockquotes, tables) — same first-line-indent exception the .docx export
+ * applies to non-'body' paragraph kinds (headings, list items, blockquote
+ * paragraphs, table cells never get FIRST_LINE_INDENT). */
+.print-paper-body h1,
+.print-paper-body h2,
+.print-paper-body h3,
+.print-paper-body li p,
+.print-paper-body blockquote p,
+.print-paper-body td p,
+.print-paper-body th p {
+  text-indent: 0;
+}
+
+.print-paper-body ul,
+.print-paper-body ol {
+  margin: 0 0 0 0.5in;
+}
+
+.print-paper-body blockquote {
+  margin: 0 0 0 0.5in;
+}
+
+.print-paper-body table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.print-paper-body td,
+.print-paper-body th {
+  border: 1px solid #999;
+  padding: 0.05in 0.1in;
+}
+
+.print-paper-section-heading {
+  text-align: center;
+  page-break-before: always;
+  break-before: page;
+  margin-top: 0;
+}
+
+/* Hanging indent (Works Cited / References entries, Notes entries) —
+ * matches docxExport's HANGING_INDENT (0.5in left, 0.5in hanging). */
+.print-paper-hanging {
+  padding-left: 0.5in;
+  text-indent: -0.5in;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  /* The overlay portals to a direct `document.body` child (see
+   * PrintPaperView.tsx), a sibling of `#root` — hiding `#root` here is what
+   * keeps the dashboard shell (sidebar, toolbar, title field, editor,
+   * sources panel) out of the printed/PDF output. `printing-paper` is
+   * added to `document.body` only while the overlay is mounted. */
+  body.printing-paper #root {
+    display: none;
+  }
+
+  .print-paper-overlay {
+    position: static;
+    background: #fff;
+  }
+
+  .print-paper {
+    max-width: none;
+    /* Tailwind's px-8/py-10 utilities (applied inline on the element) would
+     * otherwise add ~1.33in of extra margin on top of the @page margin. */
+    padding: 0 !important;
+  }
+
+  /* index.css's global `a[href]::after` print rule (appends " (url)" after
+   * every link, for accessible printing of ordinary pages) would otherwise
+   * inject raw URLs into the middle of the paper's running text/citations. */
+  .print-paper-body a[href]::after {
+    content: none !important;
+  }
+}

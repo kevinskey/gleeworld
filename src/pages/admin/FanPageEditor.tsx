@@ -154,8 +154,9 @@ export default function FanPageEditor() {
       logoUrl: branding.logo_url || null,
       isPreview: true,
       activeAddons,
+      soundcloudUrl: branding.soundcloud_url || null,
     }),
-    [editor.theme, branding.org_name, branding.logo_url, activeAddons],
+    [editor.theme, branding.org_name, branding.logo_url, branding.soundcloud_url, activeAddons],
   );
 
   const onDragEnd = (e: DragEndEvent) => {

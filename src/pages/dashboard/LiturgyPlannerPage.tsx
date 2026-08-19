@@ -11,7 +11,7 @@
 // tab — frictionless way to find a video. If a URL is pasted, the
 // button becomes a direct link.
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { getYouTubeId } from '@/lib/youtubeId';
@@ -21,11 +21,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import {
-  ArrowLeft, BookOpen, Calendar as CalendarIcon, ExternalLink, FileText, Loader2, Paperclip, Plus, Search, Trash2, Upload, X, Youtube,
+  ArrowLeft, BookOpen, Calendar as CalendarIcon, ExternalLink, FileText, Loader2, Music4, Paperclip, Pencil, Plus, Printer, Search, Trash2, Upload, X, Youtube,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PsalmComposerDialog } from '@/components/liturgy/PsalmComposerDialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { ReadingsModal } from '@/components/liturgy/ReadingsModal';
+import { readingsForDate, readingsFromCache, type CachedVariant } from '@/lib/liturgy/cachedReadings';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import {
@@ -40,6 +42,8 @@ interface MassRow {
   mass_time: string | null; // 'HH:MM:SS' or null
   observation: string | null;
   sunday_cycle: SundayCycle | null;
+  /** Chosen usccb_readings.variant_label; null = whatever the day offers first. */
+  readings_variant: string | null;
   liturgical_season: LiturgicalSeason | null;
   setting_title: string | null;       setting_youtube: string | null;      setting_pdf: string | null;
   prelude_title: string | null;       prelude_youtube: string | null;      prelude_pdf: string | null;
@@ -56,6 +60,9 @@ interface MassRow {
   gospel_acclamation: string | null;
   gospel: string | null;
   notes: string | null;
+  /** Presentation settings for the printed worship aid, including the URL of
+   *  the engraved psalm once one has been composed. */
+  worship_aid: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -94,6 +101,10 @@ function LiturgyList() {
       .insert({
         owner_user_id: user.id,
         mass_date: isoDate,
+        // Most parishes plan a 10:30 principal Mass, so seeding it saves the
+        // common case a step. Editable like any other field — this is a
+        // default, not a constraint.
+        mass_time: DEFAULT_MASS_TIME,
         observation: day.observation,
         sunday_cycle: day.cycle,
         liturgical_season: day.season,
@@ -104,6 +115,12 @@ function LiturgyList() {
     if (error) { toast.error(error.message); return; }
     navigate(`/dashboard/liturgy/${data!.id}`);
   };
+
+  // Drop a deleted plan from the list in place rather than refetching — the
+  // row is already gone server-side, and a refetch would flash the whole list.
+  const dropRow = useCallback((id: string) => {
+    setRows((cur) => cur.filter((r) => r.id !== id));
+  }, []);
 
   const upcoming = useMemo(
     () => rows.filter((r) => r.mass_date >= todayISO(new Date())).slice().reverse(),
@@ -124,14 +141,17 @@ function LiturgyList() {
         </Button>
       </div>
 
-      <Section title="Upcoming" rows={upcoming} loading={loading} emptyMsg="No upcoming Masses planned." />
-      <Section title="Recent" rows={past.slice(0, 20)} loading={loading} emptyMsg="No past Masses on file." />
+      <Section title="Upcoming" rows={upcoming} loading={loading} emptyMsg="No upcoming Masses planned."
+        onDeleted={dropRow} />
+      <Section title="Recent" rows={past.slice(0, 20)} loading={loading} emptyMsg="No past Masses on file."
+        onDeleted={dropRow} />
     </div>
   );
 }
 
-function Section({ title, rows, loading, emptyMsg }: {
+function Section({ title, rows, loading, emptyMsg, onDeleted }: {
   title: string; rows: MassRow[]; loading: boolean; emptyMsg: string;
+  onDeleted: (id: string) => void;
 }) {
   return (
     <div className="space-y-2.5">
@@ -144,21 +164,35 @@ function Section({ title, rows, loading, emptyMsg }: {
         <Card><CardContent className="py-6 text-sm text-muted-foreground text-center">{emptyMsg}</CardContent></Card>
       ) : (
         <ul className="space-y-1.5">
-          {rows.map((r) => <MassListRow key={r.id} row={r} />)}
+          {rows.map((r) => <MassListRow key={r.id} row={r} onDeleted={onDeleted} />)}
         </ul>
       )}
     </div>
   );
 }
 
-function MassListRow({ row }: { row: MassRow }) {
+function MassListRow({ row, onDeleted }: { row: MassRow; onDeleted: (id: string) => void }) {
   const dateLabel = formatDate(row.mass_date);
   const timeLabel = row.mass_time ? formatTime(row.mass_time) : null;
+  const [deleting, setDeleting] = useState(false);
+
+  const remove = async () => {
+    if (!confirm(`Delete the plan for ${row.observation || dateLabel}? This cannot be undone.`)) return;
+    setDeleting(true);
+    const { error } = await supabase.from('gw_liturgy_masses').delete().eq('id', row.id);
+    if (error) { setDeleting(false); toast.error(error.message); return; }
+    toast.success('Mass plan deleted.');
+    onDeleted(row.id);
+  };
+
+  // The delete button is a SIBLING of the link, not inside it: a <button>
+  // nested in an <a> is invalid, and stopPropagation on a nested control
+  // still leaves the row navigable by keyboard straight through the button.
   return (
-    <li>
+    <li className="flex items-stretch border border-border bg-card transition-colors hover:border-foreground/40">
       <Link
         to={`/dashboard/liturgy/${row.id}`}
-        className="block border border-border bg-card hover:border-foreground/40 transition-colors px-4 py-3"
+        className="min-w-0 flex-1 px-4 py-3"
       >
         <div className="flex items-baseline justify-between gap-3 flex-wrap">
           <div className="min-w-0">
@@ -178,9 +212,105 @@ function MassListRow({ row }: { row: MassRow }) {
           )}
         </div>
       </Link>
+      <button
+        type="button"
+        onClick={remove}
+        disabled={deleting}
+        aria-label={`Delete the plan for ${row.observation || dateLabel}`}
+        title="Delete this plan"
+        className="shrink-0 px-3 text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+      >
+        {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+      </button>
     </li>
   );
 }
+
+/** Renders a responsorial psalm the way it is printed: refrain set off from
+ *  the verses, in bold, with a line space either side.
+ *
+ *  Finding the refrain is the whole trick. USCCB prints it with an "R."
+ *  prefix, but Universalis — where these actually come from — does not: it
+ *  simply repeats the line. So the refrain is detected as THE LINE THAT
+ *  RECURS, with the "R." form still honoured when present. A psalm has one
+ *  repeated line by construction, which makes this reliable in a way that
+ *  pattern-matching a prefix was not.
+ *
+ *  Plain text in, no HTML, so nothing here can inject markup. */
+function PsalmText({ text }: { text: string }) {
+  const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
+  if (!lines.length) return null;
+
+  const counts = new Map<string, number>();
+  for (const l of lines) counts.set(l, (counts.get(l) ?? 0) + 1);
+  const isRefrain = (l: string) => /^R\.?\s/i.test(l) || (counts.get(l) ?? 0) > 1;
+
+  return (
+    <div className="border border-border bg-card p-3">
+      {lines.map((line, i) => {
+        const refrain = isRefrain(line);
+        return (
+          <p
+            key={i}
+            className={
+              refrain
+                ? `text-sm font-semibold${i > 0 ? ' mt-4' : ''}${i < lines.length - 1 ? ' mb-4' : ''}`
+                : 'text-sm text-foreground/90'
+            }
+          >
+            {line}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+/** The psalm field. Shows the FORMATTED psalm, not both the formatted and raw
+ *  versions — having the same text twice on screen, once with spacing and once
+ *  without, just reads as a duplicate.
+ *
+ *  The raw textarea is still reachable behind Edit, because psalms captured
+ *  before the formatting fix are stored flattened and hand-editing is the only
+ *  way to repair them. When there is no text yet, the editor shows directly —
+ *  there is nothing to preview. */
+function PsalmField({
+  value, onChange,
+}: { value: string | null; onChange: (v: string | null) => void }) {
+  const [editing, setEditing] = useState(false);
+
+  if (!value || editing) {
+    return (
+      <div className="space-y-2">
+        <Textarea
+          rows={8}
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value || null)}
+          placeholder="Paste or type the full Psalm refrain + verses…"
+        />
+        {value && (
+          <Button type="button" variant="outline" size="sm" onClick={() => setEditing(false)}>
+            Done
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <PsalmText text={value} />
+      <Button type="button" variant="ghost" size="sm" onClick={() => setEditing(true)}>
+        <Pencil className="w-3.5 h-3.5 mr-1.5" aria-hidden />
+        Edit text
+      </Button>
+    </div>
+  );
+}
+
+/** Seeded on a new Mass. 'HH:MM:SS' to match the column; the time input
+ *  accepts it and shows 10:30 AM. */
+const DEFAULT_MASS_TIME = '10:30:00';
 
 // ── Universalis → MassRow field mapping ──────────────────────────────
 // The readings function returns a flat list of {heading, citation, html}
@@ -188,8 +318,41 @@ function MassListRow({ row }: { row: MassRow }) {
 // columns we store. psalm_full gets the readable html of the psalm
 // block stripped to plain text since it's a textarea, not rich HTML.
 
-function stripHtml(s: string): string {
-  return s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+// Named/numeric HTML entities that actually turn up in the readings HTML.
+// &#160; (nbsp) and the curly quotes were rendering as literal "&#160;" in
+// the planner because the old stripper removed TAGS but never decoded
+// ENTITIES.
+const ENTITIES: Record<string, string> = {
+  nbsp: ' ', amp: '&', lt: '<', gt: '>', quot: '"', apos: "'",
+  ldquo: '\u201c', rdquo: '\u201d', lsquo: '\u2018', rsquo: '\u2019',
+  mdash: '\u2014', ndash: '\u2013', hellip: '\u2026',
+};
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&([a-z]+);/gi, (m, name) => ENTITIES[name.toLowerCase()] ?? m);
+}
+
+/** HTML → plain text, KEEPING line structure.
+ *
+ *  A psalm is refrain-and-verses, and the old version collapsed every run of
+ *  whitespace — including the newlines — into single spaces, so it arrived as
+ *  one unreadable paragraph. Block-level tags become newlines before the tags
+ *  are stripped, and each line is trimmed individually. */
+function htmlToText(s: string): string {
+  return decodeEntities(
+    s
+      .replace(/<\s*br\s*\/?\s*>/gi, '\n')
+      .replace(/<\/\s*(?:p|div|li|h[1-6])\s*>/gi, '\n')
+      .replace(/<[^>]+>/g, ' '),
+  )
+    .split('\n')
+    .map((line) => line.replace(/[ \t\u00a0]+/g, ' ').trim())
+    .filter((line, i, all) => line !== '' || (i > 0 && all[i - 1] !== ''))
+    .join('\n')
+    .trim();
 }
 
 function mapReadingBlocksToFields(blocks: Array<{ heading: string; citation: string | null; html: string }>): Partial<MassRow> {
@@ -200,7 +363,7 @@ function mapReadingBlocksToFields(blocks: Array<{ heading: string; citation: str
     const cite = b.citation || null;
     if (/responsorial\s*psalm/.test(h)) {
       if (cite) out.responsorial_psalm = cite;
-      const txt = stripHtml(b.html);
+      const txt = htmlToText(b.html);
       if (txt) out.psalm_full = txt;
     } else if (/gospel\s*acclamation|verse\s*before\s*the\s*gospel|alleluia/.test(h)) {
       if (cite) out.gospel_acclamation = cite;
@@ -265,7 +428,7 @@ function ReadingRow({
             </PopoverTrigger>
             <PopoverContent align="end" className="w-[min(28rem,calc(100vw-2rem))] max-h-[60vh] overflow-y-auto p-4">
               <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{block.heading}</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{block.heading}</p>
                 {block.citation && <p className="text-xs italic text-muted-foreground">{block.citation}</p>}
                 <div
                   className="prose prose-sm max-w-none text-sm leading-relaxed text-foreground/90 [&_p]:my-2 [&_blockquote]:border-l-2 [&_blockquote]:border-border [&_blockquote]:pl-3 [&_blockquote]:italic"
@@ -300,9 +463,18 @@ function OrderItem({ n, children }: { n: number; children: ReactNode }) {
 
 function LiturgyEditor({ massId }: { massId: string }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [row, setRow] = useState<MassRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  // The date the user just picked, held while we switch plans. Kept apart from
+  // row.mass_date on purpose: the current plan must be saved under the date it
+  // still belongs to, and writing the new date onto it first would drag the
+  // old day's music along to the new one.
+  const [pendingDate, setPendingDate] = useState<string | null>(null);
+  const [switchingDate, setSwitchingDate] = useState(false);
+  const dateTimer = useRef<number | null>(null);
+  useEffect(() => () => { if (dateTimer.current) window.clearTimeout(dateTimer.current); }, []);
   // MUST be declared above any early-return so the hook count stays
   // stable across renders. The previous placement (post-`if (!row)`)
   // crashed with React error #310.
@@ -310,10 +482,14 @@ function LiturgyEditor({ massId }: { massId: string }) {
   const [pullingReadings, setPullingReadings] = useState(false);
   // Which song slot's inline YouTube player is open (one at a time).
   const [playingSlot, setPlayingSlot] = useState<string | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
   // Cached blocks from the last Universalis pull. Keyed for the inline
   // hover popovers so each citation field can show its full text without
   // re-hitting the upstream.
   const [readingBlocks, setReadingBlocks] = useState<Array<{ heading: string; citation: string | null; html: string }>>([]);
+  // Every set of readings this date offers. More than one only on the days
+  // that publish alternatives (Christmas, Ascension, Pentecost, Lent...).
+  const [variants, setVariants] = useState<CachedVariant[]>([]);
 
   useEffect(() => {
     (async () => {
@@ -324,33 +500,90 @@ function LiturgyEditor({ massId }: { massId: string }) {
         .eq('id', massId)
         .single();
       if (error) { toast.error(error.message); setLoading(false); return; }
-      setRow(data as MassRow);
+      // Every plan made before the 10:30 default shipped has a blank time, and
+      // seeding only on INSERT would leave them blank forever. Fill the blank
+      // on open so the default shows on ALL plans, not just new ones.
+      //
+      // Local state only — this does NOT write to a plan the user merely
+      // looked at. It rides along with the next Save, which already sends the
+      // whole row.
+      const loaded = data as MassRow;
+      setRow({
+        ...loaded,
+        mass_time: loaded.mass_time || DEFAULT_MASS_TIME,
+        // Name the day if the field has never been set. `liturgicalDayFor`
+        // titles every date now, so plans made before that shipped — an
+        // ordinary Sunday, any weekday — arrive here still untitled and get
+        // named on open.
+        //
+        // The gate is `=== null`, not falsiness. A Mass plan distinguishes
+        // "never set" (null, what INSERT leaves when nothing is supplied)
+        // from "the user emptied this field on purpose" (''), which the
+        // Observation input writes verbatim. Only null is auto-filled, so a
+        // parish that types "Parish Feast of the Dedication" keeps it, and a
+        // parish that clears the field keeps it clear.
+        observation: loaded.observation === null
+          ? liturgicalDayFor(parseISODate(loaded.mass_date)).observation
+          : loaded.observation,
+      });
       setLoading(false);
 
-      // First-time auto-pull: if the row has no reading citations yet,
-      // try Universalis silently so the editor lands populated. Failure
-      // is non-blocking — the user can still pull manually.
+      // First-time auto-pull: if the row has no reading citations yet, fetch
+      // them silently so the editor lands populated. Failure is non-blocking —
+      // the user can still pull manually.
+      //
+      // Readings only. The day's TITLE is pure date arithmetic above: asking
+      // the readings upstream for it left ~300 days a year unnamed, because
+      // the free Universalis site only serves a window of about a fortnight.
       const r = data as MassRow;
       const empty = !r.first_reading && !r.responsorial_psalm && !r.second_reading && !r.gospel_acclamation && !r.gospel;
       if (empty) {
-        void fetchReadingsAndApply(r.mass_date, /*overwrite=*/false);
+        void fetchReadingsAndApply(r.mass_date, /*overwrite=*/false)
+          .then(({ cycle }) => {
+            setRow((cur) => {
+              if (!cur || cur.id !== r.id) return cur;  // navigated away mid-fetch
+              if (!cycle || cycle === cur.sunday_cycle) return cur;
+              return { ...cur, sunday_cycle: cycle };
+            });
+          });
       }
     })();
   }, [massId]);
 
-  // Calls the universalis proxy and merges the parsed citations into
-  // the row's reading fields. `overwrite=true` replaces whatever's
-  // there; `false` keeps user-edited values and only fills blanks.
-  async function fetchReadingsAndApply(iso: string, overwrite: boolean): Promise<{ liturgicalTitle: string | null }> {
+  // Merges the day's citations into the row's reading fields, preferring the
+  // local USCCB table and falling back to the Universalis proxy for dates it
+  // doesn't cover (near dates, and weekdays the backfill skipped).
+  // `overwrite=true` replaces whatever's there; `false` only fills blanks.
+  // `variantLabel` names which set to apply on a day that offers several;
+  // omit it to use the plan's stored choice, or the first set if it has none.
+  async function fetchReadingsAndApply(
+    iso: string, overwrite: boolean, variantLabel?: string | null,
+  ): Promise<{ cycle: SundayCycle | null }> {
     setPullingReadings(true);
     try {
-      const { data: resp, error: fnErr } = await supabase.functions.invoke('usccb-readings', {
-        body: { date: iso },
-      });
-      if (fnErr) throw new Error(fnErr.message);
-      const liturgicalTitle = ((resp as any)?.liturgicalTitle as string | null) ?? null;
-      const blocks = ((resp as any)?.readings as Array<{ heading: string; citation: string | null; html: string }>) || [];
-      if (!blocks.length) return { liturgicalTitle };
+      let cycle: SundayCycle | null = null;
+      let blocks: Array<{ heading: string; citation: string | null; html: string }> = [];
+
+      // What this date offers, so the picker can show alternatives, and which
+      // set to apply — the one the plan chose, else the one offered first.
+      const all = await readingsForDate(iso);
+      setVariants(all);
+      const cached = variantLabel !== undefined
+        ? (all.find((v) => v.label === variantLabel) ?? all[0] ?? null)
+        : await readingsFromCache(iso, row?.readings_variant ?? null);
+
+      if (cached) {
+        cycle = (cached.cycle as SundayCycle | null);
+        blocks = cached.blocks;
+      } else {
+        const { data: resp, error: fnErr } = await supabase.functions.invoke('usccb-readings', {
+          body: { date: iso },
+        });
+        if (fnErr) throw new Error(fnErr.message);
+        blocks = ((resp as any)?.readings as Array<{ heading: string; citation: string | null; html: string }>) || [];
+      }
+
+      if (!blocks.length) return { cycle };
       setReadingBlocks(blocks);
       const mapped = mapReadingBlocksToFields(blocks);
       setRow((cur) => {
@@ -362,10 +595,10 @@ function LiturgyEditor({ massId }: { massId: string }) {
         }
         return Object.keys(next).length ? { ...cur, ...next } : cur;
       });
-      return { liturgicalTitle };
+      return { cycle };
     } catch (e: any) {
       if (overwrite) toast.error(`Couldn't fetch readings: ${e?.message || e}`);
-      return { liturgicalTitle: null };
+      return { cycle: null };
     } finally {
       setPullingReadings(false);
     }
@@ -380,35 +613,64 @@ function LiturgyEditor({ massId }: { massId: string }) {
 
   const update = (patch: Partial<MassRow>) => setRow((r) => r ? { ...r, ...patch } : r);
 
-  // When the user changes the date, recompute the auto observation /
-  // cycle / season unless they've manually customized the observation,
-  // then fire a non-blocking Universalis pull to fill any empty reading
-  // fields for the new date.
+  /**
+   * Move to the plan for `iso`, leaving this date's music on this date.
+   *
+   * A plan is one row carrying both a date and its music, so re-dating the
+   * open row used to drag the old day's selections onto the new day and leave
+   * the old day with nothing. Each date keeps its own plan instead: the open
+   * one is saved under the date it still belongs to, then that date's plan is
+   * opened, starting one if the date has never been planned.
+   */
+  async function switchToDate(iso: string) {
+    if (!row || iso === row.mass_date) { setPendingDate(null); return; }
+    setSwitchingDate(true);
+    try {
+      // 1. This date's work stays on this date.
+      const { id, created_at, updated_at, ...payload } = row;
+      const { error: saveErr } = await supabase
+        .from('gw_liturgy_masses').update(payload).eq('id', id);
+      if (saveErr) throw new Error(saveErr.message);
+
+      // 2. Whatever is already planned for the new date. RLS scopes the read
+      //    to the tenant, so this finds our plan for that day, not another's.
+      const { data: existing } = await supabase
+        .from('gw_liturgy_masses')
+        .select('id').eq('mass_date', iso).limit(1).maybeSingle();
+      if (existing?.id) { navigate(`/dashboard/liturgy/${existing.id}`); return; }
+
+      // 3. Never planned — start one, seeded the way New Mass seeds.
+      const day = liturgicalDayFor(parseISODate(iso));
+      const { data: created, error: insErr } = await supabase
+        .from('gw_liturgy_masses')
+        .insert({
+          owner_user_id: user?.id,
+          mass_date: iso,
+          mass_time: row.mass_time ?? DEFAULT_MASS_TIME,
+          observation: day.observation,
+          sunday_cycle: day.cycle,
+          liturgical_season: day.season,
+        })
+        .select('id').single();
+      if (insErr) throw new Error(insErr.message);
+      navigate(`/dashboard/liturgy/${created!.id}`);
+    } catch (e: any) {
+      toast.error(`Couldn't open that date: ${e?.message || e}`);
+      setPendingDate(null);
+    } finally {
+      setSwitchingDate(false);
+    }
+  }
+
+  // Debounced, so stepping the picker through months or years lands on one
+  // plan at the date you stop on rather than creating one per step.
   const onDateChange = (iso: string) => {
-    const day = liturgicalDayFor(parseISODate(iso));
-    // Keep a manually-typed observation; otherwise seed from the local
-    // feast table (covers solemnities/major feasts offline).
-    const userCustomized = !!row.observation && !isAutoObservation(row.observation);
-    update({
-      mass_date: iso,
-      sunday_cycle: day.cycle,
-      liturgical_season: day.season,
-      observation: userCustomized ? row.observation : (day.observation ?? null),
-    });
-    // Readings are a function of the date — replace them for the new
-    // date. The same pull carries the day's liturgical title, which
-    // Universalis names for ordinary weekdays/Sundays the local table
-    // doesn't (e.g. "Saturday of week 13 in Ordinary Time"). Fill the
-    // observation from it when the user hasn't customized it and the
-    // local table had no feast.
-    void fetchReadingsAndApply(iso, /*overwrite=*/true).then(({ liturgicalTitle }) => {
-      if (userCustomized || !liturgicalTitle) return;
-      setRow((cur) => {
-        if (!cur || cur.mass_date !== iso) return cur; // date changed again mid-fetch
-        if (cur.observation && !isAutoObservation(cur.observation)) return cur;
-        return { ...cur, observation: liturgicalTitle };
-      });
-    });
+    // A part-typed date reads as '' from <input type="date">; ignore anything
+    // that is not a whole date so a half-entered year never starts a plan.
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return;
+    setPendingDate(iso);
+    if (dateTimer.current) window.clearTimeout(dateTimer.current);
+    dateTimer.current = window.setTimeout(() => { void switchToDate(iso); }, 700);
   };
 
   const save = async () => {
@@ -450,7 +712,8 @@ function LiturgyEditor({ massId }: { massId: string }) {
         <CardContent className="p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Field label="Date">
-              <Input type="date" value={row.mass_date} onChange={(e) => onDateChange(e.target.value)} />
+              <Input type="date" value={pendingDate ?? row.mass_date}
+                onChange={(e) => onDateChange(e.target.value)} disabled={switchingDate} />
             </Field>
             <Field label="Time">
               <Input type="time" value={row.mass_time ?? ''} onChange={(e) => update({ mass_time: e.target.value || null })} />
@@ -460,8 +723,40 @@ function LiturgyEditor({ massId }: { massId: string }) {
             </Field>
           </div>
           <Field label="Observation (feast day / liturgical title)">
-            <Input value={row.observation ?? ''} onChange={(e) => update({ observation: e.target.value || null })} placeholder="e.g. Solemnity of the Most Holy Trinity" />
+            {/* Writes '' rather than null when emptied: null is reserved for
+                "never set", the only state the auto-fill on open will touch.
+                Clearing this field is therefore a decision that sticks. */}
+            <Input value={row.observation ?? ''} onChange={(e) => update({ observation: e.target.value })} placeholder="e.g. Solemnity of the Most Holy Trinity" />
           </Field>
+
+          {/* Days that publish more than one set of readings. Christmas has
+              four Masses; Pentecost and the Assumption have a Vigil; the
+              Lenten Sundays carry the Year A scrutiny readings alongside the
+              cycle's own; and the Ascension is a provincial choice — kept on
+              Thursday in six US provinces, moved to the Sunday everywhere
+              else, with both sets published on both dates. The default follows
+              this province, but no default is right everywhere, so the
+              alternatives stay one click away. Hidden entirely on the vast
+              majority of days, which offer a single set. */}
+          {variants.length > 1 && (
+            <Field label="Readings">
+              <select
+                className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
+                value={row.readings_variant ?? variants[0].label ?? ''}
+                onChange={(e) => {
+                  const label = e.target.value || null;
+                  update({ readings_variant: label });
+                  void fetchReadingsAndApply(row.mass_date, /*overwrite=*/true, label);
+                }}
+              >
+                {variants.map((v) => (
+                  <option key={v.label ?? 'default'} value={v.label ?? ''}>
+                    {v.label ?? v.liturgicalTitle ?? 'Readings of the day'}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
           {/* In-app readings — opens a bottom Sheet (horizontal split
            * with editor still visible above). USCCB sends
            * X-Frame-Options: SAMEORIGIN so a direct iframe is blocked;
@@ -478,24 +773,41 @@ function LiturgyEditor({ massId }: { massId: string }) {
             </button>
             <button
               type="button"
-              onClick={() => fetchReadingsAndApply(row.mass_date, /*overwrite=*/true)}
+              onClick={() => fetchReadingsAndApply(row.mass_date, /*overwrite=*/true, row.readings_variant)}
               disabled={pullingReadings}
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-[hsl(var(--link))] hover:text-[hsl(var(--link-hover))] hover:underline disabled:opacity-50"
-              title="Replace reading citations + psalm with Universalis data for this date"
+              title="Replace reading citations + psalm with the lectionary readings for this date"
             >
               {pullingReadings ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <BookOpen className="w-3.5 h-3.5" />}
-              Pull from Universalis
+              Pull readings
             </button>
           </div>
         </CardContent>
       </Card>
 
       {/* Order of Mass — music and readings interleaved in the order the
-          liturgy actually follows. "Pull from Universalis" fills the
-          reading rows below in place. */}
+          liturgy actually follows. "Pull readings" fills the reading rows
+          below in place; choosing a date does the same automatically. */}
       <Card>
         <CardContent className="p-4 space-y-5">
-          <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-foreground/70">Order of Mass</h2>
+          {/* Save sits here as well as at the foot of the page. The Order of
+              Mass is a long card, and a plan is edited from the top down —
+              reaching the only Save meant scrolling past everything you just
+              typed (Kevin). Same handler, so there is one save path. */}
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xs font-bold uppercase tracking-[0.08em] text-foreground/70">Order of Mass</h2>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" asChild className="rounded-full">
+                <Link to={`/dashboard/liturgy/${row.id}/worship-aid`}>
+                  <Printer className="mr-1.5 h-4 w-4" /> Worship aid
+                </Link>
+              </Button>
+              <Button size="sm" onClick={save} disabled={saving} className="rounded-full">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+                Save
+              </Button>
+            </div>
+          </div>
 
           <SongSlot
             label="Mass Setting Used" slotKey="setting" playing={playingSlot === 'setting'} onPlayToggle={setPlayingSlot}
@@ -562,11 +874,23 @@ function LiturgyEditor({ massId }: { massId: string }) {
               onYouTube={(v) => update({ psalm_youtube: v || null })}
               onPdf={(v) => update({ psalm_pdf: v })}
               massId={row.id}
+              extra={
+                <button
+                  type="button"
+                  onClick={() => setComposerOpen(true)}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-border px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground"
+                  title="Write a setting of this psalm on a staff"
+                >
+                  <Music4 className="h-3.5 w-3.5" />
+                  Compose setting
+                </button>
+              }
             />
             <Field label="Psalm full text (refrain + verses)">
-              <Textarea rows={3} value={row.psalm_full ?? ''}
-                onChange={(e) => update({ psalm_full: e.target.value || null })}
-                placeholder="Paste or type the full Psalm refrain + verses…" />
+              <PsalmField
+                value={row.psalm_full}
+                onChange={(v) => update({ psalm_full: v })}
+              />
             </Field>
           </OrderItem>
 
@@ -693,6 +1017,45 @@ function LiturgyEditor({ massId }: { massId: string }) {
         isoDate={row.mass_date}
         sourceUrl={readingsHref}
       />
+
+      <PsalmComposerDialog
+        open={composerOpen}
+        onClose={() => setComposerOpen(false)}
+        citation={row.responsorial_psalm}
+        observation={row.observation}
+        psalmText={row.psalm_full}
+        // Record the engraved setting ON the Mass, not just its title.
+        //
+        // The worship aid used to go looking for it afterwards by matching
+        // library titles against the psalm citation, which fails exactly when
+        // it matters: the composer titles a score from the citation at the
+        // moment it is saved, and a plan whose responsorial is a canticle
+        // (Jeremiah 31) while the citation field still reads "Psalm 84(85)"
+        // has two different strings for one piece of music. Writing the id
+        // here removes the guessing.
+        //
+        // The picture the composer hands back is NOT written here anymore.
+        // The aid now engraves from psalmScoreId's stored MusicXML at build
+        // time (WorshipAidPage / WorshipAidPublicPage), so every Mass saved
+        // through this dialog has a score id and the render path never looks
+        // at worship_aid.psalmImageUrl again — writing it would only be data
+        // nothing reads. A Mass saved BEFORE this change keeps whatever
+        // psalmImageUrl it already has; that field is still the fallback
+        // picture for an aid whose psalm was never saved to the library at
+        // all (no scoreId, matched-by-title row with no MusicXML, or no
+        // match whatsoever) — see WorshipAidPage's fallback chain.
+        onSaved={(id, title) => update({
+          psalm_title: title,
+          worship_aid: {
+            ...(row.worship_aid ?? {}),
+            // The id is what lets the composer reopen this setting for
+            // editing instead of starting blank and filing a second copy.
+            psalmScoreId: id,
+          },
+        })}
+        existingScoreId={(row.worship_aid as { psalmScoreId?: string } | null)?.psalmScoreId ?? null}
+        settingTitle={row.psalm_title}
+      />
     </div>
   );
 }
@@ -744,9 +1107,12 @@ function useHymnSearch(q: string) {
 
 function SongSlot({
   label, title, youtube, pdf, onTitle, onYouTube, onPdf, slotKey, massId,
-  playing = false, onPlayToggle,
+  playing = false, onPlayToggle, extra,
 }: {
   label: string; title: string; youtube: string; pdf: string | null;
+  /** An extra pill rendered beside the attachment pills — used by the psalm
+   *  slot for "Compose setting". Kept generic so the slot stays reusable. */
+  extra?: React.ReactNode;
   onTitle: (v: string) => void; onYouTube: (v: string) => void; onPdf: (v: string | null) => void;
   // Inline playback: parent owns which slot is playing (one at a time).
   slotKey?: string; playing?: boolean; onPlayToggle?: (slotKey: string | null) => void;
@@ -763,7 +1129,7 @@ function SongSlot({
 
   return (
     <div className="space-y-1.5">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">{label}</div>
+      <div className="text-xs font-semibold uppercase tracking-wider text-foreground/70">{label}</div>
       <div className="flex gap-2">
         <div className="relative flex-1">
           <Input
@@ -835,7 +1201,10 @@ function SongSlot({
         placeholder="YouTube URL (optional)"
         className="text-xs"
       />
-      <PdfAttachment pdf={pdf} onPdf={onPdf} massId={massId} slotKey={slotKey ?? label} />
+      <div className="flex flex-wrap items-center gap-2">
+        <PdfAttachment pdf={pdf} onPdf={onPdf} massId={massId} slotKey={slotKey ?? label} />
+        {extra}
+      </div>
       {playing && videoId && (
         <div className="rounded-xl overflow-hidden border border-border">
           <div className="flex items-center gap-1 px-3 py-1.5 bg-muted/50">
@@ -861,11 +1230,28 @@ function SongSlot({
             </button>
           </div>
           <div className="aspect-video w-full">
+            {/* No autoplay, and declare the origin.
+             *
+             * YouTube serves a "Sign in to confirm you're not a bot"
+             * interstitial in place of the player when its bot heuristics
+             * fire. Autoplaying embeds are one of the signals it weighs, and
+             * the parameter was buying that risk for behaviour browsers block
+             * anyway — unmuted autoplay needs a user gesture inside the frame,
+             * so the video did not actually start on its own. Opening the
+             * player is already a deliberate click; one more on the poster is
+             * a fair trade for not looking automated.
+             *
+             * `origin` is what the IFrame API asks embedders to send so the
+             * request is attributable to this site rather than anonymous.
+             *
+             * Neither is a guaranteed cure: the interstitial keys mostly off
+             * the viewer's own IP and account reputation, which no embed
+             * parameter can speak for. */}
             <iframe
-              src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`}
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?rel=0&origin=${encodeURIComponent(window.location.origin)}`}
               title={title.trim() || label}
               className="w-full h-full"
-              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allow="encrypted-media; picture-in-picture; fullscreen"
               allowFullScreen
             />
           </div>
@@ -1031,7 +1417,7 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
                   <div className="min-w-0 flex-1 space-y-0.5">
                     <div className="text-sm font-semibold leading-tight line-clamp-2">{h.title}</div>
                     <div className="text-xs text-muted-foreground">{h.channelTitle}</div>
-                    <div className="text-[11px] text-muted-foreground line-clamp-2">{h.description}</div>
+                    <div className="text-xs text-muted-foreground line-clamp-2">{h.description}</div>
                   </div>
                 </button>
               </li>
@@ -1041,7 +1427,7 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
 
         {source === 'appleMusic' && appleHits.length > 0 && (
           <>
-            <p className="text-[11px] text-muted-foreground pt-3">
+            <p className="text-xs text-muted-foreground pt-3">
               Full playback requires the listener's Apple Music subscription.
             </p>
             <ul className="space-y-1.5 pt-1.5">
@@ -1060,7 +1446,7 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
                     <div className="min-w-0 flex-1 space-y-0.5">
                       <div className="text-sm font-semibold leading-tight line-clamp-2">{h.title}</div>
                       <div className="text-xs text-muted-foreground line-clamp-1">{h.artist}</div>
-                      {h.album && <div className="text-[11px] text-muted-foreground line-clamp-1">{h.album}</div>}
+                      {h.album && <div className="text-xs text-muted-foreground line-clamp-1">{h.album}</div>}
                     </div>
                   </button>
                 </li>
@@ -1084,7 +1470,7 @@ function YouTubeSearchModal({ open, onClose, initialQuery, onPick }: {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block space-y-1">
-      <span className="text-[11px] font-semibold uppercase tracking-wider text-foreground/70">{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-wider text-foreground/70">{label}</span>
       {children}
     </label>
   );
@@ -1115,18 +1501,13 @@ function formatTime(t: string): string {
   return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 }
 
-function isAutoObservation(s: string | null): boolean {
-  if (!s) return true;
-  // Labels that match our local feast table OR Universalis's ordinary
-  // weekday/Sunday naming ("Saturday of week 13 in Ordinary Time",
-  // "14th Sunday in Ordinary Time") are auto-fills, not user text — so a
-  // later date change is free to replace them.
-  return (
-    /^(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Solemnity|Ash|Palm|Good|Easter|Pentecost|Christmas|All Saints|Assumption|Immaculate)/i.test(s) ||
-    /\b(in Ordinary Time|week \d+|\d+(st|nd|rd|th) (Sunday|Week))\b/i.test(s) ||
-    /^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday) of\b/i.test(s)
-  );
-}
+// `isAutoObservation` lived here: a regex that guessed whether the stored
+// title looked like one of ours, so a date change could replace it. It is
+// gone. Guessing from the text could never tell "Fourth Sunday of Advent"
+// typed by a director from the same words auto-filled, and each date now
+// keeps its own plan row, so a date change never rewrites another day's
+// title in the first place. The null-vs-'' rule on the Observation input
+// carries the distinction instead.
 
 // ── PDF attachment for a song slot ────────────────────────────────────
 //
@@ -1174,10 +1555,25 @@ function PdfAttachment({ pdf, onPdf, massId, slotKey }: {
     }
     setUploading(true);
     try {
+      // Read the file into memory BEFORE uploading. Streaming the File handle
+      // dies mid-request if the file changed on disk since it was picked
+      // (Chrome's ERR_UPLOAD_FILE_CHANGED — re-downloaded PDFs and
+      // still-syncing iCloud/Dropbox files hit this constantly). nginx logs a
+      // bodyless 400, supabase-js surfaces a useless "Failed to fetch", and
+      // the user just sees uploads "not working". Reading first turns that
+      // into an instant, explainable failure — and once the bytes are ours,
+      // nothing on disk can corrupt the request.
+      let bytes: ArrayBuffer;
+      try {
+        bytes = await file.arrayBuffer();
+      } catch {
+        toast.error('That file changed on disk since you selected it — if it just downloaded or is still syncing, wait a moment and pick it again.');
+        return;
+      }
       const path = `liturgy/${massId}/${slotKey}.pdf`;
       const { error: upErr } = await supabase.storage
         .from('sheet-music')
-        .upload(path, file, { contentType: 'application/pdf', upsert: true });
+        .upload(path, bytes, { contentType: 'application/pdf', upsert: true });
       if (upErr) throw upErr;
       const url = supabase.storage.from('sheet-music').getPublicUrl(path).data.publicUrl;
       // Cache-bust so replacing a PDF is reflected immediately for viewers.

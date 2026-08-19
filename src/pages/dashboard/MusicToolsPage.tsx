@@ -8,7 +8,8 @@
 // 7-octave scrolling surface while the other tools collapse to a
 // compact strip at the top.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Metronome } from '@/components/audioTools/Metronome';
 import { PitchPipe } from '@/components/audioTools/PitchPipe';
 import { Tuner } from '@/components/audioTools/Tuner';
@@ -19,6 +20,30 @@ import { ArrowLeft } from 'lucide-react';
 
 export default function MusicToolsPage() {
   const [pianoExpanded, setPianoExpanded] = useState(false);
+
+  // URL context so other surfaces can link a user straight to the tool they
+  // need rather than to a page of five tools:
+  //   ?tool=metronome|pitch|tuner|piano   scroll to (and highlight) one tool
+  //   ?bpm=120                            seed the metronome's tempo
+  // Previously this page read no params at all, so a practice task could only
+  // say "go to Music Tools" and leave the rest to the student.
+  const [search] = useSearchParams();
+  const tool = search.get('tool');
+  const bpmParam = Number(search.get('bpm'));
+  const initialBpm = Number.isFinite(bpmParam) && bpmParam > 0 ? bpmParam : undefined;
+  const focusRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (tool === 'piano') { setPianoExpanded(true); return; }
+    if (!tool || !focusRef.current) return;
+    // Wait for layout so the scroll lands accurately on first paint.
+    const id = requestAnimationFrame(() => {
+      focusRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [tool]);
+
+  const highlight = 'ring-2 ring-primary ring-offset-2 ring-offset-background rounded-lg';
 
   // Hide the dashboard sidebar in stage mode so the keyboard can fill the
   // viewport. Class is read by DashboardShell's <aside> via a CSS rule in
@@ -86,9 +111,18 @@ export default function MusicToolsPage() {
         </p>
       </header>
       <div className="grid gap-4 md:grid-cols-2">
-        <Metronome />
-        <PitchPipe />
-        <Tuner />
+        <div ref={tool === 'metronome' ? focusRef : undefined}
+             className={tool === 'metronome' ? highlight : undefined}>
+          <Metronome initialBpm={initialBpm} />
+        </div>
+        <div ref={tool === 'pitch' ? focusRef : undefined}
+             className={tool === 'pitch' ? highlight : undefined}>
+          <PitchPipe />
+        </div>
+        <div ref={tool === 'tuner' ? focusRef : undefined}
+             className={tool === 'tuner' ? highlight : undefined}>
+          <Tuner />
+        </div>
         <InstrumentPlayer />
       </div>
       {/* Piano lives at the bottom — where the player's hands naturally

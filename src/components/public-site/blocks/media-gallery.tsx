@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MediaPicker, type MediaItem } from '../MediaPicker';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
+import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
 // Media Gallery accepts both audio and video — but for visual layout we focus
 // on images, which are the most common gallery item. Re-uses MediaPicker;
@@ -56,7 +57,7 @@ function GalleryViewer({
       <button
         type="button"
         onClick={onClose}
-        className="absolute top-2 right-2 z-10 text-white/85 hover:text-white p-2 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+        className="absolute top-2 right-2 z-10 w-11 h-11 grid place-items-center text-white/85 hover:text-white rounded-full bg-black/40 hover:bg-black/60 transition-colors"
         aria-label="Back to gallery"
       >
         <X className="w-5 h-5" />
@@ -66,7 +67,7 @@ function GalleryViewer({
           <button
             type="button"
             onClick={prev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 text-white/85 hover:text-white p-2 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-11 h-11 grid place-items-center text-white/85 hover:text-white rounded-full bg-black/40 hover:bg-black/60 transition-colors"
             aria-label="Previous photo"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -74,7 +75,7 @@ function GalleryViewer({
           <button
             type="button"
             onClick={next}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 text-white/85 hover:text-white p-2 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-11 h-11 grid place-items-center text-white/85 hover:text-white rounded-full bg-black/40 hover:bg-black/60 transition-colors"
             aria-label="Next photo"
           >
             <ChevronRight className="w-6 h-6" />
@@ -100,12 +101,12 @@ function GalleryViewer({
   );
 }
 
-function Render({ config }: BlockRenderProps<Config>) {
+function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
   // Drop empty rows AND normalize to the concrete shape GalleryViewer wants
   // (url/caption are optional on the stored config; the viewer requires both).
   const items = config.items.flatMap((i) => (i.url ? [{ url: i.url, caption: i.caption ?? '' }] : []));
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  if (items.length === 0) return null;
+  if (items.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Media Gallery" /> : null;
 
   const openAt = (i: number) => setOpenIndex(i);
   // Common button classes for the click-to-open thumbnails. Rendering the
@@ -117,7 +118,7 @@ function Render({ config }: BlockRenderProps<Config>) {
   return (
     <section id="gallery" className="gw-container py-5">
       {config.heading && (
-        <h2 className="normal-case text-2xl sm:text-3xl font-bold mb-6 flex items-center gap-2">
+        <h2 className="normal-case text-2xl cq-sm:text-3xl font-bold mb-6 flex items-center gap-2">
           <ImagePlus className="w-6 h-6" style={{ color: 'var(--site-accent)' }} />
           {config.heading}
         </h2>
@@ -125,18 +126,18 @@ function Render({ config }: BlockRenderProps<Config>) {
       {openIndex !== null ? (
         <GalleryViewer items={items} index={openIndex} onIndex={setOpenIndex} onClose={() => setOpenIndex(null)} />
       ) : config.layout === 'featured' ? (
-        <div className="grid lg:grid-cols-3 gap-4">
+        <div className="grid cq-lg:grid-cols-3 gap-4">
           {(() => {
             const [first, ...rest] = items;
             return (
               <>
-                <figure className="lg:col-span-2 rounded-xl overflow-hidden bg-muted">
+                <figure className="cq-lg:col-span-2 rounded-xl overflow-hidden bg-muted">
                   <button type="button" onClick={() => openAt(0)} className={thumbBtn} aria-label={first.caption || 'Open photo'}>
                     <img src={first.url} alt={first.caption} className="w-full h-full object-cover aspect-video cursor-zoom-in" />
                   </button>
                   {first.caption && <figcaption className="text-sm text-muted-foreground mt-2">{first.caption}</figcaption>}
                 </figure>
-                <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
+                <div className="grid grid-cols-2 cq-lg:grid-cols-1 gap-3">
                   {rest.slice(0, 4).map((it, i) => (
                     <figure key={i} className="rounded-xl overflow-hidden bg-muted">
                       <button type="button" onClick={() => openAt(i + 1)} className={thumbBtn} aria-label={it.caption || 'Open photo'}>
@@ -152,8 +153,8 @@ function Render({ config }: BlockRenderProps<Config>) {
       ) : (
         <div className={
           config.layout === 'masonry'
-            ? 'columns-2 sm:columns-3 lg:columns-4 gap-3 [&>*]:mb-3 [&>*]:break-inside-avoid'
-            : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3'
+            ? 'columns-2 cq-sm:columns-3 cq-lg:columns-4 gap-3 [&>*]:mb-3 [&>*]:break-inside-avoid'
+            : 'grid grid-cols-2 cq-sm:grid-cols-3 cq-lg:grid-cols-4 gap-3'
         }>
           {items.map((it, i) => (
             <figure key={i} className="rounded-lg overflow-hidden bg-muted">

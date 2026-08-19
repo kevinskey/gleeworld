@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePreviewRole } from '@/lib/nav/navPreview';
 import type { NavRole } from '@/lib/navigation/navCatalog';
-import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
+import { isTenantAdminOrAboveRole } from '@/lib/auth/tenantRoles';
 
 /**
  * The caller's role from gw_tenant_members for the tenant whose site they
@@ -100,6 +100,12 @@ export function useEffectivePreviewRole(): NavRole | null {
     staleTime: 5 * 60_000,
   });
 
-  const allowed = isTenantSuperAdminRole(myRole) || !!isPlatform;
+  // Must match ViewsSwitcher's visibility gate exactly. If this were the
+  // narrower super-admin-only check while the control showed for admins,
+  // a tenant admin would get a Views button that silently did nothing.
+  // Previewable roles (admin/student/member) are never above the viewer's
+  // own level, and nav preview only restricts the sidebar — data access is
+  // still RLS-enforced — so admins previewing down grants no privilege.
+  const allowed = isTenantAdminOrAboveRole(myRole) || !!isPlatform;
   return allowed ? previewRole : null;
 }

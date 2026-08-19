@@ -1,0 +1,156 @@
+{
+  "state_slug": "maryland",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Maryland's All-State program is run by the Maryland Music Educators Association (MMEA, mdmea.org) and includes three choral ensembles: Senior Mixed Chorus, Senior Treble Chorus, and Junior Chorus. At retrieval the MMEA All State page stated that '[a]udition materials and information for the 2026-2027 All State auditions will be available August 2026' — so no repertoire, fees, or festival dates for 2026-27 were published yet. However, MMEA published a dated memo (May 21, 2026) announcing the 2026-2027 in-person audition dates and process changes, which is the source for the dates below. Audition locations were explicitly still being finalized.",
+  "organization": {
+    "name": "Maryland Music Educators Association",
+    "acronym": "MMEA",
+    "website_url": "https://www.mdmea.org/",
+    "description": "The Maryland Music Educators Association administers Maryland's All State program through its All State Committee, which selects students by audition into Junior and Senior Band, Chorus, and Orchestra ensembles."
+  },
+  "sources": [
+    {
+      "name": "MMEA All State Auditions",
+      "url": "https://www.mdmea.org/all-state-auditions",
+      "source_type": "official"
+    },
+    {
+      "name": "MMEA All State",
+      "url": "https://www.mdmea.org/all-state",
+      "source_type": "official"
+    },
+    {
+      "name": "Maryland All State Auditions Update — 2026-2027 School Year (MMEA memo, May 21, 2026)",
+      "url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit",
+      "source_type": "official"
+    }
+  ],
+  "programs": [
+    {
+      "name": "All State Senior Mixed Chorus",
+      "lineage_key": "maryland-senior-mixed-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "MMEA All State Senior Mixed Chorus for students in grades 10, 11, and 12, selected by in-person audition. MMEA notes that treble singers auditioning for Senior ensembles are assigned to either the mixed or the treble chorus.",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "Senior Auditions (in person)",
+          "start_at": "2026-11-14",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "In-person Senior Auditions for students in grades 10, 11, and 12 auditioning for Senior Band, Senior Mixed Chorus, Senior Treble Chorus, and Senior Orchestra. New for 2026-2027: Senior auditions are now on the first of the two Saturdays before Thanksgiving. Locations were being finalized and were to be announced in mid-August.",
+          "source_url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit"
+        },
+        {
+          "date_type": "other",
+          "title": "Audition materials updated",
+          "start_at": "2026-08-15",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "MMEA's published audition timeline lists 'Mid-August — Audition materials updated'. MMEA did not publish an exact day; this entry approximates mid-August and should be treated as the published month, not a confirmed date.",
+          "source_url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Grades 10, 11, and 12",
+          "description": "Senior Auditions are for students in grades 10, 11, and 12.",
+          "source_url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit"
+        },
+        {
+          "category": "format",
+          "title": "Educator nomination then caregiver registration",
+          "description": "MMEA's audition timeline: mid-August audition materials updated; September educators nominate students; October caregivers register their students for an audition; November auditions and recorded/asynchronous audition submission deadlines; December All State rosters are announced.",
+          "source_url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit"
+        },
+        {
+          "category": "format",
+          "title": "In-person audition",
+          "description": "Choral All State auditions are held in person on the announced Saturday. Recorded/asynchronous audition formats remain only for Senior Commercial Band and for harp and piano in the All State Junior/Senior Band or Orchestra.",
+          "source_url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit"
+        }
+      ],
+      "documents": [
+        {
+          "title": "Maryland All State Auditions Update — 2026-2027 School Year",
+          "url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit",
+          "document_type": "rules",
+          "published_at": "2026-05-21"
+        }
+      ]
+    },
+    {
+      "name": "All State Senior Treble Chorus",
+      "lineage_key": "maryland-senior-treble-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "MMEA All State Senior Treble Chorus for students in grades 10, 11, and 12. Treble singers audition once for the Senior choral ensembles and are then assigned by the All State Committee to either the mixed or the treble chorus.",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "Senior Auditions (in person)",
+          "start_at": "2026-11-14",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "In-person Senior Auditions for students in grades 10, 11, and 12 auditioning for Senior Band, Senior Mixed Chorus, Senior Treble Chorus, and Senior Orchestra.",
+          "source_url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Grades 10, 11, and 12",
+          "description": "Senior Auditions are for students in grades 10, 11, and 12.",
+          "source_url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit"
+        },
+        {
+          "category": "format",
+          "title": "Treble singers assigned to mixed or treble chorus after auditions",
+          "description": "MMEA states that treble singers are assigned to mixed or treble choruses as part of the Senior ensemble seating process.",
+          "source_url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit"
+        }
+      ]
+    },
+    {
+      "name": "All State Junior Chorus",
+      "lineage_key": "maryland-junior-chorus",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "chorus",
+      "description": "MMEA All State Junior Chorus for students in grades 7, 8, and 9, selected by in-person audition.",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "Junior Auditions (in person)",
+          "start_at": "2026-11-21",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "In-person Junior Auditions for students in grades 7, 8, and 9 auditioning for Junior Band, Junior Chorus, and Junior Orchestra. New for 2026-2027: Junior auditions moved to the second of the two Saturdays before Thanksgiving to give younger students more preparation time. Locations were being finalized and were to be announced in mid-August.",
+          "source_url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "Grades 7, 8, and 9",
+          "description": "Junior Auditions are for students in grades 7, 8, and 9.",
+          "source_url": "https://docs.google.com/document/d/1yxuzoXufHiM8j7O-T6IuvlMde-SNSz67BMnTlEYyBco/edit"
+        }
+      ]
+    }
+  ],
+  "not_published": [
+    "2026-27 audition materials, repertoire, scales and sight-reading requirements — MMEA states these will be available August 2026",
+    "Audition locations for November 14 and 21, 2026 — 'currently being finalized and will be announced in Mid-August'",
+    "Audition or participation fee amounts — not published on the pages reviewed",
+    "Exact registration/nomination deadline dates — MMEA published only months (September nominations, October registration)",
+    "2027 All State Festival/concert dates and venue — not published at retrieval",
+    "Voice part codes and divisi for the choral ensembles — not published",
+    "Per-school audition quotas — not published"
+  ]
+}

@@ -205,7 +205,7 @@ export const CoursePollManager: React.FC<CoursePollManagerProps> = ({ courseId, 
 
     setGeneratingAI(true);
     try {
-      const { data, error } = await supabase.functions.invoke('mus240-instructor-assistant', {
+      const { data, error } = await supabase.functions.invoke('instructor-assistant', {
         body: { 
           task: 'poll_creation', 
           prompt: `For the course "${courseName}": ${aiPrompt.trim()}. Create exactly ${numQuestions} questions.`

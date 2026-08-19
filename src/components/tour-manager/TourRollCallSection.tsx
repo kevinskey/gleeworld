@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveTrip } from './ActiveTripContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,9 +56,15 @@ export const TourRollCallSection: React.FC = () => {
     enabled: !!user?.id,
   });
 
-  // Fetch active tour
-  const { data: tour } = useQuery({
-    queryKey: ['rollcall-tour'],
+  // The trip comes from the Travel Manager switcher, not from a local guess.
+  // This used to take the earliest planning/confirmed/active tour, which
+  // disagreed with the landing (status='planning' limit 1) as soon as a second
+  // trip existed. Falls back to its own lookup when rendered outside Travel
+  // Manager, where no provider is mounted.
+  const { trip: activeTrip, tripId } = useActiveTrip();
+  const { data: fallbackTour } = useQuery({
+    queryKey: ['rollcall-tour-fallback'],
+    enabled: !tripId,
     queryFn: async () => {
       const { data } = await supabase
         .from('gw_tours')
@@ -69,6 +76,7 @@ export const TourRollCallSection: React.FC = () => {
       return data;
     },
   });
+  const tour = activeTrip ?? fallbackTour;
 
   // Fetch cities for dropdown
   const { data: cities = [] } = useQuery({
@@ -258,10 +266,9 @@ export const TourRollCallSection: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-foreground">Roll Call</h2>
-          <p className="text-sm text-muted-foreground">{tour.name} • {rosterCount} roster members</p>
-        </div>
+        {/* "Roll Call" heading comes from DashboardPageShell; keep the tour
+            context line, which the shell subtitle doesn't carry. */}
+        <p className="text-sm text-muted-foreground">{tour.name} • {rosterCount} roster members</p>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button size="sm" className="gap-2">

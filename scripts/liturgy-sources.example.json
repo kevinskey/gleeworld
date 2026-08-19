@@ -1,0 +1,58 @@
+{
+  "_comment": [
+    "TEMPLATE — copy this, do not edit it in place.",
+    "",
+    "Put your real files in a directory OUTSIDE this repository, one JSON per",
+    "document, then run:  node scripts/ingest-liturgy.mjs <that-directory>",
+    "",
+    "The `text` below is a placeholder. Replace it with the actual wording of",
+    "the section you are licensed to hold. Do not paraphrase from memory: the",
+    "whole point of this corpus is that the assistant quotes something real",
+    "rather than inventing a rule.",
+    "",
+    "Required: document, documentTitle, issuedBy, authority, kind,",
+    "jurisdiction, and at least one section with text.",
+    "Optional: year, edition, current (defaults true), url, copyright."
+  ],
+
+  "document": "GIRM",
+  "documentTitle": "General Instruction of the Roman Missal",
+  "issuedBy": "USCCB",
+
+  "_authority_options": [
+    "universal_law         — council, universal law, the liturgical books",
+    "papal_or_dicastery    — papal documents, Vatican instructions",
+    "conference_adaptation — bishops' conference text with recognitio (US GIRM)",
+    "conference_guidance   — conference guidance without force of law (Sing to the Lord)",
+    "diocesan_policy       — binding locally, subordinate to all of the above",
+    "local_practice        — parish custom, your own practice"
+  ],
+  "authority": "conference_adaptation",
+
+  "_kind_options": [
+    "law | rubric | instruction | guidance | catechesis | policy"
+  ],
+  "kind": "instruction",
+
+  "_jurisdiction_help": "'universal', or a country/diocese code: 'US', 'US/Atlanta'. A US adaptation must not be quoted at someone abroad as universal law.",
+  "jurisdiction": "US",
+
+  "year": 2011,
+  "edition": "3rd typical edition",
+  "current": true,
+  "copyright": "© USCCB / ICEL — held under licence",
+  "url": "https://www.usccb.org/...",
+
+  "sections": [
+    {
+      "section": "48",
+      "title": "The Entrance Chant",
+      "text": "REPLACE WITH THE ACTUAL LICENSED TEXT OF THIS SECTION."
+    },
+    {
+      "section": "87",
+      "title": "The Communion Chant",
+      "text": "REPLACE WITH THE ACTUAL LICENSED TEXT OF THIS SECTION."
+    }
+  ]
+}

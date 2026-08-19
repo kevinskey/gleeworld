@@ -9,7 +9,7 @@ export interface GradeScale {
 }
 
 /**
- * MUS240 Syllabus Grading Scale
+ * Standard Syllabus Grading Scale
  * Matches the official grading policy from the course syllabus
  */
 const STANDARD_GRADE_SCALE: GradeScale[] = [
@@ -27,7 +27,7 @@ const STANDARD_GRADE_SCALE: GradeScale[] = [
 ];
 
 /**
- * Calculate letter grade from score and max points using MUS240 syllabus scale
+ * Calculate letter grade from score and max points using the standard syllabus scale
  * @param score - Points earned
  * @param maxPoints - Maximum possible points
  * @returns Letter grade (A through F, no A+ or D-)

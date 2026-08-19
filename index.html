@@ -22,9 +22,19 @@
     <meta name="twitter:image" content="https://gleeworld.org/og-image.png" />
     
     <!-- Content Security Policy -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://cdn.gpteng.co https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://gleeworld.org https://*.gleeworld.org https://js-cdn.music.apple.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' https://*.supabase.co https://supabase.gleeworld.org https://*.digitaloceanspaces.com blob: https://*.jit.si https://*.8x8.vc https://meet.gleeworld.org https://tonejs.github.io https://*.apple.com https://*.mzstatic.com; connect-src 'self' blob: https://gleeworld.org https://*.gleeworld.org wss://*.gleeworld.org *.sentry.io https://api.squareup.com https://app.squareup.com https://squareup.com https://api.squareup.com/v1/cdp/batch https://ecosystem-header.squarecdn.com *.squarecloudservices.com https://cdn.cookielaw.org/ https://*.onetrust.com/ https://browser-intake-datadoghq.com/ https://www.google.com https://www.gstatic.com https://*.supabase.co wss://*.supabase.co https://supabase.gleeworld.org wss://supabase.gleeworld.org https://*.digitaloceanspaces.com https://*.stripe.com https://meet.jit.si https://*.jit.si wss://meet.jit.si wss://*.jit.si https://8x8.vc https://*.8x8.vc wss://8x8.vc wss://*.8x8.vc https://meet.gleeworld.org wss://meet.gleeworld.org https://tonejs.github.io https://gleitz.github.io https://api.music.apple.com https://amp-api.music.apple.com https://amp-api-edge.music.apple.com https://*.music.apple.com https://*.apple.com https://*.mzstatic.com https://play.itunes.apple.com https://buy.itunes.apple.com https://cdn.jsdelivr.net https://storage.googleapis.com https://soundcloud.com https://api.soundcloud.com; worker-src 'self' blob:; frame-src 'self' https://js.stripe.com https://www.google.com https://docs.google.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://meet.gleeworld.org https://conducting.gleeworld.org https://readmusic.gleeworld.org https://*.apple.com https://buy.itunes.apple.com https://supabase.gleeworld.org https://w.soundcloud.com;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' blob: 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://cdn.gpteng.co https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://gleeworld.org https://*.gleeworld.org https://js-cdn.music.apple.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: https://*.supabase.co https://supabase.gleeworld.org https://*.digitaloceanspaces.com blob: https://*.jit.si https://*.8x8.vc https://meet.gleeworld.org https://tonejs.github.io https://*.apple.com https://*.mzstatic.com; connect-src 'self' blob: https://www.youtube.com https://gleeworld.org https://*.gleeworld.org wss://*.gleeworld.org *.sentry.io https://api.squareup.com https://app.squareup.com https://squareup.com https://api.squareup.com/v1/cdp/batch https://ecosystem-header.squarecdn.com *.squarecloudservices.com https://cdn.cookielaw.org/ https://*.onetrust.com/ https://browser-intake-datadoghq.com/ https://www.google.com https://www.gstatic.com https://*.supabase.co wss://*.supabase.co https://supabase.gleeworld.org wss://supabase.gleeworld.org https://*.digitaloceanspaces.com https://*.stripe.com https://meet.jit.si https://*.jit.si wss://meet.jit.si wss://*.jit.si https://8x8.vc https://*.8x8.vc wss://8x8.vc wss://*.8x8.vc https://meet.gleeworld.org wss://meet.gleeworld.org https://tonejs.github.io https://gleitz.github.io https://api.music.apple.com https://amp-api.music.apple.com https://amp-api-edge.music.apple.com https://*.music.apple.com https://*.apple.com https://*.mzstatic.com https://play.itunes.apple.com https://buy.itunes.apple.com https://cdn.jsdelivr.net https://storage.googleapis.com https://soundcloud.com https://api.soundcloud.com https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.crossref.org https://openlibrary.org; worker-src 'self' blob:; frame-src 'self' https://gleeworld.org https://*.gleeworld.org https://js.stripe.com https://www.google.com https://docs.google.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://meet.gleeworld.org https://conducting.gleeworld.org https://readmusic.gleeworld.org https://*.apple.com https://buy.itunes.apple.com https://supabase.gleeworld.org https://w.soundcloud.com;" />
     
-    <!-- Favicon and PWA icons -->
+    <!-- Favicon and PWA icons.
+         The two icon hrefs below are REWRITTEN PER TENANT by nginx sub_filter
+         (same mechanism as the og: tags above), so the tenant's logo is in the
+         HTML on first paint and the tab never flashes the GleeWorld mark.
+         That makes this markup a match string: changing the href, the
+         attribute order, or the whitespace means updating the sub_filter rules
+         too, or the rewrite silently stops matching and every tenant quietly
+         reverts to the GleeWorld icon — with no test failure to catch it.
+         The values here are the platform default, served by gleeworld.org and
+         any host with no tenant vhost. TenantFavicon.tsx patches them again
+         client-side once the branding row loads. -->
     <link rel="icon" type="image/png" href="/lovable-uploads/gleeworld-logo-192.png">
     <link rel="shortcut icon" href="/lovable-uploads/gleeworld-logo-192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
@@ -53,8 +63,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Graduate&family=Roboto:wght@300;400;500;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Tangerine:wght@400;700&family=Alex+Brush&family=Pacifico&family=Caveat:wght@400;700&family=Allura&family=Pinyon+Script&family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&family=Lato:wght@300;400;700;900&family=Merriweather:wght@300;400;700;900&family=Raleway:wght@300;400;500;600;700;800;900&family=Oswald:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&family=Cinzel:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Preload Bravura font for musical notation -->
-    <link rel="preload" href="/fonts/Bravura.otf" as="font" type="font/otf" crossorigin>
+    <!--
+      Bravura (the SMuFL music font) is deliberately NOT preloaded. It is
+      512KB and was being fetched at high priority on EVERY page of the
+      platform for every visitor, while the only thing that draws with it is
+      the PDF annotation stamp palette. On cellular that bandwidth competes
+      with the app bundle.
+
+      The @font-face in index.css still declares it, so it downloads on
+      demand. PDFViewerWithAnnotations additionally calls document.fonts.load
+      for it on mount, because canvas fillText silently falls back to a
+      system font instead of waiting for a webfont.
+    -->
     <script>
       // Debug Google Fonts loading
       console.log('Google Fonts loading...');

@@ -2,6 +2,12 @@ import * as React from "react"
 
 const MOBILE_BREAKPOINT = 1024
 const PHONE_BREAKPOINT = 640 // Phones only, excludes tablets
+// Below md (Tailwind 768) the dashboard sidebar is hidden, so the docked
+// bottom tab bar must carry primary navigation. Gating the bar on
+// PHONE_BREAKPOINT left a 640-767 dead zone — real devices live there
+// (iPad mini portrait = 744px) — with no sidebar AND no tab bar, only the
+// topbar hamburger. Keep this aligned with the sidebar's `md:` gate.
+const COMPACT_NAV_BREAKPOINT = 768
 // Tablet covers iPad portrait + landscape and small laptops up to a real
 // desktop. The Calendar's three-column layout (filter rail + grid +
 // detail panel) doesn't have enough horizontal room until ~1440px, so we
@@ -53,6 +59,26 @@ export function useIsTabletOrNarrower() {
   return isTablet
 }
 
+/** True below md (768px) — the widths where the dashboard sidebar is hidden
+ *  and the docked bottom tab bar provides primary navigation. */
+export function useIsCompactNav() {
+  const [isCompact, setIsCompact] = React.useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth < COMPACT_NAV_BREAKPOINT : false,
+  )
+
+  React.useEffect(() => {
+    const mql = window.matchMedia(`(max-width: ${COMPACT_NAV_BREAKPOINT - 1}px)`)
+    const onChange = () => {
+      setIsCompact(window.innerWidth < COMPACT_NAV_BREAKPOINT)
+    }
+    mql.addEventListener("change", onChange)
+    setIsCompact(window.innerWidth < COMPACT_NAV_BREAKPOINT)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
+
+  return isCompact
+}
+
 export function useIsPhone() {
   const [isPhone, setIsPhone] = React.useState<boolean>(() =>
     typeof window !== 'undefined' ? window.innerWidth < PHONE_BREAKPOINT : false,
@@ -69,6 +95,31 @@ export function useIsPhone() {
   }, [])
 
   return isPhone
+}
+
+/** True for coarse (touch) pointers — phones and tablets, regardless of
+ *  viewport width. An iPad in landscape can be ≥1024px (past MOBILE_BREAKPOINT)
+ *  yet still has no mouse; `(pointer: coarse)` is the signal that actually
+ *  tracks input type instead of screen size. Guards matchMedia's absence
+ *  (jsdom in some test environments) by defaulting to false. */
+export function useCoarsePointer() {
+  const getMatches = () =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia('(pointer: coarse)').matches
+      : false
+
+  const [coarse, setCoarse] = React.useState<boolean>(getMatches)
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const mql = window.matchMedia('(pointer: coarse)')
+    const onChange = () => setCoarse(mql.matches)
+    mql.addEventListener("change", onChange)
+    setCoarse(mql.matches)
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
+
+  return coarse
 }
 
 /** True when the viewport is taller than it is wide (phones, iPad portrait).

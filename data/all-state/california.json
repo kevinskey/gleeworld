@@ -1,0 +1,266 @@
+{
+  "state_slug": "california",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "California's All-State choral program is the CCDA All-State Honor Choirs, run by the California Choral Directors Association (CCDA) and performed at CASMEC — the California All-State Music Education Conference, the joint conference of CMEA (the NAfME state affiliate) and its partner associations. The audition PDF describes the honor choirs as 'a collaborative effort of CCDA, SCVA, and CASMEC.' 2026-27 data was fully current at retrieval. Five All-State choirs: JH SATB, JH SSAA, HS SATB, HS SSAA, HS TTBB. Selection is two-tier for high school: students audition for a fall Regional Honor Choir (Central and Coastal regions run by CCDA; the Southern Region is run separately by SCVA at scvachoral.org), participate in the Regional Honor Choir, and then Regional Chairs send All-State consideration lists to the All-State Chairs. Junior high students audition directly by recorded upload. NOTE ON ONE FEE DISCREPANCY: the junior high audition instructions document states the audition fee as $10 in one sentence and $15 in another; the CCDA All-State page states $15, which is what is recorded here.",
+
+  "organization": {
+    "name": "California Choral Directors Association",
+    "acronym": "CCDA",
+    "website_url": "https://www.calcda.org/all-state.html",
+    "description": "The California Choral Directors Association administers the California Honor Choirs — regional honor choirs in the Central and Coastal regions and the statewide All-State Honor Choirs — described on its audition materials as a collaborative effort of CCDA, SCVA, and CASMEC. The All-State Honor Choirs rehearse and perform at CASMEC, the California All-State Music Education Conference."
+  },
+
+  "sources": [
+    { "name": "CCDA All-State Honor Choirs (2027 CASMEC All-State)",
+      "url": "https://www.calcda.org/all-state.html",
+      "source_type": "official" },
+    { "name": "2027 Junior High/9th Grade California All-State Honor Choir — Audition Instructions",
+      "url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing",
+      "source_type": "official" },
+    { "name": "CCDA Central & Coastal Regions honor choir page",
+      "url": "https://www.calcda.org/central--coastal.html",
+      "source_type": "official" },
+    { "name": "HS Central/Coastal/Southern Regional Honor Choir Audition information (PDF)",
+      "url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf",
+      "source_type": "handbook_pdf" },
+    { "name": "CCDA Honor Choir Handbook",
+      "url": "https://docs.google.com/document/d/1OtNxzP_EJ3x2Azsqj4gNXLqQU5JwZ637GVvBZCaAbPI/edit?usp=sharing",
+      "source_type": "handbook_pdf" }
+  ],
+
+  "programs": [
+    {
+      "name": "High School All-State Honor Choir — SATB",
+      "lineage_key": "california-hs-satb",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "High school (grades 9-12) mixed All-State Honor Choir, rehearsing and performing at CASMEC in Sacramento. 2027 conductor: Dr. Eugene Rogers. Rehearsals Thursday and Friday, January 14-15, 2027; concert Saturday, January 16, 2027 at the Sacramento Memorial Auditorium.",
+      "dates": [
+        { "date_type": "other", "title": "Audition information and instructions posted on the CCDA website", "start_at": "2026-08-01", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "registration_deadline", "title": "HS audition sign-ups due", "start_at": "2026-09-04", "all_day": true, "timezone": "America/Los_Angeles", "description": "The CCDA Central & Coastal regional page lists the regional online audition sign-up deadline as September 7, 2026; the All-State page lists Friday 9/4/26 for HS audition sign-ups.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "other", "title": "HS audition times sent", "start_at": "2026-09-11", "all_day": true, "timezone": "America/Los_Angeles", "description": "Central and Coastal Region Honor Choir audition times emailed to directors and auditionees.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "audition_round", "title": "HS Regional Honor Choir auditions (day 1)", "start_at": "2026-09-19", "all_day": true, "timezone": "America/Los_Angeles", "description": "Coastal Region sites: Carlmont HS (Belmont), Christopher HS (Gilroy), Del Norte HS (Del Norte), Paso Robles HS (Paso Robles). Central Region site: Enterprise HS (Redding).", "source_url": "https://www.calcda.org/central--coastal.html" },
+        { "date_type": "audition_round", "title": "HS Regional Honor Choir auditions (day 2)", "start_at": "2026-09-26", "all_day": true, "timezone": "America/Los_Angeles", "description": "Coastal Region sites: North Salinas HS (Salinas), San Jose State University, Santa Rosa HS (Santa Rosa), Will C. Wood HS (Vacaville). Central Region sites: Bakersfield HS, College of the Sequoias (Visalia), CSU Stanislaus (Turlock), Fresno State University, Sacramento City College.", "source_url": "https://www.calcda.org/central--coastal.html" },
+        { "date_type": "results", "title": "HS Regional lists communicated", "start_at": "2026-10-02", "all_day": true, "timezone": "America/Los_Angeles", "description": "Regional audition results emailed to directors and auditionees.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "registration_deadline", "title": "HS Regional registrations and payment due", "start_at": "2026-10-16", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "HS Regional Honor Choirs", "start_at": "2026-11-05", "end_at": "2026-11-07", "all_day": true, "timezone": "America/Los_Angeles", "description": "Coastal Region at Sunnyvale Presbyterian Church, Sunnyvale; Central Region at University of the Pacific, Stockton. Regional concerts Saturday, November 7, 2026.", "source_url": "https://www.calcda.org/central--coastal.html" },
+        { "date_type": "other", "title": "HS Regional Chairs send All-State consideration lists to All-State Chairs", "start_at": "2026-11-09", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "results", "title": "Notification of HS All-State acceptance", "start_at": "2026-11-13", "all_day": true, "timezone": "America/Los_Angeles", "description": "Published as 'By Fri 11/13/26'.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "other", "title": "All-State registration opens", "start_at": "2026-11-16", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "registration_deadline", "title": "All-State registration due", "start_at": "2026-12-02", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "2027 All-State Honor Choirs at CASMEC", "start_at": "2027-01-14", "end_at": "2027-01-16", "all_day": true, "timezone": "America/Los_Angeles", "description": "Sacramento, CA. Rehearsals Thursday and Friday, January 14 and 15, 2027.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "All-State check-in opens", "start_at": "2027-01-14T12:00:00", "all_day": false, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "All-State Choir Concert 1 — JHS SATB, JHS SSAA & HS SATB", "start_at": "2027-01-16T11:00:00", "end_at": "2027-01-16T13:00:00", "all_day": false, "timezone": "America/Los_Angeles", "description": "Sacramento Memorial Auditorium.", "source_url": "https://www.calcda.org/all-state.html" }
+      ],
+      "requirements": [
+        { "category": "eligibility",
+          "title": "Selection via the fall Regional Honor Choirs",
+          "description": "Auditions for the 2027 High School All-State Honor Choirs are done via the 2026 Regional Honor Choirs. Students who have participated in a regional high school honor choir and have indicated that they wish to be considered for All-State Honor Choir have their audition scores assessed for participation in the All-State Honor Choirs. Regional Chairs send All-State consideration lists to the All-State Chairs. Open to grades 9-12. Southern Region auditions are run separately by SCVA.",
+          "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "category": "format",
+          "title": "100-point regional audition: solo, scales/triads, tonal memory, sight-reading",
+          "description": "The HS Central/Coastal/Southern Regional Honor Choir audition is scored out of 100 points: Solo 40 points, Scales/Triads 15 points, Tonal Memory 25 points, Sight-Reading 20 points.",
+          "structured_data": { "total_points": 100, "solo_points": 40, "scales_triads_points": 15, "tonal_memory_points": 25, "sight_reading_points": 20 },
+          "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "category": "scales",
+          "title": "Scales and triads (15 points)",
+          "description": "Sing the following, ascending and descending, on any syllable: major scale, major triad, minor triad, and chromatic scale.",
+          "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "category": "other",
+          "title": "Tonal memory (25 points)",
+          "description": "Five-note passages are played on a recording for the auditionee to repeat, sung on any syllable. Past tonal memory examples are published.",
+          "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "category": "sight_reading",
+          "title": "Sight-reading (20 points)",
+          "description": "A single-line, unaccompanied melody is supplied, sung on any syllable. Past sight-reading examples are published.",
+          "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "category": "materials",
+          "title": "Solo must be memorized and sung with the provided accompaniment track",
+          "description": "The solo (40 points) is sung from memory. Under Option 1 the auditionee sings the art song once through with no repeats or da capo, using the provided recording in a key appropriate for the voice part (Soprano/Tenor — Medium High; Alto/Bass — Medium Low); these accompaniment tracks must be used for rehearsal and audition. Under Option 2 the auditionee prepares the prescribed excerpt, measures 52 to the end of 'Sing unto God' for their voice part, from memory, using the designated accompaniment track. Learning tracks are for rehearsal purposes only and may not be used to accompany the audition.",
+          "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" }
+      ],
+      "repertoire": [
+        { "title": "Alma del core", "composer": "Caldara", "publisher": "Schirmer", "notes": "Solo Option 1 — one of three art songs from Schirmer's 28 Italian Songs and Arias, sung from memory.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "title": "Che fiero costume", "composer": "Legrenzi", "publisher": "Schirmer", "notes": "Solo Option 1 — from Schirmer's 28 Italian Songs and Arias.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "title": "Se nel ben", "composer": "Stradella", "publisher": "Schirmer", "notes": "Solo Option 1 — from Schirmer's 28 Italian Songs and Arias.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "title": "Sing unto God", "composer": "G.F. Handel", "notes": "Solo Option 2 — prescribed excerpt, measures 52 to the end, for the auditionee's voice part, sung from memory.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 1500, "payable_to": "state_association", "description": "Non-refundable audition fee.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "fee_type": "regional_honor_choir", "amount_cents": 12000, "payable_to": "state_association", "description": "Central/Coastal Regional Honor Choir fee; non-refundable; does not include hotel and meals. Southern Region fees are set separately by SCVA.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "fee_type": "participation", "amount_cents": 47500, "payable_to": "state_association", "description": "All-State Honor Choir fee, includes hotel and meals. Some financial assistance may be available for both the Regional and All-State fees; application information is included in the audition sign-up and/or registration form.", "source_url": "https://www.calcda.org/all-state.html" }
+      ],
+      "documents": [
+        { "title": "CCDA Honor Choir Handbook", "url": "https://docs.google.com/document/d/1OtNxzP_EJ3x2Azsqj4gNXLqQU5JwZ637GVvBZCaAbPI/edit?usp=sharing", "document_type": "handbook" },
+        { "title": "HS Central/Coastal/Southern Regional Honor Choir Audition information", "url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf", "document_type": "rules" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "High School All-State Honor Choir — SSAA",
+      "lineage_key": "california-hs-ssaa",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "High school (grades 9-12) treble All-State Honor Choir. 2027 conductor: Dr. Jennifer Sengin. Rehearsals January 14-15, 2027; concert January 16, 2027 at the Sacramento Memorial Auditorium.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "HS audition sign-ups due", "start_at": "2026-09-04", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "audition_round", "title": "HS Regional Honor Choir auditions", "start_at": "2026-09-19", "all_day": true, "timezone": "America/Los_Angeles", "description": "Auditions held Saturday September 19 and Saturday September 26, 2026 at regional sites.", "source_url": "https://www.calcda.org/central--coastal.html" },
+        { "date_type": "audition_round", "title": "HS Regional Honor Choir auditions (day 2)", "start_at": "2026-09-26", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/central--coastal.html" },
+        { "date_type": "event", "title": "HS Regional Honor Choirs", "start_at": "2026-11-05", "end_at": "2026-11-07", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/central--coastal.html" },
+        { "date_type": "results", "title": "Notification of HS All-State acceptance", "start_at": "2026-11-13", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "registration_deadline", "title": "All-State registration due", "start_at": "2026-12-02", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "2027 All-State Honor Choirs at CASMEC", "start_at": "2027-01-14", "end_at": "2027-01-16", "all_day": true, "timezone": "America/Los_Angeles", "description": "Sacramento, CA.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "All-State Choir Concert 2 — HS SSAA & HS TTBB", "start_at": "2027-01-16T13:30:00", "end_at": "2027-01-16T15:00:00", "all_day": false, "timezone": "America/Los_Angeles", "description": "Sacramento Memorial Auditorium.", "source_url": "https://www.calcda.org/all-state.html" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Selection via the fall Regional Honor Choirs", "description": "Auditions for the 2027 High School All-State Honor Choirs are done via the 2026 Regional Honor Choirs; open to grades 9-12.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "category": "format", "title": "100-point regional audition", "description": "Solo 40 points, Scales/Triads 15 points, Tonal Memory 25 points, Sight-Reading 20 points.", "structured_data": { "total_points": 100, "solo_points": 40, "scales_triads_points": 15, "tonal_memory_points": 25, "sight_reading_points": 20 }, "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" }
+      ],
+      "repertoire": [
+        { "title": "Alma del core", "composer": "Caldara", "publisher": "Schirmer", "notes": "Solo Option 1 — from Schirmer's 28 Italian Songs and Arias, sung from memory.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "title": "Che fiero costume", "composer": "Legrenzi", "publisher": "Schirmer", "notes": "Solo Option 1.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "title": "Se nel ben", "composer": "Stradella", "publisher": "Schirmer", "notes": "Solo Option 1.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "title": "Sing unto God", "composer": "G.F. Handel", "notes": "Solo Option 2 — measures 52 to the end.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 1500, "payable_to": "state_association", "source_url": "https://www.calcda.org/all-state.html" },
+        { "fee_type": "regional_honor_choir", "amount_cents": 12000, "payable_to": "state_association", "description": "Central/Coastal Regional Honor Choir fee; does not include hotel and meals.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "fee_type": "participation", "amount_cents": 47500, "payable_to": "state_association", "description": "All-State Honor Choir fee, includes hotel and meals.", "source_url": "https://www.calcda.org/all-state.html" }
+      ]
+    },
+    {
+      "name": "High School All-State Honor Choir — TTBB",
+      "lineage_key": "california-hs-ttbb",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "tenor-bass chorus",
+      "description": "High school (grades 9-12) tenor-bass All-State Honor Choir. 2027 conductor: Dr. Dustin S. Cates. Rehearsals January 14-15, 2027; concert January 16, 2027 at the Sacramento Memorial Auditorium.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "HS audition sign-ups due", "start_at": "2026-09-04", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "audition_round", "title": "HS Regional Honor Choir auditions", "start_at": "2026-09-19", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/central--coastal.html" },
+        { "date_type": "audition_round", "title": "HS Regional Honor Choir auditions (day 2)", "start_at": "2026-09-26", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/central--coastal.html" },
+        { "date_type": "event", "title": "HS Regional Honor Choirs", "start_at": "2026-11-05", "end_at": "2026-11-07", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/central--coastal.html" },
+        { "date_type": "results", "title": "Notification of HS All-State acceptance", "start_at": "2026-11-13", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "registration_deadline", "title": "All-State registration due", "start_at": "2026-12-02", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "2027 All-State Honor Choirs at CASMEC", "start_at": "2027-01-14", "end_at": "2027-01-16", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "All-State Choir Concert 2 — HS SSAA & HS TTBB", "start_at": "2027-01-16T13:30:00", "end_at": "2027-01-16T15:00:00", "all_day": false, "timezone": "America/Los_Angeles", "description": "Sacramento Memorial Auditorium.", "source_url": "https://www.calcda.org/all-state.html" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Selection via the fall Regional Honor Choirs", "description": "Auditions for the 2027 High School All-State Honor Choirs are done via the 2026 Regional Honor Choirs; open to grades 9-12.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "category": "format", "title": "100-point regional audition", "description": "Solo 40 points, Scales/Triads 15 points, Tonal Memory 25 points, Sight-Reading 20 points.", "structured_data": { "total_points": 100, "solo_points": 40, "scales_triads_points": 15, "tonal_memory_points": 25, "sight_reading_points": 20 }, "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" }
+      ],
+      "repertoire": [
+        { "title": "Alma del core", "composer": "Caldara", "publisher": "Schirmer", "notes": "Solo Option 1 — from Schirmer's 28 Italian Songs and Arias, sung from memory.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "title": "Che fiero costume", "composer": "Legrenzi", "publisher": "Schirmer", "notes": "Solo Option 1.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "title": "Se nel ben", "composer": "Stradella", "publisher": "Schirmer", "notes": "Solo Option 1.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" },
+        { "title": "Sing unto God", "composer": "G.F. Handel", "notes": "Solo Option 2 — measures 52 to the end.", "purpose": "audition", "source_url": "https://www.calcda.org/uploads/1/3/8/4/138467365/ccda_hs_honor_choir_audition_information.pdf" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 1500, "payable_to": "state_association", "source_url": "https://www.calcda.org/all-state.html" },
+        { "fee_type": "regional_honor_choir", "amount_cents": 12000, "payable_to": "state_association", "source_url": "https://www.calcda.org/all-state.html" },
+        { "fee_type": "participation", "amount_cents": 47500, "payable_to": "state_association", "description": "Includes hotel and meals.", "source_url": "https://www.calcda.org/all-state.html" }
+      ]
+    },
+    {
+      "name": "Junior High/9th Grade All-State Honor Choir — SATB",
+      "lineage_key": "california-jh-satb",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "mixed chorus",
+      "description": "Junior high / middle school (grades 6-9) mixed All-State Honor Choir. 2027 conductor: Professor Coty Raven Morris. Rehearsals January 14-15, 2027; concert January 16, 2027 at the Sacramento Memorial Auditorium.",
+      "dates": [
+        { "date_type": "other", "title": "Audition information and instructions posted", "start_at": "2026-08-01", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "audition_round", "title": "JHS audition upload window", "start_at": "2026-09-14", "end_at": "2026-10-09", "all_day": true, "timezone": "America/Los_Angeles", "description": "Audition uploads accepted September 14 - October 9, 2026 via OpusEvent.", "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" },
+        { "date_type": "results", "title": "Notification of JHS All-State acceptance", "start_at": "2026-11-06", "all_day": true, "timezone": "America/Los_Angeles", "description": "Published as 'Fri by 11/6/26'. Audition results are posted and emailed to participating directors by November 6.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "other", "title": "All-State registration opens", "start_at": "2026-11-16", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "registration_deadline", "title": "All-State registration and participation fees due", "start_at": "2026-12-02", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "2027 All-State Honor Choirs at CASMEC", "start_at": "2027-01-14", "end_at": "2027-01-16", "all_day": true, "timezone": "America/Los_Angeles", "description": "Sacramento, CA. Check-in opens at 12:00pm Thursday, January 14.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "All-State Choir Concert 1 — JHS SATB, JHS SSAA & HS SATB", "start_at": "2027-01-16T11:00:00", "end_at": "2027-01-16T13:00:00", "all_day": false, "timezone": "America/Los_Angeles", "description": "Sacramento Memorial Auditorium.", "source_url": "https://www.calcda.org/all-state.html" }
+      ],
+      "requirements": [
+        { "category": "eligibility",
+          "title": "Grades 6-9 with a CCDA-member director",
+          "description": "Open to students in grades 6-9 whose choral directors are CCDA members. Directors' CCDA memberships must be active in order to upload auditions.",
+          "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" },
+        { "category": "format",
+          "title": "Recorded audition: two vocalises plus an a cappella song, one continuous track",
+          "description": "Each applicant sings the ascending vocalise with the provided audition track, then the descending vocalise with the provided track, then the song a cappella (the correct pitch is given at the end of the vocalises). All three portions are recorded in one continuous track and uploaded in mp3 format to OpusEvent. Each vocalise is performed six times: the first two repetitions accompanied by piano, the remaining repetitions a cappella with a click track and chromatic cues between repetitions. The song has a suggested tempo of 78 bpm.",
+          "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" },
+        { "category": "format",
+          "title": "Recording rules",
+          "description": "The audition must be recorded with the audition track audibly playing in the background. Enhanced recordings are disqualified. No identifying information may be given in the recording (student or director name or school); all identifying information, including file names, is hidden from judges. Practice tracks are for practice only and must not be used during the audition.",
+          "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" },
+        { "category": "materials",
+          "title": "Published voice-part ranges and song keys",
+          "description": "Soprano F4-F5 (song in B-flat Major, starting pitch F4); Alto B-flat3-B-flat4 (song in E-flat Major, starting pitch B-flat3); Tenor E-flat3-E-flat4 (song in A-flat Major, starting pitch E-flat3); Bass C3-C4 (song in F Major, starting pitch C3).",
+          "structured_data": { "soprano": { "range": "F4-F5", "song_key": "B-flat Major" }, "alto": { "range": "Bb3-Bb4", "song_key": "E-flat Major" }, "tenor": { "range": "Eb3-Eb4", "song_key": "A-flat Major" }, "bass": { "range": "C3-C4", "song_key": "F Major" } },
+          "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" },
+        { "category": "other",
+          "title": "Submission is by the teacher, not the student",
+          "description": "Teachers submit all of their students' auditions on their OpusEvent teacher account using their CCDA membership number; students do not create their own accounts. Registration requires student name and voice part, grade level, gender identity (F/M/NB), parent/guardian name, email and phone, school/organization name and address, acknowledgment of understanding of the CCDA Honor Choir handbook including All-State accommodations, and any financial assistance application. The audition fee must be paid before the audition file can be uploaded; a direct payment link can be sent to the parent/guardian.",
+          "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" }
+      ],
+      "repertoire": [
+        { "title": "Dona Nobis Pacem", "purpose": "audition", "notes": "Sung a cappella as the third portion of the recorded audition; suggested tempo 78 bpm, transposed per voice part. No composer or edition is credited in the CCDA audition instructions.", "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 1500, "payable_to": "state_association", "description": "Audition fee, payable before the audition file can be uploaded. Note: the junior high audition instructions document states $10 in one sentence and $15 in another; the CCDA All-State page states $15.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "fee_type": "participation", "amount_cents": 47500, "payable_to": "state_association", "description": "All-State Honor Choir fee, includes hotel and all meals; due by December 2. Some financial assistance may be available; application information is included in the audition sign-up form.", "source_url": "https://www.calcda.org/all-state.html" }
+      ],
+      "documents": [
+        { "title": "2027 Junior High/9th Grade California All-State Honor Choir Audition Instructions", "url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing", "document_type": "rules" },
+        { "title": "CCDA Honor Choir Handbook", "url": "https://docs.google.com/document/d/1OtNxzP_EJ3x2Azsqj4gNXLqQU5JwZ637GVvBZCaAbPI/edit?usp=sharing", "document_type": "handbook" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    },
+    {
+      "name": "Junior High/9th Grade All-State Honor Choir — SSAA",
+      "lineage_key": "california-jh-ssaa",
+      "season": "2026-27",
+      "school_level": "middle",
+      "ensemble_type": "treble chorus",
+      "description": "Junior high / middle school (grades 6-9) treble All-State Honor Choir. 2027 conductor: Dr. Elizabeth Nunez. Rehearsals January 14-15, 2027; concert January 16, 2027 at the Sacramento Memorial Auditorium.",
+      "dates": [
+        { "date_type": "audition_round", "title": "JHS audition upload window", "start_at": "2026-09-14", "end_at": "2026-10-09", "all_day": true, "timezone": "America/Los_Angeles", "description": "Audition uploads accepted September 14 - October 9, 2026 via OpusEvent.", "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" },
+        { "date_type": "results", "title": "Notification of JHS All-State acceptance", "start_at": "2026-11-06", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "registration_deadline", "title": "All-State registration and participation fees due", "start_at": "2026-12-02", "all_day": true, "timezone": "America/Los_Angeles", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "2027 All-State Honor Choirs at CASMEC", "start_at": "2027-01-14", "end_at": "2027-01-16", "all_day": true, "timezone": "America/Los_Angeles", "description": "Sacramento, CA.", "source_url": "https://www.calcda.org/all-state.html" },
+        { "date_type": "event", "title": "All-State Choir Concert 1 — JHS SATB, JHS SSAA & HS SATB", "start_at": "2027-01-16T11:00:00", "end_at": "2027-01-16T13:00:00", "all_day": false, "timezone": "America/Los_Angeles", "description": "Sacramento Memorial Auditorium.", "source_url": "https://www.calcda.org/all-state.html" }
+      ],
+      "requirements": [
+        { "category": "eligibility", "title": "Grades 6-9 with a CCDA-member director", "description": "Open to students in grades 6-9 whose choral directors are CCDA members.", "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" },
+        { "category": "format", "title": "Recorded audition: two vocalises plus an a cappella song, one continuous track", "description": "Ascending vocalise with track, descending vocalise with track, then the song a cappella, recorded in one continuous mp3 and uploaded to OpusEvent. Enhanced recordings are disqualified and no identifying information may appear in the recording.", "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" }
+      ],
+      "repertoire": [
+        { "title": "Dona Nobis Pacem", "purpose": "audition", "notes": "Sung a cappella as the third portion of the recorded audition; suggested tempo 78 bpm. No composer or edition is credited in the CCDA audition instructions.", "source_url": "https://docs.google.com/document/d/19RBw4XyyvUJoGRc_CGtsYEeNwaeyjkRQErlDpOLfshE/edit?usp=sharing" }
+      ],
+      "fees": [
+        { "fee_type": "audition", "amount_cents": 1500, "payable_to": "state_association", "source_url": "https://www.calcda.org/all-state.html" },
+        { "fee_type": "participation", "amount_cents": 47500, "payable_to": "state_association", "description": "Includes hotel and all meals.", "source_url": "https://www.calcda.org/all-state.html" }
+      ]
+    }
+  ],
+
+  "not_published": [
+    "Performance repertoire for any of the five 2027 All-State Honor Choirs",
+    "Southern Region high school honor choir audition dates, sites and fees — administered separately by SCVA at scvachoral.org, not retrieved",
+    "Exact ensemble sizes / number of seats per choir",
+    "The audition score rubrics themselves (linked as separate documents from the audition instructions, not retrieved)",
+    "Reconciliation of the two HS audition sign-up deadlines shown (All-State page: Fri 9/4/26; Central & Coastal regional page: September 7) — both are recorded above as published",
+    "Reconciliation of the junior high audition fee stated as both $10 and $15 within the same audition instructions document",
+    "Whether the ~$475 All-State fee is exact or approximate — the JH instructions describe it as 'approx. $475 per participant' while the All-State page states $475"
+  ]
+}

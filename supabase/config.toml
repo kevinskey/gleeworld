@@ -193,14 +193,8 @@ verify_jwt = true
 [functions.promote-super-admin]
 verify_jwt = true
 
-[functions.grade-journal-ai]
-verify_jwt = false
-
 [functions.test-journal-ai]
 verify_jwt = false
-
-[functions.delete-all-mus240-groups]
-verify_jwt = true
 
 [functions.create-sight-reading-assignment]
 verify_jwt = true
@@ -208,20 +202,11 @@ verify_jwt = true
 [functions.get-member-assignments]
 verify_jwt = true
 
-[functions.mus240-instructor-assistant]
-verify_jwt = true
-
-[functions.update-student-roles]
+[functions.instructor-assistant]
 verify_jwt = true
 
 [functions.sync-usccb-liturgical]
 verify_jwt = false
-
-[functions.generate-comprehensive-feedback]
-verify_jwt = true
-
-[functions.generate-midterm-feedback]
-verify_jwt = true
 
 [functions.generate-test-questions]
 verify_jwt = true
@@ -368,9 +353,6 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.sync-assignment-to-gleeworld]
-verify_jwt = true
-
-[functions.bulk-password-reset]
 verify_jwt = true
 
 [functions.youtube-channel-videos]

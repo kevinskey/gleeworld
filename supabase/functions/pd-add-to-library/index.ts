@@ -7,8 +7,24 @@
 //      pd-cache/{source}/{source_id}.pdf, and stamp the storage_key
 //      back on the pd_works row. Subsequent tenants reuse the cached
 //      object — every tenant after the first pays nothing in CPDL load.
-//   3. Insert into gw_sheet_music for the caller's tenant. ON CONFLICT
-//      (tenant_id, pd_work_id) DO NOTHING so re-clicks are idempotent.
+//   3. target:'tenant' (default): Insert into gw_sheet_music for the
+//      caller's tenant. ON CONFLICT (tenant_id, pd_work_id) DO NOTHING
+//      so re-clicks are idempotent.
+//      target:'personal': reuses the SAME shared pd-cache ensure step
+//      above (including the on-demand fetch and its source_fetch_failed/
+//      source_too_large failure modes — a first-time personal save can
+//      still trigger and pay for the global cache fill), then copies the
+//      now-cached object into the caller's private
+//      personal-scores/{user_id}/cpdl/{work_id}.pdf folder and upserts a
+//      row in gw_personal_scores (owner-only RLS, unique on
+//      (user_id, pd_work_id)). Requires an authenticated caller.
+//      `no_cached_pdf` (502) fires only in the rare case where the work
+//      has neither a storage_key NOR an original_score_url to fetch.
+//      already_in_my_music is true only when a row ALREADY had a
+//      storage_path (a true re-save/no-op) or on the 23505 insert race.
+//      Upgrading a metadata-only row (attaching storage_path for the
+//      first time) is real work, so that response reports
+//      already_in_my_music:false — the UI toasts "Saved to My Music".
 //   4. Return the inserted (or pre-existing) score row so the UI can
 //      update the library list.
 //
@@ -43,6 +59,7 @@ const corsHeaders = {
 
 interface ReqBody {
   pd_work_id?: string;
+  target?: "tenant" | "personal";
 }
 
 // Swap CPDL's user-facing CDN (www2) for the staging host whose IP isn't
@@ -107,8 +124,28 @@ serve(async (req) => {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+  const target: "tenant" | "personal" = body.target === "personal" ? "personal" : "tenant";
 
   try {
+    // target:'personal' writes are owner-scoped (gw_personal_scores RLS is
+    // auth.uid() = user_id) and the storage copy is keyed by user id, so we
+    // need the caller's resolved user id up front — not just a present
+    // JWT. Only pay for this extra auth round-trip on the personal path;
+    // the tenant path (all existing traffic) never touches it, and any
+    // transient auth-service failure here is still caught by this try
+    // block so it returns the standard corsHeaders/JSON error shape
+    // instead of an unhandled exception.
+    let userId: string | null = null;
+    if (target === "personal") {
+      const { data: userData, error: userErr } = await supabase.auth.getUser(jwt);
+      userId = userData?.user?.id ?? null;
+      if (!userId || userErr) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // 2. Read the pd_works row (RLS allows authenticated users to read).
     const { data: work, error: readErr } = await supabase
       .from("pd_works")
@@ -166,6 +203,94 @@ serve(async (req) => {
         .from("pd_works")
         .update({ storage_key: storageKey })
         .eq("id", work.id);
+    }
+
+    if (target === "personal") {
+      // Personal saves need a real cached object to copy.
+      if (!storageKey) {
+        return new Response(JSON.stringify({ error: "no_cached_pdf" }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Re-save: RLS scopes this select to the caller's own rows. A
+      // swallowed error here would fall through to the insert below,
+      // hit the 23505 unique-violation race handler, and report a
+      // silent "already" success without ever performing the upgrade.
+      const { data: mine, error: mineErr } = await supabase
+        .from("gw_personal_scores")
+        .select("id, storage_path")
+        .eq("pd_work_id", work.id)
+        .maybeSingle();
+      if (mineErr) throw new Error(`personal lookup: ${mineErr.message}`);
+
+      if (mine?.storage_path) {
+        return new Response(JSON.stringify({
+          ok: true, already_in_my_music: true, personal_score_id: mine.id,
+          title: work.title, cached: true,
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Copy the shared pd-cache object into the caller's private folder so
+      // gw_personal_scores.storage_path always means "object in personal-scores"
+      // (viewer, RLS and the offline vault all assume that).
+      const { data: pdfBlob, error: dlErr } = await adminSupabase.storage
+        .from(STORAGE_BUCKET).download(storageKey);
+      if (dlErr || !pdfBlob) throw new Error(`pd-cache download: ${dlErr?.message ?? "empty"}`);
+
+      const personalPath = `${userId}/cpdl/${work.id}.pdf`;
+      const { error: upErrPersonal } = await adminSupabase.storage
+        .from("personal-scores")
+        .upload(personalPath, pdfBlob, { contentType: "application/pdf", upsert: true });
+      if (upErrPersonal) throw new Error(`personal upload: ${upErrPersonal.message}`);
+
+      if (mine) {
+        // Upgrade a metadata-only row (saved earlier via Repertoire search).
+        const { data: upd, error: updErr } = await supabase
+          .from("gw_personal_scores")
+          .update({ storage_path: personalPath })
+          .eq("id", mine.id)
+          .select("id")
+          .maybeSingle();
+        if (updErr || !upd) throw new Error(`personal upgrade: ${updErr?.message ?? "no row updated"}`);
+        // This save just attached the PDF to a metadata-only row (saved
+        // earlier via Repertoire search) — that's real work, not a no-op,
+        // so report already_in_my_music:false so the UI toasts "Saved to
+        // My Music" instead of "Already in My Music".
+        return new Response(JSON.stringify({
+          ok: true, already_in_my_music: false, personal_score_id: mine.id,
+          title: work.title, cached: Boolean(storageKey),
+        }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      const { data: insertedPersonal, error: insPErr } = await supabase
+        .from("gw_personal_scores")
+        .insert({
+          user_id: userId,
+          title: work.title,
+          composer: work.composer,
+          voicing: work.voicing,
+          source: "cpdl",
+          pd_work_id: work.id,
+          storage_path: personalPath,
+          external_url: work.source_page_url,
+        })
+        .select("id")
+        .single();
+      if (insPErr) {
+        if ((insPErr as { code?: string }).code === "23505") {
+          return new Response(JSON.stringify({
+            ok: true, already_in_my_music: true, personal_score_id: null,
+            title: work.title, cached: true,
+          }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        throw new Error(`personal insert: ${insPErr.message}`);
+      }
+
+      return new Response(JSON.stringify({
+        ok: true, already_in_my_music: false, personal_score_id: insertedPersonal.id,
+        title: work.title, cached: Boolean(storageKey),
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // 4. Insert into the calling tenant's library. tenant_id is filled

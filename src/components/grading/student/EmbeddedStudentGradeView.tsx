@@ -12,7 +12,6 @@ import { useCourseGrade } from '@/hooks/useCourseGrade';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { StudentGradeSpreadsheet } from './StudentGradeSpreadsheet';
-import { Mus240GradeGrid } from '@/components/mus240/grades/Mus240GradeGrid';
 
 interface EmbeddedStudentGradeViewProps {
   courseId: string;
@@ -154,7 +153,7 @@ export const EmbeddedStudentGradeView: React.FC<EmbeddedStudentGradeViewProps> =
   return (
     <div className="space-y-6">
       {isAttendanceOnly ? (
-        /* ═══ MUS 070 Attendance-Only Grade Card ═══ */
+        /* ═══ GW 070 Attendance-Only Grade Card ═══ */
         <div className="space-y-4">
           <div className="rounded-2xl overflow-hidden shadow-lg" style={{ background: 'linear-gradient(135deg, #003366 0%, #004d99 60%, #7cb9e8 100%)' }}>
             <div className="p-6">
@@ -280,13 +279,8 @@ export const EmbeddedStudentGradeView: React.FC<EmbeddedStudentGradeViewProps> =
           </TabsTrigger>
         </TabsList>
 
-        {/* Spreadsheet Tab - Use new Mus240GradeGrid for MUS-240 */}
         <TabsContent value="spreadsheet" className="mt-6">
-          {courseId === '23c4ee3c-7bbb-4534-8c0a-eecd88298d37' ? (
-            <Mus240GradeGrid />
-          ) : (
-            <StudentGradeSpreadsheet courseId={courseId} />
-          )}
+          <StudentGradeSpreadsheet courseId={courseId} />
         </TabsContent>
 
         {/* Overview/Breakdown Tab */}

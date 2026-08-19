@@ -20,51 +20,20 @@ export function PersonalInfoPage() {
         name="personalityDescription"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Describe your personality *</FormLabel>
+            <FormLabel>Describe your personality</FormLabel>
             <FormControl>
-              <Textarea 
-                placeholder="Tell us about yourself, your interests, and what makes you unique... (minimum 50 words)"
+              <Textarea
+                placeholder="Tell us about yourself, your interests, and what makes you unique..."
                 className="min-h-[120px]"
-                {...field} 
+                {...field}
+                value={field.value ?? ''}
               />
             </FormControl>
-            <div className="flex justify-between items-center">
-              <FormMessage />
-              <span className="text-xs text-gray-500">
-                {(() => {
-                  const text = field.value || '';
-                  const wordCount = text.trim() ? text.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
-                  return `${wordCount}/50 words minimum`;
-                })()}
-              </span>
-            </div>
+            <FormMessage />
           </FormItem>
         )}
       />
 
-        <FormField
-        control={form.control}
-        name="interestedInLeadership"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Are you interested in leadership opportunities within the Glee Club? (Optional)</FormLabel>
-            <RadioGroup
-              value={field.value === true ? "yes" : field.value === false ? "no" : ""}
-              onValueChange={(value) => field.onChange(value === "yes")}
-              className="flex gap-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="yes" id="leadership-yes" />
-                <Label htmlFor="leadership-yes">Yes</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="no" id="leadership-no" />
-                <Label htmlFor="leadership-no">No</Label>
-              </div>
-            </RadioGroup>
-          </FormItem>
-        )}
-      />
 
       <FormField
         control={form.control}

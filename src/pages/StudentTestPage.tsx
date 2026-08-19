@@ -20,7 +20,7 @@ export default function StudentTestPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate('/mus-240/student/dashboard')}
+          onClick={() => navigate('/academy')}
           className="flex items-center gap-2 mb-6"
         >
           <ArrowLeft className="h-4 w-4" />

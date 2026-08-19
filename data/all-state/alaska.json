@@ -1,0 +1,151 @@
+{
+  "state_slug": "alaska",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Alaska's All-State choirs are run by the Alaska School Activities Association (ASAA) — the state's high school activities governing body — as part of the ASAA/First National Bank Alaska All-State Music Festival, NOT by the Alaska Music Educators Association (AMEA), which is credited only as a supporter. Two choral ensembles: All-State Mixed Choir and All-State Treble Choir (alongside All-State Band and All-State Orchestra). ASAA labels the season by the fall festival year (\"2026 All-State Music Festival\", November 19-21, 2026), which falls in the 2026-27 school year. IMPORTANT: at retrieval the DEADLINES tab was updated for 2026 but the AUDITIONS tab still showed 2025 audition materials, 2025 audition open/close dates, and 2025 guest conductors; those stale 2025 items are deliberately NOT recorded here as 2026-27 data. The linked music handbook was still the 2025-26 edition.",
+
+  "organization": {
+    "name": "Alaska School Activities Association",
+    "acronym": "ASAA",
+    "website_url": "https://asaa.org/activities/music/all-state-music/",
+    "description": "The Alaska School Activities Association governs interscholastic activities for Alaska high schools, including the annual ASAA/First National Bank Alaska All-State Music Festival. The ASAA Music Coordinator administers All-State Band, Choir, Treble Choir and Orchestra auditions, registration and the Gala Performance Concert."
+  },
+
+  "sources": [
+    { "name": "ASAA All-State Music",
+      "url": "https://asaa.org/activities/music/all-state-music/",
+      "source_type": "official" },
+    { "name": "ASAA All-State Music Festival Forms & Deadlines",
+      "url": "https://asaa.org/activities/music/music-forms/",
+      "source_type": "official" }
+  ],
+
+  "programs": [
+    {
+      "name": "All-State Mixed Choir",
+      "lineage_key": "alaska-mixed-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "One of two choral ensembles of the ASAA/First National Bank Alaska All-State Music Festival. The 2026 festival is hosted by Bartlett and West Anchorage High Schools and ASAA, with rehearsals at Bartlett High School, dress rehearsals at West Anchorage High School, and a Gala Performance Concert at West Anchorage High School.",
+      "dates": [
+        { "date_type": "registration_deadline",
+          "title": "Music Festival Intent Form and Student Eligibility Waiver due",
+          "start_at": "2026-08-28",
+          "all_day": true,
+          "timezone": "America/Anchorage",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "registration_deadline",
+          "title": "Choir Application due",
+          "start_at": "2026-09-18",
+          "all_day": true,
+          "timezone": "America/Anchorage",
+          "description": "Scanned and emailed to the ASAA Music Coordinator (barb@asaa.org).",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "audition_round",
+          "title": "Online auditions due via the Opus Platform",
+          "start_at": "2026-09-23",
+          "all_day": true,
+          "timezone": "America/Anchorage",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "registration_deadline",
+          "title": "School Activities Reporting System (SARS) due",
+          "start_at": "2026-09-25",
+          "all_day": true,
+          "timezone": "America/Anchorage",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "registration_deadline",
+          "title": "Choir Director's Registration due",
+          "start_at": "2026-10-16",
+          "all_day": true,
+          "timezone": "America/Anchorage",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "registration_deadline",
+          "title": "State Championship Code of Conduct, Music Festival Supervision Form and Academic Award Entry due",
+          "start_at": "2026-10-23",
+          "all_day": true,
+          "timezone": "America/Anchorage",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "event",
+          "title": "2026 ASAA/First National Bank Alaska All-State Music Festival",
+          "start_at": "2026-11-19",
+          "end_at": "2026-11-21",
+          "all_day": true,
+          "timezone": "America/Anchorage",
+          "description": "Hosted by Bartlett and West Anchorage High Schools & ASAA, Anchorage.",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "event",
+          "title": "Gala Performance Concert",
+          "start_at": "2026-11-21T16:00:00",
+          "all_day": false,
+          "timezone": "America/Anchorage",
+          "description": "West Anchorage High School, Anchorage. 4:00 PM Saturday, November 21, 2026. Live streamed on the NFHS Network; on-demand viewing is not available for music copyright reasons.",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" }
+      ],
+      "requirements": [
+        { "category": "format",
+          "title": "Recorded audition submitted through the Opus platform",
+          "description": "All-State auditions are submitted online through the Opus platform; directors contact ASAA Music Coordinator Barb Carroll (barb@asaa.org) for information on how to upload auditions.",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "category": "materials",
+          "title": "Choir audition must include the Chorale",
+          "description": "ASAA states choir auditions must include the Chorale, with materials and part-singing tracks distributed via the ASAA website or a linked Google Drive folder. Only the 2025 edition of those materials was posted at retrieval.",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "category": "eligibility",
+          "title": "Student eligibility waiver and eligibility review",
+          "description": "Schools must submit a Student Eligibility Waiver for ASAA Music Festival Participation and report through the School Activities Reporting System (SARS). ASAA states failure to meet deadlines can result in students becoming ineligible to participate.",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "category": "other",
+          "title": "Festival dress code",
+          "description": "November 19-20, 2026 (rehearsals): students follow the Bartlett High School dress code. November 21, 2026 (dress rehearsal and concert): students wear their school's formal concert uniform; if the school has no formal concert uniform, students wear all black floor-length dress, skirts, or pants.",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" }
+      ],
+      "documents": [
+        { "title": "Choir Application (PDF)", "url": "https://asaa.org/wp-content/uploads/Choir_Application_updated.pdf", "document_type": "form" },
+        { "title": "Student Eligibility Waiver for ASAA Music Festival Participation (PDF)", "url": "https://asaa.org/wp-content/uploads/student-eligibility-waiver-music-festival_updated.pdf", "document_type": "form" },
+        { "title": "Music Festival Supervision Form (PDF)", "url": "https://asaa.org/wp-content/uploads/handbook/music/forms/Music_Supervision.pdf", "document_type": "form" },
+        { "title": "2025-26 ASAA Music Handbook (PDF)", "url": "https://asaa.org/wp-content/uploads/handbook/music/complete/2025-26-Music-Handbook.pdf", "document_type": "handbook" },
+        { "title": "ASAA Music Policies and Procedures (PDF)", "url": "https://asaa.org/wp-content/uploads/handbook/2026handbook/asaa/section/activity-specific-policies-procedures/Music-Policies-Procedures.pdf", "document_type": "rules" }
+      ]
+    },
+    {
+      "name": "All-State Treble Choir",
+      "lineage_key": "alaska-treble-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "treble chorus",
+      "description": "The second choral ensemble of the ASAA/First National Bank Alaska All-State Music Festival, sharing the same application, audition and festival schedule as the All-State Mixed Choir.",
+      "dates": [
+        { "date_type": "registration_deadline", "title": "Music Festival Intent Form and Student Eligibility Waiver due", "start_at": "2026-08-28", "all_day": true, "timezone": "America/Anchorage", "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "registration_deadline", "title": "Choir Application due", "start_at": "2026-09-18", "all_day": true, "timezone": "America/Anchorage", "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "audition_round", "title": "Online auditions due via the Opus Platform", "start_at": "2026-09-23", "all_day": true, "timezone": "America/Anchorage", "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "registration_deadline", "title": "Choir Director's Registration due", "start_at": "2026-10-16", "all_day": true, "timezone": "America/Anchorage", "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "event", "title": "2026 ASAA/First National Bank Alaska All-State Music Festival", "start_at": "2026-11-19", "end_at": "2026-11-21", "all_day": true, "timezone": "America/Anchorage", "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "date_type": "event", "title": "Gala Performance Concert", "start_at": "2026-11-21T16:00:00", "all_day": false, "timezone": "America/Anchorage", "description": "West Anchorage High School, Anchorage.", "source_url": "https://asaa.org/activities/music/all-state-music/" }
+      ],
+      "requirements": [
+        { "category": "format",
+          "title": "Recorded audition submitted through the Opus platform",
+          "description": "All-State auditions are submitted online through the Opus platform.",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" },
+        { "category": "materials",
+          "title": "Choir audition must include the Chorale",
+          "description": "ASAA states choir auditions must include the Chorale. Only the 2025 edition of the audition materials was posted at retrieval.",
+          "source_url": "https://asaa.org/activities/music/all-state-music/" }
+      ],
+      "documents": [
+        { "title": "Choir Application (PDF)", "url": "https://asaa.org/wp-content/uploads/Choir_Application_updated.pdf", "document_type": "form" }
+      ]
+    }
+  ],
+
+  "not_published": [
+    "2026 All-State Choir audition materials and repertoire — the AUDITIONS tab still showed 2025 materials at retrieval",
+    "2026 audition window open/close dates — the AUDITIONS tab still showed the 2025 window (Sept 1 - Sept 24, 2025); only the Sept 23, 2026 Opus submission deadline is published for the new season",
+    "2026-27 All-State Choir and Treble Choir guest conductors — the conductors listed on the page appeared alongside the 2025 Gala date and are not confirmed for 2026",
+    "All-State participation or audition fees — no fee is published for All-State (the $15 entry fee shown on the ASAA music forms page applies to Solo & Ensemble, not All-State)",
+    "Grade-level eligibility rules and per-school quotas — not on the All-State Music page; may be in the ASAA Music Handbook (2025-26 edition was the latest posted)",
+    "Results / selection announcement date",
+    "2026-27 edition of the ASAA Music Handbook"
+  ]
+}

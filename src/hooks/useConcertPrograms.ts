@@ -5,10 +5,12 @@
 // the editor wires up directly.
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import type {
-  RightsStatus, VisualTheme, PrintFormat, ProgramCardLayout, RosterSection,
+  RightsStatus, VisualTheme, PrintFormat, ProgramCardLayout, RosterSection, RosterMember,
 } from '@/lib/concertPlanner/types';
+import type { PrintDesign, ProgramBlock } from '@/lib/concertProgram/types';
 
 // Legacy "template" axis. The new UI replaces this with theme + print_format;
 // the column stays in the DB to avoid losing the test program's value.
@@ -31,7 +33,9 @@ export interface ConcertProgram {
   theme: VisualTheme;
   print_format: PrintFormat;
   card_layout: ProgramCardLayout;
-  design_state: Record<string, any>;
+  print_design: PrintDesign;
+  blocks: ProgramBlock[];
+  design_state: Record<string, unknown>;
   canva_design_id: string | null;
   setlist_id: string | null;
   published_at: string | null;
@@ -107,36 +111,28 @@ export function useConcertProgram(id: string | undefined) {
   const updateProgram = useMutation({
     mutationFn: async (patch: Partial<ConcertProgram>) => {
       if (!id) throw new Error('Missing program id');
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('gw_concert_programs')
         .update({ ...patch, updated_at: new Date().toISOString() })
-        .eq('id', id);
-      if (error) throw error;
+        .eq('id', id)
+        .select('id');
+      if (error || !data?.length) throw error ?? new Error('Save was rejected');
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['concert-program', id] }),
-  });
-
-  const addPiece = useMutation({
-    mutationFn: async (input: Partial<ConcertProgramPiece>) => {
-      if (!id) throw new Error('Missing program id');
-      const order = (piecesQ.data?.length ?? 0);
-      const { error } = await supabase
-        .from('gw_concert_program_pieces')
-        .insert({ program_id: id, sort_order: order, title: 'New piece', ...input });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] }),
+    onError: () => toast.error('Could not save changes'),
   });
 
   const updatePiece = useMutation({
     mutationFn: async ({ pieceId, patch }: { pieceId: string; patch: Partial<ConcertProgramPiece> }) => {
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('gw_concert_program_pieces')
         .update(patch)
-        .eq('id', pieceId);
-      if (error) throw error;
+        .eq('id', pieceId)
+        .select('id');
+      if (error || !data?.length) throw error ?? new Error('Save was rejected');
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] }),
+    onError: () => toast.error('Could not save changes'),
   });
 
   const deletePiece = useMutation({
@@ -146,17 +142,6 @@ export function useConcertProgram(id: string | undefined) {
         .delete()
         .eq('id', pieceId);
       if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] }),
-  });
-
-  const reorderPieces = useMutation({
-    mutationFn: async (orderedIds: string[]) => {
-      await Promise.all(
-        orderedIds.map((pieceId, idx) =>
-          supabase.from('gw_concert_program_pieces').update({ sort_order: idx }).eq('id', pieceId),
-        ),
-      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['concert-program-pieces', id] }),
   });
@@ -182,12 +167,12 @@ export function useConcertProgram(id: string | undefined) {
       ]);
       if (sErr) throw sErr;
       if (mErr) throw mErr;
-      const bySection = new Map<string, any[]>();
-      (members ?? []).forEach((m: any) => {
+      const bySection = new Map<string, RosterMember[]>();
+      (members ?? []).forEach((m: RosterMember) => {
         if (!bySection.has(m.section_id)) bySection.set(m.section_id, []);
         bySection.get(m.section_id)!.push(m);
       });
-      return (sections ?? []).map((s: any) => ({
+      return (sections ?? []).map((s: Omit<RosterSection, 'members'>) => ({
         ...s,
         members: bySection.get(s.id) ?? [],
       })) as RosterSection[];
@@ -258,10 +243,8 @@ export function useConcertProgram(id: string | undefined) {
     roster: rosterQ.data ?? [],
     isLoading: programQ.isLoading || piecesQ.isLoading || rosterQ.isLoading,
     updateProgram,
-    addPiece,
     updatePiece,
     deletePiece,
-    reorderPieces,
     addRosterSection,
     updateRosterSection,
     deleteRosterSection,

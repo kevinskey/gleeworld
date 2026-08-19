@@ -10,7 +10,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { useSemesterSafe } from '@/contexts/SemesterContext';
 import { PollAdminInterface } from './PollAdminInterface';
 import { StudentPollView } from './StudentPollView';
 import { LivePollController } from './LivePollController';
@@ -46,7 +46,7 @@ interface AcademyPollSystemProps {
 export const AcademyPollSystem: React.FC<AcademyPollSystemProps> = ({ courseId }) => {
   const { user } = useAuth();
   const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
-  const { currentSemester } = useMus240SemesterSafe();
+  const { currentSemester } = useSemesterSafe();
   const [polls, setPolls] = useState<AcademyPoll[]>([]);
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'student' | 'admin'>('student');

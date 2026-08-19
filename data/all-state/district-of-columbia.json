@@ -1,0 +1,19 @@
+{
+  "state_slug": "district-of-columbia",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": true,
+  "notes": "No All-State chorus program could be found for the District of Columbia. The District of Columbia Music Education Association (DCMEA, washingtondcmea.org) is the federated NAfME state affiliate; as of 2026-08-07 its site advertises only a Fall Conference (Georgetown Day School, October 2026, registration opening August 11, 2026), community meetings, advocacy, job listings, and classroom resources. There is no All-State, honor choir, or student-audition page anywhere in its navigation, and its own mission statement mentions 'student performance opportunities' only in general terms. The nearest analogue is the DCPS All City Chorus (formerly the DC Honors Chorus), an elementary-level choir of unchanged voices produced by the Children's Chorus of Washington in partnership with DC Public Schools. It is nomination-based rather than audition-based (elementary music teachers nominate students who demonstrate a passion for singing), students prepare at their own schools, then meet for a single full day of collaborative rehearsal culminating in a public performance. It is a school-district program covering DCPS only, not a statewide/district-wide All-State program run by the music educators association, so it is not recorded as an All-State chorus here. Note also that a separate site at dcmea.org (which does carry chorus audition information) is a different organization and is not the DC affiliate. If a DC All-State or honor chorus is later announced, DCMEA's Events and Opportunities pages are the places to check.",
+
+  "sources": [
+    { "name": "DC Music Education Association (DCMEA)", "url": "https://washingtondcmea.org/", "source_type": "official" },
+    { "name": "DCPS All City Chorus — Children's Chorus of Washington", "url": "https://www.childrenschorusdc.org/dcps-all-city-chorus", "source_type": "other" },
+    { "name": "NAfME event listing — DCMEA Conference", "url": "https://nafme.org/event/dcmea-conference/", "source_type": "other" }
+  ],
+
+  "not_published": [
+    "Any DC All-State or statewide honor chorus — none exists on DCMEA's site as of 2026-08-07",
+    "DCPS All City Chorus nomination deadline, rehearsal date, and performance date for the 2026-27 school year",
+    "DCPS All City Chorus eligibility criteria beyond 'elementary-level, unchanged voices, nominated by their music teacher'",
+    "Any fees for the DCPS All City Chorus"
+  ]
+}

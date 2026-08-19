@@ -14,6 +14,8 @@ export interface ScoreResult {
     // octave (so an octave slip reads ~0, not ∓1200). Fractional intonation is
     // preserved when the take carried per-note cents.
     centsOff: number | null;
+    /** How far off the beat this note landed, in beats. Null if never attempted. */
+    beatsOff: number | null;
     ok: boolean;
   }[];
   driftBar: number | null;
@@ -29,9 +31,24 @@ const ALIGNMENT_TOLERANCE_BEATS = 1;
 // of the baseline earns full marks, sliding linearly to zero by ZERO_CREDIT_CENTS
 // (a full semitone off). OK_CENTS is the quarter-tone boundary used for the ✓/✗
 // per-note display and for drift detection.
-const FULL_CREDIT_CENTS = 20;
+const FULL_CREDIT_CENTS = 35;
 const ZERO_CREDIT_CENTS = 100;
+// Quarter-tone line, still used for drift detection (a sustained lean flat or
+// sharp) — but no longer for whether a note passes; see PASS_CREDIT.
 const OK_CENTS = 50;
+
+// Sight singing trains READING, not perfect pitch. A note passes when it is at
+// least 80% correct on pitch AND on rhythm, judged independently — intonation
+// and timing still shape the score, they just don't gate the pass at
+// trained-singer precision. With the ramps below that works out to roughly a
+// quarter tone (~48 cents) and about a fifth of a beat.
+// EPS keeps the boundary inclusive: a note exactly at the 80% line computes a
+// hair under it in floating point, and "80% counts as passing" shouldn't hinge
+// on that.
+const PASS_CREDIT = 0.8;
+const PASS_EPS = 1e-9;
+const RHYTHM_FULL_CREDIT_BEATS = 0.125;
+const RHYTHM_ZERO_CREDIT_BEATS = 0.5;
 
 // Signed cents between a sung offset and a reference, folded into the nearest
 // octave so octave displacement reads as ~0 (a singer an octave down still has
@@ -47,6 +64,13 @@ function noteCredit(absCents: number): number {
   if (absCents <= FULL_CREDIT_CENTS) return 1;
   if (absCents >= ZERO_CREDIT_CENTS) return 0;
   return 1 - (absCents - FULL_CREDIT_CENTS) / (ZERO_CREDIT_CENTS - FULL_CREDIT_CENTS);
+}
+
+/** The same shape of ramp for timing: how correct this note's placement was. */
+function rhythmCredit(absBeats: number): number {
+  if (absBeats <= RHYTHM_FULL_CREDIT_BEATS) return 1;
+  if (absBeats >= RHYTHM_ZERO_CREDIT_BEATS) return 0;
+  return 1 - (absBeats - RHYTHM_FULL_CREDIT_BEATS) / (RHYTHM_ZERO_CREDIT_BEATS - RHYTHM_FULL_CREDIT_BEATS);
 }
 
 // The "lower median" of a set of semitone offsets: sorted-and-indexed rather
@@ -74,7 +98,7 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
   if (sung.length === 0 || expected.length === 0) {
     return {
       firstNoteOk: false, pitch: 0, rhythm: 0, retention: 0, overall: 0, driftBar: null,
-      perNote: expected.map(n => ({ expectedMidi: n.midi, sungMidi: null, centsOff: null, ok: false })),
+      perNote: expected.map(n => ({ expectedMidi: n.midi, sungMidi: null, centsOff: null, beatsOff: null, ok: false })),
     };
   }
 
@@ -88,13 +112,19 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
       if (d < bestDist) { bestDist = d; best = s; }
     }
     if (!best || bestDist > ALIGNMENT_TOLERANCE_BEATS) {
-      return { expectedMidi: exp.midi, sungMidi: null as number | null, offset: null as number | null };
+      return {
+        expectedMidi: exp.midi, sungMidi: null as number | null,
+        offset: null as number | null, beatsOff: null as number | null,
+      };
     }
     // Offset is the CONTINUOUS distance (semitones, fractional) from the
     // expected note, folding the tracker's real cents back onto the integer
     // midi. sungMidi stays the integer for display.
     const sungPitch = best.midi + (best.cents ?? 0) / 100;
-    return { expectedMidi: exp.midi, sungMidi: best.midi, offset: sungPitch - exp.midi };
+    return {
+      expectedMidi: exp.midi, sungMidi: best.midi,
+      offset: sungPitch - exp.midi, beatsOff: best.beatPos - exp.beatPos,
+    };
   });
 
   // The performance's own reference point: the median of the STUDENT'S
@@ -132,10 +162,19 @@ export function scoreAttempt(ir: ExerciseIR, sung: SungNote[]): ScoreResult {
 
   const perNote = aligned.map((a) => {
     if (a.sungMidi === null || a.offset === null) {
-      return { expectedMidi: a.expectedMidi, sungMidi: null, centsOff: null, ok: false };
+      return { expectedMidi: a.expectedMidi, sungMidi: null, centsOff: null, beatsOff: null, ok: false };
     }
-    const ok = Math.abs(octaveFoldedCents(a.offset, baselineOffset)) <= OK_CENTS;
-    return { expectedMidi: a.expectedMidi, sungMidi: a.sungMidi, centsOff: Math.round(octaveFoldedCents(a.offset, 0)), ok };
+    // A note passes only if it is at least 80% correct on BOTH dimensions —
+    // pitch can't carry sloppy timing and vice versa.
+    const ok = noteCredit(Math.abs(octaveFoldedCents(a.offset, baselineOffset))) >= PASS_CREDIT - PASS_EPS
+      && rhythmCredit(Math.abs(a.beatsOff ?? 0)) >= PASS_CREDIT - PASS_EPS;
+    return {
+      expectedMidi: a.expectedMidi,
+      sungMidi: a.sungMidi,
+      centsOff: Math.round(octaveFoldedCents(a.offset, 0)),
+      beatsOff: a.beatsOff,
+      ok,
+    };
   });
 
   // firstNoteOk is judged against 0, not against the baseline — this is the

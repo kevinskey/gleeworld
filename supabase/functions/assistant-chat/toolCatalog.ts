@@ -39,16 +39,27 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'server', confirm: false,
   },
   {
-    name: 'find_note',
-    description: "Search the user's private Planner notes by title. Returns matching notes with ids. Use before open_note.",
+    name: 'research_repertoire',
+    // Deliberately drawn against search_music so the model picks correctly:
+    // one answers "do we own this", the other "what is this".
+    description:
+      'Research a composer or a choral/liturgical work on the public web: dates and biography, '
+      + "a work's voicing, language, publisher, text source, and background. "
+      + 'Use when asked ABOUT a piece or composer — who wrote it, when, what forces it needs, where the text comes from. '
+      + 'search_music searches OUR library and answers whether we hold a score; this answers what the work is. '
+      + 'Reads the best source page in full, so prefer it over web_search for music questions.',
     parameters: {
       type: 'object',
-      properties: { query: str('Title fragment') },
-      required: ['query'],
+      properties: {
+        work: str('Title of the piece, e.g. "Sicut cervus" or "Lead Me, Guide Me"'),
+        composer: str('Composer or arranger, e.g. "Palestrina", "Leon C. Roberts"'),
+        question: str('What specifically to find out, e.g. "voicing and publisher" or "when was it written"'),
+      },
+      required: [],
     },
     minRole: 'member', execution: 'server', confirm: false,
   },
-  {
+    {
     name: 'find_user',
     description: 'Look up a member by name to get their user id, email, and phone. Use before send_sms or send_email to an individual.',
     parameters: {
@@ -60,37 +71,332 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'search_youtube',
-    description: 'Search YouTube for videos. Returns video ids, titles, channels, and URLs.',
+    description: 'Search YouTube for videos. Returns video ids, titles, channels, and URLs. Use this to LIST options; to actually play something, call play_video.',
     parameters: {
       type: 'object',
       properties: { q: str('Search query') },
       required: ['q'],
     },
+    // Read-only search, and a member asking to hear a piece is the whole
+    // point — this was admin-gated, which left ordinary singers unable to
+    // ask for the music they are learning.
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'play_video',
+    description: "Play a video or song ON SCREEN. Use whenever the user asks to hear, play, watch, OPEN or pull up a piece of music, a recording or a video — 'play Ave Verum', 'pull up the Hall Johnson recording', 'let me hear that', 'open the video'. When they say 'the video' or 'that recording' about something ALREADY DISCUSSED in this conversation, they mean THAT one: pass its title as `q` — never send them to the video library instead. Pass what they asked for as `q` and it finds and plays the best match; pass `videoId` instead when you already have one from search_youtube. The player appears in the app — never read the URL or the video id aloud.",
+    parameters: {
+      type: 'object',
+      properties: {
+        q: str("What to play, e.g. 'Ave Verum Corpus Mozart' or 'Hall Johnson Ain't Got Time to Die'"),
+        videoId: str('A known YouTube video id, when you already have one'),
+        title: str('Title, when you already have one'),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'set_assistant_name',
+    description: "Rename the assistant for THIS user (personal, follows them across workspaces). Use when the user names you — 'I'll call you Ruby', 'change your name to Ada', 'go back to your normal name' (pass clear=true). Takes effect immediately.",
+    parameters: {
+      type: 'object',
+      properties: {
+        name: str('The new name the user chose, e.g. "Ruby"'),
+        clear: { type: 'boolean', description: 'true to remove the custom name and return to the default' },
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'set_preferred_name',
+    description: "Set what the assistant CALLS THE USER (personal, follows them across workspaces). Use when they say 'call me Doc', 'my friends call me Bea', 'use my nickname', or 'go back to my real name' (pass clear=true). Takes effect immediately.",
+    parameters: {
+      type: 'object',
+      properties: {
+        name: str('What the user wants to be called, e.g. "Doc"'),
+        clear: { type: 'boolean', description: 'true to clear the preferred name and return to their first name' },
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'lookup_hymn',
+    description: "Hymnal number lookup across the loaded hymnal indexes (Lead Me Guide Me 2nd ed. 'LMGM II', Gather Comprehensive 'Gather', Baptist Hymnal 2008). Use for 'what number is <hymn>', picking hymns while planning a liturgy, or reverse lookup ('what is 457 in LMGM'). Pass `query` (title, first line, or tune name), and/or `number` for reverse lookup; `hymnal` narrows to one book. NEVER state a hymn number from memory — only from this tool.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str("Hymn title, first line, or tune name, e.g. 'Total Praise'"),
+        hymnal: str("Hymnal name or abbreviation to narrow to, e.g. 'LMGM', 'Gather', 'Baptist' (optional)"),
+        number: str("Hymn number for reverse lookup, e.g. '457' (optional)"),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_score_analysis',
+    description: "Musical facts about a score in the library, from its Part Tracks analysis: key, meter, tempo, measure count, voice parts with their ranges, and duration. Use for 'what key is X in', 'how many measures', 'what's the alto range', 'how fast does it go'. Get score_id from search_music first — never guess ids. NEVER state a score's key, meter, measure count, or ranges from memory — only from this tool. If it returns analyzed:false, tell the user the score hasn't been analyzed yet and relay the hint honestly.",
+    parameters: {
+      type: 'object',
+      properties: {
+        score_id: str('The score id from search_music'),
+      },
+      required: ['score_id'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'list_courses',
+    description: "List the Academy courses this workspace offers — titles, codes, terms, instructors, dates. Use for 'what classes are available', 'is there a class called X', 'who teaches Y'. Optional `query` filters by title or code.",
+    parameters: {
+      type: 'object',
+      properties: { query: str("Filter text matched against course title and code, e.g. 'sight reading' or 'GW102' (optional)") },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_course_info',
+    description: "Full detail for ONE Academy course: description (where prerequisites and materials live), instructor with email/office/office-hours, term dates, meeting patterns, upcoming class sessions, location, syllabus link, enrollment. Use for 'when does X meet', 'who teaches X', 'what are the prerequisites for X', 'tell me about the X class'.",
+    parameters: {
+      type: 'object',
+      properties: { course: str("Course title or code as the user said it, e.g. 'Sight Reading' or 'GW102'") },
+      required: ['course'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_course_deadlines',
+    description: "Assignment due dates and test windows across Academy courses — 'what's due in X', 'when is the next test', 'any assignments this week'. Omit `course` to sweep every visible course. Returns each item's course, kind (assignment/test), title, due/open/close dates and points. For how a SPECIFIC STUDENT is doing on them, use get_assignments instead.",
+    parameters: {
+      type: 'object',
+      properties: { course: str('Course title or code to narrow to (optional)') },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_enrollments',
+    description: "Who is enrolled in Academy courses. 'Am I enrolled in anything?' → call with no args. 'Who is in Sight Reading?' → pass course. 'What is Maria taking?' → pass user_name. Members can only see their OWN enrollments — an empty result for a member means they are not enrolled, never that the course is empty. Admins and instructors see everyone.",
+    parameters: {
+      type: 'object',
+      properties: {
+        course: str('Course title or code (optional)'),
+        user_name: str("Member's name to filter by — admins/instructors only see results for others (optional)"),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'search_apple_music',
+    description: "Search the Apple Music catalog for songs, albums, and artists. Use when the user names Apple Music ('play X on Apple Music'), asks to play an ALBUM, or asks about an album or artist's catalog info (year, tracks, genre). Returns ids for play_apple_music. For videos/performances, search_youtube + play_video remain the default.",
+    parameters: {
+      type: 'object',
+      properties: { query: str("What to search, e.g. 'Ezekiel Saw de Wheel Fisk Jubilee Singers' or 'Lift Every Voice album'") },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'play_apple_music',
+    description: "Play a song or album from Apple Music in the floating player window. Get id/kind/title/artist/artwork_url from search_apple_music first — never guess ids. Full tracks need the listener's Apple Music subscription (they may see a sign-in); otherwise Apple plays previews.",
+    parameters: {
+      type: 'object',
+      properties: {
+        id: str('Apple Music catalog id from search_apple_music'),
+        kind: str("'song' or 'album'"),
+        title: str('Title, for the player window'),
+        artist: str('Artist name, for the player window'),
+        artwork_url: str('Artwork URL from the search result (optional)'),
+      },
+      required: ['id'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'create_apple_playlist',
+    description: "Create a playlist in the USER'S OWN Apple Music library. Resolve every song with search_apple_music first, then call this ONCE with all song ids together. Needs the listener's Apple Music sign-in; the client reports failure if they decline.",
+    parameters: {
+      type: 'object',
+      properties: {
+        name: str('Playlist name the user chose'),
+        description: str('One-line description (optional)'),
+        song_ids: { type: 'array', items: { type: 'string' }, description: 'Apple Music song ids from search_apple_music, in order' },
+      },
+      required: ['name'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'play_my_playlist',
+    description: "Play a playlist FROM THE USER'S OWN Apple Music library by name — 'play my warm-up playlist'. The client finds the closest name match and plays it in the floating player. For catalog albums/songs use play_apple_music instead.",
+    parameters: {
+      type: 'object',
+      properties: { name: str("The playlist name as the user said it, e.g. 'warm-ups'") },
+      required: ['name'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'schedule_event_playlist',
+    description: "Attach music to a CALENDAR EVENT so a one-tap play button appears when the event starts — 'play my warm-ups at Sunday's rehearsal', 'schedule In Bright Mansions for the retreat'. Pass `event` (title words), plus EITHER playlist_name (their Apple Music library playlist) OR apple_id/apple_kind/label from search_apple_music. clear=true detaches. Browsers can't start audio unattended — always tell the user it plays on one tap when the event begins.",
+    parameters: {
+      type: 'object',
+      properties: {
+        event: str('Words from the event title, e.g. "Sunday rehearsal"'),
+        playlist_name: str("Their library playlist name (optional)"),
+        apple_id: str('Apple Music catalog id from search_apple_music (optional)'),
+        apple_kind: str("'song' or 'album' (with apple_id)"),
+        label: str('Human name shown on the play chip'),
+        artwork_url: str('Artwork URL (optional)'),
+        clear: { type: 'boolean', description: 'true to remove the scheduled music from the event' },
+      },
+      required: ['event'],
+    },
     minRole: 'admin', execution: 'server', confirm: false,
   },
   {
-    name: 'open_page',
-    description: 'Navigate the user to a GleeWorld page. Valid keys: home, calendar, notes, music-library, studio, video, messenger, academy, sight-reading, part-tracks, media-library, songwriting, concert-planner, tour-manager, attendance, users, analytics.',
+    name: 'stop_playback',
+    // "Stop the music" during live voice (2026-08-10) got "I don't have a
+    // way to stop playback" — true at the time: the app owns the mini
+    // player but no tool touched it.
+    description:
+      "Stop the music or video currently playing in the assistant's player. Use for 'stop the music', 'stop playing', 'pause that', 'turn it off'. If nothing is playing it is harmless.",
+    parameters: { type: 'object', properties: {}, required: [] },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'get_ride',
+    description:
+      "Prepare a rideshare deep link to a destination. The user speaks naturally ('take me home', 'ride to the Fox Theatre'); you resolve the destination and hand back a card the user taps to launch Uber or Lyft. 'home' resolves to the user's saved home address; if it's not set, ASK for the address instead of calling this tool blindly.",
     parameters: {
       type: 'object',
-      properties: { key: str('Page key from the list in the description') },
+      properties: {
+        destination: { type: 'string', description: 'Where the user wants to go. Free text; may be "home", a place name, or an address.' },
+        preferred: { type: 'string', description: "'uber' or 'lyft' if the user has a preference (optional)" },
+      },
+      required: ['destination'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+    {
+    name: 'open_page',
+    description: "Navigate the user to a GleeWorld page. Valid keys are listed in the system prompt under 'Pages you can open' — pass one exactly as listed there.",
+    parameters: {
+      type: 'object',
+      properties: { key: str("Page key from the system prompt's 'Pages you can open' list") },
       required: ['key'],
     },
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
-    name: 'open_song',
-    description: 'Open a score from the music library in the PDF viewer. Get score_id from search_music first.',
+    name: 'open_bible',
+    description: "Open The Bible at a passage. Pass a plain reference like 'Psalm 23', 'John 3:16' or '1 Corinthians 13'. Use this when the user wants to SEE a passage. To read it aloud or quote it, call lookup_bible instead (or as well).",
     parameters: {
       type: 'object',
-      properties: { score_id: str('gw_sheet_music id'), title: str('Score title, for the reply') },
+      properties: {
+        reference: str("Scripture reference, e.g. 'Psalm 23' or 'John 3:16'"),
+        translation: str("Optional translation code: WEBCE, KJV, DRA, ASV, BSB, YLT, WEBSTER, JPS1917. Defaults to WEBCE."),
+      },
+      required: ['reference'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'liturgical_day',
+    description: "What day it is in the Church's calendar, and what is read at Mass. Returns the celebration name ('19th Sunday of Ordinary Time'), season, Sunday cycle, and every reading citation. Set include_psalm_text when the user wants the responsorial psalm actually recited — it returns the refrain and verses separately, in order.",
+    parameters: {
+      type: 'object',
+      properties: {
+        when: str("'today' (default), 'tomorrow', 'sunday' (the coming Sunday, or today if today is Sunday), or 'next_sunday'"),
+        date: str('Explicit date as YYYY-MM-DD. Overrides `when`.'),
+        include_psalm_text: str("Pass 'true' to also fetch the responsorial psalm's full text as refrain + verses."),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'lookup_all_state',
+    description: "Facts about a US state's All-State chorus program: audition dates and deadlines, requirements, fees, and audition repertoire, from the state association's own published materials. Call this for ANY All-State question — never answer from memory, because deadlines move and every state differs. Each fact returns with its official source URL and the date we last checked it; when you state a date, fee, or requirement, tell the user it comes from the association's published materials and that the source link is on screen.",
+    parameters: {
+      type: 'object',
+      properties: {
+        state: str("State name, two-letter abbreviation, or slug — e.g. 'Georgia', 'GA', 'texas'."),
+        topic: str("Optional focus: 'dates', 'requirements', 'repertoire', 'fees', or 'overview'. Omit for everything."),
+      },
+      required: ['state'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'lookup_bible',
+    description: "Get the actual TEXT of a Bible passage, or search scripture for a phrase. Use this to read a passage aloud or quote it. Only ever quote what this returns — never recite scripture from memory, because the wording differs between translations and the user is reading a specific one.",
+    parameters: {
+      type: 'object',
+      properties: {
+        reference: str("Scripture reference, e.g. 'Psalm 23' or 'John 3:16'. Omit if searching by phrase."),
+        query: str("Words or phrase to search for, e.g. 'living water'. Omit if looking up a reference."),
+        translation: str('Translation code: WEBCE, KJV, DRA, ASV, BSB, YLT, WEBSTER, JPS1917. Defaults to WEBCE.'),
+      },
+      required: [],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'add_to_nav',
+    description: 'Add a feature to the user\'s personal navigation (their My World shelf) — "add the Studio to my nav", "put Part Tracks in my tools". key is the same page key open_page uses. Adding never opens the page; confirm what was added in a few words.',
+    parameters: {
+      type: 'object',
+      properties: { key: str('The page key of the feature to add (same catalog as open_page)') },
+      required: ['key'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'open_link',
+    description: 'Open an external http(s) link in the in-app article reader — e.g. the full article behind a news headline from read_news_feeds. The reader shows the article text beside the chat (with a Read-aloud button) without leaving the app. Use the exact link from the tool result; never fabricate URLs.',
+    parameters: {
+      type: 'object',
+      properties: {
+        url: str('The http(s) URL to open'),
+        title: str('Short human name for the link, for the spoken confirmation (optional)'),
+        read_aloud: { type: 'boolean', description: 'true ONLY if the user asked to HEAR the article ("read it to me") — the reader starts speaking it as soon as it loads' },
+      },
+      required: ['url'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'open_song',
+    description: "Open a score in the Viewer (the app's full-screen score reader) — the DEFAULT for every 'open/show/pull up <piece>' request. Get score_id from search_music first. Pass in_library=true ONLY when the user explicitly says to open it in the Music Library.",
+    parameters: {
+      type: 'object',
+      properties: {
+        score_id: str('gw_sheet_music id'),
+        title: str('Score title, for the reply'),
+        in_library: { type: 'boolean', description: 'true ONLY if the user explicitly asked for the Music Library instead of the Viewer' },
+      },
       required: ['score_id'],
     },
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
+    name: 'close_viewer',
+    // "Close the music viewer, please" (2026-08-11) produced dead silence:
+    // the model had no tool for it and replied empty. Closing returns the
+    // user to the Music Library list.
+    description: "Close the score Viewer / music viewer and return to the Music Library. Use for 'close the viewer', 'close the score', 'get me out of this music'.",
+    parameters: { type: 'object', properties: {}, required: [] },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
     name: 'open_note',
-    description: 'Open a specific Planner note by id. Get note_id from find_note first.',
+    description: 'Open a specific Planner note by id.',
     parameters: {
       type: 'object',
       properties: { note_id: str('gw_planner_notes id'), title: str('Note title, for the reply') },
@@ -100,11 +406,27 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'create_note',
-    description: "Create a note in the user's private Planner. Optionally include body text.",
+    description: "Create a note in the user's private Planner. Optionally include body text. Also the tool for CAPTURING THIS CONVERSATION — 'save this as a note', 'put our research in my notes', 'write that down' — with a distilled summary of what was discussed as the body.",
     parameters: {
       type: 'object',
       properties: { title: str('Note title'), body: str('Plain-text body (optional)') },
       required: ['title'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'save_article_note',
+    description: "Save a NEWS ARTICLE into the user's private Planner notes — 'save that article', 'this one's important, note it', 'keep the story about X'. The full article text is extracted server-side and stored with the link, so pass the item's exact link/title/source/summary from read_news_feeds (or the article currently open in the reader). For saving anything that is not a news article, use create_note instead.",
+    parameters: {
+      type: 'object',
+      properties: {
+        url: str('The article link, exactly as the tool result gave it — never fabricated'),
+        title: str('The headline'),
+        source: str('Publisher name, e.g. "Choral Journal" (optional)'),
+        published: str('Published date/time from the feed item (optional)'),
+        summary: str("The feed item's short summary — used as the note body if the full text can't be extracted (optional)"),
+      },
+      required: ['url', 'title'],
     },
     minRole: 'member', execution: 'client', confirm: false,
   },
@@ -354,16 +676,17 @@ export const TOOL_CATALOG: ToolDef[] = [
   },
   {
     name: 'order_food',
-    description: "Open a food-delivery service with a search pre-filled ('order me wings'). service is one of doordash | ubereats | grubhub — check get_preference('food_delivery_service') or ask which they use before calling. The user completes the order in their own account. REQUIRES user confirmation.",
+    description:
+      "Prepare food-delivery deep links. Pass an optional query like 'donuts' or 'thai near me' and the user gets DoorDash, Uber Eats, and Grubhub buttons pre-loaded with that search. No query is fine — the panel then opens each service's homepage.",
     parameters: {
       type: 'object',
       properties: {
-        service: str("'doordash' | 'ubereats' | 'grubhub'"),
-        craving: str('What to search for, e.g. "wings" or "sushi" (optional — omit to open the service home)'),
+        query: str('What the user wants to order (optional)'),
+        preferred: str("'doordash', 'ubereats', or 'grubhub' if the user has a preference (optional)"),
       },
-      required: ['service'],
+      required: [],
     },
-    minRole: 'member', execution: 'client', confirm: true,
+    minRole: 'member', execution: 'server', confirm: false,
   },
   {
     name: 'get_preference',
@@ -386,7 +709,7 @@ export const TOOL_CATALOG: ToolDef[] = [
       },
       required: ['key', 'value'],
     },
-    minRole: 'member', execution: 'client', confirm: false,
+    minRole: 'member', execution: 'server', confirm: false,
   },
   {
     name: 'get_date_card',
@@ -410,6 +733,17 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'admin', execution: 'client', confirm: true,
   },
   {
+    name: 'web_search',
+    description:
+      "Search the live web (Brave) and return a short answer plus a list of result URLs. Use for current-events or fact-check questions your own knowledge can't cover. Daily limit is per-tenant — don't chain multiple searches for a single question.",
+    parameters: {
+      type: 'object',
+      properties: { query: str('The search query') },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
     name: 'switch_world',
     description: "Switch to one of the user's other tenants ('worlds'). Pass `query` as the name or slug (or a partial match — 'kevinsworld', 'spelman', 'main'). Leave `query` empty to have the tool list the user's available worlds so you can ask which one. If the user is only in one world, this tool is a no-op. On web this cross-navigates to the tenant's subdomain; on native it swaps the cached tenant and reloads in place. Same underlying mechanism as the avatar dropdown's Switch organization list.",
     parameters: {
@@ -420,6 +754,93 @@ export const TOOL_CATALOG: ToolDef[] = [
       required: [],
     },
     minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
+    name: 'get_assignments',
+    description: 'Upcoming or overdue coursework for the caller, or for another student if user_id is given. Use for "what is due", "what am I behind on".',
+    parameters: { type: 'object', properties: {
+      window: str('week | overdue | all — defaults to week'),
+      course_id: str('Optional course uuid to narrow to one class'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_grades',
+    description: 'Per-course grade averages, or every graded item when detail is "all". Use for "how am I doing", "show me all my grades".',
+    parameters: { type: 'object', properties: {
+      detail: str('summary | all — defaults to summary'),
+      course_id: str('Optional course uuid'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_grade_trend',
+    description: 'Compares the average of the last 5 graded items against the 5 before. Use for "am I slipping", "is my grade going up".',
+    parameters: { type: 'object', properties: {
+      course_id: str('Optional course uuid'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_attendance',
+    description: 'Attendance counts by status plus the most recent absences and late arrivals.',
+    parameters: { type: 'object', properties: {
+      days: str('Lookback window in days — defaults to 120'),
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_balance',
+    description: 'Outstanding balance in cents plus open charges with due dates. Use for "what do I owe", "am I paid up".',
+    parameters: { type: 'object', properties: {
+      user_id: str('Optional gw_profiles user id; omit for the caller'),
+    }, required: [] },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'get_roster_flags',
+    description: 'Directors only. Lists students crossing a concern threshold across the whole roster.',
+    parameters: { type: 'object', properties: {
+      flag: str('failing | absences | missing_work | owes'),
+    }, required: ['flag'] },
+    minRole: 'admin', execution: 'server', confirm: false,
+  },
+  {
+    name: 'search_academy',
+    description: 'Search the choral reference library for background on conducting history and technique, beat patterns, spirituals, choral repertoire and major works, musical terminology, church music, choral education, and choral associations. Use this before answering any question about those subjects. Returns source passages.',
+    parameters: {
+      type: 'object',
+      properties: { query: str('The subject to look up, e.g. "hemiola" or "conducting before the baton"') },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'search_music_facts',
+    description: 'Look up exact instrument, voice and ensemble facts: playable ranges, practical vs extreme ranges, transposition (what an instrument sounds versus what is written), clefs, register spans, choral voice-part ranges for SATB, SSAA and TTBB, orchestral score order (which instrument goes where on the page), and standard orchestra instrumentations (Classical, Romantic, chamber). Call this BEFORE stating any range, transposition, register, score position or instrumentation — those are precise facts that must not be guessed. Not for concepts or technique.',
+    parameters: {
+      type: 'object',
+      properties: { query: str('The instrument, voice part or fact wanted, e.g. "viola range" or "clarinet transposition"') },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
+  },
+  {
+    name: 'search_liturgy',
+    description: "Search official Catholic Church documents on liturgy and sacred music — the Missal's General Instruction, council and papal documents, canon law, bishops' conference and diocesan norms. Use this BEFORE answering any question about what is allowed, required or forbidden at Mass or in Catholic worship: who may sing or read what, whether a text may be replaced, instruments and seasons, ritual roles, liturgical seasons and calendar. Returns passages with the authority of each. Never answer a question of liturgical law from your own knowledge.",
+    parameters: {
+      type: 'object',
+      properties: {
+        query: str('The liturgical question or topic, e.g. "may the choir sing the entrance chant alone"'),
+        jurisdiction: str("Optional country or diocese code, e.g. 'US' or 'US/Atlanta', when the user's location matters."),
+      },
+      required: ['query'],
+    },
+    minRole: 'member', execution: 'server', confirm: false,
   },
 ];
 

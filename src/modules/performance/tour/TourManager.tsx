@@ -450,7 +450,7 @@ export const TourManager = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Tour Manager</h2>
+          <h2 className="text-2xl font-bold">Travel Manager</h2>
           <p className="text-muted-foreground">Manage tour events, tasks, and travel logistics</p>
         </div>
         
@@ -484,7 +484,7 @@ export const TourManager = () => {
                   placeholder="e.g., Syracuse, NY"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="start_date">Start Date *</Label>
                   <Input
@@ -790,7 +790,7 @@ export const TourManager = () => {
                                 </SelectContent>
                               </Select>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <Label htmlFor="departure_location">Departure</Label>
                                 <Input
@@ -810,7 +810,7 @@ export const TourManager = () => {
                                 />
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div>
                                 <Label htmlFor="departure_time">Departure Time</Label>
                                 <Input

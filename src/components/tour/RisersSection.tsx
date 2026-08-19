@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, UserPlus, X, RotateCcw, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LegacyMigrationBanner } from '@/features/seating-charts/adapters/LegacyMigrationBanner';
 
 interface RosterMember {
   user_id: string;
@@ -211,6 +212,7 @@ const RiserGrid = ({ config }: { config: RiserConfig }) => {
 
   return (
     <div className="space-y-4">
+      <LegacyMigrationBanner label="riser chart" />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
@@ -236,7 +238,7 @@ const RiserGrid = ({ config }: { config: RiserConfig }) => {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         <Card className="p-3 text-center">
           <p className="text-2xl font-bold text-primary">{roster.length}</p>
-          <p className="text-xs text-muted-foreground">Tour Roster</p>
+          <p className="text-xs text-muted-foreground">Travel Roster</p>
         </Card>
         <Card className="p-3 text-center">
           <p className="text-2xl font-bold" style={{ color: '#16a34a' }}>{assignedCount}</p>

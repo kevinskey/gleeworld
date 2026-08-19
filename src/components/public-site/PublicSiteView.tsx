@@ -1,9 +1,9 @@
 // Renders a published site payload (from get_public_site). Shared by the
 // /sites/:slug route and the tenant root landing when a site is published.
 import { useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BLOCK_REGISTRY, isBlockAvailable } from './registry';
-import { fontStack, safeConfig, themeCssVars, themeSchema, type SiteBlock, type SiteRenderContext } from './types';
+import { blockPage, fontStack, safeConfig, themeCssVars, themeSchema, type SiteBlock, type SiteRenderContext } from './types';
 import { StoreOrderConfirmation } from './StoreOrderConfirmation';
 
 export interface PublicSitePayload {
@@ -20,6 +20,7 @@ export interface PublicSitePayload {
   accent_color: string | null;
   font_family: string | null;
   letter_spacing: number | null;
+  soundcloud_url: string | null;
   active_addons: string[];
 }
 
@@ -65,11 +66,18 @@ export function PublicSiteView({
   data,
   slug,
   memberSignIn = false,
+  page = 'home',
+  pageHref,
 }: {
   data: PublicSitePayload;
   slug: string;
   memberSignIn?: boolean;
+  /** Which page of the site to render. Legacy snapshots are all 'home'. */
+  page?: string;
+  /** Builds the app route for a sibling page (for the #rsvp QR redirect). */
+  pageHref?: (page: string) => string;
 }) {
+  const navigate = useNavigate();
   const theme = useMemo(() => {
     const parsed = themeSchema.safeParse(data.theme ?? {});
     const base = parsed.success ? parsed.data : themeSchema.parse({});
@@ -94,6 +102,7 @@ export function PublicSiteView({
       isPreview: false,
       activeAddons: data.active_addons ?? [],
       memberSignIn,
+      soundcloudUrl: data.soundcloud_url || null,
     }),
     [slug, theme, data, memberSignIn],
   );
@@ -113,7 +122,24 @@ export function PublicSiteView({
     return () => { restore?.(); };
   }, [data, slug]);
 
-  const blocks = [...(data.blocks ?? [])].sort((a, b) => a.position - b.position);
+  const blocks = [...(data.blocks ?? [])]
+    .filter((b) => blockPage(b) === page)
+    .sort((a, b) => a.position - b.position);
+
+  // Printed-QR back-compat: flyers link to /#rsvp from when the RSVP block
+  // lived on the home page. If this page has no rsvp block but a sibling
+  // page does, forward the visitor there with the hash intact.
+  useEffect(() => {
+    if (window.location.hash !== '#rsvp') return;
+    if (blocks.some((b) => b.block_type === 'concert-rsvp')) return;
+    const target = (data.blocks ?? []).find(
+      (b) => b.block_type === 'concert-rsvp' && b.is_visible && blockPage(b) !== page,
+    );
+    if (target && pageHref) {
+      navigate(`${pageHref(blockPage(target))}#rsvp`, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.blocks, page]);
 
   // Store checkout success (Tenant Store add-on, Task 3): store-checkout's
   // success_url redirects here with `?order=&t=`. Purely a display

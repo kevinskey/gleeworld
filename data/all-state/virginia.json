@@ -1,0 +1,165 @@
+{
+  "state_slug": "virginia",
+  "retrieved_at": "2026-08-07",
+  "no_program_found": false,
+  "notes": "Virginia has TWO distinct statewide honor choir tracks. (1) All-Virginia Chorus, administered by VCDA (the Virginia Choral Directors Association, a VMEA affiliate), fed by all-district choir auditions run by each of VCDA's numbered districts using district-specific procedures; the All-Virginia Band, Chorus and Orchestra event is April 22-24, 2027 at the Greater Richmond Convention Center. (2) The VMEA Senior Honors Choir, auditioned online through SNAP Audition and performing at the VMEA Conference, November 19-21, 2026 in Richmond, open only to 12th graders. VCDA publishes audition format as 'TBD by each District' and audition date only as 'February' with no specific 2027 day; district-level dates and fees live in per-district PDF procedure manuals that were not individually retrieved. No fee amounts are published on VCDA's or VMEA's public pages.",
+  "organization": {
+    "name": "Virginia Music Educators Association",
+    "acronym": "VMEA",
+    "website_url": "https://www.vmea.com/",
+    "description": "VMEA is Virginia's NAfME state affiliate. Its choral affiliate, the Virginia Choral Directors Association (VCDA), administers the All-Virginia Chorus and the district all-district choir auditions that feed it; VMEA itself runs the Senior Honors Choir at its annual conference."
+  },
+  "sources": [
+    { "name": "VCDA — All-Virginia Chorus Audition Information", "url": "https://www.vcda.net/index.php/events/all-virginia-menu/allva-chorus-audition.html", "source_type": "official" },
+    { "name": "VCDA — All-Virginia Chorus Event Information", "url": "https://www.vcda.net/index.php/events/all-virginia-menu/allva-envent-information.html", "source_type": "official" },
+    { "name": "VCDA — District Procedures", "url": "https://www.vcda.net/index.php/events/district-procedures.html", "source_type": "official" },
+    { "name": "VMEA — Honors Choir Auditions", "url": "https://www.vmea.com/honors-choir", "source_type": "official" },
+    { "name": "VCDA — Operations Manual", "url": "https://www.vcda.net/index.php/resources/administrative-handbook.html", "source_type": "handbook_pdf" }
+  ],
+  "programs": [
+    {
+      "name": "All-Virginia Chorus",
+      "lineage_key": "virginia-all-virginia-chorus",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "The All-Virginia Chorus, administered by VCDA, brings together Virginia's top high school vocalists. It performs alongside the All-Virginia Band and Orchestra. Students qualify through all-district auditions; the audition format is set by each VCDA district, using the statewide All-Virginia audition selection from VCDA's yearly rotation plus sight reading.",
+      "dates": [
+        {
+          "date_type": "audition_round",
+          "title": "All-Virginia Chorus auditions",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "VCDA lists the audition date only as 'February' with no specific day published for 2027; the audition format is TBD by each district.",
+          "source_url": "https://www.vcda.net/index.php/events/all-virginia-menu/allva-chorus-audition.html"
+        },
+        {
+          "date_type": "event",
+          "title": "2027 All-Virginia Band, Chorus and Orchestra",
+          "start_at": "2027-04-22",
+          "end_at": "2027-04-24",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Greater Richmond Convention Center, 403 N. 3rd Street, Richmond, VA 23219.",
+          "source_url": "https://www.vcda.net/index.php/events/all-virginia-menu/allva-envent-information.html"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "format",
+          "title": "Audition format set by each district",
+          "description": "VCDA publishes the All-Virginia audition format as 'TBD by each District'. Each numbered VCDA district posts its own all-district audition procedures PDF on the District Procedures page.",
+          "source_url": "https://www.vcda.net/index.php/events/all-virginia-menu/allva-chorus-audition.html"
+        },
+        {
+          "category": "materials",
+          "title": "Statewide audition repertoire on a yearly rotation",
+          "description": "Auditions use the All-Virginia audition songs on VCDA's published yearly rotation. VCDA posts part-specific sheet music PDFs and part-predominant audio practice files for the current selection, organized by voice pairing (S1/T1, S2/T2, A1/B1, A2/B2).",
+          "source_url": "https://www.vcda.net/index.php/events/all-virginia-menu/allva-chorus-audition.html"
+        },
+        {
+          "category": "sight_reading",
+          "title": "Sight reading component",
+          "description": "VCDA publishes sight-reading examples from previous years and sight-reading starter recordings for audition preparation.",
+          "source_url": "https://www.vcda.net/index.php/events/all-virginia-menu/allva-chorus-audition.html"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Where'er You Walk",
+          "purpose": "audition",
+          "notes": "Listed by VCDA as the All-Virginia Chorus audition selection for the 2026-2027 rotation year. Part-specific PDFs and audio files are posted by voice pairing with the transposition indicated per pairing (S2/T2 in A-flat, S1/T1 in B-flat, A1/B1 in F, A2/B2 in E-flat). VCDA does not credit a composer on this page.",
+          "source_url": "https://www.vcda.net/index.php/events/all-virginia-menu/allva-chorus-audition.html"
+        }
+      ],
+      "documents": [
+        { "title": "All-Virginia Audition Score Sheet (04-2019)", "url": "https://www.vcda.net/index.php/events/all-virginia-menu/allva-chorus-audition.html", "document_type": "rules" },
+        { "title": "VCDA District Procedures (per-district audition procedure PDFs)", "url": "https://www.vcda.net/index.php/events/district-procedures.html", "document_type": "rules" },
+        { "title": "VCDA Operations Manual", "url": "https://www.vcda.net/index.php/resources/administrative-handbook.html", "document_type": "handbook" },
+        { "title": "Sight Reading Starter Recordings", "url": "https://drive.google.com/drive/folders/0B8hfqnlHE09yLVhIRGJjV2JQc3M?resourcekey=0-l91G7wcJC1ikiPVxJE01gw&usp=sharing", "document_type": "other" },
+        { "title": "2025 Sight Reading Examples", "url": "https://drive.google.com/drive/folders/1UTNr-9HTeVNWJVQ7WSqGm5SRKTZsP5SA?usp=drive_link", "document_type": "other" },
+        { "title": "VCDA Music List", "url": "https://www.vcda.net/index.php/music-list.html", "document_type": "other" }
+      ],
+      "voice_parts": [
+        { "code": "S1", "label": "Soprano 1" },
+        { "code": "S2", "label": "Soprano 2" },
+        { "code": "A1", "label": "Alto 1" },
+        { "code": "A2", "label": "Alto 2" },
+        { "code": "T1", "label": "Tenor 1" },
+        { "code": "T2", "label": "Tenor 2" },
+        { "code": "B1", "label": "Bass 1" },
+        { "code": "B2", "label": "Bass 2" }
+      ]
+    },
+    {
+      "name": "VMEA Senior Honor Choir",
+      "lineage_key": "virginia-vmea-senior-honor-choir",
+      "season": "2026-27",
+      "school_level": "high",
+      "ensemble_type": "mixed chorus",
+      "description": "VMEA's Senior Honor Choir performs during the annual VMEA Conference in Richmond. Auditions are hosted online through SNAP Audition. The 2026 conductor is Deanna Joseph of Georgia State University.",
+      "dates": [
+        {
+          "date_type": "event",
+          "title": "2026 VMEA Senior Honor Choir",
+          "start_at": "2026-11-19",
+          "end_at": "2026-11-21",
+          "all_day": true,
+          "timezone": "America/New_York",
+          "description": "Held during the 2026 VMEA Conference in Richmond.",
+          "source_url": "https://www.vmea.com/honors-choir"
+        }
+      ],
+      "requirements": [
+        {
+          "category": "eligibility",
+          "title": "12th grade students in a VMEA member's choral ensemble",
+          "description": "All 12th grade students enrolled in a VMEA member's school choral ensemble are eligible to audition.",
+          "source_url": "https://www.vmea.com/honors-choir"
+        },
+        {
+          "category": "format",
+          "title": "Online audition via SNAP Audition",
+          "description": "SNAP Audition is used to host online auditions. Students record their voice part along with the other voice parts and accompaniment to submit on SNAP, and complete one sight-reading example. Practice and performance tracks are posted by VMEA.",
+          "source_url": "https://www.vmea.com/honors-choir"
+        },
+        {
+          "category": "sight_reading",
+          "title": "One sight-reading example",
+          "description": "Students complete one sight-reading example as part of the SNAP submission.",
+          "source_url": "https://www.vmea.com/honors-choir"
+        }
+      ],
+      "repertoire": [
+        {
+          "title": "Swifter Than Flame",
+          "composer": "Elaine Hagenberg",
+          "purpose": "audition",
+          "notes": "Audition excerpt is measure 54 to the end. The selection is drawn from the Honor Choir performance repertoire.",
+          "source_url": "https://www.vmea.com/honors-choir"
+        }
+      ],
+      "documents": [
+        { "title": "Senior Honor Choir Audition Info (includes timeline)", "url": "https://docs.google.com/document/d/19_k9FjeTbPVKWMUhC1oNqYDTOU-s1aJZjhwvF8EgSd0/edit?usp=sharing", "document_type": "other" },
+        { "title": "Audition Rubric", "url": "https://drive.google.com/file/d/101ovfb_7iZqvt6EzW7SO8r5WMmmB6cyt/view?usp=sharing", "document_type": "rules" },
+        { "title": "Audition FAQ", "url": "https://docs.google.com/document/d/1eQBZJr5rVknuZOh482Id9U07456i9XnnRleYDAdCXCs/edit?usp=sharing", "document_type": "other" },
+        { "title": "Downloadable audition files (practice and performance tracks)", "url": "https://drive.google.com/drive/folders/1xBUbAIJaI822wRL5tzER5Pn4mUkaMCjc?usp=drive_link", "document_type": "other" }
+      ],
+      "voice_parts": [
+        { "code": "S", "label": "Soprano" },
+        { "code": "A", "label": "Alto" },
+        { "code": "T", "label": "Tenor" },
+        { "code": "B", "label": "Bass" }
+      ]
+    }
+  ],
+  "not_published": [
+    "Specific 2027 All-Virginia Chorus audition date — VCDA lists only the month 'February'",
+    "All-Virginia Chorus audition and participation fee amounts — no dollar figures on VCDA's public pages",
+    "VMEA Senior Honor Choir audition deadline dates — the timeline is inside a linked Google Doc that was not retrieved",
+    "VMEA Senior Honor Choir audition or participation fee amounts",
+    "Composer/publisher credit for the 2026-2027 All-Virginia audition selection — VCDA posts part files without composer attribution on the audition page",
+    "Full All-Virginia Chorus performance repertoire for the April 2027 event",
+    "District-level audition dates, quotas, and fees — these are in per-district PDF procedure manuals on VCDA's District Procedures page, not aggregated"
+  ]
+}

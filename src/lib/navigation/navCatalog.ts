@@ -7,20 +7,21 @@
 // icon) where the sidebar historically differs.
 // Spec: docs/superpowers/specs/2026-07-06-nav-catalog-parity-design.md
 import {
+  Globe,
   Home, MessageSquare, Calendar, Music, ScanEye, Eye, Mic, Images, LibraryBig,
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
-  Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store,
+  Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
-  PenLine, NotebookPen, ConciergeBell, QrCode, Cloud,
-  type LucideIcon,
-} from 'lucide-react';
+  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, Gavel, CreditCard, Receipt,
+  HandHeart, ConciergeBell, QrCode, Award,
+  type LucideIcon, FileText } from 'lucide-react';
 
 export type NavSectionKey =
-  'today' | 'music' | 'teach' | 'make' | 'plan' | 'reach' | 'money' | 'people' | 'admin';
+  'today' | 'church' | 'music' | 'teach' | 'make' | 'plan' | 'reach' | 'money' | 'people' | 'admin';
 
 export const NAV_SECTION_LABELS: Record<NavSectionKey, string> = {
-  today: 'Today', music: 'Music', teach: 'Teach', make: 'Make', plan: 'Plan',
-  reach: 'Reach', money: 'Money', people: 'People', admin: 'Admin',
+  today: 'Today', church: 'Church', music: 'Music', teach: 'Teach', make: 'Make',
+  plan: 'Plan', reach: 'Reach', money: 'Money', people: 'People', admin: 'Admin',
 };
 
 export interface NavGate {
@@ -29,6 +30,7 @@ export interface NavGate {
   adminOnly?: boolean;
   platformAdminOnly?: boolean;
   librarianOnly?: boolean;
+  partnerOnly?: boolean;
 }
 
 export interface CatalogEntry {
@@ -41,7 +43,6 @@ export interface CatalogEntry {
   section: NavSectionKey;
   tone: string;
   tourId: string;
-  hero?: boolean;
   end?: boolean;
   surfaces?: Array<'sidebar' | 'grid'>;
   gate?: NavGate;
@@ -50,21 +51,48 @@ export interface CatalogEntry {
 export const NAV_CATALOG: CatalogEntry[] = [
   // Today — tab-bar territory; sidebar-only, never grid tiles.
   { key: 'home',     to: '/dashboard',           label: 'Command Center', icon: Home,          section: 'today', tone: 'bg-primary/10 text-primary', tourId: 'nav-command-center', end: true, surfaces: ['sidebar'] },
+  // The way BACK OUT: the tenant's public site lives at the host root. No
+  // gate — every member may want the page they share with the world.
+  { key: 'public-site', to: '/', label: 'Public Site', icon: Globe, section: 'today', tone: 'bg-sky-50 text-sky-600', tourId: 'nav-public-site', end: true },
   { key: 'messages', to: '/dashboard/messenger', label: 'Messages',       icon: MessageSquare, section: 'today', tone: 'bg-cyan-50 text-cyan-600',   tourId: 'nav-messenger',      surfaces: ['sidebar'] },
   { key: 'calendar', to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      section: 'today', tone: 'bg-purple-50 text-purple-600', tourId: 'nav-calendar',     surfaces: ['sidebar'] },
   { key: 'notes',    to: '/planner',             label: 'Notes',          icon: NotebookPen,   section: 'today', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-notes', gate: { module: 'planner' } },
+  { key: 'documents', to: '/dashboard/documents', label: 'Documents', icon: FileText, section: 'today', tone: 'bg-blue-50 text-blue-600', tourId: 'nav-documents' },
+  // The Bible — full text, highlights, Apple Pencil underlines, notes.
+  // Formerly "Prayer App"; the prayers and daily readings still live at
+  // /prayer and are reachable from inside the Bible page.
+  { key: 'bible',    to: '/bible',               label: 'The Bible',      icon: BookOpen,      section: 'church', tone: 'bg-violet-50 text-violet-700', tourId: 'nav-bible' },
   { key: 'concierge', to: '/dashboard/concierge', label: 'Concierge',     icon: ConciergeBell, section: 'today', tone: 'bg-sky-50 text-sky-600',       tourId: 'nav-concierge' },
   // Music
-  { key: 'music-library', to: '/dashboard/music-library', label: 'Music Library', icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
+  { key: 'music-library',   to: '/dashboard/music-library', label: 'Music Library',  icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
   { key: 'music',         to: '/dashboard/viewer',        label: 'Viewer',        icon: ScanEye,  section: 'music', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-viewer',        gridLabel: 'Music', gridIcon: Music, gate: { module: 'viewer' } },
-  { key: 'sight',         to: '/dashboard/sight-reading', label: 'Sight Reading', icon: Eye,      section: 'music', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-sight-reading', gridIcon: ScanEye, gate: { module: 'sight_reading' } },
-  { key: 'tracks',        to: '/dashboard/part-tracks',   label: 'Part Tracks',   icon: Mic,      section: 'music', tone: 'bg-indigo-50 text-indigo-600', tourId: 'nav-part-tracks',   gridLabel: 'Tracks', gate: { module: 'part_tracks' } },
+  { key: 'sight',         to: '/dashboard/reading-music', label: 'Reading Music', icon: Eye,      section: 'music', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-reading-music', gridIcon: ScanEye, gate: { module: 'sight_reading' } },
+  { key: 'part-tracks',   to: '/dashboard/part-tracks',   label: 'Part Tracks',   icon: ListMusic, section: 'music', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-part-tracks' },
   { key: 'media-library', to: '/dashboard/media-library', label: 'Media Library', icon: Images,   section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-media-library' },
+  // Streams the tenant's soundcloud.com profile through SoundCloud's own
+  // widget, grouped by the sets on that account. Profile comes from
+  // gw_branding_settings.soundcloud_url; unset shows a setup prompt.
+  // Not to be confused with /soundcloud, the 2025 OAuth search page.
+  { key: 'soundcloud',    to: '/dashboard/soundcloud',    label: 'SoundCloud',    icon: Music,    section: 'music', tone: 'bg-sky-50 text-sky-600',       tourId: 'nav-soundcloud' },
+  // The partner sheet-music marketplace (buyer side). Everyone can browse
+  // and buy; partners manage their catalog via Partner Portal below.
+  { key: 'music-store',   to: '/store',                   label: 'Music Store',   icon: ShoppingBag, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-music-store' },
   { key: 'librarian',     to: '/dashboard/librarian',     label: 'Librarian',     icon: LibraryBig, section: 'music', tone: 'bg-slate-50 text-slate-600', tourId: 'nav-librarian',    gate: { module: 'librarian', librarianOnly: true } },
-  { key: 'soundcloud',    to: '/dashboard/music-player',  label: 'SoundCloud',    icon: Cloud,      section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-soundcloud' },
+  { key: 'partner-portal', to: '/partner', label: 'Partner Portal', icon: Store, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-partner-portal', gate: { partnerOnly: true } },
   // Teach
-  { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-primary text-primary-foreground', tourId: 'nav-academy', hero: true },
+  { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-primary text-primary-foreground', tourId: 'nav-academy' },
   { key: 'office-hours', to: '/dashboard/office-hours',        label: 'Studio Hours', icon: CalendarClock, section: 'teach', tone: 'bg-emerald-50 text-emerald-600',     tourId: 'nav-office-hours' },
+  // Reference directory (public, all 49 states) and the director's own
+  // workspace are separate destinations: one answers "what does my state
+  // require", the other "are my students ready".
+  { key: 'all-state',    to: '/all-state',                     label: 'All-State',    icon: Award,         section: 'teach', tone: 'bg-indigo-50 text-indigo-600',       tourId: 'nav-all-state', gate: { module: 'all_state' } },
+  { key: 'all-state-cohorts', to: '/dashboard/all-state',      label: 'All-State Roster', icon: Users,     section: 'teach', tone: 'bg-indigo-50 text-indigo-700',       tourId: 'nav-all-state-cohorts', gate: { module: 'all_state', adminOnly: true } },
+  // Student surface — no adminOnly gate. Shows an empty state for anyone not
+  // in a cohort, which is cheaper than hiding it and leaving students unsure
+  // whether the feature exists.
+  { key: 'my-all-state', to: '/dashboard/my-all-state',        label: 'My All-State', icon: Award,         section: 'teach', tone: 'bg-indigo-50 text-indigo-600',       tourId: 'nav-my-all-state', gate: { module: 'all_state' } },
+  // Editorial canon for every state — GleeWorld staff only, not tenant admins.
+  { key: 'all-state-admin', to: '/dashboard/all-state-admin',  label: 'All-State Data', icon: Award,       section: 'admin', tone: 'bg-indigo-50 text-indigo-600',      tourId: 'nav-all-state-admin', gate: { platformAdminOnly: true }, surfaces: ['sidebar'] },
   { key: 'practice',     to: '/dashboard/practice-recordings', label: 'Practice',     icon: Mic,           section: 'teach', tone: 'bg-teal-50 text-teal-700',           tourId: 'nav-practice', gate: { adminOnly: true } },
   // Make
   { key: 'studio',      to: '/studio',                label: 'Studio',      icon: Disc3,  section: 'make', tone: 'bg-sky-50 text-sky-600',   tourId: 'nav-studio', gate: { module: 'studio' } },
@@ -76,15 +104,32 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'songwriting', to: '/songwriting', label: 'Songwriting', icon: PenLine, section: 'make', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-songwriting', gate: { module: 'songwriting' } },
   // Plan
   { key: 'planner',   to: '/dashboard/concert-planner', label: 'Concert Planner', icon: ClipboardList, section: 'plan', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-concert-planner', gridLabel: 'Programs', gridIcon: ListMusic, gate: { module: 'concert_planner' } },
-  { key: 'liturgy',   to: '/dashboard/liturgy',         label: 'Liturgy Planner', icon: Church,        section: 'plan', tone: 'bg-amber-50 text-amber-700',     tourId: 'nav-liturgy-planner', gate: { module: 'liturgy_planner' } },
-  { key: 'tour',      to: '/tour-manager',              label: 'Tour Manager',    icon: RouteIcon,     section: 'plan', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-tour-manager', gate: { module: 'tour' } },
+  { key: 'liturgy',   to: '/dashboard/liturgy',         label: 'Liturgy Planner', icon: Church,        section: 'church', tone: 'bg-amber-50 text-amber-700',     tourId: 'nav-liturgy-planner', gate: { module: 'liturgy_planner' } },
+  { key: 'worship-aids', to: '/dashboard/worship-aids',  label: 'Worship Aids',    icon: FileText,      section: 'church', tone: 'bg-amber-50 text-amber-700',     tourId: 'nav-worship-aids', gate: { module: 'liturgy_planner' } },
+  { key: 'tour',      to: '/tour-manager',              label: 'Travel Manager',  icon: RouteIcon,     section: 'plan', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-tour-manager', gate: { module: 'tour' } },
+  { key: 'seating-charts', to: '/seating-charts',       label: 'Seating Charts',  icon: Armchair,      section: 'plan', tone: 'bg-indigo-50 text-indigo-600',   tourId: 'nav-seating-charts' },
   { key: 'auditions', to: '/dashboard/auditions',       label: 'Auditions',       icon: ScanLine,      section: 'plan', tone: 'bg-lime-50 text-lime-600',       tourId: 'nav-auditions', gate: { module: 'auditions' } },
+  { key: 'auctions',  to: '/auctions',                  label: 'Auctions',        icon: Gavel,         section: 'plan', tone: 'bg-stone-50 text-stone-600',     tourId: 'nav-auctions', gate: { module: 'auctions' } },
   // Reach
   { key: 'pr-hub',    to: '/dashboard/pr-hub', label: 'PR Hub',    icon: Megaphone,     section: 'reach', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-pr-hub', gate: { module: 'pr_hub' } },
   { key: 'fan-page',  to: '/admin/fan-page',   label: 'Fan Page',  icon: Heart,         section: 'reach', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-fan-page', gate: { adminOnly: true } },
   { key: 'feeds',     to: '/dashboard/feeds',  label: 'Feeds',     icon: Newspaper,     section: 'reach', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-feeds', gate: { module: 'feeds' } },
   { key: 'qr-codes',  to: '/qr-generator',     label: 'QR Codes',  icon: QrCode,        section: 'reach', tone: 'bg-slate-50 text-slate-600',     tourId: 'nav-qr-codes', gate: { adminOnly: true } },
-  { key: 'shop',      to: '/dashboard/shop',   label: 'Store',     icon: Store,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-shop', gate: { moduleAny: ['merch', 'store'] } },
+  // Consolidated 2026-08-09: this used to be two catalog entries pointing at
+  // the SAME ProductManagement component ('shop' here, and a grid-only
+  // 'merch' at /store/products) — a member browsing All Tools saw "Store"
+  // and "Merch" side by side and landed on one identical admin screen
+  // either way. 'merch' is retired via MERGED_KEYS (myTools.ts), not
+  // deleted outright, so any stored member layout referencing it still
+  // resolves here. Labelled "Store Admin" (not "Store") to read as
+  // distinct from 'music-store' (Music Store, /store — the separate
+  // buyer-facing marketplace). adminOnly added here at the same time:
+  // ProductManagement composes Orders/Customers/Payments/Discounts/Tax
+  // managers reading gw_orders/gw_payments/gw_refunds/gw_disputes, and the
+  // gate used to be module-only, so any member of a merch/store-enabled
+  // tenant could open it. ProductManagement also self-gates now (a member
+  // can still type the URL) — see its own admin check.
+  { key: 'shop',      to: '/dashboard/shop',   label: 'Store Admin', icon: Store,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-shop', gate: { moduleAny: ['merch', 'store'], adminOnly: true } },
   // Destination is the graduates PAGE BUILDER (GraduatesManagementModule opens
   // on its Page Builder tab), which authors the public /alumni page — so it is
   // labelled as a page editor and gated adminOnly to match its sibling Fan
@@ -92,20 +137,32 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // tenant open the editor and hit RLS write failures instead of simply not
   // seeing the entry.
   { key: 'graduates', to: '/dashboard/alumni', label: 'Graduates Page', icon: GraduationCap, section: 'reach', tone: 'bg-teal-50 text-teal-600',       tourId: 'nav-alumni', gate: { module: 'alumni', adminOnly: true } },
-  { key: 'merch',     to: '/store',            label: 'Merch',     icon: Shirt,         section: 'reach', tone: 'bg-amber-50 text-amber-600',     tourId: 'nav-merch-grid', surfaces: ['grid'], gate: { module: 'merch' } },
+  // 'merch' retired 2026-08-09 — see the comment on 'shop' above. Key kept
+  // out of the catalog on purpose (NEVER rename/reuse a key); MERGED_KEYS
+  // resolves stored references to 'shop' instead.
   // Money
+  { key: 'my-fees',   to: '/dashboard/my-fees',    label: 'My Fees',    icon: CreditCard, section: 'money', tone: 'bg-sky-50 text-sky-700',         tourId: 'nav-my-fees' },
+  { key: 'fees-admin', to: '/dashboard/fees',      label: 'Fees',       icon: Receipt,    section: 'money', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-fees-admin', gate: { adminOnly: true } },
   { key: 'box-office', to: '/dashboard/box-office', label: 'Box Office', icon: Ticket,     section: 'money', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-box-office', gate: { module: 'box_office', adminOnly: true } },
   { key: 'finance',    to: '/dashboard/finance',    label: 'Finance',    icon: DollarSign, section: 'money', tone: 'bg-emerald-50 text-emerald-600', tourId: 'nav-finance', gridIcon: Wallet, gate: { module: 'finance' } },
   { key: 'tickets',    to: '/box-office',           label: 'Tickets',    icon: Ticket,     section: 'money', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-tickets-grid', surfaces: ['grid'], gate: { module: 'box_office' } },
-  { key: 'fundraising', to: '/dashboard/fundraising', label: 'Fundraising Store', icon: Shirt, section: 'money', tone: 'bg-amber-50 text-amber-600', tourId: 'nav-fundraising', gate: { adminOnly: true } },
+  // Labelled with the partner's name deliberately (Kevin, 2026-08-09). This is NOT a
+  // store GleeWorld runs: provision-tsb-store creates a T-Shirt Brothers group store,
+  // TSB holds the catalog, fulfils, and collects, and the tenant keeps 15%. None of the
+  // commerce-core rules (server-side prices, webhook fulfilment, our order model,
+  // Connect account resolution) apply. A bare "Store" label invited directors to expect
+  // their own inventory and land on someone else's platform. NEVER rename the `key`.
+  { key: 'fundraising', to: '/dashboard/fundraising', label: 'Fundraising (T-Shirt Brothers)', icon: Shirt, section: 'money', tone: 'bg-amber-50 text-amber-600', tourId: 'nav-fundraising', gate: { adminOnly: true } },
   // People — tenant user management (invite / promote / disable / CSV
   // bulk import). adminOnly is now authoritative in the code, not just
   // via gw_tenant_nav_prefs — a fresh tenant with no prefs seeded would
   // otherwise expose the roster + invite dialog to every student.
   { key: 'people',     to: '/dashboard/users', label: 'People',     icon: Users,         section: 'people', tone: 'bg-cyan-50 text-cyan-600', tourId: 'nav-people', gate: { adminOnly: true } },
+  { key: 'parents',    to: '/dashboard/workspace?tab=parents', label: 'Parents', icon: HeartHandshake, section: 'people', tone: 'bg-rose-50 text-rose-600', tourId: 'nav-parents', gate: { adminOnly: true } },
   { key: 'attendance', to: '/attendance',      label: 'Attendance', icon: ClipboardList, section: 'people', tone: 'bg-cyan-50 text-cyan-600', tourId: 'nav-attendance-grid', surfaces: ['grid'] },
   // Admin
   { key: 'site-setup', to: '/admin/public-page',   label: 'Site Setup', icon: Settings,   section: 'admin', tone: 'bg-fuchsia-50 text-fuchsia-700', tourId: 'nav-site-setup', gate: { adminOnly: true } },
+  { key: 'partners',   to: '/admin/partners',      label: 'Partners',   icon: Store,      section: 'admin', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-admin-partners', gate: { adminOnly: true } },
   { key: 'analytics',  to: '/dashboard/analytics', label: 'Analytics',  icon: TrendingUp, section: 'admin', tone: 'bg-purple-50 text-purple-600',   tourId: 'nav-analytics' },
   { key: 'settings',   to: '/dashboard/workspace', label: 'Settings',   icon: Settings,   section: 'admin', tone: 'bg-muted text-muted-foreground', tourId: 'nav-settings' },
   { key: 'tenants',    to: '/admin/tenants',       label: 'Tenants',    icon: Sparkles,   section: 'admin', tone: 'bg-indigo-50 text-indigo-700',   tourId: 'nav-platform-tenants', surfaces: ['sidebar'], gate: { platformAdminOnly: true } },
@@ -116,6 +173,7 @@ export interface NavContext {
   isTenantAdmin: boolean;
   isPlatformAdmin: boolean;
   canLibrarian: boolean;
+  isPartner: boolean;
   hiddenRoutes: ReadonlySet<string>;
 }
 
@@ -130,6 +188,7 @@ function gateOpen(gate: NavGate | undefined, ctx: NavContext): boolean {
   if (gate.adminOnly && !ctx.isTenantAdmin) return false;
   if (gate.platformAdminOnly && !ctx.isPlatformAdmin) return false;
   if (gate.librarianOnly && !ctx.canLibrarian) return false;
+  if (gate.partnerOnly && !ctx.isPartner) return false;
   return true;
 }
 
@@ -137,6 +196,52 @@ function gateOpen(gate: NavGate | undefined, ctx: NavContext): boolean {
 // gated destination.
 export function resolveNav(ctx: NavContext): CatalogEntry[] {
   return NAV_CATALOG.filter((e) => gateOpen(e.gate, ctx) && !ctx.hiddenRoutes.has(e.to));
+}
+
+/**
+ * Every module id any catalog entry gates on.
+ *
+ * The shells (DashboardShell, MyWorldPage) loop this to build the
+ * `moduleAccess` map that backs `NavContext.hasModule`, so a gated entry is
+ * only ever visible if its module id appears here. This used to be a
+ * hand-maintained array duplicated in both shells, and forgetting to add a
+ * key hid the destination completely — no error, no warning, nothing in the
+ * console. That cost us All-State on its first deploy and Auctions on its
+ * second, which is twice too often for a list a computer can derive.
+ *
+ * Computed once at module load from the static catalog, so the shells' hook
+ * count is fixed across renders — the property the hand-written list was
+ * there to guarantee.
+ */
+export const GATED_MODULE_KEYS: readonly string[] = (() => {
+  const keys = new Set<string>();
+  for (const entry of NAV_CATALOG) {
+    if (entry.gate?.module) keys.add(entry.gate.module);
+    for (const m of entry.gate?.moduleAny ?? []) keys.add(m);
+  }
+  // 'alumni' has no catalog entry gating on it today but the shells have
+  // always probed it; keep it so removing it is a separate, deliberate change.
+  keys.add('alumni');
+  return Object.freeze([...keys]);
+})();
+
+// Every page the assistant may offer to open, derived from the catalog so
+// it can never drift from the real nav (its predecessor was a hand-kept
+// key list in the assistant-chat edge fn that missed every add-on shipped
+// after it was written). Deliberately ungated: gating needs live role +
+// module state the AssistantProvider doesn't carry, and each gated route
+// already defends itself — worst case the assistant opens a page that
+// shows its own access message, which beats silently pretending the page
+// doesn't exist.
+export function assistantNavTargets(): Array<{ key: string; label: string }> {
+  const seen = new Set<string>();
+  const targets: Array<{ key: string; label: string }> = [];
+  for (const e of NAV_CATALOG) {
+    if (seen.has(e.key)) continue;
+    seen.add(e.key);
+    targets.push({ key: e.key, label: e.label });
+  }
+  return targets;
 }
 
 // ---------------------------------------------------------------------------
@@ -175,10 +280,10 @@ export const HIDEABLE_NAV_ROLES: { value: NavRole; label: string }[] = [
 // Only 'admin' carries privilege; student and member are unprivileged in the
 // nav's eyes. canLibrarian is a per-user grant rather than a role, but no
 // non-admin role implies it, so false is correct.
-const PREVIEW_ROLE_CAPS: Record<NavRole, Pick<NavContext, 'isTenantAdmin' | 'isPlatformAdmin' | 'canLibrarian'>> = {
-  admin:    { isTenantAdmin: true,  isPlatformAdmin: false, canLibrarian: true  },
-  student:  { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
-  member:   { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false },
+const PREVIEW_ROLE_CAPS: Record<NavRole, Pick<NavContext, 'isTenantAdmin' | 'isPlatformAdmin' | 'canLibrarian' | 'isPartner'>> = {
+  admin:    { isTenantAdmin: true,  isPlatformAdmin: false, canLibrarian: true,  isPartner: false },
+  student:  { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false },
+  member:   { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false },
 };
 
 /**

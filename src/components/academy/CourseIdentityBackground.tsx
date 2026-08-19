@@ -9,7 +9,7 @@ interface CourseIdentityBackgroundProps {
 }
 
 // Universal atmospheric background for every academy class page.
-// Generalizes the MUS 070 "deep-sea" look so it's driven by the course's
+// Generalizes the GW 070 "deep-sea" look so it's driven by the course's
 // theme palette. Three glow orbs at rest positions + a very subtle
 // fractal-noise grain, all pointer-events:none so they never intercept
 // user input. Orbs live in a sibling absolute layer (not wrapping the

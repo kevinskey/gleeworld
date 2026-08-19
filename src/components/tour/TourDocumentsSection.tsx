@@ -75,7 +75,10 @@ const ACCEPTED_TYPES: Record<string, string[]> = {
   'text/plain': ['.txt'],
 };
 
-export const TourDocumentsSection = () => {
+/** Set false when a parent already renders the section title (Tour Manager's
+ *  DashboardPageShell does). Tour2026Page leaves it true — there the heading
+ *  is a genuine sub-heading under that page's own h1. */
+export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boolean }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
@@ -109,7 +112,7 @@ export const TourDocumentsSection = () => {
       if (data) {
         setRootFolderId(data.id);
         setCurrentFolderId(data.id);
-        setFolderPath([{ id: data.id, name: 'Tour Documents' }]);
+        setFolderPath([{ id: data.id, name: 'Travel Documents' }]);
       }
     };
     findFolder();
@@ -499,10 +502,14 @@ export const TourDocumentsSection = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Tour Documents</h2>
-          <p className="text-sm text-muted-foreground">
-            Signed contracts, deposit checks, receipts, scans & more
-          </p>
+          {showHeading && (
+            <>
+              <h2 className="text-xl font-bold text-foreground">Travel Documents</h2>
+              <p className="text-sm text-muted-foreground">
+                Signed contracts, deposit checks, receipts, scans & more
+              </p>
+            </>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">
@@ -812,7 +819,7 @@ export const TourDocumentsSection = () => {
           <DialogHeader>
             <DialogTitle>Create New Folder</DialogTitle>
             <DialogDescription>
-              Add a subfolder inside "{folderPath[folderPath.length - 1]?.name || 'Tour Documents'}"
+              Add a subfolder inside "{folderPath[folderPath.length - 1]?.name || 'Travel Documents'}"
             </DialogDescription>
           </DialogHeader>
           <Input
@@ -853,7 +860,7 @@ export const TourDocumentsSection = () => {
             </div>
           </div>
           <div className="flex-1 overflow-auto">
-            {previewUrl.match(/\.(png|jpg|jpeg|gif|webp|bmp|tiff)(\?|$)/i) ? (
+            {previewUrl.match(/\.(png|jpg|jpeg|gif|webp|bmp|tiff|avif)(\?|$)/i) ? (
               <div className="flex items-center justify-center h-full p-4">
                 <img src={previewUrl} alt={previewTitle} className="max-w-full max-h-full object-contain rounded-lg" />
               </div>

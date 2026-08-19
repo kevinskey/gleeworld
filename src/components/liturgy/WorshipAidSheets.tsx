@@ -1,0 +1,586 @@
+import { useEffect, useRef } from 'react';
+import { applyPanelEdits, type AidEditsByPanel, type RenderedBlock } from '@/lib/liturgy/aidEdits';
+import {
+  PANEL_W_IN, SHEET_H_IN, PANEL_PAD_X_IN, PANEL_PAD_Y_IN,
+  SIDE_BAND_W_IN, SIDE_BAND_PAD_IN, SPINE_INDENT_IN, AID_BODY_PT,
+} from '@/lib/liturgy/aidPage';
+import { flowBlocks, type FlowResult } from '@/lib/liturgy/flow';
+import {
+  coverImageScale, coverTitleSize, panelSpacing,
+  type AidEntry, type WorshipAid, type PanelId, type WorshipAidSettings,
+} from '@/lib/liturgy/worshipAid';
+
+/**
+ * Brand colour, taken from the tenant's theme rather than hardcoded.
+ *
+ * --primary is what TenantThemeRoot writes from the tenant's accent, so a
+ * parish's aid prints in its own colour. It resolves in print too: the
+ * variable lives on <html> and print does not re-cascade.
+ */
+const BRAND = 'hsl(var(--primary))';
+
+/**
+ * The two printed sheets of a bifold worship aid.
+ *
+ * Sizing is in INCHES throughout, not pixels or rem. This is a physical
+ * object — 11×8.5 landscape, folded once into two 5.5×8.5 panels — and inches
+ * are the only units that survive the trip through a print dialog unchanged.
+ * A rem-based layout would resize with the browser's font setting and quietly
+ * reflow the program between the screen and the paper.
+ *
+ * The type is a serif stack on purpose: worship aids are read at arm's length
+ * in low light by people who are not looking for a modern UI, and the parish
+ * originals this was built from are set in Times. It deliberately does NOT
+ * use the tenant's brand font, which can be anything up to a script face.
+ */
+
+/** The page geometry lives in lib/liturgy/aidPage because the engraved psalm
+ *  has to be sized to the column these margins leave, and a second copy of
+ *  the numbers over there is a second copy that can drift. */
+const PANEL_W = PANEL_W_IN;
+const SHEET_H = SHEET_H_IN;
+const PANEL_PADDING = `${PANEL_PAD_Y_IN}in ${PANEL_PAD_X_IN}in`;
+
+function Notice({ text, spacing = 1, editable, onCommit }: {
+  text: string; spacing?: number; editable?: boolean; onCommit?: (v: string) => void;
+}) {
+  return (
+    <div style={{
+      border: `1px solid ${BRAND}`, padding: '0.09in 0.11in',
+      margin: `${(0.10 * spacing).toFixed(3)}in 0`,
+      fontStyle: 'italic', fontSize: '7.6pt', lineHeight: 1.35, textAlign: 'center',
+    }}>
+      <Editable value={text} editable={editable} multiline onCommit={onCommit} />
+    </div>
+  );
+}
+
+function Divider({ label, spacing = 1 }: { label: string; spacing?: number }) {
+  return (
+    <div className="worship-aid-brand-text" style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.10in',
+      margin: `${(0.16 * spacing).toFixed(3)}in 0 ${(0.10 * spacing).toFixed(3)}in`,
+      fontWeight: 700, fontSize: '11pt', letterSpacing: '0.02em', color: BRAND,
+    }}>
+      <span aria-hidden>✠</span>
+      <span>{label}</span>
+      <span aria-hidden>✠</span>
+    </div>
+  );
+}
+
+/**
+ * A field you can type into directly on the page.
+ *
+ * contentEditable rather than an input: an input would carry its own box,
+ * font and metrics, so the thing being edited would not be the thing that
+ * prints. Editing the rendered element means what you see is literally the
+ * printed output — which is the entire point of a fixed-format document.
+ *
+ * Commit is on BLUR, not on every keystroke: this text feeds the pagination,
+ * and re-flowing the document on each character would move the line you are
+ * typing on out from under you.
+ */
+/** Read an editable element's text with its line breaks intact.
+ *  textContent flattens <br> to nothing, which silently ate blank lines. */
+function readText(el: HTMLElement): string {
+  return el.innerHTML
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+}
+
+function Editable({ value, onCommit, editable, style, className, multiline }: {
+  value: string;
+  onCommit?: (next: string) => void;
+  editable?: boolean;
+  style?: React.CSSProperties;
+  className?: string;
+  /** Body text takes line breaks; a heading does not. */
+  multiline?: boolean;
+}) {
+  if (!editable) {
+    // Rendered with the breaks the user typed, on screen and in print alike.
+    return <span style={{ whiteSpace: 'pre-wrap', ...style }} className={className}>{value}</span>;
+  }
+  return (
+    <span
+      contentEditable
+      suppressContentEditableWarning
+      spellCheck={false}
+      className={`${className ?? ''} worship-aid-editable`}
+      style={{ whiteSpace: 'pre-wrap', ...style }}
+      onBlur={(e) => {
+        const next = readText(e.currentTarget);
+        if (next !== value) onCommit?.(next);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          // Body text takes a line break — including an empty one, which is
+          // how you open up a panel while typing. A heading is one line by
+          // definition, so there Enter commits instead; shift+Enter still
+          // forces a break if one is genuinely wanted.
+          if (multiline || e.shiftKey) return;
+          e.preventDefault();
+          (e.currentTarget as HTMLElement).blur();
+        }
+        if (e.key === 'Escape') {
+          e.currentTarget.textContent = value;
+          (e.currentTarget as HTMLElement).blur();
+        }
+      }}
+    >
+      {value}
+    </span>
+  );
+}
+
+function Entry({ entry, spacing = 1, editable, onEdit }: {
+  entry: AidEntry;
+  spacing?: number;
+  editable?: boolean;
+  onEdit?: (field: 'label' | 'title' | 'credit' | 'summary', value: string) => void;
+}) {
+  if (entry.notice) {
+    return (
+      <Notice
+        text={entry.notice}
+        spacing={spacing}
+        editable={editable}
+        onCommit={(v) => onEdit?.('summary', v)}
+      />
+    );
+  }
+  if (entry.divider) return <Divider label={entry.label} spacing={spacing} />;
+
+  return (
+    <div style={{ margin: `0 0 ${(0.11 * spacing).toFixed(3)}in` }}>
+      {entry.label && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.12in' }}>
+          <Editable
+            value={entry.label}
+            editable={editable}
+            onCommit={(v) => onEdit?.('label', v)}
+            style={{ fontWeight: 700, fontSize: '8.6pt', letterSpacing: '0.01em' }}
+          />
+          {(entry.citation || (!entry.title && entry.credit)) && (
+            <span style={{ fontStyle: 'italic', fontSize: '8.6pt', whiteSpace: 'nowrap' }}>
+              {entry.citation ?? entry.credit}
+            </span>
+          )}
+        </div>
+      )}
+      {entry.title && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.12in' }}>
+          <Editable
+            value={entry.title}
+            editable={editable}
+            onCommit={(v) => onEdit?.('title', v)}
+            style={{ fontStyle: 'italic', fontSize: '8.6pt' }}
+          />
+          {entry.credit && (
+            <span style={{ fontStyle: 'italic', fontSize: '8.6pt', whiteSpace: 'nowrap' }}>
+              {entry.credit}
+            </span>
+          )}
+        </div>
+      )}
+      {entry.summary && (
+        // The aid's body size lives in aidPage because the engraved psalm's
+        // lyrics are set to the same number — see AID_BODY_PT. Inline here it
+        // was one of two copies, and the copy that decided the psalm's print
+        // size was in another file.
+        <p style={{ fontStyle: 'italic', fontSize: `${AID_BODY_PT}pt`, lineHeight: 1.35, margin: '0.04in 0 0' }}>
+          <Editable
+            value={entry.summary}
+            editable={editable}
+            multiline
+            onCommit={(v) => onEdit?.('summary', v)}
+          />
+        </p>
+      )}
+      {entry.imageUrl && (
+        // An engraved setting is a block of its own, not a picture beside
+        // text: centred, with clear air above and below so it never reads as
+        // part of the entry above it or collides with the one below.
+        //
+        // An entry that states the width it was DESIGNED for prints at that
+        // width. Engraved music has to: the score's layout — bars per system,
+        // room per syllable, staff size — was decided at that width, and
+        // printing it at any other silently re-scales all of it. Without this
+        // the psalm was sized like a photograph, by whichever of
+        // `max-width:100%` and the height cap bound first, so its printed
+        // staff depended on how many systems it happened to have: two systems
+        // hit the height cap and printed at 4.09in, one system hit the width
+        // and printed at 4.7in, three systems came out at 2.94in. Three
+        // different staff sizes for one engraving.
+        //
+        // The caps stay as the safety they were meant to be (Kevin: it must
+        // REDUCE to fit) — a wide engraving still shrinks to the panel rather
+        // than running over the fold, and a tall one still cannot push the
+        // rest of the panel off the page. Artwork, which has no design width,
+        // is unaffected and still just fits the panel.
+        <div style={{
+          margin: `${(0.16 * spacing).toFixed(3)}in 0`,
+          textAlign: 'center',
+        }}>
+          <img
+            src={entry.imageUrl}
+            alt=""
+            style={{
+              display: 'inline-block',
+              width: entry.imageWidthIn ? `${entry.imageWidthIn}in` : 'auto',
+              maxWidth: '100%', maxHeight: '2.6in',
+              height: 'auto',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * One printed page of the folded aid.
+ *
+ * It no longer measures itself. Pagination is decided by the line budget in
+ * lib/liturgy/flow before anything renders — two competing measurements would
+ * disagree the moment an image loaded late, and the one that decided the
+ * print would not be the one that warned the user.
+ */
+function Panel({ children, style, dataPanel }: {
+  children: React.ReactNode; style?: React.CSSProperties; dataPanel: PanelId;
+}) {
+  return (
+    <div data-panel={dataPanel} style={{
+      width: `${PANEL_W}in`, height: `${SHEET_H}in`, padding: PANEL_PADDING,
+      boxSizing: 'border-box', overflow: 'hidden', position: 'relative', ...style,
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function FrontPanel({ aid, titleSize, imageScale, dataPanel }: {
+  aid: WorshipAid; titleSize: number; imageScale: number; dataPanel: PanelId;
+}) {
+  /**
+   * A column, so the picture gets everything left over.
+   *
+   * It used to be a fixed maxHeight of 4.6in with the season word and QR
+   * absolutely positioned over the bottom of the panel. That capped the
+   * artwork at roughly half the page however large the slider went — the
+   * slider only ever controlled WIDTH, and a tall portrait mark hit the
+   * height limit long before it ran out of width. Laying the panel out as a
+   * column means the image takes the real remaining space, and the slider
+   * now trims it back from full size rather than being the only thing
+   * holding it up.
+   */
+  return (
+    <Panel dataPanel={dataPanel} style={{ textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ fontSize: `${titleSize}pt`, lineHeight: 1.15, marginBottom: '0.16in', flexShrink: 0 }}>
+        {aid.front.title}
+      </div>
+
+      {aid.front.imageUrl && (
+        // min-height:0 is what actually lets a flex child shrink to its
+        // container instead of forcing the column taller than the panel.
+        <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img
+            src={aid.front.imageUrl}
+            alt=""
+            style={{
+              display: 'block',
+              maxWidth: `${Math.round(imageScale * 100)}%`,
+              maxHeight: '100%',
+              width: 'auto', height: 'auto',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
+      )}
+
+    </Panel>
+  );
+}
+
+function BackPanel({ aid, qrDataUrl, children, dataPanel }: {
+  aid: WorshipAid; qrDataUrl?: string | null; children: React.ReactNode; dataPanel: PanelId;
+}) {
+  return (
+    <Panel dataPanel={dataPanel}>
+      {aid.spineText && (
+        // Up the outer edge of the back cover, as on the parish original.
+        <div style={{
+          position: 'absolute', left: '0.12in', top: 0, bottom: 0,
+          display: 'flex', alignItems: 'center',
+        }}>
+          <span style={{
+            writingMode: 'vertical-rl', transform: 'rotate(180deg)',
+            fontSize: '7.5pt', letterSpacing: '0.04em',
+          }}>
+            {aid.spineText}
+          </span>
+        </div>
+      )}
+      <div style={{ marginLeft: aid.spineText ? `${SPINE_INDENT_IN}in` : 0 }}>
+        {children}
+        {/* The phone code belongs on the BACK, not the cover: it is what you
+            look for as you leave, and the cover is the parish's face. */}
+        {qrDataUrl && (
+          <div style={{ marginTop: '0.18in', textAlign: 'center' }}>
+            <img src={qrDataUrl} alt="" style={{ width: '0.72in', height: '0.72in' }} />
+            <div style={{ fontSize: '6.6pt', marginTop: '0.03in' }}>Follow along on your phone</div>
+          </div>
+        )}
+      </div>
+    </Panel>
+  );
+}
+
+function SideBand({ day, date }: { day: string; date: string }) {
+  if (!day && !date) return null;
+  return (
+    <div className="worship-aid-band" style={{
+      position: 'absolute', right: 0, top: 0, bottom: 0, width: `${SIDE_BAND_W_IN}in`,
+      background: BRAND, color: 'hsl(var(--primary-foreground))',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      <span style={{
+        writingMode: 'vertical-rl', fontSize: '13pt', letterSpacing: '0.01em',
+        whiteSpace: 'nowrap',
+      }}>
+        {day}{day && date ? '   ·   ' : ''}{date}
+      </span>
+    </div>
+  );
+}
+
+export interface WorshipAidSheetsProps {
+  aid: WorshipAid;
+  qrDataUrl?: string | null;
+  /** Read for its per-panel spacing multipliers. */
+  settings: WorshipAidSettings;
+  /** The user's edits, merged over the generated panels. */
+  edits?: AidEditsByPanel;
+  /** Lines of content that will not fit in the four pages at all. The
+   *  document cannot grow, so this is what the editor must surface. */
+  onFlow?: (result: FlowResult) => void;
+  /** Type directly on the page. Screen only — print never shows the affordance. */
+  editable?: boolean;
+  /** A field on a block was edited. */
+  onEditBlock?: (key: string, field: 'label' | 'title' | 'credit' | 'summary', value: string) => void;
+  /** A block was deleted from the page. */
+  onDeleteBlock?: (key: string) => void;
+  /** Nudge the blank space after a block, in inches. */
+  onSpaceBlock?: (key: string, delta: number) => void;
+  /** Move a block up or down the running order — graphics included. */
+  onMoveBlock?: (key: string, dir: -1 | 1) => void;
+}
+
+/**
+ * Both sheets, imposed for folding.
+ *
+ * Sheet 1 is [back | front] — NOT [front | back]. Fold the sheet and the
+ * front cover lands on the outside with the back wrapping around. Reversing
+ * them prints a program that reads back-to-front once folded, which looks
+ * fine on screen and is only discovered after the copies are made.
+ */
+export function WorshipAidSheets({
+  aid, qrDataUrl, settings, edits, onFlow, editable, onEditBlock, onDeleteBlock, onSpaceBlock,
+  onMoveBlock,
+}: WorshipAidSheetsProps) {
+  const gap = (p: PanelId) => panelSpacing(settings, p);
+
+  /**
+   * One stream, then paginated — not three independent panels.
+   *
+   * The aid reads 1 → 4 like any document, so the content is merged with the
+   * user's edits, joined end to end in reading order, and flowed across the
+   * three content pages. When a page fills the remainder moves to the next
+   * one instead of being cut off at the fold.
+   *
+   * Which panel an entry was generated for still decides its ORDER — that is
+   * the order of the Mass — but no longer decides which page it prints on.
+   */
+  const stream: RenderedBlock[] = [
+    ...applyPanelEdits(aid.insideLeft, edits?.insideLeft),
+    ...applyPanelEdits(aid.insideRight, edits?.insideRight),
+    ...applyPanelEdits(aid.back, edits?.back),
+  ];
+  const flowed: FlowResult = flowBlocks(stream);
+  // Reported after render, not during: calling a parent's setState while
+  // rendering re-renders this component and loops.
+  const flowRef = useRef(onFlow); flowRef.current = onFlow;
+  useEffect(() => { flowRef.current?.(flowed); });
+  const page = (p: 'insideLeft' | 'insideRight' | 'back') => flowed.pages[p];
+
+  /** A page's blocks, editable in place with a delete affordance on hover. */
+  const renderPage = (p: 'insideLeft' | 'insideRight' | 'back') =>
+    page(p).map((b) => (
+      <div
+        key={b.key}
+        className={editable ? 'worship-aid-block' : undefined}
+        style={b.gapAfter ? { marginBottom: `${b.gapAfter}in`, position: 'relative' } : { position: 'relative' }}
+      >
+        <Entry
+          entry={b.entry}
+          spacing={gap(p)}
+          editable={editable}
+          onEdit={(field, value) => onEditBlock?.(b.key, field, value)}
+        />
+        {editable && (
+          // INSIDE the panel, not hanging off its edge. These sat at
+          // right:-46px, outside a box with overflow:hidden — so the fold
+          // sliced them in half and what survived was unreadable.
+          <span className="worship-aid-tools">
+            {/* Move applies to ANY block, graphics included. Reordering used
+                to live only in the drawer's text list, which left an
+                inserted score with no way to move at all. */}
+            <button type="button" title="Move up"
+              aria-label={`Move ${b.entry.label || 'this block'} up`}
+              onClick={() => onMoveBlock?.(b.key, -1)}>↑</button>
+            <button type="button" title="Move down"
+              aria-label={`Move ${b.entry.label || 'this block'} down`}
+              onClick={() => onMoveBlock?.(b.key, 1)}>↓</button>
+            <button type="button" title="Add a blank line"
+              aria-label={`Add space after ${b.entry.label || 'this block'}`}
+              onClick={() => onSpaceBlock?.(b.key, 0.16)}>+</button>
+            <button type="button" title="Remove a blank line"
+              aria-label={`Less space after ${b.entry.label || 'this block'}`}
+              onClick={() => onSpaceBlock?.(b.key, -0.16)}>−</button>
+            <button type="button" title="Remove" className="worship-aid-danger"
+              aria-label={`Remove ${b.entry.label || 'this block'}`}
+              onClick={() => onDeleteBlock?.(b.key)}>×</button>
+          </span>
+        )}
+      </div>
+    ));
+  return (
+    <div className="worship-aid-sheets">
+      <style>{`
+        @page { size: 11in 8.5in; margin: 0; }
+        .worship-aid-sheets { font-family: 'Times New Roman', Times, serif; color: #000; }
+        .worship-aid-sheet {
+          width: 11in; height: 8.5in; display: flex; background: #fff;
+          position: relative; page-break-after: always; break-after: page;
+        }
+        .worship-aid-sheet:last-child { page-break-after: auto; break-after: auto; }
+        /* The fold, shown on screen only — a printed guide line would be
+           visible on every copy. */
+        .worship-aid-fold {
+          position: absolute; top: 0; bottom: 0; left: 5.5in; width: 0;
+          border-left: 1px dashed #bbb;
+        }
+        /* Editing affordances are SCREEN ONLY — the printed sheet must carry
+           no trace of them, which is why they live here rather than inline. */
+        @media screen {
+          .worship-aid-editable:hover { background: rgba(0,0,0,0.05); }
+          .worship-aid-editable:focus {
+            outline: 2px solid hsl(var(--primary)); outline-offset: 1px; background: #fff;
+          }
+          .worship-aid-block { position: relative; }
+          .worship-aid-block:hover > .worship-aid-tools,
+          .worship-aid-tools:focus-within { opacity: 1; }
+          /* Inside the panel and above the text, on a solid pill so the
+             controls read against whatever they overlap. */
+          .worship-aid-tools {
+            position: absolute; top: -2px; right: 0; z-index: 5;
+            display: flex; gap: 3px; padding: 2px;
+            background: #fff; border: 1px solid #d4d4d4; border-radius: 999px;
+            box-shadow: 0 1px 4px rgba(0,0,0,.18);
+            opacity: 0; transition: opacity .12s;
+          }
+          .worship-aid-tools button {
+            width: 20px; height: 20px; line-height: 18px; font-size: 13px;
+            cursor: pointer; border: 0; background: transparent; color: #333;
+            border-radius: 999px;
+          }
+          .worship-aid-tools button:hover { background: #eee; }
+          .worship-aid-tools .worship-aid-danger { color: #b00; }
+        }
+        @media print {
+          .worship-aid-tools { display: none !important; }
+          .worship-aid-editable { background: none !important; outline: none !important; }
+          .worship-aid-fold { display: none; }
+          .worship-aid-sheet { box-shadow: none; margin: 0; }
+
+          /* Print ONLY the sheets.
+             This page renders inside the dashboard shell, so without this the
+             sidebar and header print alongside the program and push it off
+             the paper. Hiding by visibility rather than display keeps the
+             sheets' own absolute positioning intact, and works without this
+             component having to know the shell's class names. */
+          body * { visibility: hidden !important; }
+          .worship-aid-sheets, .worship-aid-sheets * { visibility: visible !important; }
+          .worship-aid-sheets {
+            position: absolute !important; left: 0 !important; top: 0 !important;
+            margin: 0 !important; padding: 0 !important; width: auto !important;
+          }
+          html, body {
+            margin: 0 !important; padding: 0 !important; background: #fff !important;
+          }
+
+          /* The app's global print reset flattens every colour to black on
+             white, which is right for a document and wrong for a design
+             element: it turned the day/date band into black text on white and
+             lost the band entirely. print-color-adjust tells the browser to
+             render it as specified rather than "optimising" it away. */
+          .worship-aid-band {
+            background: hsl(var(--primary)) !important;
+            color: hsl(var(--primary-foreground)) !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          /* Section headings and notice rules are brand-coloured too — the
+             same global reset would flatten them to black. */
+          .worship-aid-brand-text { color: hsl(var(--primary)) !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important; }
+
+          /* That same global block prints every link's href in parentheses
+             after it. Useful in an article, ruinous in a program. */
+          .worship-aid-sheets a[href]::after { content: none !important; }
+        }
+        @media screen {
+          .worship-aid-sheet {
+            box-shadow: 0 1px 12px rgba(0,0,0,0.18); margin: 0 auto 1rem;
+          }
+        }
+      `}</style>
+
+      <div className="worship-aid-sheet">
+        <BackPanel
+          aid={aid}
+          qrDataUrl={qrDataUrl}
+          dataPanel="back"
+        >
+          {renderPage('back')}
+        </BackPanel>
+        <FrontPanel
+          aid={aid}
+          titleSize={coverTitleSize(settings)}
+          imageScale={coverImageScale(settings)}
+          dataPanel="front"
+        />
+        <div className="worship-aid-fold" aria-hidden />
+      </div>
+
+      <div className="worship-aid-sheet">
+        <Panel dataPanel="insideLeft">
+          {renderPage('insideLeft')}
+        </Panel>
+        <Panel style={{ paddingRight: `${SIDE_BAND_PAD_IN}in` }} dataPanel="insideRight">
+          {renderPage('insideRight')}
+          <SideBand day={aid.sideBand.day} date={aid.sideBand.date} />
+        </Panel>
+        <div className="worship-aid-fold" aria-hidden />
+      </div>
+    </div>
+  );
+}

@@ -172,7 +172,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       if (!request) return;
       
       const existingNotes = request.notes_for_director || '';
-      const newNoteText = `[${new Date().toLocaleDateString()} - ${user?.full_name || 'Tour Manager'}] ${note}`;
+      const newNoteText = `[${new Date().toLocaleDateString()} - ${user?.full_name || 'Travel Manager'}] ${note}`;
       const updatedNotes = existingNotes ? `${existingNotes}\n\n${newNoteText}` : newNoteText;
       
       const { error } = await supabase
@@ -227,8 +227,8 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
             await supabase.functions.invoke('send-sms-notification', {
               body: {
                 phoneNumbers,
-                message: `Booking request needs approval: "${request.event_name}" from ${request.organization_name} on ${new Date(request.event_date_start).toLocaleDateString()}. Tour Manager note: ${note}`,
-                senderName: user?.full_name || 'Tour Manager'
+                message: `Booking request needs approval: "${request.event_name}" from ${request.organization_name} on ${new Date(request.event_date_start).toLocaleDateString()}. Travel Manager note: ${note}`,
+                senderName: user?.full_name || 'Travel Manager'
               }
             });
           }
@@ -322,7 +322,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       
       toast({
         title: "Request declined",
-        description: "The booking request has been declined. Tour managers have been notified to inform the requestor.",
+        description: "The booking request has been declined. Travel managers have been notified to inform the requestor.",
       });
     } catch (error) {
       console.error('Error declining request:', error);
@@ -350,7 +350,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       
       toast({
         title: "Request approved",
-        description: "The booking request has been approved. Tour managers have been notified to create a contract.",
+        description: "The booking request has been approved. Travel managers have been notified to create a contract.",
       });
     } catch (error) {
       console.error('Error approving request:', error);
@@ -396,9 +396,9 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
       case 'declined':
         return 'bg-red-100 text-red-800 border-red-200';
       case 'completed':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-muted-foreground border-border';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
@@ -792,7 +792,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                       </DialogContent>
                     </Dialog>
 
-                    {/* Forward to Superadmin - Tour Managers only */}
+                    {/* Forward to Superadmin - Travel Managers only */}
                     {!isSuperAdmin && (
                       <Dialog>
                         <DialogTrigger asChild>
@@ -847,7 +847,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Approve Request</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Approve this booking request from {request.organization_name}? Tour managers will be notified to create a contract.
+                                Approve this booking request from {request.organization_name}? Travel managers will be notified to create a contract.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
@@ -874,7 +874,7 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Decline Request</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Decline this booking request from {request.organization_name}? Tour managers will be notified to inform the requestor.
+                                Decline this booking request from {request.organization_name}? Travel managers will be notified to inform the requestor.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>

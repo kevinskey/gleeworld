@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getOrgName } from '@/lib/orgName';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
 
-// MUS 070 is the default "Glee Club" course
+// GW 070 is the default "Glee Club" course
 const DEFAULT_COURSE_ID = 'a0000000-0000-0000-0000-000000000070';
 
 interface CourseContextType {
@@ -82,7 +83,7 @@ export const useCourseDisplayInfo = () => {
   
   return {
     camTitle: isDefaultCourse ? 'Glee Cam' : `${selectedCourseCode} Cam`,
-    courseLabel: selectedCourseName || 'Glee Club',
+    courseLabel: selectedCourseName || getOrgName(),
     isInCourseView: !isDefaultCourse && selectedCourseId !== null,
   };
 };

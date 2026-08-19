@@ -440,9 +440,12 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           <Loader2 className="w-4 h-4 animate-spin" /> Loading availability…
         </div>
       ) : (
-        <div className="max-w-2xl">
+        <div className="max-w-3xl">
           <Step n={1} label="Choose a service">
-            <ul className="grid gap-2">
+            {/* Compact 2-up grid (Kevin, 2026-08-13: full-width cards ate
+                too much vertical space). cq- so the editor preview obeys
+                the container, not the window. */}
+            <ul className="grid gap-2 cq-sm:grid-cols-2">
               {services.map((s) => {
                 const active = s.idx === serviceIdx;
                 return (
@@ -451,26 +454,26 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                       type="button"
                       onClick={() => { setServiceIdx(s.idx); setDate(null); setSlot(null); setError(null); }}
                       aria-pressed={active}
-                      className="w-full text-left p-4 border bg-card transition-colors hover:border-foreground/30"
+                      className="w-full h-full text-left px-3 py-2.5 border bg-card transition-colors hover:border-foreground/30"
                       style={{
                         borderRadius: 'var(--site-radius)',
                         borderColor: active ? 'var(--site-accent)' : undefined,
                         boxShadow: active ? '0 0 0 1px var(--site-accent)' : undefined,
                       }}
                     >
-                      <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="font-semibold normal-case">{s.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {s.duration || `${s.durationMinutes} min`}
-                        </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="font-semibold normal-case text-[15px] truncate">{s.name}</span>
                         {s.price && (
-                          <span className="text-sm font-medium ml-auto" style={{ color: 'var(--site-accent)' }}>
+                          <span className="text-sm font-medium ml-auto shrink-0" style={{ color: 'var(--site-accent)' }}>
                             {s.price}
                           </span>
                         )}
                       </div>
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {s.duration || `${s.durationMinutes} min`}
+                      </div>
                       {s.description && (
-                        <p className="text-sm text-muted-foreground mt-1">{s.description}</p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{s.description}</p>
                       )}
                     </button>
                   </li>
@@ -502,9 +505,9 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                             boxShadow: active ? '0 0 0 1px var(--site-accent)' : undefined,
                           }}
                         >
-                          <span className="block text-[11px] text-muted-foreground">{l.weekday}</span>
+                          <span className="block text-xs text-muted-foreground">{l.weekday}</span>
                           <span className="block text-lg font-semibold leading-tight tabular-nums">{l.day}</span>
-                          <span className="block text-[11px] text-muted-foreground">{l.month}</span>
+                          <span className="block text-xs text-muted-foreground">{l.month}</span>
                         </button>
                       );
                     })}
@@ -651,6 +654,17 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   );
 }
 
+// Format duration_minutes → "30 min" / "1 hour" / "1 h 30 min" for the
+// block's display field.
+function formatDuration(minutes: number | null | undefined): string {
+  if (!minutes || minutes <= 0) return '';
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h === 0) return `${m} min`;
+  if (m === 0) return h === 1 ? '1 hour' : `${h} hours`;
+  return `${h} h ${m} min`;
+}
+
 function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
   const set = (patch: Partial<Config>) => onChange({ ...config, ...patch });
   const update = (i: number, patch: Partial<Config['services'][number]>) =>
@@ -686,7 +700,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
         <Input value={config.heading} onChange={(e) => set({ heading: e.target.value })} />
       </div>
       <div className="space-y-1.5">
-        <Label>Intro (optional)</Label>
+        <Label>Intro paragraph</Label>
         <Textarea value={config.intro} onChange={(e) => set({ intro: e.target.value })} rows={2} />
       </div>
       <div className="grid grid-cols-2 gap-2">
@@ -711,7 +725,9 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
       <div className="space-y-2">
         <Label>Services offered</Label>
         {config.services.length === 0 && (
-          <p className="text-xs text-slate-500">List the kinds of appointments visitors can book (lessons, auditions, consultations…).</p>
+          <p className="text-xs text-slate-500">
+            List the kinds of appointments visitors can book (lessons, auditions, consultations…).
+          </p>
         )}
         {config.services.map((s, i) => (
           <div key={i} className="rounded-lg border border-slate-200 bg-slate-50/50 p-3 space-y-2">
@@ -727,7 +743,7 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
-            <div className="grid grid-cols-[1fr_auto] gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-2">
               <Input
                 value={s.name}
                 onChange={(e) => update(i, { name: e.target.value })}
@@ -762,9 +778,12 @@ function EditorForm({ config, onChange }: BlockEditorFormProps<Config>) {
             />
           </div>
         ))}
-        <Button variant="outline" size="sm" onClick={add} className="gap-1.5">
-          <Plus className="w-4 h-4" /> Add service
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={add} className="gap-1.5">
+            <Plus className="w-4 h-4" /> Add service
+          </Button>
+        </div>
+
       </div>
 
       <div className="space-y-2 border-t border-slate-200 pt-4">
@@ -898,9 +917,11 @@ export const appointmentBookingBlock: BlockModule<typeof schema> = {
   name: 'Appointment Booking',
   description: 'Let visitors book lessons, auditions, or consultations right on your page — no account needed.',
   icon: CalendarClock,
-  tier: 'addon',
-  requiredAddon: 'appointments',
-  group: 'addon',
+  // Was gated on the retired 'appointments' add-on which never landed in
+  // gw_billing_modules — the block was permanently un-activatable. Tiers
+  // model now covers gating; treat this block as free-for-all.
+  tier: 'free',
+  group: 'core',
   poweredBy: 'Appointments',
   configSchema: schema,
   defaultConfig: schema.parse({}),

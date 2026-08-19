@@ -1,7 +1,12 @@
 // Reusable, theater-style tour engine. Reads target rects from the DOM
-// but never mutates the DOM, never calls element.click(), and never
+// but never mutates the DOM itself, never calls element.click(), and never
 // navigates. Activation is purely a callback into mock state via the
-// TourActionContext provided by the caller.
+// TourActionContext provided by the caller. A step's optional
+// `beforeMeasure` is the one place a script gets to act before the engine
+// reads the DOM (e.g. clicking open a disclosure that unmounts its own
+// contents when closed, so a target inside it can be found at all) — that
+// DOM interaction is the script's, not the engine's; see productTourScript's
+// ensureAllToolsOpen for the concrete case and why it's scoped that tightly.
 //
 // Architecture:
 //   - A single fixed-position overlay covers the viewport at z-index 9000.
@@ -93,6 +98,17 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
     if (!selector) return null;
     const el = document.querySelector(selector) as HTMLElement | null;
     if (!el) return null;
+    // Bring the target on screen BEFORE reading its rect. The sidebar's All
+    // Tools disclosure is its own scroll container and the rows a step most
+    // often needs (Analytics, Settings — anything not on the member's shelf)
+    // sit at the bottom of it, so the spotlight used to be measured, and
+    // drawn, off-screen: the tour visibly "highlighted" nothing. Scrolling
+    // with the default (instant) behavior keeps this synchronous, so the
+    // rect read on the next line is the post-scroll one. Guarded because
+    // jsdom does not implement scrollIntoView.
+    if (typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ block: 'center', inline: 'nearest' });
+    }
     const r = el.getBoundingClientRect();
     if (r.width === 0 && r.height === 0) return null;
     return { x: r.x, y: r.y, width: r.width, height: r.height };
@@ -128,6 +144,23 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
 
   // Step transitions — sets up the cursor target and spotlight, then
   // hands off to the RAF loop until arrival.
+  //
+  // A step's beforeMeasure may flip React state to reveal its target (e.g.
+  // opening a disclosure that unmounts its own contents when closed) —
+  // that state update commits asynchronously even though beforeMeasure
+  // itself runs synchronously below. flushSync cannot force it here:
+  // this effect body already executes inside React's passive-effect
+  // commit (CommitContext), where flushSync is a documented no-op (plus a
+  // console warning) rather than a real synchronous flush — an earlier
+  // version of this code called flushSync from inside beforeMeasure and
+  // silently never actually revealed the target. So the first measurement
+  // below is a best-effort synchronous check (the common case: the target
+  // is already mounted, no delay at all). Only when a step DECLARES a
+  // target and that immediate check comes up empty do we wait one
+  // requestAnimationFrame and check again — by then the browser has
+  // painted, which means React has committed whatever beforeMeasure's
+  // state update triggered. Steps with no targetSelector (intro/outro)
+  // never hit the retry path and read immediately, same as before.
   useEffect(() => {
     if (!currentStep) {
       setPhase('done');
@@ -139,21 +172,51 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
     if (dwellTimerRef.current) window.clearTimeout(dwellTimerRef.current);
     if (pulseTimerRef.current) window.clearTimeout(pulseTimerRef.current);
 
-    const rect = measureTarget(currentStep.targetSelector);
-    setSpotlight(rect);
-    setBubbleAnchor(rect);
+    let rafId: number | null = null;
 
-    if (rect) {
-      const center = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-      cursorFromRef.current = cursorPosRef.current;
-      cursorTargetRef.current = center;
-      cursorStartMsRef.current = performance.now();
-      setPhase('moving');
-    } else {
-      // Intro / outro — no target. Park the cursor off-screen and just read.
-      cursorTargetRef.current = null;
-      setPhase('reading');
+    const arrive = (rect: Rect | null) => {
+      setSpotlight(rect);
+      setBubbleAnchor(rect);
+      if (rect) {
+        const center = { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+        cursorFromRef.current = cursorPosRef.current;
+        cursorTargetRef.current = center;
+        cursorStartMsRef.current = performance.now();
+        setPhase('moving');
+      } else {
+        // Intro / outro, or a target that's still missing after the
+        // one-frame retry. Park the cursor off-screen and just read.
+        cursorTargetRef.current = null;
+        setPhase('reading');
+      }
+    };
+
+    try {
+      currentStep.beforeMeasure?.();
+    } catch (e) {
+      console.error('tour beforeMeasure failed:', e);
     }
+
+    const immediate = measureTarget(currentStep.targetSelector);
+    if (immediate || !currentStep.targetSelector) {
+      arrive(immediate);
+    } else {
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        arrive(measureTarget(currentStep.targetSelector));
+      });
+    }
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      // Step teardown — runs on advance, on restart, and on unmount. Undoes
+      // whatever beforeMeasure revealed (see TourStep.onStepEnd).
+      try {
+        currentStep.onStepEnd?.();
+      } catch (e) {
+        console.error('tour onStepEnd failed:', e);
+      }
+    };
   }, [stepIndex, currentStep, measureTarget, onComplete]);
 
   // When cursor reaches the target, play the click pulse, then fire the
@@ -178,6 +241,11 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
   useEffect(() => {
     if (phase !== 'reading' || !currentStep) return;
     const remeasure = window.setTimeout(() => {
+      try {
+        currentStep.beforeMeasure?.();
+      } catch (e) {
+        console.error('tour beforeMeasure failed:', e);
+      }
       const r = measureTarget(currentStep.targetSelector);
       if (r) {
         setSpotlight(r);
@@ -405,7 +473,7 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
                   type="button"
                   onClick={() => setPaused((p) => !p)}
                   aria-label={paused ? 'Resume' : 'Pause'}
-                  className="h-8 w-8 rounded-md border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors"
+                  className="h-8 w-8 rounded-md border border-border hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors"
                 >
                   {paused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                 </button>
@@ -413,7 +481,7 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
                   type="button"
                   onClick={restart}
                   aria-label="Restart"
-                  className="h-8 w-8 rounded-md border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors"
+                  className="h-8 w-8 rounded-md border border-border hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors"
                 >
                   <RotateCcw className="w-4 h-4" />
                 </button>
@@ -421,7 +489,7 @@ export function TourEngine({ steps, onComplete, onDismiss, initialStepIndex = 0,
                   type="button"
                   onClick={skip}
                   aria-label="Skip"
-                  className="h-8 w-8 rounded-md border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-600 transition-colors"
+                  className="h-8 w-8 rounded-md border border-border hover:bg-muted flex items-center justify-center text-muted-foreground transition-colors"
                 >
                   <SkipForward className="w-4 h-4" />
                 </button>

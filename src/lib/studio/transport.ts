@@ -44,6 +44,17 @@ export function formatBarBeat(seconds: number, tempoBpm: number, numerator: numb
   return `${String(bar).padStart(3, '0')}.${beat}.${String(tick).padStart(3, '0')}`;
 }
 
+/** bar.beat only — the phone LCD. No zero-padding, no ticks: "7.3".
+ *  The full BBB.beat.tick readout ate a third of a 390px transport row
+ *  and pushed the rewind cluster off the bar entirely. */
+export function formatBarBeatCompact(seconds: number, tempoBpm: number, numerator: number): string {
+  const secondsPerBeat = 60 / tempoBpm;
+  const totalBeats = Math.max(0, seconds) / secondsPerBeat;
+  const bar = Math.floor(totalBeats / numerator) + 1;
+  const beat = Math.floor(totalBeats % numerator) + 1;
+  return `${bar}.${beat}`;
+}
+
 /** Absolute sample count at the given rate, grouped for readability. */
 export function formatSamples(seconds: number, sampleRate: number): string {
   const samples = Math.floor(Math.max(0, seconds) * sampleRate);

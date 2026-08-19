@@ -21,7 +21,6 @@ import { format } from 'date-fns';
 // Map course IDs to their routes
 const COURSE_ROUTES: Record<string, string> = {
   'a0000000-0000-0000-0000-000000000070': '/academy/mus-070',
-  '23c4ee3c-7bbb-4534-8c0a-eecd88298d37': '/academy/mus-240',
   'a0000000-0000-0000-0000-000000000210': '/academy/mus-210',
   'a0000000-0000-0000-0000-000000000001': '/academy/mus-001',
   'a0000000-0000-0000-0000-0000000e0101': '/academy/glee-101',

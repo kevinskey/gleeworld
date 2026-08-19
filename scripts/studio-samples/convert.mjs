@@ -39,16 +39,43 @@ const recipes = JSON.parse(readFileSync(recipesPath, 'utf8'))
 const BITRATE = '160k';       // mp3 (universal decodeAudioData fallback)
 const OPUS_BITRATE = '96k';   // webm/opus alternate (~40% smaller, picked by capable clients)
 
+// Per-file peak level (dBFS) via ffmpeg volumedetect — pass 1 of peak
+// normalization. volumedetect prints to stderr, hence the shell pipeline.
+function peakDbOf(src) {
+  const res = execFileSync('sh', ['-c',
+    `ffmpeg -hide_banner -i ${JSON.stringify(join(srcRoot, src))} -af volumedetect -f null - 2>&1 | grep max_volume || true`,
+  ]).toString();
+  const m = /max_volume:\s*(-?[\d.]+)\s*dB/.exec(res);
+  return m ? Number(m[1]) : null;
+}
+
+// Peak-normalization target. -1 dBFS pre-MP3: lame adds a hair of overshoot,
+// so 0 dB would clip on decode.
+const NORM_TARGET_DB = -1.0;
+
+const OPUS_BITRATE = '96k'; // webm/opus alternate (~40% smaller, picked by capable clients)
+
 // Every sample is emitted twice: <dst>.mp3 and <dst>.webm (Opus). Manifest
 // urls stay .mp3; clients that can decode webm/opus swap the extension
 // (see pickGwSampleFormat in src/lib/studio/gwInstruments.ts).
-function convert(src, dst, gainDb) {
+function convert(src, dst, gainDb, normalize) {
+  const dstWebm = dst.replace(/\.mp3$/, '.webm');
+  if (existsSync(dst) && existsSync(dstWebm)) return; // idempotent re-runs
   const filters = [];
-  if (gainDb) filters.push(`volume=${gainDb}dB`);
+  if (normalize === 'peak') {
+    // KITS: every hit normalized to the same peak. Velocity dynamics come
+    // from the engine's layer choice + gain ramp, not from quiet files —
+    // a quiet "soft" sample UNDER the engine's velocity gain double-dips
+    // and reads as "way too soft" (Kevin, 2026-08-17). gainDb still
+    // applies on top as a deliberate trim when a recipe wants one.
+    const peak = peakDbOf(src);
+    if (peak !== null) filters.push(`volume=${(NORM_TARGET_DB - peak + (gainDb || 0)).toFixed(2)}dB`);
+    else if (gainDb) filters.push(`volume=${gainDb}dB`);
+  } else if (gainDb) filters.push(`volume=${gainDb}dB`);
   // Trim leading digital silence so note-on timing stays tight, keep tails.
   filters.push('silenceremove=start_periods=1:start_threshold=-60dB:start_silence=0.005');
   const encode = (out, codecArgs) => {
-    if (existsSync(out)) return; // idempotent re-runs
+    if (existsSync(out)) return;
     mkdirSync(dirname(out), { recursive: true });
     execFileSync('ffmpeg', [
       '-hide_banner', '-loglevel', 'error', '-y',
@@ -59,7 +86,7 @@ function convert(src, dst, gainDb) {
     ]);
   };
   encode(dst, ['-ar', '44100', '-codec:a', 'libmp3lame', '-b:a', BITRATE]);
-  encode(dst.replace(/\.mp3$/, '.webm'), ['-ar', '48000', '-codec:a', 'libopus', '-b:a', OPUS_BITRATE]);
+  encode(dstWebm, ['-ar', '48000', '-codec:a', 'libopus', '-b:a', OPUS_BITRATE]);
 }
 
 let failures = 0;
@@ -69,7 +96,7 @@ for (const recipe of recipes) {
   console.log(`── ${recipe.name}`);
 
   const safe = (src, dst) => {
-    try { convert(src, dst, recipe.gainDb); return true; }
+    try { convert(src, dst, recipe.gainDb, recipe.normalize); return true; }
     catch (e) { failures++; console.error(`  FAIL ${src}: ${e.message.split('\n')[0]}`); return false; }
   };
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { parseMidiMessage, createNoteEchoFilter } from '@/lib/studio/midiMessage';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
+import { registerStudioAudio } from '@/lib/studio/audioLeakGuard';
 
 /**
  * Subscribe to hardware MIDI note input (Web MIDI on desktop browsers,
@@ -33,13 +34,19 @@ export function useStudioMidiInput({
   const onOffRef = useRef(onNoteOff); onOffRef.current = onNoteOff;
   const onSustainRef = useRef(onSustain); onSustainRef.current = onSustain;
   const onCcRef = useRef(onCc); onCcRef.current = onCc;
+  // Latest deviceId via ref: the managed subscription is only opened once
+  // per `enabled` toggle (below), so a switch effect applies device changes
+  // to it live. This ref also lets a late-resolving subscribe() (subscribe
+  // is async) pick up whatever device is CURRENT by the time it lands,
+  // rather than the deviceId the effect closed over when it started.
+  const deviceIdRef = useRef(deviceId); deviceIdRef.current = deviceId;
 
   const source = getMidiInputSource();
+  const subRef = useRef<{ close(): void; setDevice(id: string): void } | null>(null);
 
   useEffect(() => {
     if (!enabled || !source.supported) { setStatus('idle'); return; }
     let cancelled = false;
-    let unsub: (() => void) | null = null;
 
     const refreshInputs = () => {
       void source.listInputs()
@@ -54,7 +61,7 @@ export function useStudioMidiInput({
     const isNoteEcho = createNoteEchoFilter();
 
     source
-      .subscribe(deviceId, (data, timeStampMs) => {
+      .subscribeManaged(deviceIdRef.current, (data, timeStampMs) => {
         const ev = parseMidiMessage(data);
         if (isNoteEcho(ev, timeStampMs)) return;
         if (ev.type === 'noteon') onOnRef.current(ev.pitch, ev.velocity, timeStampMs);
@@ -62,9 +69,18 @@ export function useStudioMidiInput({
         else if (ev.type === 'sustain') onSustainRef.current?.(ev.down, timeStampMs);
         else if (ev.type === 'cc') onCcRef.current?.(ev.controller, ev.value, timeStampMs);
       })
-      .then((u) => {
-        if (cancelled) { u(); return; }
-        unsub = u;
+      .then((sub) => {
+        if (cancelled) { sub.close(); return; }
+        // Apply whatever device is current now — deviceId may have changed
+        // while this (async) subscribe was in flight.
+        sub.setDevice(deviceIdRef.current);
+        subRef.current = sub;
+        // Leak guard: a subscription whose unmount cleanup is skipped
+        // (aborted cleanup batch) keeps delivering keystrokes to dead
+        // closures — the route-level disposeAllStudioAudio() closes it.
+        const unregister = registerStudioAudio({ dispose: () => { sub.close(); if (subRef.current === sub) subRef.current = null; } });
+        const prevClose = sub.close.bind(sub);
+        sub.close = () => { unregister(); prevClose(); };
         setStatus('connected');
         refreshInputs();
       })
@@ -73,11 +89,20 @@ export function useStudioMidiInput({
     return () => {
       cancelled = true;
       offState();
-      unsub?.();
+      subRef.current?.close();
+      subRef.current = null;
     };
     // `source` is a module singleton — stable for the app lifetime.
+    // deviceId is intentionally excluded: switching devices must not tear
+    // down and re-request the MIDI session (see the effect below).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, deviceId]);
+  }, [enabled]);
+
+  // Device switches apply live to the already-open managed subscription —
+  // no re-subscribe, no re-prompt for permission, no port re-attach.
+  useEffect(() => {
+    subRef.current?.setDevice(deviceId);
+  }, [deviceId]);
 
   return { supported: source.supported, inputs, status };
 }

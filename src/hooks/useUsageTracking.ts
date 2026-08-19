@@ -47,12 +47,12 @@ const getPageTitle = (pathname: string): string => {
     '/signup': 'Sign Up',
     '/graduates': 'Graduates Portal',
     '/academy': 'Glee Academy',
-    '/mus-070': 'MUS 070',
-    '/mus-240': 'MUS 240',
-    '/mus-210': 'MUS 210',
-    '/mus-101': 'MUS 101',
-    '/mus-001': 'MUS 001',
-    '/mus-000': 'MUS 000',
+    '/mus-070': 'GW 070',
+    '/mus-240': 'GW 240',
+    '/mus-210': 'GW 210',
+    '/mus-101': 'GW 101',
+    '/mus-001': 'GW 001',
+    '/mus-000': 'GW 000',
     '/glee-101': 'GLEE 101',
     '/lh-100': 'LH 100',
     '/profile': 'Profile',
@@ -63,7 +63,14 @@ const getPageTitle = (pathname: string): string => {
 
 // Session storage key
 const SESSION_ID_KEY = 'gw_session_id';
-const SESSION_DB_ID_KEY = 'gw_session_db_id';
+// Bumped to _v2 with migration 20260809060000 (user_sessions tenant isolation).
+// Any id stored under the old key points at a row written before user_sessions
+// had a tenant_id. Those rows are NULL-tenant and invisible under the new
+// RESTRICTIVE policy, so the UPDATEs below would match zero rows and return 204
+// with no error — and initSession() returns early whenever sessionDbIdRef is
+// set, so the tab would never create a replacement and would silently stop
+// recording. Changing the key discards the stale ids.
+const SESSION_DB_ID_KEY = 'gw_session_db_id_v2';
 
 export const useUsageTracking = () => {
   const location = useLocation();

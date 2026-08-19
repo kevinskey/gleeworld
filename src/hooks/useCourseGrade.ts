@@ -39,7 +39,7 @@ const getLetterGrade = (percentage: number): string => {
 };
 
 /**
- * For attendance-only courses (MUS 070):
+ * For attendance-only courses (GW 070):
  * Start at A. Each absence beyond the allowed count drops one letter grade.
  * 2 allowed → 3 absences = B, 4 = C, 5 = D, 6+ = F
  */
