@@ -2051,15 +2051,17 @@ function Editor({
         </DialogContent>
       </Dialog>
 
-      {/* Transport bar — three-cell grid keeps the LCD dead-center at every
-       *  breakpoint. Row 1: primary transport | LCD | secondary actions.
-       *  Row 2 (md+): tempo, punch, snap, grid, end chips. Row 3: engine
-       *  status. On phones the chip row lives inside the settings sheet. */}
+      {/* Transport bar — one centered cluster row (transport | LCD | session
+       *  chips | actions) plus the engine status line. On phones the chips
+       *  live inside the settings sheet behind the More button. */}
       <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 space-y-1.5">
-        {/* Phones flex-wrap (buttons row, LCD wraps whole beneath — nothing
-         *  ever clips); sm+ uses the three-cell grid that keeps the LCD
-         *  dead-center. */}
-        <div className="flex flex-wrap sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-3">
+        {/* One centered, wrapping cluster row — transport | LCD | session
+         *  chips | actions — so the controls pack together with no dead
+         *  space between clusters (the old 1fr|auto|1fr grid pinned the
+         *  LCD dead-center and left two blank stretches beside it). On
+         *  narrower screens whole clusters wrap to a second centered
+         *  line instead of clipping. */}
+        <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1.5">
 
         {/* LEFT — transport controls. Play/Pause/Stop/Rec/Loop are
          *  visible on every breakpoint; nav (skip start/end + scrub) and
@@ -2206,9 +2208,10 @@ function Editor({
          *  Count-in (♪) and metronome toggles sit inside its left edge,
          *  then segmented bar|beat|tick digits, elapsed time, editable
          *  tempo (label doubles as tap tempo), and time signature.
-         *  Anchored to the middle grid cell so it reads dead-center at
-         *  every breakpoint. Only TransportLCDPosition re-renders per
-         *  transport tick — the shell stays still. */}
+         *  Sits flush in the centered cluster row — no dead space either
+         *  side. Only TransportLCDPosition re-renders per transport tick
+         *  — the shell stays still. */}
+        <div className="hidden sm:block w-px h-7 bg-border" />
         <TransportLCD
           store={transportTick}
           counterMode={counterMode}
@@ -2258,45 +2261,12 @@ function Editor({
           }}
         />
 
-        {/* RIGHT — secondary actions. Count-in moved into the LCD's left
-         *  edge (Logic model) but stays one tap away on every breakpoint.
-         *  Undo has no keyboard shortcut on iPad, so a persistent button
-         *  is the only way to reach it there. The More button opens the
-         *  settings sheet with tempo/TS/snap/grid/end/punch — the same
-         *  controls that live in the LCD + Row 2 on desktop, so nothing
-         *  is ever exclusively phone- or desktop-only. */}
-        <div className="flex items-center gap-1 sm:gap-1.5 justify-end min-w-0">
-          {countInBeat !== null && (
-            <span className="text-xs sm:text-sm font-bold px-2 py-0.5 rounded bg-rose-500 text-white tabular-nums animate-pulse">
-              {countInBeat}
-            </span>
-          )}
-          <button
-            onClick={undo}
-            className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
-            aria-label="Undo" title="Undo (⌘Z)">
-            <Undo2 className="w-4 h-4" />
-            <span className="hidden xl:inline text-sm font-semibold">Undo</span>
-          </button>
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
-            aria-label="Session settings" title="Session — tempo, time signature, snap, grid, punch, end">
-            <SlidersHorizontal className="w-4 h-4" />
-            <span className="hidden xl:inline text-sm font-semibold">More</span>
-          </button>
-          <div className="hidden xl:block ml-1">
-            <LiveVuMeter store={transportTick} />
-          </div>
-        </div>
-        </div>
-
-        {/* Row 2 — desktop chip row (md+). Punch, Zoom, Snap/Grid/End.
-         *  Tempo + Tap + TS moved up into the LCD (Logic model). On
-         *  phones these live inside the settings sheet (accessible from
-         *  the More button) — this row disappears entirely so the
-         *  transport can fit in one clean line. */}
-        <div className="hidden md:flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1.5 border-t border-border/60 text-sm">
+        {/* Session chips — Punch, Zoom, Snap, Grid, End. Folded into the
+         *  main row (md+) right beside the LCD so the transport has no
+         *  blank second-row stretch; on phones these live in the settings
+         *  sheet behind the More button, same as before. */}
+        <div className="hidden md:block w-px h-7 bg-border" />
+        <div className="hidden md:flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1.5 text-sm">
           <div className="flex items-center gap-1">
             <span className="text-muted-foreground">Punch</span>
             <button
@@ -2332,12 +2302,9 @@ function Editor({
             )}
           </div>
 
-          {/* Timeline zoom — moved up here from the add-track row so it
-              sits next to Punch, right in the transport's control cluster.
-              Slider is log-scaled (px range 8→240 spans ~5 octaves, so
-              linear travel would bunch the useful zoom levels into the
-              rightmost sliver); double-click resets to the default. No px
-              readout on purpose — the slider position IS the affordance. */}
+          {/* Timeline zoom — log-scaled slider (px range 8→240 spans ~5
+              octaves, so linear travel would bunch the useful zoom levels
+              into the rightmost sliver); double-click resets to default. */}
           <div className="flex items-center gap-1.5">
             <span className="text-muted-foreground">Zoom</span>
             <input
@@ -2352,13 +2319,13 @@ function Editor({
                 setPxPerSecond(px);
               }}
               onDoubleClick={() => setPxPerSecond(PX_PER_SECOND_DEFAULT)}
-              className="w-28 h-6 accent-primary cursor-pointer"
+              className="w-24 h-6 accent-primary cursor-pointer"
               aria-label="Timeline zoom"
               title="Timeline zoom — drag to widen or narrow clips. Double-click to reset."
             />
           </div>
 
-          <div className="flex items-center gap-1 ml-auto">
+          <div className="flex items-center gap-1">
             <span className="text-muted-foreground" title={`Snap quantum at current tempo: ${snapSeconds > 0 ? `${(snapSeconds * 1000).toFixed(0)} ms` : 'off'}`}>Snap</span>
             <select value={snapMode} onChange={(e) => setSnapMode(e.target.value as SnapMode)}
               className="h-7 bg-background border border-border rounded text-sm px-1 min-w-[68px]"
@@ -2391,6 +2358,39 @@ function Editor({
             <span className="text-muted-foreground text-xs">s</span>
           </div>
         </div>
+
+        {/* Actions — count-in badge, Undo, More, VU. Undo has no keyboard
+         *  shortcut on iPad, so a persistent button is the only way to
+         *  reach it there. The More button opens the settings sheet with
+         *  tempo/TS/snap/grid/end/punch — the same controls as the chips,
+         *  so nothing is ever exclusively phone- or desktop-only. */}
+        <div className="hidden md:block w-px h-7 bg-border" />
+        <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+          {countInBeat !== null && (
+            <span className="text-xs sm:text-sm font-bold px-2 py-0.5 rounded bg-rose-500 text-white tabular-nums animate-pulse">
+              {countInBeat}
+            </span>
+          )}
+          <button
+            onClick={undo}
+            className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
+            aria-label="Undo" title="Undo (⌘Z)">
+            <Undo2 className="w-4 h-4" />
+            <span className="hidden xl:inline text-sm font-semibold">Undo</span>
+          </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="h-8 sm:h-9 w-8 sm:w-auto sm:px-3 rounded border border-border bg-muted hover:bg-muted/70 inline-flex items-center justify-center gap-1.5"
+            aria-label="Session settings" title="Session — tempo, time signature, snap, grid, punch, end">
+            <SlidersHorizontal className="w-4 h-4" />
+            <span className="hidden xl:inline text-sm font-semibold">More</span>
+          </button>
+          <div className="hidden xl:block ml-1">
+            <LiveVuMeter store={transportTick} />
+          </div>
+        </div>
+        </div>
+
 
         {/* Native engine status + error panel (full-width so it never
          *  crowds the transport row). */}
