@@ -215,146 +215,159 @@ export default function SoundCloudPlayerPage() {
 
     return (
       <>
-        {/* One widget, re-pointed as the selection changes: 30 mounted
-            iframes would each open their own player and their own network
-            connection. */}
-        <Card className={`${SOFT_CARD} mb-5 overflow-hidden`} style={SOFT_CARD_STYLE}>
-          <CardContent className="p-0">
-            <iframe
-              ref={frameRef}
-              key={nowPlayingUrl}
-              title={selected ? `SoundCloud — ${selected.title}` : 'SoundCloud — all tracks'}
-              src={widgetSrc(nowPlayingUrl)}
-              width="100%"
-              height={selected ? 450 : 450}
-              frameBorder="0"
-              allow="autoplay"
-              scrolling="no"
-              className="block w-full"
-            />
-            {/* The widget streams from a cross-origin iframe at 100% and has
-                no volume control of its own at this height, so SoundCloud
-                played back louder than everything else in the app. Drives the
-                same app-wide level the floating mini player uses. */}
-            <div className="flex items-center justify-end px-3 py-2 border-t border-border">
-              <SoundCloudVolume />
-            </div>
-          </CardContent>
-        </Card>
+        {/* Two columns (Kevin, 2026-08-19): the now-playing stage on the
+            left, the catalog to pick from in a fixed 340px rail on the
+            right — the layout this page had before the merge brought
+            main's single-column version. Stacks on narrow screens.
+            items-start so the rail doesn't stretch to the player's height. */}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
 
-        {/* Search — 549 tracks is far past what anyone scrolls, and until now
-            the only way to reach a track was to know which set it was in.
-            Matches set titles AND track titles; picking a track points the
-            widget straight at it. */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          <Input
-            value={query}
-            onFocus={() => setWantTracks(true)}
-            onChange={(e) => { setWantTracks(true); setQuery(e.target.value); }}
-            placeholder="Search tracks and playlists…"
-            aria-label="Search SoundCloud titles"
-            className="pl-9 pr-9 h-10 rounded-xl"
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => setQuery('')}
-              aria-label="Clear search"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        {q && (
-          <div className="mb-5">
-            <h2 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-2">
-              {tracksLoading && !trackData ? (
-                <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading tracks…</>
-              ) : (
-                <>
-                  {matchingTracks.length} track{matchingTracks.length === 1 ? '' : 's'}
-                  {matchingTracks.length > TRACK_LIMIT && ` — showing the first ${TRACK_LIMIT}`}
-                </>
+          {/* LEFT — search, then the player it drives. */}
+          <div className="min-w-0">
+            {/* Search sits above the stage: it's how you get to one of 549
+                tracks, and until now the only route to a track was knowing
+                which set it was in. Matches set AND track titles. */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                value={query}
+                onFocus={() => setWantTracks(true)}
+                onChange={(e) => { setWantTracks(true); setQuery(e.target.value); }}
+                placeholder="Search tracks and playlists…"
+                aria-label="Search SoundCloud titles"
+                className="pl-9 pr-9 h-10 rounded-xl"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery('')}
+                  aria-label="Clear search"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-accent transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               )}
-            </h2>
-            {matchingTracks.length === 0 && matchingPlaylists.length === 0 && !tracksLoading ? (
+            </div>
+
+            {/* One widget, re-pointed as the selection changes: 30 mounted
+                iframes would each open their own player and their own
+                network connection. */}
+            <Card className={`${SOFT_CARD} overflow-hidden`} style={SOFT_CARD_STYLE}>
+              <CardContent className="p-0">
+                <iframe
+                  ref={frameRef}
+                  key={nowPlayingUrl}
+                  title={selected ? `SoundCloud — ${selected.title}` : 'SoundCloud — all tracks'}
+                  src={widgetSrc(nowPlayingUrl)}
+                  width="100%"
+                  height={450}
+                  frameBorder="0"
+                  allow="autoplay"
+                  scrolling="no"
+                  className="block w-full"
+                />
+                {/* The widget streams from a cross-origin iframe at 100% and
+                    has no volume control of its own at this height, so
+                    SoundCloud played back louder than everything else in the
+                    app. Drives the same app-wide level the floating mini
+                    player uses. */}
+                <div className="flex items-center justify-end px-3 py-2 border-t border-border">
+                  <SoundCloudVolume />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* RIGHT — the catalog rail: search hits while searching, the
+              playlists otherwise. Both are "things you can put on the
+              stage", so they share one column rather than splitting the
+              picking between two places. */}
+          <div className="min-w-0 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pr-1 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+                {q ? (
+                  tracksLoading && !trackData
+                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching…</>
+                    : <>{matchingTracks.length} track{matchingTracks.length === 1 ? '' : 's'}
+                        {matchingPlaylists.length > 0 && `, ${matchingPlaylists.length} playlist${matchingPlaylists.length === 1 ? '' : 's'}`}</>
+                ) : (
+                  <>{matchingPlaylists.length} playlist{matchingPlaylists.length === 1 ? '' : 's'}</>
+                )}
+              </h2>
+              {data?.user.permalinkUrl && !q && (
+                <Button variant="ghost" size="sm" className="shrink-0" asChild>
+                  <a href={data.user.permalinkUrl} target="_blank" rel="noreferrer">
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </Button>
+              )}
+            </div>
+
+            {/* Capped, with the true count above: a one-letter query matches
+                hundreds of titles and rendering them all costs more than it
+                helps. */}
+            {q && matchingTracks.length > TRACK_LIMIT && (
+              <p className="text-xs text-muted-foreground">Showing the first {TRACK_LIMIT}.</p>
+            )}
+
+            {q && matchingTracks.length === 0 && matchingPlaylists.length === 0 && !tracksLoading && (
               <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
                 <CardContent className="py-8 text-center text-muted-foreground text-sm">
                   Nothing matches “{query.trim()}”.
                 </CardContent>
               </Card>
-            ) : (
-              <div className="grid gap-2 sm:grid-cols-2">
-                {matchingTracks.slice(0, TRACK_LIMIT).map((t) => {
-                  const active = selected?.kind === 'track' && selected.id === t.id;
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setSelected({ kind: 'track', id: t.id, title: t.title, permalinkUrl: t.permalinkUrl })}
-                      className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors min-w-0 ${
-                        active
-                          ? 'border-primary bg-primary/10'
-                          : 'border-border bg-card hover:bg-accent/50'
-                      }`}
-                    >
-                      <Music className={`w-4 h-4 shrink-0 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
-                      <span className="flex-1 min-w-0 truncate text-sm font-medium">{t.title}</span>
-                      <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
-                        {formatDuration(t.durationMs)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
             )}
+
+            {q && matchingTracks.slice(0, TRACK_LIMIT).map((t) => {
+              const active = selected?.kind === 'track' && selected.id === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setSelected({ kind: 'track', id: t.id, title: t.title, permalinkUrl: t.permalinkUrl })}
+                  className={`w-full flex items-center gap-3 rounded-xl border px-3 py-2.5 text-left transition-colors min-w-0 ${
+                    active ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-accent/50'
+                  }`}
+                >
+                  <Music className={`w-4 h-4 shrink-0 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <span className="flex-1 min-w-0 truncate text-sm font-medium">{t.title}</span>
+                  <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                    {formatDuration(t.durationMs)}
+                  </span>
+                </button>
+              );
+            })}
+
+            {!canManage && matchingPlaylists.length === 0 && !q && (
+              <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+                <CardContent className="py-8 text-center text-muted-foreground text-sm">
+                  No playlists have been shared with you yet.
+                </CardContent>
+              </Card>
+            )}
+
+            {!q && (
+              <PlaylistRow
+                label="All tracks"
+                count={data?.user.trackCount ?? 0}
+                active={selected === null}
+                onClick={() => setSelected(null)}
+              />
+            )}
+            {matchingPlaylists.map((p) => (
+              <PlaylistRow
+                key={p.id}
+                label={p.title}
+                count={p.trackCount}
+                active={selected?.kind === 'playlist' && selected.id === p.id}
+                onClick={() => setSelected({ kind: 'playlist', id: p.id, title: p.title, permalinkUrl: p.permalinkUrl })}
+                shares={shareMap.get(p.id) ?? []}
+                onShare={canManage
+                  ? () => setSharing({ id: p.id, title: p.title, permalinkUrl: p.permalinkUrl })
+                  : undefined}
+              />
+            ))}
           </div>
-        )}
-
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <h2 className="text-sm font-semibold text-muted-foreground">
-            {matchingPlaylists.length} playlist{matchingPlaylists.length === 1 ? '' : 's'}
-          </h2>
-          {data?.user.permalinkUrl && (
-            <Button variant="ghost" size="sm" asChild>
-              <a href={data.user.permalinkUrl} target="_blank" rel="noreferrer">
-                Open on SoundCloud <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
-              </a>
-            </Button>
-          )}
-        </div>
-
-        {!canManage && matchingPlaylists.length === 0 && !q && (
-          <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
-            <CardContent className="py-8 text-center text-muted-foreground text-sm">
-              No playlists have been shared with you yet.
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="grid gap-2 sm:grid-cols-2">
-          <PlaylistRow
-            label="All tracks"
-            count={data?.user.trackCount ?? 0}
-            active={selected === null}
-            onClick={() => setSelected(null)}
-          />
-          {matchingPlaylists.map((p) => (
-            <PlaylistRow
-              key={p.id}
-              label={p.title}
-              count={p.trackCount}
-              active={selected?.kind === 'playlist' && selected.id === p.id}
-              onClick={() => setSelected({ kind: 'playlist', id: p.id, title: p.title, permalinkUrl: p.permalinkUrl })}
-              shares={shareMap.get(p.id) ?? []}
-              onShare={canManage
-                ? () => setSharing({ id: p.id, title: p.title, permalinkUrl: p.permalinkUrl })
-                : undefined}
-            />
-          ))}
         </div>
 
         <PlaylistShareDialog
