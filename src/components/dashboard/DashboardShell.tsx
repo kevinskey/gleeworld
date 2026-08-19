@@ -47,7 +47,7 @@ import {
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { HIDEABLE_NAV_ROLES, applyPreviewRole, type NavRole } from '@/lib/navigation/navCatalog';
+import { HIDEABLE_NAV_ROLES, applyPreviewRole, type NavRole, GATED_MODULE_KEYS } from '@/lib/navigation/navCatalog';
 import {
   DndContext, PointerSensor, useDroppable, useSensor, useSensors, type DragEndEvent,
 } from '@dnd-kit/core';
@@ -62,11 +62,12 @@ import { useMessenger } from '@/contexts/MessengerContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { getOrgName } from '@/lib/orgName';
+import { useHideSiteName } from '@/hooks/useHideSiteName';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
 import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
-import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
+import { isTenantAdminOrAboveRole } from '@/lib/auth/tenantRoles';
 import { useMyTenants, tenantHomeUrl, tenantSwitchUrl, performTenantSwitch } from '@/hooks/useMyTenants';
 import { isNativeApp } from '@/lib/nativeTenant';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -94,6 +95,15 @@ import {
 } from '@/lib/navigation/navCatalog';
 
 const SECTION_ORDER: NavSectionKey[] = ['today', 'music', 'teach', 'make', 'plan', 'reach', 'money', 'people', 'admin'];
+
+// The fixed module-gate key list a `module: 'x'` catalog gate checks
+// against. One definition shared by Sidebar and MobileNav, so the call
+// sites can't drift out of sync with which modules exist. (Cost us
+// All-State on first deploy, once, when a gated nav entry was added
+// without adding its key here.) Derived from NAV_CATALOG
+// (GATED_MODULE_KEYS) rather than hand-listed: a gated nav entry whose
+// module id was missing from this list rendered nowhere, silently.
+const MODULE_KEYS = GATED_MODULE_KEYS;
 
 // The platform ('main') tenant ships no branding.logo_url of its own, so
 // BrandLogo fell back to the monogram there. Use the GleeWorld platform logo
@@ -271,6 +281,7 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const userCanLibrarian = typeof canEditMusicLibrary === 'function'
     ? canEditMusicLibrary()
     : !!(profile?.is_admin || profile?.is_super_admin);
+  const hideSiteName = useHideSiteName();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState<Set<string>>(loadCollapsed);
 
@@ -294,8 +305,8 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
 
   // Add-on modules — only render the nav entry if the tenant has access.
-  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner'] as const;
-  // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
+  // Hooks must run unconditionally and in stable order — the fixed
+  // module-level MODULE_KEYS list (derived from the catalog) keeps that true.
   const moduleAccess: Record<string, boolean> = {};
   for (const key of MODULE_KEYS) {
     // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
@@ -385,14 +396,26 @@ function Sidebar({ onCollapse }: { onCollapse?: () => void }) {
       <div
         className="flex items-center border-b border-border pr-2 pt-[env(safe-area-inset-top,0px)] h-[calc(80px+env(safe-area-inset-top,0px))]"
       >
-        <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-3 py-3 h-full">
+        {/* Open nav: the LOGO alone, at full width (Kevin). A logo beside a
+            site name has to share ~150px with it, which squeezed a wide
+            lockup down to a stamp and still truncated the name to "The L…".
+            Standing alone it can be read. The name is not lost — it is what
+            the collapsed-nav header shows instead, where there is no logo
+            competing for the room.
+
+            A tenant with NO logo keeps the name: dropping it there would
+            leave a single monogram letter identifying the workspace. The one
+            exception is hideSiteName — the tenant switched the name off on
+            their public page's Header block, and the workspace chrome
+            mirrors that choice. */}
+        <Link to="/dashboard" className="flex min-w-0 flex-1 items-center gap-3 px-4 h-full">
           <BrandLogo
             logoUrl={platformLogoFor(branding?.logo_url)}
             fallbackInitial={(branding?.short_name || tenantName).charAt(0).toUpperCase()}
             alt={tenantName}
             size="hero"
           />
-          {!platformLogoFor(branding?.logo_url) && (
+          {!platformLogoFor(branding?.logo_url) && !hideSiteName && (
             <div className="min-w-0 flex-1">
               <div className="font-bold text-[22px] leading-tight tracking-tight truncate">
                 {tenantName}
@@ -529,8 +552,9 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
   const isPlatformAdmin = !!profile?.is_super_admin && tenantSlug === 'main';
   const isTenantAdmin = !!profile?.is_admin || !!profile?.is_super_admin;
   const userCanLibrarian = canEditMusicLibrary();
-  const MODULE_KEYS = ['sight_reading', 'box_office', 'part_tracks', 'auditions', 'librarian', 'pr_hub', 'alumni', 'finance', 'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour', 'liturgy_planner', 'studio', 'songwriting', 'planner'] as const;
-  // Hooks must run unconditionally and in stable order — a fixed key list keeps that true.
+  const hideSiteName = useHideSiteName();
+  // Hooks must run unconditionally and in stable order — the fixed
+  // module-level MODULE_KEYS list (derived from the catalog) keeps that true.
   const moduleAccess: Record<string, boolean> = {};
   for (const key of MODULE_KEYS) {
     // eslint-disable-next-line react-hooks/rules-of-hooks -- fixed-length loop over a const array; call order is stable across renders
@@ -569,7 +593,9 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
           alt={tenantName}
           size="hero"
         />
-        {!platformLogoFor(branding?.logo_url) && (
+        {/* hideSiteName mirrors the public Header block's "Show site name"
+            toggle — see the sidebar brand comment. */}
+        {!platformLogoFor(branding?.logo_url) && !hideSiteName && (
           <span className="font-bold text-[22px] tracking-tight truncate">{tenantName}</span>
         )}
       </div>
@@ -608,9 +634,15 @@ function MobileNav({ onNavigate }: { onNavigate: () => void }) {
 
 // ── Top bar ─────────────────────────────────────────────────────────────────
 
-// Views switcher — visible only to tenant super-admins. Lets them
-// preview the command-center sidebar as any lower-privilege role
-// without signing out. "Home" restores their own super-admin view.
+// Views switcher — visible to whoever runs the tenant: owner, admin, or
+// super-admin (either spelling). Lets them preview the command-center
+// sidebar as any lower-privilege role without signing out. "Home" restores
+// their own view.
+//
+// It was super-admin-only, which hid it on tenant sites from the two roles
+// that most need it: tenant admins, and the tenant OWNER — the site's own
+// creator. Keep this gate identical to useEffectivePreviewRole's, or the
+// button appears and does nothing.
 // Backed by the shared navPreview module (sessionStorage-persisted so
 // the preview survives a route change but auto-clears on tab close,
 // preventing a super-admin from getting trapped with a hidden
@@ -626,7 +658,7 @@ function ViewsSwitcher() {
   // the control from them.
   const myTenantRole = useMyTenantRole();
 
-  if (!isTenantSuperAdminRole(myTenantRole)) return null;
+  if (!isTenantAdminOrAboveRole(myTenantRole)) return null;
 
   const label = preview
     ? HIDEABLE_NAV_ROLES.find((r) => r.value === preview)?.label ?? 'Preview'
@@ -703,6 +735,7 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
   const sidebarHidden = inImmersiveRoute || navCollapsed;
   const compactBrandName =
     branding?.short_name || branding?.org_name || getOrgName();
+  const hideSiteName = useHideSiteName();
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -795,8 +828,10 @@ function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean;
             alt={compactBrandName}
             size="hero"
           />
-          {!platformLogoFor(branding?.logo_url) && (
-            <span className="font-bold text-base tracking-tight truncate max-w-[180px]">
+          {/* hideSiteName mirrors the public Header block's "Show site name"
+              toggle — see the sidebar brand comment. */}
+          {!hideSiteName && (
+            <span className="font-bold text-[22px] tracking-tight truncate max-w-[260px]">
               {compactBrandName}
             </span>
           )}

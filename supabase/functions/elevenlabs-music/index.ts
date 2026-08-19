@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { resolveElevenLabsKey } from "../_shared/elevenLabsKey.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,10 +14,10 @@ serve(async (req) => {
 
   try {
     const { prompt, duration = 30 } = await req.json();
-    const ELEVENLABS_API_KEY = Deno.env.get("ELEVENLABS_API_KEY");
+    const ELEVENLABS_API_KEY = resolveElevenLabsKey();
 
     if (!ELEVENLABS_API_KEY) {
-      throw new Error("ELEVENLABS_API_KEY not configured");
+      throw new Error("ElevenLabs API key not configured (set ELEVENLABS_API_KEY_1)");
     }
 
     if (!prompt) {

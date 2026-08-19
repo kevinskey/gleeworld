@@ -38,6 +38,7 @@ export const elegantPackage: TemplatePackage = {
     { type: 'events', config: { heading: 'Performances', style: 'list', limit: 8 } },
     { type: 'about', config: { title: 'About the ensemble', body: '', imageSide: 'left' } },
     { type: 'music-player', config: { heading: 'Recordings', tracks: [] } },
+    { type: 'soundcloud', config: { heading: 'Listen on SoundCloud', playlistUrl: '', visual: false } },
     { type: 'media-gallery', config: { heading: 'Gallery', layout: 'grid', items: [] } },
     { type: 'contact', config: { email: '', phone: '' } },
   ],

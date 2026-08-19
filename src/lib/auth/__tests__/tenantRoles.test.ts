@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isTenantSuperAdminRole } from '../tenantRoles';
+import { isTenantSuperAdminRole, isTenantAdminOrAboveRole } from '../tenantRoles';
 
 describe('isTenantSuperAdminRole', () => {
   it('accepts the canonical spelling', () => {
@@ -28,5 +28,38 @@ describe('isTenantSuperAdminRole', () => {
     expect(isTenantSuperAdminRole('SUPER_ADMIN')).toBe(false);
     expect(isTenantSuperAdminRole('not-super-admin')).toBe(false);
     expect(isTenantSuperAdminRole('super_admin_readonly')).toBe(false);
+  });
+});
+
+describe('isTenantAdminOrAboveRole', () => {
+  it('accepts the roles that run a tenant', () => {
+    for (const role of ['super_admin', 'super-admin', 'admin', 'owner']) {
+      expect(isTenantAdminOrAboveRole(role), `${role} must pass`).toBe(true);
+    }
+  });
+
+  it("accepts 'owner' — the tenant creator's role", () => {
+    // The whole reason this predicate exists: the Views switcher was gated on
+    // super-admin, so it vanished for the person who OWNS the tenant.
+    expect(isTenantAdminOrAboveRole('owner')).toBe(true);
+    expect(isTenantSuperAdminRole('owner')).toBe(false);
+  });
+
+  it('rejects staff and every member-level role', () => {
+    for (const role of ['staff', 'student', 'fan', 'graduate', 'member', 'alumna', 'alumni']) {
+      expect(isTenantAdminOrAboveRole(role), `${role} must not pass`).toBe(false);
+    }
+  });
+
+  it('rejects unresolved roles rather than defaulting open', () => {
+    expect(isTenantAdminOrAboveRole(null)).toBe(false);
+    expect(isTenantAdminOrAboveRole(undefined)).toBe(false);
+    expect(isTenantAdminOrAboveRole('')).toBe(false);
+  });
+
+  it('does not match on substring or case', () => {
+    expect(isTenantAdminOrAboveRole('ADMIN')).toBe(false);
+    expect(isTenantAdminOrAboveRole('administrator')).toBe(false);
+    expect(isTenantAdminOrAboveRole('co-owner')).toBe(false);
   });
 });

@@ -333,3 +333,34 @@ describe('AllToolsSheet — accessibility', () => {
     for (const b of screen.getAllByRole('button')) expect(b).toHaveAccessibleName();
   });
 });
+
+describe('AllToolsSheet — selected row stays readable on a tenant accent', () => {
+  // A tenant whose accent is dark (Lyke House's gold) made the highlighted
+  // row unreadable: the row itself flipped to --accent-foreground, but its
+  // label rendered dark anyway because it did not inherit that colour, and
+  // the icon kept its fixed muted-slate. Verified in-browser at the time —
+  // row computed white, label computed black on the same element tree.
+  //
+  // Every child that carries text or an icon must therefore name its own
+  // selected colour rather than trusting inheritance.
+  it('gives the row label its own selected colour', () => {
+    renderSheet();
+    const label = document.querySelector('[cmdk-item] span.flex-1');
+    expect(label).not.toBeNull();
+    expect(label!.className).toContain('group-data-[selected=true]:text-accent-foreground');
+  });
+
+  it('gives the row icon its own selected colour', () => {
+    renderSheet();
+    const icon = document.querySelector('[cmdk-item] svg');
+    expect(icon).not.toBeNull();
+    expect(icon!.getAttribute('class') ?? '')
+      .toContain('group-data-[selected=true]:text-accent-foreground');
+  });
+
+  it('marks the row as a group, without which none of the child rules apply', () => {
+    renderSheet();
+    const item = document.querySelector('[cmdk-item]');
+    expect(item!.className.split(/\s+/)).toContain('group');
+  });
+});

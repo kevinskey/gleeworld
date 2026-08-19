@@ -338,8 +338,9 @@ export default function PublicPageEditor() {
       logoUrl: branding.logo_url || null,
       isPreview: true,
       activeAddons,
+      soundcloudUrl: branding.soundcloud_url || null,
     }),
-    [site?.slug, theme, branding.org_name, branding.logo_url, activeAddons],
+    [site?.slug, theme, branding.org_name, branding.logo_url, branding.soundcloud_url, activeAddons],
   );
 
   const activate = async () => {
@@ -459,6 +460,9 @@ export default function PublicPageEditor() {
               toast({ title: 'Saved, but not published', description: pubErr.message, variant: 'destructive' });
             } else {
               queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+              // Workspace chrome mirrors header config (showSiteName, logo)
+              // through this cache — see useHideSiteName/UniversalHeader.
+              queryClient.invalidateQueries({ queryKey: ['tenant-public-site'] });
             }
           }
         }
@@ -632,6 +636,7 @@ export default function PublicPageEditor() {
         .eq('id', site.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ['gw_public_sites'] });
+      queryClient.invalidateQueries({ queryKey: ['tenant-public-site'] });
       toast({ title: 'Published', description: `Your page is live at /sites/${site.slug}` });
     } catch (e: any) {
       toast({ title: 'Publish failed', description: e.message, variant: 'destructive' });

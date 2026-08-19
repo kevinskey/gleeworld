@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { CreateTenantDialog } from '@/components/admin/CreateTenantDialog';
 import { TenantDomainDialog } from '@/components/admin/TenantDomainDialog';
+import { TenantModulesDialog } from '@/components/admin/TenantModulesDialog';
 import {
   ExternalLink,
   Settings,
@@ -29,6 +30,7 @@ import {
   Globe,
   Link2,
   Mail,
+  Blocks,
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -172,6 +174,7 @@ export default function PlatformTenantsPortal() {
   // unreachable when /admin/site-setup started redirecting away, leaving a
   // hand-written SQL UPDATE as the only route.
   const [domainTarget, setDomainTarget] = useState<TenantRow | null>(null);
+  const [modulesTarget, setModulesTarget] = useState<TenantRow | null>(null);
   // Mirrors resendTarget but only updates when the dialog opens, so the
   // AlertDialogDescription keeps rendering the tenant's name during the
   // close animation instead of going blank the instant resendTarget is
@@ -381,6 +384,15 @@ export default function PlatformTenantsPortal() {
                     >
                       <LayoutPanelTop className="w-3.5 h-3.5 mr-1" /> Pages
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 min-h-0 lg:min-h-0 px-2 text-xs"
+                      onClick={() => setModulesTarget(t)}
+                      title="Turn specialised opt-in modules on or off for this tenant"
+                    >
+                      <Blocks className="w-3.5 h-3.5 mr-1" /> Modules
+                    </Button>
                     {!isPlatform && (
                       <Button
                         size="sm"
@@ -427,6 +439,12 @@ export default function PlatformTenantsPortal() {
           })}
         </div>
       )}
+
+      <TenantModulesDialog
+        tenant={modulesTarget}
+        open={!!modulesTarget}
+        onOpenChange={(v) => !v && setModulesTarget(null)}
+      />
 
       <TenantDomainDialog
         tenant={domainTarget}

@@ -15,17 +15,31 @@ interface CreateAssignmentDialogProps {
   courseId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Attach a Media Library recording (a class-copy row) to the new assignment. */
+  mediaId?: string;
+  /** Pre-fill the title (e.g. the shared recording's name). */
+  defaultTitle?: string;
+  /**
+   * Which assignment table to write. GleeWorld has two parallel lineages and
+   * different pages read different ones — writing the wrong table creates a
+   * row nobody ever sees:
+   *   'gw_course_assignments' (default) — the grading views + the legacy
+   *     UnifiedCoursePage read this.
+   *   'gw_assignments' — CourseShell's AssignmentsTab (/academy/c/:code, the
+   *     page students and instructors actually open) reads this, and it is
+   *     what fires the calendar-sync trigger.
+   * Column names differ between them; the mutation maps accordingly.
+   */
+  table?: 'gw_course_assignments' | 'gw_assignments';
 }
 
 interface AssignmentFormData {
   title: string;
   description?: string;
   assignment_type: string;
-  category?: string;
   points: number;
   due_at?: string;
   instructions?: string;
-  rubric?: string;
   is_active: boolean;
 }
 
@@ -33,10 +47,14 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
   courseId,
   open,
   onOpenChange,
+  mediaId,
+  defaultTitle,
+  table = 'gw_course_assignments',
 }) => {
   const queryClient = useQueryClient();
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<AssignmentFormData>({
     defaultValues: {
+      title: defaultTitle ?? '',
       assignment_type: 'other',
       is_active: true,
     }
@@ -50,15 +68,30 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.from('gw_course_assignments').insert({
+      // The two tables spell the same two fields differently:
+      //   due_date/is_published (gw_course_assignments)
+      //   due_at/is_active      (gw_assignments)
+      const common = {
         course_id: courseId,
         created_by: user.id,
-        is_published: data.is_active,
-        due_date: data.due_at || null,
-        ...data,
-      });
+        title: data.title,
+        description: data.description || null,
+        instructions: data.instructions || null,
+        assignment_type: data.assignment_type,
+        points: data.points,
+        media_id: mediaId ?? null,
+      };
+      const payload = table === 'gw_assignments'
+        ? { ...common, due_at: data.due_at || null, is_active: data.is_active }
+        : { ...common, due_date: data.due_at || null, is_published: data.is_active };
 
+      const { data: inserted, error } = await supabase
+        .from(table)
+        .insert(payload as never)
+        .select('id');
       if (error) throw error;
+      // Demo-tenant writes match 0 rows silently — treat empty as failure.
+      if (!inserted || inserted.length === 0) throw new Error('Assignment was not saved (read-only workspace?)');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gw-course-assignments', courseId] });
@@ -68,9 +101,14 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
       reset();
       onOpenChange(false);
     },
-    onError: (error) => {
-      toast.error('Failed to create assignment');
-      console.error(error);
+    onError: (error: any) => {
+      // Surface the real reason. A bare "Failed to create assignment" hid a
+      // Postgres 42P01 (a dropped table referenced by an RLS helper) for as
+      // long as it took someone to reproduce the insert by hand.
+      toast.error('Failed to create assignment', {
+        description: error?.message || String(error),
+      });
+      console.error('[CreateAssignmentDialog]', error);
     },
   });
 
@@ -80,6 +118,11 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Create New Assignment</DialogTitle>
         </DialogHeader>
+        {mediaId && (
+          <p className="text-xs rounded-md bg-primary/5 text-primary px-3 py-2">
+            A recording is attached — students will see a player on this assignment.
+          </p>
+        )}
         <form onSubmit={handleSubmit((data) => createMutation.mutate(data))} className="space-y-4">
           <div>
             <Label htmlFor="title">Title *</Label>
@@ -92,28 +135,21 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
             <Textarea id="description" {...register('description')} rows={3} />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="assignment_type">Assignment Type</Label>
-              <Select value={assignmentType} onValueChange={(value) => setValue('assignment_type', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="writing">Writing</SelectItem>
-                  <SelectItem value="reflection_paper">Reflection Paper</SelectItem>
-                  <SelectItem value="exam">Exam</SelectItem>
-                  <SelectItem value="project">Project</SelectItem>
-                  <SelectItem value="presentation">Presentation</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="category">Category</Label>
-              <Input id="category" {...register('category')} placeholder="e.g., Journals, Exams" />
-            </div>
+          <div>
+            <Label htmlFor="assignment_type">Assignment Type</Label>
+            <Select value={assignmentType} onValueChange={(value) => setValue('assignment_type', value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="writing">Writing</SelectItem>
+                <SelectItem value="reflection_paper">Reflection Paper</SelectItem>
+                <SelectItem value="exam">Exam</SelectItem>
+                <SelectItem value="project">Project</SelectItem>
+                <SelectItem value="presentation">Presentation</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -132,11 +168,6 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
           <div>
             <Label htmlFor="instructions">Instructions</Label>
             <Textarea id="instructions" {...register('instructions')} rows={4} placeholder="Detailed instructions for students" />
-          </div>
-
-          <div>
-            <Label htmlFor="rubric">Rubric</Label>
-            <Textarea id="rubric" {...register('rubric')} rows={4} placeholder="Grading criteria and rubric" />
           </div>
 
           <div className="flex items-center gap-2">

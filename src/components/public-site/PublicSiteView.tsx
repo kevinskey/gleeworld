@@ -20,6 +20,7 @@ export interface PublicSitePayload {
   accent_color: string | null;
   font_family: string | null;
   letter_spacing: number | null;
+  soundcloud_url: string | null;
   active_addons: string[];
 }
 
@@ -101,6 +102,7 @@ export function PublicSiteView({
       isPreview: false,
       activeAddons: data.active_addons ?? [],
       memberSignIn,
+      soundcloudUrl: data.soundcloud_url || null,
     }),
     [slug, theme, data, memberSignIn],
   );

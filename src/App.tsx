@@ -108,6 +108,7 @@ const StudioHome = lazy(() => import("./pages/studio/StudioHome"));
 const StudioEditor = lazy(() => import("./pages/studio/StudioEditor"));
 const VideoLibrary = lazy(() => import("./pages/video/VideoLibrary"));
 const VideoPlayer = lazy(() => import("./pages/video/VideoPlayer"));
+const ListenPage = lazy(() => import("./pages/ListenPage"));
 const Messenger = lazy(() => import("./pages/admin/Messenger"));
 import { Terms, Privacy } from "./pages/Legal";
 const ThankYou = lazy(() => import("./pages/ThankYou"));
@@ -217,6 +218,7 @@ const SeatingChartViewPage = lazy(() => import("./pages/seating-charts/ViewPage"
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
+const SoundCloudPlayerPage = lazy(() => import("./pages/dashboard/SoundCloudPlayerPage"));
 const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
 const ReadingMusicPage = lazy(() => import("./pages/dashboard/ReadingMusicPage"));
 const NotationEditorPage = lazy(() => import("./pages/notation/NotationEditorPage"));
@@ -231,6 +233,12 @@ const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPa
 const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/SongwritingLibraryPage"));
 const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));
 const PlannerPage = lazy(() => import("./pages/planner/PlannerPage"));
+const AuctionsCalendarPage = lazy(() => import("./pages/auctions/AuctionsCalendarPage"));
+const AuctionsAdminPage = lazy(() => import("./pages/auctions/AuctionsAdminPage"));
+const AuctionsLotsPage = lazy(() => import("./pages/auctions/LotsPage"));
+const AuctionsLotDetailPage = lazy(() => import("./pages/auctions/LotDetailPage"));
+const AuctionsSavedSearchesPage = lazy(() => import("./pages/auctions/SavedSearchesPage"));
+const AuctionsMatchesPage = lazy(() => import("./pages/auctions/MatchesPage"));
 const PrayerApp = lazy(() => import("./pages/prayer/PrayerApp"));
 const BibleApp = lazy(() => import("./pages/bible/BibleApp"));
 const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
@@ -335,7 +343,10 @@ const MemberDirectory = lazy(() => import("./pages/MemberDirectory"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
 const AuditionsManagement = lazy(() => import("./components/admin/AuditionsManagement").then(m => ({ default: m.AuditionsManagement })));
 const SoundCloudSearch = lazy(() => import("./pages/SoundCloudSearch"));
-const SoundCloudPlayerPage = lazy(() => import("./pages/dashboard/SoundCloudPlayerPage"));
+// The OAuth-backed floating Music Player (distinct from SoundCloudPlayerPage,
+// the widget-based Command Center player declared with the other dashboard
+// pages above).
+const MusicPlayerPage = lazy(() => import("./pages/dashboard/MusicPlayerPage"));
 const PublicSitePreviewPage = lazy(() => import("./pages/dashboard/PublicSitePreviewPage"));
 const FloatingSoundCloudPlayerHost = lazy(() => import("./components/soundcloud/FloatingSoundCloudPlayer"));
 const ShoutcastManagement = lazy(() => import("./pages/admin/ShoutcastManagement").then(m => ({ default: m.ShoutcastManagement })));
@@ -1043,6 +1054,11 @@ const App = () => {
               <Route path="/studio/videos/:id" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><VideoPlayer /></DashboardShell></UniversalLayout></ProtectedRoute>} />
               {/* Legacy /video/:id → studio player (backward compat). */}
               <Route path="/video/:id" element={<Navigate to="/studio/videos" replace />} />
+              <Route path="/listen/:id" element={
+                <ProtectedRoute>
+                  <ListenPage />
+                </ProtectedRoute>
+              } />
               <Route
                 path="/academy/c/:code/discuss/:threadId"
                 element={
@@ -1832,6 +1848,82 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
+                {/* Auctions — addon module 'auctions'. Phase 1 is the calendar:
+                    a member-facing list of upcoming equipment sales, plus a
+                    platform-staff-only curation page (the auction tables are
+                    global reference data, so the admin page self-gates too). */}
+                <Route
+                  path="/auctions"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsCalendarPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/lots"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsLotsPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/lots/:lotId"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsLotDetailPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/searches"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsSavedSearchesPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/matches"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsMatchesPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/auctions/admin"
+                  element={
+                    <ProtectedRoute>
+                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                        <DashboardShell>
+                          <ModuleGate moduleId="auctions"><AuctionsAdminPage /></ModuleGate>
+                        </DashboardShell>
+                      </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
                 {/* Documents — personal word processor (gw_personal_docs). Not a
                     tenant add-on module, so no ModuleGate: every signed-in user
                     gets it, same as Notes/Planner's own personal-storage model
@@ -1967,6 +2059,16 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell><NewMediaLibraryPage /></DashboardShell>
                       </UniversalLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                {/* The Command Center player. /soundcloud (no /dashboard) is
+                    the separate SoundCloud.com OAuth search page. */}
+                <Route
+                  path="/dashboard/soundcloud"
+                  element={
+                    <ProtectedRoute>
+                      <SoundCloudPlayerPage />
                     </ProtectedRoute>
                   }
                 />
@@ -3091,7 +3193,7 @@ const App = () => {
                                    path="/dashboard/music-player"
                                    element={
                                      <ProtectedRoute>
-                                       <SoundCloudPlayerPage />
+                                       <MusicPlayerPage />
                                      </ProtectedRoute>
                                    }
                                   />

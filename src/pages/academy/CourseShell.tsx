@@ -215,7 +215,7 @@ export default function CourseShell() {
           <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">
               <p className="text-slate-600 mb-4">Class not found.</p>
-              <Button onClick={() => navigate("/control-center?module=glee-academy")}>Back to Glee Academy</Button>
+              <Button onClick={() => navigate("/academy")}>Back to Glee Academy</Button>
             </div>
           </div>
         </DashboardShell>
@@ -235,7 +235,11 @@ export default function CourseShell() {
       <div className="bg-primary text-primary-foreground" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <button
-            onClick={() => navigate("/control-center?module=glee-academy")}
+            // "Glee Academy" must land on Glee Academy. This pointed at
+            // /control-center?module=glee-academy — the command center —
+            // so the back arrow took you somewhere that is not the place
+            // named on the label.
+            onClick={() => navigate("/academy")}
             className="inline-flex items-center gap-1.5 text-xs text-primary-foreground/70 hover:text-primary-foreground mb-3"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -882,6 +886,29 @@ function ModuleCard({
 
 // ─── Assignments ──────────────────────────────────────────────────────────
 
+/**
+ * Resolve any recordings attached to these assignments (shared from the
+ * Studio / Media Library via ShareRecordingDialog) in ONE batched query, so
+ * a long assignment list doesn't fan out into a request per row. Rows the
+ * caller cannot read under RLS simply come back unattached rather than
+ * failing the whole list.
+ */
+async function withAttachedMedia(rows: any[]): Promise<any[]> {
+  const ids = [...new Set(rows.map((r) => r.media_id).filter(Boolean))];
+  if (ids.length === 0) return rows;
+  const { data } = await supabase
+    .from("gw_media_library")
+    .select("id, title, file_url")
+    .in("id", ids)
+    .eq("is_deleted", false);
+  const byId: Record<string, { id: string; title: string; file_url: string }> =
+    Object.fromEntries(((data as any[]) ?? []).map((m) => [m.id, m]));
+  return rows.map((r) => ({
+    ...r,
+    attachedMedia: r.media_id ? byId[r.media_id] ?? null : null,
+  }));
+}
+
 function AssignmentsTab({ course, canEdit }: TabProps) {
   const { user } = useAuth();
   const [items, setItems] = useState<any[]>([]);
@@ -909,26 +936,30 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
   function reload() {
     supabase
       .from("gw_assignments")
-      .select("id, title, description, due_at, points, is_active, tenant_id")
+      .select("id, title, description, due_at, points, is_active, tenant_id, media_id")
       .eq("course_id", course.id)
       .order("due_at", { ascending: true })
-      .then(({ data }) => setItems((data || []).map((r: any) => ({
-        ...r, due_date: r.due_at, is_published: r.is_active,
-      }))));
+      .then(async ({ data }) => {
+        const rows = (data || []).map((r: any) => ({
+          ...r, due_date: r.due_at, is_published: r.is_active,
+        }));
+        setItems(await withAttachedMedia(rows));
+      });
   }
 
   useEffect(() => {
     let c = false;
     supabase
       .from("gw_assignments")
-      .select("id, title, description, due_at, points, is_active, tenant_id")
+      .select("id, title, description, due_at, points, is_active, tenant_id, media_id")
       .eq("course_id", course.id)
       .order("due_at", { ascending: true })
       .then(async ({ data }) => {
         if (c) return;
-        const rows = (data || []).map((r: any) => ({
+        const rows = await withAttachedMedia((data || []).map((r: any) => ({
           ...r, due_date: r.due_at, is_published: r.is_active,
-        }));
+        })));
+        if (c) return;
         setItems(rows);
         setLoading(false);
 
@@ -1084,6 +1115,20 @@ function AssignmentsTab({ course, canEdit }: TabProps) {
                     {" · "}{a.points || 0} pts
                     {overdue && !isSubmitted && <span className="text-red-600 font-semibold"> · OVERDUE</span>}
                   </div>
+                  {/* Recording shared to the class as an assignment. preload
+                      "none" so a long list doesn't fetch every take up front;
+                      the row itself is clickable, so don't let player clicks
+                      open the assignment. */}
+                  {a.attachedMedia && (
+                    <audio
+                      controls
+                      preload="none"
+                      src={a.attachedMedia.file_url}
+                      className="w-full max-w-sm mt-2"
+                      aria-label={`Recording: ${a.attachedMedia.title}`}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {canEdit && a.is_published && (
@@ -1144,6 +1189,11 @@ function AssignmentEditDialog({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [gradingOpen, setGradingOpen] = useState(false);
+  // How much student work this delete would take with it. Submissions are
+  // FK'd to gw_assignments ON DELETE CASCADE, so deleting the assignment
+  // destroys every response and grade on it — the confirmation has to say so
+  // in numbers, not in the abstract. null = not counted yet.
+  const [submissionCount, setSubmissionCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (assignment) {
@@ -1155,6 +1205,18 @@ function AssignmentEditDialog({
       setForm(null);
     }
   }, [assignment]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSubmissionCount(null);
+    if (!open || !assignment?.id) return;
+    supabase
+      .from('gw_course_submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('assignment_id', assignment.id)
+      .then(({ count }) => { if (!cancelled) setSubmissionCount(count ?? 0); });
+    return () => { cancelled = true; };
+  }, [open, assignment?.id]);
 
   if (!open || !form) return null;
 
@@ -1256,10 +1318,31 @@ function AssignmentEditDialog({
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t">
-            <Button variant="destructive" size="sm" onClick={del} disabled={deleting}>
-              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
+            {/* Deleting cascades student submissions away, so this confirms
+                and names the damage in numbers. No "don't ask again" — an
+                opt-out on other people's graded work is not ours to offer. */}
+            <ConfirmDeleteButton
+              confirmKey="delete-course-assignment"
+              title={`Delete "${form.title}"?`}
+              description={
+                submissionCount === null
+                  ? 'Checking for student submissions…'
+                  : submissionCount === 0
+                    ? 'No one has submitted yet. This removes the assignment for the whole class.'
+                    : `This also permanently deletes ${submissionCount} student ${submissionCount === 1 ? 'submission' : 'submissions'}, including grades and feedback.`
+              }
+              confirmLabel={submissionCount ? 'Delete anyway' : 'Delete'}
+              allowDontAskAgain={false}
+              onConfirm={del}
+              disabled={deleting || submissionCount === null}
+              ariaLabel="Delete assignment"
+              className="inline-flex items-center justify-center h-9 px-4 text-sm font-medium text-rose-600 hover:text-rose-700 hover:bg-muted disabled:opacity-50"
+            >
+              {deleting
+                ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                : <Trash2 className="w-4 h-4 mr-1.5" />}
               Delete
-            </Button>
+            </ConfirmDeleteButton>
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={onClose}>Cancel</Button>
               <Button onClick={save} disabled={saving}>

@@ -53,11 +53,20 @@ interface Props {
   disabled?: boolean;
   /** Optional ARIA label for the trigger. */
   ariaLabel?: string;
+  /**
+   * Whether the user may permanently opt out of this confirmation.
+   * Default true. Pass false for actions whose cost is other people's data —
+   * deleting an assignment cascades away every student's submission and
+   * grade, and that is not something anyone should be able to silence
+   * forever with one stray checkbox.
+   */
+  allowDontAskAgain?: boolean;
 }
 
 export function ConfirmDeleteButton({
   confirmKey, title, description, onConfirm, children,
   className, confirmLabel = 'Delete', disabled, ariaLabel,
+  allowDontAskAgain = true,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [dontAsk, setDontAsk] = useState(false);
@@ -66,7 +75,7 @@ export function ConfirmDeleteButton({
   const fire = async () => {
     setRunning(true);
     try {
-      if (dontAsk) setSkipped(confirmKey);
+      if (dontAsk && allowDontAskAgain) setSkipped(confirmKey);
       await onConfirm();
       setOpen(false);
     } finally {
@@ -75,7 +84,9 @@ export function ConfirmDeleteButton({
   };
 
   const handleTrigger = () => {
-    if (isSkipped(confirmKey)) {
+    // A stored opt-out never applies when this action forbids opting out —
+    // so turning the flag off also re-arms anyone who had already skipped it.
+    if (allowDontAskAgain && isSkipped(confirmKey)) {
       // Opted out — run immediately.
       fire();
       return;
@@ -108,13 +119,15 @@ export function ConfirmDeleteButton({
             )}
           </div>
         </div>
-        <label className="flex items-center gap-2 text-sm text-muted-foreground mb-3 cursor-pointer">
-          <Checkbox
-            checked={dontAsk}
-            onCheckedChange={(v) => setDontAsk(v === true)}
-          />
-          Don&apos;t ask me again for this action
-        </label>
+        {allowDontAskAgain && (
+          <label className="flex items-center gap-2 text-sm text-muted-foreground mb-3 cursor-pointer">
+            <Checkbox
+              checked={dontAsk}
+              onCheckedChange={(v) => setDontAsk(v === true)}
+            />
+            Don&apos;t ask me again for this action
+          </label>
+        )}
         <div className="flex justify-end gap-2">
           <Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={running}>
             Cancel

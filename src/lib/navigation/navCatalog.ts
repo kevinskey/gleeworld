@@ -12,7 +12,7 @@ import {
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
-  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, CreditCard, Receipt,
+  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, Gavel, CreditCard, Receipt,
   HandHeart, ConciergeBell, QrCode, Award, Cloud,
   type LucideIcon, FileText } from 'lucide-react';
 
@@ -72,12 +72,21 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'sight',         to: '/dashboard/reading-music', label: 'Reading Music', icon: Eye,      section: 'music', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-reading-music', gridIcon: ScanEye, gate: { module: 'sight_reading' } },
   { key: 'part-tracks',   to: '/dashboard/part-tracks',   label: 'Part Tracks',   icon: ListMusic, section: 'music', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-part-tracks' },
   { key: 'media-library', to: '/dashboard/media-library', label: 'Media Library', icon: Images,   section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-media-library' },
+  // Streams the tenant's soundcloud.com profile through SoundCloud's own
+  // widget, grouped by the sets on that account. Profile comes from
+  // gw_branding_settings.soundcloud_url; unset shows a setup prompt.
+  // Not to be confused with /soundcloud, the 2025 OAuth search page.
+  { key: 'soundcloud',    to: '/dashboard/soundcloud',    label: 'SoundCloud',    icon: Music,    section: 'music', tone: 'bg-sky-50 text-sky-600',       tourId: 'nav-soundcloud' },
   // The partner sheet-music marketplace (buyer side). Everyone can browse
   // and buy; partners manage their catalog via Partner Portal below.
   { key: 'music-store',   to: '/store',                   label: 'Music Store',   icon: ShoppingBag, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-music-store' },
   { key: 'librarian',     to: '/dashboard/librarian',     label: 'Librarian',     icon: LibraryBig, section: 'music', tone: 'bg-slate-50 text-slate-600', tourId: 'nav-librarian',    gate: { module: 'librarian', librarianOnly: true } },
   { key: 'partner-portal', to: '/partner', label: 'Partner Portal', icon: Store, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-partner-portal', gate: { partnerOnly: true } },
-  { key: 'soundcloud',    to: '/dashboard/music-player',  label: 'SoundCloud',    icon: Cloud,      section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-soundcloud' },
+  // The OAuth-backed floating player (concert-rsvp-form lineage). Kept
+  // alongside the widget-based /dashboard/soundcloud entry above until one
+  // of the two SoundCloud integrations is retired — keys/tourIds must stay
+  // distinct or nav ordering and tours misbehave.
+  { key: 'music-player',  to: '/dashboard/music-player',  label: 'Music Player',  icon: Cloud,      section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-music-player' },
   // Teach
   { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-primary text-primary-foreground', tourId: 'nav-academy' },
   { key: 'office-hours', to: '/dashboard/office-hours',        label: 'Studio Hours', icon: CalendarClock, section: 'teach', tone: 'bg-emerald-50 text-emerald-600',     tourId: 'nav-office-hours' },
@@ -108,6 +117,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'tour',      to: '/tour-manager',              label: 'Travel Manager',  icon: RouteIcon,     section: 'plan', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-tour-manager', gate: { module: 'tour' } },
   { key: 'seating-charts', to: '/seating-charts',       label: 'Seating Charts',  icon: Armchair,      section: 'plan', tone: 'bg-indigo-50 text-indigo-600',   tourId: 'nav-seating-charts' },
   { key: 'auditions', to: '/dashboard/auditions',       label: 'Auditions',       icon: ScanLine,      section: 'plan', tone: 'bg-lime-50 text-lime-600',       tourId: 'nav-auditions', gate: { module: 'auditions' } },
+  { key: 'auctions',  to: '/auctions',                  label: 'Auctions',        icon: Gavel,         section: 'plan', tone: 'bg-stone-50 text-stone-600',     tourId: 'nav-auctions', gate: { module: 'auctions' } },
   // Reach
   { key: 'pr-hub',    to: '/dashboard/pr-hub', label: 'PR Hub',    icon: Megaphone,     section: 'reach', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-pr-hub', gate: { module: 'pr_hub' } },
   { key: 'fan-page',  to: '/admin/fan-page',   label: 'Fan Page',  icon: Heart,         section: 'reach', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-fan-page', gate: { adminOnly: true } },
@@ -195,6 +205,33 @@ function gateOpen(gate: NavGate | undefined, ctx: NavContext): boolean {
 export function resolveNav(ctx: NavContext): CatalogEntry[] {
   return NAV_CATALOG.filter((e) => gateOpen(e.gate, ctx) && !ctx.hiddenRoutes.has(e.to));
 }
+
+/**
+ * Every module id any catalog entry gates on.
+ *
+ * The shells (DashboardShell, MyWorldPage) loop this to build the
+ * `moduleAccess` map that backs `NavContext.hasModule`, so a gated entry is
+ * only ever visible if its module id appears here. This used to be a
+ * hand-maintained array duplicated in both shells, and forgetting to add a
+ * key hid the destination completely — no error, no warning, nothing in the
+ * console. That cost us All-State on its first deploy and Auctions on its
+ * second, which is twice too often for a list a computer can derive.
+ *
+ * Computed once at module load from the static catalog, so the shells' hook
+ * count is fixed across renders — the property the hand-written list was
+ * there to guarantee.
+ */
+export const GATED_MODULE_KEYS: readonly string[] = (() => {
+  const keys = new Set<string>();
+  for (const entry of NAV_CATALOG) {
+    if (entry.gate?.module) keys.add(entry.gate.module);
+    for (const m of entry.gate?.moduleAny ?? []) keys.add(m);
+  }
+  // 'alumni' has no catalog entry gating on it today but the shells have
+  // always probed it; keep it so removing it is a separate, deliberate change.
+  keys.add('alumni');
+  return Object.freeze([...keys]);
+})();
 
 // Every page the assistant may offer to open, derived from the catalog so
 // it can never drift from the real nav (its predecessor was a hand-kept
