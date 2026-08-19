@@ -31,7 +31,6 @@ export interface GleeWorldEvent {
   attendance_deadline?: string | null;
   late_arrival_allowed?: boolean | null;
   excuse_required?: boolean | null;
-  event_qr_token?: string | null;
   // Recurring event fields
   is_recurring?: boolean | null;
   parent_event_id?: string | null;
@@ -288,7 +287,10 @@ export const useGleeWorldEvents = () => {
   };
 
   const getUpcomingEvents = (limit: number = 6) => {
-    return events.slice(0, limit);
+    const now = new Date();
+    return events
+      .filter(event => new Date(event.end_date || event.start_date) >= now)
+      .slice(0, limit);
   };
 
   const getEventsByMonth = (year: number, month: number) => {

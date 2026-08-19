@@ -35,7 +35,7 @@ import {
   Smartphone,
   Sparkles,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
@@ -59,7 +59,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Slider } from '@/components/ui/slider';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { BLOCK_LIST, getBlockModule, isBlockAvailable } from '@/components/public-site/registry';
+import { BLOCK_LIST, getBlockModule, isBlockAvailable, isBlockOfferedToTenant } from '@/components/public-site/registry';
 import { AutoForm } from '@/components/public-site/AutoForm';
 import { BlockFrame } from '@/components/public-site/BlockFrame';
 import { fontStack, FONT_OPTIONS, safeConfig, themeCssVars, themeSchema, type SiteBlock, type SiteRenderContext, type SiteTheme } from '@/components/public-site/types';
@@ -1207,7 +1207,7 @@ export default function PublicPageEditor() {
                       { key: 'gleeworld', label: 'GleeWorld extras' },
                       { key: 'addon', label: 'Add-ons' },
                     ] as const).map(({ key, label }) => {
-                      const items = BLOCK_LIST.filter((m) => !m.locked && (m.group ?? 'core') === key);
+                      const items = BLOCK_LIST.filter((m) => !m.locked && (m.group ?? 'core') === key && isBlockOfferedToTenant(m, getTenantSlug()));
                       if (items.length === 0) return null;
                       return (
                         <div key={key} className="space-y-2">

@@ -43,7 +43,7 @@ describe('findRoutingCycle', () => {
   it('detects a direct self-loop', () => {
     const r = findRoutingCycle([{ from: 'bus1', to: 'bus1' }]);
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.cycle).toEqual(['bus1', 'bus1']);
+    if (r.ok === false) expect(r.cycle).toEqual(['bus1', 'bus1']);
   });
 
   it('detects a two-node cycle', () => {
@@ -52,7 +52,7 @@ describe('findRoutingCycle', () => {
       { from: 'bus2', to: 'bus1' },
     ]);
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.cycle).toEqual(['bus1', 'bus2', 'bus1']);
+    if (r.ok === false) expect(r.cycle).toEqual(['bus1', 'bus2', 'bus1']);
   });
 
   it('detects a three-node cycle (bus1 → bus2 → bus3 → bus1)', () => {
@@ -62,7 +62,7 @@ describe('findRoutingCycle', () => {
       { from: 'bus3', to: 'bus1' },
     ]);
     expect(r.ok).toBe(false);
-    if (!r.ok) {
+    if (r.ok === false) {
       expect(r.cycle[0]).toBe(r.cycle[r.cycle.length - 1]);
       expect(new Set(r.cycle).size).toBe(3); // three distinct nodes involved
     }
@@ -77,7 +77,7 @@ describe('findRoutingCycle', () => {
       { from: 'bus2', to: 'bus1' },
     ]);
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.cycle).toEqual(['bus1', 'bus2', 'bus1']);
+    if (r.ok === false) expect(r.cycle).toEqual(['bus1', 'bus2', 'bus1']);
   });
 
   it('ignores an outbound edge from master (master is a terminal sink)', () => {
@@ -117,7 +117,7 @@ describe('wouldEditCycle', () => {
       { from: 'bus1', to: 'bus2' },
     );
     expect(r.ok).toBe(false);
-    if (!r.ok) {
+    if (r.ok === false) {
       expect(r.cycle[0]).toBe(r.cycle[r.cycle.length - 1]);
       expect(new Set(r.cycle)).toEqual(new Set(['bus1', 'bus2']));
     }
@@ -126,7 +126,7 @@ describe('wouldEditCycle', () => {
   it('rejects a direct self-loop edit', () => {
     const r = wouldEditCycle([], { from: 'bus1', to: 'bus1' });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.cycle).toEqual(['bus1', 'bus1']);
+    if (r.ok === false) expect(r.cycle).toEqual(['bus1', 'bus1']);
   });
 
   it('allows the edit even when the CURRENT graph is cyclic, so long as the edit breaks it', () => {

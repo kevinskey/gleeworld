@@ -92,7 +92,11 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   return (
     <section id="scholar-application" className="w-full border-y" style={{ background: 'color-mix(in oklab, var(--site-accent) 6%, transparent)', borderColor: 'color-mix(in oklab, var(--site-accent) 22%, transparent)' }}>
       <div className="gw-container">
-        <div className="mb-6">
+        {/* Centered column (Kevin, 2026-08-19): the band is full-bleed, so
+            left-aligned content at 768px left a dead right half on desktop.
+            Header text centers; the form keeps its comfortable reading width
+            but sits in the middle of the band. */}
+        <div className="mb-6 text-center">
           {config.eyebrow && (
             <p className="text-xs font-semibold uppercase mb-2" style={{ color: 'var(--site-accent)', letterSpacing: '0.24em' }}>
               {config.eyebrow}
@@ -104,11 +108,11 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                 "2027" on its own line — the year wraps as one unit. */}
             {config.academicYear && <> · <span className="whitespace-nowrap">{config.academicYear}</span></>}
           </h2>
-          {config.intro && <p className="text-muted-foreground mt-2 max-w-2xl">{config.intro}</p>}
+          {config.intro && <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">{config.intro}</p>}
         </div>
 
         {submit.isSuccess ? (
-          <div className="rounded-xl border border-border bg-white p-8 text-center max-w-xl">
+          <div className="rounded-xl border border-border bg-white p-8 text-center max-w-xl mx-auto">
             <GraduationCap className="w-7 h-7 mx-auto mb-3" style={{ color: 'var(--site-accent)' }} />
             <p className="font-semibold text-lg">Application received.</p>
             <p className="text-muted-foreground mt-1">Thank you, {form.full_name.trim()}. The program director will review your application — if you are accepted, your class sign-in link will be emailed to {form.email.trim()}.</p>
@@ -118,7 +122,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
              wall of fields. The form renders only after the click. */
           <Button
             size="lg"
-            className="h-12 px-8 text-base font-semibold"
+            className="h-12 px-8 text-base font-semibold mx-auto flex"
             style={{ background: 'var(--site-accent)', color: '#fff' }}
             onClick={() => setFormOpen(true)}
           >
@@ -127,7 +131,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           </Button>
         ) : (
           <form
-            className="rounded-xl border border-border bg-white p-5 cq-sm:p-6 space-y-6 max-w-3xl"
+            className="rounded-xl border border-border bg-white p-5 cq-sm:p-6 space-y-6 max-w-3xl mx-auto"
             onSubmit={(e) => { e.preventDefault(); submit.mutate(); }}
           >
             <div className="space-y-4">
@@ -272,6 +276,11 @@ export const scholarApplicationBlock: BlockModule<typeof schema> = {
   icon: GraduationCap,
   tier: 'free',
   group: 'core',
+  // Lyke House only. The block itself is tenant-neutral, but the Sr. Thea
+  // Bowman agreement it defaults to is theirs, so it stays out of every
+  // other tenant's block picker until someone asks for it. Gating is
+  // picker-side only — an already-placed block always renders.
+  tenants: ['lykehouse'],
   configSchema: schema,
   defaultConfig: schema.parse({}),
   EditorForm,

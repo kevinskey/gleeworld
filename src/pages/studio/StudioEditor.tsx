@@ -5293,10 +5293,14 @@ function BarRuler({
         onLoopRegionChange({ start: lo, end: hi });
       }
     };
-    const up = (ev: PointerEvent) => {
+    const cleanup = (ev: PointerEvent) => {
       try { el.releasePointerCapture(ev.pointerId); } catch { /* ignore */ }
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', cancel);
+    };
+    const up = (ev: PointerEvent) => {
+      cleanup(ev);
       const sec = Math.max(0, Math.min(lengthSeconds, (ev.clientX - rect.left) / pxPerSecond));
       if (!dragged) {
         // Tap: move playhead. A leftover region highlight with loop OFF
@@ -5308,13 +5312,20 @@ function BarRuler({
         onSeek?.(sec);
       }
     };
+    // iOS fires pointercancel if the browser reclaims the gesture; keep
+    // whatever region was dragged so far, just stop tracking.
+    const cancel = (ev: PointerEvent) => cleanup(ev);
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', cancel);
   };
 
   return (
     <div
-      className="relative h-6 bg-muted/30 cursor-crosshair select-none"
+      // touch-none is load-bearing: without it iOS claims a horizontal
+      // drag on the ruler as a scroll gesture and fires pointercancel,
+      // so drag-to-loop never worked on touch — scroll from the lanes.
+      className="relative h-6 bg-muted/30 cursor-crosshair select-none touch-none"
       style={{ width }}
       onPointerDown={onPointerDown}
       title="Click to set playhead · drag to mark a loop region"

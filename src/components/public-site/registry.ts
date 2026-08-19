@@ -81,3 +81,13 @@ export function getBlockModule(type: string): BlockModule | undefined {
 export function isBlockAvailable(mod: BlockModule, activeAddons: string[]): boolean {
   return mod.tier === 'free' || !mod.requiredAddon || activeAddons.includes(mod.requiredAddon);
 }
+
+/**
+ * Blocks may be scoped to specific tenants (see BlockModule.tenants). Used by
+ * the block pickers so a one-tenant block doesn't clutter everyone else's
+ * "Add block" sheet. Rendering never consults this — an already-placed block
+ * keeps working regardless.
+ */
+export function isBlockOfferedToTenant(mod: BlockModule, tenantSlug: string): boolean {
+  return !mod.tenants || mod.tenants.includes(tenantSlug);
+}

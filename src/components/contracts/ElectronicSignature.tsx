@@ -41,16 +41,18 @@ const SignatureCanvas = ({
     if (!canvas) return { x: 0, y: 0 };
     
     const rect = canvas.getBoundingClientRect();
-    
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
     if ('touches' in e) {
       return {
-        x: e.touches[0].clientX - rect.left,
-        y: e.touches[0].clientY - rect.top
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY
       };
     }
     return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
+      x: (e.clientX - rect.left) * scaleX,
+      y: (e.clientY - rect.top) * scaleY
     };
   };
 
@@ -166,17 +168,21 @@ export const ElectronicSignature = ({
   }, []);
 
   const handleSign = () => {
+    // Only attach the drawn signature when signing from the draw tab —
+    // an abandoned scribble should not ride along with a typed signature
+    const includeDrawn = activeTab === 'draw' && hasDrawnSignature && !!drawnSignatureData;
+
     const signatureData: SignatureData = {
-      type: activeTab === 'draw' && drawnSignatureData ? 'drawn' : 'typed',
+      type: includeDrawn ? 'drawn' : 'typed',
       typedName: typedName.trim(),
       typedTitle: typedTitle.trim() || undefined,
-      drawnSignature: drawnSignatureData,
+      drawnSignature: includeDrawn ? drawnSignatureData : undefined,
       signedAt: new Date().toISOString(),
       consent: true
     };
 
     // If both typed name and drawn signature exist
-    if (typedName.trim() && drawnSignatureData) {
+    if (includeDrawn && typedName.trim()) {
       signatureData.type = 'both';
     }
 

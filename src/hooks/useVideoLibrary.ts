@@ -198,7 +198,19 @@ export async function loadPlaylistItems(playlistId: string): Promise<PlaylistIte
     .from('youtube_videos')
     .select('id, video_id, title, thumbnail_url, video_url, duration, published_at')
     .in('id', items.map((i) => i.video_id));
-  const byId = new Map((videos || []).map((v) => [v.id, v]));
+  // Same explicit-row-shape pattern as the gw_video_playlist_items read
+  // above — keeps us honest about the columns we actually selected.
+  type VideoRow = {
+    id: string;
+    video_id: string;
+    title: string;
+    thumbnail_url: string | null;
+    video_url: string;
+    duration: string | null;
+    published_at: string | null;
+  };
+  const videoRows = (videos || []) as VideoRow[];
+  const byId = new Map(videoRows.map((v) => [v.id, v]));
 
   return items
     .map((it) => {

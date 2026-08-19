@@ -102,7 +102,9 @@ function GalleryViewer({
 }
 
 function Render({ config, onConfigChange }: BlockRenderProps<Config>) {
-  const items = config.items.filter((i) => i.url);
+  // Drop empty rows AND normalize to the concrete shape GalleryViewer wants
+  // (url/caption are optional on the stored config; the viewer requires both).
+  const items = config.items.flatMap((i) => (i.url ? [{ url: i.url, caption: i.caption ?? '' }] : []));
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   if (items.length === 0) return onConfigChange ? <EmptyBlockPlaceholder name="Media Gallery" /> : null;
 

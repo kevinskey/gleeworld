@@ -1041,6 +1041,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const [navCollapsed, setNavCollapsed] = useState<boolean>(() => {
     try { return localStorage.getItem('gw_sidebar_collapsed') === '1'; } catch { return false; }
   });
+  if (alreadyInsideShell) return <>{children}</>;
   const setCollapsed = (v: boolean) => {
     setNavCollapsed(v);
     try { localStorage.setItem('gw_sidebar_collapsed', v ? '1' : '0'); } catch { /* private mode */ }

@@ -1,4 +1,5 @@
-import { defineConfig, type Plugin } from 'vite';
+import { type Plugin } from 'vite';
+import { defineConfig, configDefaults } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
@@ -38,6 +39,12 @@ function bumpSwVersion(): Plugin {
 // Vite-React-Shadcn project: `@/` aliases to `./src/`.
 export default defineConfig({
   plugins: [react(), bumpSwVersion()],
+  test: {
+    // Parallel Claude sessions keep git worktrees under .claude/worktrees;
+    // without this vitest runs every copy of the suite it finds there.
+    exclude: [...configDefaults.exclude, '**/.claude/**'],
+    setupFiles: ['./src/test/vitest.setup.ts'],
+  },
   resolve: {
     alias: { '@': path.resolve(__dirname, './src') },
   },

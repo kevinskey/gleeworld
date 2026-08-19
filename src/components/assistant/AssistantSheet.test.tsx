@@ -11,7 +11,11 @@ vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: () => ({ profile: { user_id: 'u1', full_name: 'Test User', email: 't@example.com', role: 'member' } }),
 }));
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { functions: { invoke: vi.fn() } },
+  supabase: {
+    functions: { invoke: vi.fn() },
+    auth: { getSession: vi.fn(async () => ({ data: { session: null } })) },
+  },
+  SUPABASE_URL: 'http://localhost',
 }));
 // AssistantProvider → useAssistantVoice → useBrandingSettings, which needs
 // getTenantSlug + a queryable supabase client; stub the hook instead.

@@ -24,6 +24,19 @@ let singletonChannel: RealtimeChannel | null = null;
 let singletonKey: string | null = null;
 let singletonSubscribed = false;
 let singletonSubscribePromise: Promise<void> | null = null;
+let singletonHandlersAttached = false;
+
+// Last lobby presence payload tracked on the shared channel, so leaving a
+// meeting can restore it instead of wiping this client's presence entirely.
+let lobbyPresencePayload: Record<string, unknown> | null = null;
+
+// Channel-level presence handlers are attached once per channel instance and
+// fan out to these per-mount subscribers (added/removed on mount/unmount).
+type PresenceState = Record<string, any[]>;
+const presenceSubscribers = new Set<(state: PresenceState) => void>();
+const notifyPresenceSubscribers = (state: PresenceState) => {
+  presenceSubscribers.forEach((cb) => cb(state));
+};
 
 const getPresenceChannel = (presenceKey: string) => {
   if (singletonChannel && singletonKey === presenceKey) {
@@ -42,6 +55,8 @@ const getPresenceChannel = (presenceKey: string) => {
   singletonKey = presenceKey;
   singletonSubscribed = false;
   singletonSubscribePromise = null;
+  singletonHandlersAttached = false;
+  lobbyPresencePayload = null;
 
   singletonChannel = supabase.channel(PRESENCE_CHANNEL, {
     config: {
@@ -63,22 +78,28 @@ export const useActiveMeetings = () => {
     const presenceKey = user?.id || `viewer-${Math.random().toString(36).slice(2)}`;
     const presenceChannel = getPresenceChannel(presenceKey);
 
-    // Attach handlers once per channel instance
-    presenceChannel
-      .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState();
-        setActiveMeetings(parsePresenceState(state));
-      })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        console.log('User joined meeting:', key, newPresences);
-        const state = presenceChannel.presenceState();
-        setActiveMeetings(parsePresenceState(state));
-      })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        console.log('User left meeting:', key, leftPresences);
-        const state = presenceChannel.presenceState();
-        setActiveMeetings(parsePresenceState(state));
-      });
+    // Register this mount's subscriber; channel-level handlers fan out to the set
+    const onPresenceState = (state: PresenceState) => {
+      setActiveMeetings(parsePresenceState(state));
+    };
+    presenceSubscribers.add(onPresenceState);
+
+    // Attach channel-level handlers ONCE per channel instance
+    if (!singletonHandlersAttached) {
+      singletonHandlersAttached = true;
+      presenceChannel
+        .on('presence', { event: 'sync' }, () => {
+          notifyPresenceSubscribers(presenceChannel.presenceState());
+        })
+        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+          console.log('User joined meeting:', key, newPresences);
+          notifyPresenceSubscribers(presenceChannel.presenceState());
+        })
+        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+          console.log('User left meeting:', key, leftPresences);
+          notifyPresenceSubscribers(presenceChannel.presenceState());
+        });
+    }
 
     // Subscribe once (avoid multiple .subscribe() on same topic)
     if (!singletonSubscribePromise) {
@@ -93,14 +114,16 @@ export const useActiveMeetings = () => {
 
             // Presence sync/join events are more reliable after the client tracks a presence state.
             try {
-              await presenceChannel.track({
+              const payload = {
                 room_name: '',
                 user_id: presenceKey,
                 user_name: user?.email || 'Viewer',
                 user_email: user?.email,
                 joined_at: new Date().toISOString(),
                 kind: 'lobby',
-              });
+              };
+              await presenceChannel.track(payload);
+              lobbyPresencePayload = payload;
               console.log('Tracked lobby presence');
             } catch (e) {
               console.warn('Failed to track lobby presence:', e);
@@ -146,6 +169,7 @@ export const useActiveMeetings = () => {
 
     return () => {
       window.clearInterval(poll);
+      presenceSubscribers.delete(onPresenceState);
     };
   }, [user?.id]);
 
@@ -254,7 +278,13 @@ export const useMeetingPresence = (
     return () => {
       console.log('[Presence] meeting hook cleanup', { roomName, userId });
       if (interval) window.clearInterval(interval);
-      presenceChannel.untrack();
+      // The channel is shared with the lobby list: restore the lobby presence
+      // payload instead of untracking, which would wipe this client's presence.
+      if (lobbyPresencePayload) {
+        void presenceChannel.track(lobbyPresencePayload);
+      } else {
+        void presenceChannel.untrack();
+      }
     };
   }, [roomName, userName, userEmail, userId]);
 

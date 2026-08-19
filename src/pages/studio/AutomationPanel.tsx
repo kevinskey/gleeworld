@@ -169,7 +169,9 @@ function EnvelopeCanvas({
     const v = valueForY(y);
     const nextPoints: AutomationPoint[] = [
       ...envelope.points,
-      { time_seconds: t, value: v, curve: 'linear' },
+      // `as const` because .sort() breaks the contextual typing from the
+      // AutomationPoint[] annotation, which would widen 'linear' to string.
+      { time_seconds: t, value: v, curve: 'linear' as const },
     ].sort((a, b) => a.time_seconds - b.time_seconds);
     commit(nextPoints);
     // eslint-disable-next-line react-hooks/exhaustive-deps

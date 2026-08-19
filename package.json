@@ -177,6 +177,7 @@
     "fake-indexeddb": "^6.2.5",
     "globals": "^15.9.0",
     "jose": "^5.10.0",
+    "jsdom": "^30.0.1",
     "lovable-tagger": "^1.1.7",
     "playwright-core": "^1.62.0",
     "postcss": "^8.4.47",

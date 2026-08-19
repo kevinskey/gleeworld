@@ -279,7 +279,7 @@ async function renderWindow(
     }));
     const cycleCheck = findRoutingCycle(cycleEdges);
     const busGraphOk = cycleCheck.ok;
-    if (!busGraphOk) {
+    if (cycleCheck.ok === false) {
       // eslint-disable-next-line no-console
       console.error(`[studio] export: bus routing cycle detected — bypassing bus routing: ${formatCycle(cycleCheck.cycle)}`);
     }

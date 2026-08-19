@@ -35,27 +35,37 @@ const EventCheckinPage = () => {
         return;
       }
 
-      try {
-        const { data, error: fetchError } = await supabase
-          .from("gw_events")
-          .select("id, title, start_date, end_date, location, description")
-          .eq("event_qr_token", token)
-          .single();
+      // get_checkin_event_by_token requires a session. Signed-out visitors
+      // fall through to the sign-in prompt below rather than the error card,
+      // which is what they used to get when gw_events was anon-readable.
+      if (!user) {
+        setLoading(false);
+        return;
+      }
 
-        if (fetchError || !data) {
+      try {
+        // The QR token lives in gw_event_qr_tokens, which is readable only by
+        // instructors/admins — a scholar resolving their own check-in link
+        // goes through this SECURITY DEFINER RPC instead. It requires auth,
+        // scopes to the caller's tenant, and never returns the token itself.
+        const { data, error: fetchError } = await supabase
+          .rpc("get_checkin_event_by_token", { p_token: token });
+
+        if (fetchError || !data?.success) {
           setError("Event not found or link has expired");
           setLoading(false);
           return;
         }
 
-        setEvent(data);
+        const eventData = data.event as EventData;
+        setEvent(eventData);
 
         // Check if user already checked in
         if (user) {
           const { data: existingAttendance } = await supabase
             .from("gw_event_attendance")
             .select("id")
-            .eq("event_id", data.id)
+            .eq("event_id", eventData.id)
             .eq("user_id", user.id)
             .maybeSingle();
 

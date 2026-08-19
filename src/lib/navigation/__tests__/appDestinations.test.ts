@@ -308,7 +308,7 @@ describe('getAppTiles with a custom tools list', () => {
 });
 
 describe('getAppTiles catalog parity', () => {
-  it('default primary is byte-identical to the pre-catalog grid for both roles (allOn)', () => {
+  it('default primary matches the frozen grid for both roles (allOn)', () => {
     // Faculty tabs claim /dashboard/viewer (Music); student tabs claim
     // /dashboard/viewer AND /studio — so those keys dedupe out of the grid.
     // With Part Tracks removed, the grid now has more room (8 max, not 8 with tracks).

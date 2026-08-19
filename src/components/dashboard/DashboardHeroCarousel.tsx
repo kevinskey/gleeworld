@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, X, Camera } from "lucide-react";
 import { useUniversalHeroSlides } from "@/hooks/useUniversalSlider";
@@ -29,7 +29,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
   // Pull from the universal slider system; shim back to the local
   // HeroSlide shape so the carousel JSX below doesn't change.
   const { data: universalSlides = [], isLoading: loading } = useUniversalHeroSlides('dashboard_hero');
-  const slides: HeroSlide[] = universalSlides.map((s) => ({
+  const slides: HeroSlide[] = useMemo(() => universalSlides.map((s) => ({
     id: s.id,
     title: s.title ?? undefined,
     description: s.description ?? undefined,
@@ -38,7 +38,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
     ipad_image_url: s.ipadImageUrl ?? undefined,
     display_order: 0,
     link_url: s.buttonUrl ?? undefined,
-  }));
+  })), [universalSlides]);
   const [expandedSlide, setExpandedSlide] = useState<HeroSlide | null>(null);
   const isMobile = useIsMobile();
   

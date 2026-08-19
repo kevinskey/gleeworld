@@ -1,13 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
-import { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode, Beam, Annotation } from 'vexflow';
-// VexFlow's TS shim doesn't declare Articulation / Tuplet / Curve as named
-// exports (they exist at runtime — the shim is just incomplete), so pull
-// them via a cast on the module namespace rather than a `named import` that
-// would TS2305 in the typecheck baseline forever. Kept in a separate import
-// from the rest so the older baselined imports don't churn.
+// vexflow 5 ships its own types, but opensheetmusicdisplay drags in the stale
+// @types/vexflow (1.x) whose ambient `declare module "vexflow"` shadows them,
+// so every named import from 'vexflow' is a TS2305. Runtime is unaffected —
+// Vite resolves the real v5 package — so import the module namespace and
+// re-type it with the identical v5 typings exposed under 'vexflow/core'
+// (a type-only import, fully erased at compile time; the runtime import
+// below still uses the full 'vexflow' entry, fonts included).
 import * as VexFlowExt from 'vexflow';
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const { Articulation, Tuplet, Curve } = VexFlowExt as any;
+import type * as VexFlow5 from 'vexflow/core';
+const { Renderer, Stave, StaveNote, Accidental, Formatter, StaveTie, Dot, Barline, Voice, VoiceMode, Beam, Annotation, Articulation, Tuplet, Curve } =
+  VexFlowExt as unknown as typeof VexFlow5;
+// The destructured consts above are value bindings only — re-expose the
+// instance types for the annotations below.
+type StaveNote = VexFlow5.StaveNote;
+type Stave = VexFlow5.Stave;
+type Voice = VexFlow5.Voice;
+type Beam = VexFlow5.Beam;
 import { EditorScore } from '@/lib/notation/model';
 import { layoutMeasures } from '@/lib/notation/measures';
 import { toVexKey, toVexDuration } from '@/lib/notation/toVexflow';
@@ -329,7 +337,7 @@ export function NotationView({
           if (el.triplet === 'stop' && runStart >= 0) {
             const group = notes.slice(runStart, k + 1);
             try {
-              tuplets.push(new Tuplet(group, { num_notes: group.length, notes_occupied: group.length - 1 }));
+              tuplets.push(new Tuplet(group, { numNotes: group.length, notesOccupied: group.length - 1 }));
             } catch { /* malformed group — skip rather than crash the score */ }
             runStart = -1;
           }
@@ -339,7 +347,7 @@ export function NotationView({
         voice = new Voice({ numBeats: score.timeSig.beats, beatValue: score.timeSig.beatType }).setMode(VoiceMode.SOFT);
         voice.addTickables(notes);
         Accidental.applyAccidentals([voice], keySpec);   // key-aware sharps/naturals
-        beams = Beam.generateBeams(voice.getTickables(), { groups: Beam.getDefaultBeamGroups(beamSpec) });
+        beams = Beam.generateBeams(notes, { groups: Beam.getDefaultBeamGroups(beamSpec) });
         try { minW = new Formatter().joinVoices([voice]).preCalculateMinTotalWidth([voice]); }
         catch { minW = 44 * notes.length; }
 

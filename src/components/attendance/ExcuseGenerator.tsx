@@ -341,9 +341,15 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
       }
 
       const reason = selectedReason === 'Other' ? customReason : selectedReason;
-      const fullReason = detailedExplanation.trim() 
+      const fullReason = detailedExplanation.trim()
         ? `${reason}\n\nDetailed Explanation: ${detailedExplanation}`
         : reason;
+
+      // excuse_requests has no documentation column, so embed the uploaded
+      // file URL in the reason text so approvers can see it
+      const reasonWithDocumentation = documentationUrl
+        ? `${fullReason}\n\nDocumentation: ${documentationUrl}`
+        : fullReason;
 
       if (editingRequest) {
         // Update existing request - get event data first
@@ -355,7 +361,7 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
             event_id: selectedEvent,
             event_date: selectedEventData?.start_date?.split('T')[0],
             event_title: selectedEventData?.title || 'Unknown Event',
-            reason: fullReason,
+            reason: reasonWithDocumentation,
             status: 'pending', // Reset to pending when resubmitted
             secretary_message: null, // Clear secretary message
             secretary_message_sent_at: null,
@@ -389,7 +395,7 @@ export const ExcuseGenerator = ({ onRequestEdited }: ExcuseGeneratorProps) => {
             event_id: selectedEvent,
             event_date: selectedEventData?.start_date?.split('T')[0],
             event_title: selectedEventData?.title || 'Unknown Event',
-            reason: fullReason,
+            reason: reasonWithDocumentation,
             status: 'pending',
             ...formExtras,
           } as any);

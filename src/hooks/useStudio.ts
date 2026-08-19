@@ -452,8 +452,12 @@ function fxEntries(session: Session | null): Array<{ fxId: string; trackId: stri
 /** Audio-clip signature for a single audio track. Used to detect which
  *  clips were added / removed / edited between two sessions so we can
  *  splice the engine instead of rebuilding it. */
-function audioClipSig(c: { id: string; asset_id: string; start_seconds: number; duration_seconds: number; offset_seconds: number; gain_db: number; pitch_semitones: number; time_stretch: number; reverse: boolean }): string {
-  return `${c.id}:${c.asset_id}:${c.start_seconds.toFixed(3)}:${c.duration_seconds.toFixed(3)}:${c.offset_seconds.toFixed(3)}:${c.gain_db}:${c.pitch_semitones}:${c.time_stretch}:${c.reverse}`;
+export function audioClipSig(c: { id: string; asset_id: string; start_seconds: number; duration_seconds: number; offset_seconds: number; gain_db: number; pitch_semitones: number; time_stretch: number; reverse: boolean; fade_in_seconds: number; fade_out_seconds: number }): string {
+  // Fades ARE part of the signature: the player bakes fadeIn/fadeOut at
+  // construction, so a fade edit must ride the remove+add splice or the
+  // engine keeps playing the old envelope while the clip DRAWS the new
+  // one (seen 2026-08-19: fades visible, no audible fade).
+  return `${c.id}:${c.asset_id}:${c.start_seconds.toFixed(3)}:${c.duration_seconds.toFixed(3)}:${c.offset_seconds.toFixed(3)}:${c.gain_db}:${c.pitch_semitones}:${c.time_stretch}:${c.reverse}:${c.fade_in_seconds}:${c.fade_out_seconds}`;
 }
 
 // Map a native bridge state payload onto the web engine's EngineState
@@ -1117,7 +1121,7 @@ export function useStudioEngine(session: Session | null) {
       setBusOutput: async (busId: string, targetBusId: string): Promise<RoutingEditResult> => {
         const r = engineRef.current?.setBusOutput(busId, targetBusId);
         if (r === undefined) return { ok: false, error: 'unknown_bus' };
-        if (r.ok) return { ok: true };
+        if (r.ok === true) return { ok: true };
         if ('cycle' in r) return { ok: false, error: 'cycle', cycle: r.cycle };
         return { ok: false, error: r.error === 'unknown_bus' ? 'unknown_bus' : 'unknown_target' };
       },

@@ -20,6 +20,10 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// Branding's save() chains `.upsert(...).select('id')` (silent-noop guard,
+// be6c86e17) while General's awaits the upsert directly — so the mock's
+// return must be both awaitable and .select()-chainable, and .select must
+// resolve to a non-empty row set or the guard treats the save as a noop.
 const upsertMock = vi.hoisted(() =>
   vi.fn((_payload: Record<string, unknown>, _options?: { onConflict?: string }) =>
     pgChain({ data: [{ id: 'branding-row' }], error: null })),

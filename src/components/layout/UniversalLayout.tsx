@@ -58,7 +58,6 @@ export const UniversalLayout = ({
   onViewModeChange
 }: UniversalLayoutProps) => {
   const alreadyInsideLayout = useContext(UniversalLayoutNestedContext);
-  if (alreadyInsideLayout) return <>{children}</>;
   const location = useLocation();
   const { settings: branding } = useBrandingSettings();
 

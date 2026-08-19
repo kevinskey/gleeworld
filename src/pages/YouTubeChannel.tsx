@@ -244,7 +244,6 @@ export const YouTubeChannel: React.FC = () => {
     }
     toast({ title: next ? 'Added to Featured' : 'Removed from Featured' });
   };
-
   // Ask the edge function for a short-lived presigned URL, then let the
   // browser fetch it directly — a 10 GB archive must never be proxied
   // through the app. The link expires in minutes, so it is minted per click

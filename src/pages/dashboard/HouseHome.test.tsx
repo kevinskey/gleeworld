@@ -5,7 +5,7 @@
 // stubbed so this test isolates the one thing under test: does
 // DateCardSlot receive a real ensembleName, sourced from branding settings,
 // instead of the hardcoded ''.
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -146,6 +146,16 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 
 import HouseHome from './HouseHome';
+
+beforeEach(() => {
+  // HouseHome uses useIsMobile (since #293), which reads window.matchMedia;
+  // jsdom doesn't implement it, so stub it (same pattern as MobileBottomNav.test.tsx).
+  window.matchMedia = ((query: string) => ({
+    matches: false, media: query, onchange: null,
+    addEventListener: vi.fn(), removeEventListener: vi.fn(),
+    addListener: vi.fn(), removeListener: vi.fn(), dispatchEvent: vi.fn(),
+  })) as unknown as typeof window.matchMedia;
+});
 
 afterEach(() => {
   cleanup();

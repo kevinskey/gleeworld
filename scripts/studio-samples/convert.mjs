@@ -36,7 +36,8 @@ if (!recipesPath || !srcRoot || !outRoot) {
 const recipes = JSON.parse(readFileSync(recipesPath, 'utf8'))
   .filter((r) => only.length === 0 || only.includes(r.name));
 
-const BITRATE = '160k';
+const BITRATE = '160k';       // mp3 (universal decodeAudioData fallback)
+const OPUS_BITRATE = '96k';   // webm/opus alternate (~40% smaller, picked by capable clients)
 
 // Per-file peak level (dBFS) via ffmpeg volumedetect — pass 1 of peak
 // normalization. volumedetect prints to stderr, hence the shell pipeline.
