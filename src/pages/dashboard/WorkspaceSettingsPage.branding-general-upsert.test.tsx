@@ -20,8 +20,16 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+// Branding's save() chains `.upsert(...).select('id')` (silent-noop guard,
+// be6c86e17) while General's awaits the upsert directly — so the mock's
+// return must be both awaitable and .select()-chainable, and .select must
+// resolve to a non-empty row set or the guard treats the save as a noop.
 const upsertMock = vi.hoisted(() =>
-  vi.fn(async (_payload: Record<string, unknown>, _options?: { onConflict?: string }) => ({ error: null })),
+  vi.fn((_payload: Record<string, unknown>, _options?: { onConflict?: string }) =>
+    Object.assign(Promise.resolve({ data: [{ id: 1 }], error: null }), {
+      select: async () => ({ data: [{ id: 1 }], error: null }),
+    }),
+  ),
 );
 const fromMock = vi.hoisted(() => vi.fn());
 
@@ -39,6 +47,18 @@ vi.mock('@/hooks/useUserRole', () => ({
 
 vi.mock('@/hooks/useBrandingSettings', () => ({
   useBrandingSettings: () => ({ settings: null, refetch: vi.fn() }),
+}));
+
+// The page was wrapped in UniversalLayout + DashboardShell (2026-07-24,
+// 59126e655) after this test was written. That shell tree pulls in heavy,
+// jsdom-hostile modules (pdfjs via the music library, mobileAudioUnlock,
+// etc.) that are irrelevant to the upsert wiring under test — mock the
+// shell down to passthroughs, same as HouseHome.test.tsx does.
+vi.mock('@/components/layout/UniversalLayout', () => ({
+  UniversalLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+vi.mock('@/components/dashboard/DashboardShell', () => ({
+  DashboardShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 import WorkspaceSettingsPage from './WorkspaceSettingsPage';

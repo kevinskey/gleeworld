@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AssistantProvider, useAssistant } from './AssistantProvider';
 import { saveThread } from './threadStorage';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +12,11 @@ vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: () => ({ profile: { user_id: 'u1', full_name: 'Test User', email: 't@example.com', role: 'member' } }),
 }));
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { functions: { invoke: vi.fn() } },
+  supabase: {
+    functions: { invoke: vi.fn() },
+    auth: { getSession: vi.fn(async () => ({ data: { session: null } })) },
+  },
+  SUPABASE_URL: 'http://localhost',
 }));
 
 const Probe = () => {
@@ -28,9 +33,11 @@ const Probe = () => {
 
 const renderProbe = () =>
   render(
-    <MemoryRouter>
-      <AssistantProvider><Probe /></AssistantProvider>
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter>
+        <AssistantProvider><Probe /></AssistantProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 
 beforeEach(() => { sessionStorage.clear(); });

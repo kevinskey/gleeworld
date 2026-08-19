@@ -3,6 +3,7 @@ import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, cleanup } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AssistantSheet } from './AssistantSheet';
 import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
 
@@ -10,7 +11,11 @@ vi.mock('@/hooks/useUserRole', () => ({
   useUserRole: () => ({ profile: { user_id: 'u1', full_name: 'Test User', email: 't@example.com', role: 'member' } }),
 }));
 vi.mock('@/integrations/supabase/client', () => ({
-  supabase: { functions: { invoke: vi.fn() } },
+  supabase: {
+    functions: { invoke: vi.fn() },
+    auth: { getSession: vi.fn(async () => ({ data: { session: null } })) },
+  },
+  SUPABASE_URL: 'http://localhost',
 }));
 
 function setViewportWidth(width: number) {
@@ -25,11 +30,13 @@ function setViewportWidth(width: number) {
 
 const renderSheet = () =>
   render(
-    <MemoryRouter>
-      <AssistantProvider initialSheetOpen>
-        <AssistantSheet />
-      </AssistantProvider>
-    </MemoryRouter>,
+    <QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}>
+      <MemoryRouter>
+        <AssistantProvider initialSheetOpen>
+          <AssistantSheet />
+        </AssistantProvider>
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 
 beforeEach(() => { sessionStorage.clear(); setViewportWidth(390); });

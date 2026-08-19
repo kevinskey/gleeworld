@@ -31,7 +31,7 @@ const openForm = () => {
 };
 
 const fillUrl = (value: string) => {
-  fireEvent.change(screen.getByLabelText('YouTube URL or video ID'), { target: { value } });
+  fireEvent.change(screen.getByLabelText('Video URL'), { target: { value } });
 };
 
 beforeEach(() => {
@@ -49,7 +49,7 @@ describe('AddYouTubeVideoForm', () => {
   it('starts collapsed behind an "Add video" button', () => {
     render(<AddYouTubeVideoForm onAdded={vi.fn()} />);
     expect(screen.getByRole('button', { name: /add video/i })).toBeInTheDocument();
-    expect(screen.queryByLabelText('YouTube URL or video ID')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Video URL')).not.toBeInTheDocument();
   });
 
   it('rejects an invalid/non-YouTube URL inline without calling supabase', async () => {
@@ -59,7 +59,7 @@ describe('AddYouTubeVideoForm', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /add video/i })[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/paste a full youtube url/i)).toBeInTheDocument();
+      expect(screen.getByText(/paste a youtube, vimeo/i)).toBeInTheDocument();
     });
     expect(fromMock).not.toHaveBeenCalled();
     expect(insertMock).not.toHaveBeenCalled();
@@ -72,7 +72,7 @@ describe('AddYouTubeVideoForm', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /add video/i })[0]);
 
     await waitFor(() => {
-      expect(screen.getByText(/paste a full youtube url/i)).toBeInTheDocument();
+      expect(screen.getByText(/paste a youtube, vimeo/i)).toBeInTheDocument();
     });
     expect(fromMock).not.toHaveBeenCalled();
   });
