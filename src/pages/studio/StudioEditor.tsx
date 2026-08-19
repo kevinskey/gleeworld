@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { StudioEngineStatus } from '@/components/studio/StudioEngineStatus';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { renderRegionMix, renderRegionStems, renderRegionBuffer, zipBlobs, safeName } from '@/lib/studio/engine/regionExport';
 import { supabase } from '@/integrations/supabase/client';
@@ -3197,6 +3198,9 @@ function DraggableClip({
   onDuplicate?: () => void;
 }) {
   const pxPerSecond = usePxPerSecond();
+  // Double-click delete asks first — an accidental double-tap while
+  // selecting/dragging silently nuked clips (2026-08-19).
+  const [confirmRemove, setConfirmRemove] = useState<ConfirmPillRequest | null>(null);
   const snap = (s: number) => snapSeconds > 0
     ? Math.round(s / snapSeconds) * snapSeconds
     : Math.max(0, s);
@@ -3344,7 +3348,7 @@ function DraggableClip({
   const fadeInW = Math.min(width, fadeIn * pxPerSecond);
   const fadeOutW = Math.min(width, fadeOut * pxPerSecond);
   const hasFades = fadeIn !== undefined && fadeOut !== undefined;
-  return (
+  return (<>
     <div
       className={`absolute top-2 bottom-2 rounded-md border cursor-grab active:cursor-grabbing select-none transition-shadow overflow-hidden ${selected ? 'ring-2 ring-primary ring-offset-1 shadow-md brightness-110' : 'hover:brightness-105'}`}
       style={{
@@ -3363,8 +3367,8 @@ function DraggableClip({
         touchAction: 'none',
       }}
       onPointerDown={onDragBody}
-      onDoubleClick={onRemove}
-      title={title ?? `${label} — click to select · drag body to move · ⌥-drag to copy · L/R edges to trim · corners to fade · Delete to remove`}
+      onDoubleClick={(e) => setConfirmRemove({ x: e.clientX, y: e.clientY, message: `Delete "${label}"?` })}
+      title={title ?? `${label} — click to select · drag body to move · ⌥-drag to copy · L/R edges to trim · corners to fade · Delete or double-click to remove`}
     >
       {peaks && peaks.length > 0 && (() => {
         // Slice the asset's peaks to just the visible window so that
@@ -3451,6 +3455,17 @@ function DraggableClip({
         />
       )}
     </div>
+    {/* Sibling, not child, of the draggable div — the pill portals to
+      * document.body but React bubbles its events through the REACT
+      * tree, so nesting it inside would route Cancel/Delete pointer
+      * events into onDragBody (select + pointer-capture + grid-snap
+      * nudge of the clip under the pill). */}
+    <ConfirmPill
+      request={confirmRemove}
+      onConfirm={() => { setConfirmRemove(null); onRemove(); }}
+      onCancel={() => setConfirmRemove(null)}
+    />
+  </>
   );
 }
 
