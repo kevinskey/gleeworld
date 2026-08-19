@@ -2631,3 +2631,18 @@ body.gw-stage-mode .gw-collapsible-sidebar {
     order: -1;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Find & replace hits in the Documents editor (DocumentSearch extension).
+   Decoration-only — nothing here is written into the document, so a search
+   can't dirty a doc or trigger an autosave. The active hit has to stand out
+   from the rest at a glance, hence the ring rather than a darker fill.
+   --------------------------------------------------------------------------- */
+.gw-search-hit {
+  background-color: hsl(45 100% 55% / 0.35);
+  border-radius: 2px;
+}
+.gw-search-hit-active {
+  background-color: hsl(45 100% 55% / 0.75);
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.55);
+}

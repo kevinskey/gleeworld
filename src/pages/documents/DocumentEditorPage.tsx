@@ -27,6 +27,7 @@ import { DocumentEditor } from '@/components/documents/DocumentEditor';
 import { removeCitationsFor } from '@/components/documents/extensions/CitationChip';
 import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRef';
 import { SourcesPanel } from '@/components/documents/SourcesPanel';
+import { OutlinePanel } from '@/components/documents/OutlinePanel';
 import { PrompterOverlay } from '@/components/prompter/PrompterOverlay';
 import { WorksCitedPreview } from '@/components/documents/WorksCitedPreview';
 import { PrintPaperView } from '@/components/documents/PrintPaperView';
@@ -159,6 +160,11 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   footnotesRef.current = footnotes;
 
   const editorInstanceRef = useRef<Editor | null>(null);
+  // The ref is what the imperative callers (citations, images, export) use.
+  // Panels that RENDER from editor state need a state copy as well, so they
+  // mount once the editor exists instead of reading a null ref forever.
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
+  const [outlineOpen, setOutlineOpen] = useState(false);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -492,6 +498,20 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
           {/* Sources live up here now, at every size — the docked right rail
               squeezed the page (Kevin, 2026-08-13: "move sources up and let
               doc have width"). The sheet slides OVER the doc instead. */}
+          {/* Outline — headings only, click to jump. Same over-the-doc sheet
+              as Sources so the page keeps its full width. */}
+          <Sheet open={outlineOpen} onOpenChange={setOutlineOpen}>
+            <SheetTrigger asChild>
+              <Button type="button" variant="outline" size="sm" className="text-xs">Outline</Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-sm overflow-y-auto">
+              <SheetHeader><SheetTitle>Outline</SheetTitle></SheetHeader>
+              <div className="mt-3">
+                <OutlinePanel editor={editorInstance} />
+              </div>
+            </SheetContent>
+          </Sheet>
+
           <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
             <SheetTrigger asChild>
               <Button type="button" variant="outline" size="sm" className="text-xs">Sources</Button>
@@ -515,7 +535,7 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             onFootnoteClick={handleFootnoteToolbarClick}
             onImageClick={handleImageButtonClick}
             onImageFiles={handleImageFiles}
-            editorRef={(editor) => { editorInstanceRef.current = editor; }}
+            editorRef={(editor) => { editorInstanceRef.current = editor; setEditorInstance(editor); }}
           />
 
           {/* Footer: live word count + save status (spec §"Editor page"). The

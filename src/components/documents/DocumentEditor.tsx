@@ -18,6 +18,8 @@ import { CharacterCount } from '@tiptap/extensions';
 import { DocToolbar } from './DocToolbar';
 import { CitationChip } from './extensions/CitationChip';
 import { FootnoteRef } from './extensions/FootnoteRef';
+import { DocumentSearch } from './extensions/DocumentSearch';
+import { FindReplaceBar } from './FindReplaceBar';
 
 /**
  * Image, extended with a `path` attribute (rendered as `data-path`) that
@@ -94,6 +96,7 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
     FontFamily,
     FontSize,
     CharacterCount,
+    DocumentSearch,
     CitationChip.configure({ getText: opts.getCitationText ?? (() => '[citation]') }),
     FootnoteRef.configure({ getIndex: opts.getFootnoteIndex ?? (() => -1) }),
   ];
@@ -190,6 +193,7 @@ export function DocumentEditor({
   return (
     <div className="flex flex-col">
       <DocToolbar editor={editor} onCiteClick={onCiteClick} onFootnoteClick={onFootnoteClick} onImageClick={onImageClick} />
+      <FindReplaceBar editor={editor} />
       {/* w-full is load-bearing: in a flex-col parent, mx-auto overrides the
           default cross-axis stretch and the card shrink-wraps its content
           (an empty doc collapsed to ~90px). */}
