@@ -212,6 +212,12 @@ export interface BlockModule<S extends z.ZodTypeAny = z.ZodTypeAny> {
   poweredBy?: string;
   /** Group used by the block picker to organize options. */
   group?: 'core' | 'addon' | 'gleeworld';
+  /**
+   * Restrict this block to specific tenant slugs. Absent = offered to every
+   * tenant. This gates the block PICKER only: a block already placed on a
+   * page still renders everywhere, so a slug change can't blank a live site.
+   */
+  tenants?: string[];
   /** Locked blocks pin to position 0 and can't be hidden or deleted (header). */
   locked?: boolean;
   configSchema: S;

@@ -30,7 +30,7 @@ import {
   ChevronDown,
   ExternalLink,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -47,7 +47,7 @@ import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
-import { BLOCK_LIST, getBlockModule, isBlockAvailable } from '@/components/public-site/registry';
+import { BLOCK_LIST, getBlockModule, isBlockAvailable, isBlockOfferedToTenant } from '@/components/public-site/registry';
 import { AutoForm } from '@/components/public-site/AutoForm';
 import { fontStack, safeConfig, type SiteBlock, type SiteRenderContext } from '@/components/public-site/types';
 import { useQuery } from '@tanstack/react-query';
@@ -317,7 +317,7 @@ export default function FanPageEditor() {
                 </DialogHeader>
                 <div className="space-y-5 max-h-[60vh] overflow-y-auto pr-1">
                   {(['core', 'gleeworld', 'addon'] as const).map((key) => {
-                    const items = BLOCK_LIST.filter((m) => !m.locked && (m.group ?? 'core') === key);
+                    const items = BLOCK_LIST.filter((m) => !m.locked && (m.group ?? 'core') === key && isBlockOfferedToTenant(m, getTenantSlug()));
                     if (items.length === 0) return null;
                     const label = key === 'core' ? 'Your essentials' : key === 'gleeworld' ? 'GleeWorld extras' : 'Add-ons';
                     return (

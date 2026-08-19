@@ -19,6 +19,7 @@ import { concertRsvpBlock } from './blocks/concert-rsvp';
 import { alumniSpotlightBlock } from './blocks/alumni-spotlight';
 import { spotlightBlock } from './blocks/spotlight';
 import { scholarshipBlock } from './blocks/scholarship';
+import { scholarApplicationBlock } from './blocks/scholar-application';
 import { appointmentBookingBlock } from './blocks/appointment-booking';
 import { pressBlock } from './blocks/press';
 import { supportBlock } from './blocks/support';
@@ -48,6 +49,7 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [alumniSpotlightBlock.type]: alumniSpotlightBlock,
   [spotlightBlock.type]: spotlightBlock,
   [scholarshipBlock.type]: scholarshipBlock,
+  [scholarApplicationBlock.type]: scholarApplicationBlock,
   [appointmentBookingBlock.type]: appointmentBookingBlock,
   // Back-compat: `video-gallery` was the original key for the Videos block.
   // Map it to the same module so stored configs continue to render.
@@ -64,4 +66,14 @@ export function getBlockModule(type: string): BlockModule | undefined {
 /** A block renders publicly only if free, or its required addon is active. */
 export function isBlockAvailable(mod: BlockModule, activeAddons: string[]): boolean {
   return mod.tier === 'free' || !mod.requiredAddon || activeAddons.includes(mod.requiredAddon);
+}
+
+/**
+ * Blocks may be scoped to specific tenants (see BlockModule.tenants). Used by
+ * the block pickers so a one-tenant block doesn't clutter everyone else's
+ * "Add block" sheet. Rendering never consults this — an already-placed block
+ * keeps working regardless.
+ */
+export function isBlockOfferedToTenant(mod: BlockModule, tenantSlug: string): boolean {
+  return !mod.tenants || mod.tenants.includes(tenantSlug);
 }
