@@ -36,28 +36,36 @@ if (!recipesPath || !srcRoot || !outRoot) {
 const recipes = JSON.parse(readFileSync(recipesPath, 'utf8'))
   .filter((r) => only.length === 0 || only.includes(r.name));
 
-const BITRATE = '160k';
+const BITRATE = '160k';       // mp3 (universal decodeAudioData fallback)
+const OPUS_BITRATE = '96k';   // webm/opus alternate (~40% smaller, picked by capable clients)
 
+// Every sample is emitted twice: <dst>.mp3 and <dst>.webm (Opus). Manifest
+// urls stay .mp3; clients that can decode webm/opus swap the extension
+// (see pickGwSampleFormat in src/lib/studio/gwInstruments.ts).
 function convert(src, dst, gainDb) {
-  if (existsSync(dst)) return; // idempotent re-runs
-  mkdirSync(dirname(dst), { recursive: true });
   const filters = [];
   if (gainDb) filters.push(`volume=${gainDb}dB`);
   // Trim leading digital silence so note-on timing stays tight, keep tails.
   filters.push('silenceremove=start_periods=1:start_threshold=-60dB:start_silence=0.005');
-  execFileSync('ffmpeg', [
-    '-hide_banner', '-loglevel', 'error', '-y',
-    '-i', join(srcRoot, src),
-    '-af', filters.join(','),
-    '-ar', '44100', '-codec:a', 'libmp3lame', '-b:a', BITRATE,
-    dst,
-  ]);
+  const encode = (out, codecArgs) => {
+    if (existsSync(out)) return; // idempotent re-runs
+    mkdirSync(dirname(out), { recursive: true });
+    execFileSync('ffmpeg', [
+      '-hide_banner', '-loglevel', 'error', '-y',
+      '-i', join(srcRoot, src),
+      '-af', filters.join(','),
+      ...codecArgs,
+      out,
+    ]);
+  };
+  encode(dst, ['-ar', '44100', '-codec:a', 'libmp3lame', '-b:a', BITRATE]);
+  encode(dst.replace(/\.mp3$/, '.webm'), ['-ar', '48000', '-codec:a', 'libopus', '-b:a', OPUS_BITRATE]);
 }
 
 let failures = 0;
 for (const recipe of recipes) {
   const outDir = join(outRoot, recipe.name);
-  const manifest = { name: recipe.name, kind: recipe.kind };
+  const manifest = { name: recipe.name, kind: recipe.kind, formats: ['mp3', 'webm'] };
   console.log(`── ${recipe.name}`);
 
   const safe = (src, dst) => {

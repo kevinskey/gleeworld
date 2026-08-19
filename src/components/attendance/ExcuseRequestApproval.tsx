@@ -39,6 +39,13 @@ interface ExcuseRequest {
   } | null;
 }
 
+// Excuse documentation is embedded in the reason text as a "Documentation: <url>" line
+const splitReasonDocumentation = (reason: string) => {
+  const match = reason.match(/\n\nDocumentation: (https?:\/\/\S+)\s*$/);
+  if (!match) return { text: reason, documentationUrl: null };
+  return { text: reason.slice(0, match.index), documentationUrl: match[1] };
+};
+
 export const ExcuseRequestApproval = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
@@ -49,6 +56,7 @@ export const ExcuseRequestApproval = () => {
   const [adminNotes, setAdminNotes] = useState('');
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'approved' | 'denied' | 'returned' | null>(null);
+  const [isSubmittingDecision, setIsSubmittingDecision] = useState(false);
   const [gwProfile, setGwProfile] = useState<any>(null);
 
   const isAdmin = gwProfile?.is_admin || gwProfile?.is_super_admin;
@@ -154,8 +162,9 @@ export const ExcuseRequestApproval = () => {
   };
 
   const submitApprovalDecision = async () => {
-    if (!selectedRequest || !pendingAction) return;
+    if (!selectedRequest || !pendingAction || isSubmittingDecision) return;
 
+    setIsSubmittingDecision(true);
     try {
       const { error } = await supabase
         .from('excuse_requests')
@@ -200,6 +209,8 @@ export const ExcuseRequestApproval = () => {
         description: "Failed to submit approval decision",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmittingDecision(false);
     }
   };
 
@@ -289,7 +300,18 @@ export const ExcuseRequestApproval = () => {
                     
                     <div className="mb-4">
                       <p className="text-sm font-medium mb-1">Student's Reason:</p>
-                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">{request.reason}</p>
+                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded">{splitReasonDocumentation(request.reason).text}</p>
+                      {splitReasonDocumentation(request.reason).documentationUrl && (
+                        <a
+                          href={splitReasonDocumentation(request.reason).documentationUrl!}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline flex items-center gap-1 mt-2"
+                        >
+                          <FileText className="h-4 w-4" />
+                          View Documentation
+                        </a>
+                      )}
                     </div>
 
                     {request.secretary_message && (
@@ -375,7 +397,18 @@ export const ExcuseRequestApproval = () => {
 
               <div>
                 <p className="font-medium mb-2">Student's Reason:</p>
-                <p className="text-gray-700 bg-gray-50 p-3 rounded">{selectedRequest.reason}</p>
+                <p className="text-gray-700 bg-gray-50 p-3 rounded">{splitReasonDocumentation(selectedRequest.reason).text}</p>
+                {splitReasonDocumentation(selectedRequest.reason).documentationUrl && (
+                  <a
+                    href={splitReasonDocumentation(selectedRequest.reason).documentationUrl!}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:underline flex items-center gap-1 mt-2"
+                  >
+                    <FileText className="h-4 w-4" />
+                    View Documentation
+                  </a>
+                )}
               </div>
 
               {selectedRequest.secretary_message && (
@@ -414,7 +447,7 @@ export const ExcuseRequestApproval = () => {
             </Button>
             <Button
               onClick={submitApprovalDecision}
-              disabled={(pendingAction === 'denied' || pendingAction === 'returned') && !adminNotes.trim()}
+              disabled={isSubmittingDecision || ((pendingAction === 'denied' || pendingAction === 'returned') && !adminNotes.trim())}
               className={
                 pendingAction === 'approved' 
                   ? "bg-green-600 hover:bg-green-700" 

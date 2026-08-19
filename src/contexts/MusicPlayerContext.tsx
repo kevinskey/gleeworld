@@ -67,6 +67,8 @@ export const MusicPlayerProvider = ({ children }: MusicPlayerProviderProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const audioRef = useRef<HTMLAudioElement>(null);
+  // Always holds the latest playNext so the 'ended' listener never calls a stale closure
+  const playNextRef = useRef<() => void>(() => {});
   
   // Audio coordination - ensure only one audio source plays at a time
   const { requestPlayback, registerPauseCallback, unregisterPauseCallback, notifyPaused } = useAudioCoordinator();
@@ -102,7 +104,7 @@ export const MusicPlayerProvider = ({ children }: MusicPlayerProviderProps) => {
     };
 
     const handleEnded = () => {
-      playNext();
+      playNextRef.current();
     };
 
     const handleLoadStart = () => {
@@ -220,6 +222,11 @@ export const MusicPlayerProvider = ({ children }: MusicPlayerProviderProps) => {
       playTrack(nextTrack, playlist, state.currentAlbum);
     }
   };
+
+  // Keep the ref pointing at the latest playNext (fresh repeat/shuffle state)
+  useEffect(() => {
+    playNextRef.current = playNext;
+  });
 
   const playPrevious = () => {
     const { playlist, currentTrackIndex, currentTime } = state;

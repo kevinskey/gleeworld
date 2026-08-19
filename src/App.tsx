@@ -1184,8 +1184,8 @@ const App = () => {
                 path="/communications"
                 element={
                   <ProtectedRoute>
-                    <UniversalLayout>
-                      <Messenger />
+                    <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
+                      <DashboardShell><Messenger /></DashboardShell>
                     </UniversalLayout>
                   </ProtectedRoute>
                 }
@@ -2000,20 +2000,12 @@ const App = () => {
                    } 
                  />
                  <Route
-                   path="/messages" 
+                   path="/direct-messages"
                    element={
                      <ProtectedRoute>
-                       <Navigate to="/community?tab=messages" replace />
+                       <Navigate to="/messages" replace />
                      </ProtectedRoute>
-                   } 
-                  />
-                 <Route
-                   path="/direct-messages" 
-                   element={
-                     <ProtectedRoute>
-                       <Navigate to="/community?tab=messages" replace />
-                     </ProtectedRoute>
-                   } 
+                   }
                   />
                   <Route
                     path="/admin/announcements/new" 
@@ -2578,14 +2570,6 @@ const App = () => {
                 }
               />
                               {/* /amazon-shopping route removed with Amazon Affiliate module. */}
-                              <Route
-                               path="/dashboard/pr-hub" 
-                               element={
-                                 <ProtectedRoute>
-                                   <PRHubPage />
-                                 </ProtectedRoute>
-                               } 
-                             />
                             {/* Section Leader, Student Conductor, and Karaoke routes removed. */}
                              <Route 
                                path="/sectional-management" 

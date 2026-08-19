@@ -168,17 +168,21 @@ export const ElectronicSignature = ({
   }, []);
 
   const handleSign = () => {
+    // Only attach the drawn signature when signing from the draw tab —
+    // an abandoned scribble should not ride along with a typed signature
+    const includeDrawn = activeTab === 'draw' && hasDrawnSignature && !!drawnSignatureData;
+
     const signatureData: SignatureData = {
-      type: activeTab === 'draw' && drawnSignatureData ? 'drawn' : 'typed',
+      type: includeDrawn ? 'drawn' : 'typed',
       typedName: typedName.trim(),
       typedTitle: typedTitle.trim() || undefined,
-      drawnSignature: drawnSignatureData,
+      drawnSignature: includeDrawn ? drawnSignatureData : undefined,
       signedAt: new Date().toISOString(),
       consent: true
     };
 
     // If both typed name and drawn signature exist
-    if (typedName.trim() && drawnSignatureData) {
+    if (includeDrawn && typedName.trim()) {
       signatureData.type = 'both';
     }
 
