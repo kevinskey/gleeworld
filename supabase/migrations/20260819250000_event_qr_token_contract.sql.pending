@@ -1,0 +1,37 @@
+-- CONTRACT phase for 20260819240000_event_qr_token_expand.sql.
+--
+-- DO NOT APPLY until a build containing the updated EventCheckinPage,
+-- EventDetailDialog and useGleeWorldEvents is deployed to every tenant.
+-- Dropping this column against the old bundle breaks event check-in.
+--
+-- Deliberately parked with a .pending suffix so it is not picked up by a
+-- run-everything-in-supabase/migrations loop. Rename to .sql when shipping.
+--
+-- Pre-flight — expect 0:
+--   SELECT count(*) FROM gw_events e
+--    WHERE NOT EXISTS (SELECT 1 FROM gw_event_qr_tokens t WHERE t.event_id = e.id);
+
+DROP TRIGGER IF EXISTS trg_sync_event_qr_token ON public.gw_events;
+DROP FUNCTION IF EXISTS public.sync_event_qr_token();
+
+-- New events now get their token from the token table's own default.
+CREATE OR REPLACE FUNCTION public.create_event_qr_token()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.gw_event_qr_tokens (event_id, tenant_id)
+  VALUES (NEW.id, NEW.tenant_id)
+  ON CONFLICT (event_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trg_create_event_qr_token
+  AFTER INSERT ON public.gw_events
+  FOR EACH ROW EXECUTE FUNCTION public.create_event_qr_token();
+
+DROP INDEX IF EXISTS idx_gw_events_qr_token;
+ALTER TABLE public.gw_events DROP COLUMN IF EXISTS event_qr_token;
