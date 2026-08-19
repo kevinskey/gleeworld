@@ -266,7 +266,21 @@ function ServiceCard({ service, onEdit, onDelete }: { service: Service; onEdit: 
     },
   });
 
-  const days = availRows.map((r: any) => DAYS[r.day_of_week]).join(', ');
+  // Show the actual windows, grouped by day. Listing bare day names meant a
+  // day with a morning and an evening block rendered as "Tue, Tue" with no
+  // hint that they were different times.
+  const summary = (() => {
+    const byDay = new Map<number, string[]>();
+    for (const r of availRows as any[]) {
+      const list = byDay.get(r.day_of_week) ?? [];
+      list.push(`${shortTime(r.start_time)}–${shortTime(r.end_time)}`);
+      byDay.set(r.day_of_week, list);
+    }
+    return Array.from(byDay.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([day, windows]) => `${DAYS[day]} ${windows.join(', ')}`)
+      .join(' · ');
+  })();
 
   return (
     <div className="border rounded-xl p-4 flex items-start gap-3 hover:bg-muted/40 transition">
@@ -282,8 +296,8 @@ function ServiceCard({ service, onEdit, onDelete }: { service: Service; onEdit: 
           </>}
         </div>
         {service.description && <p className="text-xs text-muted-foreground line-clamp-2 mt-1.5">{service.description}</p>}
-        <div className="text-sm text-muted-foreground mt-2 truncate">
-          {days ? <>Open: {days}</> : <span className="text-amber-700">No availability set</span>}
+        <div className="text-sm text-muted-foreground mt-2">
+          {summary ? <>Open: {summary}</> : <span className="text-amber-700">No availability set</span>}
         </div>
       </div>
       <div className="flex flex-col gap-1.5">
@@ -355,21 +369,45 @@ function ServiceEditorDialog({
         .select('day_of_week, start_time, end_time, is_active')
         .eq('service_id', service.id)
         .order('day_of_week');
-      const base = emptyAvailability();
-      (data || []).forEach((r: any) => {
-        base[r.day_of_week] = {
+      // Keep EVERY row. This used to index by day_of_week, so a day with two
+      // windows (a morning block and an evening block) silently lost one on
+      // load — and then lost it for real on the next save.
+      const loaded: AvailabilityRow[] = (data || [])
+        .filter((r: any) => r.is_active)
+        .map((r: any) => ({
           day_of_week: r.day_of_week,
           start_time: (r.start_time || '09:00').slice(0, 5),
           end_time: (r.end_time || '17:00').slice(0, 5),
-          is_active: !!r.is_active,
-        };
-      });
-      setAvailability(base);
+          is_active: true,
+        }));
+      setAvailability(loaded);
     })();
   }, [open, service.id]);
 
   const update = (i: number, patch: Partial<AvailabilityRow>) => {
     setAvailability((prev) => prev.map((r, idx) => idx === i ? { ...r, ...patch } : r));
+  };
+
+  // A second window on a day defaults to the evening, since that is what the
+  // extra block is nearly always for.
+  const addWindow = (day: number) => {
+    setAvailability((prev) => {
+      const existing = prev.filter((r) => r.day_of_week === day);
+      const next: AvailabilityRow = existing.length
+        ? { day_of_week: day, start_time: '18:00', end_time: '20:00', is_active: true }
+        : { day_of_week: day, start_time: '09:00', end_time: '17:00', is_active: true };
+      return [...prev, next].sort(
+        (a, b) => a.day_of_week - b.day_of_week || a.start_time.localeCompare(b.start_time),
+      );
+    });
+  };
+
+  const removeWindow = (i: number) => {
+    setAvailability((prev) => prev.filter((_, idx) => idx !== i));
+  };
+
+  const clearDay = (day: number) => {
+    setAvailability((prev) => prev.filter((r) => r.day_of_week !== day));
   };
 
   return (
@@ -428,28 +466,56 @@ function ServiceEditorDialog({
               </p>
             </div>
             <div className="space-y-1.5">
-              {availability.map((row, i) => (
-                <div key={i} className="flex items-center gap-2 p-2 rounded-lg border">
-                  <Switch
-                    checked={row.is_active}
-                    onCheckedChange={(c) => update(i, { is_active: c })}
-                  />
-                  <div className="w-10 text-xs font-medium">{DAYS[i]}</div>
-                  {row.is_active ? (
-                    <div className="flex items-center gap-1.5 flex-1 flex-wrap">
-                      <Input type="time" value={row.start_time}
-                             onChange={(e) => update(i, { start_time: e.target.value })}
-                             className="w-24 h-8 text-xs" />
-                      <span className="text-sm text-muted-foreground">to</span>
-                      <Input type="time" value={row.end_time}
-                             onChange={(e) => update(i, { end_time: e.target.value })}
-                             className="w-24 h-8 text-xs" />
-                    </div>
-                  ) : (
-                    <div className="text-sm text-muted-foreground flex-1">Closed</div>
-                  )}
-                </div>
-              ))}
+              {DAYS.map((label, day) => {
+                // Indices into `availability` for this weekday, so edits and
+                // removals address the right row when a day has several.
+                const idxs = availability
+                  .map((r, i) => (r.day_of_week === day ? i : -1))
+                  .filter((i) => i >= 0);
+                const isOpen = idxs.length > 0;
+
+                return (
+                  <div key={day} className="flex items-start gap-2 p-2 rounded-lg border">
+                    <Switch
+                      className="mt-1"
+                      checked={isOpen}
+                      onCheckedChange={(c) => (c ? addWindow(day) : clearDay(day))}
+                    />
+                    <div className="w-10 text-xs font-medium mt-2">{label}</div>
+
+                    {isOpen ? (
+                      <div className="flex-1 space-y-1.5">
+                        {idxs.map((i, n) => (
+                          <div key={i} className="flex items-center gap-1.5 flex-wrap">
+                            <Input type="time" value={availability[i].start_time}
+                                   onChange={(e) => update(i, { start_time: e.target.value })}
+                                   className="w-24 h-8 text-xs" />
+                            <span className="text-sm text-muted-foreground">to</span>
+                            <Input type="time" value={availability[i].end_time}
+                                   onChange={(e) => update(i, { end_time: e.target.value })}
+                                   className="w-24 h-8 text-xs" />
+                            {idxs.length > 1 && (
+                              <Button variant="ghost" size="icon" className="h-7 w-7"
+                                      onClick={() => removeWindow(i)}
+                                      title="Remove this window">
+                                <X className="w-3.5 h-3.5" />
+                              </Button>
+                            )}
+                            {n === idxs.length - 1 && (
+                              <Button variant="ghost" size="sm" className="h-7 px-2 text-xs"
+                                      onClick={() => addWindow(day)}>
+                                <Plus className="w-3 h-3 mr-1" />Add window
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground flex-1 mt-1.5">Closed</div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -466,13 +532,22 @@ function ServiceEditorDialog({
   );
 }
 
+// A service starts with no windows; a day is "open" precisely when it has at
+// least one. Representing closed days as inactive placeholder rows is what
+// made multiple windows per day impossible to express.
+// "18:00:00" → "6p", "08:30:00" → "8:30a" — compact enough that several
+// windows still fit on a card.
+function shortTime(t: string): string {
+  const [hRaw, m] = (t || '').split(':');
+  const h = parseInt(hRaw, 10);
+  if (Number.isNaN(h)) return t;
+  const suffix = h >= 12 ? 'p' : 'a';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return m && m !== '00' ? `${h12}:${m}${suffix}` : `${h12}${suffix}`;
+}
+
 function emptyAvailability(): AvailabilityRow[] {
-  return DAYS.map((_, i) => ({
-    day_of_week: i,
-    start_time: '09:00',
-    end_time: '17:00',
-    is_active: false,
-  }));
+  return [];
 }
 
 // ── Bookings panel ────────────────────────────────────────────────────────

@@ -94,6 +94,8 @@ export default function InvitesPanel() {
   const [subject, setSubject] = useState('');
   const [intro, setIntro] = useState('');
   const [recipientsRaw, setRecipientsRaw] = useState('');
+  const [windowStart, setWindowStart] = useState('');
+  const [windowEnd, setWindowEnd] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const parsed = useMemo(() => parseRecipients(recipientsRaw), [recipientsRaw]);
@@ -119,6 +121,9 @@ export default function InvitesPanel() {
     mutationFn: async () => {
       if (!serviceId) throw new Error('Pick which meeting type they are booking.');
       if (!parsed.valid.length) throw new Error('Add at least one valid email address.');
+      if (windowStart && windowEnd && windowEnd < windowStart) {
+        throw new Error('The end of the date range is before its start.');
+      }
 
       // Create first, send second. If the send fails the links still exist and
       // can be resent from the list below — nobody has to retype the roster.
@@ -131,6 +136,8 @@ export default function InvitesPanel() {
           p_campaign: campaign || null,
           p_message: intro || null,
           p_expires_in_days: 30,
+          p_window_start: windowStart || null,
+          p_window_end: windowEnd || null,
         });
         if (error) throw error;
         if (!(data as any)?.success) throw new Error((data as any)?.error || 'Could not create invite');
@@ -157,6 +164,8 @@ export default function InvitesPanel() {
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ['booking-invites', user?.id] });
       setRecipientsRaw('');
+      setWindowStart('');
+      setWindowEnd('');
       if (res?.failed) {
         toast.warning(`Sent ${res.sent}. ${res.failed} could not be delivered — see the list below.`);
       } else {
@@ -249,6 +258,27 @@ export default function InvitesPanel() {
             <Label className="text-xs">Subject line</Label>
             <Input value={subject} onChange={(e) => setSubject(e.target.value)}
                    placeholder={service ? `Let's find a time — ${service.name}` : 'Let\'s find a time'} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Only offer times in this range (optional)</Label>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Input type="date" value={windowStart} onChange={(e) => setWindowStart(e.target.value)}
+                     className="w-40" />
+              <span className="text-sm text-muted-foreground">to</span>
+              <Input type="date" value={windowEnd} onChange={(e) => setWindowEnd(e.target.value)}
+                     className="w-40" />
+              {(windowStart || windowEnd) && (
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs"
+                        onClick={() => { setWindowStart(''); setWindowEnd(''); }}>
+                  Clear
+                </Button>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Leave blank to offer your next open times. Use a range for someone who
+              asked for a particular month, or who is away until a certain date.
+            </p>
           </div>
 
           <div className="space-y-1.5">
@@ -349,6 +379,13 @@ export default function InvitesPanel() {
                         </Badge>
                         {inv.campaign && (
                           <span className="text-[11px] text-muted-foreground">{inv.campaign}</span>
+                        )}
+                        {(inv.window_start || inv.window_end) && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {inv.window_start ? format(parseISO(inv.window_start), 'MMM d') : 'now'}
+                            {' – '}
+                            {inv.window_end ? format(parseISO(inv.window_end), 'MMM d') : 'open'}
+                          </span>
                         )}
                         {inv.last_sent_at && (
                           <span className="text-[11px] text-muted-foreground">
