@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { USER_ROLES, isRoleAtLeast } from "@/constants/permissions";
+import { useEffectivePreviewRole } from "@/hooks/useEffectivePreviewRole";
+import type { NavRole } from "@/lib/navigation/navCatalog";
 
 interface UserProfile {
   id: string;
@@ -26,14 +28,23 @@ interface UserProfile {
 const MEMBER_SUPER_ROLES = ['super-admin', 'super_admin'];
 const MEMBER_ADMIN_ROLES = ['admin', 'director'];
 
+// What gw_profiles.role a previewed NavRole stands in for. Mirrors
+// PREVIEW_ROLE_CAPS in navCatalog.ts, which does the same job for the
+// sidebar's NavContext — keep the two in step.
+const PREVIEW_PROFILE_ROLE: Record<NavRole, string> = {
+  admin: USER_ROLES.ADMIN,
+  student: USER_ROLES.STUDENT,
+  member: USER_ROLES.MEMBER,
+};
+
 export const useUserRole = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [memberRole, setMemberRole] = useState<string | null>(null);
+  const [realProfile, setProfile] = useState<UserProfile | null>(null);
+  const [realMemberRole, setMemberRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasSecretaryAppRole, setHasSecretaryAppRole] = useState(false);
-  const [hasLibrarianAppRole, setHasLibrarianAppRole] = useState(false);
-  const [hasWardrobeAppRole, setHasWardrobeAppRole] = useState(false);
+  const [realSecretaryAppRole, setHasSecretaryAppRole] = useState(false);
+  const [realLibrarianAppRole, setHasLibrarianAppRole] = useState(false);
+  const [realWardrobeAppRole, setHasWardrobeAppRole] = useState(false);
 
   useEffect(() => {
     const fetchUserProfileAndRoles = async () => {
@@ -90,6 +101,48 @@ export const useUserRole = () => {
 
     fetchUserProfileAndRoles();
   }, [user]);
+
+  // ── Views preview ───────────────────────────────────────────────────────
+  // "Preview command center as Students" used to repaint only the sidebar.
+  // Every page kept reading the real super-admin profile, so AcademyHome's
+  // `isSuperAdmin() || isAdmin()` fork still rendered the Instructor Console
+  // while the header pill said "Students" — the preview was a lie exactly
+  // where it mattered most.
+  //
+  // Masking here rather than at each call site means every useUserRole
+  // consumer narrows together and none can be forgotten. This can only ever
+  // REMOVE privilege: useEffectivePreviewRole returns null unless the caller
+  // is genuinely a tenant admin or platform super-admin, and every field
+  // below downgrades. It is a UI affordance only — RLS is still the real
+  // boundary, so a forged sessionStorage value changes what you SEE, never
+  // what you can read or write.
+  const previewRole = useEffectivePreviewRole();
+
+  const profile = useMemo<UserProfile | null>(() => {
+    if (!previewRole || !realProfile) return realProfile;
+    return {
+      ...realProfile,
+      role: PREVIEW_PROFILE_ROLE[previewRole] ?? realProfile.role,
+      is_admin: previewRole === 'admin',
+      is_super_admin: false,
+      is_exec_board: false,
+      is_partner: false,
+    };
+  }, [realProfile, previewRole]);
+
+  // The membership row outranks the profile role (see MEMBER_ADMIN_ROLES
+  // above), so leaving the real value here would hand a previewed student
+  // admin rights straight back.
+  const memberRole = previewRole
+    ? (previewRole === 'admin' ? 'admin' : null)
+    : realMemberRole;
+
+  // app_roles are per-user grants, not role capabilities — nobody being
+  // previewed holds them. 'admin' still passes the checks that matter via
+  // isAdmin(), which each of these predicates short-circuits on.
+  const hasSecretaryAppRole = previewRole ? false : realSecretaryAppRole;
+  const hasLibrarianAppRole = previewRole ? false : realLibrarianAppRole;
+  const hasWardrobeAppRole = previewRole ? false : realWardrobeAppRole;
 
   const getEffectiveRole = (): string => {
     if (!profile) return USER_ROLES.VISITOR;
