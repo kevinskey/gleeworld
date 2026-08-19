@@ -17,10 +17,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import {
   Loader2, Send, Link as LinkIcon, Check, Users, Mail, CalendarCheck,
-  RotateCw, Ban,
+  RotateCw, Ban, CalendarPlus, Trash2,
 } from 'lucide-react';
+import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -97,6 +99,7 @@ export default function InvitesPanel() {
   const [windowStart, setWindowStart] = useState('');
   const [windowEnd, setWindowEnd] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [bookingFor, setBookingFor] = useState<any>(null);
 
   const parsed = useMemo(() => parseRecipients(recipientsRaw), [recipientsRaw]);
   const service = services.find((s) => s.id === serviceId);
@@ -208,6 +211,28 @@ export default function InvitesPanel() {
       queryClient.invalidateQueries({ queryKey: ['booking-invites', user?.id] });
       toast.success('Link deactivated.');
     },
+  });
+
+  // Revoke kills the link but keeps the record. Delete removes the row
+  // outright, for when an invite is being reissued — a revoked duplicate
+  // sitting in the list is just noise. A booked invite's appointment is NOT
+  // removed with it; that has to be cancelled from the calendar or by the
+  // guest, so the warning says so.
+  const removeInvite = useMutation({
+    mutationFn: async (inviteId: string) => {
+      const { data, error } = await supabase
+        .from('gw_booking_invites')
+        .delete()
+        .eq('id', inviteId)
+        .select('id');
+      if (error) throw error;
+      if (!data || data.length === 0) throw new Error('Not permitted to delete this invitation.');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['booking-invites', user?.id] });
+      toast.success('Invitation deleted.');
+    },
+    onError: (e: any) => toast.error(e.message || 'Could not delete that invitation.'),
   });
 
   const copyLink = async (token: string, id: string) => {
@@ -406,6 +431,11 @@ export default function InvitesPanel() {
                       {state === 'waiting' && (
                         <>
                           <Button size="sm" variant="ghost" className="h-8 px-2"
+                                  onClick={() => setBookingFor(inv)}
+                                  title="Book a time for them">
+                            <CalendarPlus className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button size="sm" variant="ghost" className="h-8 px-2"
                                   disabled={resend.isPending}
                                   onClick={() => resend.mutate(inv.id)} title="Resend with current times">
                             <RotateCw className="w-3.5 h-3.5" />
@@ -416,6 +446,18 @@ export default function InvitesPanel() {
                           </Button>
                         </>
                       )}
+                      <ConfirmDeleteButton
+                        confirmKey="delete-booking-invite"
+                        title={`Delete ${inv.invitee_name}'s invitation?`}
+                        description={inv.booked_at
+                          ? 'Their link stops working and the record disappears from this list. The meeting they booked stays on the calendar — cancel that separately if you need to.'
+                          : 'Their link stops working and the record disappears from this list. Send a new invitation to replace it.'}
+                        onConfirm={() => removeInvite.mutate(inv.id)}
+                        className="h-8 px-2 text-destructive"
+                        ariaLabel={`Delete invitation for ${inv.invitee_name}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </ConfirmDeleteButton>
                     </div>
                   </div>
                 );
@@ -424,6 +466,161 @@ export default function InvitesPanel() {
           )}
         </CardContent>
       </Card>
+
+      {bookingFor && (
+        <BookForDialog
+          invite={bookingFor}
+          open={!!bookingFor}
+          onOpenChange={(o) => { if (!o) setBookingFor(null); }}
+          onBooked={() => queryClient.invalidateQueries({ queryKey: ['booking-invites', user?.id] })}
+        />
+      )}
     </div>
+  );
+}
+
+
+// ── Book on someone's behalf ──────────────────────────────────────────────
+//
+// For the teacher who replies "Tuesday at 10:30 works" instead of clicking.
+// Books through their own invite, so the row carries their name and email and
+// they get the same confirmation, Meet link and reminders as a self-booking —
+// there is no second-class "entered by the host" path to keep in sync.
+function BookForDialog({
+  invite, open, onOpenChange, onBooked,
+}: {
+  invite: any;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  onBooked: () => void;
+}) {
+  const [phone, setPhone] = useState('');
+  const [picked, setPicked] = useState<{ date: string; time: string } | null>(null);
+
+  const { data: slots = [], isLoading } = useQuery({
+    queryKey: ['book-for-slots', invite?.token],
+    enabled: open && !!invite?.token,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_invite_available_slots', {
+        p_token: invite.token,
+        p_days: 45,
+      });
+      if (error) throw error;
+      return (data || []) as Array<{ slot_date: string; start_time: string }>;
+    },
+  });
+
+  const grouped = useMemo(() => {
+    const m = new Map<string, string[]>();
+    for (const s of slots) {
+      if (!m.has(s.slot_date)) m.set(s.slot_date, []);
+      m.get(s.slot_date)!.push(s.start_time);
+    }
+    return Array.from(m.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [slots]);
+
+  const submit = useMutation({
+    mutationFn: async () => {
+      if (!picked) throw new Error('Pick a day and time first.');
+      const { data, error } = await supabase.rpc('book_appointment_with_invite', {
+        p_token: invite.token,
+        p_appointment_date: picked.date,
+        p_start_time: picked.time,
+        p_notes: 'Booked by the host from an email reply',
+        p_phone: phone || null,
+      });
+      if (error) throw error;
+      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Could not book that time.');
+
+      // Same confirmation path a guest booking takes: email, SMS, Meet link.
+      await supabase.functions.invoke('booking-invite-confirm', {
+        body: { token: invite.token, siteUrl: window.location.origin },
+      });
+      return data;
+    },
+    onSuccess: () => {
+      toast.success(`Booked for ${invite.invitee_name}. Confirmation sent.`);
+      setPicked(null);
+      setPhone('');
+      onOpenChange(false);
+      onBooked();
+    },
+    onError: (e: any) => toast.error(e.message || 'Could not book that time.'),
+  });
+
+  const fmt = (t: string) => {
+    const [h, m] = t.split(':').map(Number);
+    const s = h >= 12 ? 'PM' : 'AM';
+    return `${h % 12 === 0 ? 12 : h % 12}:${String(m).padStart(2, '0')} ${s}`;
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Book a time for {invite?.invitee_name}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <p className="text-xs text-muted-foreground">
+            They'll get the confirmation, the meeting link and the reminders — exactly
+            as if they had picked it themselves.
+          </p>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Phone (optional — enables their text reminders)</Label>
+            <Input value={phone} onChange={(e) => setPhone(e.target.value)}
+                   placeholder="(404) 555-0123" type="tel" />
+          </div>
+
+          {isLoading ? (
+            <div className="py-8 text-center">
+              <Loader2 className="w-5 h-5 animate-spin inline text-muted-foreground" />
+            </div>
+          ) : !grouped.length ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              No open times. Widen your hours under Services, or clear this invite's date range.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {grouped.map(([day, times]) => (
+                <div key={day}>
+                  <p className="text-xs font-semibold mb-1.5">
+                    {format(parseISO(day), 'EEEE, MMMM d')}
+                  </p>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                    {times.map((t) => {
+                      const on = picked?.date === day && picked?.time === t;
+                      return (
+                        <Button
+                          key={`${day}-${t}`}
+                          variant={on ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-9 rounded-lg text-xs"
+                          onClick={() => setPicked({ date: day, time: t })}
+                        >
+                          {fmt(t)}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button onClick={() => submit.mutate()} disabled={!picked || submit.isPending}>
+            {submit.isPending
+              ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Booking…</>
+              : picked
+                ? `Book ${format(parseISO(picked.date), 'MMM d')} at ${fmt(picked.time)}`
+                : 'Pick a time'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
