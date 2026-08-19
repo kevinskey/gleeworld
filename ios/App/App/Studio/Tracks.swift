@@ -52,6 +52,22 @@ public final class TrackBinding {
     // Audio-track resources (push path — default).
     private var playerNodes: [AVAudioPlayerNode] = []
     private var loadedClips: [(clip: Studio.AudioClip, file: AVAudioFile, player: AVAudioPlayerNode)] = []
+    /// Per-clip processed audio — clips that use gain / fades / reverse /
+    /// time-stretch get their source window pre-rendered with those
+    /// baked in (web-engine parity; the web side bakes them into the
+    /// Tone.Player). Plain clips are absent here and keep the untouched
+    /// scheduleSegment fast path. Keyed by clip id.
+    private var processedBuffers: [String: AVAudioPCMBuffer] = [:]
+    /// Per-clip source-consumption rate (1/time_stretch). 1.0 for
+    /// unstretched clips. Used to convert timeline trims to source frames.
+    private var clipRates: [String: Double] = [:]
+    /// Varispeed inserted between player and preFaderTap for stretched
+    /// clips (rate = 1/time_stretch — same semantics as the web engine's
+    /// playbackRate: speed AND pitch shift together).
+    private var stretchNodes: [String: AVAudioUnitVarispeed] = [:]
+    /// Aux nodes (varispeeds) whose clips were deleted on a live graph —
+    /// parked for detach at dispose(), same policy as retiredPlayers.
+    private var retiredAux: [AVAudioNode] = []
     /// Players whose clips were deleted while the engine was running.
     /// Detaching a node from a LIVE AVAudioEngine can sever neighboring
     /// graph links (same instability as the loadSession bulk-connect
@@ -87,6 +103,155 @@ public final class TrackBinding {
         self.muteGate = muteGate
         self.routingGate = routingGate
         self.fxChain = fxChain
+    }
+
+    // MARK: - Per-clip processing (web-engine parity)
+
+    /// Source-consumption rate for a clip: the web engine plays at
+    /// playbackRate = 1/time_stretch, so a stretch of 2 consumes source
+    /// half as fast (longer + lower). 1.0 when unset/invalid.
+    static func clipPlaybackRate(_ clip: Studio.AudioClip) -> Double {
+        return clip.time_stretch > 0 ? (1.0 / clip.time_stretch) : 1.0
+    }
+
+    /// True when the clip uses any per-clip feature the plain
+    /// scheduleSegment path can't render.
+    static func clipNeedsProcessing(_ clip: Studio.AudioClip) -> Bool {
+        return abs(clip.gain_db) > 0.01
+            || clip.fade_in_seconds > 0
+            || clip.fade_out_seconds > 0
+            || clip.reverse
+            || abs(clipPlaybackRate(clip) - 1.0) > 0.001
+    }
+
+    /// Pre-render a clip's source window (offset → offset + duration·rate)
+    /// with reverse, per-clip gain, and linear fade ramps baked in. Fade
+    /// lengths are timeline seconds, converted to source frames so they
+    /// occupy the right wall-clock span through a varispeed. Returns nil
+    /// on extraction failure — caller falls back to unprocessed playback.
+    static func processedBuffer(clip: Studio.AudioClip, file: AVAudioFile) -> AVAudioPCMBuffer? {
+        let fmt = file.processingFormat
+        let sr = fmt.sampleRate
+        let rate = clipPlaybackRate(clip)
+        let startFrame = AVAudioFramePosition(max(0, clip.offset_seconds) * sr)
+        guard startFrame < file.length else { return nil }
+        let wantFrames = AVAudioFrameCount(max(0, clip.duration_seconds * rate * sr))
+        let frames = min(wantFrames, AVAudioFrameCount(file.length - startFrame))
+        guard frames > 0, let buf = AVAudioPCMBuffer(pcmFormat: fmt, frameCapacity: frames) else { return nil }
+        do {
+            file.framePosition = startFrame
+            try file.read(into: buf, frameCount: frames)
+        } catch {
+            NSLog("[Studio] processedBuffer read failed for \(clip.id): \(error.localizedDescription)")
+            return nil
+        }
+        guard let ch = buf.floatChannelData else { return nil }
+        let n = Int(buf.frameLength)
+        let chCount = Int(fmt.channelCount)
+        // Reverse first, then gain + fades, so the fades sit at the
+        // PLAYBACK edges — same as the web engine.
+        if clip.reverse {
+            for c in 0..<chCount {
+                let p = ch[c]
+                var i = 0, j = n - 1
+                while i < j { let t = p[i]; p[i] = p[j]; p[j] = t; i += 1; j -= 1 }
+            }
+        }
+        let gain = Float(dbToGain(clip.gain_db))
+        if abs(clip.gain_db) > 0.01 {
+            for c in 0..<chCount {
+                let p = ch[c]
+                for k in 0..<n { p[k] *= gain }
+            }
+        }
+        let fadeIn = min(n, Int(clip.fade_in_seconds * rate * sr))
+        if fadeIn > 1 {
+            for c in 0..<chCount {
+                let p = ch[c]
+                for k in 0..<fadeIn { p[k] *= Float(k) / Float(fadeIn) }
+            }
+        }
+        let fadeOut = min(n, Int(clip.fade_out_seconds * rate * sr))
+        if fadeOut > 1 {
+            for c in 0..<chCount {
+                let p = ch[c]
+                for k in 0..<fadeOut { p[n - 1 - k] *= Float(k) / Float(fadeOut) }
+            }
+        }
+        return buf
+    }
+
+    /// Copy of `src` from `from` to the end — AVAudioPlayerNode has no
+    /// scheduleBuffer-with-offset, so mid-clip joins slice a fresh buffer.
+    static func subBuffer(_ src: AVAudioPCMBuffer, from: AVAudioFrameCount) -> AVAudioPCMBuffer? {
+        guard from < src.frameLength else { return nil }
+        let frames = src.frameLength - from
+        guard let dst = AVAudioPCMBuffer(pcmFormat: src.format, frameCapacity: frames),
+              let s = src.floatChannelData, let d = dst.floatChannelData else { return nil }
+        for c in 0..<Int(src.format.channelCount) {
+            d[c].update(from: s[c] + Int(from), count: Int(frames))
+        }
+        dst.frameLength = frames
+        return dst
+    }
+
+    /// Wire a clip's player into preFaderTap, inserting a varispeed when
+    /// the clip is time-stretched. Registers processing state. Returns
+    /// false when the graph connect raised (caller skips the clip).
+    private func wireClipPlayer(_ player: AVAudioPlayerNode, clip: Studio.AudioClip,
+                                file: AVAudioFile, fmt: AVAudioFormat) -> Bool {
+        let rate = TrackBinding.clipPlaybackRate(clip)
+        let err = StudioObjC.catchExceptions({
+            if abs(rate - 1.0) > 0.001 {
+                let vs = AVAudioUnitVarispeed()
+                vs.rate = Float(rate)
+                self.engine.attach(vs)
+                self.engine.connect(player, to: vs, format: fmt)
+                self.engine.connect(vs, to: self.preFaderTap, format: fmt)
+                self.stretchNodes[clip.id] = vs
+            } else {
+                self.engine.connect(player, to: self.preFaderTap, format: fmt)
+            }
+        })
+        if let err = err {
+            NSLog("[Studio] clip \(clip.id) connect raised \(err.localizedDescription)")
+            if let vs = stretchNodes.removeValue(forKey: clip.id) {
+                _ = StudioObjC.catchExceptions({ self.engine.detach(vs) })
+            }
+            return false
+        }
+        if TrackBinding.clipNeedsProcessing(clip) {
+            if let pbuf = TrackBinding.processedBuffer(clip: clip, file: file) {
+                processedBuffers[clip.id] = pbuf
+                clipRates[clip.id] = rate
+                NSLog("[Studio] clip \(clip.id) processed (gain=\(clip.gain_db) fadeIn=\(clip.fade_in_seconds) fadeOut=\(clip.fade_out_seconds) reverse=\(clip.reverse) rate=\(rate))")
+            } else {
+                NSLog("[Studio] clip \(clip.id) processing failed — playing unprocessed")
+            }
+        }
+        return true
+    }
+
+    /// Schedule a processed clip buffer at `when`, trimming
+    /// `trimSec` timeline-seconds off the front for mid-clip joins.
+    /// Returns false when this clip has no processed buffer (caller
+    /// uses the scheduleSegment fast path).
+    private func scheduleProcessed(clip: Studio.AudioClip, player: AVAudioPlayerNode,
+                                   trimSec: Double, when: AVAudioTime) -> Bool {
+        guard let pbuf = processedBuffers[clip.id] else { return false }
+        let rate = clipRates[clip.id] ?? 1.0
+        let skip = AVAudioFrameCount(max(0, trimSec) * rate * pbuf.format.sampleRate)
+        let toPlay: AVAudioPCMBuffer?
+        if skip == 0 { toPlay = pbuf }
+        else { toPlay = TrackBinding.subBuffer(pbuf, from: skip) }
+        guard let seg = toPlay else { return true } // fully consumed — nothing to play
+        if let err = StudioObjC.catchExceptions({
+            player.scheduleBuffer(seg, at: when, options: [], completionHandler: nil)
+            if !player.isPlaying { player.play(at: when) }
+        }) {
+            NSLog("[Studio] clip \(clip.id) processed schedule raised \(err.localizedDescription)")
+        }
+        return true
     }
 
     public static func build(track: Studio.Track, engine: AVAudioEngine, master: AVAudioMixerNode,
@@ -190,9 +355,13 @@ public final class TrackBinding {
                 let player = AVAudioPlayerNode()
                 engine.attach(player)
                 // v2.0.0 — connect to preFaderTap so pre-fader sends
-                // see the raw source. preFaderTap → strip preserves
-                // the pre-v2 audible signal path.
-                engine.connect(player, to: preFaderTap, format: fmt)
+                // see the raw source (via a varispeed for stretched
+                // clips). preFaderTap → strip preserves the pre-v2
+                // audible signal path.
+                guard binding.wireClipPlayer(player, clip: clip, file: file, fmt: fmt) else {
+                    engine.detach(player)
+                    continue
+                }
                 binding.playerNodes.append(player)
                 binding.loadedClips.append((clip, file, player))
                 NSLog("[Studio.build] clip \(clip.id): player connected")
@@ -276,6 +445,13 @@ public final class TrackBinding {
                     when = AVAudioTime(hostTime: anchor.hostTime + offsetHost)
                 }
 
+                // Clips with gain / fades / reverse / stretch play their
+                // pre-processed buffer instead of the raw file segment.
+                if scheduleProcessed(clip: clip, player: player, trimSec: trimSec, when: when) {
+                    NSLog("[Studio]   clip \(clip.id) scheduled (processed)")
+                    continue
+                }
+
                 // scheduleSegment + play(at:) can raise NSException on
                 // format mismatch or wrong player state; both are
                 // caught at the ObjC layer so one bad clip can't crash
@@ -345,12 +521,11 @@ public final class TrackBinding {
         }
         let player = AVAudioPlayerNode()
         engine.attach(player)
-        if let err = StudioObjC.catchExceptions({
-            // v2.0.0 — connect via preFaderTap so incremental clip-add
-            // follows the same pre-fader-send-visible path as loadSession.
-            self.engine.connect(player, to: self.preFaderTap, format: fmt)
-        }) {
-            NSLog("[Studio] incremental connect failed for \(clip.id): \(err.localizedDescription)")
+        // v2.0.0 — connect via preFaderTap so incremental clip-add
+        // follows the same pre-fader-send-visible path as loadSession.
+        // wireClipPlayer also inserts a varispeed for stretched clips
+        // and pre-renders gain/fades/reverse into a processed buffer.
+        guard wireClipPlayer(player, clip: clip, file: file, fmt: fmt) else {
             engine.detach(player)
             return
         }
@@ -378,11 +553,13 @@ public final class TrackBinding {
                         let offsetHost = AVAudioTime.hostTime(forSeconds: secondsUntilStart)
                         when = AVAudioTime(hostTime: anchor.hostTime + offsetHost)
                     }
-                    _ = StudioObjC.catchExceptions({
-                        player.scheduleSegment(file, startingFrame: startFrame, frameCount: frameCount,
-                                               at: when, completionHandler: nil)
-                        if !player.isPlaying { player.play(at: when) }
-                    })
+                    if !scheduleProcessed(clip: clip, player: player, trimSec: trimSec, when: when) {
+                        _ = StudioObjC.catchExceptions({
+                            player.scheduleSegment(file, startingFrame: startFrame, frameCount: frameCount,
+                                                   at: when, completionHandler: nil)
+                            if !player.isPlaying { player.play(at: when) }
+                        })
+                    }
                 }
             }
         }
@@ -398,16 +575,24 @@ public final class TrackBinding {
         if let err = StudioObjC.catchExceptions({ entry.player.stop() }) {
             NSLog("[Studio] removeClip stop raised \(err.localizedDescription)")
         }
+        let vs = stretchNodes.removeValue(forKey: clipId)
         if engine.isRunning {
             retiredPlayers.append(entry.player)
+            if let vs = vs { retiredAux.append(vs) }
         } else {
             engine.disconnectNodeInput(entry.player)
             engine.detach(entry.player)
+            if let vs = vs {
+                engine.disconnectNodeInput(vs)
+                engine.detach(vs)
+            }
         }
         if let pidx = playerNodes.firstIndex(of: entry.player) {
             playerNodes.remove(at: pidx)
         }
         loadedClips.remove(at: idx)
+        processedBuffers.removeValue(forKey: clipId)
+        clipRates.removeValue(forKey: clipId)
     }
 
     /// Re-assert this track's mixer chain. If a live-graph mutation
@@ -479,15 +664,74 @@ public final class TrackBinding {
             NSLog("[Studio] addClipPullPath called but pullRenderer not enabled on \(trackId)")
             return
         }
+        // Fades / reverse parity with the push path: bake them into a
+        // copy of the clip's window (the source buffer may be shared via
+        // AudioBufferCache — never mutate it). Gain stays on gainLinear;
+        // the renderer applies it. Time-stretch is not supported on the
+        // pull path (it sums at a fixed rate) — logged, not silent.
+        var prBuffer = buffer
+        var prOffset = clip.offset_seconds
+        if clip.fade_in_seconds > 0 || clip.fade_out_seconds > 0 || clip.reverse {
+            if let win = TrackBinding.processedWindow(clip: clip, source: buffer) {
+                prBuffer = win
+                prOffset = 0
+            } else {
+                NSLog("[Studio] pull-path processing failed for \(clip.id) — playing unprocessed")
+            }
+        }
+        if abs(TrackBinding.clipPlaybackRate(clip) - 1.0) > 0.001 {
+            NSLog("[Studio] pull-path clip \(clip.id): time_stretch unsupported on pull renderer — ignored")
+        }
         let prClip = PullRendererClip(
             id: clip.id,
-            buffer: buffer,
+            buffer: prBuffer,
             startSeconds: clip.start_seconds,
             durationSeconds: clip.duration_seconds,
-            offsetSeconds: clip.offset_seconds,
+            offsetSeconds: prOffset,
             gainLinear: Float(dbToGain(clip.gain_db))
         )
         renderer.addClip(prClip)
+    }
+
+    /// Pull-path variant of processedBuffer: extract the clip window
+    /// from an in-memory source buffer and bake reverse + fade ramps
+    /// (no gain — PullRenderer applies gainLinear itself; no stretch —
+    /// unsupported on this path).
+    static func processedWindow(clip: Studio.AudioClip, source: AVAudioPCMBuffer) -> AVAudioPCMBuffer? {
+        let sr = source.format.sampleRate
+        let startFrame = AVAudioFrameCount(max(0, clip.offset_seconds) * sr)
+        guard startFrame < source.frameLength else { return nil }
+        let wantFrames = AVAudioFrameCount(max(0, clip.duration_seconds * sr))
+        let frames = min(wantFrames, source.frameLength - startFrame)
+        guard frames > 0,
+              let buf = AVAudioPCMBuffer(pcmFormat: source.format, frameCapacity: frames),
+              let s = source.floatChannelData, let d = buf.floatChannelData else { return nil }
+        let chCount = Int(source.format.channelCount)
+        for c in 0..<chCount { d[c].update(from: s[c] + Int(startFrame), count: Int(frames)) }
+        buf.frameLength = frames
+        let n = Int(frames)
+        if clip.reverse {
+            for c in 0..<chCount {
+                let p = d[c]
+                var i = 0, j = n - 1
+                while i < j { let t = p[i]; p[i] = p[j]; p[j] = t; i += 1; j -= 1 }
+            }
+        }
+        let fadeIn = min(n, Int(clip.fade_in_seconds * sr))
+        if fadeIn > 1 {
+            for c in 0..<chCount {
+                let p = d[c]
+                for k in 0..<fadeIn { p[k] *= Float(k) / Float(fadeIn) }
+            }
+        }
+        let fadeOut = min(n, Int(clip.fade_out_seconds * sr))
+        if fadeOut > 1 {
+            for c in 0..<chCount {
+                let p = d[c]
+                for k in 0..<fadeOut { p[n - 1 - k] *= Float(k) / Float(fadeOut) }
+            }
+        }
+        return buf
     }
 
     public func removeClipPullPath(clipId: String) {
@@ -516,6 +760,14 @@ public final class TrackBinding {
                 self.engine.disconnectNodeInput(p)
                 self.engine.detach(p)
             }
+            for vs in self.stretchNodes.values {
+                self.engine.disconnectNodeInput(vs)
+                self.engine.detach(vs)
+            }
+            for n in self.retiredAux {
+                self.engine.disconnectNodeInput(n)
+                self.engine.detach(n)
+            }
             self.instrument?.dispose()
             self.fxChain?.dispose()
             self.engine.disconnectNodeInput(self.preFaderTap)
@@ -532,5 +784,9 @@ public final class TrackBinding {
         retiredPlayers.removeAll()
         playerNodes.removeAll()
         loadedClips.removeAll()
+        stretchNodes.removeAll()
+        retiredAux.removeAll()
+        processedBuffers.removeAll()
+        clipRates.removeAll()
     }
 }
