@@ -242,7 +242,18 @@ function scheduleAudioClip(
     },
   });
   const gain = new Tone.Gain(dbToGain(clip.gain_db));
-  player.connect(gain);
+  // pitch_semitones — independent pitch shift (time_stretch stays the
+  // coupled speed+pitch playbackRate, like a varispeed). Only insert
+  // the shifter when actually pitched: PitchShift is a granular
+  // effect with real CPU cost and a slight timbre on unity.
+  let pitchShift: Tone.PitchShift | null = null;
+  if (clip.pitch_semitones) {
+    pitchShift = new Tone.PitchShift({ pitch: clip.pitch_semitones });
+    player.connect(pitchShift);
+    pitchShift.connect(gain);
+  } else {
+    player.connect(gain);
+  }
   gain.connect(destination);
 
   disposers.push(() => {
@@ -250,6 +261,7 @@ function scheduleAudioClip(
     const idx = playbacks.findIndex((p) => p.clipId === clip.id);
     if (idx >= 0) playbacks.splice(idx, 1);
     try { player.dispose(); } catch { /* already disposed */ }
+    pitchShift?.dispose();
     gain.dispose();
   });
 }

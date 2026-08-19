@@ -65,6 +65,10 @@ public final class TrackBinding {
     /// clips (rate = 1/time_stretch — same semantics as the web engine's
     /// playbackRate: speed AND pitch shift together).
     private var stretchNodes: [String: AVAudioUnitVarispeed] = [:]
+    /// Independent pitch shift for clip.pitch_semitones (web parity:
+    /// Tone.PitchShift after the player). Chained after the varispeed
+    /// when both are present.
+    private var pitchNodes: [String: AVAudioUnitTimePitch] = [:]
     /// Aux nodes (varispeeds) whose clips were deleted on a live graph —
     /// parked for detach at dispose(), same policy as retiredPlayers.
     private var retiredAux: [AVAudioNode] = []
@@ -196,27 +200,41 @@ public final class TrackBinding {
     }
 
     /// Wire a clip's player into preFaderTap, inserting a varispeed when
-    /// the clip is time-stretched. Registers processing state. Returns
-    /// false when the graph connect raised (caller skips the clip).
+    /// the clip is time-stretched and a time-pitch unit when it carries
+    /// pitch_semitones (player → varispeed? → pitch? → preFaderTap).
+    /// Registers processing state. Returns false when the graph connect
+    /// raised (caller skips the clip).
     private func wireClipPlayer(_ player: AVAudioPlayerNode, clip: Studio.AudioClip,
                                 file: AVAudioFile, fmt: AVAudioFormat) -> Bool {
         let rate = TrackBinding.clipPlaybackRate(clip)
         let err = StudioObjC.catchExceptions({
+            var head: AVAudioNode = player
             if abs(rate - 1.0) > 0.001 {
                 let vs = AVAudioUnitVarispeed()
                 vs.rate = Float(rate)
                 self.engine.attach(vs)
-                self.engine.connect(player, to: vs, format: fmt)
-                self.engine.connect(vs, to: self.preFaderTap, format: fmt)
+                self.engine.connect(head, to: vs, format: fmt)
                 self.stretchNodes[clip.id] = vs
-            } else {
-                self.engine.connect(player, to: self.preFaderTap, format: fmt)
+                head = vs
             }
+            if abs(clip.pitch_semitones) > 0.001 {
+                let tp = AVAudioUnitTimePitch()
+                tp.pitch = Float(clip.pitch_semitones * 100)  // cents
+                tp.rate = 1
+                self.engine.attach(tp)
+                self.engine.connect(head, to: tp, format: fmt)
+                self.pitchNodes[clip.id] = tp
+                head = tp
+            }
+            self.engine.connect(head, to: self.preFaderTap, format: fmt)
         })
         if let err = err {
             NSLog("[Studio] clip \(clip.id) connect raised \(err.localizedDescription)")
             if let vs = stretchNodes.removeValue(forKey: clip.id) {
                 _ = StudioObjC.catchExceptions({ self.engine.detach(vs) })
+            }
+            if let tp = pitchNodes.removeValue(forKey: clip.id) {
+                _ = StudioObjC.catchExceptions({ self.engine.detach(tp) })
             }
             return false
         }
@@ -575,16 +593,17 @@ public final class TrackBinding {
         if let err = StudioObjC.catchExceptions({ entry.player.stop() }) {
             NSLog("[Studio] removeClip stop raised \(err.localizedDescription)")
         }
-        let vs = stretchNodes.removeValue(forKey: clipId)
+        let aux: [AVAudioNode] = [stretchNodes.removeValue(forKey: clipId),
+                                  pitchNodes.removeValue(forKey: clipId)].compactMap { $0 }
         if engine.isRunning {
             retiredPlayers.append(entry.player)
-            if let vs = vs { retiredAux.append(vs) }
+            retiredAux.append(contentsOf: aux)
         } else {
             engine.disconnectNodeInput(entry.player)
             engine.detach(entry.player)
-            if let vs = vs {
-                engine.disconnectNodeInput(vs)
-                engine.detach(vs)
+            for n in aux {
+                engine.disconnectNodeInput(n)
+                engine.detach(n)
             }
         }
         if let pidx = playerNodes.firstIndex(of: entry.player) {
@@ -682,6 +701,9 @@ public final class TrackBinding {
         if abs(TrackBinding.clipPlaybackRate(clip) - 1.0) > 0.001 {
             NSLog("[Studio] pull-path clip \(clip.id): time_stretch unsupported on pull renderer — ignored")
         }
+        if abs(clip.pitch_semitones) > 0.001 {
+            NSLog("[Studio] pull-path clip \(clip.id): pitch_semitones unsupported on pull renderer — ignored")
+        }
         let prClip = PullRendererClip(
             id: clip.id,
             buffer: prBuffer,
@@ -764,6 +786,10 @@ public final class TrackBinding {
                 self.engine.disconnectNodeInput(vs)
                 self.engine.detach(vs)
             }
+            for tp in self.pitchNodes.values {
+                self.engine.disconnectNodeInput(tp)
+                self.engine.detach(tp)
+            }
             for n in self.retiredAux {
                 self.engine.disconnectNodeInput(n)
                 self.engine.detach(n)
@@ -785,6 +811,7 @@ public final class TrackBinding {
         playerNodes.removeAll()
         loadedClips.removeAll()
         stretchNodes.removeAll()
+        pitchNodes.removeAll()
         retiredAux.removeAll()
         processedBuffers.removeAll()
         clipRates.removeAll()
