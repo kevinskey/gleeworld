@@ -3152,7 +3152,12 @@ const LOOP_CURSOR = `url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.or
 
 function DraggableClip({
   tint, start, duration, offset = 0, label, peaks, preview, assetDuration, snapSeconds, selected,
-  fadeIn = 0, fadeOut = 0, canTrimLeft = true, title,
+  // NO defaults on fadeIn/fadeOut — `hasFades` below keys off "both
+  // defined". Defaulting them to 0 made hasFades unconditionally true,
+  // so MIDI clips grew corner fade dots that (a) do nothing (their
+  // onChange drops fade patches) and (b) sat on top of the loop
+  // handle's grab corner.
+  fadeIn, fadeOut, canTrimLeft = true, title,
   onSelect, onChange, onLoopResize, onRemove, onDuplicate,
 }: {
   tint: string;
@@ -3313,7 +3318,7 @@ function DraggableClip({
   const onFadeIn = (e: React.PointerEvent) => {
     e.stopPropagation();
     const startX = e.clientX;
-    const startFade = fadeIn;
+    const startFade = fadeIn ?? 0;
     const move = (ev: PointerEvent) => {
       const dxSec = (ev.clientX - startX) / pxPerSecond;
       const next = Math.max(0, Math.min(duration / 2, startFade + dxSec));
@@ -3329,7 +3334,7 @@ function DraggableClip({
   const onFadeOut = (e: React.PointerEvent) => {
     e.stopPropagation();
     const startX = e.clientX;
-    const startFade = fadeOut;
+    const startFade = fadeOut ?? 0;
     const move = (ev: PointerEvent) => {
       const dxSec = (ev.clientX - startX) / pxPerSecond;
       // Dragging left = bigger fade-out.
@@ -3345,12 +3350,12 @@ function DraggableClip({
   };
 
   const width = Math.max(8, duration * pxPerSecond);
-  const fadeInW = Math.min(width, fadeIn * pxPerSecond);
-  const fadeOutW = Math.min(width, fadeOut * pxPerSecond);
+  const fadeInW = Math.min(width, (fadeIn ?? 0) * pxPerSecond);
+  const fadeOutW = Math.min(width, (fadeOut ?? 0) * pxPerSecond);
   const hasFades = fadeIn !== undefined && fadeOut !== undefined;
   return (<>
     <div
-      className={`absolute top-2 bottom-2 rounded-md border cursor-grab active:cursor-grabbing select-none transition-shadow overflow-hidden ${selected ? 'ring-2 ring-primary ring-offset-1 shadow-md brightness-110' : 'hover:brightness-105'}`}
+      className={`absolute top-2 bottom-2 rounded-md border cursor-grab active:cursor-grabbing select-none transition-shadow ${selected ? 'ring-2 ring-primary ring-offset-1 shadow-md brightness-110' : 'hover:brightness-105'}`}
       style={{
         left: start * pxPerSecond,
         width,
@@ -3367,9 +3372,17 @@ function DraggableClip({
         touchAction: 'none',
       }}
       onPointerDown={onDragBody}
-      onDoubleClick={(e) => setConfirmRemove({ x: e.clientX, y: e.clientY, message: `Delete "${label}"?` })}
+      onDoubleClick={(e) => setConfirmRemove({ x: e.clientX, y: e.clientY, message: label ? `Delete "${label}"?` : 'Delete this clip?' })}
       title={title ?? `${label} — click to select · drag body to move · ⌥-drag to copy · L/R edges to trim · corners to fade · Delete or double-click to remove`}
     >
+      {/* Content is clipped in its own inset wrapper INSTEAD of
+        * overflow-hidden on the outer div, so the edge handles below can
+        * overhang the border. While they were clipped inside, the border +
+        * rounded corner won hit-testing over the outermost pixels and an
+        * edge grab fell through to the body move-drag — "loop drag doesn't
+        * work" (2026-08-19). pointer-events-none keeps the body drag
+        * target on the outer div. */}
+      <div className="absolute inset-0 rounded-md overflow-hidden pointer-events-none">
       {peaks && peaks.length > 0 && (() => {
         // Slice the asset's peaks to just the visible window so that
         // trimming an edge visibly cuts the waveform at that edge
@@ -3407,13 +3420,14 @@ function DraggableClip({
 
       <div className="absolute top-0 left-0 right-0 text-sm px-1 pt-0.5 truncate pointer-events-none"
         style={{ color: tint, textShadow: '0 0 2px rgba(255,255,255,0.85)' }}>{label}</div>
+      </div>
 
       {/* Left-edge trim handle (full-height) */}
       {canTrimLeft && (
         <div
           data-handle="resize-left"
           onPointerDown={onResizeLeft}
-          className="absolute top-0 bottom-0 left-0 w-1.5 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10"
+          className="absolute top-0 bottom-0 -left-0.5 w-3 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10"
           title="Trim start (left edge)"
         />
       )}
@@ -3421,15 +3435,18 @@ function DraggableClip({
       <div
         data-handle="resize-right"
         onPointerDown={onResizeRight}
-        className={`absolute bottom-0 right-0 w-1.5 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10 ${onLoopResize ? 'top-1/2' : 'top-0'}`}
+        className={`absolute bottom-0 -right-0.5 w-3 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10 ${onLoopResize ? 'top-1/2' : 'top-0'}`}
         title="Trim end (right edge)"
       />
-      {/* Loop handle — upper half of the right edge, loop cursor */}
+      {/* Loop handle — upper half of the right edge, loop cursor. Wide
+        * (w-4) and overhanging the border (-right-1) so grabbing the
+        * visual edge lands on IT, not the clip body — see the content-
+        * wrapper comment above. */}
       {onLoopResize && (
         <div
           data-handle="loop"
           onPointerDown={onLoopDrag}
-          className="absolute top-0 right-0 h-1/2 w-2 bg-black/10 hover:bg-black/30 z-10"
+          className="absolute top-0 -right-1 h-1/2 w-4 bg-black/10 hover:bg-black/30 z-10"
           style={{ cursor: LOOP_CURSOR }}
           title="Loop — drag right to repeat the clip"
         />
@@ -3441,7 +3458,7 @@ function DraggableClip({
           onPointerDown={onFadeIn}
           className="absolute top-0 w-3.5 h-3.5 -translate-y-1/2 rounded-full bg-foreground border-2 border-background cursor-ew-resize z-20 hover:scale-125 transition-transform"
           style={{ left: fadeInW > 0 ? `calc(${fadeInW}px - 5px)` : -5 }}
-          title={`Drag right to lengthen fade-in (currently ${fadeIn.toFixed(2)} s)`}
+          title={`Drag right to lengthen fade-in (currently ${(fadeIn ?? 0).toFixed(2)} s)`}
         />
       )}
       {/* Fade-out handle — small dot at top-right corner */}
@@ -3451,7 +3468,7 @@ function DraggableClip({
           onPointerDown={onFadeOut}
           className="absolute top-0 w-3.5 h-3.5 -translate-y-1/2 rounded-full bg-foreground border-2 border-background cursor-ew-resize z-20 hover:scale-125 transition-transform"
           style={{ right: fadeOutW > 0 ? `calc(${fadeOutW}px - 5px)` : -5 }}
-          title={`Drag left to lengthen fade-out (currently ${fadeOut.toFixed(2)} s)`}
+          title={`Drag left to lengthen fade-out (currently ${(fadeOut ?? 0).toFixed(2)} s)`}
         />
       )}
     </div>
