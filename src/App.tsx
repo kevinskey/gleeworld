@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense, ReactNode } from "react";
 import { AudioCompanionProvider } from "@/contexts/AudioCompanionContext";
+import { AssistantProvider } from "@/lib/assistant/AssistantProvider";
 import { TenantFavicon } from "@/components/TenantFavicon";
 import { Toaster } from "@/components/ui/toaster";
 import { FanRoute } from "@/components/routes/FanRoute";
@@ -571,6 +572,15 @@ const App = () => {
                   <MessengerProvider>
                   <ActiveMeetingProvider>
                   <AudioCompanionProvider>
+                  {/* Mounted ABOVE the routes so it never remounts on
+                      navigation. It used to live inside DashboardShell,
+                      which every page instantiates for itself — so "take
+                      me to the command center" unmounted the old page's
+                      shell and hung up the live voice call mid-sentence
+                      (WebSocket close 1000). The Fab/Sheet/MiniPlayer stay
+                      in the shell; only the state and the live session are
+                      global. */}
+                  <AssistantProvider>
                   <div>
                   <TenantFavicon />
                   <Toaster />
@@ -3573,6 +3583,7 @@ const App = () => {
                     <GlobalMusicPlayer />
                     <PWAInstallPrompt />
                    </div>
+                   </AssistantProvider>
                    </AudioCompanionProvider>
                   </ActiveMeetingProvider>
                   </MessengerProvider>

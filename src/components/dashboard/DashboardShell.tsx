@@ -80,7 +80,6 @@ import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
 import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
 import { ReportBugDialog } from '@/components/feedback/ReportBugDialog';
 import { isDemoTenant } from '@/lib/demoTenant';
-import { AssistantProvider } from '@/lib/assistant/AssistantProvider';
 import { AssistantFab } from '@/components/assistant/AssistantFab';
 import { AssistantMiniPlayer } from '@/components/assistant/AssistantMiniPlayer';
 import { AssistantSheet } from '@/components/assistant/AssistantSheet';
@@ -1097,7 +1096,6 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <DashboardShellNestedContext.Provider value={true}>
-    <AssistantProvider>
       {/* h-screen + overflow-hidden pins the shell to the viewport so the
           sidebar rail stays put — each <main> scrolls INSIDE its column
           instead of pushing the whole document (which used to drag the
@@ -1133,8 +1131,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <MobileBottomNav />
         {/* Mounts only when ?tour=admin is in the URL; otherwise a no-op. */}
         <ProductTour />
-        {/* Floating assistant mic + chat window (shared thread lives in
-            AssistantProvider so it survives navigation between pages). */}
+        {/* Floating assistant mic + chat window. AssistantProvider is
+            mounted once in App.tsx, above the routes — the shell remounts
+            on every navigation, and a provider living here took the live
+            voice session down with it. */}
         <AssistantFab />
         <AssistantMiniPlayer />
         <AssistantSheet />
@@ -1151,7 +1151,6 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           onPin={allToolsOnPin}
         />
       </div>
-    </AssistantProvider>
     </DashboardShellNestedContext.Provider>
   );
 }

@@ -648,8 +648,27 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           ? { overrides: { tts: { voiceId: liveVoiceId } } }
           : {};
       // Preferred form of address ("call me Doc") outranks the real first name.
-      const firstName = profile?.preferred_name?.trim()
+      let firstName = profile?.preferred_name?.trim()
         || profile?.full_name?.trim().split(/\s+/)[0] || '';
+      let assistantName = profile?.assistant_name?.trim() || '';
+      if (!firstName) {
+        // No name usually means the mic was pressed before useUserRole's
+        // profile query landed, not that the user has no name — and being
+        // early must not demote "Doc" to "Hi, there". One direct read
+        // settles it; the token round-trip above already cost more.
+        const { data: u } = await supabase.auth.getUser();
+        if (u?.user) {
+          const { data: p } = await supabase
+            .from('gw_profiles')
+            .select('preferred_name, full_name, assistant_name')
+            .eq('user_id', u.user.id)
+            .maybeSingle();
+          const row = p as { preferred_name?: string | null; full_name?: string | null; assistant_name?: string | null } | null;
+          firstName = row?.preferred_name?.trim()
+            || row?.full_name?.trim().split(/\s+/)[0] || '';
+          assistantName = assistantName || row?.assistant_name?.trim() || '';
+        }
+      }
       const session = await Conversation.startSession({
         conversationToken: token,
         connectionType: 'webrtc',
@@ -662,7 +681,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           user_first_name: firstName || 'there',
           // The user's personal name for her. The agent prompt reads
           // {{assistant_name}}; the platform default covers old bundles.
-          assistant_name: profile?.assistant_name?.trim() || 'the GleeWorld Assistant',
+          assistant_name: assistantName || 'the GleeWorld Assistant',
           // The live agent has no clock of its own; hand it the local time at
           // session start so "what time is it" never comes back empty.
           user_local_time: new Date().toLocaleString(undefined, {
