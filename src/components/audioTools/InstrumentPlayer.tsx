@@ -174,6 +174,17 @@ export function InstrumentPlayer({ className }: InstrumentPlayerProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instrument, isDrumMode]);
 
+  // Full teardown on unmount. The effect above only tears down when it
+  // re-runs for a new instrument, so leaving the page mid-note kept held
+  // soundfont notes sounding and leaked the shared gain node.
+  useEffect(() => () => {
+    teardownCurrentInstrument();
+    const g = gainRef.current;
+    gainRef.current = null;
+    if (g) { try { g.disconnect(); } catch { /* already disconnected */ } }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // C2–C7 covers most orchestral instrument ranges. The strip is wider
   // than the container so the user swipes horizontally to reach octaves
   // outside the initial view.

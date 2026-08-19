@@ -2554,7 +2554,10 @@ function Editor({
        *  buttons become direct flex items of this row). The old grid
        *  crammed all buttons into a tall left column beside a huge LCD. */}
       <div className="bg-card border border-border rounded-md p-1.5 sm:p-2 space-y-1.5">
-        <div className="flex flex-wrap items-center justify-center gap-1.5 sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:justify-normal sm:gap-3">
+        {/* Phones flex-wrap (buttons row, LCD wraps whole beneath — nothing
+         *  ever clips); sm+ uses the three-cell grid that keeps the LCD
+         *  dead-center. */}
+        <div className="flex flex-wrap sm:grid sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-3">
 
         {/* LEFT — transport controls. Play/Pause/Stop/Rec are visible on
          *  every breakpoint (metronome + count-in live in the LCD); nav
@@ -3705,21 +3708,37 @@ function MidiClipBlock({
       duration={clip.duration_seconds}
       label=""
       preview={<MidiClipPreview notes={clip.notes} durationSeconds={clip.duration_seconds} />}
-      title={`${clip.notes.length} notes — drag body to move · ⌥-drag to copy`}
+      title={`${clip.notes.length} notes — drag body to move · ⌥-drag to copy · pull right edge (top) to loop`}
       snapSeconds={snapSeconds}
       selected={selected}
       canTrimLeft={false}
       onSelect={onSelect}
-      onChange={(p) => {
-        // Right-edge trim (shrink only — a grow or a move must leave
-        // notes untouched) truncates notes so playback always matches
-        // what the piano roll shows.
-        const isRightTrimShrink = p.duration != null && p.duration < clip.duration_seconds;
-        onChange({
-          start_seconds: p.start ?? clip.start_seconds,
-          duration_seconds: p.duration ?? clip.duration_seconds,
-          ...(isRightTrimShrink ? { notes: trimNotesToDuration(clip.notes, p.duration!) } : {}),
-        });
+      onChange={(p) => onChange({
+        start_seconds: p.start ?? clip.start_seconds,
+        duration_seconds: p.duration ?? clip.duration_seconds,
+      })}
+      onLoopResize={(newDur) => {
+        // Tile the clip's content into the new length. `clip` here is the
+        // clip as of the pointerdown render — DraggableClip's drag listeners
+        // hold that closure for the whole gesture, so every move event
+        // re-tiles from the same base and repeats never compound mid-drag.
+        const baseDur = clip.duration_seconds;
+        if (baseDur <= 0) return;
+        const reps = Math.ceil(newDur / baseDur);
+        const notes = [];
+        for (let k = 0; k < reps; k++) {
+          for (const n of clip.notes) {
+            const s = k * baseDur + n.start_seconds;
+            if (s >= newDur) continue;
+            notes.push({ ...n, start_seconds: s, duration_seconds: Math.min(n.duration_seconds, newDur - s) });
+          }
+        }
+        const cc = clip.cc && clip.cc.length > 0
+          ? Array.from({ length: reps }, (_, k) => clip.cc!
+              .map((ev) => ({ ...ev, time_seconds: k * baseDur + ev.time_seconds }))
+              .filter((ev) => ev.time_seconds < newDur)).flat()
+          : clip.cc;
+        onChange({ duration_seconds: newDur, notes, ...(cc !== undefined ? { cc } : {}) });
       }}
       onRemove={onRemove}
       onDuplicate={onDuplicate}
@@ -3727,10 +3746,14 @@ function MidiClipBlock({
   );
 }
 
+/** Circular-arrow cursor for the loop handle (GarageBand-style). White
+ * halo + dark stroke so it reads on both light and dark clip tints. */
+const LOOP_CURSOR = `url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M10 3.5a6.5 6.5 0 1 1-5.8 3.6' fill='none' stroke='white' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M10 3.5a6.5 6.5 0 1 1-5.8 3.6' fill='none' stroke='%23222' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M1.5 3.2l2.8 5.4 4.4-3.4z' fill='%23222' stroke='white' stroke-width='1'/%3E%3C/svg%3E") 10 10, e-resize`;
+
 function DraggableClip({
   tint, start, duration, offset = 0, label, peaks, preview, assetDuration, snapSeconds, selected,
   fadeIn = 0, fadeOut = 0, canTrimLeft = true, title,
-  onSelect, onChange, onRemove, onDuplicate,
+  onSelect, onChange, onLoopResize, onRemove, onDuplicate,
 }: {
   tint: string;
   start: number; duration: number; offset?: number; label: string;
@@ -3761,6 +3784,11 @@ function DraggableClip({
     fadeIn?: number;
     fadeOut?: number;
   }) => void;
+  /** Loop-extend from the right edge's upper half (MIDI clips). Called
+   * with the new total duration while dragging; the parent tiles the
+   * clip's content to fill it. Extension only — never below the
+   * duration at drag start (the plain trim handle shortens). */
+  onLoopResize?: (newDuration: number) => void;
   onRemove: () => void;
   /** Option/Alt-drag duplication (Logic/GarageBand style): the parent
    * inserts a clone at the clip's CURRENT (pre-drag) position; the body
@@ -3820,6 +3848,29 @@ function DraggableClip({
       const minDur = snapSeconds > 0 ? snapSeconds : 0.05;
       const newDur = Math.max(minDur, snap(startDur + dx / pxPerSecond));
       onChange({ duration: newDur });
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
+  // Right edge, upper half — loop-extend. Pulling right repeats the
+  // clip's content into the new length; the parent owns the tiling so
+  // this stays clip-kind agnostic. Clamped to never shrink below the
+  // drag-start duration — shortening stays the trim handle's job.
+  const onLoopDrag = (e: React.PointerEvent) => {
+    if (!onLoopResize) return;
+    e.stopPropagation();
+    onSelect();
+    const startX = e.clientX;
+    const startDur = duration;
+    const move = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const newDur = Math.max(startDur, snap(startDur + dx / pxPerSecond));
+      onLoopResize(newDur);
     };
     const up = () => {
       window.removeEventListener('pointermove', move);
@@ -3976,13 +4027,23 @@ function DraggableClip({
           title="Trim start (left edge)"
         />
       )}
-      {/* Right-edge trim handle */}
+      {/* Right-edge trim handle (bottom half when a loop handle sits above) */}
       <div
         data-handle="resize-right"
         onPointerDown={onResizeRight}
-        className="absolute top-0 bottom-0 right-0 w-1.5 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10"
+        className={`absolute bottom-0 right-0 w-1.5 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10 ${onLoopResize ? 'top-1/2' : 'top-0'}`}
         title="Trim end (right edge)"
       />
+      {/* Loop handle — upper half of the right edge, loop cursor */}
+      {onLoopResize && (
+        <div
+          data-handle="loop"
+          onPointerDown={onLoopDrag}
+          className="absolute top-0 right-0 h-1/2 w-2 bg-black/10 hover:bg-black/30 z-10"
+          style={{ cursor: LOOP_CURSOR }}
+          title="Loop — drag right to repeat the clip"
+        />
+      )}
       {/* Fade-in handle — small dot at top-left corner */}
       {hasFades && (
         <div

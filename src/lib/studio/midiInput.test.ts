@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { parseMidiMessage } from './midiMessage';
+import { parseMidiMessage, createNoteEchoFilter } from './midiMessage';
 import { appendTakeNote, captureNote, findMidiClipAt, recordStartMode, grownSessionLength, ensureTakeClip } from './midiRecord';
 import { HeldNotes, attachTakeCc, getMidiTrimMs, MIDI_TRIM_STORAGE_KEY } from './midiRecord';
 import type { MidiClip } from './session';
@@ -30,6 +30,52 @@ describe('parseMidiMessage', () => {
     expect(parseMidiMessage([0xb2, 64, 64])).toEqual({ type: 'sustain', down: true });  // channel 2 (WP06 broadcasts 1-3)
     expect(parseMidiMessage([0xb0, 64, 0])).toEqual({ type: 'sustain', down: false });
     expect(parseMidiMessage([0xb1, 64, 63])).toEqual({ type: 'sustain', down: false });
+  });
+});
+
+describe('createNoteEchoFilter', () => {
+  const on = (pitch: number, velocity: number) => ({ type: 'noteon', pitch, velocity } as const);
+  const off = (pitch: number) => ({ type: 'noteoff', pitch } as const);
+
+  it('drops a duplicate note-on within 10ms (multi-port echo)', () => {
+    const isEcho = createNoteEchoFilter();
+    expect(isEcho(on(60, 100), 1000)).toBe(false);
+    expect(isEcho(on(60, 100), 1002)).toBe(true);  // second port
+    expect(isEcho(on(60, 98), 1004)).toBe(true);   // third port, near-identical velocity
+  });
+
+  it('drops a duplicate note-off within 10ms', () => {
+    const isEcho = createNoteEchoFilter();
+    expect(isEcho(off(60), 1000)).toBe(false);
+    expect(isEcho(off(60), 1003)).toBe(true);
+  });
+
+  it('keeps a fast re-strike: note-on → note-off → note-on within 30ms', () => {
+    const isEcho = createNoteEchoFilter();
+    expect(isEcho(on(60, 100), 1000)).toBe(false);
+    expect(isEcho(off(60), 1022)).toBe(false);     // key released
+    expect(isEcho(on(60, 100), 1028)).toBe(false); // genuine re-strike, kept
+  });
+
+  it('keeps events past the window and on other pitches', () => {
+    const isEcho = createNoteEchoFilter();
+    expect(isEcho(on(60, 100), 1000)).toBe(false);
+    expect(isEcho(on(64, 100), 1002)).toBe(false); // different pitch
+    expect(isEcho(on(60, 100), 1012)).toBe(false); // outside 10ms window
+  });
+
+  it('anchors the window at the first event so chained echoes cannot extend it', () => {
+    const isEcho = createNoteEchoFilter();
+    expect(isEcho(on(60, 100), 1000)).toBe(false);
+    expect(isEcho(on(60, 100), 1008)).toBe(true);
+    expect(isEcho(on(60, 100), 1014)).toBe(false); // 14ms after the ORIGINAL — kept
+  });
+
+  it('ignores non-note events and never touches note state', () => {
+    const isEcho = createNoteEchoFilter();
+    expect(isEcho(on(60, 100), 1000)).toBe(false);
+    expect(isEcho({ type: 'sustain', down: true }, 1001)).toBe(false);
+    expect(isEcho(on(60, 100), 1002)).toBe(true); // still an echo of the first note-on
   });
 });
 

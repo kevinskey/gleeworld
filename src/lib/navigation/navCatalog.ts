@@ -13,7 +13,7 @@ import {
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
   PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, Gavel, CreditCard, Receipt,
-  HandHeart, ConciergeBell, QrCode, Award,
+  HandHeart, ConciergeBell, QrCode, Award, Cloud,
   type LucideIcon, FileText } from 'lucide-react';
 
 export type NavSectionKey =
@@ -46,6 +46,9 @@ export interface CatalogEntry {
   end?: boolean;
   surfaces?: Array<'sidebar' | 'grid'>;
   gate?: NavGate;
+  // Visually prominent row in the grouped sidebar (e.g. Home) — see
+  // DashboardShell's NavLink styling.
+  hero?: boolean;
 }
 
 export const NAV_CATALOG: CatalogEntry[] = [
@@ -53,7 +56,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'home',     to: '/dashboard',           label: 'Command Center', icon: Home,          section: 'today', tone: 'bg-primary/10 text-primary', tourId: 'nav-command-center', end: true, surfaces: ['sidebar'] },
   // The way BACK OUT: the tenant's public site lives at the host root. No
   // gate — every member may want the page they share with the world.
-  { key: 'public-site', to: '/', label: 'Public Site', icon: Globe, section: 'today', tone: 'bg-sky-50 text-sky-600', tourId: 'nav-public-site', end: true },
+  { key: 'public-site', to: '/dashboard/public-site', label: 'Public Site', icon: Globe, section: 'today', tone: 'bg-sky-50 text-sky-600', tourId: 'nav-public-site' },
   { key: 'messages', to: '/dashboard/messenger', label: 'Messages',       icon: MessageSquare, section: 'today', tone: 'bg-cyan-50 text-cyan-600',   tourId: 'nav-messenger',      surfaces: ['sidebar'] },
   { key: 'calendar', to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      section: 'today', tone: 'bg-purple-50 text-purple-600', tourId: 'nav-calendar',     surfaces: ['sidebar'] },
   { key: 'notes',    to: '/planner',             label: 'Notes',          icon: NotebookPen,   section: 'today', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-notes', gate: { module: 'planner' } },
@@ -79,6 +82,11 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'music-store',   to: '/store',                   label: 'Music Store',   icon: ShoppingBag, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-music-store' },
   { key: 'librarian',     to: '/dashboard/librarian',     label: 'Librarian',     icon: LibraryBig, section: 'music', tone: 'bg-slate-50 text-slate-600', tourId: 'nav-librarian',    gate: { module: 'librarian', librarianOnly: true } },
   { key: 'partner-portal', to: '/partner', label: 'Partner Portal', icon: Store, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-partner-portal', gate: { partnerOnly: true } },
+  // The OAuth-backed floating player (concert-rsvp-form lineage). Kept
+  // alongside the widget-based /dashboard/soundcloud entry above until one
+  // of the two SoundCloud integrations is retired — keys/tourIds must stay
+  // distinct or nav ordering and tours misbehave.
+  { key: 'music-player',  to: '/dashboard/music-player',  label: 'Music Player',  icon: Cloud,      section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-music-player' },
   // Teach
   { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-primary text-primary-foreground', tourId: 'nav-academy' },
   { key: 'office-hours', to: '/dashboard/office-hours',        label: 'Studio Hours', icon: CalendarClock, section: 'teach', tone: 'bg-emerald-50 text-emerald-600',     tourId: 'nav-office-hours' },

@@ -75,7 +75,7 @@ export const MediaLibraryBulkUpload: React.FC<MediaLibraryBulkUploadProps> = ({
     );
   };
 
-const uploadFile = async (uploadFile: UploadFile): Promise<void> => {
+const uploadFile = async (uploadFile: UploadFile): Promise<boolean> => {
     const { file, title, description, album, artist } = uploadFile;
     
     try {
@@ -138,6 +138,8 @@ const uploadFile = async (uploadFile: UploadFile): Promise<void> => {
         url: data.publicUrl
       });
 
+      return true;
+
     } catch (error) {
       console.error(`Upload error for ${file.name}:`, error);
       updateFile(uploadFile.id, {
@@ -145,20 +147,25 @@ const uploadFile = async (uploadFile: UploadFile): Promise<void> => {
         progress: 0,
         error: error instanceof Error ? error.message : 'Upload failed',
       });
+      return false;
     }
   };
 
   const handleBulkUpload = async () => {
     if (files.length === 0) return;
 
+    // Only upload files that haven't already succeeded (or are mid-upload)
+    const filesToUpload = files.filter(f => f.status === 'pending' || f.status === 'error');
+    if (filesToUpload.length === 0) return;
+
     setIsUploading(true);
-    
+
     try {
       // Upload all files in parallel
-      await Promise.allSettled(files.map(uploadFile));
-      
-      const successCount = files.filter(f => f.status === 'success').length;
-      const errorCount = files.filter(f => f.status === 'error').length;
+      const results = await Promise.allSettled(filesToUpload.map(uploadFile));
+
+      const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+      const errorCount = results.length - successCount;
       
       if (successCount > 0) {
         toast({

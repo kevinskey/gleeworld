@@ -90,6 +90,11 @@ export function StandalonePiano({
   const [volume, setVolume] = useState(0.8);
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const releaseFnsRef = useRef<Map<string, () => void>>(new Map());
+  // Notes whose async start (Tone.start + soundfont load) is still in
+  // flight. A quick tap can fire stopNote before the note lands in
+  // releaseFnsRef; removal from this set tells the pending start to
+  // release immediately instead of ringing stuck.
+  const pendingStartsRef = useRef<Set<string>>(new Set());
   const scrollRef = useRef<HTMLDivElement>(null);
   const phoneScrollRef = useRef<HTMLDivElement>(null);
 
@@ -100,6 +105,13 @@ export function StandalonePiano({
   const renderedStart = expanded ? 1 : startOctave;
 
   useEffect(() => { preloadPianoSampler().catch(() => {}); }, []);
+  // Release any held/pending notes on unmount so nothing rings after the
+  // component leaves the tree.
+  useEffect(() => () => {
+    pendingStartsRef.current.clear();
+    releaseFnsRef.current.forEach((release) => { try { release(); } catch { /* ignore */ } });
+    releaseFnsRef.current.clear();
+  }, []);
   useEffect(() => {
     try {
       const dest = Tone.getDestination();
@@ -126,14 +138,22 @@ export function StandalonePiano({
     // Fire sync unlock first so iOS releases the context inside this tap.
     forceAudioUnlock();
     const startedPromise = Tone.start().catch(() => {});
-    if (releaseFnsRef.current.has(key.fullName)) return;
+    if (releaseFnsRef.current.has(key.fullName) || pendingStartsRef.current.has(key.fullName)) return;
+    pendingStartsRef.current.add(key.fullName);
     await startedPromise;
     const release = await holdPianoNote(key.fullName, 0.8);
+    // Released (or unmounted) while the start was awaiting — kill it now.
+    if (!pendingStartsRef.current.has(key.fullName)) {
+      try { release(); } catch { /* ignore */ }
+      return;
+    }
+    pendingStartsRef.current.delete(key.fullName);
     releaseFnsRef.current.set(key.fullName, release);
     setActiveNotes((prev) => new Set(prev).add(key.fullName));
   }, []);
 
   const stopNote = useCallback((key: PianoKey) => {
+    pendingStartsRef.current.delete(key.fullName);
     const release = releaseFnsRef.current.get(key.fullName);
     if (release) {
       release();

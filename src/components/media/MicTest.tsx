@@ -26,8 +26,11 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
   const rafIdRef = useRef<number | null>(null);
   const monitorGainRef = useRef<GainNode | null>(null);
   const meterCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const peakDbRef = useRef(-90);
+  const sessionRef = useRef(0);
 
   const stopAll = () => {
+    sessionRef.current++; // invalidate any in-flight startTest
     if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
     rafIdRef.current = null;
     try { sourceRef.current?.disconnect(); } catch {}
@@ -64,10 +67,13 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
     const dbNow = rms > 1e-6 ? 20 * Math.log10(rms) : -90; // dBFS approx
     const clampedDb = Math.max(-90, Math.min(0, dbNow));
     setDb(clampedDb);
-    setPeakDb((prev) => {
-      if (clampedDb > prev) return clampedDb; // rise instantly
-      return Math.max(-90, prev - 0.75); // decay
-    });
+    // Keep the peak in a ref: this rAF loop re-schedules the same closure, so
+    // reading peakDb state here would always see the initial value
+    const nextPeak = clampedDb > peakDbRef.current
+      ? clampedDb // rise instantly
+      : Math.max(-90, peakDbRef.current - 0.75); // decay
+    peakDbRef.current = nextPeak;
+    setPeakDb(nextPeak);
 
     // UI level percent for legacy bar
     const pct = Math.min(100, Math.max(0, Math.round(rms * 120)));
@@ -82,7 +88,7 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
         ctx.clearRect(0, 0, w, h);
         const minDb = -60;
         const frac = Math.max(0, Math.min(1, (clampedDb - minDb) / (0 - minDb)));
-        const peakFrac = Math.max(0, Math.min(1, (peakDb - minDb) / (0 - minDb)));
+        const peakFrac = Math.max(0, Math.min(1, (nextPeak - minDb) / (0 - minDb)));
         // background
         ctx.fillStyle = '#1f2937'; // slate-800-like
         ctx.fillRect(0, 0, w, h);
@@ -136,6 +142,7 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
   }, [deviceId]);
 
   const startTest = async () => {
+    const session = sessionRef.current;
     try {
       setStatus('idle');
       setErrorMsg(null);
@@ -166,14 +173,28 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
         stream = await navigator.mediaDevices.getUserMedia({ audio: deviceId && deviceId !== 'default' ? { deviceId: { exact: deviceId } } : true });
       }
 
+      // If stopAll ran (e.g. unmount) while awaiting getUserMedia, stop the
+      // late-resolving stream immediately instead of leaking the mic
+      if (sessionRef.current !== session) {
+        stream?.getTracks().forEach(t => t.stop());
+        return;
+      }
+
       streamRef.current = stream;
       await refreshDevices();
+
+      if (sessionRef.current !== session) return; // stopAll already released the stream
 
       const Ctx: any = (window as any).AudioContext || (window as any).webkitAudioContext;
       const ctx: AudioContext = new Ctx();
       ctxRef.current = ctx;
       if (ctx.state === 'suspended') {
         await ctx.resume();
+      }
+
+      if (sessionRef.current !== session) {
+        try { ctx.close(); } catch {}
+        return;
       }
 
       const src = ctx.createMediaStreamSource(stream!);

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { parseMidiMessage } from '@/lib/studio/midiMessage';
+import { parseMidiMessage, createNoteEchoFilter } from '@/lib/studio/midiMessage';
 import { getMidiInputSource } from '@/lib/midi/midiInputSource';
 import { registerStudioAudio } from '@/lib/studio/audioLeakGuard';
 
@@ -55,9 +55,15 @@ export function useStudioMidiInput({
     };
     const offState = source.onStateChange(refreshInputs);
 
+    // Multi-port keyboards (e.g. Kawai/NI S88) echo the same note events on
+    // 2-3 ports; with deviceId '' each echo would re-trigger live voices and
+    // record ghost notes. Fresh filter per subscription — no stale state.
+    const isNoteEcho = createNoteEchoFilter();
+
     source
       .subscribeManaged(deviceIdRef.current, (data, timeStampMs) => {
         const ev = parseMidiMessage(data);
+        if (isNoteEcho(ev, timeStampMs)) return;
         if (ev.type === 'noteon') onOnRef.current(ev.pitch, ev.velocity, timeStampMs);
         else if (ev.type === 'noteoff') onOffRef.current(ev.pitch, timeStampMs);
         else if (ev.type === 'sustain') onSustainRef.current?.(ev.down, timeStampMs);

@@ -25,7 +25,7 @@ export const DesignSystemEnforcer = () => {
       }
       
       .text-gray-400, .text-gray-300 {
-        color: hsl(var(--muted-foreground) / 0.7);
+        color: hsl(var(--muted-foreground));
       }
       
       .bg-gray-50, .bg-gray-100 {
@@ -63,7 +63,7 @@ export const DesignSystemEnforcer = () => {
       /* === PLACEHOLDER TEXT === */
       
       ::placeholder {
-        color: hsl(var(--muted-foreground) / 0.6);
+        color: hsl(var(--muted-foreground) / 0.8);
       }
     `;
     
