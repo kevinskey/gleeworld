@@ -59,3 +59,26 @@ describe('midiContentSig', () => {
     expect(midiContentSig(edited)).not.toBe(midiContentSig(base));
   });
 });
+
+// Regression: fade edits must change audioClipSig — the player bakes
+// fadeIn/fadeOut at construction, so a fade edit has to ride the
+// remove+add splice. Before 2026-08-19 fades were missing from the sig
+// and edits drew on the clip but never sounded.
+import { audioClipSig } from './useStudio';
+
+describe('audioClipSig', () => {
+  const audioClip = (o: Record<string, unknown> = {}) => ({
+    id: 'a1', asset_id: 'as1', start_seconds: 0, duration_seconds: 4,
+    offset_seconds: 0, gain_db: 0, pitch_semitones: 0, time_stretch: 1,
+    reverse: false, fade_in_seconds: 0, fade_out_seconds: 0, ...o,
+  });
+
+  it('is stable for identical clips', () => {
+    expect(audioClipSig(audioClip())).toBe(audioClipSig(audioClip()));
+  });
+
+  it('changes when fade in/out change', () => {
+    expect(audioClipSig(audioClip({ fade_in_seconds: 0.5 }))).not.toBe(audioClipSig(audioClip()));
+    expect(audioClipSig(audioClip({ fade_out_seconds: 1.25 }))).not.toBe(audioClipSig(audioClip()));
+  });
+});
