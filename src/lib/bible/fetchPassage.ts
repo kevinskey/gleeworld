@@ -75,7 +75,11 @@ export async function fetchPassage(
     .eq('chapter', parsed.chapter)
     .order('verse')
     .limit(MAX_VERSES);
-  if (parsed.verse != null) q = q.eq('verse', parsed.verse);
+  if (parsed.verse != null && parsed.verseEnd != null) {
+    q = q.gte('verse', parsed.verse).lte('verse', parsed.verseEnd);
+  } else if (parsed.verse != null) {
+    q = q.eq('verse', parsed.verse);
+  }
 
   const { data: verses, error } = await q;
   if (error) return { ok: false, text: `Couldn't read that passage: ${error.message}` };
@@ -85,7 +89,9 @@ export async function fetchPassage(
   }
 
   const label = parsed.verse != null
-    ? `${b.name} ${parsed.chapter}:${parsed.verse}`
+    ? parsed.verseEnd != null
+      ? `${b.name} ${parsed.chapter}:${parsed.verse}–${parsed.verseEnd}`
+      : `${b.name} ${parsed.chapter}:${parsed.verse}`
     : `${b.name} ${parsed.chapter}`;
   // Verse numbers are omitted when a single verse was asked for — reading
   // "one" before a one-verse quotation sounds like a mistake aloud.

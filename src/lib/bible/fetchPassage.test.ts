@@ -24,7 +24,7 @@ function table(name: string) {
     then: (resolve: (v: { data: unknown; error: null }) => void) =>
       resolve({ data: state.single ? (rowsFor()[0] ?? null) : rowsFor(), error: null }),
   };
-  for (const m of ['select', 'eq', 'ilike', 'order', 'limit', 'in', 'textSearch']) {
+  for (const m of ['select', 'eq', 'gte', 'lte', 'ilike', 'order', 'limit', 'in', 'textSearch']) {
     builder[m] = () => builder;
   }
   builder.maybeSingle = () => { state.single = true; return builder; };
@@ -57,6 +57,15 @@ describe('fetchPassage', () => {
     verses = [{ verse: 1, text: 'First.' }, { verse: 2, text: 'Second.' }];
     const r = await fetchPassage('Psalm 23');
     expect(r.text).toBe('Psalms 23 (WEBCE): 1. First. 2. Second.');
+  });
+
+  // The daily-lectionary bug: "Ezekiel 34:1-11" used to return verse 1
+  // alone, and the assistant read one verse and declared the reading done.
+  it('reads a verse range under a ranged label', async () => {
+    verses = [{ verse: 1, text: 'First.' }, { verse: 2, text: 'Second.' }, { verse: 3, text: 'Third.' }];
+    const r = await fetchPassage('Psalm 23:1-3');
+    expect(r.ok).toBe(true);
+    expect(r.text).toBe('Psalms 23:1\u20133 (WEBCE): 1. First. 2. Second. 3. Third.');
   });
 
   it('says so plainly when the reference is not a reference', async () => {

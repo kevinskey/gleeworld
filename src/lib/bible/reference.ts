@@ -19,12 +19,20 @@ export interface ParsedReference {
   chapter: number;
   /** Start verse when one is given; null for a whole chapter. */
   verse: number | null;
+  /** End verse of a same-chapter range ("Ezekiel 34:1-11"); null when the
+   *  reference is a single verse, a whole chapter, or a cross-chapter range
+   *  (which a same-chapter reader cannot span). */
+  verseEnd: number | null;
 }
 
 // Book name, then an optional chapter, then an optional :verse (and range).
 // The book part is greedy over letters/spaces so "Song of Solomon 2" works,
 // and allows a leading digit for "1 Corinthians".
-const REF = /^\s*((?:[1-3]\s*)?[A-Za-z][A-Za-z\s'.]*?)\s*(?:(\d+)\s*(?::\s*(\d+))?(?:\s*[-–—]\s*\d+(?::\d+)?)?)?\s*$/;
+// The range END is captured, not just tolerated: the search box only needs
+// somewhere to open, but lookup_bible reads aloud — dropping the "-11" from
+// "Ezekiel 34:1-11" had the assistant read one verse of the daily lectionary
+// and stop, sure it had finished.
+const REF = /^\s*((?:[1-3]\s*)?[A-Za-z][A-Za-z\s'.]*?)\s*(?:(\d+)\s*(?::\s*(\d+))?(?:\s*[-–—]\s*(\d+)(?:\s*:\s*(\d+))?)?)?\s*$/;
 
 export function parseReference(input: string): ParsedReference | null {
   const q = (input ?? '').trim();
@@ -33,7 +41,7 @@ export function parseReference(input: string): ParsedReference | null {
   const m = REF.exec(q);
   if (!m) return null;
 
-  const [, rawName, rawChapter, rawVerse] = m;
+  const [, rawName, rawChapter, rawVerse, rawEnd, rawEndVerse] = m;
   const name = rawName.replace(/[.\s]+$/, '').trim();
   if (!name) return null;
 
@@ -44,9 +52,18 @@ export function parseReference(input: string): ParsedReference | null {
   const chapter = rawChapter ? Number(rawChapter) : 1;
   if (!Number.isFinite(chapter) || chapter < 1) return null;
 
+  const verse = rawVerse ? Number(rawVerse) : null;
+  // "8" in "John 7:53-8:11" is a chapter, not a verse end — cross-chapter
+  // ranges parse to their start. "34:11-1" is nonsense; treat as no range.
+  const verseEnd =
+    verse != null && rawEnd && !rawEndVerse && Number(rawEnd) > verse
+      ? Number(rawEnd)
+      : null;
+
   return {
     usfmCode: book.usfmCode,
     chapter,
-    verse: rawVerse ? Number(rawVerse) : null,
+    verse,
+    verseEnd,
   };
 }
