@@ -5,6 +5,7 @@ import { X, Minimize2, Maximize2, GripHorizontal, Music } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { isSoundCloudSet, type SoundCloudTrack } from '@/lib/soundcloud';
 import { SoundCloudEmbed } from './SoundCloudEmbed';
+import { SoundCloudVolume } from './SoundCloudVolume';
 import { closeSoundCloudPlayer, useFloatingSoundCloudTrack } from './soundcloudPlayerStore';
 
 const POS_KEY = 'gw:sc-float:pos';
@@ -140,6 +141,21 @@ function FloatingSoundCloudPlayer({ track }: { track: SoundCloudTrack }) {
             visual={!isSoundCloudSet(track.url)}
           />
         </div>
+
+        {/* Volume lives outside the widget: the SoundCloud iframe is
+            cross-origin, so nothing in the app can attenuate it except the
+            widget's own API. Hidden while minimized along with the player.
+            Stops pointer events from reaching Rnd so dragging the slider
+            doesn't drag the whole window. */}
+        {!isMinimized && (
+          <div
+            className="shrink-0 flex items-center justify-end px-2 py-1.5 bg-card border-t border-border"
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <SoundCloudVolume />
+          </div>
+        )}
       </div>
     </Rnd>
   );

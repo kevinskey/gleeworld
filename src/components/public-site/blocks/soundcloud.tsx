@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { z } from 'zod';
 import { Music2, Plus, Trash2, Search, Loader2, ListMusic, AudioLines } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { attachSoundCloudVolume } from '@/lib/soundcloud/widgetVolume';
 import type { BlockModule, BlockEditorFormProps, BlockRenderProps } from '../types';
 import { EmptyBlockPlaceholder } from '../EmptyBlockPlaceholder';
 
@@ -75,15 +76,21 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
   const profile = ctx.soundcloudUrl?.trim() || '';
   const [active, setActive] = useState(0);
 
+  const current = items[Math.min(active, Math.max(0, items.length - 1))];
+  const source = current?.url || profile;
+
+  // Turn the widget down to the app-wide level. Hooks run before the early
+  // return below so the hook order stays stable when a block goes from
+  // "nothing curated" to having a source.
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  useEffect(() => attachSoundCloudVolume(frameRef.current), [source, config.visual]);
+
   // Nothing curated and no profile set: in the editor say so, on the public
   // site render nothing at all — the same contract music-player keeps with
   // no tracks, and what makes this block safe on every tenant.
   if (!items.length && !profile) {
     return onConfigChange ? <EmptyBlockPlaceholder name="SoundCloud" /> : null;
   }
-
-  const current = items[Math.min(active, Math.max(0, items.length - 1))];
-  const source = current?.url || profile;
 
   return (
     <section id="soundcloud" className="gw-container py-5">
@@ -120,6 +127,7 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
         {/* Keyed on the source so switching tabs remounts the widget rather
             than leaving the previous track playing underneath. */}
         <iframe
+          ref={frameRef}
           key={`${source}:${config.visual}`}
           title={current?.title || config.heading || 'SoundCloud'}
           src={widgetSrc(source, config.visual)}

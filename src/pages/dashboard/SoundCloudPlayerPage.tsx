@@ -14,12 +14,14 @@
 // the same way youtube_channel_handle does — no account is baked into
 // shared code. Distinct from /soundcloud, the 2025 OAuth search page.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
+import { SoundCloudVolume } from '@/components/soundcloud/SoundCloudVolume';
+import { attachSoundCloudVolume } from '@/lib/soundcloud/widgetVolume';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
@@ -101,6 +103,12 @@ export default function SoundCloudPlayerPage() {
   }, [data, shares, canManage]);
   const nowPlayingUrl = selected?.permalinkUrl || data?.user.permalinkUrl || profileUrl;
 
+  // Bind the widget to the app-wide SoundCloud level. Re-runs when the
+  // now-playing URL changes because the iframe is keyed on it — React
+  // remounts a fresh widget, and the old binding is gone with it.
+  const frameRef = useRef<HTMLIFrameElement>(null);
+  useEffect(() => attachSoundCloudVolume(frameRef.current), [nowPlayingUrl]);
+
   const body = () => {
     if (brandingLoading) return null;
 
@@ -152,6 +160,7 @@ export default function SoundCloudPlayerPage() {
         <Card className={`${SOFT_CARD} mb-5 overflow-hidden`} style={SOFT_CARD_STYLE}>
           <CardContent className="p-0">
             <iframe
+              ref={frameRef}
               key={nowPlayingUrl}
               title={selected ? `SoundCloud — ${selected.title}` : 'SoundCloud — all tracks'}
               src={widgetSrc(nowPlayingUrl)}
@@ -162,6 +171,13 @@ export default function SoundCloudPlayerPage() {
               scrolling="no"
               className="block w-full"
             />
+            {/* The widget streams from a cross-origin iframe at 100% and has
+                no volume control of its own at this height, so SoundCloud
+                played back louder than everything else in the app. Drives the
+                same app-wide level the floating mini player uses. */}
+            <div className="flex items-center justify-end px-3 py-2 border-t border-border">
+              <SoundCloudVolume />
+            </div>
           </CardContent>
         </Card>
 

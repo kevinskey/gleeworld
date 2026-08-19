@@ -23,19 +23,75 @@ interface Voice {
   filter: Tone.Filter;
   env: Tone.AmplitudeEnvelope;
   vibrato: Tone.Vibrato;
+  master: Tone.Gain;
 }
 
 let voice: Voice | null = null;
 let sounding = false;
 
+// ── Level ────────────────────────────────────────────────────────────────
+// The oscillator sits at 0 dB and used to run straight to the destination,
+// so the pipe played at full scale with nothing to turn it down (Kevin,
+// 2026-08-19: "pitch pipe plays too loud"). Lowering the constant alone
+// would just re-litigate the earlier swing — it was raised FROM -6 dB
+// because that was too quiet to hear over a room of voices. So the level is
+// a user setting instead: quieter by default, and turn it back up for
+// rehearsal. Stored 0..100 (linear gain ×100) to match every other volume
+// control in the app.
+
+const VOLUME_KEY = 'gw:pitchpipe:volume';
+
+/** Comfortable at a desk; raise it for a live room. */
+export const DEFAULT_PITCH_PIPE_VOLUME = 55;
+
+function clampVolume(value: number): number {
+  if (!Number.isFinite(value)) return DEFAULT_PITCH_PIPE_VOLUME;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function readVolume(): number {
+  try {
+    const raw = localStorage.getItem(VOLUME_KEY);
+    return raw === null ? DEFAULT_PITCH_PIPE_VOLUME : clampVolume(Number(raw));
+  } catch {
+    return DEFAULT_PITCH_PIPE_VOLUME;
+  }
+}
+
+let volume = readVolume();
+const volumeListeners = new Set<() => void>();
+
+export function getPitchPipeVolume(): number {
+  return volume;
+}
+
+export function setPitchPipeVolume(next: number): void {
+  const v = clampVolume(next);
+  if (v === volume) return;
+  volume = v;
+  try { localStorage.setItem(VOLUME_KEY, String(v)); } catch { /* not persisted */ }
+  // Ramp rather than jump: a step change on a sounding tone clicks.
+  if (voice) voice.master.gain.rampTo(v / 100, 0.05);
+  volumeListeners.forEach((l) => l());
+}
+
+export function subscribePitchPipeVolume(listener: () => void): () => void {
+  volumeListeners.add(listener);
+  return () => { volumeListeners.delete(listener); };
+}
+
 function getVoice(): Voice {
   if (voice) return voice;
+  // Master gain between the envelope and the speakers — the one place the
+  // user's level applies, so it scales the whole voice rather than fighting
+  // the envelope.
+  const master = new Tone.Gain(volume / 100).toDestination();
   const env = new Tone.AmplitudeEnvelope({
     attack: 0.12,      // soft breath
     decay: 0.18,
     sustain: 0.85,
     release: 0.35,    // tail off cleanly so swaps feel responsive
-  }).toDestination();
+  }).connect(master);
   const vibrato = new Tone.Vibrato({ frequency: 4.8, depth: 0.022 }).connect(env);
   const filter = new Tone.Filter({ frequency: 2400, type: 'lowpass', Q: 0.7 }).connect(vibrato);
   // Single sine oscillator — no octave doubling. The pitch the user
@@ -44,7 +100,7 @@ function getVoice(): Voice {
   // earlier -6 dB was too quiet to use as a reference pitch over voices.
   const fundamental = new Tone.Oscillator({ frequency: 440, type: 'sine', volume: 0 }).connect(filter);
   fundamental.start();
-  voice = { fundamental, filter, env, vibrato };
+  voice = { fundamental, filter, env, vibrato, master };
   return voice;
 }
 

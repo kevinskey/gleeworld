@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
+import { Volume1, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as Tone from 'tone';
-import { playPitchPipe, stopPitchPipe, PITCH_PIPE_NOTES, type PitchClass } from '@/lib/audioTools/pitchPipe';
+import { Slider } from '@/components/ui/slider';
+import {
+  playPitchPipe, stopPitchPipe, PITCH_PIPE_NOTES, type PitchClass,
+  getPitchPipeVolume, setPitchPipeVolume, subscribePitchPipeVolume,
+} from '@/lib/audioTools/pitchPipe';
 import { forceAudioUnlock } from '@/lib/audioTools/unlock';
 
 interface PitchPipeProps {
@@ -56,6 +61,10 @@ function wedgePath(cx: number, cy: number, rOuter: number, rInner: number, start
 
 export function PitchPipe({ className }: PitchPipeProps) {
   const [sounding, setSounding] = useState<PitchClass | null>(null);
+  const volume = useSyncExternalStore(
+    subscribePitchPipeVolume, getPitchPipeVolume, getPitchPipeVolume,
+  );
+  const VolumeIcon = volume === 0 ? VolumeX : volume < 50 ? Volume1 : Volume2;
 
   // Press-and-hold model — start the tone on pointer down, stop on
   // pointer up / leave / cancel. Mimics blowing into a physical pitch
@@ -89,6 +98,24 @@ export function PitchPipe({ className }: PitchPipeProps) {
         <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
           C4 – B4
         </div>
+      </div>
+
+      {/* Level. The tone is a reference pitch people hold under singing, so
+          the right volume depends on the room — a rehearsal hall wants it
+          near the top, a desk does not. Applies live: the master gain ramps
+          while a note is sounding. */}
+      <div className="w-full flex items-center gap-2">
+        <VolumeIcon className="w-3.5 h-3.5 shrink-0 text-muted-foreground" aria-hidden />
+        <Slider
+          value={[volume]}
+          onValueChange={([v]) => setPitchPipeVolume(v)}
+          min={0}
+          max={100}
+          step={1}
+          aria-label="Pitch pipe volume"
+          className="flex-1"
+        />
+        <span className="text-[10px] tabular-nums text-muted-foreground w-6 text-right">{volume}</span>
       </div>
 
       {/* The SVG fills the card's available width, capped by height so

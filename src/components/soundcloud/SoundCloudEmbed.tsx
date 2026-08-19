@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   buildResolvedSoundCloudEmbedUrl,
   type SoundCloudEmbedOptions,
 } from '@/lib/soundcloud';
+import { attachSoundCloudVolume } from '@/lib/soundcloud/widgetVolume';
 
 interface SoundCloudEmbedProps extends SoundCloudEmbedOptions {
   url: string;
@@ -28,6 +29,7 @@ export function SoundCloudEmbed({
   visual,
 }: SoundCloudEmbedProps) {
   const [src, setSrc] = useState<string | null>(null);
+  const frameRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
     let alive = true;
@@ -39,6 +41,11 @@ export function SoundCloudEmbed({
       alive = false;
     };
   }, [url, color, autoPlay, visual]);
+
+  // Bind to the app-wide volume once the resolved src has mounted a real
+  // widget iframe — the widget otherwise plays at 100%, well above everything
+  // else in the app.
+  useEffect(() => attachSoundCloudVolume(src ? frameRef.current : null), [src]);
 
   const style = height !== undefined ? { height } : undefined;
 
@@ -54,6 +61,7 @@ export function SoundCloudEmbed({
 
   return (
     <iframe
+      ref={frameRef}
       title={title || 'SoundCloud player'}
       src={src}
       className={`w-full block border-0 ${height === undefined ? 'h-full' : ''} ${className ?? ''}`}
