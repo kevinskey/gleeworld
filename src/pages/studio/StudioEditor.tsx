@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { StudioEngineStatus } from '@/components/studio/StudioEngineStatus';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -3802,6 +3803,9 @@ function DraggableClip({
   onDuplicate?: () => void;
 }) {
   const pxPerSecond = usePxPerSecond();
+  // Double-click delete asks first — an accidental double-tap while
+  // selecting/dragging silently nuked clips (2026-08-19).
+  const [confirmRemove, setConfirmRemove] = useState<ConfirmPillRequest | null>(null);
   const snap = (s: number) => snapSeconds > 0
     ? Math.round(s / snapSeconds) * snapSeconds
     : Math.max(0, s);
@@ -3954,7 +3958,7 @@ function DraggableClip({
   const fadeInW = Math.min(width, fadeIn * pxPerSecond);
   const fadeOutW = Math.min(width, fadeOut * pxPerSecond);
   const hasFades = fadeIn !== undefined && fadeOut !== undefined;
-  return (
+  return (<>
     <div
       className={`absolute top-2 bottom-2 rounded-md border cursor-grab active:cursor-grabbing select-none transition-shadow overflow-hidden ${selected ? 'ring-2 ring-primary ring-offset-1 shadow-md brightness-110' : 'hover:brightness-105'}`}
       style={{
@@ -3973,16 +3977,15 @@ function DraggableClip({
         touchAction: 'none',
       }}
       onPointerDown={onDragBody}
-      // Double-click SELECTS (which, for a MIDI clip, surfaces the piano
-      // roll) — it must never remove. It used to be onRemove: the second
-      // click's pointerdown had already started a drag with pointer
-      // capture, then the dblclick handler deleted the element out from
-      // under that live gesture mid-dispatch — Kevin double-clicked a MIDI
-      // clip expecting the roll (every DAW's gesture), lost the clip, and
-      // the renderer hard-froze (2026-08-17). Deletion stays on the
-      // Delete key, the clip toolbar, and the strip trash.
-      onDoubleClick={(e) => { e.stopPropagation(); onSelect(); }}
-      title={title ?? `${label} — click to select · drag body to move · ⌥-drag to copy · L/R edges to trim · corners to fade · Delete to remove`}
+      // Double-click asks before deleting (Kevin's 2026-08-19 call:
+      // keep the gesture, add confirmation). History: bare
+      // onRemove here deleted the element out from under the second
+      // click's live pointer-capture drag and hard-froze the renderer
+      // (2026-08-17). The pill can't reproduce that — nothing is
+      // removed until the user clicks Delete inside the pill, long
+      // after the gesture has completed.
+      onDoubleClick={(e) => { e.stopPropagation(); onSelect(); setConfirmRemove({ x: e.clientX, y: e.clientY, message: label ? `Delete "${label}"?` : 'Delete this clip?' }); }}
+      title={title ?? `${label} — click to select · drag body to move · ⌥-drag to copy · L/R edges to trim · corners to fade · Delete or double-click to remove`}
     >
       {peaks && peaks.length > 0 && (() => {
         // Slice the asset's peaks to just the visible window so that
@@ -4069,6 +4072,17 @@ function DraggableClip({
         />
       )}
     </div>
+    {/* Sibling, not child, of the draggable div — the pill portals to
+      * document.body but React bubbles its events through the REACT
+      * tree, so nesting it inside would route Cancel/Delete pointer
+      * events into onDragBody (select + pointer-capture + grid-snap
+      * nudge of the clip under the pill). */}
+    <ConfirmPill
+      request={confirmRemove}
+      onConfirm={() => { setConfirmRemove(null); onRemove(); }}
+      onCancel={() => setConfirmRemove(null)}
+    />
+  </>
   );
 }
 
