@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   GW_BY_NAME, GW_INSTRUMENTS, GW_SAMPLE_BASE,
-  fromGwPresetId, gwLayerIndexForVelocity, gwManifestUrl, gwSampleUrl, toGwPresetId,
+  fromGwPresetId, gwLayerIndexForVelocity, gwManifestUrl, gwSampleRelForFormat, gwSampleUrl,
+  pickGwSampleFormat, toGwPresetId,
 } from './gwInstruments';
 
 describe('gwInstruments catalog', () => {
@@ -46,13 +47,30 @@ describe('gw preset ids', () => {
 
 describe('sample URLs', () => {
   it('manifest and sample URLs live under the instrument folder', () => {
-    expect(gwManifestUrl('grand_piano')).toBe(`${GW_SAMPLE_BASE}/grand_piano/manifest.json`);
-    expect(gwSampleUrl('grand_piano', 'l1/C4.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano/l1/C4.mp3`);
+    expect(gwManifestUrl('violin')).toBe(`${GW_SAMPLE_BASE}/violin/manifest.json`);
+    expect(gwSampleUrl('violin', 'l1/C4.mp3')).toBe(`${GW_SAMPLE_BASE}/violin/l1/C4.mp3`);
+  });
+
+  it('honors a dir override (grand_piano v2 lives in its own immutable folder)', () => {
+    expect(GW_BY_NAME['grand_piano'].dir).toBe('grand_piano_v2');
+    expect(gwManifestUrl('grand_piano')).toBe(`${GW_SAMPLE_BASE}/grand_piano_v2/manifest.json`);
+    expect(gwSampleUrl('grand_piano', 'l1/C4.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano_v2/l1/C4.mp3`);
   });
 
   it('percent-encodes sharps so "#" cannot start a URL fragment', () => {
-    expect(gwSampleUrl('grand_piano', 'l0/C#4.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano/l0/C%234.mp3`);
-    expect(gwSampleUrl('grand_piano', 'rel/F#2.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano/rel/F%232.mp3`);
+    expect(gwSampleUrl('violin', 'l0/C#4.mp3')).toBe(`${GW_SAMPLE_BASE}/violin/l0/C%234.mp3`);
+    expect(gwSampleUrl('grand_piano', 'rel/F#2.mp3')).toBe(`${GW_SAMPLE_BASE}/grand_piano_v2/rel/F%232.mp3`);
+  });
+
+  it('rewrites .mp3 → .webm only for the webm format', () => {
+    expect(gwSampleRelForFormat('l0/C#4.mp3', 'webm')).toBe('l0/C#4.webm');
+    expect(gwSampleRelForFormat('l0/C#4.mp3', 'mp3')).toBe('l0/C#4.mp3');
+  });
+
+  it('falls back to mp3 without decode support or a webm listing', () => {
+    // jsdom has no OfflineAudioContext, so the probe can never pass here.
+    expect(pickGwSampleFormat({ formats: ['mp3', 'webm'] })).toBe('mp3');
+    expect(pickGwSampleFormat({})).toBe('mp3');
   });
 
   it('every pitched instrument has a GM fallback; kits have none', () => {

@@ -15,13 +15,22 @@ node extract-sf2.mjs "$SRC/fluidr3_gm/fluid-soundfont-3.1/FluidR3_GM.sf2" 0 52 \
   "$SRC/fluidr3_gm/extracted-choir" 8
 # 3. Generate conversion recipes (encodes each library's layout conventions):
 node build-recipes.mjs "$SRC" "$SRC/recipes.json"
-# 4. Convert to MP3 160k + manifests (requires ffmpeg):
+# 4. Convert to MP3 160k + WebM/Opus 96k + manifests (requires ffmpeg
+#    with libopus). Clients that can decode webm/opus fetch the ~40%
+#    smaller .webm files; everyone else gets the .mp3s:
 node convert.mjs "$SRC/recipes.json" "$SRC" "$OUT"
 # 5. Upload $OUT to the glee-world Space under studio-samples/ with
 #    public-read ACL + immutable cache headers (rclone on the droplet):
 #    rclone copy $OUT :s3:glee-world/studio-samples \
 #      --header-upload "Cache-Control: public, max-age=31536000, immutable"
 ```
+
+⚠️ Because uploads are cached immutable for a year, a rebuild that changes
+what an existing path MEANS (e.g. grand_piano's 2026-08 4→8 velocity-layer
+bump re-defines `l0/`..`l3/`) must go to a FRESH Space folder, wired up via
+the instrument's `dir` field in `src/lib/studio/gwInstruments.ts`
+(`grand_piano` → `grand_piano_v2`). Purely additive uploads (new
+instruments, new files) can reuse the folder.
 
 Serving URL (CORS-enabled via the supabase.gleeworld.org nginx public-storage
 proxy — plain Spaces URLs send no Access-Control-Allow-Origin):
