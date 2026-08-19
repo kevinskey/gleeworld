@@ -6,6 +6,7 @@ import { FanRoute } from "@/components/routes/FanRoute";
 import { GraduatesRoute } from "@/components/routes/GraduatesRoute";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import GlobalDictation from "@/components/voice/GlobalDictation";
+import { GlobalAssistantHost } from "@/components/assistant/GlobalAssistantHost";
 import { useFloatingSoundCloudTrack } from "@/components/soundcloud/soundcloudPlayerStore";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipContext";
@@ -527,6 +528,9 @@ const App = () => {
 
                   <AuthenticatedGlobals />
                   <DesignSystemEnforcer />
+                  {/* Assistant mic + chat, mounted app-wide rather than per
+                      DashboardShell so it survives onto public routes. */}
+                  <GlobalAssistantHost>
                   <UsageTracker>
                   <DemoBar />
                   <Suspense
@@ -3279,6 +3283,7 @@ const App = () => {
                                </Routes>
                       </Suspense>
                       </UsageTracker>
+                      </GlobalAssistantHost>
                     <Suspense fallback={null}>
                       <GlobalMusicPlayer />
                     </Suspense>
