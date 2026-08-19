@@ -80,9 +80,6 @@ import { MobileBottomNav } from '@/components/navigation/MobileBottomNav';
 import { RequestWorkspaceDialog } from '@/components/leads/RequestWorkspaceDialog';
 import { ReportBugDialog } from '@/components/feedback/ReportBugDialog';
 import { isDemoTenant } from '@/lib/demoTenant';
-import { AssistantFab } from '@/components/assistant/AssistantFab';
-import { AssistantMiniPlayer } from '@/components/assistant/AssistantMiniPlayer';
-import { AssistantSheet } from '@/components/assistant/AssistantSheet';
 import { TrialBanner } from '@/components/dashboard/TrialBanner';
 import { PermissionSlipBell } from '@/components/dashboard/PermissionSlipBell';
 import {
@@ -1131,13 +1128,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <MobileBottomNav />
         {/* Mounts only when ?tour=admin is in the URL; otherwise a no-op. */}
         <ProductTour />
-        {/* Floating assistant mic + chat window. AssistantProvider is
-            mounted once in App.tsx, above the routes — the shell remounts
-            on every navigation, and a provider living here took the live
-            voice session down with it. */}
-        <AssistantFab />
-        <AssistantMiniPlayer />
-        <AssistantSheet />
+        {/* The assistant's floating surfaces used to mount here, alongside
+            the provider that already moved up to App.tsx. They now live in
+            AssistantSurfaces next to that provider — mounted here, the mic
+            existed only on dashboard routes and vanished on public ones. */}
         {/* All Tools — the one searchable catalog behind both nav surfaces'
             "All Tools" row and global ⌘K/Ctrl+K. Rendered exactly once so a
             phone user (Sidebar hidden, MobileNav in its own drawer) never

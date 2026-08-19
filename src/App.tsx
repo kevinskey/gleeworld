@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense, ReactNode } from "react";
 import { AudioCompanionProvider } from "@/contexts/AudioCompanionContext";
 import { AssistantProvider } from "@/lib/assistant/AssistantProvider";
+import { AssistantSurfaces } from "@/components/assistant/AssistantSurfaces";
 import { TenantFavicon } from "@/components/TenantFavicon";
 import { Toaster } from "@/components/ui/toaster";
 import { FanRoute } from "@/components/routes/FanRoute";
@@ -3583,6 +3584,10 @@ const App = () => {
                     <GlobalMusicPlayer />
                     <PWAInstallPrompt />
                    </div>
+                   {/* Mic, mini player, and chat sheet — mounted beside the
+                       provider so they persist across every route, not just
+                       the ones wrapped in DashboardShell. */}
+                   <AssistantSurfaces />
                    </AssistantProvider>
                    </AudioCompanionProvider>
                   </ActiveMeetingProvider>
