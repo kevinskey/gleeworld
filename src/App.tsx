@@ -314,6 +314,7 @@ const DocumentsForms = lazy(() => import("./pages/admin/DocumentsForms"));
 const TourPlanner = lazy(() => import("./pages/TourPlanner"));
 const Weather = lazy(() => import("./pages/Weather"));
 const BookingRequest = lazy(() => import("./pages/BookingRequest"));
+const BookInvitePage = lazy(() => import("./pages/BookInvitePage"));
 const BookingForms = lazy(() => import("./pages/BookingForms"));
 const Wardrobe = lazy(() => import("./pages/Wardrobe"));
 const WardrobeManagementHub = lazy(() => import("./components/wardrobe/WardrobeManagementHub").then(m => ({ default: m.WardrobeManagementHub })));
@@ -2996,6 +2997,16 @@ const App = () => {
                                  </ProtectedRoute>
                                } 
                               />
+                           {/* Token-gated self-serve booking for invited guests who have no
+                               GleeWorld account. The token in the path is the credential. */}
+                           <Route
+                             path="/rsvp/:token"
+                             element={
+                               <PublicRoute>
+                                 <BookInvitePage />
+                               </PublicRoute>
+                             }
+                           />
                            <Route 
                              path="/booking-request" 
                              element={

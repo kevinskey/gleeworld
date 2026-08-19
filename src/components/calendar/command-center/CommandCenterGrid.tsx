@@ -82,7 +82,14 @@ export const CommandCenterGrid = ({
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-300 overflow-hidden">
+    <div className={cn(
+      "flex flex-col bg-white rounded-xl shadow-sm border border-slate-300 overflow-hidden",
+      // Month grids need six rows of min-h-[100px] cells, which is taller than
+      // the viewport on most laptops. h-full would pin the grid to the parent's
+      // height and clip the final week — the parent's overflow-auto never got
+      // anything to scroll. Sizing to content lets the parent scroll instead.
+      viewMode === 'month' ? "min-h-full" : "h-full",
+    )}>
       {/* Day Headers */}
       <div className="grid grid-cols-7 bg-white border-b border-slate-200 flex-shrink-0">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (

@@ -4,6 +4,7 @@ import { Calendar, QrCode, ClipboardCheck, Loader2, ChevronRight } from "lucide-
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { deleteCalendarItem } from '@/lib/calendar/deleteCalendarItem';
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { CategoryConfig, CategoryFilter, CATEGORY_FALLBACK_COLOR } from "./CommandCenterCalendar";
@@ -95,19 +96,12 @@ export const DayViewPanel = ({
     if (!selectedEvent) return;
     setIsDeleting(true);
     try {
-      // Tell Google first — once the row is gone we can't read its
-      // google_event_id anymore (same order as CommandCenterEventCard).
-      const { pushEventToGoogle } = await import('@/hooks/useGoogleConnection');
-      await pushEventToGoogle(selectedEvent.id, 'delete');
-      const { data: deleted, error } = await supabase
-        .from('gw_events').delete().eq('id', selectedEvent.id).select('id');
-      if (error) throw error;
-      // RLS-blocked deletes return success with zero rows — surface that
-      // honestly instead of pretending it worked.
-      if (!deleted || deleted.length === 0) {
-        throw new Error('Not permitted to delete this event');
+      const result = await deleteCalendarItem(selectedEvent as any);
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
       }
-      toast.success('Event deleted');
+      toast.success(result.message);
       setSelectedEvent(null);
       onEventDeleted?.();
     } catch (error) {
