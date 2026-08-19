@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { StudioEngineStatus } from '@/components/studio/StudioEngineStatus';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ConfirmPill, type ConfirmPillRequest } from '@/components/ui/confirm-pill';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -3705,7 +3706,7 @@ function MidiClipBlock({
       duration={clip.duration_seconds}
       label=""
       preview={<MidiClipPreview notes={clip.notes} durationSeconds={clip.duration_seconds} />}
-      title={`${clip.notes.length} notes — drag body to move · ⌥-drag to copy`}
+      title={`${clip.notes.length} notes — drag body to move · ⌥-drag to copy · pull right edge (top) to loop`}
       snapSeconds={snapSeconds}
       selected={selected}
       canTrimLeft={false}
@@ -3721,16 +3722,48 @@ function MidiClipBlock({
           ...(isRightTrimShrink ? { notes: trimNotesToDuration(clip.notes, p.duration!) } : {}),
         });
       }}
+      onLoopResize={(newDur) => {
+        // Tile the clip's content into the new length. `clip` here is the
+        // clip as of the pointerdown render — DraggableClip's drag listeners
+        // hold that closure for the whole gesture, so every move event
+        // re-tiles from the same base and repeats never compound mid-drag.
+        const baseDur = clip.duration_seconds;
+        if (baseDur <= 0) return;
+        const reps = Math.ceil(newDur / baseDur);
+        const notes = [];
+        for (let k = 0; k < reps; k++) {
+          for (const n of clip.notes) {
+            const s = k * baseDur + n.start_seconds;
+            if (s >= newDur) continue;
+            notes.push({ ...n, start_seconds: s, duration_seconds: Math.min(n.duration_seconds, newDur - s) });
+          }
+        }
+        const cc = clip.cc && clip.cc.length > 0
+          ? Array.from({ length: reps }, (_, k) => clip.cc!
+              .map((ev) => ({ ...ev, time_seconds: k * baseDur + ev.time_seconds }))
+              .filter((ev) => ev.time_seconds < newDur)).flat()
+          : clip.cc;
+        onChange({ duration_seconds: newDur, notes, ...(cc !== undefined ? { cc } : {}) });
+      }}
       onRemove={onRemove}
       onDuplicate={onDuplicate}
     />
   );
 }
 
+/** Circular-arrow cursor for the loop handle (GarageBand-style). White
+ * halo + dark stroke so it reads on both light and dark clip tints. */
+const LOOP_CURSOR = `url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M10 3.5a6.5 6.5 0 1 1-5.8 3.6' fill='none' stroke='white' stroke-width='4.5' stroke-linecap='round'/%3E%3Cpath d='M10 3.5a6.5 6.5 0 1 1-5.8 3.6' fill='none' stroke='%23222' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M1.5 3.2l2.8 5.4 4.4-3.4z' fill='%23222' stroke='white' stroke-width='1'/%3E%3C/svg%3E") 10 10, e-resize`;
+
 function DraggableClip({
   tint, start, duration, offset = 0, label, peaks, preview, assetDuration, snapSeconds, selected,
-  fadeIn = 0, fadeOut = 0, canTrimLeft = true, title,
-  onSelect, onChange, onRemove, onDuplicate,
+  // NO defaults on fadeIn/fadeOut — `hasFades` below keys off "both
+  // defined". Defaulting them to 0 made hasFades unconditionally true,
+  // so MIDI clips grew corner fade dots that (a) do nothing (their
+  // onChange drops fade patches) and (b) sat on top of the loop
+  // handle's grab corner.
+  fadeIn, fadeOut, canTrimLeft = true, title,
+  onSelect, onChange, onLoopResize, onRemove, onDuplicate,
 }: {
   tint: string;
   start: number; duration: number; offset?: number; label: string;
@@ -3761,6 +3794,11 @@ function DraggableClip({
     fadeIn?: number;
     fadeOut?: number;
   }) => void;
+  /** Loop-extend from the right edge's upper half (MIDI clips). Called
+   * with the new total duration while dragging; the parent tiles the
+   * clip's content to fill it. Extension only — never below the
+   * duration at drag start (the plain trim handle shortens). */
+  onLoopResize?: (newDuration: number) => void;
   onRemove: () => void;
   /** Option/Alt-drag duplication (Logic/GarageBand style): the parent
    * inserts a clone at the clip's CURRENT (pre-drag) position; the body
@@ -3770,6 +3808,9 @@ function DraggableClip({
   onDuplicate?: () => void;
 }) {
   const pxPerSecond = usePxPerSecond();
+  // Double-click delete asks first — an accidental double-tap while
+  // selecting/dragging silently nuked clips (2026-08-19).
+  const [confirmRemove, setConfirmRemove] = useState<ConfirmPillRequest | null>(null);
   const snap = (s: number) => snapSeconds > 0
     ? Math.round(s / snapSeconds) * snapSeconds
     : Math.max(0, s);
@@ -3829,6 +3870,29 @@ function DraggableClip({
     window.addEventListener('pointerup', up);
   };
 
+  // Right edge, upper half — loop-extend. Pulling right repeats the
+  // clip's content into the new length; the parent owns the tiling so
+  // this stays clip-kind agnostic. Clamped to never shrink below the
+  // drag-start duration — shortening stays the trim handle's job.
+  const onLoopDrag = (e: React.PointerEvent) => {
+    if (!onLoopResize) return;
+    e.stopPropagation();
+    onSelect();
+    const startX = e.clientX;
+    const startDur = duration;
+    const move = (ev: PointerEvent) => {
+      const dx = ev.clientX - startX;
+      const newDur = Math.max(startDur, snap(startDur + dx / pxPerSecond));
+      onLoopResize(newDur);
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  };
+
   // Left edge — trim start. Shifts start later AND advances offset
   // into the underlying asset by the same delta so the audio at the
   // new left-edge stays musically aligned.
@@ -3864,7 +3928,7 @@ function DraggableClip({
   const onFadeIn = (e: React.PointerEvent) => {
     e.stopPropagation();
     const startX = e.clientX;
-    const startFade = fadeIn;
+    const startFade = fadeIn ?? 0;
     const move = (ev: PointerEvent) => {
       const dxSec = (ev.clientX - startX) / pxPerSecond;
       const next = Math.max(0, Math.min(duration / 2, startFade + dxSec));
@@ -3880,7 +3944,7 @@ function DraggableClip({
   const onFadeOut = (e: React.PointerEvent) => {
     e.stopPropagation();
     const startX = e.clientX;
-    const startFade = fadeOut;
+    const startFade = fadeOut ?? 0;
     const move = (ev: PointerEvent) => {
       const dxSec = (ev.clientX - startX) / pxPerSecond;
       // Dragging left = bigger fade-out.
@@ -3896,12 +3960,12 @@ function DraggableClip({
   };
 
   const width = Math.max(8, duration * pxPerSecond);
-  const fadeInW = Math.min(width, fadeIn * pxPerSecond);
-  const fadeOutW = Math.min(width, fadeOut * pxPerSecond);
+  const fadeInW = Math.min(width, (fadeIn ?? 0) * pxPerSecond);
+  const fadeOutW = Math.min(width, (fadeOut ?? 0) * pxPerSecond);
   const hasFades = fadeIn !== undefined && fadeOut !== undefined;
-  return (
+  return (<>
     <div
-      className={`absolute top-2 bottom-2 rounded-md border cursor-grab active:cursor-grabbing select-none transition-shadow overflow-hidden ${selected ? 'ring-2 ring-primary ring-offset-1 shadow-md brightness-110' : 'hover:brightness-105'}`}
+      className={`absolute top-2 bottom-2 rounded-md border cursor-grab active:cursor-grabbing select-none transition-shadow ${selected ? 'ring-2 ring-primary ring-offset-1 shadow-md brightness-110' : 'hover:brightness-105'}`}
       style={{
         left: start * pxPerSecond,
         width,
@@ -3918,17 +3982,24 @@ function DraggableClip({
         touchAction: 'none',
       }}
       onPointerDown={onDragBody}
-      // Double-click SELECTS (which, for a MIDI clip, surfaces the piano
-      // roll) — it must never remove. It used to be onRemove: the second
-      // click's pointerdown had already started a drag with pointer
-      // capture, then the dblclick handler deleted the element out from
-      // under that live gesture mid-dispatch — Kevin double-clicked a MIDI
-      // clip expecting the roll (every DAW's gesture), lost the clip, and
-      // the renderer hard-froze (2026-08-17). Deletion stays on the
-      // Delete key, the clip toolbar, and the strip trash.
-      onDoubleClick={(e) => { e.stopPropagation(); onSelect(); }}
-      title={title ?? `${label} — click to select · drag body to move · ⌥-drag to copy · L/R edges to trim · corners to fade · Delete to remove`}
+      // Double-click asks before deleting (Kevin's 2026-08-19 call:
+      // keep the gesture, add confirmation). History: bare
+      // onRemove here deleted the element out from under the second
+      // click's live pointer-capture drag and hard-froze the renderer
+      // (2026-08-17). The pill can't reproduce that — nothing is
+      // removed until the user clicks Delete inside the pill, long
+      // after the gesture has completed.
+      onDoubleClick={(e) => { e.stopPropagation(); onSelect(); setConfirmRemove({ x: e.clientX, y: e.clientY, message: label ? `Delete "${label}"?` : 'Delete this clip?' }); }}
+      title={title ?? `${label} — click to select · drag body to move · ⌥-drag to copy · L/R edges to trim · corners to fade · Delete or double-click to remove`}
     >
+      {/* Content is clipped in its own inset wrapper INSTEAD of
+        * overflow-hidden on the outer div, so the edge handles below can
+        * overhang the border. While they were clipped inside, the border +
+        * rounded corner won hit-testing over the outermost pixels and an
+        * edge grab fell through to the body move-drag — "loop drag doesn't
+        * work" (2026-08-19). pointer-events-none keeps the body drag
+        * target on the outer div. */}
+      <div className="absolute inset-0 rounded-md overflow-hidden pointer-events-none">
       {peaks && peaks.length > 0 && (() => {
         // Slice the asset's peaks to just the visible window so that
         // trimming an edge visibly cuts the waveform at that edge
@@ -3966,23 +4037,37 @@ function DraggableClip({
 
       <div className="absolute top-0 left-0 right-0 text-sm px-1 pt-0.5 truncate pointer-events-none"
         style={{ color: tint, textShadow: '0 0 2px rgba(255,255,255,0.85)' }}>{label}</div>
+      </div>
 
       {/* Left-edge trim handle (full-height) */}
       {canTrimLeft && (
         <div
           data-handle="resize-left"
           onPointerDown={onResizeLeft}
-          className="absolute top-0 bottom-0 left-0 w-1.5 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10"
+          className="absolute top-0 bottom-0 -left-0.5 w-3 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10"
           title="Trim start (left edge)"
         />
       )}
-      {/* Right-edge trim handle */}
+      {/* Right-edge trim handle (bottom half when a loop handle sits above) */}
       <div
         data-handle="resize-right"
         onPointerDown={onResizeRight}
-        className="absolute top-0 bottom-0 right-0 w-1.5 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10"
+        className={`absolute bottom-0 -right-0.5 w-3 cursor-ew-resize bg-black/10 hover:bg-black/30 z-10 ${onLoopResize ? 'top-1/2' : 'top-0'}`}
         title="Trim end (right edge)"
       />
+      {/* Loop handle — upper half of the right edge, loop cursor. Wide
+        * (w-4) and overhanging the border (-right-1) so grabbing the
+        * visual edge lands on IT, not the clip body — see the content-
+        * wrapper comment above. */}
+      {onLoopResize && (
+        <div
+          data-handle="loop"
+          onPointerDown={onLoopDrag}
+          className="absolute top-0 -right-1 h-1/2 w-4 bg-black/10 hover:bg-black/30 z-10"
+          style={{ cursor: LOOP_CURSOR }}
+          title="Loop — drag right to repeat the clip"
+        />
+      )}
       {/* Fade-in handle — small dot at top-left corner */}
       {hasFades && (
         <div
@@ -3990,7 +4075,7 @@ function DraggableClip({
           onPointerDown={onFadeIn}
           className="absolute top-0 w-3.5 h-3.5 -translate-y-1/2 rounded-full bg-foreground border-2 border-background cursor-ew-resize z-20 hover:scale-125 transition-transform"
           style={{ left: fadeInW > 0 ? `calc(${fadeInW}px - 5px)` : -5 }}
-          title={`Drag right to lengthen fade-in (currently ${fadeIn.toFixed(2)} s)`}
+          title={`Drag right to lengthen fade-in (currently ${(fadeIn ?? 0).toFixed(2)} s)`}
         />
       )}
       {/* Fade-out handle — small dot at top-right corner */}
@@ -4000,10 +4085,21 @@ function DraggableClip({
           onPointerDown={onFadeOut}
           className="absolute top-0 w-3.5 h-3.5 -translate-y-1/2 rounded-full bg-foreground border-2 border-background cursor-ew-resize z-20 hover:scale-125 transition-transform"
           style={{ right: fadeOutW > 0 ? `calc(${fadeOutW}px - 5px)` : -5 }}
-          title={`Drag left to lengthen fade-out (currently ${fadeOut.toFixed(2)} s)`}
+          title={`Drag left to lengthen fade-out (currently ${(fadeOut ?? 0).toFixed(2)} s)`}
         />
       )}
     </div>
+    {/* Sibling, not child, of the draggable div — the pill portals to
+      * document.body but React bubbles its events through the REACT
+      * tree, so nesting it inside would route Cancel/Delete pointer
+      * events into onDragBody (select + pointer-capture + grid-snap
+      * nudge of the clip under the pill). */}
+    <ConfirmPill
+      request={confirmRemove}
+      onConfirm={() => { setConfirmRemove(null); onRemove(); }}
+      onCancel={() => setConfirmRemove(null)}
+    />
+  </>
   );
 }
 
@@ -5167,6 +5263,11 @@ function BarRuler({
   const gridLevel = useGridLevel();
   // Live position while the End caret is being dragged; null = parked.
   const [endPreview, setEndPreview] = useState<number | null>(null);
+  // Manual double-tap detection for marker flags — iOS Safari doesn't
+  // reliably fire dblclick, which made the rename/delete dialog
+  // unreachable on touch. Single tap jumps; a second tap on the same
+  // flag within the window opens the editor.
+  const lastMarkerTap = useRef<{ id: string; t: number } | null>(null);
   const secondsPerBeat = 60 / tempoBpm;
   const secondsPerBar = secondsPerBeat * numerator;
   const totalBars = Math.ceil(lengthSeconds / secondsPerBar);
@@ -5276,9 +5377,19 @@ function BarRuler({
         <button
           key={mk.id}
           onPointerDown={(e) => e.stopPropagation()}
-          onClick={(e) => { e.stopPropagation(); onMarkerJump?.(mk.seconds); }}
-          onDoubleClick={(e) => { e.stopPropagation(); onMarkerEdit?.(mk.id); }}
-          className="absolute top-0 z-10 h-4 max-w-[96px] truncate rounded-sm bg-amber-500/90 hover:bg-amber-400 px-1 text-xs font-semibold leading-4 text-amber-950"
+          onClick={(e) => {
+            e.stopPropagation();
+            const now = performance.now();
+            const last = lastMarkerTap.current;
+            if (last && last.id === mk.id && now - last.t < 400) {
+              lastMarkerTap.current = null;
+              onMarkerEdit?.(mk.id);
+            } else {
+              lastMarkerTap.current = { id: mk.id, t: now };
+              onMarkerJump?.(mk.seconds);
+            }
+          }}
+          className="absolute top-0 z-10 h-4 max-w-[96px] truncate rounded-sm bg-amber-500/90 hover:bg-amber-400 px-1 text-xs font-semibold leading-4 text-amber-950 touch-manipulation"
           style={{ left: mk.seconds * pxPerSecond }}
           title={`${mk.name} — click to jump · double-click to rename/delete`}
         >

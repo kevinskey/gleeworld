@@ -949,8 +949,17 @@ export function useStudioEngine(session: Session | null) {
           /* native loop wiring lands in a future iOS pass */
         },
         setMetronome: (on: boolean) => {
-          // Fire-and-forget — the click engine itself is the only
-          // listener that cares about the toggle.
+          // Optimistic state write, same pattern as setRecordingActive.
+          // Every toggle call site computes `!state?.metronomeOn`, so if
+          // the bridge state event carrying metronomeOn is delayed or
+          // lost (a documented native failure mode — see the Swift
+          // setMetronome comment about poisoned graph state swallowing
+          // the emit), React inverts a stale value and every press
+          // re-sends the SAME on/off — the click "won't turn on" or
+          // "won't turn off" until states happen to re-align. Writing
+          // the intent locally keeps the toggle self-correcting; the
+          // next genuine bridge state simply confirms it.
+          setState((prev) => (prev ? { ...prev, metronomeOn: on } : prev));
           void NativeStudio.setMetronome({ on });
         },
         setMetronomeVolume: (db: number) => {

@@ -108,6 +108,13 @@ describe('loop wrap re-anchors the transport-scheduled metronome', () => {
     vi.setSystemTime(0);
     recorded.clicks.length = 0;
     recorded.wraps.length = 0;
+    // The mock transport is module-level: clear position and any repeats
+    // left scheduled by the previous test's (undisposed) engine, or they
+    // fire into this test's recording.
+    const tp = Tone.getTransport() as unknown as MockTransport & { _repeats: unknown[] };
+    tp._seconds = 0;
+    tp.started = false;
+    tp._repeats.length = 0;
     vi.stubGlobal('requestAnimationFrame', () => 1);
     vi.stubGlobal('cancelAnimationFrame', () => {});
   });
@@ -172,21 +179,50 @@ describe('loop wrap re-anchors the transport-scheduled metronome', () => {
     }
     recorded.clicks.length = 0;
 
-    // Jump back to 0.1s. The repeat must follow the head, not stay
-    // anchored at the old timeline position (~1.5s next fire).
+    // Jump back to 0.1s — NOT a beat boundary. The click must land on
+    // the session's beat grid (next line at 0.5s), not re-anchor to the
+    // seek instant: 0.1s is between beats, so nothing sounds until the
+    // playhead reaches 0.5s (wall t=1400ms here), and that click is
+    // beat 2 (no accent). The bar-1 accent recurs at 2.0s (t=2900ms).
     engine.seek(0.1);
     transport()._seconds = 0.1;
 
-    for (let t = 1000; t < 1800; t += 25) {
+    for (let t = 1000; t < 3000; t += 25) {
       transport().fireDue();
       transport()._seconds += 0.025;
       vi.advanceTimersByTime(25);
     }
-    // Re-anchoring fires beat 1 at the seek instant (t=1000ms), and the
-    // next beat lands exactly one period later (t=1500ms) — not at the
-    // pre-seek anchor's next slot.
-    expect(recorded.clicks.some((c) => c.accent && c.t === 1000)).toBe(true);
-    expect(recorded.clicks.some((c) => c.t === 1500)).toBe(true);
-    expect(recorded.clicks.filter((c) => c.t > 1000 && c.t < 1500)).toEqual([]);
+    expect(recorded.clicks.filter((c) => c.t < 1400)).toEqual([]);
+    expect(recorded.clicks.some((c) => !c.accent && c.t === 1400)).toBe(true);
+    expect(recorded.clicks.filter((c) => c.t > 1400 && c.t < 1900)).toEqual([]);
+    expect(recorded.clicks.some((c) => c.t === 1900)).toBe(true);
+    expect(recorded.clicks.some((c) => c.accent && c.t === 2900)).toBe(true);
+  });
+
+  it('toggling the metronome on mid-play lands the click on the beat grid', () => {
+    const engine = new StudioEngine();
+    engine.play();
+
+    // Play 300ms with the click off, then arm it mid-beat.
+    for (let t = 0; t < 300; t += 25) {
+      transport().fireDue();
+      transport()._seconds += 0.025;
+      vi.advanceTimersByTime(25);
+    }
+    engine.setMetronome(true);
+
+    for (let t = 300; t < 2100; t += 25) {
+      transport().fireDue();
+      transport()._seconds += 0.025;
+      vi.advanceTimersByTime(25);
+    }
+    // No click at the toggle instant (0.3s is between beats); first
+    // click on the next grid line (0.5s → t=500ms, beat 2 = no accent),
+    // then every 500ms, with the bar accent at 2.0s (t=2000ms).
+    expect(recorded.clicks.filter((c) => c.t < 500)).toEqual([]);
+    expect(recorded.clicks.some((c) => !c.accent && c.t === 500)).toBe(true);
+    expect(recorded.clicks.filter((c) => c.t > 500 && c.t < 1000)).toEqual([]);
+    expect(recorded.clicks.some((c) => c.t === 1000)).toBe(true);
+    expect(recorded.clicks.some((c) => c.accent && c.t === 2000)).toBe(true);
   });
 });
