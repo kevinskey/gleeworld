@@ -31,6 +31,7 @@ import {
 import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRef';
 import { buildWorksCited, formatInText, type RefSegment } from './citationFormat';
 import type { CitationStyle, DocFootnote, DocSource, PaperMeta } from './types';
+import { PAGE_DIMENSIONS, TWIPS_PER_IN, resolvePageSetup } from './types';
 
 export interface ExportInput {
   content: unknown;
@@ -555,6 +556,23 @@ export async function tiptapToDocxParagraphs(
 
 const MARGINS = { top: 1440, bottom: 1440, left: 1440, right: 1440 };
 
+/** Page dimensions in twips for the doc's chosen size. */
+function pageSizeTwips(meta: PaperMeta): { width: number; height: number } {
+  const { pageSize } = resolvePageSetup(meta);
+  const dims = PAGE_DIMENSIONS[pageSize];
+  return {
+    width: Math.round(dims.width * TWIPS_PER_IN),
+    height: Math.round(dims.height * TWIPS_PER_IN),
+  };
+}
+
+/** Uniform margin in twips for the doc's chosen margin. */
+function pageMarginTwips(meta: PaperMeta): typeof MARGINS {
+  const { marginIn } = resolvePageSetup(meta);
+  const t = Math.round(marginIn * TWIPS_PER_IN);
+  return { top: t, bottom: t, left: t, right: t };
+}
+
 function lastWord(name: string | undefined): string | undefined {
   const trimmed = name?.trim();
   if (!trimmed) return undefined;
@@ -726,7 +744,12 @@ export async function buildDocxModel(input: ExportInput): Promise<BuildDocxModel
       // 12240x15840 twips = 8.5"x11" US Letter. docx defaults to A4
       // (11906x16838) when `size` is omitted, which is wrong for MLA/APA
       // student papers.
-      properties: { page: { size: { width: 12240, height: 15840 }, margin: MARGINS } },
+      // Page size and margins follow the doc's own setup; the fallbacks are
+      // exactly the old hardcoded values (US Letter, 1in), so a doc that
+      // never touched page setup exports byte-identically to before. docx
+      // defaults to A4 when `size` is omitted, which is wrong for MLA/APA
+      // student papers — hence always passing it explicitly.
+      properties: { page: { size: pageSizeTwips(input.meta), margin: pageMarginTwips(input.meta) } },
       headers: { default: header },
       children: [...openingBlocks, ...bodyBlocks, ...tailBlocks],
     }],

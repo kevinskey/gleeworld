@@ -22,7 +22,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { getDoc, saveDoc, type PersonalDoc } from '@/lib/documents/personalDocsApi';
 import { formatInText } from '@/lib/documents/citationFormat';
-import type { CitationStyle, DocFootnote, DocSource, PaperMeta } from '@/lib/documents/types';
+import type { CitationStyle, DocFootnote, DocSource, PaperMeta, PageSize } from '@/lib/documents/types';
+import { PAGE_DIMENSIONS, MARGIN_CHOICES, resolvePageSetup } from '@/lib/documents/types';
 import { DocumentEditor } from '@/components/documents/DocumentEditor';
 import { removeCitationsFor } from '@/components/documents/extensions/CitationChip';
 import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRef';
@@ -275,6 +276,8 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
     autosaver.schedule({ sources: next });
   }, [autosaver]);
 
+  const pageSetup = resolvePageSetup(paperMeta);
+
   const handleMetaChange = useCallback((next: PaperMeta) => {
     setPaperMeta(next);
     autosaver.schedule({ paper_meta: next });
@@ -498,6 +501,32 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
           {/* Sources live up here now, at every size — the docked right rail
               squeezed the page (Kevin, 2026-08-13: "move sources up and let
               doc have width"). The sheet slides OVER the doc instead. */}
+          {/* Page setup. Stored in paper_meta, so it needed no migration, and
+              it drives three places at once: the on-screen paper, the print
+              overlay's @page rule, and the .docx section properties. */}
+          <select
+            value={pageSetup.pageSize}
+            onChange={(e) => handleMetaChange({ ...paperMeta, pageSize: e.target.value as PageSize })}
+            className="h-8 rounded border border-input bg-background px-1.5 text-xs text-foreground"
+            aria-label="Page size"
+            title="Page size"
+          >
+            {(Object.keys(PAGE_DIMENSIONS) as PageSize[]).map((key) => (
+              <option key={key} value={key}>{PAGE_DIMENSIONS[key].label}</option>
+            ))}
+          </select>
+          <select
+            value={String(pageSetup.marginIn)}
+            onChange={(e) => handleMetaChange({ ...paperMeta, marginIn: Number(e.target.value) })}
+            className="h-8 rounded border border-input bg-background px-1.5 text-xs text-foreground"
+            aria-label="Page margins"
+            title="Margins"
+          >
+            {MARGIN_CHOICES.map((m) => (
+              <option key={m} value={m}>{m}&quot; margins</option>
+            ))}
+          </select>
+
           {/* Outline — headings only, click to jump. Same over-the-doc sheet
               as Sources so the page keeps its full width. */}
           <Sheet open={outlineOpen} onOpenChange={setOutlineOpen}>
@@ -535,6 +564,7 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             onFootnoteClick={handleFootnoteToolbarClick}
             onImageClick={handleImageButtonClick}
             onImageFiles={handleImageFiles}
+            pageSetup={paperMeta}
             editorRef={(editor) => { editorInstanceRef.current = editor; setEditorInstance(editor); }}
           />
 

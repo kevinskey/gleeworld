@@ -8,7 +8,7 @@ import {
   AlignLeft, AlignCenter, AlignRight,
   List, ListOrdered, Quote, TableIcon, Image as ImageIcon,
   Link as LinkIcon, Superscript as FootnoteIcon, BookText,
-  Undo, Redo, Strikethrough, Baseline,
+  Undo, Redo, Strikethrough, Baseline, SeparatorHorizontal,
 } from 'lucide-react';
 
 // Font stacks offered in the toolbar. Web-safe families only — a document
@@ -169,6 +169,12 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick 
       </ToolbarButton>
       <div className="w-px h-5 bg-border mx-1" />
 
+      <ToolbarButton
+        title="Insert page break"
+        onClick={() => editor.chain().focus().setPageBreak().run()}
+      >
+        <SeparatorHorizontal className="w-4 h-4" />
+      </ToolbarButton>
       <ToolbarButton title="Insert footnote" onClick={onFootnoteClick}><FootnoteIcon className="w-4 h-4" /></ToolbarButton>
       <ToolbarButton title="Insert / edit link" active={editor.isActive('link')} onClick={addLink}><LinkIcon className="w-4 h-4" /></ToolbarButton>
       <button

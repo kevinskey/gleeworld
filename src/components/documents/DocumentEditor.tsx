@@ -15,10 +15,12 @@ import { Superscript } from '@tiptap/extension-superscript';
 import { Highlight } from '@tiptap/extension-highlight';
 import { TextStyle, Color, FontFamily, FontSize } from '@tiptap/extension-text-style';
 import { CharacterCount } from '@tiptap/extensions';
+import { PAGE_DIMENSIONS, PX_PER_IN, resolvePageSetup, type PaperMeta } from '@/lib/documents/types';
 import { DocToolbar } from './DocToolbar';
 import { CitationChip } from './extensions/CitationChip';
 import { FootnoteRef } from './extensions/FootnoteRef';
 import { DocumentSearch } from './extensions/DocumentSearch';
+import { PageBreak } from './extensions/PageBreak';
 import { FindReplaceBar } from './FindReplaceBar';
 
 /**
@@ -97,6 +99,7 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
     FontSize,
     CharacterCount,
     DocumentSearch,
+    PageBreak,
     CitationChip.configure({ getText: opts.getCitationText ?? (() => '[citation]') }),
     FootnoteRef.configure({ getIndex: opts.getFootnoteIndex ?? (() => -1) }),
   ];
@@ -122,6 +125,8 @@ export interface DocumentEditorProps {
   /** Upload + insert image files from the clipboard or a drop. Without this
    *  the editor silently swallows a pasted screenshot. */
   onImageFiles?: (files: File[]) => void;
+  /** Page size + margins (from the doc's paper_meta). Absent = Letter, 1in. */
+  pageSetup?: Pick<PaperMeta, 'pageSize' | 'marginIn'>;
   editorRef?: (editor: Editor | null) => void;
 }
 
@@ -134,6 +139,7 @@ export function DocumentEditor({
   onFootnoteClick,
   onImageClick,
   onImageFiles,
+  pageSetup,
   editorRef,
 }: DocumentEditorProps) {
   // Held in a ref so the ProseMirror handlers below (created once, at editor
@@ -190,6 +196,8 @@ export function DocumentEditor({
 
   if (!editor) return null;
 
+  const { pageSize: pageWidthKey, marginIn } = resolvePageSetup(pageSetup);
+
   return (
     <div className="flex flex-col">
       <DocToolbar editor={editor} onCiteClick={onCiteClick} onFootnoteClick={onFootnoteClick} onImageClick={onImageClick} />
@@ -197,10 +205,18 @@ export function DocumentEditor({
       {/* w-full is load-bearing: in a flex-col parent, mx-auto overrides the
           default cross-axis stretch and the card shrink-wraps its content
           (an empty doc collapsed to ~90px). */}
-      {/* 816px ≈ a US-letter page at 96dpi — the sources rail is gone
-          (Kevin, 2026-08-13: "let doc have width"), so the paper can be
-          paper-sized. */}
-      <div className="w-full mx-auto max-w-[816px] px-6 py-10 bg-card rounded-xl">
+      {/* Width and padding come from the doc's page setup rather than the old
+          hardcoded 816px/px-6: 816px WAS US Letter at 96dpi, so a doc with no
+          setup stored renders byte-identically to before. Padding is the real
+          margin, so what you type sits where it will print. */}
+      <div
+        className="w-full mx-auto bg-card rounded-xl"
+        style={{
+          maxWidth: PAGE_DIMENSIONS[pageWidthKey].width * PX_PER_IN,
+          paddingInline: marginIn * PX_PER_IN,
+          paddingBlock: marginIn * PX_PER_IN,
+        }}
+      >
         <EditorContent editor={editor} />
         <LinkBubble editor={editor} />
       </div>

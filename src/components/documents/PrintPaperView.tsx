@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { formatInText, buildWorksCited } from '@/lib/documents/citationFormat';
 import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRef';
 import type { CitationStyle, DocFootnote, DocSource, PaperMeta } from '@/lib/documents/types';
+import { resolvePageSetup } from '@/lib/documents/types';
 import { documentExtensions } from './DocumentEditor';
 import '@/styles/print-paper.css';
 
@@ -77,10 +78,14 @@ export function PrintPaperView({ onClose, title, style, meta, content, sources, 
   // mounted, and remove it on unmount/cleanup.
   useEffect(() => {
     const style = document.createElement('style');
-    style.textContent = '@page { margin: 1in; }';
+    // Size and margin come from the doc's page setup, so what prints matches
+    // what the editor showed. Defaults reproduce the previous hardcoded 1in
+    // US Letter for every doc that never set one.
+    const { pageSize, marginIn } = resolvePageSetup(meta);
+    style.textContent = `@page { size: ${pageSize === 'a4' ? 'A4' : 'letter'}; margin: ${marginIn}in; }`;
     document.head.appendChild(style);
     return () => { style.remove(); };
-  }, []);
+  }, [meta]);
 
   const orderedIds = useMemo(() => orderedFootnoteIds(content), [content]);
 
