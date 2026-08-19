@@ -1,7 +1,7 @@
 // Page-scale TipTap 3 editor shell for the Documents word processor.
 // Mirrors the useEditor/ToolbarButton idiom from src/components/editor/RichTextEditor.tsx
 // but persists TipTap JSON (not HTML) and renders as a serif "page" surface.
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useEditor, EditorContent, type Editor, type AnyExtension, type Content } from '@tiptap/react';
 import { LinkBubble } from './LinkBubble';
 import StarterKit from '@tiptap/starter-kit';
@@ -13,6 +13,7 @@ import { TextAlign } from '@tiptap/extension-text-align';
 import { Subscript } from '@tiptap/extension-subscript';
 import { Superscript } from '@tiptap/extension-superscript';
 import { Highlight } from '@tiptap/extension-highlight';
+import { TextStyle, Color, FontFamily, FontSize } from '@tiptap/extension-text-style';
 import { CharacterCount } from '@tiptap/extensions';
 import { DocToolbar } from './DocToolbar';
 import { CitationChip } from './extensions/CitationChip';
@@ -84,6 +85,14 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
     Subscript,
     Superscript,
     Highlight,
+    // TextStyle + its attribute marks. Two reasons, and the first matters
+    // more: without them, pasting from Word or Google Docs threw away every
+    // font, size, and color in the pasted run, because there was no mark in
+    // the schema to hold them. They also back the toolbar's font controls.
+    TextStyle,
+    Color,
+    FontFamily,
+    FontSize,
     CharacterCount,
     CitationChip.configure({ getText: opts.getCitationText ?? (() => '[citation]') }),
     FootnoteRef.configure({ getIndex: opts.getFootnoteIndex ?? (() => -1) }),
@@ -107,6 +116,9 @@ export interface DocumentEditorProps {
   onCiteClick: () => void;
   onFootnoteClick: () => void;
   onImageClick: () => void;
+  /** Upload + insert image files from the clipboard or a drop. Without this
+   *  the editor silently swallows a pasted screenshot. */
+  onImageFiles?: (files: File[]) => void;
   editorRef?: (editor: Editor | null) => void;
 }
 
@@ -118,8 +130,14 @@ export function DocumentEditor({
   onCiteClick,
   onFootnoteClick,
   onImageClick,
+  onImageFiles,
   editorRef,
 }: DocumentEditorProps) {
+  // Held in a ref so the ProseMirror handlers below (created once, at editor
+  // construction) always call the CURRENT callback rather than the one that
+  // existed on first render.
+  const imageFilesRef = useRef(onImageFiles);
+  imageFilesRef.current = onImageFiles;
   const editor = useEditor({
     extensions: documentExtensions({ getCitationText: citationChipText, getFootnoteIndex: footnoteIndex }),
     // `content` is typed `unknown` on the public props so callers don't need
@@ -127,6 +145,30 @@ export function DocumentEditor({
     // useEditor actually wants.
     content: (content ?? '') as Content,
     editorProps: {
+      /**
+       * Images from the clipboard. TipTap/ProseMirror drop image FILES on the
+       * floor — the clipboard's text/html flavor is what it reads, and for a
+       * screenshot there isn't one — so pasting a screenshot did nothing at
+       * all. Returning false for everything else leaves normal text/HTML
+       * paste exactly as it was.
+       */
+      handlePaste(_view, event) {
+        const files = Array.from(event.clipboardData?.files ?? [])
+          .filter((f) => f.type.startsWith('image/'));
+        if (files.length === 0 || !imageFilesRef.current) return false;
+        event.preventDefault();
+        imageFilesRef.current(files);
+        return true;
+      },
+      /** Same for dragging an image file in from the desktop. */
+      handleDrop(_view, event) {
+        const dropped = (event as DragEvent).dataTransfer?.files;
+        const files = Array.from(dropped ?? []).filter((f) => f.type.startsWith('image/'));
+        if (files.length === 0 || !imageFilesRef.current) return false;
+        event.preventDefault();
+        imageFilesRef.current(files);
+        return true;
+      },
       attributes: {
         // focus-visible ring-0: index.css applies a global tenant-tinted
         // :focus-visible ring; outline-none alone doesn't suppress it.

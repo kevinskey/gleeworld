@@ -353,13 +353,28 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
     imageInputRef.current?.click();
   }, []);
 
-  const handleImageFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = ''; // allow re-selecting the same file later
+  /**
+   * Upload one image file and insert it at the caret. Shared by the toolbar
+   * button, clipboard paste, and drag-and-drop — all three want identical
+   * behavior (signed `src` for now, stable `path` so the next load can
+   * re-sign it), and pasting a screenshot is how most images actually get
+   * into a document.
+   */
+  const insertImageFile = useCallback(async (file: File) => {
     if (!file || !id || !userId) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Only images can be dropped into a document.');
+      return;
+    }
     setUploadingImage(true);
     try {
-      const ext = (file.name.match(/\.([a-z0-9]+)$/i)?.[1] ?? 'png').toLowerCase();
+      // Clipboard images often arrive as "image.png" or with no useful name
+      // at all, so fall back to the MIME subtype before defaulting to png.
+      const ext = (
+        file.name?.match(/\.([a-z0-9]+)$/i)?.[1]
+        ?? file.type.split('/')[1]
+        ?? 'png'
+      ).toLowerCase();
       // Bucket is 'personal-docs' itself, so the path doesn't repeat the
       // bucket name as a folder prefix — just <user_id>/<doc_id>/<uuid>.ext.
       const folder = `${userId}/${id}`;
@@ -384,6 +399,18 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
       setUploadingImage(false);
     }
   }, [id, userId]);
+
+  const handleImageFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (file) await insertImageFile(file);
+  }, [insertImageFile]);
+
+  /** Clipboard/drop images, in order. Sequential rather than parallel so the
+   *  caret advances predictably when several are dropped at once. */
+  const handleImageFiles = useCallback(async (files: File[]) => {
+    for (const file of files) await insertImageFile(file);
+  }, [insertImageFile]);
 
   if (loadState === 'loading') {
     return (
@@ -487,6 +514,7 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             onCiteClick={() => setSourcesSheetOpen(true)}
             onFootnoteClick={handleFootnoteToolbarClick}
             onImageClick={handleImageButtonClick}
+            onImageFiles={handleImageFiles}
             editorRef={(editor) => { editorInstanceRef.current = editor; }}
           />
 
