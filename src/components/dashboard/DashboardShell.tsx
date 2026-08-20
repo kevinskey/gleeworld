@@ -93,7 +93,7 @@ import { NavShelf } from './NavShelf';
 import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
-import { selectShelfEntries, shelfLooseTools, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { selectShelfEntries, shelfGroupsForNav, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
 import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
 import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 
@@ -211,7 +211,14 @@ function useAllToolsCatalog(): {
   const { resolvedEntries, myTools, myToolsLoaded, pinTool } = useGatedNav();
   return {
     available: resolvedEntries,
-    pinned: resolvedTools(myTools),
+    // GROUPED tools count as pinned too, not just loose ones. `pinned` is
+    // what renders the "In your world" state instead of a ⊕, and pinTool
+    // appends to the LOOSE list — so a tool the member had filed in a group
+    // (now including Favorites) showed a ⊕ that, when tapped, moved it out
+    // of that group, because sanitizeShelf keeps the first occurrence and
+    // loose comes first. Nothing told them that would happen. Reading the
+    // whole shelf makes the sheet honest about what is already chosen.
+    pinned: [...resolvedTools(myTools), ...(myTools?.groups ?? []).flatMap((g) => g.tools)],
     // No record, no ⊕: pinTool would refuse, and offering an action that
     // can only fail is the "tap does nothing" shape the plan forbids.
     canPin: myToolsLoaded,
@@ -359,6 +366,11 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
           collapsed: g.collapsed,
         }))
         .filter((g) => g.entries.length > 0);
+  // Favorites is the one group the nav does not show — it is the top row of
+  // the Command Center grid, and those apps are already on the page as
+  // keycaps. Loose tools are untouched: every "add an app" path appends to
+  // that list, so it stays the way an app reaches the left nav.
+  const navGroups = shelfGroupsForNav(shelfGroups);
 
   const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
     // Gated on `loaded`, like every other write: saveMyTools fills omitted
@@ -461,9 +473,9 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
       <nav className="flex-1 min-h-0 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2">
         <NavShelf
           home={homeEntry}
-          tools={shelfLooseTools(shelfTools, shelfGroups.length)}
+          tools={shelfTools}
           pinned={PINNED_BOTTOM(resolvedEntries)}
-          groups={shelfGroups}
+          groups={navGroups}
           onToggleGroup={handleToggleGroup}
           onOpenAllTools={onOpenAllTools}
           variant="desktop"
@@ -518,6 +530,11 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
           collapsed: g.collapsed,
         }))
         .filter((g) => g.entries.length > 0);
+  // Favorites is the one group the nav does not show — it is the top row of
+  // the Command Center grid, and those apps are already on the page as
+  // keycaps. Loose tools are untouched: every "add an app" path appends to
+  // that list, so it stays the way an app reaches the left nav.
+  const navGroups = shelfGroupsForNav(shelfGroups);
 
   const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
     // Gated on `loaded` — see the matching comment on Sidebar's
@@ -546,9 +563,9 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
       <nav className="flex-1 min-h-0 overflow-y-auto pt-2 px-2 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         <NavShelf
           home={homeEntry}
-          tools={shelfLooseTools(shelfTools, shelfGroups.length)}
+          tools={shelfTools}
           pinned={PINNED_BOTTOM(resolvedEntries)}
-          groups={shelfGroups}
+          groups={navGroups}
           onToggleGroup={handleToggleGroup}
           // Close the drawer FIRST: the sheet is a modal dialog over the
           // page, and leaving the drawer mounted underneath it means that

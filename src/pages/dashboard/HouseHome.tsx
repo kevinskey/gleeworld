@@ -19,6 +19,7 @@ import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { isFacultyProfile } from '@/lib/roles';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { getAppTiles, bandDestinations, type ModuleFlags } from '@/lib/navigation/appDestinations';
+import { FAVORITES_GROUP_ID, FAVORITES_GROUP_NAME } from '@/lib/navigation/favorites';
 import { toModuleFlags, toModuleSet } from '@/lib/navigation/moduleFlags';
 import { applyPreviewRole, previewRoleIsFaculty, resolveNav, type NavContext } from '@/lib/navigation/navCatalog';
 import { selectUpNext, fuseProgress, greetingFor, preferredFirstName } from '@/lib/home/upNext';
@@ -278,9 +279,21 @@ export default function HouseHome() {
     (draft: string[], membership: Record<string, string | null> = {}) => {
       const merged = mergeGridOrder(shelfOrder, draft, representable);
       const groupFor = (k: string) => (k in membership ? membership[k] : groupIdOf(shelf, k));
+      // Favorites is created lazily — the first drag into it names a group
+      // the record does not have yet. Creating it here is not cosmetic: the
+      // re-split below files by group id, and a key assigned to a group that
+      // is absent from this list would land in NEITHER tools nor groups,
+      // silently unpinned by the act of favouriting it. Only when something
+      // actually lands there, so a member who never favourites anything
+      // never grows an empty group in their record.
+      const needsFavorites = Object.values(membership).includes(FAVORITES_GROUP_ID)
+        && !shelf.groups.some((g) => g.id === FAVORITES_GROUP_ID);
+      const groups = needsFavorites
+        ? [{ id: FAVORITES_GROUP_ID, name: FAVORITES_GROUP_NAME, tools: [], collapsed: false }, ...shelf.groups]
+        : shelf.groups;
       return saveShelf({
         tools: merged.filter((k) => groupFor(k) === null),
-        groups: shelf.groups.map((g) => ({
+        groups: groups.map((g) => ({
           ...g,
           tools: merged.filter((k) => groupFor(k) === g.id),
         })),

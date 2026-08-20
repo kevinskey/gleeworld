@@ -448,3 +448,27 @@ describe('All Tools — preview role narrowing is actually applied', () => {
     expect(screen.getAllByText('Site Setup').length).toBeGreaterThan(0);
   });
 });
+
+// pinTool appends to the LOOSE list, and sanitizeShelf keeps the first
+// occurrence of a key — so offering a ⊕ for a tool the member has filed in a
+// group (Favorites included) is offering to silently un-file it. The sheet
+// counts grouped tools as already chosen.
+describe('AllToolsSheet — grouped tools are already in your world', () => {
+  it('shows no ⊕ for a tool filed in a group', async () => {
+    setup({
+      myTools: {
+        v: 4,
+        tools: ['calendar'],
+        groups: [{ id: 'favorites', name: 'Favorites', tools: ['finance'], collapsed: false }],
+        widgets: [],
+        setupComplete: true,
+      } as MyTools,
+    });
+    render(<MemoryRouter initialEntries={['/dashboard']}><DashboardShell>x</DashboardShell></MemoryRouter>);
+    fireEvent.click(screen.getAllByText('All Tools')[0]);
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /pin finance to your world/i })).toBeNull();
+    // ...and the loose tool is likewise already in, as it always was.
+    expect(screen.queryByRole('button', { name: /pin calendar to your world/i })).toBeNull();
+  });
+});
