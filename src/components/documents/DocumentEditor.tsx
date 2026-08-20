@@ -1,7 +1,7 @@
 // Page-scale TipTap 3 editor shell for the Documents word processor.
 // Mirrors the useEditor/ToolbarButton idiom from src/components/editor/RichTextEditor.tsx
 // but persists TipTap JSON (not HTML) and renders as a serif "page" surface.
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor, type AnyExtension, type Content } from '@tiptap/react';
 import { LinkBubble } from './LinkBubble';
 import StarterKit from '@tiptap/starter-kit';
@@ -17,6 +17,8 @@ import { TextStyle, Color, FontFamily, FontSize } from '@tiptap/extension-text-s
 import { CharacterCount } from '@tiptap/extensions';
 import { PAGE_DIMENSIONS, PX_PER_IN, resolvePageSetup, type PaperMeta } from '@/lib/documents/types';
 import { stripUnreadableColors } from '@/lib/documents/pasteColors';
+import { pageContentHeightPx } from '@/lib/documents/pagination';
+import { PageGuides } from './PageGuides';
 import { DocToolbar } from './DocToolbar';
 import { CitationChip } from './extensions/CitationChip';
 import { FootnoteRef } from './extensions/FootnoteRef';
@@ -156,6 +158,8 @@ export interface DocumentEditorProps {
   /** Upload + insert image files from the clipboard or a drop. Without this
    *  the editor silently swallows a pasted screenshot. */
   onImageFiles?: (files: File[]) => void;
+  /** Told how many physical pages the document currently occupies. */
+  onPageCountChange?: (pages: number) => void;
   /** Live collaboration session, or null for solo editing. */
   collab?: CollabSession | null;
   collabUserName?: string;
@@ -179,6 +183,7 @@ export function DocumentEditor({
   onImageClick,
   onCommentClick,
   onImageFiles,
+  onPageCountChange,
   collab,
   collabUserName,
   collabUserColor,
@@ -191,6 +196,10 @@ export function DocumentEditor({
   // existed on first render.
   const imageFilesRef = useRef(onImageFiles);
   imageFilesRef.current = onImageFiles;
+  // The rendered ProseMirror element, in state rather than a ref: PageGuides
+  // has to re-run its measurement when the node actually appears, and a ref
+  // mutation doesn't re-render.
+  const [contentEl, setContentEl] = useState<HTMLElement | null>(null);
   const editor = useEditor({
     extensions: documentExtensions({
       getCitationText: citationChipText,
@@ -293,7 +302,20 @@ export function DocumentEditor({
           paddingBlock: marginIn * PX_PER_IN,
         }}
       >
-        <EditorContent editor={editor} />
+        {/* relative: the page rules are absolutely positioned against this
+            box, so their offsets are measured from the top of the content
+            column — the same origin the page setup's margins use. */}
+        <div className="relative">
+          <PageGuides
+            contentEl={contentEl}
+            pageHeightPx={pageContentHeightPx(pageSetup)}
+            offsetTopPx={0}
+            onPageCountChange={onPageCountChange}
+          />
+          <div ref={setContentEl}>
+            <EditorContent editor={editor} />
+          </div>
+        </div>
         <LinkBubble editor={editor} />
       </div>
     </div>

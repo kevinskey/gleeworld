@@ -36,6 +36,7 @@ import { createVersion, shouldSnapshot } from '@/lib/documents/versionsApi';
 import { ShareDialog } from '@/components/documents/ShareDialog';
 import { getMyPermission, permissionAtLeast, type DocPermission } from '@/lib/documents/sharesApi';
 import { useCollaboration, collaborationEnabled, colorForUser } from '@/lib/documents/useCollaboration';
+import { describePagination } from '@/lib/documents/pagination';
 import { PrompterOverlay } from '@/components/prompter/PrompterOverlay';
 import { WorksCitedPreview } from '@/components/documents/WorksCitedPreview';
 import { PrintPaperView } from '@/components/documents/PrintPaperView';
@@ -143,6 +144,7 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   const [paperMeta, setPaperMeta] = useState<PaperMeta>({});
   const [initialContent, setInitialContent] = useState<unknown>(null);
   const [wordCount, setWordCount] = useState(0);
+  const [pageTotal, setPageTotal] = useState(1);
 
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -760,6 +762,7 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             onImageFiles={handleImageFiles}
             pageSetup={paperMeta}
             editable={canEdit}
+            onPageCountChange={setPageTotal}
             collab={collab.ydoc ? collab : null}
             collabUserName={collabName}
             collabUserColor={collabColor}
@@ -783,7 +786,9 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
           )}
 
           <div className="mx-auto mt-2 flex max-w-[816px] items-center justify-between px-6">
-            <span className="text-xs text-muted-foreground">{wordCountLabel(wordCount)}</span>
+            <span className="text-xs text-muted-foreground">
+              {wordCountLabel(wordCount)} · {describePagination(pageTotal)}
+            </span>
             <span className="text-xs text-muted-foreground" role="status">{statusLabel}</span>
           </div>
 
