@@ -19,11 +19,30 @@ export interface DropPlan {
   refileTo?: string | null;
 }
 
+/**
+ * The empty Favorites row's droppable id. A band with no tiles has nothing
+ * to collide with, so an emptied Favorites row would be a one-way door —
+ * drag the last favorite into a group and you could never put one back.
+ * This is the zone that stands in for the missing tiles.
+ */
+export const FAVORITES_DROP_ID = '__favorites__';
+
 export function planDrop(
   activeKey: string,
   overKey: string,
   bandIdOfKey: Map<string, string | null>,
 ): DropPlan {
+  // Dropping on the empty-Favorites zone means "ungrouped, at the top" —
+  // there is no neighbour tile to land beside, so it goes to the front.
+  if (overKey === FAVORITES_DROP_ID) {
+    const reorder = (order: string[]) => {
+      const from = order.indexOf(activeKey);
+      return from === -1 ? order : arrayMove(order, from, 0);
+    };
+    return (bandIdOfKey.get(activeKey) ?? null) === null
+      ? { reorder }
+      : { reorder, refileTo: null };
+  }
   const target = bandIdOfKey.get(overKey) ?? null;
   const reorder = (order: string[]) => {
     const from = order.indexOf(activeKey);

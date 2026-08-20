@@ -48,9 +48,9 @@ const gridOrder = () => screen.getAllByRole('button', { name: /^Remove .+ from g
   .map((b) => b.getAttribute('aria-label')!.replace(/^Remove | from grid$/g, ''));
 
 describe('HomeTileGrid grouped bands — view mode', () => {
-  it('gives every named group a heading and the loose band none', () => {
+  it('names the leading ungrouped band Favorites, then every named group', () => {
     renderGrid();
-    expect(headings()).toEqual(['Sunday', 'Teaching']);
+    expect(headings()).toEqual(['Favorites', 'Sunday', 'Teaching']);
   });
 
   it('renders loose keycaps first, then each band in order', () => {
@@ -64,9 +64,17 @@ describe('HomeTileGrid grouped bands — view mode', () => {
     expect(screen.getByRole('link', { name: 'liturgy' })).toHaveAttribute('href', '/liturgy');
   });
 
-  it('renders no heading at all for a member with no groups', () => {
+  it('still says Favorites for a member with no groups at all', () => {
     renderGrid([{ groupId: null, name: null, tiles: [dest('calendar')] }]);
-    expect(screen.queryAllByRole('heading')).toHaveLength(0);
+    expect(headings()).toEqual(['Favorites']);
+  });
+
+  it('shows no Favorites heading when the member has no ungrouped apps', () => {
+    // A heading over nothing is noise in view mode — there is nothing to
+    // drop and nothing to explain. Edit mode is where the empty row earns
+    // its place; see the drop-zone test below.
+    renderGrid([{ groupId: 'a', name: 'Sunday', tiles: [dest('liturgy')] }]);
+    expect(headings()).toEqual(['Sunday']);
   });
 });
 
@@ -74,7 +82,22 @@ describe('HomeTileGrid grouped bands — edit mode', () => {
   it('keeps the headings while editing', () => {
     renderGrid();
     enterEditMode();
-    expect(headings()).toEqual(['Sunday', 'Teaching']);
+    expect(headings()).toEqual(['Favorites', 'Sunday', 'Teaching']);
+  });
+
+  // Dragging the last favorite into a group would otherwise delete the row
+  // and with it the only place to drop one back — a one-way door.
+  it('keeps an empty Favorites row, as a drop target, while editing', () => {
+    renderGrid([{ groupId: 'a', name: 'Sunday', tiles: [dest('liturgy')] }]);
+    enterEditMode();
+    expect(headings()).toEqual(['Favorites', 'Sunday']);
+    expect(screen.getByText(/drag an app here/i)).toBeInTheDocument();
+  });
+
+  it('shows no drop-zone prompt once Favorites has apps in it', () => {
+    renderGrid();
+    enterEditMode();
+    expect(screen.queryByText(/drag an app here/i)).toBeNull();
   });
 
   it('hands Done the flat loose-then-groups order', () => {
@@ -110,7 +133,7 @@ describe('HomeTileGrid grouped bands — edit mode', () => {
     renderGrid();
     enterEditMode();
     fireEvent.click(screen.getByRole('button', { name: 'Remove liturgy from grid' }));
-    expect(headings()).toEqual(['Teaching']);
+    expect(headings()).toEqual(['Favorites', 'Teaching']);
   });
 
   it('removing a grouped tile leaves every other band untouched on save', () => {

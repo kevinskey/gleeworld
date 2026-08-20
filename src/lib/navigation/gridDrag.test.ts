@@ -6,7 +6,7 @@
 // crossing a heading re-files the tool so the heading it lands under stays
 // honest.
 import { describe, it, expect } from 'vitest';
-import { planDrop } from './gridDrag';
+import { planDrop, FAVORITES_DROP_ID } from './gridDrag';
 
 describe('planDrop — dragging across bands', () => {
   const BAND_OF = new Map<string, string | null>([
@@ -36,5 +36,26 @@ describe('planDrop — dragging across bands', () => {
 
   it('is a no-op for a key the draft no longer holds', () => {
     expect(planDrop('gone', 'calendar', BAND_OF).reorder(ORDER)).toEqual(ORDER);
+  });
+});
+
+// The empty Favorites row: no tiles to collide with, so it gets its own
+// droppable. Dropping there means "ungrouped, at the top".
+describe('planDrop — the empty Favorites zone', () => {
+  const BAND_OF = new Map<string, string | null>([['liturgy', 'a'], ['academy', 'b']]);
+
+  it('un-files the dropped app and puts it first', () => {
+    const plan = planDrop('academy', FAVORITES_DROP_ID, BAND_OF);
+    expect(plan.refileTo).toBeNull();
+    expect(plan.reorder(['liturgy', 'academy'])).toEqual(['academy', 'liturgy']);
+  });
+
+  it('leaves membership alone when the app was already ungrouped', () => {
+    const plan = planDrop('calendar', FAVORITES_DROP_ID, new Map([['calendar', null]]));
+    expect('refileTo' in plan).toBe(false);
+  });
+
+  it('is a no-op for a key the draft no longer holds', () => {
+    expect(planDrop('gone', FAVORITES_DROP_ID, BAND_OF).reorder(['liturgy'])).toEqual(['liturgy']);
   });
 });
