@@ -391,14 +391,43 @@ git commit -m "feat(prayer): reading-text RPCs resolving citations to WEBCE vers
 - Produces: the **unchanged** response contract
   `{ date, sourceUrl, liturgicalTitle, readings: [{ heading, citation, summary, html }] }`.
 
-- [ ] **Step 1: Pin the existing contract with a test first**
+> **DEVIATION (2026-08-20).** Implemented without a `prayer_day_full` SQL
+> RPC. That RPC's own spec (`p_date, p_rite, p_translation` only — no
+> citation-range input) requires resolving citation strings to verse ranges
+> *inside Postgres*, which either duplicates `citation.ts`'s parser in SQL or
+> requires precomputing and storing `verse_ranges` on `gw_prayer_readings` at
+> import time — a schema change to a deliberately tenant-less reference
+> table, which Kevin flagged as needing security review before any such
+> change. Rather than guess at that design, `usccb-readings/localReadings.ts`
+> composes the two RPCs that already exist and are already live
+> (`prayer_day`, `prayer_reading_text`): it calls `prayer_day` for the day's
+> events and citations, runs `parseCitation()` — imported directly from
+> `src/lib/prayer/citation.ts`, since Deno can load it as-is (no Node/browser
+> APIs) — and calls `prayer_reading_text` per reading to resolve verses. This
+> keeps citation parsing in exactly the one place the plan requires, adds no
+> migration, and delivers Task 4's actual goal (stop scraping, serve local
+> WEBCE text, populate the psalm body). If a `prayer_day_full` RPC is wanted
+> later for performance, this composition is the reference behavior to match.
+
+- [x] **Step 1: Pin the existing contract with a test first**
 
 Before changing anything, add `supabase/functions/usccb-readings/contract.test.ts` asserting the exact response shape against a mocked Supabase client — field names, types, and that `readings` is an array of objects carrying all four keys. This is what proves deployed iOS clients keep working.
 
 Run: `npx vitest run supabase/functions/usccb-readings/contract.test.ts`
 Expected: PASS against the current implementation. **If it does not pass, the contract is not what we think it is — stop and re-read the function.**
 
-- [ ] **Step 2: Rewrite the body to query the RPC**
+> Named `localReadings.test.ts` instead — it tests the extracted
+> `buildLocalReadings()` logic directly (same pattern as
+> `web-search/__tests__/websearch.test.ts` testing `runWebSearch`), not a
+> literal `contract.test.ts` file, and not a strict "red first": since the
+> new logic lives in a new module (`localReadings.ts`) rather than modifying
+> the old scraper in place, there was no old implementation for this test to
+> run against before the rewrite. What it does pin, verified by comparing
+> against the old scraper's documented behaviour: the response shape
+> (`{ heading, citation, summary, html }` per reading), the citation-only
+> "note" case, and the empty-day case — the same guarantees Step 1 asks for.
+
+- [x] **Step 2: Rewrite the body to query the RPC**
 
 Replace the `fetch(universalis…)` + HTML parse with a `supabase.rpc('prayer_day_full', { p_date, p_rite: 'roman_catholic', p_translation: 'WEBCE' })` call. Map each reading to a `ReadingBlock`:
 - `heading` — humanised slot (`first_reading` → `First Reading`, `responsorial_psalm` → `Responsorial Psalm`, `gospel` → `Gospel`)
@@ -410,16 +439,18 @@ Replace the `fetch(universalis…)` + HTML parse with a `supabase.rpc('prayer_da
 
 Delete the scraping helpers (`parseUniversalisReadings` and friends). Leave a header comment explaining that the function name is retained only for backward compatibility.
 
-- [ ] **Step 3: Re-run the contract test**
+- [x] **Step 3: Re-run the contract test**
 
-Run: `npx vitest run supabase/functions/usccb-readings/contract.test.ts`
-Expected: PASS, unchanged. The point of this task is that the contract is identical while the source is not.
+Run: `npx vitest run supabase/functions/usccb-readings/` — 9 tests passing.
 
-- [ ] **Step 4: Verify the psalm body is now populated**
+- [x] **Step 4: Verify the psalm body is now populated**
 
-The old implementation returned a citation-only Responsorial Psalm. Assert that for a known date the `responsorial_psalm` block's `html` contains actual verse text. This is the user-visible win: directors no longer paste psalm verses by hand.
+Covered by `localReadings.test.ts`'s "renders verse text into escaped HTML
+with attribution" case, asserting the Responsorial Psalm block's `html`
+contains real verse text (`<sup>1</sup> The LORD is my shepherd…`), not a
+citation-only stub.
 
-- [ ] **Step 5: Full gates**
+- [x] **Step 5: Full gates**
 
 ```bash
 npx vitest run src/lib/prayer supabase/functions/usccb-readings
@@ -427,7 +458,28 @@ npm run typecheck:guard
 npx eslint src/lib/prayer supabase/functions/usccb-readings
 ```
 
-- [ ] **Step 6: Commit**
+All green: 52 tests passing (43 prayer + 9 usccb-readings), `typecheck:guard`
+reports 119 pre-existing errors against a baseline of 150 (0 new), eslint
+clean (0 errors; 2 pre-existing unrelated warnings in `ReadingsModal.tsx`).
+
+> **Not run: the SQL migration tests, and no real DB was touched.** This
+> environment has neither `$PRAYER_DB_URL` nor network access to LitCal/
+> catholic-readings-api/eBible.org (all blocked by egress policy) — the same
+> constraint noted in Task 1's Step 3 deviation. This task added no new
+> migration, so there is nothing new to run against a live DB; the existing
+> `prayer_reading_text_test.sql` was not re-verified here either.
+
+> **Compatibility fix beyond the plan's own spec.** `ReadingsModal.tsx`
+> checks `resp.error` before `resp.readings` to decide whether to show a
+> friendly "not published yet" pending state — and `readings: []` is
+> truthy, so a bare empty-readings response would have silently fallen
+> through to the wrong branch and looked like a broken parse. `index.ts` now
+> sets `error` + `outOfRange: true` when `buildLocalReadings` returns no
+> readings, preserving the old UX for dates outside the imported window
+> (2020–2035 calendar, 2026–2027 citations) with an accurate message instead
+> of the old Universalis-specific one.
+
+- [x] **Step 6: Commit**
 
 ```bash
 git add supabase/functions/usccb-readings
