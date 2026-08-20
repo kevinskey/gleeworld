@@ -182,7 +182,14 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   // What THIS user may do with the document. Read from the same SQL helper
   // the policies use, so the UI can never offer an action RLS will refuse.
   // null while loading; a shared reader sees a read-only page.
-  const [permission, setPermission] = useState<DocPermission | null>(null);
+  // Starts OPTIMISTIC, not null. A null start renders a read-only editor for
+  // the round trip it takes to answer, and any path that fails to answer at
+  // all — the RPC returning null, the shares migration not yet applied —
+  // leaves the document permanently read-only, which reads to the user as
+  // "I can't type or paste in my own document". RLS is the real gate; this
+  // only decides what to render, so guessing generously is safe and guessing
+  // meanly is not.
+  const [permission, setPermission] = useState<DocPermission | null>('owner');
   // Snapshot bookkeeping. Refs, not state: they're read inside the save
   // path and must never trigger a re-render of the editor page.
   const lastSnapshotAtRef = useRef<number | null>(null);
@@ -377,9 +384,12 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
     if (!id) return;
     let alive = true;
     getMyPermission(id)
-      .then((p) => { if (alive) setPermission(p); })
-      // A failure here must not lock the owner out of their own document —
-      // the policies are the real gate, this only decides what to render.
+      // `?? 'owner'` covers the RPC answering null — which is what happens
+      // when gw_doc_permission doesn't exist yet (migration unapplied) and
+      // PostgREST answers 200/null rather than erroring.
+      .then((p) => { if (alive) setPermission(p ?? 'owner'); })
+      // Same reasoning for an outright failure: never lock someone out of
+      // their own document because a lookup was unavailable.
       .catch(() => { if (alive) setPermission('owner'); });
     return () => { alive = false; };
   }, [id]);
