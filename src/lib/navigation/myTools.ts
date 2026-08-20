@@ -377,6 +377,29 @@ export function selectShelfEntries(resolved: CatalogEntry[], tools: string[]): C
 }
 
 /**
+ * What the sidebar shelf shows of the member's ungrouped tools — their
+ * FAVORITES, in the Command Center grid's language.
+ *
+ * Nothing, when they have at least one group. Kevin, 2026-08-20: "i dont
+ * need to list favorites in the left nav because its on page cards." The
+ * favorites row already sits at the top of the Command Center grid as full
+ * keycaps; repeating the same handful of apps as the first rows of the
+ * sidebar spends the most valuable nav real estate on a duplicate.
+ *
+ * The `groups.length === 0` escape hatch is not a stylistic hedge: a member
+ * who never made a group keeps EVERY tool ungrouped, so dropping them
+ * unconditionally would leave that member a sidebar of Home and All Tools
+ * and no way to reach anything they picked. Grouped members lose nothing —
+ * their groups still render, and the grid still shows favorites.
+ */
+export function shelfLooseTools(
+  looseEntries: CatalogEntry[],
+  groupCount: number,
+): CatalogEntry[] {
+  return groupCount > 0 ? [] : looseEntries;
+}
+
+/**
  * The member's stored tool keys, ready to consume anywhere: resolved
  * through MERGED_KEYS, deduped, capped — `sanitizeTools` made a first-class
  * read helper.
