@@ -2682,3 +2682,32 @@ body.gw-stage-mode .gw-collapsible-sidebar {
   border-bottom: 2px solid hsl(45 100% 45% / 0.55);
   cursor: pointer;
 }
+
+/* ---------------------------------------------------------------------------
+   Page gutters in the Documents editor (Pagination extension).
+
+   The editor card is one continuous white sheet, so a gutter has to paint the
+   app canvas across the full width of the paper — including the page margins,
+   which is why the negative inline margins pull it out past the card's
+   padding. The inset shadows are the bottom edge of the sheet above and the
+   top edge of the sheet below, which is what makes it read as two pieces of
+   paper rather than a grey stripe.
+   --------------------------------------------------------------------------- */
+.gw-page-gap {
+  /* Cancels the paper's horizontal padding (its left/right margins) so the
+     gutter spans the full sheet width. 50vw is simply "more than enough";
+     the parent clips it. */
+  margin-inline: -50vw;
+  padding-inline: 50vw;
+  background: hsl(var(--background));
+  box-shadow:
+    inset 0 1px 0 hsl(var(--border)),
+    inset 0 -1px 0 hsl(var(--border));
+  user-select: none;
+}
+
+@media print {
+  /* Print paginates for real from the @page rule — an on-screen gutter would
+     show up as a grey band mid-document. */
+  .gw-page-gap { display: none; }
+}

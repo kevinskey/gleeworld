@@ -18,7 +18,7 @@ import { CharacterCount } from '@tiptap/extensions';
 import { PAGE_DIMENSIONS, PX_PER_IN, resolvePageSetup, type PaperMeta } from '@/lib/documents/types';
 import { stripUnreadableColors } from '@/lib/documents/pasteColors';
 import { pageContentHeightPx } from '@/lib/documents/pagination';
-import { PageGuides } from './PageGuides';
+import { Pagination } from './extensions/Pagination';
 import { DocToolbar } from './DocToolbar';
 import { CitationChip } from './extensions/CitationChip';
 import { FootnoteRef } from './extensions/FootnoteRef';
@@ -62,6 +62,10 @@ const DocImage = Image.extend({
 export interface DocumentExtensionOptions {
   getCitationText?: (sourceId: string, locator?: string) => string;
   getFootnoteIndex?: (noteId: string) => number;
+  /** Usable page height in CSS px; pagination inserts a gutter when a block
+   *  won't fit in what's left. */
+  pageHeightPx?: number;
+  onPageCountChange?: (pages: number) => void;
   /** Live session, when collaborative editing is configured AND connected. */
   collab?: CollabSession | null;
   collabUserName?: string;
@@ -114,6 +118,11 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
     CharacterCount,
     DocumentSearch,
     PageBreak,
+    Pagination.configure({
+      pageHeightPx: opts.pageHeightPx ?? 864,
+      gutterPx: 56,
+      onPageCountChange: opts.onPageCountChange,
+    }),
     CommentMark,
     // Collaboration replaces ProseMirror's history: that undo stack is
     // per-client and would reach into OTHER people's edits. Yjs keeps a
@@ -199,11 +208,16 @@ export function DocumentEditor({
   // The rendered ProseMirror element, in state rather than a ref: PageGuides
   // has to re-run its measurement when the node actually appears, and a ref
   // mutation doesn't re-render.
-  const [contentEl, setContentEl] = useState<HTMLElement | null>(null);
+  // Page geometry has to be known BEFORE useEditor builds its extensions,
+  // and a change to it rebuilds the editor (see the deps array below) so the
+  // new sheet size takes effect immediately.
+  const pageHeightForEditor = pageContentHeightPx(pageSetup);
   const editor = useEditor({
     extensions: documentExtensions({
       getCitationText: citationChipText,
       getFootnoteIndex: footnoteIndex,
+      pageHeightPx: pageHeightForEditor,
+      onPageCountChange,
       collab,
       collabUserName,
       collabUserColor,
@@ -302,20 +316,7 @@ export function DocumentEditor({
           paddingBlock: marginIn * PX_PER_IN,
         }}
       >
-        {/* relative: the page rules are absolutely positioned against this
-            box, so their offsets are measured from the top of the content
-            column — the same origin the page setup's margins use. */}
-        <div className="relative">
-          <PageGuides
-            contentEl={contentEl}
-            pageHeightPx={pageContentHeightPx(pageSetup)}
-            offsetTopPx={0}
-            onPageCountChange={onPageCountChange}
-          />
-          <div ref={setContentEl}>
-            <EditorContent editor={editor} />
-          </div>
-        </div>
+        <EditorContent editor={editor} />
         <LinkBubble editor={editor} />
       </div>
     </div>
