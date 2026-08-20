@@ -33,6 +33,8 @@ import { CommentsPanel } from '@/components/documents/CommentsPanel';
 import { createComment } from '@/lib/documents/commentsApi';
 import { VersionHistoryPanel } from '@/components/documents/VersionHistoryPanel';
 import { createVersion, shouldSnapshot } from '@/lib/documents/versionsApi';
+import { ShareDialog } from '@/components/documents/ShareDialog';
+import { getMyPermission, permissionAtLeast, type DocPermission } from '@/lib/documents/sharesApi';
 import { PrompterOverlay } from '@/components/prompter/PrompterOverlay';
 import { WorksCitedPreview } from '@/components/documents/WorksCitedPreview';
 import { PrintPaperView } from '@/components/documents/PrintPaperView';
@@ -175,6 +177,11 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   const [commentsToken, setCommentsToken] = useState(0);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyToken, setHistoryToken] = useState(0);
+  const [shareOpen, setShareOpen] = useState(false);
+  // What THIS user may do with the document. Read from the same SQL helper
+  // the policies use, so the UI can never offer an action RLS will refuse.
+  // null while loading; a shared reader sees a read-only page.
+  const [permission, setPermission] = useState<DocPermission | null>(null);
   // Snapshot bookkeeping. Refs, not state: they're read inside the save
   // path and must never trigger a re-render of the editor page.
   const lastSnapshotAtRef = useRef<number | null>(null);
@@ -364,6 +371,21 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
       toast.error(e instanceof Error ? e.message : 'Could not save that comment.');
     }
   }, [id, userId]);
+
+  useEffect(() => {
+    if (!id) return;
+    let alive = true;
+    getMyPermission(id)
+      .then((p) => { if (alive) setPermission(p); })
+      // A failure here must not lock the owner out of their own document —
+      // the policies are the real gate, this only decides what to render.
+      .catch(() => { if (alive) setPermission('owner'); });
+    return () => { alive = false; };
+  }, [id]);
+
+  const canEdit = permissionAtLeast(permission, 'edit');
+  const canComment = permissionAtLeast(permission, 'comment');
+  const isOwner = permission === 'owner';
 
   const pageSetup = resolvePageSetup(paperMeta);
 
@@ -616,12 +638,22 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             ))}
           </select>
 
-          <Button
-            type="button" variant="outline" size="sm" className="text-xs"
-            onClick={() => { const label = window.prompt('Name this version'); if (label?.trim()) void snapshot(label.trim()); }}
-          >
-            Save version
-          </Button>
+          {isOwner && (
+            <>
+              <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setShareOpen(true)}>
+                Share
+              </Button>
+              <ShareDialog docId={id ?? ''} userId={userId} open={shareOpen} onOpenChange={setShareOpen} />
+            </>
+          )}
+          {canEdit && (
+            <Button
+              type="button" variant="outline" size="sm" className="text-xs"
+              onClick={() => { const label = window.prompt('Name this version'); if (label?.trim()) void snapshot(label.trim()); }}
+            >
+              Save version
+            </Button>
+          )}
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetTrigger asChild>
               <Button type="button" variant="outline" size="sm" className="text-xs">History</Button>
@@ -694,7 +726,8 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             onImageClick={handleImageButtonClick}
             onImageFiles={handleImageFiles}
             pageSetup={paperMeta}
-            onCommentClick={handleAddComment}
+            editable={canEdit}
+            onCommentClick={canComment ? handleAddComment : undefined}
             editorRef={(editor) => { editorInstanceRef.current = editor; setEditorInstance(editor); }}
           />
 

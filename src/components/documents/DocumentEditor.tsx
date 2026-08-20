@@ -130,6 +130,10 @@ export interface DocumentEditorProps {
   /** Upload + insert image files from the clipboard or a drop. Without this
    *  the editor silently swallows a pasted screenshot. */
   onImageFiles?: (files: File[]) => void;
+  /** False for someone the doc was shared with read-only. The RLS policy is
+   *  the real gate; this stops the UI inviting an edit that would be
+   *  rejected on save. */
+  editable?: boolean;
   /** Page size + margins (from the doc's paper_meta). Absent = Letter, 1in. */
   pageSetup?: Pick<PaperMeta, 'pageSize' | 'marginIn'>;
   editorRef?: (editor: Editor | null) => void;
@@ -145,6 +149,7 @@ export function DocumentEditor({
   onImageClick,
   onCommentClick,
   onImageFiles,
+  editable = true,
   pageSetup,
   editorRef,
 }: DocumentEditorProps) {
@@ -159,6 +164,7 @@ export function DocumentEditor({
     // to import TipTap's JSON type; TipTap's own Content union is what
     // useEditor actually wants.
     content: (content ?? '') as Content,
+    editable,
     editorProps: {
       /**
        * Images from the clipboard. TipTap/ProseMirror drop image FILES on the
@@ -194,6 +200,11 @@ export function DocumentEditor({
       onUpdate(editor.getJSON(), countWords(editor.getText()));
     },
   });
+
+  useEffect(() => {
+    // Permission arrives asynchronously, after the editor is constructed.
+    if (editor && editor.isEditable !== editable) editor.setEditable(editable);
+  }, [editor, editable]);
 
   useEffect(() => {
     editorRef?.(editor ?? null);
