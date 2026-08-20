@@ -93,7 +93,7 @@ import { NavShelf } from './NavShelf';
 import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
-import { selectShelfEntries, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { selectShelfEntries, shelfLooseTools, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
 import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
 import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 
@@ -461,7 +461,7 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
       <nav className="flex-1 min-h-0 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2">
         <NavShelf
           home={homeEntry}
-          tools={shelfTools}
+          tools={shelfLooseTools(shelfTools, shelfGroups.length)}
           pinned={PINNED_BOTTOM(resolvedEntries)}
           groups={shelfGroups}
           onToggleGroup={handleToggleGroup}
@@ -546,7 +546,7 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
       <nav className="flex-1 min-h-0 overflow-y-auto pt-2 px-2 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         <NavShelf
           home={homeEntry}
-          tools={shelfTools}
+          tools={shelfLooseTools(shelfTools, shelfGroups.length)}
           pinned={PINNED_BOTTOM(resolvedEntries)}
           groups={shelfGroups}
           onToggleGroup={handleToggleGroup}
