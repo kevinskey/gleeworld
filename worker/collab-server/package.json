@@ -1,0 +1,17 @@
+{
+  "name": "gleeworld-collab-server",
+  "version": "1.0.0",
+  "description": "Yjs (Hocuspocus) sync server for the Documents word processor: real-time collaborative editing with Supabase JWT auth and Postgres persistence.",
+  "main": "index.js",
+  "type": "module",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@hocuspocus/extension-database": "^2.15.0",
+    "@hocuspocus/server": "^2.15.0",
+    "jose": "^5.10.0",
+    "pg": "^8.13.0"
+  }
+}

@@ -93,7 +93,7 @@ import { NavShelf } from './NavShelf';
 import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
-import { selectShelfEntries, shelfGroupsForNav, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
 import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
 import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 
@@ -350,7 +350,7 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
   const knownGood = myTools?.setupComplete === true;
   const shelfTools = (roleLoading && !knownGood)
     ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
-    : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
+    : selectShelfEntries(resolvedEntries, navToolsForShelf(myTools?.tools ?? [], myTools?.groups));
   // Empty groups never reach a live surface. This single filter covers both
   // the group a member made but hasn't filled and the group whose every tool
   // is gated off for this viewer — a header over zero rows is noise in the
@@ -517,7 +517,7 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
   const knownGood = myTools?.setupComplete === true;
   const shelfTools = (roleLoading && !knownGood)
     ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
-    : selectShelfEntries(resolvedEntries, myTools?.tools ?? []);
+    : selectShelfEntries(resolvedEntries, navToolsForShelf(myTools?.tools ?? [], myTools?.groups));
   // Empty groups never reach a live surface — see the matching comment on
   // Sidebar's shelfGroups above; this is the same filter, not a second one.
   const shelfGroups = (roleLoading && !knownGood)

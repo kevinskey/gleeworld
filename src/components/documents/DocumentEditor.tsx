@@ -1,7 +1,7 @@
 // Page-scale TipTap 3 editor shell for the Documents word processor.
 // Mirrors the useEditor/ToolbarButton idiom from src/components/editor/RichTextEditor.tsx
 // but persists TipTap JSON (not HTML) and renders as a serif "page" surface.
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor, type AnyExtension, type Content } from '@tiptap/react';
 import { LinkBubble } from './LinkBubble';
 import StarterKit from '@tiptap/starter-kit';
@@ -13,10 +13,22 @@ import { TextAlign } from '@tiptap/extension-text-align';
 import { Subscript } from '@tiptap/extension-subscript';
 import { Superscript } from '@tiptap/extension-superscript';
 import { Highlight } from '@tiptap/extension-highlight';
+import { TextStyle, Color, FontFamily, FontSize } from '@tiptap/extension-text-style';
 import { CharacterCount } from '@tiptap/extensions';
+import { PAGE_DIMENSIONS, PX_PER_IN, resolvePageSetup, type PaperMeta } from '@/lib/documents/types';
+import { stripUnreadableColors } from '@/lib/documents/pasteColors';
+import { pageContentHeightPx } from '@/lib/documents/pagination';
+import { Pagination } from './extensions/Pagination';
 import { DocToolbar } from './DocToolbar';
 import { CitationChip } from './extensions/CitationChip';
 import { FootnoteRef } from './extensions/FootnoteRef';
+import { DocumentSearch } from './extensions/DocumentSearch';
+import { PageBreak } from './extensions/PageBreak';
+import { CommentMark } from './extensions/CommentMark';
+import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCaret from '@tiptap/extension-collaboration-caret';
+import type { Collaboration as CollabSession } from '@/lib/documents/useCollaboration';
+import { FindReplaceBar } from './FindReplaceBar';
 
 /**
  * Image, extended with a `path` attribute (rendered as `data-path`) that
@@ -50,6 +62,14 @@ const DocImage = Image.extend({
 export interface DocumentExtensionOptions {
   getCitationText?: (sourceId: string, locator?: string) => string;
   getFootnoteIndex?: (noteId: string) => number;
+  /** Usable page height in CSS px; pagination inserts a gutter when a block
+   *  won't fit in what's left. */
+  pageHeightPx?: number;
+  onPageCountChange?: (pages: number) => void;
+  /** Live session, when collaborative editing is configured AND connected. */
+  collab?: CollabSession | null;
+  collabUserName?: string;
+  collabUserColor?: string;
 }
 
 /**
@@ -69,6 +89,9 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
       heading: { levels: [1, 2, 3] },
       link: false,
       underline: false,
+      // See the Collaboration block below: a shared document needs Yjs's
+      // history, not ProseMirror's, or undo reaches into other people's text.
+      ...(opts.collab?.ydoc ? { undoRedo: false as const } : {}),
     }),
     Underline,
     Link.configure({
@@ -84,7 +107,38 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
     Subscript,
     Superscript,
     Highlight,
+    // TextStyle + its attribute marks. Two reasons, and the first matters
+    // more: without them, pasting from Word or Google Docs threw away every
+    // font, size, and color in the pasted run, because there was no mark in
+    // the schema to hold them. They also back the toolbar's font controls.
+    TextStyle,
+    Color,
+    FontFamily,
+    FontSize,
     CharacterCount,
+    DocumentSearch,
+    PageBreak,
+    Pagination.configure({
+      pageHeightPx: opts.pageHeightPx ?? 864,
+      gutterPx: 56,
+      onPageCountChange: opts.onPageCountChange,
+    }),
+    CommentMark,
+    // Collaboration replaces ProseMirror's history: that undo stack is
+    // per-client and would reach into OTHER people's edits. Yjs keeps a
+    // per-client history instead, which is why StarterKit's undoRedo is
+    // switched off above whenever a session is present.
+    ...(opts.collab?.ydoc
+      ? [
+          Collaboration.configure({ document: opts.collab.ydoc }),
+          ...(opts.collab.provider
+            ? [CollaborationCaret.configure({
+                provider: opts.collab.provider,
+                user: { name: opts.collabUserName ?? 'Someone', color: opts.collabUserColor ?? '#0f172a' },
+              })]
+            : []),
+        ]
+      : []),
     CitationChip.configure({ getText: opts.getCitationText ?? (() => '[citation]') }),
     FootnoteRef.configure({ getIndex: opts.getFootnoteIndex ?? (() => -1) }),
   ];
@@ -107,6 +161,24 @@ export interface DocumentEditorProps {
   onCiteClick: () => void;
   onFootnoteClick: () => void;
   onImageClick: () => void;
+  /** Start a comment on the current selection. Disabled when nothing is
+   *  selected — a comment with no anchor has nothing to point at. */
+  onCommentClick?: () => void;
+  /** Upload + insert image files from the clipboard or a drop. Without this
+   *  the editor silently swallows a pasted screenshot. */
+  onImageFiles?: (files: File[]) => void;
+  /** Told how many physical pages the document currently occupies. */
+  onPageCountChange?: (pages: number) => void;
+  /** Live collaboration session, or null for solo editing. */
+  collab?: CollabSession | null;
+  collabUserName?: string;
+  collabUserColor?: string;
+  /** False for someone the doc was shared with read-only. The RLS policy is
+   *  the real gate; this stops the UI inviting an edit that would be
+   *  rejected on save. */
+  editable?: boolean;
+  /** Page size + margins (from the doc's paper_meta). Absent = Letter, 1in. */
+  pageSetup?: Pick<PaperMeta, 'pageSize' | 'marginIn'>;
   editorRef?: (editor: Editor | null) => void;
 }
 
@@ -118,15 +190,82 @@ export function DocumentEditor({
   onCiteClick,
   onFootnoteClick,
   onImageClick,
+  onCommentClick,
+  onImageFiles,
+  onPageCountChange,
+  collab,
+  collabUserName,
+  collabUserColor,
+  editable = true,
+  pageSetup,
   editorRef,
 }: DocumentEditorProps) {
+  // Held in a ref so the ProseMirror handlers below (created once, at editor
+  // construction) always call the CURRENT callback rather than the one that
+  // existed on first render.
+  const imageFilesRef = useRef(onImageFiles);
+  imageFilesRef.current = onImageFiles;
+  // The rendered ProseMirror element, in state rather than a ref: PageGuides
+  // has to re-run its measurement when the node actually appears, and a ref
+  // mutation doesn't re-render.
+  // Page geometry has to be known BEFORE useEditor builds its extensions,
+  // and a change to it rebuilds the editor (see the deps array below) so the
+  // new sheet size takes effect immediately.
+  const pageHeightForEditor = pageContentHeightPx(pageSetup);
   const editor = useEditor({
-    extensions: documentExtensions({ getCitationText: citationChipText, getFootnoteIndex: footnoteIndex }),
+    extensions: documentExtensions({
+      getCitationText: citationChipText,
+      getFootnoteIndex: footnoteIndex,
+      pageHeightPx: pageHeightForEditor,
+      onPageCountChange,
+      collab,
+      collabUserName,
+      collabUserColor,
+    }),
     // `content` is typed `unknown` on the public props so callers don't need
     // to import TipTap's JSON type; TipTap's own Content union is what
     // useEditor actually wants.
-    content: (content ?? '') as Content,
+    // With Yjs holding the document, `content` must be empty: every client
+    // passing it would insert its own copy into the shared doc and everyone
+    // would see the text N times. Seeding an unmigrated document happens
+    // once, in DocumentEditorPage, by the first client to arrive.
+    content: (collab?.ydoc ? '' : (content ?? '')) as Content,
+    editable,
     editorProps: {
+      /**
+       * Copying from a dark-themed source puts `color: rgb(255,255,255)` on
+       * the clipboard. Preserved onto white paper the text is invisible, and
+       * the person pasting reasonably concludes that paste is broken (Kevin,
+       * 2026-08-20). Only unreadable colours are dropped — a red heading
+       * pasted from Word stays red.
+       */
+      transformPastedHTML(html) {
+        return stripUnreadableColors(html);
+      },
+      /**
+       * Images from the clipboard. TipTap/ProseMirror drop image FILES on the
+       * floor — the clipboard's text/html flavor is what it reads, and for a
+       * screenshot there isn't one — so pasting a screenshot did nothing at
+       * all. Returning false for everything else leaves normal text/HTML
+       * paste exactly as it was.
+       */
+      handlePaste(_view, event) {
+        const files = Array.from(event.clipboardData?.files ?? [])
+          .filter((f) => f.type.startsWith('image/'));
+        if (files.length === 0 || !imageFilesRef.current) return false;
+        event.preventDefault();
+        imageFilesRef.current(files);
+        return true;
+      },
+      /** Same for dragging an image file in from the desktop. */
+      handleDrop(_view, event) {
+        const dropped = (event as DragEvent).dataTransfer?.files;
+        const files = Array.from(dropped ?? []).filter((f) => f.type.startsWith('image/'));
+        if (files.length === 0 || !imageFilesRef.current) return false;
+        event.preventDefault();
+        imageFilesRef.current(files);
+        return true;
+      },
       attributes: {
         // focus-visible ring-0: index.css applies a global tenant-tinted
         // :focus-visible ring; outline-none alone doesn't suppress it.
@@ -139,22 +278,44 @@ export function DocumentEditor({
   });
 
   useEffect(() => {
+    // Permission arrives asynchronously, after the editor is constructed.
+    if (editor && editor.isEditable !== editable) editor.setEditable(editable);
+  }, [editor, editable]);
+
+  useEffect(() => {
     editorRef?.(editor ?? null);
     return () => editorRef?.(null);
   }, [editor, editorRef]);
 
   if (!editor) return null;
 
+  const { pageSize: pageWidthKey, marginIn } = resolvePageSetup(pageSetup);
+
   return (
     <div className="flex flex-col">
-      <DocToolbar editor={editor} onCiteClick={onCiteClick} onFootnoteClick={onFootnoteClick} onImageClick={onImageClick} />
+      <DocToolbar
+        editor={editor}
+        onCiteClick={onCiteClick}
+        onFootnoteClick={onFootnoteClick}
+        onImageClick={onImageClick}
+        onCommentClick={onCommentClick}
+      />
+      <FindReplaceBar editor={editor} />
       {/* w-full is load-bearing: in a flex-col parent, mx-auto overrides the
           default cross-axis stretch and the card shrink-wraps its content
           (an empty doc collapsed to ~90px). */}
-      {/* 816px ≈ a US-letter page at 96dpi — the sources rail is gone
-          (Kevin, 2026-08-13: "let doc have width"), so the paper can be
-          paper-sized. */}
-      <div className="w-full mx-auto max-w-[816px] px-6 py-10 bg-card rounded-xl">
+      {/* Width and padding come from the doc's page setup rather than the old
+          hardcoded 816px/px-6: 816px WAS US Letter at 96dpi, so a doc with no
+          setup stored renders byte-identically to before. Padding is the real
+          margin, so what you type sits where it will print. */}
+      <div
+        className="w-full mx-auto bg-card rounded-xl"
+        style={{
+          maxWidth: PAGE_DIMENSIONS[pageWidthKey].width * PX_PER_IN,
+          paddingInline: marginIn * PX_PER_IN,
+          paddingBlock: marginIn * PX_PER_IN,
+        }}
+      >
         <EditorContent editor={editor} />
         <LinkBubble editor={editor} />
       </div>

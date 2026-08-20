@@ -396,6 +396,34 @@ export function shelfGroupsForNav<T extends { id: string }>(groups: T[]): T[] {
 }
 
 /**
+ * The LOOSE tool keys the sidebar should render: the member's tools, minus
+ * anything filed under Favorites.
+ *
+ * shelfGroupsForNav (above) hides the Favorites HEADING, but a favorited app
+ * stays in `myTools.tools` — that is deliberate, it is how "add an app"
+ * keeps reaching the nav. The side effect is that favorites kept appearing
+ * in the sidebar one by one, without their heading, which reads as exactly
+ * the thing that was supposed to have been removed (Kevin, 2026-08-20: "the
+ * favorites are back in my left nav").
+ *
+ * So the nav subtracts the Favorites group's members on READ. Nothing is
+ * written, nothing moves on the Command Center grid, and dragging an app out
+ * of Favorites there brings it straight back to the nav.
+ */
+export function navToolsForShelf(
+  tools: string[],
+  groups: { id: string; tools: string[] }[] | undefined,
+): string[] {
+  const favorites = groups?.find((g) => g.id === FAVORITES_GROUP_ID);
+  if (!favorites || favorites.tools.length === 0) return tools;
+  // Resolved on both sides: a record can hold a retired key (e.g. 'merch')
+  // in one list and its successor ('shop') in the other, and a raw string
+  // compare would miss the match and leave the app in the nav.
+  const filed = new Set(resolveKeys(favorites.tools));
+  return resolveKeys(tools).filter((key) => !filed.has(key));
+}
+
+/**
  * The member's stored tool keys, ready to consume anywhere: resolved
  * through MERGED_KEYS, deduped, capped — `sanitizeTools` made a first-class
  * read helper.

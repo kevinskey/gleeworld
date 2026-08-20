@@ -4,29 +4,49 @@
 // handles in-document image upload. Route registration is Task 10's job
 // (this file renders its own content only — the dashboard shell wraps it).
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import type { Editor } from '@tiptap/react';
-import { AlertCircle, Loader2, MonitorPlay } from 'lucide-react';
+import {
+  AlertCircle, ArrowLeft, BookText, Download, FilePlus2, History as HistoryIcon,
+  ListTree, Loader2, MessageSquare, MonitorPlay, MoreHorizontal, Save,
+  Settings2, Share2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator,
+  DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
+  Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
-import { getDoc, saveDoc, type PersonalDoc } from '@/lib/documents/personalDocsApi';
+import { getDoc, saveDoc, createDoc, type PersonalDoc } from '@/lib/documents/personalDocsApi';
 import { formatInText } from '@/lib/documents/citationFormat';
-import type { CitationStyle, DocFootnote, DocSource, PaperMeta } from '@/lib/documents/types';
-import { DocumentEditor } from '@/components/documents/DocumentEditor';
+import type { CitationStyle, DocFootnote, DocSource, PaperMeta, PageSize } from '@/lib/documents/types';
+import { PAGE_DIMENSIONS, MARGIN_CHOICES, resolvePageSetup } from '@/lib/documents/types';
+import { DocumentEditor, countWords } from '@/components/documents/DocumentEditor';
 import { removeCitationsFor } from '@/components/documents/extensions/CitationChip';
 import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRef';
 import { SourcesPanel } from '@/components/documents/SourcesPanel';
+import { OutlinePanel } from '@/components/documents/OutlinePanel';
+import { CommentsPanel } from '@/components/documents/CommentsPanel';
+import { createComment } from '@/lib/documents/commentsApi';
+import { VersionHistoryPanel } from '@/components/documents/VersionHistoryPanel';
+import { createVersion, shouldSnapshot } from '@/lib/documents/versionsApi';
+import { ShareDialog } from '@/components/documents/ShareDialog';
+import { getMyPermission, permissionAtLeast, type DocPermission } from '@/lib/documents/sharesApi';
+import { useCollaboration, collaborationEnabled, colorForUser } from '@/lib/documents/useCollaboration';
+import { describePagination } from '@/lib/documents/pagination';
 import { PrompterOverlay } from '@/components/prompter/PrompterOverlay';
 import { WorksCitedPreview } from '@/components/documents/WorksCitedPreview';
 import { PrintPaperView } from '@/components/documents/PrintPaperView';
@@ -134,6 +154,7 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   const [paperMeta, setPaperMeta] = useState<PaperMeta>({});
   const [initialContent, setInitialContent] = useState<unknown>(null);
   const [wordCount, setWordCount] = useState(0);
+  const [pageTotal, setPageTotal] = useState(1);
 
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -159,6 +180,34 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   footnotesRef.current = footnotes;
 
   const editorInstanceRef = useRef<Editor | null>(null);
+  // The ref is what the imperative callers (citations, images, export) use.
+  // Panels that RENDER from editor state need a state copy as well, so they
+  // mount once the editor exists instead of reading a null ref forever.
+  const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
+  const navigate = useNavigate();
+  const [creating, setCreating] = useState(false);
+  const [outlineOpen, setOutlineOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  // Bumped after a new comment so the panel refetches without a prop drill.
+  const [commentsToken, setCommentsToken] = useState(0);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyToken, setHistoryToken] = useState(0);
+  const [shareOpen, setShareOpen] = useState(false);
+  // What THIS user may do with the document. Read from the same SQL helper
+  // the policies use, so the UI can never offer an action RLS will refuse.
+  // null while loading; a shared reader sees a read-only page.
+  // Starts OPTIMISTIC, not null. A null start renders a read-only editor for
+  // the round trip it takes to answer, and any path that fails to answer at
+  // all — the RPC returning null, the shares migration not yet applied —
+  // leaves the document permanently read-only, which reads to the user as
+  // "I can't type or paste in my own document". RLS is the real gate; this
+  // only decides what to render, so guessing generously is safe and guessing
+  // meanly is not.
+  const [permission, setPermission] = useState<DocPermission | null>('owner');
+  // Snapshot bookkeeping. Refs, not state: they're read inside the save
+  // path and must never trigger a re-render of the editor page.
+  const lastSnapshotAtRef = useRef<number | null>(null);
+  const dirtySinceSnapshotRef = useRef(false);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -249,10 +298,59 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   // save), so Ctrl-Z restored an empty footnote. Orphans are pruned once, at
   // load, where there is no undo history to break — see `load` above. A
   // footnote whose text is missing still renders as `[?]`.
+  /**
+   * Take a snapshot if one is due (or if the user asked for a named one).
+   * Called from the same place autosave writes, so history tracks real saved
+   * state rather than keystrokes. Failures are deliberately quiet for the
+   * automatic path: losing a snapshot is not worth a toast over the user's
+   * document, and the next interval will try again.
+   */
+  const snapshot = useCallback(async (label?: string) => {
+    const ed = editorInstanceRef.current;
+    if (!ed || !id || !userId) return;
+    const now = Date.now();
+    if (!label && !shouldSnapshot({
+      now,
+      lastSnapshotAt: lastSnapshotAtRef.current,
+      dirtySinceLastSnapshot: dirtySinceSnapshotRef.current,
+    })) return;
+    try {
+      await createVersion({
+        docId: id,
+        userId,
+        content: ed.getJSON(),
+        wordCount: countWords(ed.getText()),
+        label: label ?? null,
+      });
+      lastSnapshotAtRef.current = now;
+      dirtySinceSnapshotRef.current = false;
+      setHistoryToken((n) => n + 1);
+      if (label) toast.success('Version saved.');
+    } catch (e) {
+      if (label) toast.error(e instanceof Error ? e.message : 'Could not save that version.');
+    }
+  }, [id, userId]);
+
+  const handleRestoreVersion = useCallback((content: unknown) => {
+    const ed = editorInstanceRef.current;
+    if (!ed) return;
+    // Snapshot what's on screen BEFORE overwriting it, so "restore" is itself
+    // undoable from the same panel.
+    void snapshot('Before restore');
+    ed.commands.setContent(content as never);
+    autosaver.schedule({ content, word_count: countWords(ed.getText()) });
+    setHistoryOpen(false);
+  }, [autosaver, snapshot]);
+
   const handleEditorUpdate = useCallback((json: unknown, count: number) => {
     setWordCount(count);
     autosaver.schedule({ content: json, word_count: count });
-  }, [autosaver]);
+    // Mark the doc snapshot-worthy and let the interval decide. snapshot()
+    // is a no-op until the interval elapses, so this is cheap to call on
+    // every keystroke.
+    dirtySinceSnapshotRef.current = true;
+    void snapshot();
+  }, [autosaver, snapshot]);
 
   const handleTitleChange = useCallback((next: string) => {
     setTitle(next);
@@ -268,6 +366,93 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
     setSources(next);
     autosaver.schedule({ sources: next });
   }, [autosaver]);
+
+  /**
+   * Start a comment on the current selection. The anchor id is minted here
+   * and written into the doc as a `comment` mark; the thread row carries the
+   * same id. Order matters: the row is created FIRST, so a failed insert
+   * (offline, RLS) doesn't leave a highlight in the document pointing at a
+   * thread that never existed.
+   */
+  const handleAddComment = useCallback(async () => {
+    const ed = editorInstanceRef.current;
+    if (!ed || !id || !userId) return;
+    if (ed.state.selection.empty) {
+      toast.info('Select the text you want to comment on first.');
+      return;
+    }
+    const body = window.prompt('Comment');
+    if (!body?.trim()) return;
+    const anchorId = crypto.randomUUID();
+    try {
+      await createComment({ docId: id, userId, anchorId, body: body.trim() });
+      ed.chain().focus().setComment(anchorId).run();
+      setCommentsToken((n) => n + 1);
+      setCommentsOpen(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not save that comment.');
+    }
+  }, [id, userId]);
+
+  useEffect(() => {
+    if (!id) return;
+    let alive = true;
+    getMyPermission(id)
+      // `?? 'owner'` covers the RPC answering null — which is what happens
+      // when gw_doc_permission doesn't exist yet (migration unapplied) and
+      // PostgREST answers 200/null rather than erroring.
+      .then((p) => { if (alive) setPermission(p ?? 'owner'); })
+      // Same reasoning for an outright failure: never lock someone out of
+      // their own document because a lookup was unavailable.
+      .catch(() => { if (alive) setPermission('owner'); });
+    return () => { alive = false; };
+  }, [id]);
+
+  // Collaboration. A no-op unless VITE_COLLAB_URL is configured at build
+  // time, in which case this whole block returns nulls and the editor builds
+  // exactly the extension list it did before.
+  const collabName = paperMeta.studentName?.trim() || 'Someone';
+  const collab = useCollaboration(collaborationEnabled() ? (id ?? null) : null, collabName);
+  const collabColor = colorForUser(collabName);
+  // The first client into an unmigrated document seeds the shared Y.Doc from
+  // the stored JSON. Guarded on the doc being EMPTY so the second arrival
+  // doesn't append a duplicate copy — the hazard called out in the design
+  // doc's migration section.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    const ed = editorInstanceRef.current;
+    if (!collab.ydoc || !ed || seededRef.current) return;
+    if (collab.status !== 'connected') return;
+    if (ed.state.doc.textContent.trim().length > 0) { seededRef.current = true; return; }
+    if (initialContent) {
+      ed.commands.setContent(initialContent as never);
+      seededRef.current = true;
+    }
+  }, [collab.ydoc, collab.status, initialContent]);
+
+  const canEdit = permissionAtLeast(permission, 'edit');
+  const canComment = permissionAtLeast(permission, 'comment');
+  const isOwner = permission === 'owner';
+
+  /** New document, from inside the editor. It only existed on the library
+   *  page before, so the only route to a second document was navigating back
+   *  out (Kevin, 2026-08-20: "how do i add a new document?"). Flushes first —
+   *  navigating away with a debounced save still pending would drop it. */
+  const handleNewDocument = useCallback(async () => {
+    if (!userId || creating) return;
+    setCreating(true);
+    try {
+      await autosaver.flush();
+      const doc = await createDoc(userId);
+      navigate(`/dashboard/documents/${doc.id}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not create a document.');
+    } finally {
+      setCreating(false);
+    }
+  }, [userId, creating, autosaver, navigate]);
+
+  const pageSetup = resolvePageSetup(paperMeta);
 
   const handleMetaChange = useCallback((next: PaperMeta) => {
     setPaperMeta(next);
@@ -353,13 +538,28 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
     imageInputRef.current?.click();
   }, []);
 
-  const handleImageFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = ''; // allow re-selecting the same file later
+  /**
+   * Upload one image file and insert it at the caret. Shared by the toolbar
+   * button, clipboard paste, and drag-and-drop — all three want identical
+   * behavior (signed `src` for now, stable `path` so the next load can
+   * re-sign it), and pasting a screenshot is how most images actually get
+   * into a document.
+   */
+  const insertImageFile = useCallback(async (file: File) => {
     if (!file || !id || !userId) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Only images can be dropped into a document.');
+      return;
+    }
     setUploadingImage(true);
     try {
-      const ext = (file.name.match(/\.([a-z0-9]+)$/i)?.[1] ?? 'png').toLowerCase();
+      // Clipboard images often arrive as "image.png" or with no useful name
+      // at all, so fall back to the MIME subtype before defaulting to png.
+      const ext = (
+        file.name?.match(/\.([a-z0-9]+)$/i)?.[1]
+        ?? file.type.split('/')[1]
+        ?? 'png'
+      ).toLowerCase();
       // Bucket is 'personal-docs' itself, so the path doesn't repeat the
       // bucket name as a folder prefix — just <user_id>/<doc_id>/<uuid>.ext.
       const folder = `${userId}/${id}`;
@@ -384,6 +584,18 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
       setUploadingImage(false);
     }
   }, [id, userId]);
+
+  const handleImageFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file later
+    if (file) await insertImageFile(file);
+  }, [insertImageFile]);
+
+  /** Clipboard/drop images, in order. Sequential rather than parallel so the
+   *  caret advances predictably when several are dropped at once. */
+  const handleImageFiles = useCallback(async (files: File[]) => {
+    for (const file of files) await insertImageFile(file);
+  }, [insertImageFile]);
 
   if (loadState === 'loading') {
     return (
@@ -421,61 +633,200 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-2 px-4 pb-4 pt-3">
       {/* flex-1 alone let the pills claim the whole line and crush the
           title to a couple of characters on phones (the row's flex-wrap
           never fired because flex-1's basis is 0). The title takes a full
           line of its own below sm; the actions are their own wrapping
           cluster so nothing ever clips off-screen. */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        {/* Back to the library. The editor had no exit and no way to start a
+            second document; both live here now. */}
+        <Button
+          type="button" variant="ghost" size="icon" className="h-10 w-10 shrink-0"
+          aria-label="Back to Documents"
+          onClick={async () => { await autosaver.flush(); navigate('/dashboard/documents'); }}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
         <input
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           onBlur={() => void autosaver.flush()}
           placeholder="Untitled"
           aria-label="Document title"
-          className="basis-full min-w-0 bg-transparent text-2xl font-semibold text-foreground focus:outline-none sm:basis-auto sm:flex-1"
+          className="basis-full min-w-0 bg-transparent py-0 text-3xl font-bold leading-tight text-foreground focus:outline-none sm:basis-auto sm:flex-1"
         />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <ToggleGroup
-            type="single"
-            value={style}
-            onValueChange={(v) => { if (v === 'mla9' || v === 'apa7') handleStyleChange(v); }}
-            className="rounded-lg border border-border p-0.5"
-          >
-            <ToggleGroupItem value="mla9" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">MLA</ToggleGroupItem>
-            <ToggleGroupItem value="apa7" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">APA</ToggleGroupItem>
-          </ToggleGroup>
+        {/* Eleven equal-weight pills across two rows was the whole header
+            (Kevin, 2026-08-20: "redo header"). Everything that isn't used
+            while actually writing moved into one menu; the three reading
+            panels became icons; Share stays a real button because it's the
+            only destructive-ish, irreversible thing here. */}
+        <TooltipProvider delayDuration={300}>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[
+              { key: 'comments', label: 'Comments', Icon: MessageSquare, onClick: () => setCommentsOpen(true) },
+              { key: 'outline', label: 'Outline', Icon: ListTree, onClick: () => setOutlineOpen(true) },
+              { key: 'sources', label: 'Sources', Icon: BookText, onClick: () => setSourcesSheetOpen(true) },
+            ].map(({ key, label, Icon, onClick }) => (
+              <Tooltip key={key}>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button" variant="ghost" size="icon" className="h-10 w-10"
+                    aria-label={label} onClick={onClick}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{label}</TooltipContent>
+              </Tooltip>
+            ))}
 
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="text-xs"
-            onClick={() => setPrompterText(editorInstanceRef.current?.getText() ?? '')}
-          >
-            <MonitorPlay className="mr-1 h-3.5 w-3.5" /> Prompter
-          </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="ghost" size="icon" className="h-10 w-10" aria-label="Document menu">
+                  <MoreHorizontal className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onSelect={() => void handleNewDocument()} disabled={creating}>
+                  <FilePlus2 className="mr-2 h-4 w-4" /> New document
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setExportOpen(true)}>
+                  <Download className="mr-2 h-4 w-4" /> Export…
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
 
-          <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setExportOpen(true)}>
-            Export
-          </Button>
+                {canEdit && (
+                  <DropdownMenuItem
+                    onSelect={() => {
+                      const label = window.prompt('Name this version');
+                      if (label?.trim()) void snapshot(label.trim());
+                    }}
+                  >
+                    <Save className="mr-2 h-4 w-4" /> Save version
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onSelect={() => setHistoryOpen(true)}>
+                  <HistoryIcon className="mr-2 h-4 w-4" /> Version history
+                </DropdownMenuItem>
 
-          {/* Sources live up here now, at every size — the docked right rail
-              squeezed the page (Kevin, 2026-08-13: "move sources up and let
-              doc have width"). The sheet slides OVER the doc instead. */}
-          <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
-            <SheetTrigger asChild>
-              <Button type="button" variant="outline" size="sm" className="text-xs">Sources</Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-              <SheetHeader><SheetTitle>Sources</SheetTitle></SheetHeader>
-              <div className="mt-3">{sourcesPanel}</div>
-            </SheetContent>
-          </Sheet>
-        </div>
+                <DropdownMenuSeparator />
+
+                {/* Page setup and citation style are set once per document
+                    and then never touched — exactly what a submenu is for. */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Settings2 className="mr-2 h-4 w-4" /> Page setup
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-44">
+                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Paper</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup
+                      value={pageSetup.pageSize}
+                      onValueChange={(v) => handleMetaChange({ ...paperMeta, pageSize: v as PageSize })}
+                    >
+                      {(Object.keys(PAGE_DIMENSIONS) as PageSize[]).map((key) => (
+                        <DropdownMenuRadioItem key={key} value={key}>
+                          {PAGE_DIMENSIONS[key].label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Margins</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup
+                      value={String(pageSetup.marginIn)}
+                      onValueChange={(v) => handleMetaChange({ ...paperMeta, marginIn: Number(v) })}
+                    >
+                      {MARGIN_CHOICES.map((m) => (
+                        <DropdownMenuRadioItem key={m} value={String(m)}>{m}&quot;</DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <BookText className="mr-2 h-4 w-4" /> Citation style
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-40">
+                    <DropdownMenuRadioGroup
+                      value={style}
+                      onValueChange={(v) => { if (v === 'mla9' || v === 'apa7') handleStyleChange(v); }}
+                    >
+                      <DropdownMenuRadioItem value="mla9">MLA 9</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="apa7">APA 7</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Prompter is a performance control, not a configuration one —
+                it gets reached for mid-rehearsal, standing away from the
+                screen, so it's the one thing here that earns real size
+                (Kevin, 2026-08-20: "i want a big prompter button"). */}
+            <Button
+              type="button"
+              variant="secondary"
+              className="ml-1 h-11 gap-2 px-5 text-base font-semibold"
+              onClick={() => setPrompterText(editorInstanceRef.current?.getText() ?? '')}
+            >
+              <MonitorPlay className="h-5 w-5" /> Prompter
+            </Button>
+
+            {isOwner && (
+              <>
+                <Button type="button" className="h-11 px-4 text-sm" onClick={() => setShareOpen(true)}>
+                  <Share2 className="mr-1.5 h-4 w-4" /> Share
+                </Button>
+                <ShareDialog docId={id ?? ''} userId={userId} open={shareOpen} onOpenChange={setShareOpen} />
+              </>
+            )}
+          </div>
+        </TooltipProvider>
       </div>
+
+      {/* The panels themselves. Triggers moved into the header above, so
+          these are controlled rather than trigger-wrapped. */}
+      <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader><SheetTitle>Version history</SheetTitle></SheetHeader>
+          <div className="mt-3">
+            {id && (
+              <VersionHistoryPanel
+                docId={id}
+                refreshToken={historyToken}
+                onRestore={handleRestoreVersion}
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={commentsOpen} onOpenChange={setCommentsOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader><SheetTitle>Comments</SheetTitle></SheetHeader>
+          <div className="mt-3">
+            {id && <CommentsPanel docId={id} editor={editorInstance} refreshToken={commentsToken} />}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={outlineOpen} onOpenChange={setOutlineOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-sm overflow-y-auto">
+          <SheetHeader><SheetTitle>Outline</SheetTitle></SheetHeader>
+          <div className="mt-3"><OutlinePanel editor={editorInstance} /></div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader><SheetTitle>Sources</SheetTitle></SheetHeader>
+          <div className="mt-3">{sourcesPanel}</div>
+        </SheetContent>
+      </Sheet>
 
       <div className="flex flex-col gap-4">
         <div className="min-w-0" ref={editorContainerRef}>
@@ -487,14 +838,36 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             onCiteClick={() => setSourcesSheetOpen(true)}
             onFootnoteClick={handleFootnoteToolbarClick}
             onImageClick={handleImageButtonClick}
-            editorRef={(editor) => { editorInstanceRef.current = editor; }}
+            onImageFiles={handleImageFiles}
+            pageSetup={paperMeta}
+            editable={canEdit}
+            onPageCountChange={setPageTotal}
+            collab={collab.ydoc ? collab : null}
+            collabUserName={collabName}
+            collabUserColor={collabColor}
+            onCommentClick={canComment ? handleAddComment : undefined}
+            editorRef={(editor) => { editorInstanceRef.current = editor; setEditorInstance(editor); }}
           />
 
           {/* Footer: live word count + save status (spec §"Editor page"). The
               count comes straight from the editor's onUpdate, so it tracks
               typing rather than the last persisted value. */}
+          {collab.peers.length > 0 && (
+            <div className="mx-auto mt-2 flex max-w-[816px] flex-wrap items-center gap-2 px-6 text-xs text-muted-foreground">
+              <span>Also here:</span>
+              {collab.peers.map((peer) => (
+                <span key={peer.clientId} className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ background: peer.color }} />
+                  {peer.name}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div className="mx-auto mt-2 flex max-w-[816px] items-center justify-between px-6">
-            <span className="text-xs text-muted-foreground">{wordCountLabel(wordCount)}</span>
+            <span className="text-xs text-muted-foreground">
+              {wordCountLabel(wordCount)} · {describePagination(pageTotal)}
+            </span>
             <span className="text-xs text-muted-foreground" role="status">{statusLabel}</span>
           </div>
 
