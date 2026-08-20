@@ -35,6 +35,7 @@ import { VersionHistoryPanel } from '@/components/documents/VersionHistoryPanel'
 import { createVersion, shouldSnapshot } from '@/lib/documents/versionsApi';
 import { ShareDialog } from '@/components/documents/ShareDialog';
 import { getMyPermission, permissionAtLeast, type DocPermission } from '@/lib/documents/sharesApi';
+import { useCollaboration, collaborationEnabled, colorForUser } from '@/lib/documents/useCollaboration';
 import { PrompterOverlay } from '@/components/prompter/PrompterOverlay';
 import { WorksCitedPreview } from '@/components/documents/WorksCitedPreview';
 import { PrintPaperView } from '@/components/documents/PrintPaperView';
@@ -383,6 +384,28 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
     return () => { alive = false; };
   }, [id]);
 
+  // Collaboration. A no-op unless VITE_COLLAB_URL is configured at build
+  // time, in which case this whole block returns nulls and the editor builds
+  // exactly the extension list it did before.
+  const collabName = paperMeta.studentName?.trim() || 'Someone';
+  const collab = useCollaboration(collaborationEnabled() ? (id ?? null) : null, collabName);
+  const collabColor = colorForUser(collabName);
+  // The first client into an unmigrated document seeds the shared Y.Doc from
+  // the stored JSON. Guarded on the doc being EMPTY so the second arrival
+  // doesn't append a duplicate copy — the hazard called out in the design
+  // doc's migration section.
+  const seededRef = useRef(false);
+  useEffect(() => {
+    const ed = editorInstanceRef.current;
+    if (!collab.ydoc || !ed || seededRef.current) return;
+    if (collab.status !== 'connected') return;
+    if (ed.state.doc.textContent.trim().length > 0) { seededRef.current = true; return; }
+    if (initialContent) {
+      ed.commands.setContent(initialContent as never);
+      seededRef.current = true;
+    }
+  }, [collab.ydoc, collab.status, initialContent]);
+
   const canEdit = permissionAtLeast(permission, 'edit');
   const canComment = permissionAtLeast(permission, 'comment');
   const isOwner = permission === 'owner';
@@ -727,6 +750,9 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             onImageFiles={handleImageFiles}
             pageSetup={paperMeta}
             editable={canEdit}
+            collab={collab.ydoc ? collab : null}
+            collabUserName={collabName}
+            collabUserColor={collabColor}
             onCommentClick={canComment ? handleAddComment : undefined}
             editorRef={(editor) => { editorInstanceRef.current = editor; setEditorInstance(editor); }}
           />
@@ -734,6 +760,18 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
           {/* Footer: live word count + save status (spec §"Editor page"). The
               count comes straight from the editor's onUpdate, so it tracks
               typing rather than the last persisted value. */}
+          {collab.peers.length > 0 && (
+            <div className="mx-auto mt-2 flex max-w-[816px] flex-wrap items-center gap-2 px-6 text-xs text-muted-foreground">
+              <span>Also here:</span>
+              {collab.peers.map((peer) => (
+                <span key={peer.clientId} className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ background: peer.color }} />
+                  {peer.name}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div className="mx-auto mt-2 flex max-w-[816px] items-center justify-between px-6">
             <span className="text-xs text-muted-foreground">{wordCountLabel(wordCount)}</span>
             <span className="text-xs text-muted-foreground" role="status">{statusLabel}</span>

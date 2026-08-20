@@ -22,6 +22,9 @@ import { FootnoteRef } from './extensions/FootnoteRef';
 import { DocumentSearch } from './extensions/DocumentSearch';
 import { PageBreak } from './extensions/PageBreak';
 import { CommentMark } from './extensions/CommentMark';
+import Collaboration from '@tiptap/extension-collaboration';
+import CollaborationCaret from '@tiptap/extension-collaboration-caret';
+import type { Collaboration as CollabSession } from '@/lib/documents/useCollaboration';
 import { FindReplaceBar } from './FindReplaceBar';
 
 /**
@@ -56,6 +59,10 @@ const DocImage = Image.extend({
 export interface DocumentExtensionOptions {
   getCitationText?: (sourceId: string, locator?: string) => string;
   getFootnoteIndex?: (noteId: string) => number;
+  /** Live session, when collaborative editing is configured AND connected. */
+  collab?: CollabSession | null;
+  collabUserName?: string;
+  collabUserColor?: string;
 }
 
 /**
@@ -75,6 +82,9 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
       heading: { levels: [1, 2, 3] },
       link: false,
       underline: false,
+      // See the Collaboration block below: a shared document needs Yjs's
+      // history, not ProseMirror's, or undo reaches into other people's text.
+      ...(opts.collab?.ydoc ? { undoRedo: false as const } : {}),
     }),
     Underline,
     Link.configure({
@@ -102,6 +112,21 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
     DocumentSearch,
     PageBreak,
     CommentMark,
+    // Collaboration replaces ProseMirror's history: that undo stack is
+    // per-client and would reach into OTHER people's edits. Yjs keeps a
+    // per-client history instead, which is why StarterKit's undoRedo is
+    // switched off above whenever a session is present.
+    ...(opts.collab?.ydoc
+      ? [
+          Collaboration.configure({ document: opts.collab.ydoc }),
+          ...(opts.collab.provider
+            ? [CollaborationCaret.configure({
+                provider: opts.collab.provider,
+                user: { name: opts.collabUserName ?? 'Someone', color: opts.collabUserColor ?? '#0f172a' },
+              })]
+            : []),
+        ]
+      : []),
     CitationChip.configure({ getText: opts.getCitationText ?? (() => '[citation]') }),
     FootnoteRef.configure({ getIndex: opts.getFootnoteIndex ?? (() => -1) }),
   ];
@@ -130,6 +155,10 @@ export interface DocumentEditorProps {
   /** Upload + insert image files from the clipboard or a drop. Without this
    *  the editor silently swallows a pasted screenshot. */
   onImageFiles?: (files: File[]) => void;
+  /** Live collaboration session, or null for solo editing. */
+  collab?: CollabSession | null;
+  collabUserName?: string;
+  collabUserColor?: string;
   /** False for someone the doc was shared with read-only. The RLS policy is
    *  the real gate; this stops the UI inviting an edit that would be
    *  rejected on save. */
@@ -149,6 +178,9 @@ export function DocumentEditor({
   onImageClick,
   onCommentClick,
   onImageFiles,
+  collab,
+  collabUserName,
+  collabUserColor,
   editable = true,
   pageSetup,
   editorRef,
@@ -159,11 +191,21 @@ export function DocumentEditor({
   const imageFilesRef = useRef(onImageFiles);
   imageFilesRef.current = onImageFiles;
   const editor = useEditor({
-    extensions: documentExtensions({ getCitationText: citationChipText, getFootnoteIndex: footnoteIndex }),
+    extensions: documentExtensions({
+      getCitationText: citationChipText,
+      getFootnoteIndex: footnoteIndex,
+      collab,
+      collabUserName,
+      collabUserColor,
+    }),
     // `content` is typed `unknown` on the public props so callers don't need
     // to import TipTap's JSON type; TipTap's own Content union is what
     // useEditor actually wants.
-    content: (content ?? '') as Content,
+    // With Yjs holding the document, `content` must be empty: every client
+    // passing it would insert its own copy into the shared doc and everyone
+    // would see the text N times. Seeding an unmigrated document happens
+    // once, in DocumentEditorPage, by the first client to arrive.
+    content: (collab?.ydoc ? '' : (content ?? '')) as Content,
     editable,
     editorProps: {
       /**
