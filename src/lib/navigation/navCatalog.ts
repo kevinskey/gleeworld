@@ -153,6 +153,9 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // Connect account resolution) apply. A bare "Store" label invited directors to expect
   // their own inventory and land on someone else's platform. NEVER rename the `key`.
   { key: 'fundraising', to: '/dashboard/fundraising', label: 'Fundraising (T-Shirt Brothers)', icon: Shirt, section: 'money', tone: 'bg-amber-50 text-amber-600', tourId: 'nav-fundraising', gate: { adminOnly: true } },
+  // Peer-to-peer donation pages — a different revenue motion from the
+  // T-Shirt Brothers apparel storefront above, hence a separate entry.
+  { key: 'giving',      to: '/dashboard/giving',      label: 'Giving',      icon: HandHeart, section: 'money', tone: 'bg-pink-50 text-pink-600', tourId: 'nav-giving', gate: { module: 'giving', adminOnly: true } },
   // People — tenant user management (invite / promote / disable / CSV
   // bulk import). adminOnly is now authoritative in the code, not just
   // via gw_tenant_nav_prefs — a fresh tenant with no prefs seeded would
