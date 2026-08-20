@@ -6,18 +6,27 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import type { Editor } from '@tiptap/react';
-import { AlertCircle, Loader2, MonitorPlay } from 'lucide-react';
+import {
+  AlertCircle, BookText, Download, History as HistoryIcon, ListTree, Loader2,
+  MessageSquare, MonitorPlay, MoreHorizontal, Save, Settings2, Share2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator,
+  DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
+  Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import { getDoc, saveDoc, type PersonalDoc } from '@/lib/documents/personalDocsApi';
@@ -619,135 +628,164 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
           className="basis-full min-w-0 bg-transparent text-2xl font-semibold text-foreground focus:outline-none sm:basis-auto sm:flex-1"
         />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <ToggleGroup
-            type="single"
-            value={style}
-            onValueChange={(v) => { if (v === 'mla9' || v === 'apa7') handleStyleChange(v); }}
-            className="rounded-lg border border-border p-0.5"
-          >
-            <ToggleGroupItem value="mla9" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">MLA</ToggleGroupItem>
-            <ToggleGroupItem value="apa7" className="h-7 px-2.5 text-xs data-[state=on]:bg-muted">APA</ToggleGroupItem>
-          </ToggleGroup>
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="text-xs"
-            onClick={() => setPrompterText(editorInstanceRef.current?.getText() ?? '')}
-          >
-            <MonitorPlay className="mr-1 h-3.5 w-3.5" /> Prompter
-          </Button>
-
-          <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setExportOpen(true)}>
-            Export
-          </Button>
-
-          {/* Sources live up here now, at every size — the docked right rail
-              squeezed the page (Kevin, 2026-08-13: "move sources up and let
-              doc have width"). The sheet slides OVER the doc instead. */}
-          {/* Page setup. Stored in paper_meta, so it needed no migration, and
-              it drives three places at once: the on-screen paper, the print
-              overlay's @page rule, and the .docx section properties. */}
-          <select
-            value={pageSetup.pageSize}
-            onChange={(e) => handleMetaChange({ ...paperMeta, pageSize: e.target.value as PageSize })}
-            className="h-8 rounded border border-input bg-background px-1.5 text-xs text-foreground"
-            aria-label="Page size"
-            title="Page size"
-          >
-            {(Object.keys(PAGE_DIMENSIONS) as PageSize[]).map((key) => (
-              <option key={key} value={key}>{PAGE_DIMENSIONS[key].label}</option>
+        {/* Eleven equal-weight pills across two rows was the whole header
+            (Kevin, 2026-08-20: "redo header"). Everything that isn't used
+            while actually writing moved into one menu; the three reading
+            panels became icons; Share stays a real button because it's the
+            only destructive-ish, irreversible thing here. */}
+        <TooltipProvider delayDuration={300}>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[
+              { key: 'comments', label: 'Comments', Icon: MessageSquare, onClick: () => setCommentsOpen(true) },
+              { key: 'outline', label: 'Outline', Icon: ListTree, onClick: () => setOutlineOpen(true) },
+              { key: 'sources', label: 'Sources', Icon: BookText, onClick: () => setSourcesSheetOpen(true) },
+            ].map(({ key, label, Icon, onClick }) => (
+              <Tooltip key={key}>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button" variant="ghost" size="icon" className="h-9 w-9"
+                    aria-label={label} onClick={onClick}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{label}</TooltipContent>
+              </Tooltip>
             ))}
-          </select>
-          <select
-            value={String(pageSetup.marginIn)}
-            onChange={(e) => handleMetaChange({ ...paperMeta, marginIn: Number(e.target.value) })}
-            className="h-8 rounded border border-input bg-background px-1.5 text-xs text-foreground"
-            aria-label="Page margins"
-            title="Margins"
-          >
-            {MARGIN_CHOICES.map((m) => (
-              <option key={m} value={m}>{m}&quot; margins</option>
-            ))}
-          </select>
 
-          {isOwner && (
-            <>
-              <Button type="button" variant="outline" size="sm" className="text-xs" onClick={() => setShareOpen(true)}>
-                Share
-              </Button>
-              <ShareDialog docId={id ?? ''} userId={userId} open={shareOpen} onOpenChange={setShareOpen} />
-            </>
-          )}
-          {canEdit && (
-            <Button
-              type="button" variant="outline" size="sm" className="text-xs"
-              onClick={() => { const label = window.prompt('Name this version'); if (label?.trim()) void snapshot(label.trim()); }}
-            >
-              Save version
-            </Button>
-          )}
-          <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
-            <SheetTrigger asChild>
-              <Button type="button" variant="outline" size="sm" className="text-xs">History</Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-              <SheetHeader><SheetTitle>Version history</SheetTitle></SheetHeader>
-              <div className="mt-3">
-                {id && (
-                  <VersionHistoryPanel
-                    docId={id}
-                    refreshToken={historyToken}
-                    onRestore={handleRestoreVersion}
-                  />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="ghost" size="icon" className="h-9 w-9" aria-label="Document menu">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onSelect={() => setExportOpen(true)}>
+                  <Download className="mr-2 h-4 w-4" /> Export…
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => setPrompterText(editorInstanceRef.current?.getText() ?? '')}
+                >
+                  <MonitorPlay className="mr-2 h-4 w-4" /> Prompter
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                {canEdit && (
+                  <DropdownMenuItem
+                    onSelect={() => {
+                      const label = window.prompt('Name this version');
+                      if (label?.trim()) void snapshot(label.trim());
+                    }}
+                  >
+                    <Save className="mr-2 h-4 w-4" /> Save version
+                  </DropdownMenuItem>
                 )}
-              </div>
-            </SheetContent>
-          </Sheet>
+                <DropdownMenuItem onSelect={() => setHistoryOpen(true)}>
+                  <HistoryIcon className="mr-2 h-4 w-4" /> Version history
+                </DropdownMenuItem>
 
-          {/* Comments — threads live in gw_doc_comments; the highlight in
-              the document is just the anchor. */}
-          <Sheet open={commentsOpen} onOpenChange={setCommentsOpen}>
-            <SheetTrigger asChild>
-              <Button type="button" variant="outline" size="sm" className="text-xs">Comments</Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-              <SheetHeader><SheetTitle>Comments</SheetTitle></SheetHeader>
-              <div className="mt-3">
-                {id && (
-                  <CommentsPanel docId={id} editor={editorInstance} refreshToken={commentsToken} />
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
+                <DropdownMenuSeparator />
 
-          {/* Outline — headings only, click to jump. Same over-the-doc sheet
-              as Sources so the page keeps its full width. */}
-          <Sheet open={outlineOpen} onOpenChange={setOutlineOpen}>
-            <SheetTrigger asChild>
-              <Button type="button" variant="outline" size="sm" className="text-xs">Outline</Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-sm overflow-y-auto">
-              <SheetHeader><SheetTitle>Outline</SheetTitle></SheetHeader>
-              <div className="mt-3">
-                <OutlinePanel editor={editorInstance} />
-              </div>
-            </SheetContent>
-          </Sheet>
+                {/* Page setup and citation style are set once per document
+                    and then never touched — exactly what a submenu is for. */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Settings2 className="mr-2 h-4 w-4" /> Page setup
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-44">
+                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Paper</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup
+                      value={pageSetup.pageSize}
+                      onValueChange={(v) => handleMetaChange({ ...paperMeta, pageSize: v as PageSize })}
+                    >
+                      {(Object.keys(PAGE_DIMENSIONS) as PageSize[]).map((key) => (
+                        <DropdownMenuRadioItem key={key} value={key}>
+                          {PAGE_DIMENSIONS[key].label}
+                        </DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">Margins</DropdownMenuLabel>
+                    <DropdownMenuRadioGroup
+                      value={String(pageSetup.marginIn)}
+                      onValueChange={(v) => handleMetaChange({ ...paperMeta, marginIn: Number(v) })}
+                    >
+                      {MARGIN_CHOICES.map((m) => (
+                        <DropdownMenuRadioItem key={m} value={String(m)}>{m}&quot;</DropdownMenuRadioItem>
+                      ))}
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
 
-          <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
-            <SheetTrigger asChild>
-              <Button type="button" variant="outline" size="sm" className="text-xs">Sources</Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-              <SheetHeader><SheetTitle>Sources</SheetTitle></SheetHeader>
-              <div className="mt-3">{sourcesPanel}</div>
-            </SheetContent>
-          </Sheet>
-        </div>
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <BookText className="mr-2 h-4 w-4" /> Citation style
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-40">
+                    <DropdownMenuRadioGroup
+                      value={style}
+                      onValueChange={(v) => { if (v === 'mla9' || v === 'apa7') handleStyleChange(v); }}
+                    >
+                      <DropdownMenuRadioItem value="mla9">MLA 9</DropdownMenuRadioItem>
+                      <DropdownMenuRadioItem value="apa7">APA 7</DropdownMenuRadioItem>
+                    </DropdownMenuRadioGroup>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {isOwner && (
+              <>
+                <Button type="button" size="sm" className="ml-1 h-9" onClick={() => setShareOpen(true)}>
+                  <Share2 className="mr-1.5 h-4 w-4" /> Share
+                </Button>
+                <ShareDialog docId={id ?? ''} userId={userId} open={shareOpen} onOpenChange={setShareOpen} />
+              </>
+            )}
+          </div>
+        </TooltipProvider>
       </div>
+
+      {/* The panels themselves. Triggers moved into the header above, so
+          these are controlled rather than trigger-wrapped. */}
+      <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader><SheetTitle>Version history</SheetTitle></SheetHeader>
+          <div className="mt-3">
+            {id && (
+              <VersionHistoryPanel
+                docId={id}
+                refreshToken={historyToken}
+                onRestore={handleRestoreVersion}
+              />
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={commentsOpen} onOpenChange={setCommentsOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader><SheetTitle>Comments</SheetTitle></SheetHeader>
+          <div className="mt-3">
+            {id && <CommentsPanel docId={id} editor={editorInstance} refreshToken={commentsToken} />}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={outlineOpen} onOpenChange={setOutlineOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-sm overflow-y-auto">
+          <SheetHeader><SheetTitle>Outline</SheetTitle></SheetHeader>
+          <div className="mt-3"><OutlinePanel editor={editorInstance} /></div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={sourcesSheetOpen} onOpenChange={setSourcesSheetOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+          <SheetHeader><SheetTitle>Sources</SheetTitle></SheetHeader>
+          <div className="mt-3">{sourcesPanel}</div>
+        </SheetContent>
+      </Sheet>
 
       <div className="flex flex-col gap-4">
         <div className="min-w-0" ref={editorContainerRef}>
