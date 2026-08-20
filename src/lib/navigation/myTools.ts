@@ -410,6 +410,49 @@ export function shelfGroupsForNav<T extends { id: string }>(groups: T[]): T[] {
  * written, nothing moves on the Command Center grid, and dragging an app out
  * of Favorites there brings it straight back to the nav.
  */
+/** Prefix marking a nav group that was derived from the catalog's own
+ *  sections rather than made by the member. Kept distinct so collapse state
+ *  is never written into their saved groups. */
+export const SECTION_GROUP_PREFIX = 'section:';
+
+export function isSectionGroupId(id: string): boolean {
+  return id.startsWith(SECTION_GROUP_PREFIX);
+}
+
+/**
+ * File loose shelf tools under their catalog section.
+ *
+ * Adding an app appended it to the flat loose list, so a member with twenty
+ * tools got twenty ungrouped rows above their actual groups (Kevin,
+ * 2026-08-20: "when i add apps the need to appear in categories in the left
+ * nav"). Every catalog entry already declares a section — Today, Church,
+ * Music, Teach, Make, Plan, Reach, Money, People, Admin — so the headings
+ * exist; nothing was using them in the shelf.
+ *
+ * Order follows NAV_SECTION_LABELS, not first-added, so the nav reads the
+ * same way for everyone and doesn't reshuffle when a tool is added. Sections
+ * with nothing in them never appear.
+ */
+export function groupToolsBySection<T extends { key: string; section: string }>(
+  entries: T[],
+  sectionOrder: string[],
+  sectionLabels: Record<string, string>,
+): { id: string; name: string; entries: T[] }[] {
+  const bySection = new Map<string, T[]>();
+  for (const entry of entries) {
+    const list = bySection.get(entry.section);
+    if (list) list.push(entry);
+    else bySection.set(entry.section, [entry]);
+  }
+  return sectionOrder
+    .filter((key) => (bySection.get(key)?.length ?? 0) > 0)
+    .map((key) => ({
+      id: `${SECTION_GROUP_PREFIX}${key}`,
+      name: sectionLabels[key] ?? key,
+      entries: bySection.get(key)!,
+    }));
+}
+
 /**
  * The shelf a preview should render.
  *

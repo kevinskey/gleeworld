@@ -138,7 +138,10 @@ describe('Sidebar — shelf must not blank on every route change', () => {
     });
     render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Finance')).toBeInTheDocument();
-    expect(screen.getByText('People')).toBeInTheDocument();
+    // by role: loose tools now render under their catalog section, and the
+    // People tool sits in a section also called People — matching on text
+    // alone hits both the heading and the row.
+    expect(screen.getByRole('link', { name: 'People' })).toBeInTheDocument();
   });
 
   it('renders the role-invariant core, not a blank shelf, while genuinely unresolved', () => {
@@ -186,7 +189,10 @@ describe('Sidebar — failed load must still render the shelf', () => {
     });
     render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Finance')).toBeInTheDocument();
-    expect(screen.getByText('People')).toBeInTheDocument();
+    // by role: loose tools now render under their catalog section, and the
+    // People tool sits in a section also called People — matching on text
+    // alone hits both the heading and the row.
+    expect(screen.getByRole('link', { name: 'People' })).toBeInTheDocument();
   });
 });
 
@@ -225,7 +231,10 @@ describe('Sidebar — the Favorites group is page-only', () => {
     setup({ myTools: WITH_FAVORITES });
     render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Sunday')).toBeInTheDocument();
-    expect(screen.getByText('People')).toBeInTheDocument();
+    // by role: loose tools now render under their catalog section, and the
+    // People tool sits in a section also called People — matching on text
+    // alone hits both the heading and the row.
+    expect(screen.getByRole('link', { name: 'People' })).toBeInTheDocument();
   });
 
   it('applies to the mobile drawer too', () => {
