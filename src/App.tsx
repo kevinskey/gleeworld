@@ -82,6 +82,14 @@ const WorkspaceSettingsPage = lazy(() => import("./pages/dashboard/WorkspaceSett
 const MyWorldPage = lazy(() => import("./pages/dashboard/MyWorldPage"));
 const WorkspaceAnalyticsPage = lazy(() => import("./pages/dashboard/WorkspaceAnalyticsPage"));
 const FundraisingPage = lazy(() => import("./pages/dashboard/FundraisingPage"));
+const GivingPage = lazy(() => import("./pages/dashboard/GivingPage"));
+// Public peer-to-peer giving pages. Lazy + public: these are opened by
+// strangers from a shared text message, so they must not pull the
+// authenticated dashboard bundle.
+const FundraiserPublicPage = lazy(() => import("./pages/give/FundraiserPublicPage"));
+const ParticipantPublicPage = lazy(() => import("./pages/give/ParticipantPublicPage"));
+const GivingThanksPage = lazy(() => import("./pages/give/GivingThanksPage"));
+const ParticipantManagePage = lazy(() => import("./pages/give/ParticipantManagePage"));
 const DiscussionThreadPage = lazy(() => import("./pages/academy/DiscussionThreadPage"));
 const StudentOnboarding = lazy(() => import("./pages/admin/StudentOnboarding"));
 const JoinCourse = lazy(() => import("./pages/JoinCourse"));
@@ -626,6 +634,14 @@ const App = () => {
               <Route path="/dpa" element={<PublicRoute><DataProcessingAddendum /></PublicRoute>} />
               <Route path="/data-processing-addendum" element={<PublicRoute><DataProcessingAddendum /></PublicRoute>} />
               <Route path="/thank-you" element={<PublicRoute><ThankYou /></PublicRoute>} />
+              {/* Giving (peer-to-peer fundraising). Router v6 ranks the static
+                  /thanks segment above :participantSlug, so a participant
+                  whose slug happens to be "thanks" loses to the post-donation
+                  page rather than the other way round. */}
+              <Route path="/give/:slug" element={<PublicRoute><FundraiserPublicPage /></PublicRoute>} />
+              <Route path="/give/:slug/thanks" element={<PublicRoute><GivingThanksPage /></PublicRoute>} />
+              <Route path="/give/:slug/:participantSlug" element={<PublicRoute><ParticipantPublicPage /></PublicRoute>} />
+              <Route path="/p/:token" element={<PublicRoute><ParticipantManagePage /></PublicRoute>} />
               <Route path="/my-music" element={<PublicRoute><MyMusicOfflinePage /></PublicRoute>} />
               <Route
                 path="/academy/:courseCode/rehearsal-today"
@@ -1015,6 +1031,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <FundraisingPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/giving"
+                element={
+                  <ProtectedRoute>
+                    <GivingPage />
                   </ProtectedRoute>
                 }
               />
