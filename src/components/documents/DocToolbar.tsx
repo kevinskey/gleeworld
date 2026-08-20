@@ -34,7 +34,7 @@ function ToolbarButton({
       onMouseDown={(e) => { e.preventDefault(); if (!disabled) onClick(); }}
       title={title}
       aria-label={title}
-      className={`p-1.5 rounded hover:bg-muted transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${active ? 'bg-muted text-foreground' : 'text-muted-foreground'}`}
+      className={`inline-flex h-9 w-9 items-center justify-center rounded-md transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40 ${active ? 'bg-muted text-foreground' : 'text-muted-foreground'}`}
     >
       {children}
     </button>
@@ -79,15 +79,15 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
   };
 
   return (
-    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-0.5 border-b border-border bg-background/95 backdrop-blur px-2 py-1.5">
-      <ToolbarButton title="Undo" onClick={() => editor.chain().focus().undo().run()}><Undo className="w-4 h-4" /></ToolbarButton>
-      <ToolbarButton title="Redo" onClick={() => editor.chain().focus().redo().run()}><Redo className="w-4 h-4" /></ToolbarButton>
+    <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b border-border bg-background/95 px-2 py-1.5 backdrop-blur">
+      <ToolbarButton title="Undo" onClick={() => editor.chain().focus().undo().run()}><Undo className="h-[18px] w-[18px]" /></ToolbarButton>
+      <ToolbarButton title="Redo" onClick={() => editor.chain().focus().redo().run()}><Redo className="h-[18px] w-[18px]" /></ToolbarButton>
       <div className="w-px h-5 bg-border mx-1" />
 
       <select
         value={currentBlockValue(editor)}
         onChange={(e) => handleBlockChange(e.target.value)}
-        className="text-sm rounded border border-input bg-background px-1.5 py-1 text-foreground"
+        className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
         aria-label="Block style"
       >
         {BLOCK_OPTIONS.map((opt) => (
@@ -96,11 +96,11 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
       </select>
       <div className="w-px h-5 bg-border mx-1" />
 
-      <ToolbarButton title="Bold" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold className="w-4 h-4" /></ToolbarButton>
-      <ToolbarButton title="Italic" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic className="w-4 h-4" /></ToolbarButton>
-      <ToolbarButton title="Underline" active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()}><UnderlineIcon className="w-4 h-4" /></ToolbarButton>
-      <ToolbarButton title="Strikethrough" active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough className="w-4 h-4" /></ToolbarButton>
-      <ToolbarButton title="Highlight" active={editor.isActive('highlight')} onClick={() => editor.chain().focus().toggleHighlight().run()}><Highlighter className="w-4 h-4" /></ToolbarButton>
+      <ToolbarButton title="Bold" active={editor.isActive('bold')} onClick={() => editor.chain().focus().toggleBold().run()}><Bold className="h-[18px] w-[18px]" /></ToolbarButton>
+      <ToolbarButton title="Italic" active={editor.isActive('italic')} onClick={() => editor.chain().focus().toggleItalic().run()}><Italic className="h-[18px] w-[18px]" /></ToolbarButton>
+      <ToolbarButton title="Underline" active={editor.isActive('underline')} onClick={() => editor.chain().focus().toggleUnderline().run()}><UnderlineIcon className="h-[18px] w-[18px]" /></ToolbarButton>
+      <ToolbarButton title="Strikethrough" active={editor.isActive('strike')} onClick={() => editor.chain().focus().toggleStrike().run()}><Strikethrough className="h-[18px] w-[18px]" /></ToolbarButton>
+      <ToolbarButton title="Highlight" active={editor.isActive('highlight')} onClick={() => editor.chain().focus().toggleHighlight().run()}><Highlighter className="h-[18px] w-[18px]" /></ToolbarButton>
       <div className="w-px h-5 bg-border mx-1" />
 
       {/* Font family / size / color. onMouseDown-preventDefault isn't enough
@@ -113,7 +113,7 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
           const chain = editor.chain().focus();
           (v ? chain.setFontFamily(v) : chain.unsetFontFamily()).run();
         }}
-        className="text-sm rounded border border-input bg-background px-1.5 py-1 text-foreground"
+        className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
         aria-label="Font"
       >
         {FONT_OPTIONS.map((f) => (
@@ -127,7 +127,7 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
           const chain = editor.chain().focus();
           (v ? chain.setFontSize(v) : chain.unsetFontSize()).run();
         }}
-        className="text-sm rounded border border-input bg-background px-1.5 py-1 text-foreground"
+        className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
         aria-label="Font size"
       >
         {SIZE_OPTIONS.map((sz) => (
@@ -138,7 +138,7 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
         className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground cursor-pointer inline-flex items-center"
         title="Text color"
       >
-        <Baseline className="w-4 h-4" />
+        <Baseline className="h-[18px] w-[18px]" />
         <input
           type="color"
           className="sr-only"
@@ -149,24 +149,24 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
       </label>
       <div className="w-px h-5 bg-border mx-1" />
 
-      <ToolbarButton title="Align left" active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()}><AlignLeft className="w-4 h-4" /></ToolbarButton>
-      <ToolbarButton title="Align center" active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()}><AlignCenter className="w-4 h-4" /></ToolbarButton>
-      <ToolbarButton title="Align right" active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()}><AlignRight className="w-4 h-4" /></ToolbarButton>
+      <ToolbarButton title="Align left" active={editor.isActive({ textAlign: 'left' })} onClick={() => editor.chain().focus().setTextAlign('left').run()}><AlignLeft className="h-[18px] w-[18px]" /></ToolbarButton>
+      <ToolbarButton title="Align center" active={editor.isActive({ textAlign: 'center' })} onClick={() => editor.chain().focus().setTextAlign('center').run()}><AlignCenter className="h-[18px] w-[18px]" /></ToolbarButton>
+      <ToolbarButton title="Align right" active={editor.isActive({ textAlign: 'right' })} onClick={() => editor.chain().focus().setTextAlign('right').run()}><AlignRight className="h-[18px] w-[18px]" /></ToolbarButton>
       <div className="w-px h-5 bg-border mx-1" />
 
-      <ToolbarButton title="Bullet list" active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}><List className="w-4 h-4" /></ToolbarButton>
-      <ToolbarButton title="Numbered list" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered className="w-4 h-4" /></ToolbarButton>
-      <ToolbarButton title="Quote" active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote className="w-4 h-4" /></ToolbarButton>
+      <ToolbarButton title="Bullet list" active={editor.isActive('bulletList')} onClick={() => editor.chain().focus().toggleBulletList().run()}><List className="h-[18px] w-[18px]" /></ToolbarButton>
+      <ToolbarButton title="Numbered list" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered className="h-[18px] w-[18px]" /></ToolbarButton>
+      <ToolbarButton title="Quote" active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote className="h-[18px] w-[18px]" /></ToolbarButton>
       <div className="w-px h-5 bg-border mx-1" />
 
       <ToolbarButton
         title="Insert 3x3 table"
         onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
       >
-        <TableIcon className="w-4 h-4" />
+        <TableIcon className="h-[18px] w-[18px]" />
       </ToolbarButton>
       <ToolbarButton title="Insert image" onClick={onImageClick}>
-        <ImageIcon className="w-4 h-4" />
+        <ImageIcon className="h-[18px] w-[18px]" />
       </ToolbarButton>
       <div className="w-px h-5 bg-border mx-1" />
 
@@ -177,24 +177,24 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
           active={editor.isActive('comment')}
           onClick={onCommentClick}
         >
-          <MessageSquarePlus className="w-4 h-4" />
+          <MessageSquarePlus className="h-[18px] w-[18px]" />
         </ToolbarButton>
       )}
       <ToolbarButton
         title="Insert page break"
         onClick={() => editor.chain().focus().setPageBreak().run()}
       >
-        <SeparatorHorizontal className="w-4 h-4" />
+        <SeparatorHorizontal className="h-[18px] w-[18px]" />
       </ToolbarButton>
-      <ToolbarButton title="Insert footnote" onClick={onFootnoteClick}><FootnoteIcon className="w-4 h-4" /></ToolbarButton>
-      <ToolbarButton title="Insert / edit link" active={editor.isActive('link')} onClick={addLink}><LinkIcon className="w-4 h-4" /></ToolbarButton>
+      <ToolbarButton title="Insert footnote" onClick={onFootnoteClick}><FootnoteIcon className="h-[18px] w-[18px]" /></ToolbarButton>
+      <ToolbarButton title="Insert / edit link" active={editor.isActive('link')} onClick={addLink}><LinkIcon className="h-[18px] w-[18px]" /></ToolbarButton>
       <button
         type="button"
         onMouseDown={(e) => { e.preventDefault(); onCiteClick(); }}
         title="Insert citation"
         className="flex items-center gap-1 px-2 py-1 rounded text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
       >
-        <BookText className="w-4 h-4" />
+        <BookText className="h-[18px] w-[18px]" />
         Cite
       </button>
     </div>

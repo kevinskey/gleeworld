@@ -4,11 +4,12 @@
 // handles in-document image upload. Route registration is Task 10's job
 // (this file renders its own content only — the dashboard shell wraps it).
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import type { Editor } from '@tiptap/react';
 import {
-  AlertCircle, BookText, Download, History as HistoryIcon, ListTree, Loader2,
-  MessageSquare, MonitorPlay, MoreHorizontal, Save, Settings2, Share2,
+  AlertCircle, ArrowLeft, BookText, Download, FilePlus2, History as HistoryIcon,
+  ListTree, Loader2, MessageSquare, MonitorPlay, MoreHorizontal, Save,
+  Settings2, Share2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -29,7 +30,7 @@ import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
-import { getDoc, saveDoc, type PersonalDoc } from '@/lib/documents/personalDocsApi';
+import { getDoc, saveDoc, createDoc, type PersonalDoc } from '@/lib/documents/personalDocsApi';
 import { formatInText } from '@/lib/documents/citationFormat';
 import type { CitationStyle, DocFootnote, DocSource, PaperMeta, PageSize } from '@/lib/documents/types';
 import { PAGE_DIMENSIONS, MARGIN_CHOICES, resolvePageSetup } from '@/lib/documents/types';
@@ -183,6 +184,8 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   // Panels that RENDER from editor state need a state copy as well, so they
   // mount once the editor exists instead of reading a null ref forever.
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
+  const navigate = useNavigate();
+  const [creating, setCreating] = useState(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   // Bumped after a new comment so the panel refetches without a prop drill.
@@ -431,6 +434,24 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   const canComment = permissionAtLeast(permission, 'comment');
   const isOwner = permission === 'owner';
 
+  /** New document, from inside the editor. It only existed on the library
+   *  page before, so the only route to a second document was navigating back
+   *  out (Kevin, 2026-08-20: "how do i add a new document?"). Flushes first —
+   *  navigating away with a debounced save still pending would drop it. */
+  const handleNewDocument = useCallback(async () => {
+    if (!userId || creating) return;
+    setCreating(true);
+    try {
+      await autosaver.flush();
+      const doc = await createDoc(userId);
+      navigate(`/dashboard/documents/${doc.id}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not create a document.');
+    } finally {
+      setCreating(false);
+    }
+  }, [userId, creating, autosaver, navigate]);
+
   const pageSetup = resolvePageSetup(paperMeta);
 
   const handleMetaChange = useCallback((next: PaperMeta) => {
@@ -612,20 +633,29 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-2 px-4 pb-4 pt-3">
       {/* flex-1 alone let the pills claim the whole line and crush the
           title to a couple of characters on phones (the row's flex-wrap
           never fired because flex-1's basis is 0). The title takes a full
           line of its own below sm; the actions are their own wrapping
           cluster so nothing ever clips off-screen. */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        {/* Back to the library. The editor had no exit and no way to start a
+            second document; both live here now. */}
+        <Button
+          type="button" variant="ghost" size="icon" className="h-10 w-10 shrink-0"
+          aria-label="Back to Documents"
+          onClick={async () => { await autosaver.flush(); navigate('/dashboard/documents'); }}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
         <input
           value={title}
           onChange={(e) => handleTitleChange(e.target.value)}
           onBlur={() => void autosaver.flush()}
           placeholder="Untitled"
           aria-label="Document title"
-          className="basis-full min-w-0 bg-transparent text-2xl font-semibold text-foreground focus:outline-none sm:basis-auto sm:flex-1"
+          className="basis-full min-w-0 bg-transparent py-0 text-3xl font-bold leading-tight text-foreground focus:outline-none sm:basis-auto sm:flex-1"
         />
 
         {/* Eleven equal-weight pills across two rows was the whole header
@@ -643,10 +673,10 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
               <Tooltip key={key}>
                 <TooltipTrigger asChild>
                   <Button
-                    type="button" variant="ghost" size="icon" className="h-9 w-9"
+                    type="button" variant="ghost" size="icon" className="h-10 w-10"
                     aria-label={label} onClick={onClick}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-5 w-5" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{label}</TooltipContent>
@@ -655,11 +685,15 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button type="button" variant="ghost" size="icon" className="h-9 w-9" aria-label="Document menu">
-                  <MoreHorizontal className="h-4 w-4" />
+                <Button type="button" variant="ghost" size="icon" className="h-10 w-10" aria-label="Document menu">
+                  <MoreHorizontal className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onSelect={() => void handleNewDocument()} disabled={creating}>
+                  <FilePlus2 className="mr-2 h-4 w-4" /> New document
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onSelect={() => setExportOpen(true)}>
                   <Download className="mr-2 h-4 w-4" /> Export…
                 </DropdownMenuItem>
@@ -737,7 +771,7 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
 
             {isOwner && (
               <>
-                <Button type="button" size="sm" className="ml-1 h-9" onClick={() => setShareOpen(true)}>
+                <Button type="button" className="ml-1 h-10 px-4 text-sm" onClick={() => setShareOpen(true)}>
                   <Share2 className="mr-1.5 h-4 w-4" /> Share
                 </Button>
                 <ShareDialog docId={id ?? ''} userId={userId} open={shareOpen} onOpenChange={setShareOpen} />
