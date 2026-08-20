@@ -11,6 +11,7 @@
 import { parseTileLayout } from './appDestinations';
 import type { CatalogEntry } from './navCatalog';
 import { MERGED_KEYS, resolveKey, resolveKeys } from './mergedKeys';
+import { FAVORITES_GROUP_ID } from './favorites';
 
 // Re-exported for backward compatibility — every existing import site
 // (useMyTools.ts, this file's own tests) reads these from here. The
@@ -67,6 +68,10 @@ export const GROUP_NAME_MAX = 32;
 
 /** House spec §5.1 caps the home at two role widgets. */
 export const WIDGETS_CAP = 2;
+
+// The reserved Favorites group lives in its own leaf module (import-cycle
+// guard — see favorites.ts); re-exported here so shelf code has one import.
+export { FAVORITES_GROUP_ID, FAVORITES_GROUP_NAME } from './favorites';
 
 /**
  * A member-named group of tools. `id` is generated and never derived from
@@ -377,26 +382,17 @@ export function selectShelfEntries(resolved: CatalogEntry[], tools: string[]): C
 }
 
 /**
- * What the sidebar shelf shows of the member's ungrouped tools — their
- * FAVORITES, in the Command Center grid's language.
+ * The groups the sidebar shelf renders: every one the member made, minus
+ * FAVORITES.
  *
- * Nothing, when they have at least one group. Kevin, 2026-08-20: "i dont
- * need to list favorites in the left nav because its on page cards." The
- * favorites row already sits at the top of the Command Center grid as full
- * keycaps; repeating the same handful of apps as the first rows of the
- * sidebar spends the most valuable nav real estate on a duplicate.
- *
- * The `groups.length === 0` escape hatch is not a stylistic hedge: a member
- * who never made a group keeps EVERY tool ungrouped, so dropping them
- * unconditionally would leave that member a sidebar of Home and All Tools
- * and no way to reach anything they picked. Grouped members lose nothing —
- * their groups still render, and the grid still shows favorites.
+ * Favorites are already on the Command Center page as full keycaps (Kevin,
+ * 2026-08-20: "i dont need to list favorites in the left nav because its on
+ * page cards"). The member's LOOSE tools still render in the nav exactly as
+ * they always have — that is what keeps "add this app to my left nav"
+ * reachable, since every add path appends to the loose list.
  */
-export function shelfLooseTools(
-  looseEntries: CatalogEntry[],
-  groupCount: number,
-): CatalogEntry[] {
-  return groupCount > 0 ? [] : looseEntries;
+export function shelfGroupsForNav<T extends { id: string }>(groups: T[]): T[] {
+  return groups.filter((g) => g.id !== FAVORITES_GROUP_ID);
 }
 
 /**

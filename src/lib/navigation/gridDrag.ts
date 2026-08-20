@@ -4,6 +4,7 @@
 // simulating a pointer drag in jsdom, which dnd-kit cannot do reliably —
 // and because a component file that also exports helpers loses fast refresh.
 import { arrayMove } from '@dnd-kit/sortable';
+import { FAVORITES_GROUP_ID } from './favorites';
 
 /**
  * Where the dragged tile lands, and — when the drop crossed a heading —
@@ -32,16 +33,18 @@ export function planDrop(
   overKey: string,
   bandIdOfKey: Map<string, string | null>,
 ): DropPlan {
-  // Dropping on the empty-Favorites zone means "ungrouped, at the top" —
-  // there is no neighbour tile to land beside, so it goes to the front.
+  // Dropping on the empty-Favorites zone files the app into the reserved
+  // Favorites group and puts it first — there is no neighbour tile to land
+  // beside. Favorites is a GROUP, not the loose list: loose tools are the
+  // ones the sidebar shows, and these are deliberately page-only.
   if (overKey === FAVORITES_DROP_ID) {
     const reorder = (order: string[]) => {
       const from = order.indexOf(activeKey);
       return from === -1 ? order : arrayMove(order, from, 0);
     };
-    return (bandIdOfKey.get(activeKey) ?? null) === null
+    return bandIdOfKey.get(activeKey) === FAVORITES_GROUP_ID
       ? { reorder }
-      : { reorder, refileTo: null };
+      : { reorder, refileTo: FAVORITES_GROUP_ID };
   }
   const target = bandIdOfKey.get(overKey) ?? null;
   const reorder = (order: string[]) => {

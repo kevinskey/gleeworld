@@ -1,11 +1,13 @@
 // Keycap app grid with iOS-style jiggle editing, extracted from HouseHome.
 // View mode: primary tiles as keycap links, rest behind a "More" expander.
-// The primary tiles arrive already partitioned into BANDS — the member's
-// ungrouped keycaps first under FAVORITES, then one heading per group they
-// named. Same set as the sidebar shelf, and now the same structure.
-// Favorites is the top of the grid and takes any app: drag one there, or add
-// one from More, and it lands in Favorites. In edit mode it is the one band
-// that survives being empty, so it can always be dropped into.
+// The primary tiles arrive already partitioned into BANDS — FAVORITES first,
+// then the member's ungrouped keycaps under no heading, then one heading per
+// group they named. Same set as the sidebar shelf.
+// FAVORITES is a reserved group (see favorites.ts), not the loose list: apps
+// in it are page-only, while loose apps still render as sidebar rows. That
+// split is what lets "put this on the page" and "put this in my left nav" be
+// two different gestures. In edit mode Favorites survives being empty, so it
+// can always be dropped into.
 // Edit mode (long-press a tile or tap Edit): tiles jiggle; tapping a
 // primary tile (or its – badge) demotes it to More, tapping a More tile
 // (or its + badge) appends it to primary, dragging reorders ACROSS the whole
@@ -32,9 +34,10 @@ import { useToast } from '@/hooks/use-toast';
 import { bandDestinations, type Destination, type TileBand } from '@/lib/navigation/appDestinations';
 import { NAV_SECTION_LABELS, type NavSectionKey } from '@/lib/navigation/navCatalog';
 import { planDrop, FAVORITES_DROP_ID } from '@/lib/navigation/gridDrag';
+import { FAVORITES_GROUP_ID, FAVORITES_GROUP_NAME } from '@/lib/navigation/favorites';
 
 interface HomeTileGridProps {
-  /** Loose tiles first (groupId null, no heading), then one band per group. */
+  /** Favorites first, then loose tiles (no heading), then one band per group. */
   bands: TileBand[];
   overflow: Destination[];
   /**
@@ -50,10 +53,6 @@ const LONG_PRESS_MS = 500;
 const LONG_PRESS_SLOP_PX = 10;
 
 const GRID_CLASSES = 'grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2';
-
-// The name of the leading ungrouped band. Every app can live here, and this
-// is where anything added from More lands.
-const FAVORITES_LABEL = 'Favorites';
 
 // Sections rendered as their own "More" group, in display order. A tile
 // whose section isn't in this list (or has no section at all) falls
@@ -146,18 +145,17 @@ function AddTile({ tile, index, onAdd }: { tile: Destination; index: number; onA
 // One band: its heading above its run of keycaps. Shared by view and edit
 // mode so the two can never drift apart.
 //
-// The leading ungrouped band is FAVORITES (Kevin, 2026-08-20). It used to
-// render with no heading at all, which left the most important row on the
-// page — the one every app can be dragged into, and where anything added
-// from More lands — as the only unnamed thing in the grid. Naming it is
-// what makes "put this app at the top" a place a member can aim at rather
-// than a side effect of dragging far enough.
+// Every band carries its own name; the loose band has none, as before. The
+// FAVORITES band gets its heading from the reserved group like any other,
+// which is why there is no special case here.
 function BandSection({ band, children }: { band: TileBand; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
-        {band.name ?? FAVORITES_LABEL}
-      </h3>
+      {band.name && (
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+          {band.name}
+        </h3>
+      )}
       {children}
     </section>
   );
@@ -216,16 +214,24 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
   // anything this edit session dragged across a heading. Rebuilt rather than
   // patched so a tile dragged out of a group is dropped from that group's
   // tools (→ it bands loose) and picked up by exactly one other.
-  const draftGroups = useMemo(
-    () => bandGroups.map((g) => ({
+  //
+  // Favorites is seeded into this list even when the member has never used
+  // it: it is created lazily, so on a first drag into the empty Favorites
+  // row there is no such group to re-file INTO, and the tile would silently
+  // band loose instead — landing in the sidebar, the exact opposite of what
+  // dropping it in Favorites means.
+  const draftGroups = useMemo(() => {
+    const withFavorites = bandGroups.some((g) => g.id === FAVORITES_GROUP_ID)
+      ? bandGroups
+      : [{ id: FAVORITES_GROUP_ID, name: FAVORITES_GROUP_NAME, tools: [] as string[] }, ...bandGroups];
+    return withFavorites.map((g) => ({
       ...g,
       tools: [
         ...g.tools.filter((k) => refiled[k] === undefined || refiled[k] === g.id),
         ...Object.keys(refiled).filter((k) => refiled[k] === g.id && !g.tools.includes(k)),
       ],
-    })),
-    [bandGroups, refiled],
-  );
+    }));
+  }, [bandGroups, refiled]);
   // Re-derived from the draft on every edit, never from the `bands` prop: a
   // removed tile must take its now-empty heading with it, and a tile added
   // from More must land in the LOOSE band rather than under whichever
@@ -236,9 +242,9 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
   // but dragging the last favorite into a group would then take the drop
   // target with it and there would be no way back. It stays dropped in view
   // mode, where there is nothing to drop and nothing to explain.
-  const editBands: TileBand[] = draftBands[0]?.groupId === null
+  const editBands: TileBand[] = draftBands.some((b) => b.groupId === FAVORITES_GROUP_ID)
     ? draftBands
-    : [{ groupId: null, name: null, tiles: [] }, ...draftBands];
+    : [{ groupId: FAVORITES_GROUP_ID, name: FAVORITES_GROUP_NAME, tiles: [] }, ...draftBands];
   // key → the band it currently renders in. Drag needs this to tell an
   // ordinary within-band reorder from a drop that crossed a heading.
   const bandIdOfKey = useMemo(() => {
@@ -407,8 +413,8 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
           <div className="space-y-4">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
               {editBands.map((band) => (
-                <BandSection key={band.groupId ?? '__favorites'} band={band}>
-                  {band.groupId === null && band.tiles.length === 0 ? (
+                <BandSection key={band.groupId ?? '__loose'} band={band}>
+                  {band.groupId === FAVORITES_GROUP_ID && band.tiles.length === 0 ? (
                     <EmptyFavoritesZone />
                   ) : (
                     <SortableContext items={band.tiles.map((t) => t.key)} strategy={rectSortingStrategy}>
