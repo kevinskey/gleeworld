@@ -25,7 +25,7 @@ import { applyPreviewRole, previewRoleIsFaculty, resolveNav, type NavContext } f
 import { selectUpNext, fuseProgress, greetingFor, preferredFirstName } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useMyTools } from '@/hooks/useMyTools';
-import { mergeGridOrder, sanitizeShelf, type Shelf } from '@/lib/navigation/myTools';
+import { mergeGridOrder, sanitizeShelf, previewShelfTools, type Shelf } from '@/lib/navigation/myTools';
 import { flattenShelf, groupIdOf } from '@/lib/navigation/toolGroups';
 import { resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
@@ -205,6 +205,15 @@ export default function HouseHome() {
   // contain every chosen tool, grouped or not — and in this order, so
   // bandDestinations only has to partition what it is handed.
   const shelfOrder = useMemo(() => flattenShelf(shelf), [shelf]);
+  // Previewing shows the ROLE's default grid, not the admin's own tiles.
+  // getAppTiles already followed the previewed role for the tile SET's
+  // faculty/student split, but the ORDER it was handed was still this
+  // admin's personal shelf — so "preview as Students" kept rendering the
+  // admin's own cards and looked like it wasn't updating at all (Kevin,
+  // 2026-08-20). Same reasoning as the sidebar: a previewing admin has no
+  // student record to borrow, so the role defaults are the honest stand-in.
+  // useEffectivePreviewRole is already admin-gated, so this can't be forced.
+  const previewShelf = useMemo(() => previewShelfTools(previewRole), [previewRole]);
   // First-run sheet: shown once, on a brand-new member's very first load of
   // this page. `firstRunDismissed` is held locally (not derived solely from
   // myTools.setupComplete) so a Skip/Looks good tap closes the sheet
@@ -232,7 +241,7 @@ export default function HouseHome() {
         (previewRole ? previewRoleIsFaculty(previewRole) : isFaculty) ? 'faculty' : 'student',
         // `null` still means "no record at all" (→ the frozen default grid);
         // an empty shelfOrder is a deliberate "I cleared everything".
-        flags, nav, myTools ? shelfOrder : null, { tabBarVisible },
+        flags, nav, previewShelf ?? (myTools ? shelfOrder : null), { tabBarVisible },
       );
 
   // The grid shows the same SET as the sidebar shelf, and now the same
@@ -240,7 +249,11 @@ export default function HouseHome() {
   // Empty bands are dropped inside bandDestinations, so an unfilled group —
   // or one whose every tool is gated off for this viewer — never renders a
   // heading over nothing.
-  const bands = useMemo(() => bandDestinations(primary, shelf.groups), [primary, shelf.groups]);
+  // A previewed role has no custom groups — those bands are the admin's.
+  const bands = useMemo(
+    () => bandDestinations(primary, previewShelf ? [] : shelf.groups),
+    [primary, shelf.groups, previewShelf],
+  );
 
   // Which stored keys this grid is able to show at all. A stored key outside
   // this set (route claimed by the tab bar, module switched off, key retired)
