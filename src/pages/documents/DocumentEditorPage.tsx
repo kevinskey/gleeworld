@@ -697,12 +697,6 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
                 <DropdownMenuItem onSelect={() => setExportOpen(true)}>
                   <Download className="mr-2 h-4 w-4" /> Export…
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onSelect={() => setPrompterText(editorInstanceRef.current?.getText() ?? '')}
-                >
-                  <MonitorPlay className="mr-2 h-4 w-4" /> Prompter
-                </DropdownMenuItem>
-
                 <DropdownMenuSeparator />
 
                 {canEdit && (
@@ -769,9 +763,22 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Prompter is a performance control, not a configuration one —
+                it gets reached for mid-rehearsal, standing away from the
+                screen, so it's the one thing here that earns real size
+                (Kevin, 2026-08-20: "i want a big prompter button"). */}
+            <Button
+              type="button"
+              variant="secondary"
+              className="ml-1 h-11 gap-2 px-5 text-base font-semibold"
+              onClick={() => setPrompterText(editorInstanceRef.current?.getText() ?? '')}
+            >
+              <MonitorPlay className="h-5 w-5" /> Prompter
+            </Button>
+
             {isOwner && (
               <>
-                <Button type="button" className="ml-1 h-10 px-4 text-sm" onClick={() => setShareOpen(true)}>
+                <Button type="button" className="h-11 px-4 text-sm" onClick={() => setShareOpen(true)}>
                   <Share2 className="mr-1.5 h-4 w-4" /> Share
                 </Button>
                 <ShareDialog docId={id ?? ''} userId={userId} open={shareOpen} onOpenChange={setShareOpen} />
