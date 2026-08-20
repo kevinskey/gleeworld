@@ -8,7 +8,7 @@ import {
   AlignLeft, AlignCenter, AlignRight,
   List, ListOrdered, Quote, TableIcon, Image as ImageIcon,
   Link as LinkIcon, Superscript as FootnoteIcon, BookText,
-  Undo, Redo, Strikethrough, Baseline, SeparatorHorizontal,
+  Undo, Redo, Strikethrough, Baseline, SeparatorHorizontal, MessageSquarePlus,
 } from 'lucide-react';
 
 // Font stacks offered in the toolbar. Web-safe families only — a document
@@ -60,9 +60,10 @@ interface DocToolbarProps {
   onCiteClick: () => void;
   onFootnoteClick: () => void;
   onImageClick: () => void;
+  onCommentClick?: () => void;
 }
 
-export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick }: DocToolbarProps) {
+export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick, onCommentClick }: DocToolbarProps) {
   const addLink = () => {
     const url = window.prompt('Link URL (https://…)', editor.getAttributes('link').href || '');
     if (url === null) return;
@@ -169,6 +170,16 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick 
       </ToolbarButton>
       <div className="w-px h-5 bg-border mx-1" />
 
+      {onCommentClick && (
+        <ToolbarButton
+          title={editor.state.selection.empty ? 'Select text to comment on it' : 'Comment on selection'}
+          disabled={editor.state.selection.empty}
+          active={editor.isActive('comment')}
+          onClick={onCommentClick}
+        >
+          <MessageSquarePlus className="w-4 h-4" />
+        </ToolbarButton>
+      )}
       <ToolbarButton
         title="Insert page break"
         onClick={() => editor.chain().focus().setPageBreak().run()}

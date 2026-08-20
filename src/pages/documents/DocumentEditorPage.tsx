@@ -24,11 +24,15 @@ import { getDoc, saveDoc, type PersonalDoc } from '@/lib/documents/personalDocsA
 import { formatInText } from '@/lib/documents/citationFormat';
 import type { CitationStyle, DocFootnote, DocSource, PaperMeta, PageSize } from '@/lib/documents/types';
 import { PAGE_DIMENSIONS, MARGIN_CHOICES, resolvePageSetup } from '@/lib/documents/types';
-import { DocumentEditor } from '@/components/documents/DocumentEditor';
+import { DocumentEditor, countWords } from '@/components/documents/DocumentEditor';
 import { removeCitationsFor } from '@/components/documents/extensions/CitationChip';
 import { orderedFootnoteIds } from '@/components/documents/extensions/FootnoteRef';
 import { SourcesPanel } from '@/components/documents/SourcesPanel';
 import { OutlinePanel } from '@/components/documents/OutlinePanel';
+import { CommentsPanel } from '@/components/documents/CommentsPanel';
+import { createComment } from '@/lib/documents/commentsApi';
+import { VersionHistoryPanel } from '@/components/documents/VersionHistoryPanel';
+import { createVersion, shouldSnapshot } from '@/lib/documents/versionsApi';
 import { PrompterOverlay } from '@/components/prompter/PrompterOverlay';
 import { WorksCitedPreview } from '@/components/documents/WorksCitedPreview';
 import { PrintPaperView } from '@/components/documents/PrintPaperView';
@@ -166,6 +170,15 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   // mount once the editor exists instead of reading a null ref forever.
   const [editorInstance, setEditorInstance] = useState<Editor | null>(null);
   const [outlineOpen, setOutlineOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  // Bumped after a new comment so the panel refetches without a prop drill.
+  const [commentsToken, setCommentsToken] = useState(0);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyToken, setHistoryToken] = useState(0);
+  // Snapshot bookkeeping. Refs, not state: they're read inside the save
+  // path and must never trigger a re-render of the editor page.
+  const lastSnapshotAtRef = useRef<number | null>(null);
+  const dirtySinceSnapshotRef = useRef(false);
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -256,10 +269,59 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
   // save), so Ctrl-Z restored an empty footnote. Orphans are pruned once, at
   // load, where there is no undo history to break — see `load` above. A
   // footnote whose text is missing still renders as `[?]`.
+  /**
+   * Take a snapshot if one is due (or if the user asked for a named one).
+   * Called from the same place autosave writes, so history tracks real saved
+   * state rather than keystrokes. Failures are deliberately quiet for the
+   * automatic path: losing a snapshot is not worth a toast over the user's
+   * document, and the next interval will try again.
+   */
+  const snapshot = useCallback(async (label?: string) => {
+    const ed = editorInstanceRef.current;
+    if (!ed || !id || !userId) return;
+    const now = Date.now();
+    if (!label && !shouldSnapshot({
+      now,
+      lastSnapshotAt: lastSnapshotAtRef.current,
+      dirtySinceLastSnapshot: dirtySinceSnapshotRef.current,
+    })) return;
+    try {
+      await createVersion({
+        docId: id,
+        userId,
+        content: ed.getJSON(),
+        wordCount: countWords(ed.getText()),
+        label: label ?? null,
+      });
+      lastSnapshotAtRef.current = now;
+      dirtySinceSnapshotRef.current = false;
+      setHistoryToken((n) => n + 1);
+      if (label) toast.success('Version saved.');
+    } catch (e) {
+      if (label) toast.error(e instanceof Error ? e.message : 'Could not save that version.');
+    }
+  }, [id, userId]);
+
+  const handleRestoreVersion = useCallback((content: unknown) => {
+    const ed = editorInstanceRef.current;
+    if (!ed) return;
+    // Snapshot what's on screen BEFORE overwriting it, so "restore" is itself
+    // undoable from the same panel.
+    void snapshot('Before restore');
+    ed.commands.setContent(content as never);
+    autosaver.schedule({ content, word_count: countWords(ed.getText()) });
+    setHistoryOpen(false);
+  }, [autosaver, snapshot]);
+
   const handleEditorUpdate = useCallback((json: unknown, count: number) => {
     setWordCount(count);
     autosaver.schedule({ content: json, word_count: count });
-  }, [autosaver]);
+    // Mark the doc snapshot-worthy and let the interval decide. snapshot()
+    // is a no-op until the interval elapses, so this is cheap to call on
+    // every keystroke.
+    dirtySinceSnapshotRef.current = true;
+    void snapshot();
+  }, [autosaver, snapshot]);
 
   const handleTitleChange = useCallback((next: string) => {
     setTitle(next);
@@ -275,6 +337,33 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
     setSources(next);
     autosaver.schedule({ sources: next });
   }, [autosaver]);
+
+  /**
+   * Start a comment on the current selection. The anchor id is minted here
+   * and written into the doc as a `comment` mark; the thread row carries the
+   * same id. Order matters: the row is created FIRST, so a failed insert
+   * (offline, RLS) doesn't leave a highlight in the document pointing at a
+   * thread that never existed.
+   */
+  const handleAddComment = useCallback(async () => {
+    const ed = editorInstanceRef.current;
+    if (!ed || !id || !userId) return;
+    if (ed.state.selection.empty) {
+      toast.info('Select the text you want to comment on first.');
+      return;
+    }
+    const body = window.prompt('Comment');
+    if (!body?.trim()) return;
+    const anchorId = crypto.randomUUID();
+    try {
+      await createComment({ docId: id, userId, anchorId, body: body.trim() });
+      ed.chain().focus().setComment(anchorId).run();
+      setCommentsToken((n) => n + 1);
+      setCommentsOpen(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not save that comment.');
+    }
+  }, [id, userId]);
 
   const pageSetup = resolvePageSetup(paperMeta);
 
@@ -527,6 +616,46 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             ))}
           </select>
 
+          <Button
+            type="button" variant="outline" size="sm" className="text-xs"
+            onClick={() => { const label = window.prompt('Name this version'); if (label?.trim()) void snapshot(label.trim()); }}
+          >
+            Save version
+          </Button>
+          <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+            <SheetTrigger asChild>
+              <Button type="button" variant="outline" size="sm" className="text-xs">History</Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader><SheetTitle>Version history</SheetTitle></SheetHeader>
+              <div className="mt-3">
+                {id && (
+                  <VersionHistoryPanel
+                    docId={id}
+                    refreshToken={historyToken}
+                    onRestore={handleRestoreVersion}
+                  />
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Comments — threads live in gw_doc_comments; the highlight in
+              the document is just the anchor. */}
+          <Sheet open={commentsOpen} onOpenChange={setCommentsOpen}>
+            <SheetTrigger asChild>
+              <Button type="button" variant="outline" size="sm" className="text-xs">Comments</Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader><SheetTitle>Comments</SheetTitle></SheetHeader>
+              <div className="mt-3">
+                {id && (
+                  <CommentsPanel docId={id} editor={editorInstance} refreshToken={commentsToken} />
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+
           {/* Outline — headings only, click to jump. Same over-the-doc sheet
               as Sources so the page keeps its full width. */}
           <Sheet open={outlineOpen} onOpenChange={setOutlineOpen}>
@@ -565,6 +694,7 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             onImageClick={handleImageButtonClick}
             onImageFiles={handleImageFiles}
             pageSetup={paperMeta}
+            onCommentClick={handleAddComment}
             editorRef={(editor) => { editorInstanceRef.current = editor; setEditorInstance(editor); }}
           />
 

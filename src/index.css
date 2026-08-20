@@ -2673,3 +2673,12 @@ body.gw-stage-mode .gw-collapsible-sidebar {
   .gw-page-break { border-top: 0; margin: 0; }
   .gw-page-break::after { content: none; }
 }
+
+/* Commented text in the Documents editor. Deliberately lighter than a search
+   hit — a comment anchor is ambient (it can sit on a paragraph for weeks),
+   while a search hit is transient and wants the eye. */
+.gw-comment-anchor {
+  background-color: hsl(45 100% 55% / 0.18);
+  border-bottom: 2px solid hsl(45 100% 45% / 0.55);
+  cursor: pointer;
+}

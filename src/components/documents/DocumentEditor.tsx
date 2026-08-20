@@ -21,6 +21,7 @@ import { CitationChip } from './extensions/CitationChip';
 import { FootnoteRef } from './extensions/FootnoteRef';
 import { DocumentSearch } from './extensions/DocumentSearch';
 import { PageBreak } from './extensions/PageBreak';
+import { CommentMark } from './extensions/CommentMark';
 import { FindReplaceBar } from './FindReplaceBar';
 
 /**
@@ -100,6 +101,7 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
     CharacterCount,
     DocumentSearch,
     PageBreak,
+    CommentMark,
     CitationChip.configure({ getText: opts.getCitationText ?? (() => '[citation]') }),
     FootnoteRef.configure({ getIndex: opts.getFootnoteIndex ?? (() => -1) }),
   ];
@@ -122,6 +124,9 @@ export interface DocumentEditorProps {
   onCiteClick: () => void;
   onFootnoteClick: () => void;
   onImageClick: () => void;
+  /** Start a comment on the current selection. Disabled when nothing is
+   *  selected — a comment with no anchor has nothing to point at. */
+  onCommentClick?: () => void;
   /** Upload + insert image files from the clipboard or a drop. Without this
    *  the editor silently swallows a pasted screenshot. */
   onImageFiles?: (files: File[]) => void;
@@ -138,6 +143,7 @@ export function DocumentEditor({
   onCiteClick,
   onFootnoteClick,
   onImageClick,
+  onCommentClick,
   onImageFiles,
   pageSetup,
   editorRef,
@@ -200,7 +206,13 @@ export function DocumentEditor({
 
   return (
     <div className="flex flex-col">
-      <DocToolbar editor={editor} onCiteClick={onCiteClick} onFootnoteClick={onFootnoteClick} onImageClick={onImageClick} />
+      <DocToolbar
+        editor={editor}
+        onCiteClick={onCiteClick}
+        onFootnoteClick={onFootnoteClick}
+        onImageClick={onImageClick}
+        onCommentClick={onCommentClick}
+      />
       <FindReplaceBar editor={editor} />
       {/* w-full is load-bearing: in a flex-col parent, mx-auto overrides the
           default cross-axis stretch and the card shrink-wraps its content
