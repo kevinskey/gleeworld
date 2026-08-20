@@ -25,7 +25,8 @@ import { applyPreviewRole, previewRoleIsFaculty, resolveNav, type NavContext } f
 import { selectUpNext, fuseProgress, greetingFor, preferredFirstName } from '@/lib/home/upNext';
 import { ledgerGlyphs } from '@/lib/home/ledger';
 import { useMyTools } from '@/hooks/useMyTools';
-import { mergeGridOrder, sanitizeShelf, previewShelfTools, type Shelf } from '@/lib/navigation/myTools';
+import { mergeGridOrder, sanitizeShelf, type Shelf } from '@/lib/navigation/myTools';
+import { usePreviewShelf } from '@/hooks/usePreviewShelf';
 import { flattenShelf, groupIdOf } from '@/lib/navigation/toolGroups';
 import { resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
@@ -213,7 +214,7 @@ export default function HouseHome() {
   // 2026-08-20). Same reasoning as the sidebar: a previewing admin has no
   // student record to borrow, so the role defaults are the honest stand-in.
   // useEffectivePreviewRole is already admin-gated, so this can't be forced.
-  const previewShelf = useMemo(() => previewShelfTools(previewRole), [previewRole]);
+  const previewShelf = usePreviewShelf(previewRole);
   // First-run sheet: shown once, on a brand-new member's very first load of
   // this page. `firstRunDismissed` is held locally (not derived solely from
   // myTools.setupComplete) so a Skip/Looks good tap closes the sheet

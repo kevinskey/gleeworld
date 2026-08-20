@@ -93,7 +93,8 @@ import { NavShelf } from './NavShelf';
 import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
-import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, previewShelfTools, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { usePreviewShelf } from '@/hooks/usePreviewShelf';
 import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
 import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 
@@ -356,7 +357,7 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
   // Previewing renders the role's DEFAULT shelf, not the admin's own — see
   // previewShelfTools. Without this the preview showed the admin their own
   // tools and looked like it was ignoring the Navigation settings.
-  const previewTools = previewShelfTools(previewingAs);
+  const previewTools = usePreviewShelf(previewingAs);
   const shelfTools = previewTools
     ? selectShelfEntries(resolvedEntries, previewTools)
     : (roleLoading && !knownGood)
@@ -535,7 +536,7 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
   // Previewing renders the role's DEFAULT shelf, not the admin's own — see
   // previewShelfTools. Without this the preview showed the admin their own
   // tools and looked like it was ignoring the Navigation settings.
-  const previewTools = previewShelfTools(previewingAs);
+  const previewTools = usePreviewShelf(previewingAs);
   const shelfTools = previewTools
     ? selectShelfEntries(resolvedEntries, previewTools)
     : (roleLoading && !knownGood)

@@ -43,7 +43,10 @@ vi.mock('@/hooks/useMyTools', () => ({
 }));
 vi.mock('@/hooks/useUserRole', () => ({ useUserRole: () => ({ profile: { is_admin: false, role: 'student' }, loading: false, canEditMusicLibrary: () => false }) }));
 vi.mock('@/hooks/useModuleAccess', () => ({ useModuleAccess: (key: string) => ({ hasAccess: h.moduleOverrides[key] ?? true }) }));
-vi.mock('@/hooks/useTenantNavPrefs', () => ({ useTenantNavPrefs: () => h.hiddenRoutes }));
+vi.mock('@/hooks/useTenantNavPrefs', () => ({
+  // Same module as useTenantNavPrefs — a preview reads the tenant's
+  // configured role defaults from the row that query already fetched.
+  useTenantRoleDefaults: () => null, useTenantNavPrefs: () => h.hiddenRoutes }));
 vi.mock('@/hooks/useEffectivePreviewRole', () => ({ useEffectivePreviewRole: () => null }));
 vi.mock('@/hooks/useTenantDefaultTools', () => ({
   useTenantDefaultTools: () => ({ defaultsByRole: h.defaultsByRole, loading: false, saveDefaults: h.saveDefaults }),
