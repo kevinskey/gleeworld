@@ -7,6 +7,7 @@
 // honest.
 import { describe, it, expect } from 'vitest';
 import { planDrop, FAVORITES_DROP_ID } from './gridDrag';
+import { FAVORITES_GROUP_ID } from './favorites';
 
 describe('planDrop — dragging across bands', () => {
   const BAND_OF = new Map<string, string | null>([
@@ -44,14 +45,21 @@ describe('planDrop — dragging across bands', () => {
 describe('planDrop — the empty Favorites zone', () => {
   const BAND_OF = new Map<string, string | null>([['liturgy', 'a'], ['academy', 'b']]);
 
-  it('un-files the dropped app and puts it first', () => {
+  it('files the dropped app into Favorites and puts it first', () => {
     const plan = planDrop('academy', FAVORITES_DROP_ID, BAND_OF);
-    expect(plan.refileTo).toBeNull();
+    expect(plan.refileTo).toBe(FAVORITES_GROUP_ID);
     expect(plan.reorder(['liturgy', 'academy'])).toEqual(['academy', 'liturgy']);
   });
 
-  it('leaves membership alone when the app was already ungrouped', () => {
+  // Favorites is a GROUP, not the loose list — an ungrouped app dropped in
+  // is a real move (out of the sidebar, onto the page), not a no-op.
+  it('files an ungrouped app in, because loose is the nav and Favorites is not', () => {
     const plan = planDrop('calendar', FAVORITES_DROP_ID, new Map([['calendar', null]]));
+    expect(plan.refileTo).toBe(FAVORITES_GROUP_ID);
+  });
+
+  it('leaves membership alone when the app is already a favorite', () => {
+    const plan = planDrop('calendar', FAVORITES_DROP_ID, new Map([['calendar', FAVORITES_GROUP_ID]]));
     expect('refileTo' in plan).toBe(false);
   });
 

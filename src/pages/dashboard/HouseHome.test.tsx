@@ -464,7 +464,7 @@ describe('HouseHome keycap grid — a grid edit never flattens the member groups
   // place any app at the top"), so the grid hands back the membership it
   // ended up rendering. The re-split must follow THAT, not the stored
   // filing — otherwise every cross-band drag snaps back on the next render.
-  it('re-files a tool the member dragged out of its group and up to the top', async () => {
+  it('re-files a tool the member dragged out of its group and into the loose nav list', async () => {
     const saveShelf = vi.fn().mockResolvedValue(true);
     myToolsResult.current = {
       myTools: {
@@ -498,5 +498,54 @@ describe('HouseHome keycap grid — a grid edit never flattens the member groups
     const saved = saveShelf.mock.calls.at(-1)![0];
     expect(saved.tools).toEqual(['messages']);
     expect(saved.groups[0].tools).toEqual(['academy', 'calendar']);
+  });
+});
+
+// FAVORITES is a reserved group, created the first time the member puts
+// something in it — a key filed into a group the record does not have yet
+// would otherwise land in neither list and be silently unpinned.
+describe('HouseHome keycap grid — the Favorites group is created on demand', () => {
+  const setShelfWithGroup = () => {
+    const saveShelf = vi.fn().mockResolvedValue(true);
+    myToolsResult.current = {
+      myTools: {
+        tools: ['calendar', 'messages'],
+        groups: [{ id: 'a', name: 'Sunday', tools: ['academy'], collapsed: false }],
+        widgets: [],
+        setupComplete: true,
+      },
+      loading: false,
+      saveTools: vi.fn(),
+      saveMyTools: vi.fn(),
+      saveShelf,
+    };
+    return saveShelf;
+  };
+
+  it('creates it and files the favorited app there, out of the loose nav list', async () => {
+    const saveShelf = setShelfWithGroup();
+    renderHouseHome();
+    await capturedGridProps.current!.onSave(
+      ['calendar', 'messages', 'academy'],
+      { calendar: 'favorites', messages: null, academy: 'a' },
+    );
+    const saved = saveShelf.mock.calls.at(-1)![0];
+    const favorites = saved.groups.find((g: { id: string }) => g.id === 'favorites');
+    expect(favorites?.tools).toEqual(['calendar']);
+    // Out of the loose list — that list is what the sidebar renders.
+    expect(saved.tools).toEqual(['messages']);
+    // And the member's own group is untouched.
+    expect(saved.groups.find((g: { id: string }) => g.id === 'a')?.tools).toEqual(['academy']);
+  });
+
+  it('does not grow an empty Favorites group for a member who never uses it', async () => {
+    const saveShelf = setShelfWithGroup();
+    renderHouseHome();
+    await capturedGridProps.current!.onSave(
+      ['calendar', 'messages', 'academy'],
+      { calendar: null, messages: null, academy: 'a' },
+    );
+    const saved = saveShelf.mock.calls.at(-1)![0];
+    expect(saved.groups.map((g: { id: string }) => g.id)).toEqual(['a']);
   });
 });

@@ -12,6 +12,7 @@ import { resolveKey, resolveKeys } from './mergedKeys';
 // module, so a value import here would close the runtime cycle mergedKeys.ts
 // exists to avoid (see its header). `import type` is erased at compile time.
 import type { ToolGroup } from './myTools';
+import { FAVORITES_GROUP_ID } from './favorites';
 
 export interface ModuleFlags {
   hasViewer: boolean; hasStudio: boolean;
@@ -279,5 +280,12 @@ export function bandDestinations(
     const tiles = primary.filter((tile) => groupIdOfKey.get(tile.key) === group.id);
     if (tiles.length > 0) bands.push({ groupId: group.id, name: group.name, tiles });
   }
+  // Favorites leads, wherever the member happens to have it filed in their
+  // groups array — it is the top of the grid by definition, not by position
+  // in a list they can reorder. Hoisted here rather than at each call site so
+  // the view-mode grid, the edit draft and any future band consumer cannot
+  // disagree about where it sits.
+  const fav = bands.findIndex((b) => b.groupId === FAVORITES_GROUP_ID);
+  if (fav > 0) bands.unshift(...bands.splice(fav, 1));
   return bands;
 }

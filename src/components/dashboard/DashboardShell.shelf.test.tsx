@@ -187,45 +187,52 @@ describe('Sidebar — failed load must still render the shelf', () => {
   });
 });
 
-// Favorites (the member's ungrouped tools) already render as full keycaps at
-// the top of the Command Center grid. Kevin, 2026-08-20: "i dont need to list
-// favorites in the left nav because its on page cards." So a member with
-// groups gets their groups in the sidebar and nothing else — the duplicate
-// rows are what the nav's most valuable space was being spent on.
-describe('Sidebar — favorites belong on the page, not in the nav', () => {
-  const GROUPED = {
+// Favorites is a reserved group whose apps are already on the Command Center
+// page as keycaps, so the nav hides that ONE group (Kevin, 2026-08-20: "i
+// dont need to list favorites in the left nav because its on page cards").
+// Loose tools keep rendering: every "add an app" path appends to the loose
+// list, so that is how an app reaches the left nav at all.
+describe('Sidebar — the Favorites group is page-only', () => {
+  const WITH_FAVORITES = {
     v: 4,
     tools: ['calendar', 'messages'],
-    groups: [{ id: 'a', name: 'Sunday', tools: ['finance'], collapsed: false }],
+    groups: [
+      { id: 'favorites', name: 'Favorites', tools: ['finance'], collapsed: false },
+      { id: 'a', name: 'Sunday', tools: ['people'], collapsed: false },
+    ],
     widgets: [],
     setupComplete: true,
   } as MyTools;
 
-  it('drops the ungrouped tools from the shelf when the member has a group', () => {
-    setup({ myTools: GROUPED });
+  it('hides the Favorites group and its tools from the shelf', () => {
+    setup({ myTools: WITH_FAVORITES });
     render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
-    expect(screen.queryByText('Calendar')).not.toBeInTheDocument();
-    expect(screen.queryByText('Messages')).not.toBeInTheDocument();
-    // The group itself, and the tool inside it, still render.
-    expect(screen.getByText('Sunday')).toBeInTheDocument();
-    expect(screen.getByText('Finance')).toBeInTheDocument();
+    expect(screen.queryByText('Favorites')).not.toBeInTheDocument();
+    expect(screen.queryByText('Finance')).not.toBeInTheDocument();
   });
 
-  it('keeps them for a member with no groups, whose nav would otherwise be empty', () => {
-    setup({ myTools: { v: 4, tools: ['finance', 'people'], groups: [], widgets: [], setupComplete: true } });
+  it('keeps the loose tools, which is how an app gets into the nav', () => {
+    setup({ myTools: WITH_FAVORITES });
     render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
-    expect(screen.getByText('Finance')).toBeInTheDocument();
+    expect(screen.getByText('Calendar')).toBeInTheDocument();
+    expect(screen.getByText('Messages')).toBeInTheDocument();
+  });
+
+  it('keeps every other group', () => {
+    setup({ myTools: WITH_FAVORITES });
+    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    expect(screen.getByText('Sunday')).toBeInTheDocument();
     expect(screen.getByText('People')).toBeInTheDocument();
   });
 
   it('applies to the mobile drawer too', () => {
-    setup({ myTools: GROUPED });
+    setup({ myTools: WITH_FAVORITES });
     render(
       <MemoryRouter initialEntries={['/dashboard']}>
         <MobileNav onNavigate={vi.fn()} onOpenAllTools={vi.fn()} />
       </MemoryRouter>,
     );
-    expect(screen.queryByText('Calendar')).not.toBeInTheDocument();
-    expect(screen.getByText('Finance')).toBeInTheDocument();
+    expect(screen.queryByText('Finance')).not.toBeInTheDocument();
+    expect(screen.getByText('Calendar')).toBeInTheDocument();
   });
 });

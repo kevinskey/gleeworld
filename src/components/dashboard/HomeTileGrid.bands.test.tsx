@@ -24,7 +24,7 @@ const dest = (key: string): Destination => ({
 });
 
 const BANDS: TileBand[] = [
-  { groupId: null, name: null, tiles: [dest('calendar'), dest('messages')] },
+  { groupId: 'favorites', name: 'Favorites', tiles: [dest('calendar'), dest('messages')] },
   { groupId: 'a', name: 'Sunday', tiles: [dest('liturgy')] },
   { groupId: 'b', name: 'Teaching', tiles: [dest('academy'), dest('grading')] },
 ];
@@ -48,7 +48,7 @@ const gridOrder = () => screen.getAllByRole('button', { name: /^Remove .+ from g
   .map((b) => b.getAttribute('aria-label')!.replace(/^Remove | from grid$/g, ''));
 
 describe('HomeTileGrid grouped bands — view mode', () => {
-  it('names the leading ungrouped band Favorites, then every named group', () => {
+  it('leads with the Favorites band, then every named group', () => {
     renderGrid();
     expect(headings()).toEqual(['Favorites', 'Sunday', 'Teaching']);
   });
@@ -64,12 +64,14 @@ describe('HomeTileGrid grouped bands — view mode', () => {
     expect(screen.getByRole('link', { name: 'liturgy' })).toHaveAttribute('href', '/liturgy');
   });
 
-  it('still says Favorites for a member with no groups at all', () => {
+  // Loose tools are the ones the sidebar shows; on the grid they still
+  // render under no heading at all, exactly as before Favorites existed.
+  it('renders the loose band with no heading', () => {
     renderGrid([{ groupId: null, name: null, tiles: [dest('calendar')] }]);
-    expect(headings()).toEqual(['Favorites']);
+    expect(screen.queryAllByRole('heading')).toHaveLength(0);
   });
 
-  it('shows no Favorites heading when the member has no ungrouped apps', () => {
+  it('shows no Favorites heading in view mode when nothing is favorited', () => {
     // A heading over nothing is noise in view mode — there is nothing to
     // drop and nothing to explain. Edit mode is where the empty row earns
     // its place; see the drop-zone test below.
@@ -95,7 +97,7 @@ describe('HomeTileGrid grouped bands — edit mode', () => {
   });
 
   it('shows no drop-zone prompt once Favorites has apps in it', () => {
-    renderGrid();
+    renderGrid(BANDS);
     enterEditMode();
     expect(screen.queryByText(/drag an app here/i)).toBeNull();
   });
@@ -114,7 +116,7 @@ describe('HomeTileGrid grouped bands — edit mode', () => {
     enterEditMode();
     fireEvent.click(screen.getByRole('button', { name: /done/i }));
     expect(onSave.mock.calls[0][1]).toEqual({
-      calendar: null, messages: null, liturgy: 'a', academy: 'b', grading: 'b',
+      calendar: 'favorites', messages: 'favorites', liturgy: 'a', academy: 'b', grading: 'b',
     });
   });
 
