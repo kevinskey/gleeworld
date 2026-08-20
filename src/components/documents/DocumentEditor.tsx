@@ -16,6 +16,7 @@ import { Highlight } from '@tiptap/extension-highlight';
 import { TextStyle, Color, FontFamily, FontSize } from '@tiptap/extension-text-style';
 import { CharacterCount } from '@tiptap/extensions';
 import { PAGE_DIMENSIONS, PX_PER_IN, resolvePageSetup, type PaperMeta } from '@/lib/documents/types';
+import { stripUnreadableColors } from '@/lib/documents/pasteColors';
 import { DocToolbar } from './DocToolbar';
 import { CitationChip } from './extensions/CitationChip';
 import { FootnoteRef } from './extensions/FootnoteRef';
@@ -208,6 +209,16 @@ export function DocumentEditor({
     content: (collab?.ydoc ? '' : (content ?? '')) as Content,
     editable,
     editorProps: {
+      /**
+       * Copying from a dark-themed source puts `color: rgb(255,255,255)` on
+       * the clipboard. Preserved onto white paper the text is invisible, and
+       * the person pasting reasonably concludes that paste is broken (Kevin,
+       * 2026-08-20). Only unreadable colours are dropped — a red heading
+       * pasted from Word stays red.
+       */
+      transformPastedHTML(html) {
+        return stripUnreadableColors(html);
+      },
       /**
        * Images from the clipboard. TipTap/ProseMirror drop image FILES on the
        * floor — the clipboard's text/html flavor is what it reads, and for a
