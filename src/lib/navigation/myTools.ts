@@ -410,6 +410,28 @@ export function shelfGroupsForNav<T extends { id: string }>(groups: T[]): T[] {
  * written, nothing moves on the Command Center grid, and dragging an app out
  * of Favorites there brings it straight back to the nav.
  */
+/**
+ * The shelf a preview should render.
+ *
+ * The sidebar's top section is the member's OWN shelf — per-user data keyed
+ * by uid — so "preview as Students" was still showing the admin their own
+ * tools, and the Navigation settings page (which describes the tenant's
+ * catalog) appeared to disagree with the nav (Kevin, 2026-08-20: "this is
+ * supposedly the student navigation setup. It doesnt match the actual left
+ * nav"). They were describing different things.
+ *
+ * A previewing admin can't borrow a real student's shelf — there isn't one
+ * to borrow — so the honest answer is the DEFAULTS a new member of that role
+ * receives. That is what a student who has never customised anything sees,
+ * which is what the preview is being asked.
+ *
+ * Returns null when no preview applies, so callers keep their own logic.
+ */
+export function previewShelfTools(previewRole: string | null | undefined): string[] | null {
+  if (!previewRole) return null;
+  return previewRole === 'admin' ? DEFAULT_TOOLS_FACULTY : DEFAULT_TOOLS_STUDENT;
+}
+
 export function navToolsForShelf(
   tools: string[],
   groups: { id: string; tools: string[] }[] | undefined,

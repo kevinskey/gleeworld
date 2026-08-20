@@ -93,7 +93,7 @@ import { NavShelf } from './NavShelf';
 import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
-import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, previewShelfTools, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
 import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
 import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 
@@ -348,15 +348,27 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
   // convention actually applied correctly — CORE_TAB_KEYS there is the
   // role-invariant set, not an empty one.
   const knownGood = myTools?.setupComplete === true;
-  const shelfTools = (roleLoading && !knownGood)
-    ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
-    : selectShelfEntries(resolvedEntries, navToolsForShelf(myTools?.tools ?? [], myTools?.groups));
+  // Only a genuine tenant admin previews; a forged sessionStorage value is
+  // inert here exactly as it is in useUserRole.
+  const previewRoleRaw = usePreviewRole();
+  const myTenantRoleForPreview = useMyTenantRole();
+  const previewingAs = isTenantAdminOrAboveRole(myTenantRoleForPreview) ? previewRoleRaw : null;
+  // Previewing renders the role's DEFAULT shelf, not the admin's own — see
+  // previewShelfTools. Without this the preview showed the admin their own
+  // tools and looked like it was ignoring the Navigation settings.
+  const previewTools = previewShelfTools(previewingAs);
+  const shelfTools = previewTools
+    ? selectShelfEntries(resolvedEntries, previewTools)
+    : (roleLoading && !knownGood)
+      ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
+      : selectShelfEntries(resolvedEntries, navToolsForShelf(myTools?.tools ?? [], myTools?.groups));
   // Empty groups never reach a live surface. This single filter covers both
   // the group a member made but hasn't filled and the group whose every tool
   // is gated off for this viewer — a header over zero rows is noise in the
   // sidebar and worse over a keycap band. The editor still shows them, which
   // is where a member fills or deletes one.
-  const shelfGroups = (roleLoading && !knownGood)
+  // A previewed role has no custom groups — those are the admin's own.
+  const shelfGroups = (previewTools || (roleLoading && !knownGood))
     ? []
     : (myTools?.groups ?? [])
         .map((g) => ({
@@ -515,12 +527,24 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
   // Same knownGood/roleLoading gate as Sidebar — see the matching comment
   // there for why this isn't `roleLoading ? [] : ...` anymore.
   const knownGood = myTools?.setupComplete === true;
-  const shelfTools = (roleLoading && !knownGood)
-    ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
-    : selectShelfEntries(resolvedEntries, navToolsForShelf(myTools?.tools ?? [], myTools?.groups));
+  // Only a genuine tenant admin previews; a forged sessionStorage value is
+  // inert here exactly as it is in useUserRole.
+  const previewRoleRaw = usePreviewRole();
+  const myTenantRoleForPreview = useMyTenantRole();
+  const previewingAs = isTenantAdminOrAboveRole(myTenantRoleForPreview) ? previewRoleRaw : null;
+  // Previewing renders the role's DEFAULT shelf, not the admin's own — see
+  // previewShelfTools. Without this the preview showed the admin their own
+  // tools and looked like it was ignoring the Navigation settings.
+  const previewTools = previewShelfTools(previewingAs);
+  const shelfTools = previewTools
+    ? selectShelfEntries(resolvedEntries, previewTools)
+    : (roleLoading && !knownGood)
+      ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
+      : selectShelfEntries(resolvedEntries, navToolsForShelf(myTools?.tools ?? [], myTools?.groups));
   // Empty groups never reach a live surface — see the matching comment on
   // Sidebar's shelfGroups above; this is the same filter, not a second one.
-  const shelfGroups = (roleLoading && !knownGood)
+  // A previewed role has no custom groups — those are the admin's own.
+  const shelfGroups = (previewTools || (roleLoading && !knownGood))
     ? []
     : (myTools?.groups ?? [])
         .map((g) => ({
