@@ -94,7 +94,7 @@ vi.mock('@/components/dashboard/DashboardShell', () => ({
 interface CapturedGridProps {
   bands: Array<{ groupId: string | null; name: string | null; tiles: Array<{ key: string }> }>;
   overflow: Array<{ key: string }>;
-  onSave: (order: string[]) => Promise<boolean>;
+  onSave: (order: string[], membership?: Record<string, string | null>) => Promise<boolean>;
 }
 const capturedGridProps = vi.hoisted(() => ({ current: null as CapturedGridProps | null }));
 vi.mock('@/components/dashboard/HomeTileGrid', () => ({
@@ -458,5 +458,45 @@ describe('HouseHome keycap grid — a grid edit never flattens the member groups
     await capturedGridProps.current!.onSave(['calendar', 'part-tracks', 'academy']);
     const saved = saveShelf.mock.calls.at(-1)![0];
     expect(saved.groups[0].tools).toEqual(['part-tracks', 'academy']);
+  });
+
+  // Dragging across a heading is now allowed (Kevin, 2026-08-20: "let me
+  // place any app at the top"), so the grid hands back the membership it
+  // ended up rendering. The re-split must follow THAT, not the stored
+  // filing — otherwise every cross-band drag snaps back on the next render.
+  it('re-files a tool the member dragged out of its group and up to the top', async () => {
+    const saveShelf = vi.fn().mockResolvedValue(true);
+    myToolsResult.current = {
+      myTools: {
+        tools: ['calendar'],
+        groups: [{ id: 'a', name: 'Sunday', tools: ['academy'], collapsed: false }],
+        widgets: [],
+        setupComplete: true,
+      },
+      loading: false,
+      saveTools: vi.fn(),
+      saveMyTools: vi.fn(),
+      saveShelf,
+    };
+    renderHouseHome();
+    await capturedGridProps.current!.onSave(
+      ['academy', 'calendar'],
+      { academy: null, calendar: null },
+    );
+    const saved = saveShelf.mock.calls.at(-1)![0];
+    expect(saved.tools).toEqual(['academy', 'calendar']);
+    expect(saved.groups[0].tools).toEqual([]);
+  });
+
+  it('re-files a loose tool the member dragged under a heading', async () => {
+    const saveShelf = setShelf();
+    renderHouseHome();
+    await capturedGridProps.current!.onSave(
+      ['messages', 'academy', 'calendar'],
+      { messages: null, academy: 'a', calendar: 'a' },
+    );
+    const saved = saveShelf.mock.calls.at(-1)![0];
+    expect(saved.tools).toEqual(['messages']);
+    expect(saved.groups[0].tools).toEqual(['academy', 'calendar']);
   });
 });

@@ -267,14 +267,22 @@ export default function HouseHome() {
   // Both lists are rebuilt from `merged` rather than filtered in place, so a
   // reorder the member made INSIDE a band persists instead of snapping back
   // to the stored order the next time the page renders.
+  //
+  // `membership` is the grid's own answer for every key the edit session
+  // could speak for — a drag across a heading re-files a tool, so the split
+  // must follow the arrangement the member just made, not the filing they
+  // had before it. Every other key (stored but not representable here) still
+  // falls back to its stored group, which is what keeps a phone edit from
+  // un-filing the tools the tab bar claimed.
   const saveGridOrder = useCallback(
-    (draft: string[]) => {
+    (draft: string[], membership: Record<string, string | null> = {}) => {
       const merged = mergeGridOrder(shelfOrder, draft, representable);
+      const groupFor = (k: string) => (k in membership ? membership[k] : groupIdOf(shelf, k));
       return saveShelf({
-        tools: merged.filter((k) => groupIdOf(shelf, k) === null),
+        tools: merged.filter((k) => groupFor(k) === null),
         groups: shelf.groups.map((g) => ({
           ...g,
-          tools: merged.filter((k) => groupIdOf(shelf, k) === g.id),
+          tools: merged.filter((k) => groupFor(k) === g.id),
         })),
       });
     },

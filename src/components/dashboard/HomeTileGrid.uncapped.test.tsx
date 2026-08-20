@@ -63,7 +63,7 @@ describe('HomeTileGrid has no add ceiling', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add extra-b to grid' }));
     fireEvent.click(screen.getByRole('button', { name: /done/i }));
     // All ten, in order — not the first eight.
-    expect(onSave).toHaveBeenCalledWith([...eight, ...spare].map((d) => d.key));
+    expect(onSave.mock.calls[0][0]).toEqual([...eight, ...spare].map((d) => d.key));
   });
 
   it('still refuses to add the same tile twice', () => {
@@ -71,6 +71,6 @@ describe('HomeTileGrid has no add ceiling', () => {
     const { onSave } = renderGrid();
     fireEvent.click(screen.getByRole('button', { name: 'Add extra-a to grid' }));
     fireEvent.click(screen.getByRole('button', { name: /done/i }));
-    expect(onSave).toHaveBeenCalledWith([...eight.map((d) => d.key), 'extra-a']);
+    expect(onSave.mock.calls[0][0]).toEqual([...eight.map((d) => d.key), 'extra-a']);
   });
 });
