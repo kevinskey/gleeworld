@@ -35,7 +35,32 @@ serve(async (req) => {
   const cartQuantities = String(session.metadata?.cart_quantities ?? "")
     .split(",").map((q: string) => Math.max(1, Math.trunc(Number(q)) || 1));
   const qtyByScore = new Map(cartScoreIds.map((id: string, i: number) => [id, cartQuantities[i] ?? 1]));
+  // Not a partner-store checkout.
+  //
+  // Stripe fans checkout.session.completed out to EVERY endpoint subscribed
+  // to it, and this account has five. So the fees flow, the main store,
+  // VIP454 and T-Shirt Brothers all land here, none of them carrying partner
+  // metadata. Refusing them is right; refusing them with a 400 was not —
+  // that tells Stripe the delivery FAILED, so it retries, counts the failure,
+  // and eventually emails "webhook delivery issues" (Kevin, 2026-08-20:
+  // every real delivery was a 400 and the endpoint looked broken).
+  //
+  // "This event isn't mine" is a successful delivery. 200, like the
+  // event-type check above.
+  const isPartnerCheckout = Boolean(orderId || buyerUserId || partnerId || cartScoreIds.length > 0);
+  if (!isPartnerCheckout) {
+    return new Response("not a partner checkout", { status: 200 });
+  }
+
+  // Looks like a partner checkout but is missing pieces — that IS a real
+  // failure (partner-checkout-create should always set all four), so it
+  // still 400s and still retries. Logged with the session id, because a
+  // silent 200 here would hide a broken checkout path.
   if (!orderId || !buyerUserId || !partnerId || cartScoreIds.length === 0) {
+    console.error("[partner-webhook] partial partner metadata", {
+      session: session.id,
+      has: { orderId: !!orderId, buyerUserId: !!buyerUserId, partnerId: !!partnerId, scores: cartScoreIds.length },
+    });
     return new Response("missing metadata", { status: 400 });
   }
 
