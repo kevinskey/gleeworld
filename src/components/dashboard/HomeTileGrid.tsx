@@ -1,8 +1,11 @@
 // Keycap app grid with iOS-style jiggle editing, extracted from HouseHome.
 // View mode: primary tiles as keycap links, rest behind a "More" expander.
 // The primary tiles arrive already partitioned into BANDS — the member's
-// loose keycaps first under no heading, then one heading per group they
+// ungrouped keycaps first under FAVORITES, then one heading per group they
 // named. Same set as the sidebar shelf, and now the same structure.
+// Favorites is the top of the grid and takes any app: drag one there, or add
+// one from More, and it lands in Favorites. In edit mode it is the one band
+// that survives being empty, so it can always be dropped into.
 // Edit mode (long-press a tile or tap Edit): tiles jiggle; tapping a
 // primary tile (or its – badge) demotes it to More, tapping a More tile
 // (or its + badge) appends it to primary, dragging reorders ACROSS the whole
@@ -17,7 +20,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  DndContext, PointerSensor, closestCenter, useSensor, useSensors,
+  DndContext, PointerSensor, closestCenter, useDroppable, useSensor, useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core';
 import {
@@ -28,7 +31,7 @@ import { Minus, Plus, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { bandDestinations, type Destination, type TileBand } from '@/lib/navigation/appDestinations';
 import { NAV_SECTION_LABELS, type NavSectionKey } from '@/lib/navigation/navCatalog';
-import { planDrop } from '@/lib/navigation/gridDrag';
+import { planDrop, FAVORITES_DROP_ID } from '@/lib/navigation/gridDrag';
 
 interface HomeTileGridProps {
   /** Loose tiles first (groupId null, no heading), then one band per group. */
@@ -47,6 +50,10 @@ const LONG_PRESS_MS = 500;
 const LONG_PRESS_SLOP_PX = 10;
 
 const GRID_CLASSES = 'grid grid-cols-4 md:grid-cols-6 xl:grid-cols-8 gap-2';
+
+// The name of the leading ungrouped band. Every app can live here, and this
+// is where anything added from More lands.
+const FAVORITES_LABEL = 'Favorites';
 
 // Sections rendered as their own "More" group, in display order. A tile
 // whose section isn't in this list (or has no section at all) falls
@@ -136,19 +143,37 @@ function AddTile({ tile, index, onAdd }: { tile: Destination; index: number; onA
   );
 }
 
-// One band: the member's heading (absent for the loose band, which renders
-// with no heading at all) above its run of keycaps. Shared by view and edit
+// One band: its heading above its run of keycaps. Shared by view and edit
 // mode so the two can never drift apart.
+//
+// The leading ungrouped band is FAVORITES (Kevin, 2026-08-20). It used to
+// render with no heading at all, which left the most important row on the
+// page — the one every app can be dragged into, and where anything added
+// from More lands — as the only unnamed thing in the grid. Naming it is
+// what makes "put this app at the top" a place a member can aim at rather
+// than a side effect of dragging far enough.
 function BandSection({ band, children }: { band: TileBand; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      {band.name && (
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
-          {band.name}
-        </h3>
-      )}
+      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+        {band.name ?? FAVORITES_LABEL}
+      </h3>
       {children}
     </section>
+  );
+}
+
+// The empty Favorites row in edit mode. Without it, dragging the last
+// favorite into a group would delete the row and with it the only place to
+// drop one back — see FAVORITES_DROP_ID.
+function EmptyFavoritesZone() {
+  const { setNodeRef, isOver } = useDroppable({ id: FAVORITES_DROP_ID });
+  return (
+    <div ref={setNodeRef}
+      className={'border border-dashed px-3 py-6 text-center text-sm text-muted-foreground transition-colors '
+        + (isOver ? 'border-primary bg-primary/5 text-primary' : 'border-border')}>
+      Drag an app here to keep it at the top.
+    </div>
   );
 }
 
@@ -206,6 +231,14 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
   // from More must land in the LOOSE band rather than under whichever
   // heading it happened to follow in the flat draft.
   const draftBands = draft ? bandDestinations(draftPrimary, draftGroups) : bands;
+  // Favorites is the one band that survives being empty WHILE EDITING —
+  // bandDestinations drops empty bands (a heading over nothing is noise),
+  // but dragging the last favorite into a group would then take the drop
+  // target with it and there would be no way back. It stays dropped in view
+  // mode, where there is nothing to drop and nothing to explain.
+  const editBands: TileBand[] = draftBands[0]?.groupId === null
+    ? draftBands
+    : [{ groupId: null, name: null, tiles: [] }, ...draftBands];
   // key → the band it currently renders in. Drag needs this to tell an
   // ordinary within-band reorder from a drop that crossed a heading.
   const bandIdOfKey = useMemo(() => {
@@ -373,15 +406,19 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
               and still writes the same groups, so the two agree. */}
           <div className="space-y-4">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-              {draftBands.map((band) => (
-                <BandSection key={band.groupId ?? '__loose'} band={band}>
-                  <SortableContext items={band.tiles.map((t) => t.key)} strategy={rectSortingStrategy}>
-                    <div className={GRID_CLASSES}>
-                      {band.tiles.map((t, i) => (
-                        <SortableTile key={t.key} tile={t} index={i} onRemove={removeTile} />
-                      ))}
-                    </div>
-                  </SortableContext>
+              {editBands.map((band) => (
+                <BandSection key={band.groupId ?? '__favorites'} band={band}>
+                  {band.groupId === null && band.tiles.length === 0 ? (
+                    <EmptyFavoritesZone />
+                  ) : (
+                    <SortableContext items={band.tiles.map((t) => t.key)} strategy={rectSortingStrategy}>
+                      <div className={GRID_CLASSES}>
+                        {band.tiles.map((t, i) => (
+                          <SortableTile key={t.key} tile={t} index={i} onRemove={removeTile} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  )}
                 </BandSection>
               ))}
             </DndContext>
