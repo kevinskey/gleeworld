@@ -6,6 +6,20 @@ const CLEF_SIGN: Record<EditorScore['clef'], { sign: string; line: number }> = {
   treble: { sign: 'G', line: 2 }, bass: { sign: 'F', line: 4 }, alto: { sign: 'C', line: 3 },
 };
 
+/**
+ * Page defaults, so the file carries the type size the editor engraves at.
+ *
+ * Without a <defaults> block every other renderer picks its own lyric size,
+ * and most of them pick one visibly smaller than the noteheads — the same
+ * complaint the worship aid had. Scaling is the standard 7mm per 40 tenths
+ * (staff space = 1.75mm), and 8pt is the 1.6-staff-space relation the staff
+ * renderer uses, expressed in the units MusicXML wants.
+ */
+const DEFAULTS_XML =
+  '<defaults><scaling><millimeters>7</millimeters><tenths>40</tenths></scaling>'
+  + '<word-font font-family="Times New Roman" font-size="8"/>'
+  + '<lyric-font font-family="Times New Roman" font-size="8"/></defaults>';
+
 function noteXml(el: EditorElement): string {
   const dur = elementTicks(el);
   const dots = '<dot/>'.repeat(el.dots);
@@ -90,8 +104,10 @@ export function editorScoreToMusicXML(score: EditorScore): string {
     + `<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">`
     + `<score-partwise version="3.1">`
     + `<work><work-title>${escapeXml(score.title)}</work-title></work>`
-    // Element order matters to the DTD: work, then identification, then part-list.
+    // Element order matters to the DTD: work, then identification, then
+    // defaults, then part-list.
     + identificationXml(score)
+    + DEFAULTS_XML
     + `<part-list><score-part id="P1"><part-name>Voice</part-name></score-part></part-list>`
     + `<part id="P1">${body}</part></score-partwise>`;
 }

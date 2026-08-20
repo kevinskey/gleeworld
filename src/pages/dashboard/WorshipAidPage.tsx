@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
-import { WorshipAidSheets } from '@/components/liturgy/WorshipAidSheets';
+import { WorshipAidSheets, DEFAULT_IMAGE_GAP_IN } from '@/components/liturgy/WorshipAidSheets';
 import { PsalmEngraving } from '@/components/liturgy/PsalmEngraving';
 import { AidStage } from '@/components/liturgy/aid-editor/AidStage';
 import { AidControlRail } from '@/components/liturgy/aid-editor/AidControlRail';
@@ -456,6 +456,16 @@ export default function WorshipAidPage() {
   const setGap = (panel: PanelId, key: string, inches: number) =>
     patchPanel(panel, (cur) => ({ ...cur, gaps: { ...(cur.gaps ?? {}), [key]: inches } }));
 
+  /** Air above or below a block's engraving, in inches. */
+  const setImageSpace = (panel: PanelId, key: string, side: 'above' | 'below', inches: number) =>
+    patchPanel(panel, (cur) => ({
+      ...cur,
+      imageSpace: {
+        ...(cur.imageSpace ?? {}),
+        [key]: { ...(cur.imageSpace?.[key] ?? {}), [side]: inches },
+      },
+    }));
+
   const setText = (panel: PanelId, key: string, field: 'label' | 'title' | 'credit' | 'summary', value: string) =>
     patchPanel(panel, (cur) => ({
       ...cur,
@@ -666,9 +676,32 @@ export default function WorshipAidPage() {
                 />
               )}
               {b.entry.imageUrl && (
-                <span className="block truncate text-[11px] text-muted-foreground">
-                  Score image
-                </span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                  <span className="truncate">Score image</span>
+                  {/* Above AND below, because the complaint is always the seam
+                      between the heading and the music — a gap after the block
+                      cannot reach it. */}
+                  {(['above', 'below'] as const).map((side) => {
+                    // Unset reads as the default the page is currently
+                    // printing — the panel's spacing multiplied in — so the
+                    // slider starts where the eye already is.
+                    const value = b.imageSpace?.[side]
+                      ?? DEFAULT_IMAGE_GAP_IN * panelSpacing(settings, editPanel);
+                    return (
+                      <label key={side} className="flex items-center gap-1.5">
+                        Space {side}
+                        <input
+                          type="range" min={0} max={1.5} step={0.02}
+                          value={value}
+                          onChange={(e) => setImageSpace(editPanel, b.key, side, Number(e.target.value))}
+                          aria-label={`Space ${side} the image in ${b.entry.label || 'this block'}`}
+                          className="w-20"
+                        />
+                        <span className="w-9 tabular-nums">{value.toFixed(2)}″</span>
+                      </label>
+                    );
+                  })}
+                </div>
               )}
             </div>
 
