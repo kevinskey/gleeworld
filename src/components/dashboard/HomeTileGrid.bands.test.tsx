@@ -81,7 +81,18 @@ describe('HomeTileGrid grouped bands — edit mode', () => {
     const { onSave } = renderGrid();
     enterEditMode();
     fireEvent.click(screen.getByRole('button', { name: /done/i }));
-    expect(onSave).toHaveBeenCalledWith(['calendar', 'messages', 'liturgy', 'academy', 'grading']);
+    expect(onSave.mock.calls[0][0]).toEqual(['calendar', 'messages', 'liturgy', 'academy', 'grading']);
+  });
+
+  // Membership rides along with the order because a drag can now change it —
+  // the caller re-splits loose/groups by THIS map, not by the stored filing.
+  it('hands Done the band each tile ended up in', () => {
+    const { onSave } = renderGrid();
+    enterEditMode();
+    fireEvent.click(screen.getByRole('button', { name: /done/i }));
+    expect(onSave.mock.calls[0][1]).toEqual({
+      calendar: null, messages: null, liturgy: 'a', academy: 'b', grading: 'b',
+    });
   });
 
   it('re-derives the bands from the draft — a tile added from More joins the loose band', () => {
@@ -92,7 +103,7 @@ describe('HomeTileGrid grouped bands — edit mode', () => {
     // so it belongs in the leading loose band.
     expect(gridOrder()).toEqual(['calendar', 'messages', 'extra-a', 'liturgy', 'academy', 'grading']);
     fireEvent.click(screen.getByRole('button', { name: /done/i }));
-    expect(onSave).toHaveBeenCalledWith(['calendar', 'messages', 'extra-a', 'liturgy', 'academy', 'grading']);
+    expect(onSave.mock.calls[0][0]).toEqual(['calendar', 'messages', 'extra-a', 'liturgy', 'academy', 'grading']);
   });
 
   it('drops a heading the moment its last tile is removed mid-edit', () => {
@@ -107,7 +118,7 @@ describe('HomeTileGrid grouped bands — edit mode', () => {
     enterEditMode();
     fireEvent.click(screen.getByRole('button', { name: 'Remove academy from grid' }));
     fireEvent.click(screen.getByRole('button', { name: /done/i }));
-    expect(onSave).toHaveBeenCalledWith(['calendar', 'messages', 'liturgy', 'grading']);
+    expect(onSave.mock.calls[0][0]).toEqual(['calendar', 'messages', 'liturgy', 'grading']);
   });
 
   it('shows no count, quota, or "full" state on any band', () => {

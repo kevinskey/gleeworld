@@ -5,9 +5,11 @@
 // named. Same set as the sidebar shelf, and now the same structure.
 // Edit mode (long-press a tile or tap Edit): tiles jiggle; tapping a
 // primary tile (or its – badge) demotes it to More, tapping a More tile
-// (or its + badge) appends it to primary, dragging reorders WITHIN a band.
-// Moving a tool between groups is the My World editor's job, not a gesture
-// here — see the per-band DndContext below.
+// (or its + badge) appends it to primary, dragging reorders ACROSS the whole
+// grid — any app can be dragged to any slot, the first one included. A drag
+// that crosses a heading also re-files that tool into the band it was
+// dropped in, so the heading stays honest; the My World editor's "Move to…"
+// menu writes the same groups and remains the way to do it without a drag.
 // Done persists once via onSave; Esc/Cancel reverts. Tiles never navigate
 // while editing. Whole-tile taps keep the ≥44px target; badges are the
 // visual affordance.
@@ -19,19 +21,26 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import {
-  SortableContext, arrayMove, rectSortingStrategy, useSortable,
+  SortableContext, rectSortingStrategy, useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Minus, Plus, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { bandDestinations, type Destination, type TileBand } from '@/lib/navigation/appDestinations';
 import { NAV_SECTION_LABELS, type NavSectionKey } from '@/lib/navigation/navCatalog';
+import { planDrop } from '@/lib/navigation/gridDrag';
 
 interface HomeTileGridProps {
   /** Loose tiles first (groupId null, no heading), then one band per group. */
   bands: TileBand[];
   overflow: Destination[];
-  onSave: (order: string[]) => Promise<boolean>;
+  /**
+   * `order` is the flat grid order the member sees; `membership` maps each
+   * of those keys to the band it ended up in (null = loose). Membership is
+   * passed because a drag may now cross a heading — saving order alone would
+   * re-split the arrangement by the member's previous filing.
+   */
+  onSave: (order: string[], membership: Record<string, string | null>) => Promise<boolean>;
 }
 
 const LONG_PRESS_MS = 500;
@@ -147,6 +156,11 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
   const { toast } = useToast();
   // draft === null → view mode; draft = ordered primary keys while editing.
   const [draft, setDraft] = useState<string[] | null>(null);
+  // Re-filings made by dragging across a heading this session: key → the
+  // group it now belongs to (null = the loose band). Empty until a drag
+  // crosses a band boundary, so an edit that only reorders within a band
+  // still saves exactly the membership the member already had.
+  const [refiled, setRefiled] = useState<Record<string, string | null>>({});
   const [saving, setSaving] = useState(false);
   const editing = draft !== null;
 
@@ -173,11 +187,32 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
   const draftOverflow = draft
     ? [...primary, ...overflow].filter((t) => !draft.includes(t.key))
     : overflow;
+  // Band membership as the DRAFT sees it: stored membership, overridden by
+  // anything this edit session dragged across a heading. Rebuilt rather than
+  // patched so a tile dragged out of a group is dropped from that group's
+  // tools (→ it bands loose) and picked up by exactly one other.
+  const draftGroups = useMemo(
+    () => bandGroups.map((g) => ({
+      ...g,
+      tools: [
+        ...g.tools.filter((k) => refiled[k] === undefined || refiled[k] === g.id),
+        ...Object.keys(refiled).filter((k) => refiled[k] === g.id && !g.tools.includes(k)),
+      ],
+    })),
+    [bandGroups, refiled],
+  );
   // Re-derived from the draft on every edit, never from the `bands` prop: a
   // removed tile must take its now-empty heading with it, and a tile added
   // from More must land in the LOOSE band rather than under whichever
   // heading it happened to follow in the flat draft.
-  const draftBands = draft ? bandDestinations(draftPrimary, bandGroups) : bands;
+  const draftBands = draft ? bandDestinations(draftPrimary, draftGroups) : bands;
+  // key → the band it currently renders in. Drag needs this to tell an
+  // ordinary within-band reorder from a drop that crossed a heading.
+  const bandIdOfKey = useMemo(() => {
+    const m = new Map<string, string | null>();
+    for (const b of draftBands) for (const t of b.tiles) m.set(t.key, b.groupId);
+    return m;
+  }, [draftBands]);
 
   // Long-press any view-mode tile to enter edit mode; cancelled by
   // movement past the slop (i.e. a scroll) or release.
@@ -200,22 +235,36 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
   };
   useEffect(() => clearPress, []);
 
+  // Cancel/Esc reverts the whole session — order AND any re-filing a drag
+  // across a heading made, which is only ever a draft until Done.
+  const cancel = () => { setDraft(null); setRefiled({}); };
+
   // Esc cancels the edit session and reverts.
   useEffect(() => {
     if (!editing || saving) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setDraft(null); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setDraft(null); setRefiled({}); } };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [editing, saving]);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  // A drag may land anywhere on the grid, band boundaries included — that is
+  // the whole point: any app can be dragged to the very first slot without
+  // first re-filing it in the My World editor. Dropping onto a tile in
+  // another band ALSO re-files the dragged tile into that band, so the
+  // heading it now sits under keeps telling the truth (and the sidebar
+  // shelf, which reads the same groups, agrees). Dropping onto a loose tile
+  // un-files it.
   const onDragEnd = (e: DragEndEvent) => {
     const { active, over } = e;
     if (!over || active.id === over.id) return;
-    setDraft((d) => {
-      if (!d) return d;
-      return arrayMove(d, d.indexOf(String(active.id)), d.indexOf(String(over.id)));
-    });
+    const activeKey = String(active.id);
+    const plan = planDrop(activeKey, String(over.id), bandIdOfKey);
+    if ('refileTo' in plan) {
+      const to = plan.refileTo ?? null;
+      setRefiled((r) => ({ ...r, [activeKey]: to }));
+    }
+    setDraft((d) => (d ? plan.reorder(d) : d));
   };
 
   // No ceiling. This used to refuse a tap once the draft reached a `cap`
@@ -226,11 +275,19 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
   // myTools.ts — so there is nothing left to protect the member from, and a
   // refused tap on their own grid is now the worse outcome. A member may
   // fill the grid with every app they have; it wraps onto more rows.
+  // Both drop any re-filing this session made for the key: a tile taken off
+  // the grid and put back should land loose, exactly as a tile arriving from
+  // More always has — not under a heading it was dragged to three taps ago.
+  const forgetRefiling = (key: string) => setRefiled(({ [key]: _dropped, ...rest }) => rest);
   const addTile = (key: string) => {
     if (!draft || draft.includes(key)) return;
+    forgetRefiling(key);
     setDraft((d) => (d && !d.includes(key) ? [...d, key] : d));
   };
-  const removeTile = (key: string) => setDraft((d) => (d ? d.filter((k) => k !== key) : d));
+  const removeTile = (key: string) => {
+    forgetRefiling(key);
+    setDraft((d) => (d ? d.filter((k) => k !== key) : d));
+  };
 
   // View-mode keycap. Extracted verbatim from the old primary.map(...) body
   // so banding changed the layout and nothing else — long-press, drag
@@ -261,10 +318,16 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
     // flat draft, but an ungrouped tile RENDERS in the leading loose band —
     // so the raw draft would hand the caller an order the grid never showed
     // (that tile trailing the last group instead of leading the loose run).
-    const ok = await onSave(draftBands.flatMap((b) => b.tiles.map((t) => t.key)));
+    // Membership travels WITH the order, because a drag can now change it —
+    // saving the order alone would re-split the new arrangement by the OLD
+    // filing and snap every cross-band move straight back.
+    const membership: Record<string, string | null> = {};
+    for (const b of draftBands) for (const t of b.tiles) membership[t.key] = b.groupId;
+    const ok = await onSave(draftBands.flatMap((b) => b.tiles.map((t) => t.key)), membership);
     setSaving(false);
     if (ok) {
       setDraft(null);
+      setRefiled({});
     } else {
       // Keep the edited layout locally; user can retry Done.
       toast({ title: 'Could not save your layout', description: 'Check your connection and tap Done again.', variant: 'destructive' });
@@ -277,7 +340,7 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
         <span className="text-xs uppercase tracking-widest text-muted-foreground">Apps</span>
         {editing ? (
           <span className="flex items-center gap-3 text-sm">
-            <button type="button" onClick={() => setDraft(null)} disabled={saving} className="text-muted-foreground min-h-[44px] disabled:opacity-50">
+            <button type="button" onClick={cancel} disabled={saving} className="text-muted-foreground min-h-[44px] disabled:opacity-50">
               Cancel
             </button>
             <button type="button" onClick={done} disabled={saving} className="font-semibold text-primary min-h-[44px]">
@@ -299,17 +362,19 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
 
       {editing ? (
         <div className={saving ? 'pointer-events-none opacity-60' : undefined}>
+          {/* ONE DndContext over every band, not one per band. Collision
+              detection is DndContext-scoped, so this is what makes "drag any
+              app anywhere, including the very first slot" possible at all
+              (Kevin's call, 2026-08-20 — the earlier per-band contexts made
+              a tile a prisoner of its heading, and the only way to move one
+              to the top was a detour through the My World editor). A drop
+              that crosses a heading re-files the tile into that band; see
+              onDragEnd. The My World editor's "Move to…" menu still exists
+              and still writes the same groups, so the two agree. */}
           <div className="space-y-4">
-            {draftBands.map((band) => (
-              <BandSection key={band.groupId ?? '__loose'} band={band}>
-                {/* One DndContext PER BAND, not one wrapping the whole grid.
-                    Collision detection is DndContext-scoped, so this is what
-                    makes "a drag reorders WITHIN a band" structurally true
-                    rather than a runtime check someone has to remember.
-                    Re-filing a tool belongs to the My World editor's
-                    "Move to…" menu; a drag that did it here would be a
-                    second, less discoverable grouping UI competing with it. */}
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              {draftBands.map((band) => (
+                <BandSection key={band.groupId ?? '__loose'} band={band}>
                   <SortableContext items={band.tiles.map((t) => t.key)} strategy={rectSortingStrategy}>
                     <div className={GRID_CLASSES}>
                       {band.tiles.map((t, i) => (
@@ -317,9 +382,9 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
                       ))}
                     </div>
                   </SortableContext>
-                </DndContext>
-              </BandSection>
-            ))}
+                </BandSection>
+              ))}
+            </DndContext>
           </div>
           {draftPrimary.length === 0 && (
             <p className="text-sm text-muted-foreground py-2">
