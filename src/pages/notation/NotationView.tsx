@@ -266,11 +266,26 @@ export function NotationView({
     // would clip the top of the SVG on the first system and collide with the
     // previous system's lyrics on the others.
     const STAVE_HEADROOM = 2;
-    // SYSTEM_H drops by exactly the headroom removed (2 spaces = 20 units) so
-    // the space BELOW each staff — where the lyrics live — is unchanged:
-    // 96 − 40 − 40 = 16 before, 76 − 20 − 40 = 16 now. Systems keep their
-    // spacing; only the dead air above them goes.
-    const TOP = 12, SYSTEM_H = 76, BOTTOM = 16;
+    // SYSTEM_H stays at 96, and dropping it was a mistake worth recording.
+    //
+    // The reasoning that failed: cutting the headroom by 20 units and the row
+    // stride by 20 keeps the space BELOW each staff identical (96−40−40 = 16
+    // before, 76−20−40 = 16 after), so systems "keep their spacing". They do
+    // not. The gap a reader SEES between two systems is the space below the
+    // upper staff PLUS the headroom of the one beneath it:
+    //
+    //     gap = (SYSTEM_H − headroom − staff − lyrics) + headroom
+    //
+    // Halving the headroom shrinks that gap on every system, not just the
+    // first — so the lyrics of one line ended up crowding the staff of the
+    // next. The dead air was only ever above the FIRST staff; on systems 2+
+    // that same headroom was doing real work as inter-system spacing.
+    //
+    // At 96 with a headroom of 2 the below-staff room becomes 36, so the gap
+    // is (36 − lyrics) + 20 — exactly what it was at 96 with a headroom of 4.
+    // Spacing between systems is restored and only the 28 units above the
+    // first staff are gone, which was the whole point.
+    const TOP = 12, SYSTEM_H = 96, BOTTOM = 16;
     const MOD_RESERVE = 70; // clef (+ key sig) + time sig on a system's first bar
     // What a system spends before any measure gets any room: the 8px stave
     // inset at each end, plus the opening clef/key/metre.
