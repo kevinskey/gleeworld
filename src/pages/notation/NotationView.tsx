@@ -251,7 +251,26 @@ export function NotationView({
     // SYSTEM_H is the vertical stride between systems (staff to staff). Lower
     // = tighter score, more visible at once — the previous 130 was leaving
     // white space between systems bigger than the staves themselves.
-    const TOP = 20, SYSTEM_H = 96, BOTTOM = 16;
+    // STAVE_HEADROOM is VexFlow's `spaceAboveStaffLn`, in line-spaces. Its
+    // default of 4 puts FOUR line-spaces — a whole staff height and a half —
+    // of blank paper above every top staff line, because getYForLine adds it
+    // to every line position. That space exists for text VexFlow expects to
+    // sit above the staff (tempo, dynamics, top-justified annotations), and
+    // this renderer draws none of it: the only Annotation here is the lyric,
+    // and it is VerticalJustify.BOTTOM. So it was 40 units of nothing above a
+    // 40-unit staff, which is what made the engraved psalm print with a band
+    // of white between its heading and its first line.
+    //
+    // 2 rather than 0: the headroom is also the ledger room for notes above
+    // the staff, and nothing in this layout clamps them — at 0 a high note
+    // would clip the top of the SVG on the first system and collide with the
+    // previous system's lyrics on the others.
+    const STAVE_HEADROOM = 2;
+    // SYSTEM_H drops by exactly the headroom removed (2 spaces = 20 units) so
+    // the space BELOW each staff — where the lyrics live — is unchanged:
+    // 96 − 40 − 40 = 16 before, 76 − 20 − 40 = 16 now. Systems keep their
+    // spacing; only the dead air above them goes.
+    const TOP = 12, SYSTEM_H = 76, BOTTOM = 16;
     const MOD_RESERVE = 70; // clef (+ key sig) + time sig on a system's first bar
     // What a system spends before any measure gets any room: the 8px stave
     // inset at each end, plus the opening clef/key/metre.
@@ -453,7 +472,7 @@ export function NotationView({
       rowItems.forEach((b, i) => {
         const mi = rowsPacked[r].start + i;
         const w = (weights[i] / totalW) * availableW + (i === 0 ? MOD_RESERVE : 0);
-        const stave = new Stave(x, rowY, w);
+        const stave = new Stave(x, rowY, w, { spaceAboveStaffLn: STAVE_HEADROOM });
         rowStave ??= stave;
         if (i === 0) {
           stave.addClef(VEX_CLEF[score.clef]);                                                     // clef opens every system
