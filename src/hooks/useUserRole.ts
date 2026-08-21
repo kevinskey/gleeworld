@@ -2,6 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { USER_ROLES, isRoleAtLeast } from "@/constants/permissions";
+import { usePreviewRole } from "@/lib/nav/navPreview";
+import { useMyTenantRole } from "@/hooks/useEffectivePreviewRole";
+import { isTenantAdminOrAboveRole } from "@/lib/auth/tenantRoles";
+import { previewCapabilities } from "@/lib/auth/previewClamp";
 
 interface UserProfile {
   id: string;
@@ -28,6 +32,16 @@ const MEMBER_ADMIN_ROLES = ['admin', 'director'];
 
 export const useUserRole = () => {
   const { user } = useAuth();
+  // "Views" preview. Applied HERE rather than per page because every gate in
+  // the app funnels through this hook — 120 files — so this is the only
+  // place that makes "see what a student sees" true everywhere instead of
+  // on the six pages that had wired it up by hand.
+  //
+  // Gated on the caller's REAL tenant role, and every clamp is a downgrade,
+  // so a forged preview value can never grant anything.
+  const previewRole = usePreviewRole();
+  const myTenantRole = useMyTenantRole();
+  const preview = previewCapabilities(previewRole, isTenantAdminOrAboveRole(myTenantRole));
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [memberRole, setMemberRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -93,6 +107,7 @@ export const useUserRole = () => {
 
   const getEffectiveRole = (): string => {
     if (!profile) return USER_ROLES.VISITOR;
+    if (preview) return preview.effectiveRole;
     if (profile.is_super_admin) return USER_ROLES.SUPER_ADMIN;
     if (memberRole && MEMBER_SUPER_ROLES.includes(memberRole)) return USER_ROLES.SUPER_ADMIN;
     if (profile.is_admin) return USER_ROLES.ADMIN;
@@ -106,12 +121,14 @@ export const useUserRole = () => {
 
   const isSuperAdmin = (): boolean => {
     if (!profile) return false;
+    if (preview) return preview.isSuperAdmin;
     if (memberRole && MEMBER_SUPER_ROLES.includes(memberRole)) return true;
     return profile.is_super_admin || profile.role === 'director' || profile.role === USER_ROLES.SUPER_ADMIN;
   };
 
   const isAdmin = (): boolean => {
     if (!profile) return false;
+    if (preview) return preview.isAdmin;
     if (isSuperAdmin()) return true;
     if (memberRole && MEMBER_ADMIN_ROLES.includes(memberRole)) return true;
     return profile.is_admin || profile.role === USER_ROLES.ADMIN;
@@ -129,6 +146,7 @@ export const useUserRole = () => {
 
   const isStudent = (): boolean => {
     if (!profile) return false;
+    if (preview) return preview.isStudent;
     return profile.role === USER_ROLES.STUDENT || profile.role === USER_ROLES.MEMBER;
   };
 
@@ -154,10 +172,15 @@ export const useUserRole = () => {
     return profile.role === USER_ROLES.VISITOR;
   };
 
+  // App grants (librarian / wardrobe / secretary) are per-user, not roles,
+  // so they survive a clamp unless the preview is of an ordinary member.
+  const appGrant = (granted: boolean): boolean =>
+    (preview && !preview.keepAppGrants) ? false : granted;
+
   const canDownloadPDF = (): boolean => {
     if (!profile) return false;
     if (isAdmin()) return true;
-    return hasLibrarianAppRole;
+    return appGrant(hasLibrarianAppRole);
   };
 
   const canDownloadMP3 = (): boolean => isSuperAdmin();
@@ -165,13 +188,13 @@ export const useUserRole = () => {
   const isWardrobeManager = (): boolean => {
     if (!profile) return false;
     if (isAdmin()) return true;
-    return hasWardrobeAppRole;
+    return appGrant(hasWardrobeAppRole);
   };
 
   const isSecretary = (): boolean => {
     if (!profile) return false;
     if (isAdmin()) return true;
-    return hasSecretaryAppRole;
+    return appGrant(hasSecretaryAppRole);
   };
 
   const isCourseTA = (_courseCode: string = 'GW240'): boolean => {
@@ -198,11 +221,12 @@ export const useUserRole = () => {
   const canEditMusicLibrary = useCallback((): boolean => {
     if (!profile) return false;
     if (isSuperAdmin() || isAdmin()) return true;
+    if (preview && !preview.keepAppGrants) return false;
     if (hasLibrarianAppRole) return true;
     if (profile.role === 'librarian') return true;
     return false;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- isSuperAdmin/isAdmin are render-scoped closures over `profile` only
-  }, [profile, hasLibrarianAppRole]);
+  }, [profile, hasLibrarianAppRole, preview]);
 
   return {
     profile,

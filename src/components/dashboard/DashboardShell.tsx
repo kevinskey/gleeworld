@@ -86,14 +86,15 @@ import { AssistantSheet } from '@/components/assistant/AssistantSheet';
 import { TrialBanner } from '@/components/dashboard/TrialBanner';
 import { PermissionSlipBell } from '@/components/dashboard/PermissionSlipBell';
 import {
-  resolveNav,
+  resolveNav, NAV_SECTION_LABELS,
   type CatalogEntry, type NavContext,
 } from '@/lib/navigation/navCatalog';
 import { NavShelf } from './NavShelf';
 import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
-import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, groupToolsBySection, isSectionGroupId, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { usePreviewShelf } from '@/hooks/usePreviewShelf';
 import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
 import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 
@@ -348,15 +349,31 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
   // convention actually applied correctly — CORE_TAB_KEYS there is the
   // role-invariant set, not an empty one.
   const knownGood = myTools?.setupComplete === true;
-  const shelfTools = (roleLoading && !knownGood)
-    ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
-    : selectShelfEntries(resolvedEntries, navToolsForShelf(myTools?.tools ?? [], myTools?.groups));
+  // Only a genuine tenant admin previews; a forged sessionStorage value is
+  // inert here exactly as it is in useUserRole.
+  // Collapse state for DERIVED section headings lives here, not in the
+  // member's saved record: they aren't groups the member made, and writing
+  // to their record would invent groups they never created.
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  const previewRoleRaw = usePreviewRole();
+  const myTenantRoleForPreview = useMyTenantRole();
+  const previewingAs = isTenantAdminOrAboveRole(myTenantRoleForPreview) ? previewRoleRaw : null;
+  // Previewing renders the role's DEFAULT shelf, not the admin's own — see
+  // previewShelfTools. Without this the preview showed the admin their own
+  // tools and looked like it was ignoring the Navigation settings.
+  const previewTools = usePreviewShelf(previewingAs);
+  const shelfTools = previewTools
+    ? selectShelfEntries(resolvedEntries, previewTools)
+    : (roleLoading && !knownGood)
+      ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
+      : selectShelfEntries(resolvedEntries, navToolsForShelf(myTools?.tools ?? [], myTools?.groups));
   // Empty groups never reach a live surface. This single filter covers both
   // the group a member made but hasn't filled and the group whose every tool
   // is gated off for this viewer — a header over zero rows is noise in the
   // sidebar and worse over a keycap band. The editor still shows them, which
   // is where a member fills or deletes one.
-  const shelfGroups = (roleLoading && !knownGood)
+  // A previewed role has no custom groups — those are the admin's own.
+  const shelfGroups = (previewTools || (roleLoading && !knownGood))
     ? []
     : (myTools?.groups ?? [])
         .map((g) => ({
@@ -370,9 +387,29 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
   // the Command Center grid, and those apps are already on the page as
   // keycaps. Loose tools are untouched: every "add an app" path appends to
   // that list, so it stays the way an app reaches the left nav.
-  const navGroups = shelfGroupsForNav(shelfGroups);
+  // Loose tools file themselves under their catalog section (Today, Church,
+  // Music…) instead of stacking into one flat list. The member's OWN groups
+  // still render after these, unchanged — a group they made outranks a
+  // heading we derived.
+  const sectionGroups = groupToolsBySection(
+    shelfTools.filter((t) => t.key !== homeEntry?.key),
+    Object.keys(NAV_SECTION_LABELS),
+    NAV_SECTION_LABELS,
+  ).map((g) => ({ ...g, collapsed: collapsedSections.has(g.id) }));
+  const navGroups = [...sectionGroups, ...shelfGroupsForNav(shelfGroups)];
 
   const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
+    // A derived section heading is not one of the member's groups — collapse
+    // it locally rather than writing a group they never made into their
+    // record.
+    if (isSectionGroupId(id)) {
+      setCollapsedSections((prev) => {
+        const next = new Set(prev);
+        if (collapsed) next.add(id); else next.delete(id);
+        return next;
+      });
+      return;
+    }
     // Gated on `loaded`, like every other write: saveMyTools fills omitted
     // fields from the current record, so a toggle fired before the record
     // arrives would persist an empty shelf over the member's real one.
@@ -473,7 +510,9 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
       <nav className="flex-1 min-h-0 overflow-y-auto pt-4 sm:pt-5 pb-2 px-2">
         <NavShelf
           home={homeEntry}
-          tools={shelfTools}
+          // Loose tools render inside their section headings below; passing
+          // them here too would list every tool twice.
+          tools={[]}
           pinned={PINNED_BOTTOM(resolvedEntries)}
           groups={navGroups}
           onToggleGroup={handleToggleGroup}
@@ -515,12 +554,28 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
   // Same knownGood/roleLoading gate as Sidebar — see the matching comment
   // there for why this isn't `roleLoading ? [] : ...` anymore.
   const knownGood = myTools?.setupComplete === true;
-  const shelfTools = (roleLoading && !knownGood)
-    ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
-    : selectShelfEntries(resolvedEntries, navToolsForShelf(myTools?.tools ?? [], myTools?.groups));
+  // Only a genuine tenant admin previews; a forged sessionStorage value is
+  // inert here exactly as it is in useUserRole.
+  // Collapse state for DERIVED section headings lives here, not in the
+  // member's saved record: they aren't groups the member made, and writing
+  // to their record would invent groups they never created.
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  const previewRoleRaw = usePreviewRole();
+  const myTenantRoleForPreview = useMyTenantRole();
+  const previewingAs = isTenantAdminOrAboveRole(myTenantRoleForPreview) ? previewRoleRaw : null;
+  // Previewing renders the role's DEFAULT shelf, not the admin's own — see
+  // previewShelfTools. Without this the preview showed the admin their own
+  // tools and looked like it was ignoring the Navigation settings.
+  const previewTools = usePreviewShelf(previewingAs);
+  const shelfTools = previewTools
+    ? selectShelfEntries(resolvedEntries, previewTools)
+    : (roleLoading && !knownGood)
+      ? selectShelfEntries(resolvedEntries, ROLE_INVARIANT_CORE_TOOLS)
+      : selectShelfEntries(resolvedEntries, navToolsForShelf(myTools?.tools ?? [], myTools?.groups));
   // Empty groups never reach a live surface — see the matching comment on
   // Sidebar's shelfGroups above; this is the same filter, not a second one.
-  const shelfGroups = (roleLoading && !knownGood)
+  // A previewed role has no custom groups — those are the admin's own.
+  const shelfGroups = (previewTools || (roleLoading && !knownGood))
     ? []
     : (myTools?.groups ?? [])
         .map((g) => ({
@@ -534,7 +589,16 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
   // the Command Center grid, and those apps are already on the page as
   // keycaps. Loose tools are untouched: every "add an app" path appends to
   // that list, so it stays the way an app reaches the left nav.
-  const navGroups = shelfGroupsForNav(shelfGroups);
+  // Loose tools file themselves under their catalog section (Today, Church,
+  // Music…) instead of stacking into one flat list. The member's OWN groups
+  // still render after these, unchanged — a group they made outranks a
+  // heading we derived.
+  const sectionGroups = groupToolsBySection(
+    shelfTools.filter((t) => t.key !== homeEntry?.key),
+    Object.keys(NAV_SECTION_LABELS),
+    NAV_SECTION_LABELS,
+  ).map((g) => ({ ...g, collapsed: collapsedSections.has(g.id) }));
+  const navGroups = [...sectionGroups, ...shelfGroupsForNav(shelfGroups)];
 
   const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
     // Gated on `loaded` — see the matching comment on Sidebar's
@@ -563,7 +627,9 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
       <nav className="flex-1 min-h-0 overflow-y-auto pt-2 px-2 pb-[calc(env(safe-area-inset-bottom)+6rem)]">
         <NavShelf
           home={homeEntry}
-          tools={shelfTools}
+          // Loose tools render inside their section headings below; passing
+          // them here too would list every tool twice.
+          tools={[]}
           pinned={PINNED_BOTTOM(resolvedEntries)}
           groups={navGroups}
           onToggleGroup={handleToggleGroup}
