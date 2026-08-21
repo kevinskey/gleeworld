@@ -75,6 +75,12 @@ export function blockLines(block: RenderedBlock): number {
     // cap: reserving too much space costs a line, reserving too little runs
     // the music over the fold.
     lines += Math.ceil(2.6 / LINE_HEIGHT_IN);
+    // Plus the air around it. Left out, a user who opened the seam above the
+    // psalm by half an inch would be told the page still fits and only find
+    // out at the fold.
+    const above = block.imageSpace?.above ?? LINE_HEIGHT_IN;
+    const below = block.imageSpace?.below ?? LINE_HEIGHT_IN;
+    lines += Math.ceil((above + below) / LINE_HEIGHT_IN);
   }
 
   lines += Math.ceil(block.gapAfter / LINE_HEIGHT_IN);

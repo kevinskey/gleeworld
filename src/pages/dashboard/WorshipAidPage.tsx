@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PageTitle } from '@/components/dashboard/DashboardPageShell';
-import { WorshipAidSheets } from '@/components/liturgy/WorshipAidSheets';
+import { WorshipAidSheets, DEFAULT_IMAGE_GAP_IN } from '@/components/liturgy/WorshipAidSheets';
 import { PsalmEngraving } from '@/components/liturgy/PsalmEngraving';
 import { AidStage } from '@/components/liturgy/aid-editor/AidStage';
 import { AidControlRail } from '@/components/liturgy/aid-editor/AidControlRail';
@@ -456,6 +456,16 @@ export default function WorshipAidPage() {
   const setGap = (panel: PanelId, key: string, inches: number) =>
     patchPanel(panel, (cur) => ({ ...cur, gaps: { ...(cur.gaps ?? {}), [key]: inches } }));
 
+  /** Air above or below a block's engraving, in inches. */
+  const setImageSpace = (panel: PanelId, key: string, side: 'above' | 'below', inches: number) =>
+    patchPanel(panel, (cur) => ({
+      ...cur,
+      imageSpace: {
+        ...(cur.imageSpace ?? {}),
+        [key]: { ...(cur.imageSpace?.[key] ?? {}), [side]: inches },
+      },
+    }));
+
   const setText = (panel: PanelId, key: string, field: 'label' | 'title' | 'credit' | 'summary', value: string) =>
     patchPanel(panel, (cur) => ({
       ...cur,
@@ -634,8 +644,23 @@ export default function WorshipAidPage() {
 
       <ul className="space-y-1.5">
         {panelBlocks(editPanel).map((b, i, all) => (
-          <li key={b.key} className="flex flex-wrap items-center gap-2 border border-border p-2">
-            <div className="flex shrink-0 flex-col">
+          /*
+           * Two rows, not one.
+           *
+           * Everything used to sit on a single flex line: arrows, the heading
+           * field, the spacing slider, the delete button. The slider and the
+           * button were shrink-0 and the field was min-w-0, so in the rail's
+           * width the field was the only thing that could give — and it gave
+           * all of it, collapsing to about 115px. "THE GATHERING" read as
+           * "THE (", which is useless for the one control whose whole job is
+           * telling you WHICH block you are adjusting.
+           *
+           * So the field gets the full column and the controls drop beneath
+           * it. The name stays readable at any rail width, which matters more
+           * than keeping the row one line tall.
+           */
+          <li key={b.key} className="flex items-start gap-2 border border-border p-2">
+            <div className="flex shrink-0 flex-col pt-1">
               <button type="button" aria-label="Move up" disabled={i === 0}
                 onClick={() => move(editPanel, b.key, -1)}
                 className="text-muted-foreground hover:text-foreground disabled:opacity-30">
@@ -648,12 +673,12 @@ export default function WorshipAidPage() {
               </button>
             </div>
 
-            <div className="min-w-0 flex-1 space-y-1">
+            <div className="min-w-0 flex-1 space-y-1.5">
               <Input
                 value={b.entry.label ?? ''}
                 onChange={(e) => setText(editPanel, b.key, 'label', e.target.value)}
                 placeholder={b.inserted ? 'Heading (optional)' : 'Heading'}
-                className="h-8 text-xs font-semibold"
+                className="h-8 w-full text-xs font-semibold"
               />
               {(b.entry.title != null || b.inserted) && b.entry.imageUrl == null && (
                 <Input
@@ -662,34 +687,61 @@ export default function WorshipAidPage() {
                     b.entry.summary != null && b.entry.title == null ? 'summary' : 'title',
                     e.target.value)}
                   placeholder="Text"
-                  className="h-8 text-xs"
+                  className="h-8 w-full text-xs"
                 />
               )}
               {b.entry.imageUrl && (
-                <span className="block truncate text-[11px] text-muted-foreground">
-                  Score image
-                </span>
+                <div className="space-y-1 text-[11px] text-muted-foreground">
+                  <span className="block truncate">Score image</span>
+                  {/* Above AND below, because the complaint is always the seam
+                      between the heading and the music — a gap after the block
+                      cannot reach it. */}
+                  {(['above', 'below'] as const).map((side) => {
+                    // Unset reads as the default the page is currently
+                    // printing — the panel's spacing multiplied in — so the
+                    // slider starts where the eye already is.
+                    const value = b.imageSpace?.[side]
+                      ?? DEFAULT_IMAGE_GAP_IN * panelSpacing(settings, editPanel);
+                    return (
+                      <label key={side} className="flex items-center gap-1.5">
+                        <span className="w-[4.5rem] shrink-0">Space {side}</span>
+                        <input
+                          type="range" min={0} max={1.5} step={0.02}
+                          value={value}
+                          onChange={(e) => setImageSpace(editPanel, b.key, side, Number(e.target.value))}
+                          aria-label={`Space ${side} the image in ${b.entry.label || 'this block'}`}
+                          className="min-w-0 flex-1"
+                        />
+                        <span className="w-9 shrink-0 tabular-nums">{value.toFixed(2)}″</span>
+                      </label>
+                    );
+                  })}
+                </div>
               )}
+              {/* The slider FLEXES and the readout is fixed, rather than the
+                  other way round: a slider is only as usable as it is wide,
+                  and a two-decimal inch value never needs more than 9. */}
+              <div className="flex items-center gap-2">
+                <label className="flex min-w-0 flex-1 items-center gap-1.5 text-[11px] text-muted-foreground">
+                  <span className="w-[4.5rem] shrink-0">Space after</span>
+                  <input
+                    type="range" min={0} max={1.5} step={0.05}
+                    value={b.gapAfter}
+                    onChange={(e) => setGap(editPanel, b.key, Number(e.target.value))}
+                    aria-label={`Space after ${b.entry.label || 'block'}`}
+                    className="min-w-0 flex-1"
+                  />
+                  <span className="w-9 shrink-0 tabular-nums">{b.gapAfter.toFixed(2)}″</span>
+                </label>
+
+                <Button
+                  type="button" size="sm" variant="ghost" className="shrink-0 text-destructive"
+                  onClick={() => deleteBlock(editPanel, b.key)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
-
-            <label className="flex shrink-0 items-center gap-1.5 text-[11px] text-muted-foreground">
-              Space after
-              <input
-                type="range" min={0} max={1.5} step={0.05}
-                value={b.gapAfter}
-                onChange={(e) => setGap(editPanel, b.key, Number(e.target.value))}
-                aria-label={`Space after ${b.entry.label || 'block'}`}
-                className="w-20"
-              />
-              <span className="w-9 tabular-nums">{b.gapAfter.toFixed(2)}″</span>
-            </label>
-
-            <Button
-              type="button" size="sm" variant="ghost" className="shrink-0 text-destructive"
-              onClick={() => deleteBlock(editPanel, b.key)}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </Button>
           </li>
         ))}
       </ul>

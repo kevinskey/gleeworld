@@ -41,6 +41,13 @@ const PANEL_W = PANEL_W_IN;
 const SHEET_H = SHEET_H_IN;
 const PANEL_PADDING = `${PANEL_PAD_Y_IN}in ${PANEL_PAD_X_IN}in`;
 
+/**
+ * Default air above and below an engraved setting, in inches, before the
+ * panel's spacing multiplier. Exported so the editor's sliders can START from
+ * what the page is actually showing rather than from zero.
+ */
+export const DEFAULT_IMAGE_GAP_IN = 0.16;
+
 function Notice({ text, spacing = 1, editable, onCommit }: {
   text: string; spacing?: number; editable?: boolean; onCommit?: (v: string) => void;
 }) {
@@ -138,9 +145,11 @@ function Editable({ value, onCommit, editable, style, className, multiline }: {
   );
 }
 
-function Entry({ entry, spacing = 1, editable, onEdit }: {
+function Entry({ entry, spacing = 1, imageSpace, editable, onEdit }: {
   entry: AidEntry;
   spacing?: number;
+  /** Per-entry override for the air above/below its image, in inches. */
+  imageSpace?: { above?: number; below?: number };
   editable?: boolean;
   onEdit?: (field: 'label' | 'title' | 'credit' | 'summary', value: string) => void;
 }) {
@@ -223,8 +232,14 @@ function Entry({ entry, spacing = 1, editable, onEdit }: {
         // than running over the fold, and a tall one still cannot push the
         // rest of the panel off the page. Artwork, which has no design width,
         // is unaffected and still just fits the panel.
+        //
+        // The two gaps are settable per entry, because the default that suits
+        // a psalm under one heading crowds it under another: the music arrives
+        // welded to "RESPONSORIAL PSALM" unless the person setting the page can
+        // open that seam themselves. An unset side keeps the default air.
         <div style={{
-          margin: `${(0.16 * spacing).toFixed(3)}in 0`,
+          marginTop: `${(imageSpace?.above ?? DEFAULT_IMAGE_GAP_IN * spacing).toFixed(3)}in`,
+          marginBottom: `${(imageSpace?.below ?? DEFAULT_IMAGE_GAP_IN * spacing).toFixed(3)}in`,
           textAlign: 'center',
         }}>
           <img
@@ -430,6 +445,7 @@ export function WorshipAidSheets({
         <Entry
           entry={b.entry}
           spacing={gap(p)}
+          imageSpace={b.imageSpace}
           editable={editable}
           onEdit={(field, value) => onEditBlock?.(b.key, field, value)}
         />

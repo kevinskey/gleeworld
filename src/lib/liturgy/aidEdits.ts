@@ -40,6 +40,16 @@ export interface PanelEdits {
   /** Extra space in inches AFTER a given key — how a user opens up a panel
    *  that reads tight, without changing the whole panel's spacing. */
   gaps?: Record<string, number>;
+  /**
+   * Space above and below a block's IMAGE, in inches, by key.
+   *
+   * Separate from `gaps` because the engraving sits INSIDE its entry, under
+   * the entry's own heading: a gap after the block pushes the next entry down
+   * but leaves the music welded to the words above it. Absent (or a missing
+   * side) means the renderer's default air, so an untouched aid prints exactly
+   * as it did before anyone reached for the control.
+   */
+  imageSpace?: Record<string, { above?: number; below?: number }>;
 }
 
 export type AidEditsByPanel = Partial<Record<PanelId, PanelEdits>>;
@@ -51,6 +61,9 @@ export interface RenderedBlock {
   inserted: boolean;
   /** Extra space to leave after this block, in inches. */
   gapAfter: number;
+  /** Space above/below this block's image, in inches. A side left undefined
+   *  takes the renderer's default. */
+  imageSpace?: { above?: number; below?: number };
 }
 
 /**
@@ -81,6 +94,20 @@ function safeGap(raw: unknown): number {
   return Math.max(0, Math.min(MAX_GAP_IN, raw));
 }
 
+/** Clamp a stored image gap, keeping "unset" distinct from "zero" — zero is a
+ *  deliberate choice (music tight under its heading), unset is the default. */
+function safeImageSpace(
+  raw: { above?: number; below?: number } | undefined,
+): { above?: number; below?: number } | undefined {
+  if (!raw) return undefined;
+  const side = (v: unknown) =>
+    (typeof v === 'number' && Number.isFinite(v)) ? Math.max(0, Math.min(MAX_GAP_IN, v)) : undefined;
+  const above = side(raw.above);
+  const below = side(raw.below);
+  if (above === undefined && below === undefined) return undefined;
+  return { above, below };
+}
+
 function insertedEntry(block: InsertedBlock): AidEntry {
   switch (block.kind) {
     case 'text':
@@ -105,6 +132,7 @@ export function applyPanelEdits(entries: AidEntry[], edits: PanelEdits | undefin
   const hidden = new Set(edits?.hidden ?? []);
   const textEdits = edits?.text ?? {};
   const gaps = edits?.gaps ?? {};
+  const imageSpace = edits?.imageSpace ?? {};
 
   const generated: RenderedBlock[] = [];
   for (const entry of entries) {
@@ -116,6 +144,7 @@ export function applyPanelEdits(entries: AidEntry[], edits: PanelEdits | undefin
       entry: override ? { ...entry, ...override } : entry,
       inserted: false,
       gapAfter: safeGap(gaps[key]),
+      imageSpace: safeImageSpace(imageSpace[key]),
     });
   }
 
@@ -125,6 +154,7 @@ export function applyPanelEdits(entries: AidEntry[], edits: PanelEdits | undefin
     inserted: true,
     // A spacer IS its gap — it has no content of its own.
     gapAfter: b.kind === 'spacer' ? safeGap(b.height ?? 0.25) : safeGap(gaps[b.id]),
+    imageSpace: safeImageSpace(imageSpace[b.id]),
   }));
 
   const all = [...generated, ...inserted];

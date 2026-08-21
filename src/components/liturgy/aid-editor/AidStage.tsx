@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { PanelId } from '@/lib/liturgy/worshipAid';
+import { PANEL_W_IN, SHEET_H_IN } from '@/lib/liturgy/aidPage';
 import { AID_VIEW_ATTR, PANEL_LABEL } from './aidView';
 
-/** A single panel is half of an 11in sheet. */
-const PANEL_WIDTH_IN = 5.5;
+/** A single panel is half of an 11in sheet. Same numbers the sheet itself is
+ *  laid out from — a local copy here could drift from the printed page. */
+const PANEL_WIDTH_IN = PANEL_W_IN;
+const PANEL_HEIGHT_IN = SHEET_H_IN;
 /** Browsers lay out CSS inches at 96px regardless of the real display. */
 const PX_PER_IN = 96;
 
@@ -116,7 +119,20 @@ export function AidStage({
             width: ${PANEL_WIDTH_IN}in;
             transform: scale(var(--aid-scale, 1));
             transform-origin: top left;
-            margin: 0;
+            /* Margins that pay for what the transform does NOT do.
+               transform: scale() paints bigger but leaves the layout box at
+               5.5in x 8.5in, so the scroll container sizes its scrollable
+               area to the UNSCALED sheet. Above 1x — and this stage scales
+               to 1.6x on a wide pane — the extra painted height had nowhere
+               to scroll to, and contain:paint on the container (there for
+               a separate click-eating bug) clipped it rather than letting it
+               spill: the bottom of every page was simply unreachable.
+               These margins reserve exactly the difference, so the container
+               can scroll to the real bottom. They go NEGATIVE below 1x,
+               which is right too — it reclaims the dead space a shrunken
+               sheet would otherwise leave behind. */
+            margin: 0 calc((var(--aid-scale, 1) - 1) * ${PANEL_WIDTH_IN}in)
+                      calc((var(--aid-scale, 1) - 1) * ${PANEL_HEIGHT_IN}in) 0;
           }
           /* !important is required: FrontPanel (WorshipAidSheets.tsx) renders
              its root with an inline style={{ display: 'flex', ... }}, and an
