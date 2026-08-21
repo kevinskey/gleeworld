@@ -43,6 +43,9 @@ vi.mock('@/hooks/useEffectivePreviewRole', () => ({
   useMyTenantRole: () => ({ data: null, isLoading: false }),
 }));
 vi.mock('@/hooks/useTenantNavPrefs', () => ({
+  // Same module as useTenantNavPrefs — a preview reads the tenant's
+  // configured role defaults from the row that query already fetched.
+  useTenantRoleDefaults: () => null,
   useTenantNavPrefs: () => new Set<string>(),
 }));
 const myToolsResult = vi.hoisted(() => ({

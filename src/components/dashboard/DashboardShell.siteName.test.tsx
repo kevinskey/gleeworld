@@ -41,6 +41,9 @@ vi.mock('@/hooks/useModuleAccess', () => ({
   useModuleAccess: () => ({ hasAccess: true }),
 }));
 vi.mock('@/hooks/useTenantNavPrefs', () => ({
+  // Same module as useTenantNavPrefs — a preview reads the tenant's
+  // configured role defaults from the row that query already fetched.
+  useTenantRoleDefaults: () => null,
   useTenantNavPrefs: () => new Set<string>(),
 }));
 vi.mock('@/hooks/useEffectivePreviewRole', () => ({
