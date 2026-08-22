@@ -8,7 +8,7 @@ import { executeClientAction } from './clientActions';
 import { getSpeechInput, isMuted, setMuted, speak, stopSpeaking } from './speech';
 import { ConfirmActionQueue } from './confirmQueue';
 import { loadThread, saveThread } from './threadStorage';
-import { useAssistantVoice } from './voices';
+import { getVoiceOverride, setVoiceOverrideStored, useAssistantVoice, voiceLabel } from './voices';
 import type { AssistantAction, ThreadState } from './types';
 
 export interface AssistantContextValue {
@@ -33,9 +33,12 @@ export interface AssistantContextValue {
   videoRoom: string | null;
   setVideoRoom: (room: string | null) => void;
   captionReply: { id: string; text: string } | null;
-  /** Tenant-configured assistant voice from Workspace Settings → Branding.
-   *  Null while loading, or if the tenant hasn't picked one (app default). */
+  /** Effective assistant voice: the user's on-page pick (this device)
+   *  falling back to the tenant's Workspace Settings → Branding choice. */
   voiceId: string | null;
+  /** Pick a voice for this device (null = back to tenant default). Speaks
+   *  a short sample so the choice is audible immediately. */
+  setVoice: (id: string | null) => void;
 }
 
 const AssistantContext = createContext<AssistantContextValue | null>(null);
@@ -71,7 +74,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   const [speaking, setSpeaking] = useState(false);
   const [videoRoom, setVideoRoom] = useState<string | null>(null);
   const [captionReply, setCaptionReply] = useState<{ id: string; text: string } | null>(null);
-  const { voiceId } = useAssistantVoice();
+  const { voiceId: tenantVoiceId } = useAssistantVoice();
+  // Effective voice = the user's on-page pick (per device) → tenant default.
+  const [voiceOverride, setVoiceOverride] = useState<string | null>(getVoiceOverride());
+  const voiceId = voiceOverride ?? tenantVoiceId;
   const voiceIdRef = useRef<string | null>(voiceId);
   useEffect(() => { voiceIdRef.current = voiceId; }, [voiceId]);
   const speechRef = useRef(getSpeechInput());
@@ -398,6 +404,16 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     return () => clearTimeout(t);
   }, [state.busy, muted]);
 
+  const setVoice = useCallback((id: string | null) => {
+    setVoiceOverrideStored(id);
+    setVoiceOverride(id);
+    // Make the pick audible right away — update the ref synchronously so
+    // the sample uses the new voice, not the previous render's.
+    voiceIdRef.current = id ?? tenantVoiceId;
+    const label = id === 'browser' ? 'the browser voice' : voiceLabel(voiceIdRef.current);
+    void speakNow(`Hi — this is ${label}.`);
+  }, [tenantVoiceId, speakNow]);
+
   const toggleMute = useCallback(() => {
     const m = !muted;
     setMuted(m);
@@ -412,7 +428,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       sheetOpen, setSheetOpen,
       micAvailable: speechRef.current.available, listening, transcript, toggleMic,
       conversationActive, toggleConversation,
-      muted, toggleMute,
+      muted, toggleMute, setVoice,
       speaking, stopSpeaking: stopSpeakingNow,
       videoRoom, setVideoRoom,
       captionReply,

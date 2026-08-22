@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { AudioLines, ChevronDown, Mic, Send, Square, Volume2, VolumeX } from 'lucide-react';
+import { AudioLines, Check, ChevronDown, Mic, Send, Speech, Square, Volume2, VolumeX } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ASSISTANT_VOICES, BROWSER_VOICE_ID, voiceLabel } from '@/lib/assistant/voices';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -25,6 +34,7 @@ export const AssistantSheet = () => {
     sheetOpen, setSheetOpen,
     micAvailable, listening, transcript, toggleMic,
     conversationActive, toggleConversation,
+    voiceId, setVoice,
     muted, toggleMute,
     speaking, stopSpeaking,
     videoRoom, setVideoRoom,
@@ -57,14 +67,48 @@ export const AssistantSheet = () => {
           <SheetHeader className="px-4 py-2.5 border-b flex-row items-center justify-between space-y-0">
             <SheetTitle className="text-sm font-semibold">GleeWorld Assistant</SheetTitle>
             <SheetDescription className="sr-only">{ASSISTANT_DESCRIPTION}</SheetDescription>
-            <button
-              type="button"
-              onClick={toggleMute}
-              className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
-              title={muted ? 'Unmute replies' : 'Mute replies'}
-            >
-              {muted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-muted-foreground" />}
-            </button>
+            <div className="flex items-center gap-1">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="h-8 rounded-full px-2.5 flex items-center gap-1.5 hover:bg-accent transition-colors text-muted-foreground"
+                    title="Change voice"
+                  >
+                    <Speech className="w-4 h-4" />
+                    <span className="text-xs">{voiceLabel(voiceId)}</span>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 max-h-80 overflow-y-auto">
+                  <DropdownMenuLabel>Assistant voice</DropdownMenuLabel>
+                  {ASSISTANT_VOICES.map((v) => (
+                    <DropdownMenuItem key={v.id} className="cursor-pointer gap-2" onClick={() => setVoice(v.id)}>
+                      <span className="flex-1">
+                        {v.label}
+                        <span className="block text-xs text-muted-foreground">{v.description}</span>
+                      </span>
+                      {voiceId === v.id && <Check className="w-4 h-4" />}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="cursor-pointer gap-2" onClick={() => setVoice(BROWSER_VOICE_ID)}>
+                    <span className="flex-1">Browser default</span>
+                    {voiceId === BROWSER_VOICE_ID && <Check className="w-4 h-4" />}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="cursor-pointer" onClick={() => setVoice(null)}>
+                    Use workspace default
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <button
+                type="button"
+                onClick={toggleMute}
+                className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-accent transition-colors"
+                title={muted ? 'Unmute replies' : 'Mute replies'}
+              >
+                {muted ? <VolumeX className="w-4 h-4 text-muted-foreground" /> : <Volume2 className="w-4 h-4 text-muted-foreground" />}
+              </button>
+            </div>
           </SheetHeader>
 
           {/* min-h-0 lets this region shrink-and-scroll once the sheet hits
