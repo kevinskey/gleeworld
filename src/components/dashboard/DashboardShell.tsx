@@ -65,7 +65,7 @@ import { getOrgName } from '@/lib/orgName';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
-import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
+import { useEffectivePreviewRole, useIsPlatformSuperAdmin, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
 import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
 import { useMyTenants, tenantHomeUrl, tenantSwitchUrl, performTenantSwitch } from '@/hooks/useMyTenants';
 import { isNativeApp } from '@/lib/nativeTenant';
@@ -604,8 +604,12 @@ function ViewsSwitcher() {
   // .maybeSingle(), which returned null for any multi-tenant user and hid
   // the control from them.
   const myTenantRole = useMyTenantRole();
+  // Platform owner sees the switcher on every tenant, membership row or
+  // not — mirrors the gate inside useEffectivePreviewRole, which already
+  // honors the preview for them; only the button was hiding.
+  const isPlatformSuperAdmin = useIsPlatformSuperAdmin();
 
-  if (!isTenantSuperAdminRole(myTenantRole)) return null;
+  if (!isTenantSuperAdminRole(myTenantRole) && !isPlatformSuperAdmin) return null;
 
   const label = preview
     ? HIDEABLE_NAV_ROLES.find((r) => r.value === preview)?.label ?? 'Preview'

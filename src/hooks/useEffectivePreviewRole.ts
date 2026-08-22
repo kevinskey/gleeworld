@@ -76,16 +76,18 @@ export function useMyTenantRole(): string | null {
  * null no matter what sits in sessionStorage, so forging the key does
  * nothing.
  */
-export function useEffectivePreviewRole(): NavRole | null {
+/**
+ * Platform-super-admin gate: an is_super_admin on gw_profiles is enough,
+ * even when this user has no gw_tenant_members row on the current tenant
+ * (platform owner impersonating a tenant subdomain). Exported so UI that
+ * gates on "can this user preview?" (the Views switcher) matches the
+ * engine below instead of re-implementing half of it — the switcher used
+ * to check only the tenant membership role, which hid the button from the
+ * platform owner on every subtenant where they hold no membership row.
+ */
+export function useIsPlatformSuperAdmin(): boolean {
   const { user } = useAuth();
-  const previewRole = usePreviewRole();
-  const myRole = useMyTenantRole();
-
-  // Platform-super-admin gate: an is_super_admin on gw_profiles is enough,
-  // even when this user has no gw_tenant_members row on the current tenant
-  // (platform owner impersonating a tenant subdomain). Kept as its own tiny
-  // query so useMyTenantRole stays a single-purpose lookup.
-  const { data: isPlatform } = useQuery<boolean>({
+  const { data } = useQuery<boolean>({
     queryKey: ['is-platform-super-admin', user?.id],
     queryFn: async () => {
       if (!user) return false;
@@ -99,7 +101,14 @@ export function useEffectivePreviewRole(): NavRole | null {
     enabled: !!user,
     staleTime: 5 * 60_000,
   });
+  return !!data;
+}
 
-  const allowed = isTenantSuperAdminRole(myRole) || !!isPlatform;
+export function useEffectivePreviewRole(): NavRole | null {
+  const previewRole = usePreviewRole();
+  const myRole = useMyTenantRole();
+  const isPlatform = useIsPlatformSuperAdmin();
+
+  const allowed = isTenantSuperAdminRole(myRole) || isPlatform;
   return allowed ? previewRole : null;
 }
