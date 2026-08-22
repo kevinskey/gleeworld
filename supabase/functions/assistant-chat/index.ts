@@ -195,7 +195,22 @@ serve(async (req) => {
       const { message } = await callModel(buildChatRequest(messages, openAiTools, model), apiKey, apiUrl);
       const toolCalls = message.tool_calls ?? [];
       if (toolCalls.length === 0) {
-        const reply = message.content ?? '';
+        let reply = (message.content ?? '').trim();
+        // Some models come back with EMPTY content on the turn after tool
+        // results ("read the news feed" → tool ran → silence). Never ship
+        // that to the client: nudge once for a plain-language answer, and
+        // if the model still won't speak, say so instead of saying nothing.
+        if (!reply && i > 0) {
+          messages.push({
+            role: 'user',
+            content: 'Answer now in plain language using the tool results above. Do not call any more tools.',
+          });
+          const retry = await callModel(buildChatRequest(messages, [], model), apiKey, apiUrl);
+          reply = (retry.message.content ?? '').trim();
+        }
+        if (!reply && actions.length === 0) {
+          reply = "I looked that up but couldn't put the answer into words — please ask me again.";
+        }
         await persistAssistantReply(reply);
         return json({ reply, actions, thread_id: threadId });
       }

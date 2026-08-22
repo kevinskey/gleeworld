@@ -259,7 +259,8 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       // Malformed response: no reply text and no error to show — surface a
       // failure instead of dispatching an empty-content assistant message
       // and leaving busy stuck (or silently doing nothing).
-      if (!data || (data.reply == null && data.error == null)) {
+      const blankReply = typeof data?.reply === 'string' && data.reply.trim() === '' && !(data.actions?.length);
+      if (!data || blankReply || (data.reply == null && data.error == null)) {
         dispatch({ type: 'fail', error: "I couldn't reach the assistant right now." });
         return;
       }
