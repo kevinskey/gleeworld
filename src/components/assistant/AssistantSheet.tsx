@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { ChevronDown, Mic, Send, Square, Volume2, VolumeX } from 'lucide-react';
+import { AudioLines, ChevronDown, Mic, Send, Square, Volume2, VolumeX } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ export const AssistantSheet = () => {
     state, send, runAction, cancelAction,
     sheetOpen, setSheetOpen,
     micAvailable, listening, transcript, toggleMic,
+    conversationActive, toggleConversation,
     muted, toggleMute,
     speaking, stopSpeaking,
     videoRoom, setVideoRoom,
@@ -197,6 +198,14 @@ export const AssistantSheet = () => {
                 className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center transition-colors ${listening ? 'bg-destructive/10 text-destructive animate-pulse' : 'hover:bg-accent text-muted-foreground'}`}
                 title={listening ? 'Stop listening' : 'Speak'}>
                 <Mic className="w-4 h-4" />
+              </button>
+            )}
+            {micAvailable && (
+              <button type="button" onClick={toggleConversation}
+                className={`h-9 w-9 shrink-0 rounded-full flex items-center justify-center transition-colors ${conversationActive ? 'bg-primary/15 text-primary animate-pulse' : 'hover:bg-accent text-muted-foreground'}`}
+                title={conversationActive ? 'End conversation' : 'Start voice conversation — hands-free back and forth'}
+                aria-label={conversationActive ? 'End conversation' : 'Start voice conversation'}>
+                <AudioLines className="w-4 h-4" />
               </button>
             )}
             <input

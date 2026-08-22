@@ -22,6 +22,10 @@ export interface AssistantContextValue {
   listening: boolean;
   transcript: string;
   toggleMic: () => void;
+  /** Hands-free voice conversation: mic reopens after each spoken reply
+   *  until toggled off, two silent turns pass, or the mic is stopped. */
+  conversationActive: boolean;
+  toggleConversation: () => void;
   muted: boolean;
   toggleMute: () => void;
   speaking: boolean;
@@ -274,21 +278,106 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     }
   }, [state.busy, state.messages, profile, speakNow, runAction, setSheetOpen, getFreshGeo]);
 
-  const toggleMic = useCallback(() => {
+  // ── Conversation mode ──────────────────────────────────────────────────
+  // One mic session per turn, relaunched after each reply. Refs (not state)
+  // drive the loop because every decision happens inside speech/speak
+  // callbacks that would otherwise close over stale values.
+  const [conversationActive, setConversationActiveState] = useState(false);
+  const conversationRef = useRef(false);
+  const listeningRef = useRef(false);
+  const speakingRef = useRef(false);
+  useEffect(() => { speakingRef.current = speaking; }, [speaking]);
+  const emptyTurnsRef = useRef(0);
+  // Self-reference so the retry inside onEnd doesn't fight useCallback order.
+  const startListeningRef = useRef<() => void>(() => {});
+
+  const endConversation = useCallback(() => {
+    conversationRef.current = false;
+    setConversationActiveState(false);
+    emptyTurnsRef.current = 0;
+  }, []);
+
+  const startListening = useCallback(() => {
     const speech = speechRef.current;
-    if (!speech.available) return;
-    if (listening) { speech.stop(); setListening(false); return; }
+    if (!speech.available || listeningRef.current) return;
     // Barge-in: starting to talk cuts off whatever she's saying.
     stopSpeakingNow();
+    listeningRef.current = true;
     setListening(true);
     setTranscript('');
     setCaptionReply(null);
     let finalTranscript = '';
     speech.start(
       (t, isFinal) => { setTranscript(t); if (isFinal) finalTranscript = t; },
-      () => { setListening(false); if (finalTranscript.trim()) void send(finalTranscript); },
+      () => {
+        listeningRef.current = false;
+        setListening(false);
+        const said = finalTranscript.trim();
+        if (said) { emptyTurnsRef.current = 0; void send(said); return; }
+        // Silence. In conversation mode allow one more open-mic window,
+        // then bow out — a hot mic forever is creepy and eats battery.
+        if (conversationRef.current) {
+          emptyTurnsRef.current += 1;
+          if (emptyTurnsRef.current < 2) startListeningRef.current();
+          else endConversation();
+        }
+      },
     );
-  }, [listening, send, stopSpeakingNow]);
+  }, [send, stopSpeakingNow, endConversation]);
+  useEffect(() => { startListeningRef.current = startListening; }, [startListening]);
+
+  const toggleMic = useCallback(() => {
+    const speech = speechRef.current;
+    if (!speech.available) return;
+    if (listeningRef.current) {
+      // Manually stopping the mic also leaves conversation mode — the
+      // user is clearly done talking, don't reopen on them.
+      endConversation();
+      speech.stop();
+      return;
+    }
+    startListening();
+  }, [startListening, endConversation]);
+
+  const toggleConversation = useCallback(() => {
+    if (!speechRef.current.available) return;
+    if (conversationRef.current) {
+      endConversation();
+      if (listeningRef.current) speechRef.current.stop();
+      stopSpeakingNow();
+      return;
+    }
+    conversationRef.current = true;
+    setConversationActiveState(true);
+    emptyTurnsRef.current = 0;
+    if (!listeningRef.current) startListening();
+  }, [startListening, endConversation, stopSpeakingNow]);
+
+  // Reopen the mic when her reply finishes playing.
+  const prevSpeakingRef = useRef(false);
+  useEffect(() => {
+    const justFinished = prevSpeakingRef.current && !speaking;
+    prevSpeakingRef.current = speaking;
+    if (justFinished && conversationRef.current && !listeningRef.current && !state.busy) {
+      startListeningRef.current();
+    }
+  }, [speaking, state.busy]);
+
+  // Fallback for turns that never speak (muted, empty reply, TTS failure):
+  // when the request finishes and no speech has started shortly after,
+  // reopen the mic anyway so the loop can't stall.
+  const prevBusyRef = useRef(false);
+  useEffect(() => {
+    const justFinished = prevBusyRef.current && state.busy === false;
+    prevBusyRef.current = state.busy;
+    if (!justFinished || !conversationRef.current) return;
+    const t = setTimeout(() => {
+      if (conversationRef.current && !listeningRef.current && !speakingRef.current) {
+        startListeningRef.current();
+      }
+    }, muted ? 300 : 2500);
+    return () => clearTimeout(t);
+  }, [state.busy, muted]);
 
   const toggleMute = useCallback(() => {
     const m = !muted;
@@ -303,6 +392,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       state, send, runAction, cancelAction,
       sheetOpen, setSheetOpen,
       micAvailable: speechRef.current.available, listening, transcript, toggleMic,
+      conversationActive, toggleConversation,
       muted, toggleMute,
       speaking, stopSpeaking: stopSpeakingNow,
       videoRoom, setVideoRoom,

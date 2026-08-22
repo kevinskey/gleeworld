@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ChevronUp, Mic, Square, X } from 'lucide-react';
+import { AudioLines, ChevronUp, Mic, Square, X } from 'lucide-react';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { useAssistantOptional } from '@/lib/assistant/AssistantProvider';
 import { sectionKeyFromPath, isFabCollapsed, setFabCollapsed } from '@/lib/assistant/fabPrefs';
@@ -33,7 +33,7 @@ export const AssistantFab = () => {
   }, [captionReply]);
 
   if (!assistant) return null;
-  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state } = assistant;
+  const { sheetOpen, setSheetOpen, micAvailable, listening, transcript, toggleMic, speaking, stopSpeaking, videoRoom, state, conversationActive, toggleConversation } = assistant;
   if (sheetOpen || videoRoom) return null;
 
   // Immersive full-screen routes (Viewer reader, Studio session editor)
@@ -124,6 +124,22 @@ export const AssistantFab = () => {
             )}
           >
             <Mic className="w-4 h-4" />
+          </button>
+        )}
+        {micAvailable && (
+          <button
+            type="button"
+            aria-label={conversationActive ? 'End conversation' : 'Start voice conversation'}
+            title={conversationActive ? 'End conversation' : 'Voice conversation — hands-free back and forth'}
+            onClick={toggleConversation}
+            className={cn(
+              'h-9 w-9 rounded-full flex items-center justify-center transition-colors',
+              conversationActive
+                ? 'bg-primary/40 text-primary animate-pulse'
+                : 'text-primary/70 hover:bg-primary/20',
+            )}
+          >
+            <AudioLines className="w-4 h-4" />
           </button>
         )}
       </div>
