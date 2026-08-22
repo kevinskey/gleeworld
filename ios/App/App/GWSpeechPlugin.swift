@@ -194,6 +194,16 @@ public class GWSpeechPlugin: CAPPlugin, CAPBridgedPlugin {
     private static func deactivateAudioSession() {
         // Best effort — hand the session back so Studio / Apple Music
         // playback un-ducks and resumes.
-        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        let session = AVAudioSession.sharedInstance()
+        try? session.setActive(false, options: .notifyOthersOnDeactivation)
+        // Restore the launch-time configuration (AppDelegate: .playback +
+        // .mixWithOthers, active). setActive(false) alone left the category
+        // stuck on .playAndRecord/.measurement, so the assistant's spoken
+        // reply — which the webview plays immediately after a mic turn —
+        // re-activated the session in recording mode and came out silent /
+        // earpiece-routed on device. Same failure class the comment in
+        // AudioSessionConfigPlugin.restoreDefault documents for MPMusicPlayer.
+        try? session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+        try? session.setActive(true)
     }
 }
