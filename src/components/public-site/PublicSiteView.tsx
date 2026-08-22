@@ -65,10 +65,15 @@ export function PublicSiteView({
   data,
   slug,
   memberSignIn = false,
+  page = 'home',
 }: {
   data: PublicSitePayload;
   slug: string;
   memberSignIn?: boolean;
+  /** Which site page to render. The payload carries every page's blocks
+   *  (multi-page sites, e.g. the retirement concert page); without this
+   *  filter they all interleave by position — the double-header bug. */
+  page?: string;
 }) {
   const theme = useMemo(() => {
     const parsed = themeSchema.safeParse(data.theme ?? {});
@@ -113,7 +118,9 @@ export function PublicSiteView({
     return () => { restore?.(); };
   }, [data, slug]);
 
-  const blocks = [...(data.blocks ?? [])].sort((a, b) => a.position - b.position);
+  const blocks = [...(data.blocks ?? [])]
+    .filter((b) => (b.page ?? 'home') === page)
+    .sort((a, b) => a.position - b.position);
 
   // Store checkout success (Tenant Store add-on, Task 3): store-checkout's
   // success_url redirects here with `?order=&t=`. Purely a display

@@ -160,6 +160,9 @@ export interface SiteBlock {
   position: number;
   config: Record<string, unknown>;
   is_visible: boolean;
+  /** Which site page this block belongs to. Rows predating the multi-page
+   *  column (or snapshots that dropped it) are treated as 'home'. */
+  page?: string | null;
 }
 
 // Context handed to every block render. isPreview = editor preview (admin

@@ -236,9 +236,14 @@ export default function PublicPageEditor() {
     queryKey: ['gw_site_blocks'],
     enabled: !!site,
     queryFn: async () => {
+      // This editor edits the HOME page. Other pages (e.g. the retirement
+      // concert page) keep their own rows; loading them here interleaved
+      // two headers in the Layers list and let Publish flatten every page
+      // into one.
       const { data, error } = await supabase
         .from('gw_site_blocks')
-        .select('id, block_type, position, config, is_visible')
+        .select('id, block_type, position, config, is_visible, page')
+        .or('page.is.null,page.eq.home')
         .order('position');
       if (error) throw error;
       return data as SiteBlock[];
@@ -341,12 +346,26 @@ export default function PublicPageEditor() {
     }
   };
 
+  // Positions are unique per TENANT, not per page, and other pages' rows
+  // (the retirement concert page) occupy slots interleaved with ours. So a
+  // reorder must permute within the position numbers this page's blocks
+  // already own — writing a fresh 0..n would collide with the other page.
+  // Two phases: park every moved row far above the range, then land each on
+  // its final slot; a direct swap inside a unique constraint has no safe
+  // single-pass order.
   const persistPositions = async (ordered: SiteBlock[]) => {
-    await Promise.all(
-      ordered.map((b, i) =>
-        b.position === i ? null : supabase.from('gw_site_blocks').update({ position: i }).eq('id', b.id),
-      ),
-    );
+    const pool = ordered.map((b) => b.position).sort((a, b) => a - b);
+    const moves = ordered
+      .map((b, i) => ({ id: b.id, from: b.position, to: pool[i] }))
+      .filter((m) => m.from !== m.to);
+    if (!moves.length) return;
+    const PARK = 10_000;
+    for (let i = 0; i < moves.length; i++) {
+      await supabase.from('gw_site_blocks').update({ position: PARK + i }).eq('id', moves[i].id);
+    }
+    for (const m of moves) {
+      await supabase.from('gw_site_blocks').update({ position: m.to }).eq('id', m.id);
+    }
   };
 
   const onDragEnd = (e: DragEndEvent) => {
@@ -358,9 +377,13 @@ export default function PublicPageEditor() {
       // Never allow anything above a locked block (header stays at 0).
       const lockedCount = prev.filter((b) => getBlockModule(b.block_type)?.locked).length;
       if (newIndex < lockedCount) return prev;
-      const next = arrayMove(prev, oldIndex, newIndex).map((b, i) => ({ ...b, position: i }));
-      void persistPositions(next);
-      return next;
+      // Reassign within this page's own position pool (not 0..n) so local
+      // state mirrors what persistPositions writes — positions are unique
+      // tenant-wide and other pages own the gaps.
+      const pool = prev.map((b) => b.position).sort((a, b) => a - b);
+      const moved = arrayMove(prev, oldIndex, newIndex);
+      void persistPositions(moved);
+      return moved.map((b, i) => ({ ...b, position: pool[i] }));
     });
   };
 
@@ -405,45 +428,51 @@ export default function PublicPageEditor() {
     });
   };
 
-  // Duplicate inserts a copy of `block` immediately after it. Positions of
-  // every subsequent block shift +1 so the ordering stays contiguous. Locked
-  // blocks (header) can't be duplicated — there's only one header slot.
+  // Next free position across the WHOLE tenant, because unique(tenant_id,
+  // position) spans every page — home max + 1 could land on a row belonging
+  // to another page this editor never loaded.
+  const nextTenantPosition = async (): Promise<number> => {
+    const { data } = await supabase
+      .from('gw_site_blocks')
+      .select('position')
+      .order('position', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return ((data as { position?: number } | null)?.position ?? -1) + 1;
+  };
+
+  // Duplicate inserts a copy of `block` immediately after it. The row is
+  // appended at the tenant-wide free position (never a shift — shifting +1
+  // through a shared position space collides with other pages' rows), then
+  // the ordinary reorder permutation walks it into place.
   const duplicateBlock = async (block: SiteBlock) => {
     const mod = getBlockModule(block.block_type);
     if (!mod || mod.locked) return;
-    const insertPos = block.position + 1;
-    // Optimistic: shift affected positions locally so the new row appears in
-    // the right place before the round-trip completes.
-    const shifted = blocks.map((b) =>
-      b.position >= insertPos ? { ...b, position: b.position + 1 } : b,
-    );
-    setBlocks(shifted);
-    // Persist the position shifts sequentially. Supabase enforces a per-row
-    // unique(tenant_id, position) constraint downstream — updating in bulk
-    // without ordering risks a transient collision.
-    for (const b of shifted) {
-      if (b.position !== blocks.find((o) => o.id === b.id)?.position) {
-        await supabase.from('gw_site_blocks').update({ position: b.position }).eq('id', b.id);
-      }
-    }
     const { data, error } = await supabase
       .from('gw_site_blocks')
       .insert({
         block_type: block.block_type,
-        position: insertPos,
+        position: await nextTenantPosition(),
         config: block.config,
         is_visible: block.is_visible,
+        page: 'home',
       })
-      .select('id, block_type, position, config, is_visible')
+      .select('id, block_type, position, config, is_visible, page')
       .single();
     if (error) {
       toast({ title: 'Duplicate failed', description: error.message, variant: 'destructive' });
       return;
     }
-    setBlocks((prev) =>
-      [...prev, data as SiteBlock].sort((a, b) => a.position - b.position),
-    );
-    setSelectedId((data as SiteBlock).id);
+    const copy = data as SiteBlock;
+    // Place the copy right after its original, then persist that order
+    // through the same pool permutation the drag handler uses.
+    const ordered = [...blocks];
+    const at = ordered.findIndex((b) => b.id === block.id);
+    ordered.splice(at + 1, 0, copy);
+    const pool = ordered.map((b) => b.position).sort((a, b) => a - b);
+    void persistPositions(ordered);
+    setBlocks(ordered.map((b, i) => ({ ...b, position: pool[i] })));
+    setSelectedId(copy.id);
   };
 
   // Scroll the newly-selected block into view in the preview column. Fires
@@ -480,13 +509,13 @@ export default function PublicPageEditor() {
   const addBlock = async (type: string) => {
     const mod = getBlockModule(type);
     if (!mod) return;
-    // Use max(existing position) + 1 instead of blocks.length so deletions +
-    // re-adds don't collide. Falls back to 0 when there are no blocks yet.
-    const position = blocks.length === 0 ? 0 : Math.max(...blocks.map((b) => b.position)) + 1;
+    // Tenant-wide free position — home's own max + 1 can collide with rows
+    // on other pages, since unique(tenant_id, position) spans all pages.
+    const position = await nextTenantPosition();
     const { data, error } = await supabase
       .from('gw_site_blocks')
-      .insert({ block_type: type, position, config: mod.defaultConfig, is_visible: true })
-      .select('id, block_type, position, config, is_visible')
+      .insert({ block_type: type, position, config: mod.defaultConfig, is_visible: true, page: 'home' })
+      .select('id, block_type, position, config, is_visible, page')
       .single();
     if (error) {
       toast({ title: 'Could not add block', description: error.message, variant: 'destructive' });
@@ -541,7 +570,20 @@ export default function PublicPageEditor() {
     if (!site) return;
     setPublishing(true);
     try {
-      const snapshot = blocks.map((b, i) => ({ ...b, position: i }));
+      // Snapshot = this editor's home blocks (reindexed) PLUS every other
+      // page's rows fetched fresh — a home-only publish must not erase the
+      // other pages from the published payload.
+      const { data: otherPages, error: opErr } = await supabase
+        .from('gw_site_blocks')
+        .select('id, block_type, position, config, is_visible, page')
+        .not('page', 'is', null)
+        .neq('page', 'home')
+        .order('position');
+      if (opErr) throw opErr;
+      const snapshot = [
+        ...blocks.map((b, i) => ({ ...b, page: b.page ?? 'home', position: i })),
+        ...(otherPages ?? []),
+      ];
       const { error } = await supabase
         .from('gw_public_sites')
         .update({ published_blocks: snapshot, published_at: new Date().toISOString(), is_published: true })
@@ -580,13 +622,21 @@ export default function PublicPageEditor() {
     if (!site || !snapshot.length) return;
     setRestoring(true);
     try {
-      const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
+      // Home rows only — a tenant-wide delete would wipe the other pages
+      // (retirement concert etc.) this editor never loaded. And the
+      // re-insert numbers from the tenant-wide free position, not 0, because
+      // those pages' rows still occupy the low slots.
+      const del = await supabase.from('gw_site_blocks').delete()
+        .eq('tenant_id', site.tenant_id)
+        .or('page.is.null,page.eq.home');
       if (del.error) throw del.error;
+      const base = await nextTenantPosition();
       const rows = snapshot.map((b, i) => ({
         block_type: b.block_type,
-        position: i,
+        position: base + i,
         config: b.config,
         is_visible: b.is_visible,
+        page: 'home',
       }));
       const ins = await supabase.from('gw_site_blocks').insert(rows);
       if (ins.error) throw ins.error;
@@ -608,8 +658,13 @@ export default function PublicPageEditor() {
     // is the live draft list, which is exactly what the delete destroys.
     const snapshot = blocks.map((b) => ({ ...b }));
     try {
-      const del = await supabase.from('gw_site_blocks').delete().eq('tenant_id', site.tenant_id);
+      // Home rows only — see restore() above; tenant-wide would wipe the
+      // other pages' blocks.
+      const del = await supabase.from('gw_site_blocks').delete()
+        .eq('tenant_id', site.tenant_id)
+        .or('page.is.null,page.eq.home');
       if (del.error) throw del.error;
+      const base = await nextTenantPosition();
 
       // Package theme merges OVER the current theme, but tenant colors are
       // preserved on top — packages are about typography / rhythm / shape,
@@ -642,14 +697,15 @@ export default function PublicPageEditor() {
       };
 
       const rows = [
-        { block_type: 'header', position: 0, config: headerConfig, is_visible: true },
+        { block_type: 'header', position: base, config: headerConfig, is_visible: true, page: 'home' },
         ...pkg.blocks.map((b, i) => {
           const mod = getBlockModule(b.type);
           return {
             block_type: b.type,
-            position: i + 1,
+            position: base + i + 1,
             config: { ...(mod?.defaultConfig ?? {}), ...(b.config ?? {}) },
             is_visible: true,
+            page: 'home',
           };
         }),
       ];
