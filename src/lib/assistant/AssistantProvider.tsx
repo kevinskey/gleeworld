@@ -350,8 +350,27 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     conversationRef.current = true;
     setConversationActiveState(true);
     emptyTurnsRef.current = 0;
-    if (!listeningRef.current) startListening();
-  }, [startListening, endConversation, stopSpeakingNow]);
+    // Greet first — starting a conversation with a silently hot mic feels
+    // broken ("it does not greet me"). When the greeting finishes speaking,
+    // the speaking-end effect below opens the mic, the same path every
+    // later turn uses. Muted (or TTS-less) sessions skip straight to
+    // listening since there is nothing to hear.
+    if (!muted) {
+      const firstName = profile?.full_name?.split(' ')[0];
+      void speakNow(
+        `Hey${firstName ? ` ${firstName}` : ''} — I'm listening. What can I do for you?`,
+      );
+      // If speech never actually starts (TTS failure before onplay), fall
+      // back to the mic so the conversation can't stall at the greeting.
+      setTimeout(() => {
+        if (conversationRef.current && !speakingRef.current && !listeningRef.current) {
+          startListeningRef.current();
+        }
+      }, 4000);
+    } else if (!listeningRef.current) {
+      startListening();
+    }
+  }, [startListening, endConversation, stopSpeakingNow, muted, profile, speakNow]);
 
   // Reopen the mic when her reply finishes playing.
   const prevSpeakingRef = useRef(false);
