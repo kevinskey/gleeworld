@@ -35,9 +35,11 @@ export function createNativeSpeechInput(plugin: GWSpeechPluginShape): SpeechInpu
       void (async () => {
         try {
           added.push(await plugin.addListener('speechResult', (e) => {
+            if (e.isFinal) dbg('mic-final', { len: e.transcript.length });
             if (session === mySession && !ended) onResult(e.transcript, e.isFinal);
           }));
           added.push(await plugin.addListener('speechEnd', () => {
+            dbg('mic-ended');
             if (session === mySession) finish();
           }));
           if (session !== mySession) {
@@ -45,10 +47,13 @@ export function createNativeSpeechInput(plugin: GWSpeechPluginShape): SpeechInpu
             for (const h of added) void h.remove().catch(() => { /* best effort */ });
             return;
           }
+          dbg('mic-starting');
           await plugin.start();
-        } catch {
+          dbg('mic-started');
+        } catch (err) {
           // Permission denied or native failure — mirror the web source,
           // where onerror routes to onEnd.
+          dbg('mic-start-failed', { err: String(err) });
           if (session === mySession) finish();
         }
       })();
@@ -181,6 +186,7 @@ async function playBlobNative(
     done = true;
     nativePlayActive = false;
     void handle?.remove().catch(() => { /* best effort */ });
+    dbg('native-play-ended');
     onEnd?.();
   };
   handle = await GWAudioPlay.addListener('playEnded', finish);
