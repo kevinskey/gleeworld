@@ -72,10 +72,14 @@ export function getSpeechInput(
   native?: NativeSpeechBackend,
 ): SpeechInputSource {
   const w = (win ?? (typeof window !== 'undefined' ? window : undefined)) as any;
+  // Native first IN THE APP, even when a web recognizer ctor exists: newer
+  // iOS exposes webkitSpeechRecognition inside WKWebView, but it fails
+  // silently there (no transcript, no error we can surface) — which routed
+  // the assistant's mic away from GWSpeech and killed conversation mode.
+  const nat = native ?? { available: isNativeSpeechAvailable(), plugin: GWSpeech };
+  if (nat.available) return createNativeSpeechInput(nat.plugin);
   const Ctor = w?.SpeechRecognition ?? w?.webkitSpeechRecognition;
   if (!Ctor) {
-    const nat = native ?? { available: isNativeSpeechAvailable(), plugin: GWSpeech };
-    if (nat.available) return createNativeSpeechInput(nat.plugin);
     return { available: false, start: () => {}, stop: () => {} };
   }
   let rec: any = null;
