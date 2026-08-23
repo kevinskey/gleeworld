@@ -24,6 +24,9 @@ class MainViewController: CAPBridgeViewController {
         // GWSpeechPlugin — Assistant speech-to-text (iOS WebKit has no
         // SpeechRecognition). Same dead-strip problem, same explicit fix.
         bridge?.registerPluginInstance(GWSpeechPlugin())
+        // GWAudioPlayPlugin — native playback for Assistant replies
+        // (WebKit's Web Audio obeys the silent switch / stale routes).
+        bridge?.registerPluginInstance(GWAudioPlayPlugin())
         // RecordingLiveActivityPlugin disabled — needs widget extension's
         // GleeWorldRecordingAttributes type that's not in the main target.
     }

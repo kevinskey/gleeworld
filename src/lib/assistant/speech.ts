@@ -1,4 +1,5 @@
 import { GWSpeech, isNativeSpeechAvailable, type GWSpeechPluginShape } from '@/plugins/gwSpeech';
+import { GWAudioPlay, isNativeAudioPlayAvailable } from '@/plugins/gwAudioPlay';
 import type { PluginListenerHandle } from '@capacitor/core';
 
 export interface SpeechInputSource {
@@ -147,6 +148,53 @@ let speakSession = 0;
 
 // Web Audio playback path for the native app (see playBlobViaWebAudio).
 let webAudioSource: AudioBufferSourceNode | null = null;
+// True while a native (AVAudioPlayer) reply is playing — see playBlobNative.
+let nativePlayActive = false;
+
+// Native reply playback for the iOS app. Web Audio breadcrumbs showed
+// decode/start/ended all firing while the device stayed silent — WebKit
+// renders Web Audio under an ambient-style session that obeys the silent
+// switch and stale routes. AVAudioPlayer under the app's own .playback
+// session is loud regardless.
+async function playBlobNative(
+  blob: Blob,
+  volume: number,
+  onStart?: () => void,
+  onEnd?: () => void,
+): Promise<void> {
+  const buf = await blob.arrayBuffer();
+  let b64 = '';
+  {
+    // Chunked conversion — String.fromCharCode(...whole) overflows the arg
+    // limit on multi-hundred-KB replies.
+    const bytes = new Uint8Array(buf);
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      b64 += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    b64 = btoa(b64);
+  }
+  let handle: PluginListenerHandle | null = null;
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    nativePlayActive = false;
+    void handle?.remove().catch(() => { /* best effort */ });
+    onEnd?.();
+  };
+  handle = await GWAudioPlay.addListener('playEnded', finish);
+  try {
+    nativePlayActive = true;
+    await GWAudioPlay.play({ b64, volume });
+    dbg('native-play-started', { bytes: blob.size });
+    onStart?.();
+  } catch (e) {
+    dbg('native-play-failed', { err: String(e) });
+    finish();
+    throw e;
+  }
+}
 
 // TEMP diagnostics for the iOS silent-assistant bug: breadcrumb every stage
 // of reply playback to the client-log edge function so the failure point is
@@ -168,6 +216,11 @@ function dbg(stage: string, extra?: Record<string, unknown>): void {
 
 function stopElevenLabs(): void {
   speakSession += 1;
+  if (nativePlayActive) {
+    nativePlayActive = false;
+    // stop() emits playEnded, which runs the pending finish()/onEnd.
+    void GWAudioPlay.stop().catch(() => { /* best effort */ });
+  }
   const s = webAudioSource;
   webAudioSource = null;
   if (s) { try { s.onended = null; s.stop(); } catch { /* already stopped */ } }
@@ -299,6 +352,20 @@ export function speak(
       if (!res.ok) throw new Error(`elevenlabs-tts ${res.status}`);
       const blob = await res.blob();
       if (mySession !== speakSession) return;
+      // In the iOS app, native AVAudioPlayer first — Web Audio there obeys
+      // the silent switch / stale routes and played replies inaudibly.
+      if (isNativeAudioPlayAvailable()) {
+        try {
+          await playBlobNative(
+            blob,
+            volume,
+            () => { if (mySession === speakSession) opts?.onStart?.(); },
+            () => { if (mySession === speakSession) opts?.onEnd?.(); },
+          );
+          return;
+        } catch { /* fall through to Web Audio */ }
+        if (mySession !== speakSession) return;
+      }
       // Web Audio first on EVERY platform: iOS blocks HTMLAudioElement
       // playback that starts after an async fetch (no gesture context) in
       // Safari and Chrome-on-iOS too, not just in the app's webview. The

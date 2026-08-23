@@ -26,6 +26,7 @@
 		62C9EA54498F2728EA0B7FE2 /* Sends.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88112B3A1BA6224CCFB596CB /* Sends.swift */; };
 		6A1D00000000000000000001 /* GWMidiPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1D00000000000000000002 /* GWMidiPlugin.swift */; };
 		6A1D00000000000000000003 /* GWSpeechPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1D00000000000000000004 /* GWSpeechPlugin.swift */; };
+		6A1D00000000000000000005 /* GWAudioPlayPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6A1D00000000000000000006 /* GWAudioPlayPlugin.swift */; };
 		768412EC465E014A6BC6AFDE /* Instruments.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FDD37EFA950FB969BF90C82 /* Instruments.swift */; };
 		7696E25FC90C885166862AE1 /* StudioModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DAD2143C4798E9ADDA1A3AF /* StudioModel.swift */; };
 		811FD86D3D010FEDDBB8E3D5 /* AutomationScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 704B44948CC7846CABD487D3 /* AutomationScheduler.swift */; };
@@ -68,6 +69,7 @@
 		693451AC85FAAD6C29DB7ED2 /* StudioObjC.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = StudioObjC.h; sourceTree = "<group>"; };
 		6A1D00000000000000000002 /* GWMidiPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GWMidiPlugin.swift; sourceTree = "<group>"; };
 		6A1D00000000000000000004 /* GWSpeechPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GWSpeechPlugin.swift; sourceTree = "<group>"; };
+		6A1D00000000000000000006 /* GWAudioPlayPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GWAudioPlayPlugin.swift; sourceTree = "<group>"; };
 		704B44948CC7846CABD487D3 /* AutomationScheduler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AutomationScheduler.swift; sourceTree = "<group>"; };
 		88112B3A1BA6224CCFB596CB /* Sends.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Sends.swift; sourceTree = "<group>"; };
 		90B41B6DB59A4EC515A3D916 /* Fx.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Fx.swift; sourceTree = "<group>"; };
@@ -148,6 +150,7 @@
 				170875622DC704B10DFAA60D /* StudioEnginePlugin.swift */,
 				6A1D00000000000000000002 /* GWMidiPlugin.swift */,
 				6A1D00000000000000000004 /* GWSpeechPlugin.swift */,
+				6A1D00000000000000000006 /* GWAudioPlayPlugin.swift */,
 				F0CB09196F6C93C644BF4557 /* Studio */,
 				F32A6B44BE5444770C30D5EB /* StudioObjC.m */,
 				693451AC85FAAD6C29DB7ED2 /* StudioObjC.h */,
@@ -315,6 +318,7 @@
 				0F8FC03F74824DDFA1681673 /* StudioEnginePlugin.swift in Sources */,
 				6A1D00000000000000000001 /* GWMidiPlugin.swift in Sources */,
 				6A1D00000000000000000003 /* GWSpeechPlugin.swift in Sources */,
+				6A1D00000000000000000005 /* GWAudioPlayPlugin.swift in Sources */,
 				1D09D689DC86B0FDB970E0F3 /* Engine.swift in Sources */,
 				D4910ED7763D327934102420 /* Tracks.swift in Sources */,
 				F3827DBA2B1BCFB65967AA84 /* Fx.swift in Sources */,
@@ -488,7 +492,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 201;
+				CURRENT_PROJECT_VERSION = 207;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -513,7 +517,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 201;
+				CURRENT_PROJECT_VERSION = 207;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = (
