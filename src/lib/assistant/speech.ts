@@ -1,5 +1,5 @@
 import { GWSpeech, isNativeSpeechAvailable, type GWSpeechPluginShape } from '@/plugins/gwSpeech';
-import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
+import type { PluginListenerHandle } from '@capacitor/core';
 
 export interface SpeechInputSource {
   available: boolean;
@@ -270,7 +270,13 @@ export function speak(
       if (!res.ok) throw new Error(`elevenlabs-tts ${res.status}`);
       const blob = await res.blob();
       if (mySession !== speakSession) return;
-      if (Capacitor.isNativePlatform()) {
+      // Web Audio first on EVERY platform: iOS blocks HTMLAudioElement
+      // playback that starts after an async fetch (no gesture context) in
+      // Safari and Chrome-on-iOS too, not just in the app's webview. The
+      // shared Tone context is gesture-unlocked by the tap that started
+      // the conversation, so it can always emit sound. HTMLAudio remains
+      // as the fallback if decode fails (e.g. an unsupported codec).
+      try {
         await playBlobViaWebAudio(
           blob,
           volume,
@@ -278,7 +284,8 @@ export function speak(
           () => { if (mySession === speakSession) opts?.onEnd?.(); },
         );
         return;
-      }
+      } catch { /* fall through to HTMLAudio */ }
+      if (mySession !== speakSession) return;
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audio.volume = volume;
