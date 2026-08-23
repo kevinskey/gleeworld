@@ -154,8 +154,10 @@ let webAudioSource: AudioBufferSourceNode | null = null;
 function dbg(stage: string, extra?: Record<string, unknown>): void {
   try {
     if (!(globalThis as any).Capacitor?.isNativePlatform?.()) return;
-    const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
-    if (!supabaseUrl) return;
+    // VITE_SUPABASE_URL isn't set in this project (URL comes from the tenant
+    // config at boot) — resolve the same way, with the prod default last.
+    const supabaseUrl = (globalThis as any).__TENANT_CONFIG__?.supabaseUrl
+      ?? 'https://supabase.gleeworld.org';
     void fetch(`${supabaseUrl}/functions/v1/client-log`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
