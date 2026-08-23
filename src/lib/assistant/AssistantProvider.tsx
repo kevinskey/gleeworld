@@ -201,19 +201,33 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     }
     if (typeof navigator === 'undefined' || !navigator.geolocation) return null;
     return new Promise((resolve) => {
+      // getCurrentPosition's own `timeout` only starts once permission is
+      // resolved — in WKWebView with no NSLocation* Info.plist key the
+      // permission can never resolve and NEITHER callback fires, which
+      // hung send() forever before the chat request (the iOS assistant
+      // heard the user and then went dead). Hard-cap the whole thing.
+      let settled = false;
+      const settle = (v: { lat: number; lng: number } | null) => {
+        if (settled) return;
+        settled = true;
+        resolve(v);
+      };
+      const cap = setTimeout(() => settle(null), 4000);
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const next = { lat: pos.coords.latitude, lng: pos.coords.longitude, ts: Date.now() };
           geoRef.current = next;
-          resolve({ lat: next.lat, lng: next.lng });
+          clearTimeout(cap);
+          settle({ lat: next.lat, lng: next.lng });
         },
         () => {
           // Permission dismissed / denied / errored. Don't re-prompt this
           // session — user can enable in browser settings if they want it.
           geoDeniedRef.current = true;
-          resolve(null);
+          clearTimeout(cap);
+          settle(null);
         },
-        { enableHighAccuracy: false, maximumAge: 15 * 60 * 1000, timeout: 5000 },
+        { enableHighAccuracy: false, maximumAge: 15 * 60 * 1000, timeout: 3000 },
       );
     });
   }, []);
