@@ -148,6 +148,22 @@ let speakSession = 0;
 // Web Audio playback path for the native app (see playBlobViaWebAudio).
 let webAudioSource: AudioBufferSourceNode | null = null;
 
+// TEMP diagnostics for the iOS silent-assistant bug: breadcrumb every stage
+// of reply playback to the client-log edge function so the failure point is
+// readable in server logs. Native app only; remove once the bug is dead.
+function dbg(stage: string, extra?: Record<string, unknown>): void {
+  try {
+    if (!(globalThis as any).Capacitor?.isNativePlatform?.()) return;
+    const supabaseUrl = (import.meta as any).env?.VITE_SUPABASE_URL;
+    if (!supabaseUrl) return;
+    void fetch(`${supabaseUrl}/functions/v1/client-log`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ src: 'speech', stage, ...extra }),
+    }).catch(() => { /* diagnostics must never break speech */ });
+  } catch { /* ditto */ }
+}
+
 function stopElevenLabs(): void {
   speakSession += 1;
   const s = webAudioSource;
@@ -180,8 +196,17 @@ async function playBlobViaWebAudio(
 ): Promise<void> {
   const Tone = await import('tone');
   const ctx = Tone.getContext().rawContext as AudioContext;
-  try { await ctx.resume(); } catch { /* keep going — decode may still work */ }
-  const buf = await ctx.decodeAudioData(await blob.arrayBuffer());
+  dbg('ctx-before-resume', { state: ctx.state, sampleRate: ctx.sampleRate, blobBytes: blob.size, blobType: blob.type });
+  try { await ctx.resume(); } catch (e) { dbg('resume-failed', { err: String(e) }); }
+  dbg('ctx-after-resume', { state: ctx.state });
+  let buf: AudioBuffer;
+  try {
+    buf = await ctx.decodeAudioData(await blob.arrayBuffer());
+  } catch (e) {
+    dbg('decode-failed', { err: String(e) });
+    throw e;
+  }
+  dbg('decoded', { duration: Math.round(buf.duration * 100) / 100, channels: buf.numberOfChannels });
   const src = ctx.createBufferSource();
   src.buffer = buf;
   const gain = ctx.createGain();
@@ -191,10 +216,12 @@ async function playBlobViaWebAudio(
   webAudioSource = src;
   src.onended = () => {
     if (webAudioSource === src) webAudioSource = null;
+    dbg('ended', { state: ctx.state, currentTime: Math.round(ctx.currentTime * 10) / 10 });
     onEnd?.();
   };
   onStart?.();
   src.start(0);
+  dbg('started', { state: ctx.state, destChannels: ctx.destination.maxChannelCount });
 }
 
 export function speak(
@@ -284,8 +311,9 @@ export function speak(
           () => { if (mySession === speakSession) opts?.onEnd?.(); },
         );
         return;
-      } catch { /* fall through to HTMLAudio */ }
+      } catch (e) { dbg('webaudio-path-failed', { err: String(e) }); }
       if (mySession !== speakSession) return;
+      dbg('falling-back-to-htmlaudio');
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audio.volume = volume;
@@ -302,6 +330,7 @@ export function speak(
     } catch {
       // Fall back to browser TTS on ANY ElevenLabs failure — a rate limit,
       // network hiccup, or bad voice_id must never leave the assistant mute.
+      dbg('falling-back-to-browser-tts', { haveSynth: !!browserSynth });
       if (mySession !== speakSession) return;
       if (!browserSynth) { opts?.onEnd?.(); return; }
       const UtterCtor = (globalThis as any).SpeechSynthesisUtterance;
