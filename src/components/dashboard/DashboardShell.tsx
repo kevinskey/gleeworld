@@ -657,6 +657,30 @@ function ViewsSwitcher() {
   );
 }
 
+// Full-width strip shown while a Views preview is active. The amber chip
+// in the TopBar alone was too quiet — an admin who forgot the preview saw
+// "missing apps" with no hint why (Lyke House, 2026-08-22).
+function PreviewBanner() {
+  const preview = useEffectivePreviewRole();
+  if (!preview) return null;
+  const label = HIDEABLE_NAV_ROLES.find((r) => r.value === preview)?.label ?? preview;
+  return (
+    <div className="flex items-center justify-center gap-3 bg-amber-100 text-amber-900 text-sm px-4 py-1.5 border-b border-amber-200">
+      <Eye className="w-4 h-4 shrink-0" />
+      <span>
+        Previewing as <strong>{label}</strong> — admin apps and nav are hidden on purpose.
+      </span>
+      <button
+        type="button"
+        onClick={() => setPreviewRole(null)}
+        className="font-semibold underline underline-offset-2 hover:text-amber-950"
+      >
+        Exit preview
+      </button>
+    </div>
+  );
+}
+
 function TopBar({ navCollapsed = false, onExpandNav }: { navCollapsed?: boolean; onExpandNav?: () => void }) {
   const { user, signOut } = useAuth();
   const { userProfile } = useUserProfile(user);
@@ -1039,6 +1063,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           {/* Trial countdown — self-gates on trial state so it renders null
               for grandfathered / paid / loading / no-tenant. */}
           <TrialBanner />
+          <PreviewBanner />
           <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} />
           {/* pt-3 gives every page a small breath of space below the
               sticky topbar — pages that want more (CommandCenter, Viewer
