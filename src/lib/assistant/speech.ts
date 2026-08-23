@@ -1,5 +1,5 @@
 import { GWSpeech, isNativeSpeechAvailable, type GWSpeechPluginShape } from '@/plugins/gwSpeech';
-import type { PluginListenerHandle } from '@capacitor/core';
+import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 
 export interface SpeechInputSource {
   available: boolean;
@@ -145,8 +145,14 @@ let elevenAudio: HTMLAudioElement | null = null;
 // playing so we never stack audio.
 let speakSession = 0;
 
+// Web Audio playback path for the native app (see playBlobViaWebAudio).
+let webAudioSource: AudioBufferSourceNode | null = null;
+
 function stopElevenLabs(): void {
   speakSession += 1;
+  const s = webAudioSource;
+  webAudioSource = null;
+  if (s) { try { s.onended = null; s.stop(); } catch { /* already stopped */ } }
   const a = elevenAudio;
   elevenAudio = null;
   if (!a) return;
@@ -157,6 +163,38 @@ function stopElevenLabs(): void {
     a.removeAttribute('src');
     a.load();
   } catch { /* already torn down */ }
+}
+
+// In the iOS app, HTMLAudioElement playback runs in WebKit's separate media
+// process, whose audio session the app can't reliably control — replies
+// fetched fine but played silently (TestFlight builds ≤204). Web Audio
+// output goes through the app's own AVAudioSession (.playback, configured
+// in AppDelegate and restored by GWSpeech after mic turns), and the app's
+// shared Tone context is gesture-unlocked at boot, so we decode the MP3 and
+// play it through that context instead.
+async function playBlobViaWebAudio(
+  blob: Blob,
+  volume: number,
+  onStart?: () => void,
+  onEnd?: () => void,
+): Promise<void> {
+  const Tone = await import('tone');
+  const ctx = Tone.getContext().rawContext as AudioContext;
+  try { await ctx.resume(); } catch { /* keep going — decode may still work */ }
+  const buf = await ctx.decodeAudioData(await blob.arrayBuffer());
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const gain = ctx.createGain();
+  gain.gain.value = volume;
+  src.connect(gain);
+  gain.connect(ctx.destination);
+  webAudioSource = src;
+  src.onended = () => {
+    if (webAudioSource === src) webAudioSource = null;
+    onEnd?.();
+  };
+  onStart?.();
+  src.start(0);
 }
 
 export function speak(
@@ -232,6 +270,15 @@ export function speak(
       if (!res.ok) throw new Error(`elevenlabs-tts ${res.status}`);
       const blob = await res.blob();
       if (mySession !== speakSession) return;
+      if (Capacitor.isNativePlatform()) {
+        await playBlobViaWebAudio(
+          blob,
+          volume,
+          () => { if (mySession === speakSession) opts?.onStart?.(); },
+          () => { if (mySession === speakSession) opts?.onEnd?.(); },
+        );
+        return;
+      }
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audio.volume = volume;
