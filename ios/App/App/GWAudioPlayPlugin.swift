@@ -48,7 +48,13 @@ public class GWAudioPlayPlugin: CAPPlugin, CAPBridgedPlugin, AVAudioPlayerDelega
                 p.volume = max(0, min(1, volume))
                 self.player = p
                 p.play()
-                call.resolve()
+                // Delegate completion proved unreliable in the field (the
+                // clip audibly finished but audioPlayerDidFinishPlaying
+                // never fired, wedging the assistant's conversation loop),
+                // so a watchdog polls for completion as a backstop. The
+                // delegate path still wins when it does fire.
+                self.armWatchdog(for: p, after: p.duration + 0.4)
+                call.resolve(["duration": p.duration])
             } catch {
                 call.reject("audio init failed: \(error.localizedDescription)")
             }
@@ -65,6 +71,21 @@ public class GWAudioPlayPlugin: CAPPlugin, CAPBridgedPlugin, AVAudioPlayerDelega
                 self.notifyListeners("playEnded", data: [:])
             }
             call.resolve()
+        }
+    }
+
+    private func armWatchdog(for p: AVAudioPlayer, after delay: TimeInterval) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+            guard let self, let cur = self.player, cur === p else { return }
+            if cur.isPlaying {
+                // Still audibly going (route change stretched it out) —
+                // check again shortly.
+                self.armWatchdog(for: p, after: 0.5)
+                return
+            }
+            cur.delegate = nil
+            self.player = nil
+            self.notifyListeners("playEnded", data: [:])
         }
     }
 

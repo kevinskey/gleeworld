@@ -192,8 +192,16 @@ async function playBlobNative(
   handle = await GWAudioPlay.addListener('playEnded', finish);
   try {
     nativePlayActive = true;
-    await GWAudioPlay.play({ b64, volume });
-    dbg('native-play-started', { bytes: blob.size });
+    const res = await GWAudioPlay.play({ b64, volume });
+    dbg('native-play-started', { bytes: blob.size, duration: res?.duration });
+    // JS-side backstop mirroring the native watchdog: if playEnded gets
+    // lost anywhere in the bridge, finish shortly after the clip's known
+    // duration so the conversation loop can never wedge on "speaking".
+    const durMs = typeof res?.duration === 'number' && res.duration > 0
+      ? res.duration * 1000 : 30_000;
+    setTimeout(() => {
+      if (!done) { dbg('js-watchdog-finish'); finish(); }
+    }, durMs + 1500);
     onStart?.();
   } catch (e) {
     dbg('native-play-failed', { err: String(e) });

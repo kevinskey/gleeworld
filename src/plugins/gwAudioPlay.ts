@@ -14,7 +14,7 @@ export interface GWAudioPlayPluginShape {
    *  codec; we send ElevenLabs MP3). Resolves once playback has started.
    *  Exactly one playEnded follows, on natural finish or stop(). A play()
    *  during another clip stops the first WITHOUT emitting its playEnded. */
-  play(opts: { b64: string; volume?: number }): Promise<void>;
+  play(opts: { b64: string; volume?: number }): Promise<{ duration?: number }>;
   stop(): Promise<void>;
   addListener(event: 'playEnded', cb: () => void): Promise<PluginListenerHandle>;
 }
