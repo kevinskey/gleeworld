@@ -32,7 +32,7 @@ import type { NavContext } from '../navCatalog';
 const allOn: ModuleFlags = {
   hasViewer: true, hasStudio: true, hasSightReading: true, hasBoxOffice: true,
   hasConcertPlanner: true, hasMerch: true, hasFinance: true, hasAcademy: true,
-  hasStore: true, hasSongwriting: true, hasPlanner: true, hasAuctions: true,
+  hasStore: true, hasSongwriting: true, hasPlanner: true,
 };
 
 const navFor = (isTenantAdmin: boolean): NavContext => ({
