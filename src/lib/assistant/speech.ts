@@ -214,11 +214,15 @@ async function playBlobNative(
   }
 }
 
-// TEMP diagnostics for the iOS silent-assistant bug: breadcrumb every stage
-// of reply playback to the client-log edge function so the failure point is
-// readable in server logs. Native app only; remove once the bug is dead.
+// Speech-path breadcrumbs → the client-log edge function. These solved the
+// 2026-08 iOS silent-assistant hunt (WKWebView has no console and TestFlight
+// cycles are too slow to debug blind) and stay wired for the next one — but
+// OFF by default. Re-arm on a device via Safari inspector or any in-app
+// console: localStorage.setItem('gw-speech-debug', '1'); then read
+// `docker logs supabase-edge-functions | grep client-log` on the droplet.
 function dbg(stage: string, extra?: Record<string, unknown>): void {
   try {
+    if (typeof localStorage === 'undefined' || localStorage.getItem('gw-speech-debug') !== '1') return;
     if (!(globalThis as any).Capacitor?.isNativePlatform?.()) return;
     // VITE_SUPABASE_URL isn't set in this project (URL comes from the tenant
     // config at boot) — resolve the same way, with the prod default last.

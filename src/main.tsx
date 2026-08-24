@@ -93,36 +93,13 @@ const reloadOnceForStaleChunk = (): boolean => {
     return false;
   }
 };
-// TEMP diagnostics (iOS silent-assistant / Studio-won't-open hunt): in the
-// native app, ship every uncaught error to the client-log edge function —
-// WKWebView users have no console, and TestFlight cycles are too slow to
-// debug blind. Remove with the speech.ts breadcrumbs once resolved.
-const reportNativeError = (label: string, detail: string): void => {
-  try {
-    if (!(globalThis as any).Capacitor?.isNativePlatform?.()) return;
-    const supabaseUrl = (globalThis as any).__TENANT_CONFIG__?.supabaseUrl
-      ?? 'https://supabase.gleeworld.org';
-    void fetch(`${supabaseUrl}/functions/v1/client-log`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        src: 'window-error',
-        label,
-        path: window.location?.pathname,
-        detail: detail.slice(0, 1500),
-      }),
-    }).catch(() => { /* diagnostics must never cascade */ });
-  } catch { /* ditto */ }
-};
 window.addEventListener('error', (e) => {
-  reportNativeError('error', detailOf(e));
   if (reloadInFlight) return;
   const msg = (e.error?.message as string | undefined) || e.message || '';
   if (STALE_CHUNK_RE.test(msg) && reloadOnceForStaleChunk()) return;
   renderBootError('Boot error', detailOf(e));
 });
 window.addEventListener('unhandledrejection', (e) => {
-  reportNativeError('unhandledrejection', detailOfRejection(e.reason));
   if (reloadInFlight) return;
   const r = e.reason as { message?: string } | string | undefined;
   const msg = typeof r === 'string' ? r : r?.message || '';
