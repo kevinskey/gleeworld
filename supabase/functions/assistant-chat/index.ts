@@ -214,7 +214,10 @@ serve(async (req) => {
         await persistAssistantReply(reply);
         return json({ reply, actions, thread_id: threadId });
       }
-      messages.push({ role: 'assistant', content: message.content ?? null, tool_calls: toolCalls });
+      // Never null: the model gateway 400s on non-string content in the
+      // follow-up request ("content should be a string or a list"), which
+      // killed every tool round — e.g. "read the news feed" → silence.
+      messages.push({ role: 'assistant', content: message.content ?? '', tool_calls: toolCalls });
       for (const tc of toolCalls) {
         const def = tools.find((t) => t.name === tc.function.name);
         let args: Record<string, unknown> = {};
