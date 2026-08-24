@@ -77,7 +77,7 @@ export async function executeClientAction(
   action: AssistantAction,
   depsOverride?: Partial<ActionDeps>,
 ): Promise<ActionOutcome> {
-  const needsDeps = !['open_page', 'open_song', 'open_note', 'start_video_session', 'book_ride', 'order_food'].includes(action.tool);
+  const needsDeps = !['open_page', 'open_song', 'open_course', 'open_note', 'start_video_session', 'book_ride', 'order_food'].includes(action.tool);
   const deps = { ...(needsDeps && !depsOverride ? await defaultDeps() : {}), ...depsOverride } as ActionDeps;
   const a = action.args;
   try {
@@ -95,6 +95,11 @@ export async function executeClientAction(
         const id = String(a.score_id ?? '');
         if (!/^[0-9a-f-]{3,64}$/i.test(id)) return { ok: false, message: 'That score id looks invalid.' };
         return { ok: true, navigateTo: `/dashboard/music-library?view=${id}`, message: `Opening ${a.title ?? 'the score'}.` };
+      }
+      case 'open_course': {
+        const id = String(a.course_id ?? '');
+        if (!/^[0-9a-f-]{3,64}$/i.test(id)) return { ok: false, message: 'That course id looks invalid.' };
+        return { ok: true, navigateTo: `/academy/canvas/courses/${id}`, message: `Opening ${a.title ?? 'the course'}.` };
       }
       case 'open_note': {
         const id = String(a.note_id ?? '');
