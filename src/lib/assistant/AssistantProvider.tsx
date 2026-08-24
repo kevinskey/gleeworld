@@ -305,6 +305,8 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   // callbacks that would otherwise close over stale values.
   const [conversationActive, setConversationActiveState] = useState(false);
   const conversationRef = useRef(false);
+  // True once the session's first conversation greeting has been spoken.
+  const greetedRef = useRef(false);
   const listeningRef = useRef(false);
   const speakingRef = useRef(false);
   useEffect(() => { speakingRef.current = speaking; }, [speaking]);
@@ -376,6 +378,16 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     // the speaking-end effect below opens the mic, the same path every
     // later turn uses. Muted (or TTS-less) sessions skip straight to
     // listening since there is nothing to hear.
+    //
+    // But only greet ONCE per app session: the ~3s greeting before the mic
+    // opens made every later start feel dead — users spoke over it, got
+    // ignored, and ended up tapping three times ("have to click 3 times
+    // before it's ready to listen"). Restarts go straight to the mic.
+    if (greetedRef.current) {
+      if (!listeningRef.current) startListening();
+      return;
+    }
+    greetedRef.current = true;
     if (!muted) {
       const firstName = profile?.full_name?.split(' ')[0];
       void speakNow(
