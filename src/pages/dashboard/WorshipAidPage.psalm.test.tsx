@@ -267,11 +267,13 @@ describe('the fallback chain, for aids with no score behind them', () => {
     expect(srcs().filter(Boolean)).toEqual([]);
   });
 
-  it('ignores a library row with neither music nor a picture', async () => {
-    // It used to be impossible for such a row to win, because the query
-    // filtered thumbnail_url out server-side. Now that a score with no
-    // thumbnail is worth finding, the empty row has to be excluded here
-    // instead — or it takes the newest-in-tenant fallback and prints nothing.
+  it('never prints an unrelated setting when nothing matches by name', async () => {
+    // The newest-in-tenant fallback is deliberately GONE: a Sunday with no
+    // composed setting used to silently print LAST week's psalm ("stale
+    // psalm", Kevin 2026-08-25), which reads as correct until someone sings
+    // from it. No name match now means no engraved score at all — the aid
+    // prints the psalm as prose until one is composed or a graphic is
+    // uploaded.
     massRow = { ...baseMass, worship_aid: {} };
     sheetRows = [
       { id: 'empty', title: 'A blank psalm', xml_content: null, thumbnail_url: null, created_at: '2026-08-01T00:00:00Z' },
@@ -279,6 +281,9 @@ describe('the fallback chain, for aids with no score behind them', () => {
     ];
 
     renderPage();
-    await waitFor(() => expect(srcs()).toContain('blob:engraved-now'));
+    // Give the resolution effect a beat to settle, then assert the
+    // unrelated score was NOT engraved.
+    await new Promise((r) => setTimeout(r, 50));
+    expect(srcs()).not.toContain('blob:engraved-now');
   });
 });

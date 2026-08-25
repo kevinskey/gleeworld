@@ -65,7 +65,7 @@ export default function WorshipAidPage() {
   const [psalmXml, setPsalmXml] = useState<string | null>(null);
   /** The object URL PsalmEngraving hands back. Owned by that component. */
   const [engraved, setEngraved] = useState<string | null>(null);
-  const [uploading, setUploading] = useState<PanelId | 'cover' | null>(null);
+  const [uploading, setUploading] = useState<PanelId | 'cover' | 'psalm' | null>(null);
   const [filing, setFiling] = useState(false);
   /** How the content paginated, and whether any of it has nowhere to go. */
   const [flow, setFlow] = useState<{ overflowLines: number; dropped: number }>(
@@ -83,7 +83,7 @@ export default function WorshipAidPage() {
   // could bind to either one.
   const isMobile = useIsMobile();
   const sheetsRef = useRef<HTMLDivElement>(null);
-  const uploadTarget = useRef<PanelId | 'cover'>('cover');
+  const uploadTarget = useRef<PanelId | 'cover' | 'psalm'>('cover');
   // Read inside the upload callback so a slider moved mid-upload is not lost.
   const settingsRef = useRef(settings); settingsRef.current = settings;
   const fileRef = useRef<HTMLInputElement>(null);
@@ -183,11 +183,12 @@ export default function WorshipAidPage() {
         .map((v) => norm(v ?? ''))
         .filter(Boolean);
 
-      const match = rows.find((r) => wanted.some((w) => norm(r.title).includes(w) || w.includes(norm(r.title))))
-        // Nothing matched by name: the newest psalm setting in this tenant is
-        // a better guess than printing no music at all, and the user can see
-        // on the preview whether it is the right one.
-        ?? rows[0];
+      // Name match ONLY — no newest-in-tenant fallback. That fallback was
+      // the "stale psalm" bug: a Sunday with no composed setting silently
+      // printed LAST week's psalm, which reads as correct until someone
+      // sings from it. No match now means the psalm prints as prose (or
+      // the uploaded graphic), never a guess.
+      const match = rows.find((r) => wanted.some((w) => norm(r.title).includes(w) || w.includes(norm(r.title))));
 
       if (match?.xml_content) { setPsalmXml(match.xml_content); setPsalmImage(null); return; }
       setPsalmXml(null);
@@ -270,7 +271,7 @@ export default function WorshipAidPage() {
     toast.success(next ? 'Published — the QR code now works.' : 'Unpublished. The old link no longer opens.');
   };
 
-  const pickImage = (target: PanelId | 'cover') => {
+  const pickImage = (target: PanelId | 'cover' | 'psalm') => {
     uploadTarget.current = target;
     fileRef.current?.click();
   };
@@ -309,6 +310,36 @@ export default function WorshipAidPage() {
         toast.error("The image uploaded but never became readable. That's usually a storage hiccup — try again.");
         return;
       }
+      if (target === 'psalm') {
+        // An uploaded psalm graphic REPLACES the engraved score for this
+        // Mass: clear the score link so the library lookup can't override
+        // it, and stop the live engraver.
+        const next = {
+          ...settingsRef.current, psalmImageUrl: result.url, psalmScoreId: null,
+        } as WorshipAidSettings;
+        setSettings(next);
+        setPsalmXml(null);
+        setPsalmImage(result.url);
+        await persist(next);
+        // Week-to-week copy in the Media Library: each Sunday's psalm files
+        // as its OWN row (never overwritten), so last year's graphic is
+        // findable under Images → Responsorial Psalms.
+        const { data: auth } = await supabase.auth.getUser();
+        await supabase.from('gw_media_library').insert({
+          title: `Responsorial Psalm — ${row?.psalm_title || row?.observation || 'Mass'} — ${row?.mass_date ?? ''}`.trim(),
+          description: 'Responsorial psalm graphic used on the worship aid.',
+          file_url: result.url,
+          file_path: result.path,
+          file_type: file.type || 'image/jpeg',
+          file_size: file.size,
+          folder: 'Responsorial Psalms',
+          category: 'general',
+          tags: ['responsorial-psalm', 'worship-aid', 'liturgy'],
+          uploaded_by: auth?.user?.id ?? null,
+        });
+        toast.success('Psalm graphic set — filed in the Media Library under Responsorial Psalms.');
+        return;
+      }
       const next: WorshipAidSettings = target === 'cover'
         ? { ...settingsRef.current, coverImageUrl: result.url }
         : { ...settingsRef.current, images: { ...settingsRef.current.images, [target]: result.url } };
@@ -318,7 +349,7 @@ export default function WorshipAidPage() {
     } finally {
       setUploading(null);
     }
-  }, [id, persist]);
+  }, [id, persist, row]);
 
   /**
    * File the program in the Media Library, under Documents / Worship Aids.
@@ -836,6 +867,27 @@ export default function WorshipAidPage() {
           <PageTitle>Worship Aid</PageTitle>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => pickImage('psalm')} disabled={uploading === 'psalm'}>
+            {uploading === 'psalm'
+              ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+              : <ImageIcon className="mr-1.5 h-4 w-4" />}
+            Psalm graphic
+          </Button>
+          {psalmImage && !psalmXml && (
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Remove the psalm graphic — the psalm prints as prose until one is composed or uploaded"
+              onClick={() => {
+                const next = { ...settings, psalmImageUrl: null } as WorshipAidSettings;
+                setSettings(next);
+                setPsalmImage(null);
+                void persist(next);
+              }}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
           <Button variant="outline" onClick={save} disabled={saving}>
             {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />}
             Save
