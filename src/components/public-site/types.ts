@@ -161,7 +161,7 @@ export interface SiteBlock {
   config: Record<string, unknown>;
   is_visible: boolean;
   /** Page slug this block belongs to. Absent (legacy snapshots) = 'home'. */
-  page?: string;
+  page?: string | null;
 }
 
 /** Page slug of a block; legacy blocks (pre-pages snapshots) are home. */

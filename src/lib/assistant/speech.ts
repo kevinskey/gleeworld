@@ -1,4 +1,5 @@
 import { GWSpeech, isNativeSpeechAvailable, type GWSpeechPluginShape } from '@/plugins/gwSpeech';
+import { GWAudioPlay, isNativeAudioPlayAvailable } from '@/plugins/gwAudioPlay';
 import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import { voiceGain } from './voices';
 
@@ -39,9 +40,11 @@ export function createNativeSpeechInput(plugin: GWSpeechPluginShape): SpeechInpu
       void (async () => {
         try {
           added.push(await plugin.addListener('speechResult', (e) => {
+            if (e.isFinal) dbg('mic-final', { len: e.transcript.length });
             if (session === mySession && !ended) onResult(e.transcript, e.isFinal);
           }));
           added.push(await plugin.addListener('speechEnd', () => {
+            dbg('mic-ended');
             if (session === mySession) finish();
           }));
           if (session !== mySession) {
@@ -49,10 +52,13 @@ export function createNativeSpeechInput(plugin: GWSpeechPluginShape): SpeechInpu
             for (const h of added) void h.remove().catch(() => { /* best effort */ });
             return;
           }
+          dbg('mic-starting');
           await plugin.start();
-        } catch {
+          dbg('mic-started');
+        } catch (err) {
           // Permission denied or native failure — mirror the web source,
           // where onerror routes to onEnd.
+          dbg('mic-start-failed', { err: String(err) });
           if (session === mySession) finish();
         }
       })();
@@ -71,10 +77,14 @@ export function getSpeechInput(
   native?: NativeSpeechBackend,
 ): SpeechInputSource {
   const w = (win ?? (typeof window !== 'undefined' ? window : undefined)) as any;
+  // Native first IN THE APP, even when a web recognizer ctor exists: newer
+  // iOS exposes webkitSpeechRecognition inside WKWebView, but it fails
+  // silently there (no transcript, no error we can surface) — which routed
+  // the assistant's mic away from GWSpeech and killed conversation mode.
+  const nat = native ?? { available: isNativeSpeechAvailable(), plugin: GWSpeech };
+  if (nat.available) return createNativeSpeechInput(nat.plugin);
   const Ctor = w?.SpeechRecognition ?? w?.webkitSpeechRecognition;
   if (!Ctor) {
-    const nat = native ?? { available: isNativeSpeechAvailable(), plugin: GWSpeech };
-    if (nat.available) return createNativeSpeechInput(nat.plugin);
     return { available: false, start: () => {}, stop: () => {} };
   }
   let rec: any = null;
@@ -270,8 +280,97 @@ export function takeInterruptedSpeech(): { text: string; fraction: number; at: n
   return v;
 }
 
+// Web Audio playback path retired; the source var remains for barge-in symmetry.
+let webAudioSource: AudioBufferSourceNode | null = null;
+// True while a native (AVAudioPlayer) reply is playing — see playBlobNative.
+let nativePlayActive = false;
+
+// Native reply playback for the iOS app. Web Audio breadcrumbs showed
+// decode/start/ended all firing while the device stayed silent — WebKit
+// renders Web Audio under an ambient-style session that obeys the silent
+// switch and stale routes. AVAudioPlayer under the app's own .playback
+// session is loud regardless.
+async function playBlobNative(
+  blob: Blob,
+  volume: number,
+  onStart?: () => void,
+  onEnd?: () => void,
+): Promise<void> {
+  const buf = await blob.arrayBuffer();
+  let b64 = '';
+  {
+    // Chunked conversion — String.fromCharCode(...whole) overflows the arg
+    // limit on multi-hundred-KB replies.
+    const bytes = new Uint8Array(buf);
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      b64 += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    b64 = btoa(b64);
+  }
+  let handle: PluginListenerHandle | null = null;
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    nativePlayActive = false;
+    void handle?.remove().catch(() => { /* best effort */ });
+    dbg('native-play-ended');
+    onEnd?.();
+  };
+  handle = await GWAudioPlay.addListener('playEnded', finish);
+  try {
+    nativePlayActive = true;
+    const res = await GWAudioPlay.play({ b64, volume });
+    dbg('native-play-started', { bytes: blob.size, duration: res?.duration });
+    // JS-side backstop mirroring the native watchdog: if playEnded gets
+    // lost anywhere in the bridge, finish shortly after the clip's known
+    // duration so the conversation loop can never wedge on "speaking".
+    const durMs = typeof res?.duration === 'number' && res.duration > 0
+      ? res.duration * 1000 : 30_000;
+    setTimeout(() => {
+      if (!done) { dbg('js-watchdog-finish'); finish(); }
+    }, durMs + 1500);
+    onStart?.();
+  } catch (e) {
+    dbg('native-play-failed', { err: String(e) });
+    finish();
+    throw e;
+  }
+}
+
+// Speech-path breadcrumbs → the client-log edge function. These solved the
+// 2026-08 iOS silent-assistant hunt (WKWebView has no console and TestFlight
+// cycles are too slow to debug blind) and stay wired for the next one — but
+// OFF by default. Re-arm on a device via Safari inspector or any in-app
+// console: localStorage.setItem('gw-speech-debug', '1'); then read
+// `docker logs supabase-edge-functions | grep client-log` on the droplet.
+function dbg(stage: string, extra?: Record<string, unknown>): void {
+  try {
+    if (typeof localStorage === 'undefined' || localStorage.getItem('gw-speech-debug') !== '1') return;
+    if (!(globalThis as any).Capacitor?.isNativePlatform?.()) return;
+    // VITE_SUPABASE_URL isn't set in this project (URL comes from the tenant
+    // config at boot) — resolve the same way, with the prod default last.
+    const supabaseUrl = (globalThis as any).__TENANT_CONFIG__?.supabaseUrl
+      ?? 'https://supabase.gleeworld.org';
+    void fetch(`${supabaseUrl}/functions/v1/client-log`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ src: 'speech', stage, ...extra }),
+    }).catch(() => { /* diagnostics must never break speech */ });
+  } catch { /* ditto */ }
+}
+
 function stopElevenLabs(): void {
   speakSession += 1;
+  if (nativePlayActive) {
+    nativePlayActive = false;
+    // stop() emits playEnded, which runs the pending finish()/onEnd.
+    void GWAudioPlay.stop().catch(() => { /* best effort */ });
+  }
+  const s = webAudioSource;
+  webAudioSource = null;
+  if (s) { try { s.onended = null; s.stop(); } catch { /* already stopped */ } }
   const a = elevenAudio;
   elevenAudio = null;
   captureInterrupt(a);
@@ -516,6 +615,20 @@ export function speak(
       if (!res.ok) throw new Error(`elevenlabs-tts ${res.status}`);
       const blob = await res.blob();
       if (mySession !== speakSession) return;
+      // In the iOS app, native AVAudioPlayer first — Web Audio there obeys
+      // the silent switch / stale routes and played replies inaudibly.
+      if (isNativeAudioPlayAvailable()) {
+        try {
+          await playBlobNative(
+            blob,
+            volume,
+            () => { if (mySession === speakSession) opts?.onStart?.(); },
+            () => { if (mySession === speakSession) opts?.onEnd?.(); },
+          );
+          return;
+        } catch { /* fall through to Web Audio */ }
+        if (mySession !== speakSession) return;
+      }
       const url = URL.createObjectURL(blob);
       // Reuse the gesture-primed element when we have one — a fresh
       // Audio() here is exactly what Safari's auto-play policy rejects
@@ -543,6 +656,7 @@ export function speak(
       // Logged, because an unexplained change of voice mid-conversation is
       // otherwise impossible to diagnose from a bug report.
       console.warn('[assistant] ElevenLabs TTS failed, using the browser voice:', err);
+      dbg('falling-back-to-browser-tts', { haveSynth: !!browserSynth });
       // Except on native: WKWebView's synth fires events but produces no
       // sound, so "falling back" there just fakes a spoken reply. End
       // honestly instead.

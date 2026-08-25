@@ -37,6 +37,9 @@ class MainViewController: CAPBridgeViewController {
         // GWCalendarPlugin — EventKit bridge so the app can read the user's
         // local Calendar and surface events alongside the choir schedule.
         bridge?.registerPluginInstance(GWCalendarPlugin())
+        // GWAudioPlayPlugin — native playback for Assistant replies
+        // (WebKit's Web Audio obeys the silent switch / stale routes).
+        bridge?.registerPluginInstance(GWAudioPlayPlugin())
         // RecordingLiveActivityPlugin disabled — needs widget extension's
         // GleeWorldRecordingAttributes type that's not in the main target.
     }
