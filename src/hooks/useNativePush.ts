@@ -12,7 +12,14 @@ export function useNativePush() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || !Capacitor.isNativePlatform()) return;
+    // iOS only for now. On Android, PushNotifications.register() reaches
+    // Firebase Messaging natively, and with no google-services.json in the
+    // Android project FirebaseApp never initializes — the resulting native
+    // IllegalStateException is untouchable from JS and killed the whole app
+    // right after sign-in (K10C tablet, 2026-08-25; denying the notification
+    // permission "fixed" it because registration was skipped). Widen back to
+    // isNativePlatform() only after FCM is configured end-to-end.
+    if (!user || Capacitor.getPlatform() !== 'ios') return;
     let cancelled = false;
     const listeners: Array<{ remove: () => void }> = [];
 
