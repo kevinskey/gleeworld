@@ -14,6 +14,7 @@
 // spoken punctuation ("period", "comma", "new line") is folded in.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
+import { toast } from 'sonner';
 import { getSpeechInput } from '@/lib/assistant/speech';
 
 /** Spoken-punctuation folding. Word-boundary matches only, so "the period
@@ -68,18 +69,39 @@ export function useDictation(getEditor: () => Editor | null): Dictation {
     chain.run();
   }, [getEditor]);
 
+  // Consecutive windows that produced not even an interim result. A live
+  // mic in a quiet room still emits interims from breaths and room tone;
+  // sustained absolute silence means the browser is wired to a dead input
+  // (Kevin's iMac: Chrome pointed at an audio interface with no live
+  // channel — dictation sat at "Listening…" forever). Stop and say so.
+  const emptyWindowsRef = useRef(0);
+
   openWindowRef.current = () => {
     let finalTranscript = '';
+    let heardAnything = false;
     speechRef.current.start(
       (t, isFinal) => {
+        heardAnything = true;
         setInterim(t);
         if (isFinal) finalTranscript = t;
       },
       () => {
         setInterim('');
         if (finalTranscript.trim()) insertFinal(finalTranscript);
+        if (!activeRef.current) return;
+        emptyWindowsRef.current = heardAnything ? 0 : emptyWindowsRef.current + 1;
+        if (emptyWindowsRef.current >= 4) {
+          activeRef.current = false;
+          setActive(false);
+          emptyWindowsRef.current = 0;
+          toast.error("Dictation can't hear anything", {
+            description:
+              'The microphone your browser is using seems silent. Check the mic choice in your browser’s site settings (or your system input), then tap the mic again.',
+          });
+          return;
+        }
         // Silence closed the window, not the user — keep listening.
-        if (activeRef.current) openWindowRef.current();
+        openWindowRef.current();
       },
     );
   };
@@ -93,6 +115,7 @@ export function useDictation(getEditor: () => Editor | null): Dictation {
     }
     activeRef.current = true;
     setActive(true);
+    emptyWindowsRef.current = 0;
     openWindowRef.current();
   }, []);
 
