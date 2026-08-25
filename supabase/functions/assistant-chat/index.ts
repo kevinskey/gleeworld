@@ -374,7 +374,7 @@ serve(async (req) => {
         // in the Viewer." with no open action attached, nothing happens on
         // screen (2026-08-12). One corrective re-ask, then accept.
         const openedThisTurn = actions.some((a) =>
-          ['open_song', 'open_page', 'open_note', 'open_link', 'close_viewer', 'open_bible'].includes(a.tool));
+          ['open_song', 'open_page', 'open_note', 'open_link', 'open_course', 'close_viewer', 'open_bible'].includes(a.tool));
         if (!openNudged && !openedThisTurn && claimsOpen(reply)) {
           openNudged = true;
           messages.push({ role: 'assistant', content: reply });

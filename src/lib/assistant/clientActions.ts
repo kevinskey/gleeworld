@@ -118,7 +118,7 @@ export async function executeClientAction(
   depsOverride?: Partial<ActionDeps>,
 ): Promise<ActionOutcome> {
   const needsDeps = ![
-    'open_page', 'open_link', 'open_song', 'open_bible', 'open_note',
+    'open_page', 'open_link', 'open_song', 'open_course', 'open_bible', 'open_note',
     'start_video_session', 'book_ride', 'order_food', 'stop_playback',
     'close_viewer', 'play_apple_music', 'create_apple_playlist', 'play_my_playlist',
   ].includes(action.tool);
@@ -201,6 +201,11 @@ export async function executeClientAction(
       }
       case 'close_viewer': {
         return { ok: true, navigateTo: '/dashboard/music-library', message: 'Closed the viewer.' };
+      }
+      case 'open_course': {
+        const id = String(a.course_id ?? '');
+        if (!/^[0-9a-f-]{3,64}$/i.test(id)) return { ok: false, message: 'That course id looks invalid.' };
+        return { ok: true, navigateTo: `/academy/canvas/courses/${id}`, message: `Opening ${a.title ?? 'the course'}.` };
       }
       case 'open_note': {
         const id = String(a.note_id ?? '');

@@ -386,6 +386,19 @@ export const TOOL_CATALOG: ToolDef[] = [
     minRole: 'member', execution: 'client', confirm: false,
   },
   {
+    name: 'open_course',
+    description: "Open an Academy course's page — the DEFAULT for 'open my X class', 'take me to the Y course', 'go to Sight Reading'. Get course_id from list_courses first (match the title or code the user said).",
+    parameters: {
+      type: 'object',
+      properties: {
+        course_id: str('gw course id, from list_courses'),
+        title: str('Course title, for the reply'),
+      },
+      required: ['course_id'],
+    },
+    minRole: 'member', execution: 'client', confirm: false,
+  },
+  {
     name: 'close_viewer',
     // "Close the music viewer, please" (2026-08-11) produced dead silence:
     // the model had no tool for it and replied empty. Closing returns the

@@ -40,6 +40,8 @@
 	<string>GleeWorld uses the microphone for the instrument tuner and music practice tools.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>GleeWorld transcribes your voice so you can talk to the GleeWorld Assistant.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>GleeWorld uses your location so the Assistant can find rides, food, and events near you.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
