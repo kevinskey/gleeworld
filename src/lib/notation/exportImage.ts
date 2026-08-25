@@ -119,15 +119,30 @@ export async function svgToJpegBlob(
     img.onerror = () => reject(new Error('Could not rasterise the staff.'));
     img.src = url;
   });
+  // decode() forces the SVG document's subresources — the embedded font —
+  // to finish before we photograph it. Chromium (Android WebView included)
+  // can fire onload while the @font-face inside an SVG image is still
+  // parsing; drawing at that moment placed noteheads with fallback metrics
+  // while stems (plain paths) stayed put — the "stems detached from their
+  // noteheads" psalm on the K10C tablet (2026-08-25).
+  await (img as { decode?: () => Promise<void> }).decode?.()?.catch(() => { /* draw anyway */ });
 
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(width * scale);
   canvas.height = Math.round(height * scale);
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas is unavailable in this browser.');
-  ctx.fillStyle = background;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const paint = () => {
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  };
+  // Draw twice with a frame between: the first pass warms the SVG image's
+  // font cache on engines where decode() doesn't cover it; the second is
+  // the one that ships. Cheap insurance — one extra draw of a cached image.
+  paint();
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  paint();
 
   return await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob(
