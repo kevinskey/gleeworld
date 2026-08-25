@@ -9,7 +9,9 @@ import {
   List, ListOrdered, Quote, TableIcon, Image as ImageIcon,
   Link as LinkIcon, Superscript as FootnoteIcon, BookText,
   Undo, Redo, Strikethrough, Baseline, SeparatorHorizontal, MessageSquarePlus,
+  Mic,
 } from 'lucide-react';
+import type { Dictation } from './useDictation';
 
 // Font stacks offered in the toolbar. Web-safe families only — a document
 // exports to .docx and prints, so a font nobody has installed is worse than
@@ -61,9 +63,12 @@ interface DocToolbarProps {
   onFootnoteClick: () => void;
   onImageClick: () => void;
   onCommentClick?: () => void;
+  /** Dictation state from useDictation. Omitted (or unavailable) = no mic
+   *  button, e.g. a browser with no speech recognition. */
+  dictation?: Dictation;
 }
 
-export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick, onCommentClick }: DocToolbarProps) {
+export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick, onCommentClick, dictation }: DocToolbarProps) {
   const addLink = () => {
     const url = window.prompt('Link URL (https://…)', editor.getAttributes('link').href || '');
     if (url === null) return;
@@ -82,6 +87,23 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
     <div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b border-border bg-background/95 px-2 py-1.5 backdrop-blur">
       <ToolbarButton title="Undo" onClick={() => editor.chain().focus().undo().run()}><Undo className="h-[18px] w-[18px]" /></ToolbarButton>
       <ToolbarButton title="Redo" onClick={() => editor.chain().focus().redo().run()}><Redo className="h-[18px] w-[18px]" /></ToolbarButton>
+      {dictation?.available && (
+        <>
+          <div className="w-px h-5 bg-border mx-1" />
+          <ToolbarButton
+            title={dictation.active ? 'Stop dictation' : 'Dictate — speak and it types at the cursor'}
+            active={dictation.active}
+            onClick={dictation.toggle}
+          >
+            <Mic className={`h-[18px] w-[18px] ${dictation.active ? 'text-destructive animate-pulse' : ''}`} />
+          </ToolbarButton>
+          {dictation.active && (
+            <span className="max-w-[40ch] truncate rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs text-destructive">
+              {dictation.interim || 'Listening…'}
+            </span>
+          )}
+        </>
+      )}
       <div className="w-px h-5 bg-border mx-1" />
 
       <select

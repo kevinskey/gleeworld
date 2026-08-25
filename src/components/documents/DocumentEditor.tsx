@@ -4,6 +4,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor, type AnyExtension, type Content } from '@tiptap/react';
 import { LinkBubble } from './LinkBubble';
+import { useDictation } from './useDictation';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import Link from '@tiptap/extension-link';
@@ -287,6 +288,12 @@ export function DocumentEditor({
     return () => editorRef?.(null);
   }, [editor, editorRef]);
 
+  // Latest-editor ref so dictation's insert callback never closes over a
+  // stale (or not-yet-constructed) instance.
+  const dictationEditorRef = useRef<Editor | null>(null);
+  dictationEditorRef.current = editor ?? null;
+  const dictation = useDictation(() => dictationEditorRef.current);
+
   if (!editor) return null;
 
   const { pageSize: pageWidthKey, marginIn } = resolvePageSetup(pageSetup);
@@ -299,6 +306,7 @@ export function DocumentEditor({
         onFootnoteClick={onFootnoteClick}
         onImageClick={onImageClick}
         onCommentClick={onCommentClick}
+        dictation={dictation}
       />
       <FindReplaceBar editor={editor} />
       {/* w-full is load-bearing: in a flex-col parent, mx-auto overrides the
