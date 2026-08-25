@@ -12,7 +12,7 @@ import {
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
-  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, Gavel, CreditCard, Receipt,
+  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, CreditCard, Receipt,
   HandHeart, ConciergeBell, QrCode, Award,
   type LucideIcon, FileText } from 'lucide-react';
 
@@ -109,7 +109,6 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'tour',      to: '/tour-manager',              label: 'Travel Manager',  icon: RouteIcon,     section: 'plan', tone: 'bg-blue-50 text-blue-600',       tourId: 'nav-tour-manager', gate: { module: 'tour' } },
   { key: 'seating-charts', to: '/seating-charts',       label: 'Seating Charts',  icon: Armchair,      section: 'plan', tone: 'bg-indigo-50 text-indigo-600',   tourId: 'nav-seating-charts' },
   { key: 'auditions', to: '/dashboard/auditions',       label: 'Auditions',       icon: ScanLine,      section: 'plan', tone: 'bg-lime-50 text-lime-600',       tourId: 'nav-auditions', gate: { module: 'auditions' } },
-  { key: 'auctions',  to: '/auctions',                  label: 'Auctions',        icon: Gavel,         section: 'plan', tone: 'bg-stone-50 text-stone-600',     tourId: 'nav-auctions', gate: { module: 'auctions' } },
   // Reach
   { key: 'pr-hub',    to: '/dashboard/pr-hub', label: 'PR Hub',    icon: Megaphone,     section: 'reach', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-pr-hub', gate: { module: 'pr_hub' } },
   { key: 'fan-page',  to: '/admin/fan-page',   label: 'Fan Page',  icon: Heart,         section: 'reach', tone: 'bg-rose-50 text-rose-700',       tourId: 'nav-fan-page', gate: { adminOnly: true } },
@@ -153,6 +152,9 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // Connect account resolution) apply. A bare "Store" label invited directors to expect
   // their own inventory and land on someone else's platform. NEVER rename the `key`.
   { key: 'fundraising', to: '/dashboard/fundraising', label: 'Fundraising (T-Shirt Brothers)', icon: Shirt, section: 'money', tone: 'bg-amber-50 text-amber-600', tourId: 'nav-fundraising', gate: { adminOnly: true } },
+  // Peer-to-peer donation pages — a different revenue motion from the
+  // T-Shirt Brothers apparel storefront above, hence a separate entry.
+  { key: 'giving',      to: '/dashboard/giving',      label: 'Giving',      icon: HandHeart, section: 'money', tone: 'bg-pink-50 text-pink-600', tourId: 'nav-giving', gate: { module: 'giving', adminOnly: true } },
   // People — tenant user management (invite / promote / disable / CSV
   // bulk import). adminOnly is now authoritative in the code, not just
   // via gw_tenant_nav_prefs — a fresh tenant with no prefs seeded would

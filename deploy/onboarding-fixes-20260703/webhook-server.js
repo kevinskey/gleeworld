@@ -70,6 +70,17 @@ app.post('/stripe-webhook', express.raw({ type: 'application/json' }), async (re
   try {
     switch (event.type) {
       case 'checkout.session.completed':
+        // Box-office ticket sale charged on the PLATFORM account (a tenant
+        // flagged gw_tenants.uses_platform_stripe -- the platform operator's
+        // own tenant, which cannot Connect an account to itself). Same
+        // fulfillment path as the Connect route; only the account differs.
+        // MUST precede the store branch: both carry metadata.store_type.
+        if (event.data.object.metadata?.store_type === 'box-office') { await handleConnectCheckoutCompleted(event.data.object); break; }
+        // Giving donations are always Connect direct charges (donate-checkout
+        // refuses to run without a tenant stripe_account_id), so one should
+        // never arrive here. Routed anyway rather than left to fall into the
+        // store branch, where it would fail hunting for order items.
+        if (event.data.object.metadata?.store_type === 'giving') { await handleDonationCompleted(event.data.object); break; }
         // Store sale (GleeWorld Store on the platform account) — dispatch
         // before the ticket/module branches (handled inside
         // handleCheckoutCompleted) and stop; a store sale never carries
@@ -128,6 +139,11 @@ app.post('/stripe-connect-webhook', express.raw({ type: 'application/json' }), a
         await handleConnectAccountUpdated(event.data.object);
         break;
       case 'checkout.session.completed':
+        // Giving donation (Connect account). Rides the same
+        // metadata.store_type dispatch as the store, so it MUST be checked
+        // before the generic store branch or a gift would be handed to
+        // gw_store_fulfill_order and fail looking for order items.
+        if (event.data.object.metadata?.store_type === 'giving') { await handleDonationCompleted(event.data.object); break; }
         // Tenant Store sale (Connect account) — dispatch before the
         // box-office ticket branch and stop; box-office orders never carry
         // metadata.store_type.
@@ -177,7 +193,14 @@ async function handleConnectAccountUpdated(account) {
 async function handleConnectCheckoutCompleted(session) {
   const orderId = session.metadata?.order_id;
   if (!orderId) {
-    console.log('connect checkout.session.completed without order_id metadata — not a box-office sale');
+    console.log('checkout.session.completed without order_id metadata — not a box-office sale');
+    return;
+  }
+  // This handler is reached from both the Connect and the platform dispatcher,
+  // and orderId is interpolated into a $$-quoted SQL literal below. A real
+  // UUID cannot contain "$$", so validating the shape closes the breakout.
+  if (!UUID_RE.test(orderId)) {
+    console.error('refusing to fulfill: order_id is not a uuid', JSON.stringify(orderId).slice(0, 120));
     return;
   }
   const signingSecret = process.env.TICKET_SIGNING_SECRET || '';
@@ -255,6 +278,177 @@ async function handleStoreCheckoutCompleted(session) {
   // entitlements already exist in gw_store_entitlements for store-download to serve.
 }
 
+// ── Giving (peer-to-peer fundraising) ──────────────────────────────────────
+// Connect-account checkout.session.completed with metadata.store_type='giving'
+// → promote the pending gw_donations row (idempotent on its own status, so a
+// Stripe re-delivery cannot double-count a gift on the leaderboard), then
+// send the two emails that make this model work: the donor's receipt, and the
+// participant's "you just got a gift, go thank them" nudge.
+async function handleDonationCompleted(session) {
+  const donationId = session.metadata?.order_id || session.metadata?.donation_id;
+  if (!donationId || !UUID_RE.test(donationId)) {
+    console.warn('[giving] checkout.session.completed without a usable donation id; session=', session.id);
+    return;
+  }
+  const pi = typeof session.payment_intent === 'string' ? session.payment_intent : (session.payment_intent?.id || '');
+  // Stripe gives us the billing country/state for free on the session; it is
+  // what powers the "donations by state" map without ever asking the donor.
+  const addr = session.customer_details?.address || {};
+  const state = (addr.state || '').slice(0, 8).replace(/[^A-Za-z -]/g, '');
+  const country = (addr.country || '').slice(0, 2).replace(/[^A-Za-z]/g, '');
+
+  const raw = await runSqlReturn(
+    `SELECT public.gw_giving_fulfill_donation(
+       $$${donationId}$$::uuid, $$${session.id}$$, $$${pi}$$,
+       ${state ? `$$${state}$$` : 'NULL'}, ${country ? `$$${country}$$` : 'NULL'}
+     ) AS result;`
+  );
+  let result = null;
+  try {
+    const line = (raw || '').split('\n').map(l => l.trim()).find(l => l.startsWith('{'));
+    result = line ? JSON.parse(line) : null;
+  } catch (e) {
+    console.error('[giving] failed to parse fulfill result for donation', donationId, e, raw);
+    return;
+  }
+  if (result?.already_paid) { console.log('[giving] donation already paid (idempotent)', donationId); return; }
+  if (!result?.ok) { console.error('[giving] fulfill error', donationId, result); return; }
+  console.log(`[giving] donation ${donationId} paid — $${(result.amount_cents / 100).toFixed(2)}`);
+
+  try {
+    await sendDonationReceipt(result);
+  } catch (err) {
+    console.error('[giving] receipt email failed for donation', donationId, err);
+  }
+  try {
+    await sendDonationNudge(result);
+  } catch (err) {
+    console.error('[giving] participant nudge failed for donation', donationId, err);
+  }
+}
+
+// Donor receipt.
+//
+// GleeWorld is NOT a 501(c)(3) and is not a fiscal sponsor, so this email
+// NEVER asserts deductibility on GleeWorld's behalf. Deductible language and
+// an EIN appear only when the tenant itself attested to its own 501(c)(3)
+// status on the fundraiser row; otherwise the receipt says plainly that the
+// gift is not tax-deductible. Getting this backwards is the one mistake in
+// this feature that creates real liability for a customer.
+async function sendDonationReceipt(r) {
+  if (!RESEND_KEY) { console.warn('RESEND_API_KEY unset — cannot email donation receipt'); return; }
+  if (!r.donor_email) return;
+
+  const amount = `$${(r.amount_cents / 100).toFixed(2)}`;
+  const feeCover = r.fee_cover_cents > 0 ? `$${(r.fee_cover_cents / 100).toFixed(2)}` : null;
+  const total = `$${((r.amount_cents + (r.fee_cover_cents || 0)) / 100).toFixed(2)}`;
+  const pageUrl = r.participant_slug
+    ? `https://${ROOT_DOMAIN}/give/${r.fundraiser_slug}/${r.participant_slug}`
+    : `https://${ROOT_DOMAIN}/give/${r.fundraiser_slug}`;
+  const toWhom = r.participant_name ? ` to ${r.participant_name}` : '';
+
+  const legal = r.tax_deductible
+    ? `This organization is a non-profit 501(c)(3) organization. Your donation is tax-deductible. No goods or services were received in return for this donation.${r.ein ? ` Federal Tax ID #${r.ein}` : ''}`
+    : 'No goods or services were received in return for this donation. This gift is not tax-deductible.';
+
+  const text =
+`Thank you for your ${amount} donation${toWhom} for ${r.fundraiser_title}.
+
+Please help make this even more successful by sharing this page with your friends and family:
+${pageUrl}
+
+Donation details
+Donation Amount: ${amount}${feeCover ? `\nProcessing fee covered: ${feeCover}` : ''}
+Total Charged: ${total}
+Date: ${new Date().toLocaleDateString('en-US', { dateStyle: 'long' })}
+
+${legal}
+
+${r.receipt_note || ''}`.trim();
+
+  const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;color:#111;max-width:560px;margin:0 auto;padding:24px;">
+    <h2 style="margin:0 0 12px;">Thank you!</h2>
+    <p style="margin:0 0 16px;">Thank you for your <strong>${amount}</strong> donation${escapeHtml(toWhom)} for ${escapeHtml(r.fundraiser_title)}.</p>
+    <p style="margin:0 0 16px;">Help make this even more successful by sharing this page:<br>
+      <a href="${escapeHtml(pageUrl)}">${escapeHtml(pageUrl)}</a></p>
+    <h3 style="margin:24px 0 8px;font-size:15px;">Donation details</h3>
+    <table style="font-size:14px;border-collapse:collapse;">
+      <tr><td style="padding:2px 12px 2px 0;color:#555;">Donation Amount</td><td><strong>${amount}</strong></td></tr>
+      ${feeCover ? `<tr><td style="padding:2px 12px 2px 0;color:#555;">Processing fee covered</td><td>${feeCover}</td></tr>` : ''}
+      <tr><td style="padding:2px 12px 2px 0;color:#555;">Total Charged</td><td>${total}</td></tr>
+    </table>
+    <p style="margin:24px 0 0;font-size:12px;color:#666;">${escapeHtml(legal)}</p>
+    ${r.receipt_note ? `<p style="margin:12px 0 0;font-size:12px;color:#666;">${escapeHtml(r.receipt_note)}</p>` : ''}
+  </body></html>`;
+
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: SENDER,
+      to: r.donor_email,
+      subject: `${r.fundraiser_title} — thanks for your support!`,
+      text,
+      html,
+    }),
+  });
+  console.log(`[giving] receipt sent to ${r.donor_email}`);
+}
+
+// Participant nudge — "kevin johnson made a $60 donation, send a thank-you".
+// This is the loop that turns one gift into the next ask, and it only fires
+// when the participant is a real GleeWorld account with an email on file.
+// Anonymous donors' identities are never disclosed here.
+async function sendDonationNudge(r) {
+  if (!RESEND_KEY || !r.participant_user_id || !UUID_RE.test(r.participant_user_id)) return;
+
+  const lookup = await runSqlReturn(`
+    SELECT row_to_json(t) FROM (
+      SELECT email, full_name FROM gw_profiles
+       WHERE user_id = $$${r.participant_user_id}$$::uuid LIMIT 1
+    ) t;
+  `);
+  const profile = JSON.parse((lookup || '').trim() || 'null');
+  if (!profile?.email) return;
+
+  const amount = `$${(r.amount_cents / 100).toFixed(2)}`;
+  const donor = r.is_anonymous ? 'Someone' : (r.donor_name || 'Someone');
+  const pageUrl = `https://${ROOT_DOMAIN}/give/${r.fundraiser_slug}/${r.participant_slug}`;
+  const thankLine = (!r.is_anonymous && r.donor_email)
+    ? `\nSend them a personal thank-you note: ${r.donor_email}\n`
+    : '';
+
+  const text =
+`Hello ${r.participant_name || profile.full_name || 'there'},
+
+${donor} has made a ${amount} donation.
+${r.message ? `\nTheir message: "${r.message}"\n` : ''}${thankLine}
+Your page: ${pageUrl}
+
+Keep sharing — every share turns into another gift.`;
+
+  const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;color:#111;max-width:560px;margin:0 auto;padding:24px;">
+    <h2 style="margin:0 0 12px;">You just got a donation 🎉</h2>
+    <p style="margin:0 0 12px;"><strong>${escapeHtml(donor)}</strong> has made a <strong>${amount}</strong> donation.</p>
+    ${r.message ? `<blockquote style="margin:0 0 12px;padding:8px 12px;border-left:3px solid #ddd;color:#444;">${escapeHtml(r.message)}</blockquote>` : ''}
+    ${(!r.is_anonymous && r.donor_email) ? `<p style="margin:0 0 12px;">Send them a personal thank-you note: <a href="mailto:${escapeHtml(r.donor_email)}">${escapeHtml(r.donor_email)}</a></p>` : ''}
+    <p style="margin:16px 0 0;"><a href="${escapeHtml(pageUrl)}">View your fundraising page</a></p>
+  </body></html>`;
+
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: SENDER,
+      to: profile.email,
+      subject: `${donor} made a ${amount} donation to you`,
+      text,
+      html,
+    }),
+  });
+  console.log(`[giving] participant nudge sent to ${profile.email}`);
+}
+
 // Find the order by payment_intent and atomically void it (gw_tickets
 // flipped to 'void', tier.quantity_sold decremented, order.status set to
 // 'refunded'). Idempotent via the SQL function so re-deliveries from
@@ -265,6 +459,28 @@ async function handleConnectChargeRefunded(charge) {
     console.log('connect charge.refunded without payment_intent — skipping');
     return;
   }
+  // A Giving donation refunded from the tenant's dashboard. Try this first:
+  // the SQL function is a no-op returning donation_not_found when the PI
+  // belongs to tickets instead, so the ticket path below is unaffected.
+  const donRaw = await runSqlReturn(
+    `SELECT public.gw_giving_refund_donation($$${pi}$$) AS result;`
+  );
+  try {
+    const line = (donRaw || '').split('\n').map(l => l.trim()).find(l => l.startsWith('{'));
+    const donResult = line ? JSON.parse(line) : null;
+    if (donResult?.ok) {
+      console.log(`✓ donation ${donResult.donation_id} refunded (totals decremented)`);
+      return;
+    }
+    if (donResult?.already_refunded) {
+      console.log(`✓ donation for PI ${pi} already refunded — skipping`);
+      return;
+    }
+  } catch (e) {
+    console.error('failed to parse giving refund result', e, donRaw);
+    // Fall through — this may simply be a ticket order.
+  }
+
   // Look up which order this PI belongs to.
   const lookup = await runSqlReturn(`
     SELECT row_to_json(t) FROM (
@@ -547,6 +763,81 @@ async function handleSubscriptionChange(sub, kind) {
   const tenantId = sub.metadata?.tenant_id;
   const moduleId = sub.metadata?.module_id;
 
+  // ── Base-plan + Personal-plan subscriptions (2026-08-17) ────────────────
+  // create-plan-checkout / create-personal-checkout (Supabase edge fns) tag
+  // subscription metadata with kind: 'plan' | 'personal'. Stripe's platform
+  // endpoint delivers here (gleeworld.org/stripe-webhook → :3030), so this
+  // service is the fulfillment path for those checkouts — without these
+  // branches a paid plan stayed 'trial' forever (found live 2026-08-17,
+  // lykehouse test purchase).
+  // A Customer Portal plan switch changes the subscription's PRICE but not
+  // its metadata, so the price's lookup_key (gw_<tier>_<cycle>, set by
+  // scripts/stripe-setup-tiers.mjs) is the truth for plan + cycle; checkout
+  // metadata is only the fallback for prices without a lookup_key.
+  const lk = sub.items?.data?.[0]?.price?.lookup_key || '';
+  const lkMatch = lk.match(/^gw_(personal|director60|director150|institution)_(monthly|annual)$/);
+  const planFromPrice = lkMatch
+    ? { personal: 'personal', director60: 'director_60', director150: 'director_150', institution: 'institution' }[lkMatch[1]]
+    : null;
+  const cycleFromPrice = lkMatch ? lkMatch[2] : null;
+
+  if (sub.metadata?.kind === 'plan' && tenantId && (planFromPrice || sub.metadata?.plan_id)) {
+    const planId = planFromPrice || sub.metadata.plan_id;
+    const periodEnd = new Date((sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end) * 1000).toISOString();
+    // NB: gw_tenant_plans's status CHECK spells it 'cancelled' (two L's);
+    // gw_user_plans's spells it 'canceled'. Found live 2026-08-17 when the
+    // tenant cancel bounced off the constraint.
+    const status =
+      kind === 'cancel'          ? 'cancelled' :
+      sub.status === 'past_due'  ? 'past_due' :
+      sub.status === 'unpaid'    ? 'past_due' :
+      sub.status === 'canceled'  ? 'cancelled' :
+      'active';
+    const cycle = (cycleFromPrice || sub.metadata?.billing_cycle) === 'annual' ? 'annual' : 'monthly';
+    await runSql(`
+      INSERT INTO gw_tenant_plans
+        (tenant_id, plan_id, billing_cycle, status, stripe_subscription_id, stripe_customer_id, current_period_end)
+      VALUES ($$${tenantId}$$, $$${planId}$$, $$${cycle}$$, $$${status}$$, $$${sub.id}$$, $$${sub.customer}$$, $$${periodEnd}$$)
+      ON CONFLICT (tenant_id) DO UPDATE SET
+        plan_id = EXCLUDED.plan_id,
+        billing_cycle = EXCLUDED.billing_cycle,
+        status = EXCLUDED.status,
+        stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+        stripe_customer_id = EXCLUDED.stripe_customer_id,
+        current_period_end = EXCLUDED.current_period_end,
+        updated_at = now();
+    `);
+    console.log(`✓ tenant plan ${kind}: ${planId} for tenant ${tenantId} status=${status}`);
+    return;
+  }
+  if (sub.metadata?.kind === 'personal' && sub.metadata?.user_id && sub.metadata?.plan_id) {
+    const periodEnd = new Date((sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end) * 1000).toISOString();
+    const status =
+      kind === 'cancel'          ? 'canceled' :
+      sub.status === 'past_due'  ? 'past_due' :
+      sub.status === 'unpaid'    ? 'past_due' :
+      sub.status === 'canceled'  ? 'canceled' :
+      'active';
+    await runSql(`
+      INSERT INTO gw_user_plans
+        (user_id, plan_id, status, stripe_subscription_id, stripe_customer_id, current_period_end, tenant_id)
+      VALUES ($$${sub.metadata.user_id}$$, $$${sub.metadata.plan_id}$$, $$${status}$$, $$${sub.id}$$, $$${sub.customer}$$, $$${periodEnd}$$,
+        -- tenant_id is the multi-tenant sweep's NOT NULL column; raw SQL gets
+        -- no request-scoped default, so pin it to the user's home tenant.
+        COALESCE((SELECT tenant_id FROM gw_profiles WHERE user_id = $$${sub.metadata.user_id}$$ LIMIT 1),
+                 (SELECT id FROM gw_tenants WHERE slug = $$main$$)))
+      ON CONFLICT (user_id) DO UPDATE SET
+        plan_id = EXCLUDED.plan_id,
+        status = EXCLUDED.status,
+        stripe_subscription_id = EXCLUDED.stripe_subscription_id,
+        stripe_customer_id = EXCLUDED.stripe_customer_id,
+        current_period_end = EXCLUDED.current_period_end,
+        updated_at = now();
+    `);
+    console.log(`✓ personal plan ${kind}: user ${sub.metadata.user_id} status=${status}`);
+    return;
+  }
+
   // Base-plan subscription (tagged at provisioning): sync its lifecycle to
   // the tenant itself — non-payment or cancellation must reach the site.
   if (tenantId && !moduleId && sub.metadata?.gleeworld_plan) {
@@ -608,6 +899,22 @@ async function handlePaymentFailed(invoice) {
       WHERE id = $$${tenantId}$$;
     `);
     console.warn(`⚠ plan payment failed: tenant ${tenantId} → past_due`);
+    return;
+  }
+  if (sub.metadata?.kind === 'plan' && tenantId) {
+    await runSql(`
+      UPDATE gw_tenant_plans SET status = 'past_due', updated_at = now()
+      WHERE tenant_id = $$${tenantId}$$;
+    `);
+    console.warn(`⚠ tenant plan payment failed: tenant ${tenantId} → past_due`);
+    return;
+  }
+  if (sub.metadata?.kind === 'personal' && sub.metadata?.user_id) {
+    await runSql(`
+      UPDATE gw_user_plans SET status = 'past_due', updated_at = now()
+      WHERE user_id = $$${sub.metadata.user_id}$$;
+    `);
+    console.warn(`⚠ personal plan payment failed: user ${sub.metadata.user_id} → past_due`);
     return;
   }
   if (!tenantId || !moduleId) return;

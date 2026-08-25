@@ -41,3 +41,31 @@ describe('navToolsForShelf', () => {
     expect(navToolsForShelf(tools, favorites([]))).toEqual(tools);
   });
 });
+
+import { previewShelfTools } from '../myTools';
+import { DEFAULT_TOOLS_STUDENT, DEFAULT_TOOLS_FACULTY } from '../myTools';
+
+describe('previewShelfTools', () => {
+  it('leaves the real shelf alone when nothing is being previewed', () => {
+    expect(previewShelfTools(null)).toBeNull();
+    expect(previewShelfTools(undefined)).toBeNull();
+  });
+
+  it('shows the student default shelf for member-level previews', () => {
+    // The point: an admin previewing a student must not be shown their OWN
+    // tools, which is what made the nav disagree with the settings page.
+    expect(previewShelfTools('student')).toEqual(DEFAULT_TOOLS_STUDENT);
+    expect(previewShelfTools('member')).toEqual(DEFAULT_TOOLS_STUDENT);
+  });
+
+  it('shows the faculty default shelf for an admin preview', () => {
+    expect(previewShelfTools('admin')).toEqual(DEFAULT_TOOLS_FACULTY);
+  });
+
+  it('never returns the caller’s own tools', () => {
+    // Both defaults are fixed lists, so a preview can't leak a personal shelf.
+    for (const role of ['admin', 'student', 'member']) {
+      expect(previewShelfTools(role)).not.toContain('a-tool-only-kevin-has');
+    }
+  });
+});

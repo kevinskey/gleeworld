@@ -23,6 +23,40 @@ import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
 interface NavPrefRow {
   role: string;
   hidden_items: string[] | null;
+  /** The shelf a NEW member of this role starts with — My World →
+   *  "Defaults for members". Selected here rather than through
+   *  useTenantDefaultTools so a preview costs no extra round trip: it is the
+   *  same table, the same row, and this query is already on every page. */
+  default_tools: string[] | null;
+}
+
+/**
+ * The tenant's configured default shelf for a role, or null when that role
+ * has none saved. Reads the row this hook already fetched.
+ */
+export function useTenantRoleDefaults(role: string | null | undefined): string[] | null {
+  const { user } = useAuth();
+  const { data: rows = [] } = useQuery<NavPrefRow[]>({
+    queryKey: ['tenant-nav-prefs'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_tenant_nav_prefs')
+        .select('role, hidden_items, default_tools');
+      if (error) return [];
+      return (data as NavPrefRow[]) ?? [];
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+
+  return useMemo(() => {
+    if (!role) return null;
+    const configured = rows.find((r) => r.role === role)?.default_tools;
+    // An absent list means the tenant never configured this role. An empty
+    // one is a real choice and is NOT the same thing — only the former should
+    // fall back to the built-in constants.
+    return Array.isArray(configured) && configured.length > 0 ? configured : null;
+  }, [role, rows]);
 }
 
 export function useTenantNavPrefs(): Set<string> {
@@ -35,7 +69,7 @@ export function useTenantNavPrefs(): Set<string> {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_tenant_nav_prefs')
-        .select('role, hidden_items');
+        .select('role, hidden_items, default_tools');
       if (error) return [];
       return (data as NavPrefRow[]) ?? [];
     },

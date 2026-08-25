@@ -1509,11 +1509,18 @@ function Editor({
   // output latency can drift between takes. Shared by the normal record
   // path and punch-record's in-point.
   const resetMidiCapture = () => {
-    midiCcRef.current = [];
     // Seed from the CONTINUOUS physical state, not false — a pedal held
     // down when the take starts (or across a punch-in) is truly down, and
     // must dedupe against handleMidiSustain's next message correctly
-    // instead of the take wrongly believing it starts released.
+    // instead of the take wrongly believing it starts released. Seeding
+    // the STATE alone isn't enough: the down transition happened before
+    // capture began, so without a synthetic CC64-down at t=0 the take
+    // carries no down event at all and applySustain plays the opening
+    // phrase unsustained (pressing the pedal during the count-in is
+    // normal piano technique). attachTakeCc clamps t=0 to clip start.
+    midiCcRef.current = lastPedalDownRef.current
+      ? [{ controller: 64, value: 127, timeAbsSeconds: 0 }]
+      : [];
     midiPedalRef.current = lastPedalDownRef.current;
     // Auto compensation measured once per take; ±trim from the settings
     // dial. Do NOT clamp the total at 0 here: the trim UI explicitly

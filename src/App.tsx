@@ -82,6 +82,14 @@ const WorkspaceSettingsPage = lazy(() => import("./pages/dashboard/WorkspaceSett
 const MyWorldPage = lazy(() => import("./pages/dashboard/MyWorldPage"));
 const WorkspaceAnalyticsPage = lazy(() => import("./pages/dashboard/WorkspaceAnalyticsPage"));
 const FundraisingPage = lazy(() => import("./pages/dashboard/FundraisingPage"));
+const GivingPage = lazy(() => import("./pages/dashboard/GivingPage"));
+// Public peer-to-peer giving pages. Lazy + public: these are opened by
+// strangers from a shared text message, so they must not pull the
+// authenticated dashboard bundle.
+const FundraiserPublicPage = lazy(() => import("./pages/give/FundraiserPublicPage"));
+const ParticipantPublicPage = lazy(() => import("./pages/give/ParticipantPublicPage"));
+const GivingThanksPage = lazy(() => import("./pages/give/GivingThanksPage"));
+const ParticipantManagePage = lazy(() => import("./pages/give/ParticipantManagePage"));
 const DiscussionThreadPage = lazy(() => import("./pages/academy/DiscussionThreadPage"));
 const StudentOnboarding = lazy(() => import("./pages/admin/StudentOnboarding"));
 const JoinCourse = lazy(() => import("./pages/JoinCourse"));
@@ -234,12 +242,6 @@ const ConcertPlannerPage = lazy(() => import("./pages/dashboard/ConcertPlannerPa
 const SongwritingLibraryPage = lazy(() => import("./pages/songwriting/SongwritingLibraryPage"));
 const SongwritingEditorPage = lazy(() => import("./pages/songwriting/SongwritingEditorPage"));
 const PlannerPage = lazy(() => import("./pages/planner/PlannerPage"));
-const AuctionsCalendarPage = lazy(() => import("./pages/auctions/AuctionsCalendarPage"));
-const AuctionsAdminPage = lazy(() => import("./pages/auctions/AuctionsAdminPage"));
-const AuctionsLotsPage = lazy(() => import("./pages/auctions/LotsPage"));
-const AuctionsLotDetailPage = lazy(() => import("./pages/auctions/LotDetailPage"));
-const AuctionsSavedSearchesPage = lazy(() => import("./pages/auctions/SavedSearchesPage"));
-const AuctionsMatchesPage = lazy(() => import("./pages/auctions/MatchesPage"));
 const PrayerApp = lazy(() => import("./pages/prayer/PrayerApp"));
 const BibleApp = lazy(() => import("./pages/bible/BibleApp"));
 const LiturgyPlannerPage = lazy(() => import("./pages/dashboard/LiturgyPlannerPage"));
@@ -626,6 +628,14 @@ const App = () => {
               <Route path="/dpa" element={<PublicRoute><DataProcessingAddendum /></PublicRoute>} />
               <Route path="/data-processing-addendum" element={<PublicRoute><DataProcessingAddendum /></PublicRoute>} />
               <Route path="/thank-you" element={<PublicRoute><ThankYou /></PublicRoute>} />
+              {/* Giving (peer-to-peer fundraising). Router v6 ranks the static
+                  /thanks segment above :participantSlug, so a participant
+                  whose slug happens to be "thanks" loses to the post-donation
+                  page rather than the other way round. */}
+              <Route path="/give/:slug" element={<PublicRoute><FundraiserPublicPage /></PublicRoute>} />
+              <Route path="/give/:slug/thanks" element={<PublicRoute><GivingThanksPage /></PublicRoute>} />
+              <Route path="/give/:slug/:participantSlug" element={<PublicRoute><ParticipantPublicPage /></PublicRoute>} />
+              <Route path="/p/:token" element={<PublicRoute><ParticipantManagePage /></PublicRoute>} />
               <Route path="/my-music" element={<PublicRoute><MyMusicOfflinePage /></PublicRoute>} />
               <Route
                 path="/academy/:courseCode/rehearsal-today"
@@ -1015,6 +1025,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <FundraisingPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/dashboard/giving"
+                element={
+                  <ProtectedRoute>
+                    <GivingPage />
                   </ProtectedRoute>
                 }
               />
@@ -1849,82 +1867,6 @@ const App = () => {
                       <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
                         <DashboardShell>
                           <ModuleGate moduleId="planner"><PlannerPage /></ModuleGate>
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                {/* Auctions — addon module 'auctions'. Phase 1 is the calendar:
-                    a member-facing list of upcoming equipment sales, plus a
-                    platform-staff-only curation page (the auction tables are
-                    global reference data, so the admin page self-gates too). */}
-                <Route
-                  path="/auctions"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <ModuleGate moduleId="auctions"><AuctionsCalendarPage /></ModuleGate>
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/auctions/lots"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <ModuleGate moduleId="auctions"><AuctionsLotsPage /></ModuleGate>
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/auctions/lots/:lotId"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <ModuleGate moduleId="auctions"><AuctionsLotDetailPage /></ModuleGate>
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/auctions/searches"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <ModuleGate moduleId="auctions"><AuctionsSavedSearchesPage /></ModuleGate>
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/auctions/matches"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <ModuleGate moduleId="auctions"><AuctionsMatchesPage /></ModuleGate>
-                        </DashboardShell>
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/auctions/admin"
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout showHeader={false} showFooter={false} containerized={false}>
-                        <DashboardShell>
-                          <ModuleGate moduleId="auctions"><AuctionsAdminPage /></ModuleGate>
                         </DashboardShell>
                       </UniversalLayout>
                     </ProtectedRoute>

@@ -22,10 +22,6 @@ describe('GATED_MODULE_KEYS', () => {
       .toEqual([]);
   });
 
-  it('includes auctions — the entry that regressed', () => {
-    expect(GATED_MODULE_KEYS).toContain('auctions');
-  });
-
   it('keeps the previously hand-listed keys, so nothing silently drops out', () => {
     // The hand-maintained list this replaced. Every one of these must survive
     // the switch to deriving from the catalog.
