@@ -60,7 +60,7 @@ import { useHideSiteName } from '@/hooks/useHideSiteName';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useModuleAccess } from '@/hooks/useModuleAccess';
 import { useTenantNavPrefs } from '@/hooks/useTenantNavPrefs';
-import { useEffectivePreviewRole, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
+import { useEffectivePreviewRole, useIsPlatformSuperAdmin, useMyTenantRole } from '@/hooks/useEffectivePreviewRole';
 import { isTenantAdminOrAboveRole } from '@/lib/auth/tenantRoles';
 import { useMyTenants, tenantHomeUrl, tenantSwitchUrl, performTenantSwitch } from '@/hooks/useMyTenants';
 import { isNativeApp } from '@/lib/nativeTenant';
@@ -605,8 +605,12 @@ function ViewsSwitcher() {
   // .maybeSingle(), which returned null for any multi-tenant user and hid
   // the control from them.
   const myTenantRole = useMyTenantRole();
+  // Platform owner sees the switcher on every tenant, membership row or
+  // not — mirrors the gate inside useEffectivePreviewRole, which already
+  // honors the preview for them; only the button was hiding.
+  const isPlatformSuperAdmin = useIsPlatformSuperAdmin();
 
-  if (!isTenantAdminOrAboveRole(myTenantRole)) return null;
+  if (!isTenantAdminOrAboveRole(myTenantRole) && !isPlatformSuperAdmin) return null;
 
   const label = preview
     ? HIDEABLE_NAV_ROLES.find((r) => r.value === preview)?.label ?? 'Preview'
@@ -651,6 +655,30 @@ function ViewsSwitcher() {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+// Full-width strip shown while a Views preview is active. The amber chip
+// in the TopBar alone was too quiet — an admin who forgot the preview saw
+// "missing apps" with no hint why (Lyke House, 2026-08-22).
+function PreviewBanner() {
+  const preview = useEffectivePreviewRole();
+  if (!preview) return null;
+  const label = HIDEABLE_NAV_ROLES.find((r) => r.value === preview)?.label ?? preview;
+  return (
+    <div className="flex items-center justify-center gap-3 bg-amber-100 text-amber-900 text-sm px-4 py-1.5 border-b border-amber-200">
+      <Eye className="w-4 h-4 shrink-0" />
+      <span>
+        Previewing as <strong>{label}</strong> — admin apps and nav are hidden on purpose.
+      </span>
+      <button
+        type="button"
+        onClick={() => setPreviewRole(null)}
+        className="font-semibold underline underline-offset-2 hover:text-amber-950"
+      >
+        Exit preview
+      </button>
+    </div>
   );
 }
 
@@ -1125,6 +1153,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               for grandfathered / paid / loading / no-tenant, and is admin-only
               (billing UI never shows to students/parents/fans). */}
           <TrialBanner roleLoading={roleLoading} isAdmin={userIsAdmin} />
+          <PreviewBanner />
           <TopBar navCollapsed={navCollapsed} onExpandNav={() => setCollapsed(false)} onOpenAllTools={openAllTools} />
           {/* pt-3 gives every page a small breath of space below the
               sticky topbar — pages that want more (CommandCenter, Viewer

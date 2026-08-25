@@ -10,7 +10,7 @@ import { executeClientAction, resolvePageRoute } from './clientActions';
 import { getSpeechInput, isMuted, setMuted, sanitizeForSpeech, speak, stopSpeaking, takeInterruptedSpeech } from './speech';
 import { ConfirmActionQueue } from './confirmQueue';
 import { loadThread, saveThread } from './threadStorage';
-import { useAssistantVoice, BROWSER_VOICE_ID } from './voices';
+import { getVoiceOverride, setVoiceOverrideStored, useAssistantVoice, voiceLabel, BROWSER_VOICE_ID } from './voices';
 import type { AssistantAction, ThreadState } from './types';
 import type { ConciergeResult } from './conciergeTypes';
 
@@ -41,6 +41,10 @@ export interface AssistantContextValue {
   listening: boolean;
   transcript: string;
   toggleMic: () => void;
+  /** Hands-free voice conversation: mic reopens after each spoken reply
+   *  until toggled off, two silent turns pass, or the mic is stopped. */
+  conversationActive: boolean;
+  toggleConversation: () => void;
   muted: boolean;
   toggleMute: () => void;
   speaking: boolean;
@@ -55,8 +59,8 @@ export interface AssistantContextValue {
   nowPlaying: NowPlaying | null;
   setNowPlaying: (v: NowPlaying | null) => void;
   captionReply: { id: string; text: string } | null;
-  /** Tenant-configured assistant voice from Workspace Settings → Branding.
-   *  Null while loading, or if the tenant hasn't picked one (app default). */
+  /** Effective assistant voice: the user's on-page pick (this device)
+   *  falling back to the tenant's Workspace Settings → Branding choice. */
   voiceId: string | null;
   /** A playlist scheduled on a calendar event that just started: the
    *  one-tap offer. Browsers cannot start audio unattended, so the tap IS
@@ -75,6 +79,9 @@ export interface AssistantContextValue {
   liveStatus: 'off' | 'connecting' | 'live';
   startLive: () => void;
   endLive: () => void;
+  /** Pick a voice for this device (null = back to tenant default). Speaks
+   *  a short sample so the choice is audible immediately. */
+  setVoice: (id: string | null) => void;
 }
 
 const AssistantContext = createContext<AssistantContextValue | null>(null);
@@ -154,7 +161,10 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
    * a page load came out in Jessica and later ones in the chosen voice, which
    * is what "the voice changes through the conversation" was.
    */
-  const { voiceId, loading: voiceLoading } = useAssistantVoice();
+  const { voiceId: tenantVoiceId, loading: voiceLoading } = useAssistantVoice();
+  // Effective voice = the user's on-page pick (per device) → tenant default.
+  const [voiceOverride, setVoiceOverride] = useState<string | null>(getVoiceOverride());
+  const voiceId = voiceOverride ?? tenantVoiceId;
   const voiceIdRef = useRef<string | null>(voiceId);
   useEffect(() => { voiceIdRef.current = voiceId; }, [voiceId]);
 
@@ -553,7 +563,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           geoDeniedRef.current = true;
           onDone?.(null);
         },
-        { enableHighAccuracy: false, maximumAge: 15 * 60 * 1000, timeout: 5000 },
+        { enableHighAccuracy: false, maximumAge: 15 * 60 * 1000, timeout: 3000 },
       );
     if (geoSlowRef.current) {
       // A previous call stalled (or the permission prompt is still up) —
@@ -1126,6 +1136,16 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     if (m) stopSpeakingNow();
   }, [muted, stopSpeakingNow]);
 
+  const setVoice = useCallback((id: string | null) => {
+    setVoiceOverrideStored(id);
+    setVoiceOverride(id);
+    // Make the pick audible right away — update the ref synchronously so
+    // the sample uses the new voice, not the previous render's.
+    voiceIdRef.current = id ?? tenantVoiceId;
+    const label = id === BROWSER_VOICE_ID ? 'the browser voice' : voiceLabel(voiceIdRef.current);
+    void speakNow(`Hi — this is ${label}.`);
+  }, [tenantVoiceId, speakNow]);
+
   const acceptScheduledPlay = useCallback(() => {
     if (!scheduledPlay) return;
     markScheduledSeen(scheduledPlay.eventId);
@@ -1144,7 +1164,8 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       state, send, runAction, cancelAction,
       sheetOpen, setSheetOpen,
       micAvailable: speechRef.current.available, listening, transcript, toggleMic,
-      muted, toggleMute,
+      conversationActive, toggleConversation,
+      muted, toggleMute, setVoice,
       speaking, stopSpeaking: stopSpeakingNow,
       liveStatus, startLive, endLive,
       videoRoom, setVideoRoom,

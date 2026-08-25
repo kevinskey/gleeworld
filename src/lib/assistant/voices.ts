@@ -141,3 +141,20 @@ export function useMyAssistantVoice() {
 
   return { voiceId: query.data ?? null, isLoading: query.isLoading, save };
 }
+
+// ── Per-user, per-device voice override ──────────────────────────────────
+// The tenant picks a default voice in Workspace Settings → Branding, but a
+// user can pick their own from the assistant sheet ("on-page"). Stored in
+// localStorage so it follows the device, not the tenant.
+const VOICE_OVERRIDE_KEY = 'gw-assistant-voice';
+
+export function getVoiceOverride(): string | null {
+  try { return localStorage.getItem(VOICE_OVERRIDE_KEY); } catch { return null; }
+}
+
+export function setVoiceOverrideStored(id: string | null): void {
+  try {
+    if (id) localStorage.setItem(VOICE_OVERRIDE_KEY, id);
+    else localStorage.removeItem(VOICE_OVERRIDE_KEY);
+  } catch { /* private mode */ }
+}
