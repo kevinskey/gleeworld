@@ -41,10 +41,6 @@ export interface AssistantContextValue {
   listening: boolean;
   transcript: string;
   toggleMic: () => void;
-  /** Hands-free voice conversation: mic reopens after each spoken reply
-   *  until toggled off, two silent turns pass, or the mic is stopped. */
-  conversationActive: boolean;
-  toggleConversation: () => void;
   muted: boolean;
   toggleMute: () => void;
   speaking: boolean;
@@ -1164,7 +1160,6 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       state, send, runAction, cancelAction,
       sheetOpen, setSheetOpen,
       micAvailable: speechRef.current.available, listening, transcript, toggleMic,
-      conversationActive, toggleConversation,
       muted, toggleMute, setVoice,
       speaking, stopSpeaking: stopSpeakingNow,
       liveStatus, startLive, endLive,
