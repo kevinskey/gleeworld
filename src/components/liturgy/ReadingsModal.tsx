@@ -9,7 +9,8 @@ import { readingsFromCache } from '@/lib/liturgy/cachedReadings';
 import { expandScriptureAbbrevs } from '@/lib/liturgy/scriptureAbbrev';
 
 // Daily Catholic readings viewer. Reads the local USCCB table first and falls
-// back to proxying Universalis via the `usccb-readings` edge function, then
+// back to the `usccb-readings` edge function, which now serves GleeWorld's
+// own Prayer module data (Phase 0/1) instead of proxying Universalis, then
 // renders the sanitized reading blocks in a bottom sheet.
 // Shared by the Liturgy Planner and the Command Center's Liturgical Day card.
 
@@ -20,7 +21,8 @@ export interface ReadingsResp {
   liturgicalTitle: string | null;
   readings: ReadingBlock[];
   error?: string;
-  /** Set when the date lies outside the window Universalis publishes. */
+  /** Set when the date has no calendar row imported yet (Prayer module data
+   *  currently covers 2020–2035 for the calendar, 2026–2027 for readings). */
   outOfRange?: boolean;
 }
 

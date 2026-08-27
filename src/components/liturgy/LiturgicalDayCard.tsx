@@ -7,9 +7,10 @@ import { DateCardSwitcherContext } from '@/components/home/date-card/switcherCon
 import { ReadingsModal } from './ReadingsModal';
 
 // Top-of-Command-Center card for Catholic tenants: shows today's liturgical day
-// name (pulled from Universalis via the usccb-readings edge function) and opens
-// the day's readings in a sheet on tap. Gated by the liturgy_planner module in
-// HouseHome, so only tenants with the Liturgy add-on see it.
+// name (from GleeWorld's own Prayer module data via the usccb-readings edge
+// function) and opens the day's readings in a sheet on tap. Gated by the
+// liturgy_planner module in HouseHome, so only tenants with the Liturgy
+// add-on see it.
 export function LiturgicalDayCard() {
   const today = useMemo(() => new Date(), []);
   // Admin type-switcher when rendered inside DateCardSlot — sits at the end
