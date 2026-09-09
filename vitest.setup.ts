@@ -1,13 +1,20 @@
 // Provide a minimal Deno global shim so that edge-function files (which use
-// Deno.env.get) can be imported by Vitest without modification. The shim
-// delegates to process.env so tests can set env vars the normal Node way.
+// Deno.env.get and, increasingly, the native Deno.serve(handler) form — see
+// store-checkout/index.ts and usccb-readings/index.ts — can be imported by
+// Vitest without modification. Deno.env delegates to process.env so tests can
+// set env vars the normal Node way; Deno.serve is a no-op because these files
+// export `handler` separately for direct invocation, so nothing needs an
+// actual listener under test.
 
 if (typeof globalThis.Deno === 'undefined') {
   (globalThis as any).Deno = {
     env: {
       get: (key: string): string | undefined => process.env[key],
     },
+    serve: () => undefined,
   };
+} else if (typeof (globalThis as any).Deno.serve === 'undefined') {
+  (globalThis as any).Deno.serve = () => undefined;
 }
 
 // VexFlow 5 sizes every glyph through canvas measureText (Element.measureText),

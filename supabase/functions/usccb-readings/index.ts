@@ -10,7 +10,6 @@
 // The function name is kept as `usccb-readings` for backward compat
 // with deployed clients; only the upstream and parser changed.
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import {
   isReadingsPageForDate,
   READINGS_OUT_OF_RANGE,
@@ -39,7 +38,10 @@ interface RespOk {
   readings: ReadingBlock[];
 }
 
-serve(async (req: Request) => {
+// Exported (rather than only passed to Deno.serve below) so a test can
+// invoke it directly with a constructed Request, the same seam used by
+// store-checkout/index.ts — no real HTTP listener needed to exercise it.
+export async function handler(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
@@ -83,7 +85,9 @@ serve(async (req: Request) => {
   const parsed = parseUniversalisReadings(html, yyyymmdd);
   const body: RespOk = { date, sourceUrl, ...parsed };
   return json(body, 200);
-});
+}
+
+Deno.serve(handler);
 
 function json(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {
