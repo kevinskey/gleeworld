@@ -7,6 +7,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
       // Allow Vitest (Node) to import edge-function files that use Deno's npm: specifier.
       'npm:jose@5': 'jose',
+      // Same idea for Deno's jsr: specifier — usccb-readings/index.ts imports
+      // the Supabase JS client this way, same package already in
+      // package.json's dependencies (used by src/integrations/supabase/client.ts).
+      'jsr:@supabase/supabase-js@2': '@supabase/supabase-js',
     },
   },
   test: {

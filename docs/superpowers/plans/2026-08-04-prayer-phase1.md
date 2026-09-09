@@ -391,14 +391,31 @@ git commit -m "feat(prayer): reading-text RPCs resolving citations to WEBCE vers
 - Produces: the **unchanged** response contract
   `{ date, sourceUrl, liturgicalTitle, readings: [{ heading, citation, summary, html }] }`.
 
-- [ ] **Step 1: Pin the existing contract with a test first**
+- [x] **Step 1: Pin the existing contract with a test first**
 
 Before changing anything, add `supabase/functions/usccb-readings/contract.test.ts` asserting the exact response shape against a mocked Supabase client — field names, types, and that `readings` is an array of objects carrying all four keys. This is what proves deployed iOS clients keep working.
 
 Run: `npx vitest run supabase/functions/usccb-readings/contract.test.ts`
 Expected: PASS against the current implementation. **If it does not pass, the contract is not what we think it is — stop and re-read the function.**
 
-- [ ] **Step 2: Rewrite the body to query the RPC**
+> **Deviation:** the pre-rewrite `index.ts` called `serve()` from a
+> `deno.land/std` URL import and invoked it at module scope, which Vitest
+> (Node) cannot import at all — no existing edge function with a top-level
+> `serve()`/`Deno.serve()` call is imported by a Vitest spec anywhere in this
+> repo; the ones with tests (`store-checkout`, `google-sync`, …) extract
+> testable logic into a separate module or export a `handler` and are
+> exercised by Deno-native `*_test.ts` scripts instead. Rather than add a
+> second, Deno-only test runner just for this one function, Step 1 opened
+> with a purely mechanical, behavior-preserving refactor matching
+> `store-checkout/index.ts`'s existing pattern: extract `export async
+> function handler(req)` with the untouched scrape-and-parse body, and
+> switch the bottom of the file to `Deno.serve(handler)` (a global, so no
+> module resolution problem). `contract.test.ts` then imports `handler`
+> directly and was run — and passed — against that still-scraping
+> implementation before Step 2 touched any request-handling logic. See the
+> `vitest.setup.ts` diff for the accompanying no-op `Deno.serve` shim.
+
+- [x] **Step 2: Rewrite the body to query the RPC**
 
 Replace the `fetch(universalis…)` + HTML parse with a `supabase.rpc('prayer_day_full', { p_date, p_rite: 'roman_catholic', p_translation: 'WEBCE' })` call. Map each reading to a `ReadingBlock`:
 - `heading` — humanised slot (`first_reading` → `First Reading`, `responsorial_psalm` → `Responsorial Psalm`, `gospel` → `Gospel`)
@@ -410,16 +427,52 @@ Replace the `fetch(universalis…)` + HTML parse with a `supabase.rpc('prayer_da
 
 Delete the scraping helpers (`parseUniversalisReadings` and friends). Leave a header comment explaining that the function name is retained only for backward compatibility.
 
-- [ ] **Step 3: Re-run the contract test**
+> **Deviation, part 1 — no `prayer_day_full()` exists.** Task 3's migration
+> (`20260806120000_prayer_reading_text.sql`, note the date: this landed as
+> `...0806...`, not the `...0805...` path this doc's File Structure table
+> names) shipped only `prayer_reading_text(p_translation, p_usfm, p_ranges)`.
+> There is no `prayer_day_full()` in any migration. Citation *parsing*
+> (string → `VerseRange[]`) only exists in TypeScript
+> (`src/lib/prayer/citation.ts`); SQL cannot parse a citation without
+> duplicating that logic, which is exactly the drift risk Task 2 exists to
+> avoid. So the composition this step actually does is in TypeScript, inside
+> the edge function: call `prayer_day(p_date, 'roman_catholic')`, take the
+> highest-ranked event, and for each of its readings call `parseCitation()`
+> then `prayer_reading_text('WEBCE', usfmCode, ranges)`.
+>
+> **Deviation, part 2 — getting the parser into Deno.** No existing edge
+> function in this repo imports anything from `src/` (confirmed by grep), and
+> Supabase's documented shared-code pattern for edge functions
+> (`supabase/functions/_shared/...`, e.g. `assistant-chat/executors.ts`
+> importing `../_shared/academy/corpus.ts`) — plus this project's self-hosted
+> deploy path, which copies a function's own directory to the runtime host —
+> gives no support for a function reaching up into `src/`. So
+> `src/lib/prayer/books.ts` and `citation.ts` moved to
+> `supabase/functions/_shared/prayer/` as the canonical source (they use no
+> Deno-only API, so this costs the frontend nothing), and the old
+> `src/lib/prayer/` paths became thin `export *` re-exports — same test files
+> (`books.test.ts`, `citation.test.ts`), same import path for existing
+> frontend callers, one implementation.
+>
+> **Deviation, part 3 — the out-of-range reason changed, not just its
+> wording.** The reference calendar/citation import currently covers only
+> 2026–2027 (see "Explicitly out of scope" / the citation corpus note at the
+> top of this doc). A date outside that range comes back from `prayer_day` as
+> zero events — a data-coverage limit, not Universalis's rolling
+> publish-window licensing limit — so the user-facing message and its
+> reasoning changed accordingly; the `{ error, outOfRange }` **shape** did
+> not.
+
+- [x] **Step 3: Re-run the contract test**
 
 Run: `npx vitest run supabase/functions/usccb-readings/contract.test.ts`
 Expected: PASS, unchanged. The point of this task is that the contract is identical while the source is not.
 
-- [ ] **Step 4: Verify the psalm body is now populated**
+- [x] **Step 4: Verify the psalm body is now populated**
 
 The old implementation returned a citation-only Responsorial Psalm. Assert that for a known date the `responsorial_psalm` block's `html` contains actual verse text. This is the user-visible win: directors no longer paste psalm verses by hand.
 
-- [ ] **Step 5: Full gates**
+- [x] **Step 5: Full gates**
 
 ```bash
 npx vitest run src/lib/prayer supabase/functions/usccb-readings
@@ -427,7 +480,7 @@ npm run typecheck:guard
 npx eslint src/lib/prayer supabase/functions/usccb-readings
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add supabase/functions/usccb-readings
@@ -438,12 +491,12 @@ git commit -m "feat(prayer): serve readings from local WEBCE instead of scraping
 
 ## Definition of done
 
-- [ ] `prayer_day_full(CURRENT_DATE, 'roman_catholic', 'WEBCE')` returns the day, its citations, **and** the verse text.
-- [ ] ≥ 99% of the 1,165 imported citations parse; every failure is individually explained in the PR.
-- [ ] `usccb-readings` performs **no outbound HTTP request**. Verify by inspection: no `fetch(` to any external host remains.
-- [ ] Its response contract is byte-compatible with the previous shape, pinned by a test written *before* the rewrite.
-- [ ] The Responsorial Psalm block contains verse text, not just a citation.
-- [ ] `npm run typecheck:guard` reports no new errors; eslint clean.
+- [ ] `prayer_day_full(CURRENT_DATE, 'roman_catholic', 'WEBCE')` returns the day, its citations, **and** the verse text. **Never shipped as its own RPC** — see Task 4 Step 2's "Deviation, part 1": no such function exists in any migration, and the equivalent composition (`prayer_day` + `parseCitation` + `prayer_reading_text`, per reading) lives in TypeScript inside the edge function instead. Left unchecked as literally written; the capability it describes exists.
+- [ ] ≥ 99% of the 1,165 imported citations parse; every failure is individually explained in the PR. Not re-verified by Task 4 — this is Task 2's own coverage sweep (`scripts/check-citation-coverage.ts`), out of this task's scope.
+- [x] `usccb-readings` performs **no outbound HTTP request**. Verify by inspection: no `fetch(` to any external host remains.
+- [x] Its response contract is byte-compatible with the previous shape, pinned by a test written *before* the rewrite.
+- [x] The Responsorial Psalm block contains verse text, not just a citation.
+- [x] `npm run typecheck:guard` reports no new errors; eslint clean.
 
 ## Explicitly out of scope for Phase 1
 

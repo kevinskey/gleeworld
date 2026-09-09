@@ -6,15 +6,21 @@
 // export `handler` separately for direct invocation, so nothing needs an
 // actual listener under test.
 
-if (typeof globalThis.Deno === 'undefined') {
-  (globalThis as any).Deno = {
+interface DenoShim {
+  env: { get(key: string): string | undefined };
+  serve: (...args: unknown[]) => unknown;
+}
+const globalWithDeno = globalThis as typeof globalThis & { Deno?: DenoShim };
+
+if (typeof globalWithDeno.Deno === 'undefined') {
+  globalWithDeno.Deno = {
     env: {
       get: (key: string): string | undefined => process.env[key],
     },
     serve: () => undefined,
   };
-} else if (typeof (globalThis as any).Deno.serve === 'undefined') {
-  (globalThis as any).Deno.serve = () => undefined;
+} else if (typeof globalWithDeno.Deno.serve === 'undefined') {
+  globalWithDeno.Deno.serve = () => undefined;
 }
 
 // VexFlow 5 sizes every glyph through canvas measureText (Element.measureText),
