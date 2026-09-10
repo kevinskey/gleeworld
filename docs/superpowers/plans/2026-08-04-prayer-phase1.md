@@ -329,8 +329,25 @@ git commit -m "feat(prayer): lectionary citation parser"
 - Consumes: `gw_bible_*` (Phase 0), `prayer_day()` (Phase 0).
 - Produces:
   - `public.prayer_reading_text(p_translation text, p_usfm text, p_ranges jsonb) RETURNS jsonb` — resolves ranges to verses.
-  - `public.prayer_day_full(p_date date, p_rite text, p_translation text) RETURNS jsonb` — `prayer_day()` plus a `verses` array per reading.
+  - ~~`public.prayer_day_full(p_date date, p_rite text, p_translation text) RETURNS jsonb`~~ — **not built; see deviation below.**
 - Ranges are passed as JSON from the TypeScript parser, so citation parsing lives in exactly one place.
+
+> **Deviation (2026-09-10).** `prayer_day_full` was never implemented as a SQL
+> RPC. Citation parsing (`parseCitation`, `resolveBook`) is pure TypeScript by
+> design — that's the whole point of the "citation parsing lives in exactly
+> one place" rule above. A SQL `prayer_day_full` would need to either
+> duplicate that parser in PL/pgSQL (violating the one-place rule this same
+> plan states) or take pre-parsed ranges as an argument per reading, which
+> isn't a `(date, rite, translation)`-shaped RPC anymore.
+>
+> Task 4 instead composes `prayer_day()` and `prayer_reading_text()` **inside
+> the `usccb-readings` Edge Function** (`buildReadings.ts`), importing
+> `parseCitation` directly from `src/lib/prayer/citation.ts`. This keeps the
+> parser in the one place the plan asks for and needs no new migration. See
+> the "reviewers" note in `buildReadings.ts` for the one real risk this
+> introduces: it's the first Edge Function in the repo to import across the
+> `supabase/functions` boundary into `src/lib`, and that path could not be
+> exercised against a live Deno deploy in the session that wrote it.
 
 - [ ] **Step 1: Write the failing SQL test**
 

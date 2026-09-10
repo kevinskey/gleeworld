@@ -8,7 +8,11 @@
  * chapters, upstream typos, half-verse letter suffixes).
  */
 
-import { resolveBook } from './books';
+// Explicit .ts extension: this module is imported directly by the
+// usccb-readings Supabase Edge Function (Deno), which requires extensions on
+// relative specifiers. `allowImportingTsExtensions` (tsconfig.app.json) keeps
+// this resolving fine under Vite/vitest too.
+import { resolveBook } from './books.ts';
 
 export interface VerseRange {
   startChapter: number | null;
