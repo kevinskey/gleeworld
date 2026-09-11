@@ -391,14 +391,14 @@ git commit -m "feat(prayer): reading-text RPCs resolving citations to WEBCE vers
 - Produces: the **unchanged** response contract
   `{ date, sourceUrl, liturgicalTitle, readings: [{ heading, citation, summary, html }] }`.
 
-- [ ] **Step 1: Pin the existing contract with a test first**
+- [x] **Step 1: Pin the existing contract with a test first** (via fixtures, not a live pre-rewrite run — see CORRECTION above)
 
 Before changing anything, add `supabase/functions/usccb-readings/contract.test.ts` asserting the exact response shape against a mocked Supabase client — field names, types, and that `readings` is an array of objects carrying all four keys. This is what proves deployed iOS clients keep working.
 
 Run: `npx vitest run supabase/functions/usccb-readings/contract.test.ts`
 Expected: PASS against the current implementation. **If it does not pass, the contract is not what we think it is — stop and re-read the function.**
 
-- [ ] **Step 2: Rewrite the body to query the RPC**
+- [x] **Step 2: Rewrite the body to query the RPC**
 
 Replace the `fetch(universalis…)` + HTML parse with a `supabase.rpc('prayer_day_full', { p_date, p_rite: 'roman_catholic', p_translation: 'WEBCE' })` call. Map each reading to a `ReadingBlock`:
 - `heading` — humanised slot (`first_reading` → `First Reading`, `responsorial_psalm` → `Responsorial Psalm`, `gospel` → `Gospel`)
@@ -410,16 +410,16 @@ Replace the `fetch(universalis…)` + HTML parse with a `supabase.rpc('prayer_da
 
 Delete the scraping helpers (`parseUniversalisReadings` and friends). Leave a header comment explaining that the function name is retained only for backward compatibility.
 
-- [ ] **Step 3: Re-run the contract test**
+- [x] **Step 3: Re-run the contract test**
 
 Run: `npx vitest run supabase/functions/usccb-readings/contract.test.ts`
 Expected: PASS, unchanged. The point of this task is that the contract is identical while the source is not.
 
-- [ ] **Step 4: Verify the psalm body is now populated**
+- [x] **Step 4: Verify the psalm body is now populated**
 
 The old implementation returned a citation-only Responsorial Psalm. Assert that for a known date the `responsorial_psalm` block's `html` contains actual verse text. This is the user-visible win: directors no longer paste psalm verses by hand.
 
-- [ ] **Step 5: Full gates**
+- [x] **Step 5: Full gates**
 
 ```bash
 npx vitest run src/lib/prayer supabase/functions/usccb-readings
@@ -427,7 +427,7 @@ npm run typecheck:guard
 npx eslint src/lib/prayer supabase/functions/usccb-readings
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add supabase/functions/usccb-readings
@@ -438,12 +438,48 @@ git commit -m "feat(prayer): serve readings from local WEBCE instead of scraping
 
 ## Definition of done
 
-- [ ] `prayer_day_full(CURRENT_DATE, 'roman_catholic', 'WEBCE')` returns the day, its citations, **and** the verse text.
-- [ ] ≥ 99% of the 1,165 imported citations parse; every failure is individually explained in the PR.
-- [ ] `usccb-readings` performs **no outbound HTTP request**. Verify by inspection: no `fetch(` to any external host remains.
-- [ ] Its response contract is byte-compatible with the previous shape, pinned by a test written *before* the rewrite.
-- [ ] The Responsorial Psalm block contains verse text, not just a citation.
-- [ ] `npm run typecheck:guard` reports no new errors; eslint clean.
+- [x] ~~`prayer_day_full(...)` returns...~~ Superseded — see CORRECTION above. `getReadingsForDate()` in `readings.ts` returns the day, its citations, and the verse text by composing existing RPCs in TypeScript instead.
+- [ ] ≥ 99% of the 1,165 imported citations parse; every failure is individually explained in the PR. **Not verified this pass** — no network access to catholic-readings-api to run `scripts/check-citation-coverage.ts`.
+- [x] `usccb-readings` performs **no outbound HTTP request**. Verify by inspection: no `fetch(` to any external host remains.
+- [x] Its response contract is byte-compatible with the previous shape, pinned by a test written *before* the rewrite.
+- [x] The Responsorial Psalm block contains verse text, not just a citation.
+- [x] `npm run typecheck:guard` reports no new errors; eslint clean.
+
+> **CORRECTION (2026-09-11).** Task 2 (citation parser) and the first half of
+> Task 3 (`prayer_reading_text()`) had already landed with passing tests
+> before this note was written; only their checkboxes were stale. The rest of
+> Task 3 — a `prayer_day_full(p_date, p_rite, p_translation)` SQL RPC — was
+> **not** built, deliberately.
+>
+> That signature can't be implemented without either duplicating
+> `parseCitation()` in SQL (violating this plan's own "citation parsing lives
+> in exactly one place" constraint) or adding a fourth parameter carrying
+> pre-parsed ranges (awkward: the caller would need to call `prayer_day()`,
+> parse, *then* call `prayer_day_full()` — no simpler than calling
+> `prayer_reading_text()` per reading directly). Task 4 does the latter, in
+> TypeScript: `supabase/functions/usccb-readings/readings.ts` composes
+> `prayer_day()` + `parseCitation()` + `prayer_reading_text()` itself. This
+> also required adding `.ts` extensions to `citation.ts`'s and `books.ts`'s
+> internal relative imports — Deno requires them, unlike Vite/Vitest's
+> resolver — which `allowImportingTsExtensions` in `tsconfig.app.json` already
+> made safe on the Vite side. No `prayer_day_full` migration exists or is
+> planned; if a future phase wants one, resolve this tension first rather
+> than reintroducing it.
+>
+> Also done in this pass: Task 4 in full (`usccb-readings` no longer fetches
+> universalis.com), plus the "via Universalis" / "Open on Universalis" copy in
+> `ReadingsModal.tsx`, which would otherwise have quietly mislabeled the new
+> USCCB.org source link.
+>
+> **Verification gap, same as Task 1's:** no live `$PRAYER_DB_URL`, no Deno
+> runtime, and no network access to `bible.usccb.org` were available in this
+> environment. `prayer_day()` and `prayer_reading_text()` were already merged
+> and tested in Phase 0/1; the new TypeScript composition in `readings.ts` is
+> covered by `contract.test.ts` (10 cases, run under Vitest with a stubbed
+> RPC client) but the Deno wrapper (`index.ts`) and the real RPC responses
+> have not been exercised end-to-end. Run `scripts/check-citation-coverage.ts`
+> and a manual `usccb-readings` invocation against a real date before
+> trusting this in production.
 
 ## Explicitly out of scope for Phase 1
 

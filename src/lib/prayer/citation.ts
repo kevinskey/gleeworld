@@ -8,7 +8,11 @@
  * chapters, upstream typos, half-verse letter suffixes).
  */
 
-import { resolveBook } from './books';
+// Extension kept explicit (`allowImportingTsExtensions` in tsconfig.app.json)
+// so this file — and its one dependency — can also be imported directly by
+// the usccb-readings Deno edge function, which requires extensions on
+// relative specifiers. See supabase/functions/usccb-readings/readings.ts.
+import { resolveBook } from './books.ts';
 
 export interface VerseRange {
   startChapter: number | null;
