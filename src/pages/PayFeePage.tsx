@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+  getTenantSlug,
+} from '@/integrations/supabase/client';
 import { CheckCircle2, CreditCard } from 'lucide-react';
 
 interface Summary {
@@ -26,8 +30,25 @@ interface Summary {
   } | null;
 }
 
-const functionsUrl = () =>
-  (supabase as unknown as { functions: { url: string } }).functions.url;
+// The payer has no session, so these calls go out with the anon key exactly
+// like every other public edge-function caller here (see publicIntakeClient).
+// Posting bare — no `apikey`, no `Authorization` — never reaches the function:
+// the gateway rejects it for a missing API key and `verify_jwt` (on by default,
+// and guest-fee-checkout has no config.toml stanza turning it off) rejects the
+// missing bearer, so the page only ever showed "We couldn't open this payment
+// link." `x-tenant-slug` rides along for the same reason it does on every other
+// anon request — it is how the tenant is resolved without a JWT claim.
+const callGuestCheckout = (body: Record<string, unknown>) =>
+  fetch(`${SUPABASE_URL}/functions/v1/guest-fee-checkout`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      'x-tenant-slug': getTenantSlug(),
+    },
+    body: JSON.stringify(body),
+  });
 
 /**
  * Public, unauthenticated fee payment page — the link a family receives.
@@ -51,12 +72,8 @@ export default function PayFeePage() {
     }
     (async () => {
       try {
-        const res = await fetch(`${functionsUrl()}/guest-fee-checkout`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ feeId, token, action: 'summary' }),
-        });
-        const body = await res.json();
+        const res = await callGuestCheckout({ feeId, token, action: 'summary' });
+        const body = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(body.error ?? 'Could not load this fee.');
         setSummary(body);
       } catch (e) {
@@ -68,12 +85,8 @@ export default function PayFeePage() {
   const startCheckout = async () => {
     setPaying(true);
     try {
-      const res = await fetch(`${functionsUrl()}/guest-fee-checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feeId, token, action: 'checkout' }),
-      });
-      const body = await res.json();
+      const res = await callGuestCheckout({ feeId, token, action: 'checkout' });
+      const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? 'Payment could not be started.');
       window.location.href = body.url;
     } catch (e) {

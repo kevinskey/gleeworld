@@ -6,6 +6,9 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: { functions: { url: 'https://functions.test' } },
+  SUPABASE_URL: 'https://supabase.test',
+  SUPABASE_PUBLISHABLE_KEY: 'anon-key',
+  getTenantSlug: () => 'campbell',
 }));
 
 import PayFeePage from './PayFeePage';
@@ -80,6 +83,23 @@ describe('PayFeePage', () => {
     expect(screen.getByText(/cash, check/)).toBeInTheDocument();
     expect(screen.getByText('Mr. Johnson')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /pay .* now/i })).not.toBeInTheDocument();
+  });
+
+  it('sends the anon key and tenant slug — a bare post never reaches the function', async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve(SUMMARY) }),
+    );
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    renderPage();
+    await screen.findByRole('heading', { name: 'Fall Trip Deposit' });
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://supabase.test/functions/v1/guest-fee-checkout');
+    expect(init.headers).toMatchObject({
+      apikey: 'anon-key',
+      Authorization: 'Bearer anon-key',
+      'x-tenant-slug': 'campbell',
+    });
   });
 
   it('shows the invalid-link message on a 404', async () => {

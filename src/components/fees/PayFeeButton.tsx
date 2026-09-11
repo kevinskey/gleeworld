@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import {
+  supabase,
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY,
+  getTenantSlug,
+} from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
 interface PayFeeButtonProps {
@@ -28,12 +33,20 @@ export function PayFeeButton({
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData?.session?.access_token;
 
+      // `apikey` and `x-tenant-slug` are not optional on a hand-rolled fetch:
+      // supabase.functions.invoke() attaches both, and the gateway rejects a
+      // request carrying no API key before the function ever runs. Bearer is
+      // the caller's own session (the function reads the user off it) and
+      // falls back to the anon key only so the request is well-formed enough
+      // to come back as the function's own 401 rather than a gateway error.
       const res = await fetch(
-        `${(supabase as unknown as { functions: { url: string } }).functions.url}/create-fee-payment`,
+        `${SUPABASE_URL}/functions/v1/create-fee-payment`,
         {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            apikey: SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${accessToken ?? SUPABASE_PUBLISHABLE_KEY}`,
+            'x-tenant-slug': getTenantSlug(),
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(
@@ -44,7 +57,7 @@ export function PayFeeButton({
         },
       );
 
-      const body = await res.json();
+      const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error ?? 'Payment failed');
       window.location.href = body.url;
     } catch (e) {
