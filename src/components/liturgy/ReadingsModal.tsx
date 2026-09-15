@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Loader2, ExternalLink, Volume2, Square, CalendarClock, Pause, Play } from 'lucide-react';
+import { Loader2, Volume2, Square, CalendarClock, Pause, Play } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSpokenText, type SpokenChunk } from '@/hooks/useChapterAudio';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,8 +9,10 @@ import { readingsFromCache } from '@/lib/liturgy/cachedReadings';
 import { expandScriptureAbbrevs } from '@/lib/liturgy/scriptureAbbrev';
 
 // Daily Catholic readings viewer. Reads the local USCCB table first and falls
-// back to proxying Universalis via the `usccb-readings` edge function, then
-// renders the sanitized reading blocks in a bottom sheet.
+// back to the `usccb-readings` edge function, which composes the day's
+// readings from GleeWorld's own calendar + public-domain WEBCE Bible data
+// (see supabase/functions/usccb-readings/index.ts) rather than scraping a
+// third party. Renders the sanitized reading blocks in a bottom sheet.
 // Shared by the Liturgy Planner and the Command Center's Liturgical Day card.
 
 export interface ReadingBlock { heading: string; citation: string | null; summary?: string | null; html: string }
@@ -20,7 +22,7 @@ export interface ReadingsResp {
   liturgicalTitle: string | null;
   readings: ReadingBlock[];
   error?: string;
-  /** Set when the date lies outside the window Universalis publishes. */
+  /** Set when there is no calendar data at all for this date. */
   outOfRange?: boolean;
 }
 
@@ -165,8 +167,11 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
                 {data?.liturgicalTitle || 'Daily Readings'}
               </SheetTitle>
               <p className="text-xs text-muted-foreground text-left">
-                {formatDate(isoDate)} · via{' '}
-                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">Universalis</a>
+                {/* World English Bible (Catholic Edition) is public domain (see
+                    scripts/import-webce.mjs); "World English Bible" is a
+                    trademark of eBible.org, so this names the translation
+                    without implying endorsement. */}
+                {formatDate(isoDate)} · Scripture: World English Bible (Catholic Edition), public domain
               </p>
             </div>
             {/* Read aloud. Sits in the header so it is reachable without
@@ -226,10 +231,6 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
                 : 'text-destructive'}>
                 {error}
               </p>
-              <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[hsl(var(--link))] hover:underline">
-                <ExternalLink className="w-3.5 h-3.5" /> Open on Universalis
-              </a>
             </div>
           )}
 
@@ -251,8 +252,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
               ))}
               {data.readings.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-6">
-                  Couldn&apos;t parse readings from the page.{' '}
-                  <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">View original</a>.
+                  No readings are recorded for this date yet.
                 </p>
               )}
             </div>
