@@ -8,7 +8,10 @@
  * chapters, upstream typos, half-verse letter suffixes).
  */
 
-import { resolveBook } from './books';
+// Extension kept explicit (not just style): this module is imported directly
+// by the usccb-readings edge function on Deno, which requires relative
+// imports to name their extension.
+import { resolveBook } from './books.ts';
 
 export interface VerseRange {
   startChapter: number | null;

@@ -9,9 +9,11 @@ import { readingsFromCache } from '@/lib/liturgy/cachedReadings';
 import { expandScriptureAbbrevs } from '@/lib/liturgy/scriptureAbbrev';
 
 // Daily Catholic readings viewer. Reads the local USCCB table first and falls
-// back to proxying Universalis via the `usccb-readings` edge function, then
-// renders the sanitized reading blocks in a bottom sheet.
-// Shared by the Liturgy Planner and the Command Center's Liturgical Day card.
+// back to the `usccb-readings` edge function, which now resolves readings
+// from our own imported calendar + public-domain WEBCE text (Phase 1 Task 4)
+// instead of scraping universalis.com. Renders the sanitized reading blocks
+// in a bottom sheet. Shared by the Liturgy Planner and the Command Center's
+// Liturgical Day card.
 
 export interface ReadingBlock { heading: string; citation: string | null; summary?: string | null; html: string }
 export interface ReadingsResp {
@@ -20,7 +22,7 @@ export interface ReadingsResp {
   liturgicalTitle: string | null;
   readings: ReadingBlock[];
   error?: string;
-  /** Set when the date lies outside the window Universalis publishes. */
+  /** Set when the date has no imported calendar row. */
   outOfRange?: boolean;
 }
 
@@ -93,9 +95,8 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
     setPending(false);
     setData(null);
     (async () => {
-      // The local USCCB table first: Universalis only publishes about a week
-      // either side of today, so anything further out reported "not posted
-      // yet" even when the readings were sitting in the database.
+      // The local USCCB table first, then the edge function's own reference
+      // data (imported calendar + WEBCE text) as a fallback.
       const cached = await readingsFromCache(isoDate);
       if (cancelled) return;
       if (cached) {
@@ -117,7 +118,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
         setError(fnErr.message || 'Could not fetch readings');
       } else if (resp && (resp as ReadingsResp).error) {
         // The function reports WHY there is nothing to show — most often that
-        // Universalis has not published this date yet. Surface that instead of
+        // this date has no imported calendar row. Surface that instead of
         // falling through to the empty-readings copy, which blames the parser.
         setError((resp as ReadingsResp).error as string);
         setPending(Boolean((resp as ReadingsResp).outOfRange));
@@ -166,7 +167,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
               </SheetTitle>
               <p className="text-xs text-muted-foreground text-left">
                 {formatDate(isoDate)} · via{' '}
-                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">Universalis</a>
+                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">World English Bible (Catholic Edition)</a>
               </p>
             </div>
             {/* Read aloud. Sits in the header so it is reachable without
@@ -228,7 +229,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
               </p>
               <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[hsl(var(--link))] hover:underline">
-                <ExternalLink className="w-3.5 h-3.5" /> Open on Universalis
+                <ExternalLink className="w-3.5 h-3.5" /> Learn more
               </a>
             </div>
           )}
