@@ -18,7 +18,8 @@
 import { writeFileSync } from 'node:fs';
 import { normalizeLitCalYear } from '../src/lib/prayer/litcal';
 import { normalizeReadingsDay } from '../src/lib/prayer/readings';
-import { lit, arrayLit, header, FOOTER } from './prayer-sql';
+import { parseCitation } from '../src/lib/prayer/citation';
+import { lit, arrayLit, jsonbLit, header, FOOTER } from './prayer-sql';
 
 const LITCAL = 'https://litcal.johnromanodorazio.com/api/dev/calendar/nation/US';
 const READINGS = 'https://cpbjr.github.io/catholic-readings-api/readings';
@@ -107,18 +108,27 @@ ON CONFLICT (rite, day_date, event_key) DO UPDATE SET
 
     // Attach to the highest-ranking celebration on that date. rank_grade DESC
     // picks the solemnity/feast over a concurrent optional memorial.
+    //
+    // Parsed here, once, at import time — not at request time in the
+    // usccb-readings edge function. citation.ts is pure TypeScript with no
+    // deploy target of its own; this Node/tsx script is the one place in the
+    // codebase that already imports it successfully, so parsing happens here
+    // and the result is stored. prayer_day_full() (see
+    // 20260918121500_prayer_day_full_rpc.sql) then does a plain SQL join —
+    // no runtime dependency on this parser from the edge function.
     for (const r of day.readings) {
       readingRows++;
+      const parsed = parseCitation(r.citation);
       statements.push(
-        `INSERT INTO public.gw_prayer_readings (calendar_day_id, slot, citation, schema_label, sort_order, source)
-SELECT d.id, ${lit(r.slot)}, ${lit(r.citation)}, ${lit(r.schemaLabel)}, ${lit(r.sortOrder)}, ${lit(r.source)}
+        `INSERT INTO public.gw_prayer_readings (calendar_day_id, slot, citation, schema_label, sort_order, source, usfm_code, ranges)
+SELECT d.id, ${lit(r.slot)}, ${lit(r.citation)}, ${lit(r.schemaLabel)}, ${lit(r.sortOrder)}, ${lit(r.source)}, ${lit(parsed.usfmCode)}, ${jsonbLit(parsed.ranges)}
 FROM public.gw_prayer_calendar_days d
 WHERE d.rite = 'roman_catholic' AND d.day_date = ${lit(day.dayDate)}
 ORDER BY d.rank_grade DESC NULLS LAST, d.event_key
 LIMIT 1
 ON CONFLICT (calendar_day_id, slot, schema_label) DO UPDATE SET
   citation = EXCLUDED.citation, sort_order = EXCLUDED.sort_order,
-  source = EXCLUDED.source;`,
+  source = EXCLUDED.source, usfm_code = EXCLUDED.usfm_code, ranges = EXCLUDED.ranges;`,
       );
     }
     await new Promise((r) => setTimeout(r, 40)); // be polite; parallel gets throttled
