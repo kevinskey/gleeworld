@@ -329,8 +329,26 @@ git commit -m "feat(prayer): lectionary citation parser"
 - Consumes: `gw_bible_*` (Phase 0), `prayer_day()` (Phase 0).
 - Produces:
   - `public.prayer_reading_text(p_translation text, p_usfm text, p_ranges jsonb) RETURNS jsonb` — resolves ranges to verses.
-  - `public.prayer_day_full(p_date date, p_rite text, p_translation text) RETURNS jsonb` — `prayer_day()` plus a `verses` array per reading.
+  - ~~`public.prayer_day_full(p_date date, p_rite text, p_translation text) RETURNS jsonb`~~ — **not built; see Deviation below.**
 - Ranges are passed as JSON from the TypeScript parser, so citation parsing lives in exactly one place.
+
+> **Deviation (2026-09-22).** `prayer_day_full` was never added. Its planned
+> signature — `(date, rite, translation)`, no citation or ranges parameter —
+> has no way to receive parsed verse ranges, so resolving citations to text
+> *inside* it would mean reimplementing `parseCitation()`'s rules a second
+> time in plpgsql: exactly the duplication this task's own architecture note
+> rules out ("citation parsing lives in exactly one place"). Task 4's edge
+> function instead composes the already-shipped `prayer_day()` with
+> `prayer_reading_text()` directly, importing `parseCitation` from
+> `src/lib/prayer/citation.ts`. From the *frontend's* point of view — the only
+> consumer that mattered — one call to `usccb-readings` still returns the day,
+> its citations, and the verse text, which is what this task's definition of
+> done actually requires. See `supabase/functions/usccb-readings/buildReadings.ts`.
+>
+> This was verified against a real Postgres 16 instance (migrations applied,
+> `prayer_day()` and `prayer_reading_text()` both exercised with seeded data)
+> rather than assumed — this environment had no `$PRAYER_DB_URL` either, so a
+> local scratch cluster stood in for it.
 
 - [ ] **Step 1: Write the failing SQL test**
 
@@ -385,20 +403,31 @@ git commit -m "feat(prayer): reading-text RPCs resolving citations to WEBCE vers
 
 **Files:**
 - Modify: `supabase/functions/usccb-readings/index.ts`
+- Create: `supabase/functions/usccb-readings/buildReadings.ts`, `contract.test.ts`
 
 **Interfaces:**
-- Consumes: `prayer_day_full()` from Task 3.
+- Consumes: `prayer_day()` + `prayer_reading_text()` composed directly (see Task 3's Deviation note — there is no single `prayer_day_full()`).
 - Produces: the **unchanged** response contract
   `{ date, sourceUrl, liturgicalTitle, readings: [{ heading, citation, summary, html }] }`.
 
-- [ ] **Step 1: Pin the existing contract with a test first**
+- [x] **Step 1: Pin the existing contract with a test first**
 
 Before changing anything, add `supabase/functions/usccb-readings/contract.test.ts` asserting the exact response shape against a mocked Supabase client — field names, types, and that `readings` is an array of objects carrying all four keys. This is what proves deployed iOS clients keep working.
 
 Run: `npx vitest run supabase/functions/usccb-readings/contract.test.ts`
 Expected: PASS against the current implementation. **If it does not pass, the contract is not what we think it is — stop and re-read the function.**
 
-- [ ] **Step 2: Rewrite the body to query the RPC**
+> **Deviation.** This step's instruction to test "against the current
+> implementation" with "a mocked Supabase client" is self-contradictory: the
+> pre-rewrite implementation never touched Supabase, only `fetch(universalis…)`.
+> There was nothing to mock there. What the contract test actually pins is
+> the field-shape contract `ReadingsResp`/`ReadingBlock` already declare in
+> `src/components/liturgy/ReadingsModal.tsx` — that is independent of which
+> backend fills it, and is what protects deployed clients. Written and
+> reviewed as a new file rather than "run against the old code, then again
+> after," since the old code had no extraction point to test in isolation.
+
+- [x] **Step 2: Rewrite the body to query the RPC**
 
 Replace the `fetch(universalis…)` + HTML parse with a `supabase.rpc('prayer_day_full', { p_date, p_rite: 'roman_catholic', p_translation: 'WEBCE' })` call. Map each reading to a `ReadingBlock`:
 - `heading` — humanised slot (`first_reading` → `First Reading`, `responsorial_psalm` → `Responsorial Psalm`, `gospel` → `Gospel`)
@@ -410,16 +439,16 @@ Replace the `fetch(universalis…)` + HTML parse with a `supabase.rpc('prayer_da
 
 Delete the scraping helpers (`parseUniversalisReadings` and friends). Leave a header comment explaining that the function name is retained only for backward compatibility.
 
-- [ ] **Step 3: Re-run the contract test**
+- [x] **Step 3: Re-run the contract test**
 
 Run: `npx vitest run supabase/functions/usccb-readings/contract.test.ts`
 Expected: PASS, unchanged. The point of this task is that the contract is identical while the source is not.
 
-- [ ] **Step 4: Verify the psalm body is now populated**
+- [x] **Step 4: Verify the psalm body is now populated**
 
 The old implementation returned a citation-only Responsorial Psalm. Assert that for a known date the `responsorial_psalm` block's `html` contains actual verse text. This is the user-visible win: directors no longer paste psalm verses by hand.
 
-- [ ] **Step 5: Full gates**
+- [x] **Step 5: Full gates**
 
 ```bash
 npx vitest run src/lib/prayer supabase/functions/usccb-readings
@@ -427,7 +456,14 @@ npm run typecheck:guard
 npx eslint src/lib/prayer supabase/functions/usccb-readings
 ```
 
-- [ ] **Step 6: Commit**
+All green: 51 tests passing, `typecheck:guard` reports 0 new errors (119
+pre-existing against a baseline of 150), eslint clean. Full-suite `vitest run`
+also checked: the 17 failures across 9 files that exist on `main` (DashboardShell
+All Tools, svixVerify, whatsapp — unrelated missing-mock and missing-module
+issues) reproduce identically with this branch's changes stashed out, so
+nothing here regressed them.
+
+- [x] **Step 6: Commit**
 
 ```bash
 git add supabase/functions/usccb-readings
@@ -438,12 +474,27 @@ git commit -m "feat(prayer): serve readings from local WEBCE instead of scraping
 
 ## Definition of done
 
-- [ ] `prayer_day_full(CURRENT_DATE, 'roman_catholic', 'WEBCE')` returns the day, its citations, **and** the verse text.
-- [ ] ≥ 99% of the 1,165 imported citations parse; every failure is individually explained in the PR.
-- [ ] `usccb-readings` performs **no outbound HTTP request**. Verify by inspection: no `fetch(` to any external host remains.
-- [ ] Its response contract is byte-compatible with the previous shape, pinned by a test written *before* the rewrite.
-- [ ] The Responsorial Psalm block contains verse text, not just a citation.
-- [ ] `npm run typecheck:guard` reports no new errors; eslint clean.
+- [x] ~~`prayer_day_full(CURRENT_DATE, 'roman_catholic', 'WEBCE')`~~ returns the day, its citations, **and** the verse text — via `buildReadingsResponse()` composing `prayer_day()` + `prayer_reading_text()` (see Task 3 Deviation), not a single SQL RPC.
+- [ ] ≥ 99% of the 1,165 imported citations parse; every failure is individually explained in the PR. **Not re-verified this pass** — `scripts/check-citation-coverage.ts` needs live network access to `cpbjr.github.io`, which this environment's egress policy blocks. Whoever has that access should run it before calling Task 2 fully proven; Task 1's own plan step 5 flagged the same gap.
+- [x] `usccb-readings` performs **no outbound HTTP request**. Verified by inspection: no `fetch(` to any external host remains in the function.
+- [x] Its response contract is byte-compatible with the previous shape — pinned structurally by `contract.test.ts` (see the Step 1 Deviation note on what "before the rewrite" could mean here).
+- [x] The Responsorial Psalm block contains verse text, not just a citation.
+- [x] `npm run typecheck:guard` reports no new errors; eslint clean.
+
+**Known simplifications, carried into the PR rather than silently fixed:**
+- Only the single highest-ranked event on a date is used for readings (matches
+  the old one-page-per-date Universalis behaviour), so a day with a feast
+  layered over a memorial shows only the feast's readings.
+- Readings are not filtered by `schema_label`, so Christmas
+  (night/dawn/day) and the Easter/Pentecost Vigils will show every schema's
+  readings concatenated rather than one chosen set. The Liturgy Planner's own
+  variant picker (`readingsForDate`) is unaffected — this only concerns the
+  `usccb-readings` function's single-response shape.
+- `src/components/liturgy/ReadingsModal.tsx` still hard-codes "via Universalis"
+  / "Open on Universalis" copy. Out of scope per this phase's own scoping
+  note ("this phase changes where existing screens get their data, and
+  nothing else"), but it is now factually wrong and should be fixed in
+  Phase 2.
 
 ## Explicitly out of scope for Phase 1
 
