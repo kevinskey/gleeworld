@@ -9,8 +9,10 @@ import { readingsFromCache } from '@/lib/liturgy/cachedReadings';
 import { expandScriptureAbbrevs } from '@/lib/liturgy/scriptureAbbrev';
 
 // Daily Catholic readings viewer. Reads the local USCCB table first and falls
-// back to proxying Universalis via the `usccb-readings` edge function, then
-// renders the sanitized reading blocks in a bottom sheet.
+// back to the `usccb-readings` edge function, which resolves the day's
+// citations against our own public-domain WEBCE text (Prayer module Phase 1
+// — no outbound scrape), then renders the sanitized reading blocks in a
+// bottom sheet.
 // Shared by the Liturgy Planner and the Command Center's Liturgical Day card.
 
 export interface ReadingBlock { heading: string; citation: string | null; summary?: string | null; html: string }
@@ -20,7 +22,7 @@ export interface ReadingsResp {
   liturgicalTitle: string | null;
   readings: ReadingBlock[];
   error?: string;
-  /** Set when the date lies outside the window Universalis publishes. */
+  /** Set when the date lies outside the window the readings source covers. */
   outOfRange?: boolean;
 }
 
@@ -166,7 +168,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
               </SheetTitle>
               <p className="text-xs text-muted-foreground text-left">
                 {formatDate(isoDate)} · via{' '}
-                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">Universalis</a>
+                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">eBible.org (WEB)</a>
               </p>
             </div>
             {/* Read aloud. Sits in the header so it is reachable without
@@ -228,7 +230,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
               </p>
               <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[hsl(var(--link))] hover:underline">
-                <ExternalLink className="w-3.5 h-3.5" /> Open on Universalis
+                <ExternalLink className="w-3.5 h-3.5" /> About this translation
               </a>
             </div>
           )}
@@ -251,8 +253,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
               ))}
               {data.readings.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-6">
-                  Couldn&apos;t parse readings from the page.{' '}
-                  <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">View original</a>.
+                  No readings are available for this date yet.
                 </p>
               )}
             </div>
