@@ -68,31 +68,42 @@ export async function fetchPassage(
     return { ok: false, text: `${tr.code} doesn't contain that book.` };
   }
 
-  let q = supabase
-    .from('gw_bible_verses')
-    .select('verse, text')
-    .eq('book_id', b.id)
-    .eq('chapter', parsed.chapter)
-    .order('verse')
-    .limit(MAX_VERSES);
-  if (parsed.verse != null && parsed.verseEnd != null) {
-    q = q.gte('verse', parsed.verse).lte('verse', parsed.verseEnd);
-  } else if (parsed.verse != null) {
-    q = q.eq('verse', parsed.verse);
-  }
+  // A lectionary citation is a LIST of verse groups ("Psalm 25:4-5, 6-7,
+  // 8-9", or "Ecclesiastes 11:9—12:8" across a chapter break), so each
+  // segment is fetched on its own and skipped verses stay skipped.
+  const rows: Array<{ chapter: number; verse: number; text: string }> = [];
+  const labels: string[] = [];
+  for (const seg of parsed.segments) {
+    if (rows.length >= MAX_VERSES) break;
+    let q = supabase
+      .from('gw_bible_verses')
+      .select('verse, text')
+      .eq('book_id', b.id)
+      .eq('chapter', seg.chapter)
+      .order('verse')
+      .limit(MAX_VERSES - rows.length);
+    if (seg.verseStart != null) q = q.gte('verse', seg.verseStart);
+    if (seg.verseEnd != null) q = q.lte('verse', seg.verseEnd);
 
-  const { data: verses, error } = await q;
-  if (error) return { ok: false, text: `Couldn't read that passage: ${error.message}` };
-  const rows = (verses ?? []) as Array<{ verse: number; text: string }>;
+    const { data: verses, error } = await q;
+    if (error) return { ok: false, text: `Couldn't read that passage: ${error.message}` };
+    const got = (verses ?? []) as Array<{ verse: number; text: string }>;
+    if (got.length === 0) continue;
+
+    rows.push(...got.map((r) => ({ chapter: seg.chapter, ...r })));
+    labels.push(
+      seg.verseStart == null
+        ? `${seg.chapter}`
+        : got.length === 1
+          ? `${seg.chapter}:${got[0].verse}`
+          : `${seg.chapter}:${got[0].verse}–${got[got.length - 1].verse}`,
+    );
+  }
   if (rows.length === 0) {
     return { ok: false, text: `${b.name} ${parsed.chapter} isn't in ${tr.code}.` };
   }
 
-  const label = parsed.verse != null
-    ? parsed.verseEnd != null
-      ? `${b.name} ${parsed.chapter}:${parsed.verse}–${parsed.verseEnd}`
-      : `${b.name} ${parsed.chapter}:${parsed.verse}`
-    : `${b.name} ${parsed.chapter}`;
+  const label = `${b.name} ${labels.join(', ')}`;
   // Verse numbers are omitted when a single verse was asked for — reading
   // "one" before a one-verse quotation sounds like a mistake aloud.
   const body = rows.length === 1

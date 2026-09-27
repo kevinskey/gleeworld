@@ -787,16 +787,83 @@ const BIBLE_BOOK_ALIASES: Record<string, string> = {
 
 const SINGLE_CHAPTER = new Set(['OBA', 'PHM', '2JN', '3JN', 'JUD']);
 
-function parseBibleReference(input: string) {
-  const m = /^\s*((?:[1-3]\s*)?[A-Za-z][A-Za-z\s']*?)\s*(?:(\d+)\s*(?::\s*(\d+)(?:\s*-\s*(\d+))?)?)?\s*$/.exec(input || '');
+interface BibleSegment {
+  chapter: number;
+  /** null = the whole chapter. */
+  startVerse: number | null;
+  /** null with startVerse set = to the end of the chapter (the head of a
+   *  cross-chapter range). */
+  endVerse: number | null;
+}
+
+/** Verse letters ("43b", "17bc") mark half-verses the printed lectionary
+ *  distinguishes; the verse table does not. Letters must touch the digits —
+ *  "1 Corinthians" keeps its name. */
+function stripVerseLetters(s: string): string {
+  return s.replace(/(\d+)[a-z]{1,3}(?![a-z])/gi, '$1');
+}
+
+/**
+ * The lectionary citations in gw_prayer_readings arrive exactly as printed:
+ * "Psalm 25:4-5, 6-7, 8-9" (verse groups), "Luke 9:43b-45" (verse letters),
+ * "Psalm 144:1b and 2abc, 3-4" ("and"), "Ecclesiastes 11:9—12:8" (em-dash,
+ * cross-chapter). The assistant passes them here verbatim after
+ * liturgical_day, so rejecting them meant it could announce the day's
+ * readings but never read one. Parses to a LIST of verse groups so skipped
+ * verses stay skipped.
+ */
+function parseBibleReference(input: string): { code: string; segments: BibleSegment[] } | null {
+  const raw = (input || '').trim();
+  const colon = raw.indexOf(':');
+  const head = stripVerseLetters(colon === -1 ? raw : raw.slice(0, colon)).replace(/[–—]/g, '-');
+  const tail = colon === -1 ? '' : raw.slice(colon + 1);
+
+  const m = /^\s*((?:[1-3]\s*)?[A-Za-z][A-Za-z\s']*?)\s*(?:(\d+))?\s*$/.exec(head);
   if (!m) return null;
   const code = BIBLE_BOOK_ALIASES[m[1].trim().toLowerCase().replace(/\s+/g, ' ')];
   if (!code) return null;
   const single = SINGLE_CHAPTER.has(code);
   // For a one-chapter book, a bare number is a VERSE, not a chapter.
-  const chapter = single ? 1 : (m[2] ? Number(m[2]) : 1);
-  const startVerse = single && m[2] && !m[3] ? Number(m[2]) : (m[3] ? Number(m[3]) : null);
-  return { code, chapter, startVerse, endVerse: m[4] ? Number(m[4]) : startVerse };
+  if (single && m[2] && !tail) {
+    const v = Number(m[2]);
+    return { code, segments: [{ chapter: 1, startVerse: v, endVerse: v }] };
+  }
+  const firstChapter = single ? 1 : (m[2] ? Number(m[2]) : 1);
+
+  if (!tail) return { code, segments: [{ chapter: firstChapter, startVerse: null, endVerse: null }] };
+  if (!m[2] && !single) return null;
+
+  const cleaned = stripVerseLetters(tail)
+    .replace(/[–—]/g, '-')
+    .replace(/\s+and\s+/gi, ',')
+    .replace(/\s+/g, '');
+  const segments: BibleSegment[] = [];
+  let chapter = firstChapter;
+  for (const piece of cleaned.split(',')) {
+    if (!piece) continue;
+    const g = /^(\d+)(?:-(?:(\d+):)?(\d+))?$/.exec(piece);
+    if (!g) return null;
+    const start = Number(g[1]);
+    if (g[2]) {
+      // Cross-chapter: to the end of this chapter, then from the top of
+      // the next.
+      segments.push({ chapter, startVerse: start, endVerse: null });
+      chapter = Number(g[2]);
+      segments.push({ chapter, startVerse: 1, endVerse: Number(g[3]) });
+    } else {
+      const end = g[3] ? Number(g[3]) : start;
+      const prev = segments[segments.length - 1];
+      // Merge groups that touch ("3-4, 5-6" reads as 3-6) so a psalm is
+      // one fetch, while genuinely skipped verses stay skipped.
+      if (prev && prev.chapter === chapter && prev.startVerse != null &&
+          prev.endVerse != null && start <= prev.endVerse + 1) {
+        prev.endVerse = Math.max(prev.endVerse, end, start);
+      } else {
+        segments.push({ chapter, startVerse: start, endVerse: Math.max(end, start) });
+      }
+    }
+  }
+  return segments.length ? { code, segments } : null;
 }
 
 
@@ -922,23 +989,40 @@ async function lookupBible(args: Record<string, unknown>, deps: Deps): Promise<s
     const ref = parseBibleReference(reference);
     if (!ref) return JSON.stringify({ error: `I could not read "${reference}" as a scripture reference.` });
 
-    let q = deps.supabase
-      .from('gw_bible_verses')
-      .select('chapter, verse, text, book:gw_bible_books!inner(name, usfm_code, gw_bible_translations!inner(code))')
-      .eq('book.usfm_code', ref.code)
-      .eq('book.gw_bible_translations.code', translation)
-      .eq('chapter', ref.chapter)
-      .order('verse');
-    if (ref.startVerse) q = q.gte('verse', ref.startVerse).lte('verse', ref.endVerse ?? ref.startVerse);
+    // A lectionary citation is a LIST of verse groups; fetch each on its
+    // own so skipped verses stay skipped.
+    const rows: Array<{ chapter: number; verse: number; text: string; book: { name: string } }> = [];
+    const labels: string[] = [];
+    for (const seg of ref.segments) {
+      if (rows.length >= 200) break;
+      let q = deps.supabase
+        .from('gw_bible_verses')
+        .select('chapter, verse, text, book:gw_bible_books!inner(name, usfm_code, gw_bible_translations!inner(code))')
+        .eq('book.usfm_code', ref.code)
+        .eq('book.gw_bible_translations.code', translation)
+        .eq('chapter', seg.chapter)
+        .order('verse');
+      if (seg.startVerse) q = q.gte('verse', seg.startVerse);
+      if (seg.endVerse) q = q.lte('verse', seg.endVerse);
 
-    const { data, error } = await q.limit(200);
-    if (error) return JSON.stringify({ error: error.message });
-    const rows = (data ?? []) as Array<{ chapter: number; verse: number; text: string; book: { name: string } }>;
+      const { data, error } = await q.limit(200 - rows.length);
+      if (error) return JSON.stringify({ error: error.message });
+      const got = (data ?? []) as typeof rows;
+      if (!got.length) continue;
+      rows.push(...got);
+      labels.push(
+        seg.startVerse == null
+          ? `${seg.chapter}`
+          : got.length === 1
+            ? `${seg.chapter}:${got[0].verse}`
+            : `${seg.chapter}:${got[0].verse}-${got[got.length - 1].verse}`,
+      );
+    }
     if (!rows.length) return JSON.stringify({ error: `Nothing found for "${reference}" in ${translation}.` });
 
     return JSON.stringify({
       translation,
-      reference: `${rows[0].book.name} ${ref.chapter}${ref.startVerse ? `:${ref.startVerse}${ref.endVerse && ref.endVerse !== ref.startVerse ? `-${ref.endVerse}` : ''}` : ''}`,
+      reference: `${rows[0].book.name} ${labels.join(', ')}`,
       verses: rows.map((r) => ({ verse: r.verse, text: r.text })),
     });
   }
@@ -1017,14 +1101,13 @@ async function liturgicalDay(args: Record<string, unknown>, deps: Deps): Promise
     .eq('rite', 'roman_catholic')
     .eq('day_date', date)
     .order('rank_grade', { ascending: false })
-    .limit(1);
+    .limit(8);
   if (error) return JSON.stringify({ error: error.message });
 
-  const day = (days ?? [])[0] as
-    | { id: string; name: string; rank_label: string | null; liturgical_season: string | null;
-        sunday_cycle: string | null; is_holy_day_of_obligation: boolean; color: string[] }
-    | undefined;
-  if (!day) {
+  type CalDay = { id: string; name: string; rank_label: string | null; liturgical_season: string | null;
+    sunday_cycle: string | null; is_holy_day_of_obligation: boolean; color: string[] };
+  const candidates = (days ?? []) as CalDay[];
+  if (!candidates.length) {
     return JSON.stringify({
       date,
       error: `The liturgical calendar isn't loaded for ${date}. It currently covers one liturgical year.`,
@@ -1033,11 +1116,21 @@ async function liturgicalDay(args: Record<string, unknown>, deps: Deps): Promise
 
   const { data: readingRows } = await deps.supabase
     .from('gw_prayer_readings')
-    .select('slot, citation, sort_order')
-    .eq('calendar_day_id', day.id)
+    .select('calendar_day_id, slot, citation, sort_order')
+    .in('calendar_day_id', candidates.map((d) => d.id))
     .order('sort_order');
+  const allReadings = (readingRows ?? []) as Array<{ calendar_day_id: string; slot: string; citation: string }>;
 
-  const readings = ((readingRows ?? []) as Array<{ slot: string; citation: string }>)
+  // A date often carries several celebrations (a Saturday ferial day, an
+  // optional memorial, a Sunday vigil), and the readings are not attached
+  // to all of them. Answering with the top-ranked one regardless meant
+  // "what are today's readings" could come back empty while another row
+  // for the same day held them — so prefer the highest-ranked celebration
+  // that actually has readings.
+  const day = candidates.find((d) => allReadings.some((r) => r.calendar_day_id === d.id)) ?? candidates[0];
+
+  const readings = allReadings
+    .filter((r) => r.calendar_day_id === day.id)
     .map((r) => ({ slot: r.slot, citation: r.citation }));
 
   const result: Record<string, unknown> = {

@@ -104,3 +104,89 @@ describe('set_preferred_name executor', () => {
     expect(JSON.parse(replyJson).error).toContain('caller');
   });
 });
+
+// ── Scripture: lectionary citations and the day's readings ──
+//
+// The citations in gw_prayer_readings arrive exactly as printed in the
+// lectionary — verse groups, half-verse letters, em-dash chapter breaks.
+// The assistant hands them to lookup_bible verbatim after liturgical_day,
+// so the parser rejecting them meant it announced the readings but could
+// not read a single one (Doc, 2026-09-27).
+describe('lookup_bible with lectionary citations', () => {
+  function verseStub(rows: Array<{ chapter: number; verse: number; text: string }>) {
+    const make = () => {
+      const b: any = {};
+      for (const m of ['select', 'gte', 'lte', 'eq', 'in', 'order', 'limit', 'textSearch']) b[m] = () => b;
+      b.then = (resolve: (v: unknown) => void) =>
+        resolve({ data: rows.map((r) => ({ ...r, book: { name: 'Psalms' } })), error: null });
+      return b;
+    };
+    return { from: () => make() } as any;
+  }
+
+  it('reads a responsorial psalm citation with verse groups', async () => {
+    const rows = [4, 5, 6, 7, 8, 9].map((v) => ({ chapter: 25, verse: v, text: `v${v}` }));
+    const { replyJson } = await executeServerTool('lookup_bible',
+      { reference: 'Psalm 25:4-5, 6-7, 8-9' }, { supabase: verseStub(rows) });
+    const out = JSON.parse(replyJson);
+    expect(out.error).toBeUndefined();
+    expect(out.verses).toHaveLength(6);
+    expect(out.reference).toBe('Psalms 25:4-9');
+  });
+
+  it('accepts half-verse letters and "and"', async () => {
+    const rows = [1, 2, 3, 4].map((v) => ({ chapter: 144, verse: v, text: `v${v}` }));
+    const { replyJson } = await executeServerTool('lookup_bible',
+      { reference: 'Psalm 144:1b and 2abc, 3-4' }, { supabase: verseStub(rows) });
+    expect(JSON.parse(replyJson).error).toBeUndefined();
+  });
+
+  it('accepts an em-dash cross-chapter range', async () => {
+    const rows = [{ chapter: 11, verse: 9, text: 'v' }];
+    const { replyJson } = await executeServerTool('lookup_bible',
+      { reference: 'Ecclesiastes 11:9—12:8' }, { supabase: verseStub(rows) });
+    expect(JSON.parse(replyJson).error).toBeUndefined();
+  });
+
+  it('still rejects a non-reference', async () => {
+    const { replyJson } = await executeServerTool('lookup_bible',
+      { reference: 'Nonsense 3' }, { supabase: verseStub([]) });
+    expect(JSON.parse(replyJson).error).toContain('could not read');
+  });
+});
+
+describe('liturgical_day picks the celebration that has readings', () => {
+  // A Saturday carries several rows (ferial day, optional memorials, the
+  // Sunday vigil) and the readings hang off only one of them. Answering
+  // from the top-ranked row regardless returned an empty readings list.
+  function dayStub() {
+    const days = [
+      { id: 'd-wenceslaus', name: 'Saint Wenceslaus, Martyr', rank_label: 'Optional Memorial',
+        liturgical_season: 'ORDINARY_TIME', sunday_cycle: 'A', is_holy_day_of_obligation: false, color: ['red'] },
+      { id: 'd-ferial', name: 'Monday of the 26th Week of Ordinary Time', rank_label: 'Weekday',
+        liturgical_season: 'ORDINARY_TIME', sunday_cycle: 'A', is_holy_day_of_obligation: false, color: ['green'] },
+    ];
+    const readings = [
+      { calendar_day_id: 'd-ferial', slot: 'first_reading', citation: 'Job 1:6-22', sort_order: 1 },
+      { calendar_day_id: 'd-ferial', slot: 'gospel', citation: 'Luke 9:46-50', sort_order: 3 },
+    ];
+    const make = (rows: unknown[]) => {
+      const b: any = {};
+      for (const m of ['select', 'gte', 'lte', 'eq', 'in', 'order', 'limit']) b[m] = () => b;
+      b.then = (resolve: (v: unknown) => void) => resolve({ data: rows, error: null });
+      return b;
+    };
+    return {
+      from: (table: string) => make(table === 'gw_prayer_calendar_days' ? days : readings),
+    } as any;
+  }
+
+  it('returns the readings even when a higher-ranked row has none', async () => {
+    const { replyJson } = await executeServerTool('liturgical_day',
+      { date: '2026-09-28' }, { supabase: dayStub() });
+    const out = JSON.parse(replyJson);
+    expect(out.celebration).toBe('Monday of the 26th Week of Ordinary Time');
+    expect(out.readings).toHaveLength(2);
+    expect(out.readings[0].citation).toBe('Job 1:6-22');
+  });
+});
