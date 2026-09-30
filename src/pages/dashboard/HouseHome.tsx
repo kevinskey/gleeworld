@@ -29,7 +29,9 @@ import { mergeGridOrder, sanitizeShelf, type Shelf } from '@/lib/navigation/myTo
 import { usePreviewShelf } from '@/hooks/usePreviewShelf';
 import { flattenShelf, groupIdOf } from '@/lib/navigation/toolGroups';
 import { resolveWidgets } from '@/lib/navigation/homeWidgets';
-import { HomeTileGrid } from '@/components/dashboard/HomeTileGrid';
+import { SmartSearchBar } from '@/components/home/media/SmartSearchBar';
+import { YouTubePanel } from '@/components/home/media/YouTubePanel';
+import { SoundCloudPanel } from '@/components/home/media/SoundCloudPanel';
 import { FirstRunSheet } from '@/components/dashboard/FirstRunSheet';
 import { DateCardSlot } from '@/components/home/date-card/DateCardSlot';
 import { hasParsableEventAt } from '@/components/home/date-card/eventAt';
@@ -496,10 +498,22 @@ export default function HouseHome() {
           );
         })()}
 
-        {/* Keycap app grid (editable — see HomeTileGrid) */}
-        {!modulesLoading && !layoutLoading && !roleLoading && (
-          <HomeTileGrid bands={bands} overflow={overflow} onSave={saveGridOrder} />
-        )}
+        {/* Media zone — replaces the keycap app grid (Kevin, 2026-09-30:
+            "instead of this apps section i want a youtube section … and on
+            the right … my soundcloud playlists … i want it to feel like
+            everything i need is right there"). Apps stay one tap away in
+            the sidebar and ⌘K All Tools; this space now holds the things
+            he actually lives in. The smart search field routes intent —
+            apps, assistant, or Google — from one box. */}
+        <SmartSearchBar className="max-w-2xl" />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="h-[480px] lg:h-[560px] min-h-0">
+            <YouTubePanel />
+          </div>
+          <div className="h-[480px] lg:h-[560px] min-h-0">
+            <SoundCloudPanel />
+          </div>
+        </div>
       </div>
 
       {/* Mounted CONDITIONALLY, not rendered with open={false}. The sheet

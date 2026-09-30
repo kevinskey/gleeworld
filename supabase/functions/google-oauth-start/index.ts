@@ -49,7 +49,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'No tenant for user' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  let body: { redirect_to?: string } = {};
+  let body: { redirect_to?: string; feature?: string } = {};
   try { body = await req.json(); } catch { /* optional */ }
 
   // Cryptographically random state nonce.
@@ -65,6 +65,18 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'state_store_failed: ' + stateErr.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
+  // Base scopes for the calendar connection. When the caller asks for the
+  // 'youtube' feature we append youtube.readonly to the SAME auth request —
+  // this is Google "incremental authorization": include_granted_scopes=true
+  // (below) tells Google to merge this grant with whatever the user already
+  // approved, so the existing calendar connection keeps working and we reuse
+  // the same redirect URI / client id (no new OAuth client, no new redirect
+  // URI to register in the Google console).
+  let scope = 'https://www.googleapis.com/auth/calendar.events openid email profile';
+  if (body.feature === 'youtube') {
+    scope += ' https://www.googleapis.com/auth/youtube.readonly';
+  }
+
   // Read-only scope is all we need to pull events into GleeWorld.
   // access_type=offline + prompt=consent ensures Google issues a refresh_token
   // (otherwise the second connect for the same user wouldn't get one back).
@@ -78,7 +90,7 @@ serve(async (req) => {
     // calendar.events grants read+write on events (not on calendar metadata).
     // Sufficient for both pulling Google events into GleeWorld and pushing
     // GleeWorld events back to the user's primary calendar.
-    scope: 'https://www.googleapis.com/auth/calendar.events openid email profile',
+    scope,
     state,
   });
 
