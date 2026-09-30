@@ -21,7 +21,7 @@
 // matching, which is what makes the dropdown feel instant.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Sparkles } from 'lucide-react';
+import { Music, Search, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { searchNav } from '@/lib/navigation/navSearch';
 import { resolveNav, type CatalogEntry } from '@/lib/navigation/navCatalog';
@@ -67,7 +67,13 @@ const MAX_APP_ROWS = 3;
 type Row =
   | { kind: 'app'; entry: CatalogEntry }
   | { kind: 'assistant' }
+  | { kind: 'soundcloud' }
   | { kind: 'google' };
+
+/** Event the SoundCloudPanel listens for — the smart bar's SoundCloud lane
+ *  pipes the query into the panel's own track search rather than opening
+ *  soundcloud.com, keeping "everything I need right there" literal. */
+export const SC_SEARCH_EVENT = 'gw:sc-search';
 
 export function SmartSearchBar({ entries, className }: SmartSearchBarProps) {
   const navigate = useNavigate();
@@ -98,6 +104,7 @@ export function SmartSearchBar({ entries, className }: SmartSearchBarProps) {
     const apps = searchNav(pool, trimmed).slice(0, MAX_APP_ROWS);
     const out: Row[] = apps.map((entry) => ({ kind: 'app', entry }));
     if (assistant) out.push({ kind: 'assistant' });
+    out.push({ kind: 'soundcloud' });
     out.push({ kind: 'google' });
     return out;
   }, [entries, trimmed, assistant]);
@@ -112,6 +119,8 @@ export function SmartSearchBar({ entries, className }: SmartSearchBarProps) {
       // sheet is where that reply renders — nothing here awaits it.
       void assistant.send(trimmed);
       assistant.setSheetOpen(true);
+    } else if (row.kind === 'soundcloud') {
+      window.dispatchEvent(new CustomEvent(SC_SEARCH_EVENT, { detail: { query: trimmed } }));
     } else {
       // 'noopener' severs window.opener so the Google tab can't script this
       // one back (reverse-tabnabbing).
@@ -228,6 +237,16 @@ export function SmartSearchBar({ entries, className }: SmartSearchBarProps) {
                   <span className="min-w-0 flex-1 truncate">{row.entry.label}</span>
                   <span className="shrink-0 rounded-md border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                     App
+                  </span>
+                </button>
+              );
+            }
+            if (row.kind === 'soundcloud') {
+              return (
+                <button key="soundcloud" type="button" className={rowClass} {...common}>
+                  <Music className="h-4 w-4 shrink-0 text-orange-500" aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate">
+                    Search SoundCloud for <span className="font-medium">{trimmed}</span>
                   </span>
                 </button>
               );
