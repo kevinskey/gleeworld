@@ -30,6 +30,7 @@ import { usePreviewShelf } from '@/hooks/usePreviewShelf';
 import { flattenShelf, groupIdOf } from '@/lib/navigation/toolGroups';
 import { resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { SmartSearchBar } from '@/components/home/media/SmartSearchBar';
+import { useGatedNav } from '@/components/dashboard/DashboardShell';
 import { YouTubePanel } from '@/components/home/media/YouTubePanel';
 import { SoundCloudPanel } from '@/components/home/media/SoundCloudPanel';
 import { FirstRunSheet } from '@/components/dashboard/FirstRunSheet';
@@ -54,6 +55,10 @@ export default function HouseHome() {
   const firstName = preferredFirstName(profile);
   const { settings: brandingSettings } = useBrandingSettings();
   const isMobile = useIsMobile();
+  // The same gated catalog the sidebar renders — SmartSearchBar's app lane
+  // must match module-gated destinations (Liturgy Planner, Studio…), which
+  // its ungated fallback deliberately under-shows.
+  const { resolvedEntries: gatedNavEntries } = useGatedNav();
 
   const { data: rows = [], isLoading } = useQuery<FeedRow[]>({
     queryKey: ['house-home-feed'],
@@ -505,7 +510,7 @@ export default function HouseHome() {
             the sidebar and ⌘K All Tools; this space now holds the things
             he actually lives in. The smart search field routes intent —
             apps, assistant, or Google — from one box. */}
-        <SmartSearchBar className="max-w-2xl" />
+        <SmartSearchBar className="max-w-2xl" entries={gatedNavEntries} />
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="h-[480px] lg:h-[560px] min-h-0">
             <YouTubePanel />

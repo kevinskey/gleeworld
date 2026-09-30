@@ -85,6 +85,9 @@ vi.mock('@/components/dashboard/HomeNewsRail', () => ({
 }));
 vi.mock('@/components/dashboard/DashboardShell', () => ({
   DashboardShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  // HouseHome feeds SmartSearchBar the shell's gated catalog; an empty list
+  // here just means the search lane shows no app matches in these tests.
+  useGatedNav: () => ({ resolvedEntries: [] }),
 }));
 // Captures the exact props HouseHome hands the grid — bands/overflow
 // (getAppTiles' output, partitioned by bandDestinations) and onSave — so the

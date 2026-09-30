@@ -135,7 +135,10 @@ function platformLogoFor(brandingLogoUrl?: string | null): string | undefined {
 // sheet's hook guarded it with `typeof === 'function'` (tolerating an older
 // useUserRole shape that doesn't export the fn, so a stale bundle can't
 // white-screen the shell) — this hook always uses the defensive form.
-function useGatedNav() {
+// Exported for HouseHome's SmartSearchBar: the search field needs the same
+// gated catalog the sidebar renders, or module-gated apps (Liturgy Planner,
+// Studio…) never match a query.
+export function useGatedNav() {
   const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
   const userCanLibrarian = typeof canEditMusicLibrary === 'function'
     ? canEditMusicLibrary()
