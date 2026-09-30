@@ -4,7 +4,7 @@ import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AssistantProvider, useAssistant } from './AssistantProvider';
+import { AssistantProvider, useAssistant, __resetLiveSessionForTests } from './AssistantProvider';
 import { saveThread } from './threadStorage';
 import { setMuted, speak } from './speech';
 import { supabase } from '@/integrations/supabase/client';
@@ -113,6 +113,9 @@ const renderProbe = () =>
 beforeEach(() => {
   sessionStorage.clear(); brandingVoice.current = null; startSession.mockClear(); speakBehavior.current = 'audible';
   speechHandlers.current = null; speechStart.mockClear(); speechStop.mockClear(); interruptedFixture.current = null;
+  // The live session survives provider unmounts BY DESIGN (module scope) —
+  // in tests that means it survives into the next test and blocks its mic.
+  __resetLiveSessionForTests();
 });
 
 /**

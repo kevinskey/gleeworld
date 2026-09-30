@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { ChevronDown, Mic, Send, Square, Volume2, VolumeX } from 'lucide-react';
+import { AudioLines, ChevronDown, Mic, Send, Square, Volume2, VolumeX } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,23 @@ export const AssistantSheet = () => {
     videoRoom, setVideoRoom,
     resultsPanel, setResultsPanel,
     assistantName,
+    liveStatus, endLive,
   } = useAssistant();
+  // The FAB (which holds the other End control) returns null while this
+  // sheet is open — so while a live ElevenLabs session runs, this pill is
+  // the ONLY visible indicator that a hot mic + billed session is active.
+  const livePill = liveStatus !== 'off' && (
+    <button
+      type="button"
+      onClick={endLive}
+      aria-label="End live conversation"
+      title="End live conversation"
+      className="h-8 rounded-full px-3 flex items-center gap-1.5 bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+    >
+      <AudioLines className={cn('w-4 h-4', liveStatus === 'live' && 'animate-pulse')} />
+      <span className="text-xs font-semibold">{liveStatus === 'connecting' ? 'Connecting…' : 'Live · End'}</span>
+    </button>
+  );
   // The user's own name for her, everywhere the header identifies the
   // assistant. Per user, not per tenant — but the FALLBACK is per tenant:
   // hardcoding "GleeWorld Assistant" leaked platform branding onto
@@ -81,6 +97,7 @@ export const AssistantSheet = () => {
           <SheetHeader className="px-4 py-2.5 border-b flex-row items-center justify-between space-y-0">
             <SheetTitle className="text-sm font-semibold">{displayName}</SheetTitle>
             <SheetDescription className="sr-only">{ASSISTANT_DESCRIPTION}</SheetDescription>
+            {livePill}
             {/* Muted gets a persistent destructive tint so the state reads at
                 a glance. Unmuted hover pairs bg-accent WITH accent-foreground —
                 on touch devices :hover sticks after a tap, and the old
@@ -177,6 +194,7 @@ export const AssistantSheet = () => {
           <div className="flex items-center justify-between px-3 py-2 border-b">
             <span className="text-xs font-medium text-muted-foreground px-1">{displayName}</span>
             <div className="flex items-center gap-1">
+              {livePill}
               {/* Same muted-state treatment as the sheet header above. */}
               <button
                 type="button"

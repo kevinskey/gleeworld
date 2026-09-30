@@ -128,6 +128,77 @@ const CAPTION_FALLBACK_MS = 8000;
 
 let liveNowPlaying: NowPlaying | null = null;
 
+// ── Module-scope live-session survivor ──────────────────────────────────
+// Same pattern as liveNowPlaying above, for the ElevenLabs WebRTC session:
+// route changes swap DashboardShell instances and REMOUNT this provider, and
+// the old unmount cleanup ended the live session — including when the
+// agent's own open_page/open_bible tools triggered the navigation, killing
+// the session mid-sentence. The handle and its guards live here so a
+// remount re-adopts them; the session ends only deliberately (endLive), on
+// sign-out, by a guard below, or with the document itself.
+type LiveStatus = 'off' | 'connecting' | 'live';
+let liveSessionGlobal: { endSession: () => Promise<void> } | null = null;
+let liveStatusGlobal: LiveStatus = 'off';
+let liveUserEnded = false;
+let liveHiddenTimer: ReturnType<typeof setTimeout> | null = null;
+let liveMaxTimer: ReturnType<typeof setTimeout> | null = null;
+let liveVisHandler: (() => void) | null = null;
+const liveListeners = new Set<(s: LiveStatus, unexpected: boolean) => void>();
+// Abandoned-session guards. A full-duplex WebRTC session is a hot mic AND
+// per-minute ElevenLabs billing, so "walked away from the tab" must not run
+// until ElevenLabs' own server timeout: a hidden tab gets a grace period,
+// and every session gets a hard cap.
+const LIVE_HIDDEN_GRACE_MS = 90_000;
+const LIVE_MAX_SESSION_MS = 15 * 60_000;
+
+function clearLiveGuards() {
+  if (liveHiddenTimer) { clearTimeout(liveHiddenTimer); liveHiddenTimer = null; }
+  if (liveMaxTimer) { clearTimeout(liveMaxTimer); liveMaxTimer = null; }
+  if (liveVisHandler) { document.removeEventListener('visibilitychange', liveVisHandler); liveVisHandler = null; }
+}
+
+function setLiveStatusShared(s: LiveStatus, unexpected = false) {
+  liveStatusGlobal = s;
+  liveListeners.forEach((fn) => fn(s, unexpected));
+}
+
+/** End the shared session. `unexpected: true` marks teardowns the user did
+ *  not ask for (guards, network) so the mounted provider can say why. */
+function endLiveShared(unexpected = false) {
+  const session = liveSessionGlobal;
+  liveSessionGlobal = null;
+  liveUserEnded = !unexpected;
+  clearLiveGuards();
+  setLiveStatusShared('off', unexpected);
+  if (session) void session.endSession().catch(() => { /* already closed */ });
+}
+
+/** TEST-ONLY: the survivor state above deliberately outlives provider
+ *  mounts, which in a test run means it outlives TESTS — one test's live
+ *  session would make the next test's mic refuse to start. Production code
+ *  must never call this. */
+export function __resetLiveSessionForTests() {
+  liveSessionGlobal = null;
+  liveUserEnded = false;
+  clearLiveGuards();
+  liveStatusGlobal = 'off';
+  liveListeners.clear();
+}
+
+function armLiveGuards() {
+  clearLiveGuards();
+  liveMaxTimer = setTimeout(() => endLiveShared(true), LIVE_MAX_SESSION_MS);
+  liveVisHandler = () => {
+    if (document.hidden) {
+      if (!liveHiddenTimer) liveHiddenTimer = setTimeout(() => endLiveShared(true), LIVE_HIDDEN_GRACE_MS);
+    } else if (liveHiddenTimer) {
+      clearTimeout(liveHiddenTimer);
+      liveHiddenTimer = null;
+    }
+  };
+  document.addEventListener('visibilitychange', liveVisHandler);
+}
+
 export const AssistantProvider = ({ children, initialSheetOpen = false }: { children: ReactNode; initialSheetOpen?: boolean }) => {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -605,21 +676,39 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   // The SDK (+ LiveKit) is ~heavy, so it's dynamically imported only when
   // a session actually starts. Client tools mirror the chat assistant's
   // navigation/news surface; anything else stays with push-to-talk chat.
-  const [liveStatus, setLiveStatus] = useState<'off' | 'connecting' | 'live'>('off');
-  const liveSessionRef = useRef<{ endSession: () => Promise<void> } | null>(null);
+  // State mirrors the module-scope session (see the survivor block above the
+  // component): this provider ADOPTS whatever session exists on mount, and an
+  // unexpected end — guard teardown, network drop — is surfaced instead of
+  // leaving the user talking to a dead line.
+  const [liveStatus, setLiveStatus] = useState<LiveStatus>(liveStatusGlobal);
   const liveConnectingRef = useRef(false);
-
-  const endLive = useCallback(() => {
-    const session = liveSessionRef.current;
-    liveSessionRef.current = null;
-    setLiveStatus('off');
-    if (session) void session.endSession().catch(() => { /* already closed */ });
+  useEffect(() => {
+    const listener = (s: LiveStatus, unexpected: boolean) => {
+      setLiveStatus(s);
+      if (unexpected) failVisibly('Live conversation ended — tap the waveform to reconnect.');
+    };
+    liveListeners.add(listener);
+    setLiveStatus(liveStatusGlobal);
+    return () => { liveListeners.delete(listener); };
+  }, [failVisibly]);
+  // Sign-out is the one lifecycle event that MUST end a surviving session —
+  // provider unmounts no longer do (that was the route-change kill).
+  useEffect(() => {
+    // Optional-chained: test doubles mock only the slice of supabase.auth
+    // they need, and a missing listener must not take the provider down.
+    const sub = supabase.auth?.onAuthStateChange?.((event) => {
+      if (event === 'SIGNED_OUT') endLiveShared(false);
+    });
+    return () => sub?.data?.subscription?.unsubscribe();
   }, []);
 
+  const endLive = useCallback(() => { endLiveShared(false); }, []);
+
   const startLive = useCallback(async () => {
-    if (liveSessionRef.current || liveConnectingRef.current) return;
+    if (liveSessionGlobal || liveConnectingRef.current) return;
     liveConnectingRef.current = true;
-    setLiveStatus('connecting');
+    liveUserEnded = false;
+    setLiveStatusShared('connecting');
     // Live mode owns the audio path — silence push-to-talk TTS and mic.
     stopSpeakingNow();
     speechRef.current.stop();
@@ -648,6 +737,11 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
       // session outright, so this and that flag ship together.
       // BROWSER_VOICE_ID is meaningless here (a WebRTC agent has no
       // browser-synth path) — it falls through to the agent default.
+      // awaitVoice first — the same race speakNow guards against: reading
+      // the ref before branding/user preference resolved locked a WHOLE
+      // live session to the default voice. Bounded, so a stalled query
+      // still starts the session (in the agent default) rather than never.
+      await awaitVoice();
       const liveVoiceId = voiceIdRef.current;
       const voiceOverride =
         liveVoiceId && liveVoiceId !== BROWSER_VOICE_ID
@@ -878,14 +972,21 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
           },
         },
         onDisconnect: () => {
-          liveSessionRef.current = null;
-          setLiveStatus('off');
+          // A deliberate end (endLiveShared) already nulled the global and
+          // announced 'off' — this callback then fires for a session that is
+          // no longer current, and must stay silent. Anything else reaching
+          // here is the server or network hanging up on its own.
+          if (liveSessionGlobal === null && liveStatusGlobal === 'off') return;
+          liveSessionGlobal = null;
+          clearLiveGuards();
+          setLiveStatusShared('off', !liveUserEnded);
         },
       });
-      liveSessionRef.current = session;
-      setLiveStatus('live');
+      liveSessionGlobal = session;
+      armLiveGuards();
+      setLiveStatusShared('live');
     } catch (err) {
-      setLiveStatus('off');
+      setLiveStatusShared('off');
       // Say WHY. The reason travelled all the way from ElevenLabs — through
       // the edge function, through supabase-js — and was thrown away in this
       // catch, leaving a fixed string that could mean a dead key, a missing
@@ -901,15 +1002,27 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
     } finally {
       liveConnectingRef.current = false;
     }
-  }, [navigate, stopSpeakingNow, showResult, failVisibly, profile?.full_name, profile?.assistant_name, profile?.preferred_name, getFreshGeo, runAction, setSheetOpen]);
-
-  // End the live session if the provider ever unmounts (sign-out, tenant
-  // switch) — a dangling WebRTC session would keep the mic open.
-  useEffect(() => endLive, [endLive]);
+  }, [navigate, stopSpeakingNow, showResult, failVisibly, awaitVoice, profile?.full_name, profile?.assistant_name, profile?.preferred_name, getFreshGeo, runAction, setSheetOpen]);
+  // NO unmount endLive here anymore: route changes remount this provider,
+  // and ending on unmount killed the live session on every navigation —
+  // including ones the agent itself triggered. The session now survives at
+  // module scope; sign-out (auth listener above) and the guards in
+  // armLiveGuards are the deliberate ends.
 
   const send = useCallback(async (content: string, opts?: { fromVoice?: boolean }) => {
     const text = content.trim();
-    if (!text || state.busy) return;
+    if (!text) return;
+    if (state.busy) {
+      // A typed turn is gated by the disabled Send button, but the voice
+      // path fires unconditionally from beginListening's onEnd — the user
+      // watched their caption build and then vanish with no explanation.
+      // Caption only, no dispatch: a 'fail' here would clobber the turn
+      // that is legitimately still in flight.
+      if (opts?.fromVoice) {
+        setCaptionReply({ id: crypto.randomUUID(), text: "One moment — I'm still answering your last question." });
+      }
+      return;
+    }
     // A voice turn (re)opens conversation mode; a typed turn ends it — the
     // keyboard is an explicit signal the user is done talking hands-free.
     conversationRef.current = opts?.fromVoice === true;
@@ -1041,7 +1154,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   // re-arms. Every mic-originated turn is marked fromVoice so the server
   // applies its spoken-length budget and the conversation stays open.
   const beginListening = useCallback((): boolean => {
-    if (liveSessionRef.current) return false;
+    if (liveSessionGlobal) return false;
     const speech = speechRef.current;
     if (!speech.available) return false;
     micActiveRef.current = true;
@@ -1056,14 +1169,21 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
         setTranscript(t);
         if (isFinal) finalTranscript = t;
       },
-      () => {
+      (reason) => {
         micActiveRef.current = false;
         setListening(false);
+        // 'not-allowed' is the one mic failure the user can fix — before
+        // this, a blocked mic flashed "Listening…" and went silent,
+        // indistinguishable from hearing nothing.
+        if (reason === 'not-allowed') {
+          failVisibly("Microphone access is blocked — allow the mic for this site in your browser settings, then try again.");
+          return;
+        }
         if (finalTranscript.trim()) void send(finalTranscript, { fromVoice: true });
       },
     );
     return true;
-  }, [send, clearIdleTimer]);
+  }, [send, clearIdleTimer, failVisibly]);
 
   // Conversation-mode idle clock. Stage 0: five quiet seconds → stop the
   // mic (it must never be live while she speaks — there is no echo
@@ -1096,7 +1216,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
   // video call, music playing) or the mic (already listening via barge-in).
   maybeRearmRef.current = () => {
     if (!conversationRef.current) return;
-    if (liveSessionRef.current || videoRoomRef.current || nowPlayingRef.current) { endConversation(); return; }
+    if (liveSessionGlobal || videoRoomRef.current || nowPlayingRef.current) { endConversation(); return; }
     // A read-aloud article owns the speaker for the next several minutes —
     // like music, a hot mic over it would hear her own voice and barge her
     // in mid-story. (No echo cancellation on the push-to-talk path.)
@@ -1108,7 +1228,7 @@ export const AssistantProvider = ({ children, initialSheetOpen = false }: { chil
 
   const toggleMic = useCallback(() => {
     // Live mode owns the mic — push-to-talk stays out of the way.
-    if (liveSessionRef.current) return;
+    if (liveSessionGlobal) return;
     const speech = speechRef.current;
     if (!speech.available) return;
     if (listening) {
