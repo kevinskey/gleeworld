@@ -93,7 +93,7 @@ import { NavShelf } from './NavShelf';
 import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
-import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, groupToolsBySection, isSectionGroupId, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, groupToolsBySection, mergeNavGroups, isSectionGroupId, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
 import { usePreviewShelf } from '@/hooks/usePreviewShelf';
 import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
 import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
@@ -396,7 +396,10 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
     Object.keys(NAV_SECTION_LABELS),
     NAV_SECTION_LABELS,
   ).map((g) => ({ ...g, collapsed: collapsedSections.has(g.id) }));
-  const navGroups = [...sectionGroups, ...shelfGroupsForNav(shelfGroups)];
+  // mergeNavGroups folds a member group named like a section ("Music",
+  // "Today"…) into that section heading instead of rendering the heading
+  // twice — see its comment in myTools.ts.
+  const navGroups = mergeNavGroups(sectionGroups, shelfGroupsForNav(shelfGroups));
 
   const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
     // A derived section heading is not one of the member's groups — collapse
@@ -598,7 +601,10 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
     Object.keys(NAV_SECTION_LABELS),
     NAV_SECTION_LABELS,
   ).map((g) => ({ ...g, collapsed: collapsedSections.has(g.id) }));
-  const navGroups = [...sectionGroups, ...shelfGroupsForNav(shelfGroups)];
+  // mergeNavGroups folds a member group named like a section ("Music",
+  // "Today"…) into that section heading instead of rendering the heading
+  // twice — see its comment in myTools.ts.
+  const navGroups = mergeNavGroups(sectionGroups, shelfGroupsForNav(shelfGroups));
 
   const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
     // Gated on `loaded` — see the matching comment on Sidebar's
