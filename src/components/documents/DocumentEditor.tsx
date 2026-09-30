@@ -74,6 +74,36 @@ export interface DocumentExtensionOptions {
 }
 
 /**
+ * FontSize that RENDERS px values as pt. The toolbar's size number has
+ * always meant points, but until 2026-09-30 it was stored as px — so "12"
+ * rendered at 12px on screen (too small, Kevin) and ≈9pt in print. New
+ * marks are stored in pt; legacy px marks are normalized here at render
+ * time — which covers the live editor DOM, generateHTML (print/PDF), and
+ * collaborative ydoc content alike — without ever rewriting the stored
+ * value, which may live in a Yjs document shared with older clients.
+ */
+const PointFontSize = FontSize.extend({
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element: HTMLElement) => element.style.fontSize || null,
+            renderHTML: (attributes: { fontSize?: string | null }) => {
+              if (!attributes.fontSize) return {};
+              const size = String(attributes.fontSize).replace(/^(\d+(?:\.\d+)?)px$/, '$1pt');
+              return { style: `font-size: ${size}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
+/**
  * Builds the shared TipTap extension array for the Documents editor. Kept as
  * a factory (rather than inlined in `useEditor`) so later tasks can append
  * `CitationChip` / `FootnoteRef` here instead of touching DocumentEditor.
@@ -115,7 +145,7 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
     TextStyle,
     Color,
     FontFamily,
-    FontSize,
+    PointFontSize,
     CharacterCount,
     DocumentSearch,
     PageBreak,
