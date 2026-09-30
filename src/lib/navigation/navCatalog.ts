@@ -80,7 +80,10 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'librarian',     to: '/dashboard/librarian',     label: 'Librarian',     icon: LibraryBig, section: 'music', tone: 'bg-slate-50 text-slate-600', tourId: 'nav-librarian',    gate: { module: 'librarian', librarianOnly: true } },
   { key: 'partner-portal', to: '/partner', label: 'Partner Portal', icon: Store, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-partner-portal', gate: { partnerOnly: true } },
   // Teach
-  { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-primary text-primary-foreground', tourId: 'nav-academy' },
+  // Pastel pair like its 'teach' siblings — the old solid bg-primary "hero"
+  // tone rendered as one dominant near-black square in the pastel keycap
+  // grid, reading as a selected state (committee, 2026-09-30).
+  { key: 'academy',      to: '/dashboard/academy',             label: 'Academy',      icon: GraduationCap, section: 'teach', tone: 'bg-teal-50 text-teal-700', tourId: 'nav-academy' },
   { key: 'office-hours', to: '/dashboard/office-hours',        label: 'Studio Hours', icon: CalendarClock, section: 'teach', tone: 'bg-emerald-50 text-emerald-600',     tourId: 'nav-office-hours' },
   // Reference directory (public, all 49 states) and the director's own
   // workspace are separate destinations: one answers "what does my state

@@ -13,7 +13,7 @@
 // ArticleReaderSheet (most news sites block iframing; the sheet shows the
 // extracted story with save-to-notes and an "Open full article" escape
 // hatch).
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Newspaper, RefreshCw } from 'lucide-react';
@@ -57,7 +57,20 @@ export function HomeNewsRail() {
     refetchInterval: 15 * 60 * 1000,
   });
 
-  const items = data?.items ?? [];
+  // Fresh items lead. fetch-news-feeds applies no recency cutoff, so the
+  // rail was presenting April articles as today's news; items older than 30
+  // days sink below every fresh one instead of interleaving (dropping them
+  // outright would blank the rail for tenants with slow feeds).
+  const rawItems = data?.items ?? [];
+  const items = useMemo(() => {
+    const cutoff = Date.now() - 30 * 86400000;
+    const age = (n: NewsItem) => new Date(n.pubDate).getTime() || 0;
+    return [...rawItems].sort((a, b) => {
+      const aFresh = age(a) >= cutoff ? 1 : 0;
+      const bFresh = age(b) >= cutoff ? 1 : 0;
+      return bFresh - aFresh;
+    });
+  }, [rawItems]);
   const hasMore = !!data?.hasMore && visibleCount < MAX_ITEMS;
 
   // Reader sheet: `readerOpen` drives the sheet so `reading` can stay
@@ -87,12 +100,14 @@ export function HomeNewsRail() {
     // relative + lg:absolute-inset scroll area: the rail scrolls within
     // whatever height the status-card column sets, and can never stretch
     // the shared grid row taller.
-    <aside className="relative min-h-[16rem] border border-border bg-card" aria-label="News">
+    <aside className="relative min-h-[16rem] rounded-xl border border-border bg-card" aria-label="News">
       <div className="flex h-full flex-col p-3 lg:absolute lg:inset-0">
         <div className="mb-2 flex min-h-[44px] items-center justify-between">
           <span className="text-xs uppercase tracking-widest text-muted-foreground">News</span>
+          {/* "Edit sources", not "Edit" — the bare verb read as editing the
+              articles themselves (committee, 2026-09-30). */}
           <Link to="/dashboard/feeds" className="text-sm text-muted-foreground hover:text-foreground">
-            Edit
+            Edit sources
           </Link>
         </div>
         {isLoading ? (

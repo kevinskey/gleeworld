@@ -1,3 +1,7 @@
+// Debug logging gated to dev builds: nine unconditional console.log sites
+// fired on every production load and interaction (committee, 2026-09-30).
+const audioDebug = (...args: unknown[]) => { if (import.meta.env.DEV) console.log(...args); };
+
 // Mobile Audio Context Unlock Utility
 // iOS/Safari and PWAs require user interaction to unlock AudioContext
 
@@ -79,7 +83,7 @@ const playHtml5SilentAudio = (): void => {
       playPromise.then(() => {
         audio.pause();
         audio.remove?.();
-        console.log('[AudioUnlock] HTML5 silent audio played successfully');
+        audioDebug('[AudioUnlock] HTML5 silent audio played successfully');
       }).catch(() => {
         // Ignore - just an additional unlock attempt
       });
@@ -125,7 +129,7 @@ export const getAudioContextState = (): string => {
 // Must be synchronous within user gesture for iOS
 export const forceUnlockAudio = (): boolean => {
   const isPwaMode = isPWA();
-  console.log('[AudioUnlock] forceUnlockAudio called. PWA:', isPwaMode, 'Current state:', {
+  audioDebug('[AudioUnlock] forceUnlockAudio called. PWA:', isPwaMode, 'Current state:', {
     hasContext: !!globalAudioContext,
     state: globalAudioContext?.state || 'not-created',
     isUnlocked,
@@ -133,13 +137,13 @@ export const forceUnlockAudio = (): boolean => {
 
   // Fast path: already unlocked and running
   if (isUnlocked && globalAudioContext?.state === 'running') {
-    console.log('[AudioUnlock] Already unlocked and running');
+    audioDebug('[AudioUnlock] Already unlocked and running');
     return true;
   }
   
   try {
     const ctx = getSharedAudioContext();
-    console.log('[AudioUnlock] Got shared AudioContext with state:', ctx.state);
+    audioDebug('[AudioUnlock] Got shared AudioContext with state:', ctx.state);
     
     // CRITICAL for iOS: Play silent buffer + tone synchronously within user gesture
     // This must happen BEFORE any async operations
@@ -169,16 +173,16 @@ export const forceUnlockAudio = (): boolean => {
     if (ctx.state !== 'running') {
       ctx.resume().then(() => {
         isUnlocked = ctx.state === 'running';
-        console.log('[AudioUnlock] Resume resolved. New state:', ctx.state, 'isUnlocked:', isUnlocked);
+        audioDebug('[AudioUnlock] Resume resolved. New state:', ctx.state, 'isUnlocked:', isUnlocked);
         if (isUnlocked) {
-          console.log('✅ Audio context resumed and unlocked');
+          audioDebug('✅ Audio context resumed and unlocked');
         }
       }).catch((err) => {
         console.error('[AudioUnlock] ctx.resume() failed:', err);
       });
     } else {
       isUnlocked = true;
-      console.log('[AudioUnlock] Context already running, marking as unlocked');
+      audioDebug('[AudioUnlock] Context already running, marking as unlocked');
     }
     
     // Return current state (may not be running yet, but unlock is in progress)
@@ -198,7 +202,7 @@ export const setupMobileAudioUnlock = (): (() => void) => {
   
   const unlockOnInteraction = () => {
     if (!isUnlocked) {
-      console.log('[AudioUnlock] User interaction detected, attempting unlock. PWA:', isPWA());
+      audioDebug('[AudioUnlock] User interaction detected, attempting unlock. PWA:', isPWA());
       forceUnlockAudio();
     }
   };
@@ -227,7 +231,7 @@ export const setupMobileAudioUnlock = (): (() => void) => {
   }
   
   setupComplete = true;
-  console.log('[AudioUnlock] Mobile audio unlock setup complete. PWA mode:', isPWA());
+  audioDebug('[AudioUnlock] Mobile audio unlock setup complete. PWA mode:', isPWA());
   
   return () => {
     events.forEach((event) => {

@@ -6,6 +6,7 @@ import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { useAssistant } from '@/lib/assistant/AssistantProvider';
 import { AssistantThread } from './AssistantThread';
@@ -13,7 +14,7 @@ import { AssistantSuggestions } from './AssistantSuggestions';
 import { AssistantVideoOverlay } from './AssistantVideoOverlay';
 import { AssistantResultsPanel } from './AssistantResultsPanel';
 
-const ASSISTANT_DESCRIPTION = "Chat with the GleeWorld Assistant by typing or voice. Some actions ask for confirmation before they run.";
+const ASSISTANT_DESCRIPTION = "Chat with the assistant by typing or voice. Some actions ask for confirmation before they run.";
 
 // Chat window over the shared assistant state (AssistantProvider). The
 // provider owns the thread, speech, mute, and open state — this component
@@ -33,8 +34,13 @@ export const AssistantSheet = () => {
     assistantName,
   } = useAssistant();
   // The user's own name for her, everywhere the header identifies the
-  // assistant. Per user, not per tenant.
-  const displayName = assistantName || 'GleeWorld Assistant';
+  // assistant. Per user, not per tenant — but the FALLBACK is per tenant:
+  // hardcoding "GleeWorld Assistant" leaked platform branding onto
+  // white-label tenants (committee, 2026-09-30, on yo-doc.com).
+  const { settings: brandingSettings } = useBrandingSettings();
+  const orgName = brandingSettings?.org_name || '';
+  const displayName = assistantName || (orgName ? `${orgName} Assistant` : 'Assistant');
+  const askPlaceholder = `Ask ${assistantName || orgName || 'me anything'}…`;
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -129,7 +135,7 @@ export const AssistantSheet = () => {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={listening ? 'Listening…' : 'Ask GleeWorld…'}
+              placeholder={listening ? 'Listening…' : askPlaceholder}
               className="flex-1 h-9 rounded-full border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
             <Button type="submit" size="sm" className="h-9 w-9 rounded-full p-0" disabled={state.busy || !input.trim()}>
@@ -236,7 +242,7 @@ export const AssistantSheet = () => {
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder={listening ? 'Listening…' : 'Ask GleeWorld…'}
+                  placeholder={listening ? 'Listening…' : askPlaceholder}
                   className="flex-1 h-9 rounded-full border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
                 <Button type="submit" size="sm" className="h-9 w-9 shrink-0 rounded-full p-0" disabled={state.busy || !input.trim()}>

@@ -3,7 +3,7 @@
 // Letterpress plates: bg-card border border-border (+ the up-next plate's
 // top accent stripe); no other elevations.
 // Spec: docs/superpowers/specs/2026-07-04-house-and-stage-design.md
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -121,8 +121,24 @@ export default function HouseHome() {
     },
   });
 
-  const now = new Date();
-  const upNext = useMemo(() => selectUpNext(rows, now), [rows]);
+  // `now` is state on a one-minute tick, and every memo below depends on it:
+  // a render-time `new Date()` omitted from the deps left a long-lived tab
+  // showing started events as "Up next" and yesterday's Today list past
+  // midnight (the feed query alone never re-runs these memos — react-query's
+  // structural sharing keeps `rows` identity-stable).
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+  // hasParsableEventAt at the SOURCE, not just in dateCardCtx below: the
+  // Up Next plate and Today rows call date-fns format() directly, and one
+  // malformed event_at row in v_command_center_feed would throw during
+  // render and white-screen the whole home.
+  const upNext = useMemo(() => {
+    const next = selectUpNext(rows, now);
+    return next && hasParsableEventAt(next.event_at) ? next : null;
+  }, [rows, now]);
   const urgent = useMemo(
     () => [...rows.filter((r) => r.section === 'urgent_task'), ...unreviewed]
       .sort((a, b) => new Date(b.event_at).getTime() - new Date(a.event_at).getTime())
@@ -131,12 +147,13 @@ export default function HouseHome() {
   );
   const todayRows = useMemo(
     () => rows.filter((r) => r.section === 'schedule'
+      && hasParsableEventAt(r.event_at)
       && new Date(r.event_at).toDateString() === now.toDateString())
       .sort((a, b) => new Date(a.event_at).getTime() - new Date(b.event_at).getTime())
       .slice(0, 4),
-    [rows],
+    [rows, now],
   );
-  const glyphs = useMemo(() => ledgerGlyphs(myPracticeDates, now), [myPracticeDates]);
+  const glyphs = useMemo(() => ledgerGlyphs(myPracticeDates, now), [myPracticeDates, now]);
   // ensembleName comes from gw_branding_settings.org_name (via
   // useBrandingSettings, the same hook the tenant branding UI reads) rather
   // than the profile — the profile has no ensemble_name field. When org_name
@@ -345,17 +362,22 @@ export default function HouseHome() {
         {(() => {
           const statusColumn = (
             <div className="min-w-0 space-y-4 h-full">
-        {/* Up next — the plate that answers what/where/when. */}
-        <div className="bg-card border border-border border-t-2 border-t-primary p-3">
+        {/* Up next — the plate that answers what/where/when. Hero mass on
+            purpose (larger title, more padding, a left accent rail): the
+            committee found the liturgy card above was winning the top-down
+            scan over the card this page exists to lead with. primary/70
+            rather than bare primary so a near-black tenant primary reads as
+            an accent, not an error stripe. */}
+        <div className="bg-card border border-border border-l-4 border-l-primary/70 rounded-xl p-4">
           {upNext ? (
             <>
-              <div className="text-xs font-bold uppercase tracking-widest text-primary tabular-nums">
+              <div className="text-xs font-bold uppercase tracking-widest text-primary/80 tabular-nums">
                 Up next · {format(new Date(upNext.event_at), 'h:mm a')}
               </div>
-              <div className="py-1.5 text-lg">{upNext.title}</div>
+              <div className="py-1.5 text-2xl font-semibold">{upNext.title}</div>
               {upNext.detail && <div className="text-sm text-muted-foreground">{upNext.detail}</div>}
-              <div className="h-0.5 bg-muted mt-2 overflow-hidden">
-                <div className="h-full bg-primary origin-left motion-reduce:transition-none"
+              <div className="h-0.5 bg-muted mt-2 overflow-hidden rounded-full">
+                <div className="h-full bg-primary/70 origin-left motion-reduce:transition-none"
                   style={{ transform: `scaleX(${fuseProgress(new Date(upNext.event_at), now)})` }} />
               </div>
             </>
@@ -377,7 +399,7 @@ export default function HouseHome() {
           <>
             {isFaculty ? (
               shownWidgets.includes('needs-attention') && (
-                <div className="bg-card border border-border p-3">
+                <div className="bg-card border border-border rounded-xl p-3">
                   <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Needs attention</div>
                   {urgent.length === 0 ? (
                     <div className="text-sm text-muted-foreground">All caught up.</div>
@@ -400,7 +422,7 @@ export default function HouseHome() {
               )
             ) : (
               shownWidgets.includes('practice-ledger') && (
-                <div className="bg-card border border-border p-3">
+                <div className="bg-card border border-border rounded-xl p-3">
                   <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Practice this week</div>
                   <div className="text-xl tracking-[0.35em] text-primary"
                     aria-label={`${glyphs.filter((g) => g === 'note').length} of 7 days practiced this week`}>
@@ -417,15 +439,21 @@ export default function HouseHome() {
               )
             )}
 
-            {/* Widget 2: Today */}
-            {shownWidgets.includes('today') && (
-              <div className="bg-card border border-border p-3">
+            {/* Widget 2: Today. Rows the Up Next plate already announces are
+                filtered out — the common personal-tenant case is ONE event,
+                and rendering it in both cards said the same thing twice
+                (committee, 2026-09-30). When filtering leaves nothing AND an
+                upNext exists, the card hides entirely rather than claiming
+                'No sessions today' under a plate that just named one. */}
+            {shownWidgets.includes('today')
+              && !(upNext && todayRows.every((r) => r.id === upNext.id)) && (
+              <div className="bg-card border border-border rounded-xl p-3">
                 <div className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Today</div>
                 {todayRows.length === 0 ? (
                   <div className="text-sm text-muted-foreground">No sessions today.</div>
                 ) : (
                   <ul className="divide-y divide-border">
-                    {todayRows.map((r) => (
+                    {todayRows.filter((r) => r.id !== upNext?.id).map((r) => (
                       <li key={r.id} className="flex items-center justify-between py-2 text-sm">
                         <span className="truncate">{r.title}</span>
                         <span className="tabular-nums text-muted-foreground ml-2 shrink-0">
