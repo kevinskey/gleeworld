@@ -24,7 +24,14 @@ const FONT_OPTIONS: { label: string; value: string }[] = [
   { label: 'Mono', value: 'ui-monospace, SFMono-Regular, Menlo, monospace' },
 ];
 
-const SIZE_OPTIONS = ['', '12px', '14px', '17px', '20px', '24px', '32px'];
+// POINTS, not pixels. The select shows a bare number, and in a word
+// processor that number is a point size — the old px values printed a
+// "12" at 12px ≈ 9pt on paper (Kevin, 2026-09-30: "claims to be 12 point
+// but i printed it out and its more like 8 point"). Legacy documents
+// carry px marks with these same numbers; the select's value getter and
+// PrintPaperView both treat the NUMBER as points, so old and new docs
+// read and print consistently.
+const SIZE_OPTIONS = ['', '10pt', '11pt', '12pt', '14pt', '17pt', '20pt', '24pt', '32pt'];
 
 function ToolbarButton({
   active, disabled, onClick, title, children,
@@ -143,7 +150,9 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
         ))}
       </select>
       <select
-        value={(editor.getAttributes('textStyle').fontSize as string) ?? ''}
+        // Legacy px marks ('12px') display as their pt option ('12pt') —
+        // the number is the size; px was just the old spelling of it.
+        value={((editor.getAttributes('textStyle').fontSize as string) ?? '').replace('px', 'pt')}
         onChange={(e) => {
           const v = e.target.value;
           const chain = editor.chain().focus();
@@ -153,7 +162,7 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
         aria-label="Font size"
       >
         {SIZE_OPTIONS.map((sz) => (
-          <option key={sz || 'default'} value={sz}>{sz ? sz.replace('px', '') : 'Size'}</option>
+          <option key={sz || 'default'} value={sz}>{sz ? sz.replace('pt', '') : 'Size'}</option>
         ))}
       </select>
       <label

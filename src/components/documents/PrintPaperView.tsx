@@ -96,10 +96,17 @@ export function PrintPaperView({ onClose, title, style, meta, content, sources, 
       return source ? formatInText(source, style, locator) : '[missing source]';
     };
     try {
-      return generateHTML(
+      const html = generateHTML(
         content as JSONContent,
         documentExtensions({ getCitationText: citationChipText, getFootnoteIndex: footnoteIndex }),
       );
+      // The toolbar's size number has always MEANT points — but until
+      // 2026-09-30 it was stored as px, so "12" printed at 12px ≈ 9pt
+      // over this stylesheet's 12pt base. New marks are stored in pt;
+      // legacy px marks are rewritten to pt here so every existing
+      // document prints at the size its author chose. Scoped to this
+      // print path on purpose: the stored JSON is untouched.
+      return html.replace(/font-size:\s*(\d+(?:\.\d+)?)px/g, 'font-size: $1pt');
     } catch {
       // Never let a malformed node crash the whole print view — an empty
       // body is recoverable (the student can still see the heading block
