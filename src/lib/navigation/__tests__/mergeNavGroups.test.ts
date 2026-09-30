@@ -33,11 +33,30 @@ describe('mergeNavGroups', () => {
     expect(out[0].entries.map((e) => e.key)).toEqual(['calendar', 'notes']);
   });
 
-  it('keeps unmatched custom groups after the sections, unchanged', () => {
+  it('orders headings by the member group order, leftover sections after', () => {
     const make = custom('Make', ['studio']);
     const out = mergeNavGroups([section('Money', ['finance'])], [make]);
-    expect(out.map((g) => g.name)).toEqual(['Money', 'Make']);
-    expect(out[1]).toBe(make);
+    expect(out.map((g) => g.name)).toEqual(['Make', 'Money']);
+    expect(out[0]).toBe(make);
+  });
+
+  it('a merged heading takes its member group position, not the catalog slot', () => {
+    const out = mergeNavGroups(
+      [section('Today', ['calendar']), section('Music', ['music-library'])],
+      [custom('Music', ['soundcloud']), custom('Admin', ['settings'])],
+    );
+    // Music claimed first by the member's order, Admin standalone next,
+    // then Today (unclaimed) in catalog order.
+    expect(out.map((g) => g.name)).toEqual(['Music', 'Admin', 'Today']);
+    expect(out[0].entries.map((e) => e.key)).toEqual(['music-library', 'soundcloud']);
+  });
+
+  it('a member with no groups sees pure catalog order, unchanged', () => {
+    const out = mergeNavGroups(
+      [section('Today', ['calendar']), section('Music', ['music-library'])],
+      [],
+    );
+    expect(out.map((g) => g.name)).toEqual(['Today', 'Music']);
   });
 
   it('dedupes entries by key within a merged heading', () => {

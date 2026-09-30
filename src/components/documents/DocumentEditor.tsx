@@ -195,6 +195,8 @@ export interface DocumentEditorProps {
   /** Start a comment on the current selection. Disabled when nothing is
    *  selected — a comment with no anchor has nothing to point at. */
   onCommentClick?: () => void;
+  /** Opens the print preview. Passed through to DocToolbar's Print button. */
+  onPrintClick?: () => void;
   /** Upload + insert image files from the clipboard or a drop. Without this
    *  the editor silently swallows a pasted screenshot. */
   onImageFiles?: (files: File[]) => void;
@@ -222,6 +224,7 @@ export function DocumentEditor({
   onFootnoteClick,
   onImageClick,
   onCommentClick,
+  onPrintClick,
   onImageFiles,
   onPageCountChange,
   collab,
@@ -337,6 +340,7 @@ export function DocumentEditor({
         onImageClick={onImageClick}
         onCommentClick={onCommentClick}
         dictation={dictation}
+        onPrintClick={onPrintClick}
       />
       <FindReplaceBar editor={editor} />
       {/* w-full is load-bearing: in a flex-col parent, mx-auto overrides the

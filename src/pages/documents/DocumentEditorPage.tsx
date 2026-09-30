@@ -843,6 +843,13 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
             onCiteClick={() => setSourcesSheetOpen(true)}
             onFootnoteClick={handleFootnoteToolbarClick}
             onImageClick={handleImageButtonClick}
+            // Same snapshot + flush contract as the Export dialog's Print:
+            // pending edits are durably saved, then the print view renders
+            // the live editor JSON.
+            onPrintClick={() => {
+              void autosaver.flush();
+              handleOpenPrintView(getExportContent());
+            }}
             onImageFiles={handleImageFiles}
             pageSetup={paperMeta}
             editable={canEdit}

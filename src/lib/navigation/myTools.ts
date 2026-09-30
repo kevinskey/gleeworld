@@ -466,9 +466,16 @@ export function groupToolsBySection<T extends { key: string; section: string }>(
  * written into the member's saved groups — the record is untouched either
  * way; this is a render-time fold only.
  *
- * Matching is by trimmed, case-insensitive name. Custom groups with no
- * same-named section render after the sections, exactly as before. Entries
- * are deduped by key within a merged heading, section entries first.
+ * Matching is by trimmed, case-insensitive name. Entries are deduped by key
+ * within a merged heading, section entries first.
+ *
+ * ORDER is the member's, not the catalog's: headings backed by a member
+ * group — merged or standalone — render in the member's stored group order
+ * (rearranged in My World's group editor), and only the leftover derived
+ * sections keep catalog order, after them. That makes "how do I rearrange
+ * the left nav categories?" (Kevin, 2026-09-30) answerable: name a group
+ * after the category and move it. A member with no groups sees pure
+ * catalog order, unchanged.
  */
 export function mergeNavGroups<
   T extends { key: string },
@@ -477,16 +484,19 @@ export function mergeNavGroups<
   const norm = (name: string) => name.trim().toLowerCase();
   const merged = sections.map((s) => ({ ...s, entries: [...s.entries] }));
   const byName = new Map(merged.map((s) => [norm(s.name), s]));
-  const rest: G[] = [];
+  const claimed = new Set<G>();
+  const ordered: G[] = [];
   for (const g of custom) {
     const target = byName.get(norm(g.name));
-    if (!target) { rest.push(g); continue; }
+    if (!target || claimed.has(target as G)) { ordered.push(g); continue; }
     const seen = new Set(target.entries.map((e) => e.key));
     for (const e of g.entries) {
       if (!seen.has(e.key)) { seen.add(e.key); target.entries.push(e); }
     }
+    claimed.add(target as G);
+    ordered.push(target as G);
   }
-  return [...merged, ...rest];
+  return [...ordered, ...merged.filter((s) => !claimed.has(s as G))];
 }
 
 /**

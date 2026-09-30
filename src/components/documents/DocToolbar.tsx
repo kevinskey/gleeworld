@@ -9,7 +9,7 @@ import {
   List, ListOrdered, Quote, TableIcon, Image as ImageIcon,
   Link as LinkIcon, Superscript as FootnoteIcon, BookText,
   Undo, Redo, Strikethrough, Baseline, SeparatorHorizontal, MessageSquarePlus,
-  Mic,
+  Mic, Printer,
 } from 'lucide-react';
 import type { Dictation } from './useDictation';
 
@@ -73,9 +73,14 @@ interface DocToolbarProps {
   /** Dictation state from useDictation. Omitted (or unavailable) = no mic
    *  button, e.g. a browser with no speech recognition. */
   dictation?: Dictation;
+  /** Opens the print preview (PrintPaperView) with a fresh content
+   *  snapshot. Print used to live only inside the Export dialog, which
+   *  read as download-only — a word processor's toolbar has a print
+   *  button (Kevin, 2026-09-30). */
+  onPrintClick?: () => void;
 }
 
-export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick, onCommentClick, dictation }: DocToolbarProps) {
+export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick, onCommentClick, dictation, onPrintClick }: DocToolbarProps) {
   const addLink = () => {
     const url = window.prompt('Link URL (https://…)', editor.getAttributes('link').href || '');
     if (url === null) return;
@@ -228,6 +233,14 @@ export function DocToolbar({ editor, onCiteClick, onFootnoteClick, onImageClick,
         <BookText className="h-[18px] w-[18px]" />
         Cite
       </button>
+      {onPrintClick && (
+        <>
+          <div className="w-px h-5 bg-border mx-1" />
+          <ToolbarButton title="Print" onClick={onPrintClick}>
+            <Printer className="h-[18px] w-[18px]" />
+          </ToolbarButton>
+        </>
+      )}
     </div>
   );
 }
