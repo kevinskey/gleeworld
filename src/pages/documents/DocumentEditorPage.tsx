@@ -655,7 +655,12 @@ function DocumentEditorContent({ id }: { id: string | undefined }) {
           onBlur={() => void autosaver.flush()}
           placeholder="Untitled"
           aria-label="Document title"
-          className="basis-full min-w-0 bg-transparent py-0 text-3xl font-bold leading-tight text-foreground focus:outline-none sm:basis-auto sm:flex-1"
+          // text-xl, not the old text-3xl: at 3xl a normal-length title
+          // ("Dr. Kevin Johnson Pro Bio") clipped against the header's
+          // buttons (Kevin, 2026-09-30: "make the title smaller so it
+          // fits"). It's an input in a toolbar row, not the document's
+          // rendered heading — print/export set their own title size.
+          className="basis-full min-w-0 bg-transparent py-0 text-xl font-bold leading-tight text-foreground focus:outline-none sm:basis-auto sm:flex-1"
         />
 
         {/* Eleven equal-weight pills across two rows was the whole header
