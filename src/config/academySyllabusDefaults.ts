@@ -8,8 +8,8 @@ import { getOrgName } from '@/lib/orgName';
 type SyllabusDefaults = Omit<UnifiedSyllabusData, 'id'>;
 
 const STANDARD_POLICIES = {
-  academic_honesty_policy: `At the heart of Riverside Music Institute's mission is academic excellence, along with the development of intellectual, ethical and leadership qualities. All members of the academic community are expected to follow the basic standards of honesty and integrity as outlined in the Riverside Music Institute Code of Conduct.`,
-  disability_statement: `Riverside Music Institute is committed to ensuring the full participation of all students in its programs. If you have a documented disability, contact the Student Access Center (SAC) at 404-270-5289. Located in MacVicar Hall, Room 106.`,
+  academic_honesty_policy: `At the heart of ${getOrgName()}'s mission is academic excellence, along with the development of intellectual, ethical and leadership qualities. All members of the academic community are expected to follow the basic standards of honesty and integrity as outlined in the ${getOrgName()} Code of Conduct.`,
+  disability_statement: `${getOrgName()} is committed to ensuring the full participation of all students in its programs. If you have a documented disability, contact the Student Access Center (SAC) at 404-270-5289. Located in MacVicar Hall, Room 106.`,
   additional_policies: null
 };
 
@@ -24,7 +24,7 @@ export const SYLLABUS_DEFAULTS: Record<string, SyllabusDefaults> = {
     instructor_email: 'kjohns10@riversidechoir.example',
     instructor_office: 'Fine Arts 105',
     office_hours: 'MWF 3-5 PM',
-    purpose: `The ${getOrgName()} is the premier choral ensemble of Riverside Music Institute with over 100 years of musical excellence. Members develop vocal technique, musicianship, and performance skills while representing the college at concerts, tours, and special events.`,
+    purpose: `The ${getOrgName()} is the premier choral ensemble of ${getOrgName()} with over 100 years of musical excellence. Members develop vocal technique, musicianship, and performance skills while representing the college at concerts, tours, and special events.`,
     course_model: null,
     course_badge: 'Choral Ensemble',
     course_phases: null,

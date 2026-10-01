@@ -71,7 +71,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
       'Cultivate sight-reading and ear-training skills',
       'Demonstrate professional stage presence and concert etiquette',
       'Collaborate effectively as an ensemble member',
-      'Represent Riverside Music Institute with excellence at all performances',
+      `Represent ${getOrgName()} with excellence at all performances`,
     ],
     materials: [
       'Black concert attire (provided specifications)',
@@ -106,8 +106,8 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
       { grade: 'F', range: 'Below 60%' },
     ],
     attendancePolicy: 'Attendance at all rehearsals and performances is mandatory. Members begin with 100% attendance credit. Two unexcused absences are permitted per semester. Each additional unexcused absence results in a 5-point deduction. Absences from concerts may result in removal from the ensemble. Excused absences require advance notice and documentation.',
-    academicIntegrity: 'Members are expected to uphold the highest standards of integrity, representing both Riverside Music Institute and the Glee Club tradition with honor.',
-    accessStatement: 'Riverside Music Institute is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations. Located in MacVicar Hall, Room 106.',
+    academicIntegrity: `Members are expected to uphold the highest standards of integrity, representing both ${getOrgName()} and the Glee Club tradition with honor.`,
+    accessStatement: `${getOrgName()} is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations. Located in MacVicar Hall, Room 106.`,
     schedule: [], // Performance ensemble - no weekly academic schedule
   },
 
@@ -172,8 +172,8 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     ],
     attendancePolicy: 'Regular attendance is essential. Students are allowed 2 unexcused absences. Additional absences may result in grade reduction.',
     lateWorkPolicy: 'Late assignments will be penalized 5% per day unless prior arrangements are made.',
-    academicIntegrity: 'All work must be original. Plagiarism will result in failure of the assignment and may result in failure of the course. At the heart of Riverside Music Institute\'s mission is academic excellence, along with the development of intellectual, ethical and leadership qualities.',
-    accessStatement: 'Riverside Music Institute is committed to ensuring the full participation of all students. If you have a documented disability, contact the Student Access Center (SAC) at 404-270-5289. Located in MacVicar Hall, Room 106.',
+    academicIntegrity: `All work must be original. Plagiarism will result in failure of the assignment and may result in failure of the course. At the heart of ${getOrgName()}'s mission is academic excellence, along with the development of intellectual, ethical and leadership qualities.`,
+    accessStatement: `${getOrgName()} is committed to ensuring the full participation of all students. If you have a documented disability, contact the Student Access Center (SAC) at 404-270-5289. Located in MacVicar Hall, Room 106.`,
     schedule: [
       { week: 1, title: 'Introduction to African American Music', date: 'Jan 14–23', description: 'Course overview, African musical roots, introduction to methodology', assignments: 'Journal #1' },
       { week: 2, title: 'Spirituals and the Enslaved Experience', date: 'Jan 26–30', description: 'Ring shouts, field hollers, and the development of spirituals', assignments: 'Journal #2' },
@@ -252,7 +252,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     ],
     attendancePolicy: 'Due to the practical nature of this course, attendance is critical. More than two absences may result in grade reduction. Lab sessions are mandatory.',
     academicIntegrity: 'All written work must be original. Proper citation is required for all sources.',
-    accessStatement: 'Riverside Music Institute is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations.',
+    accessStatement: `${getOrgName()} is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations.`,
     schedule: [
       { week: 1, title: 'Introduction to Conducting', description: 'The role of the conductor, basic stance and posture' },
       { week: 2, title: 'Beat Patterns', description: '2/4, 3/4, 4/4 patterns; legato and marcato styles' },
@@ -315,7 +315,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     ],
     attendancePolicy: 'Attendance at all sessions is required. Missing more than two sessions may result in failing the institute.',
     academicIntegrity: 'All assessments must be completed individually without unauthorized assistance.',
-    accessStatement: 'Riverside Music Institute is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations.',
+    accessStatement: `${getOrgName()} is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations.`,
     schedule: [
       { week: 1, title: 'Foundations', description: 'Introduction to solfège, do-re-mi, basic rhythm' },
       { week: 2, title: 'Stepwise Motion', description: 'Scales, neighbors, passing tones' },
@@ -380,7 +380,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     ],
     attendancePolicy: 'As leaders, attendance at all sessions is mandatory. Absences must be approved in advance by the Director.',
     academicIntegrity: 'All work submitted must reflect genuine personal reflection and original thought.',
-    accessStatement: 'Riverside Music Institute is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations.',
+    accessStatement: `${getOrgName()} is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations.`,
     schedule: [
       { week: 1, title: 'Foundations of Leadership', description: 'Leadership styles, Glee Club history and values' },
       { week: 2, title: 'Roles & Responsibilities', description: 'Executive board positions, handbook review' },
@@ -453,7 +453,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     ],
     attendancePolicy: 'Regular attendance is essential for spiritual formation and community building. Absences must be communicated in advance.',
     academicIntegrity: 'All written reflections must be genuine expressions of personal spiritual journey.',
-    accessStatement: 'Riverside Music Institute is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations.',
+    accessStatement: `${getOrgName()} is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations.`,
     schedule: [
       { week: 1, title: 'Introduction', description: 'Program overview, spiritual formation goals' },
       { week: 2, title: 'Sister Thea Bowman', description: 'Life, legacy, and vision for Black Catholic worship' },
@@ -528,7 +528,7 @@ export const SYLLABUS_DATA: Record<string, CourseSyllabus> = {
     ],
     attendancePolicy: 'Attendance at all scheduled lessons is mandatory. Missed lessons must be rescheduled within the same week when possible. More than two missed lessons may result in grade reduction.',
     academicIntegrity: 'All performances and practice documentation must reflect the student\'s own work and effort.',
-    accessStatement: 'Riverside Music Institute is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations.',
+    accessStatement: `${getOrgName()} is committed to ensuring the full participation of all students. Contact the Student Access Center (SAC) at 404-270-5289 for accommodations.`,
     schedule: [
       { week: 1, title: 'Assessment & Goal Setting', description: 'Initial evaluation, establish semester goals' },
       { week: 2, title: 'Technical Foundations', description: 'Warm-ups, exercises, fundamental technique' },

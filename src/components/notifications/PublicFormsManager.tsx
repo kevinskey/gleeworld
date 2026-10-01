@@ -109,17 +109,17 @@ export const PublicFormsManager = () => {
 
       switch (submission.form_type) {
         case 'fan_interest':
-          subject = 'Thank you for your interest in Riverside Concert Choir!';
+          subject = `Thank you for your interest in ${getOrgName()}!`;
           responseMessage = `Dear ${submission.full_name},\n\nThank you for expressing interest in the ${getOrgName()}! We're thrilled to have supporters like you.\n\nWe'll keep you updated on our upcoming performances and events. Follow us on our social media channels for the latest news and announcements.\n\nMusically yours,\n${getOrgName()}`;
           break;
         
         case 'booking_request':
-          subject = 'Your Concert Booking Request - Riverside Concert Choir';
+          subject = `Your Concert Booking Request - ${getOrgName()}`;
           responseMessage = `Dear ${submission.full_name},\n\nThank you for your interest in booking the ${getOrgName()} for your event.\n\nWe have received your request for ${submission.event_date ? `an event on ${new Date(submission.event_date).toLocaleDateString()}` : 'your upcoming event'}${submission.event_location ? ` at ${submission.event_location}` : ''}.\n\nOur booking coordinator will review your request and contact you within 2-3 business days to discuss availability, requirements, and next steps.\n\nBest regards,\n${getOrgName()} Booking Department`;
           break;
         
         default:
-          subject = 'Thank you for contacting Riverside Concert Choir';
+          subject = `Thank you for contacting ${getOrgName()}`;
           responseMessage = `Dear ${submission.full_name},\n\nThank you for reaching out to the ${getOrgName()}. We have received your message and will respond as soon as possible.\n\nBest regards,\n${getOrgName()}`;
       }
 

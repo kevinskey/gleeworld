@@ -1,5 +1,6 @@
 // Unified Academy Course Configuration - Ordered: GW 070, GW 240, GW 210, GW 001, GLEE 101, GLEE 000
 import { Users, Music, BookOpen, Mic, Eye, Award, GraduationCap, LucideIcon } from 'lucide-react';
+import { getOrgName } from '@/lib/orgName';
 
 export interface AcademyCourse {
   id: string;
@@ -26,7 +27,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     id: 'a0000000-0000-0000-0000-000000000070',
     courseCode: 'GW 070',
     title: 'Glee Club',
-    description: 'The premier choral ensemble of Riverside Music Institute with over 100 years of musical excellence.',
+    description: `The premier choral ensemble of ${getOrgName()} with over 100 years of musical excellence.`,
     icon: Users,
     level: 'Audition Required',
     duration: 'Semester',

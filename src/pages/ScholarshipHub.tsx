@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, GraduationCap, Star } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
+import { getOrgName } from '@/lib/orgName';
 
 const ScholarshipHub = () => {
   const { user, loading: authLoading } = useAuth();
@@ -136,7 +137,7 @@ const ScholarshipHub = () => {
             <h1 className="text-3xl font-bebas text-brand-800 tracking-wide">Scholarship Hub</h1>
           </div>
           <p className="text-brand-600 max-w-2xl mx-auto">
-            Discover scholarship opportunities to support your educational journey at Riverside Music Institute and beyond.
+            Discover scholarship opportunities to support your educational journey at {getOrgName()} and beyond.
           </p>
         </div>
 

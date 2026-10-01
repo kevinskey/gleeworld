@@ -125,7 +125,7 @@ Student Conductor, ${getOrgName()}`;
         subject,
         html,
         text,
-        from: 'Riverside Concert Choir <onboarding@resend.dev>'
+        from: `${getOrgName()} <onboarding@resend.dev>`
       }
     });
 

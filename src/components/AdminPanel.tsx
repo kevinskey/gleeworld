@@ -28,6 +28,7 @@ import { AdminPanelHeader } from "./admin/AdminPanelHeader";
 import { PermissionsPanel } from "./admin/PermissionsPanel";
 import { MasterCalendar } from "./admin/MasterCalendar";
 import { SchedulingDashboard } from "./admin/SchedulingDashboard";
+import { getOrgName } from '@/lib/orgName';
 // Square integration removed - using Stripe instead
 
 interface AdminPanelProps {
@@ -111,7 +112,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
                   Community Hub
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
-                  Connect with the Riverside Concert Choir community
+                  Connect with the {getOrgName()} community
                 </CardDescription>
               </CardHeader>
               <CardContent>

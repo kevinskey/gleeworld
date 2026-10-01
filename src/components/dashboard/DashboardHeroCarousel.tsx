@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import useEmblaCarousel from 'embla-carousel-react';
+import { getOrgName } from '@/lib/orgName';
 
 interface HeroSlide {
   id: string;
@@ -116,7 +117,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
   if (slides.length === 0) {
     const fallbackSlides: HeroSlide[] = [{
       id: 'fallback-1',
-      title: 'Riverside Concert Choir — Live in Concert',
+      title: `${getOrgName()} — Live in Concert`,
       description: 'To Amaze and Inspire.',
       image_url: '/images/hero-glee-1.jpg',
       display_order: 1

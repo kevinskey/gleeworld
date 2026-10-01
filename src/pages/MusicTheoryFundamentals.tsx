@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Music, Clock, MapPin, User, GraduationCap, BookOpen, Award, Calendar, CheckCircle, FileMusic, FileText } from 'lucide-react';
 import { SightSingingWidget } from '@/components/shared/SightSingingWidget';
+import { getOrgName } from '@/lib/orgName';
 
 const MusicTheoryFundamentals = () => {
   const [showObjectives, setShowObjectives] = React.useState(false);
@@ -478,7 +479,7 @@ const MusicTheoryFundamentals = () => {
                     <div>
                       <h4 className="font-semibold text-primary mb-2">Accessibility</h4>
                       <p className="text-sm text-muted-foreground">
-                        Riverside Music Institute is committed to ensuring full participation of all students. If you have a documented 
+                        {getOrgName()} is committed to ensuring full participation of all students. If you have a documented 
                         disability and need reasonable accommodations, contact the Student Access Center at 404-270-5289. 
                         Located in MacVicar Hall, Room 106.
                       </p>

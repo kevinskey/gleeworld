@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Music, Play, RefreshCw, RotateCcw } from 'lucide-react';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import { useToast } from '@/hooks/use-toast';
+import { getOrgName } from '@/lib/orgName';
 
 interface Note {
   note: string;
@@ -265,7 +266,7 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
     <work-title>Sight Reading Exercise</work-title>
   </work>
   <identification>
-    <creator type="composer">Riverside Concert Choir Sight Reading Generator</creator>
+    <creator type="composer">${getOrgName()} Sight Reading Generator</creator>
     <encoding>
       <software>GleeWorld.org</software>
       <encoding-date>${new Date().toISOString().split('T')[0]}</encoding-date>
