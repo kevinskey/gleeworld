@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import PhoneNumberInput from '@/components/notifications/PhoneNumberInput';
+import { isMemberRole } from '@/lib/auth/memberRole';
 
 interface Recipient {
   id: string;
@@ -88,7 +89,7 @@ export const UnifiedCommunicationsHub = () => {
       case 'admins':
         return recipients.filter(r => ['admin', 'super-admin'].includes(r.role));
       case 'members':
-        return recipients.filter(r => r.role === 'student' || r.role === 'user');
+        return recipients.filter(r => isMemberRole(r.role) || r.role === 'user');
       case 'specific':
         return recipients.filter(r => selectedRecipients.includes(r.id));
       case 'custom':
@@ -272,7 +273,7 @@ export const UnifiedCommunicationsHub = () => {
                 <RadioGroupItem value="members" id="members" />
                 <Label htmlFor="members" className="flex items-center gap-2 cursor-pointer text-sm">
                   <Users className="h-4 w-4 text-blue-600" />
-                  Students ({recipients.filter(r => r.role === 'student' || r.role === 'user').length})
+                  Members ({recipients.filter(r => isMemberRole(r.role) || r.role === 'user').length})
                 </Label>
               </div>
               <div className="flex items-center space-x-2 bg-orange-50 p-3 rounded-lg border-2 border-transparent data-[state=checked]:border-orange-500">

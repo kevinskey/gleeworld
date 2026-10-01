@@ -19,6 +19,24 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyTenantRole, useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
 import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
+import { isMemberRole, LEGACY_MEMBER_ROLE, MEMBER_ROLE } from '@/lib/auth/memberRole';
+
+/**
+ * Find this role's row, tolerating the student/member rename.
+ *
+ * 'student' and 'member' are one audience now, but tenants configured them
+ * as two and BOTH spellings exist in gw_tenant_nav_prefs today (8 student
+ * rows, 4 member rows as of 2026-10-01). Deliberately exact-match first and
+ * only then fall back to the other spelling — a union of the two would
+ * change what current members see in their sidebar the moment this ships,
+ * which is not what a rename should do. Phase 2 merges the rows for real.
+ */
+function findRoleRow<T extends { role: string }>(rows: readonly T[], role: string): T | undefined {
+  const exact = rows.find((r) => r.role === role);
+  if (exact || !isMemberRole(role)) return exact;
+  const other = role === MEMBER_ROLE ? LEGACY_MEMBER_ROLE : MEMBER_ROLE;
+  return rows.find((r) => r.role === other);
+}
 
 interface NavPrefRow {
   role: string;
@@ -51,7 +69,7 @@ export function useTenantRoleDefaults(role: string | null | undefined): string[]
 
   return useMemo(() => {
     if (!role) return null;
-    const configured = rows.find((r) => r.role === role)?.default_tools;
+    const configured = findRoleRow(rows, role)?.default_tools;
     // An absent list means the tenant never configured this role. An empty
     // one is a real choice and is NOT the same thing — only the former should
     // fall back to the built-in constants.
@@ -90,7 +108,7 @@ export function useTenantNavPrefs(): Set<string> {
     // do NOT filter — otherwise the sidebar flashes empty during the
     // first render.
     if (!effectiveRole || isTenantSuperAdminRole(effectiveRole)) return new Set<string>();
-    const row = rows.find((r) => r.role === effectiveRole);
+    const row = findRoleRow(rows, effectiveRole);
     return new Set(row?.hidden_items ?? []);
   }, [effectiveRole, rows]);
 }

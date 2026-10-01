@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { MEMBER_ROLE_VALUES } from '@/lib/auth/memberRole';
 
 export interface SetupCrew {
   id: string;
@@ -280,7 +281,7 @@ export const useSetupCrews = () => {
         .from('gw_profiles_directory')
         .select('user_id, full_name, email, voice_part, graduation_year')
         .eq('graduation_year', firstYearGradYear)
-        .eq('role', 'student')
+        .in('role', MEMBER_ROLE_VALUES)
         .order('full_name');
 
       if (error) throw error;

@@ -20,6 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { isMemberRole } from '@/lib/auth/memberRole';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -87,7 +88,7 @@ export default function WorkspaceAnalyticsPage() {
       if (p.disabled) disabled++;
       if (p.is_super_admin || p.is_admin || p.role === 'admin' || p.role === 'super-admin') admins++;
       else if (p.role === 'instructor') instructors++;
-      else if (p.role === 'student' || p.role === 'member') students++;
+      else if (isMemberRole(p.role)) students++;
       else if (p.role === 'fan' || p.role === 'vip') fans++;
     });
 

@@ -32,6 +32,7 @@ import { ScholarshipFeedSlider } from './ScholarshipFeedSlider';
 import { OfficeHoursWidget } from './OfficeHoursWidget';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { MEMBER_ROLE_VALUES, isMemberRole } from '@/lib/auth/memberRole';
 
 // Lazy load heavy components
 const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then((m) => ({
@@ -94,7 +95,7 @@ export const UnifiedDashboard = () => {
     if (profileLoading || !profile) return;
     const isLeadership = profile.is_super_admin || profile.is_admin ||
     profile.role === 'super-admin' || profile.role === 'admin';
-    if (profile.role === 'student' && !isLeadership) {
+    if (isMemberRole(profile.role) && !isLeadership) {
       navigate('/course-selection', { replace: true });
     }
   }, [profile, profileLoading, navigate]);
@@ -153,7 +154,7 @@ export const UnifiedDashboard = () => {
         const {
           data,
           error
-        } = await supabase.from('gw_profiles_directory').select('user_id').eq('role', 'student').eq('status', 'active').limit(1).single();
+        } = await supabase.from('gw_profiles_directory').select('user_id').in('role', MEMBER_ROLE_VALUES).eq('status', 'active').limit(1).single();
         if (error) console.error('Error fetching sample student:', error);
         setSimulatedStudentId(data?.user_id || null);
       } finally {
@@ -389,7 +390,7 @@ export const UnifiedDashboard = () => {
     const role = profile?.role;
 
     // Students get Glee Academy
-    if (role === 'student') {
+    if (isMemberRole(role)) {
       return <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
           <GleeAcademyDashboardCard />
         </Suspense>;

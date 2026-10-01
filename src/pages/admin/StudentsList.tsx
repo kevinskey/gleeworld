@@ -10,6 +10,7 @@ import { Users, ChevronRight, Loader2 } from 'lucide-react';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { MEMBER_ROLE_VALUES } from '@/lib/auth/memberRole';
 
 export default function StudentsList() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function StudentsList() {
       let query = supabase
         .from('gw_profiles_directory')
         .select('user_id, full_name, email, voice_part, phone')
-        .eq('role', 'student')
+        .in('role', MEMBER_ROLE_VALUES)
         .order('full_name', { ascending: true })
         .limit(500);
       if (q.trim()) {

@@ -5,6 +5,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useBrandingSettings } from "@/hooks/useBrandingSettings";
 import { supabase, getTenantSlug } from "@/integrations/supabase/client";
 import { claimPartnerByEmailWithTimeout } from "@/lib/partner/api";
+import { isMemberRole } from '@/lib/auth/memberRole';
 
 /**
  * Post-login routing for the choir/band template.
@@ -155,8 +156,7 @@ export function pickDestination(profile: {
   if (profile.is_admin || profile.role === 'admin') return '/dashboard';
   if (profile.role === 'instructor') return '/dashboard';
   if (profile.role === 'alumni' || profile.role === 'graduate' || profile.role === 'graduates') return '/alumni';
-  if (profile.role === 'student') return '/dashboard';
-  if (profile.role === 'member') return '/dashboard';
+  if (isMemberRole(profile.role)) return '/dashboard';
   if (profile.role === 'auditioner') return '/auditioner';
   if (profile.role === 'fan' || profile.role === 'vip') return '/fan';
   return null;

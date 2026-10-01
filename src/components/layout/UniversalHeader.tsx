@@ -29,6 +29,7 @@ import { HEADER_ICON_SIZES } from "@/components/layout/headerIconSizes";
 
 import { LandingPageModal } from "@/components/landing/LandingPageModal";
 import { publicSiteHidesSiteName } from "@/hooks/useHideSiteName";
+import { isMemberRole } from '@/lib/auth/memberRole';
 
 interface UniversalHeaderProps {
   viewMode?: 'admin' | 'member';
@@ -87,7 +88,7 @@ export const UniversalHeader = ({
   } = useTheme();
 
   // Fetch courses for Institute dropdown
-  const isStudentRole = userProfile?.role === 'student' && !userProfile?.is_admin && !userProfile?.is_super_admin;
+  const isStudentRole = isMemberRole(userProfile?.role) && !userProfile?.is_admin && !userProfile?.is_super_admin;
   
   const {
     data: courses = []
@@ -178,9 +179,8 @@ export const UniversalHeader = ({
   const getRoleBadgeLabel = () => {
     if (userProfile?.is_super_admin) return 'Super Admin';
     if (userProfile?.is_admin) return 'Admin';
+    if (isMemberRole(userProfile?.role)) return 'Member';
     switch (userProfile?.role) {
-      case 'student':
-        return 'Student';
       case 'graduate':
         return 'Graduate';
       case 'fan':
@@ -522,7 +522,7 @@ export const UniversalHeader = ({
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
                         </p>
-                        {getRoleBadgeLabel() && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit mt-1 ${userProfile?.is_super_admin ? 'bg-red-100 text-red-700' : userProfile?.is_admin ? 'bg-purple-100 text-purple-700' : userProfile?.role === 'student' ? 'bg-emerald-100 text-emerald-700' : userProfile?.role === 'graduate' ? 'bg-amber-100 text-amber-700' : userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-700'}`}>
+                        {getRoleBadgeLabel() && <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium w-fit mt-1 ${userProfile?.is_super_admin ? 'bg-red-100 text-red-700' : userProfile?.is_admin ? 'bg-purple-100 text-purple-700' : isMemberRole(userProfile?.role) ? 'bg-emerald-100 text-emerald-700' : userProfile?.role === 'graduate' ? 'bg-amber-100 text-amber-700' : userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' : 'bg-gray-100 text-gray-700'}`}>
                             {getRoleBadgeLabel()}
                           </span>}
                       </div>

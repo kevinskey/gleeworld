@@ -6,6 +6,7 @@
 // this bundle. See docs/superpowers/specs/2026-07-06-demo-onboarding-redesign-design.md.
 
 import { supabase } from '@/integrations/supabase/client';
+import { isMemberRole } from '@/lib/auth/memberRole';
 
 export type DemoRole = 'director' | 'student' | 'fan';
 
@@ -44,7 +45,7 @@ export function claimsToDemoRole(claims: Record<string, unknown> | null): DemoRo
   if (claims.tenant_slug !== 'demo') return null;
   const role = claims.tenant_role;
   if (role === 'admin') return 'director';
-  if (role === 'student') return 'student';
+  if (isMemberRole(role)) return 'student';
   if (role === 'fan') return 'fan';
   return null;
 }

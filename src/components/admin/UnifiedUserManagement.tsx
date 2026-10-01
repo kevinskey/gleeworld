@@ -24,6 +24,7 @@ import { PermissionErrorBoundary } from './PermissionErrorBoundary';
 import { useAutoEnrollUser } from '@/hooks/useAutoEnrollUser';
 import { usePermissionGroups } from '@/hooks/usePermissionGroups';
 import type { User as AdminUser } from '@/hooks/useUsers';
+import { isMemberRole } from '@/lib/auth/memberRole';
 
 interface UserProfile {
   id: string;
@@ -223,7 +224,7 @@ export const UnifiedUserManagement = () => {
   const userStats = useMemo(() => ({
     total: users.length,
     admins: users.filter(u => u.role === 'admin' || u.role === 'super-admin').length,
-    students: users.filter(u => u.role === 'student').length,
+    members: users.filter(u => isMemberRole(u.role)).length,
     executives: users.filter(u => u.role === 'executive' || u.is_exec_board).length,
     vips: users.filter(u => u.role === 'vip').length,
     graduates: users.filter(u => u.role === 'graduate').length,
@@ -336,7 +337,7 @@ export const UnifiedUserManagement = () => {
       <div className="flex gap-1 overflow-x-auto touch-pan-x overscroll-x-contain scrollbar-hide">
         <StatPill label="Total" value={userStats.total} icon={Users} />
         <StatPill label="Admins" value={userStats.admins} icon={Shield} />
-        <StatPill label="Students" value={userStats.students} icon={User} />
+        <StatPill label="Members" value={userStats.members} icon={User} />
         <StatPill label="Graduates" value={userStats.graduates} icon={GraduationCap} />
         <StatPill label="VIP" value={userStats.vips} icon={Star} />
         <StatPill label="Exec" value={userStats.executives} icon={Settings} />
@@ -372,7 +373,7 @@ export const UnifiedUserManagement = () => {
                 <SelectItem value="guest">Guest</SelectItem>
                 <SelectItem value="fan">Fan</SelectItem>
                 <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="student">Member</SelectItem>
                 <SelectItem value="graduate">Graduate</SelectItem>
                 <SelectItem value="vip">VIP</SelectItem>
                 <SelectItem value="executive">Executive</SelectItem>
