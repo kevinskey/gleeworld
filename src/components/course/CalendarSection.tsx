@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar as CalendarIcon, BookOpen, FileCheck, Users, Clock, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, parseISO } from 'date-fns';
 import { useGleeWorldEvents } from '@/hooks/useGleeWorldEvents';
+import { getOrgName } from '@/lib/orgName';
 interface CalendarSectionProps {
   courseId: string;
 }
@@ -96,7 +97,7 @@ export const CalendarSection: React.FC<CalendarSectionProps> = ({
         <h2 className="text-2xl font-bold">Academic Calendar</h2>
         <Badge variant="secondary" className="bg-[#8b5cf6]/10 text-[#8b5cf6]">
           <CalendarIcon className="h-3 w-3 mr-1" />
-          Riverside Music Institute Calendar
+          {getOrgName()} Calendar
         </Badge>
       </div>
 

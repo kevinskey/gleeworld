@@ -144,7 +144,7 @@ export const MemberCommunications = () => {
                       <strong>Type:</strong> ${COMMUNICATION_TYPES.find(t => t.value === formData.communication_type)?.label}<br><br>
                       Please log in to your dashboard to view the full details.<br><br>
                       Best regards,<br>
-                      Riverside Concert Choir Administration
+                      {getOrgName()} Administration
                     </p>
                   </div>
                 </div>

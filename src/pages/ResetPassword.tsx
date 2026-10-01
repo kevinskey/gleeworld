@@ -9,8 +9,16 @@ import { Lock, CheckCircle, AlertCircle, Music, Loader2 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 
 const ResetPassword = () => {
+  // This page used to hardcode the demo tenant's choir name, so members of
+  // every other choir were told to set a password for someone else's
+  // organization. Branding comes from the tenant now: their logo, falling
+  // back to their org name when none is uploaded.
+  const { settings: branding } = useBrandingSettings();
+  const orgName = branding.org_name || branding.short_name || 'GleeWorld';
+  const tenantLogo = branding.logo_url;
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -145,9 +153,17 @@ const ResetPassword = () => {
               <Music className="h-4 w-4 text-primary" />
               Reset Your Password
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-              Riverside Concert Choir
-            </h1>
+            {tenantLogo ? (
+              <img
+                src={tenantLogo}
+                alt={orgName}
+                className="mx-auto h-20 w-auto max-w-[240px] object-contain"
+              />
+            ) : (
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                {orgName}
+              </h1>
+            )}
             <p className="text-muted-foreground">
               Set your new password to continue
             </p>

@@ -14,6 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { BookOpen, Upload, X, Image as ImageIcon } from "lucide-react";
+import { getOrgName } from '@/lib/orgName';
 
 interface AddStoryDialogProps {
   open: boolean;
@@ -162,7 +163,7 @@ export const AddStoryDialog = ({ open, onOpenChange, onStoryAdded }: AddStoryDia
             Share Your Story
           </DialogTitle>
           <DialogDescription>
-            Share your Riverside Concert Choir experience with future generations. Stories are reviewed before being published.
+            Share your {getOrgName()} experience with future generations. Stories are reviewed before being published.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>

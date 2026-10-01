@@ -110,7 +110,7 @@ export const UserHero = () => {
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
                 <p className="text-white text-xs font-medium text-center">
-                  Historic Riverside Concert Choir
+                  Historic {getOrgName()}
                 </p>
               </div>
             </div>

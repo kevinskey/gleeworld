@@ -16,6 +16,7 @@ import {
   Download,
   Eye
 } from "lucide-react";
+import { getOrgName } from '@/lib/orgName';
 
 interface Event {
   id: string;
@@ -53,7 +54,7 @@ export const EventDocumentationTracker = () => {
       id: "2",
       title: "Fall Concert",
       date: "2024-11-20",
-      location: "Riverside Music Institute",
+      location: getOrgName(),
       type: "Concert",
       mediaUploaded: true,
       journalEntry: false,

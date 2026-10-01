@@ -55,7 +55,7 @@ const EMAIL_TEMPLATES: EmailTemplate[] = [
   {
     id: 'welcome',
     name: 'Welcome Message',
-    subject: 'Welcome to Riverside Concert Choir Graduates Network',
+    subject: `Welcome to ${getOrgName()} Graduates Network`,
     content: `Dear {name},
 
 Welcome to the ${getOrgName()} Graduates Network! We're thrilled to have you as part of our community.
