@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
+import { sendPasswordReset } from '@/lib/auth/sendPasswordReset';
 
 // Security utility functions
 const sanitizeInput = (input: string): string => {
@@ -259,14 +260,12 @@ export const useSecurityEnhanced = () => {
     }
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(sanitizedEmail, {
-        redirectTo: `https://gleeworld.org/reset-password`,
-      });
-
-      if (error) {
+      try {
+        await sendPasswordReset(sanitizedEmail);
+      } catch (error: any) {
         await logSecurityEvent('password_reset_failed', 'password_reset', undefined, {
           email: sanitizedEmail,
-          error: error.message
+          error: error?.message
         });
         throw error;
       }

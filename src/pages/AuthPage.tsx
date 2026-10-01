@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
+import { sendPasswordReset } from '@/lib/auth/sendPasswordReset';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -198,12 +199,7 @@ export default function AuthPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        // Current origin, not gleeworld.org — a tenant admin resetting from
-        // theirchoir.gleeworld.org must land back on their own site.
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) throw error;
+      await sendPasswordReset(email);
       setResetEmailSent(true);
       toast({
         title: "Check your email",

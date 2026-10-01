@@ -1,5 +1,9 @@
 project_id = "oopmlreysjzuxzylyheb"
 
+# Password reset is by definition asked for by someone who cannot sign in.
+[functions.gw-send-password-reset]
+verify_jwt = false
+
 [functions.handle-sms-approval]
 verify_jwt = false
 
