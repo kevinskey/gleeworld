@@ -15,6 +15,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import * as jose from "https://deno.land/x/jose@v5.6.3/index.ts";
+import { MEMBER_ROLE } from "../_shared/memberRole.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -171,7 +172,7 @@ serve(async (req) => {
       email,
       full_name: name,
       tenant_id: platform.tenant_id,
-      role: "student",
+      role: MEMBER_ROLE,
     });
   }
 

@@ -14,6 +14,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { requestPlatformToken, NRPS_SCOPE } from "../_shared/lti.ts";
+import { MEMBER_ROLE } from "../_shared/memberRole.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,10 +49,10 @@ function parseNextLink(headerValue: string | null): string | null {
 }
 
 // Map a CourseInstructor / Mentor / Learner role URI to a GleeWorld role.
-function mapRole(roles: string[] | undefined): "instructor" | "admin" | "student" {
+function mapRole(roles: string[] | undefined): "instructor" | "admin" | typeof MEMBER_ROLE {
   const set = new Set(roles ?? []);
   if ([...set].some((r) => /Instructor|Administrator|Mentor/i.test(r))) return "instructor";
-  return "student";
+  return MEMBER_ROLE;
 }
 
 serve(async (req) => {
