@@ -12,8 +12,14 @@ import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { getOrgName } from '@/lib/orgName';
 import { sendPasswordReset } from '@/lib/auth/sendPasswordReset';
 import { useToast } from '@/hooks/use-toast';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 
 const MemberRegistration = () => {
+  // Tenant branding, not the demo choir's name — this page greets members
+  // of whichever choir's domain they arrived on.
+  const { settings: branding } = useBrandingSettings();
+  const orgName = branding.org_name || branding.short_name || 'GleeWorld';
+  const tenantLogo = branding.logo_url;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -378,9 +384,17 @@ const MemberRegistration = () => {
               <Heart className="h-4 w-4 text-primary" />
               Join the Legacy
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-              Riverside Concert Choir
-            </h1>
+            {tenantLogo ? (
+              <img
+                src={tenantLogo}
+                alt={orgName}
+                className="mx-auto h-20 w-auto max-w-[240px] object-contain"
+              />
+            ) : (
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+                {orgName}
+              </h1>
+            )}
             <p className="text-muted-foreground">
               100+ years of musical excellence starts with you
             </p>
