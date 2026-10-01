@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
+import { MEMBER_ROLE } from "../_shared/memberRole.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,7 +96,7 @@ serve(async (req: Request): Promise<Response> => {
               user_id: userData.user.id,
               full_name: student.full_name,
               email: student.email,
-              role: "student"
+              role: MEMBER_ROLE
             }, { onConflict: "user_id" });
 
           results.push({ 

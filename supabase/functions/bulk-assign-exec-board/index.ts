@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { MEMBER_ROLE } from "../_shared/memberRole.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -187,7 +188,7 @@ Deno.serve(async (req) => {
               user_id: userId,
               email: assignment.email,
               full_name: assignment.full_name,
-              role: 'student',
+              role: MEMBER_ROLE,
               exec_board_role: assignment.role,
               is_exec_board: true,
               is_admin: assignment.role === 'president',

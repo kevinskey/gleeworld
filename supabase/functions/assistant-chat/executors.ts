@@ -8,6 +8,7 @@ import { MUSIC_FACTS } from '../_shared/musicfacts/corpus.ts';
 import {
   appliesTo, authorityLabel, byAuthorityThenScore, formatCitation,
 } from '../_shared/liturgy/types.ts';
+import { MEMBER_ROLE } from "../_shared/memberRole.ts";
 
 type SupabaseLike = {
   from: (table: string) => any;
@@ -1404,7 +1405,7 @@ async function getEnrollments(args: Record<string, unknown>, deps: Deps): Promis
   let list = ((rows ?? []) as EnrollmentRow[]).map((r) => ({
     course: titleById.get(r.course_id) ?? 'Unknown course',
     student: nameById.get(r.user_id) ?? 'Unknown member',
-    role: r.role ?? 'student',
+    role: r.role ?? MEMBER_ROLE,
     status: r.enrollment_status ?? null,
     enrolled_at: r.enrolled_at ?? null,
   }));
