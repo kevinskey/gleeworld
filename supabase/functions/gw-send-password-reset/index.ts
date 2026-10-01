@@ -90,13 +90,16 @@ serve(async (req) => {
     // will actually validate against its redirect allowlist, so resolving from
     // the origin keeps the branding and the destination consistent.
     const origin = (body.appOrigin || "").replace(/\/+$/, "");
-    const slug =
-      (await resolveTenantSlugFromOrigin(origin, async () => {
-        const { data } = await supabase
-          .from("gw_tenants")
-          .select("slug, subdomain, custom_domain");
-        return (data as TenantHostRow[] | null) ?? [];
-      })) ?? (body.tenantSlug || "").trim() || null;
+    // Kept as two statements on purpose: Deno rejects `??` mixed with `||`
+    // in one expression ("requires parens"), and it rejects it at BOOT, so
+    // the whole function 500s on every request rather than failing a test.
+    const slugFromOrigin = await resolveTenantSlugFromOrigin(origin, async () => {
+      const { data } = await supabase
+        .from("gw_tenants")
+        .select("slug, subdomain, custom_domain");
+      return (data as TenantHostRow[] | null) ?? [];
+    });
+    const slug = slugFromOrigin || (body.tenantSlug || "").trim() || null;
 
     // 2. The tenant's display name. gw_branding_settings.org_name is the same
     //    source gw-invite-student uses, so invite and reset agree.
