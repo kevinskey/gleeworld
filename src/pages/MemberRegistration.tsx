@@ -10,6 +10,7 @@ import { Heart, Mail, Lock, AlertCircle, CheckCircle, Music } from 'lucide-react
 import { Link } from 'react-router-dom';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { getOrgName } from '@/lib/orgName';
+import { sendPasswordReset } from '@/lib/auth/sendPasswordReset';
 import { useToast } from '@/hooks/use-toast';
 
 const MemberRegistration = () => {
@@ -42,21 +43,17 @@ const MemberRegistration = () => {
       if (signInError?.message.includes('Invalid login credentials')) {
         // User might exist but wrong password, or user doesn't exist
         // Try password reset to definitively check
-        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-          // Current origin, not gleeworld.org — a tenant user resetting from
-          // theirchoir.gleeworld.org must land back on their own site.
-          redirectTo: `${window.location.origin}/reset-password`
-        });
-
-        if (resetError && resetError.message.includes('User not found')) {
-          // User doesn't exist
-          setUserExists(false);
-          setMode('register');
-        } else {
-          // User exists
-          setUserExists(true);
-          setMode('reset');
-        }
+        // NOTE: this branch has not actually distinguished anything for a
+        // long time. GoTrue returns success for unknown addresses on purpose
+        // (enumeration protection), so 'User not found' never came back and
+        // every email fell through to mode 'reset' — the register path below
+        // is already unreachable from here. gw-send-password-reset makes that
+        // guarantee explicit rather than incidental: it ALWAYS reports
+        // success. Preserving the existing behavior; fixing the dead register
+        // path is a separate change.
+        await sendPasswordReset(email);
+        setUserExists(true);
+        setMode('reset');
       } else if (!signInError) {
         // User exists and password was correct (shouldn't happen with dummy password)
         setUserExists(true);
@@ -120,13 +117,7 @@ const MemberRegistration = () => {
     setError('');
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        // Current origin, not gleeworld.org — a tenant user resetting from
-        // theirchoir.gleeworld.org must land back on their own site.
-        redirectTo: `${window.location.origin}/reset-password`
-      });
-
-      if (error) throw error;
+      await sendPasswordReset(email);
 
       setMode('success');
       toast({

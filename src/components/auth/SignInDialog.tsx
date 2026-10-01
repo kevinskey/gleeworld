@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 import { signInDestination } from '@/hooks/useRoleBasedRedirect';
 import { claimPartnerByEmailWithTimeout } from '@/lib/partner/api';
+import { sendPasswordReset } from '@/lib/auth/sendPasswordReset';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -118,10 +119,7 @@ export function SignInDialog({ open, onOpenChange, onAuthenticated, primaryColor
     e.preventDefault();
     setSubmitting(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-      if (error) throw error;
+      await sendPasswordReset(email);
       setResetSent(true);
     } catch (err: any) {
       toast({ title: 'Error', description: err.message || 'Failed to send reset email.', variant: 'destructive' });

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { supabase } from "@/integrations/supabase/client";
+import { sendPasswordReset } from "@/lib/auth/sendPasswordReset";
 import { Loader2 } from "lucide-react";
 
 interface ForgotPasswordFormProps {
@@ -23,12 +23,8 @@ export const ForgotPasswordForm = ({ onSwitchToLogin }: ForgotPasswordFormProps)
     setError("");
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `https://gleeworld.org/reset-password`,
-      });
+      await sendPasswordReset(email);
 
-      if (error) throw error;
-      
       setSuccess(true);
     } catch (error: any) {
       setError(error.message || "An error occurred");
