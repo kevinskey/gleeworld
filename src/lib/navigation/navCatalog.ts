@@ -272,8 +272,10 @@ export type NavRole = 'admin' | 'student' | 'member';
 
 export const HIDEABLE_NAV_ROLES: { value: NavRole; label: string }[] = [
   { value: 'admin',    label: 'Tenant admins' },
-  { value: 'student',  label: 'Students' },
-  { value: 'member',   label: 'Members' },
+  // 'student' and 'member' are ONE audience. The value stays 'student'
+  // because that is what gw_tenant_nav_prefs rows are still keyed by;
+  // useTenantNavPrefs falls back across both spellings on read.
+  { value: 'student',  label: 'Members' },
 ];
 
 // Capability flags each previewable role actually holds. Preview used to

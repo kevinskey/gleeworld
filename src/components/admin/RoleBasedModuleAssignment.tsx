@@ -28,7 +28,7 @@ export const RoleBasedModuleAssignment = () => {
   const { toast } = useToast();
 
   const roles = [
-    { value: 'student', label: 'Student' },
+    { value: 'student', label: 'Member' },
     { value: 'member', label: 'Member' },
     { value: 'graduate', label: 'Graduate' },
     { value: 'executive', label: 'Executive Board' },

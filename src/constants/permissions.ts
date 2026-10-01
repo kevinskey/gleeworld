@@ -17,9 +17,10 @@ export const USER_ROLES = {
   VISITOR: 'visitor',
   FAN: 'fan',
   AUDITIONER: 'auditioner',
+  /** Legacy spelling of MEMBER. Still the stored value until the rename's phase 2. */
   STUDENT: 'student',
   ALUMNA: 'graduate',
-  MEMBER: 'member', // Alias for student
+  MEMBER: 'member', // Canonical name for the STUDENT audience
   INSTRUCTOR: 'instructor',
   EXECUTIVE: 'executive',
   ADMIN: 'admin',
@@ -53,13 +54,13 @@ export const ROLE_DESCRIPTIONS: Record<UserRole, { title: string; description: s
     level: 50,
   },
   [USER_ROLES.STUDENT]: {
-    title: 'Student/Member',
-    description: 'Active Glee Club members. Access to music studio, contracts, payments, and member resources.',
+    title: 'Member',
+    description: 'Active members. Access to music studio, contracts, payments, and member resources.',
     level: 40,
   },
   [USER_ROLES.MEMBER]: {
     title: 'Member',
-    description: 'Alias for Student. Active Glee Club members.',
+    description: 'Active members. Same audience as the legacy student role.',
     level: 40,
   },
   [USER_ROLES.ALUMNA]: {

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { UNIFIED_MODULES, getActiveModules } from '@/config/unified-modules';
 import { EXECUTIVE_MODULE_IDS, STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
+import { isMemberRole } from '@/lib/auth/memberRole';
 
 export interface ModuleAccess {
   moduleId: string;
@@ -180,7 +181,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
 
           // Students get essential student modules (hardcoded access)
           const essentialModules = ['music-library', 'calendar', 'attendance', 'member-sight-reading-studio'];
-          if (profile?.role === 'student' && essentialModules.includes(module.id)) {
+          if (isMemberRole(profile?.role) && essentialModules.includes(module.id)) {
             return {
               moduleId: module.id,
               hasAccess: true,

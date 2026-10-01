@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { isMemberRole } from '@/lib/auth/memberRole';
 import {
   applyPreviewRole,
   previewRoleIsFaculty,
@@ -88,9 +89,20 @@ describe('applyPreviewRole', () => {
     // fans -> /fan and graduates -> /alumni via useRoleBasedRedirect; neither
     // ever mounts DashboardShell, so previewing their sidebar was meaningless.
     const offered = HIDEABLE_NAV_ROLES.map((r) => r.value);
-    expect(offered).toEqual(['admin', 'student', 'member']);
+    expect(offered).toEqual(['admin', 'student']);
     expect(offered).not.toContain('fan');
     expect(offered).not.toContain('graduate');
+  });
+
+  it('offers members as ONE audience, under the stored spelling', () => {
+    // 'student' and 'member' were two separately-configurable rows; they are
+    // one audience now. The value stays 'student' because that is still what
+    // gw_tenant_nav_prefs rows are keyed by — useTenantNavPrefs falls back
+    // across both spellings on read. Offering both would let a tenant
+    // configure one audience twice and see only one of them take effect.
+    const members = HIDEABLE_NAV_ROLES.filter((r) => isMemberRole(r.value));
+    expect(members).toHaveLength(1);
+    expect(members[0]).toEqual({ value: 'student', label: 'Members' });
   });
 
   it('ignores a retired role rather than leaving admin capabilities intact', () => {

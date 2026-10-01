@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { normalizeMessengerProfile } from '@/lib/messenger-contacts';
+import { isMemberRole } from '@/lib/auth/memberRole';
 
 export type MessengerRole = 'super-admin' | 'admin' | 'student' | 'graduate' | 'fan' | 'none';
 
@@ -48,7 +49,7 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
 
     const role = userProfile.role?.toLowerCase();
     if (role === 'graduate' || role === 'graduates') return 'graduate';
-    if (role === 'student' || role === 'member') return 'student';
+    if (isMemberRole(role)) return 'student';
     if (role === 'fan') return 'fan';
 
     return 'none';

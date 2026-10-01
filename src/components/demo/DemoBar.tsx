@@ -20,7 +20,7 @@ import { DemoWelcomeOverlay } from '@/components/demo/DemoWelcomeOverlay';
 
 const ROLE_LABEL: Record<DemoRole, string> = {
   director: 'Director',
-  student: 'Student',
+  student: 'Member',
   fan: 'Fan',
 };
 
