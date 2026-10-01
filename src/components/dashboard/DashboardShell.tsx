@@ -12,7 +12,7 @@
 //   │  tenant)   │                                        │
 //   └────────────┴────────────────────────────────────────┘
 
-import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, lazy, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 // Idempotence guard. Some pages self-wrap in <DashboardShell> while their
 // route in App.tsx already wraps them — nested instances would render two
@@ -93,9 +93,8 @@ import { NavShelf } from './NavShelf';
 import { AllToolsSheet } from './AllToolsSheet';
 import { isFacultyProfile } from '@/lib/roles';
 import { useMyTools } from '@/hooks/useMyTools';
-import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, groupToolsBySection, isSectionGroupId, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
+import { selectShelfEntries, shelfGroupsForNav, navToolsForShelf, groupToolsBySection, mergeNavGroups, ROLE_INVARIANT_CORE_TOOLS, resolvedTools } from '@/lib/navigation/myTools';
 import { usePreviewShelf } from '@/hooks/usePreviewShelf';
-import { setGroupCollapsed } from '@/lib/navigation/toolGroups';
 import { disposeAllStudioAudio } from '@/lib/studio/audioLeakGuard';
 
 // The fixed module-gate key list a `module: 'x'` catalog gate checks
@@ -136,7 +135,10 @@ function platformLogoFor(brandingLogoUrl?: string | null): string | undefined {
 // sheet's hook guarded it with `typeof === 'function'` (tolerating an older
 // useUserRole shape that doesn't export the fn, so a stale bundle can't
 // white-screen the shell) — this hook always uses the defensive form.
-function useGatedNav() {
+// Exported for HouseHome's SmartSearchBar: the search field needs the same
+// gated catalog the sidebar renders, or module-gated apps (Liturgy Planner,
+// Studio…) never match a query.
+export function useGatedNav() {
   const { profile, loading: roleLoading, canEditMusicLibrary } = useUserRole();
   const userCanLibrarian = typeof canEditMusicLibrary === 'function'
     ? canEditMusicLibrary()
@@ -351,10 +353,16 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
   const knownGood = myTools?.setupComplete === true;
   // Only a genuine tenant admin previews; a forged sessionStorage value is
   // inert here exactly as it is in useUserRole.
-  // Collapse state for DERIVED section headings lives here, not in the
-  // member's saved record: they aren't groups the member made, and writing
-  // to their record would invent groups they never created.
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  // Every category STARTS CLOSED (Kevin, 2026-09-30: "on load cats should
+  // be closed not open") — the nav reads as a table of contents, not an
+  // open filing cabinet. Expansion is tracked here for the session only,
+  // for member groups too: nothing is written to the saved record, and the
+  // stored per-group `collapsed` flag no longer drives this surface. The
+  // group holding the current page is seeded open below so the active item
+  // is never hidden behind a closed heading.
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const seededActiveGroupRef = useRef(false);
+  const navLocation = useLocation();
   const previewRoleRaw = usePreviewRole();
   const myTenantRoleForPreview = useMyTenantRole();
   const previewingAs = isTenantAdminOrAboveRole(myTenantRoleForPreview) ? previewRoleRaw : null;
@@ -395,27 +403,33 @@ export function Sidebar({ onCollapse, onOpenAllTools }: { onCollapse?: () => voi
     shelfTools.filter((t) => t.key !== homeEntry?.key),
     Object.keys(NAV_SECTION_LABELS),
     NAV_SECTION_LABELS,
-  ).map((g) => ({ ...g, collapsed: collapsedSections.has(g.id) }));
-  const navGroups = [...sectionGroups, ...shelfGroupsForNav(shelfGroups)];
+  );
+  // mergeNavGroups folds a member group named like a section ("Music",
+  // "Today"…) into that section heading instead of rendering the heading
+  // twice — see its comment in myTools.ts.
+  const navGroups = mergeNavGroups(sectionGroups, shelfGroupsForNav(shelfGroups))
+    .map((g) => ({ ...g, collapsed: !expandedGroups.has(g.id) }));
+  // Seed the active page's category open, once per mount — everything else
+  // stays closed until tapped.
+  const activeGroupId = navGroups.find((g) =>
+    g.entries.some((e) => navLocation.pathname === e.to || navLocation.pathname.startsWith(`${e.to}/`)))?.id;
+  useEffect(() => {
+    if (seededActiveGroupRef.current || !activeGroupId) return;
+    seededActiveGroupRef.current = true;
+    setExpandedGroups(new Set([activeGroupId]));
+  }, [activeGroupId]);
 
+  // Local-only for EVERY heading, member groups included: with all
+  // categories starting closed each load, persisting a collapse flag to
+  // the record would be dead weight — and writing on every tap was a
+  // needless RPC besides.
   const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
-    // A derived section heading is not one of the member's groups — collapse
-    // it locally rather than writing a group they never made into their
-    // record.
-    if (isSectionGroupId(id)) {
-      setCollapsedSections((prev) => {
-        const next = new Set(prev);
-        if (collapsed) next.add(id); else next.delete(id);
-        return next;
-      });
-      return;
-    }
-    // Gated on `loaded`, like every other write: saveMyTools fills omitted
-    // fields from the current record, so a toggle fired before the record
-    // arrives would persist an empty shelf over the member's real one.
-    if (!toolsLoaded || !myTools) return;
-    void saveMyTools({ groups: setGroupCollapsed(myTools, id, collapsed).groups });
-  }, [toolsLoaded, myTools, saveMyTools]);
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (collapsed) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
 
   // Studio session editor needs the full window for clips + mixer.
   // Hide the sidebar when an open session is loaded. The user can
@@ -556,10 +570,16 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
   const knownGood = myTools?.setupComplete === true;
   // Only a genuine tenant admin previews; a forged sessionStorage value is
   // inert here exactly as it is in useUserRole.
-  // Collapse state for DERIVED section headings lives here, not in the
-  // member's saved record: they aren't groups the member made, and writing
-  // to their record would invent groups they never created.
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  // Every category STARTS CLOSED (Kevin, 2026-09-30: "on load cats should
+  // be closed not open") — the nav reads as a table of contents, not an
+  // open filing cabinet. Expansion is tracked here for the session only,
+  // for member groups too: nothing is written to the saved record, and the
+  // stored per-group `collapsed` flag no longer drives this surface. The
+  // group holding the current page is seeded open below so the active item
+  // is never hidden behind a closed heading.
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const seededActiveGroupRef = useRef(false);
+  const navLocation = useLocation();
   const previewRoleRaw = usePreviewRole();
   const myTenantRoleForPreview = useMyTenantRole();
   const previewingAs = isTenantAdminOrAboveRole(myTenantRoleForPreview) ? previewRoleRaw : null;
@@ -597,15 +617,30 @@ export function MobileNav({ onNavigate, onOpenAllTools }: { onNavigate: () => vo
     shelfTools.filter((t) => t.key !== homeEntry?.key),
     Object.keys(NAV_SECTION_LABELS),
     NAV_SECTION_LABELS,
-  ).map((g) => ({ ...g, collapsed: collapsedSections.has(g.id) }));
-  const navGroups = [...sectionGroups, ...shelfGroupsForNav(shelfGroups)];
+  );
+  // mergeNavGroups folds a member group named like a section ("Music",
+  // "Today"…) into that section heading instead of rendering the heading
+  // twice — see its comment in myTools.ts.
+  const navGroups = mergeNavGroups(sectionGroups, shelfGroupsForNav(shelfGroups))
+    .map((g) => ({ ...g, collapsed: !expandedGroups.has(g.id) }));
+  // Seed the active page's category open, once per mount — everything else
+  // stays closed until tapped.
+  const activeGroupId = navGroups.find((g) =>
+    g.entries.some((e) => navLocation.pathname === e.to || navLocation.pathname.startsWith(`${e.to}/`)))?.id;
+  useEffect(() => {
+    if (seededActiveGroupRef.current || !activeGroupId) return;
+    seededActiveGroupRef.current = true;
+    setExpandedGroups(new Set([activeGroupId]));
+  }, [activeGroupId]);
 
+  // Local-only — see Sidebar's handleToggleGroup comment.
   const handleToggleGroup = useCallback((id: string, collapsed: boolean) => {
-    // Gated on `loaded` — see the matching comment on Sidebar's
-    // handleToggleGroup for why.
-    if (!toolsLoaded || !myTools) return;
-    void saveMyTools({ groups: setGroupCollapsed(myTools, id, collapsed).groups });
-  }, [toolsLoaded, myTools, saveMyTools]);
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (collapsed) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
 
   return (
     <div className="flex flex-col h-full">

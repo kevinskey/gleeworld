@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { ChevronDown, Mic, Send, Square, Volume2, VolumeX } from 'lucide-react';
+import { AudioLines, ChevronDown, Mic, Send, Square, Volume2, VolumeX } from 'lucide-react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { useIsPhone } from '@/hooks/use-mobile';
 import { useAssistant } from '@/lib/assistant/AssistantProvider';
 import { AssistantThread } from './AssistantThread';
@@ -13,7 +14,7 @@ import { AssistantSuggestions } from './AssistantSuggestions';
 import { AssistantVideoOverlay } from './AssistantVideoOverlay';
 import { AssistantResultsPanel } from './AssistantResultsPanel';
 
-const ASSISTANT_DESCRIPTION = "Chat with the GleeWorld Assistant by typing or voice. Some actions ask for confirmation before they run.";
+const ASSISTANT_DESCRIPTION = "Chat with the assistant by typing or voice. Some actions ask for confirmation before they run.";
 
 // Chat window over the shared assistant state (AssistantProvider). The
 // provider owns the thread, speech, mute, and open state — this component
@@ -31,10 +32,31 @@ export const AssistantSheet = () => {
     videoRoom, setVideoRoom,
     resultsPanel, setResultsPanel,
     assistantName,
+    liveStatus, endLive,
   } = useAssistant();
+  // The FAB (which holds the other End control) returns null while this
+  // sheet is open — so while a live ElevenLabs session runs, this pill is
+  // the ONLY visible indicator that a hot mic + billed session is active.
+  const livePill = liveStatus !== 'off' && (
+    <button
+      type="button"
+      onClick={endLive}
+      aria-label="End live conversation"
+      title="End live conversation"
+      className="h-8 rounded-full px-3 flex items-center gap-1.5 bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+    >
+      <AudioLines className={cn('w-4 h-4', liveStatus === 'live' && 'animate-pulse')} />
+      <span className="text-xs font-semibold">{liveStatus === 'connecting' ? 'Connecting…' : 'Live · End'}</span>
+    </button>
+  );
   // The user's own name for her, everywhere the header identifies the
-  // assistant. Per user, not per tenant.
-  const displayName = assistantName || 'GleeWorld Assistant';
+  // assistant. Per user, not per tenant — but the FALLBACK is per tenant:
+  // hardcoding "GleeWorld Assistant" leaked platform branding onto
+  // white-label tenants (committee, 2026-09-30, on yo-doc.com).
+  const { settings: brandingSettings } = useBrandingSettings();
+  const orgName = brandingSettings?.org_name || '';
+  const displayName = assistantName || (orgName ? `${orgName} Assistant` : 'Assistant');
+  const askPlaceholder = `Ask ${assistantName || orgName || 'me anything'}…`;
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -75,6 +97,7 @@ export const AssistantSheet = () => {
           <SheetHeader className="px-4 py-2.5 border-b flex-row items-center justify-between space-y-0">
             <SheetTitle className="text-sm font-semibold">{displayName}</SheetTitle>
             <SheetDescription className="sr-only">{ASSISTANT_DESCRIPTION}</SheetDescription>
+            {livePill}
             {/* Muted gets a persistent destructive tint so the state reads at
                 a glance. Unmuted hover pairs bg-accent WITH accent-foreground —
                 on touch devices :hover sticks after a tap, and the old
@@ -129,7 +152,7 @@ export const AssistantSheet = () => {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={listening ? 'Listening…' : 'Ask GleeWorld…'}
+              placeholder={listening ? 'Listening…' : askPlaceholder}
               className="flex-1 h-9 rounded-full border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
             <Button type="submit" size="sm" className="h-9 w-9 rounded-full p-0" disabled={state.busy || !input.trim()}>
@@ -171,6 +194,7 @@ export const AssistantSheet = () => {
           <div className="flex items-center justify-between px-3 py-2 border-b">
             <span className="text-xs font-medium text-muted-foreground px-1">{displayName}</span>
             <div className="flex items-center gap-1">
+              {livePill}
               {/* Same muted-state treatment as the sheet header above. */}
               <button
                 type="button"
@@ -236,7 +260,7 @@ export const AssistantSheet = () => {
                   ref={inputRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder={listening ? 'Listening…' : 'Ask GleeWorld…'}
+                  placeholder={listening ? 'Listening…' : askPlaceholder}
                   className="flex-1 h-9 rounded-full border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
                 />
                 <Button type="submit" size="sm" className="h-9 w-9 shrink-0 rounded-full p-0" disabled={state.busy || !input.trim()}>

@@ -1,3 +1,4 @@
+import type React from 'react';
 // @vitest-environment jsdom
 //
 // Regression guards for the Task 4 code review's round 2 findings:
@@ -23,7 +24,7 @@
 // this file — see the export comments there for why (same rationale as
 // BrandLogo's export for DashboardShell.brand.test.tsx).
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter } from 'react-router-dom';
 import type { MyTools } from '@/lib/navigation/myTools';
@@ -97,10 +98,19 @@ function setup({
 
 afterEach(cleanup);
 
+// Categories start CLOSED since 2026-09-30 ("on load cats should be closed").
+// These tests assert on rows inside headings, so render + expand everything:
+// click every collapsed heading (buttons carrying aria-expanded="false").
+const renderNav = (ui: React.ReactElement) => {
+  render(ui);
+  screen.queryAllByRole('button', { expanded: false }).forEach((b) => fireEvent.click(b));
+};
+
+
 describe('Sidebar — I2: a hidden Home must not blank the whole nav', () => {
   it('still renders the rest of the shelf when hiddenRoutes removes Home', () => {
     setup({ hiddenRoutes: new Set(['/dashboard']) });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.queryByText('Command Center')).not.toBeInTheDocument();
     expect(screen.getByText('Calendar')).toBeInTheDocument();
     expect(screen.getByText('Finance')).toBeInTheDocument();
@@ -108,7 +118,7 @@ describe('Sidebar — I2: a hidden Home must not blank the whole nav', () => {
 
   it('renders Home normally when it is not hidden', () => {
     setup();
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Command Center')).toBeInTheDocument();
   });
 });
@@ -116,7 +126,7 @@ describe('Sidebar — I2: a hidden Home must not blank the whole nav', () => {
 describe('MobileNav — I2: a hidden Home must not blank the whole drawer', () => {
   it('still renders the rest of the shelf when hiddenRoutes removes Home', () => {
     setup({ hiddenRoutes: new Set(['/dashboard']) });
-    render(
+    renderNav(
       <MemoryRouter initialEntries={['/dashboard']}>
         <MobileNav onNavigate={() => {}} onOpenAllTools={vi.fn()} />
       </MemoryRouter>,
@@ -136,7 +146,7 @@ describe('Sidebar — shelf must not blank on every route change', () => {
       roleLoading: true,
       myTools: { v: 4, tools: ['finance', 'people'], groups: [], widgets: [], setupComplete: true },
     });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Finance')).toBeInTheDocument();
     // by role: loose tools now render under their catalog section, and the
     // People tool sits in a section also called People — matching on text
@@ -153,7 +163,7 @@ describe('Sidebar — shelf must not blank on every route change', () => {
       roleLoading: true,
       myTools: { v: 4, tools: ['sight', 'studio', 'my-fees'], groups: [], widgets: [], setupComplete: false },
     });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     // The unresolved guess's student-only tools must not leak through...
     expect(screen.queryByText('Reading Music')).not.toBeInTheDocument();
     expect(screen.queryByText('Studio')).not.toBeInTheDocument();
@@ -167,7 +177,7 @@ describe('Sidebar — shelf must not blank on every route change', () => {
 
   it('renders nothing role-specific when there is no data at all yet (myTools null) and role is loading', () => {
     setup({ roleLoading: true, myTools: null });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     // Home always renders; the core still renders even with zero data,
     // because it doesn't depend on myTools at all.
     expect(screen.getByText('Command Center')).toBeInTheDocument();
@@ -187,7 +197,7 @@ describe('Sidebar — failed load must still render the shelf', () => {
       loaded: false,
       myTools: { v: 4, tools: ['finance', 'people'], groups: [], widgets: [], setupComplete: false },
     });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Finance')).toBeInTheDocument();
     // by role: loose tools now render under their catalog section, and the
     // People tool sits in a section also called People — matching on text
@@ -215,21 +225,21 @@ describe('Sidebar — the Favorites group is page-only', () => {
 
   it('hides the Favorites group and its tools from the shelf', () => {
     setup({ myTools: WITH_FAVORITES });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.queryByText('Favorites')).not.toBeInTheDocument();
     expect(screen.queryByText('Finance')).not.toBeInTheDocument();
   });
 
   it('keeps the loose tools, which is how an app gets into the nav', () => {
     setup({ myTools: WITH_FAVORITES });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Calendar')).toBeInTheDocument();
     expect(screen.getByText('Messages')).toBeInTheDocument();
   });
 
   it('keeps every other group', () => {
     setup({ myTools: WITH_FAVORITES });
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('Sunday')).toBeInTheDocument();
     // by role: loose tools now render under their catalog section, and the
     // People tool sits in a section also called People — matching on text
@@ -239,7 +249,7 @@ describe('Sidebar — the Favorites group is page-only', () => {
 
   it('applies to the mobile drawer too', () => {
     setup({ myTools: WITH_FAVORITES });
-    render(
+    renderNav(
       <MemoryRouter initialEntries={['/dashboard']}>
         <MobileNav onNavigate={vi.fn()} onOpenAllTools={vi.fn()} />
       </MemoryRouter>,

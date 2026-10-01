@@ -1,3 +1,4 @@
+import type React from 'react';
 // @vitest-environment jsdom
 //
 // The public Header block has a "Show site name" toggle. When a tenant turns
@@ -10,7 +11,7 @@
 // DashboardShell.shelf.test.tsx); useHideSiteName is the mocked seam, and its
 // own showSiteName extraction is covered here via publicSiteHidesSiteName.
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -74,15 +75,22 @@ afterEach(() => {
   useHideSiteNameMock.mockReturnValue(false);
 });
 
+// Categories start CLOSED since 2026-09-30 — expand every heading after
+// render so row-level assertions still see their targets.
+const renderNav = (ui: React.ReactElement) => {
+  render(ui);
+  screen.queryAllByRole('button', { expanded: false }).forEach((b) => fireEvent.click(b));
+};
+
 describe('Sidebar — public "Show site name" toggle mirrors into the chrome', () => {
   it('shows the tenant name when the public page keeps it', () => {
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.getByText('The Lyke House')).toBeInTheDocument();
   });
 
   it('drops the tenant name when the public page removed it', () => {
     useHideSiteNameMock.mockReturnValue(true);
-    render(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
+    renderNav(<MemoryRouter initialEntries={['/dashboard']}><Sidebar onOpenAllTools={vi.fn()} /></MemoryRouter>);
     expect(screen.queryByText('The Lyke House')).not.toBeInTheDocument();
     // The nav itself must survive — only the name goes.
     expect(screen.getByText('Calendar')).toBeInTheDocument();
@@ -91,7 +99,7 @@ describe('Sidebar — public "Show site name" toggle mirrors into the chrome', (
 
 describe('MobileNav — same mirror in the drawer header', () => {
   it('shows the tenant name when the public page keeps it', () => {
-    render(
+    renderNav(
       <MemoryRouter initialEntries={['/dashboard']}>
         <MobileNav onNavigate={() => {}} onOpenAllTools={vi.fn()} />
       </MemoryRouter>,
@@ -101,7 +109,7 @@ describe('MobileNav — same mirror in the drawer header', () => {
 
   it('drops the tenant name when the public page removed it', () => {
     useHideSiteNameMock.mockReturnValue(true);
-    render(
+    renderNav(
       <MemoryRouter initialEntries={['/dashboard']}>
         <MobileNav onNavigate={() => {}} onOpenAllTools={vi.fn()} />
       </MemoryRouter>,

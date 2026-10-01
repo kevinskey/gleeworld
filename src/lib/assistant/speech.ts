@@ -5,7 +5,12 @@ import { voiceGain } from './voices';
 
 export interface SpeechInputSource {
   available: boolean;
-  start(onResult: (transcript: string, isFinal: boolean) => void, onEnd: () => void): void;
+  /** onEnd always fires exactly once per session. `reason` is set only when
+   *  the session died on an error — 'not-allowed' when the browser blocked
+   *  mic access (the one failure the user can actually fix, so callers
+   *  should say so; every error used to collapse into a silent bare onEnd
+   *  indistinguishable from "heard nothing"). */
+  start(onResult: (transcript: string, isFinal: boolean) => void, onEnd: (reason?: 'not-allowed' | 'error') => void): void;
   stop(): void;
 }
 
@@ -31,11 +36,11 @@ export function createNativeSpeechInput(plugin: GWSpeechPluginShape): SpeechInpu
       const mySession = ++session;
       let ended = false;
       const added: PluginListenerHandle[] = [];
-      const finish = () => {
+      const finish = (reason?: 'not-allowed' | 'error') => {
         if (ended) return;
         ended = true;
         for (const h of added) void h.remove().catch(() => { /* best effort */ });
-        onEnd();
+        onEnd(reason);
       };
       void (async () => {
         try {
@@ -59,7 +64,9 @@ export function createNativeSpeechInput(plugin: GWSpeechPluginShape): SpeechInpu
           // Permission denied or native failure — mirror the web source,
           // where onerror routes to onEnd.
           dbg('mic-start-failed', { err: String(err) });
-          if (session === mySession) finish();
+          if (session === mySession) {
+            finish(/denied|permission|not.?allowed/i.test(String(err)) ? 'not-allowed' : 'error');
+          }
         }
       })();
     },
@@ -129,7 +136,16 @@ export function getSpeechInput(
         void sawFinal;
       };
       rec.onend = () => { clearSilenceTimer(); onEnd(); };
-      rec.onerror = () => { clearSilenceTimer(); onEnd(); };
+      rec.onerror = (e: any) => {
+        clearSilenceTimer();
+        const code = String(e?.error ?? '');
+        // 'aborted'/'no-speech' are ordinary session ends, not failures.
+        onEnd(
+          code === 'not-allowed' || code === 'service-not-allowed'
+            ? 'not-allowed'
+            : code === 'aborted' || code === 'no-speech' ? undefined : 'error',
+        );
+      };
       rec.start();
     },
     stop() {

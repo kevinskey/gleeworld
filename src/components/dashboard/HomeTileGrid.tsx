@@ -86,7 +86,7 @@ function KeycapFace({ tile, editing }: { tile: Destination; editing: boolean }) 
   return (
     <>
       <span className={
-        'w-full aspect-square bg-card border border-border shadow-[0_2px_0_hsl(var(--border))] flex items-center justify-center'
+        'w-full aspect-square bg-card border border-border rounded-xl shadow-[0_2px_0_hsl(var(--border))] flex items-center justify-center'
         + (editing ? '' : ' transition-transform motion-reduce:transition-none group-active:translate-y-px group-active:shadow-none')
       }>
         <span className={`${CHIP_SIZE} rounded-xl md:rounded-2xl flex items-center justify-center ${tile.tone || DEFAULT_TONE}`}>
@@ -108,7 +108,7 @@ function SortableTile({ tile, index, onRemove }: {
       className="relative touch-none">
       <button type="button" onClick={() => onRemove(tile.key)}
         aria-label={`Remove ${tile.label} from grid`}
-        className={`w-full flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none`}
+        className={`w-full flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-foreground/75 min-h-[44px] animate-jiggle motion-reduce:animate-none`}
         style={{ animationDelay: `${(index % 4) * 75}ms` }}>
         <KeycapFace tile={tile} editing />
       </button>
@@ -130,7 +130,7 @@ function AddTile({ tile, index, onAdd }: { tile: Destination; index: number; onA
       <button type="button"
         onClick={() => onAdd(tile.key)}
         aria-label={`Add ${tile.label} to grid`}
-        className={`w-full flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground min-h-[44px] animate-jiggle motion-reduce:animate-none`}
+        className={`w-full flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-foreground/75 min-h-[44px] animate-jiggle motion-reduce:animate-none`}
         style={{ animationDelay: `${(index % 4) * 75}ms` }}>
         <KeycapFace tile={tile} editing />
       </button>
@@ -152,7 +152,7 @@ function BandSection({ band, children }: { band: TileBand; children: React.React
   return (
     <section className="space-y-2">
       {band.name && (
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground/75 px-1">
           {band.name}
         </h3>
       )}
@@ -345,7 +345,7 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
       onPointerUp={clearPress}
       onPointerCancel={clearPress}
       onContextMenu={(e) => e.preventDefault()}
-      className={`flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground group min-h-[44px]`}>
+      className={`flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-foreground/75 group min-h-[44px]`}>
       <KeycapFace tile={t} editing={false} />
     </Link>
   );
@@ -376,7 +376,7 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-2 min-h-[44px]">
-        <span className="text-xs uppercase tracking-widest text-muted-foreground">Apps</span>
+        <span className="text-xs uppercase tracking-widest text-foreground/75">Apps</span>
         {editing ? (
           <span className="flex items-center gap-3 text-sm">
             <button type="button" onClick={cancel} disabled={saving} className="text-muted-foreground min-h-[44px] disabled:opacity-50">
@@ -435,7 +435,7 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
             </p>
           )}
           <div className="flex flex-wrap items-baseline gap-x-2 mt-4 mb-2">
-            <span className="text-xs uppercase tracking-widest text-muted-foreground">More</span>
+            <span className="text-xs uppercase tracking-widest text-foreground/75">More</span>
           </div>
           {draftOverflow.length === 0 ? (
             <p className="text-sm text-muted-foreground">Everything is on your grid.</p>
@@ -446,7 +446,7 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
                 .filter(({ tiles }) => tiles.length > 0)
                 .map(({ s, tiles }) => (
                   <div key={s}>
-                    <div className="text-xs uppercase tracking-widest text-muted-foreground/70 mt-3 mb-2">
+                    <div className="text-xs uppercase tracking-widest text-foreground/60 mt-3 mb-2">
                       {NAV_SECTION_LABELS[s]}
                     </div>
                     <div className={GRID_CLASSES}>
@@ -490,7 +490,7 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
           )}
           {overflow.length > 0 && (
             <details className="text-sm mt-4" open={primary.length === 0 || undefined}>
-              <summary className="text-muted-foreground cursor-pointer py-2 min-h-[44px] flex items-center">
+              <summary className="text-foreground/75 cursor-pointer py-2 min-h-[44px] flex items-center">
                 More ({overflow.length})
               </summary>
               <div className={`${GRID_CLASSES} pt-2`}>
@@ -498,7 +498,7 @@ export function HomeTileGrid({ bands, overflow, onSave }: HomeTileGridProps) {
                   <Link key={t.key} to={t.to}
                     draggable={false}
                     onDragStart={(e) => e.preventDefault()}
-                    className={`flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-muted-foreground min-h-[44px]`}>
+                    className={`flex flex-col items-center gap-1 md:gap-1.5 ${LABEL_SIZE} text-foreground/75 min-h-[44px]`}>
                     <span className="w-full aspect-square bg-card border border-border flex items-center justify-center">
                       <span className={`${CHIP_SIZE} rounded-xl md:rounded-2xl flex items-center justify-center ${t.tone || DEFAULT_TONE}`}>
                         <t.icon className={ICON_SIZE} />

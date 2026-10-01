@@ -64,7 +64,10 @@ export const AssistantFab = () => {
   // you already knew it was there, and well under a 44pt touch target. It
   // now carries the mic so it reads as the assistant, and is tall enough to
   // hit with a thumb.
-  if (collapsed) {
+  // NEVER tucked while a live session runs: the pill below holds the only
+  // on-page End control, and hiding it left a hot mic + billed session with
+  // no visible sign it was active.
+  if (collapsed && liveStatus === 'off') {
     return (
       <button
         type="button"

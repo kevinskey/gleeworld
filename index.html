@@ -76,40 +76,14 @@
       system font instead of waiting for a webfont.
     -->
     <script>
-      // Debug Google Fonts loading
-      console.log('Google Fonts loading...');
-      
-      // Check if fonts are loaded
+      // Font loading errors are worth knowing about in production; the rest
+      // of the old font-debug probe (335-font dumps, a Dancing Script test
+      // element) was console noise on every load and is gone.
       if (document.fonts) {
-        document.fonts.ready.then(() => {
-          console.log('All fonts loaded successfully');
-          console.log('Available fonts:', Array.from(document.fonts.values()).map(f => f.family));
-        });
-        
-        document.fonts.onloadingdone = (e) => {
-          console.log('Font loading done:', e);
-        };
-        
         document.fonts.onloadingerror = (e) => {
           console.error('Font loading error:', e);
         };
       }
-      
-      // Test Dancing Script specifically
-      setTimeout(() => {
-        const testEl = document.createElement('div');
-        testEl.style.fontFamily = 'Dancing Script, cursive';
-        testEl.style.fontSize = '16px';
-        testEl.textContent = 'Test';
-        testEl.style.position = 'absolute';
-        testEl.style.left = '-9999px';
-        document.body.appendChild(testEl);
-        
-        const computedStyle = window.getComputedStyle(testEl);
-        console.log('Dancing Script computed font-family:', computedStyle.fontFamily);
-        
-        document.body.removeChild(testEl);
-      }, 1000);
     </script>
   </head>
 

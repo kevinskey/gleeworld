@@ -74,6 +74,36 @@ export interface DocumentExtensionOptions {
 }
 
 /**
+ * FontSize that RENDERS px values as pt. The toolbar's size number has
+ * always meant points, but until 2026-09-30 it was stored as px — so "12"
+ * rendered at 12px on screen (too small, Kevin) and ≈9pt in print. New
+ * marks are stored in pt; legacy px marks are normalized here at render
+ * time — which covers the live editor DOM, generateHTML (print/PDF), and
+ * collaborative ydoc content alike — without ever rewriting the stored
+ * value, which may live in a Yjs document shared with older clients.
+ */
+const PointFontSize = FontSize.extend({
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element: HTMLElement) => element.style.fontSize || null,
+            renderHTML: (attributes: { fontSize?: string | null }) => {
+              if (!attributes.fontSize) return {};
+              const size = String(attributes.fontSize).replace(/^(\d+(?:\.\d+)?)px$/, '$1pt');
+              return { style: `font-size: ${size}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
+/**
  * Builds the shared TipTap extension array for the Documents editor. Kept as
  * a factory (rather than inlined in `useEditor`) so later tasks can append
  * `CitationChip` / `FootnoteRef` here instead of touching DocumentEditor.
@@ -115,7 +145,7 @@ export function documentExtensions(opts: DocumentExtensionOptions = {}): AnyExte
     TextStyle,
     Color,
     FontFamily,
-    FontSize,
+    PointFontSize,
     CharacterCount,
     DocumentSearch,
     PageBreak,
@@ -165,6 +195,8 @@ export interface DocumentEditorProps {
   /** Start a comment on the current selection. Disabled when nothing is
    *  selected — a comment with no anchor has nothing to point at. */
   onCommentClick?: () => void;
+  /** Opens the print preview. Passed through to DocToolbar's Print button. */
+  onPrintClick?: () => void;
   /** Upload + insert image files from the clipboard or a drop. Without this
    *  the editor silently swallows a pasted screenshot. */
   onImageFiles?: (files: File[]) => void;
@@ -192,6 +224,7 @@ export function DocumentEditor({
   onFootnoteClick,
   onImageClick,
   onCommentClick,
+  onPrintClick,
   onImageFiles,
   onPageCountChange,
   collab,
@@ -307,6 +340,7 @@ export function DocumentEditor({
         onImageClick={onImageClick}
         onCommentClick={onCommentClick}
         dictation={dictation}
+        onPrintClick={onPrintClick}
       />
       <FindReplaceBar editor={editor} />
       {/* w-full is load-bearing: in a flex-col parent, mx-auto overrides the

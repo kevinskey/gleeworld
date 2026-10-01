@@ -15,13 +15,8 @@ export const useNotifications = () => {
 
   // Load notifications
   const loadNotifications = async (limit = 50) => {
-    if (!user) {
-      console.log('No user found, cannot load notifications');
-      return;
-    }
-    
-    console.log('Loading notifications for user:', user.id);
-    
+    if (!user) return;
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -31,15 +26,12 @@ export const useNotifications = () => {
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      console.log('Notifications query result:', { data, error });
-
       if (error) {
         console.error('Error loading notifications:', error);
         toast.error('Failed to load notifications');
         return;
       }
 
-      console.log('Setting notifications:', data);
       setNotifications(data || []);
       const unread = data?.filter(n => !n.is_read).length || 0;
       setUnreadCount(unread);
@@ -252,16 +244,19 @@ export const useNotifications = () => {
         },
         (payload) => {
           const updatedNotification = payload.new as Notification;
-          setNotifications(prev => 
-            prev.map(n => 
+          // Recompute the badge from the swapped list instead of blindly
+          // decrementing: markAsRead already decrements locally, so the echo
+          // of our own UPDATE arriving here subtracted a second time (3
+          // unread showed 1), and updates to already-read rows decremented
+          // too. Deriving from state makes the count correct no matter who
+          // wrote the row.
+          setNotifications(prev => {
+            const next = prev.map(n =>
               n.id === updatedNotification.id ? updatedNotification : n
-            )
-          );
-          
-          // Update unread count
-          if (updatedNotification.is_read) {
-            setUnreadCount(prev => Math.max(0, prev - 1));
-          }
+            );
+            setUnreadCount(next.filter(n => !n.is_read).length);
+            return next;
+          });
         }
       )
       .subscribe();

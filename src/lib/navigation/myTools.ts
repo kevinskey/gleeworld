@@ -454,6 +454,52 @@ export function groupToolsBySection<T extends { key: string; section: string }>(
 }
 
 /**
+ * Fold member-made groups into the derived section headings they share a
+ * name with, so the nav never shows the same heading twice.
+ *
+ * groupToolsBySection files LOOSE tools under section headings, and the
+ * member's own groups render after them — which meant a member whose group
+ * is named exactly like a section ("Music", "Today"…) saw both headings,
+ * one over their loose tools and one over their group (Kevin, 2026-09-30:
+ * "sections are repeating"). Merged groups keep the SECTION id, so their
+ * collapse toggle stays local (collapsedSections) and nothing is ever
+ * written into the member's saved groups — the record is untouched either
+ * way; this is a render-time fold only.
+ *
+ * Matching is by trimmed, case-insensitive name. Entries are deduped by key
+ * within a merged heading, section entries first.
+ *
+ * ORDER is the member's, not the catalog's: headings backed by a member
+ * group — merged or standalone — render in the member's stored group order
+ * (rearranged in My World's group editor), and only the leftover derived
+ * sections keep catalog order, after them. That makes "how do I rearrange
+ * the left nav categories?" (Kevin, 2026-09-30) answerable: name a group
+ * after the category and move it. A member with no groups sees pure
+ * catalog order, unchanged.
+ */
+export function mergeNavGroups<
+  T extends { key: string },
+  G extends { id: string; name: string; entries: T[] },
+>(sections: G[], custom: G[]): G[] {
+  const norm = (name: string) => name.trim().toLowerCase();
+  const merged = sections.map((s) => ({ ...s, entries: [...s.entries] }));
+  const byName = new Map(merged.map((s) => [norm(s.name), s]));
+  const claimed = new Set<G>();
+  const ordered: G[] = [];
+  for (const g of custom) {
+    const target = byName.get(norm(g.name));
+    if (!target || claimed.has(target as G)) { ordered.push(g); continue; }
+    const seen = new Set(target.entries.map((e) => e.key));
+    for (const e of g.entries) {
+      if (!seen.has(e.key)) { seen.add(e.key); target.entries.push(e); }
+    }
+    claimed.add(target as G);
+    ordered.push(target as G);
+  }
+  return [...ordered, ...merged.filter((s) => !claimed.has(s as G))];
+}
+
+/**
  * The shelf a preview should render.
  *
  * The sidebar's top section is the member's OWN shelf — per-user data keyed
