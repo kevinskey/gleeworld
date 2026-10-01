@@ -12,13 +12,17 @@
 // Compact by design: header with a playlist <select> and a track-search
 // field, then the widget filling whatever height the parent grid row grants.
 // Sharing admin stays on the full page; this panel is "put a set on (or find
-// a track) and keep working". The SmartSearchBar's "Search SoundCloud" lane
+// a track) and keep working". Visibility follows the same share rules as the
+// full page: members see only the sets shared with them, and never the
+// whole-profile views ("All tracks", track search) that would bypass that. The SmartSearchBar's "Search SoundCloud" lane
 // pipes its query here via the SC_SEARCH_EVENT custom event.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
+import { useUserRole } from '@/hooks/useUserRole';
+import { visiblePlaylists, type PlaylistShare } from '@/lib/soundcloud/shares';
 import { attachSoundCloudVolume } from '@/lib/soundcloud/widgetVolume';
 import { Music, Loader2, Search, X, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -73,6 +77,8 @@ function widgetSrc(resourceUrl: string, autoPlay = false): string {
 export function SoundCloudPanel() {
   const { settings, isLoading: brandingLoading } = useBrandingSettings();
   const profileUrl = settings.soundcloud_url?.trim() || '';
+  const { isAdmin, isSuperAdmin } = useUserRole();
+  const canManage = isAdmin() || isSuperAdmin();
 
   // What the <select> chose. null = nothing chosen yet, in which case we
   // default to the first playlist once the catalog arrives (per spec) rather
@@ -92,11 +98,11 @@ export function SoundCloudPanel() {
   useEffect(() => {
     const onSearch = (e: Event) => {
       const q = (e as CustomEvent<{ query?: string }>).detail?.query ?? '';
-      if (q) { setTrackPick(null); setTrackQuery(q); }
+      if (q && canManage) { setTrackPick(null); setTrackQuery(q); }
     };
     window.addEventListener(SC_SEARCH_EVENT, onSearch);
     return () => window.removeEventListener(SC_SEARCH_EVENT, onSearch);
-  }, []);
+  }, [canManage]);
 
   const { data, isLoading, error, refetch, isRefetching } = useQuery<ProfileResponse>({
     queryKey: ['sc-panel', profileUrl],
@@ -112,18 +118,40 @@ export function SoundCloudPanel() {
     },
   });
 
+  // Same query (and cache key) as the full page. RLS returns a member only
+  // the shares that name them.
+  const { data: shares = [] } = useQuery<PlaylistShare[]>({
+    queryKey: ['soundcloud-shares'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_soundcloud_playlist_shares')
+        .select('id, playlist_id, playlist_title, playlist_url, share_type, target_role, course_id, invited_email, revoked_at')
+        .is('revoked_at', null);
+      if (error) throw error;
+      return (data ?? []) as unknown as PlaylistShare[];
+    },
+  });
+
   // Biggest sets first, mirroring the full page's ordering, so the default
   // selection (first entry) is the account's meatiest playlist.
-  const playlists = [...(data?.playlists ?? [])].sort((a, b) => b.trackCount - a.trackCount);
+  const playlists = visiblePlaylists(
+    [...(data?.playlists ?? [])].sort((a, b) => b.trackCount - a.trackCount),
+    shares,
+    canManage,
+  );
 
   const effectiveChoice =
-    choice ?? (playlists.length > 0 ? String(playlists[0]?.id) : ALL_TRACKS);
+    choice ?? (playlists.length > 0 ? String(playlists[0]?.id) : canManage ? ALL_TRACKS : '');
   const selectedPlaylist = playlists.find((p) => String(p.id) === effectiveChoice);
   // A picked track outranks the playlist choice — the pick IS the intent.
+  // Members never fall back to the whole profile: it lists every track,
+  // shared or not. No shared set means no widget.
   const nowPlayingUrl =
-    trackPick?.permalinkUrl || selectedPlaylist?.permalinkUrl || data?.user.permalinkUrl || profileUrl;
+    trackPick?.permalinkUrl || selectedPlaylist?.permalinkUrl
+    || (canManage ? data?.user.permalinkUrl || profileUrl : '');
+  const nothingShared = !canManage && !isLoading && !error && playlists.length === 0;
 
-  const q = trackQuery.trim().toLowerCase();
+  const q = canManage ? trackQuery.trim().toLowerCase() : '';
   const { data: trackData, isFetching: tracksLoading } = useQuery<ProfileResponse>({
     queryKey: ['sc-panel-tracks', profileUrl],
     enabled: !!profileUrl && q.length > 0,
@@ -164,7 +192,7 @@ export function SoundCloudPanel() {
             value={effectiveChoice}
             onChange={(e) => { setChoice(e.target.value); setTrackPick(null); }}
             aria-label="Choose a playlist"
-            disabled={isLoading || !!error}
+            disabled={isLoading || !!error || nothingShared}
             // Native <select> on purpose: a shadcn Select popover inside a
             // fixed-height grid cell fights the overflow-hidden card, and the
             // OS picker is fine for a flat list of set titles.
@@ -178,14 +206,16 @@ export function SoundCloudPanel() {
                 {p.title} ({p.trackCount})
               </option>
             ))}
-            <option value={ALL_TRACKS}>All tracks{data ? ` (${data.user.trackCount})` : ''}</option>
+            {canManage && (
+              <option value={ALL_TRACKS}>All tracks{data ? ` (${data.user.trackCount})` : ''}</option>
+            )}
           </select>
         )}
       </div>
 
       {/* Track search — always visible under the header so "find that one
           recording" never requires leaving the Command Center. */}
-      {profileUrl && !error && (
+      {profileUrl && !error && canManage && (
         <div className="px-3 py-1.5 border-b border-border shrink-0 flex items-center gap-2">
           {trackPick ? (
             <>
@@ -257,6 +287,11 @@ export function SoundCloudPanel() {
               {isRefetching && <Loader2 className="w-3 h-3 animate-spin" aria-hidden />}
               Retry
             </button>
+          </div>
+        ) : nothingShared ? (
+          <div className="h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
+            <Music className="w-6 h-6 opacity-40" aria-hidden />
+            <p className="text-sm text-muted-foreground">No playlists have been shared with you yet.</p>
           </div>
         ) : q && !trackPick ? (
           // Search results take the body over while a query is live: picking

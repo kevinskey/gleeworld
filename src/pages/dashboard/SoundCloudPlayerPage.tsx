@@ -127,7 +127,9 @@ export default function SoundCloudPlayerPage() {
 
   const { data: trackData, isFetching: tracksLoading } = useQuery<ProfileResponse>({
     queryKey: ['soundcloud-tracks', profileUrl],
-    enabled: !!profileUrl && wantTracks,
+    // Members never get the profile's track list: it spans every set,
+    // including the ones not shared with them.
+    enabled: !!profileUrl && wantTracks && canManage,
     staleTime: 10 * 60 * 1000,
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke('soundcloud-playlists', {
@@ -158,11 +160,19 @@ export default function SoundCloudPlayerPage() {
   // of them costs more than it helps. The count below says when it's capped.
   const TRACK_LIMIT = 100;
   const matchingTracks = useMemo(() => {
-    if (!q) return [];
+    if (!q || !canManage) return [];
     return (trackData?.tracks ?? []).filter((t) => t.title?.toLowerCase().includes(q));
-  }, [trackData, q]);
+  }, [trackData, q, canManage]);
 
-  const nowPlayingUrl = selected?.permalinkUrl || data?.user.permalinkUrl || profileUrl;
+  // Admins default to the whole profile ("All tracks"). Members only ever
+  // get a shared set: the profile widget would list every track, shared or
+  // not, so they start on their first shared playlist, and get no widget
+  // at all when nothing has been shared with them.
+  const fallbackPlaylist = canManage ? null : playlists[0] ?? null;
+  const nowPlayingUrl = selected?.permalinkUrl
+    || (canManage ? data?.user.permalinkUrl || profileUrl : fallbackPlaylist?.permalinkUrl || '');
+  const activePlaylistId = selected?.kind === 'playlist' ? selected.id
+    : selected ? null : fallbackPlaylist?.id ?? null;
 
   // Bind the widget to the app-wide SoundCloud level. Re-runs when the
   // now-playing URL changes because the iframe is keyed on it — React
@@ -233,7 +243,7 @@ export default function SoundCloudPlayerPage() {
                 value={query}
                 onFocus={() => setWantTracks(true)}
                 onChange={(e) => { setWantTracks(true); setQuery(e.target.value); }}
-                placeholder="Search tracks and playlists…"
+                placeholder={canManage ? 'Search tracks and playlists…' : 'Search playlists…'}
                 aria-label="Search SoundCloud titles"
                 className="pl-9 pr-9 h-10 rounded-xl"
               />
@@ -252,12 +262,13 @@ export default function SoundCloudPlayerPage() {
             {/* One widget, re-pointed as the selection changes: 30 mounted
                 iframes would each open their own player and their own
                 network connection. */}
+            {nowPlayingUrl && (
             <Card className={`${SOFT_CARD} overflow-hidden`} style={SOFT_CARD_STYLE}>
               <CardContent className="p-0">
                 <iframe
                   ref={frameRef}
                   key={nowPlayingUrl}
-                  title={selected ? `SoundCloud — ${selected.title}` : 'SoundCloud — all tracks'}
+                  title={selected ? `SoundCloud — ${selected.title}` : fallbackPlaylist ? `SoundCloud — ${fallbackPlaylist.title}` : 'SoundCloud — all tracks'}
                   src={widgetSrc(nowPlayingUrl)}
                   width="100%"
                   height={450}
@@ -276,6 +287,7 @@ export default function SoundCloudPlayerPage() {
                 </div>
               </CardContent>
             </Card>
+            )}
           </div>
 
           {/* RIGHT — the catalog rail: search hits while searching, the
@@ -285,7 +297,7 @@ export default function SoundCloudPlayerPage() {
           <div className="min-w-0 lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto lg:pr-1 space-y-2">
             <div className="flex items-center justify-between gap-2">
               <h2 className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
-                {q ? (
+                {q && canManage ? (
                   tracksLoading && !trackData
                     ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Searching…</>
                     : <>{matchingTracks.length} track{matchingTracks.length === 1 ? '' : 's'}
@@ -294,7 +306,7 @@ export default function SoundCloudPlayerPage() {
                   <>{matchingPlaylists.length} playlist{matchingPlaylists.length === 1 ? '' : 's'}</>
                 )}
               </h2>
-              {data?.user.permalinkUrl && !q && (
+              {canManage && data?.user.permalinkUrl && !q && (
                 <Button variant="ghost" size="sm" className="shrink-0" asChild>
                   <a href={data.user.permalinkUrl} target="_blank" rel="noreferrer">
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -346,7 +358,7 @@ export default function SoundCloudPlayerPage() {
               </Card>
             )}
 
-            {!q && (
+            {canManage && !q && (
               <PlaylistRow
                 label="All tracks"
                 count={data?.user.trackCount ?? 0}
@@ -359,7 +371,7 @@ export default function SoundCloudPlayerPage() {
                 key={p.id}
                 label={p.title}
                 count={p.trackCount}
-                active={selected?.kind === 'playlist' && selected.id === p.id}
+                active={activePlaylistId === p.id}
                 onClick={() => setSelected({ kind: 'playlist', id: p.id, title: p.title, permalinkUrl: p.permalinkUrl })}
                 shares={shareMap.get(p.id) ?? []}
                 onShare={canManage
