@@ -97,8 +97,18 @@ export default function MusicLibraryPage() {
     tags: (searchParams.get('tag') ?? '').split(',').filter(Boolean),
     rights: (searchParams.get('rights') ?? '').split(',').filter(Boolean),
     composer: searchParams.get('composer'),
-    sharing: parseSharingFilter(searchParams.get('sharing')),
-  }), [searchParams]);
+    // Scores is the ENSEMBLE's shelf: by default it shows what the ensemble
+    // can actually see (Kevin, 2026-10-02). Without this a librarian's Scores
+    // tab was mostly rows nobody but them could open — on yo-doc, 277 of 284.
+    // Members are already filtered server-side by gw_sheet_music_browse, so
+    // the default only changes the librarian/admin view. It is a DEFAULT, not
+    // a cage: the sharing control and the summary counters still reach the
+    // unshared ones, which is how you find and fix them. `?sharing=any` is
+    // the explicit opt-out, so "show everything" survives a reload.
+    sharing: searchParams.has('sharing')
+      ? parseSharingFilter(searchParams.get('sharing'))
+      : (canEdit ? 'shared' : null),
+  }), [searchParams, canEdit]);
   const sort: ScoresSort = (searchParams.get('sort') as ScoresSort) || 'title';
   const setFilters = (f: ScoresFilters) => updateParams((p) => {
     const setOrDel = (k: string, v: string) => { if (v) p.set(k, v); else p.delete(k); };
@@ -107,7 +117,9 @@ export default function MusicLibraryPage() {
     setOrDel('tag', f.tags.join(','));
     setOrDel('rights', f.rights.join(','));
     setOrDel('composer', f.composer ?? '');
-    setOrDel('sharing', f.sharing ?? '');
+    // Written explicitly (never deleted) so clearing it means "show
+    // everything" rather than falling back to the shared-only default.
+    p.set('sharing', f.sharing ?? 'any');
   });
   const setSort = (s: ScoresSort) => updateParams((p) => {
     if (s === 'title') p.delete('sort'); else p.set('sort', s);
@@ -368,6 +380,16 @@ export default function MusicLibraryPage() {
 
       {topTab === 'scores' && (
         <>
+          {/* Says out loud what the default filter does, so a librarian who
+              remembers uploading 284 scores isn't left wondering where they
+              went. Members get the plain description — the shared-only view
+              is the only one they have ever had. */}
+          <p className="text-sm text-muted-foreground">
+            {canEdit
+              ? 'Your group’s shelf — showing the scores you’ve shared. Use the counters below to find the ones members still can’t see.'
+              : 'Sheet music your directors have shared with you.'}
+          </p>
+
           <Card className={SOFT_CARD}>
             {/* Search gets its own row, the controls get the next one.
                 Sharing one row, search was the only element with min-w-0 — so
@@ -505,12 +527,31 @@ export default function MusicLibraryPage() {
             <Card className={SOFT_CARD}>
               <CardContent className="p-12 text-center">
                 <FileMusic className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-base font-semibold">No scores match the current filters.</p>
+                <p className="text-base font-semibold">
+                  {filters.sharing && preSharing.length > 0
+                    ? 'Nothing here is shared yet.'
+                    : 'No scores match the current filters.'}
+                </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {rows.length === 0
                     ? 'Add your first score to build the library.'
-                    : 'Try a different scope or search term.'}
+                    : filters.sharing && preSharing.length > 0
+                      // The one dead end the shared-only default could create:
+                      // a library with scores in it and none of them shared.
+                      // Name the number and hand over the way out.
+                      ? `${preSharing.length} ${preSharing.length === 1 ? 'score is' : 'scores are'} in this library but not shared with anyone.`
+                      : 'Try a different scope or search term.'}
                 </p>
+                {filters.sharing && preSharing.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-4"
+                    onClick={() => setFilters({ ...filters, sharing: null })}
+                  >
+                    Show all scores
+                  </Button>
+                )}
               </CardContent>
             </Card>
           ) : scoresView === 'cards' ? (
