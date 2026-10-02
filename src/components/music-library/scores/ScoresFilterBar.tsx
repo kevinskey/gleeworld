@@ -27,8 +27,27 @@ export interface ScoresFilters {
   // Who can see it. 'unshared' is the one a librarian actually needs:
   // it answers "what have I uploaded that members still can't see?",
   // which pairs with Select all to fix a whole library in two clicks.
-  sharing: 'shared' | 'unshared' | null;
+  // 'members' answers the other half — "what HAVE I put in front of the
+  // whole choir?" — and 'targeted' is the narrower middle lane.
+  sharing: ScoresSharingFilter | null;
 }
+
+export type ScoresSharingFilter = 'shared' | 'unshared' | 'members' | 'targeted';
+
+export const SHARING_FILTER_VALUES: ScoresSharingFilter[] = ['shared', 'unshared', 'members', 'targeted'];
+
+export function parseSharingFilter(value: string | null): ScoresSharingFilter | null {
+  return value && (SHARING_FILTER_VALUES as string[]).includes(value)
+    ? (value as ScoresSharingFilter)
+    : null;
+}
+
+export const SHARING_FILTER_LABEL: Record<ScoresSharingFilter, string> = {
+  shared: 'Shared with someone',
+  unshared: 'Not shared yet',
+  members: 'Shared with members',
+  targeted: 'Shared with specific people',
+};
 
 export type ScoresSort = 'title' | 'composer' | 'recent';
 
@@ -51,6 +70,25 @@ export function isScoreShared(r: ScoreRow): boolean {
     || (r.shared_with_voice_parts ?? []).length > 0;
 }
 
+/** Shared with the whole roster — the `shared_with_members` lane. */
+export function isSharedWithMembers(r: ScoreRow): boolean {
+  return r.shared_with_members === true;
+}
+
+/** Shared, but only with named people / classes / voice parts. */
+export function isSharedWithSomeOnly(r: ScoreRow): boolean {
+  return !isSharedWithMembers(r) && isScoreShared(r);
+}
+
+function matchesSharing(r: ScoreRow, sharing: ScoresSharingFilter): boolean {
+  switch (sharing) {
+    case 'shared': return isScoreShared(r);
+    case 'unshared': return !isScoreShared(r);
+    case 'members': return isSharedWithMembers(r);
+    case 'targeted': return isSharedWithSomeOnly(r);
+  }
+}
+
 export function applyScoresFilters(rows: ScoreRow[], f: ScoresFilters): ScoreRow[] {
   return rows.filter((r) =>
     (f.voicings.length === 0 || (r.voicing != null && f.voicings.includes(r.voicing)))
@@ -58,7 +96,7 @@ export function applyScoresFilters(rows: ScoreRow[], f: ScoresFilters): ScoreRow
     && (f.tags.length === 0 || (r.tags ?? []).some((t) => f.tags.includes(t)))
     && (f.rights.length === 0 || (r.rights_status != null && f.rights.includes(r.rights_status)))
     && (!f.composer || r.composer === f.composer)
-    && (!f.sharing || (f.sharing === 'shared' ? isScoreShared(r) : !isScoreShared(r))),
+    && (!f.sharing || matchesSharing(r, f.sharing)),
   );
 }
 
@@ -142,15 +180,17 @@ export function ScoresFilterBar({
         <Label className="text-sm font-semibold">Sharing</Label>
         <Select
           value={filters.sharing ?? 'any'}
-          onValueChange={(v) => onFiltersChange({ ...filters, sharing: v === 'any' ? null : (v as 'shared' | 'unshared') })}
+          onValueChange={(v) => onFiltersChange({ ...filters, sharing: parseSharingFilter(v) })}
         >
           <SelectTrigger className="h-9">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="any">Any</SelectItem>
-            <SelectItem value="shared">Shared with someone</SelectItem>
-            <SelectItem value="unshared">Not shared yet</SelectItem>
+            <SelectItem value="members">{SHARING_FILTER_LABEL.members}</SelectItem>
+            <SelectItem value="targeted">{SHARING_FILTER_LABEL.targeted}</SelectItem>
+            <SelectItem value="shared">{SHARING_FILTER_LABEL.shared}</SelectItem>
+            <SelectItem value="unshared">{SHARING_FILTER_LABEL.unshared}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -250,7 +290,7 @@ export function ActiveFilterChips({
       remove: () => onFiltersChange({ ...filters, rights: filters.rights.filter((x) => x !== v) }),
     })),
     ...(filters.sharing ? [{
-      key: 'sharing', label: filters.sharing === 'shared' ? 'Shared' : 'Not shared yet',
+      key: 'sharing', label: SHARING_FILTER_LABEL[filters.sharing],
       remove: () => onFiltersChange({ ...filters, sharing: null }),
     }] : []),
     ...(filters.composer ? [{

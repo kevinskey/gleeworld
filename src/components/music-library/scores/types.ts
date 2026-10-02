@@ -44,7 +44,7 @@ export interface ScoreRow {
 // badge label plus a full breakdown for the title/tooltip.
 export function sharingSummary(row: ScoreRow): { shared: boolean; label: string; detail: string } {
   if (row.shared_with_members) {
-    return { shared: true, label: 'Everyone', detail: 'Visible to every member of this workspace' };
+    return { shared: true, label: 'All members', detail: 'Visible to every member of this workspace' };
   }
   const people = row.shared_with_users?.length ?? 0;
   const classes = row.shared_with_courses?.length ?? 0;

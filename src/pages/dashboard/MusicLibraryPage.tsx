@@ -32,9 +32,10 @@ import { AttachAudioDialog } from '@/components/music-library/scores/AttachAudio
 import { EditScoreDialog } from '@/components/music-library/scores/EditScoreDialog';
 import { ShareScoreDialog } from '@/components/music-library/scores/ShareScoreDialog';
 import {
-  ScoresFilterBar, ActiveFilterChips, applyScoresFilters,
-  type ScoresFilters, type ScoresSort,
+  ScoresFilterBar, ActiveFilterChips, applyScoresFilters, EMPTY_FILTERS, parseSharingFilter,
+  type ScoresFilters, type ScoresSort, type ScoresSharingFilter,
 } from '@/components/music-library/scores/ScoresFilterBar';
+import { ScoresSharingSummary } from '@/components/music-library/scores/ScoresSharingSummary';
 import { AddToCollectionDialog } from '@/components/music-library/scores/AddToCollectionDialog';
 import { ScoreViewerDialog } from '@/components/music-library/ScoreViewerDialog';
 import {
@@ -96,7 +97,7 @@ export default function MusicLibraryPage() {
     tags: (searchParams.get('tag') ?? '').split(',').filter(Boolean),
     rights: (searchParams.get('rights') ?? '').split(',').filter(Boolean),
     composer: searchParams.get('composer'),
-    sharing: (searchParams.get('sharing') as 'shared' | 'unshared' | null) ?? null,
+    sharing: parseSharingFilter(searchParams.get('sharing')),
   }), [searchParams]);
   const sort: ScoresSort = (searchParams.get('sort') as ScoresSort) || 'title';
   const setFilters = (f: ScoresFilters) => updateParams((p) => {
@@ -274,7 +275,10 @@ export default function MusicLibraryPage() {
     return m;
   }, [courses]);
 
-  const filtered = useMemo(() => {
+  // Everything except the sharing lane — the sharing summary counts off this
+  // so its three counters always add up to the list on screen, and clicking
+  // one narrows `filtered` without changing what the counters say.
+  const preSharing = useMemo(() => {
     const s = search.trim().toLowerCase();
     let out = rows;
     // "View as student/member" previews VISIBILITY too, not just nav.
@@ -295,11 +299,16 @@ export default function MusicLibraryPage() {
         (r.tags ?? []).some((t) => t.toLowerCase().includes(s)),
       );
     }
-    out = applyScoresFilters(out, filters);
+    out = applyScoresFilters(out, { ...filters, sharing: null });
     if (collectionId && collectionItemIds) {
       const inCollection = new Set(collectionItemIds);
       out = out.filter((r) => inCollection.has(r.id));
     }
+    return out;
+  }, [rows, search, filters, collectionId, collectionItemIds, previewRole]);
+
+  const filtered = useMemo(() => {
+    let out = applyScoresFilters(preSharing, { ...EMPTY_FILTERS, sharing: filters.sharing });
     if (sort === 'composer') {
       const collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
       out = [...out].sort((a, b) => collator.compare(a.composer ?? '', b.composer ?? ''));
@@ -308,7 +317,7 @@ export default function MusicLibraryPage() {
     }
     // 'title' keeps the server's .order('title').
     return out;
-  }, [rows, search, filters, sort, collectionId, collectionItemIds, previewRole]);
+  }, [preSharing, filters.sharing, sort]);
 
   // Row's Share button — opens the granular share dialog rather than
   // toggling in place. The dialog handles the actual write; passing the
@@ -477,6 +486,14 @@ export default function MusicLibraryPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* "What have I actually shared?" — the per-card badge answers it one
+              score at a time; this answers it for the whole list and filters. */}
+          <ScoresSharingSummary
+            rows={preSharing}
+            sharing={filters.sharing}
+            onSharingChange={(s: ScoresSharingFilter | null) => setFilters({ ...filters, sharing: s })}
+          />
 
           <ActiveFilterChips filters={filters} onFiltersChange={setFilters} />
 
