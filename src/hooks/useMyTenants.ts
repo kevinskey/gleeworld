@@ -9,6 +9,9 @@ export interface MyTenant {
   slug: string;
   name: string | null;
   role: string | null;
+  /** The tenant's own domain, when it has one (gw_tenants.custom_domain).
+   *  Null for tenants that live on a *.gleeworld.org subdomain. */
+  custom_domain?: string | null;
 }
 
 /**
@@ -35,8 +38,15 @@ export function useMyTenants() {
   });
 }
 
-/** Absolute URL for a tenant's own subdomain (main = the platform apex). */
-export function tenantHomeUrl(slug: string): string {
+/** Absolute URL for a tenant's own front door.
+ *
+ *  Prefers the tenant's custom domain when it has one. Without it, a member
+ *  switching to Yo-Doc (slug `kevin`) landed on kevin.gleeworld.org rather
+ *  than yo-doc.com — the slug is an internal handle, not the address its
+ *  people know. Falls back to the subdomain, and `main` is the apex. */
+export function tenantHomeUrl(slug: string, customDomain?: string | null): string {
+  const domain = (customDomain ?? '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  if (domain) return `https://${domain}`;
   return slug === 'main' ? 'https://gleeworld.org' : `https://${slug}.gleeworld.org`;
 }
 
@@ -47,8 +57,12 @@ export function tenantHomeUrl(slug: string): string {
  *  the session's JWT tenant_slug matches the target tenant — otherwise
  *  the destination boot-errors on the JWT/URL tenant mismatch. See
  *  performTenantSwitch() below for the coordinated flow. */
-export function tenantSwitchUrl(slug: string, session: Session | null): string {
-  const base = tenantHomeUrl(slug);
+export function tenantSwitchUrl(
+  slug: string,
+  session: Session | null,
+  customDomain?: string | null,
+): string {
+  const base = tenantHomeUrl(slug, customDomain);
   if (!session?.access_token || !session.refresh_token) return base;
   // Route through /auth/callback so the destination's manual setSession
   // (AuthCallback.tsx) picks up the tokens reliably — supabase-js's
