@@ -79,16 +79,40 @@ export function PublishToLibraryDialog({
       })
       .select('id')
       .maybeSingle();
-    setBusy(false);
     if (error || !data) {
       const code = (error as { code?: string } | null)?.code;
-      toast.error(
-        code === '23505'
-          ? 'This file is already published to your group’s library.'
-          : 'Could not publish — your role may not have permission.',
-      );
+      // 23505 = gw_sheet_music_personal_publish_uq: this file already has a
+      // library row. That used to dead-end here, which is exactly what
+      // "I shared it and nobody can see it" looks like from the outside —
+      // the earlier row is usually UNLISTED (shared_with_members = false),
+      // and re-publishing could never fix it. Publishing again is a plain
+      // statement of intent, so apply it to the row that already exists.
+      if (code === '23505') {
+        const { data: existing, error: shareErr } = await (supabase as any)
+          .from('gw_sheet_music')
+          .update({ shared_with_members: shareNow })
+          .eq('storage_bucket', 'personal-scores')
+          .eq('storage_path', score.storage_path)
+          .select('id');
+        setBusy(false);
+        if (shareErr || !existing?.length) {
+          toast.error('Already in the library, but its sharing could not be updated — your role may not have permission.');
+          return;
+        }
+        toast.success(
+          shareNow
+            ? 'Already in the library — now shared with every member.'
+            : 'Already in the library — now hidden from members.',
+        );
+        onPublished();
+        onOpenChange(false);
+        return;
+      }
+      setBusy(false);
+      toast.error('Could not publish — your role may not have permission.');
       return;
     }
+    setBusy(false);
     toast.success(
       shareNow
         ? 'Published — every member can now see it in Scores.'
