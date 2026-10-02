@@ -96,6 +96,7 @@ export default function MusicLibraryPage() {
     tags: (searchParams.get('tag') ?? '').split(',').filter(Boolean),
     rights: (searchParams.get('rights') ?? '').split(',').filter(Boolean),
     composer: searchParams.get('composer'),
+    sharing: (searchParams.get('sharing') as 'shared' | 'unshared' | null) ?? null,
   }), [searchParams]);
   const sort: ScoresSort = (searchParams.get('sort') as ScoresSort) || 'title';
   const setFilters = (f: ScoresFilters) => updateParams((p) => {
@@ -105,6 +106,7 @@ export default function MusicLibraryPage() {
     setOrDel('tag', f.tags.join(','));
     setOrDel('rights', f.rights.join(','));
     setOrDel('composer', f.composer ?? '');
+    setOrDel('sharing', f.sharing ?? '');
   });
   const setSort = (s: ScoresSort) => updateParams((p) => {
     if (s === 'title') p.delete('sort'); else p.set('sort', s);
@@ -240,14 +242,29 @@ export default function MusicLibraryPage() {
       // librarians see all) — see 20260803140000_sheet_music_browse_view.sql.
       // Listing is enforced by the view; open-by-id on the base table stays
       // open on purpose so ?view= deep links and setlists keep working.
-      let q = (supabase as any)
-        .from('gw_sheet_music_browse')
-        .select('id, title, composer, voicing, difficulty_level, pdf_url, storage_path, storage_bucket, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, arranger, language, tags, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members, shared_with_users, shared_with_courses, shared_with_voice_parts')
-        .order('title')
-        .limit(200);
-      q = applyFilter(q as any);
-      const { data } = await q;
-      return (data ?? []) as ScoreRow[];
+      // Page through the whole library rather than stopping at a flat cap.
+      // A single .limit(200) silently hid 84 of yo-doc.com's 284 scores from
+      // the librarian who owns them — "my music isn't in the library" with no
+      // error to go on, and no way to select those rows for sharing.
+      // PostgREST caps a response at 1000 rows, so walk ranges until a short
+      // page comes back. PAGE_CAP is a runaway guard, not a product limit.
+      const PAGE = 1000;
+      const PAGE_CAP = 20;
+      const all: ScoreRow[] = [];
+      for (let page = 0; page < PAGE_CAP; page += 1) {
+        let q = (supabase as any)
+          .from('gw_sheet_music_browse')
+          .select('id, title, composer, voicing, difficulty_level, pdf_url, storage_path, storage_bucket, audio_url, audio_title, physical_copies_count, physical_location, course_id, created_at, arranger, language, tags, rights_status, license_seat_count, license_expires_at, copyright_holder, shared_with_members, shared_with_users, shared_with_courses, shared_with_voice_parts')
+          .order('title')
+          .range(page * PAGE, page * PAGE + PAGE - 1);
+        q = applyFilter(q as any);
+        const { data, error } = await q;
+        if (error) break;
+        const batch = (data ?? []) as ScoreRow[];
+        all.push(...batch);
+        if (batch.length < PAGE) break;
+      }
+      return all;
     },
   });
 
@@ -439,6 +456,22 @@ export default function MusicLibraryPage() {
                   >
                     <CheckSquare className="w-4 h-4 sm:mr-1.5" />
                     <span className="hidden sm:inline">{selectMode ? 'Done' : 'Select'}</span>
+                  </Button>
+                )}
+                {/* Sharing a whole library one checkbox at a time is not a
+                    workflow. Select-all works on what the current search and
+                    filters show, so "share everything unshared" is two
+                    clicks. */}
+                {canEdit && selectMode && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 h-9"
+                    onClick={() => setSelectedIds(new Set(filtered.map((r) => r.id)))}
+                    disabled={filtered.length === 0 || filtered.every((r) => selectedIds.has(r.id))}
+                    title="Select every score currently listed"
+                  >
+                    Select all{filtered.length ? ` (${filtered.length})` : ''}
                   </Button>
                 )}
               </div>
