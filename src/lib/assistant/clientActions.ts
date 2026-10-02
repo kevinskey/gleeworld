@@ -580,10 +580,10 @@ export async function executeClientAction(
           const { tenantHomeUrl, tenantSwitchUrl, performTenantSwitch } = await import('@/hooks/useMyTenants');
           try {
             const refreshed = await performTenantSwitch(deps.supabase as any, target.slug);
-            window.location.href = tenantSwitchUrl(target.slug, refreshed);
+            window.location.href = tenantSwitchUrl(target.slug, refreshed, target.custom_domain);
           } catch (e) {
             console.warn('[assistant] tenant switch pivot failed', e);
-            window.location.href = tenantHomeUrl(target.slug);
+            window.location.href = tenantHomeUrl(target.slug, target.custom_domain);
           }
         }
         return { ok: true, message: `Switching to ${target.name || target.slug}…` };

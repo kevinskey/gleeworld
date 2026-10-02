@@ -1105,10 +1105,10 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
                   // reaches the target's login screen.
                   try {
                     const refreshed = await performTenantSwitch(supabase, t.slug);
-                    window.location.href = tenantSwitchUrl(t.slug, refreshed);
+                    window.location.href = tenantSwitchUrl(t.slug, refreshed, t.custom_domain);
                   } catch (e) {
                     console.warn('[tenant-switch] pivot failed, falling back to login', e);
-                    window.location.href = tenantHomeUrl(t.slug);
+                    window.location.href = tenantHomeUrl(t.slug, t.custom_domain);
                   }
                 };
                 return (
