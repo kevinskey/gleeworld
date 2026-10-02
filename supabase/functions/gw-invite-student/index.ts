@@ -8,7 +8,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
-import { LEGACY_MEMBER_ROLE, MEMBER_ROLE, normalizeMemberRole } from "../_shared/memberRole.ts";
+import { MEMBER_ROLE } from "../_shared/memberRole.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,8 +30,7 @@ interface InvitePayload {
 
 // This endpoint runs service-role. Never let a caller-supplied role reach
 // admin/super_admin — promotion stays a deliberate act in the Edit dialog.
-// Both member spellings are accepted; invites are stored as MEMBER_ROLE.
-const ALLOWED_ROLES = new Set([LEGACY_MEMBER_ROLE, MEMBER_ROLE, "instructor", "fan"]);
+const ALLOWED_ROLES = new Set([MEMBER_ROLE, "instructor", "fan"]);
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -39,9 +38,7 @@ serve(async (req) => {
     const body = (await req.json()) as InvitePayload;
     if (!body.email) throw new Error("email is required");
     const requested = String(body.role || "").toLowerCase();
-    // normalizeMemberRole collapses a caller passing "student" onto the
-    // canonical "member" so invites stop minting legacy-spelled rows.
-    const role = ALLOWED_ROLES.has(requested) ? String(normalizeMemberRole(requested)) : MEMBER_ROLE;
+    const role = ALLOWED_ROLES.has(requested) ? requested : MEMBER_ROLE;
     const fullName = (body.fullName || body.full_name || "").trim() || null;
     const sendEmail = body.sendEmail !== false;
 

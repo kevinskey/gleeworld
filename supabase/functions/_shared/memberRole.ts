@@ -1,41 +1,30 @@
 // The member role, server side. Mirror of src/lib/auth/memberRole.ts — keep
 // the two in step.
 //
-// 'student' and 'member' are ONE audience. Phase 2 of the rename makes
-// 'member' the stored value; reads still accept both so a function deployed
-// before or after the data migration behaves identically either way.
+// Phase 3 of the student -> member rename: the legacy spelling is gone. Every
+// row is stored as "member" (migration 20261001120000).
 //
-// IMPORTANT — two different things are spelled 'student' in this codebase:
-//
-//   1. The USER role, on gw_profiles.role / gw_tenant_members.role. That is
-//      what this module covers.
-//
-//   2. The COURSE role, on gw_course_enrollments.role, whose domain is
-//      'student' | 'instructor' | 'ta' | 'auditor' and which is pinned by the
-//      gw_course_enrollments_role_check constraint. A person's role WITHIN
-//      one course. NOT being renamed — do not use these helpers there, the
-//      insert will fail the constraint.
-//
-// Functions that correctly keep 'student' because they write the COURSE role:
-// gw-course-enroll, upload-classlist-csv, public-students-api,
-// fetch-students-from-gleeworld, and the enrollment half of
-// provision-student-accounts.
+// IMPORTANT — one thing is still spelled "student" and is NOT this role:
+// gw_course_enrollments.role, whose domain is
+// "student" | "instructor" | "ta" | "auditor", pinned by
+// gw_course_enrollments_role_check. A person's role WITHIN one course.
+// Functions that correctly still write "student" there: gw-course-enroll,
+// upload-classlist-csv, public-students-api, fetch-students-from-gleeworld,
+// the enrollment half of provision-student-accounts, and the SQL function
+// list_seating_chart_roster.
 
-/** Canonical name for the role. What phase 2 stores. */
+/** The member role, as stored. */
 export const MEMBER_ROLE = "member";
 
-/** The pre-rename spelling. Still present in rows written before phase 2. */
-export const LEGACY_MEMBER_ROLE = "student";
+/** For `.in("role", ...)` filters on PROFILE tables. */
+export const MEMBER_ROLE_VALUES: readonly string[] = [MEMBER_ROLE];
 
-/** Both spellings, for `.in("role", ...)` filters on PROFILE tables. */
-export const MEMBER_ROLE_VALUES: readonly string[] = [LEGACY_MEMBER_ROLE, MEMBER_ROLE];
-
-/** Is this user role the member audience, under either spelling? */
+/** Is this user role the member audience? */
 export function isMemberRole(role: unknown): boolean {
-  return role === MEMBER_ROLE || role === LEGACY_MEMBER_ROLE;
+  return role === MEMBER_ROLE;
 }
 
-/** Collapse either spelling to the canonical one; leave other roles alone. */
+/** Collapse a member role to the canonical spelling; leave others alone. */
 export function normalizeMemberRole(role: unknown): unknown {
   return isMemberRole(role) ? MEMBER_ROLE : role;
 }

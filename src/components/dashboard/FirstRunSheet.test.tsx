@@ -15,7 +15,7 @@ const h = vi.hoisted(() => ({
     loading: false,
   },
   defaultsState: {
-    defaultsByRole: { admin: [] as string[], student: ['calendar', 'academy'], member: [] as string[] },
+    defaultsByRole: { admin: [] as string[], member: ['calendar', 'academy'] },
     loading: false,
   },
 }));
@@ -58,7 +58,7 @@ beforeEach(() => {
   h.saveMyTools.mockReset().mockResolvedValue(true);
   h.myToolsState.myTools = { v: 4, tools: [], widgets: [], setupComplete: false };
   h.myToolsState.loading = false;
-  h.defaultsState.defaultsByRole = { admin: [], student: ['calendar', 'academy'], member: [] };
+  h.defaultsState.defaultsByRole = { admin: [], member: ['calendar', 'academy'] };
   h.defaultsState.loading = false;
   // useIsCompactNav (side selection) reads matchMedia; jsdom has none by default.
   window.matchMedia = ((query: string) => ({
@@ -145,7 +145,7 @@ describe('FirstRunSheet', () => {
   // edit the member makes while useTenantDefaultTools is still in flight.
   it('an in-sheet edit survives a late-arriving tenant default', async () => {
     h.defaultsState.loading = true;
-    h.defaultsState.defaultsByRole = { admin: [], student: [], member: [] };
+    h.defaultsState.defaultsByRole = { admin: [], member: [] };
     const { rerender } = render(sheetEl());
 
     // Seeded from the platform default (8 tools) while the tenant query is
@@ -158,7 +158,7 @@ describe('FirstRunSheet', () => {
 
     // Tenant default resolves late, to a DIFFERENT (2-tool) set.
     h.defaultsState.loading = false;
-    h.defaultsState.defaultsByRole = { admin: [], student: ['calendar', 'academy'], member: [] };
+    h.defaultsState.defaultsByRole = { admin: [], member: ['calendar', 'academy'] };
     rerender(sheetEl());
 
     // The member's edit must survive — not be replaced by the late default.
@@ -176,8 +176,7 @@ describe('FirstRunSheet', () => {
   it('re-seeds for the real role when the profile resolves after the defaults query', async () => {
     h.defaultsState.defaultsByRole = {
       admin: ['calendar', 'academy', 'finance'],
-      student: ['calendar'],
-      member: [],
+      member: ['calendar'],
     };
     h.defaultsState.loading = false; // defaults already cached — resolve first
 
@@ -199,8 +198,7 @@ describe('FirstRunSheet', () => {
   it('still lets an edit made before the role flip win over the re-seed', () => {
     h.defaultsState.defaultsByRole = {
       admin: ['calendar', 'academy', 'finance'],
-      student: ['calendar'],
-      member: [],
+      member: ['calendar'],
     };
     const { rerender } = render(sheetEl('student'));
     fireEvent.click(screen.getByRole('button', { name: /^add academy$/i }));

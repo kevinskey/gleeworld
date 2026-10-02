@@ -35,12 +35,12 @@ beforeEach(() => {
 describe('useTenantDefaultTools', () => {
   it('maps rows to a role-keyed record', async () => {
     h.select.mockResolvedValue({
-      data: [{ role: 'student', default_tools: ['calendar', 'academy'] }],
+      data: [{ role: 'member', default_tools: ['calendar', 'academy'] }],
       error: null,
     });
     const { result } = renderHook(() => useTenantDefaultTools(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.defaultsByRole.student).toEqual(['calendar', 'academy']);
+    expect(result.current.defaultsByRole.member).toEqual(['calendar', 'academy']);
     expect(result.current.defaultsByRole.admin).toEqual([]);
   });
 
@@ -50,19 +50,19 @@ describe('useTenantDefaultTools', () => {
   // record (see resolvedTools in myTools.ts), different table.
   it('resolves a retired key in a stored default list to its successor', async () => {
     h.select.mockResolvedValue({
-      data: [{ role: 'student', default_tools: ['merch', 'calendar'] }],
+      data: [{ role: 'member', default_tools: ['merch', 'calendar'] }],
       error: null,
     });
     const { result } = renderHook(() => useTenantDefaultTools(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.defaultsByRole.student).toEqual(['shop', 'calendar']);
+    expect(result.current.defaultsByRole.member).toEqual(['shop', 'calendar']);
   });
 
   it('returns empty arrays for every role when the query fails', async () => {
     h.select.mockResolvedValue({ data: null, error: { message: 'nope' } });
     const { result } = renderHook(() => useTenantDefaultTools(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.defaultsByRole).toEqual({ admin: [], student: [], member: [] });
+    expect(result.current.defaultsByRole).toEqual({ admin: [], member: [] });
   });
 
   // "caps at 8" until 2026-08-09. It no longer does: sanitizeTools stopped
@@ -74,10 +74,10 @@ describe('useTenantDefaultTools', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     const many = Array.from({ length: 20 }, (_, i) => `k${i}`);
-    await act(async () => { await result.current.saveDefaults('student', many); });
+    await act(async () => { await result.current.saveDefaults('member', many); });
 
     const [row, opts] = h.upsert.mock.calls[0];
-    expect(row.role).toBe('student');
+    expect(row.role).toBe('member');
     expect(row.tenant_id).toBe('t1');
     expect(row.default_tools).toEqual(many);
     expect(opts).toEqual({ onConflict: 'tenant_id,role' });
@@ -91,7 +91,7 @@ describe('useTenantDefaultTools', () => {
   // exactly these pains; this is the same shape.
   it('writes the new list into the cache before the upsert resolves', async () => {
     h.select.mockResolvedValue({
-      data: [{ role: 'student', default_tools: ['calendar'] }],
+      data: [{ role: 'member', default_tools: ['calendar'] }],
       error: null,
     });
     let resolveUpsert!: (v: { error: null }) => void;
@@ -99,15 +99,15 @@ describe('useTenantDefaultTools', () => {
 
     const { result } = renderHook(() => useTenantDefaultTools(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.defaultsByRole.student).toEqual(['calendar']);
+    expect(result.current.defaultsByRole.member).toEqual(['calendar']);
 
     let done!: Promise<boolean>;
-    act(() => { done = result.current.saveDefaults('student', ['academy']); });
+    act(() => { done = result.current.saveDefaults('member', ['academy']); });
 
     // Nothing has come back from the server yet — the upsert is still
     // pending on the promise above — and the editor already reads the new
     // list.
-    await waitFor(() => expect(result.current.defaultsByRole.student).toEqual(['academy']));
+    await waitFor(() => expect(result.current.defaultsByRole.member).toEqual(['academy']));
     expect(h.upsert).toHaveBeenCalledTimes(1);
 
     resolveUpsert({ error: null });
@@ -116,7 +116,7 @@ describe('useTenantDefaultTools', () => {
 
   it('rolls the cache back to the previous list when the upsert fails', async () => {
     h.select.mockResolvedValue({
-      data: [{ role: 'student', default_tools: ['calendar'] }],
+      data: [{ role: 'member', default_tools: ['calendar'] }],
       error: null,
     });
     h.upsert.mockResolvedValue({ error: { message: 'denied' } });
@@ -125,11 +125,11 @@ describe('useTenantDefaultTools', () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     let ok = true;
-    await act(async () => { ok = await result.current.saveDefaults('student', ['academy']); });
+    await act(async () => { ok = await result.current.saveDefaults('member', ['academy']); });
     expect(ok).toBe(false);
     // The optimistic value must not survive a rejected write — otherwise
     // the admin is looking at a default the tenant does not have.
-    expect(result.current.defaultsByRole.student).toEqual(['calendar']);
+    expect(result.current.defaultsByRole.member).toEqual(['calendar']);
     // Other roles are untouched either way.
     expect(result.current.defaultsByRole.admin).toEqual([]);
   });
@@ -140,7 +140,7 @@ describe('useTenantDefaultTools', () => {
     const { result } = renderHook(() => useTenantDefaultTools(), { wrapper });
     await waitFor(() => expect(result.current.loading).toBe(false));
     let ok = true;
-    await act(async () => { ok = await result.current.saveDefaults('student', ['calendar']); });
+    await act(async () => { ok = await result.current.saveDefaults('member', ['calendar']); });
     expect(ok).toBe(false);
   });
 });

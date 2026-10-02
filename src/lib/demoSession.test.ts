@@ -27,8 +27,11 @@ describe('claimsToDemoRole', () => {
       .toBe('director');
   });
 
-  it('maps student and fan roles', () => {
-    expect(claimsToDemoRole({ demo_viewer: true, tenant_slug: 'demo', tenant_role: 'student' }))
+  it('maps member and fan roles', () => {
+    // The demo tenant's member rows were renamed from 'student' by the
+    // rename's phase 2 migration; DemoRole keeps its own 'student' spelling
+    // as the label for the non-admin demo persona.
+    expect(claimsToDemoRole({ demo_viewer: true, tenant_slug: 'demo', tenant_role: 'member' }))
       .toBe('student');
     expect(claimsToDemoRole({ demo_viewer: true, tenant_slug: 'demo', tenant_role: 'fan' }))
       .toBe('fan');

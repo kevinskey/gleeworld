@@ -32,7 +32,7 @@ describe('applyPreviewRole', () => {
     // pass vacuously.
     expect(adminOnly.length).toBeGreaterThan(0);
 
-    const asStudent = routes(applyPreviewRole(superAdminCtx, 'student'));
+    const asStudent = routes(applyPreviewRole(superAdminCtx, 'member'));
     for (const e of adminOnly) {
       expect(asStudent.has(e.to), `${e.to} leaked into the student preview`).toBe(false);
     }
@@ -64,7 +64,7 @@ describe('applyPreviewRole', () => {
 
   it('leaves module entitlement alone — modules are tenant-level, not role-level', () => {
     const noModules: NavContext = { ...superAdminCtx, hasModule: () => false };
-    const previewed = applyPreviewRole(noModules, 'student');
+    const previewed = applyPreviewRole(noModules, 'member');
     expect(previewed.hasModule('studio')).toBe(false);
   });
 
@@ -73,36 +73,33 @@ describe('applyPreviewRole', () => {
     expect(firstUngated).toBeDefined();
     const ctx = applyPreviewRole(
       { ...superAdminCtx, hiddenRoutes: new Set([firstUngated!.to]) },
-      'student',
+      'member',
     );
     expect(routes(ctx).has(firstUngated!.to)).toBe(false);
   });
 
   it('maps only the admin role to the faculty tile set', () => {
     expect(previewRoleIsFaculty('admin')).toBe(true);
-    for (const r of ['student', 'member'] as const) {
-      expect(previewRoleIsFaculty(r)).toBe(false);
-    }
+    expect(previewRoleIsFaculty('member')).toBe(false);
   });
 
   it('only offers roles that actually render the Command Center', () => {
     // fans -> /fan and graduates -> /alumni via useRoleBasedRedirect; neither
     // ever mounts DashboardShell, so previewing their sidebar was meaningless.
     const offered = HIDEABLE_NAV_ROLES.map((r) => r.value);
-    expect(offered).toEqual(['admin', 'student']);
+    expect(offered).toEqual(['admin', 'member']);
     expect(offered).not.toContain('fan');
     expect(offered).not.toContain('graduate');
   });
 
   it('offers members as ONE audience, under the stored spelling', () => {
-    // 'student' and 'member' were two separately-configurable rows; they are
-    // one audience now. The value stays 'student' because that is still what
-    // gw_tenant_nav_prefs rows are keyed by — useTenantNavPrefs falls back
-    // across both spellings on read. Offering both would let a tenant
-    // configure one audience twice and see only one of them take effect.
+    // One audience, keyed by what gw_tenant_nav_prefs actually stores after
+    // the phase 2 migration. This value is what the Navigation settings tab
+    // WRITES, so a drift between it and useTenantNavPrefs' lookup is silent:
+    // edits would land on a row no reader ever matches.
     const members = HIDEABLE_NAV_ROLES.filter((r) => isMemberRole(r.value));
     expect(members).toHaveLength(1);
-    expect(members[0]).toEqual({ value: 'student', label: 'Members' });
+    expect(members[0]).toEqual({ value: 'member', label: 'Members' });
   });
 
   it('ignores a retired role rather than leaving admin capabilities intact', () => {

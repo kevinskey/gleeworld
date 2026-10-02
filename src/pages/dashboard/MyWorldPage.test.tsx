@@ -367,10 +367,10 @@ describe('MyWorldPage — admin defaults mode', () => {
   it('saves through saveDefaults(role, tools), never saveMyTools, when editing defaults', async () => {
     await renderAdminPage();
     switchToDefaultsTab();
-    // Unseeded — starts from the platform default for Students.
+    // Unseeded — starts from the platform default for Members.
     fireEvent.click(screen.getByRole('button', { name: /^remove calendar$/i }));
     await waitFor(() => expect(h.saveDefaults).toHaveBeenCalledWith(
-      'student',
+      'member',
       DEFAULT_TOOLS_STUDENT.filter((k) => k !== 'calendar'),
     ));
     expect(h.saveMyTools).not.toHaveBeenCalled();

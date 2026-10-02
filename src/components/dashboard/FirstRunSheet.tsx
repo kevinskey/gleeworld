@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useIsCompactNav } from '@/hooks/use-mobile';
 import { useMyTools } from '@/hooks/useMyTools';
+import { MEMBER_ROLE } from '@/lib/auth/memberRole';
 import { useTenantDefaultTools } from '@/hooks/useTenantDefaultTools';
 import { DEFAULT_TOOLS_FACULTY, DEFAULT_TOOLS_STUDENT } from '@/lib/navigation/myTools';
 import { MyWorldEditor } from '@/components/dashboard/MyWorldEditor';
@@ -40,13 +41,15 @@ export function FirstRunSheet({ open, onOpenChange, available, role }: FirstRunS
   const { myTools, loading, saveMyTools } = useMyTools(role);
   const { defaultsByRole, loading: defaultsLoading } = useTenantDefaultTools();
 
-  // NavRole ('admin' | 'student' | 'member') is a DIFFERENT vocabulary from
-  // the two-value profile role this component receives ('faculty' |
-  // 'student'). gw_tenant_nav_prefs keys its rows by NavRole, so reading a
-  // tenant default requires mapping faculty -> 'admin' (the tenant-admin
-  // default shelf) and student -> 'student'. Swapping this mapping silently
-  // hands faculty the student default shelf and vice versa.
-  const roleKey: NavRole = role === 'faculty' ? 'admin' : 'student';
+  // NavRole ('admin' | 'member') is a DIFFERENT vocabulary from the two-value
+  // profile role this component receives ('faculty' | 'student' — the latter
+  // is this component's own word for a non-faculty user, unrelated to the
+  // renamed user role). gw_tenant_nav_prefs keys its rows by NavRole, so
+  // reading a tenant default requires mapping faculty -> 'admin' (the
+  // tenant-admin default shelf) and everyone else -> MEMBER_ROLE. Swapping
+  // this mapping silently hands faculty the member default shelf and vice
+  // versa.
+  const roleKey: NavRole = role === 'faculty' ? 'admin' : MEMBER_ROLE;
   const platformDefault = role === 'faculty' ? DEFAULT_TOOLS_FACULTY : DEFAULT_TOOLS_STUDENT;
   const tenantDefault = defaultsByRole[roleKey];
   const seed = tenantDefault.length > 0 ? tenantDefault : platformDefault;

@@ -42,6 +42,7 @@ import { K12ToggleField } from '@/components/travel-manager/K12ToggleField';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { PlatformTenantWarning } from '@/components/admin/PlatformTenantWarning';
+import { MEMBER_ROLE } from '@/lib/auth/memberRole';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -637,7 +638,7 @@ function ModulesTabPanel({ canManage }: { canManage: boolean }) {
 function NavigationTabPanel({ canManage }: { canManage: boolean }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [role, setRole] = useState<NavRole>('student');
+  const [role, setRole] = useState<NavRole>(MEMBER_ROLE);
 
   const { data: prefs = [] } = useQuery({
     queryKey: ['nav-prefs-all'],

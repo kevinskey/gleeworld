@@ -31,6 +31,7 @@ import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { MyWorldEditor } from '@/components/dashboard/MyWorldEditor';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { MEMBER_ROLE } from '@/lib/auth/memberRole';
 
 /** Platform default shelf for a given tenant-nav role — same seeding rule
  * DEFAULT_TOOLS_FACULTY/STUDENT already encode: faculty shelf for admins,
@@ -234,7 +235,7 @@ export default function MyWorldPage() {
   const [worldMode, setWorldMode] = useState<'mine' | 'defaults'>('mine');
   // Students are the far more common target for a default shelf — the
   // first thing an admin will want to set.
-  const [defaultsRole, setDefaultsRole] = useState<NavRole>('student');
+  const [defaultsRole, setDefaultsRole] = useState<NavRole>(MEMBER_ROLE);
   const { defaultsByRole, saveDefaults } = useTenantDefaultTools();
   const showDefaults = isTenantAdmin && worldMode === 'defaults';
   // The ⊕ pool must reflect the ROLE being configured, not the viewing
