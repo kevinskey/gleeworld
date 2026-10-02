@@ -37,6 +37,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
+import { buildConfirmLink } from "../_shared/confirmLink.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -140,6 +141,10 @@ serve(async (req) => {
     const actionLink: string | undefined = linkData?.action_link ?? linkData?.properties?.action_link;
     const userId: string | undefined = linkData?.user?.id ?? linkData?.id;
     if (!actionLink || !userId) throw new Error("No action_link or user_id from generate_link");
+    // Email our /auth/confirm page rather than GoTrue's /verify, so a mail
+    // scanner opening the link can't spend the token. See
+    // _shared/confirmLink.ts.
+    const emailLink = buildConfirmLink(origin, linkData, next) ?? actionLink;
 
     // Profile + tenant membership so the JWT hook picks up tenant_slug
     // on their first sign-in.
@@ -183,8 +188,8 @@ serve(async (req) => {
       <div style="font-family:sans-serif;max-width:600px;padding:24px;">
         <h2 style="color:#1a1a1a;">You're invited to join ${escapeHtml(joining)}.</h2>
         <p>Click the link below to accept your invitation and sign in — no password needed.</p>
-        <p><a href="${actionLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Accept invitation &amp; sign in</a></p>
-        <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${actionLink}</p>
+        <p><a href="${emailLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Accept invitation &amp; sign in</a></p>
+        <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${emailLink}</p>
       </div>
     `;
     const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");

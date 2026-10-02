@@ -26,7 +26,9 @@ export default function AuthCallback() {
     function routeAfterSession(userId: string) {
       if (routedRef.current) return;
       routedRef.current = true;
-      const next = params.get('next') || '/academy';
+      // See AuthConfirm: most invitees are added to the workspace, not a
+      // class, and /academy is an empty page for them.
+      const next = params.get('next') || '/dashboard';
       console.log('[AuthCallback] routing to', next, 'user', userId);
       // Just route to `next`. The old profile-directory gate here
       // shunted users to /onboarding whenever the SELECT returned null,

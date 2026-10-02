@@ -9,6 +9,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 import { MEMBER_ROLE } from "../_shared/memberRole.ts";
+import { buildConfirmLink } from "../_shared/confirmLink.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -125,7 +126,12 @@ serve(async (req) => {
     // existing user → ?next" routing.
     const origin = (body.appOrigin || "").replace(/\/+$/, "");
     // Where the student ends up AFTER filling out their profile.
-    let dest = "/academy";
+    // No course on the invite means they are being added to the WORKSPACE,
+    // not to a class — the common case when a director adds singers to their
+    // environment (Kevin, 2026-10-02). Landing those people on /academy
+    // showed them an empty class list. The Command Center is the right front
+    // door; a courseId below still overrides this with the class page.
+    let dest = "/dashboard";
     let courseTitle = ""; // used in the email subject + body
     if (body.courseId) {
       // Look up the course_code AND title so we can deep-link to the
@@ -189,6 +195,10 @@ serve(async (req) => {
     if (!actionLink || !userId) {
       throw new Error("No action_link or user_id returned from generate_link");
     }
+    // What actually goes in the email: our /auth/confirm page, which spends
+    // the token only on a tap. Falls back to actionLink if GoTrue gave us no
+    // hashed_token — see _shared/confirmLink.ts.
+    const emailLink = buildConfirmLink(origin, linkData, next) ?? actionLink;
 
     // 2. Resolve tenant_id — needed for both profile and tenant membership so
     //    storage/RLS work for the new user.
@@ -276,8 +286,8 @@ serve(async (req) => {
         <div style="font-family:sans-serif;max-width:600px;padding:24px;">
           <h2 style="color:#1a1a1a;">You're invited to join ${escapeHtml(joining)}.</h2>
           <p>Click the link below to accept your invitation and sign in — no password needed.</p>
-          <p><a href="${actionLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Accept invitation &amp; sign in</a></p>
-          <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${actionLink}</p>
+          <p><a href="${emailLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Accept invitation &amp; sign in</a></p>
+          <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${emailLink}</p>
         </div>
       `;
       const { error: emailErr } = await resend.emails.send({
