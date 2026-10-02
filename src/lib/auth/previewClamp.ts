@@ -31,7 +31,7 @@ export interface PreviewCapabilities {
    *  view. */
   keepAppGrants: boolean;
   /** The value getEffectiveRole() should report. */
-  effectiveRole: 'admin' | 'student' | 'member';
+  effectiveRole: 'admin' | 'member';
 }
 
 const CAPS: Record<NavRole, PreviewCapabilities> = {
@@ -41,10 +41,6 @@ const CAPS: Record<NavRole, PreviewCapabilities> = {
     isStudent: false,
     keepAppGrants: true,
     effectiveRole: 'admin',
-  },
-  student: {
-    isSuperAdmin: false, isAdmin: false, isStudent: true,
-    keepAppGrants: false, effectiveRole: 'student',
   },
   member: {
     isSuperAdmin: false, isAdmin: false, isStudent: true,

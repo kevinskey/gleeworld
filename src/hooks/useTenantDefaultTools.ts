@@ -19,7 +19,7 @@ import type { NavRole } from '@/lib/navigation/navCatalog';
 
 export type DefaultsByRole = Record<NavRole, string[]>;
 
-const EMPTY: DefaultsByRole = { admin: [], student: [], member: [] };
+const EMPTY: DefaultsByRole = { admin: [], member: [] };
 
 export function useTenantDefaultTools() {
   const queryClient = useQueryClient();
@@ -38,7 +38,7 @@ export function useTenantDefaultTools() {
           return EMPTY;
         }
         const rows = (data as Array<{ role: string; default_tools: string[] | null }>) ?? [];
-        const out: DefaultsByRole = { admin: [], student: [], member: [] };
+        const out: DefaultsByRole = { admin: [], member: [] };
         for (const r of rows) {
           // sanitizeTools (resolve + dedupe), not the raw column: a tenant
           // that saved 'merch' into a role's defaults before it retired into

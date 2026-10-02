@@ -1,56 +1,34 @@
-// The member role, during the student -> member rename.
+// The member role.
 //
-// Phase 1 of the rename (this module): 'student' and 'member' are the SAME
-// audience everywhere a role is read. Nothing writes 'member' yet — the
-// database still coerces it back via the trg_no_member_role_* triggers — so
-// stored data is untouched and this phase is safe to deploy on its own.
-// Phase 2 drops those triggers and migrates the rows. Phase 3 deletes
-// LEGACY_MEMBER_ROLE and everything that mentions it.
+// Phase 3 of the student -> member rename: the legacy spelling is gone. Every
+// row is stored as 'member' (migration 20261001120000) and no live access
+// token can still carry tenant_role='student' — JWT_EXPIRY is 3600s and the
+// rename landed well before this shipped, so any surviving session must
+// refresh through custom_access_token_hook, which reads the stored value.
 //
-// IMPORTANT — two different things are spelled 'student' in this codebase:
-//
-//   1. The USER role, on gw_profiles.role / gw_profiles_directory.role /
-//      gw_tenant_members.role. That is what this module covers.
-//
-//   2. The COURSE role, on gw_course_enrollments.role, whose domain is
-//      'student' | 'instructor' | 'ta' | 'auditor' and which is pinned by the
-//      gw_course_enrollments_role_check constraint. That is a different axis
-//      — a person's role WITHIN one course — and it is NOT being renamed.
-//      Do not reach for these helpers there; you will break the constraint.
+// IMPORTANT — one thing is still spelled 'student' and is NOT this role:
+// gw_course_enrollments.role, whose domain is
+// 'student' | 'instructor' | 'ta' | 'auditor', pinned by
+// gw_course_enrollments_role_check. That is a person's role WITHIN one
+// course — a different axis that shares a word. Never use these helpers
+// there; the insert will fail the constraint.
 
-/** Canonical name for the role going forward. */
+/** The member role, as stored. */
 export const MEMBER_ROLE = 'member';
 
-/** The pre-rename spelling. Still what is actually stored until phase 2. */
-export const LEGACY_MEMBER_ROLE = 'student';
+/** For `.in('role', ...)` filters on PROFILE tables. */
+export const MEMBER_ROLE_VALUES: readonly string[] = [MEMBER_ROLE];
 
-/**
- * Both spellings, for `.in('role', ...)` filters.
- *
- * Use this instead of `.eq('role', 'student')` on any PROFILE query. An
- * `.eq` against one spelling silently returns a partial roster the moment
- * phase 2 starts moving rows.
- */
-export const MEMBER_ROLE_VALUES: readonly string[] = [LEGACY_MEMBER_ROLE, MEMBER_ROLE];
-
-/**
- * Is this user role the member audience (under either spelling)?
- *
- * Covers only the user role. A course enrollment's 'student' is unrelated —
- * see the module header.
- */
-// Takes `unknown` rather than `string | null` on purpose: roles also arrive
-// as untyped JWT claims (claimsToDemoRole reads claims.tenant_role), and a
-// strict equality check is already safe for any input.
+/** Is this user role the member audience? */
 export function isMemberRole(role: unknown): boolean {
-  return role === MEMBER_ROLE || role === LEGACY_MEMBER_ROLE;
+  return role === MEMBER_ROLE;
 }
 
 /**
- * Collapse either spelling to the canonical one, leaving every other role
- * untouched. Use when a role value is about to be displayed, grouped, or
- * used as a lookup key, so the two spellings cannot produce two buckets.
+ * Collapse a member role to the canonical spelling, leaving other roles
+ * untouched. Kept as the single place a role is normalised before it is
+ * displayed, grouped, or used as a lookup key.
  */
-export function normalizeMemberRole<T extends string | null | undefined>(role: T): T | string {
+export function normalizeMemberRole<T>(role: T): T | string {
   return isMemberRole(role) ? MEMBER_ROLE : role;
 }

@@ -11,7 +11,7 @@ describe('previewCapabilities', () => {
     // The escalation guard: a hand-edited sessionStorage value does nothing
     // unless the caller has already established a real admin role.
     expect(previewCapabilities('admin', false)).toBeNull();
-    expect(previewCapabilities('student', false)).toBeNull();
+    expect(previewCapabilities('member', false)).toBeNull();
   });
 
   it('strips super-admin even when previewing an admin', () => {
@@ -23,15 +23,15 @@ describe('previewCapabilities', () => {
   });
 
   it('makes a student preview genuinely unprivileged', () => {
-    const caps = previewCapabilities('student', true)!;
+    const caps = previewCapabilities('member', true)!;
     expect(caps).toMatchObject({
-      isSuperAdmin: false, isAdmin: false, isStudent: true, effectiveRole: 'student',
+      isSuperAdmin: false, isAdmin: false, isStudent: true, effectiveRole: 'member',
     });
   });
 
   it('drops per-user app grants for member-level previews', () => {
     // A "student" who still holds librarian powers is not a student view.
-    expect(previewCapabilities('student', true)!.keepAppGrants).toBe(false);
+    expect(previewCapabilities('member', true)!.keepAppGrants).toBe(false);
     expect(previewCapabilities('member', true)!.keepAppGrants).toBe(false);
     // An admin preview keeps them — matching PREVIEW_ROLE_CAPS in navCatalog.
     expect(previewCapabilities('admin', true)!.keepAppGrants).toBe(true);
@@ -40,7 +40,7 @@ describe('previewCapabilities', () => {
   it('only ever removes capability', () => {
     // The invariant the whole design rests on: for every previewable role,
     // nothing is granted that a real super-admin did not already have.
-    for (const role of ['admin', 'student', 'member'] as const) {
+    for (const role of ['admin', 'member'] as const) {
       const caps = previewCapabilities(role, true)!;
       expect(caps.isSuperAdmin).toBe(false);
       if (role !== 'admin') expect(caps.isAdmin).toBe(false);

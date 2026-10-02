@@ -4,10 +4,10 @@
 // sidebar, based on their tenant role.
 //
 // SOURCE OF TRUTH — critical: the Navigation settings tab writes rows
-// keyed by gw_tenant_members.role (values: super_admin, admin, student,
-// fan, graduate, member). We MUST look up the current user's role from
-// the same table, not from gw_profiles.role — those are different
-// role-spaces and mixing them silently kills the filter.
+// keyed by gw_tenant_members.role (values: super_admin, admin, member,
+// fan, graduate). We MUST look up the current user's role from the same
+// table, not from gw_profiles.role — those are different role-spaces and
+// mixing them silently kills the filter.
 //
 // Tenant super-admins always see every nav item so they can reach
 // settings to unhide things later. Both spellings count — see
@@ -19,23 +19,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMyTenantRole, useEffectivePreviewRole } from '@/hooks/useEffectivePreviewRole';
 import { isTenantSuperAdminRole } from '@/lib/auth/tenantRoles';
-import { isMemberRole, LEGACY_MEMBER_ROLE, MEMBER_ROLE } from '@/lib/auth/memberRole';
 
 /**
- * Find this role's row, tolerating the student/member rename.
+ * Find this role's row.
  *
- * 'student' and 'member' are one audience now, but tenants configured them
- * as two and BOTH spellings exist in gw_tenant_nav_prefs today (8 student
- * rows, 4 member rows as of 2026-10-01). Deliberately exact-match first and
- * only then fall back to the other spelling — a union of the two would
- * change what current members see in their sidebar the moment this ships,
- * which is not what a rename should do. Phase 2 merges the rows for real.
+ * Plain exact match: the rename's phase 2 migration moved every row to
+ * 'member', and HIDEABLE_NAV_ROLES writes that same key, so the two sides
+ * agree. A mismatch here is silent — edits land on a row no reader matches —
+ * so keep the write key and this lookup in step.
  */
 function findRoleRow<T extends { role: string }>(rows: readonly T[], role: string): T | undefined {
-  const exact = rows.find((r) => r.role === role);
-  if (exact || !isMemberRole(role)) return exact;
-  const other = role === MEMBER_ROLE ? LEGACY_MEMBER_ROLE : MEMBER_ROLE;
-  return rows.find((r) => r.role === other);
+  return rows.find((r) => r.role === role);
 }
 
 interface NavPrefRow {

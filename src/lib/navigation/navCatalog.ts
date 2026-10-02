@@ -268,14 +268,14 @@ export function assistantNavTargets(): Array<{ key: string; label: string }> {
 // never see, and let admins hide nav items for an audience that reads none
 // of it. Any gw_tenant_nav_prefs rows still keyed to those roles are simply
 // never read.
-export type NavRole = 'admin' | 'student' | 'member';
+export type NavRole = 'admin' | 'member';
 
 export const HIDEABLE_NAV_ROLES: { value: NavRole; label: string }[] = [
   { value: 'admin',    label: 'Tenant admins' },
-  // 'student' and 'member' are ONE audience. The value stays 'student'
-  // because that is what gw_tenant_nav_prefs rows are still keyed by;
-  // useTenantNavPrefs falls back across both spellings on read.
-  { value: 'student',  label: 'Members' },
+  // Keyed 'member' to match gw_tenant_nav_prefs after the rename's phase 2
+  // migration. This value is what the Navigation settings tab WRITES, so a
+  // mismatch here is silent: edits land on a row no reader ever matches.
+  { value: 'member',   label: 'Members' },
 ];
 
 // Capability flags each previewable role actually holds. Preview used to
@@ -284,12 +284,11 @@ export const HIDEABLE_NAV_ROLES: { value: NavRole; label: string }[] = [
 // Users, Settings and Tenants. That made the preview a lie for any tenant
 // that hadn't hand-hidden those rows. These flags close that gap.
 //
-// Only 'admin' carries privilege; student and member are unprivileged in the
-// nav's eyes. canLibrarian is a per-user grant rather than a role, but no
-// non-admin role implies it, so false is correct.
+// Only 'admin' carries privilege; members are unprivileged in the nav's eyes.
+// canLibrarian is a per-user grant rather than a role, but no non-admin role
+// implies it, so false is correct.
 const PREVIEW_ROLE_CAPS: Record<NavRole, Pick<NavContext, 'isTenantAdmin' | 'isPlatformAdmin' | 'canLibrarian' | 'isPartner'>> = {
   admin:    { isTenantAdmin: true,  isPlatformAdmin: false, canLibrarian: true,  isPartner: false },
-  student:  { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false },
   member:   { isTenantAdmin: false, isPlatformAdmin: false, canLibrarian: false, isPartner: false },
 };
 

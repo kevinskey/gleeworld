@@ -2,15 +2,19 @@ import { describe, expect, it } from 'vitest';
 import {
   isMemberRole,
   normalizeMemberRole,
-  LEGACY_MEMBER_ROLE,
   MEMBER_ROLE,
   MEMBER_ROLE_VALUES,
 } from '../memberRole';
 
 describe('isMemberRole', () => {
-  it('accepts both spellings — the whole point of the dual-accept phase', () => {
-    expect(isMemberRole('student')).toBe(true);
+  it('accepts the stored spelling', () => {
     expect(isMemberRole('member')).toBe(true);
+  });
+
+  it('no longer accepts the legacy spelling — phase 3 retired it', () => {
+    // Phase 2 migrated every row off 'student'; a value still spelled that
+    // way is now a course role or a bug, not this audience.
+    expect(isMemberRole('student')).toBe(false);
   });
 
   it('rejects every other role', () => {
@@ -26,30 +30,25 @@ describe('isMemberRole', () => {
   });
 
   it('does not match on case or whitespace — stored roles are exact', () => {
-    expect(isMemberRole('Student')).toBe(false);
-    expect(isMemberRole(' student')).toBe(false);
+    expect(isMemberRole('Member')).toBe(false);
+    expect(isMemberRole(' member')).toBe(false);
   });
 });
 
 describe('normalizeMemberRole', () => {
-  it('collapses both spellings to one bucket', () => {
-    expect(normalizeMemberRole('student')).toBe(MEMBER_ROLE);
+  it('passes the canonical spelling through', () => {
     expect(normalizeMemberRole('member')).toBe(MEMBER_ROLE);
   });
 
   it('leaves other roles alone', () => {
     expect(normalizeMemberRole('admin')).toBe('admin');
-    expect(normalizeMemberRole('fan')).toBe('fan');
+    expect(normalizeMemberRole('student')).toBe('student');
     expect(normalizeMemberRole(null)).toBeNull();
   });
 });
 
 describe('MEMBER_ROLE_VALUES', () => {
-  it('carries both spellings for .in() filters', () => {
-    expect([...MEMBER_ROLE_VALUES].sort()).toEqual(['member', 'student']);
-  });
-
-  it('includes the legacy spelling, which is still what is stored', () => {
-    expect(MEMBER_ROLE_VALUES).toContain(LEGACY_MEMBER_ROLE);
+  it('carries only the stored spelling', () => {
+    expect([...MEMBER_ROLE_VALUES]).toEqual(['member']);
   });
 });
