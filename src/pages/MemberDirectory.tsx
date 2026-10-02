@@ -104,7 +104,7 @@ const MemberDirectory = () => {
                 className="px-3 py-2 border rounded-md"
               >
                 <option value="all">All Roles</option>
-                <option value="student">Students</option>
+                <option value="member">Members</option>
                 <option value="graduate">Graduates</option>
                 <option value="executive">Executive Board</option>
                 <option value="admin">Administrators</option>

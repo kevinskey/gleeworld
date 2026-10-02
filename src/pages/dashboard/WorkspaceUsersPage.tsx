@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { ScholarApplicationsPanel } from '@/components/academy/ScholarApplicationsPanel';
+import { isMemberRole, MEMBER_ROLE } from '@/lib/auth/memberRole';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -58,14 +59,13 @@ const ROLE_PALETTE: Record<string, { Icon: React.ElementType; tone: string; labe
   'super-admin': { Icon: Shield,         tone: 'bg-rose-50 text-rose-700 border-rose-200',     label: 'Super admin' },
   'admin':       { Icon: Shield,         tone: 'bg-purple-50 text-purple-700 border-purple-200', label: 'Admin' },
   'instructor':  { Icon: GraduationCap,  tone: 'bg-sky-50 text-sky-700 border-sky-200',         label: 'Teacher' },
-  'student':     { Icon: Music,          tone: 'bg-emerald-50 text-emerald-700 border-emerald-200', label: 'Student' },
-  'member':      { Icon: Music,          tone: 'bg-emerald-50 text-emerald-700 border-emerald-200', label: 'Student' },
+  'member':      { Icon: Music,          tone: 'bg-emerald-50 text-emerald-700 border-emerald-200', label: 'Member' },
   'fan':         { Icon: Heart,          tone: 'bg-amber-50 text-amber-700 border-amber-200',   label: 'Fan' },
   'vip':         { Icon: Heart,          tone: 'bg-amber-50 text-amber-700 border-amber-200',   label: 'Fan (VIP)' },
   'parent':      { Icon: HeartHandshake, tone: 'bg-rose-50 text-rose-700 border-rose-200',       label: 'Parent' },
 };
 
-type Filter = 'all' | 'admin' | 'instructor' | 'student' | 'fan' | 'parent' | 'disabled';
+type Filter = 'all' | 'admin' | 'instructor' | 'member' | 'fan' | 'parent' | 'disabled';
 
 export default function WorkspaceUsersPage() {
   const { user } = useAuth();
@@ -117,7 +117,7 @@ export default function WorkspaceUsersPage() {
         const r = roleOf(p);
         if (filter === 'admin'      && !(r === 'admin' || r === 'super-admin')) return false;
         if (filter === 'instructor' && r !== 'instructor') return false;
-        if (filter === 'student'    && !(r === 'student' || r === 'member')) return false;
+        if (filter === 'member'     && !isMemberRole(r)) return false;
         if (filter === 'fan'        && !(r === 'fan' || r === 'vip')) return false;
         if (filter === 'parent'     && r !== 'parent') return false;
       }
@@ -144,13 +144,13 @@ export default function WorkspaceUsersPage() {
   }, [people, search, filter]);
 
   const counts = useMemo(() => {
-    const c = { total: people.length, admin: 0, instructor: 0, student: 0, fan: 0, parent: 0, disabled: 0 };
+    const c = { total: people.length, admin: 0, instructor: 0, member: 0, fan: 0, parent: 0, disabled: 0 };
     people.forEach((p) => {
       const r = roleOf(p);
       if (p.disabled) c.disabled++;
       if (r === 'admin' || r === 'super-admin') c.admin++;
       else if (r === 'instructor') c.instructor++;
-      else if (r === 'student' || r === 'member') c.student++;
+      else if (isMemberRole(r)) c.member++;
       else if (r === 'fan' || r === 'vip') c.fan++;
       else if (r === 'parent') c.parent++;
     });
@@ -162,7 +162,7 @@ export default function WorkspaceUsersPage() {
       <DashboardShell>
     <DashboardPageShell
       title="People"
-      subtitle="Everyone in this workspace — teachers, students, parents, fans."
+      subtitle="Everyone in this workspace — teachers, members, parents, fans."
       actions={
         canManage && (
           <div className="flex items-center gap-2">
@@ -213,7 +213,7 @@ export default function WorkspaceUsersPage() {
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
         <StatPill label="All"         value={counts.total}     active={filter === 'all'}        onClick={() => setFilter('all')} />
         <StatPill label="Teachers"    value={counts.instructor + counts.admin} active={filter === 'instructor' || filter === 'admin'} onClick={() => setFilter('instructor')} />
-        <StatPill label="Students"    value={counts.student}   active={filter === 'student'}    onClick={() => setFilter('student')} />
+        <StatPill label="Members"     value={counts.member}    active={filter === 'member'}     onClick={() => setFilter('member')} />
         <StatPill label="Parents"     value={counts.parent}    active={filter === 'parent'}     onClick={() => setFilter('parent')} />
         <StatPill label="Fans"        value={counts.fan}       active={filter === 'fan'}        onClick={() => setFilter('fan')} />
         <StatPill label="Disabled"    value={counts.disabled}  active={filter === 'disabled'}   onClick={() => setFilter('disabled')} tone="rose" />
@@ -292,7 +292,7 @@ export default function WorkspaceUsersPage() {
 function roleOf(p: Person): string {
   if (p.is_super_admin) return 'super-admin';
   if (p.is_admin) return 'admin';
-  return p.role || 'student';
+  return p.role || MEMBER_ROLE;
 }
 
 function StatPill({
@@ -325,7 +325,7 @@ function PersonRow({
   onEdit: () => void;
 }) {
   const r = roleOf(p);
-  const meta = ROLE_PALETTE[r] || ROLE_PALETTE['student'];
+  const meta = ROLE_PALETTE[r] || ROLE_PALETTE[MEMBER_ROLE];
   const Icon = meta.Icon;
   const initials = (p.full_name || p.email || '?').split(/\s+/).map((n) => n[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
 
@@ -356,7 +356,7 @@ function PersonRow({
 
 // ── Invite dialog ───────────────────────────────────────────────────────
 
-type CsvRow = { email: string; full_name?: string; role?: 'student' | 'instructor' | 'fan' };
+type CsvRow = { email: string; full_name?: string; role?: 'member' | 'instructor' | 'fan' };
 
 // Naive CSV splitter — no quoted-comma support. Handles the 90% case:
 // spreadsheets exported with no embedded commas in fields. If a real
@@ -368,9 +368,10 @@ function splitCsvLine(line: string): string[] {
 
 // Parse a CSV blob into invite rows. Requires a header row with at
 // minimum an `email` column. Optional columns: `full_name` (or `name`,
-// or `first_name` + `last_name`), and `role` (student|teacher|instructor|
-// fan). `admin` is deliberately not importable — gw-invite-student clamps
-// unknown roles to student, so surfacing it here would lie in the preview;
+// or `first_name` + `last_name`), and `role` (member|teacher|instructor|
+// fan; the legacy spelling `student` is still accepted on input). `admin` is
+// deliberately not importable — gw-invite-student clamps unknown roles to
+// member, so surfacing it here would lie in the preview;
 // promote people in the Edit dialog instead. Rows with invalid emails are
 // silently dropped so a stray header/footer line doesn't kill the import.
 function parseInviteCsv(text: string): { rows: CsvRow[]; skipped: number; error?: string } {
@@ -399,7 +400,8 @@ function parseInviteCsv(text: string): { rows: CsvRow[]; skipped: number; error?
     let role: CsvRow['role'];
     const rawRole = (roleIdx >= 0 ? cols[roleIdx] : '').toLowerCase().trim();
     if (rawRole === 'teacher' || rawRole === 'instructor') role = 'instructor';
-    else if (rawRole === 'student' || rawRole === 'member') role = 'student';
+    // A roster CSV may still say "student"; both spellings land on member.
+    else if (isMemberRole(rawRole)) role = 'member';
     else if (rawRole === 'fan' || rawRole === 'supporter') role = 'fan';
     rows.push({ email, full_name, role });
   }
@@ -412,7 +414,7 @@ function InviteDialog({
   open: boolean; onClose: () => void; onInvited: () => void;
 }) {
   const [emails, setEmails] = useState('');
-  const [role, setRole] = useState<'student' | 'instructor' | 'fan'>('student');
+  const [role, setRole] = useState<'member' | 'instructor' | 'fan'>(MEMBER_ROLE);
   const [sending, setSending] = useState(false);
 
   async function send() {
@@ -464,7 +466,7 @@ function InviteDialog({
             <Select value={role} onValueChange={(v) => setRole(v as any)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="instructor">Teacher</SelectItem>
                 <SelectItem value="fan">Fan</SelectItem>
               </SelectContent>
@@ -499,8 +501,8 @@ function InviteDialog({
 // Small enough to see the shape at a glance: header + one row per role
 // so directors can copy it into Numbers/Sheets and edit in place.
 const EXAMPLE_CSV = `email,full_name,role
-alice@example.com,Alice Anderson,student
-brian@example.com,Brian Brooks,student
+alice@example.com,Alice Anderson,member
+brian@example.com,Brian Brooks,member
 carol.chen@example.com,Carol Chen,teacher
 david@example.com,David Diaz,fan
 `;
@@ -528,7 +530,7 @@ function CsvImportDialog({
   onClose: () => void;
   onInvited: () => void;
 }) {
-  const [fallbackRole, setFallbackRole] = useState<'student' | 'instructor' | 'fan'>('student');
+  const [fallbackRole, setFallbackRole] = useState<'member' | 'instructor' | 'fan'>(MEMBER_ROLE);
   // Off by default: adding a roster shouldn't blast hundreds of emails unless
   // the director explicitly opts in. Accounts are created either way; people
   // can sign in anytime with their email.
@@ -612,7 +614,7 @@ function CsvImportDialog({
             <Select value={fallbackRole} onValueChange={(v) => setFallbackRole(v as any)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="instructor">Teacher</SelectItem>
                 <SelectItem value="fan">Fan</SelectItem>
               </SelectContent>
@@ -686,7 +688,7 @@ function EditUserDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [role, setRole] = useState('student');
+  const [role, setRole] = useState(MEMBER_ROLE);
   const [isAdmin, setIsAdmin] = useState(false);
   const [disabled, setDisabled] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -694,7 +696,7 @@ function EditUserDialog({
 
   useMemo(() => {
     if (person) {
-      setRole(person.role || 'student');
+      setRole(person.role || MEMBER_ROLE);
       setIsAdmin(!!person.is_admin || !!person.is_super_admin);
       setDisabled(!!person.disabled);
     }
@@ -756,7 +758,7 @@ function EditUserDialog({
             <Select value={role} onValueChange={setRole}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="student">Student</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="instructor">Teacher</SelectItem>
                 <SelectItem value="admin">Admin (manages this workspace)</SelectItem>
                 <SelectItem value="fan">Fan</SelectItem>

@@ -297,12 +297,6 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
                           Member
                         </div>
                       </SelectItem>
-                      <SelectItem value="student">
-                        <div className="flex items-center gap-2">
-                          <GraduationCap className="h-4 w-4" />
-                          Student
-                        </div>
-                      </SelectItem>
                       <SelectItem value="graduate">
                         <div className="flex items-center gap-2">
                           <Crown className="h-4 w-4" />
