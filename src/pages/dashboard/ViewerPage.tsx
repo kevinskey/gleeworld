@@ -145,8 +145,15 @@ function ViewerLanding({
     queryKey: ['viewer-library'],
     queryFn: async () => {
       const [library, personal] = await Promise.all([
+        // gw_sheet_music_browse, NOT gw_sheet_music. The base table's SELECT
+        // is deliberately open to tenant members so deep links and setlists
+        // keep working by id (20260803140000) — listing off it handed every
+        // member the whole library, shared or not. The view applies the same
+        // lanes the Music Library listing uses (security_invoker, so tenant
+        // isolation still fires) and keeps returning everything for
+        // librarians and admins.
         supabase
-          .from('gw_sheet_music')
+          .from('gw_sheet_music_browse')
           .select('id, title, composer, voicing, key_signature, time_signature, tags, pdf_url, storage_path, storage_bucket, audio_url, created_at')
           .eq('is_archived', false)
           .order('title')

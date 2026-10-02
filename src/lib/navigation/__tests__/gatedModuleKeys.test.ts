@@ -27,7 +27,9 @@ describe('GATED_MODULE_KEYS', () => {
     // the switch to deriving from the catalog.
     for (const key of [
       'sight_reading', 'box_office', 'auditions', 'librarian', 'pr_hub', 'finance',
-      'merch', 'store', 'feeds', 'viewer', 'concert_planner', 'tour',
+      // 'viewer' deliberately left this list on 2026-10-02 — the Viewer is
+      // flagless-core now, so no catalog entry gates on that module id.
+      'merch', 'store', 'feeds', 'concert_planner', 'tour',
       'liturgy_planner', 'studio', 'songwriting', 'planner', 'all_state',
     ]) {
       expect(GATED_MODULE_KEYS, `lost module key ${key}`).toContain(key);

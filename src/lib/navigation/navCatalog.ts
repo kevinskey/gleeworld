@@ -65,7 +65,12 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'concierge', to: '/dashboard/concierge', label: 'Concierge',     icon: ConciergeBell, section: 'today', tone: 'bg-sky-50 text-sky-600',       tourId: 'nav-concierge' },
   // Music
   { key: 'music-library',   to: '/dashboard/music-library', label: 'Music Library',  icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
-  { key: 'music',         to: '/dashboard/viewer',        label: 'Viewer',        icon: ScanEye,  section: 'music', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-viewer',        gridLabel: 'Music', gridIcon: Music, gate: { module: 'viewer' } },
+  // Ungated, like Music Library and Part Tracks beside it: reading the music
+  // you have been given is core to being a member, not a paid add-on, and the
+  // `viewer` module flag was hiding the Music section's reader from whole
+  // tenants (Kevin, 2026-10-02). It lists through gw_sheet_music_browse, so
+  // an ungated entry still only ever shows a member what they were shared.
+  { key: 'music',         to: '/dashboard/viewer',        label: 'Viewer',        icon: ScanEye,  section: 'music', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-viewer',        gridLabel: 'Music', gridIcon: Music },
   { key: 'sight',         to: '/dashboard/reading-music', label: 'Reading Music', icon: Eye,      section: 'music', tone: 'bg-violet-50 text-violet-600', tourId: 'nav-reading-music', gridIcon: ScanEye, gate: { module: 'sight_reading' } },
   { key: 'part-tracks',   to: '/dashboard/part-tracks',   label: 'Part Tracks',   icon: ListMusic, section: 'music', tone: 'bg-fuchsia-50 text-fuchsia-600', tourId: 'nav-part-tracks' },
   { key: 'media-library', to: '/dashboard/media-library', label: 'Media Library', icon: Images,   section: 'music', tone: 'bg-orange-50 text-orange-600', tourId: 'nav-media-library' },
