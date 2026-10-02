@@ -10,6 +10,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 import { MEMBER_ROLE } from "../_shared/memberRole.ts";
 import { buildConfirmLink } from "../_shared/confirmLink.ts";
+import { resolveTenantSlugFromOrigin, type TenantHostRow } from "../_shared/tenantHost.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,6 +33,28 @@ interface InvitePayload {
 // This endpoint runs service-role. Never let a caller-supplied role reach
 // admin/super_admin — promotion stays a deliberate act in the Edit dialog.
 const ALLOWED_ROLES = new Set([MEMBER_ROLE, "instructor", "fan"]);
+
+/**
+ * Origin → tenant id, via custom_domain/subdomain rather than a hostname
+ * guess.
+ *
+ * The old code took the first hostname label, which is only ever right for
+ * <slug>.gleeworld.org. yo-doc.com is tenant `kevin`, so "yo-doc" matched
+ * nothing, tenantId stayed undefined, and the invitee was created with NO
+ * gw_tenant_members row — invited to a workspace they were not a member of,
+ * with no error anywhere (found 2026-10-02). thesilvertoneschorus.com and
+ * blackmusicscholar.academy have the same shape.
+ */
+// deno-lint-ignore no-explicit-any
+async function tenantIdFromOrigin(supabase: any, origin: string): Promise<string | undefined> {
+  const slug = await resolveTenantSlugFromOrigin(origin, async () => {
+    const { data } = await supabase.from("gw_tenants").select("slug, subdomain, custom_domain");
+    return (data as TenantHostRow[] | null) ?? [];
+  });
+  if (!slug) return undefined;
+  const { data: t } = await supabase.from("gw_tenants").select("id").eq("slug", slug).maybeSingle();
+  return t?.id ?? undefined;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -58,12 +81,7 @@ serve(async (req) => {
       if (c?.tenant_id) preflightTenantId = c.tenant_id;
     }
     if (!preflightTenantId && body.appOrigin) {
-      try {
-        const host = new URL(body.appOrigin).hostname.replace(/^www\./, "");
-        const slugGuess = host.split(".")[0];
-        const { data: t } = await supabase.from("gw_tenants").select("id").eq("slug", slugGuess).maybeSingle();
-        if (t?.id) preflightTenantId = t.id;
-      } catch { /* ignore */ }
+      preflightTenantId = await tenantIdFromOrigin(supabase, body.appOrigin);
     }
 
     // Plan cap enforcement. Skip when:
@@ -208,13 +226,7 @@ serve(async (req) => {
       if (c?.tenant_id) tenantId = c.tenant_id;
     }
     if (!tenantId && origin) {
-      // Derive slug from hostname: blackmusicscholar.academy → 'blackmusicscholar'
-      try {
-        const host = new URL(origin).hostname.replace(/^www\./, "");
-        const slugGuess = host.split(".")[0];
-        const { data: t } = await supabase.from("gw_tenants").select("id").eq("slug", slugGuess).maybeSingle();
-        if (t?.id) tenantId = t.id;
-      } catch {}
+      tenantId = await tenantIdFromOrigin(supabase, origin);
     }
 
     // 3. Ensure profile row exists with the requested role. Existing profiles
