@@ -29,8 +29,11 @@ export function AttachScoreDialog({ open, onOpenChange, onAttach }: AttachScoreD
     queryKey: ['studio-attach-score', query],
     enabled: open,
     queryFn: async () => {
+      // Browse view, not the base table — the base table's SELECT is open to
+      // tenant members by design (deep links / setlists), so searching it
+      // here let any member pull titles out of the unshared library.
       let q = supabase
-        .from('gw_sheet_music')
+        .from('gw_sheet_music_browse')
         .select('id, title, composer, voicing')
         .limit(20);
       if (query.trim()) q = q.ilike('title', `%${query.trim()}%`);

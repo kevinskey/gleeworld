@@ -36,12 +36,13 @@ const navFor = (flags: ModuleFlags, over: Partial<NavContext> = {}): NavContext 
 
 // Routes that are always available regardless of module flags (Home,
 // Messages, Calendar, and the flagless attendance/roster surface).
-const FLAGLESS_CORE_ROUTES = new Set(['/dashboard', '/dashboard/messenger', '/dashboard/calendar', '/attendance', '/dashboard/people']);
+// /dashboard/viewer joined this set on 2026-10-02: reading your music is core
+// to membership, so the Viewer is no longer gated on the `viewer` module.
+const FLAGLESS_CORE_ROUTES = new Set(['/dashboard', '/dashboard/messenger', '/dashboard/calendar', '/attendance', '/dashboard/people', '/dashboard/viewer']);
 
 // Maps a destination route to the ModuleFlags key that gates it, when the
 // route is module-gated (used only by the sweep invariant test below).
 const ROUTE_FLAG: Record<string, keyof ModuleFlags> = {
-  '/dashboard/viewer': 'hasViewer',
   '/studio': 'hasStudio',
   '/dashboard/reading-music': 'hasSightReading',
   '/dashboard/academy': 'hasAcademy',
@@ -67,12 +68,15 @@ describe('getTabItems', () => {
     expect(new Set(tabs.map((t) => t.key)).size).toBe(5);
     expect(new Set(tabs.map((t) => t.to)).size).toBe(5);
   });
-  it('student with all module flags false falls back to Attendance only, never a duplicate', () => {
+  // Music survives allOff because the Viewer stopped being module-gated on
+  // 2026-10-02 — a member can always reach their music. Attendance is still
+  // the flagless fallback behind it, and the no-duplicates invariant holds.
+  it('student with all module flags false keeps Music and Attendance, never a duplicate', () => {
     const tabs = getTabItems('student', allOff);
-    expect(tabs.map((t) => t.label)).toEqual(['Home', 'Messages', 'Attendance', 'Calendar']);
-    expect(tabs).toHaveLength(4);
-    expect(new Set(tabs.map((t) => t.key)).size).toBe(4);
-    expect(new Set(tabs.map((t) => t.to)).size).toBe(4);
+    expect(tabs.map((t) => t.label)).toEqual(['Home', 'Messages', 'Music', 'Attendance', 'Calendar']);
+    expect(tabs).toHaveLength(5);
+    expect(new Set(tabs.map((t) => t.key)).size).toBe(5);
+    expect(new Set(tabs.map((t) => t.to)).size).toBe(5);
   });
   it('faculty without Viewer or Academy never shows a dead Academy tab, keeps Roster', () => {
     const tabs = getTabItems('faculty', { ...allOn, hasViewer: false, hasAcademy: false });

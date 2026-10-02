@@ -45,7 +45,9 @@ const D = {
 // module-gated. Destinations absent from this map (e.g. attendance, roster)
 // are always available ("flagless-core") and never skipped for being "off".
 const SLOT_FLAG: Partial<Record<string, keyof ModuleFlags>> = {
-  music: 'hasViewer', studio: 'hasStudio',
+  // `music` (the Viewer) is flagless-core now — same reasoning as its
+  // navCatalog entry: every member should be able to read their music.
+  studio: 'hasStudio',
   sight: 'hasSightReading', academy: 'hasAcademy',
 };
 
