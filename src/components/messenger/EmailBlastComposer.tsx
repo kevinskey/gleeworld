@@ -16,7 +16,7 @@ import { roleForGroup, type ComposerGroup } from '@/lib/messengerGroups';
 type Group = ComposerGroup;
 const GROUPS: Array<{ value: Group; label: string }> = [
   { value: 'all', label: 'Everyone' },
-  { value: 'students', label: 'Students only' },
+  { value: 'students', label: 'Members only' },
   { value: 'admins', label: 'Staff / Admins only' },
   { value: 'fans', label: 'Fans only' },
   { value: 'parents', label: 'Parents only' },

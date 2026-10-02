@@ -373,7 +373,6 @@ export const UnifiedUserManagement = () => {
                 <SelectItem value="guest">Guest</SelectItem>
                 <SelectItem value="fan">Fan</SelectItem>
                 <SelectItem value="member">Member</SelectItem>
-                <SelectItem value="student">Member</SelectItem>
                 <SelectItem value="graduate">Graduate</SelectItem>
                 <SelectItem value="vip">VIP</SelectItem>
                 <SelectItem value="executive">Executive</SelectItem>

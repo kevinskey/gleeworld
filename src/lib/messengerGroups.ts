@@ -3,6 +3,10 @@
 // recipient bucket here means every composer gets it — no per-file
 // ternary to keep in sync.
 
+import { MEMBER_ROLE } from '@/lib/auth/memberRole';
+
+// The 'students' key keeps its pre-rename spelling on purpose: it is a
+// persisted composer/campaign value, not a role. It maps to the member role.
 export type ComposerGroup = 'all' | 'students' | 'admins' | 'fans' | 'parents' | 'custom';
 
 /**
@@ -12,7 +16,7 @@ export type ComposerGroup = 'all' | 'students' | 'admins' | 'fans' | 'parents' |
  */
 export function roleForGroup(group: ComposerGroup): string | undefined {
   switch (group) {
-    case 'students': return 'student';
+    case 'students': return MEMBER_ROLE;
     case 'admins':   return 'admin';
     case 'fans':     return 'fan';
     case 'parents':  return 'parent';

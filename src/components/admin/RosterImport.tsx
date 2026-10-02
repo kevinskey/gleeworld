@@ -190,7 +190,6 @@ export function RosterImport({ open, onOpenChange, onImported }: {
                 <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="member">Member</SelectItem>
-                  <SelectItem value="student">Member</SelectItem>
                   <SelectItem value="graduate">Graduate</SelectItem>
                   <SelectItem value="fan">Fan</SelectItem>
                   <SelectItem value="auditioner">Auditioner</SelectItem>
