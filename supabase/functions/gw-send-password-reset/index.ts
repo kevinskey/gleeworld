@@ -25,6 +25,7 @@ import {
   resolveTenantSlugFromOrigin,
   type TenantHostRow,
 } from "../_shared/tenantHost.ts";
+import { buildConfirmLink } from "../_shared/confirmLink.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -158,6 +159,11 @@ serve(async (req) => {
       console.error("[gw-send-password-reset] no action_link in generate_link response");
       return ok();
     }
+    // Email our /auth/confirm page, not GoTrue's /verify — mail scanners
+    // open emailed links and would spend the token first. See
+    // _shared/confirmLink.ts. verification_type comes back as "recovery",
+    // so the confirm page lands them on /reset-password.
+    const emailLink = buildConfirmLink(origin, linkData) ?? actionLink;
 
     // 4. Send it as the tenant. The address stays on our Resend-verified
     //    gleeworld.org domain; only the display name is the tenant's.
@@ -171,8 +177,8 @@ serve(async (req) => {
       <div style="font-family:sans-serif;max-width:600px;padding:24px;">
         <h2 style="color:#1a1a1a;">Reset your ${safeOrg} password</h2>
         <p>We got a request to reset the password for this address. Click below to choose a new one.</p>
-        <p><a href="${actionLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Reset my password</a></p>
-        <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${actionLink}</p>
+        <p><a href="${emailLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Reset my password</a></p>
+        <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${emailLink}</p>
         <p style="color:#666;font-size:13px;">If you didn't ask for this, you can ignore this email — your password won't change.</p>
       </div>
     `,

@@ -95,6 +95,7 @@ const StudentOnboarding = lazy(() => import("./pages/admin/StudentOnboarding"));
 const JoinCourse = lazy(() => import("./pages/JoinCourse"));
 const EnrollLanding = lazy(() => import("./pages/EnrollLanding"));
 import AuthCallback from "./pages/AuthCallback";
+import AuthConfirm from "./pages/AuthConfirm";
 const LtiComplete = lazy(() => import("./pages/auth/LtiComplete"));
 const DeepLinkPicker = lazy(() => import("./pages/lti/DeepLinkPicker"));
 const LtiPlatforms = lazy(() => import("./pages/admin/LtiPlatforms"));
@@ -1049,6 +1050,9 @@ const App = () => {
               <Route path="/join/:code" element={<PublicRoute><JoinCourse /></PublicRoute>} />
               <Route path="/enroll" element={<PublicRoute><EnrollLanding /></PublicRoute>} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              {/* Emailed links land here, not on GoTrue's /verify — the token
+                  is only spent on a real tap, so mail scanners can't eat it. */}
+              <Route path="/auth/confirm" element={<AuthConfirm />} />
               <Route path="/auth/lti" element={<LtiComplete />} />
               <Route path="/lti/deep-link" element={<ProtectedRoute><DeepLinkPicker /></ProtectedRoute>} />
               <Route path="/dashboard/lti-platforms" element={<ProtectedRoute><UniversalLayout showHeader={false} showFooter={false} containerized={false}><DashboardShell><LtiPlatforms /></DashboardShell></UniversalLayout></ProtectedRoute>} />
