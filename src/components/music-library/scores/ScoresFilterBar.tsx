@@ -1,6 +1,6 @@
 // Filter + sort controls for the Scores tab. Facet values are derived
-// client-side from the loaded rows (the browse query caps at 200, so
-// client filtering is correct and cheap). Desktop gets a Popover; phones
+// client-side from the loaded rows (the browse query pages in the whole
+// library, so client filtering is correct and cheap). Desktop gets a Popover; phones
 // get a bottom Sheet for 44pt targets. Active filters render as a
 // removable chip row under the toolbar. Pattern: StreamlinedFilterBar.
 import { useMemo, useState } from 'react';
@@ -24,27 +24,41 @@ export interface ScoresFilters {
   tags: string[];
   rights: string[];
   composer: string | null;
+  // Who can see it. 'unshared' is the one a librarian actually needs:
+  // it answers "what have I uploaded that members still can't see?",
+  // which pairs with Select all to fix a whole library in two clicks.
+  sharing: 'shared' | 'unshared' | null;
 }
 
 export type ScoresSort = 'title' | 'composer' | 'recent';
 
 export const EMPTY_FILTERS: ScoresFilters = {
-  voicings: [], difficulties: [], tags: [], rights: [], composer: null,
+  voicings: [], difficulties: [], tags: [], rights: [], composer: null, sharing: null,
 };
 
 export function countActiveFilters(f: ScoresFilters): number {
-  return f.voicings.length + f.difficulties.length + f.tags.length + f.rights.length + (f.composer ? 1 : 0);
+  return f.voicings.length + f.difficulties.length + f.tags.length + f.rights.length
+    + (f.composer ? 1 : 0) + (f.sharing ? 1 : 0);
 }
 
 // Applies filters to rows — exported so the page's `filtered` memo and this
 // component agree on semantics.
+/** A score reaches somebody when any sharing lane is non-empty. */
+export function isScoreShared(r: ScoreRow): boolean {
+  return r.shared_with_members === true
+    || (r.shared_with_users ?? []).length > 0
+    || (r.shared_with_courses ?? []).length > 0
+    || (r.shared_with_voice_parts ?? []).length > 0;
+}
+
 export function applyScoresFilters(rows: ScoreRow[], f: ScoresFilters): ScoreRow[] {
   return rows.filter((r) =>
     (f.voicings.length === 0 || (r.voicing != null && f.voicings.includes(r.voicing)))
     && (f.difficulties.length === 0 || (r.difficulty_level != null && f.difficulties.includes(r.difficulty_level)))
     && (f.tags.length === 0 || (r.tags ?? []).some((t) => f.tags.includes(t)))
     && (f.rights.length === 0 || (r.rights_status != null && f.rights.includes(r.rights_status)))
-    && (!f.composer || r.composer === f.composer),
+    && (!f.composer || r.composer === f.composer)
+    && (!f.sharing || (f.sharing === 'shared' ? isScoreShared(r) : !isScoreShared(r))),
   );
 }
 
@@ -124,6 +138,22 @@ export function ScoresFilterBar({
         )}
       </div>
       <Separator />
+      <div className="space-y-1.5">
+        <Label className="text-sm font-semibold">Sharing</Label>
+        <Select
+          value={filters.sharing ?? 'any'}
+          onValueChange={(v) => onFiltersChange({ ...filters, sharing: v === 'any' ? null : (v as 'shared' | 'unshared') })}
+        >
+          <SelectTrigger className="h-9">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="any">Any</SelectItem>
+            <SelectItem value="shared">Shared with someone</SelectItem>
+            <SelectItem value="unshared">Not shared yet</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       {composers.length > 0 && (
         <div className="space-y-1.5">
           <Label className="text-sm font-semibold">Composer</Label>
@@ -219,6 +249,10 @@ export function ActiveFilterChips({
       key: `rights-${v}`, label: RIGHTS_LABEL[v] ?? v,
       remove: () => onFiltersChange({ ...filters, rights: filters.rights.filter((x) => x !== v) }),
     })),
+    ...(filters.sharing ? [{
+      key: 'sharing', label: filters.sharing === 'shared' ? 'Shared' : 'Not shared yet',
+      remove: () => onFiltersChange({ ...filters, sharing: null }),
+    }] : []),
     ...(filters.composer ? [{
       key: 'composer', label: filters.composer,
       remove: () => onFiltersChange({ ...filters, composer: null }),
