@@ -11,6 +11,7 @@ import { Resend } from "npm:resend@2.0.0";
 import { MEMBER_ROLE } from "../_shared/memberRole.ts";
 import { buildConfirmLink } from "../_shared/confirmLink.ts";
 import { resolveTenantSlugFromOrigin, type TenantHostRow } from "../_shared/tenantHost.ts";
+import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,56 @@ interface InvitePayload {
 // This endpoint runs service-role. Never let a caller-supplied role reach
 // admin/super_admin — promotion stays a deliberate act in the Edit dialog.
 const ALLOWED_ROLES = new Set([MEMBER_ROLE, "instructor", "fan"]);
+
+// Membership roles that may invite. Both 'super-admin' and 'super_admin' are
+// live in gw_tenant_members (10 admin / 8 super-admin / 7 super_admin / 8 staff
+// / 1 owner as of 2026-10-02) — accept every spelling rather than quietly
+// locking someone out over a hyphen.
+const STAFF_TENANT_ROLES = new Set([
+  "admin", "super-admin", "super_admin", "owner", "staff", "instructor", "librarian", "executive",
+]);
+
+/**
+ * May this caller create an account and a membership in `tenantId`?
+ *
+ * This endpoint runs service-role and is reachable from the public internet:
+ * FUNCTIONS_VERIFY_JWT is false in production (see _shared/auth.ts), so without
+ * this check anyone holding the PUBLISHED anon key could POST
+ * {email, tenantId, role} and mint themselves a membership in any tenant —
+ * confirmed live against the deployed function on 2026-10-02, HTTP 200. The
+ * created JWT then carries that tenant_id, so every RESTRICTIVE
+ * `tenant_id = current_tenant_id()` policy evaluates true for a tenant the
+ * attacker was never part of.
+ *
+ * Two independent conditions, both required for non-platform callers:
+ *   1. membership in the TARGET tenant — this is what stops cross-tenant minting
+ *   2. an elevated role — profile.is_admin OR a staff membership role. Several
+ *      real admins carry tm.role='member' with is_admin=true, so neither signal
+ *      alone is sufficient.
+ */
+// deno-lint-ignore no-explicit-any
+async function callerMayInviteInto(supabase: any, userId: string, tenantId: string | undefined): Promise<boolean> {
+  const { data: me } = await supabase
+    .from("gw_profiles")
+    .select("is_admin, is_super_admin")
+    .eq("user_id", userId)
+    .maybeSingle();
+  // Platform owner: deliberately unrestricted, including bootstrapping a tenant
+  // they are not yet a member of.
+  if (me?.is_super_admin === true) return true;
+  if (!tenantId) return false;
+
+  const { data: membership } = await supabase
+    .from("gw_tenant_members")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  if (!membership) return false;
+
+  const tenantRole = String(membership.role ?? "").toLowerCase();
+  return me?.is_admin === true || STAFF_TENANT_ROLES.has(tenantRole);
+}
 
 /**
  * Origin → tenant id, via custom_domain/subdomain rather than a hostname
@@ -82,6 +133,22 @@ serve(async (req) => {
     }
     if (!preflightTenantId && body.appOrigin) {
       preflightTenantId = await tenantIdFromOrigin(supabase, body.appOrigin);
+    }
+
+    // ── AUTHORIZATION ──────────────────────────────────────────────────
+    // Must come after the target tenant is known and BEFORE anything is
+    // created. Everything below this line creates an auth user, a profile, a
+    // membership and (usually) an email, so an unauthenticated caller reaching
+    // it is account creation by a stranger. Every legitimate caller is a staff
+    // screen using supabase.functions.invoke, which forwards the signed-in
+    // user's JWT. The public scholar-application form does NOT come through
+    // here — it submits anonymously via the submit_scholar_application RPC.
+    const caller = await authenticateCaller(req);
+    if (!caller) return unauthorizedResponse(corsHeaders, 401);
+    if (!caller.internal) {
+      if (!caller.userId) return unauthorizedResponse(corsHeaders, 401);
+      const mayInvite = await callerMayInviteInto(supabase, caller.userId, preflightTenantId);
+      if (!mayInvite) return unauthorizedResponse(corsHeaders, 403);
     }
 
     // Plan cap enforcement. Skip when:
