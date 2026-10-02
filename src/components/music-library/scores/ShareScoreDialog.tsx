@@ -104,6 +104,42 @@ export function ShareScoreDialog({
     },
   });
 
+  // How many people each lane ACTUALLY reaches. Sections are the trap: the
+  // lane matches gw_profiles.voice_part, and on a workspace where nobody has
+  // filled that in, picking every section shares with nobody — which reads as
+  // "I shared it and members can't see it" (Kevin, 2026-10-02: 0 of 624
+  // profiles on yo-doc.com have a voice part). Counts turn that from a silent
+  // dead end into something the dialog says out loud.
+  const { data: reach } = useQuery<{ members: number; byVoicePart: Record<string, number>; byCourse: Record<string, number> }>({
+    queryKey: ['share-dialog-reach'],
+    enabled: open,
+    staleTime: 5 * 60 * 1000,
+    queryFn: async () => {
+      const [{ data: profiles }, { data: enrollments }] = await Promise.all([
+        supabase.from('gw_profiles').select('voice_part').eq('disabled', false),
+        supabase.from('gw_course_enrollments').select('course_id').eq('enrollment_status', 'enrolled'),
+      ]);
+      const byVoicePart: Record<string, number> = {};
+      for (const p of (profiles ?? []) as Array<{ voice_part: string | null }>) {
+        if (p.voice_part) byVoicePart[p.voice_part] = (byVoicePart[p.voice_part] ?? 0) + 1;
+      }
+      const byCourse: Record<string, number> = {};
+      for (const e of (enrollments ?? []) as Array<{ course_id: string }>) {
+        byCourse[e.course_id] = (byCourse[e.course_id] ?? 0) + 1;
+      }
+      return { members: (profiles ?? []).length, byVoicePart, byCourse };
+    },
+  });
+
+  // People reached by the current draft, ignoring the everyone switch.
+  const targetedReach = useMemo(() => {
+    let n = users.size;
+    voiceParts.forEach((vp) => { n += reach?.byVoicePart[vp] ?? 0; });
+    coursesSel.forEach((cid) => { n += reach?.byCourse[cid] ?? 0; });
+    return n;
+  }, [users, voiceParts, coursesSel, reach]);
+  const picksNobody = !everyone && (users.size + voiceParts.size + coursesSel.size) > 0 && targetedReach === 0;
+
   const filteredPeople = useMemo(() => {
     const q = peopleFilter.trim().toLowerCase();
     if (!q) return people;
@@ -156,7 +192,11 @@ export function ShareScoreDialog({
         );
         return;
       }
-      toast.success(`Sharing added to ${count} scores.`);
+      toast.success(
+        picksNobody
+          ? `Sharing added to ${count} scores — but what you picked reaches 0 members right now.`
+          : `Sharing added to ${count} scores.`,
+      );
       onSaved();
       return;
     }
@@ -183,7 +223,13 @@ export function ShareScoreDialog({
       : (users.size + coursesSel.size + voiceParts.size === 0
         ? 'Not shared — visible only to you and other admins'
         : `Shared with ${users.size} person${users.size === 1 ? '' : 's'} · ${coursesSel.size} class${coursesSel.size === 1 ? '' : 'es'} · ${voiceParts.size} section${voiceParts.size === 1 ? '' : 's'}`);
-    toast.success(summary);
+    // Saved is not the same as seen: report the real headcount so an empty
+    // section selection can't masquerade as a successful share.
+    if (picksNobody) {
+      toast.warning(`${summary} — but that reaches 0 members right now, so nobody will see it.`);
+    } else {
+      toast.success(everyone || targetedReach === 0 ? summary : `${summary} (${targetedReach} member${targetedReach === 1 ? '' : 's'})`);
+    }
     onSaved();
   };
 
@@ -206,7 +252,10 @@ export function ShareScoreDialog({
           {/* Lane 1 — everyone */}
           <div className="flex items-start justify-between gap-3 rounded-lg border p-3">
             <div className="min-w-0">
-              <div className="text-sm font-semibold">Everyone in this workspace</div>
+              <div className="text-sm font-semibold">
+                Everyone in this workspace
+                {reach && <span className="ml-1 font-normal text-muted-foreground">· {reach.members} member{reach.members === 1 ? '' : 's'}</span>}
+              </div>
               <div className="text-xs text-muted-foreground">
                 {multi
                   ? 'Off = leave each score’s "everyone" setting as it is. On = turn it on for all selected scores.'
@@ -287,22 +336,34 @@ export function ShareScoreDialog({
             <p className="text-xs text-muted-foreground -mt-1">
               Every member whose profile lists a selected section sees this score.
             </p>
+            {reach && Object.keys(reach.byVoicePart).length === 0 && (
+              <p className="text-xs rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                Nobody in this workspace has a voice part set on their profile, so
+                sharing by section reaches <strong>0 members</strong> right now. Use
+                “Everyone” or pick people by name.
+              </p>
+            )}
             <div className="flex flex-wrap gap-1.5">
               {VOICE_PARTS.map((vp) => {
                 const selected = voiceParts.has(vp.value);
+                const n = reach?.byVoicePart[vp.value] ?? 0;
                 return (
                   <button
                     key={vp.value}
                     type="button"
                     onClick={() => toggleVoicePart(vp.value)}
                     aria-pressed={selected}
+                    title={reach ? `${n} member${n === 1 ? '' : 's'} in this section` : undefined}
                     className={
                       selected
-                        ? 'inline-flex items-center rounded-full border border-primary bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium transition-colors'
-                        : 'inline-flex items-center rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors'
+                        ? 'inline-flex items-center gap-1 rounded-full border border-primary bg-primary text-primary-foreground px-3 py-1.5 text-xs font-medium transition-colors'
+                        : `inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium transition-colors hover:bg-accent hover:text-foreground ${
+                            reach && n === 0 ? 'text-muted-foreground/50' : 'text-muted-foreground'
+                          }`
                     }
                   >
                     {vp.label}
+                    {reach && <span className="opacity-70">· {n}</span>}
                   </button>
                 );
               })}
@@ -346,9 +407,10 @@ export function ShareScoreDialog({
                       <Checkbox checked={selected} onCheckedChange={() => toggleCourse(c.id)} className="pointer-events-none" />
                       <div className="min-w-0 flex-1">
                         <div className="text-sm truncate">{c.title}</div>
-                        {c.course_code && (
-                          <div className="text-xs text-muted-foreground truncate">{c.course_code}</div>
-                        )}
+                        <div className="text-xs text-muted-foreground truncate">
+                          {c.course_code ? `${c.course_code} · ` : ''}
+                          {reach ? `${reach.byCourse[c.id] ?? 0} enrolled` : ''}
+                        </div>
                       </div>
                     </button>
                   );
@@ -358,6 +420,15 @@ export function ShareScoreDialog({
           </div>
         </div>
 
+        {/* Say what the draft actually reaches BEFORE it is saved — a share
+            that lands on nobody is the failure mode this dialog is most
+            likely to produce. */}
+        {picksNobody && (
+          <p className="text-xs rounded-md border border-amber-300 bg-amber-50 px-2 py-1.5 text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+            What you’ve picked reaches <strong>0 members</strong> — those sections and
+            classes are empty. Saving will leave this score invisible to everyone.
+          </p>
+        )}
         <DialogFooter className="pt-2 border-t">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
           <Button onClick={save} disabled={saving}>
