@@ -17,13 +17,32 @@
 // Shape of the admin generate_link response we read:
 //   { action_link, properties: { hashed_token, verification_type, … } }
 
-export interface GenerateLinkResponse {
+// GoTrue has shipped BOTH shapes for admin/generate_link: some versions nest
+// these under `properties`, the version running on our droplet returns them at
+// the TOP LEVEL. Read both, or buildConfirmLink silently returns undefined and
+// every caller falls back to action_link — which is exactly the scanner-edible
+// URL this module exists to stop emailing. That is precisely what happened
+// between 2026-10-02 and 2026-10-03: the protection looked deployed and was
+// doing nothing. Verified against the live instance before this fix.
+export interface GenerateLinkFields {
+  hashed_token?: string;
+  verification_type?: string;
+  email_otp?: string;
   action_link?: string;
-  properties?: {
-    hashed_token?: string;
-    verification_type?: string;
-    action_link?: string;
-  };
+}
+
+export interface GenerateLinkResponse extends GenerateLinkFields {
+  properties?: GenerateLinkFields;
+}
+
+/** Field lookup that tolerates either response shape. */
+export function linkField(
+  linkData: GenerateLinkResponse | null | undefined,
+  key: keyof GenerateLinkFields,
+): string | undefined {
+  const nested = linkData?.properties?.[key];
+  if (nested) return nested;
+  return linkData?.[key];
 }
 
 /**
@@ -38,13 +57,12 @@ export function buildConfirmLink(
   linkData: GenerateLinkResponse | null | undefined,
   next?: string,
 ): string | undefined {
-  const props = linkData?.properties;
-  const tokenHash = props?.hashed_token;
+  const tokenHash = linkField(linkData, "hashed_token");
   if (!origin || !tokenHash) return undefined;
   // verification_type is the string verifyOtp() expects: magiclink, recovery,
   // invite, signup, email_change. Default to magiclink — the type every
   // caller here mints except the password-reset path, which sets it.
-  const type = props?.verification_type ?? "magiclink";
+  const type = linkField(linkData, "verification_type") ?? "magiclink";
   try {
     const url = new URL("/auth/confirm", origin);
     url.searchParams.set("token_hash", tokenHash);

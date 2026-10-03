@@ -37,3 +37,36 @@ describe('buildConfirmLink', () => {
     expect(buildConfirmLink('not a url', linkData)).toBeUndefined();
   });
 });
+
+describe('buildConfirmLink — GoTrue response shapes', () => {
+  // The droplet's GoTrue returns these at the TOP LEVEL, not nested under
+  // `properties`. Reading only the nested shape made buildConfirmLink return
+  // undefined, so every caller fell back to action_link and the scanner
+  // protection was inert for a day. This test is the regression guard.
+  it('reads a TOP-LEVEL response (what our GoTrue actually sends)', () => {
+    const url = buildConfirmLink('https://yo-doc.com', {
+      action_link: 'https://supabase.gleeworld.org/auth/v1/verify?token=x',
+      hashed_token: 'tophash',
+      verification_type: 'magiclink',
+    }, '/welcome');
+    expect(url).toBeDefined();
+    expect(url).not.toContain('/auth/v1/verify');
+    expect(new URL(url!).searchParams.get('token_hash')).toBe('tophash');
+  });
+
+  it('still reads the NESTED response (other GoTrue versions)', () => {
+    const url = buildConfirmLink('https://yo-doc.com', {
+      properties: { hashed_token: 'nestedhash', verification_type: 'recovery' },
+    });
+    expect(new URL(url!).searchParams.get('token_hash')).toBe('nestedhash');
+    expect(new URL(url!).searchParams.get('type')).toBe('recovery');
+  });
+
+  it('prefers the nested value when both are present', () => {
+    const url = buildConfirmLink('https://yo-doc.com', {
+      hashed_token: 'top',
+      properties: { hashed_token: 'nested' },
+    });
+    expect(new URL(url!).searchParams.get('token_hash')).toBe('nested');
+  });
+});

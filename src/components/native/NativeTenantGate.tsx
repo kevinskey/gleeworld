@@ -58,6 +58,10 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
   const [password, setPassword] = useState('');
   const [signingIn, setSigningIn] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
+  // Code sign-in: the only route into the app for a passwordless invitee.
+  const [code, setCode] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
 
   // Org-picker fallback state
   const [tenants, setTenants] = useState<TenantOption[] | null>(null);
@@ -84,6 +88,59 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
         setTenants(orgs);
       });
   }, [needsPick]);
+
+  // ── Code sign-in ───────────────────────────────────────────────────
+  // The app cannot receive a magic LINK: no associated-domains entitlement,
+  // no @capacitor/app URL listener, and only push-notifications + status-bar
+  // are registered as plugins. A link opens Safari and the app never sees the
+  // session. Since invites are passwordless, a brand-new member previously
+  // had NO way into the app at all (verified in the simulator 2026-10-03).
+  // A six-digit code works without deep links, and a mail scanner cannot type
+  // it — which also sidesteps the Defender incident in _shared/confirmLink.ts.
+  const sendCode = async () => {
+    const trimmed = email.trim();
+    if (!trimmed) { setSignInError('Enter your email first.'); return; }
+    setSendingCode(true);
+    setSignInError(null);
+    try {
+      await supabase.functions.invoke('gw-send-signin-code', {
+        // The app has no useful origin (capacitor://localhost), so the cached
+        // tenant is the only branding hint the mail can use.
+        body: { email: trimmed, tenantSlug: localStorage.getItem(KEY) || undefined },
+      });
+      // Always advance, whatever came back: the function is deliberately
+      // opaque about whether the address exists, and the UI must not leak it.
+      setCodeSent(true);
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const verifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = email.trim();
+    const token = code.replace(/\D/g, '');
+    if (token.length < 6) { setSignInError('Enter the 6-digit code from your email.'); return; }
+    setSigningIn(true);
+    setSignInError(null);
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: trimmed,
+        token,
+        type: 'email',
+      });
+      if (error || !data.session) {
+        setSignInError(error?.message || 'That code is not valid. Request a new one.');
+        setSigningIn(false);
+        return;
+      }
+      await syncNativeTenant(data.session);
+      window.location.reload();
+    } catch {
+      setSignInError('Could not verify the code. Try again.');
+      setSigningIn(false);
+    }
+  };
 
   const signIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,6 +284,49 @@ export const NativeTenantGate = ({ children }: { children: ReactNode }) => {
                 {signingIn ? 'Signing in…' : 'Sign in'}
               </button>
             </form>
+
+            {/* Invited members have NO password — invites are passwordless and
+                the emailed link cannot reach the app. This is their way in. */}
+            {codeSent ? (
+              <form onSubmit={verifyCode} className="space-y-3">
+                <p className="text-sm text-white/80 text-center">
+                  If that address has an account, a 6-digit code is on its way. Enter it below.
+                </p>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="6-digit code"
+                  value={code}
+                  onChange={e => setCode(e.target.value)}
+                  className={inputClass}
+                  disabled={signingIn}
+                />
+                <button
+                  type="submit"
+                  disabled={signingIn}
+                  className="w-full px-5 py-3.5 rounded-xl bg-white text-slate-900 font-semibold disabled:opacity-60 shadow-lg"
+                >
+                  {signingIn ? 'Signing in…' : 'Sign in with code'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setCodeSent(false); setCode(''); setSignInError(null); }}
+                  className="w-full text-sm text-white/70 underline underline-offset-4 hover:text-white"
+                >
+                  Use a password instead
+                </button>
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={sendCode}
+                disabled={sendingCode}
+                className="w-full px-5 py-3.5 rounded-xl border border-white/30 text-white font-medium disabled:opacity-60"
+              >
+                {sendingCode ? 'Sending…' : 'Email me a sign-in code'}
+              </button>
+            )}
 
             <div className="text-center">
               <button
