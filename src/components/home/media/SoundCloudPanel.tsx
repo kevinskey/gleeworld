@@ -79,6 +79,13 @@ export function SoundCloudPanel() {
   // than the whole profile — a curated set is a better first impression than
   // a 500-track reverse-chron dump.
   const [choice, setChoice] = useState<string | null>(null);
+
+  // The chosen playlist STICKS (Kevin, 2026-10-03: "let this be the default
+  // playlist" — pointing at a set that is nowhere near the biggest, so
+  // biggest-first was overriding his actual preference every visit).
+  // Persisted per profile URL: tenants have different SoundCloud accounts,
+  // and a saved id from one must never leak into another's picker.
+  const storageKey = `gw-sc-panel-playlist:${profileUrl}`;
   // Track search over the profile's full catalog. The query drives a lazy
   // includeTracks fetch (titles only arrive when asked for — same contract
   // as the full page); matching is client-side because the whole catalog is
@@ -116,8 +123,17 @@ export function SoundCloudPanel() {
   // selection (first entry) is the account's meatiest playlist.
   const playlists = [...(data?.playlists ?? [])].sort((a, b) => b.trackCount - a.trackCount);
 
+  // Default order: this session's explicit pick, then the remembered pick
+  // (only if that playlist still exists on the account — a deleted set must
+  // not strand the panel on a dead id), then biggest-first as before.
+  const remembered = typeof window !== 'undefined' ? localStorage.getItem(storageKey) : null;
+  const rememberedValid =
+    remembered !== null
+    && (remembered === ALL_TRACKS || playlists.some((p) => String(p.id) === remembered));
   const effectiveChoice =
-    choice ?? (playlists.length > 0 ? String(playlists[0]?.id) : ALL_TRACKS);
+    choice
+    ?? (rememberedValid ? remembered! : null)
+    ?? (playlists.length > 0 ? String(playlists[0]?.id) : ALL_TRACKS);
   const selectedPlaylist = playlists.find((p) => String(p.id) === effectiveChoice);
   // A picked track outranks the playlist choice — the pick IS the intent.
   const nowPlayingUrl =
@@ -162,7 +178,13 @@ export function SoundCloudPanel() {
         {profileUrl && (
           <select
             value={effectiveChoice}
-            onChange={(e) => { setChoice(e.target.value); setTrackPick(null); }}
+            onChange={(e) => {
+              setChoice(e.target.value);
+              setTrackPick(null);
+              // Remember it — this choice becomes the default on every
+              // future visit until they pick something else.
+              try { localStorage.setItem(storageKey, e.target.value); } catch { /* private mode */ }
+            }}
             aria-label="Choose a playlist"
             disabled={isLoading || !!error}
             // Native <select> on purpose: a shadcn Select popover inside a

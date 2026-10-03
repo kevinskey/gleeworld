@@ -11,7 +11,7 @@
 // list is the only scrolling region; the player pins above it.
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, History, ListVideo, X, Youtube } from 'lucide-react';
+import { ChevronLeft, ChevronRight, History, ListVideo, Search as SearchIcon, X, Youtube } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,7 @@ function isScopeMissing(err: unknown): boolean {
   return err instanceof Error && err.message.includes('youtube_scope_missing');
 }
 
-type Tab = 'playlists' | 'liked' | 'recent';
+type Tab = 'playlists' | 'liked' | 'recent' | 'search';
 
 // ---------------------------------------------------------------------------
 // Small presentational pieces
@@ -280,6 +280,13 @@ function PlaylistList({
 
 export function YouTubePanel() {
   const [tab, setTab] = useState<Tab>('playlists');
+  // YouTube search. draft is what's in the box; submitted is what we have
+  // actually paid for. The split is quota discipline, not style: a
+  // search.list call costs 100 units of the project's 10,000/day (a list
+  // call costs 1), so the API fires ONLY on an explicit submit — never per
+  // keystroke. Results then scroll infinitely like every other list.
+  const [searchDraft, setSearchDraft] = useState('');
+  const [searchSubmitted, setSearchSubmitted] = useState('');
   // Drill-down state for the Playlists tab (null = playlist index).
   const [openPlaylist, setOpenPlaylist] = useState<YtPlaylist | null>(null);
   const [nowPlaying, setNowPlaying] = useState<YtVideo | null>(null);
@@ -343,6 +350,7 @@ export function YouTubePanel() {
               ['playlists', 'Playlists', ListVideo],
               ['liked', 'Liked', Youtube],
               ['recent', 'Recent', History],
+              ['search', 'Search', SearchIcon],
             ] as const
           ).map(([key, label]) => (
             <button
@@ -445,6 +453,44 @@ export function YouTubePanel() {
                 playingId={nowPlaying?.videoId ?? null}
                 onPlay={play}
               />
+            )}
+
+            {tab === 'search' && (
+              <>
+                <form
+                  className="flex items-center gap-2 border-b border-border px-2 py-1.5"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    setSearchSubmitted(searchDraft.trim());
+                  }}
+                >
+                  <SearchIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                  <input
+                    type="search"
+                    value={searchDraft}
+                    onChange={(e) => setSearchDraft(e.target.value)}
+                    placeholder="Search YouTube…"
+                    aria-label="Search YouTube"
+                    className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                  />
+                  <Button type="submit" size="sm" variant="ghost" className="h-7 px-2 text-xs" disabled={!searchDraft.trim()}>
+                    Search
+                  </Button>
+                </form>
+                {searchSubmitted ? (
+                  <VideoList
+                    queryKey={['yt', 'search', searchSubmitted] as const}
+                    requestBody={{ kind: 'search', query: searchSubmitted }}
+                    enabled
+                    playingId={nowPlaying?.videoId ?? null}
+                    onPlay={play}
+                  />
+                ) : (
+                  <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+                    Type something and press Enter.
+                  </p>
+                )}
+              </>
             )}
           </>
         )}
