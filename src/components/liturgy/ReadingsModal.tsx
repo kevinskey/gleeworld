@@ -9,8 +9,10 @@ import { readingsFromCache } from '@/lib/liturgy/cachedReadings';
 import { expandScriptureAbbrevs } from '@/lib/liturgy/scriptureAbbrev';
 
 // Daily Catholic readings viewer. Reads the local USCCB table first and falls
-// back to proxying Universalis via the `usccb-readings` edge function, then
-// renders the sanitized reading blocks in a bottom sheet.
+// back to the `usccb-readings` edge function, which now serves text from our
+// own public-domain WEBCE database via the prayer_day_full() RPC rather than
+// scraping universalis.com — see docs/superpowers/plans/2026-08-04-prayer-
+// phase1.md. Renders the sanitized reading blocks in a bottom sheet.
 // Shared by the Liturgy Planner and the Command Center's Liturgical Day card.
 
 export interface ReadingBlock { heading: string; citation: string | null; summary?: string | null; html: string }
@@ -19,10 +21,14 @@ export interface ReadingsResp {
   sourceUrl: string;
   liturgicalTitle: string | null;
   readings: ReadingBlock[];
+  /** Translation attribution, e.g. "World English Bible (Catholic Edition)…" */
+  attribution?: string | null;
   error?: string;
   /** Set when the date lies outside the window Universalis publishes. */
   outOfRange?: boolean;
 }
+
+const DEFAULT_ATTRIBUTION = 'World English Bible (Catholic Edition), public domain';
 
 function parseISODate(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number);
@@ -165,8 +171,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
                 {data?.liturgicalTitle || 'Daily Readings'}
               </SheetTitle>
               <p className="text-xs text-muted-foreground text-left">
-                {formatDate(isoDate)} · via{' '}
-                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">Universalis</a>
+                {formatDate(isoDate)} · {data?.attribution || DEFAULT_ATTRIBUTION}
               </p>
             </div>
             {/* Read aloud. Sits in the header so it is reachable without
@@ -228,7 +233,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
               </p>
               <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[hsl(var(--link))] hover:underline">
-                <ExternalLink className="w-3.5 h-3.5" /> Open on Universalis
+                <ExternalLink className="w-3.5 h-3.5" /> Open on USCCB.org
               </a>
             </div>
           )}
