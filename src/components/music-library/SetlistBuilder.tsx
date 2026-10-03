@@ -190,7 +190,10 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
     console.log('SetlistBuilder: Loading sheet music...');
     try {
       const { data, error } = await supabase
-        .from('gw_sheet_music')
+        // Browse view — picking scores for a setlist is a listing, so it is
+        // share-scoped. Resolving a setlist's existing items by id still goes
+        // through the base table, which is why that SELECT stays open.
+        .from('gw_sheet_music_browse')
         .select('id, title, composer, pdf_url')
         .order('title');
 

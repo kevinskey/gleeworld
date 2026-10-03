@@ -1672,7 +1672,8 @@ function MusicLibraryPdfPicker({ open, onClose, onPick }: {
     let cancelled = false;
     setLoading(true);
     supabase
-      .from('gw_sheet_music')
+      // Browse view, not the base table — a listing must be share-scoped.
+      .from('gw_sheet_music_browse')
       .select('id, title, composer, pdf_url')
       .not('pdf_url', 'is', null)
       .order('title', { ascending: true })

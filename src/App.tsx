@@ -1255,9 +1255,11 @@ const App = () => {
                 path="/admin/students"
                 element={
                   <ProtectedRoute>
-                    <UniversalLayout>
-                      <StudentsList />
-                    </UniversalLayout>
+                    <AdminOnlyRoute>
+                      <UniversalLayout>
+                        <StudentsList />
+                      </UniversalLayout>
+                    </AdminOnlyRoute>
                   </ProtectedRoute>
                 }
               />
@@ -1265,9 +1267,11 @@ const App = () => {
                 path="/admin/students/:id"
                 element={
                   <ProtectedRoute>
-                    <UniversalLayout>
-                      <StudentDetail />
-                    </UniversalLayout>
+                    <AdminOnlyRoute>
+                      <UniversalLayout>
+                        <StudentDetail />
+                      </UniversalLayout>
+                    </AdminOnlyRoute>
                   </ProtectedRoute>
                 }
               />
@@ -1285,9 +1289,11 @@ const App = () => {
                 path="/admin/prospects"
                 element={
                   <ProtectedRoute>
-                    <UniversalLayout>
-                      <Prospects />
-                    </UniversalLayout>
+                    <AdminOnlyRoute>
+                      <UniversalLayout>
+                        <Prospects />
+                      </UniversalLayout>
+                    </AdminOnlyRoute>
                   </ProtectedRoute>
                 }
               />
@@ -2780,7 +2786,9 @@ const App = () => {
                                 path="/admin/finance" 
                                 element={
                                   <ProtectedRoute>
-                                    <FinancialManagement />
+                                    <AdminOnlyRoute>
+                                      <FinancialManagement />
+                                    </AdminOnlyRoute>
                                   </ProtectedRoute>
                                 } 
                               />

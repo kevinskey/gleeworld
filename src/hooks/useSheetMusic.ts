@@ -21,7 +21,9 @@ export const useSheetMusic = () => {
       setError(null);
 
       const { data, error: fetchError } = await supabase
-        .from('gw_sheet_music')
+        // Browse view, not the base table — see gw_sheet_music_browse. This is
+        // a listing, so it must be share-scoped server-side.
+        .from('gw_sheet_music_browse')
         .select('*')
         .eq('is_archived', false)
         .order('title');

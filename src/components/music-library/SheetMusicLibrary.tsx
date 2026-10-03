@@ -107,7 +107,12 @@ export const SheetMusicLibrary = ({
       const from = page * PAGE_SIZE;
 
       let query = supabase
-        .from('gw_sheet_music')
+        // Browse view, not the base table. The base table's SELECT is open to
+        // tenant members by design so deep links and setlists resolve by id;
+        // LISTING off it showed every member — including a self-signed-up fan
+        // on this fan-reachable page — the director's entire private library.
+        // The view carries the same columns (SELECT sm.*).
+        .from('gw_sheet_music_browse')
         .select('*')
         .eq('is_archived', false);
 
