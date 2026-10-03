@@ -154,11 +154,21 @@ export const TourContractSigningModal: React.FC<TourContractSigningModalProps> =
       // 1. Generate signed PDF
       const pdfBlob = generateSignedPdf(contract.content, profile.full_name, signature);
 
-      // 2. Upload PDF to storage
-      const fileName = `tour-contracts/${user.id}_${Date.now()}.pdf`;
+      // 2. Upload PDF to storage.
+      //
+      // The private `tour-contracts` bucket, NOT `user-files`. These PDFs carry
+      // the signer's full name, email and signature image, and user-files is a
+      // public bucket served straight off disk by nginx — 43 signed contracts
+      // were world-readable to anyone with the URL before 2026-10-03.
+      //
+      // `fileName` keeps its historical `tour-contracts/` prefix because it is
+      // what lands in gw_media_library.file_path and what TourDocumentsSection
+      // matches on; the object key inside the bucket drops it.
+      const objectKey = `${user.id}_${Date.now()}.pdf`;
+      const fileName = `tour-contracts/${objectKey}`;
       const { error: uploadError } = await supabase.storage
-        .from('user-files')
-        .upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: true });
+        .from('tour-contracts')
+        .upload(objectKey, pdfBlob, { contentType: 'application/pdf', upsert: true });
 
       if (uploadError) {
         console.error('PDF upload error:', uploadError);
