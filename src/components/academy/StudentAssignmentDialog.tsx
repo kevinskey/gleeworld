@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { openStoredFile } from '@/utils/storage';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -386,6 +387,7 @@ export function StudentAssignmentDialog({
                       href={link}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={(e) => { e.preventDefault(); openStoredFile(link); }}
                       className="text-xs text-primary inline-flex items-center gap-1"
                     >
                       Open <ExternalLink className="h-3 w-3" />
