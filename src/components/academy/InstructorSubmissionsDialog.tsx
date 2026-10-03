@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { openStoredFile } from '@/utils/storage';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -435,10 +436,14 @@ function InlineGrader({
           {submission?.file_url && (
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground">Attachment</Label>
+              {/* assignment-submissions became private in 20261003010000.
+                  Rows written before that hold a public URL that no longer
+                  resolves, so openStoredFile re-signs it on the way out. */}
               <a
                 href={submission.file_url}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={(e) => { e.preventDefault(); openStoredFile(submission.file_url); }}
                 className="mt-1.5 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
               >
                 {submission.file_name || submission.file_url.split('/').pop() || 'Open link'}

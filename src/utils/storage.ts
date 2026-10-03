@@ -84,6 +84,10 @@ export const getSignedUrl = async (
 // made personal scores unopenable: "secure download" handed back a public URL.
 const PRIVATE_BUCKETS = new Set([
   'alumni-headshots',
+  // Made private 2026-10-03 (20261003010000). Students' coursework was in a
+  // PUBLIC bucket — every learning-journal PDF and audio file was served
+  // unauthenticated to anyone holding the URL.
+  'assignment-submissions',
   'budget-documents',
   'class-journals',
   'class-notes',
@@ -126,6 +130,57 @@ export const getFileUrl = async (bucket: string, path: string): Promise<string |
   }
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
   return data.publicUrl;
+};
+
+// A stored "public" URL is really a durable reference: it encodes the bucket
+// and the object key. When a bucket is later made private those stored strings
+// stop resolving, but they still identify the object perfectly well.
+const PUBLIC_OBJECT_URL = /\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/;
+
+/**
+ * Turn a stored file URL into one that will actually load right now.
+ *
+ * Rows written before a bucket was made private hold
+ * `/storage/v1/object/public/<bucket>/<key>`, which 400s once the bucket is
+ * locked down. Rather than migrate every stored string (and break any that
+ * were missed), re-sign at render: pull the bucket and key back out of the
+ * URL and mint a short-lived signed URL.
+ *
+ * Anything that is not a recognisable public-object URL, or that points at a
+ * bucket still genuinely public, is returned unchanged.
+ */
+export const resolveStorageUrl = async (url: string | null | undefined): Promise<string | null> => {
+  if (!url) return null;
+  const match = url.match(PUBLIC_OBJECT_URL);
+  if (!match) return url;
+  const bucket = match[1];
+  if (!PRIVATE_BUCKETS.has(bucket)) return url;
+  // Strip any query string before decoding — Supabase appends cache-busting
+  // params that are not part of the object key.
+  const key = decodeURIComponent(match[2].split('?')[0]);
+  return await getSignedUrl(bucket, key);
+};
+
+/**
+ * Open a stored file link, signing it first when its bucket is private.
+ *
+ * The window is opened SYNCHRONOUSLY, before the await, or Safari and Chrome
+ * treat the later `window.open` as an unsolicited popup and block it. We then
+ * point the already-granted tab at the resolved URL.
+ *
+ * Attach to an anchor's onClick with preventDefault; keep the plain href as
+ * the no-JS fallback.
+ */
+export const openStoredFile = (url: string | null | undefined): void => {
+  if (!url) return;
+  const win = window.open('', '_blank', 'noopener,noreferrer');
+  resolveStorageUrl(url)
+    .then((resolved) => {
+      if (!resolved) { win?.close(); return; }
+      if (win) win.location.href = resolved;
+      else window.location.href = resolved;
+    })
+    .catch(() => win?.close());
 };
 
 /**
