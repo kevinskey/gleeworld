@@ -48,14 +48,48 @@ serve(async (req) => {
       });
     }
 
+    // Firecrawl is the PRIMARY web-search backend. Google's Custom Search
+    // JSON API is closed to new customers (403 "This project does not have
+    // the access to Custom Search JSON API" — verified live 2026-10-03
+    // against a freshly-enabled project; Google's own support threads
+    // confirm the shutoff, and older keys are being cut off too). The CSE
+    // branch below is kept as a fallback for the day a working key exists,
+    // but no console action can mint one today.
+    const firecrawlKey = Deno.env.get('FIRECRAWL_API_KEY');
     const googleKey = Deno.env.get('GOOGLE_CSE_API_KEY') || Deno.env.get('GOOGLE_SEARCH_API_KEY');
     const googleCx = Deno.env.get('GOOGLE_CSE_ID');
     const deepseekKey = Deno.env.get('DEEPSEEK_API_KEY');
 
     let results: WebResult[] = [];
-    let searchConfigured = Boolean(googleKey && googleCx);
+    let searchConfigured = Boolean(firecrawlKey || (googleKey && googleCx));
 
-    if (searchConfigured) {
+    if (firecrawlKey) {
+      const res = await fetch('https://api.firecrawl.dev/v2/search', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${firecrawlKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: q, limit: 8 }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const web = data?.data?.web ?? data?.data ?? [];
+        results = (Array.isArray(web) ? web : []).map((item: { title?: string; url?: string; description?: string }) => ({
+          title: item.title || '',
+          link: item.url || '',
+          snippet: item.description || '',
+          displayLink: (() => {
+            try { return new URL(item.url).hostname.replace(/^www\./, ''); } catch { return ''; }
+          })(),
+        })).filter((r: WebResult) => r.link);
+      } else {
+        console.error('Firecrawl search error:', res.status, await res.text());
+        searchConfigured = Boolean(googleKey && googleCx);
+      }
+    }
+
+    if (results.length === 0 && googleKey && googleCx) {
       const url = new URL('https://www.googleapis.com/customsearch/v1');
       url.searchParams.set('key', googleKey!);
       url.searchParams.set('cx', googleCx!);
@@ -72,7 +106,7 @@ serve(async (req) => {
         }));
       } else {
         console.error('Google CSE error:', res.status, await res.text());
-        searchConfigured = false;
+        if (!firecrawlKey) searchConfigured = false;
       }
     }
 
