@@ -1544,7 +1544,11 @@ function LibraryDrawerContent({
     queryKey: ['viewer-library-drawer'],
     queryFn: async () => {
       const { data } = await supabase
-        .from('gw_sheet_music')
+        // Browse view — this drawer is a LISTING. The by-id fetch above
+        // (line ~261) deliberately stays on the base table so deep links keep
+        // working; this one handed the whole library to anyone who tapped the
+        // Book icon, which is the ViewerPage bug one tap deeper.
+        .from('gw_sheet_music_browse')
         .select('id, title, composer, pdf_url, storage_path, storage_bucket, created_at')
         .eq('is_archived', false)
         .order('title')
