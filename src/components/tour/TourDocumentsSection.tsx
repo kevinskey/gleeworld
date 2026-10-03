@@ -384,33 +384,35 @@ export const TourDocumentsSection = ({ showHeading = true }: { showHeading?: boo
     };
   }, []);
 
-  const resolveDocumentStorage = (doc: MediaDoc) => {
+  // Returns every place a document might live, most-preferred first. Signed
+  // tour contracts moved from the PUBLIC user-files bucket to the private
+  // tour-contracts bucket (2026-10-03) — 43 of them were world-readable — so
+  // new ones resolve in the private bucket and older ones still fall back to
+  // where they were actually written.
+  const resolveDocumentStorage = (doc: MediaDoc): Array<{ bucket: string; path: string }> => {
     const parsedUrl = parseStorageUrl(doc.file_url);
     if (parsedUrl) {
-      return parsedUrl;
+      return [parsedUrl];
     }
 
     if (doc.file_path?.startsWith('tour-contracts/')) {
-      return {
-        bucket: 'user-files',
-        path: doc.file_path,
-      };
+      return [
+        // New: private bucket, key is the part after the prefix.
+        { bucket: 'tour-contracts', path: doc.file_path.slice('tour-contracts/'.length) },
+        // Legacy: the whole path inside user-files.
+        { bucket: 'user-files', path: doc.file_path },
+      ];
     }
 
     if (doc.file_path) {
-      return {
-        bucket: 'media-library',
-        path: doc.file_path,
-      };
+      return [{ bucket: 'media-library', path: doc.file_path }];
     }
 
-    return null;
+    return [];
   };
 
   const resolveDocumentUrl = async (doc: MediaDoc) => {
-    const storageLocation = resolveDocumentStorage(doc);
-
-    if (storageLocation) {
+    for (const storageLocation of resolveDocumentStorage(doc)) {
       const secureFromStorage = await getSecureFileUrl(storageLocation.bucket, storageLocation.path);
       if (secureFromStorage) {
         return secureFromStorage;
