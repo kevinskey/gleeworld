@@ -11,6 +11,7 @@
 // a participant with no photo gets a branded initial tile instead.
 
 import { useState } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, AlertTriangle, ChevronRight, Info } from 'lucide-react';
@@ -78,7 +79,7 @@ export default function ParticipantPublicPage() {
     );
   }
 
-  const shareUrl = `${window.location.origin}/give/${fundraiser.slug}/${participant.slug}`;
+  const shareUrl = `${publicBaseUrl()}/give/${fundraiser.slug}/${participant.slug}`;
   const initials = participant.display_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 
   return (

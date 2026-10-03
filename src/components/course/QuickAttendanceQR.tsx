@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { toZonedTime } from 'date-fns-tz';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -110,9 +111,7 @@ export const QuickAttendanceQR: React.FC<QuickAttendanceQRProps> = ({
   // Generate QR image from token
   const generateQRImage = async (token: string) => {
     try {
-      const baseUrl = window.location.hostname.includes('lovable')
-        ? 'https://gleeworld.org'
-        : window.location.origin;
+      const baseUrl = publicBaseUrl();
       const checkInUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(token)}`;
       
       const dataUrl = await QRCode.toDataURL(checkInUrl, {

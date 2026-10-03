@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -154,9 +155,9 @@ export const AttendanceSecurityControls: React.FC<AttendanceSecurityControlsProp
       setQrExpires(new Date(result.expires_at));
       
       // Generate QR image
-      const baseUrl = window.location.hostname.includes('lovable') 
-        ? 'https://gleeworld.org' 
-        : window.location.origin;
+      // A QR is scanned by a DIFFERENT device, so it needs an externally
+      // resolvable host — capacitor://localhost is not one.
+      const baseUrl = publicBaseUrl();
       const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(result.token)}`;
       
       const qrDataURL = await QRCode.toDataURL(attendanceUrl, {

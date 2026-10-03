@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -115,9 +116,7 @@ export const RecordingShareDialog: React.FC<RecordingShareDialogProps> = ({
   };
 
   const handleCopyLink = () => {
-    const baseUrl = window.location.hostname.includes('lovable') 
-      ? 'https://gleeworld.org' 
-      : window.location.origin;
+    const baseUrl = publicBaseUrl();
     const link = `${baseUrl}/sight-reading-generator?recording=${recording.id}`;
     navigator.clipboard.writeText(link);
     toast({

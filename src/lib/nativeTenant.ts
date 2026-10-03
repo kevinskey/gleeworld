@@ -59,15 +59,19 @@ export async function syncNativeTenant(session: Session): Promise<void> {
   let org: string | undefined = sameTenant ? current?.org : undefined;
   let shortName: string | undefined = sameTenant ? current?.shortName : undefined;
   let logoUrl: string | undefined = sameTenant ? current?.logoUrl : undefined;
+  let customDomain: string | undefined = sameTenant ? current?.customDomain : undefined;
 
   try {
     const { supabase } = await import('@/integrations/supabase/client');
     const tenantRow = await supabase
       .from('gw_tenants')
-      .select('id, name')
+      .select('id, name, custom_domain')
       .eq('slug', slug)
       .maybeSingle();
     if (tenantRow.data?.name) org = tenantRow.data.name;
+    // Cached so publicBaseUrl() can build externally-resolvable links on
+    // native, where window.location.origin is capacitor://localhost.
+    if (tenantRow.data?.custom_domain) customDomain = tenantRow.data.custom_domain;
     const tenantId = tenantRow.data?.id;
     if (tenantId) {
       const branding = await supabase
@@ -80,12 +84,13 @@ export async function syncNativeTenant(session: Session): Promise<void> {
     }
   } catch { /* keep existing cached values */ }
 
-  const next = { tenant: slug, org, shortName, logoUrl };
+  const next = { tenant: slug, org, shortName, logoUrl, customDomain };
   if (
     sameTenant &&
     current?.org === org &&
     current?.shortName === shortName &&
-    current?.logoUrl === logoUrl
+    current?.logoUrl === logoUrl &&
+    current?.customDomain === customDomain
   ) {
     return;
   }

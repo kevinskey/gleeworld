@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -157,9 +158,7 @@ export const QRCodeManagementModule = () => {
 
   const generateUrlQRCode = async (url: string) => {
     try {
-      const baseUrl = window.location.hostname.includes('lovable') 
-        ? 'https://gleeworld.org' 
-        : window.location.origin;
+      const baseUrl = publicBaseUrl();
       const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
       const qrDataUrl = await QRCode.toDataURL(fullUrl, {
         width: 300,
@@ -475,7 +474,7 @@ export const QRCodeManagementModule = () => {
                       />
                     </div>
                     <div className="text-xs text-muted-foreground text-center break-all px-2">
-                      {customUrl.startsWith('http') ? customUrl : `${window.location.hostname.includes('lovable') ? 'https://gleeworld.org' : window.location.origin}${customUrl}`}
+                      {customUrl.startsWith('http') ? customUrl : `${publicBaseUrl()}${customUrl}`}
                     </div>
                     <Button 
                       onClick={downloadQRCode}

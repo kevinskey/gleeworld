@@ -9,6 +9,7 @@
 // there would be no way to tell who took what.
 
 import { useMemo, useState } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -118,7 +119,8 @@ export default function InvitesPanel() {
     },
   });
 
-  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://gleeworld.org';
+  // Emailed to a guest on another device — must be an external URL.
+  const siteUrl = publicBaseUrl();
 
   const sendInvites = useMutation({
     mutationFn: async () => {
@@ -534,7 +536,7 @@ function BookForDialog({
 
       // Same confirmation path a guest booking takes: email, SMS, Meet link.
       await supabase.functions.invoke('booking-invite-confirm', {
-        body: { token: invite.token, siteUrl: window.location.origin },
+        body: { token: invite.token, siteUrl: publicBaseUrl() },
       });
       return data;
     },

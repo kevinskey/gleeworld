@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -51,9 +52,7 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
         setExpiresAt(new Date(result.expires_at!));
         
         // Use production domain for QR codes
-        const baseUrl = window.location.hostname.includes('lovable') 
-          ? 'https://gleeworld.org' 
-          : window.location.origin;
+        const baseUrl = publicBaseUrl();
         const checkInUrl = `${baseUrl}/qr-scanner?token=${encodeURIComponent(result.qr_token)}`;
         const dataUrl = await QRCode.toDataURL(checkInUrl, {
           width: 300,
@@ -68,9 +67,7 @@ export const AttendanceQRDisplay: React.FC<AttendanceQRDisplayProps> = ({
           setToken(legacyResult.qr_token);
           setExpiresAt(new Date(legacyResult.expires_at));
           
-          const baseUrl = window.location.hostname.includes('lovable') 
-            ? 'https://gleeworld.org' 
-            : window.location.origin;
+          const baseUrl = publicBaseUrl();
           const checkInUrl = `${baseUrl}/attendance/check-in?token=${legacyResult.qr_token}&session=${sessionId}`;
           const dataUrl = await QRCode.toDataURL(checkInUrl, {
             width: 300,

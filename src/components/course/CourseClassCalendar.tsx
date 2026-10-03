@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -751,7 +752,7 @@ export const CourseClassCalendar: React.FC<CourseClassCalendarProps> = ({
     }
   };
   const generateQRImage = async (token: string) => {
-    const baseUrl = window.location.hostname.includes('lovable') ? 'https://gleeworld.org' : window.location.origin;
+    const baseUrl = publicBaseUrl();
     const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(token)}`;
     const qrDataURL = await QRCode.toDataURL(attendanceUrl, {
       width: 300,

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -234,9 +235,9 @@ export const QRAttendanceDisplay: React.FC<QRAttendanceDisplayProps> = ({
       // Create a proper URL for the QR code instead of just the token
       // This allows phones to scan and open the attendance page directly
       // Use the production domain for GleeWorld
-      const baseUrl = window.location.hostname.includes('lovable') 
-        ? 'https://gleeworld.org' 
-        : window.location.origin;
+      // publicBaseUrl(), not window.location.origin: a QR scanned by another
+      // phone must resolve, and on native the origin is capacitor://localhost.
+      const baseUrl = publicBaseUrl();
       const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(token)}`;
       
       console.log('Generated QR URL:', attendanceUrl);
