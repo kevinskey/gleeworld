@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { loadCallerPrivilege, callerMayActOnUser } from "../_shared/tenantAdmin.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -73,6 +74,19 @@ serve(async (req) => {
     if (targetProfile?.is_super_admin && !profile?.is_super_admin) {
       return new Response(
         JSON.stringify({ error: 'Only super admins can delete other super admin accounts' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // ── TENANT SCOPE ───────────────────────────────────────────────────
+    // is_admin is a GLOBAL flag, so the check above let any workspace admin
+    // permanently delete any non-super-admin in ANY tenant (found 2026-10-02).
+    // Deletion is irreversible, so this gate matters more here than anywhere.
+    const callerPriv = await loadCallerPrivilege(supabaseClient, user.id)
+    const mayAct = await callerMayActOnUser(supabaseClient, callerPriv, userId)
+    if (!mayAct) {
+      return new Response(
+        JSON.stringify({ error: 'That account is not in a workspace you administer.' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }

@@ -41,6 +41,31 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // ── AUTHORIZATION ──────────────────────────────────────────────────
+    // This was an OPEN MAIL RELAY: no gate at all, on a function that sends
+    // through our Resend account from noreply@gleeworld.org with valid
+    // SPF/DKIM. Confirmed 2026-10-02 from the public internet with nothing but
+    // the published anon key — it reached payload validation, which means it
+    // was past auth. Anyone could have sent perfectly-authenticated phishing
+    // as any GleeWorld tenant, and burned the sending reputation that every
+    // password reset and invite in the platform depends on.
+    //
+    // Same gate gw-send-email/index.ts:37 already uses. All four real callers
+    // (MessengerModal, Messenger, the assistant's send_email action) run as a
+    // signed-in user, so requiring one breaks nothing.
+    const callerToken = (req.headers.get("authorization") ?? "").replace(/^bearer\s+/i, "");
+    let callerUserId: string | null = null;
+    if (callerToken !== Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+      const { data: userData } = await supabase.auth.getUser(callerToken);
+      if (!userData?.user) {
+        return new Response(JSON.stringify({ success: false, error: "Unauthorized" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        });
+      }
+      callerUserId = userData.user.id;
+    }
+
     const emailData: SendBrandedEmailRequest = await req.json();
     
     console.log("Send Branded Email Request:", {
@@ -56,7 +81,44 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const recipients = Array.isArray(emailData.to) ? emailData.to : [emailData.to];
-    const senderName = emailData.senderName || "GleeWorld";
+
+    // Blast ceiling. Unbounded batching turned one authenticated account into a
+    // bulk mailer; a signed-in member has no legitimate reason to exceed this,
+    // and service-role callers (campaign jobs) are exempt.
+    const MAX_RECIPIENTS_PER_CALL = 200;
+    if (callerUserId && recipients.length > MAX_RECIPIENTS_PER_CALL) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Too many recipients in one call (${recipients.length}); limit is ${MAX_RECIPIENTS_PER_CALL}.`,
+        }),
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
+
+    // The display name is what makes a phish convincing, so a user-supplied
+    // caller does not get to choose it — it comes from the sender's own tenant
+    // branding. Service-role callers keep the parameter (campaigns legitimately
+    // send as a named tenant).
+    let senderName = emailData.senderName || "GleeWorld";
+    if (callerUserId) {
+      const { data: me } = await supabase
+        .from("gw_profiles")
+        .select("tenant_id, active_tenant_id")
+        .eq("user_id", callerUserId)
+        .maybeSingle();
+      const tid = me?.active_tenant_id ?? me?.tenant_id;
+      let resolved = "";
+      if (tid) {
+        const { data: brand } = await supabase
+          .from("gw_branding_settings")
+          .select("org_name")
+          .eq("tenant_id", tid)
+          .maybeSingle();
+        resolved = String(brand?.org_name ?? "").replace(/[<>"]/g, "").trim();
+      }
+      senderName = resolved || "GleeWorld";
+    }
 
     // Build Resend attachments from base64
     const resendAttachments = (emailData.attachments || []).map((att) => ({
