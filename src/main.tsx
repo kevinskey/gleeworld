@@ -4,6 +4,7 @@ import App from './App.tsx'
 import './index.css'
 import './styles/tenant-theme.css'
 import { installAudioUnlock } from './lib/audioTools/unlock'
+import { installNativeDownloadBridge } from './lib/nativeDownload'
 import { BootErrorBoundary } from './BootErrorBoundary'
 
 // Surface module-level throws / unhandled rejections that fire before React
@@ -133,6 +134,10 @@ window.addEventListener('unhandledrejection', (e) => {
 });
 
 installAudioUnlock();
+// WKWebView ignores an anchor's `download` attribute, so every export and
+// "Save" button in the app was a dead tap. One capture-phase listener routes
+// them to the system share sheet. No-op in browsers.
+installNativeDownloadBridge();
 
 // Capacitor iOS WebView occasionally reports a stale window.innerWidth on
 // the very first paint after app launch, which causes our `useIsMobile`
