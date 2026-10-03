@@ -13,15 +13,21 @@
 //      nothing is highlighted, because Google is this field's namesake and
 //      muscle memory from every browser omnibox expects it.
 //
-// Google results cannot be embedded: Google sends X-Frame-Options/CSP
-// headers that block iframing, and scraping SERPs violates their ToS. So
-// opening a real tab via window.open IS the correct integration here, not a
-// shortcut — there is deliberately no in-panel "results" view and no network
-// call of any kind in this component. Everything is synchronous local
-// matching, which is what makes the dropdown feel instant.
+// Google SERPs cannot be embedded (X-Frame-Options/CSP) and scraping them
+// violates ToS — but the Custom Search JSON API is the sanctioned route, and
+// the Concierge already ships an edge function for it. So the dropdown now
+// ALSO shows real web results (Kevin, 2026-10-03: "let google search results
+// appear in ui dropdown"): a debounced call to concierge-search {webOnly}
+// fills a results lane between SoundCloud and the Search-Google row. The
+// local lanes stay synchronous and render instantly; web results stream in
+// beneath them when they arrive. Debounce + min-length matter here beyond
+// politeness: CSE's free tier is 100 queries/day, so we only search once
+// typing pauses. The "Search Google" tab-opening row remains both the
+// fallback for when the API is down and the plain-Enter default.
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { Music, Search, Sparkles } from 'lucide-react';
+import { Globe, Music, Search, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { searchNav } from '@/lib/navigation/navSearch';
 import { resolveNav, type CatalogEntry } from '@/lib/navigation/navCatalog';
@@ -68,7 +74,22 @@ type Row =
   | { kind: 'app'; entry: CatalogEntry }
   | { kind: 'assistant' }
   | { kind: 'soundcloud' }
+  | { kind: 'web'; result: WebResult }
   | { kind: 'google' };
+
+/** Shape concierge-search returns per hit (Google CSE fields). */
+interface WebResult {
+  title: string;
+  link: string;
+  snippet: string;
+  displayLink: string;
+}
+
+// Enough rows to be useful, few enough that the Google fallback row stays
+// visible without scrolling on a phone.
+const MAX_WEB_ROWS = 4;
+const WEB_DEBOUNCE_MS = 450;
+const WEB_MIN_CHARS = 3;
 
 /** Event the SoundCloudPanel listens for — the smart bar's SoundCloud lane
  *  pipes the query into the panel's own track search rather than opening
@@ -95,6 +116,49 @@ export function SmartSearchBar({ entries, className }: SmartSearchBarProps) {
 
   const trimmed = query.trim();
 
+  // ── Web results lane ─────────────────────────────────────────────────
+  // seq guards against out-of-order responses: a slow answer for "spel"
+  // must never overwrite the results for "spelman glee". Results are keyed
+  // by the query they answered so the render can drop stale ones too.
+  const [webResults, setWebResults] = useState<WebResult[]>([]);
+  const [webFor, setWebFor] = useState('');
+  const [webLoading, setWebLoading] = useState(false);
+  const webSeq = useRef(0);
+
+  useEffect(() => {
+    if (trimmed.length < WEB_MIN_CHARS) {
+      setWebResults([]);
+      setWebFor('');
+      setWebLoading(false);
+      return;
+    }
+    const seq = ++webSeq.current;
+    setWebLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('concierge-search', {
+          body: { query: trimmed, webOnly: true },
+        });
+        if (seq !== webSeq.current) return; // stale
+        if (error || !data?.searchConfigured) {
+          // API down or key misconfigured — the lane just doesn't appear,
+          // and the Search-Google row still works. No error UI in a
+          // suggestion dropdown.
+          setWebResults([]);
+          setWebFor('');
+        } else {
+          setWebResults(((data.results ?? []) as WebResult[]).slice(0, MAX_WEB_ROWS));
+          setWebFor(trimmed);
+        }
+      } catch {
+        if (seq === webSeq.current) { setWebResults([]); setWebFor(''); }
+      } finally {
+        if (seq === webSeq.current) setWebLoading(false);
+      }
+    }, WEB_DEBOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [trimmed]);
+
   const rows = useMemo<Row[]>(() => {
     if (!trimmed) return [];
     const pool = entries ?? UNGATED_FALLBACK;
@@ -105,9 +169,15 @@ export function SmartSearchBar({ entries, className }: SmartSearchBarProps) {
     const out: Row[] = apps.map((entry) => ({ kind: 'app', entry }));
     if (assistant) out.push({ kind: 'assistant' });
     out.push({ kind: 'soundcloud' });
+    // Only results that answer the CURRENT text — webFor goes stale the
+    // moment the user keeps typing, and a dropdown showing answers to a
+    // question the user is no longer asking reads as broken.
+    if (webFor === trimmed) {
+      for (const result of webResults) out.push({ kind: 'web', result });
+    }
     out.push({ kind: 'google' });
     return out;
-  }, [entries, trimmed, assistant]);
+  }, [entries, trimmed, assistant, webResults, webFor]);
 
   const close = () => { setOpen(false); setHighlight(-1); };
 
@@ -121,6 +191,8 @@ export function SmartSearchBar({ entries, className }: SmartSearchBarProps) {
       assistant.setSheetOpen(true);
     } else if (row.kind === 'soundcloud') {
       window.dispatchEvent(new CustomEvent(SC_SEARCH_EVENT, { detail: { query: trimmed } }));
+    } else if (row.kind === 'web') {
+      window.open(row.result.link, '_blank', 'noopener');
     } else {
       // 'noopener' severs window.opener so the Google tab can't script this
       // one back (reverse-tabnabbing).
@@ -261,12 +333,30 @@ export function SmartSearchBar({ entries, className }: SmartSearchBarProps) {
                 </button>
               );
             }
+            if (row.kind === 'web') {
+              return (
+                <button key={`web-${row.result.link}`} type="button" className={rowClass} {...common}>
+                  <Globe className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate">{row.result.title}</span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {row.result.displayLink}
+                    </span>
+                  </span>
+                </button>
+              );
+            }
             return (
               <button key="google" type="button" className={rowClass} {...common}>
                 <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
                 <span className="min-w-0 flex-1 truncate">
                   Search Google for <span className="font-medium">{trimmed}</span>
                 </span>
+                {webLoading && (
+                  <span className="shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground animate-pulse">
+                    loading…
+                  </span>
+                )}
               </button>
             );
           })}
