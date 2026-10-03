@@ -12,6 +12,7 @@
 // themselves already booked into a slot nobody chose.
 
 import { useEffect, useMemo, useState } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
@@ -225,7 +226,7 @@ export default function BookInvitePage() {
   const changeBooking = useMutation({
     mutationFn: async (mode: 'cancel' | 'reschedule') => {
       const { data, error } = await supabase.functions.invoke('booking-invite-cancel', {
-        body: { token, mode, siteUrl: window.location.origin },
+        body: { token, mode, siteUrl: publicBaseUrl() },
       });
       if (error) throw error;
       if (!(data as any)?.success) throw new Error((data as any)?.error || 'Could not change this booking.');
@@ -264,7 +265,7 @@ export default function BookInvitePage() {
         // hiccup must not make the guest think their slot didn't take.
         supabase.functions
           .invoke('booking-invite-confirm', {
-            body: { token, siteUrl: window.location.origin },
+            body: { token, siteUrl: publicBaseUrl() },
           })
           .catch((e) => console.error('confirmation dispatch failed', e));
         return;

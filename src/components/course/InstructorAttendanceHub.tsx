@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -182,9 +183,7 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
   }, [courseId]);
   const generateQRImage = async (token: string) => {
     try {
-      const baseUrl = window.location.hostname.includes('lovable')
-        ? 'https://gleeworld.org'
-        : window.location.origin;
+      const baseUrl = publicBaseUrl();
       const checkInUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(token)}`;
       const dataUrl = await QRCode.toDataURL(checkInUrl, {
         width: 300,
@@ -426,9 +425,7 @@ export const InstructorAttendanceHub: React.FC<InstructorAttendanceHubProps> = (
       if (!result?.success) throw new Error(result?.error || 'Failed to generate checkout QR');
 
       // Generate checkout QR image
-      const baseUrl = window.location.hostname.includes('lovable')
-        ? 'https://gleeworld.org'
-        : window.location.origin;
+      const baseUrl = publicBaseUrl();
       const checkoutUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(result.qr_token)}`;
       const dataUrl = await QRCode.toDataURL(checkoutUrl, {
         width: 300,

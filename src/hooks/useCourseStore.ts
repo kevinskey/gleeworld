@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { supabase, getTenantSlug } from '@/integrations/supabase/client';
 
 export type CourseProduct = {
@@ -124,8 +125,10 @@ export async function startCourseCheckout(sku: string): Promise<string> {
       // tenant_slug: the JWT's tenant claim is the caller's HOME tenant,
       // not the workspace on screen (see resolveTargetTenant).
       tenant_slug: getTenantSlug(),
-      success_url: `${window.location.origin}/dashboard?course_purchased=${sku}`,
-      cancel_url: `${window.location.origin}/dashboard?course_cancelled=${sku}`,
+      // Stripe redirects the BROWSER here after checkout. It cannot send
+      // anyone to capacitor://localhost, so these must be real web URLs.
+      success_url: `${publicBaseUrl()}/dashboard?course_purchased=${sku}`,
+      cancel_url: `${publicBaseUrl()}/dashboard?course_cancelled=${sku}`,
     },
   });
   if (error) throw error;

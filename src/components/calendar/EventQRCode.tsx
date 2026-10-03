@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import QRCode from 'qrcode';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -121,9 +122,7 @@ export const EventQRCode = ({ eventId, eventTitle, compact = false, trigger }: E
       setExpiresAt(new Date(result.expires_at));
       
       // Generate QR image pointing to secure attendance route
-      const baseUrl = window.location.hostname.includes('lovable') 
-        ? 'https://gleeworld.org' 
-        : window.location.origin;
+      const baseUrl = publicBaseUrl();
       const attendanceUrl = `${baseUrl}/attendance/scan?token=${encodeURIComponent(tokenValue)}`;
       
       console.log('QR attendance URL:', attendanceUrl);

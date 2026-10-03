@@ -4,6 +4,7 @@
 // admin role; callers also hide their Share affordances (defense in
 // depth — RLS enforces regardless).
 import { useState } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,7 +51,8 @@ export function ShareRecordingDialog({
   const [assignmentCopy, setAssignmentCopy] = useState<{ courseId: string; mediaId: string } | null>(null);
 
   const sharerName = (user?.user_metadata as any)?.full_name || user?.email || 'Your director';
-  const absoluteListenUrl = (id: string) => `${window.location.origin}${listenPath(id)}`;
+  // Shared with other people, so never window.location.origin (native = capacitor://localhost).
+  const absoluteListenUrl = (id: string) => `${publicBaseUrl()}${listenPath(id)}`;
 
   const reset = () => {
     setTab('class'); setCourseId(''); setNotifyClass(true); setMessage('');

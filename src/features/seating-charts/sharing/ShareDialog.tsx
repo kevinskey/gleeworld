@@ -2,6 +2,7 @@
 // Falls back to a simple user picker (tenant-scoped) because we don't have
 // a dedicated user-search component in this feature.
 import { useEffect, useMemo, useState } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { Trash2, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -106,7 +107,9 @@ export function ShareDialog({ open, onOpenChange, chartId }: ShareDialogProps) {
     setShares((prev) => prev.filter((s) => s.id !== shareId));
   }
 
-  const publicUrl = `${window.location.origin}/seating-charts/${chartId}/view`;
+  // This link is handed to other people, so it must not be built from
+  // window.location.origin — on native that is capacitor://localhost.
+  const publicUrl = `${publicBaseUrl()}/seating-charts/${chartId}/view`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

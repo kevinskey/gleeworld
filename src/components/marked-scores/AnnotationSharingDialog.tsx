@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -203,9 +204,7 @@ export const AnnotationSharingDialog = ({ markedScoreId, musicTitle, children }:
   };
 
   const copyShareLink = (shareToken: string) => {
-    const baseUrl = window.location.hostname.includes('lovable') 
-      ? 'https://gleeworld.org' 
-      : window.location.origin;
+    const baseUrl = publicBaseUrl();
     const shareUrl = `${baseUrl}/shared-annotation/${shareToken}`;
     navigator.clipboard.writeText(shareUrl);
     toast.success("Share link copied to clipboard!");

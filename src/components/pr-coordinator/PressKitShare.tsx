@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,9 +44,7 @@ export const PressKitShare = ({ pressKit }: PressKitShareProps) => {
     },
   ];
 
-  const baseUrl = window.location.hostname.includes('lovable') 
-    ? 'https://gleeworld.org' 
-    : window.location.origin;
+  const baseUrl = publicBaseUrl();
   const publicUrl = `${baseUrl}/press-kit/${pressKit.id}`;
 
   const handleShare = async () => {
@@ -91,9 +90,7 @@ export const PressKitShare = ({ pressKit }: PressKitShareProps) => {
 
   const generateDownloadLink = () => {
     // In a real implementation, this would generate a ZIP file with all press kit materials
-    const baseUrl = window.location.hostname.includes('lovable') 
-      ? 'https://gleeworld.org' 
-      : window.location.origin;
+    const baseUrl = publicBaseUrl();
     return `${baseUrl}/api/press-kit/${pressKit.id}/download`;
   };
 

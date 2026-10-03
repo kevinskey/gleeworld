@@ -7,6 +7,7 @@
 // donate button, exactly where the platforms that do this well put it.
 
 import { useEffect, useMemo, useState } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2, Search, AlertTriangle, Users } from 'lucide-react';
@@ -91,7 +92,7 @@ export default function FundraiserPublicPage() {
     );
   }
 
-  const shareUrl = `${window.location.origin}/give/${fundraiser.slug}`;
+  const shareUrl = `${publicBaseUrl()}/give/${fundraiser.slug}`;
 
   return (
     <UniversalLayout>

@@ -10,6 +10,7 @@
 // the gift paid. The copy is written to be true either way.
 
 import { useState } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle2, Share2, Store, Ticket } from 'lucide-react';
@@ -28,7 +29,7 @@ export default function GivingThanksPage() {
     enabled: !!slug,
   });
 
-  const shareUrl = `${window.location.origin}/give/${slug}`;
+  const shareUrl = `${publicBaseUrl()}/give/${slug}`;
 
   return (
     <UniversalLayout>

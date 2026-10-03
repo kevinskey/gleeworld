@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import QRCode from 'qrcode';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -125,9 +126,9 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       setQrToken(token);
 
       // Use production domain for QR codes so students scan to the published site
-      const baseUrl = window.location.hostname.includes('lovable') 
-        ? 'https://gleeworld.org' 
-        : window.location.origin;
+      // publicBaseUrl(), not window.location.origin: a QR scanned by another
+      // phone must resolve, and on native the origin is capacitor://localhost.
+      const baseUrl = publicBaseUrl();
       const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(token)}`;
       
       // Generate QR code
@@ -233,9 +234,8 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       
       // Fallback: Share just the URL if file sharing isn't supported
       if (navigator.share) {
-        const baseUrl = window.location.hostname.includes('lovable') 
-          ? 'https://gleeworld.org' 
-          : window.location.origin;
+        // See above — a shared link must work off this device.
+        const baseUrl = publicBaseUrl();
         const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(qrToken)}`;
         await navigator.share({
           title,
@@ -244,9 +244,8 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
         });
       } else {
         // Final fallback: Copy to clipboard
-        const baseUrl = window.location.hostname.includes('lovable') 
-          ? 'https://gleeworld.org' 
-          : window.location.origin;
+        // See above — a shared link must work off this device.
+        const baseUrl = publicBaseUrl();
         const scanUrl = `${baseUrl}/attendance-scan?token=${encodeURIComponent(qrToken)}`;
         await navigator.clipboard.writeText(`${title}\n${text}\n${scanUrl}`);
         toast({
