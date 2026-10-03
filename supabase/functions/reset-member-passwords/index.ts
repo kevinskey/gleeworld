@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { loadCallerPrivilege } from "../_shared/tenantAdmin.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -62,11 +63,33 @@ serve(async (req) => {
       )
     }
 
+    // ── TENANT SCOPE ───────────────────────────────────────────────────
+    // This query had NO tenant predicate, and the caller check above is the
+    // global is_admin flag — so one call from any workspace admin rewrote the
+    // password of every user holding that role across the ENTIRE platform
+    // (825 rows carry role='member' as of 2026-10-02). That is a one-request
+    // lockout of every choir on the system.
+    //
+    // Non-super-admins are now confined to the tenants they actually belong
+    // to. A super admin keeps the platform-wide reach deliberately — it is the
+    // break-glass path — but no one else has it.
+    const callerPriv = await loadCallerPrivilege(supabaseClient, user.id)
+    if (!callerPriv.isSuperAdmin && callerPriv.tenantIds.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'You do not administer any workspace.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // Get users with the target role
     let query = supabaseClient
       .from('gw_profiles')
       .select('user_id, email, full_name')
       .eq('role', targetRole)
+
+    if (!callerPriv.isSuperAdmin) {
+      query = query.in('tenant_id', callerPriv.tenantIds)
+    }
 
     if (batchLimit && batchLimit > 0) {
       query = query.limit(batchLimit)

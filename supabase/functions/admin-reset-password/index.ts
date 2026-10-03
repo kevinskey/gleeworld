@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { loadCallerPrivilege, callerMayActOnUser } from "../_shared/tenantAdmin.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -78,6 +79,22 @@ serve(async (req) => {
     // If we found a profile record, use the user_id field (which is the auth user ID)
     if (profileData?.user_id) {
       authUserId = profileData.user_id;
+    }
+
+    // ── TENANT SCOPE ───────────────────────────────────────────────────
+    // The is_admin check above is GLOBAL: it says the caller administers
+    // SOMETHING, not that they administer this account. Without this, a Lyke
+    // House workspace admin could reset a Yo-Doc instructor's password and
+    // then sign in as them (found 2026-10-02). Checked on the RESOLVED auth
+    // user id, after the profile-id indirection above, so the id the caller
+    // supplied cannot route around it.
+    const callerPriv = await loadCallerPrivilege(supabaseClient, user.id)
+    const mayAct = await callerMayActOnUser(supabaseClient, callerPriv, authUserId)
+    if (!mayAct) {
+      return new Response(
+        JSON.stringify({ error: 'That account is not in a workspace you administer.' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
     // Use Supabase Admin API to update the user's password
