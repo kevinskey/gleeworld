@@ -39,7 +39,7 @@ serve(async (req) => {
   if (!caller) return unauthorizedResponse(corsHeaders);
 
   try {
-    const { query } = await req.json();
+    const { query, webOnly } = await req.json();
     const q = typeof query === 'string' ? query.trim() : '';
     if (!q) {
       return new Response(JSON.stringify({ error: 'query is required' }), {
@@ -78,6 +78,17 @@ serve(async (req) => {
 
     let answer: string | null = null;
     const aiConfigured = Boolean(deepseekKey);
+
+    // webOnly: the Command Center search dropdown wants raw results FAST as
+    // the user types — an LLM synthesis per keystroke would be slow and
+    // burn tokens for prose nobody reads in a dropdown. The Concierge page
+    // keeps the full answer path by not sending the flag.
+    if (webOnly === true) {
+      return new Response(
+        JSON.stringify({ results, answer: null, searchConfigured, aiConfigured: false }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
 
     if (aiConfigured) {
       try {
