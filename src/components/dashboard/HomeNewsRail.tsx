@@ -138,7 +138,14 @@ export function HomeNewsRail() {
             </p>
           </div>
         ) : (
-          <ul ref={listRef} className="max-h-96 flex-1 divide-y divide-border overflow-y-auto lg:max-h-none">
+          /* Mobile: a short, clearly-scrollable window rather than a long
+             block — at max-h-96 the card ate most of a phone screen before
+             anything below it (Kevin, 2026-10-03: "reduce height and let
+             section scroll on mobile"). ~3 headlines visible, the cut-off
+             next row is the scroll affordance. overscroll-contain stops the
+             list's edge-bounce from dragging the whole page on iOS. Desktop
+             is unchanged: the ResizablePanel owns the height there. */
+          <ul ref={listRef} className="max-h-60 flex-1 divide-y divide-border overflow-y-auto overscroll-contain lg:max-h-none">
             {items.map((n) => (
               <li key={n.link}>
                 <a
