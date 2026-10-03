@@ -9,7 +9,7 @@
 // Sizing contract: the root fills its parent (h-full w-full min-h-0 flex-col);
 // the integrator owns the outer clamp height, so no fixed heights here. The
 // list is the only scrolling region; the player pins above it.
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { ChevronLeft, ChevronRight, History, ListVideo, X, Youtube } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -152,6 +152,33 @@ function VideoList({
     retry: (failureCount, err) => !isScopeMissing(err) && failureCount < 2,
   });
 
+  // Infinite scroll (Kevin, 2026-10-03: "infinite results for youtube for
+  // upscrolling searches on phones"). Same sentinel pattern as HomeNewsRail.
+  // root: null is deliberate — the panel's scroll container lives in the
+  // PARENT (the flex-1 overflow-y-auto div in YouTubePanel), and the nearest
+  // scrollable ancestor is what the viewport-rooted observer effectively
+  // tracks here; 200px rootMargin starts the fetch before the user hits the
+  // bottom so the list feels continuous. The three guards mirror the
+  // button's own conditions, so observer and button can never double-fetch:
+  // react-query coalesces concurrent fetchNextPage calls anyway.
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && q.hasNextPage && !q.isFetchingNextPage) {
+          void q.fetchNextPage();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+    // q.fetchNextPage is stable; hasNextPage/isFetchingNextPage re-arm the
+    // observer with fresh closure state after each page lands.
+  }, [q.hasNextPage, q.isFetchingNextPage, q.fetchNextPage]);
+
   if (q.isPending) return <SkeletonRows />;
   if (q.isError) return <InlineError message={(q.error as Error).message} onRetry={() => q.refetch()} />;
 
@@ -175,7 +202,12 @@ function VideoList({
         ))}
       </ul>
       {q.hasNextPage && (
-        <div className="p-2">
+        <div ref={sentinelRef} className="p-2">
+          {/* The sentinel wraps the button: scrolling near the end fetches the
+              next page automatically (the phone expectation — nobody taps
+              "Load more" on a feed), and the button stays as the fallback for
+              anything without IntersectionObserver and as a visible target
+              for keyboard/screen-reader users. */}
           <Button
             variant="ghost"
             size="sm"
