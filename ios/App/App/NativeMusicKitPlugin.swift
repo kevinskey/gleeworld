@@ -65,18 +65,62 @@ public class NativeMusicKitPlugin: CAPPlugin, CAPBridgedPlugin {
             object: player)
         player.beginGeneratingPlaybackNotifications()
 
-        // Lightweight time poll so the JS layer can keep its
-        // transport playhead in sync with Apple Music.
-        DispatchQueue.main.async {
-            self.timeObserver = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-                guard let self = self, self.player.playbackState == .playing else { return }
-                let t = self.player.currentPlaybackTime
-                let d = self.player.nowPlayingItem?.playbackDuration ?? 0
-                self.notifyListeners("playbackTimeChanged", data: [
-                    "currentTime": t.isFinite ? t : 0,
-                    "duration": d,
-                ])
+        // NO timer here on purpose.
+        //
+        // Capacitor calls load() on every registered plugin at app launch,
+        // whether or not the feature is ever used. This used to start a
+        // Timer(0.5s, repeats: true) that was only invalidated in deinit —
+        // which never runs for a plugin, since it lives as long as the app.
+        // So every user, including one sitting on the sign-in screen who has
+        // never touched Apple Music, woke the main thread twice a second for
+        // the entire life of the process. (On the simulator it was visible as
+        // "MPMusicPlayerController is not available" logged 2x/second;
+        // observed 2026-10-03.)
+        //
+        // The poll only has anything to report while audio is actually
+        // playing, and playbackStateChanged already tells us exactly when
+        // that starts and stops — so the timer is created there instead.
+        syncTimeObserver()
+    }
+
+    // MARK: - Playhead poll (only while playing)
+
+    /// Starts the 0.5s poll when playback is active, tears it down otherwise.
+    /// Safe to call repeatedly; it never stacks timers.
+    private func syncTimeObserver() {
+        let shouldRun = player.playbackState == .playing
+        if shouldRun {
+            guard timeObserver == nil else { return }
+            // Timers must be scheduled on the main run loop.
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self, self.timeObserver == nil else { return }
+                guard self.player.playbackState == .playing else { return }
+                self.timeObserver = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+                    guard let self = self else { return }
+                    guard self.player.playbackState == .playing else {
+                        // Belt and braces: if we ever miss a state notification,
+                        // the timer retires itself rather than polling forever.
+                        self.stopTimeObserver()
+                        return
+                    }
+                    let t = self.player.currentPlaybackTime
+                    let d = self.player.nowPlayingItem?.playbackDuration ?? 0
+                    self.notifyListeners("playbackTimeChanged", data: [
+                        "currentTime": t.isFinite ? t : 0,
+                        "duration": d,
+                    ])
+                }
             }
+        } else {
+            stopTimeObserver()
+        }
+    }
+
+    private func stopTimeObserver() {
+        guard timeObserver != nil else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.timeObserver?.invalidate()
+            self?.timeObserver = nil
         }
     }
 
@@ -172,18 +216,25 @@ public class NativeMusicKitPlugin: CAPPlugin, CAPBridgedPlugin {
         }
     }
 
+    // Each of these nudges syncTimeObserver directly as well as relying on the
+    // MPMusicPlayerControllerPlaybackStateDidChange notification — the
+    // notification is authoritative but can lag, and the playhead should start
+    // or stop updating the moment the user taps.
     @objc func play(_ call: CAPPluginCall) {
         player.play()
+        syncTimeObserver()
         call.resolve()
     }
 
     @objc func pause(_ call: CAPPluginCall) {
         player.pause()
+        syncTimeObserver()
         call.resolve()
     }
 
     @objc func stop(_ call: CAPPluginCall) {
         player.stop()
+        syncTimeObserver()
         call.resolve()
     }
 
@@ -213,6 +264,9 @@ public class NativeMusicKitPlugin: CAPPlugin, CAPBridgedPlugin {
     // MARK: - Notifications
 
     @objc private func playbackStateChanged() {
+        // Start the playhead poll on play, drop it on pause/stop. This is what
+        // keeps the timer from being a permanent background cost.
+        syncTimeObserver()
         notifyListeners("playbackStateChanged", data: [
             "state": describeState(player.playbackState),
         ])
