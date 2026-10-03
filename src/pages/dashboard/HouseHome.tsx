@@ -511,11 +511,22 @@ export default function HouseHome() {
             he actually lives in. The smart search field routes intent —
             apps, assistant, or Google — from one box. */}
         <SmartSearchBar className="max-w-2xl" entries={gatedNavEntries} />
+        {/* Heights are responsive on purpose. Both panels are
+            overflow-hidden cards whose inner widget fills the box, so a
+            height that is too tall for the viewport does not scroll — it
+            CLIPS. The old flat h-[480px] meant two 480px boxes stacked on a
+            phone: most of a 667pt screen gone before anything else, with the
+            SoundCloud widget and the YouTube list cut off inside them
+            (Kevin, 2026-10-03: "command center is not responsive on mobile,
+            soundcloud and youtube dont fit").
+
+            min-w-0 on the cells so a long video or track title can shrink and
+            truncate instead of forcing the grid wider than the screen. */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <div className="h-[480px] lg:h-[560px] min-h-0">
+          <div className="min-w-0 h-[320px] sm:h-[400px] lg:h-[560px] min-h-0">
             <YouTubePanel />
           </div>
-          <div className="h-[480px] lg:h-[560px] min-h-0">
+          <div className="min-w-0 h-[360px] sm:h-[420px] lg:h-[560px] min-h-0">
             <SoundCloudPanel />
           </div>
         </div>
