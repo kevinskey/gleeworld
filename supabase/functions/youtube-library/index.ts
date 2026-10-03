@@ -4,8 +4,8 @@
 // { feature: 'youtube' }), so there is no separate YouTube connection —
 // we just refresh the stored refresh_token and call the YouTube Data API.
 //
-// Body: { kind: 'status' | 'playlists' | 'playlistItems' | 'liked',
-//         playlistId?, pageToken? }
+// Body: { kind: 'status' | 'playlists' | 'playlistItems' | 'liked' | 'search',
+//         playlistId?, query?, pageToken? }
 //
 // Error philosophy: this powers a dashboard panel, so "not connected" and
 // "connected but no YouTube scope" are NORMAL states, not server errors.
@@ -87,10 +87,10 @@ serve(async (req) => {
   const { data: { user } } = await admin.auth.getUser(jwt);
   if (!user) return json({ error: 'Unauthorized' }, 401);
 
-  let body: { kind?: string; playlistId?: string; pageToken?: string } = {};
+  let body: { kind?: string; playlistId?: string; query?: string; pageToken?: string } = {};
   try { body = await req.json(); } catch { /* fall through to kind check */ }
   const kind = body.kind;
-  if (!kind || !['status', 'playlists', 'playlistItems', 'liked'].includes(kind)) {
+  if (!kind || !['status', 'playlists', 'playlistItems', 'liked', 'search'].includes(kind)) {
     return json({ error: 'bad_kind' }, 400);
   }
 
@@ -149,6 +149,23 @@ serve(async (req) => {
     const p = new URLSearchParams({ part: 'snippet,contentDetails', playlistId: body.playlistId, maxResults: '25' });
     if (body.pageToken) p.set('pageToken', body.pageToken);
     apiUrl = 'https://www.googleapis.com/youtube/v3/playlistItems?' + p.toString();
+  } else if (kind === 'search') {
+    // QUOTA WARNING: search.list costs 100 units per call against the
+    // project's 10,000/day — a hundred searches is the whole day's budget,
+    // where list calls cost 1. The client MUST only call this on an explicit
+    // submit (Enter / button), never per keystroke. maxResults 25 so each
+    // expensive call at least fills a screen's worth of scrolling.
+    const query = (body.query ?? '').trim();
+    if (!query) return json({ error: 'query required' }, 400);
+    const p = new URLSearchParams({
+      part: 'snippet',
+      q: query,
+      type: 'video',
+      maxResults: '25',
+      safeSearch: 'none',
+    });
+    if (body.pageToken) p.set('pageToken', body.pageToken);
+    apiUrl = 'https://www.googleapis.com/youtube/v3/search?' + p.toString();
   } else {
     // kind === 'liked' — the videos endpoint with myRating=like returns the
     // caller's Liked Videos without needing the special LL playlist id.
@@ -200,6 +217,21 @@ serve(async (req) => {
         // playlistItem is the PLAYLIST owner's channel, which is misleading.
         channel: it.snippet?.videoOwnerChannelTitle ?? it.snippet?.channelTitle ?? '',
         publishedAt: it.contentDetails?.videoPublishedAt ?? it.snippet?.publishedAt ?? null,
+      }))
+      .filter((it) => it.videoId);
+    return json({ items, ...(data.nextPageToken ? { nextPageToken: data.nextPageToken } : {}) });
+  }
+
+  if (kind === 'search') {
+    // /search items carry the videoId under id.videoId (id is an object,
+    // unlike /videos where it is the string itself).
+    const items = raw
+      .map((it) => ({
+        videoId: it.id?.videoId ?? '',
+        title: it.snippet?.title ?? '',
+        thumb: bestThumb(it.snippet?.thumbnails),
+        channel: it.snippet?.channelTitle ?? '',
+        publishedAt: it.snippet?.publishedAt ?? null,
       }))
       .filter((it) => it.videoId);
     return json({ items, ...(data.nextPageToken ? { nextPageToken: data.nextPageToken } : {}) });
