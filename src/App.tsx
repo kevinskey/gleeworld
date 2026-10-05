@@ -228,7 +228,7 @@ const SeatingChartViewPage = lazy(() => import("./pages/seating-charts/ViewPage"
 const ViewerPage = lazy(() => import("./pages/dashboard/ViewerPage"));
 const MusicToolsPage = lazy(() => import("./pages/dashboard/MusicToolsPage"));
 const NewMediaLibraryPage = lazy(() => import("./pages/dashboard/MediaLibraryPage"));
-const SoundCloudPlayerPage = lazy(() => import("./pages/dashboard/SoundCloudPlayerPage"));
+const JukeboxPage = lazy(() => import("./pages/dashboard/JukeboxPage"));
 const SightReadingStudio = lazy(() => import("./pages/sightReading/SightReadingStudio"));
 const ReadingMusicPage = lazy(() => import("./pages/dashboard/ReadingMusicPage"));
 const NotationEditorPage = lazy(() => import("./pages/notation/NotationEditorPage"));
@@ -2020,15 +2020,22 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
-                {/* The Command Center player. /soundcloud (no /dashboard) is
-                    the separate SoundCloud.com OAuth search page. */}
+                {/* The Command Center player — the in-house Jukebox since
+                    2026-10-05 (replaced the SoundCloud widget page).
+                    /soundcloud (no /dashboard) is the separate SoundCloud.com
+                    OAuth search page. */}
                 <Route
-                  path="/dashboard/soundcloud"
+                  path="/dashboard/player"
                   element={
                     <ProtectedRoute>
-                      <SoundCloudPlayerPage />
+                      <JukeboxPage />
                     </ProtectedRoute>
                   }
+                />
+                {/* Old bookmarks and the retired SoundCloud nav key. */}
+                <Route
+                  path="/dashboard/soundcloud"
+                  element={<Navigate to="/dashboard/player" replace />}
                 />
                 <Route
                   path="/dashboard/alumni"
@@ -3137,11 +3144,7 @@ const App = () => {
                                   />
                                  <Route
                                    path="/dashboard/music-player"
-                                   element={
-                                     <ProtectedRoute>
-                                       <SoundCloudPlayerPage />
-                                     </ProtectedRoute>
-                                   }
+                                   element={<Navigate to="/dashboard/player" replace />}
                                   />
                                   <Route 
                                     path="/receipts" 
