@@ -37,6 +37,15 @@ export const BG_SWATCHES: BgSwatch[] = [
   { name: 'Mint',     value: '#dcefe3' },
   { name: 'Sage',     value: '#e4e9dc' },
   { name: 'Stone',    value: '#e4e2df' },
+  // Cooler, earthier row (Kevin, 2026-10-05): the original set skewed
+  // pastel-floral. These sit at the readability floor (L 76–78) with more
+  // gray in them, so they read slate/military rather than nursery — as deep
+  // as the contrast clamp allows.
+  { name: 'Slate',    value: '#bbc5d3' },
+  { name: 'Graphite', value: '#bdc0c7' },
+  { name: 'Olive',    value: '#c5cdb7' },
+  { name: 'Khaki',    value: '#d5ceb8' },
+  { name: 'Clay',     value: '#d5c2b8' },
 ];
 
 const HEX_RE = /^#([0-9a-f]{6})$/i;
