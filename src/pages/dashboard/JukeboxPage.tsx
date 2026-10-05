@@ -211,7 +211,22 @@ export default function JukeboxPage() {
     localStorage.setItem('gw-jukebox-volume', String(volume));
   }, [volume]);
 
+  // One sample of silence. Played synchronously inside the click handler so
+  // the browser marks the element user-activated BEFORE the async signed-URL
+  // round trip — without this, autoplay policy (Safari always, Chrome on a
+  // fresh site) rejects the real play() because the gesture has expired by
+  // the time the URL arrives, and the player sits at 0:00 forever.
+  const SILENT_WAV =
+    'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=';
+  const unlocked = useRef(false);
+
   const play = (track: Track, fromList: Track[] = shown) => {
+    const el = audioRef.current;
+    if (el && !unlocked.current) {
+      el.src = SILENT_WAV;
+      void el.play().catch(() => undefined);
+      unlocked.current = true;
+    }
     setQueue(fromList);
     setCurrent(track);
     setPlaying(true);
