@@ -477,7 +477,7 @@ export default function JukeboxPage() {
           </Card>
 
           {/* -------- source list | song table --------------------------- */}
-          <div className="grid gap-4 lg:grid-cols-[230px_minmax(0,1fr)] items-start">
+          <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)] items-start">
             <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
               <CardContent className="p-2">
                 <p className="px-2 pt-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -730,9 +730,12 @@ function SourceRow({
       </span>
       <span className="w-7 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{count}</span>
       {actions && (
-        /* Opacity, not display: layout stays stable, and the buttons remain
-           keyboard-reachable. Always visible below lg — iPad has no hover. */
-        <span className="flex items-center lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity">
+        /* Zero footprint until needed: the name keeps the full row width.
+           The selected row always shows its actions (that's the touch path —
+           tap to select, then act); other rows reveal them on hover/focus. */
+        <span className={`items-center ${
+          active ? 'flex' : 'hidden lg:group-hover:flex lg:group-focus-within:flex'
+        }`}>
           {actions}
         </span>
       )}
