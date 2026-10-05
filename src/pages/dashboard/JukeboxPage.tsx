@@ -98,6 +98,9 @@ export default function JukeboxPage() {
   const [deleting, setDeleting] = useState<Playlist | null>(null);
 
   // ----- data ---------------------------------------------------------
+  // RLS gates the rows (20261005150000): an admin gets the whole library, a
+  // member gets only tracks that sit in a playlist shared with them — so
+  // "All songs" below is each person's shared universe, not the catalog.
   const { data: tracks = [], isLoading } = useQuery<Track[]>({
     queryKey: ['jukebox-tracks'],
     staleTime: 10 * 60 * 1000,
@@ -348,7 +351,9 @@ export default function JukeboxPage() {
       <DashboardShell>
         <DashboardPageShell
           title={playerTitle}
-          subtitle={`${tracks.length} songs in the library, streamed from your own archive.`}
+          subtitle={canManage
+            ? `${tracks.length} songs in the library, streamed from your own archive.`
+            : `${tracks.length} song${tracks.length === 1 ? '' : 's'} shared with you.`}
         >
           <audio
             ref={audioRef}
@@ -455,7 +460,7 @@ export default function JukeboxPage() {
                 </p>
                 <SourceRow
                   icon={<Music className="w-4 h-4" />}
-                  label="All songs"
+                  label={canManage ? 'All songs' : 'Shared with me'}
                   count={tracks.length}
                   active={source.kind === 'library'}
                   onClick={() => setSource({ kind: 'library' })}
@@ -526,8 +531,8 @@ export default function JukeboxPage() {
                     {q
                       ? `Nothing matches “${query.trim()}”.`
                       : source.kind === 'playlist'
-                        ? 'This playlist is empty — add songs from All songs.'
-                        : 'No songs in the library yet.'}
+                        ? (canManage ? 'This playlist is empty — add songs from All songs.' : 'This playlist is empty.')
+                        : (canManage ? 'No songs in the library yet.' : 'No music has been shared with you yet.')}
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
