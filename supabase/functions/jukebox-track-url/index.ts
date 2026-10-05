@@ -79,10 +79,18 @@ export async function handler(req: Request): Promise<Response> {
       return json({ error: 'Lookup failed' }, 500);
     }
     // Not found and not allowed are deliberately the same answer.
-    if (!track) return json({ error: 'Track not found' }, 404);
+    if (!track) {
+      // Outcome logging (no secrets): distinguishes "RLS hid the row" from
+      // signing trouble when a listener reports silence.
+      console.log(`[jukebox-track-url] 404 not-visible track=${trackId} tenant=${tenantSlug}`);
+      return json({ error: 'Track not found' }, 404);
+    }
 
     const parsed = parseSpacesUrl(String(track.audio_url));
-    if (!parsed) return json({ error: 'Track has no streamable file' }, 404);
+    if (!parsed) {
+      console.log(`[jukebox-track-url] 404 unparseable-url track=${trackId}`);
+      return json({ error: 'Track has no streamable file' }, 404);
+    }
 
     const key = Deno.env.get('SPACES_ACCESS_KEY_ID') ?? Deno.env.get('SPACES_KEY') ?? '';
     const secret = Deno.env.get('SPACES_SECRET_ACCESS_KEY') ?? Deno.env.get('SPACES_SECRET') ?? '';
@@ -106,6 +114,7 @@ export async function handler(req: Request): Promise<Response> {
     });
     const signed = await aws.sign(new Request(target.toString()), { aws: { signQuery: true } });
 
+    console.log(`[jukebox-track-url] 200 signed track=${trackId} tenant=${tenantSlug}`);
     return json({ url: signed.url, expires_in: TTL_SECONDS });
   } catch (e) {
     console.error('[jukebox-track-url]', (e as Error).message);
