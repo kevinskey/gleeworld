@@ -1,16 +1,16 @@
-// Who can see one SoundCloud playlist on the Command Center page.
+// Who can see one Jukebox playlist.
 //
-// Three kinds of target: a role, an Academy class, or one person by email.
-// Roles stand in for "admin groups" — this schema has four different group
-// tables and none of them means "the admins".
+// Port of the SoundCloud PlaylistShareDialog (2026-08-18) to the Jukebox's
+// own shares table. Three kinds of target: a role, an Academy class, or one
+// person by email.
 //
-// Curation, not access control: these playlists are public on
-// soundcloud.com, so anyone with the link can play them regardless. What
-// this decides is what appears on the page. The dialog says so, because a
-// share control that looks like a lock invites the wrong assumption.
+// Curation, not access control: the audio files are public CDN objects, so
+// anyone with a file's link can play it regardless. What this decides is
+// what appears on the page — the dialog says so, because a share control
+// that looks like a lock invites the wrong assumption.
 
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,12 +24,11 @@ import {
 import { Trash2, Plus, Users, GraduationCap, Mail, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useManagedCourses } from '@/hooks/useManagedCourses';
-import { describeShare, type PlaylistShare } from '@/lib/soundcloud/shares';
+import { describeShare, type JukeboxShare } from '@/lib/jukebox/shares';
 
-export interface SharablePlaylist {
-  id: number;
+export interface SharableJukeboxPlaylist {
+  id: string;
   title: string;
-  permalinkUrl: string;
 }
 
 const ROLE_OPTIONS = [
@@ -38,13 +37,13 @@ const ROLE_OPTIONS = [
   { value: 'admin', label: 'All admins', hint: 'Admins and owners only' },
 ] as const;
 
-export function PlaylistShareDialog({
+export function JukeboxShareDialog({
   playlist, open, onOpenChange, shares,
 }: {
-  playlist: SharablePlaylist | null;
+  playlist: SharableJukeboxPlaylist | null;
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  shares: PlaylistShare[];
+  shares: JukeboxShare[];
 }) {
   const qc = useQueryClient();
   const { data: courses = [] } = useManagedCourses();
@@ -59,16 +58,15 @@ export function PlaylistShareDialog({
     ),
   );
 
-  const refresh = () => qc.invalidateQueries({ queryKey: ['soundcloud-shares'] });
+  const refresh = () => qc.invalidateQueries({ queryKey: ['jukebox-shares'] });
 
-  const add = async (patch: Partial<PlaylistShare>) => {
+  const add = async (patch: Partial<JukeboxShare>) => {
     if (!playlist) return;
     setBusy(true);
     try {
-      const { error } = await supabase.from('gw_soundcloud_playlist_shares').insert({
+      const { error } = await supabase.from('gw_jukebox_playlist_shares').insert({
         playlist_id: playlist.id,
         playlist_title: playlist.title,
-        playlist_url: playlist.permalinkUrl,
         ...patch,
       } as never);
       if (error) {
@@ -90,7 +88,7 @@ export function PlaylistShareDialog({
       // revoked_at rather than DELETE: the row stays as a record of what was
       // shared and when it stopped.
       const { error } = await supabase
-        .from('gw_soundcloud_playlist_shares')
+        .from('gw_jukebox_playlist_shares')
         .update({ revoked_at: new Date().toISOString() } as never)
         .eq('id', id);
       if (error) { toast.error(error.message); return; }
@@ -113,8 +111,7 @@ export function PlaylistShareDialog({
         <DialogHeader>
           <DialogTitle className="truncate">Share “{playlist?.title}”</DialogTitle>
           <DialogDescription>
-            Choose who sees this playlist on the SoundCloud page. It stays public on
-            soundcloud.com either way — this controls the page, not the music.
+            Choose who sees this playlist on the player page.
           </DialogDescription>
         </DialogHeader>
 
@@ -129,7 +126,7 @@ export function PlaylistShareDialog({
               </p>
             ) : (
               shares.map((s) => (
-                <div key={s.id} className="flex items-center gap-2 rounded-lg border bg-muted/30 p-2">
+                <div key={s.id} className="flex items-center gap-2 border bg-muted/30 p-2">
                   {s.share_type === 'email' ? <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                     : s.share_type === 'course' ? <GraduationCap className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                     : <Users className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
@@ -138,7 +135,7 @@ export function PlaylistShareDialog({
                     type="button"
                     disabled={busy}
                     onClick={() => revoke(s.id)}
-                    className="text-muted-foreground hover:text-rose-600 shrink-0 disabled:opacity-50"
+                    className="text-muted-foreground hover:text-destructive shrink-0 disabled:opacity-50"
                     aria-label={`Stop sharing with ${describeShare(s, courseNames)}`}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -162,7 +159,7 @@ export function PlaylistShareDialog({
               <Button
                 variant="outline"
                 disabled={busy}
-                onClick={() => add({ share_type: 'role', target_role: role as PlaylistShare['target_role'] })}
+                onClick={() => add({ share_type: 'role', target_role: role as JukeboxShare['target_role'] })}
               >
                 <Plus className="w-3.5 h-3.5 mr-1.5" /> Add
               </Button>
