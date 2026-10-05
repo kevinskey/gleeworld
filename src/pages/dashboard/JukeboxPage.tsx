@@ -212,13 +212,42 @@ export default function JukeboxPage() {
     setPlaying(true);
   };
 
+  // The bucket went private on 2026-10-05: the row's audio_url is a dead
+  // link on its own. Each play asks jukebox-track-url for a presigned GET
+  // (RLS-checked server-side), cached until shortly before it expires.
+  const signedUrls = useRef(new Map<string, { url: string; expiresAt: number }>());
+  const signedUrlFor = async (track: Track): Promise<string> => {
+    const hit = signedUrls.current.get(track.id);
+    if (hit && hit.expiresAt > Date.now() + 5 * 60_000) return hit.url;
+    const { data, error } = await supabase.functions.invoke('jukebox-track-url', {
+      body: { trackId: track.id },
+    });
+    if (error || !data?.url) throw error ?? new Error('no signed url');
+    signedUrls.current.set(track.id, {
+      url: data.url as string,
+      expiresAt: Date.now() + (Number(data.expires_in) || 3600) * 1000,
+    });
+    return data.url as string;
+  };
+
   // One element, re-pointed per track. Autoplay after a user gesture is
   // fine; the explicit play() handles the src swap race.
   useEffect(() => {
     const el = audioRef.current;
     if (!el || !current) return;
-    el.src = current.audio_url;
-    el.play().catch(() => setPlaying(false));
+    let cancelled = false;
+    signedUrlFor(current)
+      .then((url) => {
+        if (cancelled || !audioRef.current) return;
+        audioRef.current.src = url;
+        return audioRef.current.play();
+      })
+      .catch(() => {
+        if (!cancelled) setPlaying(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [current]);
 
   useEffect(() => {
