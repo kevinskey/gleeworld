@@ -517,10 +517,8 @@ export default function JukeboxPage() {
                     count={membership.get(p.id)?.length ?? 0}
                     active={source.kind === 'playlist' && source.id === p.id}
                     onClick={() => setSource({ kind: 'playlist', id: p.id })}
-                    subtitle={canManage
-                      ? ((shareMap.get(p.id)?.length ?? 0) === 0
-                          ? 'shared with nobody'
-                          : (shareMap.get(p.id) ?? []).map((s) => describeShare(s)).join(', '))
+                    sharedWith={canManage && (shareMap.get(p.id)?.length ?? 0) > 0
+                      ? (shareMap.get(p.id) ?? []).map((s) => describeShare(s)).join(', ')
                       : undefined}
                     actions={canManage ? (
                       <>
@@ -704,28 +702,40 @@ export default function JukeboxPage() {
 }
 
 function SourceRow({
-  icon, label, count, active, onClick, subtitle, actions,
+  icon, label, count, active, onClick, sharedWith, actions,
 }: {
   icon: React.ReactNode; label: string; count: number;
   active: boolean; onClick: () => void;
-  subtitle?: string; actions?: React.ReactNode;
+  /** Who this playlist is shared with; undefined = no indicator. */
+  sharedWith?: string; actions?: React.ReactNode;
 }) {
   return (
     <div
       role="button" tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
-      className={`w-full flex items-center gap-2 px-2 py-2 text-left cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-ring outline-none ${
+      title={label}
+      className={`group w-full flex items-center gap-2 px-2 py-2 text-left cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-ring outline-none ${
         active ? 'bg-primary/10 text-primary' : 'hover:bg-accent/50'
       }`}
     >
       <span className={active ? 'text-primary' : 'text-muted-foreground'}>{icon}</span>
-      <span className="flex-1 min-w-0">
-        <span className="block truncate text-sm font-medium">{label}</span>
-        {subtitle && <span className="block truncate text-xs text-muted-foreground">{subtitle}</span>}
+      <span className="flex-1 min-w-0 flex items-center gap-1.5">
+        <span className="truncate text-sm font-medium">{label}</span>
+        {sharedWith && (
+          <span title={`Shared with ${sharedWith}`} className="shrink-0 text-muted-foreground">
+            <Share2 className="w-3 h-3" aria-label={`Shared with ${sharedWith}`} />
+          </span>
+        )}
       </span>
-      <span className="text-xs tabular-nums text-muted-foreground">{count}</span>
-      {actions}
+      <span className="w-7 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{count}</span>
+      {actions && (
+        /* Opacity, not display: layout stays stable, and the buttons remain
+           keyboard-reachable. Always visible below lg — iPad has no hover. */
+        <span className="flex items-center lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity">
+          {actions}
+        </span>
+      )}
     </div>
   );
 }
