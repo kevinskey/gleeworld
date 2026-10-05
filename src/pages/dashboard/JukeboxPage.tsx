@@ -54,7 +54,6 @@ interface Track {
   title: string;
   upload_date: string | null;
   duration_ms: number | null;
-  audio_url: string;
 }
 
 interface Playlist {
@@ -107,7 +106,10 @@ export default function JukeboxPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_jukebox_tracks')
-        .select('id, title, upload_date, duration_ms, audio_url')
+        // audio_url deliberately not selected: streams go through the
+        // jukebox-track-url function, and the page should never hold a
+        // direct file URL a member could lift.
+        .select('id, title, upload_date, duration_ms')
         .order('upload_date', { ascending: false, nullsFirst: false });
       if (error) throw error;
       return (data ?? []) as unknown as Track[];
@@ -215,13 +217,50 @@ export default function JukeboxPage() {
     setPlaying(true);
   };
 
+  // The bucket is private (members must not be able to download the files),
+  // so playback streams through a short-lived presigned URL minted per track
+  // by the jukebox-track-url function — which checks the caller's own RLS
+  // view before signing. Cached until shortly before expiry so replays and
+  // queue loops don't round-trip.
+  const signedUrls = useRef(new Map<string, { url: string; expiresAt: number }>());
+  const resolveStreamUrl = async (trackId: string): Promise<string> => {
+    const hit = signedUrls.current.get(trackId);
+    if (hit && hit.expiresAt > Date.now()) return hit.url;
+    const { data, error } = await supabase.functions.invoke('jukebox-track-url', {
+      body: { trackId },
+    });
+    if (error) throw error;
+    const payload = data as { url?: string; error?: string; expires_in?: number };
+    if (!payload?.url) throw new Error(payload?.error ?? 'No stream URL');
+    signedUrls.current.set(trackId, {
+      url: payload.url,
+      // 5-minute safety margin: a URL handed to <audio> right before expiry
+      // would die on the first seek.
+      expiresAt: Date.now() + ((payload.expires_in ?? 3600) - 300) * 1000,
+    });
+    return payload.url;
+  };
+
   // One element, re-pointed per track. Autoplay after a user gesture is
-  // fine; the explicit play() handles the src swap race.
+  // fine; the stale check handles a fast next-next skipping past a slow sign.
   useEffect(() => {
     const el = audioRef.current;
     if (!el || !current) return;
-    el.src = current.audio_url;
-    el.play().catch(() => setPlaying(false));
+    let stale = false;
+    void resolveStreamUrl(current.id)
+      .then((url) => {
+        if (stale) return;
+        el.src = url;
+        return el.play();
+      })
+      .catch(() => {
+        if (!stale) {
+          setPlaying(false);
+          toast.error("Couldn't play that song. Please try again.");
+        }
+      });
+    return () => { stale = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current]);
 
   useEffect(() => {
