@@ -51,12 +51,21 @@ export interface YtHistoryEntry {
 // to account watch history years ago (watchHistory playlist returns empty for
 // every OAuth app). The ONLY way to have a "Recent" surface is to record plays
 // we initiate ourselves. Do not "fix" this by calling the API — it cannot work.
-const HISTORY_KEY = 'gw-yt-history';
+// Keyed PER USER (Kevin, 2026-10-06: "Each user should have their own
+// youtube setting on command center") — the original single key bled one
+// account's Recent tab into every other account on the same browser. No
+// userId (signed-out edge, tests) falls back to the legacy shared key; no
+// migration from it, because moving its entries would hand user A's history
+// to user B — the exact bleed being fixed.
+const HISTORY_KEY_BASE = 'gw-yt-history';
 const HISTORY_CAP = 50;
 
-export function readYtHistory(): YtHistoryEntry[] {
+const historyKey = (userId?: string | null) =>
+  userId ? `${HISTORY_KEY_BASE}:${userId}` : HISTORY_KEY_BASE;
+
+export function readYtHistory(userId?: string | null): YtHistoryEntry[] {
   try {
-    const raw = localStorage.getItem(HISTORY_KEY);
+    const raw = localStorage.getItem(historyKey(userId));
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     if (!Array.isArray(parsed)) return [];
@@ -74,13 +83,16 @@ export function readYtHistory(): YtHistoryEntry[] {
  * Prepend a play to history: newest first, deduped by videoId (keeping the
  * newest occurrence), capped at 50 so the key never grows unbounded.
  */
-export function recordYtPlay(entry: Omit<YtHistoryEntry, 'playedAt'>): YtHistoryEntry[] {
+export function recordYtPlay(
+  entry: Omit<YtHistoryEntry, 'playedAt'>,
+  userId?: string | null,
+): YtHistoryEntry[] {
   const next: YtHistoryEntry[] = [
     { ...entry, playedAt: new Date().toISOString() },
-    ...readYtHistory().filter((e) => e.videoId !== entry.videoId),
+    ...readYtHistory(userId).filter((e) => e.videoId !== entry.videoId),
   ].slice(0, HISTORY_CAP);
   try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+    localStorage.setItem(historyKey(userId), JSON.stringify(next));
   } catch {
     // Quota/private-mode failures just mean history doesn't persist — the
     // play itself must never be blocked by that.

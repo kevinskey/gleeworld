@@ -17,6 +17,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,6 +46,22 @@ async function ytInvoke<T extends { error?: string }>(body: Record<string, unkno
 
 function isScopeMissing(err: unknown): boolean {
   return err instanceof Error && err.message.includes('youtube_scope_missing');
+}
+
+/**
+ * A list call answering scope-missing means the stored connection is no
+ * longer usable (revoked at Google — e.g. the same Google account was
+ * disconnected from another workspace login, which kills the whole grant).
+ * The status query is the authority for the panel's empty-state, so the
+ * list components report the condition up and the parent refetches status;
+ * youtube-library deletes revoked connections, so the refetch comes back
+ * connected:false and the panel shows the Connect button instead of a
+ * dead-end inline error.
+ */
+function useReportScopeLost(isError: boolean, error: unknown, onScopeLost?: () => void) {
+  useEffect(() => {
+    if (isError && isScopeMissing(error)) onScopeLost?.();
+  }, [isError, error, onScopeLost]);
 }
 
 type Tab = 'playlists' | 'liked' | 'recent' | 'search';
@@ -138,12 +155,14 @@ function VideoList({
   enabled,
   playingId,
   onPlay,
+  onScopeLost,
 }: {
   queryKey: readonly unknown[];
   requestBody: Record<string, unknown>;
   enabled: boolean;
   playingId: string | null;
   onPlay: (v: YtVideo) => void;
+  onScopeLost?: () => void;
 }) {
   const q = useInfiniteQuery({
     queryKey,
@@ -155,6 +174,7 @@ function VideoList({
     enabled,
     retry: (failureCount, err) => !isScopeMissing(err) && failureCount < 2,
   });
+  useReportScopeLost(q.isError, q.error, onScopeLost);
 
   // Infinite scroll (Kevin, 2026-10-03: "infinite results for youtube for
   // upscrolling searches on phones"). Same sentinel pattern as HomeNewsRail.
@@ -230,9 +250,11 @@ function VideoList({
 function PlaylistList({
   enabled,
   onOpen,
+  onScopeLost,
 }: {
   enabled: boolean;
   onOpen: (p: YtPlaylist) => void;
+  onScopeLost?: () => void;
 }) {
   const q = useQuery({
     queryKey: ['yt', 'playlists'],
@@ -241,6 +263,7 @@ function PlaylistList({
     enabled,
     retry: (failureCount, err) => !isScopeMissing(err) && failureCount < 2,
   });
+  useReportScopeLost(q.isError, q.error, onScopeLost);
 
   if (q.isPending) return <SkeletonRows />;
   if (q.isError) return <InlineError message={(q.error as Error).message} onRetry={() => q.refetch()} />;
@@ -294,9 +317,13 @@ export function YouTubePanel() {
   // Drill-down state for the Playlists tab (null = playlist index).
   const [openPlaylist, setOpenPlaylist] = useState<YtPlaylist | null>(null);
   const [nowPlaying, setNowPlaying] = useState<YtVideo | null>(null);
+  const { user } = useAuth();
   // Local watch history lives in state so the Recent tab re-renders the
   // moment a play is recorded (localStorage alone wouldn't trigger that).
-  const [history, setHistory] = useState<YtHistoryEntry[]>(() => readYtHistory());
+  // Keyed by user id so two accounts on one browser never share a Recent
+  // tab; re-read when auth resolves (user is null on the first render).
+  const [history, setHistory] = useState<YtHistoryEntry[]>(() => readYtHistory(user?.id));
+  useEffect(() => { setHistory(readYtHistory(user?.id)); }, [user?.id]);
   const [connecting, setConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [confirmSignOut, setConfirmSignOut] = useState(false);
@@ -311,8 +338,8 @@ export function YouTubePanel() {
 
   const play = useCallback((v: YtVideo) => {
     setNowPlaying(v);
-    setHistory(recordYtPlay({ videoId: v.videoId, title: v.title, thumb: v.thumb, channel: v.channel }));
-  }, []);
+    setHistory(recordYtPlay({ videoId: v.videoId, title: v.title, thumb: v.thumb, channel: v.channel }, user?.id));
+  }, [user?.id]);
 
   const playFromHistory = useCallback((e: YtHistoryEntry) => {
     play({ videoId: e.videoId, title: e.title, thumb: e.thumb, channel: e.channel, publishedAt: '' });
@@ -360,6 +387,13 @@ export function YouTubePanel() {
     } finally {
       setSigningOut(false);
     }
+  }, [qc]);
+
+  // A list call hitting scope-missing re-checks status; youtube-library
+  // deletes revoked connections, so this is what flips a dead panel back to
+  // the Connect button.
+  const scopeLost = useCallback(() => {
+    void qc.invalidateQueries({ queryKey: ['yt', 'status'] });
   }, [qc]);
 
   const connected = status.data?.connected === true && status.data?.hasYouTubeScope === true;
@@ -487,7 +521,7 @@ export function YouTubePanel() {
         {status.isSuccess && connected && (
           <>
             {tab === 'playlists' && !openPlaylist && (
-              <PlaylistList enabled onOpen={setOpenPlaylist} />
+              <PlaylistList enabled onOpen={setOpenPlaylist} onScopeLost={scopeLost} />
             )}
 
             {tab === 'playlists' && openPlaylist && (
@@ -506,6 +540,7 @@ export function YouTubePanel() {
                   enabled
                   playingId={nowPlaying?.videoId ?? null}
                   onPlay={play}
+                  onScopeLost={scopeLost}
                 />
               </>
             )}
@@ -517,6 +552,7 @@ export function YouTubePanel() {
                 enabled
                 playingId={nowPlaying?.videoId ?? null}
                 onPlay={play}
+                onScopeLost={scopeLost}
               />
             )}
 
@@ -549,6 +585,7 @@ export function YouTubePanel() {
                     enabled
                     playingId={nowPlaying?.videoId ?? null}
                     onPlay={play}
+                    onScopeLost={scopeLost}
                   />
                 ) : (
                   <p className="px-3 py-6 text-center text-xs text-muted-foreground">

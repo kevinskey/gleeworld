@@ -131,7 +131,20 @@ serve(async (req) => {
       // Google account — treat like scope-missing so the client offers
       // the Connect flow again. String(e) only carries Google's error
       // body slice, never our credentials.
-      await admin.from('gw_google_connections').update({ last_error: String(e) }).eq('id', conn.id);
+      //
+      // invalid_grant is DEFINITIVE revocation (Google kills the whole
+      // grant per Google-account × app pair — e.g. disconnecting from one
+      // workspace login revokes the token another login stored for the same
+      // Google account). A dead row makes the status call keep answering
+      // connected:true, stranding the panel on inline errors instead of the
+      // Connect button, so delete it. Transient refresh failures (network,
+      // Google 5xx) keep the row and just record last_error as before.
+      if (String(e).includes('invalid_grant')) {
+        console.log(`[youtube-library] revoked grant — removing connection for user=${user.id}`);
+        await admin.from('gw_google_connections').delete().eq('id', conn.id);
+      } else {
+        await admin.from('gw_google_connections').update({ last_error: String(e) }).eq('id', conn.id);
+      }
       return json({ error: 'youtube_scope_missing' });
     }
   }
