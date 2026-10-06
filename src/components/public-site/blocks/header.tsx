@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { LayoutPanelTop, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -125,15 +125,36 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
     : Math.max(72, logoHeight + 32);
   const [menuOpen, setMenuOpen] = useState(false);
   const [signInOpen, setSignInOpen] = useState(false);
-  // Auto-close the mobile menu if the viewport grows past the sm breakpoint so
-  // a re-resize doesn't leave a stale open panel.
-  useEffect(() => {
-    if (!menuOpen) return;
-    const mql = window.matchMedia('(min-width: 640px)');
-    const handler = (e: MediaQueryListEvent) => { if (e.matches) setMenuOpen(false); };
-    mql.addEventListener('change', handler);
-    return () => mql.removeEventListener('change', handler);
-  }, [menuOpen]);
+
+  // Inline links vs hamburger used to flip at a fixed cq-sm breakpoint,
+  // which clipped the last links at mid window widths (Kevin, 2026-10-06:
+  // "yo-doc should be responsive like google in this window" — 'Contact'
+  // cut off at a half-screen Safari window): whether the full bar fits
+  // depends on logo size, site name, countdown, and link count, so no fixed
+  // threshold is right for every header. Instead, an invisible measuring
+  // copy of the uncollapsed bar (rendered below) reports the width the
+  // inline layout NEEDS; when that exceeds the width the bar HAS, the real
+  // bar collapses to the hamburger. Starts collapsed so the pre-measure
+  // frame can never paint clipped links; useLayoutEffect corrects it before
+  // the user sees anything.
+  const [collapsed, setCollapsed] = useState(true);
+  const availRef = useRef<HTMLDivElement>(null);
+  const needRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const avail = availRef.current;
+    const need = needRef.current;
+    if (!avail || !need) return;
+    const update = () => setCollapsed(need.offsetWidth > avail.clientWidth);
+    update();
+    // Observing both: `avail` tracks window/container resizes, `need` tracks
+    // content-driven width changes (logo finishing loading, edited labels).
+    const ro = new ResizeObserver(update);
+    ro.observe(avail);
+    ro.observe(need);
+    return () => ro.disconnect();
+  }, []);
+  // Growing back past the fit point must not leave a stale open dropdown.
+  useEffect(() => { if (!collapsed) setMenuOpen(false); }, [collapsed]);
 
   const hasLinks = config.navLinks.length > 0 || ctx.memberSignIn;
   const countdownActive = !!config.countdownTo && !Number.isNaN(Date.parse(config.countdownTo));
@@ -254,38 +275,65 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
             )}
           </a>
         )}
-        {/* Desktop: inline links. Mobile: a hamburger that toggles the dropdown below. */}
-        {countdownActive && (
-          <span className="hidden cq-sm:flex flex-1 justify-center px-3">
+        {/* Fits: inline links. Doesn't fit (any width): a hamburger that
+            toggles the dropdown below. The `collapsed` measurement replaces
+            the old fixed cq-sm breakpoint. */}
+        {countdownActive && !collapsed && (
+          <span className="flex flex-1 justify-center px-3">
             <CountdownChip to={config.countdownTo} label={config.countdownLabel} url={config.countdownUrl} color={linkColor} />
           </span>
         )}
-        <nav className={`hidden cq-sm:flex items-center ${navSpacingClass} ${navSizeClass} ${navWeightClass}`}>{navInline}</nav>
-        {hasLinks && (
+        {!collapsed && (
+          <nav className={`flex items-center ${navSpacingClass} ${navSizeClass} ${navWeightClass}`}>{navInline}</nav>
+        )}
+        {hasLinks && collapsed && (
           <button
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
-            className="cq-sm:hidden inline-flex items-center justify-center w-11 h-11 rounded-md hover:bg-white/10 transition-colors"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-md hover:bg-white/10 transition-colors"
             style={{ color: linkColor }}
           >
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         )}
       </div>
+      {/* Invisible measuring copy of the uncollapsed bar. Same container, so
+          `availRef` has exactly the width the real row gets; the w-max inner
+          row reports the width the inline layout needs. The countdown stand-in
+          uses the widest the chip can render so a day rolling over can't
+          flip the layout mid-view. h-0 + overflow-hidden keeps it out of
+          layout and screen readers skip it via aria-hidden. */}
+      <div aria-hidden className="gw-container h-0 overflow-hidden">
+        <div ref={availRef} className="w-full">
+          <div ref={needRef} className="invisible w-max flex items-center gap-4 pe-6 whitespace-nowrap">
+            <span className="flex items-center gap-3">
+              {logo && <img src={logo} alt="" className="w-auto object-contain" style={{ height: logoHeight }} />}
+              {name && <span className="font-bold text-lg">{name}</span>}
+            </span>
+            {countdownActive && (
+              <span className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs">
+                {config.countdownLabel && <span className="font-semibold">{config.countdownLabel}</span>}
+                <span className="tabular-nums font-medium">000d 00h 00m 00s</span>
+              </span>
+            )}
+            <span className={`flex items-center ${navSpacingClass} ${navSizeClass} ${navWeightClass}`}>{navInline}</span>
+          </div>
+        </div>
+      </div>
       {/* Mobile dropdown: floats over the hero (no content pushed down) on a
           plain white background. Link color always dark-on-white here, since
           the dropdown's background is fixed regardless of the theme primary. */}
-      {/* Phones: the bar has no room, so the chip gets its own strip. */}
-      {countdownActive && (
-        <div className="cq-sm:hidden flex justify-center pb-2">
+      {/* Collapsed bar has no room for the chip, so it gets its own strip. */}
+      {countdownActive && collapsed && (
+        <div className="flex justify-center pb-2">
           <CountdownChip to={config.countdownTo} label={config.countdownLabel} url={config.countdownUrl} color={linkColor} />
         </div>
       )}
-      {hasLinks && menuOpen && (
+      {hasLinks && collapsed && menuOpen && (
         <div
-          className="cq-sm:hidden absolute left-0 right-0 top-full bg-white shadow-lg border-t border-slate-200"
+          className="absolute left-0 right-0 top-full bg-white shadow-lg border-t border-slate-200"
           style={{ color: '#0f172a' }}
         >
           <nav className="px-4 py-3 flex flex-col gap-1">
