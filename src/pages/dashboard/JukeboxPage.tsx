@@ -75,6 +75,12 @@ type SortCol = 'title' | 'duration_ms' | 'upload_date';
 const SOFT_CARD = 'border-0 bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = { boxShadow: 'var(--shadow-card)' };
 
+// Playlist rail sizing (lg+). Clamped so a drag can't bury the song table
+// or collapse the rail below a readable row.
+const RAIL_MIN = 220;
+const RAIL_MAX = 560;
+const RAIL_DEFAULT = 340;
+
 /** m:ss readout for the LCD clock. */
 function clock(sec: number): string {
   if (!Number.isFinite(sec) || sec < 0) sec = 0;
@@ -210,6 +216,30 @@ export default function JukeboxPage() {
     if (audioRef.current) audioRef.current.volume = volume;
     localStorage.setItem('gw-jukebox-volume', String(volume));
   }, [volume]);
+
+  // ----- resizable playlist rail (lg+ only; stacked below lg) ----------
+  const [railWidth, setRailWidth] = useState(() => {
+    const v = Number(localStorage.getItem('gw-jukebox-rail-width'));
+    return Number.isFinite(v) ? Math.min(RAIL_MAX, Math.max(RAIL_MIN, v)) : RAIL_DEFAULT;
+  });
+  const railDrag = useRef<{ startX: number; startW: number } | null>(null);
+  const onRailHandleDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    railDrag.current = { startX: e.clientX, startW: railWidth };
+  };
+  const onRailHandleMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!railDrag.current) return;
+    const w = railDrag.current.startW + (e.clientX - railDrag.current.startX);
+    setRailWidth(Math.min(RAIL_MAX, Math.max(RAIL_MIN, w)));
+  };
+  const onRailHandleUp = () => {
+    if (!railDrag.current) return;
+    railDrag.current = null;
+    setRailWidth((w) => {
+      localStorage.setItem('gw-jukebox-rail-width', String(w));
+      return w;
+    });
+  };
 
   // One sample of silence. Played synchronously inside the click handler so
   // the browser marks the element user-activated BEFORE the async signed-URL
@@ -477,7 +507,10 @@ export default function JukeboxPage() {
           </Card>
 
           {/* -------- source list | song table --------------------------- */}
-          <div className="grid gap-4 lg:grid-cols-[230px_minmax(0,1fr)] items-start">
+          <div
+            className="grid gap-4 lg:gap-2 lg:grid-cols-[var(--rail-w)_10px_minmax(0,1fr)] items-start"
+            style={{ '--rail-w': `${railWidth}px` } as React.CSSProperties}
+          >
             <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
               <CardContent className="p-2">
                 <p className="px-2 pt-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -542,6 +575,29 @@ export default function JukeboxPage() {
                 ))}
               </CardContent>
             </Card>
+
+            {/* Drag to resize the rail. Self-stretching hit area with a 1px
+                line in the middle; arrow keys work too. */}
+            <div
+              role="separator" aria-orientation="vertical" aria-label="Resize playlist list"
+              tabIndex={0}
+              className="hidden lg:flex self-stretch items-stretch justify-center cursor-col-resize touch-none group/handle outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onPointerDown={onRailHandleDown}
+              onPointerMove={onRailHandleMove}
+              onPointerUp={onRailHandleUp}
+              onPointerCancel={onRailHandleUp}
+              onKeyDown={(e) => {
+                if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+                e.preventDefault();
+                setRailWidth((w) => {
+                  const next = Math.min(RAIL_MAX, Math.max(RAIL_MIN, w + (e.key === 'ArrowRight' ? 16 : -16)));
+                  localStorage.setItem('gw-jukebox-rail-width', String(next));
+                  return next;
+                });
+              }}
+            >
+              <div className="w-px bg-border group-hover/handle:bg-primary group-focus-visible/handle:bg-primary transition-colors" />
+            </div>
 
             <Card className={`${SOFT_CARD} overflow-hidden`} style={SOFT_CARD_STYLE}>
               <CardContent className="p-0">
@@ -730,9 +786,12 @@ function SourceRow({
       </span>
       <span className="w-7 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{count}</span>
       {actions && (
-        /* Opacity, not display: layout stays stable, and the buttons remain
-           keyboard-reachable. Always visible below lg — iPad has no hover. */
-        <span className="flex items-center lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 transition-opacity">
+        /* Zero footprint until needed: the name keeps the full row width.
+           The selected row always shows its actions (that's the touch path —
+           tap to select, then act); other rows reveal them on hover/focus. */
+        <span className={`items-center ${
+          active ? 'flex' : 'hidden lg:group-hover:flex lg:group-focus-within:flex'
+        }`}>
           {actions}
         </span>
       )}
