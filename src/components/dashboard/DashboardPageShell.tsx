@@ -51,6 +51,10 @@ interface DashboardPageShellProps {
   eyebrow?: string;
   /** Right-aligned header actions (buttons, filters). */
   actions?: ReactNode;
+  /** Extra classes for the <h1> — for the rare page whose title is a product
+   *  wordmark rather than a label (e.g. the Jukebox's script-face "Yo
+   *  Player"). Everything else should leave the one-face default alone. */
+  titleClassName?: string;
   maxWidth?: '4xl' | '6xl' | '7xl' | 'full';
   className?: string;
   children: ReactNode;
@@ -73,6 +77,7 @@ export function DashboardPageShell({
   icon,
   eyebrow,
   actions,
+  titleClassName,
   maxWidth = '6xl',
   className,
   children,
@@ -100,7 +105,7 @@ export function DashboardPageShell({
               {eyebrow}
             </p>
           )}
-          <PageTitle icon={icon}>{title}</PageTitle>
+          <PageTitle icon={icon} className={titleClassName}>{title}</PageTitle>
           {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
         </div>
         {actions}

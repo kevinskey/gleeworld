@@ -79,7 +79,7 @@ export const NAV_CATALOG: CatalogEntry[] = [
   // role/class/email. Replaced the SoundCloud widget page 2026-10-05; the
   // key stays 'soundcloud' so saved nav prefs keep working (the write key
   // must match the read key — see the member-rename scar, 2026-10-01).
-  { key: 'soundcloud',    to: '/dashboard/player',        label: 'Jukebox',       icon: Music,    section: 'music', tone: 'bg-sky-50 text-sky-600',       tourId: 'nav-soundcloud' },
+  { key: 'soundcloud',    to: '/dashboard/player',        label: 'Yo Player',     icon: Music,    section: 'music', tone: 'bg-sky-50 text-sky-600',       tourId: 'nav-soundcloud' },
   // The partner sheet-music marketplace (buyer side). Everyone can browse
   // and buy; partners manage their catalog via Partner Portal below.
   { key: 'music-store',   to: '/store',                   label: 'Music Store',   icon: ShoppingBag, section: 'music', tone: 'bg-emerald-50 text-emerald-700', tourId: 'nav-music-store' },

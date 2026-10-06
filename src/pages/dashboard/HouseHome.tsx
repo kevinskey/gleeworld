@@ -32,7 +32,7 @@ import { resolveWidgets } from '@/lib/navigation/homeWidgets';
 import { SmartSearchBar } from '@/components/home/media/SmartSearchBar';
 import { useGatedNav } from '@/components/dashboard/DashboardShell';
 import { YouTubePanel } from '@/components/home/media/YouTubePanel';
-import { SoundCloudPanel } from '@/components/home/media/SoundCloudPanel';
+import { JukeboxPanel } from '@/components/home/media/JukeboxPanel';
 import { FirstRunSheet } from '@/components/dashboard/FirstRunSheet';
 import { DateCardSlot } from '@/components/home/date-card/DateCardSlot';
 import { hasParsableEventAt } from '@/components/home/date-card/eventAt';
@@ -526,8 +526,13 @@ export default function HouseHome() {
           <div className="min-w-0 h-[320px] sm:h-[400px] lg:h-[560px] min-h-0">
             <YouTubePanel />
           </div>
+          {/* Jukebox replaced the SoundCloud panel 2026-10-06: the Jukebox
+              superseded the SoundCloud page a day earlier, and this panel
+              was still pointing every member at the tenant's SoundCloud
+              profile (Kevin: "he sees soundcloud, i thought we have jukebox
+              now"). */}
           <div className="min-w-0 h-[360px] sm:h-[420px] lg:h-[560px] min-h-0">
-            <SoundCloudPanel />
+            <JukeboxPanel />
           </div>
         </div>
       </div>
