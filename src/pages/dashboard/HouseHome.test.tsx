@@ -35,6 +35,13 @@ vi.mock('@/hooks/useUserRole', () => ({
 vi.mock('@/hooks/useModuleAccess', () => ({
   useTenantModules: () => ({ data: tenantModulesResult.current, isLoading: false }),
 }));
+// YouTubePanel reaches useAuth() for the per-user watch-history key; this
+// test renders HouseHome bare (no AuthProvider), so stub the context like
+// the preview-role hook below.
+vi.mock('@/contexts/AuthContext', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/contexts/AuthContext')>()),
+  useAuth: () => ({ user: { id: 'u1' } }),
+}));
 // PR #189 gave HouseHome a preview-role hook that reaches useAuth(). This test
 // renders the component bare (no AuthProvider), so stub the hook rather than
 // wrapping — the preview role is irrelevant to the ensembleName wiring here.
