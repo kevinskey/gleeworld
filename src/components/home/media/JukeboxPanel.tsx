@@ -222,8 +222,12 @@ export function JukeboxPanel() {
       {/* Header: identity + playlist picker. shrink-0 so the track list
           below is the only thing that flexes. */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-border shrink-0">
-        <Music className="w-4 h-4 text-primary shrink-0" aria-hidden />
-        <span className="text-sm font-semibold font-script">Yo Player</span>
+        {/* Script faces render visually smaller than their box; the wordmark
+            needs a couple of steps up to read at header weight (Kevin,
+            2026-10-06: "[title] should be bigger"). leading-none keeps the
+            taller glyph from inflating the bar. */}
+        <Music className="w-5 h-5 text-primary shrink-0" aria-hidden />
+        <span className="text-2xl leading-none font-semibold font-script">Yo Player</span>
         <select
           value={choice ?? ALL_TRACKS}
           onChange={(e) => setChoice(e.target.value)}
