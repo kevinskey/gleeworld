@@ -10,8 +10,12 @@
 // the integrator owns the outer clamp height, so no fixed heights here. The
 // list is the only scrolling region; the player pins above it.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { ChevronLeft, ChevronRight, History, ListVideo, Search as SearchIcon, X, Youtube } from 'lucide-react';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, ChevronRight, History, ListVideo, LogOut, Search as SearchIcon, X, Youtube } from 'lucide-react';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -295,6 +299,9 @@ export function YouTubePanel() {
   const [history, setHistory] = useState<YtHistoryEntry[]>(() => readYtHistory());
   const [connecting, setConnecting] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
+  const [confirmSignOut, setConfirmSignOut] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const qc = useQueryClient();
 
   const status = useQuery({
     queryKey: ['yt', 'status'],
@@ -329,6 +336,31 @@ export function YouTubePanel() {
       setConnecting(false);
     }
   }, []);
+
+  // Rides the same google-disconnect the Calendar settings dialog uses: it
+  // removes the user's ONE Google connection (revoking the token at Google,
+  // best effort), so YouTube and Calendar sync go together — the dialog copy
+  // says so. Exists here because "sign out of YouTube" is where users look
+  // for it (Kevin, 2026-10-06: "is there a way to sign out of youtube for
+  // user?"), not in Calendar settings.
+  const signOut = useCallback(async () => {
+    setSigningOut(true);
+    try {
+      const { error } = await supabase.functions.invoke('google-disconnect', { body: {} });
+      if (error) throw new Error(error.message);
+      setNowPlaying(null);
+      setConfirmSignOut(false);
+      await qc.invalidateQueries({ queryKey: ['yt'] });
+      // The calendar surfaces watch these; they must flip to "not connected"
+      // without a reload.
+      void qc.invalidateQueries({ queryKey: ['google-connection'] });
+      void qc.invalidateQueries({ queryKey: ['google-events'] });
+    } catch (e) {
+      setConnectError(e instanceof Error ? e.message : 'Sign out failed');
+    } finally {
+      setSigningOut(false);
+    }
+  }, [qc]);
 
   const connected = status.data?.connected === true && status.data?.hasYouTubeScope === true;
   // A scope-missing error from any list call also means "reconnect", but the
@@ -372,8 +404,41 @@ export function YouTubePanel() {
               {label}
             </button>
           ))}
+          {status.data?.connected === true && (
+            <button
+              type="button"
+              onClick={() => setConfirmSignOut(true)}
+              aria-label="Sign out of YouTube"
+              title="Sign out of YouTube"
+              className="ml-1 rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            >
+              <LogOut className="h-3.5 w-3.5" aria-hidden />
+            </button>
+          )}
         </nav>
       </header>
+
+      <AlertDialog open={confirmSignOut} onOpenChange={setConfirmSignOut}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out of YouTube?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This disconnects your Google account from this workspace — YouTube
+              here AND Google Calendar sync, since they share one connection.
+              You can reconnect any time.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={signingOut}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={signingOut}
+              onClick={(e) => { e.preventDefault(); void signOut(); }}
+            >
+              {signingOut ? 'Signing out…' : 'Sign out'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Inline player: pinned above the list, list keeps scrolling beneath. */}
       {nowPlaying && (
