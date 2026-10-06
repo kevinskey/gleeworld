@@ -77,6 +77,51 @@ const formatDate = (dateString: string | null): string => {
   });
 };
 
+/** Streams an archived master from the private scgc-videos bucket through a
+ *  video-stream-url presigned GET — no YouTube, no sign-in wall. Mounted
+ *  only while its card is the inline player, so navigating away stops it
+ *  (same rule as the iframe). */
+const ArchivedInlinePlayer: React.FC<{ videoRowId: string; title: string }> = ({ videoRowId, title }) => {
+  const [url, setUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    supabase.functions.invoke('video-stream-url', { body: { videoId: videoRowId } })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error || !data?.url) setFailed(true);
+        else setUrl(data.url as string);
+      })
+      .catch(() => { if (!cancelled) setFailed(true); });
+    return () => { cancelled = true; };
+  }, [videoRowId]);
+  if (failed) {
+    return (
+      <div className="w-full h-full flex items-center justify-center text-sm text-white/70">
+        This video couldn't be loaded.
+      </div>
+    );
+  }
+  if (!url) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-white/70" />
+      </div>
+    );
+  }
+  return (
+    <video
+      src={url}
+      title={title}
+      controls
+      autoPlay
+      playsInline
+      controlsList="nodownload"
+      className="w-full h-full"
+    />
+  );
+};
+
 export const YouTubeChannel: React.FC = () => {
   const { isAdmin } = useUserRole();
   const { toast } = useToast();
@@ -570,18 +615,25 @@ export const YouTubeChannel: React.FC = () => {
                   >
                     {inlineId === video.id ? (
                     <div className="aspect-video relative bg-black">
-                      <iframe
-                        src={`https://www.youtube.com/embed/${video.video_id}?autoplay=1&playsinline=1&rel=0`}
-                        title={video.title}
-                        className="w-full h-full"
-                        allow="autoplay; encrypted-media; picture-in-picture"
-                        allowFullScreen
-                      />
+                      {/* Archive first: our own file, no YouTube sign-in
+                          wall. The iframe is the fallback for videos the
+                          importer hasn't archived yet. */}
+                      {video.archive_object_key ? (
+                        <ArchivedInlinePlayer videoRowId={video.id} title={video.title} />
+                      ) : (
+                        <iframe
+                          src={`https://www.youtube.com/embed/${video.video_id}?autoplay=1&playsinline=1&rel=0`}
+                          title={video.title}
+                          className="w-full h-full"
+                          allow="autoplay; encrypted-media; picture-in-picture"
+                          allowFullScreen
+                        />
+                      )}
                     </div>
                     ) : (
                     <div
                       className="aspect-video relative bg-muted cursor-pointer"
-                      onClick={() => (isYouTube ? playInline(video) : setSelectedVideo(video))}
+                      onClick={() => (video.archive_object_key || isYouTube ? playInline(video) : setSelectedVideo(video))}
                     >
                       {video.thumbnail_url || fallbackThumb ? (
                         <img
