@@ -10,6 +10,7 @@ import { donationsBlock } from './blocks/donations';
 import { merchBlock } from './blocks/merch';
 import { musicPlayerBlock } from './blocks/music-player';
 import { soundcloudBlock } from './blocks/soundcloud';
+import { yoPlayerBlock } from './blocks/yo-player';
 import { videoGalleryBlock } from './blocks/video-gallery';
 import { mediaGalleryBlock } from './blocks/media-gallery';
 import { staffBlock } from './blocks/staff';
@@ -42,6 +43,7 @@ export const BLOCK_REGISTRY: Record<string, BlockModule> = {
   [mediaGalleryBlock.type]: mediaGalleryBlock,
   [musicPlayerBlock.type]: musicPlayerBlock,
   [soundcloudBlock.type]: soundcloudBlock,
+  [yoPlayerBlock.type]: yoPlayerBlock,
   [videoGalleryBlock.type]: videoGalleryBlock,
   [ensemblesBlock.type]: ensemblesBlock,
   [staffBlock.type]: staffBlock,
