@@ -318,7 +318,7 @@ export function SmartSearchBar({ entries, className }: SmartSearchBarProps) {
                 <button key="soundcloud" type="button" className={rowClass} {...common}>
                   <Music className="h-4 w-4 shrink-0 text-orange-500" aria-hidden="true" />
                   <span className="min-w-0 flex-1 truncate">
-                    Search SoundCloud for <span className="font-medium">{trimmed}</span>
+                    Search Yo Player for <span className="font-medium">{trimmed}</span>
                   </span>
                 </button>
               );

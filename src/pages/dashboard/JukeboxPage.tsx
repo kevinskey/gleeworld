@@ -397,7 +397,10 @@ export default function JukeboxPage() {
     </TableHead>
   );
 
-  const playerTitle = settings.org_name ? `${settings.org_name} Player` : 'Player';
+  // "Yo Player" is the product name (Kevin, 2026-10-06: "Change this Name to
+  // Yo Player and change the font to something in script") — it deliberately
+  // does NOT derive from org_name the way the old "<org> Player" title did.
+  const playerTitle = 'Yo Player';
   const currentPlaylistTitle =
     source.kind === 'playlist' ? visible.find((p) => p.id === source.id)?.title : null;
 
@@ -406,6 +409,7 @@ export default function JukeboxPage() {
       <DashboardShell>
         <DashboardPageShell
           title={playerTitle}
+          titleClassName="font-script !text-[1.9rem] sm:!text-[2.6rem]"
           subtitle={canManage
             ? `${tracks.length} songs in the library, streamed from your own archive.`
             : `${tracks.length} song${tracks.length === 1 ? '' : 's'} shared with you.`}
