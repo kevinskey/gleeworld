@@ -110,28 +110,20 @@ export async function executeServerTool(
 async function queryCalendar(args: Record<string, unknown>, { supabase }: Deps): Promise<string> {
   const from = String(args.from ?? '');
   const to = String(args.to ?? '');
-  // Two independent tables — query them together, not back to back.
-  const [{ data: events, error }, { data: gcal }] = await Promise.all([
-    supabase
-      .from('gw_events')
-      .select('id, title, start_date, end_date, location, category')
-      .gte('start_date', `${from}T00:00:00`)
-      .lte('start_date', `${to}T23:59:59`)
-      .order('start_date')
-      .limit(50),
-    supabase
-      .from('gw_google_events')
-      .select('id, title, start_at, end_at, location')
-      .gte('start_at', `${from}T00:00:00`)
-      .lte('start_at', `${to}T23:59:59`)
-      .order('start_at')
-      .limit(50),
-  ]);
+  // Google user data never reaches the model (Google API Services User Data
+  // Policy, Limited Use). The read-only gw_google_events mirror is not
+  // queried at all, and gw_events copies a user shared from their Google
+  // Calendar (external_source = 'google_calendar') are filtered out too.
+  const { data: events, error } = await supabase
+    .from('gw_events')
+    .select('id, title, start_date, end_date, location, category')
+    .or('external_source.is.null,external_source.neq.google_calendar')
+    .gte('start_date', `${from}T00:00:00`)
+    .lte('start_date', `${to}T23:59:59`)
+    .order('start_date')
+    .limit(50);
   if (error) return JSON.stringify({ error: error.message });
-  return JSON.stringify({
-    events: events ?? [],
-    google_calendar_events: (gcal ?? []).map((g: any) => ({ ...g, read_only: true })),
-  });
+  return JSON.stringify({ events: events ?? [] });
 }
 
 // The corpus is bundled and immutable, so the index is built once per instance.

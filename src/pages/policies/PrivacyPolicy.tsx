@@ -31,7 +31,7 @@ import { FileText, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 
-const LAST_UPDATED = 'June 2026';
+const LAST_UPDATED = 'October 2026';
 const COMPANY_NAME = 'GleeWorld';
 // Single confirmed inbox for privacy requests until dedicated mailboxes
 // (privacy@, dpo@, dsar@) exist. Update here when they do.
@@ -44,6 +44,9 @@ const STORAGE_PROVIDER = 'DigitalOcean Spaces (United States — region [TO BE C
 const PAYMENTS_PROVIDER = 'Stripe, Inc. (United States)';
 const EMAIL_PROVIDER = 'Resend (United States)';
 const AI_PROVIDER = 'DeepSeek (People\'s Republic of China) — used only when a user invokes an AI-assisted feature';
+const AI_PROVIDER_OPENAI = 'OpenAI, L.L.C. (United States) — API platform, used only when a user invokes an AI-assisted feature';
+const AI_PROVIDER_GATEWAY = 'Lovable AI Gateway (routes to Google Gemini models) — used only when a user invokes an AI-assisted feature';
+const AI_PROVIDER_VOICE = 'ElevenLabs (United States) — text-to-speech, transcription and audio generation';
 
 export default function PrivacyPolicy() {
   return (
@@ -161,6 +164,9 @@ export default function PrivacyPolicy() {
                 <tr><td className="p-2 border-b border-border align-top">{EMAIL_PROVIDER}</td><td className="p-2 border-b border-border align-top">Transactional + invited-list email delivery</td><td className="p-2 border-b border-border align-top">Recipient email, sender identity, message body</td></tr>
                 <tr><td className="p-2 border-b border-border align-top">Apple Push Notification service</td><td className="p-2 border-b border-border align-top">Mobile push delivery for the iOS app</td><td className="p-2 border-b border-border align-top">Device tokens, notification payloads</td></tr>
                 <tr><td className="p-2 border-b border-border align-top">{AI_PROVIDER}</td><td className="p-2 border-b border-border align-top">Optional AI-assisted text generation (e.g. concert-program notes regenerator)</td><td className="p-2 border-b border-border align-top">Only the prompt content the user invokes the feature on — typically piece title, composer, voicing</td></tr>
+                <tr><td className="p-2 border-b border-border align-top">{AI_PROVIDER_OPENAI}</td><td className="p-2 border-b border-border align-top">Optional AI-assisted grading feedback and content generation</td><td className="p-2 border-b border-border align-top">Only the prompt content the user invokes the feature on</td></tr>
+                <tr><td className="p-2 border-b border-border align-top">{AI_PROVIDER_GATEWAY}</td><td className="p-2 border-b border-border align-top">Optional AI assistants and content generation</td><td className="p-2 border-b border-border align-top">Only the prompt content the user invokes the feature on</td></tr>
+                <tr><td className="p-2 border-b border-border align-top">{AI_PROVIDER_VOICE}</td><td className="p-2 border-b border-border align-top">Optional voice features</td><td className="p-2 border-b border-border align-top">Text or audio the user submits to a voice feature</td></tr>
               </tbody>
             </table>
           </div>
@@ -180,6 +186,45 @@ export default function PrivacyPolicy() {
             We do not sell personal information. We do not "share"
             personal information for cross-context behavioral advertising
             as defined by the California Privacy Rights Act.
+          </p>
+        </Section>
+
+        <Section number="4A" id="google-user-data" title="Google user data (Google Calendar and YouTube)">
+          <p>
+            A user may choose to connect their Google account. Depending
+            on the features they turn on, we request these permissions:
+          </p>
+          <List>
+            <li><strong>Google Calendar events</strong> (<code>calendar.events</code>): we read events from the calendars the user selects so they appear alongside GleeWorld events, and we create, update and delete the events that GleeWorld itself adds to the user's primary Google Calendar (rehearsals, classes and appointments the user schedules in GleeWorld). We do not change or delete events the user created outside GleeWorld.</li>
+            <li><strong>YouTube, read-only</strong> (<code>youtube.readonly</code>): we list the user's own playlists, the videos in them and their liked videos so they can play them in the GleeWorld media panel. We never upload, edit, rate or delete anything on YouTube.</li>
+          </List>
+          <p>
+            Google Calendar events are stored in our database only to
+            display them to the user who connected the account. YouTube
+            data is fetched on request and is not stored. Disconnecting
+            Google in GleeWorld revokes our access token and deletes the
+            stored tokens and imported calendar events; only an event the
+            user explicitly chose to publish to a GleeWorld calendar
+            remains, as that user's own GleeWorld event. Users can also
+            revoke access at any time at{' '}
+            <a className="underline" href="https://myaccount.google.com/permissions" target="_blank" rel="noreferrer">myaccount.google.com/permissions</a>.
+          </p>
+          <p>
+            <strong>No AI processing of Google data.</strong> Data
+            received from Google APIs is never sent to any of the AI
+            providers listed in section 4, and is never used to develop,
+            improve or train any artificial-intelligence or
+            machine-learning model, whether ours or a third party's.
+          </p>
+          <p>
+            <strong>Limited Use.</strong> {COMPANY_NAME}'s use and transfer
+            of information received from Google APIs to any other app will
+            adhere to the{' '}
+            <a className="underline" href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">Google API Services User Data Policy</a>,
+            including the Limited Use requirements. We do not sell Google
+            user data, do not use it for advertising, and do not allow
+            humans to read it except with the user's consent, for
+            security purposes, or to comply with law.
           </p>
         </Section>
 
