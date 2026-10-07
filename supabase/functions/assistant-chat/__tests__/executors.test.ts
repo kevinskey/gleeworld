@@ -26,6 +26,22 @@ describe('executeServerTool', () => {
     expect(JSON.parse(out.replyJson).events[0].title).toBe('Rehearsal');
   });
 
+  it('query_calendar never sends Google Calendar data to the model (Limited Use)', async () => {
+    const tables: string[] = [];
+    const filters: string[] = [];
+    const builder: any = {};
+    for (const m of ['select', 'gte', 'lte', 'eq', 'order', 'limit']) builder[m] = () => builder;
+    builder.or = (f: string) => { filters.push(f); return builder; };
+    builder.then = (resolve: (v: unknown) => void) => resolve({ data: [], error: null });
+    const supabase = { from: (t: string) => { tables.push(t); return builder; } } as any;
+
+    const out = await executeServerTool('query_calendar', { from: '2026-07-13', to: '2026-07-14' }, { supabase });
+
+    expect(tables).not.toContain('gw_google_events');
+    expect(filters).toContain('external_source.is.null,external_source.neq.google_calendar');
+    expect(JSON.parse(out.replyJson)).not.toHaveProperty('google_calendar_events');
+  });
+
   it('search_music returns scores as JSON', async () => {
     const out = await executeServerTool('search_music', { query: 'lift' },
       { supabase: stubSupabase([{ id: 's1', title: 'Lift Every Voice', composer: 'J. R. Johnson' }]) });

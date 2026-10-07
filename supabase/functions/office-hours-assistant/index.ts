@@ -122,14 +122,6 @@ const tools = [
       },
     },
   },
-  {
-    type: "function",
-    function: {
-      name: "get_google_calendar_sync_status",
-      description: "Check the status of Google Calendar synchronization and recent synced events.",
-      parameters: { type: "object", properties: {}, required: [] },
-    },
-  },
 ];
 
 // ── Tool Execution ──
@@ -145,6 +137,8 @@ async function executeTool(name: string, args: any, userId: string): Promise<str
         let query = supabase
           .from("gw_events")
           .select("title, description, event_type, start_date, end_date, location, venue_name, status, attendance_required, calendar_id")
+          // Limited Use: never send events copied from a user's Google Calendar to the model.
+          .or("external_source.is.null,external_source.neq.google_calendar")
           .gte("start_date", now)
           .lte("start_date", future)
           .order("start_date", { ascending: true })
@@ -338,6 +332,8 @@ async function executeTool(name: string, args: any, userId: string): Promise<str
           .from("gw_events")
           .select("title, description, start_date, end_date, location, venue_name, status")
           .eq("event_type", "performance")
+          // Limited Use: never send events copied from a user's Google Calendar to the model.
+          .or("external_source.is.null,external_source.neq.google_calendar")
           .gte("start_date", now)
           .lte("start_date", future)
           .order("start_date", { ascending: true })
@@ -363,18 +359,6 @@ async function executeTool(name: string, args: any, userId: string): Promise<str
 
         if (error) return `Failed to create appointment: ${error.message}`;
         return `Appointment "${args.title}" for ${args.client_name} created and pending approval for ${new Date(args.appointment_date).toLocaleString("en-US", { timeZone: "America/New_York" })}.`;
-      }
-
-      case "get_google_calendar_sync_status": {
-        const { data: googleEvents } = await supabase
-          .from("gw_events")
-          .select("title, start_date, external_source, external_id")
-          .eq("external_source", "google_calendar")
-          .order("start_date", { ascending: false })
-          .limit(5);
-
-        if (!googleEvents?.length) return "No Google Calendar synced events found. The sync may not be active right now.";
-        return `Google Calendar sync is active. Last ${googleEvents.length} synced events: ${JSON.stringify(googleEvents)}`;
       }
 
       default:
@@ -441,7 +425,6 @@ You can TAKE REAL ACTIONS by calling tools:
 4. check_attendance — Look up attendance for a student or session
 5. get_performance_schedule — View upcoming concerts and performances
 6. create_appointment — Schedule new office hours appointments
-7. get_google_calendar_sync_status — Check Google Calendar sync
 
 When asked about events, assignments, attendance, or scheduling, USE YOUR TOOLS to get real data. Don't guess.
 

@@ -17,7 +17,7 @@ const str = (description: string) => ({ type: 'string', description });
 export const TOOL_CATALOG: ToolDef[] = [
   {
     name: 'query_calendar',
-    description: "Look up the user's calendar events (GleeWorld events plus their synced Google Calendar events) in a date range. Use for any what/when/where question about rehearsals, classes, or events.",
+    description: "Look up the user's GleeWorld calendar events in a date range. Personal Google Calendar events are never available to you. Use for any what/when/where question about rehearsals, classes, or events.",
     parameters: {
       type: 'object',
       properties: {

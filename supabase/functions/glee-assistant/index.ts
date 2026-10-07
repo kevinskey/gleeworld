@@ -2451,6 +2451,8 @@ Format as JSON array:
       const { data: gwEvents, error: gwError } = await supabase
         .from("gw_events")
         .select("id, title, description, start_date, end_date, location, event_type, is_public")
+        // Limited Use: never send events copied from a user's Google Calendar to the model.
+        .or("external_source.is.null,external_source.neq.google_calendar")
         .gte("start_date", today)
         .lte("start_date", endDateStr)
         .order("start_date", { ascending: true })
