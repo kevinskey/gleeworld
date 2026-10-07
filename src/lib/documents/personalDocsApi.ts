@@ -17,6 +17,8 @@ export interface PersonalDoc {
 
 export interface PersonalDocListItem {
   id: string;
+  /** The owner. Differs from the caller on documents shared with them. */
+  user_id: string;
   title: string;
   word_count: number;
   updated_at: string;
@@ -40,7 +42,7 @@ const TABLE = "gw_personal_docs" as never;
 export async function listDocs(): Promise<PersonalDocListItem[]> {
   const { data, error } = await supabase
     .from(TABLE)
-    .select("id,title,word_count,updated_at")
+    .select("id,user_id,title,word_count,updated_at")
     .order("updated_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as PersonalDocListItem[];

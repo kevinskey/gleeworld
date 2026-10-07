@@ -1,6 +1,7 @@
 // Documents library — personal word processor documents (gw_personal_docs).
-// Lists every doc the signed-in user owns (RLS scopes listDocs() to
-// auth.uid()), lets them start a new one, and open/delete existing ones.
+// Lists every doc the signed-in user can open: their own, plus any shared
+// with them by email, workspace role, or class (RLS decides via
+// gw_doc_can()). Shared ones are labelled and can't be deleted from here.
 // The editor itself (DocumentEditorPage, Task 9) renders its own content
 // only — this page's job is discovery + create + delete, wrapped by the
 // dashboard shell at the route level (App.tsx), not here.
@@ -11,6 +12,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { FileText, Loader2, MoreVertical, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { listDocs, createDoc, deleteDoc, type PersonalDocListItem } from '@/lib/documents/personalDocsApi';
 import { DashboardPageShell } from '@/components/dashboard/DashboardPageShell';
 import { Button } from '@/components/ui/button';
@@ -28,6 +30,7 @@ const DOCS_QUERY_KEY = ['personal-docs'] as const;
 export default function DocumentsLibrary() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [creating, setCreating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -97,6 +100,7 @@ export default function DocumentsLibrary() {
             <DocumentRow
               key={doc.id}
               doc={doc}
+              sharedWithMe={!!user?.id && doc.user_id !== user.id}
               onOpen={() => navigate(`/dashboard/documents/${doc.id}`)}
               onRequestDelete={() => setDeletingId(doc.id)}
             />
@@ -124,8 +128,9 @@ export default function DocumentsLibrary() {
   );
 }
 
-function DocumentRow({ doc, onOpen, onRequestDelete }: {
+function DocumentRow({ doc, sharedWithMe, onOpen, onRequestDelete }: {
   doc: PersonalDocListItem;
+  sharedWithMe: boolean;
   onOpen: () => void;
   onRequestDelete: () => void;
 }) {
@@ -140,35 +145,39 @@ function DocumentRow({ doc, onOpen, onRequestDelete }: {
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium text-foreground">{doc.title}</span>
           <span className="text-xs text-muted-foreground">
+            {sharedWithMe && 'Shared with you · '}
             {doc.word_count.toLocaleString()} words · {formatDistanceToNow(new Date(doc.updated_at), { addSuffix: true })}
           </span>
         </span>
       </button>
 
-      <div className="absolute top-1/2 right-1 -translate-y-1/2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground"
-              aria-label={`More actions for ${doc.title}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={(e) => { e.stopPropagation(); onRequestDelete(); }}
-            >
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {/* Delete is owner-only in RLS, so don't offer it on a shared doc. */}
+      {!sharedWithMe && (
+        <div className="absolute top-1/2 right-1 -translate-y-1/2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                className="text-muted-foreground"
+                aria-label={`More actions for ${doc.title}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={(e) => { e.stopPropagation(); onRequestDelete(); }}
+              >
+                <Trash2 className="mr-2 h-4 w-4" /> Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
     </div>
   );
 }
