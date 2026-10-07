@@ -65,19 +65,19 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'state_store_failed: ' + stateErr.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  // Base scopes for the calendar connection. When the caller asks for the
-  // 'youtube' feature we append youtube.readonly to the SAME auth request —
-  // this is Google "incremental authorization": include_granted_scopes=true
-  // (below) tells Google to merge this grant with whatever the user already
-  // approved, so the existing calendar connection keeps working and we reuse
-  // the same redirect URI / client id (no new OAuth client, no new redirect
-  // URI to register in the Google console).
-  let scope = 'https://www.googleapis.com/auth/calendar.events openid email profile';
-  if (body.feature === 'youtube') {
-    scope += ' https://www.googleapis.com/auth/youtube.readonly';
-  }
+  // Least privilege: each feature asks only for its own scope. The YouTube
+  // panel asks for youtube.readonly alone; the calendar surfaces ask for
+  // calendar.events alone. include_granted_scopes=true (below) is Google
+  // "incremental authorization": the new grant is merged with whatever the
+  // user already approved, so connecting YouTube after Calendar (or the
+  // reverse) keeps both working on the same connection row, client id and
+  // redirect URI. The callback stores Google's merged scope string, and
+  // each surface checks for its own scope in it.
+  const featureScope = body.feature === 'youtube'
+    ? 'https://www.googleapis.com/auth/youtube.readonly'
+    : 'https://www.googleapis.com/auth/calendar.events';
+  const scope = 'openid email profile ' + featureScope;
 
-  // Read-only scope is all we need to pull events into GleeWorld.
   // access_type=offline + prompt=consent ensures Google issues a refresh_token
   // (otherwise the second connect for the same user wouldn't get one back).
   const params = new URLSearchParams({

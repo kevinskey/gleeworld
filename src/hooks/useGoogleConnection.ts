@@ -36,7 +36,7 @@ export function useStartGoogleOAuth() {
   return useMutation({
     mutationFn: async (redirectTo?: string) => {
       const { data, error } = await supabase.functions.invoke('google-oauth-start', {
-        body: { redirect_to: redirectTo ?? '/dashboard/calendar' },
+        body: { feature: 'calendar', redirect_to: redirectTo ?? '/dashboard/calendar' },
       });
       if (error) throw error;
       if (!data?.url) throw new Error('No URL returned');
@@ -59,6 +59,13 @@ export function useSyncGoogle() {
       qc.invalidateQueries({ queryKey: ['google-events'] });
     },
   });
+}
+
+// Whether the connection includes any Google Calendar scope. A connection
+// made from the YouTube panel carries only youtube.readonly, so "a row
+// exists" does not mean "Google Calendar is connected".
+export function hasCalendarScope(scope: string | null | undefined): boolean {
+  return typeof scope === 'string' && scope.includes('https://www.googleapis.com/auth/calendar');
 }
 
 // Whether the current connection includes the write scope (calendar.events).

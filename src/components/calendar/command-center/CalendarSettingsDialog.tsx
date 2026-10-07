@@ -33,6 +33,7 @@ import {
   useRefreshGoogleCalendars,
   useToggleGoogleCalendar,
   hasWriteScope,
+  hasCalendarScope,
 } from '@/hooks/useGoogleConnection';
 import { useAuth } from '@/contexts/AuthContext';
 import { IosCalendarPanel } from './IosCalendarPanel';
@@ -493,7 +494,9 @@ function ProviderRow({ name, steps, href, icon }: { name: string; steps: string[
 
 function GoogleConnectionPanel() {
   const { toast } = useToast();
-  const { data: conn, isLoading } = useGoogleConnection();
+  const { data: connection, isLoading } = useGoogleConnection();
+  // A YouTube-only connection has no calendar scope: show Connect here.
+  const conn = connection && hasCalendarScope(connection.scope) ? connection : null;
   const startMut = useStartGoogleOAuth();
   const syncMut = useSyncGoogle();
   const disconnectMut = useDisconnectGoogle();

@@ -28,6 +28,7 @@ import { ConfirmDeleteButton } from '@/components/shared/ConfirmDeleteButton';
 const InvitesPanel = lazy(() => import('@/components/officehours/InvitesPanel'));
 import { format, parseISO, isFuture, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { hasCalendarScope } from '@/hooks/useGoogleConnection';
 
 const SOFT_CARD = 'border-0 rounded-2xl';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -78,18 +79,19 @@ function GoogleConnectionBar() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_google_connections')
-        .select('google_email, last_synced_at, last_error')
+        .select('google_email, last_synced_at, last_error, scope')
         .eq('user_id', user!.id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      // A YouTube-only connection has no calendar scope: not connected here.
+      return data && hasCalendarScope(data.scope) ? data : null;
     },
   });
 
   const connect = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('google-oauth-start', {
-        body: { redirect_to: window.location.href },
+        body: { feature: 'calendar', redirect_to: window.location.href },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
