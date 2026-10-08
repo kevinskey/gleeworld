@@ -106,6 +106,30 @@ export async function resolveTenantHost(slug: string): Promise<string> {
 }
 
 /**
+ * True when the signed-in user has a gw_tenant_members row for `slug`.
+ *
+ * Used by AuthContext's mismatch guard: a person whose JWT names another
+ * of their tenants is still a legitimate visitor of this site when they are
+ * a member here too (e.g. someone a playlist was shared with by email —
+ * 20261008160000). current_tenant_id() honours this site's x-tenant-slug for
+ * members, so RLS already scopes them to this tenant; no JWT pivot needed.
+ *
+ * Fails closed: any error reads as "not a member", which keeps the old
+ * redirect behaviour.
+ */
+export async function isMemberOfTenant(slug: string): Promise<boolean> {
+  if (!slug) return false;
+  try {
+    const { data, error } = await supabase.rpc('my_tenants');
+    if (error) throw error;
+    return ((data ?? []) as Array<{ slug: string | null }>).some((t) => t.slug === slug);
+  } catch (e) {
+    console.warn('[auth] membership lookup failed; treating as non-member', e);
+    return false;
+  }
+}
+
+/**
  * Build the URL that lands the user signed in on their own tenant.
  *
  * With tokens: /auth/callback#access_token=…&refresh_token=… — AuthCallback

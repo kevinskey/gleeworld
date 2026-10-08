@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, useRef, ReactNode } fro
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { isNativeApp, syncNativeTenant } from "@/lib/nativeTenant";
-import { resolveTenantHost, buildTenantHandoffUrl } from "@/lib/auth/tenantRedirect";
+import { resolveTenantHost, buildTenantHandoffUrl, isMemberOfTenant } from "@/lib/auth/tenantRedirect";
 import { tenantSwitchInFlight } from "@/lib/tenantSwitchFlag";
 
 interface AuthContextType {
@@ -173,6 +173,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                   const switchingTo = tenantSwitchInFlight();
                   if (switchingTo && switchingTo === claims.tenant_slug) {
                     console.info(`[auth] tenant switch to ${switchingTo} in flight — leaving navigation to the switcher`);
+                  } else if (
+                    claims.tenant_slug && claims.tenant_slug !== expectedTenant && !isPlatformOwner && !isDemoViewer &&
+                    // Also a member of THIS site (multi-tenant person, or an
+                    // email share recipient — 20261008160000): stay. Same
+                    // reasoning as the demo-viewer bypass above —
+                    // current_tenant_id() resolves this subdomain's tenant
+                    // from real membership, not the JWT claim.
+                    await isMemberOfTenant(expectedTenant)
+                  ) {
+                    console.info(`[auth] member of ${expectedTenant} (JWT tenant=${claims.tenant_slug}) — staying signed in`);
                   } else if (claims.tenant_slug && claims.tenant_slug !== expectedTenant && !isPlatformOwner && !isDemoViewer) {
                     console.warn(`[auth] tenant mismatch: jwt=${claims.tenant_slug} bootstrap=${expectedTenant}. Redirecting to their tenant.`);
                     // Capture the tokens BEFORE tearing the session down —
