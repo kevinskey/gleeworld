@@ -342,15 +342,38 @@ serve(async (req) => {
       // 4. Resolve the tenant's display name for the invite copy. Prefer an explicit
       //    orgName from the caller, else the tenant's branding org_name, else a generic.
       let tenantName = (body.orgName || "").replace(/[<>"]/g, "").trim();
+      let brandErr: string | null = null;
       if (!tenantName && tenantId) {
-        const { data: brand } = await supabase
+        const { data: brand, error } = await supabase
           .from("gw_branding_settings")
           .select("org_name")
           .eq("tenant_id", tenantId)
           .maybeSingle();
+        if (error) brandErr = error.message ?? String(error);
         if (brand?.org_name) tenantName = String(brand.org_name).replace(/[<>"]/g, "").trim();
       }
-      if (!tenantName) tenantName = "your music program";
+      // gw_tenants.name before any generic: a branded invite is the difference
+      // between "You're invited to join The Lyke House" and something a
+      // recipient reads as spam.
+      if (!tenantName && tenantId) {
+        const { data: t } = await supabase
+          .from("gw_tenants").select("name").eq("id", tenantId).maybeSingle();
+        if (t?.name) tenantName = String(t.name).replace(/[<>"]/g, "").trim();
+      }
+      if (!tenantName) {
+        // Two invites on 2026-10-07 went out as "You're invited to join your
+        // music program" even though tenant main has org_name 'GleeWorld'.
+        // Both were delivered and neither was ever opened. Nothing in the
+        // logs said which lookup came up empty, so record that here — origin,
+        // tenantId and the branding error are the three things needed to tell
+        // "no tenant resolved" apart from "tenant resolved, branding missing".
+        console.error(
+          `[gw-invite-student] tenant name unresolved — email=${body.email} ` +
+          `origin=${origin || "(none)"} tenantId=${tenantId ?? "(none)"} ` +
+          `bodyOrgName=${body.orgName ?? "(none)"} brandErr=${brandErr ?? "(none)"}`,
+        );
+        tenantName = "GleeWorld";
+      }
 
       // 5. Send invite email via Resend.
       const resend = new Resend(Deno.env.get("RESEND_API_KEY") ?? "");
@@ -383,19 +406,38 @@ serve(async (req) => {
     //    a current_tenant_id() default that is null under service role, so
     //    passing the (usually absent) caller tenantId made every insert
     //    fail silently.
+    //    `tenant_id ?? undefined` omits the key, which lets the column's
+    //    current_tenant_id() default apply — and that is null under service
+    //    role, so the row dies on the NOT NULL constraint. Nothing had been
+    //    written to this table since 2026-10-03 for exactly that reason, and
+    //    the only trace was a log line that says "log failed" without saying
+    //    which invite was lost. Skip the insert when there is no tenant, and
+    //    name the recipient either way so a lost invite stays findable.
     try {
-      const { error: logErr } = await supabase.from("gw_student_invites").insert({
-        email: body.email,
-        full_name: fullName,
-        course_id: body.courseId || null,
-        invited_by: body.invitedBy || null,
-        tenant_id: tenantId ?? undefined,
-        status: sendEmail ? "sent" : "added",
-        sent_at: new Date().toISOString(),
-      });
-      if (logErr) console.error("gw_student_invites log failed:", logErr.message);
+      if (!tenantId) {
+        console.error(
+          `[gw-invite-student] invite NOT logged (no tenant resolved) — ` +
+          `email=${body.email} origin=${origin || "(none)"} emailSent=${sendEmail}`,
+        );
+      } else {
+        const { error: logErr } = await supabase.from("gw_student_invites").insert({
+          email: body.email,
+          full_name: fullName,
+          course_id: body.courseId || null,
+          invited_by: body.invitedBy || null,
+          tenant_id: tenantId,
+          status: sendEmail ? "sent" : "added",
+          sent_at: new Date().toISOString(),
+        });
+        if (logErr) {
+          console.error(
+            `[gw-invite-student] invite NOT logged — email=${body.email} ` +
+            `tenantId=${tenantId} err=${logErr.message}`,
+          );
+        }
+      }
     } catch (logEx) {
-      console.error("gw_student_invites log failed:", logEx);
+      console.error(`[gw-invite-student] invite NOT logged — email=${body.email}`, logEx);
     }
 
     return new Response(JSON.stringify({ success: true, userId, email: body.email, emailSent: sendEmail }), {
