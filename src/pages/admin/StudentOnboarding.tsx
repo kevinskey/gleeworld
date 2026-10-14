@@ -5,6 +5,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -91,7 +92,7 @@ function SingleInvite({ courses, userId, orgName }: { courses: Course[]; userId?
           fullName: fullName.trim() || undefined,
           courseId: courseId || undefined,
           invitedBy: userId,
-          appOrigin: window.location.origin,
+          appOrigin: publicBaseUrl(),
           orgName,
         },
       });
@@ -182,7 +183,7 @@ function RosterUpload({ courses, userId, orgName }: { courses: Course[]; userId?
             fullName: r.fullName,
             courseId: courseId || undefined,
             invitedBy: userId,
-            appOrigin: window.location.origin,
+            appOrigin: publicBaseUrl(),
             orgName,
           },
         });

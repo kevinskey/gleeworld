@@ -112,3 +112,35 @@ export async function resolveTenantSlugFromOrigin(
     return null;
   }
 }
+
+/**
+ * Is this origin a real, externally-resolvable web URL?
+ *
+ * In the Capacitor app `window.location.origin` is `capacitor://localhost`,
+ * which nothing outside the device can open. An invite email built from it is
+ * dead on arrival (every member invited from the app, 2026-10-14). So before
+ * emailing a link we require an http(s) origin with a real host.
+ */
+export function isWebOrigin(origin: string | null | undefined): boolean {
+  if (!origin) return false;
+  try {
+    const u = new URL(origin);
+    if (u.protocol !== 'https:' && u.protocol !== 'http:') return false;
+    return !!u.hostname && u.hostname !== 'localhost' && u.hostname !== '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+/** A tenant row's public web origin: its custom domain, else <slug>.gleeworld.org. */
+export function tenantWebOrigin(row: TenantHostRow | null | undefined): string | null {
+  const dom = normalizeHost(row?.custom_domain);
+  if (dom) return `https://${dom}`;
+  const sub = (row?.subdomain ?? '').trim().toLowerCase();
+  if (sub) {
+    const host = sub.includes('.') ? normalizeHost(sub) : (row?.slug === 'main' ? ROOT_DOMAIN : `${sub}.${ROOT_DOMAIN}`);
+    if (host) return `https://${host}`;
+  }
+  if (row?.slug && row.slug !== 'main') return `https://${row.slug}.${ROOT_DOMAIN}`;
+  return null;
+}

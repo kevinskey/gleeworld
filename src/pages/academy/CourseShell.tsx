@@ -13,6 +13,7 @@
  */
 import React, { useEffect, useMemo, useState, useCallback, useRef, lazy, Suspense } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { publicBaseUrl } from "@/lib/publicUrl";
 import { useQuery as useQueryReactQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -1984,7 +1985,7 @@ function PeopleTab({ course, canEdit }: TabProps) {
     const failures: string[] = [];
     for (const email of emails) {
       const { data, error } = await supabase.functions.invoke("gw-invite-student", {
-        body: { email, courseId: course.id, appOrigin: window.location.origin },
+        body: { email, courseId: course.id, appOrigin: publicBaseUrl() },
       });
       if (error) {
         failures.push(`${email} — ${error.message || 'unknown error'}`);
@@ -2277,7 +2278,7 @@ function ResendInviteButton({ email, courseId }: { email: string; courseId: stri
         setBusy(true);
         try {
           const { error } = await supabase.functions.invoke('gw-invite-student', {
-            body: { email, courseId, appOrigin: window.location.origin },
+            body: { email, courseId, appOrigin: publicBaseUrl() },
           });
           if (error) throw error;
           toast.success(`Invite re-sent to ${email}`);

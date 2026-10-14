@@ -6,6 +6,7 @@ import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent } from '@/components/ui/card';
@@ -431,7 +432,7 @@ function InviteDialog({
     for (const email of list) {
       try {
         const { data, error } = await supabase.functions.invoke('gw-invite-student', {
-          body: { email, role, appOrigin: window.location.origin },
+          body: { email, role, appOrigin: publicBaseUrl() },
         });
         if (error) throw new Error(error.message || 'invoke failed');
         if ((data as any)?.error) throw new Error((data as any).error);
@@ -561,7 +562,7 @@ function CsvImportDialog({
               role: row.role || fallbackRole,
               full_name: row.full_name,
               sendEmail: sendEmails,
-              appOrigin: window.location.origin,
+              appOrigin: publicBaseUrl(),
             },
           });
           if (error) throw new Error(error.message || 'invoke failed');
