@@ -15,7 +15,7 @@ import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-tenant-slug, x-tenant-db",
 };
 
 interface InvitePayload {
@@ -107,6 +107,15 @@ async function tenantIdFromOrigin(supabase: any, origin: string): Promise<string
   return t?.id ?? undefined;
 }
 
+/** x-tenant-slug header → tenant id. Undefined for a missing/unknown slug. */
+// deno-lint-ignore no-explicit-any
+async function tenantIdFromSlug(supabase: any, slug: string | null): Promise<string | undefined> {
+  const clean = (slug ?? "").trim().toLowerCase();
+  if (!clean) return undefined;
+  const { data: t } = await supabase.from("gw_tenants").select("id").eq("slug", clean).maybeSingle();
+  return t?.id ?? undefined;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
@@ -133,6 +142,17 @@ serve(async (req) => {
     }
     if (!preflightTenantId && body.appOrigin) {
       preflightTenantId = await tenantIdFromOrigin(supabase, body.appOrigin);
+    }
+    // Last resort: the workspace the caller's app is in. Every request from
+    // our Supabase client carries x-tenant-slug. This is what saves invites
+    // sent from an iOS build older than 2026-10-14: those send
+    // appOrigin=capacitor://localhost and no tenantId, so nothing above
+    // resolves, the email linked to gleeworld.org instead of yo-doc.com, and
+    // the invitee got no membership in the workspace they were invited to.
+    // Not an escalation: callerMayInviteInto below still requires the caller
+    // to be staff in whatever tenant this names.
+    if (!preflightTenantId) {
+      preflightTenantId = await tenantIdFromSlug(supabase, req.headers.get("x-tenant-slug"));
     }
 
     // ── AUTHORIZATION ──────────────────────────────────────────────────
@@ -307,6 +327,8 @@ serve(async (req) => {
     if (!tenantId && origin) {
       tenantId = await tenantIdFromOrigin(supabase, origin);
     }
+    // Same workspace the authorization check above was made against.
+    if (!tenantId) tenantId = preflightTenantId;
 
     // 3. Ensure profile row exists with the requested role. Existing profiles
     //    are never role-changed or name-clobbered by a re-invite — we only
