@@ -30,6 +30,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
@@ -510,12 +513,59 @@ export default function JukeboxPage() {
             </CardContent>
           </Card>
 
+          {/* Mobile source picker. The rail card below is lg-only: stacked
+              above the table it buried the songs under the whole playlist
+              list, and picking a playlist meant scrolling to the bottom to
+              see it (Kevin, 2026-10-13). */}
+          <div className="lg:hidden mb-3 flex items-center gap-2">
+            <Select
+              value={source.kind === 'playlist' ? source.id : 'library'}
+              onValueChange={(v) =>
+                setSource(v === 'library' ? { kind: 'library' } : { kind: 'playlist', id: v })}
+            >
+              <SelectTrigger className="flex-1 min-w-0" aria-label="Choose library or playlist">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="library">
+                  {canManage ? 'All songs' : 'Shared with me'} ({tracks.length})
+                </SelectItem>
+                {visible.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.title} ({membership.get(p.id)?.length ?? 0})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {canManage && (
+              <Button variant="outline" size="icon" aria-label="New playlist"
+                onClick={() => setCreating(true)}>
+                <Plus className="w-4 h-4" />
+              </Button>
+            )}
+            {canManage && source.kind === 'playlist' && currentPlaylistTitle && (
+              <>
+                <Button variant="outline" size="icon" aria-label={`Share ${currentPlaylistTitle}`}
+                  onClick={() => setSharing({ id: source.id, title: currentPlaylistTitle })}>
+                  <Share2 className="w-4 h-4" />
+                </Button>
+                <Button variant="outline" size="icon" aria-label={`Delete ${currentPlaylistTitle}`}
+                  onClick={() => {
+                    const p = visible.find((x) => x.id === source.id);
+                    if (p) setDeleting(p);
+                  }}>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </>
+            )}
+          </div>
+
           {/* -------- source list | song table --------------------------- */}
           <div
             className="grid gap-4 lg:gap-2 lg:grid-cols-[var(--rail-w)_10px_minmax(0,1fr)] items-start"
             style={{ '--rail-w': `${railWidth}px` } as React.CSSProperties}
           >
-            <Card className={SOFT_CARD} style={SOFT_CARD_STYLE}>
+            <Card className={`hidden lg:block ${SOFT_CARD}`} style={SOFT_CARD_STYLE}>
               <CardContent className="p-2">
                 <p className="px-2 pt-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Library
