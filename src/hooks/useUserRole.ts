@@ -134,6 +134,18 @@ export const useUserRole = () => {
     return profile.is_admin || profile.role === USER_ROLES.ADMIN;
   };
 
+  // The caller's REAL admin rights, ignoring any "preview as" clamp. Only
+  // for pages that HOST the preview controls (Workspace Settings): arming a
+  // member preview there must not lock the editor that armed it.
+  const isActualAdmin = (): boolean => {
+    if (!profile) return false;
+    if (memberRole && (MEMBER_SUPER_ROLES.includes(memberRole) || MEMBER_ADMIN_ROLES.includes(memberRole))) return true;
+    return profile.is_super_admin || profile.is_admin
+      || profile.role === 'director'
+      || profile.role === USER_ROLES.SUPER_ADMIN
+      || profile.role === USER_ROLES.ADMIN;
+  };
+
   // Kept for backwards compatibility — exec-board is gone, so this just
   // collapses to "is admin". Callers like canManageUsers rely on this.
   const isExecutiveBoard = (): boolean => isAdmin();
@@ -236,6 +248,7 @@ export const useUserRole = () => {
 
     isSuperAdmin,
     isAdmin,
+    isActualAdmin,
     isExecutiveBoard,
     isInstructor,
     isStudent,

@@ -52,8 +52,11 @@ const SOFT_CARD_STYLE: React.CSSProperties = {
 const TAB_VALUES = new Set(['plan', 'navigation', 'branding', 'datecard', 'parents', 'billing', 'general']);
 
 export default function WorkspaceSettingsPage() {
-  const { isSuperAdmin, isAdmin, loading: roleLoading } = useUserRole();
-  const canManage = isSuperAdmin() || isAdmin();
+  // Real rights, not the preview-clamped ones: the Navigation tab arms a
+  // member preview while editing member nav, and with the clamped check the
+  // page locked itself read-only the moment an admin picked "Members".
+  const { isActualAdmin, loading: roleLoading } = useUserRole();
+  const canManage = isActualAdmin();
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get('tab');
   // `modules` is the retired Add-ons tab — bounce old bookmarks to Plan
