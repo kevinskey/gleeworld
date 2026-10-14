@@ -10,6 +10,7 @@ import { Check, ChevronDown, ChevronUp, Download, GraduationCap, Loader2, UserPl
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { useToast } from '@/hooks/use-toast';
 
 export interface ScholarApplicationRow {
@@ -94,7 +95,7 @@ export function ScholarApplicationsPanel({ courseId, onAccepted }: { courseId?: 
         // account if needed, enrolls in the application's course, emails a
         // sign-in link.
         const { data, error } = await supabase.functions.invoke('gw-invite-student', {
-          body: { email: app.email, fullName: app.full_name, courseId: app.course_id ?? courseId, appOrigin: window.location.origin },
+          body: { email: app.email, fullName: app.full_name, courseId: app.course_id ?? courseId, appOrigin: publicBaseUrl() },
         });
         if (error) throw new Error(error.message || 'Invite failed');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

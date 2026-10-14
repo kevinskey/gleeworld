@@ -10,7 +10,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Resend } from "npm:resend@2.0.0";
 import { MEMBER_ROLE } from "../_shared/memberRole.ts";
 import { buildConfirmLink } from "../_shared/confirmLink.ts";
-import { resolveTenantSlugFromOrigin, type TenantHostRow } from "../_shared/tenantHost.ts";
+import { resolveTenantSlugFromOrigin, isWebOrigin, tenantWebOrigin, type TenantHostRow } from "../_shared/tenantHost.ts";
 import { authenticateCaller, unauthorizedResponse } from "../_shared/auth.ts";
 
 const corsHeaders = {
@@ -210,6 +210,18 @@ serve(async (req) => {
     // The link lands on /auth/callback which handles "new user → onboarding,
     // existing user → ?next" routing.
     const origin = (body.appOrigin || "").replace(/\/+$/, "");
+    // The link in the email must open on a real device. When the caller is the
+    // Capacitor app, window.location.origin is `capacitor://localhost` and
+    // every invite built from it is dead on arrival (all members invited from
+    // the app, 2026-10-14). Fall back to the tenant's public web origin, then
+    // to the platform apex, so we NEVER email a capacitor:// / localhost link.
+    let webOrigin: string | null = isWebOrigin(origin) ? origin : null;
+    if (!webOrigin && preflightTenantId) {
+      const { data: trow } = await supabase
+        .from("gw_tenants").select("slug, subdomain, custom_domain").eq("id", preflightTenantId).maybeSingle();
+      webOrigin = tenantWebOrigin(trow as TenantHostRow | null);
+    }
+    if (!webOrigin) webOrigin = (Deno.env.get("SITE_URL") || "https://gleeworld.org").replace(/\/+$/, "");
     // Where the student ends up AFTER filling out their profile.
     // No course on the invite means they are being added to the WORKSPACE,
     // not to a class — the common case when a director adds singers to their
@@ -239,7 +251,7 @@ serve(async (req) => {
     // later as a class assignment) — then on to their course/academy.
     // /welcome honors ?next= and skips itself once a phone is on file.
     const next = `/welcome?next=${encodeURIComponent(dest)}`;
-    const redirectTo = origin ? `${origin}/auth/callback?next=${encodeURIComponent(next)}` : undefined;
+    const redirectTo = `${webOrigin}/auth/callback?next=${encodeURIComponent(next)}`;
 
     // Call GoTrue's admin endpoint directly. The supabase-js SDK nests
     // redirectTo under `options`, but GoTrue's admin/generate_link
@@ -283,7 +295,7 @@ serve(async (req) => {
     // What actually goes in the email: our /auth/confirm page, which spends
     // the token only on a tap. Falls back to actionLink if GoTrue gave us no
     // hashed_token — see _shared/confirmLink.ts.
-    const emailLink = buildConfirmLink(origin, linkData, next) ?? actionLink;
+    const emailLink = buildConfirmLink(webOrigin, linkData, next) ?? actionLink;
 
     // 2. Resolve tenant_id — needed for both profile and tenant membership so
     //    storage/RLS work for the new user.

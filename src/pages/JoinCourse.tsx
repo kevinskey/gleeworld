@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { publicBaseUrl } from '@/lib/publicUrl';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,7 +54,7 @@ export default function JoinCourse() {
           joinCode: code,
           email: email.trim(),
           fullName: fullName.trim() || undefined,
-          appOrigin: window.location.origin,
+          appOrigin: publicBaseUrl(),
           orgName,
         },
       });
