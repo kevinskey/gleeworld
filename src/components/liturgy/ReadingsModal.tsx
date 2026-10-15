@@ -9,8 +9,9 @@ import { readingsFromCache } from '@/lib/liturgy/cachedReadings';
 import { expandScriptureAbbrevs } from '@/lib/liturgy/scriptureAbbrev';
 
 // Daily Catholic readings viewer. Reads the local USCCB table first and falls
-// back to proxying Universalis via the `usccb-readings` edge function, then
-// renders the sanitized reading blocks in a bottom sheet.
+// back to the `usccb-readings` edge function, which now serves citations +
+// WEBCE verse text from our own Prayer module data (no third-party scrape),
+// then renders the sanitized reading blocks in a bottom sheet.
 // Shared by the Liturgy Planner and the Command Center's Liturgical Day card.
 
 export interface ReadingBlock { heading: string; citation: string | null; summary?: string | null; html: string }
@@ -20,7 +21,7 @@ export interface ReadingsResp {
   liturgicalTitle: string | null;
   readings: ReadingBlock[];
   error?: string;
-  /** Set when the date lies outside the window Universalis publishes. */
+  /** Set when the date isn't covered by the imported liturgical calendar. */
   outOfRange?: boolean;
 }
 
@@ -165,8 +166,8 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
                 {data?.liturgicalTitle || 'Daily Readings'}
               </SheetTitle>
               <p className="text-xs text-muted-foreground text-left">
-                {formatDate(isoDate)} · via{' '}
-                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">Universalis</a>
+                {formatDate(isoDate)} ·{' '}
+                <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="underline">source</a>
               </p>
             </div>
             {/* Read aloud. Sits in the header so it is reachable without
@@ -228,7 +229,7 @@ export function ReadingsModal({ open, onClose, isoDate, sourceUrl }: {
               </p>
               <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-[hsl(var(--link))] hover:underline">
-                <ExternalLink className="w-3.5 h-3.5" /> Open on Universalis
+                <ExternalLink className="w-3.5 h-3.5" /> Open source
               </a>
             </div>
           )}
