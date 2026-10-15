@@ -12,7 +12,7 @@ import {
   GraduationCap, CalendarClock, Disc3, Film, Wrench, ClipboardList, ListMusic,
   Church, Route as RouteIcon, ScanLine, Megaphone, Heart, Newspaper, Store, ShoppingBag,
   Shirt, Ticket, DollarSign, Wallet, Users, Settings, TrendingUp, Sparkles,
-  PenLine, NotebookPen, BookOpen, HeartHandshake, Armchair, CreditCard, Receipt,
+  PenLine, NotebookPen, HeartHandshake, Armchair, CreditCard, Receipt,
   HandHeart, ConciergeBell, QrCode, Award,
   type LucideIcon, FileText } from 'lucide-react';
 
@@ -58,10 +58,6 @@ export const NAV_CATALOG: CatalogEntry[] = [
   { key: 'calendar', to: '/dashboard/calendar',  label: 'Calendar',       icon: Calendar,      section: 'today', tone: 'bg-purple-50 text-purple-600', tourId: 'nav-calendar',     surfaces: ['sidebar'] },
   { key: 'notes',    to: '/planner',             label: 'Notes',          icon: NotebookPen,   section: 'today', tone: 'bg-amber-50 text-amber-700',   tourId: 'nav-notes', gate: { module: 'planner' } },
   { key: 'documents', to: '/dashboard/documents', label: 'Documents', icon: FileText, section: 'today', tone: 'bg-blue-50 text-blue-600', tourId: 'nav-documents' },
-  // The Bible — full text, highlights, Apple Pencil underlines, notes.
-  // Formerly "Prayer App"; the prayers and daily readings still live at
-  // /prayer and are reachable from inside the Bible page.
-  { key: 'bible',    to: '/bible',               label: 'The Bible',      icon: BookOpen,      section: 'church', tone: 'bg-violet-50 text-violet-700', tourId: 'nav-bible' },
   { key: 'concierge', to: '/dashboard/concierge', label: 'Concierge',     icon: ConciergeBell, section: 'today', tone: 'bg-sky-50 text-sky-600',       tourId: 'nav-concierge' },
   // Music
   { key: 'music-library',   to: '/dashboard/music-library', label: 'Music Library',  icon: Music,    section: 'music', tone: 'bg-rose-50 text-rose-600',     tourId: 'nav-music-library' },
