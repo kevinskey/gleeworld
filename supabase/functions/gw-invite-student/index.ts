@@ -379,14 +379,34 @@ serve(async (req) => {
       //    orgName from the caller, else the tenant's branding org_name, else a generic.
       let tenantName = (body.orgName || "").replace(/[<>"]/g, "").trim();
       let brandErr: string | null = null;
-      if (!tenantName && tenantId) {
+      // Active-tenant branding for the email: logo at the top and the tenant's
+      // own accent color on the button, so an invite reads as coming from THEIR
+      // organization (e.g. Yo-Doc), never a generic GleeWorld note.
+      let logoUrl: string | null = null;
+      let accentColor = "#4f46e5"; // indigo default when the tenant sets none
+      if (tenantId) {
         const { data: brand, error } = await supabase
           .from("gw_branding_settings")
-          .select("org_name")
+          .select("org_name, logo_url, primary_color")
           .eq("tenant_id", tenantId)
           .maybeSingle();
         if (error) brandErr = error.message ?? String(error);
-        if (brand?.org_name) tenantName = String(brand.org_name).replace(/[<>"]/g, "").trim();
+        if (!tenantName && brand?.org_name) tenantName = String(brand.org_name).replace(/[<>"]/g, "").trim();
+        // Only accept a logo served from our own storage/domain — never render
+        // an arbitrary caller-influenced URL in an outgoing email.
+        const lu = String(brand?.logo_url ?? "").trim();
+        if (/^https:\/\/[^\/]*gleeworld\.org\//i.test(lu)) logoUrl = lu;
+        const pc = String(brand?.primary_color ?? "").trim();
+        // Accept any valid #rrggbb the tenant set (black is fine — white text on
+        // black is legible) EXCEPT colors so light the white button label would
+        // vanish. Relative luminance ≤ 0.72 keeps the label readable.
+        if (/^#[0-9a-fA-F]{6}$/.test(pc)) {
+          const r = parseInt(pc.slice(1, 3), 16) / 255;
+          const g = parseInt(pc.slice(3, 5), 16) / 255;
+          const b = parseInt(pc.slice(5, 7), 16) / 255;
+          const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          if (lum <= 0.72) accentColor = pc;
+        }
       }
       // gw_tenants.name before any generic: a branded invite is the difference
       // between "You're invited to join The Lyke House" and something a
@@ -429,12 +449,16 @@ serve(async (req) => {
         ? `You already have an account. Use the button below to set (or reset) your password and sign in.`
         : `Click the link below to accept your invitation and sign in — no password needed.`;
       const cta = isExistingUser ? "Set my password &amp; sign in" : "Accept invitation &amp; sign in";
+      const logoBlock = logoUrl
+        ? `<div style="text-align:center;margin-bottom:24px;"><img src="${logoUrl}" alt="${escapeHtml(tenantName)}" style="max-height:72px;max-width:220px;height:auto;width:auto;" /></div>`
+        : "";
       const html = `
-        <div style="font-family:sans-serif;max-width:600px;padding:24px;">
-          <h2 style="color:#1a1a1a;">${heading}</h2>
-          <p>${lead}</p>
-          <p><a href="${emailLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">${cta}</a></p>
-          <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${emailLink}</p>
+        <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;color:#1a1a1a;">
+          ${logoBlock}
+          <h2 style="color:#1a1a1a;font-size:22px;margin:0 0 16px;">${heading}</h2>
+          <p style="font-size:15px;line-height:1.5;margin:0 0 20px;">${lead}</p>
+          <p style="margin:0 0 24px;"><a href="${emailLink}" style="display:inline-block;background:${accentColor};color:#ffffff;padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">${cta}</a></p>
+          <p style="color:#666;font-size:13px;line-height:1.5;margin:0;">If the button doesn't work, copy and paste this link: ${emailLink}</p>
         </div>
       `;
       const { error: emailErr } = await resend.emails.send({
