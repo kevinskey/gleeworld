@@ -397,15 +397,17 @@ serve(async (req) => {
         const lu = String(brand?.logo_url ?? "").trim();
         if (/^https:\/\/[^\/]*gleeworld\.org\//i.test(lu)) logoUrl = lu;
         const pc = String(brand?.primary_color ?? "").trim();
-        // Accept any valid #rrggbb the tenant set (black is fine — white text on
-        // black is legible) EXCEPT colors so light the white button label would
-        // vanish. Relative luminance ≤ 0.72 keeps the label readable.
+        // Accept the tenant's accent only in a mid band: too light (≥0.72) and
+        // the white button label vanishes; too dark (≤0.12, e.g. yo-doc's
+        // #000000) and the button itself disappears into a dark-mode mail
+        // background — the 2026-10-21 unreadable-preview bug. Outside the band,
+        // keep the indigo default, which reads on both light and dark.
         if (/^#[0-9a-fA-F]{6}$/.test(pc)) {
           const r = parseInt(pc.slice(1, 3), 16) / 255;
           const g = parseInt(pc.slice(3, 5), 16) / 255;
           const b = parseInt(pc.slice(5, 7), 16) / 255;
           const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-          if (lum <= 0.72) accentColor = pc;
+          if (lum >= 0.12 && lum <= 0.72) accentColor = pc;
         }
       }
       // gw_tenants.name before any generic: a branded invite is the difference
@@ -449,18 +451,33 @@ serve(async (req) => {
         ? `You already have an account. Use the button below to set (or reset) your password and sign in.`
         : `Click the link below to accept your invitation and sign in — no password needed.`;
       const cta = isExistingUser ? "Set my password &amp; sign in" : "Accept invitation &amp; sign in";
+      // A logo on its own white pill so a dark-ink mark (yo-doc's "doc" is
+      // black) stays visible even if a mail client forces its own dark theme.
       const logoBlock = logoUrl
-        ? `<div style="text-align:center;margin-bottom:24px;"><img src="${logoUrl}" alt="${escapeHtml(tenantName)}" style="max-height:72px;max-width:220px;height:auto;width:auto;" /></div>`
+        ? `<div style="text-align:center;margin:0 0 24px;"><span style="display:inline-block;background:#ffffff;border-radius:10px;padding:10px 16px;"><img src="${logoUrl}" alt="${escapeHtml(tenantName)}" style="max-height:64px;max-width:200px;height:auto;width:auto;display:block;" /></span></div>`
         : "";
-      const html = `
-        <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;color:#1a1a1a;">
-          ${logoBlock}
-          <h2 style="color:#1a1a1a;font-size:22px;margin:0 0 16px;">${heading}</h2>
-          <p style="font-size:15px;line-height:1.5;margin:0 0 20px;">${lead}</p>
-          <p style="margin:0 0 24px;"><a href="${emailLink}" style="display:inline-block;background:${accentColor};color:#ffffff;padding:13px 26px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">${cta}</a></p>
-          <p style="color:#666;font-size:13px;line-height:1.5;margin:0;">If the button doesn't work, copy and paste this link: ${emailLink}</p>
-        </div>
-      `;
+      // Dark-mode-safe: the whole email is an explicit WHITE card on a light
+      // page. Clients that auto-darken (Apple Mail, Gmail) keep backgrounds
+      // that are set explicitly, so black text + a colored button stay legible
+      // instead of vanishing into a dark background (the 9:31 screenshot bug).
+      const html = `<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="color-scheme" content="light" />
+<meta name="supported-color-schemes" content="light" />
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;margin:0;padding:0;"><tr><td align="center" style="padding:24px;">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;border:1px solid #e5e7eb;"><tr><td style="padding:32px 28px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;">
+      ${logoBlock}
+      <h2 style="color:#1a1a1a;font-size:22px;line-height:1.3;margin:0 0 16px;">${heading}</h2>
+      <p style="color:#333333;font-size:15px;line-height:1.5;margin:0 0 24px;">${lead}</p>
+      <p style="margin:0 0 24px;"><a href="${emailLink}" style="display:inline-block;background:${accentColor};color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;">${cta}</a></p>
+      <p style="color:#6b7280;font-size:13px;line-height:1.5;margin:0;">If the button doesn't work, copy and paste this link:<br /><a href="${emailLink}" style="color:${accentColor};word-break:break-all;">${emailLink}</a></p>
+    </td></tr></table>
+  </td></tr></table>
+</body></html>`;
       const { error: emailErr } = await resend.emails.send({
         from: `${safeFromName} <noreply@gleeworld.org>`,
         to: [body.email],
