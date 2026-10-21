@@ -70,6 +70,23 @@
   margin-inline: auto;
 }
 
+/* Decorative piano-key gutters (PublicSiteView). Each fills one side margin
+   that opens up once the viewport is wider than the content column; the width
+   math collapses to 0 at or below the column width, so the strips vanish on
+   phones/tablets. Fixed + full height so the keyboard runs the whole scrolled
+   page. background-size height (784px) matches the SVG's 7-octave tile so the
+   repeat is seamless. */
+.gw-piano-gutter {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: max(0px, calc((100vw - var(--site-content-max, 72rem)) / 2));
+  background-repeat: repeat-y;
+  background-size: 100% 784px;
+  pointer-events: none;
+  z-index: 0;
+}
+
 /* Body text scale.
 
    Tailwind's text-* utilities are rem-based, and rem resolves against the

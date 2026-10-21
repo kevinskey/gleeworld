@@ -6,6 +6,35 @@ import { BLOCK_REGISTRY, isBlockAvailable } from './registry';
 import { blockPage, fontStack, safeConfig, themeCssVars, themeSchema, type SiteBlock, type SiteRenderContext } from './types';
 import { StoreOrderConfirmation } from './StoreOrderConfirmation';
 
+// Decorative piano-key gutter. When the viewport is wider than the content
+// column the side margins are otherwise blank white; fill each with a tiny
+// black-and-white keyboard running the full height (Kevin, 2026-10-21). The
+// tile is 7 octaves of 7 white keys (=49), so the 5-black-key pattern repeats
+// seamlessly. `side` is which gutter it fills: black keys sit on the INNER
+// edge (facing the content) — the right edge of the left gutter, and vice
+// versa. Returns a ready-to-use CSS url() with the SVG inlined.
+function pianoGutterImage(side: 'left' | 'right'): string {
+  const H = 784, unit = H / 49, W = 100, bw = 42, bh = unit * 1.25;
+  const bx = side === 'left' ? W - bw : 0; // black keys on the inner edge
+  let seps = '';
+  let blacks = '';
+  for (let k = 0; k < 49; k++) {
+    if (k > 0) {
+      const y = (k * unit).toFixed(2);
+      seps += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#d2d2d2" stroke-width="0.8"/>`;
+    }
+    const deg = k % 7; // 0..6 = C D E F G A B; black keys after C,D,F,G,A
+    if (deg === 1 || deg === 2 || deg === 4 || deg === 5 || deg === 6) {
+      const y = (k * unit - bh / 2).toFixed(2);
+      blacks += `<rect x="${bx}" y="${y}" width="${bw}" height="${bh.toFixed(2)}" rx="1.5" fill="#161616"/>`;
+    }
+  }
+  const edgeX = side === 'left' ? W : 0; // divider line against the content
+  const edge = `<line x1="${edgeX}" y1="0" x2="${edgeX}" y2="${H}" stroke="#bdbdbd" stroke-width="1.5"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><rect width="${W}" height="${H}" fill="#fcfcfc"/>${seps}${blacks}${edge}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
 export interface PublicSitePayload {
   slug: string;
   theme: Record<string, unknown>;
@@ -167,6 +196,11 @@ export function PublicSiteView({
         .gw-site > section:not(#top),
         .gw-site > footer { padding-top: var(--site-section-py); padding-bottom: var(--site-section-py); }
       `}</style>
+      {/* Piano-key gutters. Fixed, full-height, one per side; `width` collapses
+          to 0 at or below the content width, so phones/tablets never see them.
+          pointer-events:none so the empty margin stays click-through. */}
+      <div aria-hidden className="gw-piano-gutter" style={{ left: 0, backgroundImage: pianoGutterImage('left') }} />
+      <div aria-hidden className="gw-piano-gutter" style={{ right: 0, backgroundImage: pianoGutterImage('right') }} />
       {orderId && orderToken && <StoreOrderConfirmation order={orderId} token={orderToken} />}
       {blocks.map((block) => {
         const mod = BLOCK_REGISTRY[block.block_type];
