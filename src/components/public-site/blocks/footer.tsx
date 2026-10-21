@@ -35,7 +35,12 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
   const year = new Date().getFullYear();
   const logo = config.logoUrl || ctx.logoUrl;
   return (
-    <footer className="w-full" style={{ background: 'var(--site-primary, #131722)', color: '#fff' }}>
+    // Contained to the content column (gw-container-flush), same width as the
+    // header and every section — a full-bleed bar read as wider than the body
+    // on wide screens (Kevin, 2026-10-21). Icons use a LIGHTENED accent: the
+    // footer sits on the dark --site-primary, where the raw accent (tuned for
+    // light sections) goes too dark to see, so mix it toward white.
+    <footer className="gw-container-flush" style={{ background: 'var(--site-primary, #131722)', color: '#fff' }}>
       <div className="gw-container py-6">
         {/* Everything on one line: identity + contact left, socials right. */}
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
@@ -45,12 +50,12 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
           </div>
           {config.email && (
             <a href={`mailto:${config.email}`} className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white">
-              <Mail className="w-4 h-4" style={{ color: 'var(--site-accent)' }} /> {config.email}
+              <Mail className="w-4 h-4" style={{ color: 'color-mix(in oklab, var(--site-accent) 45%, white)' }} /> {config.email}
             </a>
           )}
           {config.phone && (
             <a href={`tel:${config.phone.replace(/[^+\d]/g, '')}`} className="inline-flex items-center gap-2 text-sm text-white/80 hover:text-white">
-              <Phone className="w-4 h-4" style={{ color: 'var(--site-accent)' }} /> {config.phone}
+              <Phone className="w-4 h-4" style={{ color: 'color-mix(in oklab, var(--site-accent) 45%, white)' }} /> {config.phone}
             </a>
           )}
           {socials.length > 0 && (
@@ -63,7 +68,7 @@ function Render({ config, ctx }: BlockRenderProps<Config>) {
                   rel="noreferrer"
                   aria-label={label}
                   className="opacity-80 hover:opacity-100 transition-opacity"
-                  style={{ color: 'var(--site-accent)' }}
+                  style={{ color: 'color-mix(in oklab, var(--site-accent) 45%, white)' }}
                 >
                   <Icon className="w-5 h-5" />
                 </a>
