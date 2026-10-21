@@ -206,6 +206,22 @@ serve(async (req) => {
       if (t?.slug) tenantSlug = String(t.slug);
     }
 
+    // Does this email already have an account? Members like Babette already
+    // exist in gw_profiles with a user_id; a passwordless magic link would
+    // sign them in without ever letting them set a password, so instead we
+    // mint a RECOVERY link and the email invites them to set/reset their
+    // password. Checked across tenants (an account is an account) — the
+    // tenant membership upsert below still files them into this workspace.
+    const emailLc = body.email.toLowerCase().trim();
+    const { data: existingAcct } = await supabase
+      .from("gw_profiles")
+      .select("user_id")
+      .ilike("email", emailLc)
+      .not("user_id", "is", null)
+      .limit(1)
+      .maybeSingle();
+    const isExistingUser = !!existingAcct?.user_id;
+
     // 1. Generate a magic link (creates user if doesn't exist).
     // The link lands on /auth/callback which handles "new user → onboarding,
     // existing user → ?next" routing.
@@ -246,11 +262,17 @@ serve(async (req) => {
       }
       if (c?.title) courseTitle = String(c.title);
     }
-    // Invited students arrive signed in via the magic link. Route them through
-    // /welcome — a minimal name + phone registration (the full profile comes
-    // later as a class assignment) — then on to their course/academy.
-    // /welcome honors ?next= and skips itself once a phone is on file.
-    const next = `/welcome?next=${encodeURIComponent(dest)}`;
+    // Where the confirmed sign-in lands.
+    //   • New invitees arrive signed in via the magic link; route them through
+    //     /welcome (minimal name + phone, honors ?next=, self-skips once a
+    //     phone is on file) and then on to dest.
+    //   • Existing members arrive in a PASSWORD_RECOVERY session; AuthConfirm
+    //     force-routes recovery to /reset-password and forwards this `next`,
+    //     so pass dest directly and let /reset-password send them on after
+    //     they set a password.
+    const next = isExistingUser
+      ? dest
+      : `/welcome?next=${encodeURIComponent(dest)}`;
     const redirectTo = `${webOrigin}/auth/callback?next=${encodeURIComponent(next)}`;
 
     // Call GoTrue's admin endpoint directly. The supabase-js SDK nests
@@ -269,7 +291,9 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        type: "magiclink",
+        // Existing accounts get a recovery link (they set a password);
+        // brand-new invitees get a passwordless magic link.
+        type: isExistingUser ? "recovery" : "magiclink",
         email: body.email,
         ...(redirectTo ? { redirect_to: redirectTo } : {}),
         // User metadata for the profile trigger — only applied on creation.
@@ -395,12 +419,21 @@ serve(async (req) => {
       // Always: "You're invited to join {Class} on {Tenant}". When the invite isn't
       // tied to a specific class, fall back to just the tenant name.
       const joining = courseTitle ? `${courseTitle} on ${tenantName}` : tenantName;
-      const subject = `You're invited to join ${joining}`;
+      const subject = isExistingUser
+        ? `Set your password for ${joining}`
+        : `You're invited to join ${joining}`;
+      const heading = isExistingUser
+        ? `You've been added to ${escapeHtml(joining)}.`
+        : `You're invited to join ${escapeHtml(joining)}.`;
+      const lead = isExistingUser
+        ? `You already have an account. Use the button below to set (or reset) your password and sign in.`
+        : `Click the link below to accept your invitation and sign in — no password needed.`;
+      const cta = isExistingUser ? "Set my password &amp; sign in" : "Accept invitation &amp; sign in";
       const html = `
         <div style="font-family:sans-serif;max-width:600px;padding:24px;">
-          <h2 style="color:#1a1a1a;">You're invited to join ${escapeHtml(joining)}.</h2>
-          <p>Click the link below to accept your invitation and sign in — no password needed.</p>
-          <p><a href="${emailLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Accept invitation &amp; sign in</a></p>
+          <h2 style="color:#1a1a1a;">${heading}</h2>
+          <p>${lead}</p>
+          <p><a href="${emailLink}" style="display:inline-block;background:#4f46e5;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">${cta}</a></p>
           <p style="color:#666;font-size:13px;">If the button doesn't work, copy and paste this link: ${emailLink}</p>
         </div>
       `;

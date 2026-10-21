@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { UniversalFooter } from '@/components/layout/UniversalFooter';
 import { Lock, CheckCircle, AlertCircle, Music, Loader2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
@@ -27,6 +27,7 @@ const ResetPassword = () => {
   const [sessionReady, setSessionReady] = useState(false);
   const [checking, setChecking] = useState(true);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -94,7 +95,8 @@ const ResetPassword = () => {
       });
 
       setTimeout(() => {
-        navigate('/', { replace: true });
+        const nextParam = searchParams.get('next');
+        navigate(nextParam && nextParam.startsWith('/') ? nextParam : '/', { replace: true });
       }, 3000);
 
     } catch (err: any) {

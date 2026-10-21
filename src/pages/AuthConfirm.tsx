@@ -45,8 +45,15 @@ export default function AuthConfirm() {
       return;
     }
     // Recovery links exist to set a password; everything else goes where the
-    // sender asked.
-    navigate(type === 'recovery' ? '/reset-password' : next, { replace: true });
+    // sender asked. For recovery we still forward `next` so /reset-password can
+    // land the member on their intended page (e.g. an invited member's class)
+    // once the password is set.
+    navigate(
+      type === 'recovery'
+        ? `/reset-password?next=${encodeURIComponent(next)}`
+        : next,
+      { replace: true },
+    );
   }
 
   return (
