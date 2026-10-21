@@ -206,19 +206,17 @@ function Render({ config, ctx, onConfigChange }: BlockRenderProps<Config>) {
 
   return (
     <header
-      // Header fills its content-column bounds edge-to-edge, same footprint
-      // as the hero and every other block. Colored bar IS the outer
-      // <header>; nav content is padded from inside — hence the flush
-      // variant, which takes the column width without the gutter. Below the
-      // column width margin-inline:auto degrades to full-width so header,
-      // hero, and sections all hit the viewport edges together — consistent
-      // widths from mobile through desktop, per the sizing rule. Width comes
-      // from --site-content-max (Site design panel), not a fixed 1152.
-      // Full-bleed bar, contained content — the bar's background spans the
-      // viewport like the section bands do, while logo/nav sit on the same
-      // .gw-container column as every section (Kevin, 2026-08-13: a
-      // content-width bar floated as a box aligned with nothing).
-      className="sticky top-0 z-40 w-full"
+      // The colored bar IS the outer <header>, capped at the content column
+      // (.gw-container-flush = --site-content-max, no gutter) and centered, so
+      // it sits exactly as wide as the hero and every section — nav content is
+      // padded from inside via the .gw-container below. Below the column width
+      // margin-inline:auto degrades to full-width, so on phones the bar still
+      // spans edge to edge. Was full-bleed (`w-full`); on wide screens that
+      // made the bar wider than the contained body — Kevin, 2026-10-21: "I
+      // don't like how the header is wider than the body." (This supersedes
+      // the 2026-08-13 note against a content-width bar: back then it aligned
+      // with nothing; now the hero and sections share this same column.)
+      className="sticky top-0 z-40 gw-container-flush"
       style={{ paddingTop: 'env(safe-area-inset-top)', color: linkColor, background: 'var(--site-primary)' }}
     >
       <div
