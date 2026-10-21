@@ -14,7 +14,11 @@ import { StoreOrderConfirmation } from './StoreOrderConfirmation';
 // edge (facing the content) — the right edge of the left gutter, and vice
 // versa. Returns a ready-to-use CSS url() with the SVG inlined.
 function pianoGutterImage(side: 'left' | 'right'): string {
-  const H = 784, unit = H / 49, W = 100, bw = 42, bh = unit * 1.25;
+  // Real-piano proportions: a black key spans ~half a white key's pitch
+  // (bh) and reaches ~60% of the white key's length inward (bw). Keeping bh
+  // well under one unit leaves a clear white gap between adjacent black keys,
+  // so the 2-then-3 grouping reads instead of merging into solid bars.
+  const H = 784, unit = H / 49, W = 100, bw = 58, bh = unit * 0.5;
   const bx = side === 'left' ? W - bw : 0; // black keys on the inner edge
   let seps = '';
   let blacks = '';
