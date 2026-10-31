@@ -44654,6 +44654,21 @@ export type Database = {
           student_cap: number
         }[]
       }
+      gw_tenant_roster: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string | null
+          disabled: boolean | null
+          email: string | null
+          full_name: string | null
+          is_admin: boolean | null
+          is_super_admin: boolean | null
+          phone_number: string | null
+          role: string | null
+          tenant_role: string | null
+          user_id: string
+        }[]
+      }
       gw_unaccent: { Args: { "": string }; Returns: string }
       gw_unread_counts: {
         Args: never
@@ -44669,6 +44684,15 @@ export type Database = {
           unread: number
           user_id: string
         }[]
+      }
+      gw_update_tenant_member: {
+        Args: {
+          p_disabled: boolean
+          p_is_admin: boolean
+          p_role: string
+          p_user_id: string
+        }
+        Returns: undefined
       }
       gw_worship_aid_by_token: {
         Args: { p_token: string }

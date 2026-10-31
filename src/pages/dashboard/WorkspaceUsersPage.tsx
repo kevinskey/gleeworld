@@ -1,6 +1,16 @@
 // /dashboard/users — tenant-level user management for owner-teachers and
 // tenant admins. List, invite, promote/demote, disable, delete tenant
-// members. Scoped to the caller's tenant via RLS on gw_profiles.
+// members.
+//
+// The roster is the tenant's MEMBERSHIP (gw_tenant_members joined to
+// gw_profiles via the gw_tenant_roster RPC), not the profiles homed here.
+// gw_profiles is UNIQUE(user_id) with one home tenant_id and RLS of
+// `tenant_id = current_tenant_id()`, so listing profiles could never show a
+// person who belongs to several workspaces — Natasha, invited from
+// yo-doc.com, got a yo-doc membership but only ever appeared on gleeworld.org
+// (2026-10-31). Edits go through gw_update_tenant_member for the same reason.
+// Both RPCs fall back to the old direct gw_profiles path when the migration
+// (20261031120000) is not deployed yet.
 
 import { useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -38,6 +48,7 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { DashboardShell } from '@/components/dashboard/DashboardShell';
 import { ScholarApplicationsPanel } from '@/components/academy/ScholarApplicationsPanel';
 import { isMemberRole, MEMBER_ROLE } from '@/lib/auth/memberRole';
+import { isTenantAdminOrAboveRole } from '@/lib/auth/tenantRoles';
 
 const SOFT_CARD = 'border-0 rounded-2xl bg-card';
 const SOFT_CARD_STYLE: React.CSSProperties = {
@@ -49,12 +60,21 @@ type Person = {
   email: string | null;
   full_name: string | null;
   role: string | null;
+  /** gw_tenant_members.role for the CURRENT tenant; null on the pre-migration fallback. */
+  tenant_role: string | null;
   is_admin: boolean | null;
   is_super_admin: boolean | null;
   disabled: boolean | null;
   avatar_url: string | null;
   phone_number: string | null;
 };
+
+/** PostgREST's "no such function" — the migration isn't deployed yet. */
+function rpcMissing(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  if (error.code === 'PGRST202' || error.code === '42883') return true;
+  return /could not find the function|does not exist/i.test(error.message ?? '');
+}
 
 const ROLE_PALETTE: Record<string, { Icon: React.ElementType; tone: string; label: string }> = {
   'super-admin': { Icon: Shield,         tone: 'bg-rose-50 text-rose-700 border-rose-200',     label: 'Super admin' },
@@ -91,12 +111,16 @@ export default function WorkspaceUsersPage() {
   const { data: people = [], isLoading } = useQuery<Person[]>({
     queryKey: ['workspace-users'],
     queryFn: async () => {
+      const roster = await supabase.rpc('gw_tenant_roster');
+      if (!roster.error) return (roster.data ?? []) as Person[];
+      if (!rpcMissing(roster.error)) throw roster.error;
+      // Pre-migration fallback: profiles homed in this tenant only.
       const { data, error } = await supabase
         .from('gw_profiles')
         .select('user_id, email, full_name, role, is_admin, is_super_admin, disabled, avatar_url, phone_number')
         .order('full_name', { ascending: true, nullsFirst: false });
       if (error) throw error;
-      return (data ?? []) as Person[];
+      return ((data ?? []) as Omit<Person, 'tenant_role'>[]).map((p) => ({ ...p, tenant_role: null }));
     },
   });
 
@@ -290,9 +314,14 @@ export default function WorkspaceUsersPage() {
   );
 }
 
+// Tenant membership role outranks the profile role: a person mirrored in from
+// another workspace keeps their profile role there, but what they ARE here is
+// the membership row (same precedence as useUserRole).
 function roleOf(p: Person): string {
   if (p.is_super_admin) return 'super-admin';
-  if (p.is_admin) return 'admin';
+  if (isTenantAdminOrAboveRole(p.tenant_role) || p.is_admin) return 'admin';
+  const t = (p.tenant_role || '').toLowerCase();
+  if (t && t !== 'admin') return t === 'student' ? MEMBER_ROLE : t;
   return p.role || MEMBER_ROLE;
 }
 
@@ -697,8 +726,9 @@ function EditUserDialog({
 
   useMemo(() => {
     if (person) {
-      setRole(person.role || MEMBER_ROLE);
-      setIsAdmin(!!person.is_admin || !!person.is_super_admin);
+      const shown = roleOf(person);
+      setRole(shown === 'admin' || shown === 'super-admin' ? (person.role || MEMBER_ROLE) : shown);
+      setIsAdmin(shown === 'admin' || shown === 'super-admin');
       setDisabled(!!person.disabled);
     }
   }, [person]);
@@ -707,16 +737,26 @@ function EditUserDialog({
 
   async function save() {
     setSaving(true);
-    const { error } = await supabase
-      .from('gw_profiles')
-      .update({
-        role,
-        is_admin: isAdmin,
-        // never escalate to super_admin via this UI — that's a platform-owner action
-        disabled,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', person.user_id);
+    // Membership-scoped write; never escalates to super_admin — that's a
+    // platform-owner action.
+    let error = (await supabase.rpc('gw_update_tenant_member', {
+      p_user_id: person.user_id,
+      p_role: role,
+      p_is_admin: isAdmin,
+      p_disabled: disabled,
+    })).error as { code?: string; message?: string } | null;
+    if (rpcMissing(error)) {
+      // Pre-migration fallback: direct profile update (home-tenant members only).
+      ({ error } = await supabase
+        .from('gw_profiles')
+        .update({
+          role,
+          is_admin: isAdmin,
+          disabled,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', person.user_id));
+    }
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success('Updated.');
