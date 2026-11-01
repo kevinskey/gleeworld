@@ -66,13 +66,13 @@ export const GradingBreakdownEditor: React.FC<Props> = ({
               <p className="text-primary-foreground">No grading items defined yet.</p>
               <p className="text-sm mt-1 text-primary-foreground">Click "Add Item" to define grade components.</p>
             </div> : <>
-              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
+              <div className="grid grid-cols-12 gap-2 sm:gap-4 text-sm font-medium text-muted-foreground border-b pb-2">
                 <div className="col-span-8">Assignment/Category</div>
                 <div className="col-span-3 text-right">Percentage</div>
                 <div className="col-span-1"></div>
               </div>
               
-              {gradingBreakdown.map((item, index) => <div key={index} className={`grid grid-cols-12 gap-4 items-center p-2 rounded-md ${index % 2 === 0 ? 'bg-muted/30' : 'bg-muted/10'}`}>
+              {gradingBreakdown.map((item, index) => <div key={index} className={`grid grid-cols-12 gap-2 sm:gap-4 items-center p-2 rounded-md ${index % 2 === 0 ? 'bg-muted/30' : 'bg-muted/10'}`}>
                   <div className="col-span-8">
                     <Input value={item.item} onChange={e => updateItem(index, 'item', e.target.value)} placeholder="e.g., Participation, Midterm Exam, Final Project" />
                   </div>
@@ -90,7 +90,7 @@ export const GradingBreakdownEditor: React.FC<Props> = ({
                 </div>)}
               
               {/* Total */}
-              <div className="grid grid-cols-12 gap-4 items-center pt-4 border-t">
+              <div className="grid grid-cols-12 gap-2 sm:gap-4 items-center pt-4 border-t">
                 <div className="col-span-8 font-semibold">Total</div>
                 <div className="col-span-3 text-right">
                   <span className={`font-bold ${totalPercentage === 100 ? 'text-green-600' : 'text-amber-600'}`}>

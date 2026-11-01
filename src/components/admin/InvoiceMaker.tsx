@@ -384,8 +384,8 @@ export const InvoiceMaker = () => {
               </div>
               <div className="space-y-3">
                 {lineItems.map((item, idx) => (
-                  <div key={item._key} className="grid grid-cols-12 gap-2 items-end">
-                    <div className="col-span-5">
+                  <div key={item._key} className="grid grid-cols-6 sm:grid-cols-12 gap-2 items-end">
+                    <div className="col-span-6 sm:col-span-5">
                       {idx === 0 && <Label className="text-xs">Description</Label>}
                       <Input
                         value={item.description}

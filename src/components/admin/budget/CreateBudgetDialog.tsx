@@ -255,8 +255,8 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
               {budgetItems.length > 0 && (
                 <div className="space-y-3">
                   {budgetItems.map((item) => (
-                    <div key={item.id} className="grid grid-cols-12 gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="col-span-4">
+                    <div key={item.id} className="grid grid-cols-2 sm:grid-cols-12 gap-3 p-3 bg-gray-50 rounded-lg">
+                      <div className="col-span-2 sm:col-span-4">
                         <Label htmlFor={`item-desc-${item.id}`} className="text-sm">Description</Label>
                         <Input
                           id={`item-desc-${item.id}`}
@@ -266,7 +266,7 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
                           className="mt-1"
                         />
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-1 sm:col-span-2">
                         <Label htmlFor={`item-cost-${item.id}`} className="text-sm">Est. Cost</Label>
                         <Input
                           id={`item-cost-${item.id}`}
@@ -278,7 +278,7 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
                           className="mt-1"
                         />
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-1 sm:col-span-2">
                         <Label htmlFor={`item-category-${item.id}`} className="text-sm">Category</Label>
                         <Select
                           value={item.category}
@@ -299,7 +299,7 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="col-span-2">
+                      <div className="col-span-1 sm:col-span-2">
                         <Label htmlFor={`item-priority-${item.id}`} className="text-sm">Priority</Label>
                         <Select
                           value={item.priority}
@@ -315,7 +315,7 @@ export const CreateBudgetDialog = ({ contractId, eventId, onSuccess }: CreateBud
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="col-span-2 flex items-end">
+                      <div className="col-span-1 sm:col-span-2 flex items-end">
                         <Button
                           type="button"
                           onClick={() => removeBudgetItem(item.id)}

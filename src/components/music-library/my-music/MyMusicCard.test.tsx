@@ -1,12 +1,10 @@
 // @vitest-environment jsdom
 //
-// Guards a layout collision reported on iPad: the card's action cluster is
-// absolutely positioned (top-3 right-3), so it does NOT push the title aside —
-// the title has to reserve the space itself. It reserved pr-6 (24px) while the
-// cluster is up to four 24px buttons plus gaps (~104px), so the second line of
-// a long filename ran underneath the icons.
-//
-// Worst case is a librarian, because the publish button is the fourth icon.
+// The card's per-score actions (star / publish / edit / delete / save-to-
+// device) used to float over the top-right corner, so the title had to reserve
+// up to 144px for them — which on a 3-up desktop grid left room for about six
+// characters ("Welco me…", 2026-11-01). The actions now live in the footer row
+// and the title owns the full card width. These tests pin that contract.
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import '@testing-library/jest-dom/vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
@@ -43,22 +41,29 @@ const baseProps = {
 
 const titleEl = () => screen.getByTitle(LONG_TITLE);
 
-describe('MyMusicCard title / action collision', () => {
-  it('reserves room for four icons when publish is offered', () => {
-    render(<MyMusicCard {...baseProps} onTogglePublish={vi.fn()} published={false} />);
-    // star + publish + edit + delete
-    expect(titleEl().className).toContain('pr-28');
+describe('MyMusicCard title width', () => {
+  it('reserves no right padding for actions, even when every action is offered', () => {
+    render(
+      <MyMusicCard
+        {...baseProps}
+        onTogglePublish={vi.fn()}
+        published={false}
+        onToggleDevice={vi.fn()}
+        savedOnDevice={false}
+      />,
+    );
+    expect(titleEl().className).not.toMatch(/\bpr-\d+\b/);
   });
 
-  it('reserves room for three icons when publish is not offered', () => {
-    render(<MyMusicCard {...baseProps} />);
-    // star + edit + delete
-    expect(titleEl().className).toContain('pr-20');
-  });
-
-  it('never falls back to the old pr-6, which is narrower than one icon row', () => {
+  it('keeps the actions in the footer, not floated over the title', () => {
     render(<MyMusicCard {...baseProps} onTogglePublish={vi.fn()} published={false} />);
-    expect(titleEl().className).not.toMatch(/\bpr-6\b/);
+    const edit = screen.getByRole('button', { name: /^edit /i });
+    // Walk up: no ancestor of the action button is absolutely positioned.
+    let el: HTMLElement | null = edit;
+    while (el) {
+      expect(el.className).not.toMatch(/\babsolute\b/);
+      el = el.parentElement;
+    }
   });
 
   it('lets a space-free filename wrap instead of overflowing its box', () => {
@@ -71,6 +76,12 @@ describe('MyMusicCard title / action collision', () => {
   it('still clamps to two lines so cards keep a uniform height', () => {
     render(<MyMusicCard {...baseProps} />);
     expect(titleEl().className).toContain('line-clamp-2');
+  });
+
+  it('shows when the score was added and a separate Open affordance', () => {
+    render(<MyMusicCard {...baseProps} />);
+    expect(screen.getByText(/^Added /)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: `Open ${LONG_TITLE}` }).length).toBeGreaterThanOrEqual(2);
   });
 });
 

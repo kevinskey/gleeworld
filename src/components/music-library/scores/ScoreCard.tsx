@@ -55,9 +55,9 @@ export function ScoreCard({
           <Checkbox checked={selected} className="pointer-events-none bg-background" aria-hidden />
         </div>
       )}
-      <CardContent className="p-3 sm:p-4 flex-1 flex flex-col">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
+      <CardContent className="p-3 flex-1 flex flex-col">
+        <div className="flex items-start gap-2.5">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 bg-muted text-muted-foreground">
             <Music className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
@@ -72,10 +72,10 @@ export function ScoreCard({
             </div>
             {/* Always reserve the composer line so cards stay the same
                 height whether composer was provided or not. */}
-            <div className="text-sm text-muted-foreground truncate mt-0.5">
+            <div className="text-xs text-muted-foreground truncate mt-0.5">
               {row.composer || '\u00A0'}
             </div>
-            <div className="flex items-center gap-2 mt-2 flex-wrap">
+            <div className="flex items-center gap-1 mt-1.5 flex-wrap">
               <RightsBadge
                 status={row.rights_status}
                 seatCount={row.license_seat_count}
@@ -86,15 +86,15 @@ export function ScoreCard({
                 }
                 compact
               />
-              {row.voicing && <Badge variant="outline" className="text-xs">{row.voicing}</Badge>}
-              {row.difficulty_level && <Badge variant="outline" className="text-xs">{row.difficulty_level}</Badge>}
+              {row.voicing && <Badge variant="outline" className="text-[11px] leading-4 px-1.5 py-0">{row.voicing}</Badge>}
+              {row.difficulty_level && <Badge variant="outline" className="text-[11px] leading-4 px-1.5 py-0">{row.difficulty_level}</Badge>}
               {courseCode ? (
-                <Badge variant="outline" className="text-xs">{courseCode}</Badge>
+                <Badge variant="outline" className="text-[11px] leading-4 px-1.5 py-0">{courseCode}</Badge>
               ) : (
-                <Badge variant="outline" className="text-xs text-muted-foreground">Platform</Badge>
+                <Badge variant="outline" className="text-[11px] leading-4 px-1.5 py-0 text-muted-foreground">Platform</Badge>
               )}
               {hasAudio && (
-                <Badge variant="outline" className="text-xs text-muted-foreground">
+                <Badge variant="outline" className="text-[11px] leading-4 px-1.5 py-0 text-muted-foreground">
                   <Headphones className="w-3 h-3 mr-1" />
                   Audio
                 </Badge>
@@ -105,7 +105,7 @@ export function ScoreCard({
               {copies > 0 && (
                 <Badge
                   variant="outline"
-                  className="text-xs max-w-full"
+                  className="text-[11px] leading-4 px-1.5 py-0 max-w-full"
                   title={`${copies} ${copies === 1 ? 'physical copy' : 'physical copies'}${row.physical_location ? ` · ${row.physical_location}` : ''}`}
                 >
                   <LibraryIcon className="w-3 h-3 mr-1 shrink-0" />
@@ -122,7 +122,7 @@ export function ScoreCard({
                 return (
                   <Badge
                     variant="outline"
-                    className={`text-xs max-w-full ${share.shared ? '' : 'text-muted-foreground'}`}
+                    className={`text-[11px] leading-4 px-1.5 py-0 max-w-full ${share.shared ? '' : 'text-muted-foreground'}`}
                     title={share.detail}
                   >
                     <Share2 className="w-3 h-3 mr-1 shrink-0" />
@@ -138,7 +138,7 @@ export function ScoreCard({
             actually reach for — stays as the one labelled button. Share
             keeps its own button for librarians (highest-frequency action,
             and its variant mirrors the sharing state). */}
-        <div className="flex flex-wrap items-center justify-end gap-1.5 mt-auto pt-3">
+        <div className="flex flex-wrap items-center justify-end gap-1 mt-auto pt-2">
           {canEdit && (
             <Button
               variant={isSharedAnyLane(row) ? 'secondary' : 'outline'}

@@ -335,7 +335,7 @@ export function MyMusicTab() {
           </p>
         </div>
       ) : view === 'cards' ? (
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {visibleScores.map((s) => (
             <li key={s.id}>
               <MyMusicCard
