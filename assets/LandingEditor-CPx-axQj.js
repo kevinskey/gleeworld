@@ -1,0 +1,1 @@
+import{j as t}from"./markdown-DhDeT_t5.js";import{av as r}from"./index-BkAbyT1F.js";import"./pdf-viewer-CZwrHNNw.js";import"./osmd-K0Ks1scK.js";import"./pdfjs-rTpe4PAn.js";import"./charts-C_bkZeXw.js";import"./pdf-tools-BvBK5V-z.js";import"./tone-CYbv91c3.js";import"./date-locale-UHVDO-p8.js";function d(){return t.jsx(r,{to:"/admin/public-page",replace:!0})}export{d as default};

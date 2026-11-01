@@ -1,0 +1,1 @@
+const a="personal-scores";function n(e,r){return`${e}/uploads/${crypto.randomUUID()}.pdf`}function o(e){return e.type!=="application/pdf"?"Only PDF files can be added to My Music.":e.size>26214400?"PDFs must be 25 MB or smaller.":null}export{a as P,n as p,o as v};

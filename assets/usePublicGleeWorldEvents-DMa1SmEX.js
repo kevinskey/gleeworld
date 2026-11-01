@@ -1,0 +1,8 @@
+import{r as o}from"./pdf-viewer-CZwrHNNw.js";import{c as E,G as b}from"./index-BkAbyT1F.js";const w=()=>{const[r,u]=o.useState([]),[g,a]=o.useState(!0),{toast:c}=E(),l=o.useCallback(async()=>{var n;try{console.log("usePublicGleeWorldEvents: Starting fetch..."),a(!0);const t=new Date;t.setMonth(t.getMonth()-18);const{data:e,error:s}=await b.from("gw_events").select(`
+          *,
+          gw_calendars (
+            name,
+            color,
+            is_visible
+          )
+        `).eq("is_public",!0).gte("start_date",t.toISOString()).order("start_date",{ascending:!0});if(console.log("usePublicGleeWorldEvents: Query result",{data:(e==null?void 0:e.length)||0,error:s,firstEvent:(n=e==null?void 0:e[0])==null?void 0:n.title,allEvents:e==null?void 0:e.map(i=>({title:i.title,date:i.start_date}))}),s)throw console.error("Supabase error:",s),s;console.log("Setting events to:",(e==null?void 0:e.length)||0,"events"),u(e||[])}catch(t){console.error("Error fetching public events:",t),c({title:"Error",description:"Failed to load public events",variant:"destructive"})}finally{console.log("usePublicGleeWorldEvents: Fetch complete, setting loading to false"),a(!1)}},[c]),v=o.useCallback((n,t)=>r.filter(e=>{const s=new Date(e.start_date);return s>=n&&s<=t}),[r]),d=o.useCallback((n=6)=>{const t=new Date;return r.filter(e=>new Date(e.end_date||e.start_date)>=t).slice(0,n)},[r]),f=o.useCallback((n,t)=>r.filter(e=>{const s=new Date(e.start_date);return s.getFullYear()===n&&s.getMonth()===t}),[r]);return o.useEffect(()=>{l()},[l]),{events:r,loading:g,fetchEvents:l,getEventsByDateRange:v,getUpcomingEvents:d,getEventsByMonth:f}};export{w as u};

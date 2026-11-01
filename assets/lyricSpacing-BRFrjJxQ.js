@@ -1,0 +1,1 @@
+const t=16,o=12,C=6;function e(_){if(!_.some(E=>E>0))return 0;let n=0;for(let E=1;E<_.length;E++)n=Math.max(n,(_[E-1]+_[E])/2+6);const R=n*Math.max(0,_.length-1),a=(_[0]+_[_.length-1])/2;return R+a+26}export{C as L,t as a,o as b,e as l};

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>GleeWorld — Run your music program. Beautifully.</title>
+    <meta name="description" content="The all-in-one platform for choirs, bands, and music classrooms. Your branded site, set up in ten minutes." />
+    <meta name="author" content="GleeWorld" />
+
+    <meta property="og:title" content="GleeWorld — Run your music program. Beautifully." />
+    <meta property="og:description" content="The all-in-one platform for choirs, bands, and music classrooms. Your branded site, set up in ten minutes." />
+    <meta property="og:type" content="website" />
+    <!-- Absolute URL: link-preview crawlers don't resolve relative paths. These
+         are the platform defaults; crawlers don't run JS, so tenant-bootstrap.js
+         can never brand them. Tenant sites get their own og:title/description/
+         image rewritten per-vhost by nginx sub_filter (provision-vhost.sh).
+         Changing the title or description text here means updating the
+         sub_filter match strings too, or the rewrite silently stops matching. -->
+    <meta property="og:image" content="https://gleeworld.org/og-image.png" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://gleeworld.org/og-image.png" />
+    
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' blob: 'unsafe-inline' 'unsafe-eval' https://w.soundcloud.com https://js.stripe.com https://www.google.com https://www.gstatic.com https://www.googletagmanager.com https://cdn.gpteng.co https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://gleeworld.org https://*.gleeworld.org https://js-cdn.music.apple.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: https://*.supabase.co https://supabase.gleeworld.org https://*.digitaloceanspaces.com blob: https://*.jit.si https://*.8x8.vc https://meet.gleeworld.org https://tonejs.github.io https://*.apple.com https://*.mzstatic.com; connect-src 'self' blob: https://www.youtube.com https://gleeworld.org https://*.gleeworld.org wss://*.gleeworld.org *.sentry.io https://api.squareup.com https://app.squareup.com https://squareup.com https://api.squareup.com/v1/cdp/batch https://ecosystem-header.squarecdn.com *.squarecloudservices.com https://cdn.cookielaw.org/ https://*.onetrust.com/ https://browser-intake-datadoghq.com/ https://www.google.com https://www.gstatic.com https://*.supabase.co wss://*.supabase.co https://supabase.gleeworld.org wss://supabase.gleeworld.org https://*.digitaloceanspaces.com https://*.stripe.com https://meet.jit.si https://*.jit.si wss://meet.jit.si wss://*.jit.si https://8x8.vc https://*.8x8.vc wss://8x8.vc wss://*.8x8.vc https://meet.gleeworld.org wss://meet.gleeworld.org https://tonejs.github.io https://gleitz.github.io https://api.music.apple.com https://amp-api.music.apple.com https://amp-api-edge.music.apple.com https://*.music.apple.com https://*.apple.com https://*.mzstatic.com https://play.itunes.apple.com https://buy.itunes.apple.com https://cdn.jsdelivr.net https://storage.googleapis.com https://soundcloud.com https://api.soundcloud.com https://api.elevenlabs.io wss://api.elevenlabs.io https://*.elevenlabs.io wss://*.elevenlabs.io https://api.crossref.org https://openlibrary.org; worker-src 'self' blob:; frame-src 'self' https://gleeworld.org https://*.gleeworld.org https://js.stripe.com https://www.google.com https://docs.google.com https://www.youtube.com https://youtube.com https://www.youtube-nocookie.com https://meet.jit.si https://*.jit.si https://8x8.vc https://*.8x8.vc https://meet.gleeworld.org https://conducting.gleeworld.org https://readmusic.gleeworld.org https://*.apple.com https://buy.itunes.apple.com https://supabase.gleeworld.org https://w.soundcloud.com;" />
+    
+    <!-- Favicon and PWA icons.
+         The two icon hrefs below are REWRITTEN PER TENANT by nginx sub_filter
+         (same mechanism as the og: tags above), so the tenant's logo is in the
+         HTML on first paint and the tab never flashes the GleeWorld mark.
+         That makes this markup a match string: changing the href, the
+         attribute order, or the whitespace means updating the sub_filter rules
+         too, or the rewrite silently stops matching and every tenant quietly
+         reverts to the GleeWorld icon — with no test failure to catch it.
+         The values here are the platform default, served by gleeworld.org and
+         any host with no tenant vhost. TenantFavicon.tsx patches them again
+         client-side once the branding row loads. -->
+    <link rel="icon" type="image/png" href="/lovable-uploads/gleeworld-logo-192.png">
+    <link rel="shortcut icon" href="/lovable-uploads/gleeworld-logo-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2">
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon.png?v=2">
+    <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon.png?v=2">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GleeWorld">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="GleeWorld">
+    <meta name="msapplication-TileColor" content="#1e3a8a">
+    <meta name="msapplication-TileImage" content="/lovable-uploads/gleeworld-logo-192.png">
+
+    <!-- Apple Smart App Banner — shows a native "Open in App Store" strip
+         at the top of every page for iOS Safari visitors. Zero JavaScript,
+         one line, one-tap install. app-id = App Store trackId, resolved
+         via itunes.apple.com/search?term=gleeworld. -->
+    <meta name="apple-itunes-app" content="app-id=6779189993">
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Graduate&family=Roboto:wght@300;400;500;700&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Tangerine:wght@400;700&family=Alex+Brush&family=Pacifico&family=Caveat:wght@400;700&family=Allura&family=Pinyon+Script&family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;500;600;700;800;900&family=Open+Sans:wght@300;400;500;600;700;800&family=Lato:wght@300;400;700;900&family=Merriweather:wght@300;400;700;900&family=Raleway:wght@300;400;500;600;700;800;900&family=Oswald:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800;900&family=Cinzel:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!--
+      Bravura (the SMuFL music font) is deliberately NOT preloaded. It is
+      512KB and was being fetched at high priority on EVERY page of the
+      platform for every visitor, while the only thing that draws with it is
+      the PDF annotation stamp palette. On cellular that bandwidth competes
+      with the app bundle.
+
+      The @font-face in index.css still declares it, so it downloads on
+      demand. PDFViewerWithAnnotations additionally calls document.fonts.load
+      for it on mount, because canvas fillText silently falls back to a
+      system font instead of waiting for a webfont.
+    -->
+    <script>
+      // Font loading errors are worth knowing about in production; the rest
+      // of the old font-debug probe (335-font dumps, a Dancing Script test
+      // element) was console noise on every load and is gone.
+      if (document.fonts) {
+        document.fonts.onloadingerror = (e) => {
+          console.error('Font loading error:', e);
+        };
+      }
+    </script>
+    <script type="module" crossorigin src="/assets/index-BkAbyT1F.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/osmd-K0Ks1scK.js">
+    <link rel="modulepreload" crossorigin href="/assets/pdfjs-rTpe4PAn.js">
+    <link rel="modulepreload" crossorigin href="/assets/pdf-viewer-CZwrHNNw.js">
+    <link rel="modulepreload" crossorigin href="/assets/markdown-DhDeT_t5.js">
+    <link rel="modulepreload" crossorigin href="/assets/charts-C_bkZeXw.js">
+    <link rel="modulepreload" crossorigin href="/assets/pdf-tools-BvBK5V-z.js">
+    <link rel="modulepreload" crossorigin href="/assets/tone-CYbv91c3.js">
+    <link rel="modulepreload" crossorigin href="/assets/date-locale-UHVDO-p8.js">
+    <link rel="stylesheet" crossorigin href="/assets/pdf-viewer-Bda7VDdz.css">
+    <link rel="stylesheet" crossorigin href="/assets/index-Dcdra0DI.css">
+  </head>
+
+  <body>
+    <!-- Pre-React boot screen. Painted immediately by the browser before
+         any JS runs so the user sees brand + spinner instead of a long
+         white screen while the 3MB+ gzipped React bundle parses on a
+         phone. Cleared the moment React mounts into #root. -->
+    <style>
+      #gw-boot-splash {
+        position: fixed; inset: 0; display: flex; align-items: center;
+        justify-content: center; flex-direction: column; gap: 16px;
+        background: #150d26; color: #f6e9c8; z-index: 1;
+        font: 14px/1.4 -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      #gw-boot-splash img { width: 84px; height: 84px; border-radius: 18px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+      #gw-boot-splash .gw-boot-ring {
+        width: 36px; height: 36px; border-radius: 50%;
+        border: 3px solid rgba(246,233,200,0.18);
+        border-top-color: #22d3ee;
+        animation: gw-boot-spin 0.9s linear infinite;
+      }
+      @keyframes gw-boot-spin { to { transform: rotate(360deg); } }
+      /* Once React mounts, #root has children → hide the splash. */
+      #root:not(:empty) ~ #gw-boot-splash { display: none; }
+    </style>
+    <div id="root"></div>
+    <div id="gw-boot-splash" aria-hidden="true">
+      <img src="/lovable-uploads/gleeworld-logo-192.png" alt="" />
+      <div class="gw-boot-ring"></div>
+    </div>
+    <!-- Boot watchdog: catches errors that fire BEFORE the React bundle
+         can install its own handlers, and renders a fallback message if
+         no React tree mounts within 8 seconds. Without this a module-load
+         failure on WKWebView is just a permanent white screen. -->
+    <script>
+      (function () {
+        function paint(msg) {
+          try {
+            var el = document.getElementById('root');
+            if (!el || el.childElementCount) return;
+            el.innerHTML =
+              '<pre style="padding:24px;font:14px/1.5 -apple-system,monospace;color:#fca5a5;background:#0b1220;height:100vh;margin:0;overflow:auto;white-space:pre-wrap;word-break:break-word;">' +
+              String(msg).replace(/</g, '&lt;') + '</pre>';
+          } catch (_) {}
+        }
+        // A transient network failure on a boot-critical script (deploy in
+        // progress, flaky cellular, stale cached index.html referencing a
+        // replaced asset hash) would otherwise paint a permanent error
+        // screen. Retry with ONE automatic reload per tab session; the
+        // sessionStorage guard means a genuinely broken bundle still shows
+        // the error on the second pass. main.tsx clears the guard after a
+        // successful mount.
+        function retryOnce() {
+          try {
+            if (!sessionStorage.getItem('gw-boot-retried')) {
+              sessionStorage.setItem('gw-boot-retried', '1');
+              location.reload();
+              return true;
+            }
+          } catch (_) {}
+          return false;
+        }
+        // Only OUR scripts are boot-critical. A third-party <script> that fails
+        // to load is somebody else's problem — reloading cannot fix it, and the
+        // reload just fails again. Cloudflare's proxy injects
+        // static.cloudflareinsights.com/beacon.min.js into every HTML response;
+        // our CSP blocks it; the blocked tag fires this error event. Retrying on
+        // that spun any Cloudflare-proxied custom domain at ~5 reloads/sec.
+        function isOwnScript(el) {
+          try {
+            return !!(el && el.src) && new URL(el.src, location.href).origin === location.origin;
+          } catch (_) {
+            return false;
+          }
+        }
+        window.addEventListener('error', function (e) {
+          var src = e.filename || e.target && e.target.src || '';
+          var isScriptLoad = e.target && e.target.tagName === 'SCRIPT';
+          if (isScriptLoad && !isOwnScript(e.target)) return; // third-party — not ours to retry
+          if (isScriptLoad && retryOnce()) return;
+          paint('Boot error: ' + (e.message || e.type) + (src ? ' (' + src + ')' : '') + '\n\n' + ((e.error && e.error.stack) || ''));
+        }, true);
+        window.addEventListener('unhandledrejection', function (e) {
+          var r = e.reason || {};
+          paint('Unhandled rejection: ' + (r.message || r) + '\n\n' + (r.stack || ''));
+        });
+        setTimeout(function () {
+          var el = document.getElementById('root');
+          if (el && !el.childElementCount) {
+            if (retryOnce()) return;
+            paint('React did not mount within 20s.\n\nlocation=' + location.href + '\nUA=' + navigator.userAgent + '\n__TENANT_CONFIG__=' + JSON.stringify((window).__TENANT_CONFIG__ || null));
+          }
+        }, 20000);
+      })();
+    </script>
+    <!-- Tenant bootstrap: per-subdomain nginx serves this file with
+         window.__TENANT_CONFIG__ = { supabaseUrl, supabaseAnonKey, ... } so
+         the same static build can power many tenants. Default (main domain)
+         serves an empty no-op file. Must run BEFORE the React bundle. -->
+    <script src="/tenant-bootstrap.js"></script>
+    <!-- Native app only: restores cached tenant config (no subdomain on device). -->
+    <script src="/native-boot.js"></script>
+    <script>
+      // Apply tenant branding to the document title BEFORE the React
+      // bundle runs so the browser tab never flashes the marketing
+      // "GleeWorld — Run your music program. Beautifully." title on a
+      // tenant subdomain. The bootstrap above populates __TENANT_CONFIG__
+      // synchronously; we read it here and patch the title in place.
+      // TenantFavicon (React) still runs later for the favicon swap and
+      // any title updates after branding rows load from the DB.
+      (function() {
+        try {
+          var cfg = window.__TENANT_CONFIG__;
+          if (cfg && cfg.org) document.title = cfg.org;
+        } catch (e) { /* ignore — title stays at the index.html default */ }
+      })();
+    </script>
+    <script>
+      // Service worker phase-out — we used to install one for offline caching,
+      // but it caused tenants to see stale builds (the "page won't load"
+      // reports). The web app no longer needs one (iOS uses native APN for
+      // pushes, not web-push), so we unregister any existing SW + delete every
+      // cache. /sw.js is now a stub that self-uninstalls too, so once both
+      // run there's nothing left.
+      (function() {
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(r => r.unregister().catch(() => {}));
+          }).catch(() => {});
+        }
+        if (window.caches) {
+          caches.keys().then(names => {
+            names.forEach(n => caches.delete(n).catch(() => {}));
+          }).catch(() => {});
+        }
+      })();
+    </script>
+  </body>
+</html>

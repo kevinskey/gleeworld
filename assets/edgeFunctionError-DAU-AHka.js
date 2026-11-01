@@ -1,0 +1,1 @@
+async function u(s,e){var n,t;if(s){let r=null;try{r=await((t=(n=s.context)==null?void 0:n.json)==null?void 0:t.call(n))}catch{}return r!=null&&r.error?String(r.error):s.message??"unknown error"}return e!=null&&e.error?String(e.error):null}export{u as edgeFunctionErrorMessage};

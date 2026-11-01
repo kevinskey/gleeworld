@@ -1,0 +1,1 @@
+const e=["Vegetarian","Vegan","Pescatarian","Keto","Paleo","Gluten-Free","Dairy-Free","Kosher","Halal","Low Sodium","Low Sugar"],l=["Nut Allergy","Peanut Allergy","Shellfish Allergy","Soy Allergy","Egg Allergy","Fish Allergy","Lactose Intolerant","Sesame Allergy"],a=[...e,...l];export{a as A};
