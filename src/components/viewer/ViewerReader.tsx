@@ -550,7 +550,9 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
             <div className="flex-1 min-w-0 text-sm md:text-[0.95rem] font-medium truncate text-center flex items-center gap-1.5 justify-center">
               <span className="truncate">{m.title}</span>
               <SyncStatusBadge cueRole={cue.role} />
-              <span className="text-muted-foreground tabular-nums shrink-0">, p. {page.current} of {Math.max(1, page.total)}</span>
+              {/* Phone: the seek bar already shows the page count, and this
+                  span crowded the title out of its pill entirely. */}
+              <span className="hidden sm:inline text-muted-foreground tabular-nums shrink-0">, p. {page.current} of {Math.max(1, page.total)}</span>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
