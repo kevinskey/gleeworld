@@ -329,8 +329,13 @@ export function previewRoleIsFaculty(role: NavRole): boolean {
 export interface HideableNavItem {
   /** Route path — the stable identity stored in hidden_items. */
   path: string;
+  /** Catalog key — the identity default_tools / My Tools shelves store. */
+  key: string;
   label: string;
   section: string;
+  /** false for grid-only entries (Attendance, Tickets…): they can never sit
+   *  in the left nav, so "add to sidebar" is not an option for them. */
+  sidebar: boolean;
 }
 
 // Platform-admin-only entries (Tenants) are excluded: they never render for
@@ -339,5 +344,5 @@ export interface HideableNavItem {
 export function hideableNavItems(): HideableNavItem[] {
   return NAV_CATALOG
     .filter((e) => !e.gate?.platformAdminOnly)
-    .map((e) => ({ path: e.to, label: e.label, section: NAV_SECTION_LABELS[e.section] }));
+    .map((e) => ({ path: e.to, key: e.key, label: e.label, section: NAV_SECTION_LABELS[e.section], sidebar: entrySurfaces(e).includes('sidebar') }));
 }

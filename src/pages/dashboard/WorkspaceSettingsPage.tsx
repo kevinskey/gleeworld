@@ -32,6 +32,8 @@ import {
   Save, Building2, Lock, Sparkles, Users, Menu, CalendarDays,
 } from 'lucide-react';
 import { hideableNavItems, HIDEABLE_NAV_ROLES, type NavRole, type HideableNavItem } from '@/lib/navigation/navCatalog';
+import { previewShelfTools, resolveKeys } from '@/lib/navigation/myTools';
+import { useTenantDefaultTools } from '@/hooks/useTenantDefaultTools';
 import { getPreviewRole, setPreviewRole, usePreviewRole } from '@/lib/nav/navPreview';
 import { toast } from 'sonner';
 import { billingPortalErrorMessage } from '@/lib/billingPortalError';
@@ -657,6 +659,30 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
     prefs.find((p) => p.role === role)?.hidden_items ?? []
   );
 
+  // The left nav is NOT "everything visible": it is the role's shelf — the
+  // tenant's saved default tools for that role, or the built-in day-one
+  // list when none are saved (the same precedence a new member and the
+  // sidebar preview use, see usePreviewShelf). Everything else that is
+  // visible lives under All Tools only. Kevin, 2026-11-01: "look how
+  // Visible doesn't match the left nav" — the cards said Visible for Notes,
+  // Documents and Concierge while the Members preview showed none of them.
+  const { defaultsByRole, saveDefaults } = useTenantDefaultTools();
+  const shelfForRole = resolveKeys(
+    defaultsByRole[role].length ? defaultsByRole[role] : previewShelfTools(role) ?? [],
+  );
+  const shelfSet = new Set(shelfForRole);
+  const [shelfPending, setShelfPending] = useState<string | null>(null);
+  const toggleShelf = async (key: string, onShelf: boolean) => {
+    const next = onShelf ? shelfForRole.filter((k) => k !== key) : [...shelfForRole, key];
+    setShelfPending(key);
+    const ok = await saveDefaults(role, next);
+    setShelfPending(null);
+    if (!ok) { toast.error('Could not update the sidebar defaults.'); return; }
+    // the sidebar preview reads the same row through a different query key
+    queryClient.invalidateQueries({ queryKey: ['tenant-nav-prefs'] });
+    if (!getPreviewRole()) setPreviewRole(role);
+  };
+
   // Mutation carries the toggled `path` in its variables so we can
   // scope the pending spinner to just the clicked card — using
   // `savePref.isPending` alone would spin every button on the tab.
@@ -770,7 +796,11 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
         <CardContent className="p-4 sm:p-5">
           <h2 className="text-lg font-semibold mb-1">Navigation</h2>
           <p className="text-sm text-muted-foreground mb-4">
-            Choose which sidebar items each type of user in your tenant sees.
+            Choose what each type of user in your tenant can reach, and what sits in their
+            left nav. <b>In sidebar</b> apps show in the left nav for new members of that role
+            (and in the preview). <b>All Tools only</b> apps are allowed but reached through
+            All Tools until a member pins them. <b>Hidden</b> apps are gone for that role
+            everywhere. Members who already customised My World keep their own nav.
             You (as super-admin) always see everything.
           </p>
 
@@ -845,31 +875,58 @@ function NavigationTabPanel({ canManage }: { canManage: boolean }) {
                     // passed to .mutate() while the mutation is in
                     // flight.
                     const pending = savePref.isPending && savePref.variables?.path === item.path;
+                    const isHome = item.key === 'home';
+                    const onShelf = isHome || shelfSet.has(item.key);
+                    const shelfBusy = shelfPending === item.key;
+                    const status = isHidden
+                      ? 'Hidden'
+                      : isHome
+                        ? 'Always first in the sidebar'
+                        : onShelf
+                          ? 'In sidebar'
+                          : item.sidebar
+                            ? 'All Tools only'
+                            : 'Home grid only';
                     return (
                       <div key={item.path} className="rounded-xl border p-4 flex flex-col">
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <div className="font-semibold text-base">{item.label}</div>
-                          {!isHidden && (
+                          {!isHidden && (onShelf ? (
                             <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200">
-                              <CheckCircle2 className="w-4 h-4 mr-1" /> Visible
+                              <CheckCircle2 className="w-4 h-4 mr-1" /> In sidebar
                             </Badge>
-                          )}
+                          ) : (
+                            <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                              {item.sidebar ? 'All Tools only' : 'Grid only'}
+                            </Badge>
+                          ))}
                         </div>
                         <p className="text-sm text-muted-foreground mb-3">{item.path}</p>
-                        <div className="mt-auto flex items-center justify-between">
-                          <div className="text-xs text-muted-foreground">
-                            {isHidden ? 'Hidden' : 'Shown'}
-                          </div>
+                        <div className="mt-auto flex items-center justify-between gap-2">
+                          <div className="text-xs text-muted-foreground">{status}</div>
                           {canManage && (
-                            <button
-                              type="button"
-                              data-compact
-                              className={pill}
-                              onClick={() => toggleItem(item.path, isHidden)}
-                              disabled={pending}
-                            >
-                              {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : isHidden ? 'Show' : 'Hide'}
-                            </button>
+                            <div className="flex items-center gap-2">
+                              {!isHidden && !isHome && item.sidebar && (
+                                <button
+                                  type="button"
+                                  data-compact
+                                  className={pill}
+                                  onClick={() => { void toggleShelf(item.key, onShelf); }}
+                                  disabled={shelfBusy || pending}
+                                >
+                                  {shelfBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : onShelf ? 'Remove from sidebar' : 'Add to sidebar'}
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                data-compact
+                                className={pill}
+                                onClick={() => toggleItem(item.path, isHidden)}
+                                disabled={pending || shelfBusy}
+                              >
+                                {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : isHidden ? 'Show' : 'Hide'}
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
