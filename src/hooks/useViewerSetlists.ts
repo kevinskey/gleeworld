@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { fetchViewerScores } from '@/lib/viewerAccess';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface ViewerSetlist {
@@ -35,8 +37,10 @@ export function hasSource(sc: Pick<SetlistScore, 'pdf_url' | 'storage_path'>): b
 // All published setlists visible to this tenant. RLS handles scoping;
 // item_count is a denormalized convenience for the landing list.
 export function useViewerSetlists() {
+  const { user } = useAuth();
   return useQuery<ViewerSetlist[]>({
-    queryKey: ['viewer-setlists'],
+    queryKey: ['viewer-setlists', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_setlists')
@@ -59,25 +63,29 @@ export function useViewerSetlists() {
 // Ordered scores for one setlist. Used by the setlist-player mode in the
 // reader to step Next/Prev between scores.
 export function useSetlistScores(setlistId: string | undefined) {
+  const { user } = useAuth();
   return useQuery<SetlistScore[]>({
-    queryKey: ['viewer-setlist-scores', setlistId],
-    enabled: !!setlistId,
+    queryKey: ['viewer-setlist-scores', user?.id, setlistId],
+    enabled: !!user?.id && !!setlistId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_setlist_items')
-        .select('id, music_id, order_index, score:gw_sheet_music(title, composer, pdf_url, storage_path, storage_bucket)')
+        .select('id, music_id, order_index')
         .eq('setlist_id', setlistId!)
         .order('order_index');
       if (error) throw error;
-      return (data ?? []).map((it: any) => ({
+      const scores = await fetchViewerScores((data ?? []).map((it) => it.music_id));
+      const visible = new Map(scores.map((score) => [score.id, score]));
+      // A setlist must not grant access to an otherwise unshared score.
+      return (data ?? []).filter((it) => visible.has(it.music_id)).map((it) => ({
         id: it.id,
         sheet_music_id: it.music_id,
         order_index: it.order_index,
-        title: it.score?.title ?? '(untitled)',
-        composer: it.score?.composer ?? null,
-        pdf_url: it.score?.pdf_url ?? null,
-        storage_path: it.score?.storage_path ?? null,
-        storage_bucket: it.score?.storage_bucket ?? null,
+        title: visible.get(it.music_id)?.title ?? '(untitled)',
+        composer: visible.get(it.music_id)?.composer ?? null,
+        pdf_url: visible.get(it.music_id)?.pdf_url ?? null,
+        storage_path: visible.get(it.music_id)?.storage_path ?? null,
+        storage_bucket: visible.get(it.music_id)?.storage_bucket ?? null,
       }));
     },
   });

@@ -17,6 +17,8 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchViewerScores } from '@/lib/viewerAccess';
+import { useAuth } from '@/contexts/AuthContext';
 import { getSignedUrl } from '@/utils/storage';
 import { isPersonalScoreId, toTableId } from '@/lib/viewerScoreId';
 import { PERSONAL_SCORES_BUCKET } from '@/lib/personalLibrary';
@@ -110,6 +112,7 @@ const DISPLAY_PREF_KEY = 'gw-viewer-display-pref';
 
 export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   // My Music scores annotate fine (Task 2 routes to gw_personal_score_
   // annotations) but bookmarks, jumps, page-rearrange, layers and audio
   // tracks all FK gw_sheet_music — there's no row for a personal score to
@@ -263,7 +266,7 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
   }, [handsFree.settings.gesturesEnabled, handsFree.settings.gestureSensitivity]);
 
   const { data: meta, isLoading } = useQuery<ScoreMeta | null>({
-    queryKey: ['viewer-score', scoreId],
+    queryKey: ['viewer-score', user?.id, scoreId],
     queryFn: async () => {
       if (!scoreId) return null;
 
@@ -289,14 +292,11 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
         } as ScoreMeta;
       }
 
-      const { data } = await supabase
-        .from('gw_sheet_music')
-        .select('id, title, composer, pdf_url, storage_path, storage_bucket')
-        .eq('id', scoreId)
-        .maybeSingle();
-      return (data as ScoreMeta) ?? null;
+      // Deep links must pass the same sharing check as library browsing.
+      const scores = await fetchViewerScores([scoreId]);
+      return (scores[0] as ScoreMeta) ?? null;
     },
-    enabled: !!scoreId,
+    enabled: !!user?.id && !!scoreId,
   });
 
   // Effective PDF URL: prefer the legacy `pdf_url` when present,
@@ -304,7 +304,7 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
   // expire in 1h; the reader typically re-opens the same file within
   // that window, and re-signing on the next mount is cheap.
   const { data: effectivePdfUrl } = useQuery<string | null>({
-    queryKey: ['viewer-pdf-url', scoreId, meta?.pdf_url, meta?.storage_bucket, meta?.storage_path],
+    queryKey: ['viewer-pdf-url', user?.id, scoreId, meta?.pdf_url, meta?.storage_bucket, meta?.storage_path],
     queryFn: async () => {
       if (!meta) return null;
       if (meta.pdf_url) return meta.pdf_url;
@@ -371,10 +371,10 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
   // guard off the source columns rather than effectivePdfUrl — otherwise
   // the error page flashes for a beat between meta and signing.
   const hasSource = !!(meta?.pdf_url || (meta?.storage_bucket && meta?.storage_path));
-  if (scoreId && meta && !hasSource) {
+  if (scoreId && !hasSource) {
     return (
       <div className="fixed inset-0 bg-background flex flex-col items-center justify-center gap-3">
-        <p className="text-sm text-muted-foreground">Score not found or has no PDF.</p>
+        <p className="text-sm text-muted-foreground">This score is unavailable or is not shared with you.</p>
         <Button size="sm" variant="outline" onClick={onBack}>
           <ArrowLeft className="w-4 h-4 mr-1" /> Back to Viewer
         </Button>
@@ -1583,7 +1583,7 @@ function LibrarySearchForm({ onSubmit }: { onSubmit: (q: string) => void }) {
 }
 
 // Library popout — full sortable + filterable score list inside a Sheet.
-// Pulls from `gw_sheet_music` (active scores with a pdf_url), groups by
+// Uses Music Library sharing rules for active scores with a PDF, groups by
 // the chosen sort key, and highlights the row matching the currently
 // open score so the user can see where they are at a glance.
 function LibraryDrawerContent({
@@ -1592,16 +1592,15 @@ function LibraryDrawerContent({
   currentScoreId: string;
   onPick: (scoreId: string) => void;
 }) {
+  const { user } = useAuth();
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState<'title' | 'composer' | 'recent'>('title');
   const { data: rows = [], isLoading } = useQuery<Array<{ id: string; title: string; composer: string | null; pdf_url: string | null; storage_path: string | null; storage_bucket: string | null; created_at: string | null }>>({
-    queryKey: ['viewer-library-drawer'],
+    queryKey: ['viewer-library-drawer', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data } = await supabase
-        // Browse view — this drawer is a LISTING. The by-id fetch above
-        // (line ~261) deliberately stays on the base table so deep links keep
-        // working; this one handed the whole library to anyone who tapped the
-        // Book icon, which is the ViewerPage bug one tap deeper.
+        // Apply the same sharing rules as the landing list and reader.
         .from('gw_sheet_music_browse')
         .select('id, title, composer, pdf_url, storage_path, storage_bucket, created_at')
         .eq('is_archived', false)
