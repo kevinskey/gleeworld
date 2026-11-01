@@ -150,16 +150,32 @@ Deno.serve(async (req) => {
             }
             userId = existing.user_id;
             status = "linked";
-            await admin.from("gw_tenant_members").upsert(
-              { user_id: userId, tenant_id: tenantId, role },
-              { onConflict: "user_id,tenant_id", ignoreDuplicates: true },
-            );
           } else {
             results.push({ email, status: "error", message: ie.message });
             continue;
           }
         } else {
           userId = invited.user?.id ?? null;
+        }
+
+        // INVITED = MEMBER (docs/reference/member-access.md). The signup
+        // trigger files a brand-new account as audience ('fan'); an existing
+        // account may hold no row here at all. gw_grant_membership creates or
+        // promotes the row to the roster's role and never downgrades. Falls
+        // back to insert-if-missing until migration 20261101120000 is applied.
+        if (userId) {
+          const { error: ge } = await admin.rpc("gw_grant_membership", {
+            p_user_id: userId, p_tenant_id: tenantId, p_role: role,
+          });
+          if (ge) {
+            if (ge.code !== "PGRST202" && ge.code !== "42883") {
+              console.warn("gw_grant_membership failed; falling back to insert", ge.message ?? ge);
+            }
+            await admin.from("gw_tenant_members").upsert(
+              { user_id: userId, tenant_id: tenantId, role },
+              { onConflict: "user_id,tenant_id", ignoreDuplicates: true },
+            );
+          }
         }
 
         let warn: string | undefined;

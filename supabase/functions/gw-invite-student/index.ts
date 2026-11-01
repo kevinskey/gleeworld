@@ -107,6 +107,28 @@ async function tenantIdFromOrigin(supabase: any, origin: string): Promise<string
   return t?.id ?? undefined;
 }
 
+/**
+ * Membership for an invitee: gw_grant_membership (service-role RPC) creates
+ * the row or promotes an audience row ('fan' / 'vip') to `role`; it never
+ * downgrades and never grants admin. PGRST202 / 42883 means the migration is
+ * not applied yet — keep the old behaviour (insert if missing) so invites
+ * keep working during a rollout.
+ */
+// deno-lint-ignore no-explicit-any
+export async function grantMembership(supabase: any, userId: string, tenantId: string, role: string): Promise<void> {
+  const { error } = await supabase.rpc("gw_grant_membership", {
+    p_user_id: userId, p_tenant_id: tenantId, p_role: role,
+  });
+  if (!error) return;
+  if (error.code !== "PGRST202" && error.code !== "42883") {
+    console.warn("gw_grant_membership failed; falling back to insert", error.message ?? error);
+  }
+  await supabase.from("gw_tenant_members").upsert(
+    { user_id: userId, tenant_id: tenantId, role },
+    { onConflict: "user_id,tenant_id", ignoreDuplicates: true },
+  );
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
@@ -353,13 +375,14 @@ serve(async (req) => {
     }
 
     // 4. Ensure tenant membership so the JWT hook injects tenant_id on next
-    //    sign-in. DO NOTHING on conflict — a re-invite must not rewrite the
-    //    role of someone who was since promoted.
+    //    sign-in. INVITED = MEMBER (docs/reference/member-access.md): the
+    //    signup trigger files every new account as audience ('fan'), and
+    //    gw_grant_membership promotes that row to the invited role. It never
+    //    downgrades, so a re-invite cannot demote someone since promoted.
+    //    Falls back to the old insert-if-missing while the migration that
+    //    adds the RPC (20261101120000) is not yet applied.
     if (tenantId) {
-      await supabase.from("gw_tenant_members").upsert(
-        { user_id: userId, tenant_id: tenantId, role },
-        { onConflict: "user_id,tenant_id", ignoreDuplicates: true }
-      );
+      await grantMembership(supabase, userId, tenantId, role);
     }
 
     // 3. Optionally enroll in course. Service-role inserts skip the JWT-based

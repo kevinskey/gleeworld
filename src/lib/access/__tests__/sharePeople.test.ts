@@ -24,8 +24,8 @@ function profilesChain(rows: unknown[], error: unknown = null) {
 describe('fetchSharePeople', () => {
   beforeEach(() => { rpc.mockReset(); from.mockReset(); });
 
-  it('lists the workspace members from gw_share_people', async () => {
-    rpc.mockResolvedValue({ data: people, error: null });
+  it('lists the workspace members from gw_share_people, dropping rows with no account', async () => {
+    rpc.mockResolvedValue({ data: [...people, { user_id: null, full_name: 'ghost', email: null, member_role: 'member', voice_part: null }], error: null });
     const out = await fetchSharePeople();
     expect(rpc).toHaveBeenCalledWith('gw_share_people');
     expect(out.map((p) => p.user_id)).toEqual(['u1', 'u2', 'u3']);
@@ -34,9 +34,13 @@ describe('fetchSharePeople', () => {
 
   it('falls back to profiles homed here only while the RPC is missing', async () => {
     rpc.mockResolvedValue({ data: null, error: { code: 'PGRST202', message: 'not found' } });
-    from.mockReturnValue(profilesChain([{ user_id: 'u1', full_name: 'Babette', email: 'b@example.org', voice_part: null }]));
+    const chain = profilesChain([{ user_id: 'u1', full_name: 'Babette', email: 'b@example.org', voice_part: null }]);
+    from.mockReturnValue(chain);
     const out = await fetchSharePeople();
     expect(from).toHaveBeenCalledWith('gw_profiles');
+    // voice_part must stay in the select or the section counts silently go to 0.
+    expect(chain.select).toHaveBeenCalledWith('user_id, full_name, email, voice_part');
+    expect(chain.eq).toHaveBeenCalledWith('disabled', false);
     expect(out).toEqual([{ user_id: 'u1', full_name: 'Babette', email: 'b@example.org', voice_part: null, member_role: null }]);
   });
 

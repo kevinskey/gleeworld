@@ -78,12 +78,17 @@ export function ShareScoreDialog({
   // Workspace MEMBERS — the people a share can name. See
   // docs/reference/member-access.md: you share with members, so the picker
   // lists members (wherever their profile is homed), not profiles.
-  const { data: people = [], isLoading: peopleLoading } = useQuery<SharePerson[]>({
+  const { data: people = [], isLoading: peopleLoading, error: peopleError } = useQuery<SharePerson[]>({
     queryKey: ['share-dialog-people'],
     enabled: open,
     staleTime: 5 * 60 * 1000,
+    retry: false,
     queryFn: fetchSharePeople,
   });
+  // 42501 = the server says this account may not share here (it is not an
+  // admin or librarian OF THIS workspace). Say that, rather than rendering an
+  // empty list as "0 members".
+  const notAllowedToShare = (peopleError as { code?: string } | null)?.code === '42501';
 
   // Tenant classes — pulled from gw_courses; only active ones surface
   // because sharing to a dormant/archived class would be surprising.
@@ -124,9 +129,9 @@ export function ShareScoreDialog({
     },
   });
   const reach = useMemo(() => {
-    if (peopleLoading || !enrollmentsByCourse) return undefined;
+    if (peopleLoading || peopleError || !enrollmentsByCourse) return undefined;
     return { ...summarizeReach(people), byCourse: enrollmentsByCourse };
-  }, [people, peopleLoading, enrollmentsByCourse]);
+  }, [people, peopleLoading, peopleError, enrollmentsByCourse]);
 
   // People reached by the current draft, ignoring the everyone switch.
   const targetedReach = useMemo(() => {
@@ -290,6 +295,12 @@ export function ShareScoreDialog({
                 {peopleLoading ? (
                   <div className="p-3 text-xs text-muted-foreground inline-flex items-center gap-1.5">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" /> Loading people…
+                  </div>
+                ) : peopleError ? (
+                  <div className="p-3 text-xs text-destructive">
+                    {notAllowedToShare
+                      ? 'Your account is not an admin or librarian of this workspace, so it cannot share here.'
+                      : 'Could not load the members of this workspace. Close and try again.'}
                   </div>
                 ) : filteredPeople.length === 0 ? (
                   <div className="p-3 text-xs text-muted-foreground">No people match.</div>

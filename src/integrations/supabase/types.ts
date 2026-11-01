@@ -44683,13 +44683,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: {
           can_share: boolean | null
+          has_membership: boolean | null
+          is_admin_here: boolean | null
           is_member: boolean | null
-          manages_library: boolean | null
           member_role: string | null
           tenant_slug: string | null
         }[]
       }
       gw_is_member: { Args: Record<PropertyKey, never>; Returns: boolean }
+      gw_has_membership: { Args: Record<PropertyKey, never>; Returns: boolean }
+      gw_is_admin_here: { Args: Record<PropertyKey, never>; Returns: boolean }
       gw_member_role: { Args: Record<PropertyKey, never>; Returns: string | null }
       gw_can_share_here: { Args: Record<PropertyKey, never>; Returns: boolean }
       gw_unaccent: { Args: { "": string }; Returns: string }

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# SUPERSEDED by scripts/deploy-member-access.sh (2026-11-01), which applies
+# this migration plus 20261101120000 and verifies both. Kept for reference.
+#
 # One-shot deploy for the 2026-10-31 People/membership fix:
 #   1. apply migration 20261031120000 (mirror GleeWorld members into Yo-Doc,
 #      gw_tenant_roster / gw_update_tenant_member RPCs) on the self-hosted DB
