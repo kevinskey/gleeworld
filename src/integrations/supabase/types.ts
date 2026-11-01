@@ -44669,6 +44669,29 @@ export type Database = {
           user_id: string
         }[]
       }
+      gw_share_people: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          email: string | null
+          full_name: string | null
+          member_role: string | null
+          user_id: string
+          voice_part: string | null
+        }[]
+      }
+      gw_my_access: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          can_share: boolean | null
+          is_member: boolean | null
+          manages_library: boolean | null
+          member_role: string | null
+          tenant_slug: string | null
+        }[]
+      }
+      gw_is_member: { Args: Record<PropertyKey, never>; Returns: boolean }
+      gw_member_role: { Args: Record<PropertyKey, never>; Returns: string | null }
+      gw_can_share_here: { Args: Record<PropertyKey, never>; Returns: boolean }
       gw_unaccent: { Args: { "": string }; Returns: string }
       gw_unread_counts: {
         Args: never

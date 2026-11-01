@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { VOICE_PARTS, type ScoreRow } from './types';
+import { fetchSharePeople, summarizeReach, type SharePerson } from '@/lib/access/sharePeople';
 
 // ── Share dialog ────────────────────────────────────────────────────────
 //
@@ -24,7 +25,9 @@ import { VOICE_PARTS, type ScoreRow } from './types';
 //   1. "Everyone in this workspace" — the tenant-wide shared_with_members
 //      flag (kept for the ~thousand-row broadcast case).
 //   2. "Specific people" — shared_with_users uuid[] on the score. Members
-//      whose auth.uid() lands in the array see the row in Scores.
+//      whose auth.uid() lands in the array see the row in Scores. The
+//      picker lists workspace MEMBERS via gw_share_people() (see
+//      docs/reference/member-access.md), not profiles homed here.
 //   3. "Classes" — shared_with_courses uuid[] on the score. Anyone
 //      currently enrolled (gw_course_enrollments) in a listed course
 //      sees the row. Removing a student from the class immediately
@@ -72,20 +75,14 @@ export function ShareScoreDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scores.map((s) => s.id).join(',')]);
 
-  // Tenant members — used for the individual-share picker. Fetched only
-  // when the dialog is open to avoid pulling every profile at page load.
-  const { data: people = [], isLoading: peopleLoading } = useQuery<Array<{ user_id: string; full_name: string | null; email: string | null; role: string | null }>>({
+  // Workspace MEMBERS — the people a share can name. See
+  // docs/reference/member-access.md: you share with members, so the picker
+  // lists members (wherever their profile is homed), not profiles.
+  const { data: people = [], isLoading: peopleLoading } = useQuery<SharePerson[]>({
     queryKey: ['share-dialog-people'],
     enabled: open,
     staleTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('gw_profiles')
-        .select('user_id, full_name, email, role')
-        .eq('disabled', false)
-        .order('full_name', { ascending: true, nullsFirst: false });
-      return (data ?? []) as any[];
-    },
+    queryFn: fetchSharePeople,
   });
 
   // Tenant classes — pulled from gw_courses; only active ones surface
@@ -110,26 +107,26 @@ export function ShareScoreDialog({
   // "I shared it and members can't see it" (Kevin, 2026-10-02: 0 of 624
   // profiles on yo-doc.com have a voice part). Counts turn that from a silent
   // dead end into something the dialog says out loud.
-  const { data: reach } = useQuery<{ members: number; byVoicePart: Record<string, number>; byCourse: Record<string, number> }>({
-    queryKey: ['share-dialog-reach'],
+  const { data: enrollmentsByCourse } = useQuery<Record<string, number>>({
+    queryKey: ['share-dialog-enrollments'],
     enabled: open,
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const [{ data: profiles }, { data: enrollments }] = await Promise.all([
-        supabase.from('gw_profiles').select('voice_part').eq('disabled', false),
-        supabase.from('gw_course_enrollments').select('course_id').eq('enrollment_status', 'enrolled'),
-      ]);
-      const byVoicePart: Record<string, number> = {};
-      for (const p of (profiles ?? []) as Array<{ voice_part: string | null }>) {
-        if (p.voice_part) byVoicePart[p.voice_part] = (byVoicePart[p.voice_part] ?? 0) + 1;
-      }
+      const { data: enrollments } = await supabase
+        .from('gw_course_enrollments')
+        .select('course_id')
+        .eq('enrollment_status', 'enrolled');
       const byCourse: Record<string, number> = {};
       for (const e of (enrollments ?? []) as Array<{ course_id: string }>) {
         byCourse[e.course_id] = (byCourse[e.course_id] ?? 0) + 1;
       }
-      return { members: (profiles ?? []).length, byVoicePart, byCourse };
+      return byCourse;
     },
   });
+  const reach = useMemo(() => {
+    if (peopleLoading || !enrollmentsByCourse) return undefined;
+    return { ...summarizeReach(people), byCourse: enrollmentsByCourse };
+  }, [people, peopleLoading, enrollmentsByCourse]);
 
   // People reached by the current draft, ignoring the everyone switch.
   const targetedReach = useMemo(() => {
