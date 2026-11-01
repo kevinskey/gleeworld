@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { X, Download, Apple } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useBrandingSettings } from '@/hooks/useBrandingSettings';
@@ -34,6 +35,9 @@ export const PWAInstallPrompt = () => {
   // GleeWorld. Naming the tenant there would promise a store page that does
   // not exist. Only the installable web app takes the tenant's name.
   const { settings } = useBrandingSettings();
+  const location = useLocation();
+  const inReader = /^\/dashboard\/viewer\//.test(location.pathname);
+  const deviceWord = typeof navigator !== 'undefined' && /iPad|Macintosh/i.test(navigator.userAgent) ? 'iPad' : 'iPhone';
   const appName = settings?.org_name?.trim() || 'GleeWorld';
 
   useEffect(() => {
@@ -55,8 +59,10 @@ export const PWAInstallPrompt = () => {
       // iOS Safari: don't suggest add-to-home-screen — the real app is
       // in the App Store and is a strictly better experience.
       setIsIosSafari(true);
-      setShowPrompt(true);
-      return;
+      // Never on first paint: the card used to cover page actions the moment
+      // a prospect landed. Give them a while with the app first.
+      const t = window.setTimeout(() => setShowPrompt(true), 25000);
+      return () => window.clearTimeout(t);
     }
 
     // Everything else: wait for the browser's beforeinstallprompt.
@@ -88,10 +94,11 @@ export const PWAInstallPrompt = () => {
     setShowPrompt(false);
   };
 
-  if (!showPrompt) return null;
+  // The performance reader is full-bleed by design; nothing floats over it.
+  if (!showPrompt || inReader) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-50 animate-in slide-in-from-bottom-5">
+    <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-40 animate-in slide-in-from-bottom-5">
       <div className="bg-card border border-border rounded-lg shadow-lg p-4">
         <div className="flex items-start gap-3">
           <div className="p-2 bg-primary/10 rounded-lg">
@@ -103,7 +110,7 @@ export const PWAInstallPrompt = () => {
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-foreground mb-1">
-              {isIosSafari ? 'Get GleeWorld for iPhone' : `Install ${appName}`}
+              {isIosSafari ? `Get GleeWorld for ${deviceWord}` : `Install ${appName}`}
             </h3>
             <p className="text-sm text-muted-foreground mb-3">
               {isIosSafari

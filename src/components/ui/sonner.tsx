@@ -12,7 +12,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="bottom-center"
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
-      duration={1500}
+      duration={4000}
+      closeButton
       // Cap simultaneous visible toasts. Without this, rapid deletes
       // / saves stack 4-5 cards over the transport and block the
       // Stop/Play/Record buttons.
@@ -23,7 +24,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       // an object — value is the bottom inset.
       offset="144px"
       toastOptions={{
-        duration: 1500,
+        duration: 4000,
         classNames: {
           toast:
             "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",

@@ -104,6 +104,10 @@ const STAMP_OPTIONS = [
 
 const COLOR_OPTIONS = ['#ff0000', '#000000', '#0000ff', '#008000', '#800080', '#ffa500'];
 
+
+type DisplayMode = 'normal' | 'half' | 'reflow' | 'two-page';
+const DISPLAY_PREF_KEY = 'gw-viewer-display-pref';
+
 export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) {
   const navigate = useNavigate();
   // My Music scores annotate fine (Task 2 routes to gw_personal_score_
@@ -168,12 +172,40 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
   // Display modes — only one at a time. 'normal' is the standard reader,
   // 'half' uses HalfPageView, 'reflow' uses ReflowView teleprompter,
   // 'two-page' shows two pages side-by-side (iPad landscape book mode).
-  const [displayMode, setDisplayMode] = useState<'normal' | 'half' | 'reflow' | 'two-page'>('normal');
+  const [displayMode, setDisplayModeState] = useState<'normal' | 'half' | 'reflow' | 'two-page'>('normal');
   const device = useDeviceProfile();
+  // The user's explicit display-mode choice is remembered across scores and
+  // sessions; the layout-aware default below only applies when they have
+  // never chosen.
+  const setDisplayMode = useCallback((next: DisplayMode | ((m: DisplayMode) => DisplayMode)) => {
+    setDisplayModeState((prev) => {
+      const resolved = typeof next === 'function' ? next(prev) : next;
+      try { localStorage.setItem(DISPLAY_PREF_KEY, resolved); } catch { /* storage unavailable */ }
+      return resolved;
+    });
+  }, []);
   // Jumps overlay state: when placing a new jump, listen for canvas taps.
   const [placingJump, setPlacingJump] = useState(false);
   const scoreSurfaceRef = useRef<HTMLDivElement>(null);
   const [page, setPage] = useState({ current: 1, total: 1 });
+  // First-run default per layout: wide landscape surfaces (desktop, iPad
+  // landscape) open multi-page scores as a two-page book; phones and
+  // portrait tablets stay single-page. A remembered choice always wins.
+  const defaultAppliedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!scoreId || page.total < 2 || defaultAppliedFor.current === scoreId) return;
+    defaultAppliedFor.current = scoreId;
+    let pref: string | null = null;
+    try { pref = localStorage.getItem(DISPLAY_PREF_KEY); } catch { /* storage unavailable */ }
+    const wide = device.layout !== 'phone' && device.isLandscape && window.innerWidth >= 1100;
+    const want: DisplayMode | null =
+      pref === 'two-page' || pref === 'half' || pref === 'reflow' ? (wide || pref !== 'two-page' ? pref : 'normal')
+      : pref === 'normal' ? 'normal'
+      : wide ? 'two-page' : null;
+    if (want && want !== displayMode) setDisplayModeState(want);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scoreId, page.total, device.layout, device.isLandscape]);
+
   const hideTimerRef = useRef<number | null>(null);
   const pdfRef = useRef<PDFViewerHandle | null>(null);
 
@@ -435,7 +467,13 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
   ];
 
   return (
-    <div className="fixed inset-0 bg-background z-40 flex flex-col">
+    <div
+      className="fixed inset-x-0 bottom-0 bg-background z-40 flex flex-col"
+      // Sits below any sticky top banner (the demo bar publishes its height
+      // as --gw-demo-bar-h). With inset-0 the reader's own title bar rendered
+      // underneath that banner, so the demo showed a reader with no controls.
+      style={{ top: 'var(--gw-demo-bar-h, 0px)' }}
+    >
       {/* Top bar — three zones, forScore-style:
             LEFT:   ☰ (content sources drawer) · ◀ Back
             CENTER: Title · Page X of Y · ★ (per-score menu)
@@ -478,18 +516,22 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
               the reader. Pill = rounded-full white surface with a soft
               shadow, matching the forScore aesthetic. */}
           <div className="flex items-center gap-0.5 md:gap-1 bg-background/95 backdrop-blur shadow-md rounded-full px-1 py-1 md:px-1.5 md:py-1.5 border border-border/40">
-            <PillButton onClick={toggleAudioCompanion} active={audioCompanionOn} label="Audio companion">
-              <Music className="w-4 h-4" />
-            </PillButton>
+            <span className="hidden sm:contents">
+              <PillButton onClick={toggleAudioCompanion} active={audioCompanionOn} label="Audio companion">
+                <Music className="w-4 h-4" />
+              </PillButton>
+            </span>
             <PillButton onClick={() => setLibraryDrawerOpen(true)} label="Library">
               <BookOpen className="w-4 h-4" />
             </PillButton>
             <PillButton onClick={() => setSetlistsDrawerOpen(true)} label="Setlists">
               <Menu className="w-4 h-4" />
             </PillButton>
-            <PillButton onClick={() => setCpdlDrawerOpen(true)} label="CPDL">
-              <Cloud className="w-4 h-4" />
-            </PillButton>
+            <span className="hidden sm:contents">
+              <PillButton onClick={() => setCpdlDrawerOpen(true)} label="CPDL">
+                <Cloud className="w-4 h-4" />
+              </PillButton>
+            </span>
           </div>
 
           {/* CENTER pill — grid icon (page picker), title + page count,
@@ -559,16 +601,18 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
             >
               <Pencil className="w-4 h-4" />
             </PillButton>
-            <PillButton onClick={() => setSearchOpen(true)} label="Search library">
-              <SearchIcon className="w-4 h-4" />
-            </PillButton>
-            <PillButton
-              onClick={() => { setMusicToolsOpen(true); showChrome(); }}
-              active={musicToolsOpen}
-              label="Metronome / Pitch / Tuner"
-            >
-              <MetronomeIcon className="w-4 h-4" />
-            </PillButton>
+            <span className="hidden sm:contents">
+              <PillButton onClick={() => setSearchOpen(true)} label="Search library">
+                <SearchIcon className="w-4 h-4" />
+              </PillButton>
+              <PillButton
+                onClick={() => { setMusicToolsOpen(true); showChrome(); }}
+                active={musicToolsOpen}
+                label="Metronome / Pitch / Tuner"
+              >
+                <MetronomeIcon className="w-4 h-4" />
+              </PillButton>
+            </span>
           {/* Tools — heavier feature drawer (page picker, display modes,
               jumps, rearrange, bookmarks). Same inner sheet as before;
               only its trigger moved into this pill cluster. */}
@@ -583,11 +627,19 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
                 <Briefcase className="w-4 h-4 md:w-[1.1rem] md:h-[1.1rem]" />
               </button>
             </SheetTrigger>
-            <SheetContent side="right" className={device.isIpadLike ? "w-[420px]" : "w-80"}>
+            <SheetContent side="right" className={device.layout !== 'phone' ? "w-[420px]" : "w-80"}>
               <SheetHeader>
                 <SheetTitle>Tools</SheetTitle>
               </SheetHeader>
               <div className="mt-4 space-y-1">
+                {/* Phone only: these four live in the top bar at sm+, but the
+                    390px bar can't hold them, so they're reachable here. */}
+                <div className="sm:hidden space-y-1 pb-2 mb-2 border-b border-border">
+                  <ToolButton Icon={Music} label="Audio companion" note="MP3 / YouTube / Apple Music" onClick={() => { toggleAudioCompanion(); setToolsOpen(false); showChrome(); }} />
+                  <ToolButton Icon={Cloud} label="CPDL" note="Public-domain scores" onClick={() => { setCpdlDrawerOpen(true); setToolsOpen(false); }} />
+                  <ToolButton Icon={SearchIcon} label="Search library" note="Find another score" onClick={() => { setSearchOpen(true); setToolsOpen(false); }} />
+                  <ToolButton Icon={MetronomeIcon} label="Music tools" note="Metronome · Pitch · Tuner" onClick={() => { setMusicToolsOpen(true); setToolsOpen(false); showChrome(); }} />
+                </div>
                 <ToolButton
                   Icon={Grid3X3}
                   label="Page picker"
@@ -603,7 +655,7 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
                 <ToolButton
                   Icon={BookOpen}
                   label="Two-page book"
-                  note={device.isIpadLike ? "Side-by-side pages (great in landscape)" : "Side-by-side pages — best on iPad / desktop"}
+                  note={device.layout !== 'phone' ? "Side-by-side pages (great in landscape)" : "Side-by-side pages — best on iPad / desktop"}
                   onClick={() => { setDisplayMode('two-page'); setToolsOpen(false); showChrome(); }}
                 />
                 <ToolButton
@@ -786,7 +838,7 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
           the safe-area inset and the title bar's inner height in ONE calc
           so the side nav butts right against the title bar with no
           double-counted padding. */}
-      {device.isIpadLike && (
+      {device.layout !== 'phone' && (
         <div
           className="absolute bottom-0 left-0 z-40"
           style={{ top: 'calc(env(safe-area-inset-top, 0px) + 3rem)' }}
@@ -813,7 +865,7 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
           // light theme so the reader doesn't feel like a different app
           // before a score is chosen.
           hasScore ? '' : 'bg-[#f7f5f0]',
-          device.isIpadLike ? (sideNavCollapsed ? 'left-16' : 'left-72') : 'left-0',
+          device.layout !== 'phone' ? (sideNavCollapsed ? 'left-16' : 'left-72') : 'left-0',
         )}
         onClick={toggleChrome}
       >
@@ -911,7 +963,7 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
 
       {/* Music tools sheet — metronome, pitch pipe, tuner. */}
       <Sheet open={musicToolsOpen} onOpenChange={setMusicToolsOpen}>
-        <SheetContent side="right" className={device.isIpadLike ? "w-[480px] overflow-y-auto" : "w-96 overflow-y-auto"}>
+        <SheetContent side="right" className={device.layout !== 'phone' ? "w-[480px] overflow-y-auto" : "w-96 overflow-y-auto"}>
           <SheetHeader>
             <SheetTitle>Music Tools</SheetTitle>
           </SheetHeader>
@@ -925,7 +977,7 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
 
       {/* Hands-free sheet — Bluetooth pedal, MIDI, face gestures. */}
       <Sheet open={handsFreeOpen} onOpenChange={setHandsFreeOpen}>
-        <SheetContent side="right" className={device.isIpadLike ? "w-[480px] overflow-y-auto" : "w-96 overflow-y-auto"}>
+        <SheetContent side="right" className={device.layout !== 'phone' ? "w-[480px] overflow-y-auto" : "w-96 overflow-y-auto"}>
           <SheetHeader>
             <SheetTitle>Hands-Free Turning</SheetTitle>
           </SheetHeader>
@@ -999,7 +1051,7 @@ export function ViewerReader({ scoreId, setlistId, onBack }: ViewerReaderProps) 
 
       {/* Cue session sheet — lead / follow page-turn sync. */}
       <Sheet open={cueOpen} onOpenChange={setCueOpen}>
-        <SheetContent side="right" className={device.isIpadLike ? "w-[420px]" : "w-96"}>
+        <SheetContent side="right" className={device.layout !== 'phone' ? "w-[420px]" : "w-96"}>
           <SheetHeader>
             <SheetTitle>Cue Session</SheetTitle>
           </SheetHeader>

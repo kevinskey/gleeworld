@@ -74,7 +74,7 @@ export const AssistantFab = () => {
         aria-label="Show assistant"
         title="Assistant"
         onClick={() => { setCollapsed(false); setFabCollapsed(section, false); }}
-        className="fixed right-0 z-40 flex h-11 w-7 lg:h-[5.5rem] lg:w-14 items-center justify-center overflow-hidden rounded-l-full border border-r-0 border-border/70 bg-background/55 text-primary shadow-md lg:shadow-xl backdrop-blur-2xl backdrop-saturate-150 transition-colors hover:bg-background/75"
+        className="fixed right-0 z-40 flex h-11 w-11 lg:h-[5.5rem] lg:w-14 items-center justify-center overflow-hidden rounded-l-full border border-r-0 border-border/70 bg-background/55 text-primary shadow-md lg:shadow-xl backdrop-blur-2xl backdrop-saturate-150 transition-colors hover:bg-background/75"
         style={{ bottom }}
       >
         {/* Liquid glass: light gathers at the top of the pill and pools at the

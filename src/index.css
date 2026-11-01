@@ -430,7 +430,7 @@
     --link-hover: var(--primary);
 
     /* ── iOS system semantics ── */
-    --destructive: 359 100% 61%;      /* #FF383C */
+    --destructive: 359 78% 47%;       /* #D51A21 — darkened from #FF383C for AA contrast with white text (5.2:1) */
     --destructive-foreground: 0 0% 100%;
     --success: 135 59% 49%;           /* #34C759 — surface/icon green (needs bold+large or non-text use) */
     --success-foreground: 0 0% 100%;
@@ -2080,16 +2080,9 @@ textarea:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid hsl(var(--ring));
   outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* High visibility focus for keyboard navigation */
-.keyboard-nav a:focus,
-.keyboard-nav button:focus,
-.keyboard-nav [role="button"]:focus {
-  outline: 3px solid hsl(var(--primary));
-  outline-offset: 3px;
-  box-shadow: 0 0 0 6px hsl(var(--primary) / 0.2);
+  /* No border-radius override here: it squared every capsule button the
+     moment keyboard focus landed on it. The outline follows the element's
+     own radius. */
 }
 
 /* Ensure disabled elements are visually distinct */

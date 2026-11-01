@@ -13,6 +13,7 @@
 import { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { sectionEyebrowForPath } from '@/lib/navigation/sectionEyebrow';
 
 interface PageTitleProps {
   children: ReactNode;
@@ -82,6 +83,7 @@ export function DashboardPageShell({
   className,
   children,
 }: DashboardPageShellProps) {
+  const shownEyebrow = eyebrow ?? (typeof window !== 'undefined' ? sectionEyebrowForPath(window.location.pathname) : null);
   // Anchored to the left edge (no mx-auto) so page titles land at the exact
   // same X coordinate across every page regardless of `maxWidth`. Vertical
   // padding is fixed so the title's Y is also stable across navigations.
@@ -100,9 +102,9 @@ export function DashboardPageShell({
     >
       <header className="flex items-end justify-between gap-3 flex-wrap pb-4 border-b border-primary/15">
         <div>
-          {eyebrow && (
+          {shownEyebrow && (
             <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">
-              {eyebrow}
+              {shownEyebrow}
             </p>
           )}
           <PageTitle icon={icon} className={titleClassName}>{title}</PageTitle>

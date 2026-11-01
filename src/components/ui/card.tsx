@@ -6,7 +6,11 @@ const Card = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & {
     variant?: "default" | "glass" | "elevated" | "outline" | "glossy" | "muted"
   }
->(({ className, variant = "default", ...props }, ref) => {
+>(({ className, variant = "default", onClick, role, tabIndex, onKeyDown, ...props }, ref) => {
+  // A card with onClick and no explicit role is a whole-card target: give
+  // it button semantics and Enter/Space so keyboard users can open it.
+  // Callers that set their own role/tabIndex/onKeyDown are left alone.
+  const clickable = !!onClick && role === undefined && tabIndex === undefined
   // iOS cards: white on gray canvas, 12px continuous-feel corners,
   // whisper shadow. No border on the default surface — contrast + radius
   // carry the elevation (HIG grouped-inset pattern).
@@ -23,9 +27,25 @@ const Card = React.forwardRef<
     <div
       ref={ref}
       data-component="card"
+      role={clickable ? 'button' : role}
+      tabIndex={clickable ? 0 : tabIndex}
+      onClick={onClick}
+      onKeyDown={
+        clickable
+          ? (e) => {
+              onKeyDown?.(e)
+              if (e.defaultPrevented || e.target !== e.currentTarget) return
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault()
+                onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>)
+              }
+            }
+          : onKeyDown
+      }
       className={cn(
         "rounded-xl text-card-foreground transition-colors duration-150 relative overflow-hidden",
         variants[variant],
+        clickable && "cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         className
       )}
       {...props}

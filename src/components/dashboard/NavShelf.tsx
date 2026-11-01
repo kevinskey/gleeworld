@@ -26,7 +26,7 @@
 // arranging one, and persists so a member's chosen reading state survives.
 // Spec: docs/superpowers/specs/2026-08-08-my-space-nav-design.md §5.2, §5.3
 import { NavLink } from 'react-router-dom';
-import { ChevronRight, LayoutGrid, Settings } from 'lucide-react';
+import { ChevronRight, LayoutGrid, SlidersHorizontal } from 'lucide-react';
 import type { CatalogEntry } from '@/lib/navigation/navCatalog';
 
 // Not a NAV_CATALOG entry — Setup is a row the shelf always offers on its
@@ -44,8 +44,8 @@ import type { CatalogEntry } from '@/lib/navigation/navCatalog';
 const SETUP_ENTRY: CatalogEntry = {
   key: 'my-world-setup',
   to: '/dashboard/my-world',
-  label: 'Setup',
-  icon: Settings,
+  label: 'Edit My Tools',
+  icon: SlidersHorizontal,
   section: 'today',
   tone: 'bg-muted text-muted-foreground',
   tourId: 'nav-my-world-setup',

@@ -25,7 +25,7 @@ export const LoadingSpinner = ({
   };
 
   return (
-    <div className={`flex items-center justify-center py-4 sm:py-6 md:py-8 text-foreground ${className}`}>
+    <div role="status" aria-live="polite" className={`flex items-center justify-center py-4 sm:py-6 md:py-8 text-foreground ${className}`}>
       <div className="text-center px-2">
         <Loader2
           className={`${sizeClasses[size]} animate-spin text-current mx-auto mb-2 sm:mb-3 md:mb-4`}

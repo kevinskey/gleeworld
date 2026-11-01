@@ -11,7 +11,13 @@
 
 import { useEffect, useState } from 'react';
 
+/** Which reader layout to use. Decided by viewport + pointer, not by UA
+ *  sniffing, so a wide desktop browser gets the side-nav layout too (it used
+ *  to fall into the phone layout because it isn't an iPad). */
+export type ViewerLayout = 'phone' | 'tablet' | 'desktop';
+
 interface DeviceProfile {
+  layout: ViewerLayout;
   isIpadLike: boolean;
   isLandscape: boolean;
   pixelRatio: number;
@@ -20,7 +26,7 @@ interface DeviceProfile {
 
 function detect(): DeviceProfile {
   if (typeof window === 'undefined') {
-    return { isIpadLike: false, isLandscape: false, pixelRatio: 1, isApplePencilCapable: false };
+    return { layout: 'desktop', isIpadLike: false, isLandscape: false, pixelRatio: 1, isApplePencilCapable: false };
   }
   const ua = navigator.userAgent;
   const w = window.innerWidth;
@@ -33,7 +39,12 @@ function detect(): DeviceProfile {
   const isIpadLike =
     isIpadByUA ||
     (hasCoarsePointer && maxEdge >= 1000 && minEdge >= 700);
+  const layout: ViewerLayout =
+    w < 768 ? 'phone'
+    : (w >= 1280 && !hasCoarsePointer && !isIpadByUA) ? 'desktop'
+    : 'tablet';
   return {
+    layout,
     isIpadLike,
     isLandscape: w > h,
     pixelRatio: Math.min(window.devicePixelRatio || 1, 3),

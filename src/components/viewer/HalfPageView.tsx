@@ -89,7 +89,7 @@ export function HalfPageView({
   const nextSplit = splits[currentPage + 1] ?? 0.5;
 
   return (
-    <div className="fixed inset-0 bg-background z-[60] flex flex-col">
+    <div className="fixed inset-x-0 bottom-0 bg-background z-[60] flex flex-col" style={{ top: 'var(--gw-demo-bar-h, 0px)' }}>
       <div className="h-10 flex items-center gap-2 px-2 border-b bg-background/95 backdrop-blur shrink-0">
         <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onClose}>
           <X className="w-4 h-4" />

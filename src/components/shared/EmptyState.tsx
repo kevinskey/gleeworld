@@ -30,7 +30,7 @@ export const EmptyState = ({
           <h3 className="text-lg font-semibold mb-2 text-foreground">{title}</h3>
           <p className="text-muted-foreground mb-4">{description}</p>
           {actionLabel && onAction && (
-            <Button onClick={onAction} className="bg-brand-600 hover:bg-brand-700">
+            <Button onClick={onAction}>
               {actionLabel}
             </Button>
           )}

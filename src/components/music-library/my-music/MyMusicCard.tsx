@@ -104,7 +104,7 @@ export function MyMusicCard({
               <Badge key={t} variant="outline" className={`${BADGE} text-muted-foreground`}>#{t}</Badge>
             ))}
             {added && (
-              <span className="text-[11px] text-muted-foreground/80 ml-auto whitespace-nowrap" title={new Date(score.created_at).toLocaleString()}>
+              <span className="text-[11px] text-muted-foreground ml-auto whitespace-nowrap" title={new Date(score.created_at).toLocaleString()}>
                 {added}
               </span>
             )}

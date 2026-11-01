@@ -235,7 +235,7 @@ export default function WorkspaceUsersPage() {
       }
     >
       {/* Stat strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
         <StatPill label="All"         value={counts.total}     active={filter === 'all'}        onClick={() => setFilter('all')} />
         <StatPill label="Teachers"    value={counts.instructor + counts.admin} active={filter === 'instructor' || filter === 'admin'} onClick={() => setFilter('instructor')} />
         <StatPill label="Members"     value={counts.member}    active={filter === 'member'}     onClick={() => setFilter('member')} />
@@ -334,15 +334,15 @@ function StatPill({
     <button
       onClick={onClick}
       className={cn(
-        'rounded-2xl border p-3 text-left transition',
+        'rounded-2xl border p-2.5 text-left transition min-w-0',
         active
           ? (tone === 'rose' ? 'border-rose-300 bg-rose-50' : 'border-primary bg-primary/5')
           : 'border-border bg-card hover:bg-muted/40',
       )}
       style={SOFT_CARD_STYLE}
     >
-      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="text-2xl font-bold leading-none mt-1.5">{value}</div>
+      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground truncate">{label}</div>
+      <div className="text-xl sm:text-2xl font-bold leading-none mt-1.5">{value}</div>
     </button>
   );
 }

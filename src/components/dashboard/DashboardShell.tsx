@@ -857,7 +857,10 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
       className="border-b border-border/60 bg-card flex items-center gap-3 px-4 sm:px-6 sticky z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] md:min-h-[calc(92px+env(safe-area-inset-top,0px))]"
       style={{
         paddingTop: 'env(safe-area-inset-top)',
-        top: 'var(--gw-demo-bar-h, 0px)',
+        // The shell's own box already starts below the sticky DemoBar (it is
+        // in flow, above the shell), so no offset here — one was double-
+        // counted and pushed the bar over the first ~50px of every page.
+        top: 0,
       }}
     >
       {/* Mobile menu (lg:hidden) — drawer with nav. State is controlled so
@@ -944,7 +947,7 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
           }}
         >
           <Sparkles className="w-3.5 h-3.5" style={{ color: '#ffffff' }} />
-          <span className="hidden sm:inline" style={{ color: '#ffffff' }}>Request your workspace</span>
+          <span className="hidden lg:inline" style={{ color: '#ffffff' }}>Request your workspace</span>
         </button>
       )}
 
@@ -952,7 +955,7 @@ function TopBar({ navCollapsed = false, onExpandNav, onOpenAllTools }: { navColl
           input was simply `hidden sm:block`, which left mobile users with
           no path to search at all. The mobile button opens a focused
           search prompt (browser-native via <dialog>-style fallback). */}
-      <form onSubmit={onSearch} className="hidden sm:block w-full max-w-md min-w-0">
+      <form onSubmit={onSearch} className="hidden sm:block w-full max-w-md min-w-[7.5rem] shrink">
         <div className="relative">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -1249,7 +1252,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           sidebar rail stays put — each <main> scrolls INSIDE its column
           instead of pushing the whole document (which used to drag the
           sidebar off-screen with it). */}
-      <div className="flex h-[100dvh] w-full bg-background overflow-hidden">
+      <div className="flex h-[calc(100dvh-var(--gw-demo-bar-h,0px))] w-full bg-background overflow-hidden">
         {!navCollapsed && <Sidebar onCollapse={() => setCollapsed(true)} onOpenAllTools={openAllTools} />}
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
           {/* Trial countdown — self-gates on trial state so it renders null

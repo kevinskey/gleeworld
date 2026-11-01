@@ -143,8 +143,20 @@ export default function MediaLibraryPage() {
         .eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      toast.success('Media removed.');
+    onSuccess: (_data, id) => {
+      // Soft delete, so offer Undo instead of a confirm dialog — a mis-tap on
+      // a 16px trash icon used to be final with a 1.5s toast.
+      toast('Media removed.', {
+        duration: 8000,
+        action: {
+          label: 'Undo',
+          onClick: async () => {
+            const { error } = await supabase.from('gw_media_library').update({ is_deleted: false }).eq('id', id);
+            if (error) toast.error(error.message);
+            qc.invalidateQueries({ queryKey: ['media-library'] });
+          },
+        },
+      });
       qc.invalidateQueries({ queryKey: ['media-library'] });
     },
     onError: (e: any) => toast.error(e?.message || 'Delete failed.'),
@@ -457,10 +469,10 @@ function MediaCard({ row, courseCode, onDelete, onRename, onOpen, onShare }: { r
       tabIndex={editing ? -1 : 0}
       onKeyDown={(e) => { if (!editing && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onOpen(); } }}
     >
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${tone}`}>
-            <Icon className="w-5 h-5" />
+      <CardContent className="p-3">
+        <div className="flex items-start gap-2.5">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${tone}`}>
+            <Icon className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
             {editing ? (
@@ -474,25 +486,25 @@ function MediaCard({ row, courseCode, onDelete, onRename, onOpen, onShare }: { r
                   if (e.key === 'Escape') { e.preventDefault(); cancel(); }
                 }}
                 autoFocus
-                className="text-base font-semibold h-8"
+                className="text-sm font-semibold h-8"
               />
             ) : (
-              <div className="text-base font-semibold leading-snug truncate">{row.title || 'Untitled'}</div>
+              <div className="text-sm font-semibold leading-snug truncate">{row.title || 'Untitled'}</div>
             )}
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
               <span className="text-xs text-muted-foreground capitalize">{k}</span>
               {courseCode ? (
-                <Badge variant="outline" className="text-xs">{courseCode}</Badge>
+                <Badge variant="outline" className="text-[11px] leading-4 px-1.5 py-0">{courseCode}</Badge>
               ) : (
-                <Badge variant="outline" className="text-xs bg-primary/5 text-primary border-primary/20">Platform</Badge>
+                <Badge variant="outline" className="text-[11px] leading-4 px-1.5 py-0 text-muted-foreground">Platform</Badge>
               )}
-            </div>
-            <div className="text-xs text-muted-foreground mt-2">
-              {row.created_at ? format(parseISO(row.created_at), 'MMM d, yyyy') : ''}
+              {row.created_at && (
+                <span className="text-xs text-muted-foreground">· {format(parseISO(row.created_at), 'MMM d, yyyy')}</span>
+              )}
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-1 mt-3">
+        <div className="flex items-center justify-end gap-1 mt-2">
           {editing ? (
             <>
               <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); commit(); }} title="Save">

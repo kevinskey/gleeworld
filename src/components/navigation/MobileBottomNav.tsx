@@ -59,7 +59,9 @@ const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
   // The core tabs (Home/Messages/Calendar) are identical across roles and
   // flag states, so render only those until BOTH sources resolve — tabs then
   // only ever append, never swap identity.
-  const tabs = (modulesLoading || roleLoading)
+  // A profile fetch that fails resolves to `null`, which would also flip
+  // the tab set to the student order — treat it as unresolved too.
+  const tabs = (modulesLoading || roleLoading || !profile)
     ? allTabs.filter((t) => CORE_TAB_KEYS.has(t.key))
     : allTabs;
 
@@ -101,7 +103,9 @@ const PhoneTabBar = ({ className }: MobileBottomNavProps) => {
         {tabs.map((t) => {
           const active = t.to === '/dashboard'
             ? location.pathname === '/dashboard'
-            : location.pathname.startsWith(t.to);
+            : location.pathname.startsWith(t.to)
+              // The Music tab is the umbrella for both the reader and the library.
+              || (t.key === 'music' && location.pathname.startsWith('/dashboard/music-library'));
           const Icon = t.icon;
           return (
             <button
