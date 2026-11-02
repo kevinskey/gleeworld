@@ -47,3 +47,4 @@ test-results/
 # SVG. Diagnostic only; nothing in src/ imports it and the build never sees
 # it (Vite's only entry is index.html). Deliberately not shipped.
 harness/
+.claude/settings.local.json
